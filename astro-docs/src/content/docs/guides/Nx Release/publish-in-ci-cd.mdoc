@@ -6,9 +6,9 @@ filter: 'type:Guides'
 
 Nx Release makes it easy to move your publishing process into your CI/CD pipeline across different package ecosystems.
 
-## General Concepts
+## General concepts
 
-### Automatically Skip Publishing Locally
+### Automatically skip publishing locally
 
 When running `nx release`, after the version updates and changelog generation, you will be prompted with the following question:
 
@@ -25,7 +25,7 @@ To move publishing into an automated pipeline, you will want to skip publishing 
 Skipped publishing packages.
 ```
 
-### Use the Publish Subcommand
+### Use the publish subcommand
 
 Nx Release provides a publishing subcommand that performs just the publishing step. Use this in your CI/CD pipeline to publish the packages.
 
@@ -39,9 +39,9 @@ NX   Running target nx-release-publish for 3 projects:
 ...
 ```
 
-## Publishing NPM Packages
+## Publishing npm packages
 
-### Example NPM Publish Output
+### Example npm publish output
 
 ```text {% frame="terminal" title="nx release publish" %}
 NX   Running target nx-release-publish for 3 projects:
@@ -123,7 +123,7 @@ Published to https://registry.npmjs.org with tag "latest"
 NX   Successfully ran target nx-release-publish for 3 projects
 ```
 
-### NPM Publishing in GitHub Actions
+### npm publishing in GitHub actions
 
 A common way to automate publishing NPM packages is via GitHub Actions. An example of a publish workflow is as follows:
 
@@ -185,17 +185,17 @@ The example workflow above triggers on a single tag pattern (`v*.*.*`), which wo
 If you're using **independent versioning** (where each project has its own version), see the [Considerations for Independent Versioning](#considerations-for-independent-versioning) section below.
 {% /aside %}
 
-### Considerations for Independent Versioning
+### Considerations for independent versioning
 
 When using independent versioning, `nx release` creates a separate tag for each project being released (e.g., `pkg-1@1.0.0`, `pkg-2@2.1.0`). This introduces some challenges with tag-triggered workflows:
 
-#### GitHub's Tag Event Limitation
+#### GitHub tag event limitation
 
 GitHub Actions has an important limitation: **workflows triggered by the `push` event will not run if more than 3 tags are created at once**. This means if you run `nx release` and it creates tags for 4 or more projects, the publish workflow will not be triggered.
 
-This limitation is documented in [GitHub's workflow events documentation](https://docs.github.com/en/actions/reference/events-that-trigger-workflows#create).
+This limitation is documented in [GitHub workflow events documentation](https://docs.github.com/en/actions/reference/events-that-trigger-workflows#create).
 
-#### Alternative Approaches for Independent Versioning
+#### Alternative approaches for independent versioning
 
 There are several ways to work around this limitation:
 
@@ -273,11 +273,11 @@ If you prefer tag-triggered workflows, push tags in smaller batches (3 or fewer 
 
 The `NODE_AUTH_TOKEN` environment variable is needed to authenticate with the npm registry. In the above workflow, it is passed into the Publish packages step via a [GitHub Secret](https://docs.github.com/en/actions/reference/encrypted-secrets).
 
-#### Generate a NODE_AUTH_TOKEN for NPM
+#### Generate a NODE_AUTH_TOKEN for npm
 
 To generate the correct `NODE_AUTH_TOKEN` for the npmJS registry specifically, first login to [https://www.npmjs.com/](https://www.npmjs.com/). Select your profile icon, then navigate to "Access Tokens". Generate a new Granular Access Token. Ensure that the token has read and write access to both the packages you are publishing and their organization (if applicable). Copy the generated token and add it as a secret to your GitHub repository.
 
-#### Add the NODE_AUTH_TOKEN to GitHub Secrets
+#### Add the nODE_AUTH_TOKEN to GitHub secrets
 
 To add the token as a secret to your GitHub repository, navigate to your repository, then select "Settings" > "Secrets and Variables" > "Actions". Add a new Repository Secret with the name `NPM_ACCESS_TOKEN` and the value of the token you generated in the previous step.
 
@@ -292,7 +292,7 @@ Note: The `NPM_ACCESS_TOKEN` name is not important other than that it matches th
     NPM_CONFIG_PROVENANCE: true
 ```
 
-### NPM Provenance
+### npm provenance
 
 To verify your packages with [npm provenance](https://docs.npmjs.com/generating-provenance-statements), set the `NPM_CONFIG_PROVENANCE` environment variable to `true` in the step where `nx release publish` is performed. The workflow will also need the `id-token: write` permission to generate the provenance data:
 
@@ -331,7 +331,7 @@ Docker images are built with the `npx nx run-many -t docker:build` command, whic
 
 You may also run the build command manually before running `nx release`. After the images are built, they are tagged during the versioning phase, then pushed to a registry during the publish phase.
 
-### Docker Registry Authentication
+### Docker registry authentication
 
 Before publishing Docker images, ensure you're authenticated with your Docker registry:
 
@@ -352,7 +352,7 @@ Before publishing Docker images, ensure you're authenticated with your Docker re
 
 For changelogs, you can run `npx nx release changelog <version>` locally with the new version from the pipeline. For example, if the new version is `2501.01.be49ad6` you would run `npx nx release changelog 2501.01.be49ad6`. This will create or update the `CHANGELOG.md` files in your projects.
 
-### Using Different Registries
+### Using different registries
 
 Configure alternative registries in your `nx.json`:
 

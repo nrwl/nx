@@ -34,7 +34,7 @@ If you don't have a Docker setup already, you can leverage the `setup-docker` ge
 npx nx g @nx/node:setup-docker
 ```
 
-## Deploying the Server to Fly.io
+## Deploying the server to fly.io
 
 Now, all we need to do is set up Fly.io and deploy! If you haven't used Fly.io before, you need to install the CLI and create an account. It'll only take a couple of minutes.
 
@@ -75,7 +75,7 @@ Fly.io will log out the monitoring link when the server is successfully deployed
 
 That's is! Our server is now deployed for the world to use.
 
-## Optional: Adding a Deploy Target
+## Optional: adding a deploy target
 
 You can also automate the deployment by adding a target to your project. In addition, that allows us to leverage the Nx [task pipeline](/docs/concepts/task-pipeline-configuration) to make sure we first run the `build` and then the `deploy`.
 

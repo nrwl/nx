@@ -8,13 +8,13 @@ This guide walks you through setting up Nx Release to version, generate changelo
 
 {% linkcard title="Free Course: Versioning and Releasing NPM packages with Nx"  href="https://www.epicweb.dev/tutorials/versioning-and-releasing-npm-packages-with-nx" /%}
 
-## Setting Up Your NPM Release Workflow
+## Setting up your NPM release workflow
 
 ### Install Nx
 
 Ensure that Nx is installed in your monorepo. Check out the [Installation docs](/docs/getting-started/installation) for instructions on created a new Nx workspace or adding Nx to an existing project.
 
-### Add the JavaScript Plugin
+### Add the JavaScript plugin
 
 The [`@nx/js` package](/docs/technologies/typescript/introduction) is required for Nx Release to manage and release JavaScript packages. Add it if it is not already installed:
 
@@ -22,9 +22,9 @@ The [`@nx/js` package](/docs/technologies/typescript/introduction) is required f
 nx add @nx/js
 ```
 
-### Configure Projects to Release
+### Configure projects to release
 
-Nx Release uses Nx's powerful [Project Graph](/docs/features/explore-graph) to understand your projects and their dependencies.
+Nx Release uses Nx powerful [Project Graph](/docs/features/explore-graph) to understand your projects and their dependencies.
 
 If you want to release all of the projects in your workspace, such as when dealing with a series of npm library packages, no configuration is required.
 
@@ -43,7 +43,7 @@ For example, to release just the projects in the `packages` directory:
 }
 ```
 
-## Create the First Release
+## Create the first release
 
 The first time you release with Nx Release in your monorepo, you will need to use the `--first-release` option. This tells Nx Release not to expect the existence of any git tags, changelog files, or published packages.
 
@@ -57,7 +57,7 @@ To preview your first release, run:
 nx release --first-release --dry-run
 ```
 
-### Pick a New Version
+### Pick a new version
 
 Nx Release will prompt you to pick a version bump for all the packages in the release. By default, all package versions are kept in sync, so the prompt only needs to be answered one time. If needed, you can [configure Nx to release projects independently](/docs/guides/nx-release/release-projects-independently).
 
@@ -73,7 +73,7 @@ Nx Release will prompt you to pick a version bump for all the packages in the re
   Custom exact version
 ```
 
-### Preview the Results
+### Preview the results
 
 After this prompt, the command will finish, showing you the preview of changes that would have been made if the `--dry-run` option was not passed.
 
@@ -152,7 +152,7 @@ NX   Tagging commit with git
 Skipped publishing packages.
 ```
 
-### Run Without `--dry-run`
+### Run without `--dry-run`
 
 If the preview looks good, run the command again without the `--dry-run` option to actually create the release.
 
@@ -247,11 +247,11 @@ NX   Successfully ran target nx-release-publish for 3 projects
 
 ```
 
-## Manage Git Operations
+## Manage git operations
 
 By default, Nx Release will stage all changes it makes with git. This includes updating `package.json` files, creating changelog files, and updating the `package-lock.json` file. After staging the changes, Nx Release will commit the changes and create a git tag for the release.
 
-### Customize the Commit Message and Tag Pattern
+### Customize the commit message and tag pattern
 
 The commit message created by Nx Release defaults to 'chore(release): publish {version}', where `{version}` will be dynamically interpolated with the relevant value based on your actual release, but can be customized with the `release.git.commitMessage` property in nx.json.
 
@@ -296,7 +296,7 @@ For this same example, if you want the commit message to be 'chore(release): 1.2
 
 When using release groups in which the member projects are versioned together, you can also leverage `{releaseGroupName}` and it will be interpolated appropriately in the commit/tag that gets created for that release group.
 
-## Future Releases
+## Future releases
 
 After the first release, the `--first-release` option will no longer be required. Nx Release will expect to find git tags and changelog files for each package. It will also use `npm view` to look up the current version of packages before publishing, ensuring that the package has not already been published and therefore avoid any conflict errors, meaning you can run the same publish action multiple times without any negative side-effects.
 

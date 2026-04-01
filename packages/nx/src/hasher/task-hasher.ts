@@ -12,6 +12,7 @@ import { minimatch } from 'minimatch';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { workspaceRoot } from '../utils/workspace-root';
 import { HashInputs, NxWorkspaceFilesExternals } from '../native';
+import { getTaskIOService } from '../tasks-runner/task-io-service';
 
 // Re-export HashInputs from native module for public API
 export { HashInputs };
@@ -84,14 +85,16 @@ export interface TaskHasherImpl {
     tasks: Task[],
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
-    cwd?: string
+    cwd?: string,
+    collectInputs?: boolean
   ): Promise<PartialHash[]>;
 
   hashTask(
     task: Task,
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
-    cwd?: string
+    cwd?: string,
+    collectInputs?: boolean
   ): Promise<PartialHash>;
 }
 
@@ -108,12 +111,14 @@ export class DaemonBasedTaskHasher implements TaskHasher {
     taskGraph?: TaskGraph,
     env?: NodeJS.ProcessEnv
   ): Promise<Hash[]> {
+    const collectInputs = getTaskIOService().hasTaskInputSubscribers();
     return this.daemonClient.hashTasks(
       this.runnerOptions,
       tasks,
       taskGraph,
       env ?? process.env,
-      process.cwd()
+      process.cwd(),
+      collectInputs
     );
   }
 
@@ -122,13 +127,15 @@ export class DaemonBasedTaskHasher implements TaskHasher {
     taskGraph?: TaskGraph,
     env?: NodeJS.ProcessEnv
   ): Promise<Hash> {
+    const collectInputs = getTaskIOService().hasTaskInputSubscribers();
     return (
       await this.daemonClient.hashTasks(
         this.runnerOptions,
         [task],
         taskGraph,
         env ?? process.env,
-        process.cwd()
+        process.cwd(),
+        collectInputs
       )
     )[0];
   }
@@ -158,13 +165,15 @@ export class InProcessTaskHasher implements TaskHasher {
     tasks: Task[],
     taskGraph?: TaskGraph,
     env?: NodeJS.ProcessEnv,
-    cwd?: string
+    cwd?: string,
+    collectInputs?: boolean
   ): Promise<Hash[]> {
     const hashes = await this.taskHasher.hashTasks(
       tasks,
       taskGraph,
       env ?? process.env,
-      cwd ?? process.cwd()
+      cwd ?? process.cwd(),
+      collectInputs
     );
     return tasks.map((task, index) =>
       this.createHashDetails(task, hashes[index])
@@ -175,13 +184,15 @@ export class InProcessTaskHasher implements TaskHasher {
     task: Task,
     taskGraph?: TaskGraph,
     env?: NodeJS.ProcessEnv,
-    cwd?: string
+    cwd?: string,
+    collectInputs?: boolean
   ): Promise<Hash> {
     const res = await this.taskHasher.hashTask(
       task,
       taskGraph,
       env ?? process.env,
-      cwd ?? process.cwd()
+      cwd ?? process.cwd(),
+      collectInputs
     );
     return this.createHashDetails(task, res);
   }
@@ -265,9 +276,14 @@ export function getTargetInputs(
 
   const selfInputs = extractPatternsFromFileSets(inputs.selfInputs);
 
-  const dependencyInputs = extractPatternsFromFileSets(
-    inputs.depsInputs.map((s) => expandNamedInput(s.input, namedInputs)).flat()
-  );
+  const dependencyInputs = [
+    ...extractPatternsFromFileSets(
+      inputs.depsInputs
+        .map((s) => expandNamedInput(s.input, namedInputs))
+        .flat()
+    ),
+    ...inputs.depsFilesets.map((d) => d.fileset),
+  ];
 
   return { selfInputs, dependencyInputs };
 }
@@ -289,15 +305,15 @@ export function getInputs(
   const namedInputs = getNamedInputs(nxJson, projectNode);
   const targetData = projectNode.data.targets[task.target.target];
   const targetDefaults = (nxJson.targetDefaults || {})[task.target.target];
-  const { selfInputs, depsInputs, depsOutputs, projectInputs } =
+  const { selfInputs, depsInputs, depsOutputs, projectInputs, depsFilesets } =
     splitInputsIntoSelfAndDependencies(
       targetData.inputs || targetDefaults?.inputs || (DEFAULT_INPUTS as any),
       namedInputs
     );
-  return { selfInputs, depsInputs, depsOutputs, projectInputs };
+  return { selfInputs, depsInputs, depsOutputs, projectInputs, depsFilesets };
 }
 
-function splitInputsIntoSelfAndDependencies(
+export function splitInputsIntoSelfAndDependencies(
   inputs: ReadonlyArray<InputDefinition | string>,
   namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> }
 ): {
@@ -305,30 +321,49 @@ function splitInputsIntoSelfAndDependencies(
   projectInputs: { input: string; projects: string[] }[];
   selfInputs: ExpandedSelfInput[];
   depsOutputs: ExpandedDepsOutput[];
+  depsFilesets: { fileset: string; dependencies: true }[];
 } {
   const depsInputs: { input: string; dependencies: true }[] = [];
   const projectInputs: { input: string; projects: string[] }[] = [];
+  const depsFilesets: { fileset: string; dependencies: true }[] = [];
   const selfInputs = [];
   for (const d of inputs) {
     if (typeof d === 'string') {
       if (d.startsWith('^')) {
-        depsInputs.push({ input: d.substring(1), dependencies: true });
+        const rest = d.substring(1);
+        if (
+          rest.startsWith('{projectRoot}') ||
+          rest.startsWith('{workspaceRoot}')
+        ) {
+          depsFilesets.push({ fileset: rest, dependencies: true });
+        } else {
+          depsInputs.push({ input: rest, dependencies: true });
+        }
       } else {
         selfInputs.push(d);
       }
     } else {
-      if (
-        ('dependencies' in d && d.dependencies) ||
-        // Todo(@AgentEnder): Remove check in v17
-        ('projects' in d &&
-          typeof d.projects === 'string' &&
-          d.projects === 'dependencies')
+      if ('fileset' in d && 'dependencies' in d && d.dependencies) {
+        depsFilesets.push({
+          fileset: (d as { fileset: string; dependencies: true }).fileset,
+          dependencies: true,
+        });
+      } else if (
+        'input' in d &&
+        !('fileset' in d) &&
+        (('dependencies' in d && d.dependencies) ||
+          // Todo(@AgentEnder): Remove check in v17
+          ('projects' in d &&
+            typeof d.projects === 'string' &&
+            d.projects === 'dependencies'))
       ) {
         depsInputs.push({
           input: d.input,
           dependencies: true,
         });
       } else if (
+        'input' in d &&
+        !('fileset' in d) &&
         'projects' in d &&
         d.projects &&
         // Todo(@AgentEnder): Remove check in v17
@@ -349,6 +384,7 @@ function splitInputsIntoSelfAndDependencies(
     projectInputs,
     selfInputs: expandedInputs.filter(isSelfInput),
     depsOutputs: expandedInputs.filter(isDepsOutput),
+    depsFilesets,
   };
 }
 

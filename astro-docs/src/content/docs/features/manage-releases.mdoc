@@ -6,7 +6,7 @@ sidebar:
 filter: 'type:Features'
 ---
 
-Once you have leveraged Nx's powerful code generation and task running capabilities to build your libraries and applications, you will want to share them with your users.
+Once you have leveraged Nx powerful code generation and task running capabilities to build your libraries and applications, you will want to share them with your users.
 
 {% linkcard title="Free Course: Versioning and Releasing NPM packages with Nx" href="https://www.epicweb.dev/tutorials/versioning-and-releasing-npm-packages-with-nx" /%}
 
@@ -26,7 +26,7 @@ A release can be thought about in three main phases:
 2. **Changelog** - The process of deriving a changelog from your commit messages or [version plan](/docs/guides/nx-release/file-based-versioning-version-plans) files, which can be used to communicate the changes to your users.
 3. **Publishing** - The process of publishing your projects to a registry, such as npm for TypeScript/JavaScript libraries, crates.io for Rust, or Docker registries for container images.
 
-## Running Releases
+## Running releases
 
 The `nx release` command is used to run the release process from end to end. It is a wrapper around the three main phases of a release to provide maximum convenience and ease of use.
 
@@ -42,7 +42,7 @@ nx release --first-release --dry-run
 By default, the version follows semantic versioning (semver) rules. To disable this behavior, set `release.releaseTag.requireSemver` to `false` in your `nx.json` file. This allows you to use custom versioning schemes.
 {% /aside %}
 
-## Set Up Your Workspace
+## Set up your workspace
 
 Follow our guides to set up Nx Release for your workspace.
 
@@ -56,7 +56,7 @@ Follow our guides to set up Nx Release for your workspace.
 
 {% /cardgrid %}
 
-## Basic Configuration
+## Basic configuration
 
 Configure Nx Release in your `nx.json` file:
 
@@ -73,7 +73,7 @@ The nx release command is customizable. You can customize the versioning, change
 
 See the [configuration reference](/docs/reference/nx-json#release) for all available options.
 
-## Using the Programmatic API for Nx Release
+## Using the programmatic API for Nx release
 
 A powerful feature of Nx Release is the fact that it is designed to be used via a Node.js programmatic API in addition to the `nx release` CLI.
 
@@ -81,9 +81,9 @@ Releases are a hugely complex and nuanced process, filled with many special case
 
 See our dedicated guide on the [programmatic API](/docs/guides/nx-release/programmatic-api) to learn more and see some example release scripts.
 
-## Learn More
+## Learn more
 
-### Configuration & Customization
+### Configuration & customization
 
 - **[Version Projects Independently](/docs/guides/nx-release/release-projects-independently)** - Version projects independently or together
 - **[Release Groups](/docs/guides/nx-release/release-groups)** - Organize projects into release groups with specific configuration for each group

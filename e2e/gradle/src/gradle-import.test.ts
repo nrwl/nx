@@ -19,7 +19,7 @@ import { createFileSync } from 'fs-extra';
 
 describe('Nx Import Gradle', () => {
   const tempImportE2ERoot = join(e2eCwd, 'nx-import');
-  beforeAll(() => {
+  beforeEach(() => {
     newProject({
       packages: ['@nx/js'],
     });
@@ -49,7 +49,7 @@ describe('Nx Import Gradle', () => {
     runCommand(`git commit -am "update"`);
   });
 
-  afterAll(() => cleanupProject());
+  afterEach(() => cleanupProject());
 
   it('should be able to import a kotlin gradle app', () => {
     const tempGradleProjectName = 'created-gradle-app-kotlin';

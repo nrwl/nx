@@ -1,7 +1,8 @@
 import {
   isEnterpriseCloudUrl,
   getBannerVariant,
-  shouldShowCloudPrompt,
+  getFlowVariant,
+  PromptMessages,
 } from './ab-testing';
 
 describe('ab-testing', () => {
@@ -49,6 +50,27 @@ describe('ab-testing', () => {
     });
   });
 
+  describe('getFlowVariant', () => {
+    const originalEnv = process.env;
+
+    beforeEach(() => {
+      jest.resetModules();
+      process.env = { ...originalEnv };
+    });
+
+    afterEach(() => {
+      process.env = originalEnv;
+    });
+
+    it('should return 0 for docs generation', () => {
+      process.env.NX_GENERATE_DOCS_PROCESS = 'true';
+      const { getFlowVariant: freshGetFlowVariant } = jest.requireActual(
+        './ab-testing'
+      ) as typeof import('./ab-testing');
+      expect(freshGetFlowVariant()).toBe('0');
+    });
+  });
+
   describe('getBannerVariant', () => {
     const originalEnv = process.env;
 
@@ -63,7 +85,6 @@ describe('ab-testing', () => {
 
     it('should return 0 for docs generation', () => {
       process.env.NX_GENERATE_DOCS_PROCESS = 'true';
-      // Re-import to get fresh module state
       const { getBannerVariant: freshGetBannerVariant } = jest.requireActual(
         './ab-testing'
       ) as typeof import('./ab-testing');
@@ -78,23 +99,12 @@ describe('ab-testing', () => {
       ).toBe('0');
     });
 
-    it('should respect NX_CNW_FLOW_VARIANT env variable', () => {
-      process.env.NX_CNW_FLOW_VARIANT = '2';
-      const { getBannerVariant: freshGetBannerVariant } = jest.requireActual(
-        './ab-testing'
-      ) as typeof import('./ab-testing');
-      expect(freshGetBannerVariant('https://cloud.nx.app/connect/abc')).toBe(
-        '2'
-      );
-    });
-
-    it('should return a valid variant (0, 1, or 2) for standard URLs', () => {
-      const variant = getBannerVariant('https://cloud.nx.app/connect/abc');
-      expect(['0', '1', '2']).toContain(variant);
+    it('should return 2 for standard URLs', () => {
+      expect(getBannerVariant('https://cloud.nx.app/connect/abc')).toBe('2');
     });
   });
 
-  describe('shouldShowCloudPrompt', () => {
+  describe('setupNxCloudV2 prompt variants', () => {
     const originalEnv = process.env;
 
     beforeEach(() => {
@@ -106,25 +116,28 @@ describe('ab-testing', () => {
       process.env = originalEnv;
     });
 
-    it('should return true for variant 0', () => {
-      process.env.NX_CNW_FLOW_VARIANT = '0';
-      const { shouldShowCloudPrompt: freshShouldShowCloudPrompt } =
-        jest.requireActual('./ab-testing') as typeof import('./ab-testing');
-      expect(freshShouldShowCloudPrompt()).toBe(true);
-    });
+    it.each([
+      { flowVariant: '0', expectedCode: 'connect-to-cloud' },
+      { flowVariant: '1', expectedCode: 'cloud-ab-remote-cache-speed' },
+      { flowVariant: '2', expectedCode: 'cloud-ab-fast-ci-setup' },
+    ])(
+      'should select $expectedCode for flow variant $flowVariant',
+      ({ flowVariant, expectedCode }) => {
+        jest.resetModules();
+        process.env.NX_CNW_FLOW_VARIANT = flowVariant;
+        const { PromptMessages: FreshPromptMessages } = require('./ab-testing');
+        const pm = new FreshPromptMessages();
+        expect(pm.getPrompt('setupNxCloudV2').code).toBe(expectedCode);
+      }
+    );
 
-    it('should return true for variant 1', () => {
-      process.env.NX_CNW_FLOW_VARIANT = '1';
-      const { shouldShowCloudPrompt: freshShouldShowCloudPrompt } =
-        jest.requireActual('./ab-testing') as typeof import('./ab-testing');
-      expect(freshShouldShowCloudPrompt()).toBe(true);
-    });
-
-    it('should return false for variant 2', () => {
-      process.env.NX_CNW_FLOW_VARIANT = '2';
-      const { shouldShowCloudPrompt: freshShouldShowCloudPrompt } =
-        jest.requireActual('./ab-testing') as typeof import('./ab-testing');
-      expect(freshShouldShowCloudPrompt()).toBe(false);
+    it('should select variant 0 for docs generation', () => {
+      process.env.NX_GENERATE_DOCS_PROCESS = 'true';
+      const { PromptMessages: FreshPromptMessages } = jest.requireActual(
+        './ab-testing'
+      ) as typeof import('./ab-testing');
+      const pm = new FreshPromptMessages();
+      expect(pm.getPrompt('setupNxCloudV2').code).toBe('connect-to-cloud');
     });
   });
 });

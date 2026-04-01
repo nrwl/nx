@@ -1,4 +1,4 @@
-import * as ora from 'ora';
+import ora from 'ora';
 
 import { execAndWait } from '../child-process-utils';
 import { CnwError } from '../error-utils';

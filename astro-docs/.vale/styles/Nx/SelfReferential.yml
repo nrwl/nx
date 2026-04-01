@@ -1,0 +1,26 @@
+extends: existence
+message: "Don't write about the document itself. Get right to the content. Remove '%s'."
+level: error
+ignorecase: true
+tokens:
+  - 'This page explains'
+  - 'This page describes'
+  - 'This page covers'
+  - 'This page shows'
+  - 'This document covers'
+  - 'This document explains'
+  - 'This document describes'
+  - 'In this guide'
+  - 'In this tutorial'
+  - 'In this section'
+  - 'This guide will'
+  - 'This tutorial will'
+  - 'This section will'
+  - "we'll walk through"
+  - 'we will walk through'
+  - "we'll explore"
+  - 'we will explore'
+  - "we'll cover"
+  - 'we will cover'
+  - "we'll look at"
+  - 'we will look at'

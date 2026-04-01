@@ -1,7 +1,10 @@
 import * as pc from 'picocolors';
 import { exec, execSync, type StdioOptions } from 'child_process';
 import { prompt } from 'enquirer';
+import { handleImport } from '../../utils/handle-import';
 import { dirname, join } from 'path';
+import { createRequire } from 'module';
+import { joinPathFragments } from '../../utils/path';
 import {
   clean,
   coerce,
@@ -37,6 +40,7 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '../../utils/fileutils';
+import { writeFormattedJsonFile } from '../../utils/write-formatted-json-file';
 import { logger } from '../../utils/logger';
 import { commitChanges } from '../../utils/git-utils';
 import {
@@ -895,20 +899,46 @@ function createInstalledPackageVersionsResolver(
   root: string
 ): MigratorOptions['getInstalledPackageVersion'] {
   const cache: Record<string, string> = {};
+  const nxRequires = getNxRequirePaths(root).map((path) =>
+    createRequire(join(path, 'package.json'))
+  );
 
   function getInstalledPackageVersion(
     packageName: string,
     overrides?: Record<string, string>
   ): string | null {
-    try {
-      if (overrides?.[packageName]) {
-        return overrides[packageName];
+    if (overrides?.[packageName]) {
+      return overrides[packageName];
+    }
+
+    if (packageName === 'nx') {
+      const nxVersion =
+        cache[packageName] ??
+        (() => {
+          for (const req of nxRequires) {
+            try {
+              const packageJsonPath = req.resolve('nx/package.json');
+              if (packageJsonPath.startsWith(workspaceRoot)) {
+                return readJsonFile<PackageJson>(packageJsonPath).version;
+              }
+            } catch {}
+          }
+
+          return getInstalledPackageVersion('@nrwl/workspace', overrides);
+        })();
+
+      if (nxVersion) {
+        cache[packageName] = nxVersion;
       }
 
+      return nxVersion;
+    }
+
+    try {
       if (!cache[packageName]) {
         const { packageJson, path } = readModulePackageJson(
           packageName,
-          getNxRequirePaths()
+          getNxRequirePaths(root)
         );
         // old workspaces would have the temp installation of nx in the cache,
         // so the resolved package is not the one we need
@@ -920,14 +950,6 @@ function createInstalledPackageVersionsResolver(
 
       return cache[packageName];
     } catch {
-      // Support migrating old workspaces without nx package
-      if (packageName === 'nx') {
-        cache[packageName] = getInstalledPackageVersion(
-          '@nrwl/workspace',
-          overrides
-        );
-        return cache[packageName];
-      }
       return null;
     }
   }
@@ -977,7 +999,10 @@ function createFetcher() {
         setCache(packageName, resolvedVersion);
         return getPackageMigrationsUsingRegistry(packageName, resolvedVersion);
       })
-      .catch(() => {
+      .catch((e) => {
+        logger.verbose(
+          `Failed to get migrations from registry for ${packageName}@${packageVersion}: ${e.message}. Falling back to install.`
+        );
         logger.info(`Fetching ${packageName}@${packageVersion}`);
 
         return getPackageMigrationsUsingInstall(packageName, packageVersion);
@@ -1114,7 +1139,7 @@ async function downloadPackageMigrationsFromRegistry(
 
     const migrations = await extractFileFromTarball(
       join(dir, tarballPath),
-      join('package', migrationsFilePath),
+      joinPathFragments('package', migrationsFilePath),
       join(dir, migrationsFilePath)
     ).then((path) => readJsonFile<MigrationsJson>(path));
 
@@ -1147,6 +1172,10 @@ async function getPackageMigrationsUsingInstall(
 
     await execAsync(`${pmc.add} ${packageName}@${packageVersion}`, {
       cwd: dir,
+      env: {
+        ...process.env,
+        npm_config_legacy_peer_deps: 'true',
+      },
     });
 
     const {
@@ -1162,11 +1191,9 @@ async function getPackageMigrationsUsingInstall(
 
     result = { ...migrations, packageGroup, version: packageJson.version };
   } catch (e) {
-    output.warn({
-      title: `Failed to fetch migrations for ${packageName}@${packageVersion}`,
-      bodyLines: [e.message],
-    });
-    return {};
+    throw new Error(
+      `Failed to fetch migrations for ${packageName}@${packageVersion}: ${e.message}`
+    );
   } finally {
     await cleanup();
   }
@@ -1419,6 +1446,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
     try {
       if (
+        opts.interactive !== false &&
         ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
         (await isMigratingToNewMajor(from, opts.targetVersion)) &&
         !isCI() &&
@@ -1484,26 +1512,6 @@ async function generateMigrationsJsonAndUpdatePackageJson(
   }
 }
 
-async function writeFormattedJsonFile(
-  filePath: string,
-  content: any,
-  options?: JsonWriteOptions
-): Promise<void> {
-  const formattedContent = await formatFilesWithPrettierIfAvailable(
-    [{ path: filePath, content: JSON.stringify(content) }],
-    workspaceRoot,
-    { silent: true }
-  );
-
-  if (formattedContent.has(filePath)) {
-    writeFileSync(filePath, formattedContent.get(filePath)!, {
-      encoding: 'utf-8',
-    });
-  } else {
-    writeJsonFile(filePath, content, options);
-  }
-}
-
 function addSplitConfigurationMigrationIfAvailable(
   from: string,
   packageJson: any
@@ -1558,7 +1566,7 @@ function runInstall(nxWorkspaceRoot?: string) {
   });
   execSync(installCommand, {
     stdio: [0, 1, 2],
-    windowsHide: false,
+    windowsHide: true,
     cwd: nxWorkspaceRoot ?? process.cwd(),
   });
 }
@@ -1631,6 +1639,7 @@ export async function executeMigrations(
 
 class ChangedDepInstaller {
   private initialDeps: string;
+
   constructor(private readonly root: string) {
     this.initialDeps = getStringifiedPackageJsonDeps(root);
   }
@@ -1688,13 +1697,14 @@ export async function runNxOrAngularMigration(
     logger.info('');
   } else {
     const ngCliAdapter = await getNgCompatLayer();
+    const migrationProjectGraph = await createProjectGraphAsync();
     const { madeChanges, loggingQueue } = await ngCliAdapter.runMigration(
       root,
       migration.package,
       migration.name,
-      readProjectsConfigurationFromProjectGraph(await createProjectGraphAsync())
-        .projects,
-      isVerbose
+      readProjectsConfigurationFromProjectGraph(migrationProjectGraph).projects,
+      isVerbose,
+      migrationProjectGraph
     );
 
     logger.info(`Ran ${migration.name} from ${migration.package}`);
@@ -1907,7 +1917,7 @@ export async function runMigration() {
       }
       execSync(`${p} _migrate ${process.argv.slice(3).join(' ')}`, {
         stdio: ['inherit', 'inherit', 'inherit'],
-        windowsHide: false,
+        windowsHide: true,
       });
     }
   } else {
@@ -1995,14 +2005,14 @@ export async function nxCliPath(nxWorkspaceRoot?: string) {
       execSync(pmc.preInstall, {
         cwd: tmpDir,
         stdio,
-        windowsHide: false,
+        windowsHide: true,
       });
       // if it's berry ensure we set the node_linker to node-modules
       if (packageManager === 'yarn' && pmc.ciInstall.includes('immutable')) {
         execSync('yarn config set nodeLinker node-modules', {
           cwd: tmpDir,
           stdio,
-          windowsHide: false,
+          windowsHide: true,
         });
       }
     }
@@ -2010,7 +2020,7 @@ export async function nxCliPath(nxWorkspaceRoot?: string) {
     execSync(`${pmc.install} ${pmc.ignoreScriptsFlag ?? ''}`, {
       cwd: tmpDir,
       stdio,
-      windowsHide: false,
+      windowsHide: true,
     });
 
     // Set NODE_PATH so that these modules can be used for module resolution
@@ -2053,7 +2063,10 @@ const getNgCompatLayer = (() => {
   let _ngCliAdapter: typeof import('../../adapter/ngcli-adapter');
   return async function getNgCompatLayer() {
     if (!_ngCliAdapter) {
-      _ngCliAdapter = await import('../../adapter/ngcli-adapter');
+      _ngCliAdapter = await handleImport(
+        '../../adapter/ngcli-adapter.js',
+        __dirname
+      );
       require('../../adapter/compat');
     }
     return _ngCliAdapter;

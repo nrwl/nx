@@ -3,13 +3,24 @@ title: Express Plugin for Nx
 description: Learn how to use the @nx/express plugin to create and manage Express applications in your Nx workspace, including setup and common guides.
 sidebar:
   label: Introduction
+weight: 5
 filter: 'type:References'
 ---
 
 [Express](https://expressjs.com/) is a mature, minimal, and an open source web framework for making web applications and
 apis.
 
-## Create a New Workspace
+## Requirements
+
+The `@nx/express` plugin supports the following package versions.
+
+| Package   | Supported Versions |
+| --------- | ------------------ |
+| `express` | ^4.21.2            |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+
+## Create a new workspace
 
 To create a new workspace with a pre-created Express app, run the following command:
 
@@ -17,7 +28,7 @@ To create a new workspace with a pre-created Express app, run the following comm
  npx create-nx-workspace --preset=express
 ```
 
-## Setting Up @nx/express
+## Setting up @nx/express
 
 ### Installation
 

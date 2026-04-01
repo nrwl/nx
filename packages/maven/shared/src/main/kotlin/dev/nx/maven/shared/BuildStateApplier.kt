@@ -159,7 +159,7 @@ object BuildStateApplier {
             val pomFile = File(absPath)
             if (pomFile.exists()) {
                 log.info("Applying modified pomFile: ${pomFile.absolutePath}")
-                project.file = pomFile
+                project.setPomFile(pomFile)
             } else {
                 log.warn("Modified pomFile does not exist, skipping: ${pomFile.absolutePath}")
             }

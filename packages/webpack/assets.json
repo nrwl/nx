@@ -1,0 +1,23 @@
+{
+  "outDir": "dist/packages/webpack",
+  "assets": [
+    {
+      "glob": "**/files/**"
+    },
+    {
+      "glob": "**/files/**/.gitkeep"
+    },
+    {
+      "glob": "**/*.json",
+      "ignore": ["tsconfig*.json", "project.json", ".eslintrc.json"]
+    },
+    {
+      "glob": "**/*.js",
+      "ignore": ["**/jest.config.js"]
+    },
+    {
+      "glob": "**/*.d.ts"
+    },
+    "LICENSE"
+  ]
+}

@@ -1,6 +1,21 @@
 import type { Tree } from '../../generators/tree';
-import type { PnpmWorkspaceYaml } from '../pnpm-workspace';
-import type { CatalogReference } from './types';
+import type { CatalogDefinitions, CatalogReference } from './types';
+
+export function formatCatalogError(
+  error: string,
+  suggestions: string[]
+): string {
+  let message = error;
+
+  if (suggestions.length > 0) {
+    message += '\n\nSuggestions:';
+    suggestions.forEach((suggestion) => {
+      message += `\n  • ${suggestion}`;
+    });
+  }
+
+  return message;
+}
 
 /**
  * Interface for catalog managers that handle package manager-specific catalog implementations.
@@ -17,8 +32,8 @@ export interface CatalogManager {
   /**
    * Get catalog definitions from the workspace.
    */
-  getCatalogDefinitions(workspaceRoot: string): PnpmWorkspaceYaml | null;
-  getCatalogDefinitions(tree: Tree): PnpmWorkspaceYaml | null;
+  getCatalogDefinitions(workspaceRoot: string): CatalogDefinitions | null;
+  getCatalogDefinitions(tree: Tree): CatalogDefinitions | null;
 
   /**
    * Resolve a catalog reference to an actual version.

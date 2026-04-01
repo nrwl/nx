@@ -71,6 +71,7 @@ class CachingMaven3Invoker(
         log.debug("CachingMaven3Invoker initialized")
     }
 
+    @Synchronized
     override fun invoke(
         args: List<String>,
         workingDir: File,

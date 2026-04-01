@@ -19,7 +19,7 @@ import {
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import nodeResolve from '@rollup/plugin-node-resolve';
-import * as autoprefixer from 'autoprefixer';
+import autoprefixer from 'autoprefixer';
 import { existsSync } from 'node:fs';
 import { dirname, join, parse } from 'node:path';
 import { PackageJson } from 'nx/src/utils/package-json';
@@ -220,7 +220,7 @@ export function withNx(
     if (isTsSolutionSetup) {
       if (options.generatePackageJson) {
         throw new Error(
-          `Setting 'generatePackageJson: true' is not supported with the current TypeScript setup. Update the 'package.json' file at the project root as needed and unset the 'generatePackageJson' option.`
+          `Setting 'generatePackageJson: true' is not supported with the current TypeScript setup. Update the 'package.json' file at the project root as needed and unset the 'generatePackageJson' option. See https://nx.dev/docs/technologies/node/guides/deploying-node-projects for the recommended pruned package.json workflow.`
         );
       }
       if (options.generateExportsField) {

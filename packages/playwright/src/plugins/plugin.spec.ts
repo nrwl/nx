@@ -72,6 +72,7 @@ describe('@nx/playwright/plugin', () => {
                     "inputs": [
                       "default",
                       "^production",
+                      "^{projectRoot}/tsconfig*.json",
                       {
                         "externalDependencies": [
                           "@playwright/test",
@@ -107,6 +108,7 @@ describe('@nx/playwright/plugin', () => {
                     "inputs": [
                       "default",
                       "^production",
+                      "^{projectRoot}/tsconfig*.json",
                       {
                         "externalDependencies": [
                           "@playwright/test",
@@ -139,6 +141,7 @@ describe('@nx/playwright/plugin', () => {
                     "inputs": [
                       "default",
                       "^production",
+                      "^{projectRoot}/tsconfig*.json",
                       {
                         "externalDependencies": [
                           "@playwright/test",
@@ -210,6 +213,7 @@ describe('@nx/playwright/plugin', () => {
                     "inputs": [
                       "default",
                       "^production",
+                      "^{projectRoot}/tsconfig*.json",
                       {
                         "externalDependencies": [
                           "@playwright/test",
@@ -247,6 +251,7 @@ describe('@nx/playwright/plugin', () => {
                     "inputs": [
                       "default",
                       "^production",
+                      "^{projectRoot}/tsconfig*.json",
                       {
                         "externalDependencies": [
                           "@playwright/test",
@@ -281,6 +286,7 @@ describe('@nx/playwright/plugin', () => {
                     "inputs": [
                       "default",
                       "^production",
+                      "^{projectRoot}/tsconfig*.json",
                       {
                         "externalDependencies": [
                           "@playwright/test",
@@ -372,6 +378,7 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          "^{projectRoot}/tsconfig*.json",
           {
             "externalDependencies": [
               "@playwright/test",
@@ -408,6 +415,7 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          "^{projectRoot}/tsconfig*.json",
           {
             "externalDependencies": [
               "@playwright/test",
@@ -451,6 +459,7 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          "^{projectRoot}/tsconfig*.json",
           {
             "externalDependencies": [
               "@playwright/test",
@@ -550,6 +559,7 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          "^{projectRoot}/tsconfig*.json",
           {
             "externalDependencies": [
               "@playwright/test",
@@ -587,6 +597,7 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          "^{projectRoot}/tsconfig*.json",
           {
             "externalDependencies": [
               "@playwright/test",
@@ -632,6 +643,7 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          "^{projectRoot}/tsconfig*.json",
           {
             "externalDependencies": [
               "@playwright/test",
@@ -677,6 +689,7 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          "^{projectRoot}/tsconfig*.json",
           {
             "externalDependencies": [
               "@playwright/test",
@@ -739,6 +752,7 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          "^{projectRoot}/tsconfig*.json",
           {
             "externalDependencies": [
               "@playwright/test",
@@ -788,6 +802,7 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          "^{projectRoot}/tsconfig*.json",
           {
             "externalDependencies": [
               "@playwright/test",
@@ -839,6 +854,7 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          "^{projectRoot}/tsconfig*.json",
           {
             "externalDependencies": [
               "@playwright/test",
@@ -883,6 +899,7 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          "^{projectRoot}/tsconfig*.json",
           {
             "externalDependencies": [
               "@playwright/test",
@@ -961,6 +978,7 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          "^{projectRoot}/tsconfig*.json",
           {
             "externalDependencies": [
               "@playwright/test",
@@ -1010,6 +1028,7 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          "^{projectRoot}/tsconfig*.json",
           {
             "externalDependencies": [
               "@playwright/test",
@@ -1068,6 +1087,7 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          "^{projectRoot}/tsconfig*.json",
           {
             "externalDependencies": [
               "@playwright/test",
@@ -1119,6 +1139,7 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          "^{projectRoot}/tsconfig*.json",
           {
             "externalDependencies": [
               "@playwright/test",

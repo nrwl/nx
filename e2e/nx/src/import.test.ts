@@ -11,9 +11,10 @@ import {
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
-import { writeFileSync, mkdirSync, rmdirSync } from 'fs';
+import { mkdirSync, rmdirSync } from 'fs';
 import { execSync } from 'node:child_process';
 import { join } from 'path';
+import { createMultiPackageRepo } from './import-utils';
 
 describe('Nx Import', () => {
   let proj: string;
@@ -102,42 +103,7 @@ describe('Nx Import', () => {
   });
 
   it('should be able to import two directories from same repo', () => {
-    // Setup repo with two packages: a and b
-    const repoPath = join(tempImportE2ERoot, 'repo');
-    mkdirSync(repoPath, { recursive: true });
-    writeFileSync(join(repoPath, 'README.md'), `# Repo`);
-    execSync(`git init`, {
-      cwd: repoPath,
-    });
-    execSync(`git add .`, {
-      cwd: repoPath,
-    });
-    execSync(`git commit -am "initial commit"`, {
-      cwd: repoPath,
-    });
-    try {
-      execSync(`git checkout -b main`, {
-        cwd: repoPath,
-      });
-    } catch {
-      // This fails if git is already configured to have `main` branch, but that's OK
-    }
-    mkdirSync(join(repoPath, 'packages/a'), { recursive: true });
-    writeFileSync(join(repoPath, 'packages/a/README.md'), `# A`);
-    execSync(`git add .`, {
-      cwd: repoPath,
-    });
-    execSync(`git commit -m "add package a"`, {
-      cwd: repoPath,
-    });
-    mkdirSync(join(repoPath, 'packages/b'), { recursive: true });
-    writeFileSync(join(repoPath, 'packages/b/README.md'), `# B`);
-    execSync(`git add .`, {
-      cwd: repoPath,
-    });
-    execSync(`git commit -m "add package b"`, {
-      cwd: repoPath,
-    });
+    const repoPath = createMultiPackageRepo(tempImportE2ERoot);
 
     runCLI(
       `import ${repoPath} packages/a --ref main --source packages/a --no-interactive`,

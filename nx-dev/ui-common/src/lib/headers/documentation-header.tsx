@@ -27,7 +27,7 @@ import { resourceMenuItems } from './menu-items';
 import { SectionsMenu } from './sections-menu';
 import { DiscordIcon } from '../discord-icon';
 import { VersionPicker } from '../version-picker';
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 
 function Menu({ tabs }: { tabs: any[] }): ReactElement {
   return (
@@ -258,7 +258,7 @@ export function DocumentationHeader({
             className="ml-2 hidden items-center px-4 text-zinc-900 lg:flex lg:px-0 dark:text-white"
             prefetch={false}
             onClick={() =>
-              sendCustomEvent(
+              sendCustomEventViaGtm(
                 'documentation-click',
                 'header-navigation',
                 'documentation-header'
@@ -367,7 +367,7 @@ export function DocumentationHeader({
               variant="secondary"
               size="small"
               onClick={() =>
-                sendCustomEvent(
+                sendCustomEventViaGtm(
                   'contact-click',
                   'header-cta',
                   'documentation-header'
@@ -382,7 +382,7 @@ export function DocumentationHeader({
               variant="contrast"
               size="small"
               onClick={() =>
-                sendCustomEvent(
+                sendCustomEventViaGtm(
                   'login-click',
                   'header-cta',
                   'documentation-header'

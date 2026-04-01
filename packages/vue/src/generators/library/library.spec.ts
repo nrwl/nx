@@ -586,7 +586,7 @@ module.exports = [
                   "{options.reportsDirectory}"
                 ],
                 "options": {
-                  "reportsDirectory": "../coverage/my-lib"
+                  "reportsDirectory": "coverage/my-lib"
                 }
               }
             }

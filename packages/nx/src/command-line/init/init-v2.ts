@@ -15,7 +15,6 @@ import { configurePlugins, installPluginPackages } from './configure-plugins';
 import { determineAiAgents } from './ai-agent-prompts';
 import { setupAiAgentsGenerator } from '../../ai/set-up-ai-agents/set-up-ai-agents';
 import { FsTree, flushChanges } from '../../generators/tree';
-import { Agent } from '../../ai/utils';
 import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
 import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
 import { addNxToTurborepo } from './implementation/add-nx-to-turborepo';
@@ -24,14 +23,29 @@ import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts';
 import {
   createNxJsonFile,
   initCloud,
-  isCRA,
   isMonorepo,
   printFinalMessage,
   updateGitIgnore,
 } from './implementation/utils';
-import { addNxToCraRepo } from './implementation/react';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { installPackageToTmp } from '../../devkit-internals';
+import { handleImport } from '../../utils/handle-import';
+import { isAiAgent } from '../../native';
+import { Agent } from '../../ai/utils';
+import { detectAiAgent } from '../../ai/detect-ai-agent';
+import { recordStat } from '../../utils/ab-testing';
+import { isCI } from '../../utils/is-ci';
+import { detectPackageManager } from '../../utils/package-manager';
+import {
+  logProgress,
+  writeAiOutput,
+  buildNeedsInputResult,
+  buildSuccessResult,
+  buildErrorResult,
+  writeErrorLog,
+  determineErrorCode,
+  DetectedPlugin,
+} from './utils/ai-output';
 
 export interface InitArgs {
   interactive: boolean;
@@ -39,8 +53,9 @@ export interface InitArgs {
   useDotNxInstallation?: boolean;
   integrated?: boolean; // For Angular projects only
   verbose?: boolean;
-  force?: boolean;
   aiAgents?: Agent[];
+  plugins?: string; // 'skip' | 'all' | comma-separated list
+  cacheable?: string[]; // Cacheable operations (e.g., ['build', 'test', 'lint'])
 }
 
 export async function initHandler(
@@ -62,7 +77,7 @@ export async function initHandler(
       paths: [packageInstallResults.tempDir],
     });
 
-    const module = await import(modulePath);
+    const module = await handleImport(modulePath);
     const result = await module.initHandler(options, true);
     cleanup();
     return result;
@@ -81,6 +96,38 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
     process.env.NX_VERSION ?? (prerelease(nxVersion) ? nxVersion : 'latest');
   if (process.env.NX_VERSION) {
     output.log({ title: `Using version ${process.env.NX_VERSION}` });
+  }
+
+  // AI agent mode: apply defaults for non-interactive operation
+  const aiMode = isAiAgent();
+  if (aiMode) {
+    options.interactive = false; // Force non-interactive
+
+    if (options.nxCloud === undefined) {
+      options.nxCloud = false; // Default to skip Nx Cloud
+    }
+
+    // Auto-detect .nx installation for non-JS projects
+    if (options.useDotNxInstallation === undefined) {
+      const hasPackageJson = existsSync('package.json');
+      options.useDotNxInstallation = !hasPackageJson;
+    }
+
+    // Auto-detect and set the current AI agent for setup
+    if (options.aiAgents === undefined) {
+      const detectedAgent = detectAiAgent();
+      if (detectedAgent) {
+        options.aiAgents = [detectedAgent];
+      }
+    }
+
+    // Set default cacheable operations for AI mode
+    // These are commonly cacheable scripts that benefit from caching
+    if (options.cacheable === undefined) {
+      options.cacheable = ['build', 'test', 'lint'];
+    }
+
+    logProgress('starting', 'Initializing Nx...');
   }
 
   // TODO(jack): Remove this Angular logic once `@nx/angular` is compatible with inferred targets.
@@ -102,10 +149,10 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
     : readJsonFile('package.json');
   const _isTurborepo = existsSync('turbo.json');
   const _isMonorepo = _isNonJs ? false : isMonorepo(packageJson);
-  const _isCRA = _isNonJs ? false : isCRA(packageJson);
 
-  let guided = true;
-  if (options.interactive && !(_isTurborepo || _isCRA || _isNonJs)) {
+  // AI mode defaults to minimum setup, humans can choose
+  let guided = !aiMode; // Default to minimum (false) for AI, guided (true) for humans
+  if (options.interactive && !(_isTurborepo || _isNonJs)) {
     const setupType = await prompt<{ setupPreference: string }>([
       {
         type: 'select',
@@ -124,6 +171,9 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
    * inputs and outputs.
    */
   if (_isTurborepo) {
+    if (aiMode) {
+      logProgress('detecting', 'Detected Turborepo project');
+    }
     await addNxToTurborepo({
       interactive: options.interactive,
     });
@@ -135,31 +185,33 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
 
   const pmc = getPackageManagerCommand();
 
-  if (_isCRA) {
-    await addNxToCraRepo({
-      addE2e: false,
-      force: options.force,
-      vite: true,
-      integrated: false,
-      interactive: options.interactive,
-      nxCloud: false,
-    });
-  } else if (_isMonorepo) {
+  if (_isMonorepo) {
+    if (aiMode) {
+      logProgress('detecting', 'Detected monorepo project');
+    }
     await addNxToMonorepo(
       {
         interactive: options.interactive,
         nxCloud: false,
+        cacheable: options.cacheable,
       },
       guided
     );
   } else if (_isNonJs) {
+    if (aiMode) {
+      logProgress('detecting', 'Detected non-JavaScript project');
+    }
     generateDotNxSetup(version);
     console.log('');
   } else {
+    if (aiMode) {
+      logProgress('detecting', 'Detected NPM project');
+    }
     await addNxToNpmRepo(
       {
         interactive: options.interactive,
         nxCloud: false,
+        cacheable: options.cacheable,
       },
       guided
     );
@@ -167,37 +219,101 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
 
   const repoRoot = process.cwd();
 
-  createNxJsonFile(repoRoot, [], [], {});
+  if (aiMode) {
+    logProgress('configuring', 'Creating nx.json...');
+  }
+  createNxJsonFile(repoRoot, [], options.cacheable ?? [], {});
   updateGitIgnore(repoRoot);
 
   const nxJson = readNxJson(repoRoot);
 
-  if (guided) {
-    output.log({ title: '🧐 Checking dependencies' });
+  // Handle plugins based on mode and flags
+  let pluginsToInstall: string[] = [];
+  let updatePackageScripts = false;
 
-    let plugins: string[];
-    let updatePackageScripts: boolean;
+  if (aiMode) {
+    // AI mode: handle --plugins flag
+    const parsedPlugins = parsePluginsFlag(options.plugins);
 
-    if (_isCRA) {
-      plugins = ['@nx/vite'];
-      updatePackageScripts = true;
+    if (parsedPlugins === 'skip') {
+      // Skip plugins entirely
+      logProgress('detecting', 'Skipping plugin installation');
+      pluginsToInstall = [];
     } else {
-      const { plugins: _plugins, updatePackageScripts: _updatePackageScripts } =
-        await detectPlugins(nxJson, packageJson, options.interactive);
-      plugins = _plugins;
-      updatePackageScripts = _updatePackageScripts;
+      // Need to detect plugins for 'all' or to return needs_input
+      logProgress('detecting', 'Checking for recommended plugins...');
+
+      const { plugins: detectedPluginNames } = await detectPlugins(
+        nxJson,
+        packageJson,
+        false // non-interactive
+      );
+
+      if (parsedPlugins === 'all') {
+        // Install all detected plugins
+        pluginsToInstall = detectedPluginNames;
+        updatePackageScripts = true;
+      } else if (Array.isArray(parsedPlugins)) {
+        // Install specific plugins from the comma-separated list
+        pluginsToInstall = parsedPlugins;
+        updatePackageScripts = true;
+      } else if (detectedPluginNames.length > 0) {
+        // No --plugins flag provided and plugins were detected
+        // Return needs_input for AI to ask user
+        const detectedPlugins: DetectedPlugin[] = detectedPluginNames.map(
+          (name) => ({
+            name,
+            reason: getPluginReason(name),
+          })
+        );
+
+        logProgress(
+          'detecting',
+          `Detected ${detectedPluginNames.length} plugin(s): ${detectedPluginNames.join(', ')}`
+        );
+        writeAiOutput(buildNeedsInputResult(detectedPlugins));
+        process.exit(0);
+      }
+      // else: no plugins flag and no plugins detected, proceed with empty array
     }
 
-    output.log({ title: '📦 Installing Nx' });
+    if (pluginsToInstall.length > 0) {
+      logProgress('installing', 'Installing Nx packages...');
 
-    installPluginPackages(repoRoot, pmc, plugins);
-    await configurePlugins(
-      plugins,
-      updatePackageScripts,
-      pmc,
-      repoRoot,
-      options.verbose
-    );
+      for (const plugin of pluginsToInstall) {
+        logProgress('plugins', `Installing ${plugin}...`);
+      }
+
+      installPluginPackages(repoRoot, pmc, pluginsToInstall);
+      await configurePlugins(
+        pluginsToInstall,
+        updatePackageScripts,
+        pmc,
+        repoRoot,
+        options.verbose
+      );
+    }
+  } else if (guided) {
+    // Non-AI guided mode: existing behavior with interactive prompts
+    output.log({ title: '🧐 Checking dependencies' });
+
+    const { plugins: _plugins, updatePackageScripts: _updatePackageScripts } =
+      await detectPlugins(nxJson, packageJson, options.interactive);
+    pluginsToInstall = _plugins;
+    updatePackageScripts = _updatePackageScripts;
+
+    if (pluginsToInstall.length > 0) {
+      output.log({ title: '📦 Installing Nx' });
+
+      installPluginPackages(repoRoot, pmc, pluginsToInstall);
+      await configurePlugins(
+        pluginsToInstall,
+        updatePackageScripts,
+        pmc,
+        repoRoot,
+        options.verbose
+      );
+    }
   }
 
   const selectedAgents = await determineAiAgents(
@@ -235,15 +351,98 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
     await initCloud('nx-init');
   }
 
-  printFinalMessage({
-    learnMoreLink: 'https://nx.dev/getting-started/adding-to-existing',
-    appendLines: _isMonorepo
-      ? [
-          `- Read a detailed guide about adding Nx to NPM/YARN/PNPM workspaces: https://nx.dev/recipes/adopting-nx/adding-to-monorepos`,
-          `- Learn how Nx helps manage your TypeScript monorepo: https://nx.dev/features/maintain-ts-monorepos`,
-        ]
-      : [],
+  await recordStat({
+    command: 'init',
+    nxVersion: version,
+    useCloud: !!useNxCloud,
+    meta: {
+      type: 'complete',
+      nodeVersion: process.versions.node,
+      os: process.platform,
+      packageManager: detectPackageManager(),
+      aiAgent: aiMode,
+      isCI: isCI(),
+      pluginsInstalled: pluginsToInstall.join(','),
+    },
   });
+
+  // Output success result for AI agents
+  if (aiMode) {
+    writeAiOutput(
+      buildSuccessResult({
+        nxVersion: version,
+        pluginsInstalled: pluginsToInstall,
+      })
+    );
+  }
+
+  // Skip human-readable output for AI agents
+  if (!aiMode) {
+    printFinalMessage({
+      learnMoreLink: 'https://nx.dev/getting-started/adding-to-existing',
+      appendLines: _isMonorepo
+        ? [
+            `- Read a detailed guide about adding Nx to NPM/YARN/PNPM workspaces: https://nx.dev/recipes/adopting-nx/adding-to-monorepos`,
+            `- Learn how Nx helps manage your TypeScript monorepo: https://nx.dev/features/maintain-ts-monorepos`,
+          ]
+        : [],
+    });
+  }
+}
+
+/**
+ * Generate a reason for why a plugin was detected.
+ * Used for AI `needs_input` output.
+ */
+export function getPluginReason(plugin: string): string {
+  const reasonMap: Record<string, string> = {
+    '@nx/eslint': 'eslint detected in dependencies',
+    '@nx/storybook': 'storybook detected in dependencies',
+    '@nx/vite': 'vite detected in dependencies',
+    '@nx/vitest': 'vitest detected in dependencies',
+    '@nx/webpack': 'webpack detected in dependencies',
+    '@nx/rspack': '@rspack/core detected in dependencies',
+    '@nx/rollup': 'rollup detected in dependencies',
+    '@nx/jest': 'jest detected in dependencies',
+    '@nx/cypress': 'cypress detected in dependencies',
+    '@nx/playwright': '@playwright/test detected in dependencies',
+    '@nx/detox': 'detox detected in dependencies',
+    '@nx/expo': 'expo detected in dependencies',
+    '@nx/next': 'next.js detected in dependencies',
+    '@nx/nuxt': 'nuxt detected in dependencies',
+    '@nx/react-native': 'react-native detected in dependencies',
+    '@nx/remix': '@remix-run/dev detected in dependencies',
+    '@nx/rsbuild': '@rsbuild/core detected in dependencies',
+    '@nx/react': '@react-router/dev detected in dependencies',
+    '@nx/gradle': 'gradlew detected in workspace',
+    '@nx/dotnet': '.NET project files detected',
+    '@nx/maven': 'maven project files detected',
+    '@nx/docker': 'Dockerfile detected in workspace',
+  };
+  return reasonMap[plugin] || `${plugin} detected`;
+}
+
+/**
+ * Parse the --plugins flag value.
+ * Returns: 'skip' | 'all' | string[] (specific plugins)
+ */
+function parsePluginsFlag(
+  value: string | undefined
+): 'skip' | 'all' | string[] | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (value === 'skip') {
+    return 'skip';
+  }
+  if (value === 'all') {
+    return 'all';
+  }
+  // Comma-separated list - filter out empty strings from edge cases like "--plugins=" or "--plugins=,"
+  return value
+    .split(',')
+    .map((p) => p.trim())
+    .filter(Boolean);
 }
 
 const npmPackageToPluginMap: Record<string, `@nx/${string}`> = {

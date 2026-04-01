@@ -17,7 +17,7 @@ Depending on your current situation, you can either
 
 Let's walk through both scenarios.
 
-### Starting a New Project
+### Starting a new project
 
 For new workspaces you can create a Nx workspace with serverless function with one command:
 
@@ -25,7 +25,7 @@ For new workspaces you can create a Nx workspace with serverless function with o
 npx create-nx-workspace@latest my-functions --preset=@nx/netlify --site=my-site
 ```
 
-### Configure Existing Projects
+### Configure existing projects
 
 You will need to install `@nx/netlify` if you haven't already.
 
@@ -45,7 +45,7 @@ This will do a few things:
 2. Add the `netlify.toml` in the root of the project
 3. Update your `project.json` to have 2 new targets `serve-functions` & `deploy-functions`.
 
-## Serve Your Functions Locally
+## Serve your functions locally
 
 To serve your functions locally, run:
 
@@ -53,7 +53,7 @@ To serve your functions locally, run:
 nx serve-functions
 ```
 
-## Configure Your Netlify Deploy Settings
+## Configure your Netlify deploy settings
 
 Make sure you have a site configured on Netlify (skip if you have already). You have mostly two options:
 

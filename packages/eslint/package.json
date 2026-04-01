@@ -17,7 +17,8 @@
     "Testing"
   ],
   "main": "./index.js",
-  "typings": "./index.d.ts",
+  "type": "commonjs",
+  "types": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -32,7 +33,7 @@
   "executors": "./executors.json",
   "peerDependencies": {
     "@zkochan/js-yaml": "0.0.7",
-    "eslint": "^8.0.0 || ^9.0.0"
+    "eslint": "^8.0.0 || ^9.0.0 || ^10.0.0"
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",

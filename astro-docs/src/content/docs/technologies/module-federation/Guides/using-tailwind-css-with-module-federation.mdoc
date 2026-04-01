@@ -6,7 +6,7 @@ filter: 'type:Guides'
 
 When using [Tailwind CSS](https://tailwindcss.com/) with Module Federation, you may encounter an issue where Tailwind classes used in your remote applications don't render correctly. This guide explains why this happens and how to configure your workspace to resolve it.
 
-## Understanding the Problem
+## Understanding the problem
 
 Tailwind CSS uses a content scanning mechanism to determine which CSS classes to include in your final stylesheet. During the build process, Tailwind scans the files specified in your configuration and only generates CSS for the classes it finds. This is how Tailwind keeps your CSS bundle small by eliminating unused styles.
 
@@ -16,7 +16,7 @@ In a Module Federation architecture, the host and remote applications are built 
 This is not a bug in Nx or Module Federation. It's a fundamental aspect of how Tailwind's content scanning works combined with Module Federation's independent build model.
 {% /aside %}
 
-## Configuring the Host Application
+## Configuring the host application
 
 The solution is to configure your host application's Tailwind setup to include the source files from your remote applications. This ensures all Tailwind classes used across your federated application are compiled into the host's stylesheet.
 
@@ -112,7 +112,7 @@ module.exports = {
 
 Adjust the paths based on your workspace structure. If your remotes are in different directories, update the glob patterns accordingly.
 
-## Shared Theme Extensions
+## Shared theme extensions
 
 If your remote applications use custom Tailwind theme extensions (such as custom colors, fonts, or spacing values), you need to ensure these are also defined in the host's Tailwind configuration. Otherwise, classes like `bg-brand-primary` or `text-custom-lg` won't generate any CSS.
 
@@ -148,7 +148,7 @@ module.exports = {
 };
 ```
 
-## Further Reading
+## Further reading
 
 - [Using Tailwind CSS with Angular](/docs/technologies/angular/guides/using-tailwind-css-with-angular-projects)
 - [Using Tailwind CSS with React](/docs/technologies/react/guides/using-tailwind-css-in-react)

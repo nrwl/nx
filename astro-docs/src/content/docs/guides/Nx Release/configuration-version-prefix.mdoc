@@ -6,7 +6,7 @@ filter: 'type:Guides'
 
 This guide explains how to configure a custom version prefix in Nx Release using the `versionPrefix` option. The version prefix allows you to automatically add a specific prefix format to dependencies, providing control over how dependency versions are specified in your project's manifest files (such as `package.json`, `Cargo.toml`, etc.).
 
-## The `versionPrefix` Option
+## The `versionPrefix` option
 
 The `versionPrefix` option controls which prefix is applied to dependency versions during the versioning process. By default, `versionPrefix` is set to `"auto"`, which selects a prefix format (either `""`, `"~"`, `"^"`, or `"="`) by respecting what is already in the manifest file.
 
@@ -40,7 +40,7 @@ Then next patch bump will be:
 
 Preserving the prefix for `dependency-one` and `dependency-two` and continuing to use no prefix for `dependency-three`.
 
-### Available Prefix Options
+### Available prefix options
 
 You can set `versionPrefix` to one of the following values:
 
@@ -63,7 +63,7 @@ Example configuration:
 }
 ```
 
-## Configuring Version Prefix in `nx.json` or `project.json`
+## Configuring version prefix in `nx.json` or `project.json`
 
 To set the versionPrefix option globally or for a specific project, add it to either your `nx.json` or `project.json` configuration files:
 

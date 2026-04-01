@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-import Script from 'next/script';
-import AppRouterAnalytics from './app-router-analytics';
 import GlobalScripts from './global-scripts';
 import { GlobalSearchHandler, WebinarNotifier } from '@nx/nx-dev-ui-common';
 import bannerCollection from '../lib/banner.json';
@@ -85,22 +83,9 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  const gaMeasurementId = 'UA-88380372-10';
   const gtmMeasurementId = 'GTM-KW8423B6';
   return (
     <html lang="en" className="h-full scroll-smooth" suppressHydrationWarning>
-      {process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE !== 'true' &&
-      process.env.NEXT_PUBLIC_COOKIEBOT_ID ? (
-        <Script
-          id="Cookiebot"
-          src="https://consent.cookiebot.com/uc.js"
-          data-cbid={process.env.NEXT_PUBLIC_COOKIEBOT_ID}
-          data-blockingmode="auto"
-          type="text/javascript"
-          strategy="beforeInteractive"
-        />
-      ) : null}
-      <AppRouterAnalytics gaMeasurementId={gaMeasurementId} />
       <head>
         <meta
           name="msapplication-TileColor"
@@ -158,10 +143,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           );
         })}
         <FrontendObservability />
-        <GlobalScripts
-          gaMeasurementId={gaMeasurementId}
-          gtmMeasurementId={gtmMeasurementId}
-        />
+        <GlobalScripts gtmMeasurementId={gtmMeasurementId} />
       </body>
     </html>
   );

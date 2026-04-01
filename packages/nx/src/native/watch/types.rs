@@ -10,7 +10,7 @@ use watchexec_events::{Event, Tag};
 use crate::native::watch::utils::transform_event;
 
 #[napi(string_enum)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum EventType {
     #[allow(non_camel_case_types)]
     delete,

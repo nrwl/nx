@@ -13,7 +13,7 @@ When using [TypeScript project references](/docs/concepts/typescript-project-lin
 - A workspace using [TypeScript project references with package manager workspaces](/docs/technologies/typescript/guides/switch-to-workspaces-project-references)
 - Vitest configured for testing your projects
 
-## How It Works
+## How it works
 
 The solution uses **custom export conditions** to tell both TypeScript and Vitest to resolve imports to source `.ts` files instead of built `.js` files. This requires three pieces working together:
 
@@ -23,7 +23,7 @@ The solution uses **custom export conditions** to tell both TypeScript and Vites
 
 The good news is that **Nx already configures the first two pieces for you** in new workspaces created with workspaces enabled.
 
-## What Nx Configures For You
+## What Nx configures for you
 
 When you create a new Nx workspace with workspaces enabled (the default), Nx automatically sets up:
 
@@ -84,7 +84,7 @@ This tells Vite (which powers Vitest) to prefer the `@myorg/source` export condi
 If you also use Vite to **build** your project, keep the `resolve.conditions` configuration in a separate `vitest.config.mts` file rather than in `vite.config.mts`. Vitest automatically merges configuration from both files, so you only need to add the test-specific settings (like `resolve.conditions` and `test` options) to your `vitest.config.mts`. This ensures that your production build still resolves to built artifacts while tests resolve to source files.
 {% /aside %}
 
-## For Migrated Workspaces
+## For migrated workspaces
 
 If you migrated from an older Nx setup or TypeScript path aliases, you may need to manually add the configuration that Nx now generates automatically.
 
@@ -156,7 +156,7 @@ The order matters: export conditions are evaluated from top to bottom. When `@my
 
 Follow the [Configure Vitest](#configure-vitest) section above to add `resolve.conditions` to your Vitest config.
 
-## Removing dependsOn from Test Targets
+## Removing dependsOn from test targets
 
 If your test targets previously included `dependsOn: ["^build"]` to ensure dependencies were built before testing, you can now remove this:
 
@@ -200,17 +200,17 @@ If your test targets previously included `dependsOn: ["^build"]` to ensure depen
 
 This can significantly speed up your test runs, especially when you're iterating on changes across multiple libraries.
 
-## Important Considerations
+## Important considerations
 
 - **IDE support**: TypeScript's `customConditions` setting ensures your IDE correctly resolves types to source files, giving you accurate IntelliSense and error checking
 - **Live changes**: Tests now run against source files directly, so any changes you make are immediately reflected without rebuilding
 - **Production builds**: Keep `resolve.conditions` out of your production Vite build config to ensure builds use the compiled artifacts
 
-## Example Repository
+## Example repository
 
 For a complete working example of this pattern, see the [vitest-test-without-build-example](https://github.com/Coly010/vitest-test-without-build-example) repository.
 
-## Related Documentation
+## Related documentation
 
 - [TypeScript Project Linking](/docs/concepts/typescript-project-linking)
 - [Switch to Workspaces and Project References](/docs/technologies/typescript/guides/switch-to-workspaces-project-references)

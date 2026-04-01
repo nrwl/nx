@@ -1,0 +1,100 @@
+{
+  "results": [
+    [
+      [
+        "@acme/gradle",
+        "apps/my-app/build.gradle",
+        {
+          "projects": {
+            "apps/my-app": {
+              "name": ":apps:my-app",
+              "targets": {
+                "gradle-test": {
+                  "cache": true,
+                  "dependsOn": [
+                    ":apps:my-app:compileTestJava",
+                    ":apps:my-app:testClasses",
+                    ":apps:my-app:classes",
+                    ":apps:my-app:compileJava",
+                    ":libs:java:lib-a:jar",
+                    ":libs:java:lib-b:jar"
+                  ],
+                  "executor": "@acme/gradle:gradle",
+                  "options": {
+                    "taskName": ":apps:my-app:test"
+                  }
+                }
+              }
+            },
+            "libs/java/lib-a": {
+              "name": ":libs:java:lib-a",
+              "targets": {
+                "jar": {
+                  "cache": true,
+                  "executor": "@acme/gradle:gradle",
+                  "options": {
+                    "taskName": ":libs:java:lib-a:jar"
+                  }
+                }
+              }
+            },
+            "libs/java/lib-b": {
+              "name": ":libs:java:lib-b",
+              "targets": {
+                "jar": {
+                  "cache": true,
+                  "executor": "@acme/gradle:gradle",
+                  "options": {
+                    "taskName": ":libs:java:lib-b:jar"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    ],
+    [
+      [
+        "nx/core/project-json",
+        "apps/my-app/project.json",
+        {
+          "projects": {
+            "apps/my-app": {
+              "name": "my-app",
+              "root": "apps/my-app",
+              "projectType": "application"
+            }
+          }
+        }
+      ],
+      [
+        "nx/core/project-json",
+        "libs/java/lib-a/project.json",
+        {
+          "projects": {
+            "libs/java/lib-a": {
+              "name": "lib-a",
+              "root": "libs/java/lib-a"
+            }
+          }
+        }
+      ],
+      [
+        "nx/core/project-json",
+        "libs/java/lib-b/project.json",
+        {
+          "projects": {
+            "libs/java/lib-b": {
+              "name": "lib-b",
+              "root": "libs/java/lib-b"
+            }
+          }
+        }
+      ]
+    ]
+  ],
+  "nxJsonConfiguration": {},
+  "workspaceRoot": "/tmp/test-workspace",
+  "errors": []
+}

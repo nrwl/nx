@@ -151,7 +151,14 @@ export async function getStaticProps(): Promise<{ props: ChangeLogProps }> {
   const groupedReleases = Object.values(releasesByMinorVersion);
 
   // fetch potential manually written changelog content
-  const changelogContent = changeLogApi.getChangelogEntries();
+  let changelogContent: ReturnType<typeof changeLogApi.getChangelogEntries> =
+    [];
+  try {
+    changelogContent = changeLogApi.getChangelogEntries();
+  } catch {
+    // changelog directory may not exist in serverless function bundle
+    console.warn('Could not read changelog entries from filesystem');
+  }
 
   for (const entry of groupedReleases) {
     const hasEntry = changelogContent.find((c) => c.version === entry.version);

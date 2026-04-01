@@ -14,7 +14,7 @@ Technically, even if you have no nx release configuration at all, you are always
 When you use the `"projects"` property in the `"release"` config at the top level, you are really adjusting the projects that are present in that `__default__` group.
 {% /aside %}
 
-## Understanding Release Groups
+## Understanding release groups
 
 Release groups provide a way to organize your projects based on their release requirements. Each group can have its own:
 
@@ -24,7 +24,7 @@ Release groups provide a way to organize your projects based on their release re
 - **Release tag** - Various options related to the git tags that influence the release process
 - **Docker configuration** - Specific Docker versioning schemes
 
-## Creating Release Groups
+## Creating release groups
 
 To create release groups, define them in your `nx.json` file under the `release.groups` property:
 
@@ -46,7 +46,7 @@ To create release groups, define them in your `nx.json` file under the `release.
 }
 ```
 
-### Project Selection
+### Project selection
 
 You can specify projects for a group using project matchers that you may already be familiar with from `nx run-many` command filters:
 
@@ -59,7 +59,7 @@ You can specify projects for a group using project matchers that you may already
 Each project can only belong to one release group. If you try to assign a project to multiple groups, Nx will throw an error during configuration validation.
 {% /aside %}
 
-## Projects Relationship
+## Projects relationship
 
 The `projectsRelationship` property determines how projects within a group are released:
 
@@ -111,11 +111,11 @@ When `projectsRelationship` is set to `"independent"`:
 }
 ```
 
-## Group-Specific Configuration
+## Group-specific configuration
 
 Each release group can override the root `"release"` configuration with its own settings:
 
-### Version Configuration
+### Version configuration
 
 Customize versioning behavior per group:
 
@@ -143,7 +143,7 @@ Customize versioning behavior per group:
 }
 ```
 
-### Changelog Configuration
+### Changelog configuration
 
 Configure changelog generation per group:
 
@@ -171,7 +171,7 @@ Configure changelog generation per group:
 }
 ```
 
-### Release Tag Patterns
+### Release tag patterns
 
 Customize how relevant git tags should be discovered and created for each group independently:
 
@@ -197,7 +197,7 @@ Customize how relevant git tags should be discovered and created for each group 
 }
 ```
 
-## Update Dependents
+## Update dependents
 
 For independently versioned projects, regardless of whether they are in the same release group or not, we will have to consider what happens when those projects depend on one another.
 
@@ -225,9 +225,9 @@ Nx can handle this cascade of updates automatically, across any number of releas
 
 See the [Update Dependents](/docs/guides/nx-release/update-dependents) guide for more details.
 
-## More Examples
+## More examples
 
-### Mixed Relationship Groups
+### Mixed relationship groups
 
 You can have different relationship types for different groups in the same workspace:
 
@@ -248,7 +248,7 @@ You can have different relationship types for different groups in the same works
 }
 ```
 
-### Group-Specific Pre-Version Commands
+### Group-specific pre-version commands
 
 Run different build or preparation commands for each group:
 
@@ -273,7 +273,7 @@ Run different build or preparation commands for each group:
 }
 ```
 
-### Version Plans with Groups
+### Version plans with groups
 
 When using [version plans](/docs/guides/nx-release/file-based-versioning-version-plans), you can target specific groups:
 
@@ -295,7 +295,7 @@ When using [version plans](/docs/guides/nx-release/file-based-versioning-version
 }
 ```
 
-## Processing Order
+## Processing order
 
 Nx Release processes groups in topological order based on their dependencies:
 
@@ -310,7 +310,7 @@ This ensures that:
 
 NOTE: Circular dependencies are not recommended, but can be tolerated by nx release, as it can sometimes be unavoidable.
 
-## Using Filters with Groups
+## Using filters with groups
 
 You can filter which groups or projects to release:
 
@@ -329,7 +329,7 @@ nx release --groups=frontend --dry-run
 When filtering projects in a fixed release group, you must include all projects in that group. You cannot release a subset of projects from a fixed group as they must be versioned together.
 {% /aside %}
 
-## Next Steps
+## Next steps
 
 - Learn about [conventional commits](/docs/guides/nx-release/automatically-version-with-conventional-commits) for automatic versioning
 - Explore [version plans](/docs/guides/nx-release/file-based-versioning-version-plans) for file based versioning

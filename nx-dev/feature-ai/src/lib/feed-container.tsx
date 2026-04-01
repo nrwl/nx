@@ -1,4 +1,4 @@
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
+import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import {
   type FormEvent,
   type JSX,
@@ -43,7 +43,7 @@ export function FeedContainer(): JSX.Element {
     },
     onResponse: (_response) => {
       setStartedReply(true);
-      sendCustomEvent('ai_query', 'ai', 'query', undefined, {
+      sendCustomEventViaGtm('ai_query', 'ai', 'query', undefined, {
         query: input,
       });
       setError(null);
@@ -92,7 +92,7 @@ export function FeedContainer(): JSX.Element {
 
   const handleFeedback = (statement: 'good' | 'bad', chatItemUid: string) => {
     const query = getQueryFromUid(chatItemUid);
-    sendCustomEvent('ai_feedback', 'ai', statement, undefined, {
+    sendCustomEventViaGtm('ai_feedback', 'ai', statement, undefined, {
       query: query ?? 'Could not retrieve the question',
     });
   };

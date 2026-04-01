@@ -1,6 +1,6 @@
 ---
 title: Reduce Repetitive Configuration
-description: Learn how to use Nx's targetDefaults, namedInputs, and other features to minimize duplicate configuration across projects in your workspace.
+description: Learn how to use Nx targetDefaults, namedInputs, and other features to minimize duplicate configuration across projects in your workspace.
 filter: 'type:Guides'
 ---
 
@@ -25,7 +25,7 @@ Lets say you have three libraries in your repository - `lib1`, `lib2` and `lib3`
 
 {% /filetree %}
 
-## Initial Configuration Settings
+## Initial configuration settings
 
 All three libraries have a similar project configuration. Here is what their `project.json` files look like:
 
@@ -176,7 +176,7 @@ All three libraries have a similar project configuration. Here is what their `pr
 
 If you scan through these three files, they look very similar. The only differences aside from the project paths are that `lib1` has different assets defined for the `build` target and `lib2` has a `testTimeout` set for the `test` target.
 
-## Reduce Configuration with targetDefaults
+## Reduce configuration with targetDefaults
 
 Let's use [the `targetDefaults` property](/docs/reference/nx-json#target-defaults) in `nx.json` to reduce some of this duplicate configuration code.
 

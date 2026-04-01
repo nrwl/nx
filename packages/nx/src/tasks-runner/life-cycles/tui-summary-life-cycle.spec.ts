@@ -246,6 +246,18 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
 
       lifeCycle.startTasks?.([target], null as unknown as TaskMetadata);
       lifeCycle.appendTaskOutput?.(target.id, 'I was a happy dev server', true);
+      // With the new flow, continuous tasks are properly ended via endTasks
+      lifeCycle.endTasks?.(
+        [
+          {
+            code: 0,
+            status: 'success',
+            task: target,
+            terminalOutput: 'I was a happy dev server',
+          },
+        ],
+        null as unknown as TaskMetadata
+      );
       lifeCycle.setTaskStatus?.(target.id, NativeTaskStatus.Stopped);
       lifeCycle.printTaskTerminalOutput?.(
         target,
@@ -265,6 +277,115 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         ———————————————————————————————————————————————————————————————————————————————
 
          NX   Cancelled running target dev for project test (37w)
+        "
+      `);
+    });
+
+    it('should display success for discrete task with stopped continuous dependency', async () => {
+      const devServer = {
+        id: 'test:serve',
+        continuous: true,
+        target: {
+          target: 'serve',
+          project: 'test',
+        },
+      } as Partial<Task> as Task;
+
+      const e2eTest = {
+        id: 'test:e2e',
+        continuous: false,
+        target: {
+          target: 'e2e',
+          project: 'test',
+        },
+      } as Partial<Task> as Task;
+
+      const { lifeCycle, printSummary } = getTuiTerminalSummaryLifeCycle({
+        args: {
+          targets: ['e2e'],
+        },
+        initiatingProject: 'test',
+        initiatingTasks: [e2eTest],
+        taskGraph: {
+          tasks: { [devServer.id]: devServer, [e2eTest.id]: e2eTest },
+          dependencies: {
+            [devServer.id]: [],
+            [e2eTest.id]: [devServer.id],
+          },
+          continuousDependencies: {
+            [e2eTest.id]: [devServer.id],
+          },
+          roots: [devServer.id],
+        },
+        overrides: {},
+        projectNames: ['test'],
+        tasks: [devServer, e2eTest],
+        resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
+      });
+
+      // Dev server starts
+      lifeCycle.startTasks?.([devServer], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(
+        devServer.id,
+        'Server running on port 4200',
+        true
+      );
+
+      // E2E test starts and succeeds
+      lifeCycle.startTasks?.([e2eTest], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(e2eTest.id, 'All tests passed', true);
+      lifeCycle.endTasks?.(
+        [
+          {
+            code: 0,
+            status: 'success',
+            task: e2eTest,
+            terminalOutput: 'All tests passed',
+          },
+        ],
+        null as unknown as TaskMetadata
+      );
+      lifeCycle.printTaskTerminalOutput?.(
+        e2eTest,
+        'success',
+        'All tests passed'
+      );
+
+      // Dev server is stopped (no longer needed)
+      lifeCycle.endTasks?.(
+        [
+          {
+            code: 0,
+            status: 'success',
+            task: devServer,
+            terminalOutput: 'Server running on port 4200',
+          },
+        ],
+        null as unknown as TaskMetadata
+      );
+      lifeCycle.setTaskStatus?.(devServer.id, NativeTaskStatus.Stopped);
+      lifeCycle.printTaskTerminalOutput?.(
+        devServer,
+        'success',
+        'Server running on port 4200'
+      );
+
+      lifeCycle.endCommand?.();
+
+      const lines = getOutputLines(printSummary);
+
+      // Should show success, not cancelled, because the discrete task (e2e) is the initiating task
+      expect(lines.join('\n')).toMatchInlineSnapshot(`
+        "
+        > nx run test:serve
+
+        Server running on port 4200
+        > nx run test:e2e
+
+        All tests passed
+        ———————————————————————————————————————————————————————————————————————————————
+
+         NX   Successfully ran target e2e for project test and 1 task it depends on (37w)
         "
       `);
     });
@@ -427,6 +548,117 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
 
               - nx run bar:test
 
+        "
+      `);
+    });
+
+    it('should display stopped icon for stopped continuous task in run-many', async () => {
+      const devServer = {
+        id: 'test:serve',
+        continuous: true,
+        target: {
+          target: 'serve',
+          project: 'test',
+        },
+      } as Partial<Task> as Task;
+
+      const e2eTest = {
+        id: 'test:e2e',
+        continuous: false,
+        target: {
+          target: 'e2e',
+          project: 'test',
+        },
+      } as Partial<Task> as Task;
+
+      const { lifeCycle, printSummary } = getTuiTerminalSummaryLifeCycle({
+        args: {
+          targets: ['e2e'],
+        },
+        initiatingProject: '',
+        initiatingTasks: [e2eTest],
+        taskGraph: {
+          tasks: { [devServer.id]: devServer, [e2eTest.id]: e2eTest },
+          dependencies: {
+            [devServer.id]: [],
+            [e2eTest.id]: [devServer.id],
+          },
+          continuousDependencies: {
+            [e2eTest.id]: [devServer.id],
+          },
+          roots: [devServer.id],
+        },
+        overrides: {},
+        projectNames: ['test'],
+        tasks: [devServer, e2eTest],
+        resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
+      });
+
+      // Dev server starts
+      lifeCycle.startTasks?.([devServer], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(
+        devServer.id,
+        'Server running on port 4200',
+        true
+      );
+
+      // E2E test starts and succeeds
+      lifeCycle.startTasks?.([e2eTest], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(e2eTest.id, 'All tests passed', true);
+      lifeCycle.endTasks?.(
+        [
+          {
+            code: 0,
+            status: 'success',
+            task: e2eTest,
+            terminalOutput: 'All tests passed',
+          },
+        ],
+        null as unknown as TaskMetadata
+      );
+      lifeCycle.printTaskTerminalOutput?.(
+        e2eTest,
+        'success',
+        'All tests passed'
+      );
+
+      // Dev server is stopped (via endTasks with success status, then setTaskStatus)
+      lifeCycle.endTasks?.(
+        [
+          {
+            code: 0,
+            status: 'success',
+            task: devServer,
+            terminalOutput: 'Server running on port 4200',
+          },
+        ],
+        null as unknown as TaskMetadata
+      );
+      lifeCycle.setTaskStatus?.(devServer.id, NativeTaskStatus.Stopped);
+      lifeCycle.printTaskTerminalOutput?.(
+        devServer,
+        'success',
+        'Server running on port 4200'
+      );
+
+      lifeCycle.endCommand?.();
+
+      const lines = getOutputLines(printSummary);
+
+      // The stopped task (devServer) should show cyan ◼ icon, not green ✔
+      expect(lines.join('\n')).toMatchInlineSnapshot(`
+        "
+
+        > nx run test:serve
+
+        Server running on port 4200
+
+           ◼  nx run test:serve
+           ✔  nx run test:e2e
+
+        ———————————————————————————————————————————————————————————————————————————————
+
+         NX   Successfully ran target e2e for project test and 1 task it depends on (37w)
         "
       `);
     });

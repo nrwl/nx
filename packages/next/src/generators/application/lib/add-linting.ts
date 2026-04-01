@@ -51,7 +51,8 @@ export async function addLinting(
       addPredefinedConfigToFlatLintConfig(
         host,
         options.appProjectRoot,
-        'flat/react-typescript'
+        'flat/react-typescript',
+        { checkBaseConfig: true }
       );
       if (await isNext16(host)) {
         addPluginsToLintConfig(host, options.appProjectRoot, ['@next/next']);

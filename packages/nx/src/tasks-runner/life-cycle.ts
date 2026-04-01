@@ -9,6 +9,10 @@ import { TaskStatus } from './tasks-runner';
 
 /**
  * The result of a completed {@link Task}
+ *
+ * Task timing information (start and end timestamps) is available
+ * on the {@link Task} object itself via {@link Task.startTime} and
+ * {@link Task.endTime}.
  */
 export interface TaskResult {
   task: Task;
@@ -70,6 +74,8 @@ export interface LifeCycle {
   appendTaskOutput?(taskId: string, output: string, isPtyTask: boolean): void;
 
   setTaskStatus?(taskId: string, status: NativeTaskStatus): void;
+
+  setTaskTiming?(taskId: string, startTime: number, endTime: number): void;
 
   registerForcedShutdownCallback?(callback: () => void): void;
 
@@ -192,6 +198,14 @@ export class CompositeLifeCycle implements LifeCycle {
     for (let l of this.lifeCycles) {
       if (l.setTaskStatus) {
         l.setTaskStatus(taskId, status);
+      }
+    }
+  }
+
+  setTaskTiming(taskId: string, startTime: number, endTime: number): void {
+    for (let l of this.lifeCycles) {
+      if (l.setTaskTiming) {
+        l.setTaskTiming(taskId, startTime, endTime);
       }
     }
   }

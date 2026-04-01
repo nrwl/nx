@@ -30,6 +30,7 @@ export function getTasksHistoryLifeCycle():
 
 export class TaskHistoryLifeCycle implements LifeCycle {
   private startTimings: Record<string, number> = {};
+  private pendingResults = new Map<string, TaskResult>();
   private taskRuns = new Map<string, TaskRun>();
   private taskHistory: TaskHistory | null = getTaskHistory();
   private flakyTasks: string[];
@@ -51,6 +52,17 @@ export class TaskHistoryLifeCycle implements LifeCycle {
 
   async endTasks(taskResults: TaskResult[]) {
     for (const taskResult of taskResults) {
+      this.pendingResults.set(taskResult.task.id, taskResult);
+    }
+  }
+
+  async endCommand() {
+    if (!this.taskHistory) {
+      return;
+    }
+
+    // Build TaskRun objects now — task.hash is guaranteed to be set by this point
+    for (const [, taskResult] of this.pendingResults) {
       this.taskRuns.set(taskResult.task.hash, {
         hash: taskResult.task.hash,
         target: taskResult.task.target,
@@ -62,12 +74,7 @@ export class TaskHistoryLifeCycle implements LifeCycle {
         cacheable: taskResult.task.cache === true,
       });
     }
-  }
 
-  async endCommand() {
-    if (!this.taskHistory) {
-      return;
-    }
     const runs = [];
 
     // Only check for flaky tasks among cacheable tasks

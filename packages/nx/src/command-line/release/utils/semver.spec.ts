@@ -373,5 +373,75 @@ describe('semver', () => {
         ).get('default')
       ).toEqual(null);
     });
+
+    it('should not bump dependants when the only non-project-scoped commit has semverBump "none"', () => {
+      const configWithChoreNone: NxReleaseConfig['conventionalCommits'] = {
+        useCommitScope: true,
+        types: {
+          ...config.types,
+          chore: {
+            semverBump: 'none',
+            changelog:
+              DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types.chore.changelog,
+          },
+        },
+      };
+      // Simulate: chore commit scoped to a dependency, affecting a dependant indirectly
+      expect(
+        determineSemverChange(
+          new Map([
+            [
+              'dependant-project',
+              [{ commit: choreCommit, isProjectScopedCommit: false }],
+            ],
+          ]),
+          configWithChoreNone
+        ).get('dependant-project')
+      ).toEqual(null);
+    });
+
+    it('should still bump dependants for breaking non-project-scoped commits even when semverBump is "none"', () => {
+      const configWithChoreNone: NxReleaseConfig['conventionalCommits'] = {
+        useCommitScope: true,
+        types: {
+          ...config.types,
+          chore: {
+            semverBump: 'none',
+            changelog:
+              DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types.chore.changelog,
+          },
+        },
+      };
+      const choreBreakingCommit: GitCommit = {
+        type: 'chore',
+        isBreaking: true,
+      } as GitCommit;
+      expect(
+        determineSemverChange(
+          new Map([
+            [
+              'dependant-project',
+              [{ commit: choreBreakingCommit, isProjectScopedCommit: false }],
+            ],
+          ]),
+          configWithChoreNone
+        ).get('dependant-project')
+      ).toEqual(SemverSpecifier.PATCH);
+    });
+
+    it('should still apply patch for non-project-scoped commits when semverBump is not "none"', () => {
+      // Verify existing behavior is preserved for commit types with non-none semverBump
+      expect(
+        determineSemverChange(
+          new Map([
+            [
+              'dependant-project',
+              [{ commit: featNonBreakingCommit, isProjectScopedCommit: false }],
+            ],
+          ]),
+          config
+        ).get('dependant-project')
+      ).toEqual(SemverSpecifier.PATCH);
+    });
   });
 });

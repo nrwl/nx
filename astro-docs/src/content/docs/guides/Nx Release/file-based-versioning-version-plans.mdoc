@@ -11,9 +11,9 @@ Nx release supports file based versioning as a first class use-case through a fe
 - creating version plans and
 - applying version plans.
 
-We will cover both in this recipe, but first we need to enable the feature itself.
+Both in this recipe, but first we need to enable the feature itself.
 
-## Enable Version Plans
+## Enable version plans
 
 To enable version plans as a feature in your workspace, set `release.versionPlans` to `true` in `nx.json`:
 
@@ -31,7 +31,7 @@ To enable version plans as a feature in your workspace, set `release.versionPlan
 
 You can also enable or disable this for specific release groups by setting the property at the group level if you don't want to apply it to all matching projects in your workspace.
 
-## Create Version Plans
+## Create version plans
 
 Version plan files live in the `.nx/version-plans/` directory within your workspace (which needs to be tracked by git, so ensure that you are not ignoring the whole `.nx` directory, and instead only the `.nx/workspace-data` and `.nx/cache` directories).
 
@@ -111,7 +111,7 @@ nx release plan
 
 When you run this command you will receive a series of interactive prompts which guide you through the process of creating a version plan file. It will generate a unique name for you and ensure it is written to the correct location.
 
-## Apply Version Plans at Release Time
+## Apply version plans at release time
 
 Using version plans does not change how versioning, changelog generation and publishing is invoked, you can still use the `nx release` CLI or programmatic API as you would for any other versioning strategy.
 
@@ -119,7 +119,7 @@ The only difference is that Nx release will know to reference your version plan 
 
 When you run `nx release` or use the programmatic API, Nx will look for version plan files in the `.nx/version-plans/` directory and apply the desired version bumps to the projects and release groups specified in the Front Matter YAML section of each file. If a project or release group is not found, an error will be thrown and the release will not proceed. Once a particular version plan has been applied it will be deleted from the `.nx/version-plans/` directory so that it does not inadvertently get applied again in the future. The deleted file will be staged and committed alongside your other changed files that were modified directly as part of the release command (depending on your Nx release configuration).
 
-## Ensure That Version Plans Exist for Relevant Changes
+## Ensure that version plans exist for relevant changes
 
 When making changes to your codebase and using version plans as your versioning strategy it is likely that you will want to ensure that a version plan file exists for the changes you are making.
 

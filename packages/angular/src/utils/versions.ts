@@ -1,8 +1,8 @@
 export const nxVersion = require('../../package.json').version;
 
-export const angularVersion = '~21.1.0';
-export const angularDevkitVersion = '~21.1.0';
-export const ngPackagrVersion = '~21.1.0';
+export const angularVersion = '~21.2.0';
+export const angularDevkitVersion = '~21.2.0';
+export const ngPackagrVersion = '~21.2.0';
 export const ngrxVersion = '^21.0.0';
 export const rxjsVersion = '~7.8.0';
 export const zoneJsVersion = '~0.15.0';
@@ -14,10 +14,10 @@ export const expressVersion = '^4.21.2';
 export const typesExpressVersion = '^4.17.21';
 export const browserSyncVersion = '^3.0.0';
 export const moduleFederationNodeVersion = '^2.7.21';
-export const moduleFederationEnhancedVersion = '^0.21.2';
+export const moduleFederationEnhancedVersion = '^2.1.0';
 export const webpackMergeVersion = '^5.8.0';
 
-export const angularEslintVersion = '^21.0.1';
+export const angularEslintVersion = '^21.2.0';
 export const typescriptEslintVersion = '^7.16.0';
 export const tailwindVersion = '^3.0.2';
 export const postcssVersion = '^8.4.5';
@@ -32,5 +32,8 @@ export const jasmineMarblesVersion = '^0.9.2';
 
 export const vitestVersion = '^4.0.8';
 export const jsdomVersion = '^27.1.0';
+// @angular/build uses rolldown which injects @oxc-project/runtime helpers
+// at transform time but doesn't declare it as a dependency
+export const oxcProjectRuntimeVersion = '^0.115.0';
 
 export const jsoncEslintParserVersion = '^2.1.0';

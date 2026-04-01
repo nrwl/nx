@@ -38,31 +38,9 @@
   const config = window.__CONFIG || {};
   if (!config.isProd) return;
 
-  const isCookiebotDisabled = config.cookiebotDisabled ?? false;
-  const gaMeasurementId = config.gaMeasurementId ?? 'UA-88380372-10';
   const gtmMeasurementId = config.gtmMeasurementId ?? 'GTM-KW8423B6';
 
-  // Initialize global objects
-  window.Cookiebot = window.Cookiebot || {};
   window.dataLayer = window.dataLayer || [];
-  window.gtag =
-    window.gtag ||
-    function () {
-      window.dataLayer.push(arguments);
-    };
-
-  const loadGoogleAnalytics = () => {
-    const script = document.createElement('script');
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`;
-    script.async = true;
-    document.head.appendChild(script);
-
-    // Initialize gtag
-    window.gtag('js', new Date());
-    window.gtag('config', gaMeasurementId, {
-      page_path: window.location.pathname,
-    });
-  };
 
   const loadGTM = () => {
     if (!gtmMeasurementId) return;
@@ -79,69 +57,9 @@
     })(window, document, 'script', 'dataLayer', gtmMeasurementId);
   };
 
-  const loadHubSpot = () => {
-    const hsScript = document.createElement('script');
-    hsScript.src = 'https://js.hs-scripts.com/2757427.js';
-    hsScript.async = true;
-    hsScript.defer = true;
-    document.head.appendChild(hsScript);
-
-    // Load HubSpot Forms
-    const hsFormsScript = document.createElement('script');
-    hsFormsScript.src = '//js.hsforms.net/forms/v2.js';
-    hsFormsScript.async = true;
-    hsFormsScript.defer = true;
-    document.head.appendChild(hsFormsScript);
-  };
-
-  const loadApollo = () => {
-    const n = Math.random().toString(36).substring(7);
-    const script = document.createElement('script');
-    script.src = `https://assets.apollo.io/micro/website-tracker/tracker.iife.js?nocache=${n}`;
-    script.async = true;
-    script.defer = true;
-    script.onload = function () {
-      if (window.trackingFunctions?.onLoad) {
-        window.trackingFunctions.onLoad({
-          appId: '65e1db2f1976f30300fd8b26',
-        });
-      }
-    };
-    document.head.appendChild(script);
-  };
-
-  const loadHotjar = () => {
-    (function (h, o, t, j, a, r) {
-      h.hj =
-        h.hj ||
-        function () {
-          (h.hj.q = h.hj.q || []).push(arguments);
-        };
-      h._hjSettings = { hjid: 2774127, hjsv: 6 };
-      a = o.getElementsByTagName('head')[0];
-      r = o.createElement('script');
-      r.async = 1;
-      r.src = t + h._hjSettings.hjid + j + h._hjSettings.hjsv;
-      a.appendChild(r);
-    })(window, document, 'https://static.hotjar.com/c/hotjar-', '.js?sv=');
-  };
-
-  const loadTwitterPixel = () => {
-    !(function (e, t, n, s, u, a) {
-      e.twq ||
-        ((s = e.twq =
-          function () {
-            s.exe ? s.exe.apply(s, arguments) : s.queue.push(arguments);
-          }),
-        (s.version = '1.1'),
-        (s.queue = []),
-        (u = t.createElement(n)),
-        (u.async = !0),
-        (u.src = 'https://static.ads-twitter.com/uwt.js'),
-        (a = t.getElementsByTagName(n)[0]),
-        a.parentNode.insertBefore(u, a));
-    })(window, document, 'script');
-    window.twq('config', 'obtp4');
+  // GA4 events are dispatched via GTM dataLayer.
+  const pushGtmEvent = (eventName, payload) => {
+    window.dataLayer.push({ event: eventName, ...payload });
   };
 
   // Scroll depth tracking
@@ -221,10 +139,10 @@
   let lastSearchQuery = '';
   let currentSearchInput = null;
   let inputHandler = null;
+  let resultClickHandler = null;
 
   function sendSearchEvent(eventType, data) {
-    if (typeof window.gtag !== 'undefined')
-      window.gtag('event', eventType, data);
+    pushGtmEvent(eventType, data);
   }
 
   function trackSearchQuery(query) {
@@ -233,8 +151,8 @@
     clearTimeout(searchDebounceTimer);
     searchDebounceTimer = setTimeout(() => {
       lastSearchQuery = query;
-      sendSearchEvent('search_query', {
-        query: query,
+      sendSearchEvent('search', {
+        search_term: query,
       });
     }, SEARCH_DEBOUNCE_MS);
   }
@@ -258,12 +176,30 @@
           searchInput.addEventListener('input', inputHandler);
           currentSearchInput = searchInput;
         }
+
+        // Track search result clicks via event delegation
+        if (!resultClickHandler) {
+          resultClickHandler = (e) => {
+            const link = e.target.closest('a[href]');
+            if (!link) return;
+            const query = currentSearchInput
+              ? currentSearchInput.value.trim()
+              : '';
+            pushGtmEvent('select_content', {
+              content_type: 'search_result',
+              item_id: link.getAttribute('href'),
+              search_term: query,
+            });
+          };
+          searchDialog.addEventListener('click', resultClickHandler);
+        }
       }
       // If dialog is not found but we have handler, etc. then it must be closed and we should clean up
       else if (currentSearchInput && inputHandler) {
         currentSearchInput.removeEventListener('input', inputHandler);
         currentSearchInput = null;
         inputHandler = null;
+        resultClickHandler = null;
       }
     });
 
@@ -275,33 +211,11 @@
     });
   }
 
-  const checkAndLoadScripts = () => {
-    if (isCookiebotDisabled) {
-      loadGoogleAnalytics();
-      loadGTM();
-      loadHubSpot();
-      setupSearchTracking();
-      setupScrollTracking();
-    } else if (window.Cookiebot && window.Cookiebot.consent) {
-      // Statistics cookies (Google Analytics, GTM, Search, Scroll Tracking)
-      if (window.Cookiebot.consent.statistics) {
-        loadGoogleAnalytics();
-        loadGTM();
-        setupSearchTracking();
-        setupScrollTracking();
-      }
-
-      // Marketing cookies (HubSpot, Apollo, Hotjar, Twitter)
-      if (window.Cookiebot.consent.marketing) {
-        loadHubSpot();
-        loadApollo();
-        loadHotjar();
-        loadTwitterPixel();
-      }
-    } else {
-      // Wait for Cookiebot to load
-      setTimeout(checkAndLoadScripts, 100);
-    }
+  const initializeAnalytics = () => {
+    if (!gtmMeasurementId) return;
+    loadGTM();
+    setupSearchTracking();
+    setupScrollTracking();
   };
 
   // Add GTM noscript iframe to body
@@ -318,11 +232,8 @@
     document.body.insertBefore(noscript, document.body.firstChild);
   };
 
-  // Listen for user consent to cookies
-  window.addEventListener('CookiebotOnAccept', checkAndLoadScripts);
-
   // Initial check
-  checkAndLoadScripts();
+  initializeAnalytics();
 
   // Add GTM noscript on DOM ready
   if (document.readyState === 'loading') {

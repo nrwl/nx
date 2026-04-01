@@ -125,7 +125,9 @@ function updateProjectVersion(
   const fullImageRef =
     nxDockerImageRefEnvOverride ?? `${newImageRef}:${newVersion}`;
   if (!isDryRun) {
-    execSync(`docker tag ${imageRef} ${fullImageRef}`);
+    execSync(`docker tag ${imageRef} ${fullImageRef}`, {
+      windowsHide: true,
+    });
   }
   const logs = isDryRun
     ? [`Image would be tagged with ${fullImageRef} but dry run is enabled.`]

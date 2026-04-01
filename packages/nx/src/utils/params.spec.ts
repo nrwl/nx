@@ -1,4 +1,4 @@
-import * as yargsParser from 'yargs-parser';
+import yargsParser from 'yargs-parser';
 import { logger } from './logger';
 import {
   applyVerbosity,
@@ -1588,6 +1588,132 @@ describe('params', () => {
       ).toThrow(
         "Property 'a' does not match the schema. '123' should be a 'string'."
       );
+    });
+
+    it('should validate arrays with tuple items (items as array)', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: ['junit', { suiteName: 'MyApp' }] },
+          {
+            properties: {
+              a: {
+                type: 'array',
+                minItems: 1,
+                maxItems: 2,
+                items: [{ type: 'string' }, { type: 'object' }],
+              },
+            },
+          }
+        )
+      ).not.toThrow();
+    });
+
+    it('should throw when tuple item type does not match (items as array)', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: [123, { suiteName: 'MyApp' }] },
+          {
+            properties: {
+              a: {
+                type: 'array',
+                minItems: 1,
+                maxItems: 2,
+                items: [{ type: 'string' }, { type: 'object' }],
+              },
+            },
+          }
+        )
+      ).toThrow("Property 'a' does not match the schema.");
+    });
+
+    it('should pass when array length equals minItems', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: ['junit'] },
+          {
+            properties: {
+              a: {
+                type: 'array',
+                minItems: 1,
+                maxItems: 2,
+                items: [{ type: 'string' }, { type: 'object' }],
+              },
+            },
+          }
+        )
+      ).not.toThrow();
+    });
+
+    it('should throw when array length is below minItems', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: [] },
+          {
+            properties: {
+              a: {
+                type: 'array',
+                minItems: 1,
+                maxItems: 2,
+                items: [{ type: 'string' }, { type: 'object' }],
+              },
+            },
+          }
+        )
+      ).toThrow("Property 'a' does not match the schema.");
+    });
+
+    it('should throw when array length exceeds maxItems', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: ['junit', { suiteName: 'MyApp' }, 'html'] },
+          {
+            properties: {
+              a: {
+                type: 'array',
+                minItems: 1,
+                maxItems: 2,
+                items: [{ type: 'string' }, { type: 'object' }],
+              },
+            },
+          }
+        )
+      ).toThrow("Property 'a' does not match the schema.");
+    });
+
+    it('should validate reporters with oneOf including tuple items (issue scenario)', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { reporters: [['junit', { suiteName: 'MyApp' }]] },
+          {
+            properties: {
+              reporters: {
+                type: 'array',
+                items: {
+                  oneOf: [
+                    {
+                      anyOf: [{ type: 'string' }, { enum: ['junit', 'html'] }],
+                    },
+                    {
+                      type: 'array',
+                      minItems: 1,
+                      maxItems: 2,
+                      items: [
+                        {
+                          anyOf: [
+                            { type: 'string' },
+                            { enum: ['junit', 'html'] },
+                          ],
+                        },
+                        { type: 'object' },
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+          }
+        )
+      ).not.toThrow();
     });
 
     it("should throw if the type doesn't match (objects)", () => {

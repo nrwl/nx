@@ -18,7 +18,7 @@ require('ts-node').register({
 
 // TypeScript paths are now handled by pnpm workspaces, no need for tsconfig-paths
 
-const { examples: cliExamples } = importFresh(
+const { examples: cliExamples, cliDocsCommandMetadata } = importFresh(
   join(workspaceRoot, 'packages/nx/src/command-line/examples')
 );
 
@@ -29,7 +29,7 @@ function getCommands(command) {
   return command.getInternalMethods().getCommandInstance().getCommandHandlers();
 }
 
-async function parseCommand(name, command) {
+async function parseCommand(name, command, fullName = name) {
   // If it's not a function, return a stripped down version
   if (
     !(
@@ -47,6 +47,8 @@ async function parseCommand(name, command) {
       aliases: [],
       options: [],
       examples: cliExamples[name] || [],
+      supportedVersionRange:
+        cliDocsCommandMetadata[fullName]?.supportedVersionRange,
     };
   }
 
@@ -102,7 +104,13 @@ async function parseCommand(name, command) {
     }
 
     try {
-      const parsedSub = await parseCommand(subName, subConfig);
+      const subcommandFullName =
+        subName === '$0' ? fullName : `${fullName} ${subName}`.trim();
+      const parsedSub = await parseCommand(
+        subName,
+        subConfig,
+        subcommandFullName
+      );
       subcommands.push(parsedSub);
     } catch (error) {
       console.warn(`⚠️ Could not parse subcommand ${subName}:`, error.message);
@@ -117,6 +125,8 @@ async function parseCommand(name, command) {
     options,
     subcommands: subcommands.length > 0 ? subcommands : undefined,
     examples: cliExamples[name] || [],
+    supportedVersionRange:
+      cliDocsCommandMetadata[fullName]?.supportedVersionRange,
   };
 }
 

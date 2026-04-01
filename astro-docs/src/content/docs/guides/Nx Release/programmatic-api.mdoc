@@ -16,7 +16,7 @@ Just as with the CLI, the programmatic API is broken up into the distinct phases
 
 These functions are the exact functions used behind the scenes by the CLI, and so they will read from the "release" config in `nx.json` in just the same way. If you need even more fine grained control over configuration via the programmatic API, see the section on using the [`ReleaseClient` class](#using-the-releaseclient-class) below.
 
-## Using the Programmatic API
+## Using the programmatic API
 
 ```ts
 import { releaseChangelog, releasePublish, releaseVersion } from 'nx/release';
@@ -131,7 +131,7 @@ process.exit(
 );
 ```
 
-## Example Release Script
+## Example release script
 
 How you compose these functions in your release script is of course entirely up to you, and you may even want to break them up into multiple files depending on your use-case.
 

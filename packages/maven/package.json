@@ -13,6 +13,7 @@
   },
   "homepage": "https://nx.dev",
   "main": "./dist/index.js",
+  "type": "commonjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {

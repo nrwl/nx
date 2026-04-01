@@ -2,12 +2,13 @@ import { execSync } from 'node:child_process';
 import {
   existsSync,
   readFileSync,
-  writeFileSync,
   statSync,
   unlinkSync,
+  writeFileSync,
 } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import chalk from 'chalk';
 import { isCI } from '../ci/is-ci';
 import type { BannerVariant, CompletionMessageKey } from './messages';
 
@@ -80,7 +81,8 @@ function getFlowVariantInternal(): string {
 }
 
 /**
- * Returns the flow variant for tracking (0 = preset, 1 = template).
+ * Returns the flow variant for tracking (0, 1, or 2).
+ * Returns '0' for docs generation to preserve deterministic output.
  */
 export function getFlowVariant(): string {
   if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
@@ -95,14 +97,6 @@ export function getFlowVariant(): string {
  */
 export function getCompletionMessageKeyForVariant(): CompletionMessageKey {
   return 'platform-setup';
-}
-
-/**
- * Returns whether the cloud prompt should be shown.
- * Variant 2 skips the prompt (auto-connect). (CLOUD-4235)
- */
-export function shouldShowCloudPrompt(): boolean {
-  return getFlowVariant() !== '2';
 }
 
 // ============================================================================
@@ -136,9 +130,8 @@ export function isEnterpriseCloudUrl(cloudUrl?: string): boolean {
 
 /**
  * Get the banner variant for completion messages.
- * Uses NX_CNW_FLOW_VARIANT to determine which banner to show.
- * - Variant 0: Plain link (control) - always used for enterprise URLs
- * - Variant 1: "Finish your set up in 5 minutes" banner
+ * Now locked to variant 2 (CLOUD-4255).
+ * - Variant 0: Plain link - used for enterprise URLs and docs generation
  * - Variant 2: "Enable remote caching and automatic fixes" banner
  *
  * @param cloudUrl - The Nx Cloud URL. If enterprise, always returns '0'.
@@ -149,8 +142,13 @@ export function getBannerVariant(cloudUrl?: string): BannerVariant {
     return '0';
   }
 
-  // Use the flow variant (which handles docs generation, env var, and caching)
-  return getFlowVariant() as BannerVariant;
+  // Docs generation uses variant 0 for deterministic output
+  if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
+    return '0';
+  }
+
+  // Standard URLs get variant 2 banner
+  return '2';
 }
 
 export const NxCloudChoices = [
@@ -160,6 +158,7 @@ export const NxCloudChoices = [
   'bitbucket-pipelines',
   'circleci',
   'skip',
+  'never',
   'yes', // Deprecated but still handled
 ];
 
@@ -209,55 +208,45 @@ const messageOptions: Record<string, MessageData[]> = {
    * Simplified Cloud prompt for template flow
    */
   setupNxCloudV2: [
-    //{
-    //  code: 'cloud-v2-remote-cache-visit',
-    //  message: 'Enable remote caching with Nx Cloud?',
-    //  initial: 0,
-    //  choices: [
-    //    { value: 'yes', name: 'Yes' },
-    //    { value: 'skip', name: 'Skip' },
-    //  ],
-    //  footer:
-    //    '\nRemote caching makes your builds faster for development and in CI: https://nx.dev/ci/features/remote-cache',
-    //  fallback: undefined,
-    //  completionMessage: 'cache-setup',
-    //},
-    //{
-    //  code: 'cloud-v2-fast-ci-visit',
-    //  message: 'Speed up CI and reduce compute costs with Nx Cloud?',
-    //  initial: 0,
-    //  choices: [
-    //    { value: 'yes', name: 'Yes' },
-    //    { value: 'skip', name: 'Skip' },
-    //  ],
-    //  footer:
-    //    '\n70% faster CI, 60% less compute, Automatically fix broken PRs: https://nx.dev/nx-cloud',
-    //  fallback: undefined,
-    //  completionMessage: 'ci-setup',
-    //},
-    //{
-    //  code: 'cloud-v2-green-prs-visit',
-    //  message: 'Get to green PRs faster with Nx Cloud?',
-    //  initial: 0,
-    //  choices: [
-    //    { value: 'yes', name: 'Yes' },
-    //    { value: 'skip', name: 'Skip' },
-    //  ],
-    //  footer:
-    //    '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
-    //  fallback: undefined,
-    //  completionMessage: 'ci-setup',
-    //},
     {
-      code: 'cloud-v2-full-platform-visit',
-      message: 'Try the full Nx platform?',
+      code: 'connect-to-cloud',
+      message: 'Connect to Nx Cloud?',
       initial: 0,
       choices: [
         { value: 'yes', name: 'Yes' },
-        { value: 'skip', name: 'Skip' },
+        { value: 'skip', name: 'Skip for now' },
+        { value: 'never', name: chalk.dim("No, don't ask again") },
       ],
       footer:
         '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
+      fallback: undefined,
+      completionMessage: 'platform-setup',
+    },
+    {
+      code: 'cloud-ab-remote-cache-speed',
+      message: 'Enable remote caching to speed up builds with Nx Cloud?',
+      initial: 0,
+      choices: [
+        { value: 'yes', name: 'Yes' },
+        { value: 'skip', name: 'Skip for now' },
+        { value: 'never', name: chalk.dim("No, don't ask again") },
+      ],
+      footer:
+        '\nFree for small teams. 2-minute setup with GitHub — cache locally and in CI: https://nx.dev/nx-cloud',
+      fallback: undefined,
+      completionMessage: 'platform-setup',
+    },
+    {
+      code: 'cloud-ab-fast-ci-setup',
+      message: 'Speed up your CI with Nx Cloud?',
+      initial: 0,
+      choices: [
+        { value: 'yes', name: 'Yes' },
+        { value: 'skip', name: 'Skip for now' },
+        { value: 'never', name: chalk.dim("No, don't ask again") },
+      ],
+      footer:
+        '\n70% faster CI on GitHub, GitLab, and more. Free tier, 2-minute setup: https://nx.dev/nx-cloud',
       fallback: undefined,
       completionMessage: 'platform-setup',
     },
@@ -284,9 +273,9 @@ export class PromptMessages {
       if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
         this.selectedMessages[key] = 0;
       } else {
-        this.selectedMessages[key] = Math.floor(
-          Math.random() * messageOptions[key].length
-        );
+        const variant = Number(getFlowVariant());
+        this.selectedMessages[key] =
+          variant < messageOptions[key].length ? variant : 0;
       }
     }
     return messageOptions[key][this.selectedMessages[key]!];
@@ -404,7 +393,7 @@ function shouldRecordStats(): boolean {
     // Use npm to check registry - this works regardless of which package manager invoked us
     const stdout = execSync('npm config get registry', {
       encoding: 'utf-8',
-      windowsHide: false,
+      windowsHide: true,
     });
     const url = new URL(stdout.trim());
 

@@ -9,7 +9,7 @@ Environment variables are useful to store system-wide values such as the directo
 (PATH), OS version, Network Information, and custom variables. These env variables are passed at build time and used at
 the runtime of an app.
 
-## Set Environment Variables
+## Set environment variables
 
 By default, Nx will load any environment variables you place in the following files:
 
@@ -76,7 +76,7 @@ We recommend nesting your **app** specific `env` files in `apps/your-app`, and c
 for workspace-specific settings (like the [Nx Cloud token](/docs/guides/nx-cloud/access-tokens)).
 {% /aside %}
 
-### Environment Variables for Atomized targets
+### Environment variables for atomized targets
 
 Atomized targets have their names created dynamically, typically using the file names as a suffix. This makes it difficult to define environment variable files for them.
 For atomized targets, Nx will instead search for atomized target's parent and non-atomized target.
@@ -100,7 +100,7 @@ The above order with combinations of targets, configurations and path priority r
 - [non-atomized-target-name]
 - {general environment variables}
 
-### Environment Variables for Configurations
+### Environment variables for configurations
 
 Nx will only load environment variable files for a particular configuration if that configuration is defined for a task, even if you specify that configuration name from the command line. So if there is no `development` configuration defined for the `app`'s `build` task, the following command will use `.env.build` instead of `.env.build.development`:
 
@@ -124,15 +124,15 @@ In order to have Nx actually use the `.env.build.development` environment variab
 }
 ```
 
-### Point to Custom Env Files
+### Point to custom env files
 
 If you want to load variables from `env` files other than the ones listed above:
 
 1. Use the [env-cmd](https://www.npmjs.com/package/env-cmd) package: `env-cmd -f .qa.env nx serve`
 2. Use [dotenvx](https://github.com/dotenvx/dotenvx): `dotenvx run --env-file=.qa.env -- nx serve`
-3. Use the `envFile` option of the [run-commands](/docs/reference/nx/executors/run-commands#envfile) builder and execute your command inside of the builder
+3. Use the `envFile` option of the [run-commands](/docs/guides/tasks--caching/run-commands-executor#envfile) builder and execute your command inside of the builder
 
-### Ad-hoc Variables
+### Ad-hoc variables
 
 You can also define environment variables in an ad-hoc manner using support from your OS and shell.
 

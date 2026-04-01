@@ -1,4 +1,5 @@
 import { VcsPushStatus } from '../git/git';
+import { isCI } from '../ci/is-ci';
 import { CLIOutput } from '../output';
 import {
   getCompletionMessage,
@@ -6,7 +7,8 @@ import {
   CompletionMessageKey,
 } from './messages';
 import { getBannerVariant, getFlowVariant } from './ab-testing';
-import * as ora from 'ora';
+import { nxVersion } from './nx-version';
+import ora from 'ora';
 
 export type NxCloud =
   | 'yes'
@@ -15,7 +17,8 @@ export type NxCloud =
   | 'azure'
   | 'bitbucket-pipelines'
   | 'circleci'
-  | 'skip';
+  | 'skip'
+  | 'never';
 
 export async function connectToNxCloudForTemplate(
   directory: string,
@@ -68,12 +71,7 @@ export function readNxCloudToken(directory: string) {
   ) as typeof import('nx/src/nx-cloud/utilities/get-cloud-options');
 
   const { accessToken, nxCloudId } = getCloudOptions(directory);
-  const variant = getFlowVariant();
-  const spinnerMessage =
-    variant === '0'
-      ? 'Nx Cloud has been set up successfully'
-      : 'Nx Cloud configuration was successfully added';
-  nxCloudSpinner.succeed(spinnerMessage);
+  nxCloudSpinner.succeed('Nx Cloud configuration was successfully added');
   return accessToken || nxCloudId;
 }
 
@@ -100,7 +98,10 @@ export async function createNxCloudOnboardingUrl(
       ? 'create-nx-workspace-success-cache-setup'
       : 'create-nx-workspace-success-ci-setup';
 
-  const meta = `variant-${getFlowVariant()}`;
+  const meta = JSON.stringify({
+    variant: getFlowVariant(),
+    nxVersion,
+  });
 
   return createNxCloudOnboardingURL(
     source,
@@ -130,7 +131,15 @@ export async function getNxCloudInfo(
     workspaceName,
     bannerVariant
   );
-  out.success(message);
+
+  // Variant 2 (deferred connection): No title, just output the banner directly
+  // without the NX badge since nothing was actually configured
+  if (!message.title) {
+    out.addNewline();
+    out.writeLines(message.bodyLines ?? []);
+  } else {
+    out.success(message);
+  }
   return out.getOutput();
 }
 
@@ -138,4 +147,26 @@ export function getSkippedNxCloudInfo() {
   const out = new CLIOutput(false);
   out.success(getSkippedCloudMessage());
   return out.getOutput();
+}
+
+export async function openCloudSetupUrl(connectUrl: string): Promise<void> {
+  if (isCI()) {
+    return;
+  }
+
+  try {
+    const open = require('open');
+    await open(connectUrl);
+  } catch {
+    // Fail gracefully — the URL is already displayed in the terminal banner
+  }
+}
+
+export function setNeverConnectToCloud(directory: string): void {
+  const { readFileSync, writeFileSync } = require('fs');
+  const { join } = require('path');
+  const nxJsonPath = join(directory, 'nx.json');
+  const nxJson = JSON.parse(readFileSync(nxJsonPath, 'utf-8'));
+  nxJson.neverConnectToCloud = true;
+  writeFileSync(nxJsonPath, JSON.stringify(nxJson, null, 2) + '\n');
 }

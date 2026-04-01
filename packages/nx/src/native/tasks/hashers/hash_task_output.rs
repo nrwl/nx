@@ -20,6 +20,21 @@ pub struct CachedTaskOutput {
     pub files: Vec<String>,
 }
 
+/// Resolves task output files by expanding output paths and filtering by glob pattern.
+/// This is the file-resolution portion without any hashing, for use by the inspector.
+pub fn resolve_task_output_files(
+    workspace_root: &str,
+    glob: &str,
+    outputs: &[String],
+) -> Result<Vec<String>> {
+    let output_files = get_files_for_outputs(workspace_root.to_string(), outputs.to_vec())?;
+    let glob_set = build_glob_set(&[glob])?;
+    Ok(output_files
+        .into_iter()
+        .filter(|f| glob_set.is_match(f))
+        .collect())
+}
+
 pub fn hash_task_output(
     workspace_root: &str,
     glob: &str,

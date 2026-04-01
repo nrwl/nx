@@ -10,7 +10,7 @@ Module Federation is a technique that allows developers to share code and resour
 As of Nx 19.5, our Module Federation support is provided by the [@module-federation/enhanced](https://npmjs.com/@module-federation/enhanced) package.
 This package is owned and maintained by [Zack Jackson](https://x.com/ScriptedAlchemy), the creator of Module Federation, and the [ByteDance](https://x.com/ByteDanceTalk) team.
 
-Using this package for Nx's Module Federation support keeps our support aligned with the latest improvements, features and bug fixes for Module Federation.
+Using this package for Nx Module Federation support keeps our support aligned with the latest improvements, features and bug fixes for Module Federation.
 
 You can learn more about Module Federation Enhanced on their [docs](https://module-federation.io/).
 {% /aside %}
@@ -32,7 +32,7 @@ For example, upgrading Angular or React to the latest version should be coordina
 
 In order to achieve this, Module Federation introduces three terms for the applications that make up the Module Federation architecture; `host`, `remote` and `federated modules`.
 
-### What is a Remote?
+### What is a remote?
 
 A `remote` is an application that exposes a federated module that can be fetched over the network at runtime. The federated module can be any valid JavaScript module, and therefore grows to include things such as a React Component, an Angular Routing File, a plain old JavaScript object (POJO) and more.
 
@@ -42,7 +42,7 @@ Follow our [How to Create a Remote Application Recipe](/docs/technologies/module
 
 {% /aside %}
 
-### What is a Host?
+### What is a host?
 
 A `host` is an application that consumes federated modules from `remote` applications at runtime.
 
@@ -56,7 +56,7 @@ Follow our [How to Create a Host Application Recipe](/docs/technologies/module-f
 
 {% /aside %}
 
-### What is a Federated Module?
+### What is a federated module?
 
 A `federated module` is any valid JavaScript module that is exposed by a `remote` application with the aim that it will be consumed by a `host` application.
 
@@ -68,11 +68,11 @@ Follow our [How to Federate a Module Recipe](/docs/technologies/module-federatio
 
 {% /aside %}
 
-### Common Pitfalls
+### Common pitfalls
 
 Module Federation is not without its complexity, especially if you choose to use it to enable independent deployments where independent `remotes` are deployed on different release cadences. Some of the pitfalls you might encounter are listed below:
 
-#### Increased Bundle Size
+#### Increased bundle size
 
 Module Federation allows you to share third-party packages across `remotes` and `hosts`, which can be essential in cases such as `react`, `react-dom` and `@angular/*` packages. This means that when you load a `federated module` from a `remote`, Webpack does not need to re-download a copy of these packages. Instead, the `federated module` uses the already loaded packages.
 
@@ -80,7 +80,7 @@ However, when third-party packages are shared between `remotes` and `hosts`, Web
 
 A solution to help mitigate the impact of this is to only share exactly what is necessary between `remotes` and `hosts`.
 
-#### Managing Versions
+#### Managing versions
 
 Module Federation also supports the ability to manage the versions of third-party packages that are compatible across `remotes` and `hosts`. This support ensures that each `federated module` works with a version of the package it was intended to use, but it can also add some overhead on ensuring that the package versions remain up to date.
 
@@ -94,7 +94,7 @@ Follow our [Manage Library Versions Guide](/docs/technologies/module-federation/
 
 {% /aside %}
 
-## Nx Support for Module Federation
+## Nx support for Module federation
 
 Nx offers out-of-the-box support for Module Federation with React and Angular. There are a number of features that can assist you when developing a Module Federation architecture for your application, such as:
 
@@ -104,7 +104,7 @@ Nx offers out-of-the-box support for Module Federation with React and Angular. T
 - Versioning of Libraries - to aid in preventing some common issues regarding incompatible package versions being used by `federated modules`
 - Scaling DX - techniques to ensure a smooth DX regardless of the number of remotes in the workspace
 
-### Develop as a User
+### Develop as a user
 
 For both the best DX (Development Experience) and most accurate development of a Module Federation architecture we recommend viewing it as a single application. In other words, the `host` and all the `remotes` are composed to form a single application.
 
@@ -120,11 +120,11 @@ This is currently only supported for Rspack Module Federation using the `@nx/rsp
 
 If you are using Webpack Module Federation, or are not using [Inferred Tasks](/docs/concepts/inferred-tasks), you should use the `--devRemotes` option to specify the `remote` you are currently developing; e.g. `nx serve host --devRemotes=remote1`. This ensures that the `remote` is served via `webpack-dev-server` allowing for HMR and live reloading.
 
-## Use Cases
+## Use cases
 
 Nx has identified some common use cases that have made developers reach for Module Federation. They are Faster Builds and Independent Deployability.
 
-### Faster Builds
+### Faster builds
 
 As Module Federation allows you to split your application into smaller deployable chunks that are only required at runtime, you can take advantage of this to reduce the build times of your application.
 
@@ -138,7 +138,7 @@ Follow our [Faster Builds with Module Federation Guide](/docs/technologies/modul
 
 {% /aside %}
 
-### Independent Deployability
+### Independent deployability
 
 Independent Deployability is the concept where individual teams within an organization deploy their work on their own release cadence, regardless of other teams, allowing for more team autonomy. This can be achieved with Module Federation and becomes more and more appealing as the organization and application grows.
 

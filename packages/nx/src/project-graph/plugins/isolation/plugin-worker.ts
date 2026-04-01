@@ -10,6 +10,8 @@ import { consumeMessage, isPluginWorkerMessage } from './messaging';
 
 import { unlinkSync } from 'fs';
 import { createServer } from 'net';
+import '../../../utils/perf-logging';
+import { startAnalytics } from '../../../analytics';
 
 type Environment = Pick<
   NodeJS.ProcessEnv,
@@ -18,9 +20,7 @@ type Environment = Pick<
 
 const environment: Environment = process.env as Environment;
 
-if (environment.NX_PERF_LOGGING === 'true') {
-  require('../../../utils/perf-logging');
-}
+startAnalytics();
 
 performance.mark(`plugin worker ${process.pid} code loading -- end`);
 performance.measure(
@@ -75,8 +75,8 @@ const server = createServer((socket) => {
           loadErrorTimeout?.clear();
           process.chdir(root);
           try {
-            const { loadResolvedNxPluginAsync } = await import(
-              '../load-resolved-plugin'
+            const { loadResolvedNxPluginAsync } = await Promise.resolve(
+              require(require.resolve('../load-resolved-plugin'))
             );
 
             // Register the ts-transpiler if we are pointing to a

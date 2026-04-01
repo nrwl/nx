@@ -4,13 +4,13 @@ description: Details about the NxModuleFederationPlugin
 filter: 'type:Guides'
 ---
 
-The `NxModuleFederationPlugin` is a [Rspack](https://rspack.dev) plugin that handles module federation in Nx Workspaces. It aims to provide the same Developer Experience(DX) that you would normally receive from using Nx's `withModuleFederation` function.
+The `NxModuleFederationPlugin` is a [Rspack](https://rspack.dev) plugin that handles module federation in Nx Workspaces. It aims to provide the same Developer Experience(DX) that you would normally receive from using Nx `withModuleFederation` function.
 
 ## Usage
 
 To use the plugin, you need to add it to your `rspack.config.ts` file. You can do this by adding the following to your config.
 
-### Client Side Rendering
+### Client side rendering
 
 ```ts
 // rspack.config.ts
@@ -33,7 +33,7 @@ export default {
 };
 ```
 
-### Server Side Rendering
+### Server side rendering
 
 ```ts
 // rspack.config.ts
@@ -156,7 +156,7 @@ export default {
 
 In your CI/CD pipeline, you can set the `PRODUCTION_DEPLOY` environment variable to `true` and then build for production, and the remotes will be configured to point to their real location.
 
-## API Reference
+## API reference
 
 ### NxModuleFederationPlugin
 

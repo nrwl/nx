@@ -4,6 +4,12 @@ import { PackageManager } from './utils/package-manager';
 
 export interface CreateWorkspaceOptions {
   name: string; // Workspace name (e.g. org name)
+  /**
+   * @description Override the working directory for workspace creation.
+   * When set, the workspace is created under this directory instead of process.cwd().
+   * Used when the user provides "." or an absolute path as the workspace name.
+   */
+  workingDir?: string;
   packageManager: PackageManager; // Package manager to use
   nxCloud: NxCloud; // Enable Nx Cloud
   useGitHub?: boolean; // Will you be using GitHub as your git hosting provider?
@@ -42,14 +48,23 @@ export interface CreateWorkspaceOptions {
   cliName?: string; // Name of the CLI, used when displaying outputs. e.g. nx, Nx
   aiAgents?: Agent[]; // List of AI agents to configure
   /**
-   * @description Skip cloud connection (variant 1 experiment - NXC-3628)
+   * @description Skip cloud connection (deferred - show banner but don't write nxCloudId)
    * @default false
    */
   skipCloudConnect?: boolean;
   /**
+   * @description Set neverConnectToCloud in nx.json (full opt-out)
+   * @default false
+   */
+  neverConnectToCloud?: boolean;
+  /**
    * @description Whether GitHub CLI (gh) is available on the system (for telemetry)
    */
   ghAvailable?: boolean;
+  /**
+   * @description Enable or disable usage analytics
+   */
+  analytics?: boolean;
 }
 
 export const supportedAgents = [

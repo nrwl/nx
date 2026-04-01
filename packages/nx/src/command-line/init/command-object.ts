@@ -1,11 +1,33 @@
 import { Argv, CommandModule } from 'yargs';
+import { handleImport } from '../../utils/handle-import';
 import { parseCSV } from '../yargs-utils/shared-options';
+import { isAiAgent } from '../../native';
+import {
+  writeAiOutput,
+  buildErrorResult,
+  writeErrorLog,
+  determineErrorCode,
+} from './utils/ai-output';
+import { recordStat } from '../../utils/ab-testing';
+import { nxVersion } from '../../utils/versions';
+import { isCI } from '../../utils/is-ci';
+import { detectPackageManager } from '../../utils/package-manager';
 
 export const yargsInitCommand: CommandModule = {
   command: 'init',
   describe:
     'Adds Nx to any type of workspace. It installs nx, creates an nx.json configuration file and optionally sets up remote caching. For more info, check https://nx.dev/recipes/adopting-nx.',
-  builder: (yargs) => withInitOptions(yargs),
+  builder: async (yargs: Argv) => {
+    // Check for --help flag directly since async builder doesn't receive helpOrVersionSet reliably
+    const wantsHelp =
+      process.argv.includes('--help') || process.argv.includes('-h');
+    if (wantsHelp) {
+      const y = await withInitOptions(yargs);
+      y.showHelp();
+      process.exit(0);
+    }
+    return withInitOptions(yargs);
+  },
   handler: async (args: any) => {
     // Node 24 has stricter readline behavior, and enquirer is not checking for closed state
     // when invoking operations, thus you get an ERR_USE_AFTER_CLOSE error.
@@ -20,17 +42,70 @@ export const yargsInitCommand: CommandModule = {
       throw error;
     });
 
+    const aiAgent = isAiAgent();
+
+    recordStat({
+      command: 'init',
+      nxVersion,
+      useCloud: false,
+      meta: {
+        type: 'start',
+        nodeVersion: process.versions.node,
+        os: process.platform,
+        packageManager: detectPackageManager(),
+        aiAgent,
+        isCI: isCI(),
+      },
+    });
+
     try {
       const useV2 = await isInitV2();
       if (useV2) {
+        // v2 records its own complete event with richer context
         await require('./init-v2').initHandler(args);
       } else {
         await require('./init-v1').initHandler(args);
+        await recordStat({
+          command: 'init',
+          nxVersion,
+          useCloud: false,
+          meta: {
+            type: 'complete',
+            nodeVersion: process.versions.node,
+            os: process.platform,
+            packageManager: detectPackageManager(),
+            aiAgent,
+            isCI: isCI(),
+          },
+        });
       }
       process.exit(0);
-    } catch {
-      // Ensure the cursor is always restored just in case the user has bailed during interactive prompts
-      process.stdout.write('\x1b[?25h');
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const errorCode = determineErrorCode(error);
+
+      await recordStat({
+        command: 'init',
+        nxVersion,
+        useCloud: false,
+        meta: {
+          type: 'error',
+          errorCode,
+          errorMessage: errorMessage.substring(0, 250),
+          aiAgent,
+        },
+      });
+
+      // Output structured error for AI agents
+      if (aiAgent) {
+        const errorLogPath = writeErrorLog(error);
+        writeAiOutput(buildErrorResult(errorMessage, errorCode, errorLogPath));
+      } else {
+        // Ensure the cursor is always restored just in case the user has bailed during interactive prompts
+        // Skip for AI agents to avoid corrupting NDJSON output
+        process.stdout.write('\x1b[?25h');
+      }
       process.exit(1);
     }
   },
@@ -39,8 +114,8 @@ export const yargsInitCommand: CommandModule = {
 async function isInitV2() {
   return (
     process.env['NX_ADD_PLUGINS'] !== 'false' &&
-    (await import('../../config/nx-json')).readNxJson().useInferencePlugins !==
-      false
+    (await handleImport('../../config/nx-json.js', __dirname)).readNxJson()
+      .useInferencePlugins !== false
   );
 }
 
@@ -63,17 +138,22 @@ async function withInitOptions(yargs: Argv) {
           'Initialize an Nx workspace setup in the .nx directory of the current repository.',
         default: false,
       })
-      .option('force', {
-        describe:
-          'Force the migration to continue and ignore custom webpack setup or uncommitted changes. Only for CRA projects.',
-        type: 'boolean',
-        default: false,
-      })
       .option('aiAgents', {
         type: 'array',
         string: true,
         description: 'List of AI agents to set up.',
         choices: ['claude', 'codex', 'copilot', 'cursor', 'gemini', 'opencode'],
+      })
+      .option('plugins', {
+        type: 'string',
+        description:
+          'Plugins to install: "skip" for none, "all" for all detected, or comma-separated list (e.g., @nx/vite,@nx/jest).',
+      })
+      .option('cacheable', {
+        type: 'string',
+        description:
+          'Comma-separated list of cacheable operations (e.g., build,test,lint).',
+        coerce: parseCSV,
       });
   } else {
     return yargs
@@ -89,13 +169,7 @@ async function withInitOptions(yargs: Argv) {
       .option('integrated', {
         type: 'boolean',
         description:
-          'Migrate to an Nx integrated layout workspace. Only for Angular CLI workspaces and CRA projects.',
-        default: false,
-      })
-      .option('addE2e', {
-        describe:
-          'Set up Cypress E2E tests in integrated workspaces. Only for CRA projects.',
-        type: 'boolean',
+          'Migrate to an Nx integrated layout workspace. Only for Angular CLI workspaces.',
         default: false,
       })
       .option('useDotNxInstallation', {
@@ -103,17 +177,6 @@ async function withInitOptions(yargs: Argv) {
         description:
           'Initialize an Nx workspace setup in the .nx directory of the current repository.',
         default: false,
-      })
-      .option('force', {
-        describe:
-          'Force the migration to continue and ignore custom webpack setup or uncommitted changes. Only for CRA projects.',
-        type: 'boolean',
-        default: false,
-      })
-      .option('vite', {
-        type: 'boolean',
-        description: 'Use Vite as the bundler. Only for CRA projects.',
-        default: true,
       })
       .option('cacheable', {
         type: 'string',

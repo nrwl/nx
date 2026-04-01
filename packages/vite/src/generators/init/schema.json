@@ -45,6 +45,13 @@
       "default": false,
       "x-priority": "internal",
       "hidden": true
+    },
+    "useViteV7": {
+      "type": "boolean",
+      "description": "Use Vite v7",
+      "default": false,
+      "x-priority": "internal",
+      "hidden": true
     }
   }
 }

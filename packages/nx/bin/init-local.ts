@@ -6,6 +6,7 @@ import { stripIndents } from '../src/utils/strip-indents';
 import { daemonClient } from '../src/daemon/client/client';
 import { prompt } from 'enquirer';
 import { output } from '../src/utils/output';
+import { flushAnalytics } from '../src/analytics';
 
 /**
  * Nx is being run inside a workspace.
@@ -47,6 +48,7 @@ export async function initLocal(workspace: WorkspaceTypeAndRoot) {
       const split = newArgs.indexOf('--');
       if (help > -1 && (split === -1 || split > help)) {
         commandsObject.showHelp();
+        process.exit(0);
       } else {
         commandsObject.parse(newArgs);
       }
@@ -55,6 +57,7 @@ export async function initLocal(workspace: WorkspaceTypeAndRoot) {
     }
   } catch (e) {
     console.error(e.message);
+    flushAnalytics();
     process.exit(1);
   }
 }

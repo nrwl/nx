@@ -21,7 +21,7 @@ export async function killTree(pid: number, signal: NodeJS.Signals) {
         exec(
           'taskkill /pid ' + pid + ' /T /F',
           {
-            windowsHide: false,
+            windowsHide: true,
           },
           (error) => {
             // Ignore Fatal errors (128) because it might be due to the process already being killed.
@@ -37,7 +37,7 @@ export async function killTree(pid: number, signal: NodeJS.Signals) {
           pidsToProcess,
           function (parentPid) {
             return spawn('pgrep', ['-P', parentPid], {
-              windowsHide: false,
+              windowsHide: true,
             });
           },
           function () {
@@ -55,7 +55,7 @@ export async function killTree(pid: number, signal: NodeJS.Signals) {
               'ps',
               ['-o', 'pid', '--no-headers', '--ppid', parentPid],
               {
-                windowsHide: false,
+                windowsHide: true,
               }
             );
           },

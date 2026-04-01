@@ -15,7 +15,7 @@ Federation)_.
 **Nx** includes first-class support for helping you to scaffold a Module Federation Architecture for your React and
 Angular application(s).
 
-## Generating a Host
+## Generating a host
 
 To generate only a host application in your workspace, run the following command:
 
@@ -36,7 +36,7 @@ nx g @nx/angular:host apps/angular/shell
 {% /tabitem %}
 {% /tabs %}
 
-### Scaffold a Host with Remotes
+### Scaffold a host with remotes
 
 To scaffold a host application along with remote applications in your workspace, run the following command:
 
@@ -57,7 +57,7 @@ nx g @nx/angular:host apps/angular/with-remotes/shell --remotes=remote1,remote2
 {% /tabitem %}
 {% /tabs %}
 
-## Serving your Host
+## Serving your host
 
 Your `host` application acts like any other application in the context of Nx, and therefore serving it locally is as
 simple as running:
@@ -68,7 +68,7 @@ nx serve shell
 
 When you serve your `host`, Nx will discover any dependent remote applications that are also in the workspace and serve them statically. To learn more about check out our in-depth breakdown of [what happens when you serve your host](/docs/technologies/module-federation/concepts/nx-module-federation-technical-overview#what-happens-when-you-serve-your-host).
 
-## Building your Host
+## Building your host
 
 In the same vein, you can build your host by running:
 

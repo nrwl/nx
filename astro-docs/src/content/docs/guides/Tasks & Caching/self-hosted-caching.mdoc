@@ -38,7 +38,7 @@ Includes everything from Nx Cloud, plus:
 
 {% /aside %}
 
-## Self-Hosted Cache
+## Self-hosted cache
 
 Great for proof of concepts and small teams.
 
@@ -61,15 +61,15 @@ The following remote cache adapters are available:
 
 > Why require an activation key? It simply helps us know and support our users. If you prefer not to provide this information, you can also [build your own cache server](#build-your-own-caching-server).
 
-## Build Your Own Caching Server
+## Build your own caching server
 
 Starting in Nx version 20.8, you can build your own caching server using the OpenAPI specification below. This allows you to create a custom remote cache server tailored to your specific needs. The server manages all aspects of the remote cache, including storage, retrieval, and authentication.
 
-Implementation is up to you, but the server must adhere to the OpenAPI specification below to ensure compatibility with Nx's caching mechanism. The endpoints transfer tar archives as binary data. Note that while the underlying data format may change in future Nx versions, the OpenAPI specification should remain stable.
+Implementation is up to you, but the server must adhere to the OpenAPI specification below to ensure compatibility with Nx caching mechanism. The endpoints transfer tar archives as binary data. Note that while the underlying data format may change in future Nx versions, the OpenAPI specification should remain stable.
 
 You can implement your server in any programming language or framework, as long as it adheres to the OpenAPI spec.
 
-### Open API Specification
+### Open API specification
 
 ```json
 // Nx 20.8+
@@ -212,16 +212,16 @@ You can implement your server in any programming language or framework, as long 
 }
 ```
 
-### Usage Notes
+### Usage notes
 
 To use your custom caching server, set the `NX_SELF_HOSTED_REMOTE_CACHE_SERVER` environment variable. The following environment variables also affect behavior:
 
 - `NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN`: The authentication token to access the cache server.
 - `NODE_TLS_REJECT_UNAUTHORIZED`: Set to `0` to disable TLS certificate validation.
 
-### Migrating From Custom Tasks Runners
+### Migrating from custom tasks runners
 
-You might have used Nx's now-deprecated custom task runners API in these scenarios:
+You might have used Nx now-deprecated custom task runners API in these scenarios:
 
 - To implement custom self-hosted caching: use one of the implementations listed above
 - To inject custom behavior before and after running tasks: use our new API with dedicated pre and post hooks

@@ -1,3 +1,4 @@
+#[cfg(not(target_arch = "wasm32"))]
 use napi::bindgen_prelude::*;
 use std::fs;
 #[cfg(not(target_arch = "wasm32"))]
@@ -9,6 +10,7 @@ use tracing::trace;
 use fs4::fs_std::FileExt;
 
 #[napi]
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 pub struct FileLock {
     #[napi]
     pub locked: bool,
@@ -81,11 +83,11 @@ impl FileLock {
     }
 
     #[napi(ts_return_type = "Promise<void>")]
-    pub fn wait(&mut self, env: Env) -> napi::Result<napi::JsObject> {
+    pub fn wait(&mut self, env: Env) -> napi::Result<PromiseRaw<'static, ()>> {
         if self.locked {
             let lock_file_path = self.lock_file_path.clone();
             self.locked = false;
-            env.spawn_future(async move {
+            let promise = env.spawn_future(async move {
                 let file = OpenOptions::new()
                     .read(true)
                     .write(true)
@@ -94,9 +96,13 @@ impl FileLock {
                 fs4::fs_std::FileExt::lock_shared(&file)?;
                 fs4::fs_std::FileExt::unlock(&file)?;
                 Ok(())
-            })
+            })?;
+            // SAFETY: PromiseRaw's inner napi_value is GC-managed by V8
+            // and remains valid beyond this stack frame.
+            Ok(unsafe { std::mem::transmute(promise) })
         } else {
-            env.spawn_future(async move { Ok(()) })
+            let promise = env.spawn_future(async move { Ok(()) })?;
+            Ok(unsafe { std::mem::transmute(promise) })
         }
     }
 
@@ -112,7 +118,7 @@ impl FileLock {
 #[cfg(target_arch = "wasm32")]
 impl FileLock {
     #[napi(constructor)]
-    pub fn new(lock_file_path: String) -> anyhow::Result<Self> {
+    pub fn new(_lock_file_path: String) -> anyhow::Result<Self> {
         anyhow::bail!("FileLock is not supported on WASM")
     }
 }

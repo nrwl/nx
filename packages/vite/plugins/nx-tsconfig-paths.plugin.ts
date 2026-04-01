@@ -174,6 +174,12 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
       // Let other resolvers handle this path.
       if (!foundTsConfigPath) return null;
 
+      // Skip absolute and root-relative paths — these are filesystem paths,
+      // not TypeScript import specifiers. In Vite, `/foo` is a project-root-
+      // relative URL and must be resolved by Vite's built-in resolver, not
+      // by tsconfig path mapping (which would incorrectly use baseUrl).
+      if (importPath.startsWith('/')) return null;
+
       let resolvedFile: string;
       try {
         resolvedFile = matchTsPathEsm(importPath);

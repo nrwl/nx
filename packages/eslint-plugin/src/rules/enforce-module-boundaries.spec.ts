@@ -63,6 +63,7 @@ const tsconfig = {
       '@mycompany/domain2': ['libs/domain2/src/index.ts'],
       '@mycompany/buildableLib': ['libs/buildableLib/src/main.ts'],
       '@mycompany/buildableLib2': ['libs/buildableLib2/src/main.ts'],
+      '@mycompany/wildcard/*': ['libs/wildcard/*'],
       '@nonBuildableScope/nonBuildableLib': [
         'libs/nonBuildableLib/src/main.ts',
       ],
@@ -115,6 +116,8 @@ const fileSys = {
   './libs/dependsOnPrivate/src/index.ts': '',
   './libs/dependsOnPrivate2/src/index.ts': '',
   './libs/private/src/index.ts': '',
+  './libs/wildcard/user.ts': 'export class User {}',
+  './libs/wildcard/nested/user.ts': 'export class User {}',
   './tsconfig.base.json': JSON.stringify(tsconfig),
   './package.json': JSON.stringify(packageJson),
   './nx.json': JSON.stringify({ npmScope: 'happyorg' }),
@@ -1158,6 +1161,95 @@ Violation detected in:
       expect(failures[1].message).toEqual(message);
     });
 
+    it('should error when using require() to import another library', () => {
+      const failures = runRule(
+        {},
+        `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+        `
+          require('../../other');
+          require.resolve('../../other');
+        `,
+        {
+          nodes: {
+            mylibName: {
+              name: 'mylibName',
+              type: 'lib',
+              data: {
+                root: 'libs/mylib',
+                tags: [],
+                implicitDependencies: [],
+                targets: {},
+              },
+            },
+            otherName: {
+              name: 'otherName',
+              type: 'lib',
+              data: {
+                root: 'libs/other',
+                tags: [],
+                implicitDependencies: [],
+                targets: {},
+              },
+            },
+          },
+          dependencies: {},
+        },
+        {
+          mylibName: [createFile(`libs/mylib/src/main.ts`)],
+          otherName: [createFile('libs/other/src/index.ts')],
+        }
+      );
+
+      const message =
+        'Projects cannot be imported by a relative or absolute path, and must begin with a npm scope';
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toEqual(message);
+      expect(failures[1].message).toEqual(message);
+    });
+
+    it('should not error for require() with non-string arguments', () => {
+      const failures = runRule(
+        {},
+        `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+        `
+          const name = '../../other';
+          require(name);
+          require(\`\${name}\`);
+        `,
+        {
+          nodes: {
+            mylibName: {
+              name: 'mylibName',
+              type: 'lib',
+              data: {
+                root: 'libs/mylib',
+                tags: [],
+                implicitDependencies: [],
+                targets: {},
+              },
+            },
+            otherName: {
+              name: 'otherName',
+              type: 'lib',
+              data: {
+                root: 'libs/other',
+                tags: [],
+                implicitDependencies: [],
+                targets: {},
+              },
+            },
+          },
+          dependencies: {},
+        },
+        {
+          mylibName: [createFile(`libs/mylib/src/main.ts`)],
+          otherName: [createFile('libs/other/src/index.ts')],
+        }
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
     it('should error when relatively importing the src directory of another library', () => {
       const failures = runRule(
         {},
@@ -1238,6 +1330,53 @@ Violation detected in:
       expect(failures[1].message).toEqual(
         'External resources cannot be imported using a relative or absolute path'
       );
+    });
+
+    it('should handle relative imports containing a wildcard', () => {
+      const failures = runRule(
+        {},
+        `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+        `
+          import { User } from '../../wildcard/user';
+        `,
+        {
+          nodes: {
+            mylibName: {
+              name: 'mylibName',
+              type: 'lib',
+              data: {
+                root: 'libs/mylib',
+                tags: [],
+                implicitDependencies: [],
+                targets: {},
+              },
+            },
+            wildcardName: {
+              name: 'wildcardName',
+              type: 'lib',
+              data: {
+                root: 'libs/wildcard',
+                tags: [],
+                implicitDependencies: [],
+                targets: {},
+              },
+            },
+          },
+          dependencies: {},
+        },
+        {
+          mylibName: [createFile(`libs/mylib/src/main.ts`)],
+          wildcardName: [createFile('libs/wildcard/user.ts')],
+        }
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toEqual(
+        'Projects cannot be imported by a relative or absolute path, and must begin with a npm scope'
+      );
+
+      // Verify the fix is available
+      expect(failures[0].fix).toBeDefined();
     });
   });
 

@@ -1,0 +1,6 @@
+extends: existence
+message: "Don't use possessives on product names. Use 'the Nx configuration' instead of 'Nx's configuration'."
+level: error
+ignorecase: false
+tokens:
+  - "Nx's"

@@ -236,7 +236,7 @@ describe('NxPlugin Plugin Generator', () => {
     });
 
     describe('vitest', () => {
-      it('should generate test files with vite.config.ts', async () => {
+      it('should generate test files with vitest.config.mts', async () => {
         await pluginGenerator(
           tree,
           getSchema({
@@ -245,7 +245,8 @@ describe('NxPlugin Plugin Generator', () => {
           })
         );
 
-        ['my-plugin/vite.config.ts'].forEach((path) =>
+        expect(tree.exists('my-plugin/vite.config.ts')).toBeFalsy();
+        ['my-plugin/vitest.config.mts'].forEach((path) =>
           expect(tree.exists(path)).toBeTruthy()
         );
 

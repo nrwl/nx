@@ -6,7 +6,7 @@ sidebar:
 filter: 'type:Guides'
 ---
 
-In this guide we'll specifically look into which changes need to be made to enable incremental builds for Angular
+We'll specifically look into which changes need to be made to enable incremental builds for Angular
 applications.
 
 ## Use buildable libraries
@@ -61,11 +61,11 @@ configured when generating a publishable library (`nx g @nx/angular:lib libs/my-
 {% aside type="note" title="Angular Esbuild Performance" %}
 From internal testing done at Nx, the build time saved from using incremental builds when using Esbuild with Angular is
 not as effective as the time saved when using Webpack with Angular.
-Angular's build time with Esbuild already provides a great performance boost and therefore overall time saved may not
+Angular build time with Esbuild already provides a great performance boost and therefore overall time saved may not
 warrant using incremental builds with Esbuild for Angular
 {% /aside %}
 
-Change your Angular application's "build" target executor to Nx's version of builder you're currently using and the "
+Change your Angular application's "build" target executor to Nx version of builder you're currently using and the "
 serve" target executor to `@nx/angular:dev-server` as shown below.
 
 - `@angular-devkit/build-angular:application` -> `@nx/angular:application`
@@ -198,7 +198,7 @@ serve" target executor to `@nx/angular:dev-server` as shown below.
 {% /tabitem %}
 {% /tabs %}
 
-### Add Executor to Target Defaults
+### Add executor to target defaults
 
 If you'd like to avoid adding `"dependsOn": ["^build"]` to every application in your workspace that uses one of the
 required executors you can add it to the `targetDefaults` section of the `nx.json`:

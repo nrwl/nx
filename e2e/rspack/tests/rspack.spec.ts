@@ -219,7 +219,12 @@ describe('rspack e2e', () => {
         `
       );
 
-      const result = runCLI(`build ${appName}`);
+      // NODE_ENV is stripped globally to prevent Jest's NODE_ENV=test from
+      // leaking into subprocesses. Rspack multi-compiler builds need NODE_ENV
+      // set to avoid defaulting to production mode which changes output paths.
+      const result = runCLI(`build ${appName}`, {
+        env: { NODE_ENV: 'test' },
+      });
 
       checkFilesExist(`dist/${appName}/main.js`);
       checkFilesExist(`dist/${serverName}/index.js`);
@@ -295,7 +300,9 @@ describe('rspack e2e', () => {
         ];
         };`
       );
-      const result = runCLI(`build ${appName}`);
+      const result = runCLI(`build ${appName}`, {
+        env: { NODE_ENV: 'test' },
+      });
 
       checkFilesExist(`dist/${serverName}/index.js`);
       checkFilesExist(`dist/${appName}/main.js`);

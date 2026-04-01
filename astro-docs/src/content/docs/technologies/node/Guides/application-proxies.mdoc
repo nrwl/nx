@@ -8,9 +8,9 @@ filter: 'type:Guides'
 
 It is useful to set up frontend proxies to your backend app during local development. By proxying requests, you won't need to set up [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) when communicating with the backend.
 
-## Webpack Dev-Server
+## Webpack dev-server
 
-Webpack's dev-server has built-in support for [proxies](https://webpack.js.org/configuration/dev-server/#devserverproxy).
+Webpack dev-server has built-in support for [proxies](https://webpack.js.org/configuration/dev-server/#devserverproxy).
 
 For example, if you want to proxy all requests to `/api` to `http://localhost:3000`, then you would use this configuration:
 
@@ -51,9 +51,9 @@ module.exports = {
 };
 ```
 
-## Vite Server
+## Vite server
 
-Vite's server has built-in support for [proxies](https://vite.dev/config/server-options#server-proxy).
+Vite server has built-in support for [proxies](https://vite.dev/config/server-options#server-proxy).
 
 For example, if you want to proxy all requests to `/api` to `http://localhost:3000`, then you would use this configuration:
 
@@ -90,7 +90,7 @@ export default defineConfig({
 });
 ```
 
-## Automatically Configure Frontend Executors
+## Automatically configure frontend executors
 
 {% aside type="caution" title="Not recommended for new projects" %}
 We recommend configuring proxies using support from existing tooling. Webpack and Vite both come with proxy support out of the box, as do most modern tools. Using `--frontendProject` is meant for Nx prior to version 18.

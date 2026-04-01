@@ -1,0 +1,34 @@
+{
+  "outDir": "packages/maven/dist",
+  "assets": [
+    {
+      "glob": "**/files/**",
+      "input": "packages/maven/src"
+    },
+    {
+      "glob": "**/*.json",
+      "input": "packages/maven/src",
+      "ignore": ["maven-plugin/**/*"]
+    },
+    {
+      "glob": "@(generators|executors).json"
+    },
+    {
+      "glob": "**/*.jar",
+      "input": "packages/maven/batch-runner/target",
+      "includeIgnoredFiles": true
+    },
+    {
+      "glob": "**/*.jar",
+      "input": "packages/maven/batch-runner-adapters/maven3/target",
+      "output": "/nx-maven-adapters",
+      "includeIgnoredFiles": true
+    },
+    {
+      "glob": "**/*.jar",
+      "input": "packages/maven/batch-runner-adapters/maven4/target",
+      "output": "/nx-maven-adapters",
+      "includeIgnoredFiles": true
+    }
+  ]
+}

@@ -105,17 +105,17 @@ export function getInstalledViteVersion(tree: Tree): string {
 
 export function getInstalledViteMajorVersion(
   tree: Tree
-): 5 | 6 | 7 | undefined {
+): 5 | 6 | 7 | 8 | undefined {
   const installedViteVersion = getInstalledViteVersion(tree);
   if (!installedViteVersion) {
     return;
   }
 
   const installedMajor = major(installedViteVersion);
-  if (installedMajor < 5 || installedMajor > 7) {
+  if (installedMajor < 5 || installedMajor > 8) {
     return undefined;
   }
-  return installedMajor as 5 | 6 | 7;
+  return installedMajor as 5 | 6 | 7 | 8;
 }
 
 export async function getInstalledVitestVersionFromGraph() {

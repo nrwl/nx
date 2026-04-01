@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import * as CopyWebpackPlugin from 'copy-webpack-plugin';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
 import {
   Configuration,
   ProgressPlugin,
@@ -379,6 +379,7 @@ function applyNxDependentConfig(
               ],
               dot: true,
             },
+            noErrorOnMissing: true,
           };
         }),
       })

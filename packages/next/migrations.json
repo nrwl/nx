@@ -65,6 +65,23 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "22.6.0": {
+      "version": "22.6.0-beta.10",
+      "x-prompt": "Bump Next.js to ~16.1.6 to resolve GHSA-9g9p-9gw9-jx7f and GHSA-5f7q-jpqc-wp7h",
+      "requires": {
+        "next": ">=16.0.0"
+      },
+      "packages": {
+        "next": {
+          "version": "~16.1.6",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "^16.1.6",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

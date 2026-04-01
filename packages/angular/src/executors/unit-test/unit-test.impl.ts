@@ -8,6 +8,7 @@ import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
 import { targetFromTargetString } from '../../utils/targets';
 import type { ApplicationExecutorOptions } from '../application/schema';
 import type { BuildAngularLibraryExecutorOptions } from '../package/schema';
+import { lt } from 'semver';
 import { getInstalledAngularVersionInfo } from '../utilities/angular-version-utils';
 import { assertBuilderPackageIsInstalled } from '../utilities/builder-package';
 import {
@@ -20,7 +21,7 @@ export default async function* unitTestExecutor(
   options: UnitTestExecutorOptions,
   context: ExecutorContext
 ): AsyncIterable<BuilderOutput> {
-  validateOptions();
+  validateOptions(options);
 
   const {
     plugins: pluginPaths,
@@ -62,7 +63,7 @@ export default async function* unitTestExecutor(
   );
 }
 
-function validateOptions(): void {
+function validateOptions(options: UnitTestExecutorOptions): void {
   const { version: angularVersion, major: angularMajorVersion } =
     getInstalledAngularVersionInfo();
 
@@ -70,6 +71,14 @@ function validateOptions(): void {
     throw new Error(
       `The "unit-test" executor is only available for Angular versions >= 21.0.0. You are currently using version ${angularVersion}.`
     );
+  }
+
+  if (lt(angularVersion, '21.2.0')) {
+    if (options.headless !== undefined) {
+      throw new Error(
+        `The "headless" option requires Angular version 21.2.0 or greater. You are currently using version ${angularVersion}.`
+      );
+    }
   }
 }
 

@@ -62,11 +62,13 @@ export function recordInitialMigrationMetadata(
   const gitRef = execSync('git rev-parse HEAD', {
     cwd: workspacePath,
     encoding: 'utf-8',
+    windowsHide: true,
   }).trim();
 
   const gitSubject = execSync('git log -1 --pretty=%s', {
     cwd: workspacePath,
     encoding: 'utf-8',
+    windowsHide: true,
   }).trim();
 
   parsedMigrationsJson['nx-console'] = {
@@ -102,22 +104,26 @@ export function finishMigrationProcess(
   execSync('git add .', {
     cwd: workspacePath,
     encoding: 'utf-8',
+    windowsHide: true,
   });
 
   execSync(`git commit -m "${commitMessage}" --no-verify`, {
     cwd: workspacePath,
     encoding: 'utf-8',
+    windowsHide: true,
   });
 
   if (squashCommits && initialGitRef) {
     execSync(`git reset --soft ${initialGitRef.ref}`, {
       cwd: workspacePath,
       encoding: 'utf-8',
+      windowsHide: true,
     });
 
     execSync(`git commit -m "${commitMessage}" --no-verify`, {
       cwd: workspacePath,
       encoding: 'utf-8',
+      windowsHide: true,
     });
   }
 }
@@ -143,6 +149,7 @@ export async function runSingleMigration(
     const gitRefBefore = execSync('git rev-parse HEAD', {
       cwd: workspacePath,
       encoding: 'utf-8',
+      windowsHide: true,
     }).trim();
 
     // Run migration in a separate process so it can be cancelled
@@ -165,6 +172,7 @@ export async function runSingleMigration(
       {
         cwd: workspacePath,
         stdio: ['pipe', 'pipe', 'pipe'],
+        windowsHide: true,
       }
     );
 
@@ -228,6 +236,7 @@ export async function runSingleMigration(
         execSync('git add migrations.json', {
           cwd: workspacePath,
           encoding: 'utf-8',
+          windowsHide: true,
         });
       } catch (e) {
         // do nothing, this will fail if it's gitignored
@@ -235,11 +244,13 @@ export async function runSingleMigration(
       execSync('git commit --amend --no-verify --no-edit', {
         cwd: workspacePath,
         encoding: 'utf-8',
+        windowsHide: true,
       });
       // The revision changes after the amend, so we need to update it
       const amendedGitRef = execSync('git rev-parse HEAD', {
         cwd: workspacePath,
         encoding: 'utf-8',
+        windowsHide: true,
       }).trim();
 
       modifyMigrationsJsonMetadata(
@@ -274,6 +285,7 @@ export async function runSingleMigration(
       execSync('git add migrations.json', {
         cwd: workspacePath,
         encoding: 'utf-8',
+        windowsHide: true,
       });
     } catch (e) {
       // do nothing, this will fail if it's gitignored
@@ -442,6 +454,7 @@ export function undoMigration(workspacePath: string, id: string) {
     execSync(`git reset --hard ${existing.ref}^`, {
       cwd: workspacePath,
       encoding: 'utf-8',
+      windowsHide: true,
     });
     migrationsJsonMetadata.completedMigrations[id] = {
       type: 'skipped',

@@ -26,10 +26,11 @@ import {
   PreTasksExecutionContext,
 } from '../../project-graph/plugins/public-api';
 import { preventRecursionInGraphConstruction } from '../../project-graph/project-graph';
-import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
+import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
 import { isJsonMessage } from '../../utils/consume-messages-from-socket';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import { isCI } from '../../utils/is-ci';
+import { isSandbox } from '../../utils/is-sandbox';
 import { output } from '../../utils/output';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
 import type {
@@ -82,6 +83,13 @@ import {
   SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
   type SetNxConsolePreferenceAndInstallResponse,
 } from '../message-types/nx-console';
+import {
+  GET_CONFIGURE_AI_AGENTS_STATUS,
+  RESET_CONFIGURE_AI_AGENTS_STATUS,
+  type ConfigureAiAgentsStatusResponse,
+  type HandleGetConfigureAiAgentsStatusMessage,
+  type HandleResetConfigureAiAgentsStatusMessage,
+} from '../message-types/configure-ai-agents';
 import { REGISTER_PROJECT_GRAPH_LISTENER } from '../message-types/register-project-graph-listener';
 import {
   HandlePostTasksExecutionMessage,
@@ -112,6 +120,7 @@ import {
   Message,
   VersionMismatchError,
 } from './daemon-socket-messenger';
+import { handleImport } from '../../utils/handle-import';
 
 const DAEMON_ENV_REQUIRED_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -230,7 +239,7 @@ export class DaemonClient {
       // version mismatch => no daemon because the installed nx version differs from the running one
       if (
         isNxVersionMismatch() ||
-        ((isCI() || isDocker()) && env !== 'true') ||
+        ((isCI() || isDocker() || isSandbox()) && env !== 'true') ||
         isDaemonDisabled() ||
         nxJsonIsNotPresent() ||
         (useDaemonProcessOption === undefined && env === 'false') ||
@@ -341,7 +350,8 @@ export class DaemonClient {
     tasks: Task[],
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
-    cwd: string
+    cwd: string,
+    collectInputs?: boolean
   ): Promise<Hash[]> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
@@ -353,6 +363,7 @@ export class DaemonClient {
       tasks,
       taskGraph,
       cwd,
+      collectInputs,
     });
   }
 
@@ -963,6 +974,20 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
+  getConfigureAiAgentsStatus(): Promise<ConfigureAiAgentsStatusResponse> {
+    const message: HandleGetConfigureAiAgentsStatusMessage = {
+      type: GET_CONFIGURE_AI_AGENTS_STATUS,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  resetConfigureAiAgentsStatus(): Promise<{ success: boolean }> {
+    const message: HandleResetConfigureAiAgentsStatusMessage = {
+      type: RESET_CONFIGURE_AI_AGENTS_STATUS,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
   async isServerAvailable(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       try {
@@ -1037,9 +1062,12 @@ export class DaemonClient {
   private setUpConnection() {
     const socketPath = this.getSocketPath();
 
-    this.socketMessenger = new DaemonSocketMessenger(
-      connect(socketPath)
-    ).listen(
+    const socket = connect(socketPath);
+    // Unref the socket so it doesn't keep the process alive. The
+    // sendMessageToDaemon method uses a keep-alive setTimeout to
+    // explicitly hold the event loop open while awaiting a response.
+    socket.unref();
+    this.socketMessenger = new DaemonSocketMessenger(socket).listen(
       (message) => this.handleMessage(message),
       () => {
         // it's ok for the daemon to terminate if the client doesn't wait on
@@ -1213,8 +1241,9 @@ export class DaemonClient {
     }
 
     try {
-      const { getProcessMetricsService } = await import(
-        '../../tasks-runner/process-metrics-service'
+      const { getProcessMetricsService } = await handleImport(
+        '../../tasks-runner/process-metrics-service.js',
+        __dirname
       );
       getProcessMetricsService().registerDaemonProcess(daemonPid);
     } catch {
@@ -1289,7 +1318,7 @@ export class DaemonClient {
         cwd: workspaceRoot,
         stdio: ['ignore', this._out.fd, this._err.fd],
         detached: true,
-        windowsHide: false,
+        windowsHide: true,
         shell: false,
         env: {
           ...DAEMON_ENV_OVERRIDABLE_SETTINGS,

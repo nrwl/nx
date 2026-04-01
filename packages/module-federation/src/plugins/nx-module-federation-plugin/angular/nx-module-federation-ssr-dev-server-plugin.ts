@@ -79,7 +79,7 @@ export class NxModuleFederationSSRDevServerPlugin
               mappedLocationOfRemotes,
               {
                 pathToCert: this._options.devServerConfig.sslCert,
-                pathToKey: this._options.devServerConfig.sslCert,
+                pathToKey: this._options.devServerConfig.sslKey,
               },
               true,
               this._options.devServerConfig.host

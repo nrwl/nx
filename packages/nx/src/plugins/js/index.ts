@@ -1,6 +1,5 @@
-import { execSync } from 'child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'fs';
-import { dirname, join } from 'path';
+import { existsSync, readFileSync, rmSync } from 'fs';
+import { join } from 'path';
 import { performance } from 'perf_hooks';
 import {
   ProjectGraph,
@@ -19,6 +18,8 @@ import { workspaceDataDirectory } from '../../utils/cache-directory';
 import { combineGlobPatterns } from '../../utils/globs';
 import { detectPackageManager } from '../../utils/package-manager';
 import { nxVersion } from '../../utils/versions';
+import { logger } from '../../utils/logger';
+import { safeWriteFileCache } from '../../utils/plugin-cache-utils';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { readBunLockFile } from './lock-file/bun-parser';
 import {
@@ -206,11 +207,21 @@ function writeExternalNodesCache(
   nodes: ProjectGraph['externalNodes'],
   keyMap: Map<string, any>
 ) {
-  mkdirSync(dirname(externalNodesHashFile), { recursive: true });
   const serializedKeyMap = serializeKeyMap(keyMap);
   const cacheData = { nodes, keyMap: serializedKeyMap };
-  writeFileSync(externalNodesCache, JSON.stringify(cacheData, null, 2));
-  writeFileSync(externalNodesHashFile, hash);
+  const content = safeStringify(cacheData);
+  if (content === undefined) {
+    logger.warn(
+      `Failed to serialize external nodes cache. Skipping cache write.`
+    );
+    tryRemoveFile(externalNodesCache);
+    tryRemoveFile(externalNodesHashFile);
+    return;
+  }
+  safeWriteFileCache(externalNodesCache, content);
+  if (existsSync(externalNodesCache)) {
+    safeWriteFileCache(externalNodesHashFile, hash);
+  }
 }
 
 function readCachedExternalNodes(): {
@@ -228,9 +239,37 @@ function writeDependenciesCache(
   hash: string,
   dependencies: RawProjectGraphDependency[]
 ) {
-  mkdirSync(dirname(dependenciesHashFile), { recursive: true });
-  writeFileSync(dependenciesCache, JSON.stringify(dependencies, null, 2));
-  writeFileSync(dependenciesHashFile, hash);
+  const content = safeStringify(dependencies);
+  if (content === undefined) {
+    logger.warn(
+      `Failed to serialize dependencies cache. Skipping cache write.`
+    );
+    tryRemoveFile(dependenciesCache);
+    tryRemoveFile(dependenciesHashFile);
+    return;
+  }
+  safeWriteFileCache(dependenciesCache, content);
+  if (existsSync(dependenciesCache)) {
+    safeWriteFileCache(dependenciesHashFile, hash);
+  }
+}
+
+function safeStringify(data: unknown): string | undefined {
+  try {
+    return JSON.stringify(data, null, 2);
+  } catch {
+    return undefined;
+  }
+}
+
+function tryRemoveFile(path: string): void {
+  try {
+    if (existsSync(path)) {
+      rmSync(path);
+    }
+  } catch {
+    // Best effort
+  }
 }
 
 function readCachedDependencies(): RawProjectGraphDependency[] {

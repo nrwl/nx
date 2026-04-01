@@ -1,0 +1,40 @@
+{
+  "outDir": "packages/nx/dist",
+  "assets": [
+    { "glob": "**/files/**" },
+    { "glob": "**/files/**/.gitkeep" },
+    {
+      "glob": "**/*.json",
+      "ignore": [
+        "tsconfig*.json",
+        "**/project.json",
+        "**/__fixtures__/**",
+        ".eslintrc.json",
+        "executors.json",
+        "generators.json",
+        "migrations.json",
+        "package.json"
+      ]
+    },
+    {
+      "glob": "**/*.{mjs,cjs,js,css,html,svg}",
+      "ignore": ["**/jest.config.js", "**/__fixtures__/**"]
+    },
+    {
+      "glob": "**/*.{node,wasm}",
+      "includeIgnoredFiles": true
+    },
+    {
+      "glob": "index.d.ts",
+      "input": "packages/nx/src/native",
+      "output": "/src/native"
+    },
+    {
+      "glob": "**/*",
+      "input": "dist/apps/graph",
+      "output": "/src/core/graph",
+      "ignore": ["assets/**"],
+      "includeIgnoredFiles": true
+    }
+  ]
+}
