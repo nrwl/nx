@@ -135,7 +135,7 @@ describe('Move Angular Project', () => {
     expect(moveOutput).toContain(`CREATE ${indexPath}`);
     checkFilesExist(indexPath);
     const index = readFile(indexPath);
-    expect(index).toContain(`export * from './lib/shared-${lib1}-module'`);
+    expect(index).toContain(`export * from "./lib/shared-${lib1}-module"`);
 
     /**
      * Check that the import in lib2 has been updated
