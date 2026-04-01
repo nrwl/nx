@@ -76,7 +76,10 @@ function handleWorkspaceModules(
     logger.verbose(`Copying ${pkgName}.`);
 
     const workspaceModuleProject = workspaceModules.get(pkgName);
-    const workspaceModuleRoot = workspaceModuleProject.data.root;
+    const workspaceModuleRoot = join(
+      workspaceRoot,
+      workspaceModuleProject.data.root
+    );
     const newWorkspaceModulePath = join(workspaceModulesDir, pkgName);
 
     // Copy the module
