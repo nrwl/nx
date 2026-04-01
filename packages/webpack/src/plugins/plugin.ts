@@ -164,7 +164,7 @@ async function createWebpackTargets(
 
   targets[options.buildTargetName] = {
     command: `webpack-cli build`,
-    options: { cwd: projectRoot, args: ['--node-env=production'] },
+    options: { cwd: projectRoot, args: ['--config-node-env=production'] },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
     inputs:
@@ -204,7 +204,7 @@ async function createWebpackTargets(
     command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
-      args: ['--node-env=development'],
+      args: ['--config-node-env=development'],
     },
     metadata: {
       technologies: ['webpack'],
@@ -225,7 +225,7 @@ async function createWebpackTargets(
     command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
-      args: ['--node-env=production'],
+      args: ['--config-node-env=production'],
     },
     metadata: {
       technologies: ['webpack'],
