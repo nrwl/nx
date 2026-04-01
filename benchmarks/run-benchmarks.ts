@@ -69,8 +69,9 @@ function main() {
     goals = JSON.parse(readFileSync(goalsPath, 'utf-8'));
   }
 
-  // If setting baseline, write it first so the report shows it
-  if (updateBaseline) {
+  // Auto-set baseline on first run, or when explicitly requested
+  const firstRun = !existsSync(baselinePath);
+  if (updateBaseline || firstRun) {
     const benchmarkNames = [
       'version',
       'show-projects',
@@ -83,8 +84,16 @@ function main() {
       const result = loadResult(name);
       if (result) newBaseline[name] = { mean: result.mean };
     }
-    writeFileSync(baselinePath, JSON.stringify(newBaseline, null, 2) + '\n');
-    console.log(colors.green(`Baseline saved: ${baselinePath}\n`));
+    if (Object.keys(newBaseline).length > 0) {
+      writeFileSync(baselinePath, JSON.stringify(newBaseline, null, 2) + '\n');
+      if (firstRun) {
+        console.log(
+          colors.green(`First run — baseline saved: ${baselinePath}\n`)
+        );
+      } else {
+        console.log(colors.green(`Baseline updated: ${baselinePath}\n`));
+      }
+    }
   }
 
   // Load baseline (local, gitignored)
@@ -168,15 +177,10 @@ function main() {
   console.log('');
 
   // Update baseline if requested
-  if (!updateBaseline && !existsSync(baselinePath) && !process.env.CI) {
-    console.log(
-      colors.dim(
-        'No local baseline found. Run with --set-baseline to save one:\n  pnpm bench -- --set-baseline'
-      )
-    );
+  if (!updateBaseline && !process.env.CI) {
+    console.log(colors.dim('To update baseline: pnpm bench -- --set-baseline'));
     console.log('');
   }
-
 }
 
 main();
