@@ -28,7 +28,7 @@ export function startLocalRegistry({
   }
   return new Promise<() => void>((resolve, reject) => {
     const childProcess = fork(
-      require.resolve('nx'),
+      require.resolve('nx/bin/nx'),
       [
         ...`run ${localRegistryTarget} --location none --clear ${
           clearStorage ?? true
