@@ -6,6 +6,7 @@ import {
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
+  joinPathFragments,
   readJsonFile,
   TargetConfiguration,
   workspaceRoot,
@@ -295,9 +296,9 @@ function normalizeOutputPath(
       return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
     } else {
       if (outputPath.startsWith('..')) {
-        return join('{workspaceRoot}', join(projectRoot, outputPath));
+        return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);
       } else {
-        return join('{projectRoot}', outputPath);
+        return joinPathFragments('{projectRoot}', outputPath);
       }
     }
   }

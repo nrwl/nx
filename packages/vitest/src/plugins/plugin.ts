@@ -6,6 +6,7 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
+  normalizePath,
   ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
@@ -414,9 +415,9 @@ function normalizeOutputPath(
       return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
     } else {
       if (outputPath.startsWith('..')) {
-        return join('{workspaceRoot}', join(projectRoot, outputPath));
+        return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);
       } else {
-        return join('{projectRoot}', outputPath);
+        return joinPathFragments('{projectRoot}', outputPath);
       }
     }
   }
@@ -463,5 +464,5 @@ async function getTestPathsRelativeToProjectRoot(
     .filter((ts) =>
       fullProjectRoot === '.' ? true : ts.moduleId.startsWith(fullProjectRoot)
     )
-    .map((ts) => relative(projectRoot, ts.moduleId));
+    .map((ts) => normalizePath(relative(projectRoot, ts.moduleId)));
 }
