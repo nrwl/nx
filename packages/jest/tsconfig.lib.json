@@ -7,7 +7,7 @@
     "tsBuildInfoFile": "../../dist/packages/jest/tsconfig.tsbuildinfo"
   },
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
-  "include": ["**/*.ts", "**/*.json"],
+  "include": ["**/*.ts", "src/**/schema.json"],
   "references": [
     {
       "path": "../js/tsconfig.lib.json"
