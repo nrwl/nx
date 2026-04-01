@@ -33,9 +33,10 @@ jest.mock('vitest/node', () => ({
   }),
 }));
 
-// Mock readJsonFile from @nx/devkit to return stable project name
+// Mock readJsonFile and detectPackageManager from @nx/devkit for stable test environment
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
+  detectPackageManager: jest.fn().mockReturnValue('npm'),
   readJsonFile: jest.fn((path) => {
     if (path.endsWith('package.json')) {
       return { name: 'vite' };

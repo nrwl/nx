@@ -39,6 +39,7 @@ describe('@nx/webpack/plugin', () => {
       JSON.stringify({ name: 'my-app' })
     );
     tempFs.createFileSync('my-app/webpack.config.js', '');
+    tempFs.createFileSync('package-lock.json', '{}');
   });
 
   afterEach(() => {
