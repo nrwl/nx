@@ -3,7 +3,7 @@ module.exports = {
   displayName: 'workspace-plugin',
   preset: '../../jest.preset.js',
   transform: {
-    '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    '^.+\\.(ts|js|html)$': ['ts-jest', { diagnostics: false }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/tools/workspace-plugin',
