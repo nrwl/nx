@@ -9,6 +9,7 @@ import { coerce, major } from 'semver';
 import {
   ajvVersion,
   analogVitestAngular,
+  analogVitestAngularV3,
   edgeRuntimeVmVersion,
   happyDomVersion,
   jsdomVersion,
@@ -17,6 +18,7 @@ import {
   vitePluginReactV4Version,
   vitePluginReactVersion,
 } from './versions';
+import { getAnalogMajorVersion } from './analog-version';
 
 export type EnsureDependenciesOptions = {
   uiFramework: 'angular' | 'react' | 'none';
@@ -44,8 +46,12 @@ export function ensureDependencies(
   }
 
   if (schema.uiFramework === 'angular') {
-    devDependencies['@analogjs/vitest-angular'] = analogVitestAngular;
-    devDependencies['@analogjs/vite-plugin-angular'] = analogVitestAngular;
+    const analogVersion =
+      getAnalogMajorVersion(host) >= 3
+        ? analogVitestAngularV3
+        : analogVitestAngular;
+    devDependencies['@analogjs/vitest-angular'] = analogVersion;
+    devDependencies['@analogjs/vite-plugin-angular'] = analogVersion;
   }
 
   if (schema.uiFramework === 'react') {
