@@ -238,7 +238,7 @@ export interface DepsOutputsInput {
 
 /**
  * Detects which AI agent is running and returns its name.
- * Returns None if no agent is detected.
+ * Returns None if no agent is detected or when running inside the Nx daemon.
  * Filtering against supported agents should be done on the TypeScript side.
  */
 export declare function detectAiAgent(): string | null
@@ -413,7 +413,12 @@ export declare function installNxConsoleForEditor(editor: SupportedEditor): Prom
 
 export const IS_WASM: boolean
 
-/** Detects if the current process is being run by an AI agent */
+/**
+ * Detects if the current process is being run by an AI agent.
+ * Always returns false when running inside the Nx daemon, since the daemon
+ * is a long-lived process that should not inherit AI agent behavior from
+ * the client that connected to it.
+ */
 export declare function isAiAgent(): boolean
 
 export declare function isEditorInstalled(editor: SupportedEditor): Promise<boolean>

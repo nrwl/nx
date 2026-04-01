@@ -343,18 +343,26 @@ export function formatAggregateCreateNodesError(
       errorStackLines.push(` - ${file}:`);
     }
     for (const e of errors) {
-      const messageIndent = file ? '      ' : '  - ';
-      const stackIndent = file ? '     ' : ' - ';
-      errorBodyLines.push(
-        ...e.message.split('\n').map((line) => `${messageIndent}${line}`)
-      );
-      errorStackLines.push(
-        ...e.stack.split('\n').map((line) => `${stackIndent}${line}`)
-      );
+      const messageLines = e.message.split('\n');
+      const stackLines = e.stack.split('\n');
+      if (file) {
+        errorBodyLines.push(...messageLines.map((line) => `      ${line}`));
+        errorStackLines.push(...stackLines.map((line) => `     ${line}`));
+      } else {
+        errorBodyLines.push(
+          `  - ${messageLines[0]}`,
+          ...messageLines.slice(1).map((line) => `    ${line}`)
+        );
+        errorStackLines.push(
+          ` - ${stackLines[0]}`,
+          ...stackLines.slice(1).map((line) => `   ${line}`)
+        );
+      }
       if (e.stack && process.env.NX_VERBOSE_LOGGING === 'true') {
+        const verboseIndent = file ? '       ' : '     ';
         const innerStackTrace = e.stack
           .split('\n')
-          .map((line) => `${stackIndent}  ${line}`)
+          .map((line) => `${verboseIndent}${line}`)
           .join('\n');
         errorStackLines.push(innerStackTrace);
       }

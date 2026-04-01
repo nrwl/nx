@@ -310,12 +310,13 @@ async function processCollectedUpdatedAndDeletedFiles(
   }
 }
 
-export async function triggerGraphRecomputation() {
-  // clear existing promise from cache
+export function triggerGraphRecomputation() {
+  // Clear the cached promise so the next request triggers a fresh computation.
+  // We intentionally do NOT call getCachedSerializedProjectGraphPromise() here
+  // because assigning its return Promise to the module-level variable causes a
+  // deadlock: the async function resumes, sees the variable is non-null (pointing
+  // at its own Promise), takes the "reuse" branch, and awaits itself forever.
   cachedSerializedProjectGraphPromise = null;
-  // get new promise for cache
-  cachedSerializedProjectGraphPromise =
-    getCachedSerializedProjectGraphPromise();
 }
 
 async function processFilesAndCreateAndSerializeProjectGraph(
