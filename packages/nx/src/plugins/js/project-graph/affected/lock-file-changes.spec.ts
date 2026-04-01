@@ -1,9 +1,6 @@
 import { ProjectGraph } from '../../../../config/project-graph';
 import { WholeFileChange } from '../../../../project-graph/file-utils';
-import {
-  getTouchedProjectsFromLockFile,
-  PNPM_LOCK_FILES,
-} from './lock-file-changes';
+import { getTouchedProjectsFromLockFile } from './lock-file-changes';
 import { TempFs } from '../../../../internal-testing-utils/temp-fs';
 import { JsonDiffType } from '../../../../utils/json-diff';
 
@@ -260,8 +257,6 @@ describe('getTouchedProjectsFromLockFile', () => {
   ];
 
   AUTO_MODE_LOCK_FILES.forEach(({ lockFile, changes, expectedProjects }) => {
-    const isPnpm = PNPM_LOCK_FILES.includes(lockFile);
-
     describe(`"${lockFile}" with projectsAffectedByDependencyUpdates set to auto`, () => {
       beforeAll(async () => {
         tempFs = new TempFs('lock-file-changes-test');
@@ -293,53 +288,33 @@ describe('getTouchedProjectsFromLockFile', () => {
         expect(result).toStrictEqual([]);
       });
 
-      // When auto mode sees a WholeFileChange (binary diff, no JSON
-      // structure), it cannot narrow to specific projects. pnpm returns
-      // [] here because it only looks at importers-level JSON changes.
-      // Non-pnpm should return all projects as a safe fallback.
-      // BUG (NXC-4185): non-pnpm lock files silently return [].
-      const wholeFileTest = isPnpm ? it : it.failing;
-      wholeFileTest(
-        isPnpm
-          ? `should not return changes when whole lock file "${lockFile}" is changed`
-          : `should return all projects when whole lock file "${lockFile}" is changed`,
-        () => {
-          const result = getTouchedProjectsFromLockFile(
-            [
-              {
-                file: lockFile,
-                getChanges: () => [new WholeFileChange()],
-              },
-            ],
-            graph.nodes
-          );
-          if (isPnpm) {
-            expect(result).toStrictEqual([]);
-          } else {
-            expect(result).toStrictEqual(allNodes);
-          }
-        }
-      );
+      // When auto mode sees a WholeFileChange it cannot narrow to
+      // specific projects, so all projects should be affected.
+      it(`should return all projects when whole lock file "${lockFile}" is changed`, () => {
+        const result = getTouchedProjectsFromLockFile(
+          [
+            {
+              file: lockFile,
+              getChanges: () => [new WholeFileChange()],
+            },
+          ],
+          graph.nodes
+        );
+        expect(result).toStrictEqual(allNodes);
+      });
 
-      // BUG (NXC-4185): non-pnpm lock files silently return [] for
-      // json-level changes because getProjectPathsAffectedByDependencyUpdates
-      // only understands pnpm's "importers" structure.
-      const jsonChangeTest = isPnpm ? it : it.failing;
-      jsonChangeTest(
-        `should return only affected projects when "${lockFile}" has dependency changes`,
-        () => {
-          const result = getTouchedProjectsFromLockFile(
-            [
-              {
-                file: lockFile,
-                getChanges: () => changes,
-              },
-            ],
-            graph.nodes
-          );
-          expect(result).toStrictEqual(expectedProjects);
-        }
-      );
+      it(`should return only affected projects when "${lockFile}" has dependency changes`, () => {
+        const result = getTouchedProjectsFromLockFile(
+          [
+            {
+              file: lockFile,
+              getChanges: () => changes,
+            },
+          ],
+          graph.nodes
+        );
+        expect(result).toStrictEqual(expectedProjects);
+      });
     });
   });
 
@@ -377,23 +352,19 @@ describe('getTouchedProjectsFromLockFile', () => {
       expect(result).toStrictEqual([]);
     });
 
-    // BUG (NXC-4185): auto mode returns [] for non-pnpm lock files.
     // Since bun.lockb is binary and always produces WholeFileChange,
     // auto mode should return all projects as a safe fallback.
-    it.failing(
-      'should return all projects when whole lock file "bun.lockb" is changed',
-      () => {
-        const result = getTouchedProjectsFromLockFile(
-          [
-            {
-              file: 'bun.lockb',
-              getChanges: () => [new WholeFileChange()],
-            },
-          ],
-          graph.nodes
-        );
-        expect(result).toStrictEqual(allNodes);
-      }
-    );
+    it('should return all projects when whole lock file "bun.lockb" is changed', () => {
+      const result = getTouchedProjectsFromLockFile(
+        [
+          {
+            file: 'bun.lockb',
+            getChanges: () => [new WholeFileChange()],
+          },
+        ],
+        graph.nodes
+      );
+      expect(result).toStrictEqual(allNodes);
+    });
   });
 });
