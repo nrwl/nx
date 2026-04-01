@@ -1,20 +1,20 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`@nx/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 1`] = `
-"import { fileURLToPath } from 'node:url';
-import { dirname } from 'node:path';
+"import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
 
-import type { StorybookConfig } from '@storybook/react-vite';
+import type { StorybookConfig } from "@storybook/react-vite";
 
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { mergeConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { mergeConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
 const config: StorybookConfig = {
-  stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
+  stories: ["../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))"],
   addons: [],
   framework: {
-    name: getAbsolutePath('@storybook/react-vite'),
+    name: getAbsolutePath("@storybook/react-vite"),
     options: {},
   },
 
@@ -74,16 +74,16 @@ exports[`@nx/storybook:configuration for workspaces with Root project basic func
 exports[`@nx/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 3`] = `""`;
 
 exports[`@nx/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 4`] = `
-"import { fileURLToPath } from 'node:url';
-import { dirname } from 'node:path';
+"import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
 
-import type { StorybookConfig } from '@storybook/react-webpack5';
+import type { StorybookConfig } from "@storybook/react-webpack5";
 
 const config: StorybookConfig = {
-  stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
-  addons: [, '@nx/react/plugins/storybook'],
+  stories: ["../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))"],
+  addons: [, "@nx/react/plugins/storybook"],
   framework: {
-    name: getAbsolutePath('@storybook/react-webpack5'),
+    name: getAbsolutePath("@storybook/react-webpack5"),
     options: {},
   },
 };

@@ -743,30 +743,30 @@ getTestBed().initTestEnvironment(
 
 exports[`app angular compat support vitest-analog & angular < 21 should generate vite.config.mts 1`] = `
 "/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import angular from '@analogjs/vite-plugin-angular';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { defineConfig } from "vite";
+import angular from "@analogjs/vite-plugin-angular";
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 
 export default defineConfig(() => ({
   root: __dirname,
-  cacheDir: '../node_modules/.vite/my-app',
-  plugins: [angular(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  cacheDir: "../node_modules/.vite/my-app",
+  plugins: [angular(), nxViteTsPaths(), nxCopyAssetsPlugin(["*.md"])],
   // Uncomment this if you are using workers.
   // worker: {
   //   plugins: () => [ nxViteTsPaths() ],
   // },
   test: {
-    name: 'my-app',
+    name: "my-app",
     watch: false,
     globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    setupFiles: ['src/test-setup.ts'],
-    reporters: ['default'],
+    environment: "jsdom",
+    include: ["{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    setupFiles: ["src/test-setup.ts"],
+    reporters: ["default"],
     coverage: {
-      reportsDirectory: '../coverage/my-app',
-      provider: 'v8' as const,
+      reportsDirectory: "../coverage/my-app",
+      provider: "v8" as const,
     },
   },
 }));
@@ -776,12 +776,12 @@ export default defineConfig(() => ({
 exports[`app at the root should accept numbers in the path 1`] = `"src/9-websites/my-app"`;
 
 exports[`app format files should format files 1`] = `
-"import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { RouterModule } from '@angular/router';
-import { App } from './app';
-import { appRoutes } from './app.routes';
-import { NxWelcome } from './nx-welcome';
+"import { NgModule, provideBrowserGlobalErrorListeners } from "@angular/core";
+import { BrowserModule } from "@angular/platform-browser";
+import { RouterModule } from "@angular/router";
+import { App } from "./app";
+import { appRoutes } from "./app.routes";
+import { NxWelcome } from "./nx-welcome";
 
 @NgModule({
   declarations: [App, NxWelcome],
@@ -794,27 +794,27 @@ export class AppModule {}
 `;
 
 exports[`app format files should format files 2`] = `
-"import { Component } from '@angular/core';
+"import { Component } from "@angular/core";
 
 @Component({
-  selector: 'app-root',
+  selector: "app-root",
   standalone: false,
-  templateUrl: './app.html',
-  styleUrl: './app.css',
+  templateUrl: "./app.html",
+  styleUrl: "./app.css",
 })
 export class App {
-  protected title = 'my-app';
+  protected title = "my-app";
 }
 "
 `;
 
 exports[`app format files should format files 3`] = `
-"import { TestBed } from '@angular/core/testing';
-import { App } from './app';
-import { NxWelcome } from './nx-welcome';
-import { RouterModule } from '@angular/router';
+"import { TestBed } from "@angular/core/testing";
+import { App } from "./app";
+import { NxWelcome } from "./nx-welcome";
+import { RouterModule } from "@angular/router";
 
-describe('App', () => {
+describe("App", () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [RouterModule.forRoot([])],
@@ -822,20 +822,18 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('should render title', async () => {
+  it("should render title", async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain(
-      'Welcome my-app',
-    );
+    expect(compiled.querySelector("h1")?.textContent).toContain("Welcome my-app");
   });
 });
 "
 `;
 
 exports[`app format files should format files 4`] = `
-"import { Route } from '@angular/router';
+"import { Route } from "@angular/router";
 
 export const appRoutes: Route[] = [];
 "

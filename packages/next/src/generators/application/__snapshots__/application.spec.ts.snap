@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`app --style styled-jsx should use <style jsx> in index page 1`] = `
-"'use client';
+""use client";
 
 export default function Index() {
   /*
@@ -295,9 +295,7 @@ export default function Index() {
                 </svg>
                 <span>
                   Install Nx Console for JetBrains
-                  <span>
-                    Available for WebStorm, Intellij IDEA Ultimate and more!
-                  </span>
+                  <span>Available for WebStorm, Intellij IDEA Ultimate and more!</span>
                 </span>
               </a>
               <div id="nx-cloud" className="rounded shadow">
@@ -324,18 +322,11 @@ export default function Index() {
                     <span>Enable faster CI & better DX</span>
                   </h2>
                 </div>
-                <p>
-                  You can activate distributed tasks executions and caching by
-                  running:
-                </p>
+                <p>You can activate distributed tasks executions and caching by running:</p>
                 <pre>nx connect</pre>
-                <a
-                  href="https://nx.app/?utm_source=nx-project"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {' '}
-                  What is Nx Cloud?{' '}
+                <a href="https://nx.app/?utm_source=nx-project" target="_blank" rel="noreferrer">
+                  {" "}
+                  What is Nx Cloud?{" "}
                 </a>
               </div>
               <a
@@ -766,9 +757,7 @@ exports[`app --style tailwind should generate tailwind styles 1`] = `
                 </svg>
                 <span>
                   Install Nx Console for JetBrains
-                  <span>
-                    Available for WebStorm, Intellij IDEA Ultimate and more!
-                  </span>
+                  <span>Available for WebStorm, Intellij IDEA Ultimate and more!</span>
                 </span>
               </a>
               <div id="nx-cloud" className="rounded shadow">
@@ -795,18 +784,11 @@ exports[`app --style tailwind should generate tailwind styles 1`] = `
                     <span>Enable faster CI & better DX</span>
                   </h2>
                 </div>
-                <p>
-                  You can activate distributed tasks executions and caching by
-                  running:
-                </p>
+                <p>You can activate distributed tasks executions and caching by running:</p>
                 <pre>nx connect</pre>
-                <a
-                  href="https://nx.app/?utm_source=nx-project"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {' '}
-                  What is Nx Cloud?{' '}
+                <a href="https://nx.app/?utm_source=nx-project" target="_blank" rel="noreferrer">
+                  {" "}
+                  What is Nx Cloud?{" "}
                 </a>
               </div>
               <a

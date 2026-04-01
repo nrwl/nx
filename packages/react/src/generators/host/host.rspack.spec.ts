@@ -318,9 +318,13 @@ describe('hostGenerator', () => {
       expect(tree.exists('foo/remote1/project.json')).toBeTruthy();
       expect(tree.exists('foo/remote2/project.json')).toBeTruthy();
       expect(tree.exists('foo/remote3/project.json')).toBeTruthy();
-      expect(
-        tree.read('foo/host-app/module-federation.config.js', 'utf-8')
-      ).toContain(`'remote1', 'remote2', 'remote3'`);
+      const mfConfig = tree.read(
+        'foo/host-app/module-federation.config.js',
+        'utf-8'
+      );
+      expect(mfConfig).toContain(`"remote1"`);
+      expect(mfConfig).toContain(`"remote2"`);
+      expect(mfConfig).toContain(`"remote3"`);
     });
 
     it('should generate a host and remotes in a directory correctly when using --typescriptConfiguration=true', async () => {
@@ -342,7 +346,7 @@ describe('hostGenerator', () => {
       expect(tree.exists('foo/remote3/project.json')).toBeTruthy();
       expect(
         tree.read('foo/host-app/module-federation.config.ts', 'utf-8')
-      ).toContain(`'remote1', 'remote2', 'remote3'`);
+      ).toContain(`"remote1", "remote2", "remote3"`);
     });
 
     it('should throw an error if invalid remotes names are provided and --dynamic is set to true', async () => {
@@ -382,25 +386,25 @@ describe('hostGenerator', () => {
 
       expect(tree.read('myhostapp/src/main.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { registerRemotes } from '@module-federation/enhanced/runtime';
+        "import { registerRemotes } from "@module-federation/enhanced/runtime";
 
-        fetch('/assets/module-federation.manifest.json')
+        fetch("/assets/module-federation.manifest.json")
           .then((res) => res.json())
           .then((remotes: Record<string, string>) =>
             Object.entries(remotes).map(([name, entry]) => ({ name, entry })),
           )
           .then((remotes) => registerRemotes(remotes))
-          .then(() => import('./bootstrap').catch((err) => console.error(err)));
+          .then(() => import("./bootstrap").catch((err) => console.error(err)));
         "
       `);
       expect(tree.read('myhostapp/src/app/app.tsx', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import * as React from 'react';
-        import NxWelcome from './nx-welcome';
-        import { Link, Route, Routes } from 'react-router-dom';
-        import { loadRemote } from '@module-federation/enhanced/runtime';
+        "import * as React from "react";
+        import NxWelcome from "./nx-welcome";
+        import { Link, Route, Routes } from "react-router-dom";
+        import { loadRemote } from "@module-federation/enhanced/runtime";
 
-        const Remote1 = React.lazy(() => loadRemote('remote1/Module') as any);
+        const Remote1 = React.lazy(() => loadRemote("remote1/Module") as any);
 
         export function App() {
           return (

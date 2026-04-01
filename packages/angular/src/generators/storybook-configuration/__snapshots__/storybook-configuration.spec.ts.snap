@@ -31,13 +31,13 @@ export default config;
 `;
 
 exports[`StorybookConfiguration generator should configure storybook with interaction tests and install dependencies 1`] = `
-"import type { Meta, StoryObj } from '@storybook/angular';
-import { TestButton } from './test-button';
-import { expect } from 'storybook/test';
+"import type { Meta, StoryObj } from "@storybook/angular";
+import { TestButton } from "./test-button";
+import { expect } from "storybook/test";
 
 const meta: Meta<TestButton> = {
   component: TestButton,
-  title: 'TestButton',
+  title: "TestButton",
 };
 export default meta;
 
@@ -45,8 +45,8 @@ type Story = StoryObj<TestButton>;
 
 export const Primary: Story = {
   args: {
-    buttonType: 'button',
-    style: 'default',
+    buttonType: "button",
+    style: "default",
     age: 0,
     isOn: false,
   },
@@ -54,8 +54,8 @@ export const Primary: Story = {
 
 export const Heading: Story = {
   args: {
-    buttonType: 'button',
-    style: 'default',
+    buttonType: "button",
+    style: "default",
     age: 0,
     isOn: false,
   },
@@ -67,13 +67,13 @@ export const Heading: Story = {
 `;
 
 exports[`StorybookConfiguration generator should configure storybook with interaction tests and install dependencies 2`] = `
-"import type { Meta, StoryObj } from '@storybook/angular';
-import { TestOther } from './test-other';
-import { expect } from 'storybook/test';
+"import type { Meta, StoryObj } from "@storybook/angular";
+import { TestOther } from "./test-other";
+import { expect } from "storybook/test";
 
 const meta: Meta<TestOther> = {
   component: TestOther,
-  title: 'TestOther',
+  title: "TestOther",
 };
 export default meta;
 
@@ -97,6 +97,7 @@ exports[`StorybookConfiguration generator should generate in the correct folder 
   ".eslintignore",
   ".eslintrc.json",
   ".gitignore",
+  ".oxfmtrc.json",
   ".prettierrc",
   "apps/.gitignore",
   "jest.config.ts",
@@ -207,6 +208,7 @@ exports[`StorybookConfiguration generator should generate the right files 1`] = 
   ".eslintignore",
   ".eslintrc.json",
   ".gitignore",
+  ".oxfmtrc.json",
   ".prettierrc",
   "apps/.gitignore",
   "jest.config.ts",

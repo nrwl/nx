@@ -39,7 +39,7 @@ describe('meta', () => {
 
     const content = tree.read('apps/demo/app/routes/example.tsx', 'utf-8');
     expect(content).toMatch(
-      `import type { MetaFunction } from '@remix-run/node';`
+      `import type { MetaFunction } from "@remix-run/node";`
     );
 
     expect(content).toMatch(`export const meta: MetaFunction`);

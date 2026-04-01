@@ -1,24 +1,17 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Host App Generator --ssr should generate the correct files 1`] = `
-"import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
-import {
-  BrowserModule,
-  provideClientHydration,
-  withEventReplay,
-} from '@angular/platform-browser';
-import { RouterModule } from '@angular/router';
-import { App } from './app';
-import { appRoutes } from './app.routes';
-import { NxWelcome } from './nx-welcome';
+"import { NgModule, provideBrowserGlobalErrorListeners } from "@angular/core";
+import { BrowserModule, provideClientHydration, withEventReplay } from "@angular/platform-browser";
+import { RouterModule } from "@angular/router";
+import { App } from "./app";
+import { appRoutes } from "./app.routes";
+import { NxWelcome } from "./nx-welcome";
 
 @NgModule({
   declarations: [App, NxWelcome],
   imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
-  providers: [
-    provideBrowserGlobalErrorListeners(),
-    provideClientHydration(withEventReplay()),
-  ],
+  providers: [provideBrowserGlobalErrorListeners(), provideClientHydration(withEventReplay())],
   bootstrap: [App],
 })
 export class AppModule {}
@@ -26,8 +19,8 @@ export class AppModule {}
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 2`] = `
-"import { platformBrowser } from '@angular/platform-browser';
-import { AppModule } from './app/app-module';
+"import { platformBrowser } from "@angular/platform-browser";
+import { AppModule } from "./app/app-module";
 
 platformBrowser()
   .bootstrapModule(AppModule)
@@ -36,46 +29,46 @@ platformBrowser()
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 3`] = `
-"export { AppServerModule as default } from './app/app.server.module';
+"export { AppServerModule as default } from "./app/app.server.module";
 "
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 4`] = `
-"import { APP_BASE_HREF } from '@angular/common';
-import { CommonEngine } from '@angular/ssr/node';
-import express from 'express';
-import cors from 'cors';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { AppServerModule } from './bootstrap.server';
+"import { APP_BASE_HREF } from "@angular/common";
+import { CommonEngine } from "@angular/ssr/node";
+import express from "express";
+import cors from "cors";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { AppServerModule } from "./bootstrap.server";
 
 // The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
   const server = express();
-  const distFolder = join(process.cwd(), 'dist/test/browser');
-  const indexHtml = existsSync(join(distFolder, 'index.original.html'))
-    ? join(distFolder, 'index.original.html')
-    : join(distFolder, 'index.html');
+  const distFolder = join(process.cwd(), "dist/test/browser");
+  const indexHtml = existsSync(join(distFolder, "index.original.html"))
+    ? join(distFolder, "index.original.html")
+    : join(distFolder, "index.html");
 
   server.use(cors());
 
   const commonEngine = new CommonEngine();
 
-  server.set('view engine', 'html');
-  server.set('views', distFolder);
+  server.set("view engine", "html");
+  server.set("views", distFolder);
 
   // Example Express Rest API endpoints
   // server.get('/api/**', (req, res) => { });
   // Serve static files from /browser
   server.get(
-    '*.*',
+    "*.*",
     express.static(distFolder, {
-      maxAge: '1y',
+      maxAge: "1y",
     }),
   );
 
   // All regular routes use the Angular engine
-  server.get('*', (req, res, next) => {
+  server.get("*", (req, res, next) => {
     const { protocol, originalUrl, baseUrl, headers } = req;
 
     commonEngine
@@ -94,7 +87,7 @@ export function app(): express.Express {
 }
 
 function run(): void {
-  const port = process.env['PORT'] || 4000;
+  const port = process.env["PORT"] || 4000;
 
   // Start up the Node server
   const server = app();
@@ -110,7 +103,7 @@ export default AppServerModule;
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 5`] = `
-"import('./main.server');
+"import("./main.server");
 "
 `;
 
@@ -119,7 +112,7 @@ exports[`Host App Generator --ssr should generate the correct files 6`] = `
  * Nx requires a default export of the config to allow correct resolution of the module federation graph.
  **/
 module.exports = {
-  name: 'test',
+  name: "test",
   /**
    * To use a remote that does not exist in your current Nx Workspace
    * You can use the tuple-syntax to define your remote
@@ -138,8 +131,8 @@ module.exports = {
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 7`] = `
-"const { withModuleFederationForSSR } = require('@nx/module-federation/angular');
-const config = require('./module-federation.config');
+"const { withModuleFederationForSSR } = require("@nx/module-federation/angular");
+const config = require("./module-federation.config");
 /**
  * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
  * The DTS Plugin can be enabled by setting dts: true
@@ -150,12 +143,12 @@ module.exports = withModuleFederationForSSR(config, { dts: false });
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 8`] = `
-"import { NxWelcome } from './nx-welcome';
-import { Route } from '@angular/router';
+"import { NxWelcome } from "./nx-welcome";
+import { Route } from "@angular/router";
 
 export const appRoutes: Route[] = [
   {
-    path: '',
+    path: "",
     component: NxWelcome,
   },
 ];
@@ -210,65 +203,61 @@ exports[`Host App Generator --ssr should generate the correct files 10`] = `
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 1`] = `
-"import { bootstrapApplication } from '@angular/platform-browser';
-import { appConfig } from './app/app.config';
-import { App } from './app/app';
+"import { bootstrapApplication } from "@angular/platform-browser";
+import { appConfig } from "./app/app.config";
+import { App } from "./app/app";
 
 bootstrapApplication(App, appConfig).catch((err) => console.error(err));
 "
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 2`] = `
-"import {
-  BootstrapContext,
-  bootstrapApplication,
-} from '@angular/platform-browser';
-import { App } from './app/app';
-import { config } from './app/app.config.server';
+"import { BootstrapContext, bootstrapApplication } from "@angular/platform-browser";
+import { App } from "./app/app";
+import { config } from "./app/app.config.server";
 
-const bootstrap = (context: BootstrapContext) =>
-  bootstrapApplication(App, config, context);
+const bootstrap = (context: BootstrapContext) => bootstrapApplication(App, config, context);
 
 export default bootstrap;
 "
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 3`] = `
-"import { APP_BASE_HREF } from '@angular/common';
-import { CommonEngine } from '@angular/ssr/node';
-import express from 'express';
-import cors from 'cors';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
-import bootstrap from './bootstrap.server';
+"import { APP_BASE_HREF } from "@angular/common";
+import { CommonEngine } from "@angular/ssr/node";
+import express from "express";
+import cors from "cors";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import bootstrap from "./bootstrap.server";
 
 // The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
   const server = express();
-  const distFolder = join(process.cwd(), 'dist/test/browser');
-  const indexHtml = existsSync(join(distFolder, 'index.original.html'))
-    ? join(distFolder, 'index.original.html')
-    : join(distFolder, 'index.html');
+  const distFolder = join(process.cwd(), "dist/test/browser");
+  const indexHtml = existsSync(join(distFolder, "index.original.html"))
+    ? join(distFolder, "index.original.html")
+    : join(distFolder, "index.html");
 
   server.use(cors());
 
   const commonEngine = new CommonEngine();
 
-  server.set('view engine', 'html');
-  server.set('views', distFolder);
+  server.set("view engine", "html");
+  server.set("views", distFolder);
 
   // Example Express Rest API endpoints
   // server.get('/api/**', (req, res) => { });
   // Serve static files from /browser
   server.get(
-    '*.*',
+    "*.*",
     express.static(distFolder, {
-      maxAge: '1y',
+      maxAge: "1y",
     }),
   );
 
   // All regular routes use the Angular engine
-  server.get('*', (req, res, next) => {
+  server.get("*", (req, res, next) => {
     const { protocol, originalUrl, baseUrl, headers } = req;
 
     commonEngine
@@ -287,7 +276,7 @@ export function app(): express.Express {
 }
 
 function run(): void {
-  const port = process.env['PORT'] || 4000;
+  const port = process.env["PORT"] || 4000;
 
   // Start up the Node server
   const server = app();
@@ -303,7 +292,7 @@ export default bootstrap;
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 4`] = `
-"import('./main.server');
+"import("./main.server");
 "
 `;
 
@@ -312,7 +301,7 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
  * Nx requires a default export of the config to allow correct resolution of the module federation graph.
  **/
 module.exports = {
-  name: 'test',
+  name: "test",
   /**
    * To use a remote that does not exist in your current Nx Workspace
    * You can use the tuple-syntax to define your remote
@@ -331,8 +320,8 @@ module.exports = {
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 6`] = `
-"const { withModuleFederationForSSR } = require('@nx/module-federation/angular');
-const config = require('./module-federation.config');
+"const { withModuleFederationForSSR } = require("@nx/module-federation/angular");
+const config = require("./module-federation.config");
 /**
  * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
  * The DTS Plugin can be enabled by setting dts: true
@@ -343,12 +332,12 @@ module.exports = withModuleFederationForSSR(config, { dts: false });
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 7`] = `
-"import { NxWelcome } from './nx-welcome';
-import { Route } from '@angular/router';
+"import { NxWelcome } from "./nx-welcome";
+import { Route } from "@angular/router";
 
 export const appRoutes: Route[] = [
   {
-    path: '',
+    path: "",
     component: NxWelcome,
   },
 ];
@@ -356,16 +345,10 @@ export const appRoutes: Route[] = [
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 8`] = `
-"import {
-  ApplicationConfig,
-  provideBrowserGlobalErrorListeners,
-} from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { appRoutes } from './app.routes';
-import {
-  provideClientHydration,
-  withEventReplay,
-} from '@angular/platform-browser';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners } from "@angular/core";
+import { provideRouter } from "@angular/router";
+import { appRoutes } from "./app.routes";
+import { provideClientHydration, withEventReplay } from "@angular/platform-browser";
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -378,9 +361,9 @@ export const appConfig: ApplicationConfig = {
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 9`] = `
-"import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
-import { provideServerRendering } from '@angular/ssr';
-import { appConfig } from './app.config';
+"import { mergeApplicationConfig, ApplicationConfig } from "@angular/core";
+import { provideServerRendering } from "@angular/ssr";
+import { appConfig } from "./app.config";
 
 const serverConfig: ApplicationConfig = {
   providers: [provideServerRendering()],
@@ -438,24 +421,20 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 1`] = `
-"import { bootstrapApplication } from '@angular/platform-browser';
-import { appConfig } from './app/app.config';
-import { App } from './app/app';
+"import { bootstrapApplication } from "@angular/platform-browser";
+import { appConfig } from "./app/app.config";
+import { App } from "./app/app";
 
 bootstrapApplication(App, appConfig).catch((err) => console.error(err));
 "
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 2`] = `
-"import {
-  BootstrapContext,
-  bootstrapApplication,
-} from '@angular/platform-browser';
-import { App } from './app/app';
-import { config } from './app/app.config.server';
+"import { BootstrapContext, bootstrapApplication } from "@angular/platform-browser";
+import { App } from "./app/app";
+import { config } from "./app/app.config.server";
 
-const bootstrap = (context: BootstrapContext) =>
-  bootstrapApplication(App, config, context);
+const bootstrap = (context: BootstrapContext) => bootstrapApplication(App, config, context);
 
 export default bootstrap;
 "
@@ -574,7 +553,7 @@ export default withModuleFederationForSSR(config, { dts: false });
 
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 7`] = `
 "import { NxWelcome } from './nx-welcome';
-import { Route } from '@angular/router';
+import { Route } from "@angular/router";
 
 export const appRoutes: Route[] = [
     {
@@ -585,16 +564,10 @@ export const appRoutes: Route[] = [
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 8`] = `
-"import {
-  ApplicationConfig,
-  provideBrowserGlobalErrorListeners,
-} from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { appRoutes } from './app.routes';
-import {
-  provideClientHydration,
-  withEventReplay,
-} from '@angular/platform-browser';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners } from "@angular/core";
+import { provideRouter } from "@angular/router";
+import { appRoutes } from "./app.routes";
+import { provideClientHydration, withEventReplay } from "@angular/platform-browser";
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -607,9 +580,9 @@ export const appConfig: ApplicationConfig = {
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 9`] = `
-"import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
-import { provideServerRendering } from '@angular/ssr';
-import { appConfig } from './app.config';
+"import { mergeApplicationConfig, ApplicationConfig } from "@angular/core";
+import { provideServerRendering } from "@angular/ssr";
+import { appConfig } from "./app.config";
 
 const serverConfig: ApplicationConfig = {
   providers: [provideServerRendering()],
@@ -667,24 +640,17 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 `;
 
 exports[`Host App Generator --ssr should generate the correct files when --typescript=true 1`] = `
-"import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
-import {
-  BrowserModule,
-  provideClientHydration,
-  withEventReplay,
-} from '@angular/platform-browser';
-import { RouterModule } from '@angular/router';
-import { App } from './app';
-import { appRoutes } from './app.routes';
-import { NxWelcome } from './nx-welcome';
+"import { NgModule, provideBrowserGlobalErrorListeners } from "@angular/core";
+import { BrowserModule, provideClientHydration, withEventReplay } from "@angular/platform-browser";
+import { RouterModule } from "@angular/router";
+import { App } from "./app";
+import { appRoutes } from "./app.routes";
+import { NxWelcome } from "./nx-welcome";
 
 @NgModule({
   declarations: [App, NxWelcome],
   imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
-  providers: [
-    provideBrowserGlobalErrorListeners(),
-    provideClientHydration(withEventReplay()),
-  ],
+  providers: [provideBrowserGlobalErrorListeners(), provideClientHydration(withEventReplay())],
   bootstrap: [App],
 })
 export class AppModule {}
@@ -692,8 +658,8 @@ export class AppModule {}
 `;
 
 exports[`Host App Generator --ssr should generate the correct files when --typescript=true 2`] = `
-"import { platformBrowser } from '@angular/platform-browser';
-import { AppModule } from './app/app-module';
+"import { platformBrowser } from "@angular/platform-browser";
+import { AppModule } from "./app/app-module";
 
 platformBrowser()
   .bootstrapModule(AppModule)
@@ -702,7 +668,7 @@ platformBrowser()
 `;
 
 exports[`Host App Generator --ssr should generate the correct files when --typescript=true 3`] = `
-"export { AppServerModule as default } from './app/app.server.module';
+"export { AppServerModule as default } from "./app/app.server.module";
 "
 `;
 
@@ -819,7 +785,7 @@ export default withModuleFederationForSSR(config, { dts: false });
 
 exports[`Host App Generator --ssr should generate the correct files when --typescript=true 8`] = `
 "import { NxWelcome } from './nx-welcome';
-import { Route } from '@angular/router';
+import { Route } from "@angular/router";
 
 export const appRoutes: Route[] = [
     {

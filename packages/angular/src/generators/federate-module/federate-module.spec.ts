@@ -39,7 +39,7 @@ describe('federate-module', () => {
         'utf-8'
       );
       expect(content).toContain(
-        `'./my-federated-module': 'apps/myremote/src/my-federated-module.ts'`
+        `"./my-federated-module": "apps/myremote/src/my-federated-module.ts"`
       );
 
       const tsconfig = JSON.parse(tree.read('tsconfig.base.json', 'utf-8'));
@@ -77,7 +77,7 @@ describe('federate-module', () => {
       );
 
       expect(content).not.toContain(
-        `'./my-federated-module': 'apps/myremote/src/my-federated-module.ts'`
+        `"./my-federated-module": "apps/myremote/src/my-federated-module.ts"`
       );
 
       await federateModuleGenerator(tree, {
@@ -91,7 +91,7 @@ describe('federate-module', () => {
         'utf-8'
       );
       expect(content).toContain(
-        `'./my-federated-module': 'apps/myremote/src/my-federated-module.ts'`
+        `"./my-federated-module": "apps/myremote/src/my-federated-module.ts"`
       );
 
       const tsconfig = JSON.parse(tree.read('tsconfig.base.json', 'utf-8'));

@@ -212,7 +212,7 @@ module.exports = [
     // assert **/*.vue was added to override in base eslint config
     const eslintBaseJson = tree.read('eslint.config.cjs', 'utf-8');
     expect(eslintBaseJson).toContain(
-      `files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],`
+      `files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.vue"],`
     );
   });
 
@@ -282,7 +282,7 @@ module.exports = [
     // assert **/*.vue was added to override in base eslint config
     const eslintBaseJson = tree.read('eslint.config.mjs', 'utf-8');
     expect(eslintBaseJson).toContain(
-      `files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],`
+      `files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.vue"],`
     );
   });
 

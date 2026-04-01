@@ -1,14 +1,11 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`setup-tailwind generator should add a tailwind config to an application correctly 1`] = `
-"import type { Config } from 'tailwindcss';
-import { createGlobPatternsForDependencies } from '@nx/react/tailwind';
+"import type { Config } from "tailwindcss";
+import { createGlobPatternsForDependencies } from "@nx/react/tailwind";
 
 export default {
-  content: [
-    './app/**/*.{js,jsx,ts,tsx}',
-    ...createGlobPatternsForDependencies(__dirname),
-  ],
+  content: ["./app/**/*.{js,jsx,ts,tsx}", ...createGlobPatternsForDependencies(__dirname)],
   theme: {
     extend: {},
   },
@@ -35,32 +32,26 @@ exports[`setup-tailwind generator should add a tailwind config to an application
 `;
 
 exports[`setup-tailwind generator should add a tailwind config to an application correctly 4`] = `
-"import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from '@remix-run/react';
-import type { MetaFunction, LinksFunction } from '@remix-run/node';
-import './tailwind.css';
+"import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "@remix-run/react";
+import type { MetaFunction, LinksFunction } from "@remix-run/node";
+import "./tailwind.css";
 
 export const meta: MetaFunction = () => [
   {
-    title: 'New Remix App',
+    title: "New Remix App",
   },
 ];
 
 export const links: LinksFunction = () => [
-  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+  { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
-    rel: 'preconnect',
-    href: 'https://fonts.gstatic.com',
-    crossOrigin: 'anonymous',
+    rel: "preconnect",
+    href: "https://fonts.gstatic.com",
+    crossOrigin: "anonymous",
   },
   {
-    rel: 'stylesheet',
-    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+    rel: "stylesheet",
+    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
 ];
 

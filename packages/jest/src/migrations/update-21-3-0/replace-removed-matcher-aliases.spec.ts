@@ -47,17 +47,17 @@ describe('replace-removed-matcher-aliases migration', () => {
       .toMatchInlineSnapshot(`
       "describe('test', () => {
         it('should pass', () => {
-          expect(mockFn).toHaveBeenCalled();
-          expect(mockFn).toHaveBeenCalledTimes(1);
-          expect(mockFn).toHaveBeenCalledWith(1);
-          expect(mockFn).toHaveBeenLastCalledWith(1);
-          expect(mockFn).toHaveBeenNthCalledWith(1, 1);
-          expect(mockFn).toHaveReturned();
-          expect(mockFn).toHaveReturnedTimes(1);
-          expect(mockFn).toHaveReturnedWith(1);
-          expect(mockFn).toHaveLastReturnedWith(1);
-          expect(mockFn).toHaveNthReturnedWith(1, 1);
-          expect(() => someFn()).toThrow();
+          expect(mockFn).toBeCalled();
+          expect(mockFn).toBeCalledTimes(1);
+          expect(mockFn).toBeCalledWith(1);
+          expect(mockFn).lastCalledWith(1);
+          expect(mockFn).nthCalledWith(1, 1);
+          expect(mockFn).toReturn();
+          expect(mockFn).toReturnTimes(1);
+          expect(mockFn).toReturnWith(1);
+          expect(mockFn).lastReturnedWith(1);
+          expect(mockFn).nthReturnedWith(1, 1);
+          expect(() => someFn()).toThrowError();
         });
       });
       "
@@ -97,14 +97,14 @@ describe('test', () => {
       "import { foo } from './foo';
       describe('test', () => {
         it('should pass', async () => {
-          expect(mockFn).toHaveBeenCalled();
-          expect(mockFn).not.toHaveBeenCalled();
-          expect(mockFn).toHaveBeenCalledTimes(1);
-          expect(mockFn).toHaveBeenCalledWith(1);
-          expect(() => someFn()).toThrow();
-          expect(() => someFn()).not.toThrow();
-          await expect(someAsyncFn()).rejects.toThrow();
-          await expect(someAsyncFn()).resolves.not.toThrow();
+          expect(mockFn).toBeCalled();
+          expect(mockFn).not.toBeCalled();
+          expect(mockFn).toBeCalledTimes(1);
+          expect(mockFn).toBeCalledWith(1);
+          expect(() => someFn()).toThrowError();
+          expect(() => someFn()).not.toThrowError();
+          await expect(someAsyncFn()).rejects.toThrowError();
+          await expect(someAsyncFn()).resolves.not.toThrowError();
         });
       });
       "
@@ -176,17 +176,17 @@ describe('test', () => {
       .toMatchInlineSnapshot(`
       "describe('test', () => {
         it('should pass', () => {
-          expect(mockFn).toHaveBeenCalled();
-          expect(mockFn).toHaveBeenCalledTimes(1);
-          expect(mockFn).toHaveBeenCalledWith(1);
-          expect(mockFn).toHaveBeenLastCalledWith(1);
-          expect(mockFn).toHaveBeenNthCalledWith(1, 1);
-          expect(mockFn).toHaveReturned();
-          expect(mockFn).toHaveReturnedTimes(1);
-          expect(mockFn).toHaveReturnedWith(1);
-          expect(mockFn).toHaveLastReturnedWith(1);
-          expect(mockFn).toHaveNthReturnedWith(1, 1);
-          expect(() => someFn()).toThrow();
+          expect(mockFn).toBeCalled();
+          expect(mockFn).toBeCalledTimes(1);
+          expect(mockFn).toBeCalledWith(1);
+          expect(mockFn).lastCalledWith(1);
+          expect(mockFn).nthCalledWith(1, 1);
+          expect(mockFn).toReturn();
+          expect(mockFn).toReturnTimes(1);
+          expect(mockFn).toReturnWith(1);
+          expect(mockFn).lastReturnedWith(1);
+          expect(mockFn).nthReturnedWith(1, 1);
+          expect(() => someFn()).toThrowError();
         });
       });
       "

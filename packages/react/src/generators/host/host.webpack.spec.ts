@@ -321,7 +321,7 @@ describe('hostGenerator', () => {
       expect(tree.exists('foo/remote3/project.json')).toBeTruthy();
       expect(
         tree.read('foo/host-app/module-federation.config.js', 'utf-8')
-      ).toContain(`'remote1', 'remote2', 'remote3'`);
+      ).toContain(`"remote1", "remote2", "remote3"`);
     });
 
     it('should generate a host and remotes in a directory correctly when using --typescriptConfiguration=true', async () => {
@@ -343,7 +343,7 @@ describe('hostGenerator', () => {
       expect(tree.exists('foo/remote3/project.json')).toBeTruthy();
       expect(
         tree.read('foo/host-app/module-federation.config.ts', 'utf-8')
-      ).toContain(`'remote1', 'remote2', 'remote3'`);
+      ).toContain(`"remote1", "remote2", "remote3"`);
     });
 
     it('should throw an error if invalid remotes names are provided and --dynamic is set to true', async () => {

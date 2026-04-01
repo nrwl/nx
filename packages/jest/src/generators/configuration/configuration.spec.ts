@@ -63,7 +63,7 @@ describe('jestProject', () => {
     } as JestProjectSchema);
     expect(tree.read('libs/lib1/src/test-setup.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone';
+      "import { setupZoneTestEnv } from "jest-preset-angular/setup-env/zone";
 
       setupZoneTestEnv();
       "
@@ -138,7 +138,7 @@ describe('jestProject', () => {
       } as JestProjectSchema);
       expect(tree.exists('src/test-setup.ts')).toBeFalsy();
       expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).not.toContain(
-        `setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],`
+        `setupFilesAfterEnv: ["<rootDir>/src/test-setup.ts"],`
       );
     });
 
@@ -149,7 +149,7 @@ describe('jestProject', () => {
         setupFile: 'web-components',
       } as JestProjectSchema);
       expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).toContain(
-        `setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],`
+        `setupFilesAfterEnv: ["<rootDir>/src/test-setup.ts"],`
       );
     });
 
@@ -162,7 +162,7 @@ describe('jestProject', () => {
 
       const jestConfig = tree.read('libs/lib1/jest.config.ts', 'utf-8');
       expect(jestConfig).toContain(
-        `setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],`
+        `setupFilesAfterEnv: ["<rootDir>/src/test-setup.ts"],`
       );
       expect(jestConfig).toMatchSnapshot();
     });
@@ -259,7 +259,7 @@ describe('jestProject', () => {
     expect(tree.exists('jest.config.js')).toBeTruthy();
     expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
     expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toContain(
-      "preset: '../../jest.preset.js',"
+      'preset: "../../jest.preset.js",'
     );
   });
 
@@ -281,7 +281,7 @@ describe('jestProject', () => {
     expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
     expect(tree.exists('jest.preset.js')).toBeTruthy();
     expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toContain(
-      "preset: '../../jest.preset.js',"
+      'preset: "../../jest.preset.js",'
     );
   });
 
@@ -295,7 +295,7 @@ describe('jestProject', () => {
     expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
     expect(tree.exists('jest.preset.mjs')).toBeTruthy();
     expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toContain(
-      "preset: '../../jest.preset.mjs',"
+      'preset: "../../jest.preset.mjs",'
     );
   });
 
@@ -371,12 +371,12 @@ describe('jestProject', () => {
       });
       expect(tree.read('jest.config.ts', 'utf-8')).toMatchInlineSnapshot(`
         "export default {
-          displayName: 'my-project',
-          preset: './jest.preset.js',
-          coverageDirectory: './coverage/my-project',
+          displayName: "my-project",
+          preset: "./jest.preset.js",
+          coverageDirectory: "./coverage/my-project",
           testMatch: [
-            '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
-            '<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)',
+            "<rootDir>/src/**/__tests__/**/*.[jt]s?(x)",
+            "<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)",
           ],
         };
         "
@@ -402,12 +402,12 @@ describe('jestProject', () => {
       });
       expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(`
         "module.exports = {
-          displayName: 'my-project',
-          preset: './jest.preset.js',
-          coverageDirectory: './coverage/my-project',
+          displayName: "my-project",
+          preset: "./jest.preset.js",
+          coverageDirectory: "./coverage/my-project",
           testMatch: [
-            '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
-            '<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)',
+            "<rootDir>/src/**/__tests__/**/*.[jt]s?(x)",
+            "<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)",
           ],
         };
         "
@@ -436,9 +436,9 @@ describe('jestProject', () => {
       expect(tree.read('libs/lib1/jest.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "export default {
-          displayName: 'lib1',
-          preset: '../../jest.preset.cjs',
-          coverageDirectory: '../../coverage/libs/lib1',
+          displayName: "lib1",
+          preset: "../../jest.preset.cjs",
+          coverageDirectory: "../../coverage/libs/lib1",
         };
         "
       `);
@@ -462,9 +462,9 @@ describe('jestProject', () => {
       expect(tree.read('libs/lib1/jest.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "export default {
-          displayName: 'lib1',
-          preset: '../../jest.preset.cjs',
-          coverageDirectory: '../../coverage/libs/lib1',
+          displayName: "lib1",
+          preset: "../../jest.preset.cjs",
+          coverageDirectory: "../../coverage/libs/lib1",
         };
         "
       `);
@@ -780,12 +780,12 @@ describe('jestProject', () => {
       expect(tree.exists('jest.config.ts')).toBeFalsy();
       expect(tree.read('jest.config.cts', 'utf-8')).toMatchInlineSnapshot(`
         "module.exports = {
-          displayName: 'my-project',
-          preset: './jest.preset.js',
-          coverageDirectory: './coverage/my-project',
+          displayName: "my-project",
+          preset: "./jest.preset.js",
+          coverageDirectory: "./coverage/my-project",
           testMatch: [
-            '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
-            '<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)',
+            "<rootDir>/src/**/__tests__/**/*.[jt]s?(x)",
+            "<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)",
           ],
         };
         "

@@ -2,21 +2,21 @@
 
 exports[`@nx/vite:configuration js library with --bundler=vite should add build and test targets with vite and vitest 1`] = `
 "/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import dts from 'vite-plugin-dts';
-import * as path from 'path';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { defineConfig } from "vite";
+import dts from "vite-plugin-dts";
+import * as path from "path";
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
-  cacheDir: '../node_modules/.vite/my-lib',
+  cacheDir: "../node_modules/.vite/my-lib",
   plugins: [
     nxViteTsPaths(),
-    nxCopyAssetsPlugin(['*.md']),
+    nxCopyAssetsPlugin(["*.md"]),
     dts({
-      entryRoot: 'src',
-      tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'),
+      entryRoot: "src",
+      tsconfigPath: path.join(import.meta.dirname, "tsconfig.lib.json"),
       pathsToAliases: false,
     }),
   ],
@@ -27,7 +27,7 @@ export default defineConfig(() => ({
   // Configuration for building your library.
   // See: https://vite.dev/guide/build.html#library-mode
   build: {
-    outDir: '../dist/my-lib',
+    outDir: "../dist/my-lib",
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
@@ -35,12 +35,12 @@ export default defineConfig(() => ({
     },
     lib: {
       // Could also be a dictionary or array of multiple entry points.
-      entry: 'src/index.ts',
-      name: 'my-lib',
-      fileName: 'index',
+      entry: "src/index.ts",
+      name: "my-lib",
+      fileName: "index",
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
-      formats: ['es' as const],
+      formats: ["es" as const],
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
@@ -48,15 +48,15 @@ export default defineConfig(() => ({
     },
   },
   test: {
-    name: 'my-lib',
+    name: "my-lib",
     watch: false,
     globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
+    environment: "jsdom",
+    include: ["{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    reporters: ["default"],
     coverage: {
-      reportsDirectory: '../coverage/my-lib',
-      provider: 'v8' as const,
+      reportsDirectory: "../coverage/my-lib",
+      provider: "v8" as const,
     },
   },
 }));
@@ -129,25 +129,20 @@ exports[`@nx/vite:configuration js library with --bundler=vite should respect pr
     "types": ["node", "vite/client"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": [
-    "jest.config.ts",
-    "jest.config.cts",
-    "src/**/*.spec.ts",
-    "src/**/*.test.ts"
-  ]
+  "exclude": ["jest.config.ts", "jest.config.cts", "src/**/*.spec.ts", "src/**/*.test.ts"]
 }
 "
 `;
 
 exports[`@nx/vite:configuration js library with --bundler=vite should respect provided unitTestRunner="jest" 3`] = `
 "module.exports = {
-  displayName: 'my-lib',
-  preset: '../jest.preset.js',
+  displayName: "my-lib",
+  preset: "../jest.preset.js",
   transform: {
-    '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    "^.+\\\\.[tj]s$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.spec.json" }],
   },
-  moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../coverage/my-lib',
+  moduleFileExtensions: ["ts", "js", "html"],
+  coverageDirectory: "../coverage/my-lib",
 };
 "
 `;
@@ -178,23 +173,23 @@ exports[`@nx/vite:configuration js library with --bundler=vite should respect pr
 
 exports[`@nx/vite:configuration library mode should add config for building library 1`] = `
 "/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import dts from 'vite-plugin-dts';
-import * as path from 'path';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import dts from "vite-plugin-dts";
+import * as path from "path";
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
-  cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
+  cacheDir: "../../node_modules/.vite/libs/react-lib-nonb-jest",
   plugins: [
     react(),
     nxViteTsPaths(),
-    nxCopyAssetsPlugin(['*.md']),
+    nxCopyAssetsPlugin(["*.md"]),
     dts({
-      entryRoot: 'src',
-      tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'),
+      entryRoot: "src",
+      tsconfigPath: path.join(import.meta.dirname, "tsconfig.lib.json"),
       pathsToAliases: false,
     }),
   ],
@@ -205,7 +200,7 @@ export default defineConfig(() => ({
   // Configuration for building your library.
   // See: https://vite.dev/guide/build.html#library-mode
   build: {
-    outDir: '../../dist/libs/react-lib-nonb-jest',
+    outDir: "../../dist/libs/react-lib-nonb-jest",
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
@@ -213,16 +208,16 @@ export default defineConfig(() => ({
     },
     lib: {
       // Could also be a dictionary or array of multiple entry points.
-      entry: 'src/index.ts',
-      name: 'react-lib-nonb-jest',
-      fileName: 'index',
+      entry: "src/index.ts",
+      name: "react-lib-nonb-jest",
+      fileName: "index",
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
-      formats: ['es' as const],
+      formats: ["es" as const],
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
-      external: ['react', 'react-dom', 'react/jsx-runtime'],
+      external: ["react", "react-dom", "react/jsx-runtime"],
     },
   },
 }));
@@ -231,23 +226,23 @@ export default defineConfig(() => ({
 
 exports[`@nx/vite:configuration library mode should set up non buildable library correctly 1`] = `
 "/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import dts from 'vite-plugin-dts';
-import * as path from 'path';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import dts from "vite-plugin-dts";
+import * as path from "path";
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
-  cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
+  cacheDir: "../../node_modules/.vite/libs/react-lib-nonb-jest",
   plugins: [
     react(),
     nxViteTsPaths(),
-    nxCopyAssetsPlugin(['*.md']),
+    nxCopyAssetsPlugin(["*.md"]),
     dts({
-      entryRoot: 'src',
-      tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'),
+      entryRoot: "src",
+      tsconfigPath: path.join(import.meta.dirname, "tsconfig.lib.json"),
       pathsToAliases: false,
     }),
   ],
@@ -258,7 +253,7 @@ export default defineConfig(() => ({
   // Configuration for building your library.
   // See: https://vite.dev/guide/build.html#library-mode
   build: {
-    outDir: '../../dist/libs/react-lib-nonb-jest',
+    outDir: "../../dist/libs/react-lib-nonb-jest",
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
@@ -266,28 +261,28 @@ export default defineConfig(() => ({
     },
     lib: {
       // Could also be a dictionary or array of multiple entry points.
-      entry: 'src/index.ts',
-      name: 'react-lib-nonb-jest',
-      fileName: 'index',
+      entry: "src/index.ts",
+      name: "react-lib-nonb-jest",
+      fileName: "index",
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
-      formats: ['es' as const],
+      formats: ["es" as const],
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
-      external: ['react', 'react-dom', 'react/jsx-runtime'],
+      external: ["react", "react-dom", "react/jsx-runtime"],
     },
   },
   test: {
-    name: 'react-lib-nonb-jest',
+    name: "react-lib-nonb-jest",
     watch: false,
     globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
+    environment: "jsdom",
+    include: ["{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    reporters: ["default"],
     coverage: {
-      reportsDirectory: '../../coverage/libs/react-lib-nonb-jest',
-      provider: 'v8' as const,
+      reportsDirectory: "../../coverage/libs/react-lib-nonb-jest",
+      provider: "v8" as const,
     },
   },
 }));
@@ -296,23 +291,23 @@ export default defineConfig(() => ({
 
 exports[`@nx/vite:configuration library mode should set up non buildable library which already has vite.config.mts correctly 1`] = `
 "/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import dts from 'vite-plugin-dts';
-import * as path from 'path';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import dts from "vite-plugin-dts";
+import * as path from "path";
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
-  cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-vitest',
+  cacheDir: "../../node_modules/.vite/libs/react-lib-nonb-vitest",
   plugins: [
     react(),
     nxViteTsPaths(),
-    nxCopyAssetsPlugin(['*.md']),
+    nxCopyAssetsPlugin(["*.md"]),
     dts({
-      entryRoot: 'src',
-      tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'),
+      entryRoot: "src",
+      tsconfigPath: path.join(import.meta.dirname, "tsconfig.lib.json"),
       pathsToAliases: false,
     }),
   ],
@@ -323,7 +318,7 @@ export default defineConfig(() => ({
   // Configuration for building your library.
   // See: https://vite.dev/guide/build.html#library-mode
   build: {
-    outDir: '../../dist/libs/react-lib-nonb-vitest',
+    outDir: "../../dist/libs/react-lib-nonb-vitest",
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
@@ -331,28 +326,28 @@ export default defineConfig(() => ({
     },
     lib: {
       // Could also be a dictionary or array of multiple entry points.
-      entry: 'src/index.ts',
-      name: 'react-lib-nonb-vitest',
-      fileName: 'index',
+      entry: "src/index.ts",
+      name: "react-lib-nonb-vitest",
+      fileName: "index",
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
-      formats: ['es' as const],
+      formats: ["es" as const],
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
-      external: ['react', 'react-dom', 'react/jsx-runtime'],
+      external: ["react", "react-dom", "react/jsx-runtime"],
     },
   },
   test: {
-    name: 'react-lib-nonb-vitest',
+    name: "react-lib-nonb-vitest",
     watch: false,
     globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
+    environment: "jsdom",
+    include: ["{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    reporters: ["default"],
     coverage: {
-      reportsDirectory: '../../coverage/libs/react-lib-nonb-vitest',
-      provider: 'v8' as const,
+      reportsDirectory: "../../coverage/libs/react-lib-nonb-vitest",
+      provider: "v8" as const,
     },
   },
 }));
@@ -361,29 +356,29 @@ export default defineConfig(() => ({
 
 exports[`@nx/vite:configuration transform React app to use Vite should create vite.config file at the root of the app 1`] = `
 "/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
-  cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
+  cacheDir: "../../node_modules/.vite/apps/my-test-react-app",
   server: {
     port: 4200,
-    host: 'localhost',
+    host: "localhost",
   },
   preview: {
     port: 4300,
-    host: 'localhost',
+    host: "localhost",
   },
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(["*.md"])],
   // Uncomment this if you are using workers.
   // worker: {
   //   plugins: () => [ nxViteTsPaths() ],
   // },
   build: {
-    outDir: '../../dist/apps/my-test-react-app',
+    outDir: "../../dist/apps/my-test-react-app",
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
@@ -415,28 +410,28 @@ exports[`@nx/vite:configuration transform React app to use Vite should move inde
 
 exports[`@nx/vite:configuration transform Web app to use Vite should create vite.config file at the root of the app 1`] = `
 "/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { defineConfig } from "vite";
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
-  cacheDir: '../../node_modules/.vite/apps/my-test-web-app',
+  cacheDir: "../../node_modules/.vite/apps/my-test-web-app",
   server: {
     port: 4200,
-    host: 'localhost',
+    host: "localhost",
   },
   preview: {
     port: 4300,
-    host: 'localhost',
+    host: "localhost",
   },
-  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(["*.md"])],
   // Uncomment this if you are using workers.
   // worker: {
   //   plugins: () => [ nxViteTsPaths() ],
   // },
   build: {
-    outDir: '../../dist/apps/my-test-web-app',
+    outDir: "../../dist/apps/my-test-web-app",
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
@@ -468,29 +463,29 @@ exports[`@nx/vite:configuration transform Web app to use Vite should move index.
 
 exports[`@nx/vite:configuration vitest should create a vitest configuration if "includeVitest" is true 1`] = `
 "/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
-  cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
+  cacheDir: "../../node_modules/.vite/apps/my-test-react-app",
   server: {
     port: 4200,
-    host: 'localhost',
+    host: "localhost",
   },
   preview: {
     port: 4300,
-    host: 'localhost',
+    host: "localhost",
   },
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(["*.md"])],
   // Uncomment this if you are using workers.
   // worker: {
   //   plugins: () => [ nxViteTsPaths() ],
   // },
   build: {
-    outDir: '../../dist/apps/my-test-react-app',
+    outDir: "../../dist/apps/my-test-react-app",
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
@@ -498,15 +493,15 @@ export default defineConfig(() => ({
     },
   },
   test: {
-    name: 'my-test-react-app',
+    name: "my-test-react-app",
     watch: false,
     globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
+    environment: "jsdom",
+    include: ["{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    reporters: ["default"],
     coverage: {
-      reportsDirectory: '../../coverage/apps/my-test-react-app',
-      provider: 'v8' as const,
+      reportsDirectory: "../../coverage/apps/my-test-react-app",
+      provider: "v8" as const,
     },
   },
 }));

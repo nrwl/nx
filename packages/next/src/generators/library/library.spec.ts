@@ -108,8 +108,8 @@ describe('next library', () => {
       'my-buildable-lib/vite.config.mts',
       'utf-8'
     );
-    expect(viteConfig).toContain("index: 'src/index.ts'");
-    expect(viteConfig).toContain("server: 'src/server.ts'");
+    expect(viteConfig).toContain('index: "src/index.ts"');
+    expect(viteConfig).toContain('server: "src/server.ts"');
     expect(viteConfig).toContain('fileName: (format, entryName) =>');
 
     // Check package.json has server export

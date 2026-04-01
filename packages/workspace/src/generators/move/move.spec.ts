@@ -45,9 +45,9 @@ describe('move', () => {
     const jestConfigPath = 'shared/my-lib-new/jest.config.cts';
     const afterJestConfig = tree.read(jestConfigPath, 'utf-8');
     expect(tree.exists(jestConfigPath)).toBeTruthy();
-    expect(afterJestConfig).toContain("preset: '../../jest.preset.js'");
+    expect(afterJestConfig).toContain('preset: "../../jest.preset.js"');
     expect(afterJestConfig).toContain(
-      "coverageDirectory: '../../coverage/shared/my-lib-new'"
+      'coverageDirectory: "../../coverage/shared/my-lib-new\''
     );
   });
 
@@ -113,9 +113,9 @@ describe('move', () => {
     const jestConfigPath = 'my-lib-new/jest.config.cts';
     const afterJestConfig = tree.read(jestConfigPath, 'utf-8');
     expect(tree.exists(jestConfigPath)).toBeTruthy();
-    expect(afterJestConfig).toContain("preset: '../jest.preset.js'");
+    expect(afterJestConfig).toContain('preset: "../jest.preset.js"');
     expect(afterJestConfig).toContain(
-      "coverageDirectory: '../coverage/my-lib-new'"
+      'coverageDirectory: "../coverage/my-lib-new\''
     );
   });
 
@@ -242,8 +242,8 @@ describe('move', () => {
 
     expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
       "packages:
-        - 'libs/*'
-        - 'packages/*'
+        - "libs/*"
+        - "packages/*"
       "
     `);
   });

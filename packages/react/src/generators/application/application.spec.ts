@@ -1084,33 +1084,29 @@ describe('app', () => {
       expect(appTree.read('my-app/vite.config.mts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "/// <reference types='vitest' />
-        import { defineConfig } from 'vite';
-        import { reactRouter } from '@react-router/dev/vite';
-        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+        import { defineConfig } from "vite";
+        import { reactRouter } from "@react-router/dev/vite";
+        import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+        import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 
         export default defineConfig(() => ({
           root: import.meta.dirname,
-          cacheDir: '../node_modules/.vite/my-app',
+          cacheDir: "../node_modules/.vite/my-app",
           server: {
             port: 4200,
-            host: 'localhost',
+            host: "localhost",
           },
           preview: {
             port: 4300,
-            host: 'localhost',
+            host: "localhost",
           },
-          plugins: [
-            !process.env.VITEST && reactRouter(),
-            nxViteTsPaths(),
-            nxCopyAssetsPlugin(['*.md']),
-          ],
+          plugins: [!process.env.VITEST && reactRouter(), nxViteTsPaths(), nxCopyAssetsPlugin(["*.md"])],
           // Uncomment this if you are using workers.
           // worker: {
           //   plugins: () => [ nxViteTsPaths() ],
           // },
           build: {
-            outDir: '../dist/my-app',
+            outDir: "../dist/my-app",
             emptyOutDir: true,
             reportCompressedSize: true,
             commonjsOptions: {
@@ -1118,15 +1114,15 @@ describe('app', () => {
             },
           },
           test: {
-            name: 'my-app',
+            name: "my-app",
             watch: false,
             globals: true,
-            environment: 'jsdom',
-            include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-            reporters: ['default'],
+            environment: "jsdom",
+            include: ["{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+            reporters: ["default"],
             coverage: {
-              reportsDirectory: '../coverage/my-app',
-              provider: 'v8' as const,
+              reportsDirectory: "../coverage/my-app",
+              provider: "v8" as const,
             },
           },
         }));
@@ -1204,12 +1200,7 @@ describe('app', () => {
             "module": "commonjs",
             "moduleResolution": "node10",
             "jsx": "react-jsx",
-            "types": [
-              "jest",
-              "node",
-              "@nx/react/typings/cssmodule.d.ts",
-              "@nx/react/typings/image.d.ts"
-            ]
+            "types": ["jest", "node", "@nx/react/typings/cssmodule.d.ts", "@nx/react/typings/image.d.ts"]
           },
           "files": ["src/test-setup.ts"],
           "include": [

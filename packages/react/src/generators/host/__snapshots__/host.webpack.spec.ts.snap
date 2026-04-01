@@ -1,11 +1,11 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`hostGenerator bundler=webpack should generate host files and configs for SSR 1`] = `
-"const { composePlugins, withNx } = require('@nx/webpack');
-const { withReact } = require('@nx/react');
-const { withModuleFederationForSSR } = require('@nx/module-federation/webpack');
+"const { composePlugins, withNx } = require("@nx/webpack");
+const { withReact } = require("@nx/react");
+const { withModuleFederationForSSR } = require("@nx/module-federation/webpack");
 
-const baseConfig = require('./module-federation.config');
+const baseConfig = require("./module-federation.config");
 
 const defaultConfig = {
   ...baseConfig,
@@ -32,7 +32,7 @@ exports[`hostGenerator bundler=webpack should generate host files and configs fo
  * @type {import('@nx/module-federation').ModuleFederationConfig}
  **/
 const moduleFederationConfig = {
-  name: 'test',
+  name: "test",
   remotes: [],
 };
 
@@ -44,11 +44,11 @@ module.exports = moduleFederationConfig;
 `;
 
 exports[`hostGenerator bundler=webpack should generate host files and configs for SSR when --typescriptConfiguration=true 1`] = `
-"import { composePlugins, withNx } from '@nx/webpack';
-import { withReact } from '@nx/react';
-import { withModuleFederationForSSR } from '@nx/module-federation/webpack.js';
+"import { composePlugins, withNx } from "@nx/webpack";
+import { withReact } from "@nx/react";
+import { withModuleFederationForSSR } from "@nx/module-federation/webpack.js";
 
-import baseConfig from './module-federation.config';
+import baseConfig from "./module-federation.config";
 
 const defaultConfig = {
   ...baseConfig,
@@ -69,10 +69,10 @@ export default composePlugins(
 `;
 
 exports[`hostGenerator bundler=webpack should generate host files and configs for SSR when --typescriptConfiguration=true 2`] = `
-"import { ModuleFederationConfig } from '@nx/module-federation';
+"import { ModuleFederationConfig } from "@nx/module-federation";
 
 const config: ModuleFederationConfig = {
-  name: 'test',
+  name: "test",
   remotes: [],
 };
 
@@ -84,11 +84,11 @@ export default config;
 `;
 
 exports[`hostGenerator bundler=webpack should generate host files and configs when --typescriptConfiguration=false 1`] = `
-"const { composePlugins, withNx } = require('@nx/webpack');
-const { withReact } = require('@nx/react');
-const { withModuleFederation } = require('@nx/module-federation/webpack');
+"const { composePlugins, withNx } = require("@nx/webpack");
+const { withReact } = require("@nx/react");
+const { withModuleFederation } = require("@nx/module-federation/webpack");
 
-const baseConfig = require('./module-federation.config');
+const baseConfig = require("./module-federation.config");
 
 const config = {
   ...baseConfig,
@@ -113,7 +113,7 @@ exports[`hostGenerator bundler=webpack should generate host files and configs wh
  * Nx requires a default export of the config to allow correct resolution of the module federation graph.
  **/
 module.exports = {
-  name: 'test',
+  name: "test",
   /**
    * To use a remote that does not exist in your current Nx Workspace
    * You can use the tuple-syntax to define your remote

@@ -78,14 +78,14 @@ describe('@nx/eslint:workspace-rules-project', () => {
     expect(tree.read('tools/eslint-rules/jest.config.cts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "module.exports = {
-        displayName: 'eslint-rules',
-        preset: '../../jest.preset.js',
-        testEnvironment: 'node',
+        displayName: "eslint-rules",
+        preset: "../../jest.preset.js",
+        testEnvironment: "node",
         transform: {
-          '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+          "^.+\\\\.[tj]s$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.spec.json" }],
         },
-        moduleFileExtensions: ['ts', 'js', 'html'],
-        coverageDirectory: '../../coverage/tools/eslint-rules',
+        moduleFileExtensions: ["ts", "js", "html"],
+        coverageDirectory: "../../coverage/tools/eslint-rules",
       };
       "
     `);

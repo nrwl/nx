@@ -56,8 +56,8 @@ describe('cypress-component-configuration generator', () => {
       }
     }`);
     expect(tree.read('demo/cypress.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';
-      import { defineConfig } from 'cypress';
+      "import { nxComponentTestingPreset } from "@nx/next/plugins/component-testing";
+      import { defineConfig } from "cypress";
       export default defineConfig({
         component: nxComponentTestingPreset(__filename),
       });
@@ -65,8 +65,8 @@ describe('cypress-component-configuration generator', () => {
     `);
     expect(tree.read('demo/cypress/support/component.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { mount } from 'cypress/react';
-      import './styles.ct.css';
+      "import { mount } from "cypress/react";
+      import "./styles.ct.css";
       // ***********************************************************
       // This example support/component.ts is processed and
       // loaded automatically before your test files.
@@ -82,7 +82,7 @@ describe('cypress-component-configuration generator', () => {
       // https://on.cypress.io/configuration
       // ***********************************************************
       // Import commands.ts using ES2015 syntax:
-      import './commands';
+      import "./commands";
       // add component testing only related command here, such as mount
       declare global {
         // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -93,7 +93,7 @@ describe('cypress-component-configuration generator', () => {
           }
         }
       }
-      Cypress.Commands.add('mount', mount);
+      Cypress.Commands.add("mount", mount);
       "
     `);
     expect(tree.exists('demo/pages/index.cy.ts')).toBeFalsy();
@@ -123,8 +123,8 @@ describe('cypress-component-configuration generator', () => {
 
     expect(tree.read('demo/cypress/support/component.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { mount } from 'cypress/react18';
-      import './styles.ct.css';
+      "import { mount } from "cypress/react18";
+      import "./styles.ct.css";
       // ***********************************************************
       // This example support/component.ts is processed and
       // loaded automatically before your test files.
@@ -140,7 +140,7 @@ describe('cypress-component-configuration generator', () => {
       // https://on.cypress.io/configuration
       // ***********************************************************
       // Import commands.ts using ES2015 syntax:
-      import './commands';
+      import "./commands";
       // add component testing only related command here, such as mount
       declare global {
         // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -151,7 +151,7 @@ describe('cypress-component-configuration generator', () => {
           }
         }
       }
-      Cypress.Commands.add('mount', mount);
+      Cypress.Commands.add("mount", mount);
       "
     `);
   });
@@ -176,7 +176,7 @@ describe('cypress-component-configuration generator', () => {
       "
     `);
     expect(tree.read('demo/cypress/support/component.ts', 'utf-8')).toContain(
-      `import './styles.ct.css';`
+      `import "./styles.ct.css";`
     );
   });
 
@@ -213,8 +213,8 @@ describe('cypress-component-configuration generator', () => {
       }
     }`);
     expect(tree.read('demo/cypress.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';
-      import { defineConfig } from 'cypress';
+      "import { nxComponentTestingPreset } from "@nx/next/plugins/component-testing";
+      import { defineConfig } from "cypress";
       export default defineConfig({
         component: nxComponentTestingPreset(__filename),
       });

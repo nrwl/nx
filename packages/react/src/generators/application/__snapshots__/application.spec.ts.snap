@@ -401,7 +401,7 @@ export default App;
 `;
 
 exports[`app --style tailwind should not generate any styles files 1`] = `
-"import NxWelcome from './nx-welcome';
+"import NxWelcome from "./nx-welcome";
 
 export function App() {
   return (
@@ -417,29 +417,29 @@ export default App;
 
 exports[`app not nested should add vite types to tsconfigs 1`] = `
 "/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
-  cacheDir: '../node_modules/.vite/my-app',
+  cacheDir: "../node_modules/.vite/my-app",
   server: {
     port: 4200,
-    host: 'localhost',
+    host: "localhost",
   },
   preview: {
     port: 4300,
-    host: 'localhost',
+    host: "localhost",
   },
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(["*.md"])],
   // Uncomment this if you are using workers.
   // worker: {
   //   plugins: () => [ nxViteTsPaths() ],
   // },
   build: {
-    outDir: '../dist/my-app',
+    outDir: "../dist/my-app",
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
@@ -447,15 +447,15 @@ export default defineConfig(() => ({
     },
   },
   test: {
-    name: 'my-app',
+    name: "my-app",
     watch: false,
     globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
+    environment: "jsdom",
+    include: ["{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    reporters: ["default"],
     coverage: {
-      reportsDirectory: '../coverage/my-app',
-      provider: 'v8' as const,
+      reportsDirectory: "../coverage/my-app",
+      provider: "v8" as const,
     },
   },
 }));
@@ -465,7 +465,7 @@ export default defineConfig(() => ({
 exports[`app not nested should generate files 1`] = `
 "// Uncomment this line to use CSS modules
 // import styles from './app.module.css';
-import NxWelcome from './nx-welcome';
+import NxWelcome from "./nx-welcome";
 
 export function App() {
   return (
@@ -481,29 +481,29 @@ export default App;
 
 exports[`app not nested should use preview vite types to tsconfigs 1`] = `
 "/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
-  cacheDir: '../node_modules/.vite/my-app',
+  cacheDir: "../node_modules/.vite/my-app",
   server: {
     port: 4200,
-    host: 'localhost',
+    host: "localhost",
   },
   preview: {
     port: 4300,
-    host: 'localhost',
+    host: "localhost",
   },
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(["*.md"])],
   // Uncomment this if you are using workers.
   // worker: {
   //   plugins: () => [ nxViteTsPaths() ],
   // },
   build: {
-    outDir: '../dist/my-app',
+    outDir: "../dist/my-app",
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
@@ -511,15 +511,15 @@ export default defineConfig(() => ({
     },
   },
   test: {
-    name: 'my-app',
+    name: "my-app",
     watch: false,
     globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
+    environment: "jsdom",
+    include: ["{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    reporters: ["default"],
     coverage: {
-      reportsDirectory: '../coverage/my-app',
-      provider: 'v8' as const,
+      reportsDirectory: "../coverage/my-app",
+      provider: "v8" as const,
     },
   },
 }));

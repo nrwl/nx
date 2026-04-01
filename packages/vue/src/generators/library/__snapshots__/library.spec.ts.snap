@@ -94,13 +94,7 @@ exports[`library should add vue and vitest to package.json when non-buildable 2`
     "src/**/*.test.jsx",
     "src/**/*.spec.jsx"
   ],
-  "include": [
-    "src/**/*.js",
-    "src/**/*.jsx",
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.vue"
-  ]
+  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
 }
 "
 `;
@@ -155,24 +149,24 @@ exports[`library should ignore test files in tsconfig.lib.json 1`] = `
 `;
 
 exports[`library should support eslint flat config CJS 1`] = `
-"const vue = require('eslint-plugin-vue');
-const baseConfig = require('../eslint.config.cjs');
+"const vue = require("eslint-plugin-vue");
+const baseConfig = require("../eslint.config.cjs");
 
 module.exports = [
   ...baseConfig,
-  ...vue.configs['flat/recommended'],
+  ...vue.configs["flat/recommended"],
   {
-    files: ['**/*.vue'],
+    files: ["**/*.vue"],
     languageOptions: {
       parserOptions: {
-        parser: require('@typescript-eslint/parser'),
+        parser: require("@typescript-eslint/parser"),
       },
     },
   },
   {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+    files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.vue"],
     rules: {
-      'vue/multi-word-component-names': 'off',
+      "vue/multi-word-component-names": "off",
     },
   },
 ];
@@ -180,24 +174,24 @@ module.exports = [
 `;
 
 exports[`library should support eslint flat config ESM 1`] = `
-"import vue from 'eslint-plugin-vue';
-import baseConfig from '../eslint.config.mjs';
+"import vue from "eslint-plugin-vue";
+import baseConfig from "../eslint.config.mjs";
 
 export default [
   ...baseConfig,
-  ...vue.configs['flat/recommended'],
+  ...vue.configs["flat/recommended"],
   {
-    files: ['**/*.vue'],
+    files: ["**/*.vue"],
     languageOptions: {
       parserOptions: {
-        parser: await import('@typescript-eslint/parser'),
+        parser: await import("@typescript-eslint/parser"),
       },
     },
   },
   {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+    files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.vue"],
     rules: {
-      'vue/multi-word-component-names': 'off',
+      "vue/multi-word-component-names": "off",
     },
   },
 ];

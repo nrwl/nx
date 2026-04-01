@@ -73,11 +73,11 @@ module.exports = {
 `;
 
 exports[`remote generator bundler=webpack should create the remote with the correct config files when --typescriptConfiguration=true 1`] = `
-"import { composePlugins, withNx } from '@nx/webpack';
-import { withReact } from '@nx/react';
-import { withModuleFederation } from '@nx/module-federation/webpack.js';
+"import { composePlugins, withNx } from "@nx/webpack";
+import { withReact } from "@nx/react";
+import { withModuleFederation } from "@nx/module-federation/webpack.js";
 
-import baseConfig from './module-federation.config';
+import baseConfig from "./module-federation.config";
 
 const config = {
   ...baseConfig,
@@ -89,26 +89,22 @@ const config = {
  * The DTS Plugin can be enabled by setting dts: true
  * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
  */
-export default composePlugins(
-  withNx(),
-  withReact(),
-  withModuleFederation(config, { dts: false }),
-);
+export default composePlugins(withNx(), withReact(), withModuleFederation(config, { dts: false }));
 "
 `;
 
 exports[`remote generator bundler=webpack should create the remote with the correct config files when --typescriptConfiguration=true 2`] = `
-"export default require('./webpack.config');
+"export default require("./webpack.config");
 "
 `;
 
 exports[`remote generator bundler=webpack should create the remote with the correct config files when --typescriptConfiguration=true 3`] = `
-"import { ModuleFederationConfig } from '@nx/module-federation';
+"import { ModuleFederationConfig } from "@nx/module-federation";
 
 const config: ModuleFederationConfig = {
-  name: 'test',
+  name: "test",
   exposes: {
-    './Module': './src/remote-entry.ts',
+    "./Module": "./src/remote-entry.ts",
   },
 };
 
@@ -154,11 +150,11 @@ module.exports = {
 `;
 
 exports[`remote generator bundler=webpack should generate correct remote with config files when using --ssr and --typescriptConfiguration=true 1`] = `
-"import { composePlugins, withNx } from '@nx/webpack';
-import { withReact } from '@nx/react';
-import { withModuleFederationForSSR } from '@nx/module-federation/webpack.js';
+"import { composePlugins, withNx } from "@nx/webpack";
+import { withReact } from "@nx/react";
+import { withModuleFederationForSSR } from "@nx/module-federation/webpack.js";
 
-import baseConfig from './module-federation.server.config';
+import baseConfig from "./module-federation.server.config";
 
 const defaultConfig = {
   ...baseConfig,
@@ -179,12 +175,12 @@ export default composePlugins(
 `;
 
 exports[`remote generator bundler=webpack should generate correct remote with config files when using --ssr and --typescriptConfiguration=true 2`] = `
-"import { ModuleFederationConfig } from '@nx/module-federation';
+"import { ModuleFederationConfig } from "@nx/module-federation";
 
 const config: ModuleFederationConfig = {
-  name: 'test',
+  name: "test",
   exposes: {
-    './Module': 'test/src/remote-entry.ts',
+    "./Module": "test/src/remote-entry.ts",
   },
 };
 

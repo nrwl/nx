@@ -31,8 +31,8 @@ describe('CypressComponentConfiguration', () => {
     expect(
       tree.read(joinPathFragments(project.root, 'cypress.config.ts'), 'utf-8')
     ).toMatchInlineSnapshot(`
-      "import { defineConfig } from 'cypress';
-      import { nxComponentTestingPreset } from '@nx/remix/plugins/component-testing';
+      "import { defineConfig } from "cypress";
+      import { nxComponentTestingPreset } from "@nx/remix/plugins/component-testing";
 
       export default defineConfig({
         component: nxComponentTestingPreset(__filename),

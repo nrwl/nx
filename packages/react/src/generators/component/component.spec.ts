@@ -53,10 +53,10 @@ describe('component', () => {
       appTree.exists('my-lib/src/lib/hello/hello.module.css')
     ).toBeTruthy();
     expect(appTree.read('my-lib/src/lib/hello/hello.tsx').toString()).toMatch(
-      /import styles from '.\/hello.module.css'/
+      /import styles from ".\/hello.module.css"/
     );
     expect(appTree.read('my-lib/src/lib/hello/hello.tsx').toString()).toMatch(
-      /<div className={styles\['container']}>/
+      /<div className={styles\["container"]}>/
     );
   });
 
@@ -73,10 +73,10 @@ describe('component', () => {
       appTree.exists('my-lib/src/lib/hello/hello.module.css')
     ).toBeTruthy();
     expect(appTree.read('my-lib/src/lib/hello/hello.tsx').toString()).toMatch(
-      /import styles from '.\/hello.module.css'/
+      /import styles from ".\/hello.module.css"/
     );
     expect(appTree.read('my-lib/src/lib/hello/hello.tsx').toString()).toMatch(
-      /<div className={styles\['container']}>/
+      /<div className={styles\["container"]}>/
     );
   });
 
@@ -93,7 +93,7 @@ describe('component', () => {
     expect(appTree.exists('my-lib/src/lib/hello/hello.css')).toBeTruthy();
     expect(appTree.exists('my-lib/src/lib/hello/hello.module.css')).toBeFalsy();
     expect(appTree.read('my-lib/src/lib/hello/hello.tsx').toString()).toMatch(
-      /import '.\/hello.css'/
+      /import ".\/hello.css"/
     );
     expect(appTree.read('my-lib/src/lib/hello/hello.tsx').toString()).toMatch(
       /<div>/

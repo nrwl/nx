@@ -629,19 +629,19 @@ describe('lib', () => {
       });
 
       expect(tree.read('my-lib/rollup.config.cjs', 'utf-8'))
-        .toEqual(`const { withNx } = require('@nx/rollup/with-nx');
-const url = require('@rollup/plugin-url');
-const svg = require('@svgr/rollup');
+        .toEqual(`const { withNx } = require("@nx/rollup/with-nx");
+const url = require("@rollup/plugin-url");
+const svg = require("@svgr/rollup");
 
 module.exports = withNx(
   {
-    main: './src/index.ts',
-    outputPath: '../dist/my-lib',
-    tsConfig: './tsconfig.lib.json',
-    compiler: 'babel',
-    external: ['react', 'react-dom', 'react/jsx-runtime'],
-    format: ['esm'],
-    assets: [{ input: '.', output: '.', glob: 'README.md' }],
+    main: "./src/index.ts",
+    outputPath: "../dist/my-lib",
+    tsConfig: "./tsconfig.lib.json",
+    compiler: "babel",
+    external: ["react", "react-dom", "react/jsx-runtime"],
+    format: ["esm"],
+    assets: [{ input: ".", output: ".", glob: "README.md" }],
   },
   {
     // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options

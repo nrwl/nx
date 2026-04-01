@@ -49,11 +49,7 @@ exports[`application generator should set up project correctly for cypress 3`] =
     "@vue/eslint-config-typescript",
     "../.eslintrc.json"
   ],
-  "ignorePatterns": [
-    "!**/*",
-    "**/vite.config.*.timestamp*",
-    "**/vitest.config.*.timestamp*"
-  ],
+  "ignorePatterns": ["!**/*", "**/vite.config.*.timestamp*", "**/vitest.config.*.timestamp*"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
@@ -67,35 +63,35 @@ exports[`application generator should set up project correctly for cypress 3`] =
 `;
 
 exports[`application generator should set up project correctly for cypress 4`] = `
-"import { describe, it, expect } from 'vitest';
-import { mount } from '@vue/test-utils';
-import App from './App.vue';
+"import { describe, it, expect } from "vitest";
+import { mount } from "@vue/test-utils";
+import App from "./App.vue";
 
-describe('App', () => {
-  it('renders properly', async () => {
+describe("App", () => {
+  it("renders properly", async () => {
     const wrapper = mount(App, {});
-    expect(wrapper.text()).toContain('Welcome test 👋');
+    expect(wrapper.text()).toContain("Welcome test 👋");
   });
 });
 "
 `;
 
 exports[`application generator should set up project correctly for cypress 5`] = `
-"import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-import { defineConfig } from 'cypress';
+"import { nxE2EPreset } from "@nx/cypress/plugins/cypress-preset";
+import { defineConfig } from "cypress";
 export default defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
-      cypressDir: 'src',
-      bundler: 'vite',
+      cypressDir: "src",
+      bundler: "vite",
       webServerCommands: {
-        default: 'npx nx run test:dev',
-        production: 'npx nx run test:preview',
+        default: "npx nx run test:dev",
+        production: "npx nx run test:preview",
       },
-      ciWebServerCommand: 'npx nx run test:preview',
-      ciBaseUrl: 'http://localhost:4300',
+      ciWebServerCommand: "npx nx run test:preview",
+      ciBaseUrl: "http://localhost:4300",
     }),
-    baseUrl: 'http://localhost:4200',
+    baseUrl: "http://localhost:4200",
   },
 });
 "
@@ -103,29 +99,29 @@ export default defineConfig({
 
 exports[`application generator should set up project correctly for rsbuild 1`] = `
 "/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
-  cacheDir: '../node_modules/.vite/test',
-  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  cacheDir: "../node_modules/.vite/test",
+  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(["*.md"])],
   // Uncomment this if you are using workers.
   // worker: {
   //   plugins: () => [ nxViteTsPaths() ],
   // },
   test: {
-    name: 'test',
+    name: "test",
     watch: false,
     globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
+    environment: "jsdom",
+    include: ["{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    reporters: ["default"],
     coverage: {
-      reportsDirectory: '../coverage/test',
-      provider: 'v8' as const,
+      reportsDirectory: "../coverage/test",
+      provider: "v8" as const,
     },
   },
 }));
@@ -137,6 +133,7 @@ exports[`application generator should set up project correctly for rsbuild 3`] =
   ".eslintignore",
   ".eslintrc.json",
   ".gitignore",
+  ".oxfmtrc.json",
   ".prettierrc",
   ".vscode/extensions.json",
   "nx.json",
@@ -214,11 +211,7 @@ exports[`application generator should set up project correctly with given option
     "@vue/eslint-config-typescript",
     "../.eslintrc.json"
   ],
-  "ignorePatterns": [
-    "!**/*",
-    "**/vite.config.*.timestamp*",
-    "**/vitest.config.*.timestamp*"
-  ],
+  "ignorePatterns": ["!**/*", "**/vite.config.*.timestamp*", "**/vitest.config.*.timestamp*"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
@@ -232,26 +225,26 @@ exports[`application generator should set up project correctly with given option
 `;
 
 exports[`application generator should set up project correctly with given options 4`] = `
-"import { describe, it, expect } from 'vitest';
-import { mount } from '@vue/test-utils';
-import App from './App.vue';
+"import { describe, it, expect } from "vitest";
+import { mount } from "@vue/test-utils";
+import App from "./App.vue";
 
-describe('App', () => {
-  it('renders properly', async () => {
+describe("App", () => {
+  it("renders properly", async () => {
     const wrapper = mount(App, {});
-    expect(wrapper.text()).toContain('Welcome test 👋');
+    expect(wrapper.text()).toContain("Welcome test 👋");
   });
 });
 "
 `;
 
 exports[`application generator should set up project correctly with given options 5`] = `
-"import { defineConfig, devices } from '@playwright/test';
-import { nxE2EPreset } from '@nx/playwright/preset';
-import { workspaceRoot } from '@nx/devkit';
+"import { defineConfig, devices } from "@playwright/test";
+import { nxE2EPreset } from "@nx/playwright/preset";
+import { workspaceRoot } from "@nx/devkit";
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
+const baseURL = process.env["BASE_URL"] || "http://localhost:4300";
 
 /**
  * Read environment variables from file.
@@ -263,34 +256,34 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  ...nxE2EPreset(__filename, { testDir: './src' }),
+  ...nxE2EPreset(__filename, { testDir: "./src" }),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    trace: "on-first-retry",
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx nx run test:preview',
-    url: 'http://localhost:4300',
+    command: "npx nx run test:preview",
+    url: "http://localhost:4300",
     reuseExistingServer: true,
     cwd: workspaceRoot,
   },
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
     },
 
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
     },
 
     {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
     },
 
     // Uncomment for mobile browsers support
@@ -322,6 +315,7 @@ exports[`application generator should set up project correctly with given option
   ".eslintignore",
   ".eslintrc.json",
   ".gitignore",
+  ".oxfmtrc.json",
   ".prettierrc",
   ".vscode/extensions.json",
   "nx.json",

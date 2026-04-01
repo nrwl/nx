@@ -47,12 +47,12 @@ describe('loader', () => {
 
       it('should add imports', async () => {
         const content = tree.read('apps/demo/app/routes/example.tsx', 'utf-8');
-        expect(content).toMatch(`import { json } from '@remix-run/node';`);
+        expect(content).toMatch(`import { json } from "@remix-run/node";`);
         expect(content).toMatch(
-          `import type { LoaderFunctionArgs } from '@remix-run/node';`
+          `import type { LoaderFunctionArgs } from "@remix-run/node";`
         );
         expect(content).toMatch(
-          `import { useLoaderData } from '@remix-run/react';`
+          `import { useLoaderData } from "@remix-run/react";`
         );
       });
 

@@ -32,16 +32,16 @@ describe('scam-to-standalone', () => {
     });
 
     expect(tree.read('foo/src/app/bar/bar.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { Component, NgModule } from '@angular/core';
-      import { CommonModule } from '@angular/common';
+      "import { Component, NgModule } from "@angular/core";
+      import { CommonModule } from "@angular/common";
 
       @Component({
         imports: [CommonModule],
-        selector: 'app-bar',
+        selector: "app-bar",
         standalone: false,
         imports: [],
-        templateUrl: './bar.html',
-        styleUrl: './bar.css',
+        templateUrl: "./bar.html",
+        styleUrl: "./bar.css",
       })
       export class Bar {}
       "
@@ -49,8 +49,8 @@ describe('scam-to-standalone', () => {
 
     expect(tree.read('foo/src/app/mymodule.module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { Bar } from './bar/bar';
-      import { ExtraBarComponentModule } from './bar/extra-bar.component';
+      "import { Bar } from "./bar/bar";
+      import { ExtraBarComponentModule } from "./bar/extra-bar.component";
 
       @NgModule({
         imports: [Bar, ExtraBarComponentModule],
@@ -61,10 +61,10 @@ describe('scam-to-standalone', () => {
 
     expect(tree.read('foo/src/app/bar/bar.spec.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { ComponentFixture, TestBed } from '@angular/core/testing';
-      import { Bar } from './bar';
+      "import { ComponentFixture, TestBed } from "@angular/core/testing";
+      import { Bar } from "./bar";
 
-      describe('Bar', () => {
+      describe("Bar", () => {
         let component: Bar;
         let fixture: ComponentFixture<Bar>;
 
@@ -78,7 +78,7 @@ describe('scam-to-standalone', () => {
           await fixture.whenStable();
         });
 
-        it('should create', () => {
+        it("should create", () => {
           expect(component).toBeTruthy();
         });
       });

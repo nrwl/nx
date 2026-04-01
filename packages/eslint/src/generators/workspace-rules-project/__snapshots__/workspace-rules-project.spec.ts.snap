@@ -72,27 +72,21 @@ exports[`@nx/eslint:workspace-rules-project should generate the required files 4
     "outDir": "../../dist/out-tsc",
     "types": ["jest", "node"]
   },
-  "include": [
-    "jest.config.ts",
-    "jest.config.cts",
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "**/*.d.ts"
-  ]
+  "include": ["jest.config.ts", "jest.config.cts", "**/*.test.ts", "**/*.spec.ts", "**/*.d.ts"]
 }
 "
 `;
 
 exports[`@nx/eslint:workspace-rules-project should generate the required files 5`] = `
 "module.exports = {
-  displayName: 'eslint-rules',
-  preset: '../../jest.preset.js',
-  testEnvironment: 'node',
+  displayName: "eslint-rules",
+  preset: "../../jest.preset.js",
+  testEnvironment: "node",
   transform: {
-    '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    "^.+\\\\.[tj]s$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.spec.json" }],
   },
-  moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/tools/eslint-rules',
+  moduleFileExtensions: ["ts", "js", "html"],
+  coverageDirectory: "../../coverage/tools/eslint-rules",
 };
 "
 `;
