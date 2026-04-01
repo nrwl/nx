@@ -12,10 +12,7 @@ import {
 import { readNxJson } from 'nx/src/config/configuration';
 import { TargetProjectLocator } from '@nx/js/src/internal';
 import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
-
-// TODO (43081j): if `styleText` or `picocolors` ever supports RGB, use
-// that instead.
-const orangeText = (text: string) => `\x1B[38;2;255;165;0m${text}\x1B[39m`;
+import { orange as orangeText } from 'nx/src/utils/output';
 
 export function ensureGlobalProjectGraph(ruleName: string) {
   /**
