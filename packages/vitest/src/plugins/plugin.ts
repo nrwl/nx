@@ -21,8 +21,6 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 
-const pmc = getPackageManagerCommand();
-
 export interface VitestPluginOptions {
   testTargetName?: string;
   /**
@@ -71,6 +69,9 @@ const vitestConfigGlob = '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}';
 export const createNodes: CreateNodesV2<VitestPluginOptions> = [
   vitestConfigGlob,
   async (configFilePaths, options, context) => {
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
     const optionsHash = hashObject(options);
     const normalizedOptions = normalizeOptions(options);
     const cachePath = join(
@@ -123,7 +124,8 @@ export const createNodes: CreateNodesV2<VitestPluginOptions> = [
               configFile,
               projectRoot,
               normalizedOptions,
-              context
+              context,
+              pmc
             ));
 
           const project: ProjectConfiguration = {
@@ -155,7 +157,8 @@ async function buildVitestTargets(
   configFilePath: string,
   projectRoot: string,
   options: VitestPluginOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<VitestTargets> {
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,
@@ -236,7 +239,8 @@ async function buildVitestTargets(
       namedInputs,
       testOutputs,
       projectRoot,
-      options.testMode
+      options.testMode,
+      pmc
     );
 
     if (options.ciTargetName) {
@@ -336,7 +340,8 @@ async function testTarget(
   },
   outputs: string[],
   projectRoot: string,
-  testMode: 'watch' | 'run' = 'watch'
+  testMode: 'watch' | 'run' = 'watch',
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const command = testMode === 'run' ? 'vitest run' : 'vitest';
   return {

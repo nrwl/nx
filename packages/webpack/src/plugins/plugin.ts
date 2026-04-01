@@ -24,8 +24,6 @@ import { readWebpackOptions } from '../utils/webpack/read-webpack-options';
 import { resolveUserDefinedWebpackConfig } from '../utils/webpack/resolve-user-defined-webpack-config';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
-const pmc = getPackageManagerCommand();
-
 export interface WebpackPluginOptions {
   buildTargetName?: string;
   serveTargetName?: string;
@@ -68,6 +66,9 @@ export const createNodes: CreateNodesV2<WebpackPluginOptions> = [
     const targetsCache = readTargetsCache(cachePath);
     const normalizedOptions = normalizeOptions(options);
     const isTsSolutionSetup = isUsingTsSolutionSetup();
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -76,7 +77,8 @@ export const createNodes: CreateNodesV2<WebpackPluginOptions> = [
             options,
             context,
             targetsCache,
-            isTsSolutionSetup
+            isTsSolutionSetup,
+            pmc
           ),
         configFilePaths,
         normalizedOptions,
@@ -95,7 +97,8 @@ async function createNodesInternal(
   options: Required<WebpackPluginOptions>,
   context: CreateNodesContextV2,
   targetsCache: Record<string, WebpackTargets>,
-  isTsSolutionSetup: boolean
+  isTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<CreateNodesResult> {
   const projectRoot = dirname(configFilePath);
 
@@ -120,7 +123,8 @@ async function createNodesInternal(
     projectRoot,
     options,
     context,
-    isTsSolutionSetup
+    isTsSolutionSetup,
+    pmc
   );
 
   const { targets, metadata } = targetsCache[hash];
@@ -141,7 +145,8 @@ async function createWebpackTargets(
   projectRoot: string,
   options: Required<WebpackPluginOptions>,
   context: CreateNodesContextV2,
-  isTsSolutionSetup: boolean
+  isTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<WebpackTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
 

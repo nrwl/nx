@@ -22,8 +22,6 @@ import { minimatch } from 'minimatch';
 import { loadConfig, type RsbuildConfig } from '@rsbuild/core';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
-const pmc = getPackageManagerCommand();
-
 export interface RsbuildPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
@@ -59,6 +57,9 @@ export const createNodesV2: CreateNodesV2<RsbuildPluginOptions> = [
     );
     const targetsCache = readTargetsCache(cachePath);
     const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -67,7 +68,8 @@ export const createNodesV2: CreateNodesV2<RsbuildPluginOptions> = [
             options,
             context,
             targetsCache,
-            isUsingTsSolutionSetup
+            isUsingTsSolutionSetup,
+            pmc
           ),
         configFilePaths,
         options,
@@ -84,7 +86,8 @@ async function createNodesInternal(
   options: RsbuildPluginOptions,
   context: CreateNodesContextV2,
   targetsCache: Record<string, RsbuildTargets>,
-  isUsingTsSolutionSetup: boolean
+  isUsingTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const projectRoot = dirname(configFilePath);
   // Do not create a project if package.json and project.json isn't there.
@@ -113,7 +116,8 @@ async function createNodesInternal(
     normalizedOptions,
     tsConfigFiles,
     isUsingTsSolutionSetup,
-    context
+    context,
+    pmc
   );
 
   const { targets, metadata } = targetsCache[hash];
@@ -135,7 +139,8 @@ async function createRsbuildTargets(
   options: RsbuildPluginOptions,
   tsConfigFiles: string[],
   isUsingTsSolutionSetup: boolean,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<RsbuildTargets> {
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,

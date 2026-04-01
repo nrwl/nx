@@ -24,8 +24,6 @@ import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
 import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
 import { getReporterOutputs, type ReporterOutput } from '../utils/reporters';
 
-const pmc = getPackageManagerCommand();
-
 export interface PlaywrightPluginOptions {
   targetName?: string;
   ciTargetName?: string;
@@ -49,10 +47,13 @@ export const createNodes: CreateNodesV2<PlaywrightPluginOptions> = [
       `playwright-${optionsHash}.hash`
     );
     const pluginCache = new PluginCache<PlaywrightTargets>(cachePath);
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, pluginCache),
+          createNodesInternal(configFile, options, context, pluginCache, pmc),
         configFilePaths,
         options,
         context
@@ -69,7 +70,8 @@ async function createNodesInternal(
   configFilePath: string,
   options: PlaywrightPluginOptions,
   context: CreateNodesContextV2,
-  pluginCache: PluginCache<PlaywrightTargets>
+  pluginCache: PluginCache<PlaywrightTargets>,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const projectRoot = dirname(configFilePath);
 
@@ -101,7 +103,8 @@ async function createNodesInternal(
         configFilePath,
         projectRoot,
         normalizedOptions,
-        context
+        context,
+        pmc
       )
     );
   }
@@ -122,7 +125,8 @@ async function buildPlaywrightTargets(
   configFilePath: string,
   projectRoot: string,
   options: NormalizedOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<PlaywrightTargets> {
   // Playwright forbids importing the `@playwright/test` module twice. This would affect running the tests,
   // but we're just reading the config so let's delete the variable they are using to detect this.

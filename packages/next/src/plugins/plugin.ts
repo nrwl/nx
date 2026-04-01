@@ -33,8 +33,6 @@ export interface NextPluginOptions {
   watchDepsTargetName?: string;
 }
 
-const pmc = getPackageManagerCommand();
-
 const nextConfigBlob = '**/next.config.{ts,js,cjs,mjs}';
 
 function readTargetsCache(
@@ -68,6 +66,9 @@ export const createNodes: CreateNodesV2<NextPluginOptions> = [
     const cachePath = join(workspaceDataDirectory, `next-${optionsHash}.json`);
     const targetsCache = readTargetsCache(cachePath);
     const isTsSolutionSetup = isUsingTsSolutionSetup();
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
 
     try {
       return await createNodesFromFiles(
@@ -77,7 +78,8 @@ export const createNodes: CreateNodesV2<NextPluginOptions> = [
             options,
             context,
             targetsCache,
-            isTsSolutionSetup
+            isTsSolutionSetup,
+            pmc
           ),
         configFiles,
         options,
@@ -99,7 +101,8 @@ async function createNodesInternal(
     string,
     Record<string, TargetConfiguration<NextPluginOptions>>
   >,
-  isTsSolutionSetup: boolean
+  isTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const projectRoot = dirname(configFilePath);
 
@@ -125,7 +128,8 @@ async function createNodesInternal(
     projectRoot,
     options,
     context,
-    isTsSolutionSetup
+    isTsSolutionSetup,
+    pmc
   );
 
   return {
@@ -143,7 +147,8 @@ async function buildNextTargets(
   projectRoot: string,
   options: NextPluginOptions,
   context: CreateNodesContextV2,
-  isTsSolutionSetup: boolean
+  isTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const nextConfig = await getNextConfig(nextConfigPath, context);
   const namedInputs = getNamedInputs(projectRoot, context);
