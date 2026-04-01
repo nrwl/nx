@@ -114,7 +114,7 @@ describe('@nx/webpack/plugin', () => {
                     },
                     "options": {
                       "args": [
-                        "--node-env=production",
+                        "--config-node-env=production",
                       ],
                       "cwd": "my-app",
                     },
@@ -144,7 +144,7 @@ describe('@nx/webpack/plugin', () => {
                     },
                     "options": {
                       "args": [
-                        "--node-env=development",
+                        "--config-node-env=development",
                       ],
                       "cwd": "my-app",
                     },
@@ -171,7 +171,7 @@ describe('@nx/webpack/plugin', () => {
                     },
                     "options": {
                       "args": [
-                        "--node-env=production",
+                        "--config-node-env=production",
                       ],
                       "cwd": "my-app",
                     },
