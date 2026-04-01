@@ -26,9 +26,9 @@ describe('Angular Projects - Linting', () => {
     // disable the prefer-standalone rule for app1 which is not standalone
     let app1EslintConfig = readFile(`${app1}/eslint.config.mjs`);
     app1EslintConfig = app1EslintConfig.replace(
-      `"@angular-eslint/directive-selector": [`,
-      `"@angular-eslint/prefer-standalone": "off",
-      "@angular-eslint/directive-selector": [`
+      `'@angular-eslint/directive-selector': [`,
+      `'@angular-eslint/prefer-standalone': 'off',
+      '@angular-eslint/directive-selector': [`
     );
     updateFile(`${app1}/eslint.config.mjs`, app1EslintConfig);
 
