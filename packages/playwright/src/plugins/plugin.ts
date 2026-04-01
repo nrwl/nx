@@ -343,7 +343,7 @@ async function buildPlaywrightTargets(
       inputs: ciBaseTargetConfig.inputs,
       outputs: Array.from(mergeReportsTargetOutputs),
       options: {
-        config: posix.relative(projectRoot, configFilePath),
+        config: normalizePath(relative(projectRoot, configFilePath)),
         expectedSuites: dependsOn.length,
       },
       metadata: {
