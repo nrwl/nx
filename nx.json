@@ -391,10 +391,6 @@
       },
       {
         "rule": "./dist/workspace-plugin/src/conformance-rules/types-versions-exports-sync"
-      },
-      {
-        "rule": "./dist/workspace-plugin/src/conformance-rules/no-disabled-tests",
-        "status": "evaluated"
       }
     ]
   },

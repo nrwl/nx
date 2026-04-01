@@ -4,6 +4,11 @@
   "sourceRoot": "graph/client/src",
   "projectType": "application",
   "targets": {
+    "lint": {
+      "options": {
+        "max-warnings": 15
+      }
+    },
     "generate-dev-environment-js": {
       "executor": "nx:run-commands",
       "options": {

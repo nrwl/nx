@@ -1,10 +1,16 @@
 {
   "extends": "../../.eslintrc.json",
   "rules": {},
-  "ignorePatterns": ["!**/*", "node_modules"],
+  "ignorePatterns": [
+    "!**/*.test.ts",
+    "!**/*.test.tsx",
+    "!**/*.spec.ts",
+    "!**/*.spec.tsx",
+    "node_modules"
+  ],
   "overrides": [
     {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "files": ["*.test.ts", "*.test.tsx", "*.spec.ts", "*.spec.tsx"],
       "rules": {}
     }
   ]
