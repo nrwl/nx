@@ -21,18 +21,13 @@ export function getOxfmtBinPath(): string {
 
 export function formatContentWithOxfmt(
   filepath: string,
-  content: string,
-  configPath?: string
+  content: string
 ): Promise<string> {
   const oxfmtBin = getOxfmtBinPath();
-  const args = [oxfmtBin, `--stdin-filepath=${filepath}`];
-  if (configPath) {
-    args.push(`--config=${configPath}`);
-  }
   return new Promise((resolve, reject) => {
     const child = execFile(
       'node',
-      args,
+      [oxfmtBin, `--stdin-filepath=${filepath}`],
       { encoding: 'utf-8' as const, windowsHide: true },
       (error, stdout) => {
         if (error) {
