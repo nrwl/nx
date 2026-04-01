@@ -17,11 +17,10 @@ object NxTracing {
   private const val INSTRUMENTATION_NAME = "nx-gradle-project-graph"
 
   private val otlpEndpoint: String? = System.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
-  private val enabled: Boolean = otlpEndpoint != null && System.getenv("NX_OTEL_ENABLED") != "false"
 
   private val sdk: OpenTelemetrySdk? =
-      if (enabled) {
-        val exporter = OtlpGrpcSpanExporter.builder().setEndpoint(otlpEndpoint!!).build()
+      if (otlpEndpoint != null) {
+        val exporter = OtlpGrpcSpanExporter.builder().setEndpoint(otlpEndpoint).build()
         val resource =
             Resource.getDefault()
                 .merge(
