@@ -1,7 +1,6 @@
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
-  ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -26,7 +25,6 @@ import {
 } from '../../utils/typescript/ts-solution-setup';
 import {
   nxVersion,
-  prettierVersion,
   supportedTypescriptVersions,
   swcCoreVersion,
   swcHelpersVersion,
@@ -207,10 +205,6 @@ export async function initGeneratorInternal(
       )
     : () => {};
   tasks.push(installTask);
-
-  if (!schema.skipPackageJson && schema.formatter === 'prettier') {
-    ensurePackage('prettier', prettierVersion);
-  }
 
   if (!schema.skipFormat) {
     // even if skipPackageJson === true, we can safely run formatFiles, prettier might
