@@ -380,6 +380,12 @@ export interface ViteConfigFileOptions {
   useEsmExtension?: boolean;
   port?: number;
   previewPort?: number;
+  /**
+   * Use oxc-transform for generating TypeScript declaration files (.d.ts)
+   * instead of vite-plugin-dts. Requires `isolatedDeclarations: true` in
+   * the project's tsconfig. Significantly faster than TSC-based emission.
+   */
+  useOxcDeclarations?: boolean;
 }
 
 export function createOrEditViteConfig(
@@ -442,10 +448,16 @@ export function createOrEditViteConfig(
   const plugins: string[] = options.plugins ? [...options.plugins] : [];
 
   if (!onlyVitest && options.includeLib) {
-    imports.push(
-      `import dts from 'vite-plugin-dts'`,
-      `import * as path from 'path'`
-    );
+    if (options.useOxcDeclarations) {
+      imports.push(
+        `import { nxOxcDeclarationsPlugin } from '@nx/vite/plugins/nx-oxc-declarations.plugin'`
+      );
+    } else {
+      imports.push(
+        `import dts from 'vite-plugin-dts'`,
+        `import * as path from 'path'`
+      );
+    }
   }
 
   if (!isTsSolutionSetup) {
@@ -457,11 +469,17 @@ export function createOrEditViteConfig(
   }
 
   if (!onlyVitest && options.includeLib) {
-    plugins.push(
-      `dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json')${
-        !isTsSolutionSetup ? ', pathsToAliases: false' : ''
-      } })`
-    );
+    if (options.useOxcDeclarations) {
+      plugins.push(
+        `nxOxcDeclarationsPlugin({ projectRoot: import.meta.dirname })`
+      );
+    } else {
+      plugins.push(
+        `dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json')${
+          !isTsSolutionSetup ? ', pathsToAliases: false' : ''
+        } })`
+      );
+    }
   }
 
   const reportsDirectory = isTsSolutionSetup

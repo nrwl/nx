@@ -34,5 +34,6 @@ export interface RollupExecutorOptions {
   skipTypeCheck?: boolean;
   skipTypeField?: boolean;
   useLegacyTypescriptPlugin?: boolean;
+  useOxcDeclarations?: boolean;
   watch?: boolean;
 }

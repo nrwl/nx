@@ -64,9 +64,13 @@
     "nx": "workspace:*"
   },
   "peerDependencies": {
+    "oxc-transform": "^0.123.0",
     "verdaccio": "^6.0.5"
   },
   "peerDependenciesMeta": {
+    "oxc-transform": {
+      "optional": true
+    },
     "verdaccio": {
       "optional": true
     }

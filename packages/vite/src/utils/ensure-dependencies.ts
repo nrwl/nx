@@ -6,6 +6,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { coerce, major } from 'semver';
+import { oxcTransformVersion } from '@nx/js/src/utils/versions';
 import {
   ajvVersion,
   analogVitestAngular,
@@ -23,6 +24,7 @@ export type EnsureDependenciesOptions = {
   compiler?: 'babel' | 'swc';
   includeLib?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
+  useOxcDeclarations?: boolean;
 };
 
 export function ensureDependencies(
@@ -64,9 +66,13 @@ export function ensureDependencies(
   }
 
   if (schema.includeLib) {
-    devDependencies['vite-plugin-dts'] = vitePluginDtsVersion;
-    if (detectPackageManager() !== 'pnpm') {
-      devDependencies['ajv'] = ajvVersion;
+    if (schema.useOxcDeclarations) {
+      devDependencies['oxc-transform'] = oxcTransformVersion;
+    } else {
+      devDependencies['vite-plugin-dts'] = vitePluginDtsVersion;
+      if (detectPackageManager() !== 'pnpm') {
+        devDependencies['ajv'] = ajvVersion;
+      }
     }
   }
 
