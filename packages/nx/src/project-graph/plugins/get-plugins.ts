@@ -292,9 +292,9 @@ export function reasonToError(reason: unknown): Error {
     return reason;
   }
   if (typeof reason === 'object' && reason !== null && 'message' in reason) {
-    const error = new Error(String((reason as { message: unknown }).message));
+    const error = new Error(String(reason.message));
     if ('stack' in reason) {
-      error.stack = String((reason as { stack: unknown }).stack);
+      error.stack = String(reason.stack);
     }
     return error;
   }
