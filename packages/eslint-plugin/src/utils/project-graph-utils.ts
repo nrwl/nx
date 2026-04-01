@@ -13,10 +13,6 @@ import { readNxJson } from 'nx/src/config/configuration';
 import { TargetProjectLocator } from '@nx/js/internal';
 import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 
-// TODO (43081j): if `styleText` or `picocolors` ever supports RGB, use
-// that instead.
-const orangeText = (text: string) => `\x1B[38;2;255;165;0m${text}\x1B[39m`;
-
 export function ensureGlobalProjectGraph(ruleName: string) {
   /**
    * Only reuse graph when running from terminal
@@ -47,7 +43,7 @@ export function ensureGlobalProjectGraph(ruleName: string) {
         projectGraph.externalNodes
       );
     } catch {
-      const WARNING_PREFIX = `${pc.reset(orangeText('warning'))}`;
+      const WARNING_PREFIX = `${pc.reset(pc.yellow('warning'))}`;
       const RULE_NAME_SUFFIX = `${pc.reset(pc.dim(`@nx/${ruleName}`))}`;
       process.stdout
         .write(`${WARNING_PREFIX} No cached ProjectGraph is available. The rule will be skipped.
