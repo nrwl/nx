@@ -17,14 +17,20 @@ type AffectedPathsResolver = (changes: JsonChange[]) => string[] | null;
  * here automatically includes it in detection -- no separate list to
  * keep in sync.
  */
-const LOCK_FILE_RESOLVERS: Record<string, AffectedPathsResolver> = {
+const LOCK_FILE_RESOLVERS = {
   'pnpm-lock.yaml': getAffectedPathsFromPnpmLock,
   'pnpm-lock.yml': getAffectedPathsFromPnpmLock,
   'package-lock.json': getAffectedPathsFromNpmLock,
   'yarn.lock': getAffectedPathsFromYarnLock,
   'bun.lockb': getAffectedPathsFromBunLock,
   'bun.lock': getAffectedPathsFromBunLock,
-};
+} satisfies Record<string, AffectedPathsResolver>;
+
+type SupportedLockFile = keyof typeof LOCK_FILE_RESOLVERS;
+
+function isSupportedLockFile(file: string): file is SupportedLockFile {
+  return file in LOCK_FILE_RESOLVERS;
+}
 
 const ALL_LOCK_FILES = Object.keys(LOCK_FILE_RESOLVERS);
 
@@ -142,8 +148,14 @@ const getProjectPathsAffectedByDependencyUpdates = (
     return null;
   }
 
-  const resolve = LOCK_FILE_RESOLVERS[changedLockFile.file];
-  return resolve(changes.filter(isJsonChange));
+  if (!isSupportedLockFile(changedLockFile.file)) {
+    // TODO: should we log a warning here?
+    return null;
+  }
+
+  return LOCK_FILE_RESOLVERS[changedLockFile.file](
+    changes.filter(isJsonChange)
+  );
 };
 
 const getProjectsNamesFromPaths = (
