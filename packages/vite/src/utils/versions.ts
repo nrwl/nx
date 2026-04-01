@@ -15,6 +15,7 @@ export const vitePluginReactV4Version = '^4.2.0';
 export const vitePluginReactSwcVersion = '^4.3.0';
 export const jsdomVersion = '~22.1.0';
 export const vitePluginDtsVersion = '~4.5.0';
+export const rolldownPluginDtsVersion = '^0.22.0';
 export const ajvVersion = '^8.0.0';
 export const happyDomVersion = '~9.20.3';
 export const edgeRuntimeVmVersion = '~3.0.2';
