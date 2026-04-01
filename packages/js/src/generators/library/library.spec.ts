@@ -1637,6 +1637,27 @@ describe('lib', () => {
         },
       });
     });
+
+    it('should keep esbuild aligned with vite when generating mixed bundler libraries', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'esbuild-lib',
+        bundler: 'esbuild',
+        unitTestRunner: 'none',
+      });
+      const esbuildVersion = readJson(tree, 'package.json').devDependencies
+        .esbuild;
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'vite-lib',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies.esbuild).toBe(esbuildVersion);
+    });
   });
 
   describe('--bundler=rollup', () => {
