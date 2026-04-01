@@ -79,6 +79,7 @@ describe('@nx/nuxt/plugin', () => {
         JSON.stringify({ name: 'my-app' })
       );
       tempFs.createFileSync('my-app/nuxt.config.ts', '');
+      tempFs.createFileSync('package-lock.json', '{}');
     });
 
     afterEach(() => {

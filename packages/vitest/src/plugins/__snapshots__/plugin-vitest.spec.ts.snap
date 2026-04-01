@@ -67,8 +67,8 @@ exports[`@nx/vitest root project should create nodes with ci target name 1`] = `
             "targetGroups": {
               "E2E (CI)": [
                 "e2e-ci",
-                "e2e-ci--src/test-1.ts",
-                "e2e-ci--src/test-2.ts",
+                "e2e-ci--src\\test-1.ts",
+                "e2e-ci--src\\test-2.ts",
               ],
             },
           },
@@ -78,8 +78,8 @@ exports[`@nx/vitest root project should create nodes with ci target name 1`] = `
             "e2e-ci": {
               "cache": true,
               "dependsOn": [
-                "e2e-ci--src/test-1.ts",
-                "e2e-ci--src/test-2.ts",
+                "e2e-ci--src\\test-1.ts",
+                "e2e-ci--src\\test-2.ts",
               ],
               "executor": "nx:noop",
               "inputs": [
@@ -113,9 +113,9 @@ exports[`@nx/vitest root project should create nodes with ci target name 1`] = `
                 "{projectRoot}/coverage",
               ],
             },
-            "e2e-ci--src/test-1.ts": {
+            "e2e-ci--src\\test-1.ts": {
               "cache": true,
-              "command": "vitest run src/test-1.ts",
+              "command": "vitest run src\\test-1.ts",
               "inputs": [
                 "default",
                 "^production",
@@ -129,7 +129,7 @@ exports[`@nx/vitest root project should create nodes with ci target name 1`] = `
                 },
               ],
               "metadata": {
-                "description": "Run Vitest Tests in src/test-1.ts",
+                "description": "Run Vitest Tests in src\\test-1.ts",
                 "help": {
                   "command": "npx vitest --help",
                   "example": {
@@ -150,9 +150,9 @@ exports[`@nx/vitest root project should create nodes with ci target name 1`] = `
                 "{projectRoot}/coverage",
               ],
             },
-            "e2e-ci--src/test-2.ts": {
+            "e2e-ci--src\\test-2.ts": {
               "cache": true,
-              "command": "vitest run src/test-2.ts",
+              "command": "vitest run src\\test-2.ts",
               "inputs": [
                 "default",
                 "^production",
@@ -166,7 +166,7 @@ exports[`@nx/vitest root project should create nodes with ci target name 1`] = `
                 },
               ],
               "metadata": {
-                "description": "Run Vitest Tests in src/test-2.ts",
+                "description": "Run Vitest Tests in src\\test-2.ts",
                 "help": {
                   "command": "npx vitest --help",
                   "example": {
@@ -243,8 +243,8 @@ exports[`@nx/vitest root project should create nodes with ci target name and ci 
             "targetGroups": {
               "Custom E2E (CI)": [
                 "e2e-ci",
-                "e2e-ci--src/test-1.ts",
-                "e2e-ci--src/test-2.ts",
+                "e2e-ci--src\\test-1.ts",
+                "e2e-ci--src\\test-2.ts",
               ],
             },
           },
@@ -254,8 +254,8 @@ exports[`@nx/vitest root project should create nodes with ci target name and ci 
             "e2e-ci": {
               "cache": true,
               "dependsOn": [
-                "e2e-ci--src/test-1.ts",
-                "e2e-ci--src/test-2.ts",
+                "e2e-ci--src\\test-1.ts",
+                "e2e-ci--src\\test-2.ts",
               ],
               "executor": "nx:noop",
               "inputs": [
@@ -289,9 +289,9 @@ exports[`@nx/vitest root project should create nodes with ci target name and ci 
                 "{projectRoot}/coverage",
               ],
             },
-            "e2e-ci--src/test-1.ts": {
+            "e2e-ci--src\\test-1.ts": {
               "cache": true,
-              "command": "vitest run src/test-1.ts",
+              "command": "vitest run src\\test-1.ts",
               "inputs": [
                 "default",
                 "^production",
@@ -305,7 +305,7 @@ exports[`@nx/vitest root project should create nodes with ci target name and ci 
                 },
               ],
               "metadata": {
-                "description": "Run Vitest Tests in src/test-1.ts",
+                "description": "Run Vitest Tests in src\\test-1.ts",
                 "help": {
                   "command": "npx vitest --help",
                   "example": {
@@ -326,9 +326,9 @@ exports[`@nx/vitest root project should create nodes with ci target name and ci 
                 "{projectRoot}/coverage",
               ],
             },
-            "e2e-ci--src/test-2.ts": {
+            "e2e-ci--src\\test-2.ts": {
               "cache": true,
-              "command": "vitest run src/test-2.ts",
+              "command": "vitest run src\\test-2.ts",
               "inputs": [
                 "default",
                 "^production",
@@ -342,7 +342,7 @@ exports[`@nx/vitest root project should create nodes with ci target name and ci 
                 },
               ],
               "metadata": {
-                "description": "Run Vitest Tests in src/test-2.ts",
+                "description": "Run Vitest Tests in src\\test-2.ts",
                 "help": {
                   "command": "npx vitest --help",
                   "example": {

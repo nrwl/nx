@@ -43,6 +43,7 @@ describe('@nx/eslint/plugin', () => {
       },
       workspaceRoot: tempFs.tempDir,
     };
+    tempFs.createFileSync('package-lock.json', '{}');
   });
 
   afterEach(() => {

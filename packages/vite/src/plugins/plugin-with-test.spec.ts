@@ -3,6 +3,11 @@ import { createNodes, createNodesV2 } from './plugin';
 
 // This will only create test targets since no build targets are defined in vite.config.ts
 
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  detectPackageManager: jest.fn().mockReturnValue('npm'),
+}));
+
 jest.mock('../utils/executor-utils', () => ({
   loadViteDynamicImport: jest.fn().mockResolvedValue({
     resolveConfig: jest.fn().mockResolvedValue({

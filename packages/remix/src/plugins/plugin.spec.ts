@@ -62,6 +62,7 @@ describe('@nx/remix/plugin', () => {
           'package.json',
           JSON.stringify('{name: "my-app", type: "module"}')
         );
+        tempFs.createFileSync('package-lock.json', '{}');
         tempFs.createFileSync(
           'remix.config.cjs',
           `/**
@@ -122,6 +123,7 @@ module.exports = {
           'my-app/project.json',
           JSON.stringify({ name: 'my-app' })
         );
+        tempFs.createFileSync('package-lock.json', '{}');
         const lockFileName = getLockFileName(
           detectPackageManager(tempFs.tempDir)
         );
@@ -301,6 +303,7 @@ module.exports = {
           'package.json',
           JSON.stringify('{name: "my-app", type: "module"}')
         );
+        tempFs.createFileSync('package-lock.json', '{}');
         const lockFileName = getLockFileName(
           detectPackageManager(tempFs.tempDir)
         );
@@ -368,6 +371,7 @@ module.exports = {
           'my-app/project.json',
           JSON.stringify({ name: 'my-app' })
         );
+        tempFs.createFileSync('package-lock.json', '{}');
 
         tempFs.createFileSync(
           'my-app/vite.config.js',

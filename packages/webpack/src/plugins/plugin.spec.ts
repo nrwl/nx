@@ -39,6 +39,7 @@ describe('@nx/webpack/plugin', () => {
       JSON.stringify({ name: 'my-app' })
     );
     tempFs.createFileSync('my-app/webpack.config.js', '');
+    tempFs.createFileSync('package-lock.json', '{}');
   });
 
   afterEach(() => {
@@ -119,7 +120,7 @@ describe('@nx/webpack/plugin', () => {
                       "cwd": "my-app",
                     },
                     "outputs": [
-                      "{projectRoot}/dist/foo",
+                      "{projectRoot}\\dist\\foo",
                     ],
                   },
                   "my-serve": {

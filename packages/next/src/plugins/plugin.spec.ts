@@ -60,6 +60,7 @@ describe('@nx/next/plugin', () => {
         JSON.stringify({ name: 'my-app' })
       );
       tempFs.createFileSync('my-app/next.config.js', '');
+      tempFs.createFileSync('package-lock.json', '{}');
     });
 
     afterEach(() => {

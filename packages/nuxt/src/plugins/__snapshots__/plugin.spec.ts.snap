@@ -28,7 +28,7 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
                 "cwd": "my-app",
               },
               "outputs": [
-                "{workspaceRoot}/dist/my-app/.nuxt",
+                "{workspaceRoot}\\dist\\my-app\\.nuxt",
                 "{projectRoot}/.output",
               ],
             },
@@ -69,7 +69,7 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
                 "cwd": "my-app",
               },
               "outputs": [
-                "{workspaceRoot}/dist/my-app/.nuxt",
+                "{workspaceRoot}\\dist\\my-app\\.nuxt",
                 "{projectRoot}/.output",
               ],
             },
@@ -123,7 +123,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
                 "cwd": ".",
               },
               "outputs": [
-                "dist/my-app/.nuxt",
+                "dist\\my-app\\.nuxt",
                 "{projectRoot}/.output",
               ],
             },
@@ -151,7 +151,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
                 "cwd": ".",
               },
               "outputs": [
-                "dist/my-app/.nuxt",
+                "dist\\my-app\\.nuxt",
                 "{projectRoot}/.output",
               ],
             },
@@ -176,7 +176,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
               },
             },
             "watch-deps": {
-              "command": "npx nx watch --projects nuxt --includeDependentProjects -- npx nx build-deps nuxt",
+              "command": "pnpm exec nx watch --projects nuxt --includeDependentProjects -- pnpm exec nx build-deps nuxt",
               "continuous": true,
               "dependsOn": [
                 "build-deps",
