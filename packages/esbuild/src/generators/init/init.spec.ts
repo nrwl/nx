@@ -20,4 +20,20 @@ describe('esbuildInitGenerator', () => {
       esbuild: expect.any(String),
     });
   });
+
+  it('should keep the installed esbuild version', async () => {
+    writeJson(tree, 'package.json', {
+      devDependencies: {
+        esbuild: '^0.19.2',
+      },
+    });
+
+    await esbuildInitGenerator(tree, {});
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies).toEqual({
+      '@nx/esbuild': expect.any(String),
+      esbuild: '^0.19.2',
+    });
+  });
 });

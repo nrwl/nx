@@ -1,5 +1,11 @@
-import { validateWorkspaceName } from './create-nx-workspace';
+import {
+  validateWorkspaceName,
+  resolveSpecialFolderName,
+} from './create-nx-workspace';
 import { CnwError } from '../src/utils/error-utils';
+import { mkdtempSync, mkdirSync, rmSync, realpathSync } from 'fs';
+import { join, basename, dirname } from 'path';
+import { tmpdir } from 'os';
 
 describe('validateWorkspaceName', () => {
   it('should allow names starting with a letter', () => {
@@ -34,5 +40,111 @@ describe('validateWorkspaceName', () => {
         'Workspace names must start with a letter'
       );
     }
+  });
+});
+
+describe('resolveSpecialFolderName', () => {
+  let originalCwd: string;
+
+  beforeEach(() => {
+    originalCwd = process.cwd();
+  });
+
+  afterEach(() => {
+    process.chdir(originalCwd);
+  });
+
+  it('should return null for regular names', () => {
+    expect(resolveSpecialFolderName('myapp')).toBeNull();
+    expect(resolveSpecialFolderName('my-app')).toBeNull();
+    expect(resolveSpecialFolderName('app123')).toBeNull();
+  });
+
+  describe('"." and "./"', () => {
+    it('should throw DIRECTORY_EXISTS when cwd is non-empty', () => {
+      // cwd is the repo root, which is definitely non-empty
+      try {
+        resolveSpecialFolderName('.');
+        fail('Expected CnwError to be thrown');
+      } catch (e) {
+        expect(e).toBeInstanceOf(CnwError);
+        expect((e as CnwError).code).toBe('DIRECTORY_EXISTS');
+        expect((e as CnwError).message).toContain('nx init');
+      }
+    });
+
+    it('should throw DIRECTORY_EXISTS for "./" in non-empty directory', () => {
+      try {
+        resolveSpecialFolderName('./');
+        fail('Expected CnwError to be thrown');
+      } catch (e) {
+        expect(e).toBeInstanceOf(CnwError);
+        expect((e as CnwError).code).toBe('DIRECTORY_EXISTS');
+      }
+    });
+
+    it('should resolve "." to basename and parent workingDir when cwd is empty', () => {
+      const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
+      process.chdir(tmpDir);
+
+      const result = resolveSpecialFolderName('.');
+
+      expect(result).toEqual({
+        name: basename(tmpDir),
+        workingDir: dirname(tmpDir),
+      });
+
+      rmSync(tmpDir, { recursive: true });
+    });
+
+    it('should resolve "./" to basename and parent workingDir when cwd is empty', () => {
+      const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
+      process.chdir(tmpDir);
+
+      const result = resolveSpecialFolderName('./');
+
+      expect(result).toEqual({
+        name: basename(tmpDir),
+        workingDir: dirname(tmpDir),
+      });
+
+      rmSync(tmpDir, { recursive: true });
+    });
+  });
+
+  describe('absolute paths', () => {
+    it('should extract basename and return parent as workingDir', () => {
+      const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
+      const targetPath = join(tmpDir, 'acme');
+
+      const result = resolveSpecialFolderName(targetPath);
+
+      expect(result).toEqual({ name: 'acme', workingDir: tmpDir });
+
+      rmSync(tmpDir, { recursive: true });
+    });
+
+    it('should throw INVALID_PATH when parent directory does not exist', () => {
+      try {
+        resolveSpecialFolderName('/nonexistent-parent-dir-xyz/acme');
+        fail('Expected CnwError to be thrown');
+      } catch (e) {
+        expect(e).toBeInstanceOf(CnwError);
+        expect((e as CnwError).code).toBe('INVALID_PATH');
+        expect((e as CnwError).message).toContain('does not exist');
+      }
+    });
+
+    it('should work when target directory already exists', () => {
+      const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
+      const targetPath = join(tmpDir, 'existing');
+      mkdirSync(targetPath);
+
+      const result = resolveSpecialFolderName(targetPath);
+
+      expect(result).toEqual({ name: 'existing', workingDir: tmpDir });
+
+      rmSync(tmpDir, { recursive: true });
+    });
   });
 });

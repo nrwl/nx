@@ -69,15 +69,10 @@
       "dependsOn": ["echo"]
     },
     "copy-assets": {
-      "dependsOn": ["build-base", "build-native"]
+      "dependsOn": ["build-native", "^build-client"]
     },
     "build": {
-      "dependsOn": [
-        "^build-client",
-        "build-base",
-        "build-native",
-        "copy-assets"
-      ],
+      "dependsOn": ["build-base"],
       "inputs": [
         "production",
         "^production",
@@ -85,21 +80,16 @@
           "dependentTasksOutputFiles": "**/*.node",
           "transitive": true
         },
-        "{workspaceRoot}/scripts/copy-graph-client.js",
         "{workspaceRoot}/scripts/chmod.js",
         "copyReadme"
       ],
       "executor": "nx:run-commands",
       "outputs": [
-        "{workspaceRoot}/packages/nx/dist/src/core/graph",
         "{workspaceRoot}/packages/nx/dist/bin/nx.js",
         "{workspaceRoot}/packages/nx/README.md"
       ],
       "options": {
         "commands": [
-          {
-            "command": "node ./scripts/copy-graph-client.js"
-          },
           {
             "command": "node ./scripts/chmod packages/nx/dist/bin/nx.js"
           },

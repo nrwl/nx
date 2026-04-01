@@ -80,7 +80,10 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
         `Invalid template. Only templates from the 'nrwl' GitHub org are supported.`
       );
     const templateUrl = `https://github.com/${options.template}`;
-    const workingDir = process.cwd().replace(/\\/g, '/');
+    const workingDir = (options.workingDir ?? process.cwd()).replace(
+      /\\/g,
+      '/'
+    );
     directory = join(workingDir, name);
 
     const aiMode = isAiAgent();
@@ -95,7 +98,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     }
 
     try {
-      await cloneTemplate(templateUrl, name);
+      await cloneTemplate(templateUrl, name, workingDir);
 
       // Remove npm lockfile from template since we'll generate the correct one
       const npmLockPath = join(directory, 'package-lock.json');

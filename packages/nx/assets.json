@@ -23,6 +23,18 @@
     {
       "glob": "**/*.{node,wasm}",
       "includeIgnoredFiles": true
+    },
+    {
+      "glob": "index.d.ts",
+      "input": "packages/nx/src/native",
+      "output": "/src/native"
+    },
+    {
+      "glob": "**/*",
+      "input": "dist/apps/graph",
+      "output": "/src/core/graph",
+      "ignore": ["assets/**"],
+      "includeIgnoredFiles": true
     }
   ]
 }

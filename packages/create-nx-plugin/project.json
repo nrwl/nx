@@ -24,7 +24,12 @@
         ],
         "parallel": false
       },
-      "inputs": ["copyReadme"]
+      "inputs": [
+        "copyReadme",
+        { "dependentTasksOutputFiles": "**/bin/create-nx-plugin.js" },
+        "{workspaceRoot}/scripts/replace-versions.js",
+        "{workspaceRoot}/scripts/chmod.js"
+      ]
     }
   },
   "implicitDependencies": ["plugin"]

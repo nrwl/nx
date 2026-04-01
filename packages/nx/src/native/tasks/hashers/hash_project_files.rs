@@ -1,6 +1,9 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use anyhow::*;
+use dashmap::DashMap;
+use once_cell::sync::OnceCell;
 use tracing::{trace, trace_span};
 
 use crate::native::glob::build_glob_set;
@@ -10,6 +13,19 @@ use crate::native::types::FileData;
 pub struct ProjectFilesHashResult {
     pub hash: String,
     pub files: Vec<String>,
+}
+
+pub(crate) type ProjectFileSetCache = DashMap<String, Arc<OnceCell<Arc<ProjectFilesHashResult>>>>;
+
+fn project_file_set_cache_key(project_name: &str, file_sets: &[String]) -> String {
+    let mut sorted_file_sets: Vec<&str> = file_sets.iter().map(String::as_str).collect();
+    sorted_file_sets.sort();
+
+    format!(
+        "{project_name}\0{}\0{}",
+        sorted_file_sets.len(),
+        sorted_file_sets.join("\0")
+    )
 }
 
 /// Hashes project files and returns both the hash and the list of matched file paths.
@@ -38,6 +54,25 @@ pub fn hash_project_files_with_inputs(
         hash: hasher.digest().to_string(),
         files,
     })
+}
+
+pub(crate) fn hash_project_files_with_inputs_cached(
+    project_name: &str,
+    file_sets: &[String],
+    project_file_map: &HashMap<String, Vec<FileData>>,
+    cache: &ProjectFileSetCache,
+) -> Result<Arc<ProjectFilesHashResult>> {
+    let cache_key = project_file_set_cache_key(project_name, file_sets);
+    let cache_cell = cache
+        .entry(cache_key)
+        .or_insert_with(|| Arc::new(OnceCell::new()))
+        .clone();
+
+    cache_cell
+        .get_or_try_init(|| {
+            hash_project_files_with_inputs(project_name, file_sets, project_file_map).map(Arc::new)
+        })
+        .cloned()
 }
 
 /// base function that should be testable (to make sure that we're getting the proper files back)
@@ -220,5 +255,43 @@ mod tests {
                 .concat()
             )
         );
+    }
+
+    #[test]
+    fn should_cache_by_project_and_fileset_combo_regardless_of_order() {
+        let proj_name = "test_project";
+        let first_file_sets = &[
+            "test/root/**/*".to_string(),
+            "!test/root/**/*.spec.ts".to_string(),
+        ];
+        let second_file_sets = &[
+            "!test/root/**/*.spec.ts".to_string(),
+            "test/root/**/*".to_string(),
+        ];
+        let mut file_map = HashMap::new();
+        file_map.insert(
+            String::from(proj_name),
+            vec![
+                FileData {
+                    file: "test/root/test1.ts".into(),
+                    hash: "file_data1".into(),
+                },
+                FileData {
+                    file: "test/root/test.spec.ts".into(),
+                    hash: "file_data2".into(),
+                },
+            ],
+        );
+
+        let cache = ProjectFileSetCache::new();
+        let first =
+            hash_project_files_with_inputs_cached(proj_name, first_file_sets, &file_map, &cache)
+                .unwrap();
+        let second =
+            hash_project_files_with_inputs_cached(proj_name, second_file_sets, &file_map, &cache)
+                .unwrap();
+
+        assert_eq!(cache.len(), 1);
+        assert!(Arc::ptr_eq(&first, &second));
     }
 }

@@ -14,8 +14,7 @@ import {
 } from '@nx/e2e-utils';
 import { runCLI } from './utils';
 
-// TODO: unskip once Cypress HMR issue is resolved
-describe.skip('Dynamic Module Federation', () => {
+describe('Dynamic Module Federation', () => {
   beforeAll(() => {
     newProject({ packages: ['@nx/react'] });
   });

@@ -10,7 +10,7 @@ plugins {
 
 group = "dev.nx.gradle"
 
-version = "0.1.17"
+version = "0.1.18"
 
 repositories { mavenCentral() }
 
@@ -27,6 +27,7 @@ dependencies {
   }
   testImplementation(libs.kotlin.test)
   testImplementation(libs.junit.jupiter)
+  testImplementation(kotlin("gradle-plugin"))
 }
 
 java {

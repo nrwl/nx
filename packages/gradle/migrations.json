@@ -113,6 +113,12 @@
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.17 in build file",
       "factory": "./src/migrations/22-7-0/change-plugin-version-0-1-17"
+    },
+    "change-plugin-version-0-1-18": {
+      "version": "22.7.0-beta.9",
+      "cli": "nx",
+      "description": "Change dev.nx.gradle.project-graph to version 0.1.18 in build file",
+      "factory": "./src/migrations/22-7-0/change-plugin-version-0-1-18"
     }
   },
   "packageJsonUpdates": {}

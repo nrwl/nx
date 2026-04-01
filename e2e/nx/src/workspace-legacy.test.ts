@@ -16,8 +16,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
 
   afterEach(() => cleanupProject());
 
-  // TODO: unskip once Cypress HMR issue is resolved
-  it.skip('should convert a standalone webpack and jest react project to a monorepo (legacy)', async () => {
+  it('should convert a standalone webpack and jest react project to a monorepo (legacy)', async () => {
     const reactApp = uniq('reactapp');
     runCLI(
       `generate @nx/react:app --name=${reactApp} --directory="." --bundler=webpack --unitTestRunner=jest --e2eTestRunner=cypress --no-interactive --linter=eslint`,

@@ -12,8 +12,7 @@ import {
 import { stripIndents } from 'nx/src/utils/strip-indents';
 import { readPort, runCLI } from './utils';
 
-// TODO: unskip once Cypress HMR issue is resolved
-describe.skip('Independent Deployability', () => {
+describe('Independent Deployability', () => {
   let proj: string;
   beforeAll(() => {
     process.env.NX_ADD_PLUGINS = 'false';
