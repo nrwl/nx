@@ -280,7 +280,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
 
     this.lifecycle = new PluginLifecycleManager(registeredHooks);
 
-    const shutdown = () => this.shutdownIfInactive();
+    const shutdown = (hookName: Hook) => this.shutdownIfInactive(hookName);
     const wrap = <TArgs extends unknown[], TReturn>(
       hook: Hook,
       hookFn: (...args: TArgs) => Promise<TReturn>
@@ -291,7 +291,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
           await this.ensureAlive();
           return hookFn(...args);
         },
-        shutdown
+        () => shutdown(hook)
       );
 
     if (loadResult.createNodesPattern) {
@@ -425,7 +425,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     });
   }
 
-  private shutdownIfInactive(): void {
+  private shutdownIfInactive(hookName: Hook): void {
     if (this.pendingCount > 0) {
       logger.verbose(
         `[isolated-plugin] worker for "${this.name}" has ${this.pendingCount} pending request(s), not shutting down yet`
@@ -433,14 +433,14 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       return;
     }
     logger.verbose(
-      `[isolated-plugin] shutting down worker for "${this.name}" after last hook`
+      `[isolated-plugin] shutting down worker for "${this.name}" after ${hookName}`
     );
     this.shutdown();
   }
 
   notifyPhaseAborted(phase: Phase, lastCompletedHook: Hook): void {
     if (this.lifecycle?.notifyPhaseAborted(phase, lastCompletedHook)) {
-      this.shutdownIfInactive();
+      this.shutdownIfInactive(lastCompletedHook);
     }
   }
 
@@ -474,10 +474,12 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     if (!this.worker?.pid) return;
     (async () => {
       try {
-        const { isOnDaemon } = await import('../../../daemon/is-on-daemon');
+        const { isOnDaemon } = await require(
+          require.resolve('../../../daemon/is-on-daemon')
+        );
         if (!isOnDaemon()) {
-          const { getProcessMetricsService } = await import(
-            '../../../tasks-runner/process-metrics-service'
+          const { getProcessMetricsService } = await require(
+            require.resolve('../../../tasks-runner/process-metrics-service')
           );
           getProcessMetricsService().registerMainCliSubprocess(
             this.worker.pid,
@@ -499,7 +501,10 @@ async function startPluginWorker(name: string) {
   performance.mark(`start-plugin-worker:${name}`);
 
   const isWorkerTypescript = path.extname(__filename) === '.ts';
-  const workerPath = path.join(__dirname, 'plugin-worker');
+  const workerPath = path.join(
+    __dirname,
+    isWorkerTypescript ? 'plugin-worker.ts' : 'plugin-worker.js'
+  );
 
   const env: Record<string, string> = {
     ...process.env,
@@ -509,6 +514,10 @@ async function startPluginWorker(name: string) {
             __dirname,
             '../../../../tsconfig.lib.json'
           ),
+          TS_NODE_COMPILER_OPTIONS: JSON.stringify({
+            moduleResolution: 'node',
+            module: 'commonjs',
+          }),
         }
       : {}),
   };

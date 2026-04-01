@@ -3,7 +3,7 @@ import { XMLParser } from 'fast-xml-parser';
 import * as glob from 'glob';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import * as parseLinks from 'parse-markdown-links';
+import parseLinks from 'parse-markdown-links';
 
 const siteUrl = process.env.NX_DEV_URL || 'https://nx.dev';
 

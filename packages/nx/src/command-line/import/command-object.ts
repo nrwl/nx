@@ -9,6 +9,7 @@ import {
 } from './utils/ai-output';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { withVerbose } from '../yargs-utils/shared-options';
+import { handleImport } from '../../utils/handle-import';
 
 export const yargsImportCommand: CommandModule = {
   command: 'import [sourceRepository] [destinationDirectory]',
@@ -60,7 +61,9 @@ export const yargsImportCommand: CommandModule = {
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {
       try {
-        return await (await import('./import')).importHandler(args as any);
+        return await (
+          await handleImport('./import.js', __dirname)
+        ).importHandler(args as any);
       } catch (error) {
         if (isAiAgent()) {
           const errorMessage =

@@ -5,7 +5,10 @@ import { lstatSync } from 'fs';
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
 import { dirname, join, relative } from 'path';
-import type { InlineConfig } from 'vite';
+// TODO(jack): Remove this when @nx/cypress switches to moduleResolution:
+// "nodenext". Vite 8 ships ESM-only type declarations (.d.mts) which are not
+// resolvable under moduleResolution: "node".
+type InlineConfig = Record<string, any>;
 import vitePreprocessor from '../src/plugins/preprocessor-vite';
 import { NX_PLUGIN_OPTIONS } from '../src/utils/constants';
 const treeKill = require('tree-kill');

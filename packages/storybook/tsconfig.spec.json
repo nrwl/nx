@@ -19,7 +19,8 @@
     "**/*.test.jsx",
     "**/*.d.ts",
     "jest.config.ts",
-    "*.json"
+    "*.json",
+    "src/generators/*/test-configs/*.json"
   ],
   "references": [
     {

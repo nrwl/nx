@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { URL } from 'node:url';
 import { isRelativeVersionKeyword } from 'nx/src/command-line/release/utils/semver';
 import { ReleaseType, major, parse } from 'semver';
-import * as yargs from 'yargs';
+import yargs from 'yargs';
 
 const LARGE_BUFFER = 1024 * 1000000;
 
@@ -42,7 +42,7 @@ const VALID_AUTHORS_FOR_LATEST = [
   if (!options.local && process.env.GITHUB_ACTIONS) {
     // Delete all .node files that were built during the previous steps
     // Always run before the artifacts step because we still need the .node files for native-packages
-    execSync('find ./dist -name "*.node" -delete', {
+    execSync('find ./dist ./packages/nx/dist -name "*.node" -delete', {
       stdio: [0, 1, 2],
       maxBuffer: LARGE_BUFFER,
       windowsHide: false,
@@ -78,6 +78,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     'packages/angular-rspack-compiler',
     'packages/dotnet',
     'packages/maven',
+    'packages/nx',
   ];
 
   const packageSnapshots: { [key: string]: string } = {};

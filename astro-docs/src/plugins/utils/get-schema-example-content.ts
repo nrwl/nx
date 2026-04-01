@@ -40,7 +40,18 @@ export function getExampleForSchema(
   }
   const exampleFilePath = schema[EXAMPLE_SCHEMA_KEY];
   const schemaDirName = dirname(schemaPath);
-  const docPath = resolvePath(schemaDirName, exampleFilePath);
+  let docPath = resolvePath(schemaDirName, exampleFilePath);
+
+  // If the resolved path doesn't exist and the schema is in a dist/ directory,
+  // try resolving from the source tree instead, since docs files
+  // may not be copied to dist during the build.
+  if (!existsSync(docPath) && schemaPath.includes('/dist/src/')) {
+    const sourceSchemaDir = dirname(schemaPath.replace('/dist/src/', '/src/'));
+    const sourceDocPath = resolvePath(sourceSchemaDir, exampleFilePath);
+    if (existsSync(sourceDocPath)) {
+      docPath = sourceDocPath;
+    }
+  }
 
   if (!existsSync(docPath)) {
     throw new Error(

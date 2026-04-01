@@ -6,7 +6,8 @@ import { CnwError } from '../error-utils';
 
 export async function cloneTemplate(
   templateUrl: string,
-  targetDirectory: string
+  targetDirectory: string,
+  workingDir?: string
 ): Promise<void> {
   if (existsSync(targetDirectory)) {
     throw new CnwError(
@@ -18,7 +19,7 @@ export async function cloneTemplate(
   try {
     await execAndWait(
       `git clone --depth 1 "${templateUrl}" "${targetDirectory}"`,
-      process.cwd()
+      workingDir ?? process.cwd()
     );
 
     // Ensure clean history

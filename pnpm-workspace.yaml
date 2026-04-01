@@ -22,7 +22,7 @@ catalog:
   chalk: '^4.1.0'
   enquirer: '~2.3.6'
   minimatch: '10.2.4'
-  picomatch: '4.0.2'
+  picomatch: '4.0.4'
   picocolors: '^1.1.0'
   semver: '^7.6.3'
   tinyglobby: '^0.2.12'
@@ -82,6 +82,8 @@ catalogs:
     jest-runtime: '^30.0.2'
     jest-util: '^30.0.2'
     ts-jest: '^29.4.0'
+    '@swc/jest': '0.2.39'
+    '@swc-contrib/mut-cjs-exports': '^14.3.0'
   react:
     '@types/react': '18.3.1'
     '@types/react-dom': '18.3.1'

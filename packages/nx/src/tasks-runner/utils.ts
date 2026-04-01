@@ -22,7 +22,7 @@ import { findMatchingProjects } from '../utils/find-matching-projects';
 import { isGlobPattern } from '../utils/globs';
 import { joinPathFragments } from '../utils/path';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
-import { splitTarget } from '../utils/split-target';
+import { splitTargetFromNodes } from '../utils/split-target';
 import { workspaceRoot } from '../utils/workspace-root';
 import { isTuiEnabled } from './is-tui-enabled';
 
@@ -60,7 +60,7 @@ export function normalizeDependencyConfigDefinition(
 ): NormalizedTargetDependencyConfig[] {
   return expandWildcardTargetConfiguration(
     normalizeDependencyConfigProjects(
-      expandDependencyConfigSyntaxSugar(definition, graph),
+      expandDependencyConfigSyntaxSugar(definition, graph, currentProject),
       currentProject,
       graph
     ),
@@ -89,7 +89,8 @@ export function normalizeDependencyConfigProjects(
 
 export function expandDependencyConfigSyntaxSugar(
   dependencyConfigString: string | TargetDependencyConfig,
-  graph: ProjectGraph
+  graph: ProjectGraph,
+  currentProject?: string
 ): TargetDependencyConfig {
   if (typeof dependencyConfigString !== 'string') {
     return dependencyConfigString;
@@ -110,7 +111,8 @@ export function expandDependencyConfigSyntaxSugar(
 
   const { projects, target } = readProjectAndTargetFromTargetString(
     targetString,
-    graph.nodes
+    graph.nodes,
+    currentProject
   );
 
   return projects ? { projects, target } : { target };
@@ -163,12 +165,15 @@ export function expandWildcardTargetConfiguration(
 
 export function readProjectAndTargetFromTargetString(
   targetString: string,
-  projects: Record<string, ProjectGraphProjectNode>
+  projects: Record<string, ProjectGraphProjectNode>,
+  currentProject?: string
 ): { projects?: string[]; target: string } {
   // Support for both `project:target` and `target:with:colons` syntax
-  const [maybeProject, ...segments] = splitTarget(targetString, {
-    nodes: projects,
-  } as ProjectGraph);
+  const [maybeProject, ...segments] = splitTargetFromNodes(
+    targetString,
+    projects,
+    { silent: true, currentProject }
+  );
 
   if (!segments.length) {
     // if no additional segments are provided, then the string references

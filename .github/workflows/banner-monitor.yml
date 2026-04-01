@@ -36,7 +36,7 @@ jobs:
 
       - name: Restore cached hash
         id: cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.0.3
         with:
           path: .banner-hash
           key: banner-content-hash-
@@ -86,7 +86,7 @@ jobs:
 
       - name: Update cache
         if: steps.compare.outputs.changed == 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.0.3
         with:
           path: .banner-hash
           key: banner-content-hash-${{ github.run_id }}

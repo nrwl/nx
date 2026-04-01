@@ -16,7 +16,10 @@ describe('getGradlewTasksToRun', () => {
           root: 'app1',
           targets: {
             test: {
-              dependsOn: ['app1:lint', 'app2:build'],
+              dependsOn: [
+                { target: 'lint' },
+                { target: 'build', projects: ['app2'] },
+              ],
               options: { taskName: 'testApp1' },
             },
             lint: {
@@ -45,7 +48,7 @@ describe('getGradlewTasksToRun', () => {
           root: 'app3',
           targets: {
             deploy: {
-              dependsOn: ['app1:test'],
+              dependsOn: [{ target: 'test', projects: ['app1'] }],
               options: { taskName: 'deployApp3' },
             },
           },

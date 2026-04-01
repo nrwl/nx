@@ -6,7 +6,12 @@
     "tsBuildInfoFile": "../../dist/packages/gradle/tsconfig.tsbuildinfo"
   },
   "include": ["**/*.ts"],
-  "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
+  "exclude": [
+    "jest.config.ts",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "project-graph/**"
+  ],
   "references": [
     {
       "path": "../nx/tsconfig.lib.json"

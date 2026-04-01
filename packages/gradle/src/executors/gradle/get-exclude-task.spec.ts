@@ -1,4 +1,9 @@
 import { getExcludeTasks, getAllDependsOn } from './get-exclude-task';
+import { Target } from '@nx/devkit';
+
+function createTarget(project: string, target: string): Target {
+  return { project, target };
+}
 
 describe('getExcludeTasks', () => {
   const nodes: any = {
@@ -9,7 +14,10 @@ describe('getExcludeTasks', () => {
         root: 'app1',
         targets: {
           test: {
-            dependsOn: ['app1:lint', 'app2:build'],
+            dependsOn: [
+              { target: 'lint' },
+              { target: 'build', projects: ['app2'] },
+            ],
             options: { taskName: 'testApp1' },
           },
           lint: { options: { taskName: 'lintApp1' } },
@@ -33,7 +41,7 @@ describe('getExcludeTasks', () => {
         root: 'app3',
         targets: {
           deploy: {
-            dependsOn: ['app1:test'],
+            dependsOn: [{ target: 'test', projects: ['app1'] }],
             options: { taskName: 'deployApp3' },
           },
         },
@@ -41,75 +49,79 @@ describe('getExcludeTasks', () => {
     },
   };
 
-  it('should exclude tasks that are not in runningTaskIds and have excludeDependsOn true', () => {
-    const targets = new Set<string>(['app1:test', 'app2:build']);
-    const runningTaskIds = new Set<string>(['app1:test']);
-    const excludes = getExcludeTasks(targets, nodes, runningTaskIds);
+  it('should exclude tasks that are not in runningTasks and have excludeDependsOn true', () => {
+    const targets = new Set<Target>([
+      createTarget('app1', 'test'),
+      createTarget('app2', 'build'),
+    ]);
+    const runningTasks = new Set<Target>([createTarget('app1', 'test')]);
+    const excludes = getExcludeTasks(targets, nodes, runningTasks);
     expect(excludes).toEqual(new Set(['lintApp1', 'buildApp2']));
   });
 
   it('should not exclude tasks if direct dependencies are running', () => {
-    const targets = new Set<string>(['app1:test']);
-    const runningTaskIds = new Set<string>([
-      'app1:test',
-      'app1:lint',
-      'app2:build',
+    const targets = new Set<Target>([createTarget('app1', 'test')]);
+    const runningTasks = new Set<Target>([
+      createTarget('app1', 'test'),
+      createTarget('app1', 'lint'),
+      createTarget('app2', 'build'),
     ]);
-    const excludes = getExcludeTasks(targets, nodes, runningTaskIds);
+    const excludes = getExcludeTasks(targets, nodes, runningTasks);
     expect(excludes).toEqual(new Set());
   });
 
   it('should handle targets with no dependencies', () => {
-    const targets = new Set<string>(['app2:build']);
-    const runningTaskIds = new Set<string>(['app2:build']);
-    const excludes = getExcludeTasks(targets, nodes, runningTaskIds);
+    const targets = new Set<Target>([createTarget('app2', 'build')]);
+    const runningTasks = new Set<Target>([createTarget('app2', 'build')]);
+    const excludes = getExcludeTasks(targets, nodes, runningTasks);
     expect(excludes).toEqual(new Set());
   });
 
   it('should handle missing project or target', () => {
-    const targets = new Set<string>(['nonexistent:test']);
-    const runningTaskIds = new Set<string>();
-    const excludes = getExcludeTasks(targets, nodes, runningTaskIds);
+    const targets = new Set<Target>([createTarget('nonexistent', 'test')]);
+    const runningTasks = new Set<Target>();
+    const excludes = getExcludeTasks(targets, nodes, runningTasks);
     expect(excludes).toEqual(new Set());
   });
 
   it('should handle dependencies that are also running tasks', () => {
-    const targets = new Set<string>(['app1:test']);
-    const runningTaskIds = new Set<string>(['app1:test', 'app1:lint']);
-    const excludes = getExcludeTasks(targets, nodes, runningTaskIds);
+    const targets = new Set<Target>([createTarget('app1', 'test')]);
+    const runningTasks = new Set<Target>([
+      createTarget('app1', 'test'),
+      createTarget('app1', 'lint'),
+    ]);
+    const excludes = getExcludeTasks(targets, nodes, runningTasks);
     expect(excludes).toEqual(new Set(['buildApp2']));
   });
 
   it('should handle recursive dependencies', () => {
-    // Assuming app3:deploy depends on app1:test, which in turn depends on app1:lint and app2:build
-    const targets = new Set<string>(['app3:deploy']);
-    const runningTaskIds = new Set<string>(['app3:deploy']);
-    const excludes = getExcludeTasks(targets, nodes, runningTaskIds);
+    const targets = new Set<Target>([createTarget('app3', 'deploy')]);
+    const runningTasks = new Set<Target>([createTarget('app3', 'deploy')]);
+    const excludes = getExcludeTasks(targets, nodes, runningTasks);
     expect(excludes).toEqual(new Set(['testApp1']));
   });
 
   it('should not exclude tasks that are in includeDependsOnTasks', () => {
-    const targets = new Set<string>(['app1:test']);
-    const runningTaskIds = new Set<string>(['app1:test']);
+    const targets = new Set<Target>([createTarget('app1', 'test')]);
+    const runningTasks = new Set<Target>([createTarget('app1', 'test')]);
     const includeDependsOnTasks = new Set<string>(['lintApp1']);
     const excludes = getExcludeTasks(
       targets,
       nodes,
-      runningTaskIds,
+      runningTasks,
       includeDependsOnTasks
     );
-    // lintApp1 should not be excluded because it's in includeDependsOnTasks
     expect(excludes).toEqual(new Set(['buildApp2']));
   });
 
   it('should not exclude any tasks if all are in includeDependsOnTasks', () => {
-    const targets = new Set<string>(['app1:test']);
-    const runningTaskIds = new Set<string>(['app1:test']);
+    const targets = new Set<Target>([createTarget('app1', 'test')]);
+    const runningTasks = new Set<Target>([createTarget('app1', 'test')]);
     const includeDependsOnTasks = new Set<string>(['lintApp1', 'buildApp2']);
     const excludes = getExcludeTasks(
       targets,
       nodes,
-      runningTaskIds,
+      runningTasks,
       includeDependsOnTasks
     );
     expect(excludes).toEqual(new Set());
@@ -145,10 +157,57 @@ describe('getExcludeTasks', () => {
         },
       },
     };
-    const targets = new Set<string>(['app1:build']);
-    const runningTaskIds = new Set<string>(['app1:build']);
-    const excludes = getExcludeTasks(targets, objectNodes, runningTaskIds);
+    const targets = new Set<Target>([createTarget('app1', 'build')]);
+    const runningTasks = new Set<Target>([createTarget('app1', 'build')]);
+    const excludes = getExcludeTasks(targets, objectNodes, runningTasks);
     expect(excludes).toEqual(new Set([':app1:compileJava', ':app2:build']));
+  });
+
+  it('should handle project and target names containing colons', () => {
+    const colonNodes: any = {
+      ':sub:project': {
+        name: ':sub:project',
+        type: 'app',
+        data: {
+          root: 'sub/project',
+          targets: {
+            'compile:java': {
+              dependsOn: [
+                { target: 'process:resources' },
+                { target: 'compile:java', projects: [':other:lib'] },
+              ],
+              options: { taskName: ':sub:project:compileJava' },
+            },
+            'process:resources': {
+              options: { taskName: ':sub:project:processResources' },
+            },
+          },
+        },
+      },
+      ':other:lib': {
+        name: ':other:lib',
+        type: 'lib',
+        data: {
+          root: 'other/lib',
+          targets: {
+            'compile:java': {
+              dependsOn: [],
+              options: { taskName: ':other:lib:compileJava' },
+            },
+          },
+        },
+      },
+    };
+    const targets = new Set<Target>([
+      createTarget(':sub:project', 'compile:java'),
+    ]);
+    const runningTasks = new Set<Target>([
+      createTarget(':sub:project', 'compile:java'),
+    ]);
+    const excludes = getExcludeTasks(targets, colonNodes, runningTasks);
+    expect(excludes).toEqual(
+      new Set([':sub:project:processResources', ':other:lib:compileJava'])
+    );
   });
 });
 
@@ -159,13 +218,25 @@ describe('getAllDependsOn', () => {
       type: 'lib',
       data: {
         root: 'a',
-        targets: { build: { dependsOn: ['b:build', 'c:build'] } },
+        targets: {
+          build: {
+            dependsOn: [
+              { target: 'build', projects: ['b'] },
+              { target: 'build', projects: ['c'] },
+            ],
+          },
+        },
       },
     },
     b: {
       name: 'b',
       type: 'lib',
-      data: { root: 'b', targets: { build: { dependsOn: ['d:build'] } } },
+      data: {
+        root: 'b',
+        targets: {
+          build: { dependsOn: [{ target: 'build', projects: ['d'] }] },
+        },
+      },
     },
     c: {
       name: 'c',
@@ -180,18 +251,34 @@ describe('getAllDependsOn', () => {
     e: {
       name: 'e',
       type: 'lib',
-      data: { root: 'e', targets: { build: { dependsOn: ['f:build'] } } },
+      data: {
+        root: 'e',
+        targets: {
+          build: { dependsOn: [{ target: 'build', projects: ['f'] }] },
+        },
+      },
     },
     f: {
       name: 'f',
       type: 'lib',
-      data: { root: 'f', targets: { build: { dependsOn: ['e:build'] } } }, // Circular dependency
+      data: {
+        root: 'f',
+        targets: {
+          build: { dependsOn: [{ target: 'build', projects: ['e'] }] },
+        },
+      },
     },
   };
 
   it('should return all transitive dependencies excluding the starting task', () => {
     const dependencies = getAllDependsOn(nodes, 'a', 'build');
-    expect(dependencies).toEqual(new Set(['b:build', 'c:build', 'd:build']));
+    expect(dependencies).toEqual(
+      new Set([
+        createTarget('b', 'build'),
+        createTarget('c', 'build'),
+        createTarget('d', 'build'),
+      ])
+    );
   });
 
   it('should handle no dependencies', () => {
@@ -206,12 +293,15 @@ describe('getAllDependsOn', () => {
 
   it('should handle circular dependencies gracefully', () => {
     const dependencies = getAllDependsOn(nodes, 'e', 'build');
-    expect(dependencies).toEqual(new Set(['f:build']));
+    expect(dependencies).toEqual(new Set([createTarget('f', 'build')]));
   });
 
   it('should not include the starting task in the result', () => {
     const dependencies = getAllDependsOn(nodes, 'a', 'build');
-    expect(dependencies).not.toContain('a:build');
+    const hasStart = Array.from(dependencies).some(
+      (d) => d.project === 'a' && d.target === 'build'
+    );
+    expect(hasStart).toBe(false);
   });
 
   it('should handle object-format dependsOn entries', () => {
@@ -239,6 +329,8 @@ describe('getAllDependsOn', () => {
       },
     };
     const dependencies = getAllDependsOn(objectNodes, 'app', 'build');
-    expect(dependencies).toEqual(new Set(['app:compileJava', 'lib:jar']));
+    expect(dependencies).toEqual(
+      new Set([createTarget('app', 'compileJava'), createTarget('lib', 'jar')])
+    );
   });
 });

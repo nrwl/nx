@@ -1,4 +1,5 @@
 import { Argv, CommandModule } from 'yargs';
+import { handleImport } from '../../utils/handle-import';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { withVerbose } from '../yargs-utils/shared-options';
 
@@ -10,7 +11,7 @@ export const yargsMigrateCommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(withMigrationOptions(yargs), 'migrate'),
   handler: async () => {
-    await (await import('./migrate')).runMigration();
+    await (await handleImport('./migrate.js', __dirname)).runMigration();
     process.exit(0);
   },
 };
@@ -22,7 +23,7 @@ export const yargsInternalMigrateCommand: CommandModule = {
   handler: async (args) =>
     process.exit(
       await (
-        await import('./migrate')
+        await handleImport('./migrate.js', __dirname)
       ).migrate(process.cwd(), args, process.argv.slice(3))
     ),
 };
@@ -70,7 +71,6 @@ function withMigrationOptions(yargs: Argv) {
       describe:
         'Enable prompts to confirm whether to collect optional package updates and migrations.',
       type: 'boolean',
-      default: false,
     })
     .option('excludeAppliedMigrations', {
       describe:

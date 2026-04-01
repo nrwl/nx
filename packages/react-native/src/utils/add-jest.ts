@@ -58,6 +58,9 @@ module.exports = {
       'react-native/jest/assetFileTransformer.js'
     ),
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(.pnpm/.+/node_modules/)?(react-native|@react-native(-community)?)/)',
+  ],
   coverageDirectory: '${offsetFromRoot(
     appProjectRoot
   )}coverage/${appProjectRoot}'

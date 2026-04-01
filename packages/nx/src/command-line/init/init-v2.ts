@@ -29,9 +29,13 @@ import {
 } from './implementation/utils';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { installPackageToTmp } from '../../devkit-internals';
+import { handleImport } from '../../utils/handle-import';
 import { isAiAgent } from '../../native';
 import { Agent } from '../../ai/utils';
 import { detectAiAgent } from '../../ai/detect-ai-agent';
+import { recordStat } from '../../utils/ab-testing';
+import { isCI } from '../../utils/is-ci';
+import { detectPackageManager } from '../../utils/package-manager';
 import {
   logProgress,
   writeAiOutput,
@@ -73,7 +77,7 @@ export async function initHandler(
       paths: [packageInstallResults.tempDir],
     });
 
-    const module = await import(modulePath);
+    const module = await handleImport(modulePath);
     const result = await module.initHandler(options, true);
     cleanup();
     return result;
@@ -346,6 +350,21 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
   if (useNxCloud) {
     await initCloud('nx-init');
   }
+
+  await recordStat({
+    command: 'init',
+    nxVersion: version,
+    useCloud: !!useNxCloud,
+    meta: {
+      type: 'complete',
+      nodeVersion: process.versions.node,
+      os: process.platform,
+      packageManager: detectPackageManager(),
+      aiAgent: aiMode,
+      isCI: isCI(),
+      pluginsInstalled: pluginsToInstall.join(','),
+    },
+  });
 
   // Output success result for AI agents
   if (aiMode) {

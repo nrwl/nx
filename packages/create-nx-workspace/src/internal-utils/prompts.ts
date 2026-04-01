@@ -1,6 +1,6 @@
-import * as yargs from 'yargs';
-import * as enquirer from 'enquirer';
-import * as chalk from 'chalk';
+import yargs from 'yargs';
+import enquirer from 'enquirer';
+import chalk from 'chalk';
 
 import { MessageKey, messages } from '../utils/nx/ab-testing';
 import { deduceDefaultBase } from '../utils/git/default-base';
@@ -108,7 +108,7 @@ export async function determineTemplate(
 ): Promise<string | 'custom'> {
   if (parsedArgs.template) return parsedArgs.template;
   if (parsedArgs.preset) return 'custom';
-  if (!parsedArgs.interactive || isCI()) return 'custom';
+  if (!parsedArgs.interactive || isCI()) return 'nrwl/empty-template';
   // Docs generation needs preset flow to document all presets
   if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') return 'custom';
   // Template flow requires git for cloning - fall back to custom preset if git is not available

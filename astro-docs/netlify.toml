@@ -36,6 +36,24 @@ to = "/docs/quickstart"
 from = "/showcase/benchmarks/*"
 to = "/docs/reference/benchmarks/:splat"
 
+# DOC-452: Old framework tutorials redirect to new topic-based tutorials
+[[redirects]]
+from = "/docs/getting-started/tutorials/react-monorepo-tutorial"
+to = "/docs/getting-started/tutorials/crafting-your-workspace"
+
+[[redirects]]
+from = "/docs/getting-started/tutorials/angular-monorepo-tutorial"
+to = "/docs/getting-started/tutorials/crafting-your-workspace"
+
+[[redirects]]
+from = "/docs/getting-started/tutorials/typescript-packages-tutorial"
+to = "/docs/getting-started/tutorials/crafting-your-workspace"
+
+# DOC-452: Learn Nx URLs redirect to Tutorials (in case any were indexed)
+[[redirects]]
+from = "/docs/getting-started/learn-nx/*"
+to = "/docs/getting-started/tutorials/:splat"
+
 # Fix broken /docs/ paths still linked from CLI/Cloud source code (DOC-428)
 [[redirects]]
 from = "/docs/features/ci-features/self-healing"

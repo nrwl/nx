@@ -126,6 +126,8 @@ impl Watcher {
         globs.extend([
             "vitest.config.ts.timestamp*.mjs".into(),
             "vite.config.ts.timestamp*.mjs".into(),
+            "vitest.config.mts.timestamp*.mjs".into(),
+            "vite.config.mts.timestamp*.mjs".into(),
         ]);
 
         if let Some(additional_globs) = additional_globs {

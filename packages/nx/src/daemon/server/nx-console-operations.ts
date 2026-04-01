@@ -6,6 +6,7 @@ import {
 } from '../../native';
 import { serverLogger } from '../logger';
 import { getLatestNxTmpPath } from './latest-nx';
+import { handleImport } from '../../utils/handle-import';
 
 const log = (...messageParts: unknown[]) => {
   serverLogger.log('[NX-CONSOLE]:', ...messageParts);
@@ -36,7 +37,7 @@ export async function getNxConsoleStatus({
       { paths: [tmpPath] }
     );
 
-    const module = await import(modulePath);
+    const module = await handleImport(modulePath);
     const result = await module.getNxConsoleStatus({ inner: true });
     log('Console status check completed, shouldPrompt:', result);
     return result;
@@ -76,7 +77,7 @@ export async function handleNxConsolePreferenceAndInstall({
       { paths: [tmpPath] }
     );
 
-    const module = await import(modulePath);
+    const module = await handleImport(modulePath);
     const result = await module.handleNxConsolePreferenceAndInstall({
       preference,
       inner: true,

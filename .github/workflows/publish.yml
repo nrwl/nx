@@ -23,6 +23,7 @@ env:
   CYPRESS_INSTALL_BINARY: 0
   NODE_VERSION: 22.16.0
   PNPM_VERSION: 10.28.2 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
+  NX_GRADLE_PROJECT_GRAPH_TIMEOUT: 600
 
 jobs:
   # We first need to determine the version we are releasing, and if we need a custom repo or ref to use for the git checkout in subsequent steps.
@@ -314,6 +315,10 @@ jobs:
           repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
           ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
 
+      - name: Set verbose logging from debug mode
+        if: runner.debug == '1'
+        run: echo "NX_VERBOSE_LOGGING=true" >> "$GITHUB_ENV"
+
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
         if: ${{ !matrix.settings.docker }}
@@ -375,6 +380,8 @@ jobs:
           docker run --rm \
             --user 0:0 \
             -e PNPM_VERSION \
+            -e NX_GRADLE_PROJECT_GRAPH_TIMEOUT \
+            -e NX_VERBOSE_LOGGING \
             -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db \
             -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache \
             -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index \
@@ -419,21 +426,18 @@ jobs:
           NX_PREFER_TS_NODE: true
           PLAYWRIGHT_BROWSERS_PATH: 0
           NODE_VERSION: 22.16.0
+          NX_GRADLE_DISABLE: 'true'
         with:
           operating_system: freebsd
           version: '14.0'
           architecture: x86-64
-          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH NODE_VERSION
+          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE
           shell: bash
           run: |
             env
             whoami
-            sudo pkg install -y -f node libnghttp2 www/npm git openjdk17
+            sudo pkg install -y -f node libnghttp2 www/npm git ca_root_nss
             sudo npm install --location=global --ignore-scripts pnpm@10.28.2
-            # Set up Java 17
-            export JAVA_HOME=/usr/local/openjdk17
-            export PATH="$JAVA_HOME/bin:$PATH"
-            java --version
             curl https://sh.rustup.rs -sSf --output rustup.sh
             sh rustup.sh -y --profile minimal --default-toolchain stable
             source "$HOME/.cargo/env"
@@ -489,9 +493,7 @@ jobs:
             pnpm store prune || true
             rm -rf ~/.npm || true
             rm -rf ~/.pnpm-store || true
-            # Remove Rust build artifacts if any
-            rm -rf ~/.cargo/registry || true
-            rm -rf ~/.cargo/git || true
+            # Clean Rust extras but keep registry/git (needed for cargo to resolve deps)
             rm -rf ~/.rustup/toolchains/*/share || true
             # Remove other development tool caches
             rm -rf ~/.cache/* || true
@@ -553,6 +555,10 @@ jobs:
           repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
           ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
 
+      - name: Set verbose logging from debug mode
+        if: runner.debug == '1'
+        run: echo "NX_VERBOSE_LOGGING=true" >> "$GITHUB_ENV"
+
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
 
@@ -587,7 +593,6 @@ jobs:
           VERSION: ${{ needs.resolve-required-data.outputs.version }}
           DRY_RUN: ${{ needs.resolve-required-data.outputs.dry_run_flag }}
           PUBLISH_BRANCH: ${{ needs.resolve-required-data.outputs.publish_branch }}
-          NX_VERBOSE_LOGGING: true
         run: |
           echo ""
           # Create and check out the publish branch

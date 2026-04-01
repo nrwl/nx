@@ -40,10 +40,8 @@ import {
   ProcessDependenciesError,
   WorkspaceValidityError,
 } from './error-types';
-import {
-  ConfigurationSourceMaps,
-  mergeMetadata,
-} from './utils/project-configuration-utils';
+import { mergeMetadata } from './utils/project-configuration/target-merging';
+import type { ConfigurationSourceMaps } from './utils/project-configuration/source-maps';
 import { DelayedSpinner } from '../utils/delayed-spinner';
 import { hashObject } from '../hasher/file-hasher';
 
