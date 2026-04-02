@@ -63,6 +63,17 @@ export function execGradleAsync(
 
     cp.on('exit', (code, signal) => {
       if (code === null) code = signalToCode(signal);
+      // Forcibly destroy streams to prevent Gradle daemon pipe hang.
+      // When shell: true is used, the Gradle daemon inherits the shell's
+      // stdout/stderr pipes and holds them open after the task completes.
+      // This prevents the shell wrapper from exiting, which in turn
+      // prevents the 'exit' event from firing on the ChildProcess.
+      // By this point all output has already been buffered, so destroying
+      // the streams is safe and releases the pipe FDs from Node's
+      // perspective.
+      // See: nodejs/node#5637, gradle/gradle#3987
+      cp.stdout?.destroy();
+      cp.stderr?.destroy();
       if (code === 0) {
         res(stdout);
       } else {
