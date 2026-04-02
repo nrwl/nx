@@ -154,11 +154,16 @@ function formatNoExpand(
     hunks.push(currentHunk);
   }
 
-  for (const hunk of hunks) {
-    lines.push(...hunk.lines);
+  for (let i = 0; i < hunks.length; i++) {
+    if (i > 0) {
+      // Separator between hunks (matches jest-diff patch mark behavior)
+      lines.push(patchColor(`@@ @@`));
+    }
+    lines.push(...hunks[i].lines);
   }
 
-  return lines.join('\n');
+  // Leading newline matches jest-diff annotation line behavior
+  return '\n' + lines.join('\n');
 }
 
 function formatExpand(
