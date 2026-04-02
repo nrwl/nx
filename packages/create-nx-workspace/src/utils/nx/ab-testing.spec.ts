@@ -1,8 +1,8 @@
 import {
   isEnterpriseCloudUrl,
   getBannerVariant,
-  shouldShowCloudPrompt,
   getFlowVariant,
+  PromptMessages,
 } from './ab-testing';
 
 describe('ab-testing', () => {
@@ -104,9 +104,40 @@ describe('ab-testing', () => {
     });
   });
 
-  describe('shouldShowCloudPrompt', () => {
-    it('should always return false (variant 2 locked in CLOUD-4255)', () => {
-      expect(shouldShowCloudPrompt()).toBe(false);
+  describe('setupNxCloudV2 prompt variants', () => {
+    const originalEnv = process.env;
+
+    beforeEach(() => {
+      jest.resetModules();
+      process.env = { ...originalEnv };
+    });
+
+    afterEach(() => {
+      process.env = originalEnv;
+    });
+
+    it.each([
+      { flowVariant: '0', expectedCode: 'connect-to-cloud' },
+      { flowVariant: '1', expectedCode: 'cloud-ab-remote-cache-speed' },
+      { flowVariant: '2', expectedCode: 'cloud-ab-fast-ci-setup' },
+    ])(
+      'should select $expectedCode for flow variant $flowVariant',
+      ({ flowVariant, expectedCode }) => {
+        jest.resetModules();
+        process.env.NX_CNW_FLOW_VARIANT = flowVariant;
+        const { PromptMessages: FreshPromptMessages } = require('./ab-testing');
+        const pm = new FreshPromptMessages();
+        expect(pm.getPrompt('setupNxCloudV2').code).toBe(expectedCode);
+      }
+    );
+
+    it('should select variant 0 for docs generation', () => {
+      process.env.NX_GENERATE_DOCS_PROCESS = 'true';
+      const { PromptMessages: FreshPromptMessages } = jest.requireActual(
+        './ab-testing'
+      ) as typeof import('./ab-testing');
+      const pm = new FreshPromptMessages();
+      expect(pm.getPrompt('setupNxCloudV2').code).toBe('connect-to-cloud');
     });
   });
 });

@@ -2,14 +2,13 @@ use crate::native::hasher::hash;
 use crate::native::utils::command::create_shell_command;
 use dashmap::DashMap;
 use std::collections::HashMap;
-use std::sync::Arc;
 use tracing::trace;
 
 pub fn hash_runtime(
     workspace_root: &str,
     command: &str,
     env: &HashMap<String, String>,
-    cache: Arc<DashMap<String, String>>,
+    cache: &DashMap<String, String>,
 ) -> anyhow::Result<String> {
     let cache_key = runtime_cache_key(command, env);
 
@@ -51,16 +50,15 @@ mod tests {
     use super::*;
     use dashmap::DashMap;
     use std::collections::HashMap;
-    use std::sync::Arc;
 
     #[test]
     fn test_hash_runtime() {
         let workspace_root = if cfg!(windows) { "C:\\" } else { "/tmp" };
         let command = "echo runtime";
         let env: HashMap<String, String> = HashMap::new();
-        let cache = Arc::new(DashMap::new());
+        let cache = DashMap::new();
 
-        let result = hash_runtime(workspace_root, command, &env, Arc::clone(&cache)).unwrap();
+        let result = hash_runtime(workspace_root, command, &env, &cache).unwrap();
         assert_eq!(result, "10571312846059850300");
     }
 

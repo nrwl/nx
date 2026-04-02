@@ -101,6 +101,45 @@ function extractTestFiles(block: string): string[] {
   return [...new Set(matches.map((m) => m.replace(/FAIL\s+\S+\s+/, '')))];
 }
 
+// Extract a normalized error signature for a test file from a Jest block.
+// Used to distinguish different root causes for the same test file across runs.
+function extractErrorSignature(block: string, testFile: string): string {
+  const lines = block.split('\n');
+  let afterBullet = false;
+  let inFile = false;
+  for (const l of lines) {
+    if (l.includes('FAIL') && l.includes(testFile)) { inFile = true; continue; }
+    if (inFile && /●/.test(l)) { afterBullet = true; continue; }
+    if (!inFile || !afterBullet) continue;
+    const trimmed = l.trim();
+    if (!trimmed) continue;
+    // Skip generic "Command failed" and warnings — find the actual error
+    if (/^Command failed:|^warning /i.test(trimmed)) continue;
+    // Normalize dynamic parts
+    return trimmed
+      .replace(/\/tmp\/[^\s]+/g, '<tmpdir>')
+      .replace(/\/Users\/[^\s]+/g, '<path>')
+      .replace(/\/home\/[^\s]+/g, '<path>')
+      .replace(/[a-z]+\d{5,}/gi, '<id>')
+      .replace(/\d{4}-\d{2}-\d{2}T[\d:._Z-]+/g, '<ts>')
+      .replace(/\d+\.\d+\.\d+/g, '<ver>')
+      .trim();
+  }
+  return '';
+}
+
+// Extract signatures for all test files in a block
+function extractSignatures(
+  block: string,
+  testFiles: string[]
+): Map<string, string> {
+  const sigs = new Map<string, string>();
+  for (const tf of testFiles) {
+    sigs.set(tf, extractErrorSignature(block, tf));
+  }
+  return sigs;
+}
+
 function extractBlockForFile(fullBlock: string, testFile: string): string {
   const lines = fullBlock.split('\n');
   const result: string[] = [];
@@ -113,17 +152,29 @@ function extractBlockForFile(fullBlock: string, testFile: string): string {
   return result.slice(0, 20).join('\n');
 }
 
+export interface JobLink {
+  combo: string;
+  url: string;
+}
+
+export interface FailureDetailsResult {
+  report: string;
+  goldenJobLinks: Map<string, JobLink[]>; // project -> [{combo, url}]
+}
+
 /**
  * Collects detailed failure information for golden projects.
  * Called by process-result.ts when golden failures exist.
- * Returns Slack mrkdwn formatted failure details.
+ * Returns Slack mrkdwn report + job links for the summary section.
  */
 export async function collectFailureDetails(
   combined: MatrixResult[],
   failedGoldenProjectNames: string[]
-): Promise<string> {
+): Promise<FailureDetailsResult> {
   const projectNames = failedGoldenProjectNames;
-  if (projectNames.length === 0) return '';
+  if (projectNames.length === 0) {
+    return { report: '', goldenJobLinks: new Map() };
+  }
 
   // Group failures by project for combo info
   const failuresByProject = new Map<string, MatrixResult[]>();
@@ -209,137 +260,220 @@ export async function collectFailureDetails(
     (job) => `api repos/${REPO}/actions/jobs/${job.id}/logs`
   );
 
-  const projectLogs = new Map<string, string>();
+  // Keep per-combo logs separate AND a merged block per project
+  interface ComboLog {
+    combo: string;
+    block: string;
+    testFiles: string[];
+    signatures: Map<string, string>; // testFile -> error signature
+  }
+  const projectComboLogs = new Map<string, ComboLog[]>();
+  const projectLogs = new Map<string, string>(); // merged block for backwards compat
+
   for (const [job, raw] of logResults) {
     if (!raw) continue;
+    const cleaned = raw
+      .replace(/^\d{4}-\d{2}-\d{2}T[\d:.]+Z /gm, '')
+      .replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '');
     const block = extractJestBlocks(raw);
+    const testFiles = extractTestFiles(cleaned);
+    const sigs = extractSignatures(cleaned, testFiles);
+    const combo =
+      failedJobs.find((j) => j.id === job.id)?.combo || 'unknown';
+
+    if (!projectComboLogs.has(job.project))
+      projectComboLogs.set(job.project, []);
+    projectComboLogs.get(job.project)!.push({
+      combo,
+      block,
+      testFiles,
+      signatures: sigs,
+    });
+
     projectLogs.set(
       job.project,
       (projectLogs.get(job.project) || '') + '\n' + block
     );
   }
 
-  // Step 3: Per-project error validation
-  const validations = new Map<
-    string,
-    {
-      status: 'new' | 'confirmed' | 'different' | 'unknown';
-      firstTestFiles: string[];
-      currentTestFiles: string[];
+  // Step 3: Build distinct failures per project — each (testFile, signature, combos) is a "failure"
+  interface DistinctFailure {
+    testFile: string;
+    signature: string;
+    combos: string[];
+    block: string; // the Jest block from the first combo that has this signature
+  }
+
+  const projectDistinctFailures = new Map<string, DistinctFailure[]>();
+  for (const project of projectNames) {
+    const comboLogs = projectComboLogs.get(project) || [];
+    const seen = new Map<string, DistinctFailure>(); // "testFile|signature" -> failure
+
+    for (const cl of comboLogs) {
+      for (const tf of cl.testFiles) {
+        const sig = cl.signatures.get(tf) || '';
+        const key = `${tf}|${sig}`;
+        if (seen.has(key)) {
+          seen.get(key)!.combos.push(cl.combo);
+        } else {
+          seen.set(key, {
+            testFile: tf,
+            signature: sig,
+            combos: [cl.combo],
+            block: extractBlockForFile(cl.block, tf),
+          });
+        }
+      }
     }
-  >();
+    projectDistinctFailures.set(project, [...seen.values()]);
+  }
+
+  // Step 3b: Validate each distinct failure against the first-failing run
+  interface FailureValidation {
+    status: 'new' | 'confirmed' | 'different' | 'unknown';
+    startDate?: string;
+    days?: number;
+  }
+
+  // Key: "project|testFile|signature"
+  const failureValidations = new Map<string, FailureValidation>();
 
   for (const project of projectNames) {
     const streak = streaks.get(project)!;
-    const currentFiles = extractTestFiles(projectLogs.get(project) || '');
+    const failures = projectDistinctFailures.get(project) || [];
 
     if (streak.consecutive_failures <= 1 || !streak.failing_since) {
-      validations.set(project, {
-        status: streak.consecutive_failures <= 1 ? 'new' : 'unknown',
-        firstTestFiles: [],
-        currentTestFiles: currentFiles,
-      });
+      for (const f of failures) {
+        failureValidations.set(`${project}|${f.testFile}|${f.signature}`, {
+          status: 'new',
+          startDate: streak.failing_since || undefined,
+          days: streak.consecutive_failures || 1,
+        });
+      }
       continue;
     }
 
+    // Fetch first-failing run's signatures across all combos
     const firstRun = histRuns.find(
       (r) => r.createdAt.split('T')[0] === streak.failing_since
     );
     if (!firstRun) {
-      validations.set(project, {
-        status: 'unknown',
-        firstTestFiles: [],
-        currentTestFiles: currentFiles,
-      });
+      for (const f of failures) {
+        failureValidations.set(`${project}|${f.testFile}|${f.signature}`, {
+          status: 'unknown',
+        });
+      }
       continue;
     }
 
-    const firstJobId = gh(
-      `run view ${firstRun.databaseId} --repo ${REPO} --json jobs --jq '[.jobs[] | select(.conclusion == "failure" and (.name | split(" ") | last) == "${project}")][0].databaseId'`
+    const firstJobIdsRaw = gh(
+      `run view ${firstRun.databaseId} --repo ${REPO} --json jobs --jq '[.jobs[] | select(.conclusion == "failure" and (.name | split(" ") | last) == "${project}")] | group_by(.name | split("/")[0:2] | join("/")) | map(.[0].databaseId) | .[]'`
     );
-    if (!firstJobId || firstJobId === 'null') {
-      validations.set(project, {
-        status: 'unknown',
-        firstTestFiles: [],
-        currentTestFiles: currentFiles,
-      });
-      continue;
+    const firstJobIds = firstJobIdsRaw
+      .split('\n')
+      .filter((id) => id && id !== 'null');
+
+    // Collect ALL signatures from the first run
+    const firstRunSigs = new Set<string>(); // "testFile|signature"
+    for (const jobId of firstJobIds) {
+      const log = gh(`api repos/${REPO}/actions/jobs/${jobId}/logs`);
+      if (!log) continue;
+      const cleanedLog = log
+        .replace(/^\d{4}-\d{2}-\d{2}T[\d:.]+Z /gm, '')
+        .replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '');
+      const files = extractTestFiles(cleanedLog);
+      for (const f of files) {
+        const sig = extractErrorSignature(cleanedLog, f);
+        firstRunSigs.add(`${f}|${sig}`);
+      }
     }
 
-    const firstLog = gh(`api repos/${REPO}/actions/jobs/${firstJobId}/logs`);
-    const firstFiles = extractTestFiles(firstLog ? extractJestBlocks(firstLog) : '');
-
-    validations.set(project, {
-      status:
-        [...currentFiles].sort().join(',') === [...firstFiles].sort().join(',')
-          ? 'confirmed'
-          : 'different',
-      firstTestFiles: firstFiles,
-      currentTestFiles: currentFiles,
-    });
+    // Validate each current failure
+    for (const f of failures) {
+      const key = `${f.testFile}|${f.signature}`;
+      const fullKey = `${project}|${key}`;
+      if (firstRunSigs.has(key)) {
+        failureValidations.set(fullKey, {
+          status: 'confirmed',
+          startDate: streak.failing_since!,
+          days: streak.consecutive_failures,
+        });
+      } else {
+        failureValidations.set(fullKey, {
+          status: 'different',
+        });
+      }
+    }
   }
 
-  // Step 4: Per-error binary search for "different" projects
-  const errorDates = new Map<string, ErrorDate[]>();
-
-  for (const [project, val] of validations) {
-    if (val.status !== 'different') continue;
+  // Step 4: Binary search for start date of each "different" failure
+  for (const project of projectNames) {
     const streak = streaks.get(project)!;
-    const firstSet = new Set(val.firstTestFiles);
-    const unreliable = val.currentTestFiles.filter((f) => !firstSet.has(f));
-    if (!unreliable.length) continue;
+    const failures = projectDistinctFailures.get(project) || [];
+    const different = failures.filter((f) => {
+      const v = failureValidations.get(
+        `${project}|${f.testFile}|${f.signature}`
+      );
+      return v?.status === 'different';
+    });
+    if (!different.length) continue;
 
     const projRunIds = histRuns
       .slice(0, streak.consecutive_failures)
       .map((r) => r.databaseId);
     if (projRunIds.length <= 1) continue;
 
-    const dates: ErrorDate[] = [];
-    for (const tf of unreliable) {
+    for (const failure of different) {
+      const targetSig = failure.signature;
+      if (!targetSig) continue;
+
+      function runHasSignature(runId: number): boolean {
+        const jobIdsRaw = gh(
+          `run view ${runId} --repo ${REPO} --json jobs --jq '[.jobs[] | select(.conclusion == "failure" and (.name | split(" ") | last) == "${project}")] | group_by(.name | split("/")[0:2] | join("/")) | map(.[0].databaseId) | .[]'`
+        );
+        for (const jid of jobIdsRaw.split('\n').filter(Boolean)) {
+          const log = gh(`api repos/${REPO}/actions/jobs/${jid}/logs`);
+          if (!log) continue;
+          const cleaned = log
+            .replace(/^\d{4}-\d{2}-\d{2}T[\d:.]+Z /gm, '')
+            .replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '');
+          const sig = extractErrorSignature(cleaned, failure.testFile);
+          if (sig === targetSig) return true;
+        }
+        return false;
+      }
+
       let low = 0,
         high = projRunIds.length - 1;
 
-      const oldestJobId = gh(
-        `run view ${projRunIds[high]} --repo ${REPO} --json jobs --jq '[.jobs[] | select(.conclusion == "failure" and (.name | split(" ") | last) == "${project}")][0].databaseId'`
-      );
-      let oldestHas = false;
-      if (oldestJobId && oldestJobId !== 'null') {
-        const log = gh(`api repos/${REPO}/actions/jobs/${oldestJobId}/logs`);
-        oldestHas = new RegExp(`FAIL.*${tf.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(log);
-      }
+      // Check oldest run
+      const fullKey = `${project}|${failure.testFile}|${failure.signature}`;
 
+      const oldestHas = runHasSignature(projRunIds[high]);
       if (oldestHas) {
         const run = histRuns.find((r) => r.databaseId === projRunIds[high]);
-        dates.push({
-          testFile: tf,
+        failureValidations.set(fullKey, {
+          status: 'different',
           startDate: run?.createdAt.split('T')[0] || 'unknown',
           days: projRunIds.length,
         });
         continue;
       }
 
+      // Binary search
       while (high - low > 1) {
         const mid = Math.floor((low + high) / 2);
-        const midJobId = gh(
-          `run view ${projRunIds[mid]} --repo ${REPO} --json jobs --jq '[.jobs[] | select(.conclusion == "failure" and (.name | split(" ") | last) == "${project}")][0].databaseId'`
-        );
-        let midHas = false;
-        if (midJobId && midJobId !== 'null') {
-          const log = gh(`api repos/${REPO}/actions/jobs/${midJobId}/logs`);
-          midHas = new RegExp(`FAIL.*${tf.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(log);
-        }
-        if (midHas) low = mid;
+        if (runHasSignature(projRunIds[mid])) low = mid;
         else high = mid;
       }
 
       const foundRun = histRuns.find((r) => r.databaseId === projRunIds[low]);
-      dates.push({
-        testFile: tf,
+      failureValidations.set(fullKey, {
+        status: 'different',
         startDate: foundRun?.createdAt.split('T')[0] || 'unknown',
         days: low + 1,
       });
     }
-    errorDates.set(project, dates);
   }
 
   // Step 5: Recent commits
@@ -371,10 +505,9 @@ export async function collectFailureDetails(
 
   for (const project of sorted) {
     const streak = streaks.get(project)!;
-    const val = validations.get(project);
-    const block = projectLogs.get(project) || '';
-    const testFiles = extractTestFiles(block);
     const projResults = failuresByProject.get(project) || [];
+    const distinctFailures = projectDistinctFailures.get(project) || [];
+    const block = projectLogs.get(project) || '';
 
     const pms = [...new Set(projResults.map((r) => r.package_manager))];
     const pattern =
@@ -394,44 +527,45 @@ export async function collectFailureDetails(
 
     lines.push('———————————————————————————');
     lines.push(`*${project}* — ${projResults.length} combos (${pattern})`);
-    lines.push(`Project failing since ${since} | Last fully passing: ${lastPass}`);
+    lines.push(
+      `Project failing since ${since} | Last fully passing: ${lastPass}`
+    );
     lines.push('');
 
-    if (testFiles.length > 0) {
-      for (const tf of testFiles) {
+    if (distinctFailures.length > 0) {
+      for (const failure of distinctFailures) {
+        const fullKey = `${project}|${failure.testFile}|${failure.signature}`;
+        const val = failureValidations.get(fullKey);
+
         let errorDate = since;
         let errorDays: number | string = streak.consecutive_failures || 1;
         let label = '';
 
-        const fileDates = errorDates.get(project);
-        const fd = fileDates?.find((d) => d.testFile === tf);
-        if (fd) {
-          errorDate = fd.startDate;
-          errorDays = fd.days;
+        if (val?.startDate) {
+          errorDate = val.startDate;
+          errorDays = val.days || 1;
         }
-
-        if (val?.status === 'different' && !val.firstTestFiles.includes(tf)) {
+        if (val?.status === 'different') {
           label = ' ⚠️ error changed mid-streak';
         }
         if (errorDays === 1 || errorDays === '1') {
           label = ' 🆕 NEW';
         }
 
+        const comboStr = failure.combos.join(', ');
         lines.push(
-          `📋 \`${tf}\` — failing since ${errorDate} (${errorDays} ${errorDays === 1 || errorDays === '1' ? 'day' : 'days'})${label}`
+          `📋 \`${failure.testFile}\` (${comboStr}) — failing since ${errorDate} (${errorDays} ${errorDays === 1 || errorDays === '1' ? 'day' : 'days'})${label}`
         );
 
-        const fileBlock = extractBlockForFile(block, tf);
-        if (fileBlock) {
+        if (failure.block) {
           lines.push('```');
-          lines.push(fileBlock);
+          lines.push(failure.block);
           lines.push('```');
         }
       }
 
       const summaryMatch = block.match(/^Test Suites:.*$/m);
       if (summaryMatch) lines.push(`_${summaryMatch[0]}_`);
-      lines.push(`Failing combos: ${uniqueCombos.join(', ')}`);
     } else {
       // No Jest blocks — find which step failed and extract its error output
       const firstJob = failedJobs.find((j) => j.project === project);
@@ -449,6 +583,24 @@ export async function collectFailureDetails(
           .map((l) => l.replace(/^\d{4}-\d{2}-\d{2}T[\d:.]+Z /, ''))
           .map((l) => l.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, ''));
 
+        // Extract the failed Nx task output block (❌ > nx run <task> ... until next ##[group] or NX summary)
+        const failedTaskBlock: string[] = [];
+        let capturingTask = false;
+        for (const l of cleaned) {
+          if (/❌.*> nx run /i.test(l)) {
+            capturingTask = true;
+            failedTaskBlock.push(l);
+            continue;
+          }
+          if (capturingTask) {
+            if (/^##\[group\]|NX.*Running target/i.test(l) || failedTaskBlock.length >= 15) {
+              capturingTask = false;
+            } else {
+              failedTaskBlock.push(l);
+            }
+          }
+        }
+
         // Extract the Nx failure summary block ("Running target...failed" + "Failed tasks:" + task list)
         const nxFailureBlock: string[] = [];
         let capturingNx = false;
@@ -456,36 +608,34 @@ export async function collectFailureDetails(
           if (/NX.*Running target.*failed/i.test(l)) capturingNx = true;
           if (capturingNx) {
             nxFailureBlock.push(l);
-            // Stop after "Hint:" line or after 10 lines
             if (/^Hint:/i.test(l.trim()) || nxFailureBlock.length >= 10) {
               capturingNx = false;
             }
           }
         }
 
-        // Also extract individual error lines (build errors, module errors, etc.)
-        const errorLines = cleaned.filter((l) => {
-          const trimmed = l.trim();
-          if (trimmed.length < 10) return false;
-          if (/warning|warn\b|deprecated|orphan|Node\.js 20|FORCE_JAVASCRIPT|\* \[new branch\]|\* \[new tag\]/i.test(trimmed)) return false;
-          return (
-            /^error TS\d+:|^Error:|^\s*error\b[:\s]|ERR!|ERESOLVE|##\[error\]/i.test(trimmed) ||
-            /Cannot find module|ENOENT|EACCES|permission denied/i.test(trimmed) ||
-            /Segmentation fault|killed|OOM|out of memory/i.test(trimmed) ||
-            /command not found|No such file or directory/i.test(trimmed) ||
-            /Process completed with exit code [^0]/i.test(trimmed)
-          );
-        });
+        // Fallback: if no Nx blocks or task blocks found, extract generic error lines
+        let fallbackErrors: string[] = [];
+        if (nxFailureBlock.length === 0 && failedTaskBlock.length === 0) {
+          fallbackErrors = cleaned.filter((l) => {
+            const t = l.trim();
+            if (t.length < 10) return false;
+            if (/warning|warn\b|deprecated|orphan|Node\.js 20|FORCE_JAVASCRIPT|\* \[new branch\]|\* \[new tag\]/i.test(t)) return false;
+            return (
+              /error TS\d+:|^Error:|^\s*error\b[:\s]|ERR!|ERESOLVE|##\[error\]/i.test(t) ||
+              /Cannot find module|ENOENT|EACCES|permission denied/i.test(t) ||
+              /Segmentation fault|killed|OOM|out of memory/i.test(t) ||
+              /command not found|No such file or directory/i.test(t) ||
+              /Process completed with exit code [^0]/i.test(t)
+            );
+          }).slice(0, 5);
+        }
 
-        // Combine: Nx failure block first (most useful), then individual errors not already included
-        const nxBlockText = nxFailureBlock.join('\n');
-        const additionalErrors = errorLines
-          .filter((l) => !nxBlockText.includes(l))
-          .slice(0, 3);
-
+        // Combine: Nx summary first, then task output, then fallback errors
         const relevantErrors = [
           ...nxFailureBlock,
-          ...(additionalErrors.length > 0 ? ['', ...additionalErrors] : []),
+          ...(failedTaskBlock.length > 0 ? ['', ...failedTaskBlock] : []),
+          ...(fallbackErrors.length > 0 ? ['', ...fallbackErrors] : []),
         ];
 
         lines.push(`⚠️ Tests did not run — failed at step: *${failedStep}*`);
@@ -506,5 +656,19 @@ export async function collectFailureDetails(
     lines.push(`_${commitCount} commits since last nightly_`);
   }
 
-  return lines.join('\n');
+  // Build job links for the summary section
+  const runUrl = `https://github.com/${REPO}/actions/runs/${RUN_ID}`;
+  const goldenJobLinks = new Map<string, JobLink[]>();
+  for (const project of projectNames) {
+    const projectJobs = failedJobs.filter((j) => j.project === project);
+    goldenJobLinks.set(
+      project,
+      projectJobs.map((j) => ({
+        combo: j.combo,
+        url: `${runUrl}/job/${j.id}`,
+      }))
+    );
+  }
+
+  return { report: lines.join('\n'), goldenJobLinks };
 }

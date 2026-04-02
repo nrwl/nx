@@ -38,6 +38,7 @@
     "build-native": {
       "outputs": [
         "{projectRoot}/src/native/*.node",
+        "{projectRoot}/src/native/*.wasm",
         "{projectRoot}/src/native/!(index|browser).js",
         "{projectRoot}/src/native/index.d.ts"
       ],
@@ -56,15 +57,6 @@
     "copy-native-package-directories": {
       "command": "node scripts/copy.js packages/nx/dist/native-packages/* dist/packages"
     },
-    "copy-local-native": {
-      "dependsOn": ["build-native"],
-      "inputs": [
-        "{projectRoot}/src/native/**/*.{node,wasm,js,mjs,cjs}",
-        "{workspaceRoot}/scripts/copy-local-native.js"
-      ],
-      "outputs": ["{projectRoot}/dist/src/native/**/*.{node,wasm,js,mjs,cjs}"],
-      "command": "node ./scripts/copy-local-native.js nx"
-    },
     "artifacts": {
       "dependsOn": ["copy-native-package-directories"],
       "command": "pnpm napi artifacts --package-json-path packages/nx/package.json -d ./artifacts --npm-dir dist/packages"
@@ -76,25 +68,11 @@
       "command": "node -e \"let i = 0; let interval = setInterval(() => { console.log('Long task running ' + i++ + '---------------------------------------------------------------'); }, 200); setTimeout(() => { clearInterval(interval); console.log('Long task finished'); }, 62_000);\"",
       "dependsOn": ["echo"]
     },
-    "build-base": {
-      "dependsOn": ["copy-local-native"],
-      "outputs": [
-        "{projectRoot}/dist/**/*.{js,cjs,mjs,d.ts}",
-        "{projectRoot}/src/**/*.d.ts",
-        "{projectRoot}/bin/*.d.ts",
-        "{projectRoot}/release/**/*.d.ts",
-        "{projectRoot}/plugins/**/*.d.ts",
-        "{projectRoot}/presets/**/*.d.ts",
-        "{projectRoot}/tasks-runner/**/*.d.ts"
-      ]
+    "copy-assets": {
+      "dependsOn": ["build-native", "^build-client"]
     },
     "build": {
-      "dependsOn": [
-        "^build-client",
-        "build-base",
-        "build-native",
-        "legacy-post-build"
-      ],
+      "dependsOn": ["build-base"],
       "inputs": [
         "production",
         "^production",
@@ -102,24 +80,16 @@
           "dependentTasksOutputFiles": "**/*.node",
           "transitive": true
         },
-        "{workspaceRoot}/scripts/copy-local-native.js",
-        "{workspaceRoot}/scripts/copy-graph-client.js",
         "{workspaceRoot}/scripts/chmod.js",
-        "{workspaceRoot}/scripts/copy-readme.js",
-        "{projectRoot}/readme-template.md"
+        "copyReadme"
       ],
       "executor": "nx:run-commands",
       "outputs": [
-        "{workspaceRoot}/packages/nx/dist/**/*.{node,wasm,js,mjs,cjs}",
-        "{workspaceRoot}/packages/nx/dist/src/core/graph",
         "{workspaceRoot}/packages/nx/dist/bin/nx.js",
         "{workspaceRoot}/packages/nx/README.md"
       ],
       "options": {
         "commands": [
-          {
-            "command": "node ./scripts/copy-graph-client.js"
-          },
           {
             "command": "node ./scripts/chmod packages/nx/dist/bin/nx.js"
           },
@@ -157,54 +127,6 @@
         "fix": {
           "args": []
         }
-      }
-    },
-    "legacy-post-build": {
-      "dependsOn": ["build-base", "copy-local-native"],
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "inputs": ["production", "^production", "native"],
-      "outputs": [
-        "{projectRoot}/dist",
-        "{projectRoot}/src/native",
-        "{projectRoot}/**/*.d.ts"
-      ],
-      "options": {
-        "main": "./bin/nx.js",
-        "types": "./bin/nx.d.ts",
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          {
-            "input": "packages/nx",
-            "glob": "**/files/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/nx",
-            "glob": "**/files/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/nx",
-            "glob": "**/*.json",
-            "ignore": [
-              "**/tsconfig*.json",
-              "**/project.json",
-              "**/__fixtures__/**",
-              ".eslintrc.json",
-              "executors.json",
-              "generators.json",
-              "migrations.json",
-              "package.json"
-            ],
-            "output": "/"
-          },
-          {
-            "input": "packages/nx",
-            "glob": "**/*.{mjs,cjs,js,css,html,svg,wasm}",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          }
-        ]
       }
     }
   }

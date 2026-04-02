@@ -4,6 +4,10 @@
 # Netlify processes these top-to-bottom, first match wins.
 # Specific rules MUST come before wildcard rules.
 
+# --- favicon ---
+/favicon.ico /favicon/favicon.ico 301
+/favicon.svg /favicon/favicon.svg 301
+
 # --- docs ---
 /docs /docs/getting-started/intro 301
 

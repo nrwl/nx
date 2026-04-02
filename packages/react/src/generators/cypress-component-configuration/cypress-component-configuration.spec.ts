@@ -4,6 +4,7 @@ import {
   ProjectGraph,
   readProjectConfiguration,
   Tree,
+  updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -29,6 +30,19 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
   ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
   readCachedProjectGraph: jest.fn().mockImplementation(() => projectGraph),
 }));
+
+// TODO(jack): Remove this when Cypress adds Vite 8 support.
+// See: https://github.com/cypress-io/cypress/issues/33078
+function useVite7ForCypressCT(tree: Tree) {
+  updateJson(tree, 'package.json', (json) => {
+    for (const section of ['dependencies', 'devDependencies'] as const) {
+      if (json[section]?.vite) {
+        json[section].vite = '^7.0.0';
+      }
+    }
+    return json;
+  });
+}
 
 describe('React:CypressComponentTestConfiguration', () => {
   let tree: Tree;
@@ -103,6 +117,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,
@@ -157,6 +172,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,
@@ -223,6 +239,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,
@@ -288,6 +305,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,
@@ -333,6 +351,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       style: 'scss',
     });
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: true,
@@ -384,6 +403,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       js: true,
     });
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: true,
@@ -448,6 +468,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       dependencies: {},
     };
 
+    useVite7ForCypressCT(tree);
     await expect(
       cypressComponentConfigGenerator(tree, {
         project: 'some-lib',
@@ -504,6 +525,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,
@@ -599,6 +621,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,

@@ -1,3 +1,4 @@
+#[cfg(not(target_arch = "wasm32"))]
 use napi::bindgen_prelude::*;
 use std::fs;
 #[cfg(not(target_arch = "wasm32"))]
@@ -9,6 +10,7 @@ use tracing::trace;
 use fs4::fs_std::FileExt;
 
 #[napi]
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 pub struct FileLock {
     #[napi]
     pub locked: bool,
@@ -116,7 +118,7 @@ impl FileLock {
 #[cfg(target_arch = "wasm32")]
 impl FileLock {
     #[napi(constructor)]
-    pub fn new(lock_file_path: String) -> anyhow::Result<Self> {
+    pub fn new(_lock_file_path: String) -> anyhow::Result<Self> {
         anyhow::bail!("FileLock is not supported on WASM")
     }
 }

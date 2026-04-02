@@ -260,3 +260,61 @@ fn get_or_create_session_id(connection: &External<Arc<Mutex<NxDbConnection>>>) -
 
     Ok(session_id)
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::native::db::initialize::initialize_db;
+
+    use super::*;
+
+    #[test]
+    fn session_query_works_on_fresh_db() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let db_path = temp_dir.path().join("test.db");
+        let conn = initialize_db(&db_path).unwrap();
+
+        // The same query telemetry uses to find an active session.
+        // If the metadata table is missing, this will fail with "no such table".
+        let result: Option<String> = conn
+            .query_row(
+                &format!(
+                    "SELECT m1.value FROM metadata m1, metadata m2 \
+                     WHERE m1.key = 'SESSION_ID' AND m2.key = 'SESSION_LAST_ACTIVITY' \
+                     AND (strftime('%s', 'now') - strftime('%s', m2.value)) < {}",
+                    SESSION_TIMEOUT_SECS as i64
+                ),
+                [],
+                |row| row.get::<_, String>(0),
+            )
+            .expect("Session query should succeed on a freshly initialized database");
+
+        // No session yet, so result should be None
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn persist_and_retrieve_session() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let db_path = temp_dir.path().join("test.db");
+        let mut conn = initialize_db(&db_path).unwrap();
+
+        let session_id = "test-session-123";
+        persist_session_to_db(&mut conn, session_id);
+
+        // Now the session query should return the persisted session
+        let result: Option<String> = conn
+            .query_row(
+                &format!(
+                    "SELECT m1.value FROM metadata m1, metadata m2 \
+                     WHERE m1.key = 'SESSION_ID' AND m2.key = 'SESSION_LAST_ACTIVITY' \
+                     AND (strftime('%s', 'now') - strftime('%s', m2.value)) < {}",
+                    SESSION_TIMEOUT_SECS as i64
+                ),
+                [],
+                |row| row.get::<_, String>(0),
+            )
+            .expect("Session query should succeed");
+
+        assert_eq!(result, Some(session_id.to_string()));
+    }
+}

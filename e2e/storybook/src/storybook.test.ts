@@ -49,14 +49,16 @@ describe('Storybook generators and executors for monorepos', () => {
   });
 
   describe('build storybook', () => {
-    it('should build a React based storybook setup that uses webpack', () => {
+    // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
+    it.skip('should build a React based storybook setup that uses webpack', () => {
       // build
       runCLI(`run ${reactStorybookApp}:build-storybook --verbose`);
       checkFilesExist(`${reactStorybookApp}/storybook-static/index.html`);
     }, 300_000);
 
     // This test makes sure path resolution works
-    it('should build a React based storybook that references another lib and uses rollup', () => {
+    // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
+    it.skip('should build a React based storybook that references another lib and uses rollup', () => {
       runCLI(
         `generate @nx/react:lib my-lib --bundler=rollup --unitTestRunner=none --no-interactive`
       );
@@ -109,7 +111,8 @@ describe('Storybook generators and executors for monorepos', () => {
       checkFilesExist(`${reactStorybookApp}/storybook-static/index.html`);
     }, 300_000);
 
-    it('should not bundle in sensitive NX_ environment variables', () => {
+    // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
+    it.skip('should not bundle in sensitive NX_ environment variables', () => {
       updateFile(
         `${reactStorybookApp}/.storybook/main.ts`,
         (content) => `
