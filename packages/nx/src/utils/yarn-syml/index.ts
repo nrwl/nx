@@ -75,9 +75,7 @@ function stringifyValue(
 
   if (typeof value === `object` && value) {
     const [data, sort] =
-      value instanceof PreserveOrdering
-        ? [value.data, false]
-        : [value, true];
+      value instanceof PreserveOrdering ? [value.data, false] : [value, true];
     const indent = `  `.repeat(indentLevel);
     const keys = Object.keys(data);
 
@@ -85,8 +83,7 @@ function stringifyValue(
       keys.sort((a, b) => {
         const aIndex = specialObjectKeys.indexOf(a);
         const bIndex = specialObjectKeys.indexOf(b);
-        if (aIndex === -1 && bIndex === -1)
-          return a < b ? -1 : a > b ? +1 : 0;
+        if (aIndex === -1 && bIndex === -1) return a < b ? -1 : a > b ? +1 : 0;
         if (aIndex !== -1 && bIndex === -1) return -1;
         if (aIndex === -1 && bIndex !== -1) return +1;
         return aIndex - bIndex;
@@ -101,14 +98,9 @@ function stringifyValue(
         .map((key, index) => {
           const value = data[key];
           const stringifiedKey = stringifyString(key);
-          const stringifiedValue = stringifyValue(
-            value,
-            indentLevel + 1,
-            true
-          );
+          const stringifiedValue = stringifyValue(value, indentLevel + 1, true);
 
-          const recordIndentation =
-            index > 0 || newLineIfObject ? indent : ``;
+          const recordIndentation = index > 0 || newLineIfObject ? indent : ``;
 
           const keyPart =
             stringifiedKey.length > 1024

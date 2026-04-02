@@ -249,7 +249,9 @@ function main() {
   }
 
   // New transitive deps
-  const transitiveDeps = sortedNames.filter((name) => !directDepNames.has(name));
+  const transitiveDeps = sortedNames.filter(
+    (name) => !directDepNames.has(name)
+  );
   console.log(`\nNew transitive deps to add (${transitiveDeps.length}):`);
   for (const name of transitiveDeps) {
     console.log(`  ${name}: ${resolved.get(name)!.version}`);

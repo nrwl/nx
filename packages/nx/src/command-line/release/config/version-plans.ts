@@ -9,18 +9,39 @@ import { IMPLICIT_DEFAULT_RELEASE_GROUP } from './config';
 import { ReleaseGroupWithName } from './filter-release-groups';
 const { load } = require('@zkochan/js-yaml');
 
+// Ported from https://github.com/jxson/front-matter/blob/master/index.js
+const fmPattern = new RegExp(
+  '^(' +
+    '\\ufeff?' +
+    '(= yaml =|---)' +
+    '$([\\s\\S]*?)' +
+    '^(?:\\2|\\.\\.\\.)\\s*' +
+    '$' +
+    (process.platform === 'win32' ? '\\r?' : '') +
+    '(?:\\n)?)',
+  'm'
+);
+
 function parseFrontMatter(str: string): {
   attributes: Record<string, string>;
   body: string;
 } {
-  const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(str);
+  str = str || '';
+  const lines = str.split(/(\r?\n)/);
+  if (!lines[0] || !/= yaml =|---/.test(lines[0])) {
+    return { attributes: {}, body: str };
+  }
+
+  const match = fmPattern.exec(str);
   if (!match) {
     return { attributes: {}, body: str };
   }
-  return {
-    attributes: load(match[1]) || {},
-    body: match[2].replace(/^\r?\n/, ''),
-  };
+
+  const yaml = match[match.length - 1].replace(/^\s+|\s+$/g, '');
+  const attributes = load(yaml) || {};
+  const body = str.replace(match[0], '');
+
+  return { attributes, body };
 }
 
 export interface VersionPlanFile {

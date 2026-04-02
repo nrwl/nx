@@ -1,5 +1,5 @@
 import * as pc from 'picocolors';
-import { diff } from 'jest-diff';
+import { diff } from './diff';
 import { readFileSync } from 'node:fs';
 import { Tree, flushChanges } from '../../../generators/tree';
 import { workspaceRoot } from '../../../utils/workspace-root';
