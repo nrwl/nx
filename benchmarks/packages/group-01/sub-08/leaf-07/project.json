@@ -1,8 +1,6 @@
 {
   "name": "group-01-sub-08-leaf-07",
-  "implicitDependencies": [
-    "group-01-sub-08"
-  ],
+  "implicitDependencies": ["group-01-sub-08"],
   "targets": {
     "build": {},
     "copy": {},
