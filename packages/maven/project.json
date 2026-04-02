@@ -10,6 +10,7 @@
       ]
     },
     "build": {
+      "dependsOn": ["^build", "legacy-post-build"],
       "command": "node ./scripts/copy-readme.js maven packages/maven/readme-template.md packages/maven/README.md",
       "inputs": ["copyReadme"],
       "outputs": ["{projectRoot}/README.md"]
