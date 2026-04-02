@@ -3,9 +3,11 @@ import {
   cleanupProject,
   ensureCypressInstallation,
   ensurePlaywrightBrowsersInstallation,
+  getPackageManagerCommand,
   newProject,
   readFile,
   runCLI,
+  runCommand,
   runE2ETests,
   uniq,
   updateJson,
@@ -39,6 +41,8 @@ describe('React Router Applications - TS Solution', () => {
       delete json.devDependencies?.['@vitejs/plugin-react'];
       return json;
     });
+    // Re-run install so node_modules actually reflects the downgraded versions.
+    runCommand(getPackageManagerCommand().install);
 
     runCLI(
       `generate @nx/react:app ${appName} --use-react-router --routing --linter=eslint --unit-test-runner=vitest --e2e-test-runner=playwright --no-interactive`
