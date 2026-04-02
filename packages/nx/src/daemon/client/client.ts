@@ -123,24 +123,7 @@ import {
   VersionMismatchError,
 } from './daemon-socket-messenger';
 
-const DAEMON_ENV_REQUIRED_SETTINGS = {
-  NX_PROJECT_GLOB_CACHE: 'false',
-  NX_CACHE_PROJECTS_CONFIG: 'false',
-};
-
-const DAEMON_ENV_OVERRIDABLE_SETTINGS = {
-  NX_VERBOSE_LOGGING: 'true',
-  NX_PERF_LOGGING: 'true',
-  NX_NATIVE_LOGGING: 'nx=debug',
-};
-
-function getDaemonEnv() {
-  return {
-    ...DAEMON_ENV_OVERRIDABLE_SETTINGS,
-    ...process.env,
-    ...DAEMON_ENV_REQUIRED_SETTINGS,
-  };
-}
+import { getDaemonEnv } from './daemon-environment';
 
 export type UnregisterCallback = () => void;
 export type ChangedFile = {
