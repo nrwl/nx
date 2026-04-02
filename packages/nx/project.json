@@ -121,6 +121,9 @@
         }
       }
     },
+    "expand-deps": {
+      "command": "ts-node scripts/expand-deps.ts nx"
+    },
     "lint-native": {
       "command": "cargo clippy",
       "cache": true,

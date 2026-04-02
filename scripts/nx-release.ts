@@ -128,6 +128,12 @@ const VALID_AUTHORS_FOR_LATEST = [
         windowsHide: false,
       });
 
+      execSync(`pnpm nx run nx:expand-deps`, {
+        stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+        maxBuffer: LARGE_BUFFER,
+        windowsHide: false,
+      });
+
       let changelogCommand = `pnpm nx release changelog ${options.version} --interactive workspace`;
       if (options.from) {
         changelogCommand += ` --from ${options.from}`;
@@ -160,6 +166,12 @@ const VALID_AUTHORS_FOR_LATEST = [
   runNxReleaseVersion();
 
   execSync(`pnpm nx run-many -t add-extra-dependencies --parallel 8`, {
+    stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+    maxBuffer: LARGE_BUFFER,
+    windowsHide: false,
+  });
+
+  execSync(`pnpm nx run nx:expand-deps`, {
     stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
     maxBuffer: LARGE_BUFFER,
     windowsHide: false,
