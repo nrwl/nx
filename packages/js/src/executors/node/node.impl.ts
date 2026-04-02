@@ -25,6 +25,7 @@ import { fileExists } from 'nx/src/utils/fileutils';
 import { getRelativeDirectoryToProjectRoot } from '../../utils/get-main-file-dir';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import { detectModuleFormat } from './lib/detect-module-format';
+import { isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup';
 
 interface ActiveTask {
   id: string;
@@ -394,6 +395,12 @@ function calculateResolveMappings(
   context: ExecutorContext,
   options: NodeExecutorOptions
 ) {
+  // In TS solution workspaces, dependencies are resolved via workspace
+  // protocol and node_modules symlinks, so no custom mappings are needed.
+  if (isUsingTsSolutionSetup()) {
+    return {};
+  }
+
   const parsed = parseTargetString(options.buildTarget, context);
   const { dependencies } = calculateProjectBuildableDependencies(
     context.taskGraph,
