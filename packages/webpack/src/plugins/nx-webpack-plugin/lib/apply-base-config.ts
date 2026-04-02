@@ -443,6 +443,12 @@ function applyNxDependentConfig(
       ) ?? {}),
     },
     mainFields: config.resolve?.mainFields ?? mainFields,
+    // In ts-solution setups, workspace libraries are linked via pnpm symlinks
+    // in node_modules. Webpack resolves symlinks to real paths by default,
+    // which causes loaders' exclude patterns (e.g. /node_modules/) to miss
+    // these resolved paths, leading to errors like ts-loader trying to
+    // recompile pre-built .js files from library dist directories.
+    symlinks: config.resolve?.symlinks ?? (isUsingTsSolution ? false : true),
   };
 
   config.externals = externals;
