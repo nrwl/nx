@@ -19,7 +19,8 @@ export function getGraphTimeoutMs(): number {
 export async function getNxProjectGraphLines(
   gradlewFile: string,
   gradleConfigHash: string,
-  gradlePluginOptions: GradlePluginOptions
+  gradlePluginOptions: GradlePluginOptions,
+  externalSignal?: AbortSignal
 ): Promise<string[]> {
   let nxProjectGraphBuffer: Buffer;
 
@@ -32,6 +33,17 @@ export async function getNxProjectGraphLines(
   const timeoutSeconds = timeoutMs / 1000;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  // If already cancelled before we even start, bail out immediately.
+  if (externalSignal?.aborted) {
+    clearTimeout(timer);
+    throw new Error('Gradle project graph generation was cancelled');
+  }
+
+  // If the external signal aborts (e.g. a newer project graph request),
+  // also abort our local controller to kill the Gradle process.
+  const onExternalAbort = () => controller.abort();
+  externalSignal?.addEventListener('abort', onExternalAbort);
 
   try {
     nxProjectGraphBuffer = await execGradleAsync(
@@ -51,6 +63,9 @@ export async function getNxProjectGraphLines(
       { signal: controller.signal }
     );
   } catch (e: any) {
+    if (externalSignal?.aborted) {
+      throw e; // Let populateProjectGraph handle cancellation
+    }
     if (controller.signal.aborted) {
       throw new AggregateCreateNodesError(
         [
@@ -105,6 +120,7 @@ export async function getNxProjectGraphLines(
     }
   } finally {
     clearTimeout(timer);
+    externalSignal?.removeEventListener('abort', onExternalAbort);
   }
 
   const projectGraphLines = nxProjectGraphBuffer

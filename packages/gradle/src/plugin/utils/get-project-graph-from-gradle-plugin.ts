@@ -74,6 +74,7 @@ let projectGraphReportCachePath: string = join(
   workspaceDataDirectory,
   'gradle-nodes.hash'
 );
+let currentAbortController: AbortController | undefined;
 
 export function getCurrentProjectGraphReport(): ProjectGraphReport {
   if (!projectGraphReportCache) {
@@ -112,6 +113,13 @@ export async function populateProjectGraph(
   gradlewFiles: string[],
   options: GradlePluginOptions
 ): Promise<void> {
+  // Cancel any in-flight Gradle process from a previous call
+  if (currentAbortController) {
+    currentAbortController.abort();
+  }
+  currentAbortController = new AbortController();
+  const signal = currentAbortController.signal;
+
   const normalizedOptions = normalizeOptions(options);
   const gradleConfigHash = hashArray([
     await hashWithWorkspaceContext(workspaceRoot, [gradleConfigAndTestGlob]),
@@ -131,32 +139,42 @@ export async function populateProjectGraph(
     'gradleProjectGraphReport:start'
   );
 
-  const projectGraphLines = await gradlewFiles.reduce(
-    async (
-      projectGraphLines: Promise<string[]>,
-      gradlewFile: string
-    ): Promise<string[]> => {
-      const getNxProjectGraphLinesStart = performance.mark(
-        `${gradlewFile}GetNxProjectGraphLines:start`
-      );
-      const allLines = await projectGraphLines;
-      const currentLines = await getNxProjectGraphLines(
-        gradlewFile,
-        gradleConfigHash,
-        normalizedOptions
-      );
-      const getNxProjectGraphLinesEnd = performance.mark(
-        `${gradlewFile}GetNxProjectGraphLines:end`
-      );
-      performance.measure(
-        `${gradlewFile}GetNxProjectGraphLines`,
-        getNxProjectGraphLinesStart.name,
-        getNxProjectGraphLinesEnd.name
-      );
-      return [...allLines, ...currentLines];
-    },
-    Promise.resolve([])
-  );
+  let projectGraphLines: string[];
+  try {
+    projectGraphLines = await gradlewFiles.reduce(
+      async (
+        projectGraphLines: Promise<string[]>,
+        gradlewFile: string
+      ): Promise<string[]> => {
+        const getNxProjectGraphLinesStart = performance.mark(
+          `${gradlewFile}GetNxProjectGraphLines:start`
+        );
+        const allLines = await projectGraphLines;
+        const currentLines = await getNxProjectGraphLines(
+          gradlewFile,
+          gradleConfigHash,
+          normalizedOptions,
+          signal
+        );
+        const getNxProjectGraphLinesEnd = performance.mark(
+          `${gradlewFile}GetNxProjectGraphLines:end`
+        );
+        performance.measure(
+          `${gradlewFile}GetNxProjectGraphLines`,
+          getNxProjectGraphLinesStart.name,
+          getNxProjectGraphLinesEnd.name
+        );
+        return [...allLines, ...currentLines];
+      },
+      Promise.resolve([])
+    );
+  } catch (e) {
+    if (signal.aborted) {
+      // Cancelled by a newer populateProjectGraph call — silently return
+      return;
+    }
+    throw e;
+  }
 
   const gradleProjectGraphReportEnd = performance.mark(
     'gradleProjectGraphReport:end'
