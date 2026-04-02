@@ -770,9 +770,6 @@ importers:
       '@types/detect-port':
         specifier: ^1.3.2
         version: 1.3.5
-      '@types/ejs':
-        specifier: 3.1.2
-        version: 3.1.2
       '@types/eslint':
         specifier: ~8.56.10
         version: 8.56.12
@@ -936,8 +933,8 @@ importers:
         specifier: ~11.0.6
         version: 11.0.7
       ejs:
-        specifier: ^3.1.7
-        version: 3.1.10
+        specifier: 5.0.1
+        version: 5.0.1
       emnapi:
         specifier: ^1.2.0
         version: 1.4.4(node-addon-api@7.1.1)
@@ -2817,8 +2814,8 @@ importers:
         specifier: 'catalog:'
         version: 0.0.7
       ejs:
-        specifier: ^3.1.7
-        version: 3.1.10
+        specifier: 5.0.1
+        version: 5.0.1
       enquirer:
         specifier: 'catalog:'
         version: 2.3.6
@@ -3481,8 +3478,8 @@ importers:
         specifier: ~11.0.6
         version: 11.0.7
       ejs:
-        specifier: ^3.1.7
-        version: 3.1.10
+        specifier: 5.0.1
+        version: 5.0.1
       enquirer:
         specifier: 'catalog:'
         version: 2.3.6
@@ -13026,9 +13023,6 @@ packages:
   '@types/draco3d@1.4.10':
     resolution: {integrity: sha512-AX22jp8Y7wwaBgAixaSvkoG4M/+PlAcm3Qs4OW8yT9DM4xUpWKeFhLueTAyZF39pviAdcDdeJoACapiAceqNcw==}
 
-  '@types/ejs@3.1.2':
-    resolution: {integrity: sha512-ZmiaE3wglXVWBM9fyVC17aGPkLo/UgaOjEiI2FXQfyczrCefORPxIe+2dVmnmk3zkVIbizjrlQzmPGhSYGXG5g==}
-
   '@types/eslint-scope@3.7.7':
     resolution: {integrity: sha512-MzMFlSLBqNF2gcHWO0G1vP/YQyfvrxZ0bF+u7mzUdZ1/xK4A4sru+nraZz5i3iEIk1l1uyicaDVTB4QbbEkAYg==}
 
@@ -16745,6 +16739,11 @@ packages:
   ejs@3.1.10:
     resolution: {integrity: sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA==}
     engines: {node: '>=0.10.0'}
+    hasBin: true
+
+  ejs@5.0.1:
+    resolution: {integrity: sha512-COqBPFMxuPTPspXl2DkVYaDS3HtrD1GpzOGkNTJ1IYkifq/r9h8SVEFrjA3D9/VJGOEoMQcrlhpntcSUrM8k6A==}
+    engines: {node: '>=0.12.18'}
     hasBin: true
 
   electron-to-chromium@1.5.250:
@@ -39885,8 +39884,6 @@ snapshots:
 
   '@types/draco3d@1.4.10': {}
 
-  '@types/ejs@3.1.2': {}
-
   '@types/eslint-scope@3.7.7':
     dependencies:
       '@types/eslint': 8.56.12
@@ -44918,6 +44915,8 @@ snapshots:
   ejs@3.1.10:
     dependencies:
       jake: 10.9.2
+
+  ejs@5.0.1: {}
 
   electron-to-chromium@1.5.250: {}
 
