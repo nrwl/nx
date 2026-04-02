@@ -74,8 +74,6 @@ let projectGraphReportCachePath: string = join(
   workspaceDataDirectory,
   'gradle-nodes.hash'
 );
-let currentAbortController: AbortController | undefined;
-
 export function getCurrentProjectGraphReport(): ProjectGraphReport {
   if (!projectGraphReportCache) {
     throw new AggregateCreateNodesError(
@@ -113,13 +111,6 @@ export async function populateProjectGraph(
   gradlewFiles: string[],
   options: GradlePluginOptions
 ): Promise<void> {
-  // Cancel any in-flight Gradle process from a previous call
-  if (currentAbortController) {
-    currentAbortController.abort();
-  }
-  currentAbortController = new AbortController();
-  const signal = currentAbortController.signal;
-
   const normalizedOptions = normalizeOptions(options);
   const gradleConfigHash = hashArray([
     await hashWithWorkspaceContext(workspaceRoot, [gradleConfigAndTestGlob]),
@@ -153,8 +144,7 @@ export async function populateProjectGraph(
         const currentLines = await getNxProjectGraphLines(
           gradlewFile,
           gradleConfigHash,
-          normalizedOptions,
-          signal
+          normalizedOptions
         );
         const getNxProjectGraphLinesEnd = performance.mark(
           `${gradlewFile}GetNxProjectGraphLines:end`
@@ -169,7 +159,10 @@ export async function populateProjectGraph(
       Promise.resolve([])
     );
   } catch (e) {
-    if (signal.aborted) {
+    if (
+      e instanceof Error &&
+      e.message === 'Gradle project graph generation was cancelled'
+    ) {
       // Cancelled by a newer populateProjectGraph call — silently return
       return;
     }

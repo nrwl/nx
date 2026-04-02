@@ -5,6 +5,19 @@ import { GradlePluginOptions } from './gradle-plugin-options';
 
 const DEFAULT_GRAPH_TIMEOUT_SECONDS = isCI() ? 600 : 120;
 
+let currentAbortController: AbortController | undefined;
+
+/**
+ * Cancel any in-flight Gradle project graph process.
+ * Safe to call even if nothing is running.
+ */
+export function cancelPendingProjectGraphRequest(): void {
+  if (currentAbortController) {
+    currentAbortController.abort('cancelled');
+    currentAbortController = undefined;
+  }
+}
+
 export function getGraphTimeoutMs(): number {
   const envTimeout = process.env.NX_GRADLE_PROJECT_GRAPH_TIMEOUT;
   if (envTimeout) {
@@ -19,8 +32,7 @@ export function getGraphTimeoutMs(): number {
 export async function getNxProjectGraphLines(
   gradlewFile: string,
   gradleConfigHash: string,
-  gradlePluginOptions: GradlePluginOptions,
-  externalSignal?: AbortSignal
+  gradlePluginOptions: GradlePluginOptions
 ): Promise<string[]> {
   let nxProjectGraphBuffer: Buffer;
 
@@ -31,19 +43,13 @@ export async function getNxProjectGraphLines(
 
   const timeoutMs = getGraphTimeoutMs();
   const timeoutSeconds = timeoutMs / 1000;
+
+  // Cancel any in-flight Gradle process from a previous call, then create a fresh controller.
+  cancelPendingProjectGraphRequest();
   const controller = new AbortController();
+  currentAbortController = controller;
+  const signal = controller.signal;
   const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-  // If already cancelled before we even start, bail out immediately.
-  if (externalSignal?.aborted) {
-    clearTimeout(timer);
-    throw new Error('Gradle project graph generation was cancelled');
-  }
-
-  // If the external signal aborts (e.g. a newer project graph request),
-  // also abort our local controller to kill the Gradle process.
-  const onExternalAbort = () => controller.abort();
-  externalSignal?.addEventListener('abort', onExternalAbort);
 
   try {
     nxProjectGraphBuffer = await execGradleAsync(
@@ -60,13 +66,14 @@ export async function getNxProjectGraphLines(
         `-PworkspaceRoot=${workspaceRoot}`,
         process.env.NX_GRADLE_VERBOSE_LOGGING ? '--info' : '',
       ],
-      { signal: controller.signal }
+      { signal }
     );
   } catch (e: any) {
-    if (externalSignal?.aborted) {
-      throw e; // Let populateProjectGraph handle cancellation
+    // Cancelled by a newer populateProjectGraph call — let the caller handle it
+    if (signal.reason === 'cancelled') {
+      throw new Error('Gradle project graph generation was cancelled');
     }
-    if (controller.signal.aborted) {
+    if (signal.aborted) {
       throw new AggregateCreateNodesError(
         [
           [
@@ -120,7 +127,6 @@ export async function getNxProjectGraphLines(
     }
   } finally {
     clearTimeout(timer);
-    externalSignal?.removeEventListener('abort', onExternalAbort);
   }
 
   const projectGraphLines = nxProjectGraphBuffer
