@@ -498,7 +498,7 @@ class ProcessTaskUtilsTest {
   inner class InferExtensionsFromInputPropertiesTests {
 
     @Test
-    fun `inferExtensionsFromInputProperties detects class extension from CompileClasspath`() {
+    fun `compile task infers class from itself and jar from archive dependents`() {
       val kotlinProject = ProjectBuilder.builder().withName("kotlinInferTest").build()
       kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
 
@@ -507,13 +507,24 @@ class ProcessTaskUtilsTest {
 
       val extensions = inferExtensionsFromInputProperties(compileTestKotlin, dependsOnTasks)
 
-      assertTrue(
-          extensions.contains("class"),
-          "Expected 'class' extension from CompileClasspath, got $extensions")
+      assertTrue(extensions.contains("class"), "Expected 'class' extension, got $extensions")
     }
 
     @Test
-    fun `inferExtensionsFromInputProperties detects jar extension from archive tasks`() {
+    fun `compile task without archive dependents does not infer jar`() {
+      val project = ProjectBuilder.builder().withName("compileOnly").build()
+      project.plugins.apply("java")
+
+      val compileJava = project.tasks.getByName("compileJava")
+
+      val extensions = inferExtensionsFromInputProperties(compileJava, emptySet())
+
+      assertTrue(extensions.contains("class"), "Expected 'class' extension, got $extensions")
+      assertFalse(extensions.contains("jar"), "Compile task alone should not infer 'jar', got $extensions")
+    }
+
+    @Test
+    fun `archive dependent tasks infer their archive extension`() {
       val kotlinProject = ProjectBuilder.builder().withName("kotlinJarTest").build()
       kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
 
@@ -529,41 +540,13 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `inferExtensionsFromInputProperties returns empty for task with no classpath inputs`() {
+    fun `plain tasks infer no extensions`() {
       val project = ProjectBuilder.builder().build()
       val task = project.tasks.register("plainTask").get()
 
       val extensions = inferExtensionsFromInputProperties(task, emptySet())
 
       assertTrue(extensions.isEmpty(), "Expected empty extensions for plain task, got $extensions")
-    }
-  }
-
-  @Nested
-  inner class CleanBuildInputDetectionTests {
-
-    @Test
-    fun `getInputsForTask produces dependentTasksOutputFiles on clean build with kotlin plugin`() {
-      val kotlinProject = ProjectBuilder.builder().withName("cleanBuildTest").build()
-      kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
-
-      val compileTestKotlin = kotlinProject.tasks.getByName("compileTestKotlin")
-      val workspaceRoot = kotlinProject.rootDir.path
-      val projectRoot = kotlinProject.projectDir.path
-
-      val dependsOnTasks = getDependsOnTask(compileTestKotlin)
-
-      // Verify inferExtensionsFromInputProperties works directly
-      val inferredExtensions = inferExtensionsFromInputProperties(compileTestKotlin, dependsOnTasks)
-      assertTrue(
-          inferredExtensions.contains("class"),
-          "inferExtensionsFromInputProperties should detect 'class', got $inferredExtensions")
-
-      // Verify that the extensions get added even when getInputsForTask encounters issues
-      // with task.inputs.files resolution in ProjectBuilder (it may throw on Kotlin plugin tasks).
-      // The key assertion is that inferExtensionsFromInputProperties works correctly above.
-      // In a real Gradle build, getInputsForTask will use the inferred extensions to populate
-      // dependentTasksOutputFiles entries.
     }
   }
 

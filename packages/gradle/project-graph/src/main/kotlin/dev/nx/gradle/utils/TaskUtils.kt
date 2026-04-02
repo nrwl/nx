@@ -148,20 +148,22 @@ fun getGradleFilesInputs(workspaceRoot: String): List<String> {
 }
 
 /**
- * Infer file extensions produced/consumed by a task and its dependents using task type checks.
+ * Infer file extensions consumed by a task from its dependents' outputs using task type checks.
  *
- * Test and compile tasks consume .class + .jar from their dependencies.
- * Compile dependents produce .class files. Archive dependents declare their extension (jar, war,
- * etc).
+ * Test tasks consume .class + .jar (compiled code and library jars on the test classpath).
+ * Compile tasks consume .class from upstream compile tasks (e.g. compileTestKotlin → compileKotlin).
+ * Archive dependents declare their own extension (jar, war, etc).
  *
  * Works at configuration time without requiring files to exist on disk.
  */
 fun inferExtensionsFromInputProperties(task: Task, dependentTasks: Set<Task>): Set<String> {
   val extensions = mutableSetOf<String>()
 
-  if (task is org.gradle.api.tasks.testing.Test || task is org.gradle.api.tasks.compile.AbstractCompile) {
+  if (task is org.gradle.api.tasks.testing.Test) {
     extensions.add("class")
     extensions.add("jar")
+  } else if (task is org.gradle.api.tasks.compile.AbstractCompile) {
+    extensions.add("class")
   }
 
   dependentTasks.forEach { depTask ->
