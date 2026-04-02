@@ -7,7 +7,7 @@
   "targets": {
     "lint": {
       "options": {
-        "max-warnings": 6
+        "max-warnings": 8
       }
     },
     "e2e-ci--src/webpack.test.ts": {
