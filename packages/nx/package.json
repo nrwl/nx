@@ -50,7 +50,7 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "@ltd/j-toml": "^1.38.0",
+    "smol-toml": "1.6.1",
     "@napi-rs/wasm-runtime": "0.2.4",
     "@yarnpkg/lockfile": "^1.1.0",
     "@yarnpkg/parsers": "3.0.2",

@@ -1179,8 +1179,8 @@ config_file = ".codex/agents/ci-monitor-subagent.toml"
         expect(content).toContain('[agents.ci-monitor-subagent]');
         expect(content).toContain('multi_agent = true');
         // MCP args should be adjusted to Nx 22+ format
-        expect(content).toMatch(/'nx'/);
-        expect(content).toMatch(/'mcp'/);
+        expect(content).toMatch(/"nx"/);
+        expect(content).toMatch(/"mcp"/);
         // Should NOT contain the original nx-mcp@latest args
         expect(content).not.toContain('nx-mcp@latest');
       });
@@ -1199,7 +1199,7 @@ config_file = ".codex/agents/ci-monitor-subagent.toml"
         await setupAiAgentsGenerator(tree, options);
 
         const content = tree.read('.codex/config.toml')?.toString();
-        expect(content).toMatch(/'nx-mcp'/);
+        expect(content).toMatch(/"nx-mcp"/);
         expect(content).toContain('[agents.ci-monitor-subagent]');
       });
 
@@ -1223,12 +1223,12 @@ args = ["nx-mcp"]
         await setupAiAgentsGenerator(tree, options);
 
         const content = tree.read('.codex/config.toml')?.toString();
-        // User content preserved (library uses single quotes)
+        // User content preserved
         expect(content).toContain('sandbox_mode');
         expect(content).toContain('read-only');
         // MCP args updated to Nx 22+ format
-        expect(content).toMatch(/'nx'/);
-        expect(content).toMatch(/'mcp'/);
+        expect(content).toMatch(/"nx"/);
+        expect(content).toMatch(/"mcp"/);
         // New sections added
         expect(content).toContain('[agents.ci-monitor-subagent]');
         expect(content).toContain('multi_agent = true');

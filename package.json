@@ -68,7 +68,7 @@
     "@jest/reporters": "catalog:jest",
     "@jest/test-result": "catalog:jest",
     "@jest/types": "catalog:jest",
-    "@ltd/j-toml": "^1.38.0",
+    "smol-toml": "1.6.1",
     "@module-federation/enhanced": "2.1.0",
     "@module-federation/sdk": "^2.1.0",
     "@monodon/rust": "2.3.0",
