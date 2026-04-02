@@ -21,6 +21,7 @@ import {
   getFailedToInstallPluginErrorMessages,
 } from '../init/configure-plugins';
 import { globalSpinner } from '../../utils/spinner';
+import { NxPackageJson } from '../../utils/package-json';
 import { reportNxAddCommand } from '../../analytics';
 
 export function addHandler(options: AddOptions): Promise<number> {
@@ -61,7 +62,7 @@ async function installPackage(
       exec(
         command,
         {
-          windowsHide: false,
+          windowsHide: true,
         },
         (error, stdout, stderr) => {
           if (error) {
@@ -167,7 +168,7 @@ function parsePackageSpecifier(
 }
 
 export const coreNxPluginVersions = (
-  require('../../../package.json') as typeof import('../../../package.json')
+  require(require.resolve('nx/package.json')) as NxPackageJson
 )['nx-migrations'].packageGroup.reduce(
   (map, entry) => {
     const packageName = typeof entry === 'string' ? entry : entry.package;

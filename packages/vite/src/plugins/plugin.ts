@@ -6,6 +6,7 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
+  normalizePath,
   ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
@@ -24,8 +25,6 @@ import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import picomatch = require('picomatch');
 import type { ResolvedConfig } from 'vite';
-
-const pmc = getPackageManagerCommand();
 
 export interface VitePluginOptions {
   buildTargetName?: string;
@@ -103,9 +102,9 @@ export const createNodes: CreateNodesV2<VitePluginOptions> = [
         }
       );
 
-    const lockfile = getLockFileName(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const detectedPackageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(detectedPackageManager);
+    const lockfile = getLockFileName(detectedPackageManager);
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
       { ...normalizedOptions, isUsingTsSolutionSetup },
@@ -149,7 +148,8 @@ export const createNodes: CreateNodesV2<VitePluginOptions> = [
               tsConfigFiles,
               hasReactRouterConfig,
               isUsingTsSolutionSetup,
-              context
+              context,
+              pmc
             ));
 
           const project: ProjectConfiguration = {
@@ -189,7 +189,8 @@ async function buildViteTargets(
   tsConfigFiles: string[],
   hasReactRouterConfig: boolean,
   isUsingTsSolutionSetup: boolean,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<ViteTargets> {
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,
@@ -251,7 +252,8 @@ async function buildViteTargets(
     targets[options.testTargetName] = await testTarget(
       namedInputs,
       testOutputs,
-      projectRoot
+      projectRoot,
+      pmc
     );
 
     if (options.ciTargetName) {
@@ -360,12 +362,13 @@ async function buildViteTargets(
       namedInputs,
       buildOutputs,
       projectRoot,
-      isUsingTsSolutionSetup
+      isUsingTsSolutionSetup,
+      pmc
     );
 
     // If running in library mode, then there is nothing to serve.
     if (!viteBuildConfig.build?.lib || hasServeConfig) {
-      const devTarget = serveTarget(projectRoot, isUsingTsSolutionSetup);
+      const devTarget = serveTarget(projectRoot, isUsingTsSolutionSetup, pmc);
 
       targets[options.serveTargetName] = {
         ...devTarget,
@@ -378,7 +381,8 @@ async function buildViteTargets(
       targets[options.devTargetName] = devTarget;
       targets[options.previewTargetName] = previewTarget(
         projectRoot,
-        options.buildTargetName
+        options.buildTargetName,
+        pmc
       );
       targets[options.serveStaticTargetName] = serveStaticTarget(
         options,
@@ -435,7 +439,6 @@ async function buildViteTargets(
       ];
       targets[options.typecheckTargetName].syncGenerators = [
         '@nx/js:typescript-sync',
-        '@nx/js:deps-sync',
       ];
     }
   }
@@ -462,7 +465,8 @@ async function buildTarget(
   },
   outputs: string[],
   projectRoot: string,
-  isUsingTsSolutionSetup: boolean
+  isUsingTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const buildTarget: TargetConfiguration = {
     command: `vite build`,
@@ -494,13 +498,17 @@ async function buildTarget(
   };
 
   if (isUsingTsSolutionSetup) {
-    buildTarget.syncGenerators = ['@nx/js:typescript-sync', '@nx/js:deps-sync'];
+    buildTarget.syncGenerators = ['@nx/js:typescript-sync'];
   }
 
   return buildTarget;
 }
 
-function serveTarget(projectRoot: string, isUsingTsSolutionSetup: boolean) {
+function serveTarget(
+  projectRoot: string,
+  isUsingTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
+) {
   const targetConfig: TargetConfiguration = {
     continuous: true,
     command: `vite`,
@@ -522,16 +530,17 @@ function serveTarget(projectRoot: string, isUsingTsSolutionSetup: boolean) {
   };
 
   if (isUsingTsSolutionSetup) {
-    targetConfig.syncGenerators = [
-      '@nx/js:typescript-sync',
-      '@nx/js:deps-sync',
-    ];
+    targetConfig.syncGenerators = ['@nx/js:typescript-sync'];
   }
 
   return targetConfig;
 }
 
-function previewTarget(projectRoot: string, buildTargetName) {
+function previewTarget(
+  projectRoot: string,
+  buildTargetName: string,
+  pmc: ReturnType<typeof getPackageManagerCommand>
+) {
   const targetConfig: TargetConfiguration = {
     continuous: true,
     command: `vite preview`,
@@ -561,7 +570,8 @@ async function testTarget(
     [inputName: string]: any[];
   },
   outputs: string[],
-  projectRoot: string
+  projectRoot: string,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   return {
     command: `vitest`,
@@ -607,10 +617,7 @@ function serveStaticTarget(
   };
 
   if (isUsingTsSolutionSetup) {
-    targetConfig.syncGenerators = [
-      '@nx/js:typescript-sync',
-      '@nx/js:deps-sync',
-    ];
+    targetConfig.syncGenerators = ['@nx/js:typescript-sync'];
   }
 
   return targetConfig;
@@ -627,7 +634,11 @@ function getOutputs(
   isBuildable: boolean;
   hasServeConfig: boolean;
 } {
-  const { build, test, server } = viteBuildConfig;
+  // TODO(jack): Remove this cast when @nx/vite switches to moduleResolution:
+  // "nodenext". Vite 8's rolldown types are ESM-only (.d.mts) and not
+  // resolvable under moduleResolution: "node", which breaks rolldownOptions
+  // and vitest's test augmentation on ResolvedConfig.
+  const { build, test, server } = viteBuildConfig as any;
 
   const buildOutputPath = normalizeOutputPath(
     build?.outDir,
@@ -639,7 +650,8 @@ function getOutputs(
   const isBuildable = Boolean(
     build?.lib ||
       viteBuildConfig?.builder?.buildApp ||
-      build?.rollupOptions?.input ||
+      build?.rollupOptions?.input || // Vite <8
+      build?.rolldownOptions?.input || // Vite >=8
       existsSync(join(workspaceRoot, projectRoot, 'index.html'))
   );
 
@@ -678,9 +690,9 @@ function normalizeOutputPath(
       return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
     } else {
       if (outputPath.startsWith('..')) {
-        return join('{workspaceRoot}', join(projectRoot, outputPath));
+        return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);
       } else {
-        return join('{projectRoot}', outputPath);
+        return joinPathFragments('{projectRoot}', outputPath);
       }
     }
   }
@@ -732,5 +744,5 @@ async function getTestPathsRelativeToProjectRoot(
     .filter((ts) =>
       projectRoot === '.' ? true : ts.moduleId.startsWith(fullProjectRoot)
     )
-    .map((ts) => relative(projectRoot, ts.moduleId));
+    .map((ts) => normalizePath(relative(projectRoot, ts.moduleId)));
 }

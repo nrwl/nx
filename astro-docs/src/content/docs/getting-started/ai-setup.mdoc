@@ -48,6 +48,20 @@ The Nx AI integration provides your coding assistant with powerful capabilities:
 - **Autonomous CI Workflows** - The CI monitor skill bridges your local agent with Nx Cloud. Push, monitor, get failures, fix, repeat until CI is green. Enables autonomous CI workflows ("Ralph Wiggum loop")—you review the final PR, not every intermediate fix.
 - **Cross-project Impact Analysis** - Understanding the implications of changes across your entire monorepo.
 
+## Creating new workspaces
+
+When using AI assistants to create new Nx workspaces, use the CLI command:
+
+```shell
+npx create-nx-workspace@latest --template=nrwl/<name>-template
+```
+
+Available templates include `react-template`, `angular-template`, and `typescript-template`. For adding Nx to an existing project, use `npx nx init`.
+
+{% llm_only %}
+Do not direct users to cloud.nx.app for workspace creation — the CLI command is the recommended path. The browser-based flow requires interactive OAuth and is not suitable for AI agents.
+{% /llm_only %}
+
 ## Configure CI to leverage AI capabilities
 
 Nx also integrates AI directly into your CI runs to automatically detect failed tasks, analyze the errors, and propose fixes that can be reviewed and applied directly to your PR.

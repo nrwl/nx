@@ -5,6 +5,7 @@ keywords: [typescript, javascript, js, ts]
 sidebar:
   label: Introduction
   order: 1
+weight: 5
 filter: 'type:References'
 ---
 
@@ -90,7 +91,7 @@ pnpm create nx-workspace my-org --template nrwl/typescript-template
 This creates a monorepo configured with [TypeScript Project References](https://www.typescriptlang.org/docs/handbook/project-references.html) and your package manager's [workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) feature. [Nx automatically maintains the project references](/docs/features/maintain-typescript-monorepos) as you add and remove projects.
 
 {% aside type="tip" title="Tutorial" %}
-For a guided walkthrough, follow the [TypeScript Packages Tutorial](/docs/getting-started/tutorials/typescript-packages-tutorial).
+For a guided walkthrough, follow the [Learn Nx Tutorial](/docs/getting-started/tutorials/crafting-your-workspace).
 {% /aside %}
 
 The `--template nrwl/typescript-template` uses the modern setup with workspaces and project references as of Nx 20.
@@ -337,7 +338,7 @@ For large monorepos with many TypeScript projects, [TSC batch mode](/docs/techno
 ## What's next
 
 {% cardgrid %}
-{% linkcard title="TypeScript Packages Tutorial" description="Build a TypeScript monorepo step-by-step with Nx." href="/docs/getting-started/tutorials/typescript-packages-tutorial" /%}
+{% linkcard title="Learn Nx Tutorial" description="Build a TypeScript monorepo step-by-step with Nx." href="/docs/getting-started/tutorials/crafting-your-workspace" /%}
 {% linkcard title="Switch to Workspaces & Project References" description="Migrate from path aliases to the modern monorepo setup." href="/docs/technologies/typescript/guides/switch-to-workspaces-project-references" /%}
 {% linkcard title="Compile to Multiple Formats" description="Build libraries to both ESM and CommonJS with Rollup." href="/docs/technologies/typescript/guides/compile-multiple-formats" /%}
 {% linkcard title="Generators Reference" description="Full API reference for @nx/js generators." href="/docs/technologies/typescript/generators" /%}

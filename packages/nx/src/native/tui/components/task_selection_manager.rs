@@ -8,6 +8,8 @@ pub struct ScrollMetrics {
     pub can_scroll_up: bool,
     pub can_scroll_down: bool,
     pub scroll_offset: usize,
+    pub total_entries: usize,
+    pub viewport_height: usize,
 }
 
 pub struct TaskSelectionManager {
@@ -492,6 +494,8 @@ impl TaskSelectionManager {
             can_scroll_up: self.can_scroll_up(),
             can_scroll_down: self.can_scroll_down(),
             scroll_offset: self.scroll_offset,
+            total_entries: self.get_total_entries(),
+            viewport_height: self.viewport_height,
         }
     }
 

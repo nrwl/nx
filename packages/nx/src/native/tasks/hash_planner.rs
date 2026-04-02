@@ -313,43 +313,80 @@ impl HashPlanner {
         external_deps_mapped: &hashbrown::HashMap<&String, Vec<&'a String>>,
         visited: &mut Box<hashbrown::HashSet<&'a str>>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
+        if inputs.len() == 1 {
+            return self.gather_dependency_input(
+                task,
+                &inputs[0],
+                task_graph,
+                project_deps,
+                external_deps_mapped,
+                visited,
+            );
+        }
+
         let mut deps_inputs: Vec<HashInstruction> =
             Vec::with_capacity(inputs.len() * project_deps.len());
 
         for input in inputs {
-            for dep in project_deps {
-                if visited.contains(dep.as_str()) {
-                    continue;
-                }
-                visited.insert(dep.as_str());
+            // Dependency inputs are independent. Scope cycle detection to each
+            // input so sibling inputs all apply to the same dependency.
+            let mut visited_for_input = Box::new((**visited).clone());
+            deps_inputs.extend(self.gather_dependency_input(
+                task,
+                input,
+                task_graph,
+                project_deps,
+                external_deps_mapped,
+                &mut visited_for_input,
+            )?);
+        }
 
-                if self.project_graph.nodes.contains_key(dep) {
-                    let Some(dep_inputs) = get_inputs_for_dependency(
-                        &self.project_graph.nodes[dep],
-                        &self.nx_json,
-                        input,
-                    )?
-                    else {
-                        continue;
-                    };
-                    deps_inputs.extend(self.self_and_deps_inputs(
-                        dep,
-                        task,
-                        &dep_inputs,
-                        task_graph,
-                        external_deps_mapped,
-                        visited,
-                    )?);
-                } else {
-                    // todo(jcammisuli): add a check to skip this when the new task hasher is ready, and when `AllExternalDependencies` is used
-                    if let Some(external_deps) = external_deps_mapped.get(dep) {
-                        deps_inputs.push(HashInstruction::External(dep.to_string()));
-                        deps_inputs.extend(
-                            external_deps
-                                .iter()
-                                .map(|s| HashInstruction::External(s.to_string())),
-                        );
-                    }
+        Ok(deps_inputs)
+    }
+
+    fn gather_dependency_input<'a>(
+        &'a self,
+        task: &Task,
+        input: &Input,
+        task_graph: &TaskGraph,
+        project_deps: &'a [String],
+        external_deps_mapped: &hashbrown::HashMap<&String, Vec<&'a String>>,
+        visited: &mut Box<hashbrown::HashSet<&'a str>>,
+    ) -> anyhow::Result<Vec<HashInstruction>> {
+        let mut deps_inputs: Vec<HashInstruction> = Vec::with_capacity(project_deps.len());
+
+        for dep in project_deps {
+            if visited.contains(dep.as_str()) {
+                continue;
+            }
+            visited.insert(dep.as_str());
+
+            if self.project_graph.nodes.contains_key(dep) {
+                let Some(dep_inputs) = get_inputs_for_dependency(
+                    &self.project_graph.nodes[dep],
+                    &self.nx_json,
+                    input,
+                )?
+                else {
+                    continue;
+                };
+                deps_inputs.extend(self.self_and_deps_inputs(
+                    dep,
+                    task,
+                    &dep_inputs,
+                    task_graph,
+                    external_deps_mapped,
+                    visited,
+                )?);
+            } else {
+                // todo(jcammisuli): add a check to skip this when the new task hasher is ready, and when `AllExternalDependencies` is used
+                if let Some(external_deps) = external_deps_mapped.get(dep) {
+                    deps_inputs.push(HashInstruction::External(dep.to_string()));
+                    deps_inputs.extend(
+                        external_deps
+                            .iter()
+                            .map(|s| HashInstruction::External(s.to_string())),
+                    );
                 }
             }
         }

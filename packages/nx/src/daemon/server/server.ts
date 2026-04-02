@@ -638,6 +638,29 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
       }
     }
 
+    const cap = 10;
+    const summarize = (files: string[]) =>
+      files.length === 0
+        ? '(none)'
+        : files.length <= cap
+          ? files.map((f) => `  - ${f}`).join('\n')
+          : files
+              .slice(0, cap)
+              .map((f) => `  - ${f}`)
+              .join('\n') + `\n  ... and ${files.length - cap} more`;
+    if (
+      createdFilesToHash.length ||
+      updatedFilesToHash.length ||
+      deletedFiles.length
+    ) {
+      serverLogger.watcherLog(
+        `File changes detected:\n` +
+          `Created:\n${summarize(createdFilesToHash)}\n` +
+          `Updated:\n${summarize(updatedFilesToHash)}\n` +
+          `Deleted:\n${summarize(deletedFiles)}`
+      );
+    }
+
     addUpdatedAndDeletedFiles(
       createdFilesToHash,
       updatedFilesToHash,

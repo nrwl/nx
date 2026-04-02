@@ -417,6 +417,22 @@ async function updateRepository(repoName: string): Promise<void> {
       `Creating update branch '${updateBranch}' from origin/${mainBranch}`
     );
 
+    // Trust mise config if present so correct tool versions are used
+    const miseToml = path.join(repoDir, 'mise.toml');
+    const dotMiseToml = path.join(repoDir, '.mise.toml');
+    if (fs.existsSync(miseToml) || fs.existsSync(dotMiseToml)) {
+      await execWithOutput(
+        'mise trust',
+        repoDir,
+        'Trusting mise configuration'
+      );
+      await execWithOutput(
+        'mise install',
+        repoDir,
+        'Installing mise-managed tools'
+      );
+    }
+
     // Detect package manager
     const detectedPm = detectPackageManager(repoDir);
     log(`🔍 Detected package manager: ${detectedPm}`);

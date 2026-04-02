@@ -4,7 +4,7 @@
   "env": {
     "node": true
   },
-  "ignorePatterns": ["**/*.ts", "**/test-output"],
+  "ignorePatterns": ["**/*.ts", "**/test-output", "**/dist"],
   "plugins": ["@typescript-eslint", "@nx"],
   "extends": ["plugin:storybook/recommended"],
   "rules": {
@@ -76,7 +76,8 @@
             ]
           }
         ],
-        "@nx/workspace/valid-command-object": "error"
+        "@nx/workspace/valid-command-object": "error",
+        "@nx/workspace/require-windows-hide": "error"
       }
     },
     {
@@ -95,6 +96,22 @@
       "files": ["*.ts"],
       "rules": {
         "@angular-eslint/prefer-standalone": "off"
+      }
+    },
+    {
+      "files": [
+        "*.spec.ts",
+        "*.spec.tsx",
+        "*.spec.js",
+        "*.spec.jsx",
+        "*.test.ts",
+        "*.test.tsx",
+        "*.test.js",
+        "*.test.jsx"
+      ],
+      "plugins": ["jest"],
+      "rules": {
+        "jest/no-disabled-tests": "warn"
       }
     }
   ]

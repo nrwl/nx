@@ -48,7 +48,7 @@ export async function viewLogs(): Promise<number> {
   const pmc = getPackageManagerCommand();
   execSync(`${pmc.exec} nx-cloud upload-and-show-run-details`, {
     stdio: [0, 1, 2],
-    windowsHide: false,
+    windowsHide: true,
   });
 
   if (!cloudUsed) {

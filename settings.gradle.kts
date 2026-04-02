@@ -25,7 +25,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "nx"
+rootProject.name = "nx-root-project"
 
 include("gradle-batch-runner")
 project(":gradle-batch-runner").projectDir = file("packages/gradle/batch-runner")

@@ -1,7 +1,9 @@
 import * as pc from 'picocolors';
 import * as yargs from 'yargs';
 
-import { yargsRegisterCommand } from './register/command-object';
+import { reportCommandRunEvent } from '../analytics';
+import { output } from '../utils/output';
+import { yargsAddCommand } from './add/command-object';
 import {
   yargsAffectedBuildCommand,
   yargsAffectedCommand,
@@ -9,54 +11,52 @@ import {
   yargsAffectedLintCommand,
   yargsAffectedTestCommand,
 } from './affected/command-object';
-import {
-  yargsConnectCommand,
-  yargsViewLogsCommand,
-} from './nx-cloud/connect/command-object';
+import { yargsConfigureAiAgentsCommand } from './configure-ai-agents/command-object';
 import { yargsDaemonCommand } from './daemon/command-object';
-import { yargsGraphCommand } from './graph/command-object';
+import {
+  yargsAffectedGraphCommand,
+  yargsPrintAffectedCommand,
+} from './deprecated/command-objects';
 import { yargsExecCommand } from './exec/command-object';
 import {
   yargsFormatCheckCommand,
   yargsFormatWriteCommand,
 } from './format/command-object';
 import { yargsGenerateCommand } from './generate/command-object';
+import { yargsGraphCommand } from './graph/command-object';
 import { yargsImportCommand } from './import/command-object';
 import { yargsInitCommand } from './init/command-object';
 import { yargsListCommand } from './list/command-object';
+import { yargsMcpCommand } from './mcp/command-object';
 import {
   yargsInternalMigrateCommand,
   yargsMigrateCommand,
 } from './migrate/command-object';
 import { yargsNewCommand } from './new/command-object';
-import { yargsRepairCommand } from './repair/command-object';
-import { yargsReportCommand } from './report/command-object';
-import { yargsNxInfixCommand, yargsRunCommand } from './run/command-object';
-import { yargsRunManyCommand } from './run-many/command-object';
-import { yargsShowCommand } from './show/command-object';
-import { yargsWatchCommand } from './watch/command-object';
-import { yargsResetCommand } from './reset/command-object';
-import { yargsReleaseCommand } from './release/command-object';
-import { yargsAddCommand } from './add/command-object';
-import { yargsConfigureAiAgentsCommand } from './configure-ai-agents/command-object';
+import { yargsApplyLocallyCommand } from './nx-cloud/apply-locally/command-object';
+import { yargsStopAllAgentsCommand } from './nx-cloud/complete-run/command-object';
+import {
+  yargsConnectCommand,
+  yargsViewLogsCommand,
+} from './nx-cloud/connect/command-object';
+import { yargsDownloadCloudClientCommand } from './nx-cloud/download-cloud-client/command-object';
+import { yargsFixCiCommand } from './nx-cloud/fix-ci/command-object';
 import { yargsLoginCommand } from './nx-cloud/login/command-object';
 import { yargsLogoutCommand } from './nx-cloud/logout/command-object';
-import { yargsRecordCommand } from './nx-cloud/record/command-object';
-import { yargsStartCiRunCommand } from './nx-cloud/start-ci-run/command-object';
-import { yargsStartAgentCommand } from './nx-cloud/start-agent/command-object';
-import { yargsStopAllAgentsCommand } from './nx-cloud/complete-run/command-object';
-import { yargsFixCiCommand } from './nx-cloud/fix-ci/command-object';
 import { yargsPolygraphCommand } from './nx-cloud/polygraph/command-object';
-import { yargsApplyLocallyCommand } from './nx-cloud/apply-locally/command-object';
-import { yargsDownloadCloudClientCommand } from './nx-cloud/download-cloud-client/command-object';
-import {
-  yargsPrintAffectedCommand,
-  yargsAffectedGraphCommand,
-} from './deprecated/command-objects';
+import { yargsRecordCommand } from './nx-cloud/record/command-object';
+import { yargsStartAgentCommand } from './nx-cloud/start-agent/command-object';
+import { yargsStartCiRunCommand } from './nx-cloud/start-ci-run/command-object';
+import { yargsRegisterCommand } from './register/command-object';
+import { yargsReleaseCommand } from './release/command-object';
+import { yargsRepairCommand } from './repair/command-object';
+import { yargsReportCommand } from './report/command-object';
+import { yargsResetCommand } from './reset/command-object';
+import { yargsRunManyCommand } from './run-many/command-object';
+import { yargsNxInfixCommand, yargsRunCommand } from './run/command-object';
+import { yargsShowCommand } from './show/command-object';
 import { yargsSyncCheckCommand, yargsSyncCommand } from './sync/command-object';
-import { output } from '../utils/output';
-import { yargsMcpCommand } from './mcp/command-object';
-import { reportCommandRunEvent } from '../analytics';
+import { yargsWatchCommand } from './watch/command-object';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());

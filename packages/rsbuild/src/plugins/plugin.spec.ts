@@ -39,6 +39,7 @@ describe('@nx/rsbuild', () => {
       JSON.stringify({ name: 'my-app' })
     );
     tempFs.createFileSync('my-app/rsbuild.config.ts', `export default {};`);
+    tempFs.createFileSync('package-lock.json', '{}');
   });
 
   afterEach(() => {
@@ -231,6 +232,6 @@ describe('@nx/rsbuild', () => {
     ]);
     expect(
       nodes[0][1].projects['my-app'].targets.typecheck.syncGenerators
-    ).toEqual(['@nx/js:typescript-sync', '@nx/js:deps-sync']);
+    ).toEqual(['@nx/js:typescript-sync']);
   });
 });

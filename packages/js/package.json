@@ -19,7 +19,8 @@
     "Backend"
   ],
   "main": "src/index.js",
-  "typings": "src/index.d.ts",
+  "type": "commonjs",
+  "types": "src/index.d.ts",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"

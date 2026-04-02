@@ -912,9 +912,26 @@ function addBlockToFlatConfigExportESM(
   const exportArrayLiteral =
     exportDefaultStatement.expression as ts.ArrayLiteralExpression;
 
-  const updatedArrayElements = options.insertAtTheEnd
-    ? [...exportArrayLiteral.elements, config]
-    : [config, ...exportArrayLiteral.elements];
+  let updatedArrayElements: ts.Expression[];
+  if (options.checkBaseConfig) {
+    const baseConfigIndex = exportArrayLiteral.elements.findIndex(
+      (el) =>
+        ts.isSpreadElement(el) &&
+        ts.isIdentifier(el.expression) &&
+        el.expression.text === 'baseConfig'
+    );
+    if (baseConfigIndex >= 0) {
+      const before = exportArrayLiteral.elements.slice(0, baseConfigIndex);
+      const after = exportArrayLiteral.elements.slice(baseConfigIndex);
+      updatedArrayElements = [...before, config, ...after];
+    } else {
+      updatedArrayElements = [...exportArrayLiteral.elements, config];
+    }
+  } else {
+    updatedArrayElements = options.insertAtTheEnd
+      ? [...exportArrayLiteral.elements, config]
+      : [config, ...exportArrayLiteral.elements];
+  }
 
   const updatedExportDefault = ts.factory.createExportAssignment(
     undefined,
@@ -964,6 +981,33 @@ function addBlockToFlatConfigExportCJS(
     printer
       .printNode(ts.EmitHint.Expression, config, source)
       .replaceAll(/\n/g, '\n    ');
+
+  if (options.checkBaseConfig) {
+    const baseConfigElement = exportsArray.find(
+      (el) =>
+        ts.isSpreadElement(el) &&
+        ts.isIdentifier(el.expression) &&
+        el.expression.text === 'baseConfig'
+    );
+    if (baseConfigElement) {
+      // Match baseConfig's indentation for consistent formatting
+      const baseConfigStart = baseConfigElement.getStart();
+      const lineStart = content.lastIndexOf('\n', baseConfigStart) + 1;
+      const indentation = content.substring(lineStart, baseConfigStart);
+      const configText = printer
+        .printNode(ts.EmitHint.Expression, config, source)
+        .replaceAll(/\n/g, `\n${indentation}`);
+      return applyChangesToString(content, [
+        {
+          type: ChangeType.Insert,
+          index: baseConfigStart,
+          text: `${configText},\n${indentation}`,
+        },
+      ]);
+    }
+    // baseConfig not found — fall through to insertAtTheEnd behavior
+  }
+
   if (options.insertAtTheEnd) {
     const index =
       exportsArray.length > 0

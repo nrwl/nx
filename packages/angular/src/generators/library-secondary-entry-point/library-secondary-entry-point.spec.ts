@@ -1,6 +1,5 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import * as devkit from '@nx/devkit';
 import {
   addProjectConfiguration,
   readJson,
@@ -218,29 +217,43 @@ describe('librarySecondaryEntryPoint generator', () => {
     expect(tsConfig.exclude).toStrictEqual(['**/*.spec.ts', '**/*.test.ts']);
   });
 
-  it('should format files', async () => {
-    jest.spyOn(devkit, 'formatFiles');
-    addProjectConfiguration(tree, 'lib1', {
-      root: 'libs/lib1',
-      projectType: 'library',
-    });
-    tree.write(
-      'libs/lib1/package.json',
-      JSON.stringify({ name: '@my-org/lib1' })
-    );
+  describe('--skipFormat', () => {
+    let formatFilesSpy: jest.SpyInstance;
 
-    await librarySecondaryEntryPointGenerator(tree, {
-      name: 'testing',
-      library: 'lib1',
+    beforeEach(() => {
+      const devkitModule = require('@nx/devkit');
+      formatFilesSpy = jest
+        .spyOn(devkitModule, 'formatFiles')
+        .mockImplementation(() => Promise.resolve());
     });
 
-    expect(devkit.formatFiles).toHaveBeenCalled();
-    expect(
-      tree.read('libs/lib1/testing/src/index.ts', 'utf-8')
-    ).toMatchSnapshot();
-    expect(
-      tree.read('libs/lib1/testing/src/lib/testing-module.ts', 'utf-8')
-    ).toMatchSnapshot();
+    afterAll(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should format files', async () => {
+      addProjectConfiguration(tree, 'lib1', {
+        root: 'libs/lib1',
+        projectType: 'library',
+      });
+      tree.write(
+        'libs/lib1/package.json',
+        JSON.stringify({ name: '@my-org/lib1' })
+      );
+
+      await librarySecondaryEntryPointGenerator(tree, {
+        name: 'testing',
+        library: 'lib1',
+      });
+
+      expect(formatFilesSpy).toHaveBeenCalled();
+      expect(
+        tree.read('libs/lib1/testing/src/index.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('libs/lib1/testing/src/lib/testing-module.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
   });
 
   describe('--skipModule', () => {

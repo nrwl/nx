@@ -91,7 +91,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build --emitDeclarationOnly",
+                  "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -100,6 +100,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -119,10 +123,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -144,7 +149,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build --emitDeclarationOnly",
+                  "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -153,6 +158,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -172,10 +181,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -200,7 +210,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build --emitDeclarationOnly",
+                  "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -209,6 +219,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -228,10 +242,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -258,7 +273,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build --emitDeclarationOnly --verbose",
+                  "command": "tsc --build tsconfig.json --emitDeclarationOnly --verbose",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -267,6 +282,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -286,10 +305,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -314,7 +334,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build --emitDeclarationOnly --verbose",
+                  "command": "tsc --build tsconfig.json --emitDeclarationOnly --verbose",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -323,6 +343,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -342,10 +366,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -373,7 +398,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build --emitDeclarationOnly --verbose",
+                  "command": "tsc --build tsconfig.json --emitDeclarationOnly --verbose",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -382,6 +407,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -401,10 +430,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -430,7 +460,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsgo --build --emitDeclarationOnly",
+                  "command": "tsgo --build tsconfig.json --emitDeclarationOnly",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -439,6 +469,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -458,10 +492,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -488,7 +523,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsgo --build --emitDeclarationOnly --verbose",
+                  "command": "tsgo --build tsconfig.json --emitDeclarationOnly --verbose",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -497,6 +532,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -516,10 +555,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -548,7 +588,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "type-check": {
                   "cache": true,
-                  "command": "tsgo --build --emitDeclarationOnly",
+                  "command": "tsgo --build tsconfig.json --emitDeclarationOnly",
                   "dependsOn": [
                     "^type-check",
                   ],
@@ -557,6 +597,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -576,10 +620,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -605,7 +650,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build --emitDeclarationOnly",
+                  "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -614,6 +659,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -633,10 +682,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -676,6 +726,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -695,16 +749,16 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
                 "typecheck": {
                   "cache": true,
-                  "command": "tsgo --build --emitDeclarationOnly",
+                  "command": "tsgo --build tsconfig.json --emitDeclarationOnly",
                   "dependsOn": [
                     "build",
                     "^typecheck",
@@ -714,6 +768,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
                     },
                   ],
                   "metadata": {
@@ -733,10 +791,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -813,6 +872,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -831,10 +894,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -872,6 +936,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -890,10 +958,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -933,6 +1002,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -951,10 +1024,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                    "{projectRoot}/tsconfig.lib.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -1012,6 +1087,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -1031,12 +1110,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/out-tsc/my-lib",
-                    "{projectRoot}/out-tsc/*.tsbuildinfo",
+                    "{projectRoot}/out-tsc/my-lib/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/out-tsc/my-lib/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -1065,7 +1143,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1077,6 +1155,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -1102,7 +1184,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -1130,7 +1211,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1142,6 +1223,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -1167,7 +1252,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -1195,7 +1279,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1212,6 +1296,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -1237,7 +1325,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -1265,7 +1352,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1286,6 +1373,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -1311,7 +1402,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -1342,7 +1432,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1360,6 +1450,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -1385,7 +1479,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -1417,7 +1510,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1439,6 +1532,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -1464,7 +1561,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -1498,7 +1594,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1513,6 +1609,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -1538,7 +1638,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -1574,7 +1673,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1590,6 +1689,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -1615,7 +1718,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -1664,7 +1766,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1680,6 +1782,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -1705,7 +1811,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -1767,7 +1872,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1785,6 +1890,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                       "^{projectRoot}/tsconfig.json",
                     ],
@@ -1815,7 +1924,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -1824,7 +1932,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1835,6 +1943,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -1860,7 +1972,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2014,7 +2125,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -2038,6 +2149,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -2065,7 +2180,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2113,6 +2227,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
               "transitive": true,
             },
+            {
+              "dependencies": true,
+              "fileset": "{projectRoot}/**/*.d.ts",
+            },
           ]
         `);
 
@@ -2151,6 +2269,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             {
               "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
               "transitive": true,
+            },
+            {
+              "dependencies": true,
+              "fileset": "{projectRoot}/**/*.d.ts",
             },
           ]
         `);
@@ -2191,6 +2313,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
               "transitive": true,
             },
+            {
+              "dependencies": true,
+              "fileset": "{projectRoot}/**/*.d.ts",
+            },
           ]
         `);
 
@@ -2229,6 +2355,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             {
               "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
               "transitive": true,
+            },
+            {
+              "dependencies": true,
+              "fileset": "{projectRoot}/**/*.d.ts",
             },
           ]
         `);
@@ -2273,6 +2403,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
               "transitive": true,
             },
+            {
+              "dependencies": true,
+              "fileset": "{projectRoot}/**/*.d.ts",
+            },
           ]
         `);
       });
@@ -2290,7 +2424,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -2299,6 +2433,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -2335,7 +2473,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2363,7 +2500,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -2372,6 +2509,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -2400,7 +2541,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2426,7 +2566,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -2435,6 +2575,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -2460,7 +2604,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2506,6 +2649,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -2525,17 +2672,16 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/out-tsc/my-lib",
-                      "{projectRoot}/out-tsc/*.tsbuildinfo",
+                      "{projectRoot}/out-tsc/my-lib/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/out-tsc/my-lib/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "build",
                       "^typecheck",
@@ -2545,6 +2691,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -2565,12 +2715,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
+                      "{projectRoot}/tsconfig.tsbuildinfo",
                       "{projectRoot}/out-tsc/my-lib/**/*.d.ts",
-                      "{projectRoot}/out-tsc/*.tsbuildinfo",
+                      "{projectRoot}/out-tsc/my-lib/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2595,7 +2745,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -2604,6 +2754,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -2640,7 +2794,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2698,7 +2851,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -2712,6 +2865,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                       "^{projectRoot}/tsconfig.json",
                     ],
@@ -2733,6 +2890,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
+                      "{projectRoot}/tsconfig.tsbuildinfo",
                       "{workspaceRoot}/dist/libs/my-lib/lib.js",
                       "{workspaceRoot}/dist/libs/my-lib/lib.js.map",
                       "{workspaceRoot}/dist/libs/my-lib/lib.d.ts",
@@ -2745,7 +2903,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2754,7 +2911,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -2763,6 +2920,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -2788,7 +2949,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2818,7 +2978,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -2827,6 +2987,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -2855,7 +3019,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2882,7 +3045,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -2891,6 +3054,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -2927,7 +3094,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -2957,7 +3123,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -2966,6 +3132,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -2991,7 +3161,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -3021,7 +3190,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -3030,6 +3199,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -3055,7 +3228,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -3081,7 +3253,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -3090,6 +3262,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
                       },
                     ],
                     "metadata": {
@@ -3115,7 +3291,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -3291,6 +3466,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3310,11 +3489,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -3367,6 +3546,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3386,11 +3569,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
                 "build-deps": {
@@ -3441,6 +3624,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3460,11 +3647,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
                 "build-deps": {
@@ -3530,6 +3717,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3549,11 +3740,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
                 "build-deps": {
@@ -3605,6 +3796,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3624,11 +3819,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
                 "build-deps": {
@@ -3683,6 +3878,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3702,11 +3901,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -3747,6 +3946,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3766,11 +3969,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -3813,6 +4016,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3832,11 +4039,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.build.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -3901,6 +4108,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3920,11 +4131,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -3971,6 +4182,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3990,11 +4205,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -4044,6 +4259,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4063,11 +4282,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -4121,6 +4340,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4140,11 +4363,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -4195,6 +4418,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4214,11 +4441,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,json,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -4277,6 +4504,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4296,11 +4527,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,json,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -4356,6 +4587,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4375,11 +4610,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -4436,6 +4671,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4455,11 +4694,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -4531,6 +4770,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4550,11 +4793,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -4613,6 +4856,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                       "^{projectRoot}/tsconfig.json",
                     ],
                     "metadata": {
@@ -4633,11 +4880,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
+                      "{projectRoot}/dist/tsconfig.other.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -4742,6 +4990,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4761,11 +5013,13 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,json,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.other.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -4812,6 +5066,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
               "transitive": true,
             },
+            {
+              "dependencies": true,
+              "fileset": "{projectRoot}/**/*.d.ts",
+            },
           ]
         `);
 
@@ -4845,6 +5103,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             {
               "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
               "transitive": true,
+            },
+            {
+              "dependencies": true,
+              "fileset": "{projectRoot}/**/*.d.ts",
             },
           ]
         `);
@@ -4880,6 +5142,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
               "transitive": true,
             },
+            {
+              "dependencies": true,
+              "fileset": "{projectRoot}/**/*.d.ts",
+            },
           ]
         `);
 
@@ -4913,6 +5179,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             {
               "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
               "transitive": true,
+            },
+            {
+              "dependencies": true,
+              "fileset": "{projectRoot}/**/*.d.ts",
             },
           ]
         `);
@@ -4952,6 +5222,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
               "transitive": true,
             },
+            {
+              "dependencies": true,
+              "fileset": "{projectRoot}/**/*.d.ts",
+            },
           ]
         `);
       });
@@ -4987,6 +5261,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5006,11 +5284,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5055,6 +5333,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5082,7 +5364,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5125,6 +5406,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5144,11 +5429,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{workspaceRoot}/dist/libs/my-lib",
+                      "{workspaceRoot}/dist/libs/my-lib/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{workspaceRoot}/dist/libs/my-lib/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5188,6 +5473,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5223,7 +5512,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5276,6 +5564,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5300,11 +5592,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/dist/libs/my-lib/lib.d.ts",
                       "{workspaceRoot}/dist/libs/my-lib/lib.d.ts.map",
                       "{workspaceRoot}/dist/libs/my-lib/lib.tsbuildinfo",
-                      "{workspaceRoot}/dist/libs/my-lib/other",
+                      "{workspaceRoot}/dist/libs/my-lib/other/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{workspaceRoot}/dist/libs/my-lib/other/tsconfig.other.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5349,6 +5641,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5376,7 +5672,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5418,6 +5713,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5453,7 +5752,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5498,6 +5796,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5517,12 +5819,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
                       "{projectRoot}/my-lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5567,6 +5868,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5586,11 +5891,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/my-lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5633,6 +5938,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                         "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                         "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -5652,11 +5961,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
-                      "@nx/js:deps-sync",
                     ],
                   },
                 },
@@ -5706,6 +6015,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5725,11 +6038,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/src",
+                    "{projectRoot}/src/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/src/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -5776,6 +6089,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5795,11 +6112,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/lib",
+                    "{projectRoot}/lib/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/lib/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -5877,6 +6194,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5896,11 +6217,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -5947,6 +6268,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5966,11 +6291,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{workspaceRoot}/libs/build/my-lib",
+                    "{workspaceRoot}/libs/build/my-lib/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{workspaceRoot}/libs/build/my-lib/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -6017,6 +6342,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -6036,11 +6365,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -6118,6 +6447,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -6137,11 +6470,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/compiled",
+                    "{projectRoot}/compiled/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/compiled/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -6188,6 +6521,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -6207,11 +6544,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "external-build",
+                    "external-build/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "external-build/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -6258,6 +6595,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -6277,11 +6618,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -6355,6 +6696,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -6374,11 +6719,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/build",
+                    "{projectRoot}/build/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/build/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -6451,6 +6796,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -6470,11 +6819,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/build",
+                    "{projectRoot}/build/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/build/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },
@@ -6551,6 +6900,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
                       "transitive": true,
                     },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -6586,7 +6939,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
-                    "@nx/js:deps-sync",
                   ],
                 },
               },

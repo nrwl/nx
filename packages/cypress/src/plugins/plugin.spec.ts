@@ -19,6 +19,7 @@ describe('@nx/cypress/plugin', () => {
 
     await tempFs.createFiles({
       'package.json': '{}',
+      'package-lock.json': '{}',
       'cypress.config.js': '',
       'src/test.cy.ts': '',
     });

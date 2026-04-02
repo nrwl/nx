@@ -27,11 +27,13 @@ npx create-nx-workspace@latest
 This interactive command guides you through the setup:
 
 - **Workspace name** - The name of your root directory
-- **Template** - Choose from [various technology stacks](/docs/reference/create-nx-workspace#presets) (React, Angular, Node, etc.)
-- **Package manager** - npm, yarn, pnpm, or bun
-- **Additional options** - Styling, testing frameworks, and more depending on your template
+- **Starter template** - Choose from [various technology stacks](/docs/reference/create-nx-workspace#presets) (React, Angular, Node, etc.)
 
-For a minimal setup, choose the **empty workspace** template (`--preset=ts`). This gives you a bare TypeScript monorepo that you can extend incrementally.
+For a minimal setup, use the empty template. This gives you a bare TypeScript monorepo that you can extend incrementally.
+
+```shell
+npx create-nx-workspace@latest --template=nrwl/empty-template
+```
 
 ## Option 2: Create via Nx Cloud
 
@@ -46,3 +48,11 @@ This option gives you:
 - [Self-healing CI](/docs/features/ci-features/self-healing-ci) that automatically fixes common failures
 
 [Get started with Nx Cloud →](https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=nx-cloud-onboarding&utm_campaign=start-new-project)
+
+## Next steps
+
+Once your workspace is set up:
+
+- **New to Nx?** → [Follow the tutorial series](/docs/getting-started/tutorials/crafting-your-workspace) to learn core concepts hands-on
+- **Set up your editor** → Install [Nx Console](/docs/getting-started/editor-setup) for VSCode or JetBrains
+- **Speed up CI** → Connect to [Nx Cloud](/docs/getting-started/nx-cloud) for remote caching and distributed tasks

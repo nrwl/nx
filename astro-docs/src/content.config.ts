@@ -12,7 +12,9 @@ const searchSchema = z.object({
     .min(0, 'Search weight cannot be lower than 0')
     .max(10, 'Search weight cannot be higher than 10')
     .optional(),
-  filter: z.string().optional(),
+  filter: z
+    .enum(['type:Concepts', 'type:Features', 'type:Guides', 'type:References'])
+    .optional(),
 });
 
 const customDocsSchema = z

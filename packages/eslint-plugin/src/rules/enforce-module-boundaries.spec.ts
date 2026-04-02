@@ -1161,6 +1161,95 @@ Violation detected in:
       expect(failures[1].message).toEqual(message);
     });
 
+    it('should error when using require() to import another library', () => {
+      const failures = runRule(
+        {},
+        `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+        `
+          require('../../other');
+          require.resolve('../../other');
+        `,
+        {
+          nodes: {
+            mylibName: {
+              name: 'mylibName',
+              type: 'lib',
+              data: {
+                root: 'libs/mylib',
+                tags: [],
+                implicitDependencies: [],
+                targets: {},
+              },
+            },
+            otherName: {
+              name: 'otherName',
+              type: 'lib',
+              data: {
+                root: 'libs/other',
+                tags: [],
+                implicitDependencies: [],
+                targets: {},
+              },
+            },
+          },
+          dependencies: {},
+        },
+        {
+          mylibName: [createFile(`libs/mylib/src/main.ts`)],
+          otherName: [createFile('libs/other/src/index.ts')],
+        }
+      );
+
+      const message =
+        'Projects cannot be imported by a relative or absolute path, and must begin with a npm scope';
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toEqual(message);
+      expect(failures[1].message).toEqual(message);
+    });
+
+    it('should not error for require() with non-string arguments', () => {
+      const failures = runRule(
+        {},
+        `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+        `
+          const name = '../../other';
+          require(name);
+          require(\`\${name}\`);
+        `,
+        {
+          nodes: {
+            mylibName: {
+              name: 'mylibName',
+              type: 'lib',
+              data: {
+                root: 'libs/mylib',
+                tags: [],
+                implicitDependencies: [],
+                targets: {},
+              },
+            },
+            otherName: {
+              name: 'otherName',
+              type: 'lib',
+              data: {
+                root: 'libs/other',
+                tags: [],
+                implicitDependencies: [],
+                targets: {},
+              },
+            },
+          },
+          dependencies: {},
+        },
+        {
+          mylibName: [createFile(`libs/mylib/src/main.ts`)],
+          otherName: [createFile('libs/other/src/index.ts')],
+        }
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
     it('should error when relatively importing the src directory of another library', () => {
       const failures = runRule(
         {},

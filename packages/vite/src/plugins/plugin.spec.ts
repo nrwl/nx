@@ -46,6 +46,7 @@ describe('@nx/vite/plugin', () => {
       tempFs.createFileSync('vite.config.ts', '');
       tempFs.createFileSync('index.html', '');
       tempFs.createFileSync('package.json', '{}');
+      tempFs.createFileSync('package-lock.json', '{}');
     });
 
     afterEach(() => {
@@ -213,7 +214,7 @@ describe('@nx/vite/plugin', () => {
       ]);
       expect(
         nodes[0][1].projects['.'].targets.typecheck.syncGenerators
-      ).toEqual(['@nx/js:typescript-sync', '@nx/js:deps-sync']);
+      ).toEqual(['@nx/js:typescript-sync']);
     });
 
     it('should infer the sync generator when using TS solution setup', async () => {
@@ -234,11 +235,10 @@ describe('@nx/vite/plugin', () => {
 
       expect(nodes[0][1].projects['.'].targets.build.syncGenerators).toEqual([
         '@nx/js:typescript-sync',
-        '@nx/js:deps-sync',
       ]);
       expect(
         nodes[0][1].projects['.'].targets.typecheck.syncGenerators
-      ).toEqual(['@nx/js:typescript-sync', '@nx/js:deps-sync']);
+      ).toEqual(['@nx/js:typescript-sync']);
     });
   });
 
@@ -262,6 +262,7 @@ describe('@nx/vite/plugin', () => {
       );
       tempFs.createFileSync('my-app/vite.config.ts', '');
       tempFs.createFileSync('my-app/index.html', '');
+      tempFs.createFileSync('package-lock.json', '{}');
     });
 
     afterEach(() => {
@@ -346,6 +347,7 @@ describe('@nx/vite/plugin', () => {
         JSON.stringify({ name: 'my-lib' })
       );
       tempFs.createFileSync('my-lib/vite.config.ts', '');
+      tempFs.createFileSync('package-lock.json', '{}');
 
       const nodes = await createNodesFunction(
         ['my-lib/vite.config.ts'],
@@ -389,6 +391,7 @@ describe('@nx/vite/plugin', () => {
         JSON.stringify({ name: 'my-lib' })
       );
       tempFs.createFileSync('my-lib/vite.config.ts', '');
+      tempFs.createFileSync('package-lock.json', '{}');
 
       const nodes = await createNodesFunction(
         ['my-lib/vite.config.ts'],

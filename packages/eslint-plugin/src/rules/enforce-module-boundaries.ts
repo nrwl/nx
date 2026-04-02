@@ -255,25 +255,14 @@ export default ESLintUtils.RuleCreator(
       );
 
     function run(
+      imp: string,
       node:
         | TSESTree.ImportDeclaration
         | TSESTree.ImportExpression
         | TSESTree.ExportAllDeclaration
         | TSESTree.ExportNamedDeclaration
+        | TSESTree.CallExpression
     ) {
-      // Ignoring ExportNamedDeclarations like:
-      // export class Foo {}
-      if (!node.source) {
-        return;
-      }
-
-      // accept only literals because template literals have no value
-      if (node.source.type !== AST_NODE_TYPES.Literal) {
-        return;
-      }
-
-      const imp = node.source.value as string;
-
       // whitelisted import
       if (allow.some((a) => matchImportWithWildcard(a, imp))) {
         return;
@@ -649,7 +638,9 @@ export default ESLintUtils.RuleCreator(
       }
 
       // if we import a library using loadChildren, we should not import it using es6imports
+      // this check only applies to ES import/export statements, not require() calls
       if (
+        node.type !== AST_NODE_TYPES.CallExpression &&
         !checkDynamicDependenciesExceptions.some((a) =>
           matchImportWithWildcard(a, imp)
         ) &&
@@ -794,18 +785,79 @@ export default ESLintUtils.RuleCreator(
       }
     }
 
+    function getImportFromSourceNode(
+      node:
+        | TSESTree.ImportDeclaration
+        | TSESTree.ImportExpression
+        | TSESTree.ExportAllDeclaration
+        | TSESTree.ExportNamedDeclaration
+    ): string | undefined {
+      if (!node.source) {
+        return undefined;
+      }
+      if (node.source.type !== AST_NODE_TYPES.Literal) {
+        return undefined;
+      }
+      return node.source.value as string;
+    }
+
+    function getImportFromRequireCall(
+      node: TSESTree.CallExpression
+    ): string | undefined {
+      const callee = node.callee;
+      const isRequire =
+        callee.type === AST_NODE_TYPES.Identifier && callee.name === 'require';
+      const isRequireResolve =
+        callee.type === AST_NODE_TYPES.MemberExpression &&
+        callee.object.type === AST_NODE_TYPES.Identifier &&
+        callee.object.name === 'require' &&
+        callee.property.type === AST_NODE_TYPES.Identifier &&
+        callee.property.name === 'resolve';
+
+      if (!isRequire && !isRequireResolve) {
+        return undefined;
+      }
+
+      const arg = node.arguments[0];
+      if (
+        arg?.type === AST_NODE_TYPES.Literal &&
+        typeof arg.value === 'string'
+      ) {
+        return arg.value;
+      }
+      return undefined;
+    }
+
     return {
       ImportDeclaration(node: TSESTree.ImportDeclaration) {
-        run(node);
+        const imp = getImportFromSourceNode(node);
+        if (imp !== undefined) {
+          run(imp, node);
+        }
       },
       ImportExpression(node: TSESTree.ImportExpression) {
-        run(node);
+        const imp = getImportFromSourceNode(node);
+        if (imp !== undefined) {
+          run(imp, node);
+        }
       },
       ExportAllDeclaration(node: TSESTree.ExportAllDeclaration) {
-        run(node);
+        const imp = getImportFromSourceNode(node);
+        if (imp !== undefined) {
+          run(imp, node);
+        }
       },
       ExportNamedDeclaration(node: TSESTree.ExportNamedDeclaration) {
-        run(node);
+        const imp = getImportFromSourceNode(node);
+        if (imp !== undefined) {
+          run(imp, node);
+        }
+      },
+      CallExpression(node: TSESTree.CallExpression) {
+        const imp = getImportFromRequireCall(node);
+        if (imp !== undefined) {
+          run(imp, node);
+        }
       },
     };
   },

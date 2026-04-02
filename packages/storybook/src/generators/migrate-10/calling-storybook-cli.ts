@@ -25,7 +25,7 @@ export function callUpgrade(schema: Schema): 1 | Buffer {
       } upgrade ${schema.autoAcceptAllPrompts ? '--yes' : ''}`,
       {
         stdio: [0, 1, 2],
-        windowsHide: false,
+        windowsHide: true,
       }
     );
 

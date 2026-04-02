@@ -90,7 +90,7 @@ export async function runPluginInitGenerator(
   runNxSync(command, {
     stdio: [0, 1, 2],
     cwd: repoRoot,
-    windowsHide: false,
+    windowsHide: true,
     packageManagerCommand: pmc,
   });
 }

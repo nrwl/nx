@@ -28,7 +28,7 @@ export function startLocalRegistry({
   }
   return new Promise<() => void>((resolve, reject) => {
     const childProcess = fork(
-      require.resolve('nx'),
+      require.resolve('nx/bin/nx'),
       [
         ...`run ${localRegistryTarget} --location none --clear ${
           clearStorage ?? true
@@ -58,7 +58,7 @@ export function startLocalRegistry({
         execSync(
           `npm config set //${listenAddress}:${port}/:_authToken "${authToken}" --ws=false`,
           {
-            windowsHide: false,
+            windowsHide: true,
           }
         );
 
@@ -78,7 +78,7 @@ export function startLocalRegistry({
           execSync(
             `npm config delete //${listenAddress}:${port}/:_authToken --ws=false`,
             {
-              windowsHide: false,
+              windowsHide: true,
             }
           );
         });

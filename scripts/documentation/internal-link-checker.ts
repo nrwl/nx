@@ -3,7 +3,7 @@ import { XMLParser } from 'fast-xml-parser';
 import * as glob from 'glob';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import * as parseLinks from 'parse-markdown-links';
+import parseLinks from 'parse-markdown-links';
 
 const siteUrl = process.env.NX_DEV_URL || 'https://nx.dev';
 
@@ -145,7 +145,7 @@ const documentLinks = extractAllLinks(join(workspaceRoot, 'docs'));
 
 // Read Next.js sitemap URLs
 const nextjsSitemapUrls = readSiteMapIndex(
-  join(workspaceRoot, 'dist/nx-dev/nx-dev/public/'),
+  join(workspaceRoot, 'nx-dev/nx-dev/public/'),
   'sitemap.xml'
 ).flatMap((path) => readSiteMapLinks(path));
 console.log(nextjsSitemapUrls.length + ' URLs found in Next.js sitemap');

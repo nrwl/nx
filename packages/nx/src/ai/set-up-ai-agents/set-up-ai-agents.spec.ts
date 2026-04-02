@@ -9,6 +9,19 @@ import * as packageJsonUtils from '../../utils/package-json';
 import * as cloneModule from '../clone-ai-config-repo';
 import * as fs from 'fs';
 
+jest.mock('fs', () => {
+  const actual = jest.requireActual('fs');
+  return {
+    ...actual,
+    existsSync: jest
+      .fn()
+      .mockImplementation((...args: any[]) => actual.existsSync(...args)),
+    readFileSync: jest
+      .fn()
+      .mockImplementation((...args: any[]) => actual.readFileSync(...args)),
+  };
+});
+
 describe('setup-ai-agents generator', () => {
   let tree: Tree;
   let readModulePackageJsonSpy: jest.SpyInstance;
@@ -612,6 +625,88 @@ describe('setup-ai-agents generator', () => {
         const content = tree.read('CUSTOM-GEMINI.md')?.toString();
         expect(content).toContain('Custom Gemini configuration');
         expect(content).toContain('Nx');
+      });
+
+      it('should delete .gemini/skills that also exist in .agents/skills', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['gemini'],
+        };
+
+        // Simulate shared .agents/skills (the new location)
+        tree.write(
+          '.agents/skills/nx-workspace/SKILL.md',
+          '# Nx Workspace Skill'
+        );
+        tree.write(
+          '.agents/skills/nx-generate/SKILL.md',
+          '# Nx Generate Skill'
+        );
+
+        // Simulate legacy .gemini/skills with matching + user-created skills
+        tree.write(
+          '.gemini/skills/nx-workspace/skill.md',
+          '# Legacy Nx Workspace'
+        );
+        tree.write(
+          '.gemini/skills/nx-generate/skill.md',
+          '# Legacy Nx Generate'
+        );
+        tree.write(
+          '.gemini/skills/my-custom-skill/skill.md',
+          '# My Custom Skill'
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        // Migrated skills should be deleted
+        expect(tree.exists('.gemini/skills/nx-workspace')).toBe(false);
+        expect(tree.exists('.gemini/skills/nx-generate')).toBe(false);
+        // User-created skill should be preserved
+        expect(tree.exists('.gemini/skills/my-custom-skill/skill.md')).toBe(
+          true
+        );
+        // Other .gemini files should still exist
+        expect(tree.exists('.gemini/settings.json')).toBe(true);
+      });
+
+      it('should not delete .gemini/skills when .agents/skills does not exist', async () => {
+        // Mock getAiConfigRepoPath to fail so .agents/skills is not created
+        const spy = jest
+          .spyOn(cloneModule, 'getAiConfigRepoPath')
+          .mockImplementation(() => {
+            throw new Error('no network');
+          });
+
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['gemini'],
+        };
+
+        // Only legacy skills, no shared .agents/skills
+        tree.write(
+          '.gemini/skills/nx-workspace/skill.md',
+          '# Legacy Nx Workspace'
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        // Should be preserved since there's no .agents/skills to compare against
+        expect(tree.exists('.gemini/skills/nx-workspace/skill.md')).toBe(true);
+
+        spy.mockRestore();
+      });
+
+      it('should not error when .gemini/skills does not exist', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['gemini'],
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        expect(tree.exists('.gemini/skills')).toBe(false);
+        expect(tree.exists('.gemini/settings.json')).toBe(true);
       });
     });
 

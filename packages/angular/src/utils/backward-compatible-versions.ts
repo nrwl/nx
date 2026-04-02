@@ -47,6 +47,7 @@ export const backwardCompatibleVersions: VersionMap = {
     webpackMergeVersion: '^5.8.0',
     vitestVersion: '^3.1.1',
     jsdomVersion: '~22.1.0',
+    oxcProjectRuntimeVersion: '^0.115.0',
   },
   19: {
     angularVersion: '~19.2.0',
@@ -79,5 +80,6 @@ export const backwardCompatibleVersions: VersionMap = {
     webpackMergeVersion: '^5.8.0',
     vitestVersion: '^3.1.1',
     jsdomVersion: '~22.1.0',
+    oxcProjectRuntimeVersion: '^0.115.0',
   },
 };

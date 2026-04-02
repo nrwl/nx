@@ -2,8 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "es2021", "esnext"],
-    "outDir": "../../dist/nx-dev/nx-dev",
-    "tsBuildInfoFile": "../../dist/nx-dev/nx-dev/tsconfig.tsbuildinfo",
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
     "jsx": "preserve",
     "allowJs": true,
     "esModuleInterop": true,
@@ -34,9 +33,8 @@
     "**/*.tsx",
     "next-env.d.ts",
     ".next/types/**/*.ts",
-    "../../dist/nx-dev/nx-dev/.next/types/**/*.ts",
     "public/documentation/**/*.json",
-    "dist/nx-dev/nx-dev/.next/types/**/*.ts"
+    "../../nx-dev/nx-dev/.next/types/**/*.ts"
   ],
   "references": [
     {

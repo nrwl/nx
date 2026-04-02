@@ -11,7 +11,7 @@ Nx Cloud comes with a built-in feature called [Nx Agents](/docs/features/ci-feat
 In this lesson we're going to update the existing CI configuration to enable Nx Agents. Which mostly can be done by adding the following line:
 
 ```plaintext
-nx-cloud start-ci-run --distribute-on="5 linux-medium-js"
+nx start-ci-run --distribute-on="5 linux-medium-js"
 ```
 
 ## Relevant Links

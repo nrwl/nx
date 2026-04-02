@@ -2469,7 +2469,7 @@ Explore how Nx Cloud can help your pull request get to green faster with self-he
 
 You can copy the example GitHub Action workflow file and place it in the `.github/workflows/ci.yml` directory of your repository. This workflow will run the `lint`, `test`, and `build` tasks for all projects in your repository whenever a pull request is opened or updated.
 
-The `npx nx-cloud fix-ci` command that is already included in your GitHub Actions workflow (`github/workflows/ci.yml`) is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
+The `npx nx fix-ci` command that is already included in your GitHub Actions workflow (`github/workflows/ci.yml`) is responsible for enabling self-healing CI and will automatically suggest fixes to your failing tasks.
 
 ```yaml {% meta="{34,35}" %}
 # .github/workflows/ci.yml
@@ -2505,7 +2505,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
       - run: npx nx run-many -t lint test build
-      - run: npx nx-cloud fix-ci
+      - run: npx nx fix-ci
         if: always()
 ```
 

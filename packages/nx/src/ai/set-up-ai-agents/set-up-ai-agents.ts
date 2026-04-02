@@ -42,6 +42,7 @@ import {
   NormalizedSetupAiAgentsGeneratorSchema,
   SetupAiAgentsGeneratorSchema,
 } from './schema';
+import { handleImport } from '../../utils/handle-import';
 
 export type ModificationResults = {
   messages: CLINoteMessageConfig[];
@@ -109,7 +110,7 @@ export async function setupAiAgentsGenerator(
       'src/ai/set-up-ai-agents/set-up-ai-agents.js'
     );
 
-    const module = await import(modulePath);
+    const module = await handleImport(modulePath);
     const setupAiAgentsGeneratorResult = await module.setupAiAgentsGenerator(
       tree,
       normalizedOptions,
@@ -276,11 +277,24 @@ export async function setupAiAgentsGeneratorImpl(
   if (aiConfigRepoPath) {
     const repoPath = aiConfigRepoPath;
 
+    // Shared skills directory used by codex, cursor, and gemini
+    if (hasAgent('codex') || hasAgent('cursor') || hasAgent('gemini')) {
+      const sharedSkillsSrc = join(repoPath, 'generated/.agents');
+      if (existsSync(sharedSkillsSrc)) {
+        generateFiles(
+          tree,
+          sharedSkillsSrc,
+          join(options.directory, '.agents'),
+          {}
+        );
+      }
+    }
+
+    // Agent-specific directories (commands, agents, config)
     const agentDirs: { agent: Agent; src: string; dest: string }[] = [
       { agent: 'opencode', src: 'generated/.opencode', dest: '.opencode' },
       { agent: 'copilot', src: 'generated/.github', dest: '.github' },
       { agent: 'cursor', src: 'generated/.cursor', dest: '.cursor' },
-      { agent: 'codex', src: 'generated/.agents', dest: '.agents' },
       {
         agent: 'codex',
         src: 'generated/.codex/agents',
@@ -294,6 +308,21 @@ export async function setupAiAgentsGeneratorImpl(
         const srcPath = join(repoPath, src);
         if (existsSync(srcPath)) {
           generateFiles(tree, srcPath, join(options.directory, dest), {});
+        }
+      }
+    }
+  }
+
+  // Clean up legacy .gemini/skills that have been migrated to shared .agents/skills.
+  // Only delete skills that exist in both locations to preserve user-created skills.
+  if (hasAgent('gemini')) {
+    const geminiSkillsDir = join(options.directory, '.gemini', 'skills');
+    const sharedSkillsDir = join(options.directory, '.agents', 'skills');
+    if (tree.exists(geminiSkillsDir) && tree.exists(sharedSkillsDir)) {
+      const sharedSkills = new Set(tree.children(sharedSkillsDir));
+      for (const skill of tree.children(geminiSkillsDir)) {
+        if (sharedSkills.has(skill)) {
+          tree.delete(join(geminiSkillsDir, skill));
         }
       }
     }

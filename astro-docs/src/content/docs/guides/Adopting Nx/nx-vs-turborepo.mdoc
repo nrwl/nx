@@ -225,7 +225,7 @@ Both tools offer code generation, but the depth differs significantly.
 
 Turborepo provides `turbo gen`, a thin wrapper around [Plop.js](https://plopjs.com/). It can scaffold new workspaces and create files from Handlebars templates, but it's limited to template-based file creation and simple string append/prepend operations. There's no AST-level code modification, no awareness of the project graph, and no migration/codemod system.
 
-Nx generators are built on top of [Nx Devkit](/docs/nx-api/devkit), a full programmatic API for workspace manipulation. Generators can read and modify the project graph, perform AST-level TypeScript transforms, and compose with other generators. You can create [local workspace generators](/docs/features/generate-code#creating-custom-generators) that encode your team's specific patterns.
+Nx generators are built on top of [Nx Devkit](/docs/extending-nx/intro), a full programmatic API for workspace manipulation. Generators can read and modify the project graph, perform AST-level TypeScript transforms, and compose with other generators. You can create [local workspace generators](/docs/features/generate-code#creating-custom-generators) that encode your team's specific patterns.
 
 The real value isn't raw scaffolding, AI can do that too. It's deterministic, convention-aware generation. **AI agents can invoke your generators to produce code matching your patterns from the start.** This is faster and more token-efficient than generating everything from scratch.
 

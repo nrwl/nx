@@ -149,6 +149,10 @@ the JSON report.
 Check what your tasks currently declare before enabling sandboxing.
 Use `nx show target` to inspect a specific target's resolved inputs and outputs:
 
+{% aside type="caution" title="Nx 22.6+ Required" %}
+The `--inputs` and `--outputs` flags for `nx show target` require Nx 22.6 or later.
+{% /aside %}
+
 ```shell
 nx show target <project>:<target> --inputs --outputs
 ```

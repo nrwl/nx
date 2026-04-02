@@ -1,5 +1,5 @@
 import { TasksRunner, TaskStatus } from './tasks-runner';
-import { getThreadCount, TaskOrchestrator } from './task-orchestrator';
+import { getThreadPoolSize, TaskOrchestrator } from './task-orchestrator';
 import { TaskHasher } from '../hasher/task-hasher';
 import { LifeCycle } from './life-cycle';
 import { ProjectGraph } from '../config/project-graph';
@@ -122,7 +122,7 @@ export const defaultTasksRunner: TasksRunner<
     daemon: DaemonClient;
   }
 ): Promise<{ [id: string]: TaskStatus }> => {
-  const threadCount = getThreadCount(options, context.taskGraph);
+  const { total: threadCount } = getThreadPoolSize(options, context.taskGraph);
   await options.lifeCycle.startCommand(threadCount);
   try {
     return await runAllTasks(options, context);

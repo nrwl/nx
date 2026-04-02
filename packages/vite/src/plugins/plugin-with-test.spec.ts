@@ -1,5 +1,6 @@
 import { CreateNodesContextV2 } from '@nx/devkit';
 import { createNodes, createNodesV2 } from './plugin';
+import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 
 // This will only create test targets since no build targets are defined in vite.config.ts
 
@@ -17,7 +18,9 @@ describe('@nx/vite/plugin with test node', () => {
   let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContextV2;
   describe('root project', () => {
+    let tempFs: TempFs;
     beforeEach(async () => {
+      tempFs = new TempFs('vite-with-test-plugin');
       context = {
         nxJsonConfiguration: {
           // These defaults should be overridden by plugin
@@ -32,12 +35,28 @@ describe('@nx/vite/plugin with test node', () => {
             production: ['!{projectRoot}/**/*.spec.ts'],
           },
         },
-        workspaceRoot: '',
+        workspaceRoot: tempFs.tempDir,
       };
+      tempFs.createFileSync('vite.config.ts', '');
+      tempFs.createFileSync(
+        'package.json',
+        JSON.stringify({ name: 'vite', workspaces: ['*'] })
+      );
+      tempFs.createFileSync('package-lock.json', '{}');
+      tempFs.createFileSync('tsconfig.lib.json', '{}');
+      tempFs.createFileSync(
+        'tsconfig.json',
+        JSON.stringify({ extends: './tsconfig.base.json', files: [] })
+      );
+      tempFs.createFileSync(
+        'tsconfig.base.json',
+        JSON.stringify({ compilerOptions: { composite: true } })
+      );
     });
 
     afterEach(() => {
       jest.resetModules();
+      tempFs.cleanup();
     });
 
     it('should create nodes - with test too', async () => {

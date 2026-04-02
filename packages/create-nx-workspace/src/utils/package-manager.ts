@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, sep } from 'node:path';
+import { CnwError } from './error-utils';
 
 /*
  * Because we don't want to depend on @nx/workspace (to speed up the workspace creation)
@@ -261,13 +262,20 @@ export function getPackageManagerVersion(
   if (pmVersionCache.has(packageManager)) {
     return pmVersionCache.get(packageManager) as string;
   }
-  const version = execSync(`${packageManager} --version`, {
-    cwd,
-    encoding: 'utf-8',
-    windowsHide: false,
-  }).trim();
-  pmVersionCache.set(packageManager, version);
-  return version;
+  try {
+    const version = execSync(`${packageManager} --version`, {
+      cwd,
+      encoding: 'utf-8',
+      windowsHide: true,
+    }).trim();
+    pmVersionCache.set(packageManager, version);
+    return version;
+  } catch {
+    throw new CnwError(
+      'INVALID_PACKAGE_MANAGER',
+      `Package manager '${packageManager}' is not installed or not found in PATH.`
+    );
+  }
 }
 
 /**
