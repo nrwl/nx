@@ -16,11 +16,10 @@
       "outputs": ["{projectRoot}/README.md"]
     },
     "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
+      "executor": "@nx/workspace-plugin:copy-assets",
       "outputs": ["{options.outputPath}"],
       "dependsOn": ["build-base", "^mvn:package"],
       "options": {
-        "tsConfig": "./tsconfig.lib.json",
         "outputPath": "packages/maven/dist",
         "assets": [
           {
