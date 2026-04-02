@@ -4355,9 +4355,6 @@ importers:
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
-      nx:
-        specifier: 22.7.0-beta.9
-        version: 22.7.0-beta.9(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18))
       semver:
         specifier: 'catalog:'
         version: 7.7.4
