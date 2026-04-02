@@ -1,16 +1,16 @@
-import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
-    getProjects,
-    readJson,
-    readProjectConfiguration,
-    Tree,
-    updateJson,
+  getProjects,
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
   writeJson,
 } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
-import { Schema } from './schema';
-import { applicationGenerator } from './application';
 import { join } from 'path';
+import { applicationGenerator } from './application';
+import { Schema } from './schema';
 
 describe('app', () => {
   let tree: Tree;
@@ -1342,6 +1342,36 @@ describe('app', () => {
       });
 
       expect(tree.exists(`${name}/vitest.config.mts`)).toBeTruthy();
+      expect(tree.read(`${name}/vitest.config.mts`, 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import react from '@vitejs/plugin-react-swc';
+        import { defineConfig } from 'vite';
+        import react from '@vitejs/plugin-react';
+        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+        export default defineConfig(() => ({
+          root: __dirname,
+          cacheDir: '../node_modules/.vite/myapp',
+          plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+          // Uncomment this if you are using workers.
+          // worker: {
+          //   plugins: () => [ nxViteTsPaths() ],
+          // },
+          test: {
+            name: 'myapp',
+            watch: false,
+            globals: true,
+            environment: 'jsdom',
+            include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            reporters: ['default'],
+            coverage: {
+              reportsDirectory: '../coverage/myapp',
+              provider: 'v8' as const,
+            },
+          },
+        }));
+        "
+      `);
       expect(tree.exists(`${name}/jest.config.cts`)).toBeFalsy();
       expect(tree.exists(`${name}/jest.config.ts`)).toBeFalsy();
     });
@@ -1366,9 +1396,7 @@ describe('app', () => {
       });
 
       expect(
-        readJson(tree, 'package.json').devDependencies[
-          '@testing-library/react'
-        ]
+        readJson(tree, 'package.json').devDependencies['@testing-library/react']
       ).toBeDefined();
     });
   });
