@@ -130,11 +130,9 @@ function getNxEnvVariablesForTask(
     env.NX_TERMINAL_CAPTURE_STDERR = 'true';
   }
 
-  // Track the chain of task invocations across nested Nx processes for loop detection.
-  // Each nested Nx process inherits this env var, allowing us to detect when a task
-  // re-invokes itself (directly or indirectly) before it causes an infinite loop.
-  const existingChain = process.env.NX_TASK_INVOCATION_CHAIN;
-  const updatedChain = `${existingChain ?? '$0'} -> ${task.id}`;
+  // Pass the root Nx process PID to nested processes for DB-based loop detection.
+  // The root PID is used as a key in the task_invocations table to track which tasks
+  // have been invoked across nested Nx processes.
 
   return {
     ...getNxEnvVariablesForForkedProcess(
@@ -147,7 +145,9 @@ function getNxEnvVariablesForTask(
     ...env,
     // Ensure the TUI does not get spawned within the TUI if ever tasks invoke Nx again
     NX_TUI: 'false',
-    NX_TASK_INVOCATION_CHAIN: updatedChain,
+    // tracks the root PID for child nx tasks, used to verify nx is infinitely recursing through the same tasks
+    NX_INVOCATION_ROOT_PID:
+      process.env.NX_INVOCATION_ROOT_PID ?? String(process.pid),
   };
 }
 

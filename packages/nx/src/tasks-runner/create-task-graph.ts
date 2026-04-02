@@ -14,11 +14,13 @@ import { TargetDefaults, TargetDependencies } from '../config/nx-json';
 import { output } from '../utils/output';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { findCycles } from './task-graph-utils';
+import { TaskInvocationTracker } from '../native';
 
 const DUMMY_TASK_TARGET = '__nx_dummy_task__';
 
 export class ProcessTasks {
   private readonly seen = new Set<string>();
+  private readonly registeredInvocations = new Set<string>();
   readonly tasks: { [id: string]: Task } = {};
   readonly dependencies: { [k: string]: string[] } = {};
   readonly continuousDependencies: { [k: string]: string[] } = {};
@@ -26,7 +28,8 @@ export class ProcessTasks {
 
   constructor(
     private readonly extraTargetDependencies: TargetDependencies,
-    private readonly projectGraph: ProjectGraph
+    private readonly projectGraph: ProjectGraph,
+    private readonly taskInvocationTracker?: TaskInvocationTracker
   ) {
     const allTargetNames = new Set<string>();
     for (const projectName in projectGraph.nodes) {
@@ -134,6 +137,14 @@ export class ProcessTasks {
     configuration: string,
     overrides: Record<string, unknown>
   ): void {
+    if (
+      this.taskInvocationTracker &&
+      !this.registeredInvocations.has(task.id)
+    ) {
+      this.registeredInvocations.add(task.id);
+      this.detectTaskInvocationLoop(task);
+    }
+
     const seenKey = `${task.id}-${projectUsedToDeriveDependencies}`;
     if (this.seen.has(seenKey)) {
       return;
@@ -422,6 +433,38 @@ export class ProcessTasks {
       ? configuration
       : defaultConfiguration;
   }
+
+  /**
+   * Registers a task invocation and checks for loops across nested Nx processes.
+   * Uses the task_invocations DB table keyed by root PID. registerTask() throws
+   * on unique constraint violation when a parent Nx process already registered
+   * this task — indicating an infinite loop.
+   */
+  private detectTaskInvocationLoop(task: Task): void {
+    try {
+      this.taskInvocationTracker.registerTask(process.pid, task.id);
+    } catch {
+      // Unique constraint violation — task already registered by parent process
+      const chain = this.taskInvocationTracker.getInvocationChain();
+      const chainDisplay = chain.map((r) => r.taskId).join(' -> ');
+
+      output.error({
+        title: 'Recursive task invocation detected',
+        bodyLines: [
+          `Nx detected a recursive loop of task invocations:`,
+          ``,
+          `  ${chainDisplay} -> ${task.id}`,
+          ``,
+          `Task "${task.id}" was already invoked by a parent Nx process in this chain.`,
+          `This typically happens when a task's command (e.g., "nx ${task.target.target} ${task.target.project}")`,
+          `triggers a chain of tasks that eventually re-invokes itself.`,
+          ``,
+          `To fix this, review the command configuration for the tasks in the chain above.`,
+        ],
+      });
+      process.exit(1);
+    }
+  }
 }
 
 export function createTaskGraph(
@@ -431,9 +474,14 @@ export function createTaskGraph(
   targets: string[],
   configuration: string | undefined,
   overrides: Record<string, unknown>,
-  excludeTaskDependencies: boolean = false
+  excludeTaskDependencies: boolean = false,
+  taskInvocationTracker?: TaskInvocationTracker
 ): TaskGraph {
-  const p = new ProcessTasks(extraTargetDependencies, projectGraph);
+  const p = new ProcessTasks(
+    extraTargetDependencies,
+    projectGraph,
+    taskInvocationTracker
+  );
   const roots = p.processTasks(
     projectNames,
     targets,

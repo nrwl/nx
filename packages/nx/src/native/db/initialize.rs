@@ -2,6 +2,7 @@ use crate::native::db::connection::NxDbConnection;
 use crate::native::tasks::details::SCHEMA as TASK_DETAILS_SCHEMA;
 use crate::native::tasks::running_tasks_service::SCHEMA as RUNNING_TASKS_SCHEMA;
 use crate::native::tasks::task_history::SCHEMA as TASK_HISTORY_SCHEMA;
+use crate::native::tasks::task_invocation_tracker::SCHEMA as TASK_INVOCATIONS_SCHEMA;
 use rusqlite::vtab::array;
 use rusqlite::{Connection, OpenFlags};
 use std::fs::{File, remove_file, write};
@@ -197,6 +198,7 @@ fn create_all_tables(c: &mut NxDbConnection) -> anyhow::Result<()> {
         // Order matters: tables with no FK dependencies first
         conn.execute_batch(TASK_DETAILS_SCHEMA)?;
         conn.execute_batch(RUNNING_TASKS_SCHEMA)?;
+        conn.execute_batch(TASK_INVOCATIONS_SCHEMA)?;
 
         // Metadata table (used by telemetry for session tracking)
         conn.execute_batch(

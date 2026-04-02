@@ -19,6 +19,7 @@ import {
   parseTaskStatus,
   RunningTasksService,
   TaskDetails,
+  TaskInvocationTracker,
 } from '../native';
 import { NxArgs } from '../utils/command-line-utils';
 import { getLocalDbConnection } from '../utils/db-connection';
@@ -84,6 +85,12 @@ export class TaskOrchestrator {
 
   private runningTasksService = !IS_WASM
     ? new RunningTasksService(getLocalDbConnection())
+    : null;
+  private taskInvocationTracker = !IS_WASM
+    ? new TaskInvocationTracker(
+        getLocalDbConnection(),
+        Number(process.env.NX_INVOCATION_ROOT_PID ?? process.pid)
+      )
     : null;
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
@@ -643,10 +650,6 @@ export class TaskOrchestrator {
     const taskEntries = Object.entries(batch.taskGraph.tasks);
     const tasks = taskEntries.map(([, task]) => task);
 
-    for (const task of tasks) {
-      this.detectTaskInvocationLoop(task);
-    }
-
     this.options.lifeCycle.registerRunningBatch?.(batch.id, {
       executorName: batch.executorName,
       taskIds: Object.keys(batch.taskGraph.tasks),
@@ -953,8 +956,6 @@ export class TaskOrchestrator {
     task: Task,
     groupId: number
   ): Promise<TaskResult> {
-    this.detectTaskInvocationLoop(task);
-
     // Wait for task to be processed
     const taskSpecificEnv = await this.processedTasks.get(task.id);
 
@@ -1229,8 +1230,6 @@ export class TaskOrchestrator {
   }
 
   async startContinuousTask(task: Task, groupId: number) {
-    this.detectTaskInvocationLoop(task);
-
     if (
       this.runningTasksService &&
       this.runningTasksService.getRunningTasks([task.id]).length
@@ -1486,6 +1485,7 @@ export class TaskOrchestrator {
       if (this.completedTasks.has(task.id)) continue;
 
       this.completedTasks.set(task.id, status);
+      this.taskInvocationTracker?.unregisterTask(task.id);
 
       if (this.tuiEnabled) {
         this.options.lifeCycle.setTaskStatus(
@@ -1530,40 +1530,6 @@ export class TaskOrchestrator {
   }
 
   //endregion Lifecycle
-
-  /**
-   * Checks whether this task has already been invoked by a parent Nx process,
-   * which would indicate an infinite loop of nested Nx invocations.
-   *
-   * The NX_TASK_INVOCATION_CHAIN env var accumulates task IDs (project:target[:configuration])
-   * across nested Nx processes. If the current task is already in the chain,
-   * we're in a loop.
-   */
-  private detectTaskInvocationLoop(task: Task): void {
-    const invocationChain = process.env.NX_TASK_INVOCATION_CHAIN;
-    if (!invocationChain) {
-      return;
-    }
-
-    const chainTasks = invocationChain.split(' -> ').slice(1); // Skip '$0'
-    if (chainTasks.includes(task.id)) {
-      output.error({
-        title: 'Recursive task invocation detected',
-        bodyLines: [
-          `Nx detected a recursive loop of task invocations:`,
-          ``,
-          `  ${invocationChain}`,
-          ``,
-          `Task "${task.id}" was already invoked by a parent Nx process in this chain.`,
-          `This typically happens when a task's command (e.g., "nx ${task.target.target} ${task.target.project}")`,
-          `triggers a chain of tasks that eventually re-invokes itself.`,
-          ``,
-          `To fix this, review the command configuration for the tasks in the chain above.`,
-        ],
-      });
-      process.exit(1);
-    }
-  }
 
   // region utils
 

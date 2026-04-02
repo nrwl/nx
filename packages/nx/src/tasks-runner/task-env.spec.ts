@@ -9,12 +9,12 @@ import {
   loadAndExpandDotEnvFile,
 } from './task-env';
 
-describe('NX_TASK_INVOCATION_CHAIN', () => {
+describe('NX_INVOCATION_ROOT_PID', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
     process.env = { ...originalEnv };
-    delete process.env.NX_TASK_INVOCATION_CHAIN;
+    delete process.env.NX_INVOCATION_ROOT_PID;
   });
 
   afterAll(() => {
@@ -39,7 +39,7 @@ describe('NX_TASK_INVOCATION_CHAIN', () => {
     } as any as Task;
   }
 
-  it('should set the chain to the task key when no existing chain exists', () => {
+  it('should set NX_INVOCATION_ROOT_PID to current process PID when no existing root PID', () => {
     const task = makeTask('workspace', 'dev');
     const env = getEnvVariablesForTask(
       task,
@@ -50,14 +50,12 @@ describe('NX_TASK_INVOCATION_CHAIN', () => {
       '',
       false
     );
-    expect(env.NX_TASK_INVOCATION_CHAIN).toMatchInlineSnapshot(
-      `"$0 -> workspace:dev"`
-    );
+    expect(env.NX_INVOCATION_ROOT_PID).toBe(String(process.pid));
   });
 
-  it('should append to the existing chain from a parent Nx process', () => {
-    process.env.NX_TASK_INVOCATION_CHAIN = '$0 -> workspace:dev';
-    const task = makeTask('workspace', 'watch');
+  it('should preserve NX_INVOCATION_ROOT_PID from parent Nx process', () => {
+    process.env.NX_INVOCATION_ROOT_PID = '12345';
+    const task = makeTask('workspace', 'dev');
     const env = getEnvVariablesForTask(
       task,
       {},
@@ -67,42 +65,7 @@ describe('NX_TASK_INVOCATION_CHAIN', () => {
       '',
       false
     );
-    expect(env.NX_TASK_INVOCATION_CHAIN).toMatchInlineSnapshot(
-      `"$0 -> workspace:dev -> workspace:watch"`
-    );
-  });
-
-  it('should include configuration in the chain when present', () => {
-    const task = makeTask('workspace', 'build', 'production');
-    const env = getEnvVariablesForTask(
-      task,
-      {},
-      'true',
-      false,
-      false,
-      null,
-      null
-    );
-    expect(env.NX_TASK_INVOCATION_CHAIN).toMatchInlineSnapshot(
-      `"$0 -> workspace:build:production"`
-    );
-  });
-
-  it('should accumulate deeply nested chains', () => {
-    process.env.NX_TASK_INVOCATION_CHAIN = '$0 -> a:build -> b:dev';
-    const task = makeTask('c', 'serve');
-    const env = getEnvVariablesForTask(
-      task,
-      {},
-      'true',
-      false,
-      false,
-      '',
-      false
-    );
-    expect(env.NX_TASK_INVOCATION_CHAIN).toMatchInlineSnapshot(
-      `"$0 -> a:build -> b:dev -> c:serve"`
-    );
+    expect(env.NX_INVOCATION_ROOT_PID).toBe('12345');
   });
 });
 

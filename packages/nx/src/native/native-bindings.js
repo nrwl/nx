@@ -591,6 +591,7 @@ module.exports.RunningTasksService = nativeBinding.RunningTasksService
 module.exports.RustPseudoTerminal = nativeBinding.RustPseudoTerminal
 module.exports.TaskDetails = nativeBinding.TaskDetails
 module.exports.TaskHasher = nativeBinding.TaskHasher
+module.exports.TaskInvocationTracker = nativeBinding.TaskInvocationTracker
 module.exports.Watcher = nativeBinding.Watcher
 module.exports.WorkspaceContext = nativeBinding.WorkspaceContext
 module.exports.BatchStatus = nativeBinding.BatchStatus
