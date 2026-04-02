@@ -17,11 +17,11 @@
       "cache": true,
       "inputs": ["{projectRoot}/**/*", "{workspaceRoot}/lorem.md"]
     },
-    "lint": {
-      "command": "mkdir -p {projectRoot}/lint-out && cp lorem.md {projectRoot}/lint-out/output.md",
+    "copy": {
+      "command": "mkdir -p {projectRoot}/copy-out && cp lorem.md {projectRoot}/copy-out/output.md",
       "cache": true,
       "inputs": ["{projectRoot}/**/*", "{workspaceRoot}/lorem.md"],
-      "outputs": ["{projectRoot}/lint-out"]
+      "outputs": ["{projectRoot}/copy-out"]
     }
   },
   "analytics": false,

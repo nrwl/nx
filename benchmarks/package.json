@@ -10,7 +10,7 @@
     "bench:version": "NX_NO_CLOUD=true hyperfine --show-output --setup 'nx reset' --warmup 1 --min-runs 10 --export-json results-version.json 'nx --version'",
     "bench:show-projects": "NX_NO_CLOUD=true hyperfine --show-output --setup 'nx reset' --warmup 1 --min-runs 5 --export-json results-show-projects.json 'nx show projects --tui=false'",
     "bench:cat-warm": "NX_NO_CLOUD=true hyperfine --show-output --setup 'nx reset' --warmup 1 --min-runs 5 --export-json results-cat-warm.json 'nx run-many -t cat --tui=false'",
-    "bench:lint-warm": "NX_NO_CLOUD=true hyperfine --show-output --setup 'nx reset' --warmup 1 --min-runs 5 --export-json results-lint-warm.json 'nx run-many -t lint --tui=false'",
+    "bench:copy-warm": "NX_NO_CLOUD=true hyperfine --show-output --setup 'nx reset' --warmup 1 --min-runs 5 --export-json results-copy-warm.json 'nx run-many -t copy --tui=false'",
     "disabled:bench:build-warm": "NX_NO_CLOUD=true hyperfine --show-output --setup 'nx reset' --warmup 1 --min-runs 5 --export-json results-build-warm.json 'nx run-many -t build --tui=true --tui-auto-exit'"
   },
   "nx": {
@@ -20,7 +20,7 @@
           "bench:version",
           "bench:show-projects",
           "bench:cat-warm",
-          "bench:lint-warm"
+          "bench:copy-warm"
         ]
       },
       "bench:version": {
@@ -41,7 +41,7 @@
         ],
         "parallelism": false
       },
-      "bench:lint-warm": {
+      "bench:copy-warm": {
         "dependsOn": [
           "^build"
         ],

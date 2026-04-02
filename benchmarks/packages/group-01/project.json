@@ -2,7 +2,7 @@
   "name": "group-01",
   "targets": {
     "build": {},
-    "lint": {},
+    "copy": {},
     "cat": {}
   }
 }

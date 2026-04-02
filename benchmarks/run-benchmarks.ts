@@ -76,7 +76,7 @@ function main() {
       'version',
       'show-projects',
       'cat-warm',
-      'lint-warm',
+      'copy-warm',
       'build-warm',
     ];
     const newBaseline: Baseline = {};
@@ -106,7 +106,7 @@ function main() {
     'version',
     'show-projects',
     'cat-warm',
-    'lint-warm',
+    'copy-warm',
     'build-warm',
   ];
 

@@ -3,5 +3,5 @@ node_modules
 results-*.json
 output.json
 **/dist
-**/lint-out
+**/copy-out
 baseline.json

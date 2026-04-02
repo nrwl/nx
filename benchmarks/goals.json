@@ -8,7 +8,7 @@
   "cat-warm": {
     "max": 0.3
   },
-  "lint-warm": {
+  "copy-warm": {
     "max": 1.0
   }
 }
