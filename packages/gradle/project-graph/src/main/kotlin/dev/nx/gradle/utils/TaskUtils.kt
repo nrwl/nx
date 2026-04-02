@@ -14,6 +14,7 @@ import org.gradle.api.internal.provider.ProviderInternal
 import org.gradle.api.internal.provider.TransformBackedProvider
 import org.gradle.api.internal.tasks.DefaultTaskDependency
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.bundling.AbstractArchiveTask
 
 /**
  * Process a task and convert it into target Going to populate:
@@ -147,6 +148,37 @@ fun getGradleFilesInputs(workspaceRoot: String): List<String> {
 }
 
 /**
+ * Infer file extensions produced/consumed by a task and its dependents using task type checks.
+ *
+ * Test and compile tasks consume .class + .jar from their dependencies.
+ * Compile dependents produce .class files. Archive dependents declare their extension (jar, war,
+ * etc).
+ *
+ * Works at configuration time without requiring files to exist on disk.
+ */
+fun inferExtensionsFromInputProperties(task: Task, dependentTasks: Set<Task>): Set<String> {
+  val extensions = mutableSetOf<String>()
+
+  if (task is org.gradle.api.tasks.testing.Test || task is org.gradle.api.tasks.compile.AbstractCompile) {
+    extensions.add("class")
+    extensions.add("jar")
+  }
+
+  dependentTasks.forEach { depTask ->
+    if (depTask is AbstractArchiveTask) {
+      try {
+        depTask.archiveExtension.get().takeIf { it.isNotEmpty() }?.let { extensions.add(it) }
+      } catch (_: Exception) {}
+    }
+    if (depTask is org.gradle.api.tasks.compile.AbstractCompile) {
+      extensions.add("class")
+    }
+  }
+
+  return extensions
+}
+
+/**
  * Parse task and get inputs for this task
  *
  * @param dependsOnTasks set of tasks this task depends on
@@ -228,6 +260,12 @@ private fun getInputsForTaskImpl(
           inputs.add(relativePath)
         }
       }
+    }
+
+    // Supplement with extensions inferred from Gradle metadata (handles clean builds where
+    // output directories exist but are empty, so file-based extension discovery misses them)
+    if (tasksToProcess.isNotEmpty()) {
+      dependentTaskOutputExtensions.addAll(inferExtensionsFromInputProperties(task, tasksToProcess))
     }
 
     // Add consolidated dependentTasksOutputFiles entries using glob patterns by extension
