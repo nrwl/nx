@@ -13,6 +13,7 @@ import '../../utils/perf-logging';
 import { nxVersion } from '../../utils/versions';
 import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { getPlugins } from '../../project-graph/plugins/get-plugins';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
 import {
   getInstalledNxVersion,
@@ -377,6 +378,7 @@ async function handleMessage(socket: Socket, data: string) {
     }
     if (shouldRecomputeGraph) {
       serverLogger.log('Graph recompute necessary due to env variable refresh');
+      forwardEnvToPluginWorkers(payload.env);
       triggerGraphRecomputation();
     }
   }
@@ -942,6 +944,22 @@ export async function startServer(): Promise<Server> {
     }
   });
 }
+function forwardEnvToPluginWorkers(env: Record<string, string>) {
+  getPlugins()
+    .then((plugins) => {
+      for (const plugin of plugins) {
+        plugin.setWorkerEnv?.(env)?.catch((e) => {
+          serverLogger.log(
+            `Failed to forward env to plugin worker "${plugin.name}": ${e.message}`
+          );
+        });
+      }
+    })
+    .catch(() => {
+      // Plugins may not be loaded yet — env will be picked up on next load
+    });
+}
+
 function serializeUnserializedResult(
   response: boolean | object,
   mode: 'json' | 'v8'
