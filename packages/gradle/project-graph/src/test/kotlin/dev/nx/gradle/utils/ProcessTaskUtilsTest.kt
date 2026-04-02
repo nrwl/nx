@@ -520,7 +520,8 @@ class ProcessTaskUtilsTest {
       val extensions = inferExtensionsFromInputProperties(compileJava, emptySet())
 
       assertTrue(extensions.contains("class"), "Expected 'class' extension, got $extensions")
-      assertFalse(extensions.contains("jar"), "Compile task alone should not infer 'jar', got $extensions")
+      assertFalse(
+          extensions.contains("jar"), "Compile task alone should not infer 'jar', got $extensions")
     }
 
     @Test

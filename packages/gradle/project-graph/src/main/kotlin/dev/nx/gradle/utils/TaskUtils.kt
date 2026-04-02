@@ -150,8 +150,8 @@ fun getGradleFilesInputs(workspaceRoot: String): List<String> {
 /**
  * Infer file extensions consumed by a task from its dependents' outputs using task type checks.
  *
- * Test tasks consume .class + .jar (compiled code and library jars on the test classpath).
- * Compile tasks consume .class from upstream compile tasks (e.g. compileTestKotlin → compileKotlin).
+ * Test tasks consume .class + .jar (compiled code and library jars on the test classpath). Compile
+ * tasks consume .class from upstream compile tasks (e.g. compileTestKotlin → compileKotlin).
  * Archive dependents declare their own extension (jar, war, etc).
  *
  * Works at configuration time without requiring files to exist on disk.
