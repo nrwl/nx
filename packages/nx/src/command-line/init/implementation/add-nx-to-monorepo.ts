@@ -10,9 +10,11 @@ import {
   createNxJsonFile,
   initCloud,
   runInstall,
+  setNeverConnectToCloud,
   updateGitIgnore,
 } from './utils';
 import { connectExistingRepoToNxCloudPrompt } from '../../nx-cloud/connect/connect-to-nx-cloud';
+import { MessageOptionKey } from '../../../utils/ab-testing';
 
 type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'> & {
   legacy?: boolean;
@@ -32,7 +34,7 @@ export async function addNxToMonorepo(
   let targetDefaults: string[];
   let cacheableOperations: string[];
   let scriptOutputs = {} as { [script: string]: string };
-  let useNxCloud: boolean;
+  let nxCloudChoice: MessageOptionKey;
 
   if (options.interactive && scripts.length > 0 && guided) {
     output.log({
@@ -84,16 +86,23 @@ export async function addNxToMonorepo(
       )[scriptName];
     }
 
-    useNxCloud =
-      options.nxCloud ?? (await connectExistingRepoToNxCloudPrompt());
+    nxCloudChoice =
+      options.nxCloud === true
+        ? 'yes'
+        : options.nxCloud === false
+          ? 'skip'
+          : await connectExistingRepoToNxCloudPrompt();
   } else {
     targetDefaults = [];
     cacheableOperations = options.cacheable ?? [];
-    useNxCloud =
-      options.nxCloud ??
-      (options.interactive
-        ? await connectExistingRepoToNxCloudPrompt()
-        : false);
+    nxCloudChoice =
+      options.nxCloud === true
+        ? 'yes'
+        : options.nxCloud === false
+          ? 'skip'
+          : options.interactive
+            ? await connectExistingRepoToNxCloudPrompt()
+            : 'skip';
   }
 
   createNxJsonFile(
@@ -109,9 +118,11 @@ export async function addNxToMonorepo(
   output.log({ title: '📦 Installing dependencies' });
   runInstall(repoRoot);
 
-  if (useNxCloud) {
+  if (nxCloudChoice === 'yes') {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
     await initCloud('nx-init-monorepo');
+  } else if (nxCloudChoice === 'never') {
+    setNeverConnectToCloud(repoRoot);
   }
 }
 
