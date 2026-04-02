@@ -7,7 +7,21 @@ import { workspaceRoot } from '../../../utils/workspace-root';
 import { RawGitCommit } from '../utils/git';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from './config';
 import { ReleaseGroupWithName } from './filter-release-groups';
-const fm = require('front-matter');
+const { load } = require('@zkochan/js-yaml');
+
+function parseFrontMatter(str: string): {
+  attributes: Record<string, string>;
+  body: string;
+} {
+  const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(str);
+  if (!match) {
+    return { attributes: {}, body: str };
+  }
+  return {
+    attributes: load(match[1]) || {},
+    body: match[2].replace(/^\r?\n/, ''),
+  };
+}
 
 export interface VersionPlanFile {
   absolutePath: string;
@@ -78,7 +92,7 @@ export async function readRawVersionPlans(): Promise<RawVersionPlan[]> {
     const versionPlanContent = readFileSync(filePath).toString();
     const versionPlanStats = await stat(filePath);
 
-    const parsedContent = fm(versionPlanContent);
+    const parsedContent = parseFrontMatter(versionPlanContent);
 
     /**
      * For convenience allow:
