@@ -2,6 +2,7 @@ import {
   CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
+  detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
   normalizePath,
@@ -36,7 +37,6 @@ import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { getInstalledJestMajorVersion } from '../utils/versions';
 
-const pmc = getPackageManagerCommand();
 const REPORTER_BUILTINS = new Set(['default', 'github-actions', 'summary']);
 
 export interface JestPluginOptions {
@@ -97,6 +97,10 @@ export const createNodes: CreateNodesV2<JestPluginOptions> = [
 
     options = normalizeOptions(options);
 
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
+
     const { roots: projectRoots, configFiles: validConfigFiles } =
       configFiles.reduce(
         (acc, configFile) => {
@@ -140,7 +144,8 @@ export const createNodes: CreateNodesV2<JestPluginOptions> = [
             projectRoot,
             options,
             context,
-            presetCache
+            presetCache,
+            pmc
           );
 
           const { targets, metadata } = targetsCache[hash];
@@ -225,7 +230,8 @@ async function buildJestTargets(
   projectRoot: string,
   options: JestPluginOptions,
   context: CreateNodesContextV2,
-  presetCache: Record<string, unknown>
+  presetCache: Record<string, unknown>,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<Pick<ProjectConfiguration, 'targets' | 'metadata'>> {
   const absConfigFilePath = resolve(context.workspaceRoot, configFilePath);
 

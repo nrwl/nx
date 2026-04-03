@@ -48,6 +48,7 @@ describe('@nx/webpack/plugin', () => {
       }));
       createNodesFunction = require('./plugin').createNodesV2[1];
     });
+    tempFs.createFileSync('package-lock.json', '{}');
   });
 
   afterEach(() => {
