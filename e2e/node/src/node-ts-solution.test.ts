@@ -60,8 +60,7 @@ describe('Node Applications', () => {
     await killPorts(port);
   }, 300_000);
 
-  // TODO(jack): fix and re-enable
-  xit('should be able to generate an express application', async () => {
+  it('should be able to generate an express application', async () => {
     const nodeapp = uniq('nodeapp');
     const nodelib = uniq('nodelib');
     const port = getRandomPort();
@@ -181,8 +180,7 @@ describe('Node Applications', () => {
     }
   }, 300_000);
 
-  // TODO(jack): fix and re-enable
-  xit('should be able to import a lib into a nest application', async () => {
+  it('should be able to import a lib into a nest application', async () => {
     const nestApp = uniq('nestapp');
     const nestLib = uniq('nestlib');
 
