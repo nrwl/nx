@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
+  getDependencyVersionFromPackageJson,
   joinPathFragments,
   Tree,
   updateJson,
@@ -34,7 +35,8 @@ export function addProjectDependencies(
     },
     esbuild: {
       '@nx/esbuild': nxVersion,
-      esbuild: esbuildVersion,
+      esbuild:
+        getDependencyVersionFromPackageJson(tree, 'esbuild') ?? esbuildVersion,
     },
   };
 

@@ -58,10 +58,21 @@ export const createNodes: CreateNodesV2<MavenPluginOptions> = [
 
       // If no cached data or cache is stale, run fresh Maven analysis
       if (!mavenData) {
-        mavenData = await runMavenAnalysis(context.workspaceRoot, {
-          ...opts,
-          verbose: isVerbose,
-        });
+        try {
+          mavenData = await runMavenAnalysis(context.workspaceRoot, {
+            ...opts,
+            verbose: isVerbose,
+          });
+        } catch (e) {
+          if (
+            e instanceof Error &&
+            e.message === 'Maven analysis was cancelled'
+          ) {
+            // Cancelled by a newer createNodes call — silently return empty
+            return [];
+          }
+          throw e;
+        }
         // Cache the results with the hash
         mavenCache.set(hash, mavenData);
       }

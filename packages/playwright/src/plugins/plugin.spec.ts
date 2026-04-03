@@ -15,6 +15,7 @@ describe('@nx/playwright/plugin', () => {
     tempFs = new TempFs('playwright-plugin');
     await tempFs.createFiles({
       'package.json': '{}',
+      'package-lock.json': '{}',
       'playwright.config.js': 'module.exports = {}',
     });
 

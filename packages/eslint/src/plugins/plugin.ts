@@ -27,8 +27,6 @@ import {
 } from '../utils/config-file';
 import { resolveESLintClass } from '../utils/resolve-eslint-class';
 
-const pmc = getPackageManagerCommand();
-
 export interface EslintPluginOptions {
   targetName?: string;
   extensions?: string[];
@@ -75,7 +73,8 @@ const internalCreateNodesV2 = async (
   projectRootsByEslintRoots: Map<string, string[]>,
   lintableFilesPerProjectRoot: Map<string, string[]>,
   projectsCache: Record<string, CreateNodesResult['projects']>,
-  hashByRoot: Map<string, string>
+  hashByRoot: Map<string, string>,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<CreateNodesResult> => {
   const configDir = dirname(configFilePath);
   const eslintVersion = ESLint.version;
@@ -128,7 +127,8 @@ const internalCreateNodesV2 = async (
         projectRoot,
         eslintVersion,
         options,
-        context
+        context,
+        pmc
       );
 
       if (project) {
@@ -151,6 +151,9 @@ export const createNodes: CreateNodesV2<EslintPluginOptions> = [
   ESLINT_CONFIG_GLOB_V2,
   async (configFiles, options, context) => {
     options = normalizeOptions(options);
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
     const optionsHash = hashObject(options);
     const cachePath = join(
       workspaceDataDirectory,
@@ -207,7 +210,8 @@ export const createNodes: CreateNodesV2<EslintPluginOptions> = [
             projectRootsByEslintRoots,
             lintableFilesPerProjectRoot,
             targetsCache,
-            hashByRoot
+            hashByRoot,
+            pmc
           ),
         eslintConfigFiles,
         options,
@@ -321,7 +325,8 @@ function getProjectUsingESLintConfig(
   projectRoot: string,
   eslintVersion: string,
   options: EslintPluginOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): CreateNodesResult['projects'][string] | null {
   const rootEslintConfig = [
     baseEsLintConfigFile,
@@ -358,6 +363,7 @@ function getProjectUsingESLintConfig(
       projectRoot,
       context.workspaceRoot,
       options,
+      pmc,
       standaloneSrcPath
     ),
   };
@@ -369,6 +375,7 @@ function buildEslintTargets(
   projectRoot: string,
   workspaceRoot: string,
   options: EslintPluginOptions,
+  pmc: ReturnType<typeof getPackageManagerCommand>,
   standaloneSrcPath?: string
 ) {
   const isRootProject = projectRoot === '.';
