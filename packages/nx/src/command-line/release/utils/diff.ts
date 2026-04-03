@@ -105,7 +105,8 @@ function formatNoExpand(
         };
         // Add leading context
         for (let j = contextStart; j < i; j++) {
-          currentHunk.lines.push(`  ${diffs[j][1]}`);
+          const ctx = diffs[j][1];
+          currentHunk.lines.push(ctx ? `  ${ctx}` : '');
         }
       } else if (trailingContext > 0) {
         // We're continuing a hunk, trailing context was already added
@@ -113,15 +114,15 @@ function formatNoExpand(
       trailingContext = 0;
 
       if (type === DIFF_DELETE) {
-        currentHunk.lines.push(aColor(`- ${line}`));
+        currentHunk.lines.push(aColor(line ? `- ${line}` : '-'));
       } else {
-        currentHunk.lines.push(bColor(`+ ${line}`));
+        currentHunk.lines.push(bColor(line ? `+ ${line}` : '+'));
       }
     } else {
       if (currentHunk) {
         trailingContext++;
         if (trailingContext <= contextLines) {
-          currentHunk.lines.push(`  ${line}`);
+          currentHunk.lines.push(line ? `  ${line}` : '');
         }
         // Check if we should close this hunk
         // Look ahead to see if there's another change within contextLines
@@ -154,6 +155,8 @@ function formatNoExpand(
     hunks.push(currentHunk);
   }
 
+  const hasEqualLines = diffs.some(([type]) => type === DIFF_EQUAL);
+
   for (let i = 0; i < hunks.length; i++) {
     if (i > 0) {
       // Separator between hunks (matches jest-diff patch mark behavior)
@@ -162,8 +165,10 @@ function formatNoExpand(
     lines.push(...hunks[i].lines);
   }
 
-  // Leading newline matches jest-diff annotation line behavior
-  return '\n' + lines.join('\n');
+  // jest-diff adds a patch mark (leading newline) only when context lines
+  // exist and are being skipped. When all lines are changes, no patch mark.
+  const prefix = hasEqualLines ? '\n' : '';
+  return prefix + lines.join('\n');
 }
 
 function formatExpand(
@@ -174,11 +179,11 @@ function formatExpand(
   const lines: string[] = [];
   for (const [type, line] of diffs) {
     if (type === DIFF_DELETE) {
-      lines.push(aColor(`- ${line}`));
+      lines.push(aColor(line ? `- ${line}` : '-'));
     } else if (type === DIFF_INSERT) {
-      lines.push(bColor(`+ ${line}`));
+      lines.push(bColor(line ? `+ ${line}` : '+'));
     } else {
-      lines.push(`  ${line}`);
+      lines.push(line ? `  ${line}` : '');
     }
   }
   return lines.join('\n');
