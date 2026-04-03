@@ -164,21 +164,7 @@
     { "plugin": "@nx/vite/plugin", "include": ["astro-docs/**"] },
     {
       "plugin": "@nx/js/typescript",
-      "include": ["packages/nx/**"],
-      "options": {
-        "typecheck": true,
-        "build": { "targetName": "build-base" },
-        "compiler": "tsgo"
-      }
-    },
-    {
-      "plugin": "@nx/js/typescript",
-      "exclude": [
-        "examples/angular-rspack/**/*",
-        "nx-dev/**/*",
-        "e2e/**/*",
-        "packages/nx/**"
-      ],
+      "exclude": ["examples/angular-rspack/**/*", "nx-dev/**/*", "e2e/**/*"],
       "options": { "typecheck": true, "build": { "targetName": "build-base" } }
     },
     {

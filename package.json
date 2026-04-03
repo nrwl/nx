@@ -166,7 +166,6 @@
     "@typescript-eslint/rule-tester": "^8.40.0",
     "@typescript-eslint/type-utils": "^8.40.0",
     "@typescript-eslint/utils": "^8.40.0",
-    "@typescript/native-preview": "7.0.0-dev.20260327.2",
     "@vitejs/plugin-react": "^6.0.0",
     "@webcontainer/api": "1.5.1",
     "@xstate/immer": "0.3.1",
