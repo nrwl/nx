@@ -11,6 +11,12 @@ jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
   isUsingTsSolutionSetup: jest.fn(() => false),
 }));
 
+// Default to webpack-cli v7; override in specific tests as needed
+jest.mock('webpack-cli/package.json', () => ({
+  ...jest.requireActual('webpack-cli/package.json'),
+  version: '7.0.0',
+}));
+
 import { CreateNodesContextV2 } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
@@ -39,15 +45,6 @@ describe('@nx/webpack/plugin', () => {
       JSON.stringify({ name: 'my-app' })
     );
     tempFs.createFileSync('my-app/webpack.config.js', '');
-
-    // Default to webpack-cli v7; override in specific tests as needed
-    jest.isolateModules(() => {
-      jest.doMock('webpack-cli/package.json', () => ({
-        ...jest.requireActual('webpack-cli/package.json'),
-        version: '7.0.0',
-      }));
-      createNodesFunction = require('./plugin').createNodesV2[1];
-    });
     tempFs.createFileSync('package-lock.json', '{}');
   });
 
@@ -215,13 +212,8 @@ describe('@nx/webpack/plugin', () => {
   });
 
   it('should use --node-env for webpack-cli < 7', async () => {
-    jest.isolateModules(() => {
-      jest.doMock('webpack-cli/package.json', () => ({
-        ...jest.requireActual('webpack-cli/package.json'),
-        version: '5.0.0',
-      }));
-      createNodesFunction = require('./plugin').createNodesV2[1];
-    });
+    const webpackCliPkg = require('webpack-cli/package.json');
+    webpackCliPkg.version = '5.0.0';
     mockWebpackConfig({
       output: {
         path: 'dist/foo',
@@ -233,7 +225,7 @@ describe('@nx/webpack/plugin', () => {
     const nodes = await createNodesFunction(
       ['my-app/webpack.config.js'],
       {
-        buildTargetName: 'build-something',
+        buildTargetName: 'build-something-else',
         serveTargetName: 'my-serve',
         previewTargetName: 'preview-site',
         serveStaticTargetName: 'serve-static',
@@ -256,11 +248,11 @@ describe('@nx/webpack/plugin', () => {
                       "^build",
                     ],
                   },
-                  "build-something": {
+                  "build-something-else": {
                     "cache": true,
                     "command": "webpack-cli build",
                     "dependsOn": [
-                      "^build-something",
+                      "^build-something-else",
                     ],
                     "inputs": [
                       "production",
@@ -290,7 +282,7 @@ describe('@nx/webpack/plugin', () => {
                     },
                     "options": {
                       "args": [
-                        "--config-node-env=production",
+                        "--node-env=production",
                       ],
                       "cwd": "my-app",
                     },
@@ -320,7 +312,7 @@ describe('@nx/webpack/plugin', () => {
                     },
                     "options": {
                       "args": [
-                        "--config-node-env=development",
+                        "--node-env=development",
                       ],
                       "cwd": "my-app",
                     },
@@ -347,7 +339,7 @@ describe('@nx/webpack/plugin', () => {
                     },
                     "options": {
                       "args": [
-                        "--config-node-env=production",
+                        "--node-env=production",
                       ],
                       "cwd": "my-app",
                     },
@@ -355,11 +347,11 @@ describe('@nx/webpack/plugin', () => {
                   "serve-static": {
                     "continuous": true,
                     "dependsOn": [
-                      "build-something",
+                      "build-something-else",
                     ],
                     "executor": "@nx/web:file-server",
                     "options": {
-                      "buildTarget": "build-something",
+                      "buildTarget": "build-something-else",
                       "port": 9000,
                       "spa": true,
                     },

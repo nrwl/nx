@@ -26,8 +26,6 @@ import { resolveUserDefinedWebpackConfig } from '../utils/webpack/resolve-user-d
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 import { gte } from 'semver';
 
-const webpackCliVersion: string = require('webpack-cli/package.json').version;
-
 export interface WebpackPluginOptions {
   buildTargetName?: string;
   serveTargetName?: string;
@@ -170,6 +168,7 @@ async function createWebpackTargets(
   }
 
   const targets: Record<string, TargetConfiguration> = {};
+  const webpackCliVersion: string = require('webpack-cli/package.json').version;
   const nodeEnvParam = gte(webpackCliVersion, '7.0.0')
     ? '--config-node-env'
     : '--node-env';
