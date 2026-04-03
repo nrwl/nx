@@ -39,7 +39,7 @@ import org.gradle.api.provider.MapProperty
  */
 open class NxProjectExtension @Inject constructor(objects: ObjectFactory) {
   /** JSON root for project-level Nx config */
-  val json: MapProperty<String, Any?> = objects.mapProperty(String::class.java, Any::class.java)
+  val json: MapProperty<String, Any> = objects.mapProperty(String::class.java, Any::class.java)
 
   // DSL methods for building JSON config
 
@@ -56,16 +56,17 @@ open class NxProjectExtension @Inject constructor(objects: ObjectFactory) {
 
   fun set(key: String, action: Action<NxObjectBuilder>) = set(key) { action.execute(this) }
 
-  fun array(key: String, vararg values: Any?) = json.put(key, values.map { asJson(it) })
+  fun array(key: String, vararg values: Any?) = json.put(key, values.mapNotNull { asJson(it) })
 
-  fun array(key: String, values: Iterable<*>) = json.put(key, values.map { asJson(it) })
+  fun array(key: String, values: Iterable<*>) = json.put(key, values.mapNotNull { asJson(it) })
 
   fun array(key: String, block: NxArrayBuilder.() -> Unit) {
     val arr = NxArrayBuilder().apply(block).content
     json.put(key, arr)
   }
 
-  fun merge(map: Map<String, Any?>) = json.putAll(asJsonMap(map))
+  @Suppress("UNCHECKED_CAST")
+  fun merge(map: Map<String, Any?>) = json.putAll(asJsonMap(map) as Map<String, Any>)
 }
 
 /**
