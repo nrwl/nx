@@ -42,8 +42,6 @@ const defaultPatterns = {
   },
 };
 
-const pmc = getPackageManagerCommand();
-
 export const createNodes: CreateNodesV2<CypressPluginOptions> = [
   cypressConfigGlob,
   async (configFiles, options, context) => {
@@ -53,10 +51,13 @@ export const createNodes: CreateNodesV2<CypressPluginOptions> = [
       `cypress-${optionsHash}.hash`
     );
     const pluginCache = new PluginCache<CypressTargets>(cachePath);
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, pluginCache),
+          createNodesInternal(configFile, options, context, pluginCache, pmc),
         configFiles,
         options,
         context
@@ -73,7 +74,8 @@ async function createNodesInternal(
   configFilePath: string,
   options: CypressPluginOptions,
   context: CreateNodesContextV2,
-  pluginCache: PluginCache<CypressTargets>
+  pluginCache: PluginCache<CypressTargets>,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   options = normalizeOptions(options);
   const projectRoot = dirname(configFilePath);
@@ -97,7 +99,13 @@ async function createNodesInternal(
   if (!pluginCache.has(hash)) {
     pluginCache.set(
       hash,
-      await buildCypressTargets(configFilePath, projectRoot, options, context)
+      await buildCypressTargets(
+        configFilePath,
+        projectRoot,
+        options,
+        context,
+        pmc
+      )
     );
   }
   const { targets, metadata } = pluginCache.get(hash);
@@ -228,7 +236,8 @@ async function buildCypressTargets(
   configFilePath: string,
   projectRoot: string,
   options: CypressPluginOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<CypressTargets> {
   const cypressConfig = await loadConfigFile(
     join(context.workspaceRoot, configFilePath)

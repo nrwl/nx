@@ -13,7 +13,7 @@
     "jest.config.ts",
     "jest.config.cts"
   ],
-  "include": ["**/*.ts", "**/*.json"],
+  "include": ["**/*.ts"],
   "references": [
     {
       "path": "../vitest/tsconfig.lib.json"

@@ -4,6 +4,10 @@
   "sourceRoot": "packages/vue",
   "projectType": "library",
   "targets": {
-    "build": {}
+    "build": {
+      "outputs": ["{workspaceRoot}/dist/packages/vue/README.md"],
+      "command": "node ./scripts/copy-readme.js vue",
+      "inputs": ["copyReadme"]
+    }
   }
 }

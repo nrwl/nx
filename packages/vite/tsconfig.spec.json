@@ -17,6 +17,8 @@
     "**/*.test.jsx",
     "**/*.d.ts",
     "jest.config.ts",
+    "src/utils/test-utils.ts",
+    "src/utils/test-files/*.json",
     "*.json"
   ],
   "references": [

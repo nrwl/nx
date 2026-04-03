@@ -71,7 +71,7 @@ launch-templates:
   # You can define as many templates as you need, commonly used to make different sizes or toolchains depending on your workspace needs
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.19-v3'
+    image: 'ubuntu22.04-node24.14-v1'
     # Define environment variables shared among all steps in this launch template
     env:
       MY_ENV_VAR: shared
@@ -84,7 +84,7 @@ launch-templates:
   # You're not required to define a template for every resource class, only define what you need!
   my-linux-large-js:
     resource-class: 'docker_linux_amd64/large'
-    image: 'ubuntu22.04-node20.19-v3'
+    image: 'ubuntu22.04-node24.14-v1'
     env:
       MY_ENV_VAR: shared
     # note we are using yaml anchors to reduce duplication with the above launch-template (they have the same init-steps)
@@ -93,7 +93,7 @@ launch-templates:
   # template that installs rust
   my-linux-rust-large:
     resource-class: 'docker_linux_amd64/large'
-    image: 'ubuntu22.04-node20.19-v3'
+    image: 'ubuntu22.04-node24.14-v1'
     init-steps: *common-rust-init-steps
 ```
 
@@ -153,7 +153,7 @@ If your project consumes packages from a private registry, you'll have to set up
 launch-templates:
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.19-v3'
+    image: 'ubuntu22.04-node24.14-v1'
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
@@ -189,7 +189,7 @@ You can use [mise](#install-tools-with-mise) to manage node versions alongside o
 launch-templates:
   node-21:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.19-v3'
+    image: 'ubuntu22.04-node24.14-v1'
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
@@ -215,7 +215,7 @@ launch-templates:
     resource-class: 'docker_linux_amd64/medium'
     # note the image version of v9,
     # earlier versions of the base image will not work
-    image: 'ubuntu22.04-node20.19-v3'
+    image: 'ubuntu22.04-node24.14-v1'
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
@@ -243,7 +243,7 @@ The steps follow the general pattern of:
 launch-templates:
   node-21:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.19-v3'
+    image: 'ubuntu22.04-node24.14-v1'
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
@@ -296,7 +296,7 @@ For example, you can install the [GitHub CLI](https://cli.github.com/) on the ag
 launch-templates:
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.19-v3'
+    image: 'ubuntu22.04-node24.14-v1'
     init-steps:
       - name: Install Extras
         script: |
@@ -323,7 +323,7 @@ If your repo already has a `mise.toml` file, mise automatically installs the too
 launch-templates:
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.19-v3'
+    image: 'ubuntu22.04-node24.14-v1'
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
@@ -343,7 +343,7 @@ You can define tools inline using the `tools` input. Each line specifies a tool 
 launch-templates:
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.19-v3'
+    image: 'ubuntu22.04-node24.14-v1'
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
@@ -388,7 +388,7 @@ Using the pre-built step simplifies and provides debugging checks to make sure t
 launch-templates:
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.19-v3'
+    image: 'ubuntu22.04-node24.14-v1'
     init-steps:
       - name: Install AWS CLI
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-aws-cli/main.yaml'
@@ -407,7 +407,7 @@ It is helpful to run `aws sts get-caller-identity` command to make sure you're p
 launch-templates:
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.19-v3'
+    image: 'ubuntu22.04-node24.14-v1'
     init-steps:
       # step assumes you've passed all required AWS_* environment variables from the main agent via --with-env-vars
       - name: Install AWS CLI
@@ -465,7 +465,7 @@ Exercise caution when printing out environment variables, they will be shown in 
 launch-templates:
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.19-v3'
+    image: 'ubuntu22.04-node24.14-v1'
     env:
       # enable verbose logging for all steps
       NX_VERBOSE_LOGGING: true
@@ -519,7 +519,7 @@ If your Nx workspace is in a subdirectory of your repository, set `NX_WORKING_DI
 launch-templates:
   my-template:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.19-v3'
+    image: 'ubuntu22.04-node24.14-v1'
     env:
       NX_WORKING_DIRECTORY: './client'
     init-steps:

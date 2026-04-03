@@ -111,7 +111,6 @@ interface ConfigContext {
 }
 
 let ts: typeof import('typescript');
-const pmc = getPackageManagerCommand();
 
 const TSCONFIG_CACHE_VERSION = 2;
 const TS_CONFIG_CACHE_PATH = join(
@@ -269,6 +268,9 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
     initializeTsConfigCache(configFilePaths, context.workspaceRoot, cache);
 
     const normalizedOptions = normalizePluginOptions(options);
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
 
     const {
       configFilePaths: validConfigFilePaths,
@@ -301,7 +303,8 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
             options,
             context,
             validConfigFilePaths,
-            cache
+            cache,
+            pmc
           );
 
           const { targets } = targetsCache[targetsCacheKey];
@@ -512,7 +515,8 @@ function buildTscTargets(
   options: NormalizedPluginOptions,
   context: CreateNodesContextV2,
   configFiles: readonly string[],
-  cache: InvocationCache
+  cache: InvocationCache,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const targets: Record<string, TargetConfiguration> = {};
   const namedInputs = getNamedInputs(config.project.root, context);

@@ -396,6 +396,9 @@
     },
     {
       "path": "./examples/angular-rspack/ssr-css"
+    },
+    {
+      "path": "./nx-dev/nx-dev-e2e"
     }
   ],
   "extends": "./tsconfig.base.json"

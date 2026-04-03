@@ -34,6 +34,32 @@ fun processTask(
     gitIgnoreClassifier: GitIgnoreClassifier,
     targetNamePrefix: String = "",
     project: Project,
+): MutableMap<String, Any?> =
+    NxTracing.withSpan("processTask", mapOf("task" to task.path)) {
+      processTaskImpl(
+          task,
+          projectBuildPath,
+          projectRoot,
+          workspaceRoot,
+          externalNodes,
+          dependencies,
+          targetNameOverrides,
+          gitIgnoreClassifier,
+          targetNamePrefix,
+          project)
+    }
+
+private fun processTaskImpl(
+    task: Task,
+    projectBuildPath: String,
+    projectRoot: String,
+    workspaceRoot: String,
+    externalNodes: MutableMap<String, ExternalNode>,
+    dependencies: MutableSet<Dependency>,
+    targetNameOverrides: Map<String, String>,
+    gitIgnoreClassifier: GitIgnoreClassifier,
+    targetNamePrefix: String = "",
+    project: Project,
 ): MutableMap<String, Any?> {
   val logger = task.logger
   logger.info("NxProjectReportTask: process $task for $projectRoot")
@@ -132,6 +158,19 @@ fun getGradleFilesInputs(workspaceRoot: String): List<String> {
  * @return a list of inputs including external dependencies, null if empty or an error occurred
  */
 fun getInputsForTask(
+    dependsOnTasks: Set<Task>?,
+    task: Task,
+    projectRoot: String,
+    workspaceRoot: String,
+    externalNodes: MutableMap<String, ExternalNode>? = null,
+    gitIgnoreClassifier: GitIgnoreClassifier
+): List<Any>? =
+    NxTracing.withSpan("getInputsForTask", mapOf("task" to task.path)) {
+      getInputsForTaskImpl(
+          dependsOnTasks, task, projectRoot, workspaceRoot, externalNodes, gitIgnoreClassifier)
+    }
+
+private fun getInputsForTaskImpl(
     dependsOnTasks: Set<Task>?,
     task: Task,
     projectRoot: String,
