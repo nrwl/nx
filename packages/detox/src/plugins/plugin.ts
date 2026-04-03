@@ -27,8 +27,6 @@ export interface DetoxPluginOptions {
   watchDepsTargetName?: string;
 }
 
-const pmc = getPackageManagerCommand();
-
 function readTargetsCache(
   cachePath: string
 ): Record<string, Record<string, TargetConfiguration<DetoxPluginOptions>>> {
@@ -55,11 +53,14 @@ export const createNodes: CreateNodesV2<DetoxPluginOptions> = [
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `expo-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
 
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+          createNodesInternal(configFile, options, context, targetsCache, pmc),
         configFiles,
         options,
         context
@@ -79,7 +80,8 @@ async function createNodesInternal(
   targetsCache: Record<
     string,
     Record<string, TargetConfiguration<DetoxPluginOptions>>
-  >
+  >,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<CreateNodesResult> {
   options = normalizeOptions(options);
   const projectRoot = dirname(configFile);
@@ -91,7 +93,7 @@ async function createNodesInternal(
     [getLockFileName(detectPackageManager(context.workspaceRoot))]
   );
 
-  targetsCache[hash] ??= buildDetoxTargets(projectRoot, options, context);
+  targetsCache[hash] ??= buildDetoxTargets(projectRoot, options, context, pmc);
 
   return {
     projects: {
@@ -105,7 +107,8 @@ async function createNodesInternal(
 function buildDetoxTargets(
   projectRoot: string,
   options: DetoxPluginOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
 

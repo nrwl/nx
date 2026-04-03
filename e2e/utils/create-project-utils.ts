@@ -517,6 +517,10 @@ export function runNgNew(
     // we need to reuse the same name that's cached in order to avoid issues
     // with tests relying on a different name
     projName = Object.keys(angularJson.projects)[0];
+    // The cached Angular CLI workspace includes symlinked node_modules/.bin entries.
+    // If cleanup left the destination behind, fs-extra will fail while overwriting
+    // those links, so always start from a clean restore target.
+    removeSync(tmpProjPath());
     copySync(tmpBackupNgCliProjPath(), tmpProjPath());
 
     if (isVerboseE2ERun()) {

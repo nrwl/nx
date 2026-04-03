@@ -24,6 +24,36 @@ fun addTestCiTargets(
     gitIgnoreClassifier: GitIgnoreClassifier,
     targetNameOverrides: Map<String, String> = emptyMap(),
     targetNamePrefix: String = ""
+) =
+    NxTracing.withSpan(
+        "addTestCiTargets",
+        mapOf("ciTestTargetName" to ciTestTargetName, "testTask" to testTask.path)) {
+          addTestCiTargetsImpl(
+              testFiles,
+              projectBuildPath,
+              testTask,
+              targets,
+              targetGroups,
+              projectRoot,
+              workspaceRoot,
+              ciTestTargetName,
+              gitIgnoreClassifier,
+              targetNameOverrides,
+              targetNamePrefix)
+        }
+
+private fun addTestCiTargetsImpl(
+    testFiles: FileCollection,
+    projectBuildPath: String,
+    testTask: Task,
+    targets: NxTargets,
+    targetGroups: TargetGroups,
+    projectRoot: String,
+    workspaceRoot: String,
+    ciTestTargetName: String,
+    gitIgnoreClassifier: GitIgnoreClassifier,
+    targetNameOverrides: Map<String, String> = emptyMap(),
+    targetNamePrefix: String = ""
 ) {
   ensureTargetGroupExists(targetGroups, testCiTargetGroup)
 

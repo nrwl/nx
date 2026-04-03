@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
+  getDependencyVersionFromPackageJson,
   Tree,
 } from '@nx/devkit';
 import { esbuildVersion } from '@nx/js/src/utils/versions';
@@ -16,7 +17,9 @@ export async function esbuildInitGenerator(tree: Tree, schema: Schema) {
       {},
       {
         '@nx/esbuild': nxVersion,
-        esbuild: esbuildVersion,
+        esbuild:
+          getDependencyVersionFromPackageJson(tree, 'esbuild') ??
+          esbuildVersion,
       },
       undefined,
       schema.keepExistingVersions

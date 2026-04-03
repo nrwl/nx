@@ -19,6 +19,10 @@ dependencies {
   implementation(libs.javaparser.core)
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.jgit)
+  implementation(platform(libs.opentelemetry.bom))
+  implementation(libs.opentelemetry.api)
+  implementation(libs.opentelemetry.sdk)
+  implementation(libs.opentelemetry.exporter.otlp)
   // Use compileOnly to avoid runtime conflicts with Kotlin Gradle plugin
   compileOnly(libs.kotlin.compiler.embeddable) {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-gradle-plugin")

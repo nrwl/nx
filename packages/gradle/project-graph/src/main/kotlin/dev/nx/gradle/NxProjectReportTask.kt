@@ -1,6 +1,7 @@
 package dev.nx.gradle
 
 import com.google.gson.Gson
+import dev.nx.gradle.utils.NxTracing
 import dev.nx.gradle.utils.createNodeForProject
 import java.io.File
 import java.util.*
@@ -47,28 +48,34 @@ abstract class NxProjectReportTask @Inject constructor(private val projectLayout
 
   @TaskAction
   fun action() {
-    logger.info("${Date()} Apply task action NxProjectReportTask for ${projectName.get()}")
-    logger.info("${Date()} Hash input: ${hash.get()}")
-    logger.info("${Date()} Target Name Overrides ${targetNameOverrides.get()}")
-    logger.info("${Date()} Target Name Prefix: ${targetNamePrefix.get()}")
-    logger.info("${Date()} Atomized: ${atomized.get()}")
+    try {
+      NxTracing.withSpan("NxProjectReportTask.action", mapOf("project" to projectName.get())) {
+        logger.info("${Date()} Apply task action NxProjectReportTask for ${projectName.get()}")
+        logger.info("${Date()} Hash input: ${hash.get()}")
+        logger.info("${Date()} Target Name Overrides ${targetNameOverrides.get()}")
+        logger.info("${Date()} Target Name Prefix: ${targetNamePrefix.get()}")
+        logger.info("${Date()} Atomized: ${atomized.get()}")
 
-    val project = projectRef.get() // Get project reference at execution time
-    val report =
-        createNodeForProject(
-            project,
-            targetNameOverrides.get(),
-            workspaceRoot.get(),
-            atomized.get(),
-            targetNamePrefix.get()) // Compute report at execution time
-    val reportJson = gson.toJson(report)
+        val project = projectRef.get()
+        val report =
+            createNodeForProject(
+                project,
+                targetNameOverrides.get(),
+                workspaceRoot.get(),
+                atomized.get(),
+                targetNamePrefix.get())
+        val reportJson = gson.toJson(report)
 
-    if (outputFile.exists() && outputFile.readText() == reportJson) {
-      logger.info("${Date()} No change in the node report for ${projectName.get()}")
-      return
+        if (outputFile.exists() && outputFile.readText() == reportJson) {
+          logger.info("${Date()} No change in the node report for ${projectName.get()}")
+          return@withSpan
+        }
+
+        logger.info("${Date()} Writing node report for ${projectName.get()}")
+        outputFile.writeText(reportJson)
+      }
+    } finally {
+      NxTracing.shutdown()
     }
-
-    logger.info("${Date()} Writing node report for ${projectName.get()}")
-    outputFile.writeText(reportJson)
   }
 }

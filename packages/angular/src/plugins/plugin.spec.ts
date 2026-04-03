@@ -31,6 +31,7 @@ describe('@nx/angular/plugin', () => {
       },
       workspaceRoot: tempFs.tempDir,
     };
+    tempFs.createFileSync('package-lock.json', '{}');
   });
 
   afterEach(() => {

@@ -5,6 +5,7 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  getDependencyVersionFromPackageJson,
   installPackagesTask,
   joinPathFragments,
   names,
@@ -923,7 +924,9 @@ function addProjectDependencies(
       {
         '@nx/esbuild': nxVersion,
         '@types/node': typesNodeVersion,
-        esbuild: esbuildVersion,
+        esbuild:
+          getDependencyVersionFromPackageJson(tree, 'esbuild') ??
+          esbuildVersion,
       }
     );
   } else if (options.bundler == 'rollup') {

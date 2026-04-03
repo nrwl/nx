@@ -33,7 +33,6 @@ export interface ExpoPluginOptions {
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
 }
-const pmc = getPackageManagerCommand();
 
 function readTargetsCache(
   cachePath: string
@@ -61,11 +60,14 @@ export const createNodes: CreateNodesV2<ExpoPluginOptions> = [
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `expo-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
 
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+          createNodesInternal(configFile, options, context, targetsCache, pmc),
         configFiles,
         options,
         context
@@ -85,7 +87,8 @@ async function createNodesInternal(
   targetsCache: Record<
     string,
     Record<string, TargetConfiguration<ExpoPluginOptions>>
-  >
+  >,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<CreateNodesResult> {
   options = normalizeOptions(options);
   const projectRoot = dirname(configFile);
@@ -119,7 +122,7 @@ async function createNodesInternal(
     [getLockFileName(detectPackageManager(context.workspaceRoot))]
   );
 
-  targetsCache[hash] ??= buildExpoTargets(projectRoot, options, context);
+  targetsCache[hash] ??= buildExpoTargets(projectRoot, options, context, pmc);
 
   return {
     projects: {
@@ -133,7 +136,8 @@ async function createNodesInternal(
 function buildExpoTargets(
   projectRoot: string,
   options: ExpoPluginOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
 
