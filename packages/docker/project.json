@@ -7,7 +7,7 @@
     "build": {
       "command": "node ./scripts/copy-readme.js docker",
       "inputs": ["copyReadme"],
-      "outputs": ["{workspaceRoot}/build/packages/docker/README.md"]
+      "outputs": ["{workspaceRoot}/dist/packages/docker/README.md"]
     }
   }
 }

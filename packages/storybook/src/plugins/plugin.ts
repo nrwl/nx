@@ -23,8 +23,6 @@ import { hashObject } from 'nx/src/hasher/file-hasher';
 import { query } from '@phenomnomnominal/tsquery';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
-const pmc = getPackageManagerCommand();
-
 export interface StorybookPluginOptions {
   buildStorybookTargetName?: string;
   serveStorybookTargetName?: string;
@@ -66,6 +64,9 @@ export const createNodes: CreateNodesV2<StorybookPluginOptions> = [
       `storybook-${optionsHash}.hash`
     );
     const targetsCache = readTargetsCache(cachePath);
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
 
     try {
       return await createNodesFromFiles(
@@ -74,7 +75,8 @@ export const createNodes: CreateNodesV2<StorybookPluginOptions> = [
             configFile,
             normalizedOptions,
             context,
-            targetsCache
+            targetsCache,
+            pmc
           ),
         configFilePaths,
         normalizedOptions,
@@ -92,7 +94,8 @@ async function createNodesInternal(
   configFilePath: string,
   options: Required<StorybookPluginOptions>,
   context: CreateNodesContextV2,
-  targetsCache: Record<string, Record<string, TargetConfiguration>>
+  targetsCache: Record<string, Record<string, TargetConfiguration>>,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   let projectRoot = '';
   if (configFilePath.includes('/.storybook')) {
@@ -128,7 +131,8 @@ async function createNodesInternal(
     projectRoot,
     options,
     context,
-    projectName
+    projectName,
+    pmc
   );
 
   const result = {
@@ -148,7 +152,8 @@ async function buildStorybookTargets(
   projectRoot: string,
   options: StorybookPluginOptions,
   context: CreateNodesContextV2,
-  projectName: string
+  projectName: string,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const buildOutputs = getOutputs();
 

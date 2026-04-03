@@ -15,6 +15,12 @@ describe('setup-verdaccio generator', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
+  it('should create .verdaccio/config.yml with the correct registry', async () => {
+    await generator(tree, options);
+    const config = tree.read('.verdaccio/config.yml', 'utf-8');
+    expect(config).toContain('https://registry.npmjs.org');
+  });
+
   it('should create project.json if it does not exist', async () => {
     await generator(tree, options);
     const config = readJson(tree, 'project.json');
