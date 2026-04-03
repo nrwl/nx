@@ -1,5 +1,6 @@
 import * as path from 'path';
 import { readTsConfig } from '@nx/js';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
 
@@ -44,6 +45,11 @@ export function createLoaderFromCompiler(
           transpileOnly: !hasPlugin,
           // https://github.com/TypeStrong/ts-loader/pull/685
           experimentalWatchApi: true,
+          // In TS solution workspaces, non-buildable workspace libs are
+          // bundled by webpack but their source files live outside the
+          // app's rootDir, causing TS6059. Suppress this since type
+          // checking is handled by the separate typecheck target.
+          ...(isUsingTsSolutionSetup() && { ignoreDiagnostics: [6059] }),
           getCustomTransformers: (program) => ({
             before: compilerPluginHooks.beforeHooks.map((hook) =>
               hook(program)
