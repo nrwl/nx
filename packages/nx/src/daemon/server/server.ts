@@ -119,7 +119,9 @@ import {
 import { handleNxWorkspaceFiles } from './handle-nx-workspace-files';
 import {
   handleOutputsHashesMatch,
+  handleOutputsHashesMatchBatch,
   handleRecordOutputsHash,
+  handleRecordOutputsHashBatch,
 } from './handle-outputs-tracking';
 import { handleProcessInBackground } from './handle-process-in-background';
 import { handleRequestProjectGraph } from './handle-request-project-graph';
@@ -306,11 +308,25 @@ async function handleMessage(socket: Socket, data: string) {
       () => handleRecordOutputsHash(payload),
       mode
     );
+  } else if (payload.type === 'RECORD_OUTPUTS_HASH_BATCH') {
+    await handleResult(
+      socket,
+      'RECORD_OUTPUTS_HASH_BATCH',
+      () => handleRecordOutputsHashBatch(payload),
+      mode
+    );
   } else if (payload.type === 'OUTPUTS_HASHES_MATCH') {
     await handleResult(
       socket,
       'OUTPUTS_HASHES_MATCH',
       () => handleOutputsHashesMatch(payload),
+      mode
+    );
+  } else if (payload.type === 'OUTPUTS_HASHES_MATCH_BATCH') {
+    await handleResult(
+      socket,
+      'OUTPUTS_HASHES_MATCH_BATCH',
+      () => handleOutputsHashesMatchBatch(payload),
       mode
     );
   } else if (payload.type === 'REQUEST_SHUTDOWN') {

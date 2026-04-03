@@ -1,4 +1,5 @@
 use hashbrown::HashMap;
+use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 use tracing::{debug, trace};
 
@@ -198,6 +199,82 @@ pub fn get_files_for_outputs(
     files.sort();
 
     Ok(files)
+}
+
+#[napi]
+/// Batch version of get_files_for_outputs that processes multiple output
+/// entries in parallel using Rayon. Each entry is a list of output paths
+/// for a single task.
+pub fn get_files_for_outputs_batch(
+    directory: String,
+    entries_batch: Vec<Vec<String>>,
+) -> anyhow::Result<Vec<Vec<String>>> {
+    enable_logger();
+
+    let results: Vec<anyhow::Result<Vec<String>>> = entries_batch
+        .into_par_iter()
+        .map(|entries| {
+            let dir: PathBuf = (&directory).into();
+            let mut globs: Vec<String> = vec![];
+            let mut files: Vec<String> = vec![];
+            let mut directories: Vec<String> = vec![];
+            for entry in entries.into_iter() {
+                let path = dir.join(&entry);
+                if !path.exists() {
+                    if contains_glob_pattern(&entry) {
+                        globs.push(entry);
+                    }
+                } else if path.is_dir() {
+                    directories.push(entry);
+                } else {
+                    files.push(entry);
+                }
+            }
+
+            if !globs.is_empty() {
+                let partitioned_globs = partition_globs_into_map(globs)?;
+                for (root, patterns) in partitioned_globs {
+                    let root_path = dir.join(&root);
+                    let glob_set = build_glob_set(&patterns)?;
+                    let found_paths: Vec<String> = nx_walker(&root_path, false)
+                        .filter_map(|file| {
+                            if glob_set.is_match(&file.normalized_path) {
+                                Some(
+                                    PathBuf::from(&root)
+                                        .join(&file.normalized_path)
+                                        .to_normalized_string(),
+                                )
+                            } else {
+                                None
+                            }
+                        })
+                        .collect();
+                    files.extend(found_paths);
+                }
+            }
+
+            if !directories.is_empty() {
+                for d in directories {
+                    let d = PathBuf::from(d);
+                    let dir_path = dir.join(&d);
+                    let files_in_dir = nx_walker(&dir_path, false).filter_map(|e| {
+                        let path = dir_path.join(&e.normalized_path);
+                        if path.is_file() {
+                            Some(d.join(e.normalized_path).to_normalized_string())
+                        } else {
+                            None
+                        }
+                    });
+                    files.extend(files_in_dir);
+                }
+            }
+
+            files.sort();
+            Ok(files)
+        })
+        .collect();
+
+    results.into_iter().collect()
 }
 
 #[cfg(test)]

@@ -1,5 +1,9 @@
 import { dirname } from 'path';
-import { WatchEvent, getFilesForOutputs } from '../../native';
+import {
+  WatchEvent,
+  getFilesForOutputs,
+  getFilesForOutputsBatch,
+} from '../../native';
 import { collapseExpandedOutputs } from '../../utils/collapse-expanded-outputs';
 import { workspaceRoot } from '../../utils/workspace-root';
 
@@ -77,6 +81,7 @@ export function processFileChangesInOutputs(
     if (dirsContainingOutputs[current]) {
       dirsContainingOutputs[current].forEach((output) => {
         if (now - timestamps[output] > 2000) {
+          const hash = recordedHashes[output];
           recordedHashes[output] = undefined;
         }
       });
@@ -91,6 +96,46 @@ export function processFileChangesInOutputs(
       }
       current = dirname(current);
     }
+  }
+}
+
+/**
+ * Batch version of outputsHashesMatch that uses Rayon-parallel
+ * filesystem scanning for uncached entries.
+ */
+export function outputsHashesMatchBatch(
+  entries: { outputs: string[]; hash: string }[]
+): boolean[] {
+  if (disabled) return entries.map(() => false);
+
+  // Batch filesystem scan in parallel via Rust/Rayon
+  const outputsBatch = entries.map((e) => e.outputs);
+  const expandedBatch = getFilesForOutputsBatch(workspaceRoot, outputsBatch);
+
+  const results: boolean[] = [];
+  for (let i = 0; i < entries.length; i++) {
+    const expanded = collapseExpandedOutputs(expandedBatch[i]);
+    results.push(_outputsHashesMatch(expanded, entries[i].hash));
+  }
+
+  return results;
+}
+
+/**
+ * Batch version of recordOutputsHash that uses Rayon-parallel
+ * filesystem scanning.
+ */
+export function recordOutputsHashBatch(
+  entries: { outputs: string[]; hash: string }[]
+) {
+  if (disabled) return;
+
+  const outputsBatch = entries.map((e) => e.outputs);
+  const expandedBatch = getFilesForOutputsBatch(workspaceRoot, outputsBatch);
+
+  for (let i = 0; i < entries.length; i++) {
+    const expanded = collapseExpandedOutputs(expandedBatch[i]);
+    _recordOutputsHash(expanded, entries[i].hash);
   }
 }
 

@@ -78,6 +78,9 @@ export class TasksSchedule {
       delete this.reverseTaskDeps[taskId];
     }
     const removedSet = new Set(taskIds);
+    this.scheduledTasks = this.scheduledTasks.filter(
+      (id) => !removedSet.has(id)
+    );
     for (const [key, deps] of Object.entries(this.reverseTaskDeps)) {
       this.reverseTaskDeps[key] = deps.filter((d) => !removedSet.has(d));
     }

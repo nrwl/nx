@@ -113,7 +113,7 @@ export class TaskOrchestrator {
   private discreteTaskExitHandled = new Map<string, Promise<void>>();
   private continuousTaskExitHandled = new Map<string, Promise<void>>();
   private cleanupPromise: Promise<void> | null = null;
-
+  private workerCompletedCallbacks: (() => void)[] = [];
   // endregion internal state
 
   constructor(
@@ -159,37 +159,40 @@ export class TaskOrchestrator {
       this.taskGraph
     );
 
-    const threads = [];
-
     process.stdout.setMaxListeners(total + defaultMaxListeners);
     process.stderr.setMaxListeners(total + defaultMaxListeners);
     process.setMaxListeners(total + defaultMaxListeners);
 
-    // initial seeding of the queue
-    for (let i = 0; i < discrete; ++i) {
-      threads.push(this.executeDiscreteTaskLoop());
-    }
+    const doNotSkipCache =
+      this.options.skipNxCache === false ||
+      this.options.skipNxCache === undefined;
+
+    // Start continuous task loops (these run independently)
+    const continuousLoops = [];
     for (let i = 0; i < continuous; ++i) {
-      threads.push(this.executeContinuousTaskLoop(continuous));
+      continuousLoops.push(this.executeContinuousTaskLoop(continuous));
     }
 
+    // Set up forced shutdown handler
+    const shutdownPromise = this.tuiEnabled
+      ? new Promise((resolve) => {
+          this.options.lifeCycle.registerForcedShutdownCallback(() => {
+            this.stopRequested = true;
+            resolve(undefined);
+          });
+        })
+      : new Promise<void>((resolve) => {
+          this.resolveStopPromise = resolve;
+        });
+
+    const coordinatorLoop = this.executeCoordinatorLoop(
+      doNotSkipCache,
+      discrete
+    );
+
     await Promise.race([
-      Promise.all(threads),
-      ...(this.tuiEnabled
-        ? [
-            new Promise((resolve) => {
-              this.options.lifeCycle.registerForcedShutdownCallback(() => {
-                // The user force quit the TUI with ctrl+c, so proceed onto cleanup
-                this.stopRequested = true;
-                resolve(undefined);
-              });
-            }),
-          ]
-        : [
-            new Promise<void>((resolve) => {
-              this.resolveStopPromise = resolve;
-            }),
-          ]),
+      Promise.all([coordinatorLoop, ...continuousLoops]),
+      shutdownPromise,
     ]);
 
     performance.mark('task-execution:end');
@@ -208,6 +211,104 @@ export class TaskOrchestrator {
 
   public nextBatch() {
     return this.tasksSchedule.nextBatch();
+  }
+
+  /**
+   * Coordinator loop. All batch operations (hashing, cache resolution)
+   * happen on this single thread — no races. Cache misses are dispatched
+   * as fire-and-forget workers. Workers signal completion via
+   * workerCompletedCallbacks which wakes the coordinator to schedule
+   * the next round.
+   *
+   * Safety: the dispatch phase (step 5) is fully synchronous — no
+   * worker can run during it. So all tasks picked up by nextTask()
+   * are guaranteed to be in processedTasks from step 1.
+   */
+  private async executeCoordinatorLoop(
+    doNotSkipCache: boolean,
+    parallelism: number
+  ) {
+    let inFlightWorkers = 0;
+
+    while (true) {
+      if (this.bailed || this.stopRequested) break;
+
+      // 1. Batch-hash BEFORE processAll so processTask sees hashes set.
+      //    Single thread — no race with individual hashing.
+      {
+        const { scheduledTasks } = this.tasksSchedule.getAllScheduledTasks();
+        const unhashed = scheduledTasks
+          .map((id) => this.taskGraph.tasks[id])
+          .filter(
+            (t) =>
+              !t.hash &&
+              this.taskGraph.dependencies[t.id].every(
+                (depId) => this.completedTasks[depId]
+              )
+          );
+        if (unhashed.length > 1) {
+          try {
+            await hashTasks(
+              this.hasher,
+              this.projectGraph,
+              this.taskGraphForHashing,
+              this.batchEnv,
+              this.taskDetails,
+              unhashed
+            );
+          } catch {
+            // processTask will hash individually as fallback
+          }
+        }
+      }
+
+      // 2. Process scheduled tasks — processTask sees hash from step 1.
+      this.processAllScheduledTasks();
+
+      // 3. Handle batch executors
+      const batch = this.nextBatch();
+      if (batch) {
+        const groupId = this.closeGroup();
+        await this.applyFromCacheOrRunBatch(doNotSkipCache, batch, groupId);
+        this.openGroup(groupId);
+        continue;
+      }
+
+      // Note: fast path (resolveCachedTasksBulk) is not used in the
+      // coordinator because serial cache.get() is slower than parallel
+      // workers. The batch hash (step 1) provides the key speedup.
+
+      // 4b. Process any tasks scheduled by workers during steps 2-4 awaits.
+      this.processAllScheduledTasks();
+
+      // 5. Dispatch cache misses (synchronous — no worker can interleave)
+      let dispatched = false;
+      while (inFlightWorkers < parallelism) {
+        const task = this.tasksSchedule.nextTask((t) => !t.continuous);
+        if (!task) break;
+        dispatched = true;
+        inFlightWorkers++;
+        const groupId = this.closeGroup();
+        this.applyFromCacheOrRunTask(doNotSkipCache, task, groupId).finally(
+          () => {
+            this.openGroup(groupId);
+            inFlightWorkers--;
+            // Wake coordinator
+            this.workerCompletedCallbacks.forEach((f) => f());
+            this.workerCompletedCallbacks.length = 0;
+          }
+        );
+      }
+      if (dispatched) continue;
+
+      // 6. Nothing to dispatch — check if done
+      if (!this.tasksSchedule.hasTasks() && inFlightWorkers === 0) {
+        break;
+      }
+
+      // 7. Wait for a worker to finish
+      await new Promise<void>((res) => this.workerCompletedCallbacks.push(res));
+    }
   }
 
   private async executeDiscreteTaskLoop() {
@@ -239,7 +340,10 @@ export class TaskOrchestrator {
         continue;
       }
 
-      // block until some other task completes, then try again
+      // No work available — check if we're done or need to wait
+      if (!this.tasksSchedule.hasTasks()) {
+        return null;
+      }
       await new Promise((res) => this.waitingForTasks.push(res));
     }
   }
@@ -324,46 +428,197 @@ export class TaskOrchestrator {
     const cacheableTasks = tasks.filter((t) =>
       isCacheableTask(t, this.options)
     );
-    const res = await Promise.all(
-      cacheableTasks.map((t) => this.applyCachedResult(t))
+
+    // 1. Fetch all cache entries in parallel
+    const cacheHits = (
+      await Promise.all(
+        cacheableTasks.map(async (task) => {
+          const cachedResult = await this.cache.get(task);
+          if (!cachedResult || cachedResult.code !== 0) return null;
+          return { task, cachedResult };
+        })
+      )
+    ).filter((r) => r !== null);
+
+    if (cacheHits.length === 0) return [];
+
+    // 2. Batch-check which tasks need outputs copied from cache
+    const _dbCacheEnabled = dbCacheEnabled();
+    const tasksNeedingOutputCheck = cacheHits.filter(
+      ({ task, cachedResult }) =>
+        task.outputs.length > 0 && (!cachedResult.remote || !_dbCacheEnabled)
     );
-    return res.filter((r) => r !== null);
+
+    const shouldCopyMap = await this.shouldCopyOutputsFromCacheBatch(
+      tasksNeedingOutputCheck.map(({ task }) => ({
+        outputs: task.outputs,
+        hash: task.hash,
+      }))
+    );
+
+    // 3. Copy outputs and build results
+    const results: TaskResult[] = [];
+    for (const { task, cachedResult } of cacheHits) {
+      const shouldCopy = shouldCopyMap.get(task.hash) ?? false;
+
+      if (shouldCopy) {
+        await this.cache.copyFilesFromCache(
+          task.hash,
+          cachedResult,
+          task.outputs
+        );
+      }
+
+      const status = cachedResult.remote
+        ? 'remote-cache'
+        : shouldCopy
+          ? 'local-cache'
+          : 'local-cache-kept-existing';
+
+      this.options.lifeCycle.printTaskTerminalOutput(
+        task,
+        status,
+        cachedResult.terminalOutput
+      );
+
+      results.push({ code: cachedResult.code, task, status });
+    }
+
+    return results;
   }
 
-  private async applyCachedResult(task: Task): Promise<{
-    task: Task;
-    code: number;
-    status: 'local-cache' | 'local-cache-kept-existing' | 'remote-cache';
-  }> {
-    const cachedResult = await this.cache.get(task);
-    if (!cachedResult || cachedResult.code !== 0) return null;
+  /**
+   * Peeks at scheduled tasks, batch-checks cache, then resolves
+   * confirmed hits. Does NOT consume tasks from the scheduler until
+   * we know they're cache hits — avoids disrupting scheduler state.
+   * Returns true if any tasks were resolved.
+   */
+  private async resolveCachedTasksBulk(): Promise<boolean> {
+    const { scheduledTasks } = this.tasksSchedule.getAllScheduledTasks();
+    if (scheduledTasks.length <= 1) return false;
 
-    const outputs = task.outputs;
-    const shouldCopyOutputsFromCache =
-      // No output files to restore
-      !!outputs.length &&
-      // Remote caches are restored to output dirs when applied and using db cache
-      (!cachedResult.remote || !dbCacheEnabled()) &&
-      // Output files have not been touched since last run
-      (await this.shouldCopyOutputsFromCache(outputs, task.hash));
-    if (shouldCopyOutputsFromCache) {
-      await this.cache.copyFilesFromCache(task.hash, cachedResult, outputs);
+    // Peek: identify cacheable discrete tasks (don't remove from schedule)
+    const candidates: Task[] = [];
+    for (const id of scheduledTasks) {
+      const task = this.taskGraph.tasks[id];
+      if (
+        task.hash &&
+        !task.continuous &&
+        isCacheableTask(task, this.options)
+      ) {
+        candidates.push(task);
+      }
     }
-    const status = cachedResult.remote
-      ? 'remote-cache'
-      : shouldCopyOutputsFromCache
-        ? 'local-cache'
-        : 'local-cache-kept-existing';
-    this.options.lifeCycle.printTaskTerminalOutput(
-      task,
-      status,
-      cachedResult.terminalOutput
+    if (candidates.length <= 1) return false;
+
+    // Batch check cache — avoid yielding before this to prevent
+    // other threads from starting individual processing.
+    const cacheEntries = await Promise.all(
+      candidates.map(async (task) => {
+        const cachedResult = await this.cache.get(task);
+        if (cachedResult && cachedResult.code === 0) {
+          return { task, cachedResult };
+        }
+        return null;
+      })
     );
-    return {
-      code: cachedResult.code,
-      task,
-      status,
-    };
+
+    const cacheHits = cacheEntries.filter(
+      (e): e is { task: Task; cachedResult: any } => e !== null
+    );
+    if (cacheHits.length === 0) return false;
+
+    // Batch-check output hashes (1 daemon call instead of N)
+    const _dbCacheEnabled = dbCacheEnabled();
+    const tasksNeedingOutputCheck = cacheHits.filter(
+      ({ task, cachedResult }) =>
+        task.outputs.length > 0 && (!cachedResult.remote || !_dbCacheEnabled)
+    );
+    const shouldCopyMap = await this.shouldCopyOutputsFromCacheBatch(
+      tasksNeedingOutputCheck.map(({ task }) => ({
+        outputs: task.outputs,
+        hash: task.hash,
+      }))
+    );
+
+    // Copy outputs in parallel for tasks that need it
+    await Promise.all(
+      cacheHits.map(async ({ task, cachedResult }) => {
+        if (shouldCopyMap.get(task.hash)) {
+          await this.cache.copyFilesFromCache(
+            task.hash,
+            cachedResult,
+            task.outputs
+          );
+        }
+      })
+    );
+
+    // NOW remove hits from scheduledTasks (they're confirmed resolved)
+    const hitIds = new Set(cacheHits.map(({ task }) => task.id));
+    const hitIdxs: number[] = [];
+    for (let i = scheduledTasks.length - 1; i >= 0; i--) {
+      if (hitIds.has(scheduledTasks[i])) {
+        hitIdxs.push(i);
+      }
+    }
+    for (const idx of hitIdxs) {
+      scheduledTasks.splice(idx, 1);
+    }
+
+    // Fire scheduleTask lifecycle for hits not yet processed
+    for (const { task } of cacheHits) {
+      if (!this.processedTasks.has(task.id)) {
+        await this.options.lifeCycle.scheduleTask(task);
+      }
+    }
+
+    // Build results and run lifecycle
+    const results: {
+      task: Task;
+      code: number;
+      status: TaskStatus;
+      terminalOutput?: string;
+    }[] = [];
+    for (const { task, cachedResult } of cacheHits) {
+      const shouldCopy = shouldCopyMap.get(task.hash) ?? false;
+      const status: TaskStatus = cachedResult.remote
+        ? 'remote-cache'
+        : shouldCopy
+          ? 'local-cache'
+          : 'local-cache-kept-existing';
+
+      this.options.lifeCycle.printTaskTerminalOutput(
+        task,
+        status,
+        cachedResult.terminalOutput
+      );
+
+      results.push({
+        task,
+        code: cachedResult.code,
+        status,
+        terminalOutput: cachedResult.terminalOutput,
+      });
+    }
+
+    // Set timing on tasks before lifecycle — prevents negative durations
+    // in TUI since these tasks resolved instantly from cache.
+    const now = Date.now();
+    for (const { task } of results) {
+      task.startTime = now;
+      task.endTime = now;
+    }
+
+    const groupId = this.closeGroup();
+    await this.preRunSteps(
+      results.map((r) => r.task),
+      { groupId }
+    );
+    await this.postRunSteps(results, true, { groupId });
+    this.openGroup(groupId);
+
+    return true;
   }
 
   // endregion Applying Cache
@@ -1062,12 +1317,24 @@ export class TaskOrchestrator {
     { groupId }: { groupId: number }
   ) {
     const now = Date.now();
-    for (const { task } of results) {
+    const tasksToRecord: { outputs: string[]; hash: string }[] = [];
+    for (const { task, status } of results) {
       // Only set endTime as fallback (batch provides timing via result.task)
       task.endTime ??= now;
-      if (!this.stopRequested) {
-        await this.recordOutputsHash(task);
+      // Skip recording for tasks whose outputs already match the cache —
+      // the daemon already has the correct hash recorded.
+      if (
+        !this.stopRequested &&
+        task.outputs.length > 0 &&
+        status !== 'local-cache-kept-existing'
+      ) {
+        tasksToRecord.push({ outputs: task.outputs, hash: task.hash });
       }
+    }
+    if (tasksToRecord.length === 1) {
+      await this.recordOutputsHash(results[0].task);
+    } else if (tasksToRecord.length > 1) {
+      await this.recordOutputsHashBatch(tasksToRecord);
     }
 
     if (doNotSkipCache && !this.stopRequested) {
@@ -1281,17 +1548,49 @@ export class TaskOrchestrator {
     this.groups[id] = false;
   }
 
-  private async shouldCopyOutputsFromCache(outputs: string[], hash: string) {
+  private async shouldCopyOutputsFromCache(
+    outputs: string[],
+    hash: string
+  ): Promise<boolean> {
     if (this.daemon?.enabled()) {
       return !(await this.daemon.outputsHashesMatch(outputs, hash));
-    } else {
-      return true;
     }
+    return true;
+  }
+
+  private async shouldCopyOutputsFromCacheBatch(
+    tasks: { outputs: string[]; hash: string }[]
+  ): Promise<Map<string, boolean>> {
+    const resultMap = new Map<string, boolean>();
+    if (tasks.length === 1) {
+      resultMap.set(
+        tasks[0].hash,
+        await this.shouldCopyOutputsFromCache(tasks[0].outputs, tasks[0].hash)
+      );
+    } else if (this.daemon?.enabled() && tasks.length > 1) {
+      const matches = await this.daemon.outputsHashesMatchBatch(tasks);
+      for (let i = 0; i < tasks.length; i++) {
+        resultMap.set(tasks[i].hash, !matches[i]);
+      }
+    } else {
+      for (const task of tasks) {
+        resultMap.set(task.hash, true);
+      }
+    }
+    return resultMap;
   }
 
   private async recordOutputsHash(task: Task) {
     if (this.daemon?.enabled()) {
       return this.daemon.recordOutputsHash(task.outputs, task.hash);
+    }
+  }
+
+  private async recordOutputsHashBatch(
+    entries: { outputs: string[]; hash: string }[]
+  ) {
+    if (this.daemon?.enabled()) {
+      return this.daemon.recordOutputsHashBatch(entries);
     }
   }
 

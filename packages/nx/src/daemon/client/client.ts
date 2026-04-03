@@ -787,6 +787,15 @@ export class DaemonClient {
     });
   }
 
+  recordOutputsHashBatch(
+    entries: { outputs: string[]; hash: string }[]
+  ): Promise<any> {
+    return this.sendToDaemonViaQueue({
+      type: 'RECORD_OUTPUTS_HASH_BATCH',
+      data: entries,
+    });
+  }
+
   outputsHashesMatch(outputs: string[], hash: string): Promise<any> {
     return this.sendToDaemonViaQueue({
       type: 'OUTPUTS_HASHES_MATCH',
@@ -794,6 +803,15 @@ export class DaemonClient {
         outputs,
         hash,
       },
+    });
+  }
+
+  outputsHashesMatchBatch(
+    entries: { outputs: string[]; hash: string }[]
+  ): Promise<boolean[]> {
+    return this.sendToDaemonViaQueue({
+      type: 'OUTPUTS_HASHES_MATCH_BATCH',
+      data: entries,
     });
   }
 

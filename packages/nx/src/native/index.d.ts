@@ -319,6 +319,13 @@ export declare function getEventDimensions(): EventDimensions
 export declare function getFilesForOutputs(directory: string, entries: Array<string>): Array<string>
 
 /**
+ * Batch version of get_files_for_outputs that processes multiple output
+ * entries in parallel using Rayon. Each entry is a list of output paths
+ * for a single task.
+ */
+export declare function getFilesForOutputsBatch(directory: string, entriesBatch: Array<Array<string>>): Array<Array<string>>
+
+/**
  * If `workspace_root` is inside a git worktree, returns the main repo root.
  * Returns `None` when already in the main repo (or not in a git repo at all).
  */

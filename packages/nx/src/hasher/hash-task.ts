@@ -214,14 +214,17 @@ export async function hashTasks(
   await Promise.all([...customHasherPromises, batchHashPromise]);
 
   if (taskDetails?.recordTaskDetails) {
-    taskDetails.recordTaskDetails(
-      tasks.map((task) => ({
-        hash: task.hash,
-        project: task.target.project,
-        target: task.target.target,
-        configuration: task.target.configuration,
-      }))
-    );
+    const hashedTasks = tasks.filter((task) => task.hash);
+    if (hashedTasks.length > 0) {
+      taskDetails.recordTaskDetails(
+        hashedTasks.map((task) => ({
+          hash: task.hash,
+          project: task.target.project,
+          target: task.target.target,
+          configuration: task.target.configuration,
+        }))
+      );
+    }
   }
 
   performance.mark('hashMultipleTasks:end');

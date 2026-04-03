@@ -9,6 +9,7 @@ import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import {
+  ProjectConfiguration,
   TargetConfiguration,
   TargetDependencyConfig,
 } from '../config/workspace-json-project-json';
@@ -436,6 +437,10 @@ export function getExecutorNameForTask(task: Task, projectGraph: ProjectGraph) {
   return getTargetConfigurationForTask(task, projectGraph)?.executor;
 }
 
+let cachedProjectsForExecutor: Record<string, ProjectConfiguration> | null =
+  null;
+let cachedProjectGraphRef: ProjectGraph | null = null;
+
 export function getExecutorForTask(
   task: Task,
   projectGraph: ProjectGraph
@@ -443,11 +448,17 @@ export function getExecutorForTask(
   const executor = getExecutorNameForTask(task, projectGraph);
   const [nodeModule, executorName] = parseExecutor(executor);
 
+  if (cachedProjectGraphRef !== projectGraph) {
+    cachedProjectsForExecutor =
+      readProjectsConfigurationFromProjectGraph(projectGraph).projects;
+    cachedProjectGraphRef = projectGraph;
+  }
+
   return getExecutorInformation(
     nodeModule,
     executorName,
     workspaceRoot,
-    readProjectsConfigurationFromProjectGraph(projectGraph).projects
+    cachedProjectsForExecutor
   );
 }
 
