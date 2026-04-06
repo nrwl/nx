@@ -875,7 +875,9 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   useInferencePlugins?: boolean;
 
   /**
-   * Set this to true to disable connection to Nx Cloud
+   * Setting this to true will cause all attempts to connect your workspace to Nx Cloud to fail.
+   * This value does not prevent using Nx Cloud if already connected.
+   * Use NX_NO_CLOUD=true env var to prevent using Nx Cloud when running commands.
    */
   neverConnectToCloud?: boolean;
 
