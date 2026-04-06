@@ -39,6 +39,7 @@ describe('@nx/rsbuild', () => {
       JSON.stringify({ name: 'my-app' })
     );
     tempFs.createFileSync('my-app/rsbuild.config.ts', `export default {};`);
+    tempFs.createFileSync('package-lock.json', '{}');
   });
 
   afterEach(() => {

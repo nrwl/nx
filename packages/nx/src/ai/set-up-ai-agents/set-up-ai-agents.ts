@@ -313,6 +313,21 @@ export async function setupAiAgentsGeneratorImpl(
     }
   }
 
+  // Clean up legacy .gemini/skills that have been migrated to shared .agents/skills.
+  // Only delete skills that exist in both locations to preserve user-created skills.
+  if (hasAgent('gemini')) {
+    const geminiSkillsDir = join(options.directory, '.gemini', 'skills');
+    const sharedSkillsDir = join(options.directory, '.agents', 'skills');
+    if (tree.exists(geminiSkillsDir) && tree.exists(sharedSkillsDir)) {
+      const sharedSkills = new Set(tree.children(sharedSkillsDir));
+      for (const skill of tree.children(geminiSkillsDir)) {
+        if (sharedSkills.has(skill)) {
+          tree.delete(join(geminiSkillsDir, skill));
+        }
+      }
+    }
+  }
+
   addEntryToGitIgnore(
     tree,
     join(options.directory, '.gitignore'),

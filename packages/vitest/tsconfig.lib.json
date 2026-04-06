@@ -4,7 +4,7 @@
     "outDir": "../../dist/packages/vitest",
     "types": ["node"]
   },
-  "include": ["**/*.ts", "**/*.json"],
+  "include": ["**/*.ts"],
   "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
   "references": [
     {

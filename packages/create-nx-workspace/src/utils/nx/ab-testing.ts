@@ -8,6 +8,7 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import chalk from 'chalk';
 import { isCI } from '../ci/is-ci';
 import type { BannerVariant, CompletionMessageKey } from './messages';
 
@@ -96,12 +97,6 @@ export function getFlowVariant(): string {
  */
 export function getCompletionMessageKeyForVariant(): CompletionMessageKey {
   return 'platform-setup';
-}
-
-export function shouldShowCloudPrompt(): boolean {
-  // CLOUD-4255: Lock to variant 2 behavior (no prompt)
-  // To re-enable A/B testing: return getFlowVariant() !== '2';
-  return false;
 }
 
 // ============================================================================
@@ -215,15 +210,43 @@ const messageOptions: Record<string, MessageData[]> = {
   setupNxCloudV2: [
     {
       code: 'connect-to-cloud',
-      message: 'Connect to Nx Cloud?',
+      message: 'Enable remote caching to speed up builds with Nx Cloud?',
       initial: 0,
       choices: [
         { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip for now' },
-        { value: 'never', name: "No, don't ask again" },
+        { value: 'never', name: chalk.dim("No, don't ask again") },
       ],
       footer:
-        '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
+        '\nFree for small teams. 2-minute setup with GitHub — cache locally and in CI: https://nx.dev/nx-cloud',
+      fallback: undefined,
+      completionMessage: 'platform-setup',
+    },
+    {
+      code: 'cloud-ab-never-rebuild',
+      message: 'Never rebuild the same code twice \u2014 enable Nx Cloud?',
+      initial: 0,
+      choices: [
+        { value: 'yes', name: 'Yes' },
+        { value: 'skip', name: 'Skip for now' },
+        { value: 'never', name: chalk.dim("No, don't ask again") },
+      ],
+      footer:
+        '\nFree for small teams. Remote caching for local dev and CI. 2-minute setup: https://nx.dev/nx-cloud',
+      fallback: undefined,
+      completionMessage: 'platform-setup',
+    },
+    {
+      code: 'cloud-ab-ci-providers-speed',
+      message: 'Speed up GitHub Actions, GitLab CI, and more with Nx Cloud?',
+      initial: 0,
+      choices: [
+        { value: 'yes', name: 'Yes' },
+        { value: 'skip', name: 'Skip for now' },
+        { value: 'never', name: chalk.dim("No, don't ask again") },
+      ],
+      footer:
+        '\nFree remote caching and task distribution. 2-minute setup: https://nx.dev/nx-cloud',
       fallback: undefined,
       completionMessage: 'platform-setup',
     },
@@ -250,9 +273,9 @@ export class PromptMessages {
       if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
         this.selectedMessages[key] = 0;
       } else {
-        this.selectedMessages[key] = Math.floor(
-          Math.random() * messageOptions[key].length
-        );
+        const variant = Number(getFlowVariant());
+        this.selectedMessages[key] =
+          variant < messageOptions[key].length ? variant : 0;
       }
     }
     return messageOptions[key][this.selectedMessages[key]!];

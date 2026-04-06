@@ -170,12 +170,14 @@ describe('findNpmDependencies', () => {
   });
 
   it.each`
-    fileName
-    ${'tsconfig.base.json'}
-    ${'tsconfig.json'}
+    fileName                | command
+    ${'tsconfig.base.json'} | ${'tsc --build tsconfig.lib.json --pretty --verbose'}
+    ${'tsconfig.json'}      | ${'tsc --build tsconfig.lib.json --pretty --verbose'}
+    ${'tsconfig.base.json'} | ${'tsgo --build tsconfig.lib.json'}
+    ${'tsconfig.json'}      | ${'tsgo --build tsconfig.lib.json'}
   `(
-    'should pick up helper npm dependencies when using tsc and run-commands',
-    ({ fileName }) => {
+    'should pick up helper npm dependencies when using "$command" and run-commands',
+    ({ fileName, command }) => {
       vol.fromJSON(
         {
           [`./${fileName}`]: JSON.stringify({
@@ -199,7 +201,7 @@ describe('findNpmDependencies', () => {
             build: {
               executor: 'nx:run-commands',
               options: {
-                command: 'tsc --build tsconfig.lib.json --pretty --verbose',
+                command,
               },
             },
           },

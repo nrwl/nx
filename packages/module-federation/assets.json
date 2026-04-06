@@ -1,0 +1,10 @@
+{
+  "outDir": "dist/packages/module-federation",
+  "assets": [
+    { "glob": "**/files/**" },
+    { "glob": "**/files/**/.gitkeep" },
+    { "glob": "@(package|executors|generators|migrations).json" },
+    { "glob": "src/**/schema.d.ts" },
+    "LICENSE"
+  ]
+}

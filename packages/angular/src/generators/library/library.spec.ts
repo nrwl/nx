@@ -161,7 +161,6 @@ describe('lib', () => {
       expect(packageJson.devDependencies['ng-packagr']).toBeUndefined();
       expect(packageJson.devDependencies['postcss']).toBeUndefined();
       expect(packageJson.devDependencies['autoprefixer']).toBeUndefined();
-      expect(packageJson.devDependencies['postcss-url']).toBeUndefined();
     });
 
     it('should update package.json when publishable', async () => {
@@ -176,7 +175,6 @@ describe('lib', () => {
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
       expect(packageJson.devDependencies['postcss']).toBeDefined();
       expect(packageJson.devDependencies['autoprefixer']).toBeDefined();
-      expect(packageJson.devDependencies['postcss-url']).toBeDefined();
     });
 
     it('should update package.json when buildable', async () => {
@@ -188,7 +186,6 @@ describe('lib', () => {
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
       expect(packageJson.devDependencies['postcss']).toBeDefined();
       expect(packageJson.devDependencies['autoprefixer']).toBeDefined();
-      expect(packageJson.devDependencies['postcss-url']).toBeDefined();
 
       const libPackageJson = readJson(tree, 'my-lib/package.json');
       expect(libPackageJson.dependencies?.['tslib']).toBeFalsy();

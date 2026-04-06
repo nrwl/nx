@@ -10,7 +10,7 @@ plugins {
 
 group = "dev.nx.gradle"
 
-version = "0.1.16"
+version = "0.1.18"
 
 repositories { mavenCentral() }
 
@@ -19,6 +19,10 @@ dependencies {
   implementation(libs.javaparser.core)
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.jgit)
+  implementation(platform(libs.opentelemetry.bom))
+  implementation(libs.opentelemetry.api)
+  implementation(libs.opentelemetry.sdk)
+  implementation(libs.opentelemetry.exporter.otlp)
   // Use compileOnly to avoid runtime conflicts with Kotlin Gradle plugin
   compileOnly(libs.kotlin.compiler.embeddable) {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-gradle-plugin")
@@ -27,6 +31,7 @@ dependencies {
   }
   testImplementation(libs.kotlin.test)
   testImplementation(libs.junit.jupiter)
+  testImplementation(kotlin("gradle-plugin"))
 }
 
 java {

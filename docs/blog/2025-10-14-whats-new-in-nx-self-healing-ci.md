@@ -56,7 +56,7 @@ npx nx start-ci-run --fix-tasks="*lint*,*format*"
 npx nx start-ci-run --fix-tasks="!*deploy*,!*test*"
 ```
 
-Tasks are matched using glob patterns in the format `<project>:<task>:<configuration>`, giving you fine-grained control. Commands recorded with `nx-cloud record --` are matched by their full command string (e.g., `nx-cloud record -- nx format`).
+Tasks are matched using glob patterns in the format `<project>:<task>:<configuration>`, giving you fine-grained control. Commands recorded with `nx record --` are matched by their full command string (e.g., `nx record -- nx format`).
 
 ## YOLO Mode with `--auto-apply-fixes`
 

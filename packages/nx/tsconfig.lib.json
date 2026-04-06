@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": ".",
-    "declarationDir": ".",
+    "declarationDir": "dist",
     "declarationMap": false,
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],

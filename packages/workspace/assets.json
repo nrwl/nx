@@ -1,0 +1,36 @@
+{
+  "outDir": "dist/packages/workspace",
+  "assets": [
+    {
+      "glob": "**/files/**"
+    },
+    {
+      "glob": "**/files/**/.gitkeep"
+    },
+    {
+      "glob": "**/files-integrated-repo/**"
+    },
+    {
+      "glob": "**/files-integrated-repo/**/.gitkeep"
+    },
+    {
+      "glob": "**/files-package-based-repo/**"
+    },
+    {
+      "glob": "**/files-readme/**"
+    },
+    {
+      "glob": "**/files-root-app/**"
+    },
+    { "glob": "presets/*.json" },
+    { "glob": "package.json" },
+    { "glob": "executors.json" },
+    { "glob": "generators.json" },
+    { "glob": "migrations.json" },
+    { "glob": "src/**/schema.json" },
+    {
+      "glob": "src/**/schema.d.ts"
+    },
+    "LICENSE"
+  ]
+}

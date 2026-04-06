@@ -1167,6 +1167,20 @@ describe('app', () => {
       expect(packageJson.devDependencies['@react-router/dev']).toBeDefined();
     });
 
+    it('should use Vite 7 since React Router does not support Vite 8', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        skipFormat: false,
+        useReactRouter: true,
+        routing: true,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+      });
+
+      const rootPackageJson = readJson(appTree, 'package.json');
+      expect(rootPackageJson.devDependencies['vite']).toMatch(/^\^7\./);
+    });
+
     it('should be configured to work with jest', async () => {
       await applicationGenerator(appTree, {
         ...schema,

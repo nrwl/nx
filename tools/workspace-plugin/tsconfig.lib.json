@@ -16,18 +16,5 @@
     "src/**/*.test.ts",
     "src/**/files/**"
   ],
-  "references": [
-    {
-      "path": "../../packages/nx/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/js/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/plugin/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/devkit/tsconfig.lib.json"
-    }
-  ]
+  "references": []
 }

@@ -8,6 +8,10 @@ import {
   writeErrorLog,
   determineErrorCode,
 } from './utils/ai-output';
+import { recordStat } from '../../utils/ab-testing';
+import { nxVersion } from '../../utils/versions';
+import { isCI } from '../../utils/is-ci';
+import { detectPackageManager } from '../../utils/package-manager';
 
 export const yargsInitCommand: CommandModule = {
   command: 'init',
@@ -38,20 +42,63 @@ export const yargsInitCommand: CommandModule = {
       throw error;
     });
 
+    const aiAgent = isAiAgent();
+
+    recordStat({
+      command: 'init',
+      nxVersion,
+      useCloud: false,
+      meta: {
+        type: 'start',
+        nodeVersion: process.versions.node,
+        os: process.platform,
+        packageManager: detectPackageManager(),
+        aiAgent,
+        isCI: isCI(),
+      },
+    });
+
     try {
       const useV2 = await isInitV2();
       if (useV2) {
+        // v2 records its own complete event with richer context
         await require('./init-v2').initHandler(args);
       } else {
         await require('./init-v1').initHandler(args);
+        await recordStat({
+          command: 'init',
+          nxVersion,
+          useCloud: false,
+          meta: {
+            type: 'complete',
+            nodeVersion: process.versions.node,
+            os: process.platform,
+            packageManager: detectPackageManager(),
+            aiAgent,
+            isCI: isCI(),
+          },
+        });
       }
       process.exit(0);
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const errorCode = determineErrorCode(error);
+
+      await recordStat({
+        command: 'init',
+        nxVersion,
+        useCloud: false,
+        meta: {
+          type: 'error',
+          errorCode,
+          errorMessage: errorMessage.substring(0, 250),
+          aiAgent,
+        },
+      });
+
       // Output structured error for AI agents
-      if (isAiAgent()) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        const errorCode = determineErrorCode(error);
+      if (aiAgent) {
         const errorLogPath = writeErrorLog(error);
         writeAiOutput(buildErrorResult(errorMessage, errorCode, errorLogPath));
       } else {

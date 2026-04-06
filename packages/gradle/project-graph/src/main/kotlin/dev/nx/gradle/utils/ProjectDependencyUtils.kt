@@ -7,11 +7,10 @@ import org.gradle.api.artifacts.result.ResolvedDependencyResult
 
 private val dependencyCache = mutableMapOf<Project, Set<Dependency>>()
 
-fun getDependenciesForProject(project: Project): MutableSet<Dependency> {
-  return dependencyCache
-      .getOrPut(project) { buildDependenciesForProject(project) }
-      .toMutableSet() // Return a new mutable copy to prevent modifying the cached set
-}
+fun getDependenciesForProject(project: Project): MutableSet<Dependency> =
+    NxTracing.withSpan("getDependenciesForProject", mapOf("project" to project.name)) {
+      dependencyCache.getOrPut(project) { buildDependenciesForProject(project) }.toMutableSet()
+    }
 
 private fun buildDependenciesForProject(project: Project): Set<Dependency> {
   val dependencies = mutableSetOf<Dependency>()

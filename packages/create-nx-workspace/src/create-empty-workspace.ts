@@ -37,15 +37,18 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
   // See: https://github.com/nrwl/nx/issues/31834
   delete (options as any).skipInstall;
 
+  // workingDir is consumed by CNW itself, not passed to `nx new`
+  const { workingDir: _workingDir, ...nxNewOptions } = options;
+
   const args = unparse({
-    ...options,
+    ...nxNewOptions,
   }).join(' ');
 
   const pmc = getPackageManagerCommand(packageManager);
 
   const command = `new ${args}`;
 
-  const workingDir = process.cwd().replace(/\\/g, '/');
+  const workingDir = (options.workingDir ?? process.cwd()).replace(/\\/g, '/');
   let nxWorkspaceRoot = `"${workingDir}"`;
 
   // If path contains spaces there is a problem in Windows for npm@6.
