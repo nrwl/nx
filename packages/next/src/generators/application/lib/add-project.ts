@@ -66,7 +66,9 @@ export function addProject(host: Tree, options: NormalizedSchema) {
 
   const project: ProjectConfiguration = {
     root: options.appProjectRoot,
-    sourceRoot: options.appProjectRoot,
+    sourceRoot: options.src
+      ? joinPathFragments(options.appProjectRoot, 'src')
+      : options.appProjectRoot,
     projectType: 'application',
     targets,
     tags: options.parsedTags,
