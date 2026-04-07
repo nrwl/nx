@@ -170,26 +170,23 @@ Add `"dist"` and `"*.d.ts"` to `ignorePatterns`:
 
 Change `outDir` from `"dist/packages/<name>"` to `"packages/<name>/dist"`.
 
-### 9. Create/update `.npmignore`
+### 9. Add `files` field to `package.json`
 
-Create a `.npmignore` file (use devkit's as template):
+Instead of using `.npmignore`, add a `"files"` field to `package.json` (matching the `nx` package pattern). Remove `.npmignore` if it exists.
 
-```
-node_modules/
-.eslintrc.json
-jest.config.cts
-jest-resolver.js
-migrations.spec.ts
-project.json
-tsconfig.json
-tsconfig.lib.json
-tsconfig.spec.json
-dist/tsconfig.tsbuildinfo
-**/*.ts
-!**/*.d.ts
+```json
+"files": [
+  "dist",
+  "!dist/tsconfig.tsbuildinfo",
+  "migrations.json"
+]
 ```
 
-Add any package-specific files that shouldn't be published (test fixtures, etc.).
+Adjust based on the package's needs:
+
+- Add `"executors.json"` and/or `"generators.json"` if the package has them
+- Add any other non-TS files that need to be published
+- npm always includes `package.json` and `README.md` automatically — no need to list them
 
 ### 10. Rename README.md and update build command
 
