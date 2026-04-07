@@ -388,10 +388,16 @@ impl NxCache {
         cached_result: CachedResult,
         outputs: Vec<String>,
     ) -> anyhow::Result<i64> {
+        let restore_start = std::time::Instant::now();
         let outputs_path = Path::new(&cached_result.outputs_path);
 
         let outputs = normalize_outputs(&self.workspace_root, outputs)?;
         let expanded_outputs = _expand_outputs(outputs_path, outputs)?;
+
+        if expanded_outputs.is_empty() {
+            crate::native::profiler::record("cache::copy_files_from_cache", restore_start);
+            return Ok(0);
+        }
 
         trace!(
             "Restoring {} outputs from cache {:?} -> {:?}",
@@ -399,7 +405,10 @@ impl NxCache {
             &outputs_path,
             &self.workspace_root
         );
-        copy_outputs_into_workspace(&self.workspace_root, outputs_path, &expanded_outputs)
+        let total_size =
+            copy_outputs_into_workspace(&self.workspace_root, outputs_path, &expanded_outputs)?;
+        crate::native::profiler::record("cache::copy_files_from_cache", restore_start);
+        Ok(total_size)
     }
 
     #[napi]
