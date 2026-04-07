@@ -655,11 +655,19 @@ impl NxCache {
         cached_result: CachedResult,
         outputs: Vec<String>,
     ) -> anyhow::Result<(i64, Option<Vec<OutputFile>>)> {
+        let restore_start = std::time::Instant::now();
         let outputs_path = Path::new(&cached_result.outputs_path);
 
         let outputs = normalize_outputs(&self.workspace_root, outputs)?;
         let literal = all_literal(&outputs);
         let expanded_outputs = _expand_outputs(outputs_path, outputs.clone())?;
+
+        if expanded_outputs.is_empty() {
+            crate::native::profiler::record("cache::copy_files_from_cache", restore_start);
+            // Nothing was copied, so the workspace may still hold output files
+            // this call never looked at. `None` keeps the caller globbing.
+            return Ok((0, None));
+        }
 
         trace!(
             "Restoring {} outputs from cache {:?} -> {:?}",
@@ -682,6 +690,7 @@ impl NxCache {
             present.sort();
             restored == present
         };
+        crate::native::profiler::record("cache::copy_files_from_cache", restore_start);
         Ok((size, exact.then_some(files)))
     }
 
