@@ -1,0 +1,8 @@
+{
+  "name": "group-05",
+  "targets": {
+    "build": {},
+    "copy": {},
+    "cat": {}
+  }
+}

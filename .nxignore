@@ -1,3 +1,4 @@
+benchmarks/packages
 nx-dev/**/jest.config.js
 .next
 _files
