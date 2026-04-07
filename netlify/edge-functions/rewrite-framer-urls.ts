@@ -192,6 +192,12 @@ export const config = {
   // Only process HTML requests to save on compute
   accept: ['text/html'],
   excludedPath: [
+    // SEO-critical files — must bypass Framer so Next.js serves them
+    '/robots.txt',
+    '/sitemap.xml',
+    '/sitemap-0.xml',
+    '/llms.txt',
+    '/llms-full.txt',
     '/docs',
     '/docs/*',
     '/api/*',
