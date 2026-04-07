@@ -87,6 +87,7 @@
   "peerDependencies": {
     "@swc-node/register": "catalog:swc",
     "@swc/core": "catalog:swc",
+    "markdown-factory": "^1.0.0",
     "typescript": "^5.8.0 || ^6.0.0"
   },
   "peerDependenciesMeta": {
@@ -94,6 +95,9 @@
       "optional": true
     },
     "@swc/core": {
+      "optional": true
+    },
+    "markdown-factory": {
       "optional": true
     },
     "typescript": {
