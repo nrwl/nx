@@ -115,18 +115,40 @@ interface ScenarioResult {
 // ── Definitions ───────────────────────────────────────────────────────────────
 
 const ALL_SCENARIOS: ScenarioDef[] = [
-  { name: 'daemon-cold',   label: 'Daemon — cold',    daemon: true,  warm: false },
-  { name: 'daemon-warm',   label: 'Daemon — warm',    daemon: true,  warm: true  },
-  { name: 'nodaemon-cold', label: 'No-daemon — cold', daemon: false, warm: false },
-  { name: 'nodaemon-warm', label: 'No-daemon — warm', daemon: false, warm: true  },
+  { name: 'daemon-cold', label: 'Daemon — cold', daemon: true, warm: false },
+  { name: 'daemon-warm', label: 'Daemon — warm', daemon: true, warm: true },
+  {
+    name: 'nodaemon-cold',
+    label: 'No-daemon — cold',
+    daemon: false,
+    warm: false,
+  },
+  {
+    name: 'nodaemon-warm',
+    label: 'No-daemon — warm',
+    daemon: false,
+    warm: true,
+  },
 ];
 
 // Predefined benchmarks that map to the hyperfine goals in benchmarks/goals.json.
 // "version" is omitted — profiling overhead would dominate a ~20 ms command.
 const PREDEFINED_BENCHMARKS: BenchmarkDef[] = [
-  { name: 'show-projects',  label: 'show projects',   nxArgs: ['show', 'projects', '--tui=false'] },
-  { name: 'run-many-cat',   label: 'run-many (cat)',   nxArgs: ['run-many', '-t', 'cat', '--tui=false'] },
-  { name: 'run-many-copy',  label: 'run-many (copy)',  nxArgs: ['run-many', '-t', 'copy', '--tui=false'] },
+  {
+    name: 'show-projects',
+    label: 'show projects',
+    nxArgs: ['show', 'projects', '--tui=false'],
+  },
+  {
+    name: 'run-many-cat',
+    label: 'run-many (cat)',
+    nxArgs: ['run-many', '-t', 'cat', '--tui=false'],
+  },
+  {
+    name: 'run-many-copy',
+    label: 'run-many (copy)',
+    nxArgs: ['run-many', '-t', 'copy', '--tui=false'],
+  },
 ];
 
 // ── Parse CLI args ────────────────────────────────────────────────────────────
@@ -148,27 +170,41 @@ let benchmarkFilter: string | null = null;
 
 for (let i = 0; i < scriptArgs.length; i++) {
   const a = scriptArgs[i];
-  if (a === '--out' && scriptArgs[i + 1])           { outPath = scriptArgs[++i]; }
-  else if (a === '--no-cpu-prof')                   { cpuProf = false; }
-  else if (a === '--no-sys-prof')                   { sysProf = false; }
-  else if (a === '--verbose')                       { verbose = true; }
-  else if (a === '--scenario' && scriptArgs[i + 1]) { scenarioFilter = scriptArgs[++i]; }
-  else if (a === '--benchmark' && scriptArgs[i + 1]){ benchmarkFilter = scriptArgs[++i]; }
+  if (a === '--out' && scriptArgs[i + 1]) {
+    outPath = scriptArgs[++i];
+  } else if (a === '--no-cpu-prof') {
+    cpuProf = false;
+  } else if (a === '--no-sys-prof') {
+    sysProf = false;
+  } else if (a === '--verbose') {
+    verbose = true;
+  } else if (a === '--scenario' && scriptArgs[i + 1]) {
+    scenarioFilter = scriptArgs[++i];
+  } else if (a === '--benchmark' && scriptArgs[i + 1]) {
+    benchmarkFilter = scriptArgs[++i];
+  }
 }
 
 // Determine benchmarks to run
 let benchmarks: BenchmarkDef[];
 if (adHocNxArgs && adHocNxArgs.length > 0) {
   // Ad-hoc command: single custom benchmark
-  benchmarks = [{
-    name: adHocNxArgs.join('-').replace(/[^a-z0-9-]/gi, '-').slice(0, 40),
-    label: adHocNxArgs.join(' '),
-    nxArgs: adHocNxArgs,
-  }];
+  benchmarks = [
+    {
+      name: adHocNxArgs
+        .join('-')
+        .replace(/[^a-z0-9-]/gi, '-')
+        .slice(0, 40),
+      label: adHocNxArgs.join(' '),
+      nxArgs: adHocNxArgs,
+    },
+  ];
 } else if (benchmarkFilter) {
   const found = PREDEFINED_BENCHMARKS.find((b) => b.name === benchmarkFilter);
   if (!found) {
-    console.error(`Unknown benchmark "${benchmarkFilter}". Valid: ${PREDEFINED_BENCHMARKS.map((b) => b.name).join(', ')}`);
+    console.error(
+      `Unknown benchmark "${benchmarkFilter}". Valid: ${PREDEFINED_BENCHMARKS.map((b) => b.name).join(', ')}`
+    );
     process.exit(1);
   }
   benchmarks = [found];
@@ -182,7 +218,9 @@ const scenarios = scenarioFilter
   : ALL_SCENARIOS;
 
 if (scenarios.length === 0) {
-  console.error(`Unknown scenario "${scenarioFilter}". Valid: ${ALL_SCENARIOS.map((s) => s.name).join(', ')}`);
+  console.error(
+    `Unknown scenario "${scenarioFilter}". Valid: ${ALL_SCENARIOS.map((s) => s.name).join(', ')}`
+  );
   process.exit(1);
 }
 
@@ -198,7 +236,13 @@ const runDir = outPath
   : join(resolve(repoRoot, 'profile-out'), timestamp);
 mkdirSync(runDir, { recursive: true });
 
-const daemonProcessJsonPath = join(benchmarksDir, '.nx', 'workspace-data', 'd', 'server-process.json');
+const daemonProcessJsonPath = join(
+  benchmarksDir,
+  '.nx',
+  'workspace-data',
+  'd',
+  'server-process.json'
+);
 
 // ── Detect system sampler ─────────────────────────────────────────────────────
 
@@ -221,7 +265,10 @@ function waitForExit(proc: ChildProcess): Promise<number> {
   });
 }
 
-function waitForExitWithTimeout(proc: ChildProcess, timeoutMs: number): Promise<number> {
+function waitForExitWithTimeout(
+  proc: ChildProcess,
+  timeoutMs: number
+): Promise<number> {
   return new Promise((res) => {
     let done = false;
     const finish = (code: number) => {
@@ -233,7 +280,9 @@ function waitForExitWithTimeout(proc: ChildProcess, timeoutMs: number): Promise<
     proc.on('error', () => finish(1));
     setTimeout(() => {
       if (done) return;
-      try { proc.kill('SIGKILL'); } catch {}
+      try {
+        proc.kill('SIGKILL');
+      } catch {}
       finish(1);
     }, timeoutMs);
   });
@@ -287,14 +336,16 @@ async function runNxWithProfiling(
   mkdirSync(detailDir, { recursive: true });
 
   const cpuProfPath = join(scenarioRunDir, 'report.cpuprofile');
-  const sysProfilePath = platform === 'darwin'
-    ? join(scenarioRunDir, 'report.sample.txt')
-    : join(scenarioRunDir, 'report.perf.data');
+  const sysProfilePath =
+    platform === 'darwin'
+      ? join(scenarioRunDir, 'report.sample.txt')
+      : join(scenarioRunDir, 'report.perf.data');
 
   // ── Build env ────────────────────────────────────────────────────────────────
   const existingNodeOptions = (process.env.NODE_OPTIONS ?? '').trim();
   const workerCpuProfOptions = cpuProf
-    ? `--cpu-prof --cpu-prof-dir=${scenarioRunDir}` : '';
+    ? `--cpu-prof --cpu-prof-dir=${scenarioRunDir}`
+    : '';
 
   // NX_PROFILE_OUT points to index.md — its dirname is used as the runDir for
   // per-process JSON files.
@@ -305,20 +356,31 @@ async function runNxWithProfiling(
     NX_NO_CLOUD: 'true',
     NX_PROFILE_OUT: indexPath,
     NX_NATIVE_PROFILE: '1',
-    NODE_OPTIONS: [existingNodeOptions, workerCpuProfOptions].filter(Boolean).join(' '),
+    NODE_OPTIONS: [existingNodeOptions, workerCpuProfOptions]
+      .filter(Boolean)
+      .join(' '),
     ...(verbose ? { NX_PERF_LOGGING: 'true' } : {}),
     ...(def.daemon ? {} : { NX_DAEMON: 'false' }),
   };
 
   const nodeArgs: string[] = cpuProf
-    ? [`--cpu-prof`, `--cpu-prof-dir=${scenarioRunDir}`, `--cpu-prof-name=report.cpuprofile`]
+    ? [
+        `--cpu-prof`,
+        `--cpu-prof-dir=${scenarioRunDir}`,
+        `--cpu-prof-name=report.cpuprofile`,
+      ]
     : [];
 
   // ── Sampler state (local to this invocation) ─────────────────────────────────
   const samplerRegistry: SamplerEntry[] = [];
   const sampledPids = new Set<number>();
 
-  function startSampleForPid(pid: number, path: string, mayDie: boolean, knownRole = 'unknown'): void {
+  function startSampleForPid(
+    pid: number,
+    path: string,
+    mayDie: boolean,
+    knownRole = 'unknown'
+  ): void {
     if (sampledPids.has(pid)) return;
     sampledPids.add(pid);
     const sArgs = [String(pid), '3600', '-f', path];
@@ -328,11 +390,11 @@ async function runNxWithProfiling(
   }
 
   // ── Spawn nx ─────────────────────────────────────────────────────────────────
-  const nxProc = spawn(
-    process.execPath,
-    [...nodeArgs, nxBin, ...nxArgs],
-    { env: scenarioEnv, stdio: 'inherit', cwd: benchmarksDir }
-  );
+  const nxProc = spawn(process.execPath, [...nodeArgs, nxBin, ...nxArgs], {
+    env: scenarioEnv,
+    stdio: 'inherit',
+    cwd: benchmarksDir,
+  });
 
   // ── Start samplers ────────────────────────────────────────────────────────────
   if (hasSample) {
@@ -349,8 +411,18 @@ async function runNxWithProfiling(
       })();
     }
   } else if (hasPerf) {
-    const proc = spawn('perf', ['record', '-g', '-p', String(nxProc.pid!), '-o', sysProfilePath], { stdio: 'ignore' });
-    samplerRegistry.push({ proc, path: sysProfilePath, pid: nxProc.pid!, knownRole: 'main', mayDie: false });
+    const proc = spawn(
+      'perf',
+      ['record', '-g', '-p', String(nxProc.pid!), '-o', sysProfilePath],
+      { stdio: 'ignore' }
+    );
+    samplerRegistry.push({
+      proc,
+      path: sysProfilePath,
+      pid: nxProc.pid!,
+      knownRole: 'main',
+      mayDie: false,
+    });
     sampledPids.add(nxProc.pid!);
   }
 
@@ -361,7 +433,9 @@ async function runNxWithProfiling(
     (async () => {
       while (!stopPolling) {
         try {
-          const r = spawnSync('pgrep', ['-P', String(nxProc.pid!)], { encoding: 'utf8' });
+          const r = spawnSync('pgrep', ['-P', String(nxProc.pid!)], {
+            encoding: 'utf8',
+          });
           if (r.status === 0 && r.stdout?.trim()) {
             for (const line of r.stdout.trim().split('\n')) {
               const childPid = parseInt(line, 10);
@@ -384,19 +458,31 @@ async function runNxWithProfiling(
   for (const entry of samplerRegistry) {
     if (!entry.mayDie) entry.proc.kill('SIGINT');
   }
-  await Promise.all(samplerRegistry.map((e) => waitForExitWithTimeout(e.proc, 5000).catch(() => {})));
+  await Promise.all(
+    samplerRegistry.map((e) =>
+      waitForExitWithTimeout(e.proc, 5000).catch(() => {})
+    )
+  );
 
   // ── Collect per-PID JSON files ────────────────────────────────────────────────
   const pidJsonPattern = /^\d+_(main|plugin-worker|task-worker|daemon)\.json$/;
   const reports: ProfileReport[] = [];
-  for (const file of readdirSync(scenarioRunDir).filter((f) => pidJsonPattern.test(f))) {
+  for (const file of readdirSync(scenarioRunDir).filter((f) =>
+    pidJsonPattern.test(f)
+  )) {
     try {
-      reports.push(JSON.parse(readFileSync(join(scenarioRunDir, file), 'utf8')) as ProfileReport);
+      reports.push(
+        JSON.parse(
+          readFileSync(join(scenarioRunDir, file), 'utf8')
+        ) as ProfileReport
+      );
     } catch {}
   }
 
   // ── Build pid→role map (JSON reports + sampler hints) ─────────────────────────
-  const pidToRole = new Map<number, string>(samplerRegistry.map((e) => [e.pid, e.knownRole]));
+  const pidToRole = new Map<number, string>(
+    samplerRegistry.map((e) => [e.pid, e.knownRole])
+  );
   for (const r of reports) pidToRole.set(r.pid, r.role);
 
   // ── Build V8 CPU sections & detail files ──────────────────────────────────────
@@ -415,27 +501,41 @@ async function runNxWithProfiling(
 
   // Load perf-report exports
   type PerfReport = typeof import('../packages/nx/src/utils/perf-report.js');
-  const perfReportMod = await import(join(repoRoot, 'packages', 'nx', 'dist', 'src', 'utils', 'perf-report.js')) as unknown as PerfReport;
-  const { buildScenarioIndexMarkdown, buildSpansSection, buildTotalsSection } = perfReportMod;
+  const perfReportMod = (await import(
+    join(repoRoot, 'packages', 'nx', 'dist', 'src', 'utils', 'perf-report.js')
+  )) as unknown as PerfReport;
+  const { buildScenarioIndexMarkdown, buildSpansSection, buildTotalsSection } =
+    perfReportMod;
 
   const mainReport = reports.find((r) => r.role === 'main');
   const mainJsTotal = mainReport?.wallClockMs ?? 0;
 
   // ── Print terminal summary ────────────────────────────────────────────────────
   if (mainReport) {
-    const fmtMs = (ms: number) => ms >= 1000 ? `${(ms / 1000).toFixed(2)}s` : `${ms.toFixed(1)}ms`;
+    const fmtMs = (ms: number) =>
+      ms >= 1000 ? `${(ms / 1000).toFixed(2)}s` : `${ms.toFixed(1)}ms`;
     const top = mainReport.entries.slice(0, 8);
-    console.log(`\n── [${def.label}] ─────────────────────────────────────────────`);
+    console.log(
+      `\n── [${def.label}] ─────────────────────────────────────────────`
+    );
     for (const e of top) {
-      const bar = '█'.repeat(Math.min(28, Math.round((e.durationMs / top[0].durationMs) * 28)));
-      console.log(`  ${e.name.padEnd(43)} ${fmtMs(e.durationMs).padStart(9)}  ${bar}`);
+      const bar = '█'.repeat(
+        Math.min(28, Math.round((e.durationMs / top[0].durationMs) * 28))
+      );
+      console.log(
+        `  ${e.name.padEnd(43)} ${fmtMs(e.durationMs).padStart(9)}  ${bar}`
+      );
     }
     console.log(
       `  Wall-clock: ${fmtMs(mainReport.wallClockMs)}` +
-      (mainReport.gc ? `  GC: ${fmtMs(mainReport.gc.totalMs)}` : '') +
-      (mainReport.eventLoopDelay ? `  ELD p99: ${fmtMs(mainReport.eventLoopDelay.p99Ms)}` : '')
+        (mainReport.gc ? `  GC: ${fmtMs(mainReport.gc.totalMs)}` : '') +
+        (mainReport.eventLoopDelay
+          ? `  ELD p99: ${fmtMs(mainReport.eventLoopDelay.p99Ms)}`
+          : '')
     );
-    console.log('─────────────────────────────────────────────────────────────\n');
+    console.log(
+      '─────────────────────────────────────────────────────────────\n'
+    );
   }
 
   // ── Write per-process detail files ───────────────────────────────────────────
@@ -481,9 +581,13 @@ async function runNxWithProfiling(
 
         // Print to terminal for main only
         if (r.role === 'main') {
-          console.log(`── [${def.label}] CPU hot spots ─────────────────────────────────`);
+          console.log(
+            `── [${def.label}] CPU hot spots ─────────────────────────────────`
+          );
           printCpuHotSpots(spots, 12);
-          console.log('─────────────────────────────────────────────────────────────\n');
+          console.log(
+            '─────────────────────────────────────────────────────────────\n'
+          );
         }
       }
     }
@@ -496,7 +600,9 @@ async function runNxWithProfiling(
     const orderedSamplers = [
       ...samplerRegistry.filter((e) => e.knownRole === 'main'),
       ...samplerRegistry.filter((e) => e.knownRole === 'daemon'),
-      ...samplerRegistry.filter((e) => e.knownRole !== 'main' && e.knownRole !== 'daemon'),
+      ...samplerRegistry.filter(
+        (e) => e.knownRole !== 'main' && e.knownRole !== 'daemon'
+      ),
     ];
 
     for (const entry of orderedSamplers) {
@@ -509,7 +615,7 @@ async function runNxWithProfiling(
       writeFileSync(
         join(scenarioRunDir, sampleFile),
         `# System Profile — ${role} (pid ${entry.pid})\n\n` +
-        buildSampleMarkdownSection(sr, 40, entry.pid, role)
+          buildSampleMarkdownSection(sr, 40, entry.pid, role)
       );
 
       // Update detailLinks for JSON-matched processes
@@ -520,17 +626,26 @@ async function runNxWithProfiling(
         detailLinks.set(entry.pid, { sampleFile });
       }
 
-      console.log(`  [${def.name}] sample: ${role} pid ${entry.pid} — ${sr.hotSpots.length} fn, ${sr.totalSamples} samples`);
+      console.log(
+        `  [${def.name}] sample: ${role} pid ${entry.pid} — ${sr.hotSpots.length} fn, ${sr.totalSamples} samples`
+      );
 
       // Print terminal hot spots for main process only
       if (role === 'main') {
-        console.log(`── [${def.label}] system hot spots ──────────────────────────────`);
+        console.log(
+          `── [${def.label}] system hot spots ──────────────────────────────`
+        );
         printSampleHotSpots(sr, 12);
-        console.log('─────────────────────────────────────────────────────────────\n');
+        console.log(
+          '─────────────────────────────────────────────────────────────\n'
+        );
       }
     }
   } else if (hasPerf && existsSync(sysProfilePath)) {
-    appendPerfToFile(sysProfilePath, join(detailDir, `main-${mainReport?.pid ?? 0}-perf.md`));
+    appendPerfToFile(
+      sysProfilePath,
+      join(detailDir, `main-${mainReport?.pid ?? 0}-perf.md`)
+    );
   }
 
   // ── Write scenario index.md ───────────────────────────────────────────────────
@@ -548,12 +663,21 @@ async function runNxWithProfiling(
 function appendPerfToFile(perfData: string, outFile: string): void {
   const result = spawnSync(
     'perf',
-    ['report', '--stdio', '-i', perfData, '--max-stack=6', '--percent-limit=0.5', '--no-children'],
+    [
+      'report',
+      '--stdio',
+      '-i',
+      perfData,
+      '--max-stack=6',
+      '--percent-limit=0.5',
+      '--no-children',
+    ],
     { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 }
   );
   if (result.status !== 0 || !result.stdout?.trim()) return;
   const lines = result.stdout.split('\n').slice(0, 300);
-  writeFileSync(outFile,
+  writeFileSync(
+    outFile,
     `# System Profile (Linux \`perf\`)\n\n\`\`\`\n${lines.join('\n')}\n\`\`\`\n`
   );
 }
@@ -568,32 +692,53 @@ const KEY_SPANS = [
   'task-execution',
 ];
 
-function buildScenarioComparisonMarkdown(benchLabel: string, benchNxArgs: string[], results: ScenarioResult[]): string {
+function buildScenarioComparisonMarkdown(
+  benchLabel: string,
+  benchNxArgs: string[],
+  results: ScenarioResult[]
+): string {
   const fmtMs = (ms: number | undefined) =>
-    ms == null ? '—' : ms >= 1000 ? `${(ms / 1000).toFixed(2)}s` : `${Math.round(ms)}ms`;
+    ms == null
+      ? '—'
+      : ms >= 1000
+        ? `${(ms / 1000).toFixed(2)}s`
+        : `${Math.round(ms)}ms`;
 
   const presentSpans = KEY_SPANS.filter((span) =>
-    results.some((r) => r.reports.find((rep) => rep.role === 'main')?.entries.some((e) => e.name === span))
+    results.some((r) =>
+      r.reports
+        .find((rep) => rep.role === 'main')
+        ?.entries.some((e) => e.name === span)
+    )
   );
 
-  const colHeaders = ['Scenario', 'JS wall-clock', ...presentSpans, 'GC', 'ELD p99', 'Workers'];
-  const rows = results.map((r) => {
-    const main = r.reports.find((rep) => rep.role === 'main');
-    if (!main) return null;
-    const spanMs = (name: string) => {
-      const e = main.entries.find((en) => en.name === name);
-      return fmtMs(e?.durationMs);
-    };
-    const workerCount = r.reports.filter((rep) => rep.role !== 'main').length;
-    return [
-      `[${r.def.label}](./${r.def.name}/index.md)`,
-      fmtMs(main.wallClockMs),
-      ...presentSpans.map(spanMs),
-      fmtMs(main.gc?.totalMs),
-      fmtMs(main.eventLoopDelay?.p99Ms),
-      workerCount > 0 ? String(workerCount) : '—',
-    ];
-  }).filter((r): r is string[] => r !== null);
+  const colHeaders = [
+    'Scenario',
+    'JS wall-clock',
+    ...presentSpans,
+    'GC',
+    'ELD p99',
+    'Workers',
+  ];
+  const rows = results
+    .map((r) => {
+      const main = r.reports.find((rep) => rep.role === 'main');
+      if (!main) return null;
+      const spanMs = (name: string) => {
+        const e = main.entries.find((en) => en.name === name);
+        return fmtMs(e?.durationMs);
+      };
+      const workerCount = r.reports.filter((rep) => rep.role !== 'main').length;
+      return [
+        `[${r.def.label}](./${r.def.name}/index.md)`,
+        fmtMs(main.wallClockMs),
+        ...presentSpans.map(spanMs),
+        fmtMs(main.gc?.totalMs),
+        fmtMs(main.eventLoopDelay?.p99Ms),
+        workerCount > 0 ? String(workerCount) : '—',
+      ];
+    })
+    .filter((r): r is string[] => r !== null);
 
   const colWidths = colHeaders.map((h, i) =>
     Math.max(h.length, ...rows.map((r) => (r[i] ?? '').length))
@@ -622,12 +767,21 @@ function buildTopLevelIndex(
   allBenchmarkResults: Array<{ bench: BenchmarkDef; results: ScenarioResult[] }>
 ): string {
   const fmtMs = (ms: number | undefined) =>
-    ms == null ? '—' : ms >= 1000 ? `${(ms / 1000).toFixed(2)}s` : `${Math.round(ms)}ms`;
+    ms == null
+      ? '—'
+      : ms >= 1000
+        ? `${(ms / 1000).toFixed(2)}s`
+        : `${Math.round(ms)}ms`;
 
   const scenarioNames = scenarios.map((s) => s.name);
 
   // Build a cross-benchmark × scenario summary table
-  const colHeaders = ['Benchmark', ...scenarioNames.map((s) => s.replace('daemon-', 'D-').replace('nodaemon-', 'ND-'))];
+  const colHeaders = [
+    'Benchmark',
+    ...scenarioNames.map((s) =>
+      s.replace('daemon-', 'D-').replace('nodaemon-', 'ND-')
+    ),
+  ];
   const rows = allBenchmarkResults.map(({ bench, results }) => {
     const cells = scenarioNames.map((sName) => {
       const r = results.find((res) => res.def.name === sName);
@@ -657,8 +811,9 @@ function buildTopLevelIndex(
     '',
     '## Benchmarks',
     '',
-    ...allBenchmarkResults.map(({ bench }) =>
-      `- [${bench.label}](./${bench.name}/comparison.md) — \`nx ${bench.nxArgs.join(' ')}\``
+    ...allBenchmarkResults.map(
+      ({ bench }) =>
+        `- [${bench.label}](./${bench.name}/comparison.md) — \`nx ${bench.nxArgs.join(' ')}\``
     ),
     '',
   ].join('\n');
@@ -667,14 +822,20 @@ function buildTopLevelIndex(
 // ── Orchestration ─────────────────────────────────────────────────────────────
 
 console.log(`[profile] output    → ${runDir}/`);
-console.log(`[profile] benchmarks: ${benchmarks.map((b) => b.name).join(', ')}`);
+console.log(
+  `[profile] benchmarks: ${benchmarks.map((b) => b.name).join(', ')}`
+);
 console.log(`[profile] scenarios : ${scenarios.map((s) => s.name).join(', ')}`);
-if (cpuProf)   console.log(`[profile] v8 cpu    : V8 sampling → *.cpuprofile`);
-if (hasSample) console.log(`[profile] sample    : macOS sampler → main + daemon + workers`);
-if (hasPerf)   console.log(`[profile] perf      : Linux perf record`);
+if (cpuProf) console.log(`[profile] v8 cpu    : V8 sampling → *.cpuprofile`);
+if (hasSample)
+  console.log(`[profile] sample    : macOS sampler → main + daemon + workers`);
+if (hasPerf) console.log(`[profile] perf      : Linux perf record`);
 console.log('');
 
-const allBenchmarkResults: Array<{ bench: BenchmarkDef; results: ScenarioResult[] }> = [];
+const allBenchmarkResults: Array<{
+  bench: BenchmarkDef;
+  results: ScenarioResult[];
+}> = [];
 
 for (const bench of benchmarks) {
   const benchRunDir = benchmarks.length > 1 ? join(runDir, bench.name) : runDir;
@@ -693,10 +854,15 @@ for (const bench of benchmarks) {
     // Setup
     if (!def.warm) {
       process.stdout.write(`  [${def.name}] setup: nx reset… `);
-      spawnSync(process.execPath, [nxBin, 'reset'], { cwd: benchmarksDir, stdio: 'ignore' });
+      spawnSync(process.execPath, [nxBin, 'reset'], {
+        cwd: benchmarksDir,
+        stdio: 'ignore',
+      });
       process.stdout.write(`done\n`);
     } else {
-      console.log(`  [${def.name}] setup: warm (reusing state from previous scenario)`);
+      console.log(
+        `  [${def.name}] setup: warm (reusing state from previous scenario)`
+      );
     }
 
     const result = await runNxWithProfiling(def, bench.nxArgs, scenarioRunDir);
@@ -708,7 +874,11 @@ for (const bench of benchmarks) {
   allBenchmarkResults.push({ bench, results: benchResults });
 
   // Write benchmark-level comparison.md
-  const compMd = buildScenarioComparisonMarkdown(bench.label, bench.nxArgs, benchResults);
+  const compMd = buildScenarioComparisonMarkdown(
+    bench.label,
+    bench.nxArgs,
+    benchResults
+  );
   writeFileSync(join(benchRunDir, 'comparison.md'), compMd);
   console.log(`  → ${benchRunDir}/comparison.md`);
 }
@@ -716,9 +886,15 @@ for (const bench of benchmarks) {
 // ── Top-level index ───────────────────────────────────────────────────────────
 
 if (benchmarks.length > 1) {
-  writeFileSync(join(runDir, 'index.md'), buildTopLevelIndex(allBenchmarkResults));
+  writeFileSync(
+    join(runDir, 'index.md'),
+    buildTopLevelIndex(allBenchmarkResults)
+  );
   console.log(`\n[profile] top-level index → ${runDir}/index.md`);
 }
 
 console.log(`[profile] done → ${runDir}/`);
-process.exit(allBenchmarkResults[allBenchmarkResults.length - 1]?.results.at(-1)?.exitStatus ?? 0);
+process.exit(
+  allBenchmarkResults[allBenchmarkResults.length - 1]?.results.at(-1)
+    ?.exitStatus ?? 0
+);
