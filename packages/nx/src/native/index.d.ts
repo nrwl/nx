@@ -70,7 +70,7 @@ export declare class FileLock {
 export declare class HashPlanInspector {
   constructor(allWorkspaceFiles: ExternalObject<Array<FileData>>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, workspaceRoot: string)
   /** @deprecated Use `inspectInputs()` instead for structured output. */
-  inspect(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, string[]>
+  inspect(hashPlans: ExternalObject<HashbrownMap<string, Array<HashInstruction>>>): Record<string, string[]>
   /**
    * Like `inspect()` but returns structured `HashInputs` objects instead of flat strings.
    * Each `HashInstruction` is categorized into the appropriate bucket (files, runtime,
@@ -79,13 +79,13 @@ export declare class HashPlanInspector {
    * filters only affect hashing, not which files are reported as inputs).
    * ProjectConfiguration is skipped for now. Cwd is skipped as it's ambient.
    */
-  inspectInputs(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, HashInputs>
+  inspectInputs(hashPlans: ExternalObject<HashbrownMap<string, Array<HashInstruction>>>): Record<string, HashInputs>
 }
 
 export declare class HashPlanner {
   constructor(nxJson: NxJson, projectGraph: ExternalObject<ProjectGraph>)
   getPlans(taskIds: Array<string>, taskGraph: TaskGraph): Record<string, string[]>
-  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph): ExternalObject<Record<string, Array<HashInstruction>>>
+  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph): ExternalObject<HashbrownMap<string, Array<HashInstruction>>>
 }
 
 export declare class HttpRemoteCache {
@@ -203,7 +203,7 @@ export declare class TaskHasher {
    * the same env should build `per_task_envs` by keying that env under
    * every task id.
    */
-  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
+  hashPlans(hashPlans: ExternalObject<HashbrownMap<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
 }
 
 export declare class TaskInvocationTracker {
@@ -376,6 +376,19 @@ export declare function getFilesForOutputsBatch(directory: string, entriesBatch:
  * Returns `None` when already in the main repo (or not in a git repo at all).
  */
 export declare function getMainWorktreeRoot(workspaceRoot: string): string | null
+
+/**
+ * Returns a JSON array of `{ name, durationMs }` objects, or `null` if
+ * profiling was not enabled. Called from the JS layer on process exit.
+ *
+ * ```
+ * // TypeScript
+ * import { getNativeTimings } from './native';
+ * const raw = getNativeTimings();
+ * const entries = raw ? JSON.parse(raw) : [];
+ * ```
+ */
+export declare function getNativeTimings(): string | null
 
 export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
 

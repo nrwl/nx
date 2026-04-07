@@ -8,6 +8,7 @@ use crate::native::types::FileData;
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use rayon::prelude::*;
+use hashbrown::HashMap as HashbrownMap;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -40,7 +41,7 @@ impl HashPlanInspector {
     #[napi(ts_return_type = "Record<string, string[]>")]
     pub fn inspect(
         &self,
-        hash_plans: &External<HashMap<String, Vec<HashInstruction>>>,
+        hash_plans: &External<HashbrownMap<String, Vec<HashInstruction>>>,
     ) -> anyhow::Result<HashMap<String, Vec<String>>> {
         let project_file_set_cache = ProjectFileSetCache::new();
         let results: Vec<(&String, Vec<String>)> = hash_plans
@@ -88,7 +89,7 @@ impl HashPlanInspector {
     #[napi(ts_return_type = "Record<string, HashInputs>")]
     pub fn inspect_inputs(
         &self,
-        hash_plans: &External<HashMap<String, Vec<HashInstruction>>>,
+        hash_plans: &External<HashbrownMap<String, Vec<HashInstruction>>>,
     ) -> anyhow::Result<HashMap<String, HashInputs>> {
         let project_file_set_cache = ProjectFileSetCache::new();
         let results: Vec<(&String, HashInputsBuilder)> = hash_plans

@@ -10,6 +10,7 @@ use crate::native::{
 };
 use napi::bindgen_prelude::External;
 use rayon::prelude::*;
+use hashbrown::HashMap as HashbrownMap;
 use std::collections::HashMap;
 use tracing::trace;
 
@@ -46,7 +47,7 @@ impl HashPlanner {
         &self,
         task_ids: Vec<&str>,
         task_graph: TaskGraph,
-    ) -> anyhow::Result<HashMap<String, Vec<HashInstruction>>> {
+    ) -> anyhow::Result<HashbrownMap<String, Vec<HashInstruction>>> {
         let function_start = std::time::Instant::now();
 
         trace!("Starting get_plans_internal for {} tasks", task_ids.len());
@@ -57,7 +58,7 @@ impl HashPlanner {
         trace!("External deps setup completed in {:?}", setup_duration);
 
         let parallel_start = std::time::Instant::now();
-        let result: anyhow::Result<HashMap<String, Vec<HashInstruction>>> = task_ids
+        let result: anyhow::Result<HashbrownMap<String, Vec<HashInstruction>>> = task_ids
             .par_iter()
             .map(|id| {
                 let task = &task_graph
@@ -122,6 +123,10 @@ impl HashPlanner {
             );
         }
 
+        crate::native::profiler::record_ms("hash_planner::setup_external_deps", setup_duration.as_secs_f64() * 1000.0);
+        crate::native::profiler::record_ms("hash_planner::parallel_planning", parallel_duration.as_secs_f64() * 1000.0);
+        crate::native::profiler::record_ms("hash_planner::total", total_duration.as_secs_f64() * 1000.0);
+
         result
     }
 
@@ -132,7 +137,8 @@ impl HashPlanner {
         task_graph: TaskGraph,
     ) -> anyhow::Result<HashMap<String, Vec<HashInstruction>>> {
         let task_ids: Vec<&str> = task_ids.iter().map(|s| s.as_str()).collect();
-        self.get_plans_internal(task_ids, task_graph)
+        let plans = self.get_plans_internal(task_ids, task_graph)?;
+        Ok(plans.into_iter().collect())
     }
 
     #[napi]
@@ -140,7 +146,7 @@ impl HashPlanner {
         &self,
         task_ids: Vec<String>,
         task_graph: TaskGraph,
-    ) -> anyhow::Result<External<HashMap<String, Vec<HashInstruction>>>> {
+    ) -> anyhow::Result<External<HashbrownMap<String, Vec<HashInstruction>>>> {
         let task_ids: Vec<&str> = task_ids.iter().map(|s| s.as_str()).collect();
         let plans = self.get_plans_internal(task_ids, task_graph)?;
         Ok(External::new(plans))

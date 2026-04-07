@@ -27,11 +27,8 @@ where
 
     trace!("Copying {:?} -> {:?}", &src, &dest);
 
-    if !dest_parent.exists() {
-        trace!("Creating parent directory: {:?}", dest_parent);
-        fs::create_dir_all(dest_parent)?;
-        trace!("Successfully created parent directory: {:?}", dest_parent);
-    }
+    trace!("Ensuring parent directory: {:?}", dest_parent);
+    fs::create_dir_all(dest_parent)?;
 
     let size = if src.is_dir() {
         trace!("Copying directory: {:?}", &src);

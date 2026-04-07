@@ -387,9 +387,15 @@ impl NxCache {
         cached_result: CachedResult,
         outputs: Vec<String>,
     ) -> anyhow::Result<i64> {
+        let restore_start = std::time::Instant::now();
         let outputs_path = Path::new(&cached_result.outputs_path);
 
         let expanded_outputs = _expand_outputs(outputs_path, outputs)?;
+
+        if expanded_outputs.is_empty() {
+            crate::native::profiler::record("cache::copy_files_from_cache", restore_start);
+            return Ok(0);
+        }
 
         trace!("Removing expanded outputs: {:?}", &expanded_outputs);
         remove_items(
@@ -404,26 +410,34 @@ impl NxCache {
             "Copying Files from Cache {:?} -> {:?}",
             &outputs_path, &self.workspace_root
         );
-        let sz = _copy(outputs_path, &self.workspace_root);
-
-        match sz {
-            Err(e) => {
-                let kind = underlying_io_error_kind(&e);
-                match kind {
-                    Some(std::io::ErrorKind::NotFound) => {
-                        trace!("No artifacts to copy: {:?}", e);
-                        Ok(0)
-                    }
-                    _ => {
-                        return Err(anyhow::anyhow!("Error copying files from cache: {:?}", e));
+        let mut total_size = 0i64;
+        for expanded in &expanded_outputs {
+            let cache_src = outputs_path.join(expanded);
+            let workspace_dest = self.workspace_root.join(expanded);
+            match _copy(cache_src.as_path(), workspace_dest.as_path()) {
+                Err(e) => {
+                    let kind = underlying_io_error_kind(&e);
+                    match kind {
+                        Some(std::io::ErrorKind::NotFound) => {
+                            trace!("No artifact to copy for {}: {:?}", expanded, e);
+                        }
+                        _ => {
+                            return Err(anyhow::anyhow!(
+                                "Error copying files from cache for {}: {:?}",
+                                expanded,
+                                e
+                            ));
+                        }
                     }
                 }
-            }
-            Ok(sz) => {
-                trace!("Copied {} bytes from cache", sz);
-                Ok(sz)
+                Ok(sz) => {
+                    trace!("Copied {} bytes from cache for {}", sz, expanded);
+                    total_size += sz;
+                }
             }
         }
+        crate::native::profiler::record("cache::copy_files_from_cache", restore_start);
+        Ok(total_size)
     }
 
     #[napi]

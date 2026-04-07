@@ -610,6 +610,7 @@ module.exports.getDefaultMaxCacheSize = nativeBinding.getDefaultMaxCacheSize
 module.exports.getEventDimensions = nativeBinding.getEventDimensions
 module.exports.getFilesForOutputsBatch = nativeBinding.getFilesForOutputsBatch
 module.exports.getMainWorktreeRoot = nativeBinding.getMainWorktreeRoot
+module.exports.getNativeTimings = nativeBinding.getNativeTimings
 module.exports.getTransformableOutputs = nativeBinding.getTransformableOutputs
 module.exports.GroupType = nativeBinding.GroupType
 module.exports.hashArray = nativeBinding.hashArray
