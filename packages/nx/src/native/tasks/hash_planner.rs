@@ -9,7 +9,6 @@ use crate::native::{
 };
 use napi::bindgen_prelude::External;
 use rayon::prelude::*;
-use hashbrown::HashMap as HashbrownMap;
 use std::collections::HashMap;
 use tracing::trace;
 
