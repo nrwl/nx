@@ -1,8 +1,8 @@
 import {
-    ensurePackage,
-    GeneratorCallback,
-    joinPathFragments,
-    Tree,
+  ensurePackage,
+  GeneratorCallback,
+  joinPathFragments,
+  Tree,
 } from '@nx/devkit';
 
 import { nxVersion } from '../../../utils/versions';
@@ -32,6 +32,7 @@ export async function addVitest(
     addPlugin: options.addPlugin,
     runtimeTsconfigFileName: 'tsconfig.json',
     projectType: 'application',
+    compiler: options.swc ? 'swc' : 'babel',
   });
 
   createOrEditViteConfig(
