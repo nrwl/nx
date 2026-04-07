@@ -59,7 +59,7 @@ pub fn record_ms(name: &str, duration_ms: f64) {
 /// Returns a JSON array of `{ name, durationMs }` objects, or `null` if
 /// profiling was not enabled. Called from the JS layer on process exit.
 ///
-/// ```
+/// ```js
 /// // TypeScript
 /// import { getNativeTimings } from './native';
 /// const raw = getNativeTimings();
