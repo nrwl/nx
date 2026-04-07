@@ -52,6 +52,14 @@ async function main() {
   // --version doesn't need any env / daemon / analytics state — skip dotenv
   // loading (and the heavy modules it would pull in).
   if (workspace && process.argv[2] !== '--version') {
+    const { workspaceDataDirectoryForWorkspace } = await import(
+      '../src/utils/cache-directory.js'
+    );
+    process.report.reportOnFatalError = true;
+    process.report.directory = workspaceDataDirectoryForWorkspace(
+      workspace.dir
+    );
+
     const { loadRootEnvFiles } = await import('../src/utils/dotenv.js');
     performance.mark('loading dotenv files:start');
     loadRootEnvFiles(workspace.dir);
