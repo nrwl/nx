@@ -1,7 +1,7 @@
 use crate::native::project_graph::types::{Project, ProjectGraph};
 use crate::native::tasks::types::Task;
 use crate::native::types::{Input, NxJson};
-use std::collections::HashMap;
+use hashbrown::HashMap;
 
 #[derive(Debug)]
 pub(super) struct SplitInputs<'a> {
