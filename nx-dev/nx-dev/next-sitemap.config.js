@@ -20,9 +20,17 @@ module.exports = {
         policies: [{ userAgent: '*', disallow: '/' }],
       }
     : {
-        additionalSitemaps: [
-          `${siteUrl}/sitemap-1.xml`,
-          `${siteUrl}/docs/sitemap-index.xml`,
+        policies: [
+          { userAgent: '*', allow: '/' },
+          { userAgent: 'GPTBot', allow: '/' },
+          { userAgent: 'ClaudeBot', allow: '/' },
+          { userAgent: 'Google-Extended', allow: '/' },
+          { userAgent: 'PerplexityBot', allow: '/' },
+          { userAgent: 'OAI-SearchBot', allow: '/' },
+          { userAgent: 'Applebot-Extended', allow: '/' },
+          { userAgent: 'Meta-ExternalAgent', allow: '/' },
         ],
+        // Additional sitemaps are added to the sitemap index by
+        // scripts/patch-sitemap-index.mjs to avoid duplicate entries.
       },
 };
