@@ -25,7 +25,24 @@
     "Cypress",
     "CLI"
   ],
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/testing.d.ts"
+      ],
+      "ngcli-adapter": [
+        "dist/ngcli-adapter.d.ts"
+      ],
+      "internal": [
+        "dist/internal.d.ts"
+      ],
+      "internal-testing-utils": [
+        "dist/internal-testing-utils.d.ts"
+      ]
+    }
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {

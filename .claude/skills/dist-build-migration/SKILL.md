@@ -98,8 +98,9 @@ Change `outDir` from `../../dist/packages/<name>/spec` to `dist/spec`.
 Key changes:
 
 - Add `"type": "commonjs"` near the top (after `private`)
-- Remove `"main"` field (replaced by exports)
+- Change `"main"` to `"./dist/index.js"`
 - Change `"types"` to `"./dist/index.d.ts"`
+- Add `"typesVersions"` for backwards compatibility with `moduleResolution: "node"` consumers
 - Add `"exports"` map with entries for each entry point
 
 Each export entry follows this pattern:
@@ -123,6 +124,19 @@ Always include:
 Include `"./migrations.json": "./migrations.json"` if the package has migrations.
 
 **Note**: The `@nx/nx-source` condition is a custom condition used for source-level resolution within the workspace (so other packages import from source, not dist).
+
+Add a `typesVersions` field for consumers using `moduleResolution: "node"` (which doesn't read `exports`):
+
+```json
+"typesVersions": {
+  "*": {
+    "testing": ["dist/testing.d.ts"],
+    "ngcli-adapter": ["dist/ngcli-adapter.d.ts"]
+  }
+}
+```
+
+Add an entry for each subpath export (excluding `.`, `./package.json`, and `./migrations.json`).
 
 ### 6. Update `project.json`
 
