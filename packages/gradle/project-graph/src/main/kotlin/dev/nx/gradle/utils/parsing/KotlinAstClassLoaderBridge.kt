@@ -3,11 +3,10 @@ package dev.nx.gradle.utils.parsing
 import java.io.File
 import java.net.URL
 import java.net.URLClassLoader
-import java.util.WeakHashMap
 import org.gradle.api.Project
 import org.gradle.api.logging.Logger
 
-private val classLoaderCache = WeakHashMap<Project, ClassLoader?>()
+private val classLoaderCache = HashMap<Project, ClassLoader?>()
 
 /**
  * Parse a Kotlin file using the AST parser via a classloader that has kotlin-compiler-embeddable
@@ -87,37 +86,37 @@ private fun createKotlinAstClassLoader(project: Project, logger: Logger?): Class
 }
 
 internal fun detectKotlinVersion(project: Project, logger: Logger? = null): String? {
-  // Strategy 1: KGP extension
-  try {
-    val ext = project.extensions.findByName("kotlin")
-    if (ext != null) {
-      val method = ext.javaClass.getMethod("getCoreLibrariesVersion")
-      val version = method.invoke(ext) as? String
-      if (version != null) {
-        logger?.info("Detected Kotlin version from KGP extension: $version")
-        return version
-      }
-    }
-  } catch (e: Exception) {
-    logger?.debug("Could not read Kotlin version from KGP extension: ${e.message}")
-  }
-
-  // Strategy 2: Find kotlin-stdlib in resolved configurations
-  return findKotlinStdlibVersion(project, logger)
+  return detectKotlinVersionFromKgpExtension(project, logger)
+      ?: detectKotlinVersionFromStdlib(project, logger)
 }
 
-private fun findKotlinStdlibVersion(project: Project, logger: Logger?): String? {
+private fun detectKotlinVersionFromKgpExtension(project: Project, logger: Logger?): String? {
+  val ext = project.extensions.findByName("kotlin") ?: return null
+  return try {
+    val version = ext.javaClass.getMethod("getCoreLibrariesVersion").invoke(ext) as? String
+    logger?.info("Detected Kotlin version from KGP extension: $version")
+    version
+  } catch (e: Exception) {
+    logger?.debug("Could not read Kotlin version from KGP extension: ${e.message}")
+    null
+  }
+}
+
+private fun detectKotlinVersionFromStdlib(project: Project, logger: Logger?): String? {
   val configNames = listOf("compileClasspath", "testCompileClasspath")
   for (configName in configNames) {
     val config = project.configurations.findByName(configName) ?: continue
     if (!config.isCanBeResolved) continue
     try {
-      val artifact =
-          config.resolvedConfiguration.resolvedArtifacts.firstOrNull {
-            it.moduleVersion.id.module.toString() == "org.jetbrains.kotlin:kotlin-stdlib"
-          }
-      if (artifact != null) {
-        val version = artifact.moduleVersion.id.version
+      val version =
+          config.resolvedConfiguration.resolvedArtifacts
+              .firstOrNull {
+                it.moduleVersion.id.module.toString() == "org.jetbrains.kotlin:kotlin-stdlib"
+              }
+              ?.moduleVersion
+              ?.id
+              ?.version
+      if (version != null) {
         logger?.info("Detected Kotlin version from $configName: $version")
         return version
       }

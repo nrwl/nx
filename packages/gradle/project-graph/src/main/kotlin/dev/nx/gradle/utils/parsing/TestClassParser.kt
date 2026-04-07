@@ -1,6 +1,7 @@
 package dev.nx.gradle.utils.parsing
 
 import java.io.File
+import java.time.Instant
 import org.gradle.api.Task
 
 /**
@@ -12,8 +13,7 @@ fun getAllVisibleClassesWithNestedAnnotation(
     testTask: Task? = null
 ): MutableMap<String, String>? {
   val logger = testTask?.logger
-
-  logger?.info("=== Processing test file: ${file.name} ===")
+  logger?.info("=== Processing test file: ${file.name} at ${Instant.now()} ===")
 
   // Use AST-based parsing
   val result =
@@ -31,14 +31,9 @@ fun getAllVisibleClassesWithNestedAnnotation(
                   "Java AST parsing returned empty/null, falling back to regex for: ${file.name}")
               parseTestClassesWithRegex(file)
             }
-          } catch (e: Exception) {
+          } catch (e: Throwable) {
             logger?.warn(
-                "Java AST parsing exception for ${file.name}: ${e.javaClass.simpleName} - ${e.message}")
-            logger?.info("Falling back to regex parsing for: ${file.name}")
-            parseTestClassesWithRegex(file)
-          } catch (e: Error) {
-            logger?.warn(
-                "Java AST parsing error for ${file.name}: ${e.javaClass.simpleName} - ${e.message}")
+                "Java AST parsing failed for ${file.name}: ${e.javaClass.simpleName} - ${e.message}")
             logger?.info("Falling back to regex parsing for: ${file.name}")
             parseTestClassesWithRegex(file)
           }
@@ -63,12 +58,7 @@ fun getAllVisibleClassesWithNestedAnnotation(
                   "Kotlin AST parsing returned empty/null, falling back to regex for: ${file.name}")
               parseTestClassesWithRegex(file)
             }
-          } catch (e: Exception) {
-            logger?.warn(
-                "Kotlin AST parsing failed for ${file.name}: ${e.javaClass.simpleName} - ${e.message}")
-            logger?.info("Falling back to regex parsing for: ${file.name}")
-            parseTestClassesWithRegex(file)
-          } catch (e: Error) {
+          } catch (e: Throwable) {
             logger?.warn(
                 "Kotlin AST parsing failed for ${file.name}: ${e.javaClass.simpleName} - ${e.message}")
             logger?.info("Falling back to regex parsing for: ${file.name}")
@@ -81,6 +71,6 @@ fun getAllVisibleClassesWithNestedAnnotation(
         }
       }
 
-  logger?.info("Final result for ${file.name}: ${result?.keys}")
+  logger?.info("Final result for ${file.name}: ${result?.keys} at ${Instant.now()}")
   return result
 }
