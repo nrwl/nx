@@ -8,9 +8,9 @@ use crate::native::{
     project_graph::types::ProjectGraph,
     tasks::{inputs::SplitInputs, types::Task},
 };
+use hashbrown::HashMap as HashbrownMap;
 use napi::bindgen_prelude::External;
 use rayon::prelude::*;
-use hashbrown::HashMap as HashbrownMap;
 use std::collections::HashMap;
 use tracing::trace;
 
@@ -123,9 +123,18 @@ impl HashPlanner {
             );
         }
 
-        crate::native::profiler::record_ms("hash_planner::setup_external_deps", setup_duration.as_secs_f64() * 1000.0);
-        crate::native::profiler::record_ms("hash_planner::parallel_planning", parallel_duration.as_secs_f64() * 1000.0);
-        crate::native::profiler::record_ms("hash_planner::total", total_duration.as_secs_f64() * 1000.0);
+        crate::native::profiler::record_ms(
+            "hash_planner::setup_external_deps",
+            setup_duration.as_secs_f64() * 1000.0,
+        );
+        crate::native::profiler::record_ms(
+            "hash_planner::parallel_planning",
+            parallel_duration.as_secs_f64() * 1000.0,
+        );
+        crate::native::profiler::record_ms(
+            "hash_planner::total",
+            total_duration.as_secs_f64() * 1000.0,
+        );
 
         result
     }

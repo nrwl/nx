@@ -1116,8 +1116,8 @@ importers:
         specifier: ~0.30.2
         version: 0.30.17
       markdown-factory:
-        specifier: ^0.0.6
-        version: 0.0.6
+        specifier: ^1.0.0
+        version: 1.0.0(yaml@2.8.0)
       mdast-util-from-markdown:
         specifier: ^1.3.1
         version: 1.3.1
@@ -3337,6 +3337,9 @@ importers:
       lines-and-columns:
         specifier: 2.0.3
         version: 2.0.3
+      markdown-factory:
+        specifier: ^1.0.0
+        version: 1.0.0(yaml@2.8.0)
       minimatch:
         specifier: 'catalog:'
         version: 10.2.5
@@ -18948,8 +18951,13 @@ packages:
     resolution: {integrity: sha512-o5vL7aDWatOTX8LzaS1WMoaoxIiLRQJuIKKe2wAw6IeULDHaqbiqiggmx+pKvZDb1Sj+pE46Sn1T7lCqfFtg1Q==}
     engines: {node: '>=16'}
 
-  markdown-factory@0.0.6:
-    resolution: {integrity: sha512-epJKNY4rlcMIJ+czEkPgstlk+9cKmHUkhRxemCPf+38vKbehBoiH9gmsxXkgzRYQx98hpE9l/zVkg2WI+IbT3Q==}
+  markdown-factory@1.0.0:
+    resolution: {integrity: sha512-5AJ/g5V6S9kQASb6eYz2w3XSzJbjLfy/hEq65NX9VKhqIOJqEqhxOr/Qh7COIxZRrkP8DUVFSLnPQCXud9hLDg==}
+    peerDependencies:
+      yaml: 2.5.0
+    peerDependenciesMeta:
+      yaml:
+        optional: true
 
   markdown-table@3.0.4:
     resolution: {integrity: sha512-wiYz4+JrLyb/DqW2hkFJxP7Vd7JuTDm77fvbM8VfEQdmSMqcImWeeRbHwZjBjIFki/VaMK2BhFi7oUUZeM5bqw==}
@@ -43739,7 +43747,9 @@ snapshots:
 
   markdown-extensions@2.0.0: {}
 
-  markdown-factory@0.0.6: {}
+  markdown-factory@1.0.0(yaml@2.8.0):
+    optionalDependencies:
+      yaml: 2.8.0
 
   markdown-table@3.0.4: {}
 
