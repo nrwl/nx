@@ -1,7 +1,7 @@
 //! Benchmarks the hot path in _copy: copying a small file to a target where
 //! the parent directory already exists (the common case during cache restore).
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use std::fs;
 use std::path::Path;
 use tempfile::TempDir;
@@ -38,7 +38,9 @@ fn bench_copy_parent_exists(c: &mut Criterion) {
 
     let dest_dir = TempDir::new().unwrap();
     // Pre-create the parent — this is the common case
-    let dest_parent = dest_dir.path().join("packages/group-01/sub-01/leaf-01/copy-out");
+    let dest_parent = dest_dir
+        .path()
+        .join("packages/group-01/sub-01/leaf-01/copy-out");
     fs::create_dir_all(&dest_parent).unwrap();
 
     group.bench_function("with_exists_guard", |b| {
@@ -71,7 +73,9 @@ fn bench_copy_parent_missing(c: &mut Criterion) {
     group.bench_function("with_exists_guard", |b| {
         b.iter(|| {
             let dest_dir = TempDir::new().unwrap();
-            let dest = dest_dir.path().join("packages/group-01/sub-01/leaf-01/copy-out/output.md");
+            let dest = dest_dir
+                .path()
+                .join("packages/group-01/sub-01/leaf-01/copy-out/output.md");
             copy_with_exists_guard(black_box(&src_file), black_box(&dest))
         });
     });
@@ -79,7 +83,9 @@ fn bench_copy_parent_missing(c: &mut Criterion) {
     group.bench_function("no_exists_guard", |b| {
         b.iter(|| {
             let dest_dir = TempDir::new().unwrap();
-            let dest = dest_dir.path().join("packages/group-01/sub-01/leaf-01/copy-out/output.md");
+            let dest = dest_dir
+                .path()
+                .join("packages/group-01/sub-01/leaf-01/copy-out/output.md");
             copy_no_exists_guard(black_box(&src_file), black_box(&dest))
         });
     });

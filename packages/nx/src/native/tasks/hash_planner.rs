@@ -13,7 +13,6 @@ use crate::native::{
 use itertools::Itertools;
 use napi::bindgen_prelude::{ClassInstance, External};
 use rayon::prelude::*;
-use hashbrown::HashMap as HashbrownMap;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use tracing::trace;
 
