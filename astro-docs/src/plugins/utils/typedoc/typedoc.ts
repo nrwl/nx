@@ -85,8 +85,15 @@ export function setupTypeDoc(logger: LoaderContext['logger']) {
     '@nx/*': ['dist/packages/*', 'packages/*/src/*'],
   };
 
+  // Include dist .d.ts files so TypeDoc can find entry points like dist/index.d.ts.
+  // Use absolute paths since this tsconfig is written to a temp directory.
+  tsconfigObj.include = [
+    ...(tsconfigObj.include || []),
+    join(devkitPath, 'dist', '**', '*.d.ts'),
+  ];
+
   tsconfigObj.exclude = [
-    ...(tsconfigObj.exclude || []),
+    ...(tsconfigObj.exclude || []).filter((e: string) => e !== 'dist'),
     '**/*.spec.ts',
     '**/*.test.ts',
     '**/test/**',
