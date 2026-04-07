@@ -1,3 +1,4 @@
+use hashbrown::HashMap as HashbrownMap;
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
@@ -193,7 +194,7 @@ impl TaskHasher {
     #[napi]
     pub fn hash_plans(
         &self,
-        hash_plans: &External<HashMap<String, Vec<HashInstruction>>>,
+        hash_plans: &External<HashbrownMap<String, Vec<HashInstruction>>>,
         js_env: HashMap<String, String>,
         cwd: String,
         collect_task_inputs: Option<bool>,

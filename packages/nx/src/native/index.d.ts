@@ -50,20 +50,20 @@ export declare class FileLock {
 export declare class HashPlanInspector {
   constructor(allWorkspaceFiles: ExternalObject<Array<FileData>>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, workspaceRoot: string)
   /** @deprecated Use `inspectInputs()` instead for structured output. */
-  inspect(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, string[]>
+  inspect(hashPlans: ExternalObject<HashbrownMap<string, Array<HashInstruction>>>): Record<string, string[]>
   /**
    * Like `inspect()` but returns structured `HashInputs` objects instead of flat strings.
    * Each `HashInstruction` is categorized into the appropriate bucket (files, runtime,
    * environment, depOutputs, external). TsConfiguration is resolved to the root tsconfig
    * file path. ProjectConfiguration is skipped for now. Cwd is skipped as it's ambient.
    */
-  inspectInputs(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, HashInputs>
+  inspectInputs(hashPlans: ExternalObject<HashbrownMap<string, Array<HashInstruction>>>): Record<string, HashInputs>
 }
 
 export declare class HashPlanner {
   constructor(nxJson: NxJson, projectGraph: ExternalObject<ProjectGraph>)
   getPlans(taskIds: Array<string>, taskGraph: TaskGraph): Record<string, string[]>
-  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph): ExternalObject<Record<string, Array<HashInstruction>>>
+  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph): ExternalObject<HashbrownMap<string, Array<HashInstruction>>>
 }
 
 export declare class HttpRemoteCache {
@@ -168,7 +168,7 @@ export declare class TaskDetails {
 
 export declare class TaskHasher {
   constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<ProjectFiles>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath?: string | undefined | null, options?: HasherOptions | undefined | null)
-  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>, cwd: string, collectTaskInputs?: boolean | undefined | null): NapiDashMap<string, HashDetails>
+  hashPlans(hashPlans: ExternalObject<HashbrownMap<string, Array<HashInstruction>>>, jsEnv: Record<string, string>, cwd: string, collectTaskInputs?: boolean | undefined | null): NapiDashMap<string, HashDetails>
 }
 
 export declare class Watcher {
@@ -321,6 +321,19 @@ export declare function getFilesForOutputs(directory: string, entries: Array<str
  * Returns `None` when already in the main repo (or not in a git repo at all).
  */
 export declare function getMainWorktreeRoot(workspaceRoot: string): string | null
+
+/**
+ * Returns a JSON array of `{ name, durationMs }` objects, or `null` if
+ * profiling was not enabled. Called from the JS layer on process exit.
+ *
+ * ```
+ * // TypeScript
+ * import { getNativeTimings } from './native';
+ * const raw = getNativeTimings();
+ * const entries = raw ? JSON.parse(raw) : [];
+ * ```
+ */
+export declare function getNativeTimings(): string | null
 
 export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
 
