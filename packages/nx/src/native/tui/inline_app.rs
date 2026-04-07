@@ -670,10 +670,7 @@ impl TuiApp for InlineApp {
     fn end_tasks(&mut self, task_results: Vec<crate::native::tasks::types::TaskResult>) {
         debug!(
             "Ending tasks in InlineApp - {:?}. Selected task: {:?}",
-            task_results
-                .iter()
-                .map(|t| &t.task.id)
-                .collect::<Vec<_>>(),
+            task_results.iter().map(|t| &t.task.id).collect::<Vec<_>>(),
             self.selected_item
         );
         self.core.end_tasks(&task_results);

@@ -392,9 +392,7 @@ impl App {
         // Only in RunOne mode - in RunMany there's no single initiating task to prioritize
         if matches!(run_mode, RunMode::RunOne) {
             if let Some(first_initiating) = initiating_tasks.iter().next() {
-                self.selection_manager
-                    .lock()
-                    .select_task(first_initiating);
+                self.selection_manager.lock().select_task(first_initiating);
             }
         }
 
@@ -969,9 +967,7 @@ impl App {
                                                 c => {
                                                     match c {
                                                         'j' => {
-                                                            self.dispatch_action(
-                                                                Action::NextTask,
-                                                            );
+                                                            self.dispatch_action(Action::NextTask);
                                                         }
                                                         'k' => {
                                                             self.dispatch_action(
@@ -991,8 +987,7 @@ impl App {
                                                         '0' => self.clear_all_panes(),
                                                         'b' => self.toggle_task_list(),
                                                         'm' => {
-                                                            if let Some(area) = self.frame_area
-                                                            {
+                                                            if let Some(area) = self.frame_area {
                                                                 self.toggle_layout_mode(area);
                                                             }
                                                         }
