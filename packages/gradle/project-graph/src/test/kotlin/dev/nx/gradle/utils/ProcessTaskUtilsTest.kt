@@ -508,7 +508,9 @@ class ProcessTaskUtilsTest {
       val extensions = inferExtensionsFromInputProperties(compileTestKotlin, dependsOnTasks)
 
       assertTrue(extensions.contains("class"), "Expected 'class' extension, got $extensions")
-      assertTrue(extensions.contains("jar"), "Expected 'jar' extension from archive dependents, got $extensions")
+      assertTrue(
+          extensions.contains("jar"),
+          "Expected 'jar' extension from archive dependents, got $extensions")
     }
 
     @Test
@@ -549,8 +551,10 @@ class ProcessTaskUtilsTest {
       val testTask = kotlinProject.tasks.getByName("test")
       val extensions = inferExtensionsFromInputProperties(testTask, emptySet())
 
-      assertTrue(extensions.contains("class"), "Expected 'class' extension for Test task, got $extensions")
-      assertTrue(extensions.contains("jar"), "Expected 'jar' extension for Test task, got $extensions")
+      assertTrue(
+          extensions.contains("class"), "Expected 'class' extension for Test task, got $extensions")
+      assertTrue(
+          extensions.contains("jar"), "Expected 'jar' extension for Test task, got $extensions")
     }
 
     @Test

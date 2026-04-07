@@ -15,6 +15,8 @@ import org.gradle.api.internal.provider.TransformBackedProvider
 import org.gradle.api.internal.tasks.DefaultTaskDependency
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
+import org.gradle.api.tasks.compile.AbstractCompile
+import org.gradle.api.tasks.testing.Test as GradleTest
 
 /**
  * Process a task and convert it into target Going to populate:
@@ -159,11 +161,12 @@ fun getGradleFilesInputs(workspaceRoot: String): List<String> {
 fun inferExtensionsFromInputProperties(task: Task, dependentTasks: Set<Task>): Set<String> {
   val extensions = mutableSetOf<String>()
 
-  if (task is org.gradle.api.tasks.testing.Test) {
-    extensions.add("class")
-    extensions.add("jar")
-  } else if (task is org.gradle.api.tasks.compile.AbstractCompile) {
-    extensions.add("class")
+  when (task) {
+    is GradleTest -> {
+      extensions.add("class")
+      extensions.add("jar")
+    }
+    is AbstractCompile -> extensions.add("class")
   }
 
   dependentTasks.forEach { depTask ->
@@ -174,7 +177,7 @@ fun inferExtensionsFromInputProperties(task: Task, dependentTasks: Set<Task>): S
         task.logger.debug("Could not read archiveExtension for ${depTask.path}: ${e.message}")
       }
     }
-    if (depTask is org.gradle.api.tasks.compile.AbstractCompile) {
+    if (depTask is AbstractCompile) {
       extensions.add("class")
     }
   }
