@@ -568,7 +568,7 @@ function writeCodexConfig(
   }
 
   // ── Serialize and write ──
-  const tomlString = TOML.stringify(config as any);
+  const tomlString = TOML.stringify(config);
   tree.write(codexTomlPath, tomlString);
 }
 

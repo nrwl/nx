@@ -143,8 +143,7 @@ export class ExampleRustVersionActions extends VersionActions {
     value: string | object | Array<any> | (() => any)
   ) {
     toml[section] ??= {};
-    toml[section][key] =
-      typeof value === 'function' ? value() : value;
+    toml[section][key] = typeof value === 'function' ? value() : value;
   }
 
   async readCurrentVersionFromSourceManifest(tree: Tree): Promise<{
