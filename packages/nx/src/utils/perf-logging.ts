@@ -17,7 +17,11 @@ import { serverLogger } from '../daemon/logger';
 // NX_PROFILE_OUT can be any path; dirname(NX_PROFILE_OUT) is used as the run
 // directory where per-PID JSON files are written.
 const PROFILE_OUT = process.env['NX_PROFILE_OUT'];
-const profileEntries: Array<{ name: string; duration: number; startTime: number }> = [];
+const profileEntries: Array<{
+  name: string;
+  duration: number;
+  startTime: number;
+}> = [];
 
 // GC stats and event-loop-delay monitor — only populated when PROFILE_OUT is set
 let gcStats: { totalMs: number; majorMs: number; count: number } | null = null;
@@ -39,7 +43,8 @@ if (PROFILE_OUT) {
     for (const entry of list.getEntries()) {
       stats.totalMs += entry.duration;
       stats.count++;
-      const detail = (entry as unknown as { detail?: { kind?: number } }).detail;
+      const detail = (entry as unknown as { detail?: { kind?: number } })
+        .detail;
       if (
         detail?.kind != null &&
         detail.kind & perfConstants.NODE_PERFORMANCE_GC_MAJOR
@@ -62,32 +67,40 @@ if (PROFILE_OUT) {
       // Lazily import to avoid pulling in fs/markdown-factory at startup for
       // every nx invocation.
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { buildReport, writePidReport } = require('./perf-report') as typeof import('./perf-report');
+      const { buildReport, writePidReport } =
+        require('./perf-report') as typeof import('./perf-report');
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { dirname } = require('path') as typeof import('path');
 
       let nativeJson: string | null = null;
       try {
         // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const native = require('../native') as { getNativeTimings?: () => string | null };
+        const native = require('../native') as {
+          getNativeTimings?: () => string | null;
+        };
         nativeJson = native.getNativeTimings?.() ?? null;
       } catch {
         // native module not built / function not yet exposed — skip
       }
 
       const role = getProcessRole();
-      const report = buildReport(profileEntries, nativeJson, process.argv.slice(2).join(' '), {
-        gc: gcStats ?? undefined,
-        eventLoopDelay: eldMonitor
-          ? {
-              p50Ms: eldMonitor.percentile(50) / 1e6,
-              p99Ms: eldMonitor.percentile(99) / 1e6,
-              maxMs: eldMonitor.max / 1e6,
-            }
-          : undefined,
-        pid: process.pid,
-        role,
-      });
+      const report = buildReport(
+        profileEntries,
+        nativeJson,
+        process.argv.slice(2).join(' '),
+        {
+          gc: gcStats ?? undefined,
+          eventLoopDelay: eldMonitor
+            ? {
+                p50Ms: eldMonitor.percentile(50) / 1e6,
+                p99Ms: eldMonitor.percentile(99) / 1e6,
+                maxMs: eldMonitor.max / 1e6,
+              }
+            : undefined,
+          pid: process.pid,
+          role,
+        }
+      );
       // Write to <runDir>/<pid>_<role>.json — each process gets its own file.
       writePidReport(report, dirname(PROFILE_OUT));
     } catch (e) {
@@ -136,7 +149,11 @@ if (!initialized) {
       }
 
       if (PROFILE_OUT) {
-        profileEntries.push({ name: entry.name, duration: entry.duration, startTime: entry.startTime });
+        profileEntries.push({
+          name: entry.name,
+          duration: entry.duration,
+          startTime: entry.startTime,
+        });
       }
 
       if (isTrackedDetail(detail) && dimensionValues) {

@@ -90,7 +90,9 @@ const server = createServer((socket) => {
               plugin = await eagerLoadPromise;
             } else {
               // eslint-disable-next-line @typescript-eslint/no-var-requires
-              const { loadResolvedNxPluginAsync } = require(require.resolve('../load-resolved-plugin'));
+              const { loadResolvedNxPluginAsync } = require(
+                require.resolve('../load-resolved-plugin')
+              );
 
               // Register the ts-transpiler if we are pointing to a
               // plain ts file that's not part of a plugin project
@@ -215,15 +217,19 @@ server.listen(socketPath);
 // before we start loading the plugin.  Using async import() keeps the event
 // loop free while modules load, so the main process can connect mid-load
 // rather than waiting for a synchronous require() block to finish.
+// require.resolve() is used to find the actual file path so that resolution
+// works in both compiled (.js) and TypeScript source (.ts) modes.
 if (eagerPluginPath && eagerPluginConfig !== null) {
   eagerLoadPromise = new Promise<LoadedNxPlugin>((resolve, reject) => {
     setImmediate(async () => {
       try {
-        const { loadResolvedNxPluginAsync } = await import(
-          '../load-resolved-plugin.js'
-        );
+        const { loadResolvedNxPluginAsync } = (await import(
+          require.resolve('../load-resolved-plugin')
+        )) as typeof import('../load-resolved-plugin');
         if (eagerShouldRegisterTSTranspiler) {
-          const { registerPluginTSTranspiler } = await import('../transpiler.js');
+          const { registerPluginTSTranspiler } = (await import(
+            require.resolve('../transpiler')
+          )) as typeof import('../transpiler');
           registerPluginTSTranspiler();
         }
         resolve(

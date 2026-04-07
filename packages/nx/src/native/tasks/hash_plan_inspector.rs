@@ -5,10 +5,10 @@ use crate::native::tasks::hashers::{
 use crate::native::tasks::task_hasher::{HashInputs, HashInputsBuilder};
 use crate::native::tasks::types::HashInstruction;
 use crate::native::types::FileData;
+use hashbrown::HashMap as HashbrownMap;
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use rayon::prelude::*;
-use hashbrown::HashMap as HashbrownMap;
 use std::collections::HashMap;
 use std::sync::Arc;
 
