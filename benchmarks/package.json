@@ -7,6 +7,7 @@
   },
   "scripts": {
     "run": "tsx run-benchmarks.ts",
+    "profile": "tsx profile-run.mts",
     "bench:version": "NX_NO_CLOUD=true hyperfine --show-output --setup 'nx reset' --warmup 1 --min-runs 10 --export-json results-version.json 'nx --version'",
     "bench:show-projects": "NX_NO_CLOUD=true hyperfine --show-output --setup 'nx reset' --warmup 1 --min-runs 5 --export-json results-show-projects.json 'nx show projects --tui=false'",
     "bench:cat-warm": "NX_NO_CLOUD=true hyperfine --show-output --setup 'nx reset' --warmup 1 --min-runs 5 --export-json results-cat-warm.json 'nx run-many -t cat --tui=false'",
@@ -15,6 +16,12 @@
   },
   "nx": {
     "targets": {
+      "profile": {
+        "dependsOn": [
+          "^build"
+        ],
+        "parallelism": false
+      },
       "run": {
         "dependsOn": [
           "bench:version",
