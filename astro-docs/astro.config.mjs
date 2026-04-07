@@ -81,6 +81,7 @@ export default defineConfig({
         './src/plugins/github-stars.middleware.ts',
         './src/plugins/raw-content.middleware.ts',
         './src/plugins/canonical.middleware.ts',
+        './src/plugins/schema.middleware.ts',
       ],
       markdown: {
         headingLinks: true,
