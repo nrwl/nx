@@ -10,8 +10,8 @@
 //!   - Callable from any thread without blocking
 
 use once_cell::sync::Lazy;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Instant;
 
 static ENABLED: AtomicBool = AtomicBool::new(false);
@@ -78,10 +78,13 @@ pub fn get_native_timings() -> Option<String> {
         if i > 0 {
             buf.push(',');
         }
-        buf.push_str(&serde_json::json!({
-            "name": e.name,
-            "durationMs": e.duration_ms,
-        }).to_string());
+        buf.push_str(
+            &serde_json::json!({
+                "name": e.name,
+                "durationMs": e.duration_ms,
+            })
+            .to_string(),
+        );
     }
     buf.push(']');
     Some(buf)
