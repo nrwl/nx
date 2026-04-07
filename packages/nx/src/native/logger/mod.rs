@@ -109,6 +109,7 @@ pub(crate) fn enable_logger() {
     static INIT: Once = Once::new();
 
     INIT.call_once(|| {
+        crate::native::profiler::init();
         initialize_logger();
     });
 }
