@@ -190,3 +190,4 @@ e2e/**/*.d.ts
 e2e/**/*.d.ts.map
 
 .nx/migrate-runs
+/profile-out
