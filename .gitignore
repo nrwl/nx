@@ -159,3 +159,5 @@ test-results
 .nx/self-healing
 e2e/**/*.d.ts
 e2e/**/*.d.ts.map
+
+/profile-out
