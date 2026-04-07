@@ -1,6 +1,7 @@
 pub mod affected;
 pub mod cache;
 pub mod glob;
+pub mod profiler;
 pub mod hasher;
 pub mod ide;
 pub mod logger;
