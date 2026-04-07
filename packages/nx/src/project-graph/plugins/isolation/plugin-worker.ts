@@ -43,6 +43,18 @@ let plugin: LoadedNxPlugin;
 const socketPath = process.argv[2];
 const expectedPluginName = process.argv[3];
 
+// Optional eager-load args passed by the host to overlap plugin loading with
+// the socket-connection phase (argv[4..6] set when host knows the plugin path
+// at spawn time). The host also spawns this worker with cwd set to the plugin
+// root, so eager loading runs in the correct directory without a process.chdir.
+const eagerPluginPath: string | undefined = process.argv[4];
+const eagerPluginConfig = process.argv[5] ? JSON.parse(process.argv[5]) : null;
+const eagerShouldRegisterTSTranspiler = process.argv[6] === '1';
+
+// Populated after server.listen() so the socket is ready before we block
+// the event loop with synchronous require() calls.
+let eagerLoadPromise: Promise<LoadedNxPlugin> | null = null;
+
 const CONNECT_TIMEOUT_MS = 30_000;
 
 let connectErrorTimeout = setErrorTimeout(
@@ -88,24 +100,30 @@ const server = createServer((socket) => {
           shouldRegisterTSTranspiler,
         }) => {
           loadErrorTimeout?.clear();
-          process.chdir(root);
           return withErrorHandling(async () => {
-            const { loadResolvedNxPluginAsync } = await Promise.resolve(
-              require(require.resolve('../load-resolved-plugin'))
-            );
+            // If we eagerly started loading this exact plugin, await that
+            // already-in-progress promise instead of starting from scratch.
+            if (eagerLoadPromise && pluginPath === eagerPluginPath) {
+              plugin = await eagerLoadPromise;
+            } else {
+              process.chdir(root);
+              const { loadResolvedNxPluginAsync } = await Promise.resolve(
+                require(require.resolve('../load-resolved-plugin'))
+              );
 
-            // Register the ts-transpiler if we are pointing to a
-            // plain ts file that's not part of a plugin project
-            if (shouldRegisterTSTranspiler) {
-              (
-                require('../transpiler') as typeof import('../transpiler')
-              ).registerPluginTSTranspiler();
+              // Register the ts-transpiler if we are pointing to a
+              // plain ts file that's not part of a plugin project
+              if (shouldRegisterTSTranspiler) {
+                (
+                  require('../transpiler') as typeof import('../transpiler')
+                ).registerPluginTSTranspiler();
+              }
+              plugin = await loadResolvedNxPluginAsync(
+                pluginConfiguration,
+                pluginPath,
+                name
+              );
             }
-            plugin = await loadResolvedNxPluginAsync(
-              pluginConfiguration,
-              pluginPath,
-              name
-            );
             logger.verbose(
               `[plugin-worker] "${name}" (pid: ${process.pid}) loaded successfully`
             );
@@ -169,6 +187,45 @@ const server = createServer((socket) => {
 });
 
 server.listen(socketPath);
+
+// Kick off eager loading after server.listen() so the socket is available
+// before we start loading the plugin. Deferring the load to setImmediate lets
+// server.listen() finish first, and the load itself overlaps the host's
+// connect + load-message round-trip. We resolve the module via
+// require(require.resolve(...)) — the same mechanism the load-message fallback
+// uses — so it works for both the built .js worker and the ts-node .ts worker.
+// (A bare import('../x.js') fails to resolve under the ts-node source path,
+// where only the .ts file exists.)
+if (eagerPluginPath && eagerPluginConfig !== null) {
+  eagerLoadPromise = new Promise<LoadedNxPlugin>((resolve, reject) => {
+    setImmediate(async () => {
+      try {
+        const { loadResolvedNxPluginAsync } = require(
+          require.resolve('../load-resolved-plugin')
+        );
+        if (eagerShouldRegisterTSTranspiler) {
+          (
+            require('../transpiler') as typeof import('../transpiler')
+          ).registerPluginTSTranspiler();
+        }
+        resolve(
+          await loadResolvedNxPluginAsync(
+            eagerPluginConfig,
+            eagerPluginPath,
+            expectedPluginName
+          )
+        );
+      } catch (e) {
+        reject(e);
+      }
+    });
+  });
+  // Suppress unhandledRejection if the eager load fails before the `load`
+  // message handler attaches its own handler. The rejection is still
+  // propagated when the load handler awaits this promise.
+  eagerLoadPromise.catch(() => {});
+}
+
 logger.verbose(
   `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) listening on ${socketPath}`
 );
