@@ -36,6 +36,17 @@ let plugin: LoadedNxPlugin;
 const socketPath = process.argv[2];
 const expectedPluginName = process.argv[3];
 
+// Optional eager-load args passed by the host to overlap plugin loading with
+// the socket-connection phase (argv[4..6] set when host knows the plugin path
+// at spawn time).
+const eagerPluginPath: string | undefined = process.argv[4];
+const eagerPluginConfig = process.argv[5] ? JSON.parse(process.argv[5]) : null;
+const eagerShouldRegisterTSTranspiler = process.argv[6] === '1';
+
+// Populated after server.listen() so the socket is ready before we block
+// the event loop with synchronous require() calls.
+let eagerLoadPromise: Promise<LoadedNxPlugin> | null = null;
+
 let connectErrorTimeout = setErrorTimeout(
   5000,
   `The plugin worker for ${expectedPluginName} is exiting as it was not connected to within 5 seconds. ` +
@@ -67,30 +78,34 @@ const server = createServer((socket) => {
       return consumeMessage(socket, message, {
         load: async ({
           plugin: pluginConfiguration,
-          root,
           name,
           pluginPath,
           shouldRegisterTSTranspiler,
         }) => {
           loadErrorTimeout?.clear();
-          process.chdir(root);
           try {
-            const { loadResolvedNxPluginAsync } = await Promise.resolve(
-              require(require.resolve('../load-resolved-plugin'))
-            );
+            // If we eagerly started loading this exact plugin, await that
+            // already-in-progress promise instead of starting from scratch.
+            if (eagerLoadPromise && pluginPath === eagerPluginPath) {
+              plugin = await eagerLoadPromise;
+            } else {
+              // eslint-disable-next-line @typescript-eslint/no-var-requires
+              const { loadResolvedNxPluginAsync } = require(require.resolve('../load-resolved-plugin'));
 
-            // Register the ts-transpiler if we are pointing to a
-            // plain ts file that's not part of a plugin project
-            if (shouldRegisterTSTranspiler) {
-              (
-                require('../transpiler') as typeof import('../transpiler')
-              ).registerPluginTSTranspiler();
+              // Register the ts-transpiler if we are pointing to a
+              // plain ts file that's not part of a plugin project
+              if (shouldRegisterTSTranspiler) {
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                (
+                  require('../transpiler') as typeof import('../transpiler')
+                ).registerPluginTSTranspiler();
+              }
+              plugin = await loadResolvedNxPluginAsync(
+                pluginConfiguration,
+                pluginPath,
+                name
+              );
             }
-            plugin = await loadResolvedNxPluginAsync(
-              pluginConfiguration,
-              pluginPath,
-              name
-            );
             logger.verbose(
               `[plugin-worker] "${name}" (pid: ${process.pid}) loaded successfully`
             );
@@ -195,6 +210,40 @@ const server = createServer((socket) => {
 });
 
 server.listen(socketPath);
+
+// Kick off eager loading after server.listen() so the socket is available
+// before we start loading the plugin.  Using async import() keeps the event
+// loop free while modules load, so the main process can connect mid-load
+// rather than waiting for a synchronous require() block to finish.
+if (eagerPluginPath && eagerPluginConfig !== null) {
+  eagerLoadPromise = new Promise<LoadedNxPlugin>((resolve, reject) => {
+    setImmediate(async () => {
+      try {
+        const { loadResolvedNxPluginAsync } = await import(
+          '../load-resolved-plugin.js'
+        );
+        if (eagerShouldRegisterTSTranspiler) {
+          const { registerPluginTSTranspiler } = await import('../transpiler.js');
+          registerPluginTSTranspiler();
+        }
+        resolve(
+          await loadResolvedNxPluginAsync(
+            eagerPluginConfig,
+            eagerPluginPath,
+            expectedPluginName
+          )
+        );
+      } catch (e) {
+        reject(e);
+      }
+    });
+  });
+  // Suppress unhandledRejection if the eager load fails before the `load`
+  // message handler attaches its own handler.  The rejection is still
+  // propagated when the load handler awaits this promise.
+  eagerLoadPromise.catch(() => {});
+}
+
 logger.verbose(
   `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) listening on ${socketPath}`
 );
