@@ -161,7 +161,13 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   }
 
   private async spawnAndConnect(): Promise<LoadResultPayload> {
-    const { worker, socket } = await startPluginWorker(this.name);
+    const { worker, socket } = await startPluginWorker(
+      this.name,
+      this.plugin,
+      this.root,
+      this.pluginPath,
+      this.shouldRegisterTSTranspiler
+    );
     this.worker = worker;
     this.socket = socket;
 
@@ -527,7 +533,13 @@ export class IsolatedPlugin implements LoadedNxPlugin {
 
 global.nxPluginWorkerCount ??= 0;
 
-async function startPluginWorker(name: string) {
+async function startPluginWorker(
+  name: string,
+  plugin: PluginConfiguration,
+  root: string,
+  pluginPath: string,
+  shouldRegisterTSTranspiler: boolean
+) {
   performance.mark(`start-plugin-worker:${name}`);
 
   const isWorkerTypescript = path.extname(__filename) === '.ts';
@@ -544,9 +556,14 @@ async function startPluginWorker(name: string) {
             __dirname,
             '../../../../tsconfig.lib.json'
           ),
+          // Match the lib tsconfig's nodenext resolution so the worker can use
+          // its `customConditions` (@nx/nx-source). Forcing the legacy `node`
+          // resolution conflicts with customConditions (TS5098). nx is
+          // `type: commonjs`, so nodenext still emits CJS — worker behavior
+          // (require-based loading) is unchanged.
           TS_NODE_COMPILER_OPTIONS: JSON.stringify({
-            moduleResolution: 'node',
-            module: 'commonjs',
+            moduleResolution: 'nodenext',
+            module: 'nodenext',
           }),
         }
       : {}),
@@ -563,10 +580,14 @@ async function startPluginWorker(name: string) {
       workerPath,
       ipcPath,
       name,
+      pluginPath,
+      JSON.stringify(plugin),
+      shouldRegisterTSTranspiler ? '1' : '0',
     ],
     {
       stdio: ['ignore', 'pipe', 'pipe'],
       env,
+      cwd: root,
       detached: true,
       shell: false,
       windowsHide: true,
