@@ -115,7 +115,7 @@ function shortCommand(role: ProcessRole, command: string): string {
     const scriptPath = parts[1] ?? parts[0];
     // Extract the meaningful part after the last src/ segment
     const srcMatch = scriptPath.match(/src\/(.+)$/);
-    return srcMatch ? srcMatch[1] : scriptPath.split('/').pop() ?? command;
+    return srcMatch ? srcMatch[1] : (scriptPath.split('/').pop() ?? command);
   }
   return command;
 }
@@ -139,7 +139,11 @@ export function buildReport(
         durationMs: number;
       }>;
       for (const e of parsed) {
-        nativeEntries.push({ name: e.name, durationMs: e.durationMs, source: 'native' });
+        nativeEntries.push({
+          name: e.name,
+          durationMs: e.durationMs,
+          source: 'native',
+        });
       }
     } catch {
       // malformed native JSON — skip gracefully
@@ -313,7 +317,10 @@ export function buildTotalsSection(report: ProfileReport): string {
   ];
   if (report.gc) {
     const { totalMs, majorMs, count } = report.gc;
-    rows.push({ label: `GC (${count} events, ${fmtMs(majorMs)} major)`, value: fmtMs(totalMs) });
+    rows.push({
+      label: `GC (${count} events, ${fmtMs(majorMs)} major)`,
+      value: fmtMs(totalMs),
+    });
   }
   if (report.eventLoopDelay) {
     const { p50Ms, p99Ms, maxMs } = report.eventLoopDelay;
@@ -351,7 +358,12 @@ export function buildScenarioIndexMarkdown(
 ): string {
   const md = lazyMd();
 
-  const roleOrder: ProcessRole[] = ['main', 'plugin-worker', 'task-worker', 'daemon'];
+  const roleOrder: ProcessRole[] = [
+    'main',
+    'plugin-worker',
+    'task-worker',
+    'daemon',
+  ];
   const sorted = [...reports].sort(
     (a, b) => roleOrder.indexOf(a.role) - roleOrder.indexOf(b.role)
   );
@@ -378,14 +390,20 @@ export function buildScenarioIndexMarkdown(
 
   // Process summary table with links to detail files
   type SummaryRow = {
-    pid: string; role: string; label: string;
-    jsTotal: string; gc: string; eldP99: string; spans: string; details: string;
+    pid: string;
+    role: string;
+    label: string;
+    jsTotal: string;
+    gc: string;
+    eldP99: string;
+    spans: string;
+    details: string;
   };
   const summaryRows: SummaryRow[] = sorted.map((r) => {
     const links = detailLinks.get(r.pid);
     const detailParts: string[] = [];
     if (links?.spansFile) detailParts.push(`[spans](${links.spansFile})`);
-    if (links?.cpuFile)   detailParts.push(`[cpu](${links.cpuFile})`);
+    if (links?.cpuFile) detailParts.push(`[cpu](${links.cpuFile})`);
     if (links?.sampleFile) detailParts.push(`[sample](${links.sampleFile})`);
     return {
       pid: String(r.pid),
@@ -394,7 +412,8 @@ export function buildScenarioIndexMarkdown(
       jsTotal: fmtMs(r.wallClockMs),
       gc: r.gc ? fmtMs(r.gc.totalMs) : '—',
       eldP99: r.eventLoopDelay
-        ? fmtMs(r.eventLoopDelay.p99Ms) + (r.eventLoopDelay.p99Ms > 200 ? ' ⚠️' : '')
+        ? fmtMs(r.eventLoopDelay.p99Ms) +
+          (r.eventLoopDelay.p99Ms > 200 ? ' ⚠️' : '')
         : '—',
       spans: String(r.entries.filter((e) => e.durationMs >= 1).length),
       details: detailParts.join(' · ') || '—',
@@ -402,11 +421,11 @@ export function buildScenarioIndexMarkdown(
   });
 
   const summaryTable = md.table(summaryRows, [
-    { label: 'PID',   mapFn: (r) => r.pid },
-    { label: 'Role',  mapFn: (r) => r.role },
+    { label: 'PID', mapFn: (r) => r.pid },
+    { label: 'Role', mapFn: (r) => r.role },
     { label: 'Command / Plugin', mapFn: (r) => r.label },
     { label: 'JS wall-clock', mapFn: (r) => r.jsTotal },
-    { label: 'GC',    mapFn: (r) => r.gc },
+    { label: 'GC', mapFn: (r) => r.gc },
     { label: 'ELD p99', mapFn: (r) => r.eldP99 },
     { label: 'Spans', mapFn: (r) => r.spans },
     { label: 'Detail files', mapFn: (r) => r.details },
@@ -458,7 +477,7 @@ export function buildScenarioIndexMarkdown(
       `${md.bold('JS wall-clock')} = union of instrumented span intervals (nested/overlapping merged).`,
       `${md.bold('GC')} = V8 garbage-collector pause time.`,
       `${md.bold('ELD p99')} = event-loop delay 99th percentile (> 200 ms ⚠️ indicates blocking).`,
-      `${md.bold('Spans')} = number of ${md.code('performance.measure()')} + Rust spans ≥ 1 ms.`,
+      `${md.bold('Spans')} = number of ${md.code('performance.measure()')} + Rust spans ≥ 1 ms.`
     ),
     '',
     md.h2('Legend'),
