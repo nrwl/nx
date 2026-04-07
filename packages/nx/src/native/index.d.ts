@@ -432,6 +432,19 @@ export declare function getHardcodedIgnorePatterns(): Array<string>
  */
 export declare function getMainWorktreeRoot(workspaceRoot: string): string | null
 
+/**
+ * Returns a JSON array of `{ name, durationMs }` objects, or `null` if
+ * profiling was not enabled. Called from the JS layer on process exit.
+ *
+ * ```
+ * // TypeScript
+ * import { getNativeTimings } from './native';
+ * const raw = getNativeTimings();
+ * const entries = raw ? JSON.parse(raw) : [];
+ * ```
+ */
+export declare function getNativeTimings(): string | null
+
 export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
 
 /**
