@@ -3,7 +3,7 @@
 //! Simulates restoring 10 cache entries, each with the same directory structure
 //! as the real benchmark workspace: packages/group-XX/sub-YY/leaf-ZZ/copy-out/output.md
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use std::fs;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
@@ -68,12 +68,7 @@ fn bench_restore(c: &mut Criterion) {
     let entries: Vec<(PathBuf, String)> = (0..n)
         .map(|i| {
             let dir = &cache_dirs[i];
-            make_cache_entry(
-                dir.path(),
-                (i / 10 + 1) as u32,
-                (i % 10 + 1) as u32,
-                1,
-            )
+            make_cache_entry(dir.path(), (i / 10 + 1) as u32, (i % 10 + 1) as u32, 1)
         })
         .collect();
 
