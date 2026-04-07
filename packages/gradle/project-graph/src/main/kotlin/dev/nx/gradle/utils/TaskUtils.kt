@@ -170,7 +170,9 @@ fun inferExtensionsFromInputProperties(task: Task, dependentTasks: Set<Task>): S
     if (depTask is AbstractArchiveTask) {
       try {
         depTask.archiveExtension.get().takeIf { it.isNotEmpty() }?.let { extensions.add(it) }
-      } catch (_: Exception) {}
+      } catch (e: Exception) {
+        task.logger.debug("Could not read archiveExtension for ${depTask.path}: ${e.message}")
+      }
     }
     if (depTask is org.gradle.api.tasks.compile.AbstractCompile) {
       extensions.add("class")

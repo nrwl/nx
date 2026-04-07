@@ -498,7 +498,7 @@ class ProcessTaskUtilsTest {
   inner class InferExtensionsFromInputPropertiesTests {
 
     @Test
-    fun `compile task infers class from itself and jar from archive dependents`() {
+    fun `compile task infers class and jar with archive dependents`() {
       val kotlinProject = ProjectBuilder.builder().withName("kotlinInferTest").build()
       kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
 
@@ -508,6 +508,7 @@ class ProcessTaskUtilsTest {
       val extensions = inferExtensionsFromInputProperties(compileTestKotlin, dependsOnTasks)
 
       assertTrue(extensions.contains("class"), "Expected 'class' extension, got $extensions")
+      assertTrue(extensions.contains("jar"), "Expected 'jar' extension from archive dependents, got $extensions")
     }
 
     @Test
@@ -538,6 +539,18 @@ class ProcessTaskUtilsTest {
       assertTrue(
           extensions.contains("jar"),
           "Expected 'jar' extension from archive task dependency, got $extensions")
+    }
+
+    @Test
+    fun `test task infers class and jar regardless of dependents`() {
+      val kotlinProject = ProjectBuilder.builder().withName("kotlinTestTask").build()
+      kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
+
+      val testTask = kotlinProject.tasks.getByName("test")
+      val extensions = inferExtensionsFromInputProperties(testTask, emptySet())
+
+      assertTrue(extensions.contains("class"), "Expected 'class' extension for Test task, got $extensions")
+      assertTrue(extensions.contains("jar"), "Expected 'jar' extension for Test task, got $extensions")
     }
 
     @Test
