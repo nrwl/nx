@@ -180,7 +180,13 @@ export function parseCpuProfile(
   type Key = string;
   const aggregated = new Map<
     Key,
-    { selfUs: number; runs: number; bestTotalUs: number; bestChain: string[]; node: CpuProfileNode }
+    {
+      selfUs: number;
+      runs: number;
+      bestTotalUs: number;
+      bestChain: string[];
+      node: CpuProfileNode;
+    }
   >();
 
   for (const [id, us] of selfUs) {
@@ -251,8 +257,11 @@ export function printCpuHotSpots(spots: CpuHotSpot[], limit = 20): void {
     const pctStr = `${s.selfPct.toFixed(1)}%`.padStart(6);
     const callStr = `×${s.sampleRuns}`.padStart(6);
     const avgStr = `~${s.avgSelfMs.toFixed(2)}ms/call`;
-    const chain = s.callerChain.length > 0 ? `← ${s.callerChain.join(' ← ')}` : '';
-    console.log(`  ${s.name.padEnd(38)} ${selfStr}  ${pctStr}  ${callStr}  ${avgStr}  ${bar}`);
+    const chain =
+      s.callerChain.length > 0 ? `← ${s.callerChain.join(' ← ')}` : '';
+    console.log(
+      `  ${s.name.padEnd(38)} ${selfStr}  ${pctStr}  ${callStr}  ${avgStr}  ${bar}`
+    );
     console.log(`    \x1b[2m${loc}  ${chain}\x1b[0m`);
   }
 }
@@ -267,11 +276,9 @@ export function buildCpuMarkdownSection(
 
   const rows = spots.slice(0, limit).map((s) => {
     const loc = s.line >= 0 ? `${s.url}:${s.line + 1}` : s.url;
-    const chain =
-      s.callerChain.length > 0 ? s.callerChain.join(' → ') : '—';
+    const chain = s.callerChain.length > 0 ? s.callerChain.join(' → ') : '—';
     // Flag wrappers: self < 5% of total means it's mostly dispatching to callees
-    const selfNote =
-      s.totalMs > 0 && s.selfMs / s.totalMs < 0.05 ? ' ⚡' : '';
+    const selfNote = s.totalMs > 0 && s.selfMs / s.totalMs < 0.05 ? ' ⚡' : '';
     return (
       `| \`${s.name}\`${selfNote} ` +
       `| ${s.selfMs.toFixed(1)} ` +
@@ -288,7 +295,7 @@ export function buildCpuMarkdownSection(
     '',
     '## CPU Hot Spots (V8 sampling profiler, self-time)',
     '',
-    '> **Self time** = CPU spent in this function\'s own code (callees excluded).',
+    "> **Self time** = CPU spent in this function's own code (callees excluded).",
     '> **Calls~** = sample runs (lower-bound invocation count; sub-ms calls undercounted).',
     '> **Avg ms** = self ms ÷ calls — average time per sampled invocation.',
     '> A ⚡ label means self < 5% of total — the function is mostly a dispatcher; look at callees.',
