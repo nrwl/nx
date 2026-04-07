@@ -182,7 +182,7 @@ fun inferExtensionsFromInputProperties(task: Task, dependentTasks: Set<Task>): S
     }
   }
 
-  return extensions
+  return extensions.toSet()
 }
 
 /**
@@ -271,9 +271,7 @@ private fun getInputsForTaskImpl(
 
     // Supplement with extensions inferred from Gradle metadata (handles clean builds where
     // output directories exist but are empty, so file-based extension discovery misses them)
-    if (tasksToProcess.isNotEmpty()) {
-      dependentTaskOutputExtensions.addAll(inferExtensionsFromInputProperties(task, tasksToProcess))
-    }
+    dependentTaskOutputExtensions.addAll(inferExtensionsFromInputProperties(task, tasksToProcess))
 
     // Add consolidated dependentTasksOutputFiles entries using glob patterns by extension
     dependentTaskOutputExtensions.forEach { extension ->
