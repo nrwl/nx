@@ -2,6 +2,7 @@ import { Octokit } from 'octokit';
 import { ReportData, ScopeData } from './model';
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+const now = new Date();
 
 export async function scrapeIssues(prevDate?: Date): Promise<ReportData> {
   let total = 0;
@@ -62,9 +63,12 @@ export async function scrapeIssues(prevDate?: Date): Promise<ReportData> {
   };
 }
 
-function getSinceDate(prevDate?: Date): Date {
-  const now = new Date();
-  const firstOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+export function getSinceDate(prevDate?: Date, referenceDate = now): Date {
+  const firstOfPrevMonth = new Date(
+    referenceDate.getFullYear(),
+    referenceDate.getMonth() - 1,
+    1
+  );
   if (prevDate && prevDate > firstOfPrevMonth) {
     return prevDate;
   }
