@@ -100,7 +100,13 @@ function parseLine(line: string): {
     const threadName = dispatchMatch
       ? `${threadBase} [${dispatchMatch[1]}]`
       : threadBase;
-    return { depth, count, name: threadName, library: '(thread)', isThreadHeader: true };
+    return {
+      depth,
+      count,
+      name: threadName,
+      library: '(thread)',
+      isThreadHeader: true,
+    };
   }
 
   // Regular frame: "<name>  (in <library>) + <offset>  [<addr>]"
@@ -117,7 +123,12 @@ function parseLine(line: string): {
     library = cleanLibrary(inMatch[2]);
   } else {
     // No "(in ...)" clause — could be "???" or a raw symbol
-    name = cleanName(frameText.replace(/\s+\[0x[0-9a-f]+\].*$/, '').replace(/\s+\+\s+\d+$/, '').trim());
+    name = cleanName(
+      frameText
+        .replace(/\s+\[0x[0-9a-f]+\].*$/, '')
+        .replace(/\s+\+\s+\d+$/, '')
+        .trim()
+    );
     library = '(unknown)';
   }
 
@@ -168,7 +179,14 @@ function buildForest(lines: string[]): TreeNode[] {
 
     const { depth, count, name, library, isThreadHeader } = parsed;
 
-    const node: TreeNode = { count, name, library, depth, children: [], parent: null };
+    const node: TreeNode = {
+      count,
+      name,
+      library,
+      depth,
+      children: [],
+      parent: null,
+    };
 
     if (isThreadHeader) {
       // Thread headers are always roots
@@ -247,13 +265,25 @@ export function parseSampleFile(path: string): SampleReport {
   try {
     text = readFileSync(path, 'utf8');
   } catch {
-    return { totalSamples: 0, mainThreadSamples: 0, threads: [], hotSpots: [], libraryBreakdown: [] };
+    return {
+      totalSamples: 0,
+      mainThreadSamples: 0,
+      threads: [],
+      hotSpots: [],
+      libraryBreakdown: [],
+    };
   }
 
   // Extract everything between "Call graph:" and "Binary Images:" (or end of file)
   const callGraphStart = text.indexOf('Call graph:');
   if (callGraphStart < 0) {
-    return { totalSamples: 0, mainThreadSamples: 0, threads: [], hotSpots: [], libraryBreakdown: [] };
+    return {
+      totalSamples: 0,
+      mainThreadSamples: 0,
+      threads: [],
+      hotSpots: [],
+      libraryBreakdown: [],
+    };
   }
   const callGraphEnd = text.indexOf('\nBinary Images:', callGraphStart);
   const callGraphText =
@@ -310,7 +340,13 @@ export function parseSampleFile(path: string): SampleReport {
     }))
     .sort((a, b) => b.selfSamples - a.selfSamples);
 
-  return { totalSamples, mainThreadSamples, threads, hotSpots, libraryBreakdown };
+  return {
+    totalSamples,
+    mainThreadSamples,
+    threads,
+    hotSpots,
+    libraryBreakdown,
+  };
 }
 
 // ── Terminal renderer ─────────────────────────────────────────────────────────
@@ -327,7 +363,8 @@ export function printSampleHotSpots(report: SampleReport, limit = 15): void {
     const bar = '█'.repeat(Math.round((s.selfSamples / top) * BAR_WIDTH));
     const selfStr = `${s.selfSamples}`.padStart(6);
     const pctStr = `${s.selfPct.toFixed(1)}%`.padStart(6);
-    const chain = s.callerChain.length > 0 ? `← ${s.callerChain.join(' ← ')}` : '';
+    const chain =
+      s.callerChain.length > 0 ? `← ${s.callerChain.join(' ← ')}` : '';
     console.log(`  ${s.name.padEnd(48)} ${selfStr}  ${pctStr}  ${bar}`);
     console.log(`    \x1b[2m[${s.library}]  ${chain}\x1b[0m`);
   }
@@ -351,10 +388,7 @@ export function buildSampleMarkdownSection(
   // ── Thread table ─────────────────────────────────────────────────────────────
   const threadRows = report.threads
     .slice(0, 12)
-    .map(
-      (t) =>
-        `| ${t.name} | ${t.samples} | ${t.isMain ? '✓ main' : ''} |`
-    );
+    .map((t) => `| ${t.name} | ${t.samples} | ${t.isMain ? '✓ main' : ''} |`);
 
   const threadTable = [
     '| Thread | Samples | Role |',
@@ -363,10 +397,12 @@ export function buildSampleMarkdownSection(
   ].join('\n');
 
   // ── Library breakdown table ───────────────────────────────────────────────────
-  const libRows = report.libraryBreakdown.slice(0, 10).map(
-    (l) =>
-      `| \`${l.library}\` | ${l.selfSamples} | ${pct(l.selfPct)} | ${bar(l.selfSamples, report.libraryBreakdown[0].selfSamples)} |`
-  );
+  const libRows = report.libraryBreakdown
+    .slice(0, 10)
+    .map(
+      (l) =>
+        `| \`${l.library}\` | ${l.selfSamples} | ${pct(l.selfPct)} | ${bar(l.selfSamples, report.libraryBreakdown[0].selfSamples)} |`
+    );
 
   const libTable = [
     '| Library | Self samples | Self % | |',
@@ -380,9 +416,10 @@ export function buildSampleMarkdownSection(
     sym.length > max ? sym.slice(0, max - 1) + '…' : sym;
 
   const spotRows = report.hotSpots.slice(0, limit).map((s) => {
-    const chain = s.callerChain.length > 0
-      ? s.callerChain.map((c) => truncSym(c, 40)).join(' → ')
-      : '—';
+    const chain =
+      s.callerChain.length > 0
+        ? s.callerChain.map((c) => truncSym(c, 40)).join(' → ')
+        : '—';
     return (
       `| \`${truncSym(s.name)}\` ` +
       `| \`${s.library}\` ` +
@@ -399,14 +436,14 @@ export function buildSampleMarkdownSection(
     ...spotRows,
   ].join('\n');
 
-  const label = role && pid ? `${role} (pid ${pid})` : role ?? 'main process';
+  const label = role && pid ? `${role} (pid ${pid})` : (role ?? 'main process');
 
   return [
     '',
     `## System Profile — ${label} (macOS \`sample\`)`,
     '',
     `> Wall-clock sampling of the **${label}** at ~1 ms intervals.`,
-    '> Covers native code, I/O waits, and kernel calls invisible to V8\'s profiler.',
+    "> Covers native code, I/O waits, and kernel calls invisible to V8's profiler.",
     '> **Self~** = samples where this function was at the top of the stack (not in a callee).',
     '> **Total~** = samples where this function was anywhere on the stack.',
     '> Each sample ≈ 1 ms of wall-clock time.',

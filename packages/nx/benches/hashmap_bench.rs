@@ -1,7 +1,7 @@
 //! Compares std::collections::HashMap vs hashbrown::HashMap for string-key
 //! insertions — simulating the collect() at the end of get_plans_internal.
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use hashbrown::HashMap as HashbrownMap;
 use std::collections::HashMap as StdMap;
 
