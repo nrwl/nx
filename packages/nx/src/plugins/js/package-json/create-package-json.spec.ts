@@ -1330,6 +1330,102 @@ describe('createPackageJson', () => {
       mockReadNxJson.mockRestore();
     });
   });
+
+  describe('package aliases', () => {
+    it('should preserve alias dependency keys when canonical packages also exist in the graph', () => {
+      const mockReadNxJson = jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({});
+      const mockGetTargetInputs = jest
+        .spyOn(hashModule, 'getTargetInputs')
+        .mockReturnValue({
+          selfInputs: ['{projectRoot}/**/*'],
+          dependencyInputs: [],
+        });
+      const mockFilterUsingGlobPatterns = jest
+        .spyOn(hashModule, 'filterUsingGlobPatterns')
+        .mockImplementation((_root, files) => files);
+
+      jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+      jest.spyOn(fileutilsModule, 'readJsonFile').mockReturnValue({
+        name: 'root-package',
+        dependencies: {
+          zod: '^3.0.0',
+          zod4: 'npm:zod@^4.1.13',
+        },
+      });
+
+      const graph: ProjectGraph = {
+        nodes: {
+          myapp: {
+            type: 'app',
+            name: 'myapp',
+            data: {
+              targets: { build: {} },
+              root: 'apps/myapp',
+            },
+          },
+        },
+        externalNodes: {
+          'npm:zod': {
+            type: 'npm',
+            name: 'npm:zod',
+            data: { version: '^3.0.0', hash: '', packageName: 'zod' },
+          },
+          'npm:zod@4.1.13': {
+            type: 'npm',
+            name: 'npm:zod@4.1.13',
+            data: { version: '4.1.13', hash: '', packageName: 'zod' },
+          },
+          'npm:zod4': {
+            type: 'npm',
+            name: 'npm:zod4',
+            data: {
+              version: 'npm:zod@4.1.13',
+              hash: '',
+              packageName: 'zod4',
+            },
+          },
+        },
+        dependencies: {
+          myapp: [
+            {
+              source: 'myapp',
+              target: 'npm:zod4',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      };
+
+      const fileMap: ProjectFileMap = {
+        myapp: [
+          createFile('apps/myapp/src/main.ts', [
+            ['apps/myapp/src/main.ts', 'npm:zod4', DependencyType.static],
+          ]),
+        ],
+      };
+
+      const result = createPackageJson(
+        'myapp',
+        graph,
+        {
+          target: 'build',
+          root: '',
+          isProduction: true,
+        },
+        fileMap
+      );
+
+      expect(result.dependencies).toEqual({
+        zod4: 'npm:zod@4.1.13',
+      });
+
+      mockFilterUsingGlobPatterns.mockRestore();
+      mockGetTargetInputs.mockRestore();
+      mockReadNxJson.mockRestore();
+    });
+  });
 });
 
 function createFile(f: string, deps?: FileDataDependency[]): FileData {
