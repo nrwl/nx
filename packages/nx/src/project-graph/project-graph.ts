@@ -90,21 +90,33 @@ export function readCachedProjectConfiguration(
   }
 }
 
+// Keyed by ProjectGraph reference — GC-friendly, no manual invalidation needed.
+const projectsConfigCache = new WeakMap<ProjectGraph, ProjectsConfigurations>();
+
 /**
  * Get the {@link ProjectsConfigurations} from the {@link ProjectGraph}
+ *
+ * The result is memoized on the ProjectGraph instance. During a single run the
+ * graph never changes, so repeated callers (e.g. one per task during hashing)
+ * share the same object without repeating the O(projects) conversion.
  */
 export function readProjectsConfigurationFromProjectGraph(
   projectGraph: ProjectGraph
 ): ProjectsConfigurations {
-  return {
-    projects: Object.fromEntries(
-      Object.entries(projectGraph.nodes).map(([project, { data }]) => [
-        project,
-        data,
-      ])
-    ),
-    version: 2,
-  };
+  let cached = projectsConfigCache.get(projectGraph);
+  if (!cached) {
+    cached = {
+      projects: Object.fromEntries(
+        Object.entries(projectGraph.nodes).map(([project, { data }]) => [
+          project,
+          data,
+        ])
+      ),
+      version: 2,
+    };
+    projectsConfigCache.set(projectGraph, cached);
+  }
+  return cached;
 }
 
 export async function buildProjectGraphAndSourceMapsWithoutDaemon() {

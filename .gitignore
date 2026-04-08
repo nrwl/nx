@@ -154,3 +154,5 @@ packages/nx/**/*.d.ts
 !packages/nx/src/native/index.d.ts
 e2e/**/*.d.ts
 e2e/**/*.d.ts.map
+
+/profile-out
