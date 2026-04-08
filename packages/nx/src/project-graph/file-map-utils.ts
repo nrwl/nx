@@ -1,14 +1,13 @@
-import {
+import type {
   FileData,
   FileMap,
   ProjectFileMap,
   ProjectGraph,
 } from '../config/project-graph';
-import {
+import type {
   ProjectConfiguration,
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
-import { daemonClient } from '../daemon/client/client';
 import { NxWorkspaceFilesExternals } from '../native';
 import {
   getAllFileDataInContext,
@@ -16,14 +15,12 @@ import {
 } from '../utils/workspace-context';
 import { workspaceRoot } from '../utils/workspace-root';
 import { readProjectsConfigurationFromProjectGraph } from './project-graph';
-import { buildAllWorkspaceFiles } from './utils/build-all-workspace-files';
 import {
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
 } from './utils/find-project-for-path';
 
 export interface WorkspaceFileMap {
-  allWorkspaceFiles: FileData[];
   fileMap: FileMap;
 }
 
@@ -70,7 +67,6 @@ export function createFileMap(
     }
   }
   return {
-    allWorkspaceFiles,
     fileMap: {
       projectFileMap,
       nonProjectFiles,
@@ -94,10 +90,6 @@ export function updateFileMap(
   );
   return {
     fileMap: updates.fileMap,
-    allWorkspaceFiles: buildAllWorkspaceFiles(
-      updates.fileMap.projectFileMap,
-      updates.fileMap.nonProjectFiles
-    ),
     rustReferences: updates.externalReferences,
   };
 }
