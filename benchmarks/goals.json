@@ -1,0 +1,14 @@
+{
+  "version": {
+    "max": 0.05
+  },
+  "show-projects": {
+    "max": 0.1
+  },
+  "cat-warm": {
+    "max": 0.3
+  },
+  "copy-warm": {
+    "max": 1.0
+  }
+}

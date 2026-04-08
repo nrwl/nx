@@ -28,6 +28,10 @@
     "native": [
       "{projectRoot}/**/*.rs",
       "{projectRoot}/**/Cargo.*",
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/clippy.toml",
+      "{workspaceRoot}/.cargo/config.toml",
       { "runtime": "node -p '`${process.platform}_${process.arch}`'" },
       { "runtime": "rustc --version" },
       { "externalDependencies": ["npm:@monodon/rust", "npm:@napi-rs/cli"] }
@@ -96,7 +100,12 @@
         "env": { "NODE_OPTIONS": "--experimental-vm-modules" }
       }
     },
-    "lint": { "dependsOn": ["build-native", "^build-native"] },
+    "lint": {
+      "dependsOn": ["build-native", "^build-native"],
+      "options": {
+        "max-warnings": 5
+      }
+    },
     "e2e": { "cache": true, "inputs": ["e2eInputs", "^production"] },
     "e2e-local": {
       "cache": true,
@@ -159,21 +168,7 @@
     { "plugin": "@nx/vite/plugin", "include": ["astro-docs/**"] },
     {
       "plugin": "@nx/js/typescript",
-      "include": ["packages/nx/**"],
-      "options": {
-        "typecheck": true,
-        "build": { "targetName": "build-base" },
-        "compiler": "tsgo"
-      }
-    },
-    {
-      "plugin": "@nx/js/typescript",
-      "exclude": [
-        "examples/angular-rspack/**/*",
-        "nx-dev/**/*",
-        "e2e/**/*",
-        "packages/nx/**"
-      ],
+      "exclude": ["examples/angular-rspack/**/*", "nx-dev/**/*", "e2e/**/*"],
       "options": { "typecheck": true, "build": { "targetName": "build-base" } }
     },
     {

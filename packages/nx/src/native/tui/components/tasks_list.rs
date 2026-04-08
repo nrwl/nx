@@ -306,6 +306,17 @@ impl TasksList {
         self.max_parallel = max_parallel.unwrap_or(DEFAULT_MAX_PARALLEL as u32) as usize;
     }
 
+    /// Returns the display items visible to the renderer: the filtered subset when a
+    /// filter is active, or the full canonical list when no filter is applied.
+    /// Callers should always use this instead of accessing `filtered_display_items` directly.
+    fn visible_display_items(&self) -> &[DisplayItem] {
+        if self.filter_text.is_empty() {
+            &self.display_items
+        } else {
+            &self.filtered_display_items
+        }
+    }
+
     /// Sorts the display items and populates the task selection list.
     pub fn sort_tasks(&mut self) {
         self.sort_tasks_with_mode(None);
@@ -477,9 +488,7 @@ impl TasksList {
 
                 // If a nested task was selected, select the batch group instead
                 if should_select_batch {
-                    self.selection_manager
-                        .lock()
-                        .select_batch_group(batch_id.to_string());
+                    self.selection_manager.lock().select_batch_group(batch_id);
                 }
 
                 self.apply_filter(); // Refresh the display
@@ -498,7 +507,7 @@ impl TasksList {
             SelectionEntry::BatchGroup(batch_id) => Some(batch_id),
             SelectionEntry::Task(task_id) => {
                 // Find batch containing this task
-                self.filtered_display_items.iter().find_map(|item| {
+                self.visible_display_items().iter().find_map(|item| {
                     if let DisplayItem::BatchGroup(batch) = item {
                         if batch.nested_tasks.contains(&task_id) {
                             return Some(batch.batch_id.clone());
@@ -537,7 +546,7 @@ impl TasksList {
 
     /// Scrolls the task list up with momentum support
     fn scroll_up(&mut self) {
-        if self.filtered_display_items.is_empty() {
+        if self.visible_display_items().is_empty() {
             return;
         }
         let lines = self.scroll_momentum.calculate_momentum(ScrollDirection::Up) as usize;
@@ -546,7 +555,7 @@ impl TasksList {
 
     /// Scrolls the task list down with momentum support
     fn scroll_down(&mut self) {
-        if self.filtered_display_items.is_empty() {
+        if self.visible_display_items().is_empty() {
             return;
         }
         let lines = self
@@ -1027,7 +1036,9 @@ impl TasksList {
 
         // Apply filter to display items
         if self.filter_text.is_empty() {
-            self.filtered_display_items = self.display_items.clone();
+            // No filter active — visible_display_items() will return &display_items directly.
+            // Clear stale filtered data from a previous filter session.
+            self.filtered_display_items.clear();
         } else {
             let filter_text = self.filter_text.to_lowercase();
             self.filtered_display_items = self
@@ -1089,7 +1100,7 @@ impl TasksList {
 
         // Create entries from filtered display items with section size tracking
         let (entries, in_progress_size) =
-            self.create_entries_from_display_items(&self.filtered_display_items);
+            self.create_entries_from_display_items(self.visible_display_items());
         let mut manager = self.selection_manager.lock();
         manager.update_entries_with_size(entries, in_progress_size);
         // Explicitly scroll to ensure selected task is visible
@@ -1461,23 +1472,23 @@ impl TasksList {
         if let Some(old_idx) = old_index {
             let clamped_idx = old_idx.min(self.in_progress_tasks.len().saturating_sub(1));
             if let Some(next_task) = self.in_progress_tasks.get(clamped_idx) {
-                self.selection_manager.lock().select_task(next_task.clone());
+                self.selection_manager.lock().select_task(next_task);
             }
         } else if let Some(first) = self.in_progress_tasks.first() {
-            self.selection_manager.lock().select_task(first.clone());
+            self.selection_manager.lock().select_task(first);
         }
     }
 
     /// Updates a task's status and marks the list for deferred sorting.
-    pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
+    pub fn update_task_status(&mut self, task_id: &str, status: TaskStatus) {
         // Get the old status and check if we're in a batch BEFORE updating
         let old_status = self
             .task_lookup
-            .get(&task_id)
+            .get(task_id)
             .map(|t| t.status)
             .unwrap_or(TaskStatus::NotStarted);
         let old_is_in_progress = matches!(old_status, TaskStatus::InProgress | TaskStatus::Shared);
-        let is_in_batch = self.is_task_nested_in_expanded_batch(&task_id);
+        let is_in_batch = self.is_task_nested_in_expanded_batch(task_id);
 
         // Get position BEFORE removing (for position-based selection switching)
         let old_index = if old_is_in_progress && !is_in_batch {
@@ -1487,7 +1498,7 @@ impl TasksList {
         };
 
         // Update in task_lookup first
-        if let Some(task_item) = self.task_lookup.get_mut(&task_id) {
+        if let Some(task_item) = self.task_lookup.get_mut(task_id) {
             task_item.update_status(status.clone());
         }
 
@@ -1501,7 +1512,7 @@ impl TasksList {
                     }
                 }
                 DisplayItem::BatchGroup(batch_group) => {
-                    if batch_group.nested_tasks.contains(&task_id) {
+                    if batch_group.nested_tasks.contains(task_id) {
                         break;
                     }
                 }
@@ -1514,14 +1525,14 @@ impl TasksList {
 
             if old_is_in_progress && !new_is_in_progress {
                 // Task finished - remove and handle selection
-                if let Some(idx) = self.in_progress_tasks.iter().position(|id| id == &task_id) {
+                if let Some(idx) = self.in_progress_tasks.iter().position(|id| id == task_id) {
                     self.in_progress_tasks.remove(idx);
                 }
-                self.handle_standalone_task_finished(&task_id, old_index);
+                self.handle_standalone_task_finished(task_id, old_index);
             } else if !old_is_in_progress && new_is_in_progress {
                 // Task started - add if not already present
-                if !self.in_progress_tasks.iter().any(|id| id == &task_id) {
-                    self.in_progress_tasks.push(task_id.to_string());
+                if !self.in_progress_tasks.iter().any(|id| id == task_id) {
+                    self.in_progress_tasks.push(task_id.to_owned());
                 }
             }
 
@@ -1649,10 +1660,12 @@ impl TasksList {
             return;
         }
 
-        // Create batch group with all tasks
-        let nested_tasks: HashSet<String> = valid_task_ids.iter().cloned().collect();
-        let mut sorted_tasks: Vec<String> = nested_tasks.iter().cloned().collect();
+        // Create batch group with all tasks.
+        // Sort valid_task_ids in place for deterministic display order, then use it
+        // as sorted_tasks directly (move) to avoid a redundant Vec allocation.
+        let mut sorted_tasks = valid_task_ids;
         sorted_tasks.sort();
+        let nested_tasks: HashSet<String> = sorted_tasks.iter().cloned().collect();
 
         let batch_group = BatchGroupItem {
             batch_id,
@@ -1664,13 +1677,13 @@ impl TasksList {
         };
 
         // Register for display
-        self.register_batch_for_display(valid_task_ids, batch_group);
+        self.register_batch_for_display(batch_group);
     }
 
     /// Internal: Registers a batch group for display by removing individual task items
     /// and adding the batch group. If the currently selected task is in the batch,
     /// selects the batch instead.
-    fn register_batch_for_display(&mut self, task_ids: Vec<String>, batch_group: BatchGroupItem) {
+    fn register_batch_for_display(&mut self, batch_group: BatchGroupItem) {
         // Check if batch already exists
         if self.display_items.iter().any(|item| {
             matches!(item, DisplayItem::BatchGroup(bg) if bg.batch_id == batch_group.batch_id)
@@ -1691,11 +1704,13 @@ impl TasksList {
                 }
             });
 
-        // Count how many tasks will actually be grouped
+        // Count how many tasks will actually be grouped (O(1) per task via HashSet)
         let tasks_to_group = self
             .display_items
             .iter()
-            .filter(|item| matches!(item, DisplayItem::Task(task) if task_ids.contains(&task.name)))
+            .filter(|item| {
+                matches!(item, DisplayItem::Task(task) if batch_group.nested_tasks.contains(&task.name))
+            })
             .count();
 
         if tasks_to_group == 0 {
@@ -1704,7 +1719,7 @@ impl TasksList {
 
         // Remove individual task display items
         self.display_items.retain(|item| match item {
-            DisplayItem::Task(task) => !task_ids.contains(&task.name),
+            DisplayItem::Task(task) => !batch_group.nested_tasks.contains(&task.name),
             DisplayItem::BatchGroup(_) => true,
         });
 
@@ -1715,9 +1730,12 @@ impl TasksList {
         self.needs_sort = true;
 
         // If selected task is now inside the collapsed batch, select the batch instead
+        // Use the just-pushed batch group's nested_tasks for the O(1) contains check.
         if let Some(ref selected) = currently_selected {
-            if task_ids.iter().any(|id| id == selected) {
-                self.selection_manager.lock().select_batch_group(batch_id);
+            if let Some(DisplayItem::BatchGroup(bg)) = self.display_items.last() {
+                if bg.nested_tasks.contains(selected.as_str()) {
+                    self.selection_manager.lock().select_batch_group(&batch_id);
+                }
             }
         }
     }
@@ -1752,7 +1770,7 @@ impl TasksList {
         });
 
         if let Some(task_id) = task_to_select {
-            self.selection_manager.lock().select_task(task_id);
+            self.selection_manager.lock().select_task(&task_id);
         }
     }
 
@@ -1780,7 +1798,7 @@ impl TasksList {
         let total_tasks = self.task_lookup.len();
         // Count actual tasks in filtered display items (excluding batch groups)
         let filtered_task_count = self
-            .filtered_display_items
+            .visible_display_items()
             .iter()
             .filter(|item| matches!(item, DisplayItem::Task(_)))
             .count();
@@ -2225,7 +2243,7 @@ impl TasksList {
 
     /// Helper method to get a batch group by its ID from filtered display items
     fn get_batch_group_by_id_filtered(&self, batch_id: &str) -> Option<&BatchGroupItem> {
-        for display_item in &self.filtered_display_items {
+        for display_item in self.visible_display_items() {
             if let DisplayItem::BatchGroup(batch_group) = display_item {
                 if batch_group.batch_id == batch_id {
                     return Some(batch_group);
@@ -2912,7 +2930,7 @@ impl Component for TasksList {
                 self.needs_sort = true;
             }
             Action::UpdateTaskStatus(task_name, status) => {
-                self.update_task_status(task_name, status);
+                self.update_task_status(&task_name, status);
             }
             Action::SetTaskTiming(task_id, start_time, end_time) => {
                 self.set_task_timing(task_id, Some(start_time), Some(end_time));
@@ -3310,7 +3328,7 @@ mod tests {
         tasks_list.prepare_for_render();
 
         let (entries, in_progress_size) =
-            tasks_list.create_entries_from_display_items(&tasks_list.filtered_display_items);
+            tasks_list.create_entries_from_display_items(tasks_list.visible_display_items());
         assert_eq!(in_progress_size, 2);
         assert_eq!(
             entries.first(),
@@ -5069,10 +5087,7 @@ mod tests {
             .unwrap();
 
         // Select the app:build task in standalone context
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("app:build".to_string());
+        tasks_list.selection_manager.lock().select_task("app:build");
 
         // Capture selection state in standalone context
         let standalone_selection = tasks_list.selection_manager.lock().get_selection().cloned();
@@ -5094,10 +5109,7 @@ mod tests {
         tasks_list.expand_batch("batch1");
 
         // Re-select the app:build task after expanding (nested tasks now visible)
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("app:build".to_string());
+        tasks_list.selection_manager.lock().select_task("app:build");
 
         // Update task statuses to InProgress to show them as running
         tasks_list
@@ -5133,10 +5145,7 @@ mod tests {
         insta::assert_snapshot!("batch_identity_batch_context", terminal.backend());
 
         // Test selection behavior: should be able to select the same task whether in batch or not
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("app:build".to_string());
+        tasks_list.selection_manager.lock().select_task("app:build");
         let reselection = tasks_list.selection_manager.lock().get_selection().cloned();
         assert_eq!(
             reselection,
@@ -5190,10 +5199,7 @@ mod tests {
             .unwrap();
 
         // Select a task within the batch group when expanded
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("lib:build".to_string());
+        tasks_list.selection_manager.lock().select_task("lib:build");
         let selection_before_collapse =
             tasks_list.selection_manager.lock().get_selection().cloned();
 
@@ -5288,10 +5294,7 @@ mod tests {
         tasks_list.expand_batch("batch1");
 
         // Test 1: Select a task and verify selection type
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("app:build".to_string());
+        tasks_list.selection_manager.lock().select_task("app:build");
         // Verify we have a task selection
         assert_eq!(
             tasks_list.selection_manager.lock().get_selection(),
@@ -5318,7 +5321,7 @@ mod tests {
         tasks_list
             .selection_manager
             .lock()
-            .select_batch_group("batch1".to_string());
+            .select_batch_group("batch1");
         assert_eq!(
             tasks_list.selection_manager.lock().get_selection(),
             Some(&SelectionEntry::BatchGroup("batch1".to_string())),
@@ -5329,10 +5332,7 @@ mod tests {
         insta::assert_snapshot!("selection_enum_batch_group_selected", terminal.backend());
 
         // Test 3: Verify selections are distinct - selecting one clears the other
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("lib:build".to_string());
+        tasks_list.selection_manager.lock().select_task("lib:build");
         assert_eq!(
             tasks_list.selection_manager.lock().get_selection(),
             Some(&SelectionEntry::Task("lib:build".to_string())),
@@ -5355,10 +5355,7 @@ mod tests {
             .unwrap();
 
         // Select the standalone task for terminal output
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("app:build".to_string());
+        tasks_list.selection_manager.lock().select_task("app:build");
         let standalone_selected = tasks_list.selection_manager.lock().get_selection().cloned();
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
@@ -5396,10 +5393,7 @@ mod tests {
         tasks_list.expand_batch("batch1");
 
         // Select the same task (app:build) when it's displayed in batch context
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("app:build".to_string());
+        tasks_list.selection_manager.lock().select_task("app:build");
         let batch_selected = tasks_list.selection_manager.lock().get_selection().cloned();
 
         // Task selection should be identical regardless of display context
@@ -5415,10 +5409,7 @@ mod tests {
         // This is tested by ensuring that the selection manager returns pure task names
 
         // Test selection to lib:build task in batch context
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("lib:build".to_string());
+        tasks_list.selection_manager.lock().select_task("lib:build");
         let lib_selected = tasks_list.selection_manager.lock().get_selection().cloned();
 
         assert_eq!(
@@ -5434,7 +5425,7 @@ mod tests {
         tasks_list
             .selection_manager
             .lock()
-            .select_task("standalone:test".to_string());
+            .select_task("standalone:test");
         let standalone_test_selected = tasks_list.selection_manager.lock().get_selection().cloned();
 
         assert_eq!(
@@ -5525,10 +5516,7 @@ mod tests {
 
         // Test 4: Prevention of collapse when nested task is selected
         // First select a nested task
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("lib:build".to_string());
+        tasks_list.selection_manager.lock().select_task("lib:build");
         let selected_task = tasks_list.selection_manager.lock().get_selection().cloned();
         assert_eq!(
             selected_task,
@@ -5598,10 +5586,7 @@ mod tests {
 
         // First, simulate a previous task selection before batch creation
         // Select lib:build task when it's still displayed standalone
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("lib:build".to_string());
+        tasks_list.selection_manager.lock().select_task("lib:build");
         let pre_batch_selection = tasks_list.selection_manager.lock().get_selection().cloned();
         assert_eq!(
             pre_batch_selection,
@@ -5677,10 +5662,7 @@ mod tests {
         );
 
         // Test 4: Select a nested task after expanding
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("lib:build".to_string());
+        tasks_list.selection_manager.lock().select_task("lib:build");
         let post_expand_selection = tasks_list.selection_manager.lock().get_selection().cloned();
 
         // Verify the selection points to lib:build and the task is now visible in the expanded batch
@@ -5971,7 +5953,7 @@ mod tests {
         tasks_list
             .selection_manager
             .lock()
-            .select_task("shared:test".to_string());
+            .select_task("shared:test");
         let selected_task = tasks_list.selection_manager.lock().get_selection().cloned();
         assert_eq!(
             selected_task,
@@ -6275,8 +6257,8 @@ mod tests {
             .unwrap();
 
         // Set up initial task statuses - tasks should be running
-        tasks_list.update_task_status("app:build".to_string(), TaskStatus::InProgress);
-        tasks_list.update_task_status("lib:build".to_string(), TaskStatus::InProgress);
+        tasks_list.update_task_status("app:build", TaskStatus::InProgress);
+        tasks_list.update_task_status("lib:build", TaskStatus::InProgress);
 
         // Create and configure batch group (running batch, starts collapsed)
         tasks_list.start_batch(
@@ -6334,8 +6316,8 @@ mod tests {
             task_item.start_time = Some(1000);
             task_item.end_time = Some(39000); // 38s duration
         }
-        tasks_list.update_task_status("app:build".to_string(), TaskStatus::LocalCache);
-        tasks_list.update_task_status("lib:build".to_string(), TaskStatus::RemoteCache);
+        tasks_list.update_task_status("app:build", TaskStatus::LocalCache);
+        tasks_list.update_task_status("lib:build", TaskStatus::RemoteCache);
 
         // Step 2: Simulate batch completion ungrouping
         tasks_list.ungroup_batch_tasks("batch1");
@@ -6482,26 +6464,20 @@ mod tests {
         tasks_list
             .selection_manager
             .lock()
-            .select_batch_group("build-batch".to_string());
+            .select_batch_group("build-batch");
         tasks_list.apply_filter(); // Refresh display after selection
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!("navigation_batch_selected", terminal.backend());
 
         // Step 2: Navigate to first nested task (simulate down arrow navigation)
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("app:build".to_string());
+        tasks_list.selection_manager.lock().select_task("app:build");
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!("navigation_first_nested_task_selected", terminal.backend());
 
         // Step 3: Navigate to middle nested task
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("lib:build".to_string());
+        tasks_list.selection_manager.lock().select_task("lib:build");
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!("navigation_middle_nested_task_selected", terminal.backend());
@@ -6510,7 +6486,7 @@ mod tests {
         tasks_list
             .selection_manager
             .lock()
-            .select_batch_group("build-batch".to_string());
+            .select_batch_group("build-batch");
         tasks_list.apply_filter(); // Refresh display after selection
 
         render_to_test_backend(&mut terminal, &mut tasks_list);

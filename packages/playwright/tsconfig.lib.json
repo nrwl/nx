@@ -5,7 +5,7 @@
     "types": ["node"],
     "tsBuildInfoFile": "../../dist/packages/playwright/tsconfig.tsbuildinfo"
   },
-  "include": ["**/*.ts", "**/*.json"],
+  "include": ["**/*.ts"],
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
   "references": [
     {

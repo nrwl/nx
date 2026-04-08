@@ -5,7 +5,10 @@ import {
   cleanupCoreWebpackTest,
 } from './core-webpack-setup';
 
-describe('React Module Federation - Webpack Query Params', () => {
+// TODO: re-enable when @module-federation/enhanced supports webpack 5.106.0+
+// webpack 5.106.0 removed lib/util/create-schema-validation.js which @module-federation/enhanced@2.3.1 depends on
+// eslint-disable-next-line jest/no-disabled-tests
+describe.skip('React Module Federation - Webpack Query Params', () => {
   beforeAll(() => {
     setupCoreWebpackTest();
   });

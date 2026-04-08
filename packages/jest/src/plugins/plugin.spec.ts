@@ -29,6 +29,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
     };
 
     await tempFs.createFiles({
+      'package-lock.json': '{}',
       'proj/jest.config.js': `module.exports = {}`,
       'proj/src/unit.spec.ts': '',
       'proj/src/ignore.spec.ts': '',
@@ -910,6 +911,7 @@ describe('@nx/jest/plugin config file inputs', () => {
     };
 
     await tempFs.createFiles({
+      'package-lock.json': '{}',
       'proj/jest.config.js': `module.exports = {}`,
       'proj/src/unit.spec.ts': '',
       'proj/project.json': '{}',

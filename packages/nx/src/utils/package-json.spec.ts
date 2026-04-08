@@ -1,4 +1,9 @@
+jest.mock('child_process');
+
 import { join } from 'path';
+import * as childProcess from 'child_process';
+import { mkdtempSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
 import { createTreeWithEmptyWorkspace } from '../generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from '../generators/tree';
 import { writeJson } from '../generators/utils/json';
@@ -6,6 +11,7 @@ import { readJsonFile } from './fileutils';
 import {
   buildTargetFromScript,
   getDependencyVersionFromPackageJson,
+  installPackageToTmp,
   PackageJson,
   readModulePackageJson,
   readTargetsFromPackageJson,
@@ -22,6 +28,50 @@ describe('buildTargetFromScript', () => {
       getPackageManagerCommand()
     );
     expect(target.executor).toEqual('nx:run-script');
+  });
+});
+
+describe('installPackageToTmp', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('should always disable lifecycle scripts via environment variables', () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'nx-install-test-'));
+    const cleanup = jest.fn(() =>
+      rmSync(tempDir, { recursive: true, force: true })
+    );
+    jest.spyOn(pacakgeManager, 'createTempNpmDirectory').mockReturnValue({
+      dir: tempDir,
+      cleanup,
+    });
+    jest.spyOn(pacakgeManager, 'detectPackageManager').mockReturnValue('yarn');
+    jest
+      .spyOn(pacakgeManager, 'getPackageManagerVersion')
+      .mockReturnValue('4.0.0');
+    jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+      preInstall: 'yarn set version 4.0.0',
+      addDev: 'yarn add -D',
+      ignoreScriptsFlag: undefined,
+    } as any);
+    const execSyncSpy = jest
+      .spyOn(childProcess, 'execSync')
+      .mockReturnValue('' as any);
+
+    installPackageToTmp('nx', 'latest');
+
+    expect(execSyncSpy).toHaveBeenCalledTimes(2);
+    for (const [, options] of execSyncSpy.mock.calls) {
+      expect(options).toEqual(
+        expect.objectContaining({
+          env: expect.objectContaining({
+            YARN_ENABLE_SCRIPTS: 'false',
+          }),
+        })
+      );
+    }
+
+    cleanup();
   });
 });
 
