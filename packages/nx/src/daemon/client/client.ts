@@ -28,7 +28,9 @@ import {
 import { preventRecursionInGraphConstruction } from '../../project-graph/project-graph';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
 import { isJsonMessage } from '../../utils/consume-messages-from-socket';
+import { waitForSocketConnection } from '../../utils/wait-for-socket-connection';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
+import { handleImport } from '../../utils/handle-import';
 import { isCI } from '../../utils/is-ci';
 import { isSandbox } from '../../utils/is-sandbox';
 import { output } from '../../utils/output';
@@ -41,6 +43,13 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { getDaemonProcessIdSync, readDaemonProcessJsonCache } from '../cache';
 import { isNxVersionMismatch } from '../is-nx-version-mismatch';
 import { clientLogger } from '../logger';
+import {
+  type ConfigureAiAgentsStatusResponse,
+  GET_CONFIGURE_AI_AGENTS_STATUS,
+  type HandleGetConfigureAiAgentsStatusMessage,
+  type HandleResetConfigureAiAgentsStatusMessage,
+  RESET_CONFIGURE_AI_AGENTS_STATUS,
+} from '../message-types/configure-ai-agents';
 import {
   FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
   type HandleFlushSyncGeneratorChangesToDiskMessage,
@@ -83,13 +92,6 @@ import {
   SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
   type SetNxConsolePreferenceAndInstallResponse,
 } from '../message-types/nx-console';
-import {
-  GET_CONFIGURE_AI_AGENTS_STATUS,
-  RESET_CONFIGURE_AI_AGENTS_STATUS,
-  type ConfigureAiAgentsStatusResponse,
-  type HandleGetConfigureAiAgentsStatusMessage,
-  type HandleResetConfigureAiAgentsStatusMessage,
-} from '../message-types/configure-ai-agents';
 import { REGISTER_PROJECT_GRAPH_LISTENER } from '../message-types/register-project-graph-listener';
 import {
   HandlePostTasksExecutionMessage,
@@ -120,7 +122,6 @@ import {
   Message,
   VersionMismatchError,
 } from './daemon-socket-messenger';
-import { handleImport } from '../../utils/handle-import';
 
 const DAEMON_ENV_REQUIRED_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -1174,35 +1175,34 @@ export class DaemonClient {
   private async waitForServerToBeAvailable(options: {
     ignoreVersionMismatch: boolean;
   }): Promise<boolean> {
-    let attempts = 0;
-
     clientLogger.log(
       `[Client] Waiting for server (max: ${WAIT_FOR_SERVER_CONFIG.maxAttempts} attempts, ${WAIT_FOR_SERVER_CONFIG.delayMs}ms interval)`
     );
 
-    while (attempts < WAIT_FOR_SERVER_CONFIG.maxAttempts) {
-      await new Promise((resolve) =>
-        setTimeout(resolve, WAIT_FOR_SERVER_CONFIG.delayMs)
-      );
-      attempts++;
-
-      try {
-        if (await this.isServerAvailable()) {
-          clientLogger.log(
-            `[Client] Server available after ${attempts} attempts`
-          );
-          return true;
-        }
-      } catch (err) {
-        if (err instanceof VersionMismatchError) {
-          if (!options.ignoreVersionMismatch) {
-            throw err;
+    const socket = await waitForSocketConnection(
+      () => {
+        try {
+          return this.getSocketPath();
+        } catch (err) {
+          if (err instanceof VersionMismatchError) {
+            if (!options.ignoreVersionMismatch) {
+              throw err;
+            }
           }
-          // Keep waiting - old cache file may exist
-        } else {
-          throw err;
+          // Socket path not available yet — keep polling
+          return null;
         }
+      },
+      {
+        maxAttempts: WAIT_FOR_SERVER_CONFIG.maxAttempts,
+        delayMs: WAIT_FOR_SERVER_CONFIG.delayMs,
       }
+    );
+
+    if (socket) {
+      socket.destroy();
+      clientLogger.log(`[Client] Server available`);
+      return true;
     }
 
     clientLogger.log(
@@ -1216,12 +1216,24 @@ export class DaemonClient {
     force?: 'v8' | 'json'
   ): Promise<any> {
     await this.startDaemonIfNecessary();
-    // An open promise isn't enough to keep the event loop
-    // alive, so we set a timeout here and clear it when we hear
-    // back
-    const keepAlive = setTimeout(() => {}, 10 * 60 * 1000);
+
+    let keepAlive: NodeJS.Timeout;
     return new Promise((resolve, reject) => {
       performance.mark('sendMessageToDaemon-start');
+
+      // An open promise isn't enough to keep the event loop
+      // alive, so we set a timeout here and clear it when we hear
+      // back. This **must** be longer than the message timeout used
+      // in the plugin isolation messages, or the daemon will timeout before
+      // a plugin worker would, and that can result in odd exit behavior.
+      keepAlive = setTimeout(
+        () => {
+          reject(
+            new Error('The daemon timed out while processing ' + message.type)
+          );
+        },
+        20 * 60 * 1000
+      );
 
       this.currentMessage = message;
       this.currentResolve = resolve;

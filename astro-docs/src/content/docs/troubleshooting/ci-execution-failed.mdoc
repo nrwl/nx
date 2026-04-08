@@ -18,7 +18,7 @@ If you are receiving this error before your full pipeline has completed, conside
 
 While running in CI environments, Nx Cloud spawns a background process called the "heartbeat" to help maintain status synchronization between itself and external platforms. When the heartbeat process does not report to Nx Cloud for 30 seconds or longer, Nx Cloud assumes something has gone wrong and terminates the current CI Pipeline Execution.
 
-This behavior can be disabled by setting the [--require-explicit-completion](/docs/reference/nx-cloud-cli#requireexplicitcompletion) flag to `true` on your `nx-cloud start-ci-run` command.
+This behavior can be disabled by setting the [--require-explicit-completion](/docs/reference/nx-cloud-cli#requireexplicitcompletion) flag to `true` on your `nx start-ci-run` command.
 
 ### A command was issued to stop all Nx Cloud agents
 
@@ -32,13 +32,13 @@ If this error occurs at the beginning of a CI Pipeline Execution it could be cau
 
 Nx Cloud detected a failed task in the current CI Pipeline Execution and has halted further execution.
 
-This behavior can be disabled by setting the [--stop-agents-on-failure](/docs/reference/nx-cloud-cli#stopagentsonfailure) flag to `false` on your `nx-cloud start-ci-run` command.
+This behavior can be disabled by setting the [--stop-agents-on-failure](/docs/reference/nx-cloud-cli#stopagentsonfailure) flag to `false` on your `nx start-ci-run` command.
 
 ## Nx Agents-related
 
 ### Failed to start Nx Agents workflow
 
-Nx Cloud was unable to start the agents workflow with the configuration provided to `nx-cloud start-ci-run`. View the CI Pipeline Execution in the Nx Cloud UI for additional details.
+Nx Cloud was unable to start the agents workflow with the configuration provided to `nx start-ci-run`. View the CI Pipeline Execution in the Nx Cloud UI for additional details.
 
 ### Unable to get workflow status from Nx Agents
 
