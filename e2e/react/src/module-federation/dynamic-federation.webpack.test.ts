@@ -14,7 +14,9 @@ import {
 } from '@nx/e2e-utils';
 import { runCLI } from './utils';
 
-describe('Dynamic Module Federation', () => {
+// TODO: re-enable when @module-federation/enhanced supports webpack 5.106.0+
+// webpack 5.106.0 removed lib/util/create-schema-validation.js which @module-federation/enhanced@2.3.1 depends on
+describe.skip('Dynamic Module Federation', () => {
   beforeAll(() => {
     newProject({ packages: ['@nx/react'] });
   });
