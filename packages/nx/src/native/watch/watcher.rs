@@ -3,6 +3,8 @@ use std::collections::HashSet;
 use std::collections::hash_map::Entry;
 use std::path::MAIN_SEPARATOR;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::Duration;
 
 #[cfg(not(target_os = "macos"))]
 use crate::native::glob::{NxGlobSet, build_glob_set};
@@ -15,21 +17,13 @@ use crate::native::watch::types::{
 use crate::native::watch::watch_filterer;
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
+use notify::{RecursiveMode, Watcher as NotifyWatcher};
 use parking_lot::Mutex;
-use rayon::prelude::*;
 #[cfg(not(target_os = "macos"))]
 use std::path::Path;
 use std::path::PathBuf;
 use tracing::trace;
 use tracing_subscriber::EnvFilter;
-use watchexec::WatchedPath;
-use watchexec::Watchexec;
-#[cfg(not(target_os = "macos"))]
-use watchexec_events::FileType;
-#[cfg(not(target_os = "macos"))]
-use watchexec_events::filekind::{CreateKind, FileEventKind};
-use watchexec_events::{Event, Priority, Tag};
-use watchexec_signals::Signal;
 
 /// Build the hardcoded ignore GlobSet used to check if new directories should be watched.
 #[cfg(not(target_os = "macos"))]
@@ -37,42 +31,75 @@ fn build_ignore_glob_set() -> Arc<NxGlobSet> {
     build_glob_set(HARDCODED_IGNORE_PATTERNS).expect("These static ignores always build")
 }
 
-/// Extract new, non-ignored directory paths from creation events.
-///
-/// Pure function — does not mutate shared state. The caller is responsible
-/// for deduplicating against the existing watched path set.
+/// Extract new, non-ignored directory paths from notify events.
 #[cfg(not(target_os = "macos"))]
-fn extract_new_directories(events: &[Event], ignore_globs: &NxGlobSet) -> Vec<PathBuf> {
+fn extract_new_directories(events: &[notify::Event], ignore_globs: &NxGlobSet) -> Vec<PathBuf> {
+    use notify::EventKind;
+    use notify::event::CreateKind;
+
     events
         .iter()
         .filter(|event| {
-            // On Linux/Windows: only keep directory creation events.
-            // Linux emits CreateKind::Folder, Windows emits CreateKind::Any.
-            // On macOS: FSEvents doesn't always provide FileEventKind tags,
-            // so we accept all events and rely on the is_dir check below.
-            #[cfg(not(target_os = "macos"))]
-            {
-                event.tags.iter().any(|tag| {
-                    matches!(
-                        tag,
-                        Tag::FileEventKind(FileEventKind::Create(CreateKind::Folder))
-                            | Tag::FileEventKind(FileEventKind::Create(CreateKind::Any))
-                    )
-                })
-            }
-            #[cfg(target_os = "macos")]
-            {
-                let _ = event;
-                true
-            }
+            matches!(
+                event.kind,
+                EventKind::Create(CreateKind::Folder) | EventKind::Create(CreateKind::Any)
+            )
         })
-        .flat_map(|event| event.paths())
-        .filter(|(path, file_type)| {
-            let is_dir = file_type.map_or(false, |ft| matches!(ft, FileType::Dir)) || path.is_dir();
-            is_dir && !ignore_globs.is_match(path)
-        })
-        .map(|(path, _)| path.to_path_buf())
+        .flat_map(|event| &event.paths)
+        .filter(|path| path.is_dir() && !ignore_globs.is_match(path))
+        .cloned()
         .collect()
+}
+
+/// Re-walk newly created directories to collect files that were written
+/// before inotify was watching. Since we register watches synchronously
+/// via notify, the gap is very small, but files can still slip through
+/// between the mkdir event and our watch() call.
+///
+/// Deduplicates against events already seen (via `recent_events`)
+/// so that files caught by both inotify and the re-walk are only reported once.
+///
+/// Also discovers nested subdirectories and registers them with the watcher.
+#[cfg(not(target_os = "macos"))]
+fn collect_files_in_new_dirs(
+    dirs: &[PathBuf],
+    origin: &str,
+    watcher: &Arc<Mutex<notify::RecommendedWatcher>>,
+    recent_events: &[WatchEventInternal],
+) -> Vec<WatchEventInternal> {
+    use crate::native::walker::nx_walker_sync;
+
+    let already_reported: HashSet<&PathBuf> = recent_events.iter().map(|e| &e.path).collect();
+    let mut seen_dirs: HashSet<PathBuf> = HashSet::new();
+    let mut results = Vec::new();
+
+    for dir in dirs {
+        for rel_path in nx_walker_sync(dir, None) {
+            let full_path = dir.join(&rel_path);
+            if full_path.is_dir() {
+                seen_dirs.insert(full_path);
+            } else if full_path.is_file() && !already_reported.contains(&full_path) {
+                trace!(?full_path, "re-walk found file in new directory");
+                results.push(WatchEventInternal {
+                    path: full_path,
+                    r#type: EventType::create,
+                    origin: origin.to_owned(),
+                });
+            }
+        }
+    }
+
+    // Register nested subdirectories so inotify watches them going forward.
+    if !seen_dirs.is_empty() {
+        let mut w = watcher.lock();
+        for dir in &seen_dirs {
+            if let Err(e) = w.watch(dir, RecursiveMode::NonRecursive) {
+                trace!(?e, ?dir, "failed to watch nested directory");
+            }
+        }
+    }
+
+    results
 }
 
 /// Enumerate all non-ignored directories to watch individually (non-recursively).
@@ -97,10 +124,40 @@ fn enumerate_watch_paths<P: AsRef<Path>>(directory: P, use_ignores: bool) -> Has
     path_set
 }
 
+type NotifyResult = std::result::Result<notify::Event, notify::Error>;
+
+/// Collect a batch of events from the channel, waiting up to `timeout` for the
+/// first event, then draining any additional events that have already arrived.
+fn collect_batch(
+    rx: &std::sync::mpsc::Receiver<NotifyResult>,
+    timeout: Duration,
+) -> Vec<notify::Event> {
+    let mut batch = Vec::new();
+
+    // Block until the first event or timeout
+    match rx.recv_timeout(timeout) {
+        Ok(Ok(event)) => batch.push(event),
+        Ok(Err(e)) => {
+            trace!("notify error: {:?}", e);
+            return batch;
+        }
+        Err(_) => return batch, // timeout or disconnected
+    }
+
+    // Drain any additional events that arrived during the first event's processing
+    while let Ok(result) = rx.try_recv() {
+        if let Ok(event) = result {
+            batch.push(event);
+        }
+    }
+
+    batch
+}
+
 #[napi]
 pub struct Watcher {
     pub origin: String,
-    watch_exec: Arc<Mutex<Option<Arc<Watchexec>>>>,
+    stop_flag: Arc<AtomicBool>,
     additional_globs: Vec<String>,
     use_ignore: bool,
 }
@@ -142,7 +199,7 @@ impl Watcher {
 
         Watcher {
             origin,
-            watch_exec: Arc::new(Mutex::new(None)),
+            stop_flag: Arc::new(AtomicBool::new(false)),
             additional_globs: globs,
             use_ignore: use_ignore.unwrap_or(true),
         }
@@ -161,88 +218,135 @@ impl Watcher {
         let origin = self.origin.clone();
         let additional_globs = self.additional_globs.clone();
         let use_ignore = self.use_ignore;
-        let watch_exec_slot = self.watch_exec.clone();
+        let stop_flag = self.stop_flag.clone();
 
-        // All watchexec setup runs inside the napi Tokio runtime.
-        // Watchexec::default() internally calls tokio::spawn(), which requires
-        // Handle::current() — only available on Tokio runtime threads.
-        // The #[napi(constructor)] runs on the JS main thread (no runtime context),
-        // so we create Watchexec here instead.
-        spawn(async move {
-            trace!("configuring watch exec");
+        // Create the filterer for path-based ignore matching.
+        let filterer = watch_filterer::create_filter(&origin, &additional_globs, use_ignore)
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to create watch filter: {e}"),
+                )
+            })?;
+        let filterer = Arc::new(filterer);
 
-            let watch_exec = Arc::new(Watchexec::default());
-            *watch_exec_slot.lock() = Some(Arc::clone(&watch_exec));
+        // Channel for notify to send events to our processing thread.
+        let (tx, rx) = std::sync::mpsc::channel();
 
-            // Shared state for dynamic directory registration.
-            // When a new non-ignored directory is created, we add it to the watch set
-            // so future file changes inside it are detected.
-            let watched_path_set: Arc<Mutex<HashSet<PathBuf>>> =
-                Arc::new(Mutex::new(HashSet::new()));
+        // Create the notify watcher. Events are sent through the channel.
+        let mut watcher = notify::recommended_watcher(tx).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to create file watcher: {e}"),
+            )
+        })?;
 
-            // On Linux/Windows, we need ignore patterns and extra clones for dynamic
-            // directory registration. On macOS, FSEvents handles this natively.
+        // Register initial watch paths.
+        #[cfg(target_os = "macos")]
+        {
+            // macOS: FSEvents handles recursive watching natively.
+            // No need to enumerate individual directories.
+            trace!("macOS: watching root recursively via FSEvents");
+            if let Err(e) = watcher.watch(std::path::Path::new(&origin), RecursiveMode::Recursive) {
+                tracing::error!(?e, "failed to watch root directory");
+            }
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            // Linux/Windows: enumerate non-ignored directories and watch each one
+            // non-recursively to avoid inotify watches on node_modules etc.
+            let path_set = enumerate_watch_paths(&origin, use_ignore);
+            trace!(count = path_set.len(), "registering initial watch paths");
+            for path in &path_set {
+                if let Err(e) = watcher.watch(path, RecursiveMode::NonRecursive) {
+                    trace!(?e, ?path, "failed to watch path");
+                }
+            }
+        }
+
+        let watcher = Arc::new(Mutex::new(watcher));
+
+        // Spawn the event processing thread.
+        let watcher_for_thread = watcher.clone();
+        std::thread::spawn(move || {
+            trace!("event processing thread started");
+
             #[cfg(not(target_os = "macos"))]
-            let ignore_globs: Arc<NxGlobSet> = build_ignore_glob_set();
+            let ignore_globs = build_ignore_glob_set();
 
-            let origin_for_action = origin.clone();
+            // Track recently emitted events for dedup with re-walk results.
             #[cfg(not(target_os = "macos"))]
-            let watch_exec_for_action = watch_exec.clone();
-            #[cfg(not(target_os = "macos"))]
-            let watched_path_set_for_action = watched_path_set.clone();
-            #[cfg(not(target_os = "macos"))]
-            let ignore_globs_for_action = ignore_globs.clone();
-            watch_exec.config.on_action(move |mut action| {
-                let signals: Vec<Signal> = action.signals().collect();
+            let mut recent_events: Vec<WatchEventInternal> = Vec::new();
 
-                if signals.contains(&Signal::Terminate) {
-                    trace!("terminate - ending watch");
-                    action.quit();
-                    return action;
+            loop {
+                if stop_flag.load(Ordering::Relaxed) {
+                    trace!("stop flag set, exiting processing thread");
+                    break;
                 }
 
-                if signals.contains(&Signal::Interrupt) {
-                    trace!("interrupt - ending watch");
-                    action.quit();
-                    return action;
+                let batch = collect_batch(&rx, Duration::from_millis(100));
+                if batch.is_empty() {
+                    continue;
                 }
 
-                // On macOS, FSEvents watches the entire tree recursively from the root,
-                // so we don't need to dynamically register new directories.
+                trace!(event_count = batch.len(), "received event batch");
+
+                // Filter events through gitignore/nxignore.
+                let filtered: Vec<notify::Event> = batch
+                    .into_iter()
+                    .filter(|ev| filterer.check_event(ev))
+                    .collect();
+
+                if filtered.is_empty() {
+                    continue;
+                }
+
+                // On Linux/Windows: check for new directory creation and register
+                // watches synchronously — no gap between registration and watching.
                 #[cfg(not(target_os = "macos"))]
                 {
-                    // Check for new directory creation events and dynamically register watches.
-                    // Without this, non-recursive watches would miss changes in newly created dirs.
-                    let new_directories =
-                        extract_new_directories(&action.events, &ignore_globs_for_action);
+                    let new_dirs = extract_new_directories(&filtered, &ignore_globs);
+                    if !new_dirs.is_empty() {
+                        trace!(count = new_dirs.len(), "registering new directory watches");
 
-                    if !new_directories.is_empty() {
-                        let mut path_set = watched_path_set_for_action.lock();
-                        path_set.extend(new_directories);
-                        trace!(
-                            count = path_set.len(),
-                            "updating pathset with new directories"
+                        // Register watches SYNCHRONOUSLY. When watch() returns,
+                        // inotify is guaranteed to be active on the directory.
+                        {
+                            let mut w = watcher_for_thread.lock();
+                            for dir in &new_dirs {
+                                if let Err(e) = w.watch(dir, RecursiveMode::NonRecursive) {
+                                    trace!(?e, ?dir, "failed to watch new directory");
+                                }
+                            }
+                        }
+
+                        // Re-walk immediately. Since watch() is synchronous, inotify is
+                        // already watching. Any files found were written before inotify
+                        // registered — this is the only gap we need to cover.
+                        let rewalk_files = collect_files_in_new_dirs(
+                            &new_dirs,
+                            &origin,
+                            &watcher_for_thread,
+                            &recent_events,
                         );
-                        watch_exec_for_action
-                            .config
-                            .pathset(path_set.iter().map(|p| WatchedPath::non_recursive(p)));
+                        if !rewalk_files.is_empty() {
+                            trace!(count = rewalk_files.len(), "re-walk found unreported files");
+                            let watch_events: Vec<WatchEvent> =
+                                rewalk_files.iter().map(|e| e.into()).collect();
+                            callback_tsfn
+                                .call(Ok(watch_events), ThreadsafeFunctionCallMode::NonBlocking);
+                        }
                     }
                 }
 
-                let mut origin_path = origin_for_action.clone();
+                // Transform notify events into our internal format.
+                let mut origin_path = origin.clone();
                 if !origin_path.ends_with(MAIN_SEPARATOR) {
                     origin_path.push(MAIN_SEPARATOR);
                 }
-                trace!(?origin_path);
 
-                trace!(
-                    event_count = action.events.len(),
-                    "on_action received events"
-                );
-
-                let events = action
-                    .events
-                    .par_iter()
+                let events: Vec<WatchEventInternal> = filtered
+                    .iter()
                     .filter_map(|ev| {
                         trace!(?ev, "raw event");
                         let result = transform_event_to_watch_events(ev, &origin_path);
@@ -250,19 +354,16 @@ impl Watcher {
                         result.ok()
                     })
                     .flatten()
-                    .collect::<Vec<WatchEventInternal>>();
+                    .collect();
 
+                // Group events: Delete > Create > Modify (dedup within batch).
                 let mut group_events: HashMap<String, WatchEventInternal> = HashMap::new();
                 for g in events.into_iter() {
                     let path = g.path.display().to_string();
-
-                    // Delete > Create > Modify
                     match group_events.entry(path) {
-                        // Delete should override anything
                         Entry::Occupied(mut e) if matches!(g.r#type, EventType::delete) => {
                             e.insert(g);
                         }
-                        // Create should override update
                         Entry::Occupied(mut e)
                             if matches!(g.r#type, EventType::create)
                                 && matches!(e.get().r#type, EventType::update) =>
@@ -270,18 +371,29 @@ impl Watcher {
                             e.insert(g);
                         }
                         Entry::Occupied(_) => {}
-                        // If its empty, insert
                         Entry::Vacant(e) => {
                             e.insert(g);
                         }
                     }
                 }
+
+                if group_events.is_empty() {
+                    continue;
+                }
+
                 trace!(
                     event_count = group_events.len(),
                     "sending events to callback"
                 );
-                for (path, ev) in group_events.iter() {
-                    trace!(?path, r#type = ?ev.r#type, "callback event");
+
+                // Record for dedup against future re-walk results.
+                #[cfg(not(target_os = "macos"))]
+                {
+                    recent_events.extend(group_events.values().cloned());
+                    // Keep recent_events bounded — only need events from the last few batches.
+                    if recent_events.len() > 1000 {
+                        recent_events.drain(..recent_events.len() - 500);
+                    }
                 }
 
                 let watch_events: Vec<WatchEvent> =
@@ -289,75 +401,19 @@ impl Watcher {
                 trace!(?watch_events, "sending to node");
 
                 callback_tsfn.call(Ok(watch_events), ThreadsafeFunctionCallMode::NonBlocking);
-
-                action
-            });
-
-            // On macOS, FSEvents handles recursive watching natively from a single
-            // root path. No need to enumerate individual directories — this avoids
-            // kqueue (used for non-recursive watches) which silently fails at scale
-            // due to vnode table pressure. See #34522.
-            #[cfg(target_os = "macos")]
-            {
-                let mut path_set = HashSet::new();
-                path_set.insert(PathBuf::from(&origin));
-                trace!(
-                    count = path_set.len(),
-                    "macOS: watching root recursively via FSEvents"
-                );
-                watch_exec
-                    .config
-                    .pathset(path_set.iter().map(|p| WatchedPath::recursive(p)));
-                *watched_path_set.lock() = path_set;
-            }
-            // On Linux/Windows, enumerate non-ignored directories and watch each one
-            // non-recursively. This prevents inotify watches on node_modules and other
-            // ignored trees (fixing #33781).
-            #[cfg(not(target_os = "macos"))]
-            {
-                let path_set = enumerate_watch_paths(&origin, use_ignore);
-                trace!(count = path_set.len(), "setting watched paths");
-                watch_exec
-                    .config
-                    .pathset(path_set.iter().map(|p| WatchedPath::non_recursive(p)));
-                *watched_path_set.lock() = path_set;
             }
 
-            match watch_filterer::create_filter(&origin, &additional_globs, use_ignore) {
-                Ok(filterer) => {
-                    watch_exec.config.filterer(filterer);
-                }
-                Err(e) => {
-                    tracing::error!("Failed to configure filterer: {:?}", e);
-                    return;
-                }
-            }
-
-            trace!("starting watch exec");
-            if let Err(e) = watch_exec.main().await {
-                tracing::error!("Watchexec error: {:?}", e);
-            }
+            trace!("event processing thread exited");
         });
 
-        trace!("started watch exec");
+        trace!("watcher started");
         Ok(())
     }
 
     #[napi]
     pub async fn stop(&self) -> Result<()> {
         trace!("stopping the watch process");
-        let watch_exec = self.watch_exec.lock().clone();
-        if let Some(we) = watch_exec {
-            we.send_event(
-                Event {
-                    tags: vec![Tag::Signal(Signal::Terminate)],
-                    metadata: HashMap::new(),
-                },
-                Priority::Urgent,
-            )
-            .await
-            .map_err(anyhow::Error::from)?;
-        }
+        self.stop_flag.store(true, Ordering::Release);
         Ok(())
     }
 }

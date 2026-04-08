@@ -1,13 +1,10 @@
 use std::path::{Path, PathBuf};
 
+use notify::EventKind;
+use notify::event::{CreateKind, ModifyKind, RenameMode};
 use tracing::trace;
-use watchexec_events::filekind::CreateKind;
-use watchexec_events::filekind::FileEventKind;
-use watchexec_events::filekind::ModifyKind::Name;
-use watchexec_events::filekind::RenameMode;
-use watchexec_events::{Event, Tag};
 
-use crate::native::watch::utils::transform_event;
+use crate::native::watch::utils::canonicalize_event_paths;
 
 #[napi(string_enum)]
 #[derive(Debug, Clone, Copy)]
@@ -54,121 +51,115 @@ pub(super) struct WatchEventInternal {
 }
 
 pub fn transform_event_to_watch_events(
-    value: &Event,
+    value: &notify::Event,
     origin: &str,
 ) -> anyhow::Result<Vec<WatchEventInternal>> {
-    let transformed = transform_event(value);
-    let value = transformed.as_ref().unwrap_or(value);
+    let value = canonicalize_event_paths(value);
 
-    let Some(path) = value.paths().next() else {
+    let Some(path_ref) = value.paths.first() else {
         let error_msg = "unable to get path from the event";
         trace!(?value, error_msg);
         anyhow::bail!(error_msg)
     };
 
-    #[allow(unused_variables)]
-    // this is used in linux and windows blocks, and will show it as being unused in macos
-    let Some(event_kind) = value.tags.iter().find_map(|t| match t {
-        Tag::FileEventKind(event_kind) => Some(event_kind),
-        _ => None,
-    }) else {
-        let error_msg = "unable to get the file event kind";
-        trace!(?value, error_msg);
-        anyhow::bail!(error_msg)
-    };
+    let event_kind = &value.kind;
 
-    let path_ref = path.0;
-    if path.1.is_none() && !path_ref.exists() {
-        Ok(vec![WatchEventInternal {
-            path: path_ref.into(),
+    if !path_ref.exists() && matches!(event_kind, EventKind::Remove(_)) {
+        return Ok(vec![WatchEventInternal {
+            path: path_ref.clone(),
             r#type: EventType::delete,
             origin: origin.to_owned(),
+        }]);
+    }
+
+    // If the path doesn't exist and it's not an explicit remove, treat as delete.
+    if !path_ref.exists() {
+        return Ok(vec![WatchEventInternal {
+            path: path_ref.clone(),
+            r#type: EventType::delete,
+            origin: origin.to_owned(),
+        }]);
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        use std::fs;
+        use std::os::macos::fs::MetadataExt;
+
+        // Skip directory events
+        if path_ref.is_dir() {
+            return Ok(vec![]);
+        }
+
+        let t = fs::metadata(path_ref);
+        let event_type = match t {
+            Err(_) => EventType::delete,
+            Ok(t) => {
+                let modified_time = t.st_mtime();
+                let birth_time = t.st_birthtime();
+
+                // if a file is created and updated near the same time, we always get a create event
+                // so we need to check the timestamps to see if it was created or updated
+                if modified_time == birth_time {
+                    EventType::create
+                } else {
+                    EventType::update
+                }
+            }
+        };
+
+        Ok(vec![WatchEventInternal {
+            path: path_ref.clone(),
+            r#type: event_type,
+            origin: origin.to_owned(),
         }])
-    } else {
-        #[cfg(target_os = "macos")]
-        {
-            use std::fs;
-            use std::os::macos::fs::MetadataExt;
-            use watchexec_events::FileType;
+    }
 
-            // Skip directory events - they're handled by register_new_directory_watches
-            if path.1.map_or(false, |ft| matches!(ft, FileType::Dir)) || path_ref.is_dir() {
-                return Ok(vec![]);
-            }
-
-            let origin = origin.to_owned();
-            let t = fs::metadata(path_ref);
-            let event_type = match t {
-                Err(_) => EventType::delete,
-                Ok(t) => {
-                    let modified_time = t.st_mtime();
-                    let birth_time = t.st_birthtime();
-
-                    // if a file is created and updated near the same time, we always get a create event
-                    // so we need to check the timestamps to see if it was created or updated
-                    // if the modified time is the same as birth_time then it was created
-                    if modified_time == birth_time {
-                        EventType::create
-                    } else {
-                        EventType::update
-                    }
-                }
-            };
-
-            Ok(vec![WatchEventInternal {
-                path: path_ref.into(),
-                r#type: event_type,
-                origin,
-            }])
+    #[cfg(target_os = "windows")]
+    {
+        // Skip directory events
+        if path_ref.is_dir() {
+            return Ok(vec![]);
         }
+        Ok(create_watch_event_internal(origin, event_kind, path_ref))
+    }
 
-        #[cfg(target_os = "windows")]
-        {
-            use watchexec_events::FileType;
-            // Skip directory events - they're handled by register_new_directory_watches
-            if path.1.map_or(false, |ft| matches!(ft, FileType::Dir)) {
-                return Ok(vec![]);
+    #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
+    {
+        use crate::native::walker::nx_walker_sync;
+        use ignore::Match;
+        use ignore::gitignore::GitignoreBuilder;
+
+        if matches!(event_kind, EventKind::Create(CreateKind::Folder)) {
+            let mut result = vec![];
+
+            let mut gitignore_builder = GitignoreBuilder::new(origin);
+            let origin_path: &Path = origin.as_ref();
+            gitignore_builder.add(origin_path.join(".nxignore"));
+            let ignore = gitignore_builder.build()?;
+
+            for path in nx_walker_sync(path_ref, None) {
+                let path = path_ref.join(path);
+                let is_dir = path.is_dir();
+                if is_dir
+                    || matches!(
+                        ignore.matched_path_or_any_parents(&path, is_dir),
+                        Match::Ignore(_)
+                    )
+                {
+                    continue;
+                }
+
+                result.push(WatchEventInternal {
+                    path,
+                    r#type: EventType::create,
+                    origin: origin.to_owned(),
+                });
             }
+
+            Ok(result)
+        } else {
             Ok(create_watch_event_internal(origin, event_kind, path_ref))
-        }
-
-        #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
-        {
-            use crate::native::walker::nx_walker_sync;
-            use ignore::Match;
-            use ignore::gitignore::GitignoreBuilder;
-
-            if matches!(event_kind, FileEventKind::Create(CreateKind::Folder)) {
-                let mut result = vec![];
-
-                let mut gitignore_builder = GitignoreBuilder::new(origin);
-                let origin_path: &Path = origin.as_ref();
-                gitignore_builder.add(origin_path.join(".nxignore"));
-                let ignore = gitignore_builder.build()?;
-
-                for path in nx_walker_sync(path_ref, None) {
-                    let path = path_ref.join(path);
-                    let is_dir = path.is_dir();
-                    if is_dir
-                        || matches!(
-                            ignore.matched_path_or_any_parents(&path, is_dir),
-                            Match::Ignore(_)
-                        )
-                    {
-                        continue;
-                    }
-
-                    result.push(WatchEventInternal {
-                        path,
-                        r#type: EventType::create,
-                        origin: origin.to_owned(),
-                    });
-                }
-
-                Ok(result)
-            } else {
-                Ok(create_watch_event_internal(origin, event_kind, path_ref))
-            }
         }
     }
 }
@@ -177,22 +168,22 @@ pub fn transform_event_to_watch_events(
 // this is used in linux and windows blocks, and will show as "dead code" in macos
 fn create_watch_event_internal(
     origin: &str,
-    event_kind: &FileEventKind,
+    event_kind: &EventKind,
     path_ref: &Path,
 ) -> Vec<WatchEventInternal> {
-    let event_kind = match event_kind {
-        FileEventKind::Create(CreateKind::File) => EventType::create,
+    let event_type = match event_kind {
+        EventKind::Create(CreateKind::File) => EventType::create,
         // Windows reports CreateKind::Any for file creation via ReadDirectoryChangesW
-        FileEventKind::Create(CreateKind::Any) => EventType::create,
-        FileEventKind::Modify(Name(RenameMode::To)) => EventType::create,
-        FileEventKind::Modify(Name(RenameMode::From)) => EventType::delete,
-        FileEventKind::Modify(_) => EventType::update,
+        EventKind::Create(CreateKind::Any) => EventType::create,
+        EventKind::Modify(ModifyKind::Name(RenameMode::To)) => EventType::create,
+        EventKind::Modify(ModifyKind::Name(RenameMode::From)) => EventType::delete,
+        EventKind::Modify(_) => EventType::update,
         _ => EventType::update,
     };
 
     vec![WatchEventInternal {
         path: path_ref.into(),
-        r#type: event_kind,
+        r#type: event_type,
         origin: origin.to_owned(),
     }]
 }
