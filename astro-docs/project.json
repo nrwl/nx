@@ -152,7 +152,12 @@
     "format": {
       "cache": true,
       "//": "nx format doesn't respect overrides, so we manually run prettier for mdoc files",
-      "command": "prettier **/*.mdoc --check"
+      "command": "prettier **/*.mdoc --check",
+      "inputs": [
+        "{projectRoot}/**/*.mdoc",
+        "{workspaceRoot}/.prettierrc",
+        "{workspaceRoot}/.prettierignore"
+      ]
     },
     "format:write": {
       "command": "prettier **/*.mdoc --write"
