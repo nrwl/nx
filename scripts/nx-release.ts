@@ -163,109 +163,110 @@ const VALID_AUTHORS_FOR_LATEST = [
     process.exit(0);
   }
 
-  runNxReleaseVersion();
+  try {
+    runNxReleaseVersion();
 
-  execSync(`pnpm nx run-many -t add-extra-dependencies --parallel 8`, {
-    stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
-    maxBuffer: LARGE_BUFFER,
-    windowsHide: false,
-  });
+    execSync(`pnpm nx run-many -t add-extra-dependencies --parallel 8`, {
+      stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+      maxBuffer: LARGE_BUFFER,
+      windowsHide: false,
+    });
 
-  execSync(`pnpm nx run nx:expand-deps`, {
-    stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
-    maxBuffer: LARGE_BUFFER,
-    windowsHide: false,
-  });
+    execSync(`pnpm nx run nx:expand-deps`, {
+      stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+      maxBuffer: LARGE_BUFFER,
+      windowsHide: false,
+    });
 
-  const distTag = determineDistTag(options.version);
+    const distTag = determineDistTag(options.version);
 
-  // If publishing locally, force all projects to not be private first
-  if (options.local) {
-    console.log(
-      styleText(
-        'dim',
-        `\n  Publishing locally, so setting all packages with existing nx-release-publish targets to not be private. If you have created a new private package and you want it to be published, you will need to manually configure the "nx-release-publish" target using executor "@nx/js:release-publish"`
-      )
-    );
-    const projectGraph = await createProjectGraphAsync();
-    for (const proj of Object.values(projectGraph.nodes)) {
-      if (proj.data.targets?.['nx-release-publish']) {
-        const packageJsonPath = join(
-          workspaceRoot,
-          proj.data.targets?.['nx-release-publish']?.options.packageRoot,
-          'package.json'
-        );
-        try {
-          const packageJson = require(packageJsonPath);
-          if (packageJson.private) {
-            console.log(
-              '- Publishing private package locally:',
-              packageJson.name
-            );
-            writeFileSync(
-              packageJsonPath,
-              JSON.stringify({ ...packageJson, private: false })
-            );
-          }
-        } catch {}
+    // If publishing locally, force all projects to not be private first
+    if (options.local) {
+      console.log(
+        styleText(
+          'dim',
+          `\n  Publishing locally, so setting all packages with existing nx-release-publish targets to not be private. If you have created a new private package and you want it to be published, you will need to manually configure the "nx-release-publish" target using executor "@nx/js:release-publish"`
+        )
+      );
+      const projectGraph = await createProjectGraphAsync();
+      for (const proj of Object.values(projectGraph.nodes)) {
+        if (proj.data.targets?.['nx-release-publish']) {
+          const packageJsonPath = join(
+            workspaceRoot,
+            proj.data.targets?.['nx-release-publish']?.options.packageRoot,
+            'package.json'
+          );
+          try {
+            const packageJson = require(packageJsonPath);
+            if (packageJson.private) {
+              console.log(
+                '- Publishing private package locally:',
+                packageJson.name
+              );
+              writeFileSync(
+                packageJsonPath,
+                JSON.stringify({ ...packageJson, private: false })
+              );
+            }
+          } catch {}
+        }
       }
     }
-  }
 
-  if (!options.local && (!distTag || distTag === 'latest')) {
-    // We are only expecting non-local latest releases to be performed within publish.yml on GitHub
-    const author = process.env.GITHUB_ACTOR ?? '';
-    if (!VALID_AUTHORS_FOR_LATEST.includes(author)) {
-      throw new Error(
-        `The GitHub user "${author}" is not allowed to publish to "latest". Please request one of the following users to carry out the release: ${VALID_AUTHORS_FOR_LATEST.join(
-          ', '
-        )}`
+    if (!options.local && (!distTag || distTag === 'latest')) {
+      // We are only expecting non-local latest releases to be performed within publish.yml on GitHub
+      const author = process.env.GITHUB_ACTOR ?? '';
+      if (!VALID_AUTHORS_FOR_LATEST.includes(author)) {
+        throw new Error(
+          `The GitHub user "${author}" is not allowed to publish to "latest". Please request one of the following users to carry out the release: ${VALID_AUTHORS_FOR_LATEST.join(
+            ', '
+          )}`
+        );
+      }
+    }
+
+    // Clean up tsconfig files before publishing
+    console.log('Cleaning up tsconfig files...');
+    execSync('node ./scripts/cleanup-tsconfig-files.js', {
+      stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+      maxBuffer: LARGE_BUFFER,
+      windowsHide: false,
+    });
+
+    hackFixForDevkitPeerDependencies();
+
+    // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
+    let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
+    if (options.dryRun) {
+      publishCommand += ' --dry-run';
+    }
+    console.log(`\n> ${publishCommand}`);
+    execSync(publishCommand, {
+      stdio: [0, 1, 2],
+      maxBuffer: LARGE_BUFFER,
+      windowsHide: false,
+    });
+
+    if (!options.dryRun) {
+      let version;
+      if (['minor', 'major', 'patch'].includes(options.version)) {
+        version = execSync(`npm view nx@${distTag} version`, {
+          windowsHide: false,
+        })
+          .toString()
+          .trim();
+      } else {
+        version = options.version;
+      }
+
+      console.log(styleText('green', ` > Published version: ` + version));
+      console.log(
+        styleText('dim', `   Use: npx create-nx-workspace@${version}\n`)
       );
     }
+  } finally {
+    resetPackageJsons();
   }
-
-  // Clean up tsconfig files before publishing
-  console.log('Cleaning up tsconfig files...');
-  execSync('node ./scripts/cleanup-tsconfig-files.js', {
-    stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
-    maxBuffer: LARGE_BUFFER,
-    windowsHide: false,
-  });
-
-  hackFixForDevkitPeerDependencies();
-
-  // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
-  let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
-  if (options.dryRun) {
-    publishCommand += ' --dry-run';
-  }
-  console.log(`\n> ${publishCommand}`);
-  execSync(publishCommand, {
-    stdio: [0, 1, 2],
-    maxBuffer: LARGE_BUFFER,
-    windowsHide: false,
-  });
-
-  if (!options.dryRun) {
-    let version;
-    if (['minor', 'major', 'patch'].includes(options.version)) {
-      version = execSync(`npm view nx@${distTag} version`, {
-        windowsHide: false,
-      })
-        .toString()
-        .trim();
-    } else {
-      version = options.version;
-    }
-
-    console.log(styleText('green', ` > Published version: ` + version));
-    console.log(
-      styleText('dim', `   Use: npx create-nx-workspace@${version}\n`)
-    );
-  }
-
-  // TODO(colum): Remove when we have a better way to handle this
-  resetPackageJsons();
 
   process.exit(0);
 })();
