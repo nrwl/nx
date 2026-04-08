@@ -137,7 +137,7 @@ import {
   processFileChangesInOutputs,
 } from './outputs-tracking';
 import {
-  addUpdatedAndDeletedFiles,
+  scheduleProjectGraphRecomputation,
   registerProjectGraphRecomputationListener,
   invalidateGraphCache,
 } from './project-graph-incremental-recomputation';
@@ -675,7 +675,7 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
       );
     }
 
-    addUpdatedAndDeletedFiles(
+    scheduleProjectGraphRecomputation(
       createdFilesToHash,
       updatedFilesToHash,
       deletedFiles
@@ -808,7 +808,7 @@ export async function startServer(): Promise<Server> {
           // register file change listener to invalidate sync generator cache
           registerFileChangeListener(clearSyncGeneratorsCache);
           // trigger an initial project graph recomputation
-          addUpdatedAndDeletedFiles([], [], []);
+          scheduleProjectGraphRecomputation([], [], []);
 
           // Kick off Nx Console check in background to prime the cache
           handleGetNxConsoleStatus().catch(() => {

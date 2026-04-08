@@ -10,6 +10,7 @@ import {
   readFile,
 } from '@nx/e2e-utils';
 import { spawn } from 'child_process';
+import treeKill from 'tree-kill';
 import { join } from 'path';
 import { writeFileSync, mkdtempSync, mkdirSync } from 'fs';
 import { tmpdir } from 'os';
@@ -243,7 +244,9 @@ async function runWatch(command: string) {
       if (s.includes('watch process waiting')) {
         resolve(async (timeout = 6000) => {
           await wait(timeout);
-          p.kill();
+          treeKill(p.pid);
+          // Wait for process tree to fully exit before returning
+          await new Promise<void>((res) => p.on('close', res));
           return output
             .split('\n')
             .filter((line) => line.length > 0 && !line.includes('NX'));
@@ -281,7 +284,9 @@ async function runWatchWithReconnect(command: string) {
         resolved = true;
         resolve(async (timeout = 8000) => {
           await wait(timeout);
-          p.kill();
+          treeKill(p.pid);
+          // Wait for process tree to fully exit before returning
+          await new Promise<void>((res) => p.on('close', res));
           return output
             .split('\n')
             .filter((line) => line.length > 0 && !line.includes('NX'));

@@ -42,7 +42,6 @@ import {
   updateFilesInContext,
 } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { serverLogger } from '../logger';
 import { ProgressTopics } from '../../utils/progress-topics';
 import {
   subscribeClientToTopic,
@@ -51,6 +50,7 @@ import {
 import { notifyFileChangeListeners } from './file-watching/file-change-events';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
+import { serverLogger } from '../logger';
 
 interface SerializedProjectGraph {
   error: Error | null;
@@ -77,6 +77,7 @@ export let currentSourceMaps: ConfigurationSourceMaps | undefined;
 // This lets us detect mid-flight re-modifications when clearing processed files.
 const collectedUpdatedFiles = new Map<string, number>();
 const collectedDeletedFiles = new Map<string, number>();
+
 const projectGraphRecomputationListeners = new Set<
   (
     projectGraph: ProjectGraph,
@@ -201,7 +202,7 @@ export async function getCachedSerializedProjectGraphPromise(
   }
 }
 
-export function addUpdatedAndDeletedFiles(
+export function scheduleProjectGraphRecomputation(
   createdFiles: string[],
   updatedFiles: string[],
   deletedFiles: string[]
@@ -224,10 +225,7 @@ export function addUpdatedAndDeletedFiles(
     deletedFiles.length > 0
   ) {
     notifyFileChangeListeners({ createdFiles, updatedFiles, deletedFiles });
-  }
-
-  if (updatedFiles.length > 0 || deletedFiles.length > 0) {
-    notifyFileWatcherSockets(null, updatedFiles, deletedFiles);
+    notifyFileWatcherSockets(createdFiles, updatedFiles, deletedFiles);
   }
 
   if (createdFiles.length > 0) {
@@ -247,10 +245,6 @@ export function addUpdatedAndDeletedFiles(
         );
       const { projectGraph, sourceMaps, error } =
         await cachedSerializedProjectGraphPromise;
-
-      if (createdFiles.length > 0) {
-        notifyFileWatcherSockets(createdFiles, null, null);
-      }
 
       notifyProjectGraphRecomputationListeners(projectGraph, sourceMaps, error);
     }, waitPeriod);
