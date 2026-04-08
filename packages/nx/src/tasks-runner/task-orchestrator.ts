@@ -291,6 +291,11 @@ export class TaskOrchestrator {
           () => {
             this.openGroup(groupId);
             inFlightWorkers--;
+            // Wake coordinator — the decrement above may satisfy the
+            // exit condition (inFlightWorkers === 0) that was missed
+            // when scheduleNextTasksAndReleaseThreads fired earlier.
+            this.waitingForTasks.forEach((f) => f(null));
+            this.waitingForTasks.length = 0;
           }
         );
       }
