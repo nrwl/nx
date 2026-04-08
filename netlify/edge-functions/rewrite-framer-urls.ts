@@ -10,6 +10,50 @@ const GA_API_SECRET = Netlify.env.get('GA_API_SECRET') || '';
 // so track-page-requests.ts never fires for these paths due to alphabetical ordering.
 // https://docs.netlify.com/build/edge-functions/declarations/#declaration-processing-order
 
+/**
+ * Creates a TransformStream that performs string replacement on text chunks,
+ * correctly handling matches that span chunk boundaries.
+ */
+function createStreamingReplace(
+  search: string,
+  replace: string
+): TransformStream<string, string> {
+  let buffer = '';
+  return new TransformStream({
+    transform(chunk, controller) {
+      buffer += chunk;
+      // Hold back enough chars to catch matches split across chunks
+      const safeEnd = buffer.length - (search.length - 1);
+      if (safeEnd > 0) {
+        controller.enqueue(
+          buffer.substring(0, safeEnd).replaceAll(search, replace)
+        );
+        buffer = buffer.substring(safeEnd);
+      }
+    },
+    flush(controller) {
+      if (buffer) {
+        controller.enqueue(buffer.replaceAll(search, replace));
+      }
+    },
+  });
+}
+
+/**
+ * Streams a proxied HTML response, rewriting `search` → `replace` on the fly.
+ * Removes Content-Length since the body size changes with replacements.
+ */
+function streamWithRewrite(
+  response: Response,
+  search: string,
+  replace: string
+): ReadableStream<Uint8Array> {
+  return response
+    .body!.pipeThrough(new TextDecoderStream())
+    .pipeThrough(createStreamingReplace(search, replace))
+    .pipeThrough(new TextEncoderStream());
+}
+
 function getClientId(request: Request): string {
   const cookies = request.headers.get('cookie') || '';
   const gaMatch = cookies.match(/_ga=GA\d+\.\d+\.(\d+\.\d+)/);
@@ -126,13 +170,7 @@ export default async function handler(
     });
 
     const contentType = response.headers.get('content-type') || '';
-    let body: ReadableStream<Uint8Array> | string | null = response.body;
-
-    // Rewrite blog site URLs to nx.dev in HTML responses (canonical, og:url, etc.)
-    if (contentType.includes('text/html')) {
-      const html = await response.text();
-      body = html.replaceAll(blogUrl, 'https://nx.dev');
-    }
+    const isHtml = contentType.includes('text/html');
 
     context.waitUntil(sendToGA4(request, context, pathname));
 
@@ -140,12 +178,26 @@ export default async function handler(
     newHeaders.set('x-nx-edge-function', 'blog-proxy');
     newHeaders.set('X-Frame-Options', 'DENY');
     newHeaders.set('Content-Security-Policy', "frame-ancestors 'none'");
+    // Edge CDN cache — stale-while-revalidate serves instantly while revalidating in background
+    newHeaders.set(
+      'Netlify-CDN-Cache-Control',
+      'public, max-age=3600, stale-while-revalidate=86400'
+    );
+    if (isHtml) {
+      // Content-Length is invalid after streaming rewrite changes body size
+      newHeaders.delete('Content-Length');
+    }
 
-    return new Response(body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: newHeaders,
-    });
+    return new Response(
+      isHtml
+        ? streamWithRewrite(response, blogUrl, 'https://nx.dev')
+        : response.body,
+      {
+        status: response.status,
+        statusText: response.statusText,
+        headers: newHeaders,
+      }
+    );
   }
 
   if (!framerUrl) return context.next();
@@ -167,24 +219,29 @@ export default async function handler(
   const contentType = response.headers.get('content-type') || '';
   if (!contentType.includes('text/html')) return response;
 
-  const html = await response.text();
-
-  // This handles canonical URLs, og:url, and any other references
-  const rewrittenHtml = html.replaceAll(framerUrl, 'https://nx.dev');
-
   context.waitUntil(sendToGA4(request, context, pathname));
 
   const newHeaders = new Headers(response.headers);
   newHeaders.set('x-nx-edge-function', 'framer-proxy');
   newHeaders.set('Cache-Control', 'public, max-age=3600, must-revalidate');
+  // Edge CDN cache — stale-while-revalidate serves instantly while revalidating in background
+  newHeaders.set(
+    'Netlify-CDN-Cache-Control',
+    'public, max-age=3600, stale-while-revalidate=86400'
+  );
   newHeaders.set('X-Frame-Options', 'DENY');
   newHeaders.set('Content-Security-Policy', "frame-ancestors 'none'");
+  // Content-Length is invalid after streaming rewrite changes body size
+  newHeaders.delete('Content-Length');
 
-  return new Response(rewrittenHtml, {
-    status: response.status,
-    statusText: response.statusText,
-    headers: newHeaders,
-  });
+  return new Response(
+    streamWithRewrite(response, framerUrl, 'https://nx.dev'),
+    {
+      status: response.status,
+      statusText: response.statusText,
+      headers: newHeaders,
+    }
+  );
 }
 
 export const config = {
