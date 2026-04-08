@@ -122,7 +122,7 @@ impl TerminalPaneData {
                     };
                     // Set status message outside the pty borrow
                     if let Some(msg) = status_message {
-                        self.status_message = Some((msg.to_string(), Instant::now()));
+                        self.status_message = Some((msg.to_owned(), Instant::now()));
                     }
                     return Ok(None);
                 }

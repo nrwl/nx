@@ -14,6 +14,9 @@ import org.gradle.api.internal.provider.ProviderInternal
 import org.gradle.api.internal.provider.TransformBackedProvider
 import org.gradle.api.internal.tasks.DefaultTaskDependency
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.bundling.AbstractArchiveTask
+import org.gradle.api.tasks.compile.AbstractCompile
+import org.gradle.api.tasks.testing.Test as GradleTest
 
 /**
  * Process a task and convert it into target Going to populate:
@@ -24,6 +27,32 @@ import org.gradle.api.tasks.TaskProvider
  * - metadata
  */
 fun processTask(
+    task: Task,
+    projectBuildPath: String,
+    projectRoot: String,
+    workspaceRoot: String,
+    externalNodes: MutableMap<String, ExternalNode>,
+    dependencies: MutableSet<Dependency>,
+    targetNameOverrides: Map<String, String>,
+    gitIgnoreClassifier: GitIgnoreClassifier,
+    targetNamePrefix: String = "",
+    project: Project,
+): MutableMap<String, Any?> =
+    NxTracing.withSpan("processTask", mapOf("task" to task.path)) {
+      processTaskImpl(
+          task,
+          projectBuildPath,
+          projectRoot,
+          workspaceRoot,
+          externalNodes,
+          dependencies,
+          targetNameOverrides,
+          gitIgnoreClassifier,
+          targetNamePrefix,
+          project)
+    }
+
+private fun processTaskImpl(
     task: Task,
     projectBuildPath: String,
     projectRoot: String,
@@ -121,6 +150,42 @@ fun getGradleFilesInputs(workspaceRoot: String): List<String> {
 }
 
 /**
+ * Infer file extensions consumed by a task from its dependents' outputs using task type checks.
+ *
+ * Test tasks consume .class + .jar (compiled code and library jars on the test classpath). Compile
+ * tasks consume .class from upstream compile tasks (e.g. compileTestKotlin → compileKotlin).
+ * Archive dependents declare their own extension (jar, war, etc).
+ *
+ * Works at configuration time without requiring files to exist on disk.
+ */
+fun inferExtensionsFromInputProperties(task: Task, dependentTasks: Set<Task>): Set<String> {
+  val extensions = mutableSetOf<String>()
+
+  when (task) {
+    is GradleTest -> {
+      extensions.add("class")
+      extensions.add("jar")
+    }
+    is AbstractCompile -> extensions.add("class")
+  }
+
+  dependentTasks.forEach { depTask ->
+    if (depTask is AbstractArchiveTask) {
+      try {
+        depTask.archiveExtension.get().takeIf { it.isNotEmpty() }?.let { extensions.add(it) }
+      } catch (e: Exception) {
+        task.logger.debug("Could not read archiveExtension for ${depTask.path}: ${e.message}")
+      }
+    }
+    if (depTask is AbstractCompile) {
+      extensions.add("class")
+    }
+  }
+
+  return extensions.toSet()
+}
+
+/**
  * Parse task and get inputs for this task
  *
  * @param dependsOnTasks set of tasks this task depends on
@@ -132,6 +197,19 @@ fun getGradleFilesInputs(workspaceRoot: String): List<String> {
  * @return a list of inputs including external dependencies, null if empty or an error occurred
  */
 fun getInputsForTask(
+    dependsOnTasks: Set<Task>?,
+    task: Task,
+    projectRoot: String,
+    workspaceRoot: String,
+    externalNodes: MutableMap<String, ExternalNode>? = null,
+    gitIgnoreClassifier: GitIgnoreClassifier
+): List<Any>? =
+    NxTracing.withSpan("getInputsForTask", mapOf("task" to task.path)) {
+      getInputsForTaskImpl(
+          dependsOnTasks, task, projectRoot, workspaceRoot, externalNodes, gitIgnoreClassifier)
+    }
+
+private fun getInputsForTaskImpl(
     dependsOnTasks: Set<Task>?,
     task: Task,
     projectRoot: String,
@@ -190,6 +268,10 @@ fun getInputsForTask(
         }
       }
     }
+
+    // Supplement with extensions inferred from Gradle metadata (handles clean builds where
+    // output directories exist but are empty, so file-based extension discovery misses them)
+    dependentTaskOutputExtensions.addAll(inferExtensionsFromInputProperties(task, tasksToProcess))
 
     // Add consolidated dependentTasksOutputFiles entries using glob patterns by extension
     dependentTaskOutputExtensions.forEach { extension ->

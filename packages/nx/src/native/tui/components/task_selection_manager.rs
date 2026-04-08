@@ -215,13 +215,13 @@ impl TaskSelectionManager {
     }
 
     /// Convenience: selects a task by ID
-    pub fn select_task(&mut self, task_id: String) {
-        self.select(Some(SelectionEntry::Task(task_id)));
+    pub fn select_task(&mut self, task_id: &str) {
+        self.select(Some(SelectionEntry::Task(task_id.to_owned())));
     }
 
     /// Convenience: selects a batch group by ID
-    pub fn select_batch_group(&mut self, batch_id: String) {
-        self.select(Some(SelectionEntry::BatchGroup(batch_id)));
+    pub fn select_batch_group(&mut self, batch_id: &str) {
+        self.select(Some(SelectionEntry::BatchGroup(batch_id.to_owned())));
     }
 
     /// Determine which section a task belongs to based on its position in entries
@@ -706,7 +706,7 @@ mod tests {
             Some(SelectionEntry::Task("Task 2".to_string())),
         ];
         manager.update_entries(entries);
-        manager.select_task("Task 2".to_string());
+        manager.select_task("Task 2");
         assert_eq!(
             manager.get_selection(),
             Some(&SelectionEntry::Task("Task 2".to_string()))
@@ -830,21 +830,21 @@ mod tests {
         let mut manager = TaskSelectionManager::new(2);
 
         // Test batch group selection
-        manager.select_batch_group("my-batch-id".to_string());
+        manager.select_batch_group("my-batch-id");
         assert_eq!(
             manager.get_selection(),
             Some(&SelectionEntry::BatchGroup("my-batch-id".to_string()))
         );
 
         // Test task selection
-        manager.select_task("my-task".to_string());
+        manager.select_task("my-task");
         assert_eq!(
             manager.get_selection(),
             Some(&SelectionEntry::Task("my-task".to_string()))
         );
 
         // Test another task selection
-        manager.select_task("regular-task".to_string());
+        manager.select_task("regular-task");
         assert_eq!(
             manager.get_selection(),
             Some(&SelectionEntry::Task("regular-task".to_string()))
@@ -910,21 +910,21 @@ mod tests {
         manager.update_entries_with_size(entries, 2);
 
         // Select in-progress task
-        manager.select_task("in-progress-1".to_string());
+        manager.select_task("in-progress-1");
         assert_eq!(
             manager.get_selected_task_section(),
             Some(TaskSection::InProgress)
         );
 
         // Select other section task
-        manager.select_task("other-1".to_string());
+        manager.select_task("other-1");
         assert_eq!(
             manager.get_selected_task_section(),
             Some(TaskSection::Other)
         );
 
         // Batch groups should return None for section
-        manager.select_batch_group("batch-1".to_string());
+        manager.select_batch_group("batch-1");
         assert_eq!(manager.get_selected_task_section(), None);
     }
 }
