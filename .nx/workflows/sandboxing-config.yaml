@@ -1,7 +1,9 @@
 exclude-reads:
   - packages/nx/src/native/*.node
+  - 'dist/target/**'
 exclude-writes:
   - '**/.swc/**'
+  - 'dist/target/**'
 
 task-exclusions:
   - target: lint
