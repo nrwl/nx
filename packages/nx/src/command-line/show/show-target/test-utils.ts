@@ -83,6 +83,22 @@ jest.mock('../../../native', () => {
   };
 });
 
+export let mockHasCustomHasher = false;
+
+export function setMockHasCustomHasher(value: boolean) {
+  mockHasCustomHasher = value;
+}
+
+jest.mock('../../../tasks-runner/utils', () => {
+  const actual = jest.requireActual('../../../tasks-runner/utils');
+  return {
+    ...actual,
+    getExecutorForTask: jest.fn().mockImplementation(() => ({
+      hasherFactory: mockHasCustomHasher ? () => {} : null,
+    })),
+  };
+});
+
 jest.mock('../../../hasher/hash-plan-inspector', () => ({
   HashPlanInspector: jest.fn().mockImplementation(() => ({
     init: jest.fn().mockResolvedValue(undefined),
@@ -104,6 +120,7 @@ export function setupBeforeEach() {
   mockHashInputs = {};
   mockExpandedOutputs = null;
   mockSourceMaps = {};
+  mockHasCustomHasher = false;
   process.exitCode = undefined;
   process.cwd = jest.fn().mockReturnValue(mockCwd);
 }

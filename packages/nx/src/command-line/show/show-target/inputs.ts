@@ -7,6 +7,7 @@ import {
   resolveTarget,
   normalizePath,
   deduplicateFolderEntries,
+  hasCustomHasher,
   pc,
   printList,
   type ResolvedTarget,
@@ -18,6 +19,19 @@ export async function showTargetInputsHandler(
   args: ShowTargetInputsOptions
 ): Promise<void> {
   const t = await resolveTarget(args);
+
+  const usesCustomHasher = hasCustomHasher(
+    t.projectName,
+    t.targetName,
+    t.graph
+  );
+
+  if (usesCustomHasher) {
+    renderCustomHasherWarning(t.projectName, t.targetName, args);
+    process.exitCode = 1;
+    return;
+  }
+
   const hashInputs = await resolveInputFiles(t);
 
   if (args.check !== undefined) {
@@ -232,4 +246,39 @@ function renderBatchCheckInputs(
     );
     for (const v of unmatched) console.log(`  ${v}`);
   }
+}
+
+function renderCustomHasherWarning(
+  projectName: string,
+  targetName: string,
+  args: ShowTargetInputsOptions
+) {
+  const c = pc();
+  const label = `${c.cyan(projectName)}:${c.green(targetName)}`;
+
+  if (args.json) {
+    console.log(
+      JSON.stringify(
+        {
+          project: projectName,
+          target: targetName,
+          warning:
+            'This target uses a custom hasher. Configured inputs do not affect the cache hash.',
+        },
+        null,
+        2
+      )
+    );
+    return;
+  }
+
+  console.log(
+    `\n${c.yellow('⚠')} ${label} uses a ${c.yellow('custom hasher')}.`
+  );
+  console.log(
+    `  Configured inputs do not affect the cache hash for this target.`
+  );
+  console.log(
+    `  The executor's hasher determines what is included in the hash.`
+  );
 }

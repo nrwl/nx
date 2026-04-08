@@ -4,6 +4,7 @@ import {
   setupAfterEach,
   setGraph,
   setMockSourceMaps,
+  setMockHasCustomHasher,
 } from './test-utils';
 import { showTargetInfoHandler } from './info';
 
@@ -309,6 +310,53 @@ describe('show target info', () => {
         ]),
       })
     );
+  });
+
+  it('should indicate custom hasher in JSON output', async () => {
+    setGraph(
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: { build: { executor: '@nx/web:build' } },
+          },
+          'app'
+        )
+        .build()
+    );
+
+    setMockHasCustomHasher(true);
+
+    await showTargetInfoHandler({ target: 'my-app:build', json: true });
+
+    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    expect(parsed.customHasher).toBe(true);
+  });
+
+  it('should indicate custom hasher in text output', async () => {
+    setGraph(
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: { build: { executor: '@nx/web:build' } },
+          },
+          'app'
+        )
+        .build()
+    );
+
+    setMockHasCustomHasher(true);
+
+    await showTargetInfoHandler({ target: 'my-app:build', json: false });
+
+    const allLogged = (console.log as jest.Mock).mock.calls
+      .map((c) => c[0])
+      .join('\n');
+    expect(allLogged).toContain('custom');
+    expect(allLogged).toContain('inputs do not affect');
   });
 
   it('should include sourceMap in JSON output when source maps are available', async () => {

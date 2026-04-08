@@ -5,7 +5,12 @@ import type { ConfigurationSourceMaps } from '../../../project-graph/utils/proje
 import { getNamedInputs } from '../../../hasher/task-hasher';
 import { getDependencyConfigs } from '../../../tasks-runner/utils';
 import type { ShowTargetBaseOptions } from '../command-object';
-import { resolveTarget, pc, type ResolvedTarget } from './utils';
+import {
+  resolveTarget,
+  pc,
+  hasCustomHasher,
+  type ResolvedTarget,
+} from './utils';
 
 // ── Handler ─────────────────────────────────────────────────────────
 
@@ -83,12 +88,15 @@ function resolveTargetInfoData(t: ResolvedTarget) {
     targetName,
     sourceMaps
   );
+  const usesCustomHasher = hasCustomHasher(projectName, targetName, graph);
+
   return {
     project: projectName,
     target: targetName,
     ...(configuration ? { configuration } : {}),
     executor: targetConfig.executor,
     ...(command ? { command } : {}),
+    ...(usesCustomHasher ? { customHasher: true } : {}),
     ...(dependsOn ? { dependsOn } : {}),
     parallelism: targetConfig.parallelism ?? true,
     continuous: targetConfig.continuous ?? false,
@@ -240,6 +248,12 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
   } else if (data.executor) {
     console.log(
       `${c.bold('Executor')}: ${data.executor}${sourceHint('executor')}`
+    );
+  }
+
+  if (data.customHasher) {
+    console.log(
+      `${c.bold('Hasher')}: ${c.yellow('custom')} ${c.dim('(inputs do not affect cache hash)')}`
     );
   }
 

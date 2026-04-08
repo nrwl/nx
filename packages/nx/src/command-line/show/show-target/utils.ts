@@ -193,6 +193,32 @@ function validateConfiguration(
   }
 }
 
+// ── Custom hasher detection ──────────────────────────────────────────
+
+/**
+ * Checks whether a target's executor defines a custom hasher.
+ * Returns true if the executor has a hasherFactory — meaning the
+ * standard input-based hashing is bypassed for this target.
+ */
+export function hasCustomHasher(
+  projectName: string,
+  targetName: string,
+  graph: ProjectGraph
+): boolean {
+  try {
+    const { getExecutorForTask } = require('../../../tasks-runner/utils');
+    const task = {
+      id: `${projectName}:${targetName}`,
+      target: { project: projectName, target: targetName },
+      overrides: {},
+    };
+    const executorConfig = getExecutorForTask(task, graph);
+    return !!executorConfig.hasherFactory;
+  } catch {
+    return false;
+  }
+}
+
 // ── Small helpers shared across slices ───────────────────────────────
 
 export function normalizePath(p: string): string {

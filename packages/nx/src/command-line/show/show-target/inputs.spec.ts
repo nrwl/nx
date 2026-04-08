@@ -4,6 +4,7 @@ import {
   setupAfterEach,
   setGraph,
   setMockHashInputs,
+  setMockHasCustomHasher,
 } from './test-utils';
 import { showTargetInputsHandler } from './inputs';
 
@@ -486,4 +487,95 @@ describe('show target inputs', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('should warn and exit 1 when target uses a custom hasher', async () => {
+    setGraph(
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              build: {
+                executor: '@nx/web:build',
+                inputs: ['{projectRoot}/**/*.ts'],
+              },
+            },
+          },
+          'app'
+        )
+        .build()
+    );
+
+    setMockHasCustomHasher(true);
+
+    await showTargetInputsHandler({ target: 'my-app:build' });
+
+    const allLogged = (console.log as jest.Mock).mock.calls
+      .map((c) => c[0])
+      .join('\n');
+    expect(allLogged).toContain('custom hasher');
+    expect(allLogged).toContain('do not affect');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('should warn and exit 1 for --check when target uses a custom hasher', async () => {
+    setGraph(
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              build: {
+                executor: '@nx/web:build',
+                inputs: ['{projectRoot}/**/*.ts'],
+              },
+            },
+          },
+          'app'
+        )
+        .build()
+    );
+
+    setMockHasCustomHasher(true);
+
+    await showTargetInputsHandler({
+      target: 'my-app:build',
+      check: ['apps/my-app/src/main.ts'],
+    });
+
+    const allLogged = (console.log as jest.Mock).mock.calls
+      .map((c) => c[0])
+      .join('\n');
+    expect(allLogged).toContain('custom hasher');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('should output custom hasher warning as JSON when --json is used', async () => {
+    setGraph(
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              build: {
+                executor: '@nx/web:build',
+                inputs: ['{projectRoot}/**/*.ts'],
+              },
+            },
+          },
+          'app'
+        )
+        .build()
+    );
+
+    setMockHasCustomHasher(true);
+
+    await showTargetInputsHandler({ target: 'my-app:build', json: true });
+
+    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    expect(parsed.warning).toContain('custom hasher');
+    expect(process.exitCode).toBe(1);
+  });
 });
