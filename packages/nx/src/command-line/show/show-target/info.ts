@@ -64,23 +64,38 @@ function resolveTargetInfoData(t: ResolvedTarget) {
     [...allTargetNames]
   );
 
-  const command =
-    targetConfig.metadata?.scriptContent ??
-    targetConfig.options?.command ??
-    (targetConfig.options?.commands?.length === 1
-      ? targetConfig.options.commands[0]
-      : undefined) ??
-    (targetConfig.executor === 'nx:run-script' && targetConfig.options?.script
-      ? targetConfig.options.script
-      : undefined);
+  // Determine the hoisted command value and which option key it came from
+  let command: string | undefined;
+  let commandSourceKey: string | undefined;
+  if (targetConfig.metadata?.scriptContent) {
+    command = targetConfig.metadata.scriptContent;
+    commandSourceKey = 'options.script';
+  } else if (targetConfig.options?.command) {
+    command = targetConfig.options.command;
+    commandSourceKey = 'options.command';
+  } else if (targetConfig.options?.commands?.length === 1) {
+    command = targetConfig.options.commands[0];
+    commandSourceKey = 'options.commands';
+  } else if (
+    targetConfig.executor === 'nx:run-script' &&
+    targetConfig.options?.script
+  ) {
+    command = targetConfig.options.script;
+    commandSourceKey = 'options.script';
+  }
 
-  const dependsOn =
-    depConfigs && depConfigs.length > 0
-      ? depConfigs.flatMap((dep) => {
-          const projects = resolveDependencyProjects(dep, projectName, graph);
-          return projects.map((p) => `${p}:${dep.target}`);
-        })
-      : undefined;
+  const dependsOn: string[] = [];
+  const depSourceIndices: number[] = [];
+  if (depConfigs && depConfigs.length > 0) {
+    for (let i = 0; i < depConfigs.length; i++) {
+      const dep = depConfigs[i];
+      const projects = resolveDependencyProjects(dep, projectName, graph);
+      for (const p of projects) {
+        dependsOn.push(`${p}:${dep.target}`);
+        depSourceIndices.push(i);
+      }
+    }
+  }
 
   const configurations = Object.keys(targetConfig.configurations ?? {});
   const targetSourceMap = extractTargetSourceMap(
@@ -95,9 +110,11 @@ function resolveTargetInfoData(t: ResolvedTarget) {
     target: targetName,
     ...(configuration ? { configuration } : {}),
     executor: targetConfig.executor,
-    ...(command ? { command } : {}),
+    ...(command ? { command, _commandSourceKey: commandSourceKey } : {}),
     ...(usesCustomHasher ? { customHasher: true } : {}),
-    ...(dependsOn ? { dependsOn } : {}),
+    ...(dependsOn.length > 0
+      ? { dependsOn, _depSources: depSourceIndices }
+      : {}),
     parallelism: targetConfig.parallelism ?? true,
     continuous: targetConfig.continuous ?? false,
     cache: targetConfig.cache ?? false,
@@ -224,7 +241,7 @@ function extractTargetSourceMap(
 function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
   if (args.json) {
     // Strip internal renderer-only fields from JSON output
-    const { _inputSources, ...jsonData } = data;
+    const { _inputSources, _depSources, _commandSourceKey, ...jsonData } = data;
     console.log(JSON.stringify(jsonData, null, 2));
     return;
   }
@@ -232,9 +249,11 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
   const c = pc();
   const sm = data.sourceMap;
 
-  const sourceHint = (key: string): string => {
-    if (!sm?.[key]) return '';
-    const [file, plugin] = sm[key];
+  const sourceHint = (key: string, fallbackKey?: string): string => {
+    if (!args.verbose) return '';
+    const entry = sm?.[key] ?? (fallbackKey ? sm?.[fallbackKey] : undefined);
+    if (!entry) return '';
+    const [file, plugin] = entry;
     if (file && plugin) return ` ${c.dim(`(from ${file} by ${plugin})`)}`;
     if (file) return ` ${c.dim(`(from ${file})`)}`;
     if (plugin) return ` ${c.dim(`(by ${plugin})`)}`;
@@ -247,7 +266,10 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
 
   if (data.command) {
     const label = data.executor === 'nx:run-script' ? 'Script' : 'Command';
-    console.log(`${c.bold(label)}: ${data.command}${sourceHint('command')}`);
+    const cmdHint = data._commandSourceKey
+      ? sourceHint(data._commandSourceKey)
+      : '';
+    console.log(`${c.bold(label)}: ${data.command}${cmdHint}`);
   } else if (data.executor) {
     console.log(
       `${c.bold('Executor')}: ${data.executor}${sourceHint('executor')}`
@@ -265,8 +287,12 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
 
   if (data.dependsOn && data.dependsOn.length > 0) {
     console.log(`${c.bold('Depends On')}:`);
-    for (const taskId of data.dependsOn) {
-      console.log(`  ${taskId}`);
+    for (let i = 0; i < data.dependsOn.length; i++) {
+      const hint =
+        data._depSources?.[i] !== undefined
+          ? sourceHint(`dependsOn.${data._depSources[i]}`, 'dependsOn')
+          : '';
+      console.log(`  ${data.dependsOn[i]}${hint}`);
     }
   }
 
@@ -305,19 +331,32 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
     for (const { value, sourceIndex } of entries) {
       const display = typeof value === 'string' ? value : JSON.stringify(value);
       const hint =
-        sourceIndex !== undefined ? sourceHint(`inputs.${sourceIndex}`) : '';
+        sourceIndex !== undefined
+          ? sourceHint(`inputs.${sourceIndex}`, 'inputs')
+          : '';
       console.log(`  - ${display}${hint}`);
     }
   }
 
   if (data.outputs && data.outputs.length > 0) {
     console.log(`${c.bold('Outputs')}:`);
-    for (const o of data.outputs) console.log(`  - ${o}`);
+    for (let i = 0; i < data.outputs.length; i++) {
+      const hint = sourceHint(`outputs.${i}`, 'outputs');
+      console.log(`  - ${data.outputs[i]}${hint}`);
+    }
   }
 
-  if (Object.keys(data.options).length > 0) {
+  // When command is hoisted, hide the corresponding option key from display
+  const hoistedOptionKey = data._commandSourceKey?.startsWith('options.')
+    ? data._commandSourceKey.slice('options.'.length)
+    : undefined;
+  const displayOptions = Object.entries(data.options).filter(
+    ([key]) => key !== hoistedOptionKey
+  );
+
+  if (displayOptions.length > 0) {
     console.log(`${c.bold('Options')}:`);
-    for (const [key, value] of Object.entries(data.options)) {
+    for (const [key, value] of displayOptions) {
       const hint = sourceHint(`options.${key}`);
       if (typeof value === 'object' && value !== null) {
         console.log(`  ${key}:${hint}`);

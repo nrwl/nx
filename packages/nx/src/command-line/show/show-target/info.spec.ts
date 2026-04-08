@@ -496,7 +496,11 @@ describe('show target info', () => {
       },
     });
 
-    await showTargetInfoHandler({ target: 'my-app:build', json: false });
+    await showTargetInfoHandler({
+      target: 'my-app:build',
+      json: false,
+      verbose: true,
+    });
 
     const allLogged = (console.log as jest.Mock).mock.calls
       .map((c) => c[0])
@@ -541,5 +545,122 @@ describe('show target info', () => {
     ]);
     expect(parsed.sourceMap['targets.test']).toBeUndefined();
     expect(parsed.sourceMap['targets.test.executor']).toBeUndefined();
+  });
+
+  it('should show per-item source hints for inputs, outputs, and dependsOn with --verbose', async () => {
+    setGraph(
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              build: {
+                executor: '@nx/web:build',
+                inputs: ['default'],
+                outputs: ['{projectRoot}/dist'],
+                dependsOn: ['prebuild'],
+              },
+              prebuild: { executor: '@nx/web:build' },
+            },
+          },
+          'app'
+        )
+        .build()
+    );
+
+    // Use container-level source map keys (matching real-world source maps)
+    // Per-index keys (inputs.0, outputs.0) may or may not exist; the code
+    // falls back to the container key when the per-index key is missing.
+    setMockSourceMaps({
+      'apps/my-app': {
+        'targets.build': ['project.json', '@nx/web'],
+        'targets.build.executor': ['project.json', '@nx/web'],
+        'targets.build.inputs': ['nx.json', 'nx/target-defaults'],
+        'targets.build.outputs': ['project.json', '@nx/web'],
+        'targets.build.dependsOn': ['project.json', '@nx/web'],
+      },
+    });
+
+    await showTargetInfoHandler({
+      target: 'my-app:build',
+      json: false,
+      verbose: true,
+    });
+
+    const lines = (console.log as jest.Mock).mock.calls.map((c) =>
+      String(c[0])
+    );
+
+    // Find the specific lines for dependsOn, input, and output items
+    const depLine = lines.find((l) => l.includes('prebuild'));
+    const outputLine = lines.find((l) => l.includes('dist'));
+    const inputLine = lines.find(
+      (l) => l.includes('fileset') || l.includes('default')
+    );
+
+    // Each per-item line should contain source info when verbose
+    // (falls back to container key when per-index key is missing)
+    expect(depLine).toBeDefined();
+    expect(depLine).toContain('project.json');
+    expect(outputLine).toBeDefined();
+    expect(outputLine).toContain('project.json');
+    expect(inputLine).toBeDefined();
+    expect(inputLine).toContain('nx.json');
+
+    // Also verify JSON output strips internal fields
+    jest.clearAllMocks();
+    await showTargetInfoHandler({
+      target: 'my-app:build',
+      json: true,
+    });
+    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    expect(parsed._depSources).toBeUndefined();
+    expect(parsed._inputSources).toBeUndefined();
+  });
+
+  it('should not show any source hints without --verbose', async () => {
+    setGraph(
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              build: {
+                executor: '@nx/web:build',
+                inputs: ['default'],
+                outputs: ['{projectRoot}/dist'],
+                dependsOn: ['prebuild'],
+              },
+              prebuild: { executor: '@nx/web:build' },
+            },
+          },
+          'app'
+        )
+        .build()
+    );
+
+    setMockSourceMaps({
+      'apps/my-app': {
+        'targets.build': ['project.json', '@nx/web'],
+        'targets.build.executor': ['project.json', '@nx/web'],
+        'targets.build.inputs': ['nx.json', 'nx/target-defaults'],
+        'targets.build.outputs': ['project.json', '@nx/web'],
+        'targets.build.dependsOn': ['project.json', '@nx/web'],
+      },
+    });
+
+    await showTargetInfoHandler({
+      target: 'my-app:build',
+      json: false,
+    });
+
+    const allLogged = (console.log as jest.Mock).mock.calls
+      .map((c) => c[0])
+      .join('\n');
+    // No source hints (the "(from ...)" annotations) should appear
+    expect(allLogged).not.toContain('(from');
+    expect(allLogged).not.toContain('(by');
   });
 });
