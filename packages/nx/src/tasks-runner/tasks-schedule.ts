@@ -141,6 +141,9 @@ export class TasksSchedule {
     for (let root of this.notScheduledTaskGraph.roots) {
       if (this.canBeScheduled(root)) {
         toSchedule.push(root);
+        // Mark as running so canBeScheduled gates on parallelism for
+        // subsequent roots in this same scheduling pass.
+        this.runningTasks.add(root);
       }
     }
     if (toSchedule.length > 0) {
@@ -189,16 +192,15 @@ export class TasksSchedule {
 
       const task1Timing: number | undefined =
         this.estimatedTaskTimings[taskId1];
-      if (!task1Timing) {
-        // if no timing or 0, put task1 at beginning
-        return -1;
-      }
       const task2Timing: number | undefined =
         this.estimatedTaskTimings[taskId2];
-      if (!task2Timing) {
-        // if no timing or 0, put task2 at beginning
-        return 1;
-      }
+
+      // Tasks with no historical timing run first (unknown duration = assume long)
+      const has1 = task1Timing != null && task1Timing !== 0;
+      const has2 = task2Timing != null && task2Timing !== 0;
+      if (!has1 && !has2) return 0;
+      if (!has1) return -1;
+      if (!has2) return 1;
       return task2Timing - task1Timing;
     });
   }
