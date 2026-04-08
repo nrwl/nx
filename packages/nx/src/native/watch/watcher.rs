@@ -127,12 +127,10 @@ fn enumerate_watch_paths<P: AsRef<Path>>(directory: P, use_ignores: bool) -> Has
 type NotifyResult = std::result::Result<notify::Event, notify::Error>;
 
 /// Collect a batch of events from the channel, waiting up to `timeout` for the
-/// first event, then debouncing for `debounce` to let related events accumulate
-/// before returning the batch.
+/// first event, then draining any additional events that have already arrived.
 fn collect_batch(
     rx: &std::sync::mpsc::Receiver<NotifyResult>,
     timeout: Duration,
-    debounce: Duration,
 ) -> Vec<notify::Event> {
     let mut batch = Vec::new();
 
@@ -146,12 +144,7 @@ fn collect_batch(
         Err(_) => return batch, // timeout or disconnected
     }
 
-    // Debounce: wait for related events to accumulate (e.g. rapid file writes).
-    // Without this, each event would be processed individually, causing duplicate
-    // callback invocations for what should be a single batch.
-    std::thread::sleep(debounce);
-
-    // Drain all events that arrived during the debounce window
+    // Drain any additional events that arrived during the first event's processing
     while let Ok(result) = rx.try_recv() {
         if let Ok(event) = result {
             batch.push(event);
@@ -281,7 +274,14 @@ impl Watcher {
             #[cfg(not(target_os = "macos"))]
             let ignore_globs = build_ignore_glob_set();
 
-            // Track recently emitted events for dedup with re-walk results.
+            // Track recently emitted event paths for cross-batch deduplication.
+            // notify can fire multiple events for a single file write (e.g. Create
+            // then Modify). Within a batch, group_events deduplicates by path, but
+            // across batches the same path could be reported again. This set
+            // suppresses duplicates for non-delete events — deletes always pass
+            // through since they represent a meaningful state change.
+            let mut recent_paths: HashSet<PathBuf> = HashSet::new();
+
             #[cfg(not(target_os = "macos"))]
             let mut recent_events: Vec<WatchEventInternal> = Vec::new();
 
@@ -291,8 +291,7 @@ impl Watcher {
                     break;
                 }
 
-                let batch =
-                    collect_batch(&rx, Duration::from_millis(100), Duration::from_millis(200));
+                let batch = collect_batch(&rx, Duration::from_millis(100));
                 if batch.is_empty() {
                     continue;
                 }
@@ -337,10 +336,16 @@ impl Watcher {
                             &watcher_for_thread,
                             &recent_events,
                         );
-                        if !rewalk_files.is_empty() {
-                            trace!(count = rewalk_files.len(), "re-walk found unreported files");
+                        // Filter re-walk results through recent_paths and register
+                        // them so later inotify events for the same files are deduped.
+                        let new_rewalk: Vec<_> = rewalk_files
+                            .into_iter()
+                            .filter(|e| recent_paths.insert(e.path.clone()))
+                            .collect();
+                        if !new_rewalk.is_empty() {
+                            trace!(count = new_rewalk.len(), "re-walk found unreported files");
                             let watch_events: Vec<WatchEvent> =
-                                rewalk_files.iter().map(|e| e.into()).collect();
+                                new_rewalk.iter().map(|e| e.into()).collect();
                             callback_tsfn
                                 .call(Ok(watch_events), ThreadsafeFunctionCallMode::NonBlocking);
                         }
@@ -383,6 +388,25 @@ impl Watcher {
                             e.insert(g);
                         }
                     }
+                }
+
+                // Cross-batch dedup: remove events for paths already emitted recently.
+                // Delete events always pass through (they reset the path's state).
+                group_events.retain(|_path_str, event| {
+                    if matches!(event.r#type, EventType::delete) {
+                        // Deletes clear the path from recent set so future
+                        // creates for the same path are reported.
+                        recent_paths.remove(&event.path);
+                        true
+                    } else {
+                        // Create/Update: only emit if not recently seen.
+                        recent_paths.insert(event.path.clone())
+                    }
+                });
+
+                // Keep recent_paths bounded.
+                if recent_paths.len() > 1000 {
+                    recent_paths.clear();
                 }
 
                 if group_events.is_empty() {
