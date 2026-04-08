@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process';
 import { isCI } from './is-ci';
 import { getPackageManagerCommand } from './package-manager';
 import { getCloudUrl } from '../nx-cloud/utilities/get-cloud-options';
+import * as pc from 'picocolors';
 
 /**
  * Meta payload types for recordStat telemetry (matches CNW format).
@@ -28,20 +29,30 @@ export type RecordStatMeta =
   | RecordStatMetaComplete
   | RecordStatMetaError;
 
-export type MessageOptionKey = 'yes' | 'skip';
+export type MessageOptionKey = 'yes' | 'skip' | 'never';
 
-const messageOptions = {
+interface MessageData {
+  code: string;
+  message: string;
+  initial: number;
+  choices: Array<{ value: string; name: string; hint?: string }>;
+  footer: string;
+  hint?: string;
+}
+
+const messageOptions: Record<string, MessageData[]> = {
   setupNxCloud: [
     {
-      code: 'enable-ci',
-      message: `Would you like to enable AI-powered Self-Healing CI and Remote Caching?`,
+      code: 'cloud-ab-remote-cache-speed',
+      message: 'Enable remote caching to speed up builds with Nx Cloud?',
       initial: 0,
       choices: [
         { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip for now' },
+        { value: 'never', name: pc.dim("No, don't ask again") },
       ],
-      footer: '\nLearn about it at https://nx.dev/nx-cloud',
-      hint: `\n(it's free and can be disabled any time)`,
+      footer:
+        '\nFree for small teams. 2-minute setup with GitHub — cache locally and in CI: https://nx.dev/nx-cloud',
     },
   ],
   setupViewLogs: [
@@ -61,10 +72,9 @@ const messageOptions = {
       hint: `\n(it's free and can be disabled any time)`,
     },
   ],
-} as const;
+};
 
 export type MessageKey = keyof typeof messageOptions;
-export type MessageData = (typeof messageOptions)[MessageKey][number];
 
 export class PromptMessages {
   private selectedMessages = {};
