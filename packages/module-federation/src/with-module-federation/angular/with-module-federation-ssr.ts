@@ -1,5 +1,6 @@
 import {
   normalizeProjectName,
+  shouldSkipModuleFederationSetup,
   type ModuleFederationConfig,
   type NxModuleFederationConfigOverride,
 } from '../../utils';
@@ -9,7 +10,7 @@ export async function withModuleFederationForSSR(
   options: ModuleFederationConfig,
   configOverride?: NxModuleFederationConfigOverride
 ) {
-  if (global.NX_GRAPH_CREATION) {
+  if (shouldSkipModuleFederationSetup()) {
     return (config) => config;
   }
   const isDevServer = process.env['WEBPACK_SERVE'];

@@ -2,6 +2,7 @@ import {
   ModuleFederationConfig,
   normalizeProjectName,
   NxModuleFederationConfigOverride,
+  shouldSkipModuleFederationSetup,
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
 import { ModuleFederationPlugin } from '@module-federation/enhanced/webpack';
@@ -14,7 +15,7 @@ export async function withModuleFederation(
   options: ModuleFederationConfig,
   configOverride?: NxModuleFederationConfigOverride
 ) {
-  if (global.NX_GRAPH_CREATION) {
+  if (shouldSkipModuleFederationSetup()) {
     return (config) => config;
   }
   const isDevServer = process.env['WEBPACK_SERVE'];
