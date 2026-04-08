@@ -287,8 +287,23 @@ export class TaskOrchestrator {
         dispatched = true;
         inFlightWorkers++;
         const groupId = this.closeGroup();
-        this.applyFromCacheOrRunTask(doNotSkipCache, task, groupId).finally(
-          () => {
+        this.applyFromCacheOrRunTask(doNotSkipCache, task, groupId)
+          .catch(async (e) => {
+            // Ensure failures (e.g. remote cache errors) are still reported
+            // rather than silently dropped.
+            const terminalOutput = e?.message ?? '';
+            this.options.lifeCycle.printTaskTerminalOutput(
+              task,
+              'failure',
+              terminalOutput
+            );
+            await this.postRunSteps(
+              [{ task, status: 'failure', terminalOutput }],
+              doNotSkipCache,
+              { groupId }
+            );
+          })
+          .finally(() => {
             this.openGroup(groupId);
             inFlightWorkers--;
             // Wake coordinator — the decrement above may satisfy the
@@ -296,8 +311,7 @@ export class TaskOrchestrator {
             // when scheduleNextTasksAndReleaseThreads fired earlier.
             this.waitingForTasks.forEach((f) => f(null));
             this.waitingForTasks.length = 0;
-          }
-        );
+          });
       }
       if (dispatched) continue;
 
