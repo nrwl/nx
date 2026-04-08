@@ -137,61 +137,70 @@ export class TasksSchedule {
     if (this.options.batch !== false && process.env.NX_BATCH_MODE !== 'false') {
       await this.scheduleBatches();
     }
+    const toSchedule: string[] = [];
     for (let root of this.notScheduledTaskGraph.roots) {
       if (this.canBeScheduled(root)) {
-        await this.scheduleTask(root);
+        toSchedule.push(root);
       }
+    }
+    if (toSchedule.length > 0) {
+      this.scheduleTaskBatch(toSchedule);
     }
   }
 
-  private async scheduleTask(taskId: string) {
+  private scheduleTaskBatch(taskIds: string[]) {
     this.notScheduledTaskGraph = removeTasksFromTaskGraph(
       this.notScheduledTaskGraph,
-      [taskId]
+      taskIds
     );
-    this.scheduledTasks = this.scheduledTasks
-      .concat(taskId)
-      // NOTE: sort task by most dependent on first
-      .sort((taskId1, taskId2) => {
-        // First compare the length of task dependencies.
-        const taskDifference =
-          this.reverseTaskDeps[taskId2].length -
-          this.reverseTaskDeps[taskId1].length;
+    for (const taskId of taskIds) {
+      this.scheduledTasks.push(taskId);
+      this.runningTasks.add(taskId);
+    }
+    this.sortScheduledTasks();
+  }
 
-        if (taskDifference !== 0) {
-          return taskDifference;
-        }
+  private sortScheduledTasks() {
+    // NOTE: sort task by most dependent on first
+    this.scheduledTasks.sort((taskId1, taskId2) => {
+      // First compare the length of task dependencies.
+      const taskDifference =
+        this.reverseTaskDeps[taskId2].length -
+        this.reverseTaskDeps[taskId1].length;
 
-        // Tie-breaker for tasks with equal number of task dependencies.
-        // Most likely tasks with no dependencies such as test
-        const project1 = this.taskGraph.tasks[taskId1].target.project;
-        const project2 = this.taskGraph.tasks[taskId2].target.project;
+      if (taskDifference !== 0) {
+        return taskDifference;
+      }
 
-        const project1NodeDependencies = this.projectDependencies[project1];
-        const project2NodeDependencies = this.projectDependencies[project2];
+      // Tie-breaker for tasks with equal number of task dependencies.
+      // Most likely tasks with no dependencies such as test
+      const project1 = this.taskGraph.tasks[taskId1].target.project;
+      const project2 = this.taskGraph.tasks[taskId2].target.project;
 
-        const dependenciesDiff =
-          project2NodeDependencies - project1NodeDependencies;
+      const project1NodeDependencies = this.projectDependencies[project1];
+      const project2NodeDependencies = this.projectDependencies[project2];
 
-        if (dependenciesDiff !== 0) {
-          return dependenciesDiff;
-        }
+      const dependenciesDiff =
+        project2NodeDependencies - project1NodeDependencies;
 
-        const task1Timing: number | undefined =
-          this.estimatedTaskTimings[taskId1];
-        if (!task1Timing) {
-          // if no timing or 0, put task1 at beginning
-          return -1;
-        }
-        const task2Timing: number | undefined =
-          this.estimatedTaskTimings[taskId2];
-        if (!task2Timing) {
-          // if no timing or 0, put task2 at beginning
-          return 1;
-        }
-        return task2Timing - task1Timing;
-      });
-    this.runningTasks.add(taskId);
+      if (dependenciesDiff !== 0) {
+        return dependenciesDiff;
+      }
+
+      const task1Timing: number | undefined =
+        this.estimatedTaskTimings[taskId1];
+      if (!task1Timing) {
+        // if no timing or 0, put task1 at beginning
+        return -1;
+      }
+      const task2Timing: number | undefined =
+        this.estimatedTaskTimings[taskId2];
+      if (!task2Timing) {
+        // if no timing or 0, put task2 at beginning
+        return 1;
+      }
+      return task2Timing - task1Timing;
+    });
   }
 
   private async scheduleBatches() {

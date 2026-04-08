@@ -85,6 +85,11 @@ export declare class NxCache {
   cacheDirectory: string
   constructor(workspaceRoot: string, cachePath: string, dbConnection: ExternalObject<NxDbConnection>, linkTaskDetails?: boolean | undefined | null, maxCacheSize?: number | undefined | null)
   get(hash: string): CachedResult | null
+  /**
+   * Batch version of get() that fetches multiple cache entries in a single
+   * SQL query and reads terminal output files in parallel via Rayon.
+   */
+  getBatch(hashes: Array<string>): Array<CachedResult | undefined | null>
   put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): Array<string>
   applyRemoteCacheResults(hash: string, result: CachedResult, outputs?: Array<string> | undefined | null): void
   getTaskOutputsPath(hash: string): string

@@ -55,8 +55,10 @@ export async function recordOutputsHash(_outputs: string[], hash: string) {
 }
 
 export async function outputsHashesMatch(_outputs: string[], hash: string) {
-  const outputs = await normalizeOutputs(_outputs);
   if (disabled) return false;
+  // Skip filesystem scan if no hash was recorded — result is always false.
+  if (numberOfExpandedOutputs[hash] === undefined) return false;
+  const outputs = await normalizeOutputs(_outputs);
   return _outputsHashesMatch(outputs, hash);
 }
 
@@ -108,14 +110,31 @@ export function outputsHashesMatchBatch(
 ): boolean[] {
   if (disabled) return entries.map(() => false);
 
-  // Batch filesystem scan in parallel via Rust/Rayon
-  const outputsBatch = entries.map((e) => e.outputs);
-  const expandedBatch = getFilesForOutputsBatch(workspaceRoot, outputsBatch);
-
-  const results: boolean[] = [];
+  // Fast path: skip filesystem scan for entries with no recorded hash.
+  // _outputsHashesMatch will return false immediately if the hash isn't
+  // in numberOfExpandedOutputs, so scanning the filesystem is wasted work.
+  const needsScan: number[] = [];
+  const results: boolean[] = new Array(entries.length);
   for (let i = 0; i < entries.length; i++) {
-    const expanded = collapseExpandedOutputs(expandedBatch[i]);
-    results.push(_outputsHashesMatch(expanded, entries[i].hash));
+    if (numberOfExpandedOutputs[entries[i].hash] === undefined) {
+      results[i] = false;
+    } else {
+      needsScan.push(i);
+    }
+  }
+
+  if (needsScan.length > 0) {
+    // Only scan outputs for entries that have recorded hashes
+    const outputsBatch = needsScan.map((i) => entries[i].outputs);
+    const expandedBatch = getFilesForOutputsBatch(workspaceRoot, outputsBatch);
+
+    for (let j = 0; j < needsScan.length; j++) {
+      const expanded = collapseExpandedOutputs(expandedBatch[j]);
+      results[needsScan[j]] = _outputsHashesMatch(
+        expanded,
+        entries[needsScan[j]].hash
+      );
+    }
   }
 
   return results;

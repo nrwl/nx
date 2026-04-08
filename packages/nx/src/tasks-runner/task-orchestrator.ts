@@ -262,10 +262,17 @@ export class TaskOrchestrator {
         }
       }
 
-      // 2. Process scheduled tasks — processTask sees hash from step 1.
+      // 2. Bulk-resolve cache hits before processTask — avoids N
+      //    lifecycle calls for tasks that will be resolved from cache.
+      if (doNotSkipCache) {
+        const resolved = await this.resolveCachedTasksBulk();
+        if (resolved) continue;
+      }
+
+      // 3. Process remaining scheduled tasks (cache misses + non-cacheable).
       this.processAllScheduledTasks();
 
-      // 3. Handle batch executors
+      // 4. Handle batch executors
       const batch = this.nextBatch();
       if (batch) {
         const groupId = this.closeGroup();
@@ -274,14 +281,7 @@ export class TaskOrchestrator {
         continue;
       }
 
-      // Note: fast path (resolveCachedTasksBulk) is not used in the
-      // coordinator because serial cache.get() is slower than parallel
-      // workers. The batch hash (step 1) provides the key speedup.
-
-      // 4b. Process any tasks scheduled by workers during steps 2-4 awaits.
-      this.processAllScheduledTasks();
-
-      // 5. Dispatch cache misses (synchronous — no worker can interleave)
+      // 5. Dispatch cache misses as individual workers
       let dispatched = false;
       while (inFlightWorkers < parallelism) {
         const task = this.tasksSchedule.nextTask((t) => !t.continuous);
@@ -308,43 +308,6 @@ export class TaskOrchestrator {
 
       // 7. Wait for a worker to finish
       await new Promise<void>((res) => this.workerCompletedCallbacks.push(res));
-    }
-  }
-
-  private async executeDiscreteTaskLoop() {
-    const doNotSkipCache =
-      this.options.skipNxCache === false ||
-      this.options.skipNxCache === undefined;
-
-    while (true) {
-      // completed all the tasks
-      if (!this.tasksSchedule.hasTasks() || this.bailed || this.stopRequested) {
-        return null;
-      }
-
-      this.processAllScheduledTasks();
-
-      const batch = this.nextBatch();
-      if (batch) {
-        const groupId = this.closeGroup();
-        await this.applyFromCacheOrRunBatch(doNotSkipCache, batch, groupId);
-        this.openGroup(groupId);
-        continue;
-      }
-
-      const task = this.tasksSchedule.nextTask((t) => !t.continuous);
-      if (task) {
-        const groupId = this.closeGroup();
-        await this.applyFromCacheOrRunTask(doNotSkipCache, task, groupId);
-        this.openGroup(groupId);
-        continue;
-      }
-
-      // No work available — check if we're done or need to wait
-      if (!this.tasksSchedule.hasTasks()) {
-        return null;
-      }
-      await new Promise((res) => this.waitingForTasks.push(res));
     }
   }
 
@@ -511,21 +474,31 @@ export class TaskOrchestrator {
     }
     if (candidates.length <= 1) return false;
 
-    // Batch check cache — avoid yielding before this to prevent
-    // other threads from starting individual processing.
-    const cacheEntries = await Promise.all(
-      candidates.map(async (task) => {
-        const cachedResult = await this.cache.get(task);
+    // Batch cache lookup — single Rust/SQL call + parallel file reads
+    const cacheHits: { task: Task; cachedResult: any }[] = [];
+    if ('getBatch' in this.cache) {
+      const batchResults = (this.cache as any).getBatch(candidates);
+      for (const task of candidates) {
+        const cachedResult = batchResults.get(task.hash);
         if (cachedResult && cachedResult.code === 0) {
-          return { task, cachedResult };
+          cacheHits.push({ task, cachedResult });
         }
-        return null;
-      })
-    );
-
-    const cacheHits = cacheEntries.filter(
-      (e): e is { task: Task; cachedResult: any } => e !== null
-    );
+      }
+    } else {
+      // Fallback for non-db cache
+      const entries = await Promise.all(
+        candidates.map(async (task) => {
+          const cachedResult = await this.cache.get(task);
+          if (cachedResult && cachedResult.code === 0) {
+            return { task, cachedResult };
+          }
+          return null;
+        })
+      );
+      for (const e of entries) {
+        if (e) cacheHits.push(e);
+      }
+    }
     if (cacheHits.length === 0) return false;
 
     // Batch-check output hashes (1 daemon call instead of N)

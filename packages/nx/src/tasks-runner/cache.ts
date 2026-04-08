@@ -138,6 +138,23 @@ export class DbCache {
     }
   }
 
+  getBatch(tasks: Task[]): Map<string, CachedResult & { remote: boolean }> {
+    const results = new Map<string, CachedResult & { remote: boolean }>();
+    const hashes = tasks.map((t) => t.hash);
+    const batchResults = this.cache.getBatch(hashes);
+    for (let i = 0; i < tasks.length; i++) {
+      const res = batchResults[i];
+      if (res) {
+        results.set(tasks[i].hash, {
+          ...res,
+          terminalOutput: res.terminalOutput ?? '',
+          remote: false,
+        });
+      }
+    }
+    return results;
+  }
+
   getUsedCacheSpace() {
     return this.cache.getCacheSize();
   }

@@ -4,6 +4,7 @@ use std::time::Instant;
 use tracing::{debug, trace};
 
 use fs_extra::remove_items;
+use rayon::prelude::*;
 use regex::Regex;
 use rusqlite::params;
 use sysinfo::Disks;
@@ -136,6 +137,72 @@ impl NxCache {
             .map_err(|e| anyhow::anyhow!("Unable to get {}: {:?}", &hash, e))?;
         trace!("GET {} {:?}", &hash, start.elapsed());
         Ok(r)
+    }
+
+    #[napi]
+    /// Batch version of get() that fetches multiple cache entries in a single
+    /// SQL query and reads terminal output files in parallel via Rayon.
+    pub fn get_batch(&mut self, hashes: Vec<String>) -> anyhow::Result<Vec<Option<CachedResult>>> {
+        let start = Instant::now();
+        if hashes.is_empty() {
+            return Ok(vec![]);
+        }
+
+        // Build a single UPDATE ... WHERE hash IN (...) RETURNING query
+        let placeholders: Vec<String> = (1..=hashes.len()).map(|i| format!("?{}", i)).collect();
+        let sql = format!(
+            "UPDATE cache_outputs SET accessed_at = CURRENT_TIMESTAMP WHERE hash IN ({}) RETURNING hash, code, size",
+            placeholders.join(", ")
+        );
+
+        let db = self.db.lock().unwrap();
+        let mut stmt = db.prepare(&sql)?;
+
+        let params: Vec<&dyn rusqlite::ToSql> =
+            hashes.iter().map(|h| h as &dyn rusqlite::ToSql).collect();
+
+        // Collect (hash, code, size) tuples from DB
+        let db_results: Vec<(String, i16, i64)> = stmt
+            .query_map(params.as_slice(), |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, i16>(1)?,
+                    row.get::<_, i64>(2)?,
+                ))
+            })?
+            .filter_map(|r| r.ok())
+            .collect();
+        drop(stmt);
+        drop(db);
+
+        // Build a lookup map: hash -> (code, size)
+        let db_map: std::collections::HashMap<&str, (i16, i64)> = db_results
+            .iter()
+            .map(|(h, c, s)| (h.as_str(), (*c, *s)))
+            .collect();
+
+        // Read terminal outputs in parallel for found hashes
+        let results: Vec<Option<CachedResult>> = hashes
+            .par_iter()
+            .map(|hash| {
+                if let Some(&(code, size)) = db_map.get(hash.as_str()) {
+                    let terminal_output_path = self.cache_path.join("terminalOutputs").join(hash);
+                    let terminal_output = read_to_string(terminal_output_path).unwrap_or_default();
+                    let task_dir = self.cache_path.join(hash);
+                    Some(CachedResult {
+                        code,
+                        terminal_output: Some(terminal_output),
+                        outputs_path: task_dir.to_normalized_string(),
+                        size: Some(size),
+                    })
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        trace!("GET_BATCH {} hashes {:?}", hashes.len(), start.elapsed());
+        Ok(results)
     }
 
     #[napi]
