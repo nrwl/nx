@@ -141,7 +141,7 @@ export {
 } from './ensure-browser-installation';
 
 export function getStrippedEnvironmentVariables() {
-  return Object.fromEntries(
+  const stripped = Object.fromEntries(
     Object.entries(process.env).filter(([key]) => {
       if (key.startsWith('NX_E2E_')) {
         return true;
@@ -189,4 +189,5 @@ export function getStrippedEnvironmentVariables() {
       return true;
     })
   );
+  return { ...stripped, NX_DAEMON: 'true' };
 }
