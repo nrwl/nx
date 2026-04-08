@@ -371,13 +371,12 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
   }
 
   if (data.configurations && data.configurations.length > 0) {
-    console.log(
-      `${c.bold('Configurations')}: ${data.configurations.join(', ')}${
-        data.defaultConfiguration
-          ? ` (default: ${data.defaultConfiguration})`
-          : ''
-      }`
-    );
+    const configList = data.configurations
+      .map((cfg) =>
+        cfg === data.defaultConfiguration ? `${cfg} ${c.dim('(default)')}` : cfg
+      )
+      .join(', ');
+    console.log(`${c.bold('Configurations')}: ${configList}`);
   }
 
   console.log('');

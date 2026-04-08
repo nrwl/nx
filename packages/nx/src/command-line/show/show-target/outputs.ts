@@ -240,9 +240,7 @@ function renderBatchCheckOutputs(
   }
 
   if (matched.length > 0 || directories.length > 0) {
-    console.log(
-      `\n${c.green('✓')} These arguments were outputs of ${label}:`
-    );
+    console.log(`\n${c.green('✓')} These arguments were outputs of ${label}:`);
     for (const v of matched) console.log(`  ${v}`);
     for (const d of directories) {
       console.log(
