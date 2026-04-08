@@ -133,7 +133,8 @@
         "{projectRoot}/src/content/docs/**/*.mdx",
         "{projectRoot}/src/content/docs/**/*.md",
         "{projectRoot}/.vale.ini",
-        "{projectRoot}/.vale/styles/**/*"
+        "{projectRoot}/.vale/styles/**/*",
+        "{projectRoot}/scripts/vale-changed.mjs"
       ]
     },
     "vale:all": {
@@ -146,7 +147,8 @@
         "{projectRoot}/src/content/docs/**/*.mdx",
         "{projectRoot}/src/content/docs/**/*.md",
         "{projectRoot}/.vale.ini",
-        "{projectRoot}/.vale/styles/**/*"
+        "{projectRoot}/.vale/styles/**/*",
+        "{projectRoot}/scripts/vale-changed.mjs"
       ]
     },
     "format": {
