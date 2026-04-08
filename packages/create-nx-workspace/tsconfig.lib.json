@@ -14,9 +14,5 @@
     "jest.config.ts"
   ],
   "include": ["**/*.ts", "*.json", "migrations.json"],
-  "references": [
-    {
-      "path": "../nx/tsconfig.lib.json"
-    }
-  ]
+  "references": []
 }

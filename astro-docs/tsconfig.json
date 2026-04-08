@@ -21,9 +21,6 @@
   },
   "references": [
     {
-      "path": "../packages/nx"
-    },
-    {
       "path": "../nx-dev/ui-markdoc"
     },
     {

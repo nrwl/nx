@@ -7,9 +7,6 @@
   "files": [],
   "references": [
     {
-      "path": "../../packages/nx"
-    },
-    {
       "path": "../utils"
     },
     {
