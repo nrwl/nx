@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { major } from 'semver';
-import TOML from '@ltd/j-toml';
+import TOML from 'smol-toml';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { Tree } from '../../generators/tree';
 import { generateFiles } from '../../generators/utils/generate-files';
@@ -568,13 +568,8 @@ function writeCodexConfig(
   }
 
   // ── Serialize and write ──
-  const tomlString = TOML.stringify(config as any, {
-    newlineAround: 'section',
-  });
-  tree.write(
-    codexTomlPath,
-    Array.isArray(tomlString) ? tomlString.join('\n') : tomlString
-  );
+  const tomlString = TOML.stringify(config);
+  tree.write(codexTomlPath, tomlString);
 }
 
 /**
