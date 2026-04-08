@@ -397,6 +397,12 @@ function preparePackageInstallation(pkg: string, requiredVersion: string) {
     cwd: tempDir,
     stdio: isVerbose ? 'inherit' : 'ignore',
     windowsHide: true,
+    // Yarn Berry requires an environment variable (not a CLI flag) to disable lifecycle scripts.
+    // Apply this defensively for all package managers when pulling nx@latest to tmp.
+    env: {
+      ...process.env,
+      YARN_ENABLE_SCRIPTS: 'false',
+    },
   } as const;
 
   return {
