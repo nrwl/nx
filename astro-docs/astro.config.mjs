@@ -122,10 +122,10 @@ export default defineConfig({
           // frequency of the term relative to document length
           // versus weighted term count.
           // default is 1.0
-          termFrequency: 0.75,
+          termFrequency: 0.65,
           // pageLength changes the way ranking compares page lengths with the average page lengths on your site.
           // default 0.75
-          pageLength: 0.5,
+          pageLength: 0.3,
           // termSaturation controls how quickly a term “saturates” on a page.
           // Once a term has appeared on a page many times,
           // further appearances have a reduced impact on the page rank.
