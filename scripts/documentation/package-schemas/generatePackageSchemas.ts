@@ -2,7 +2,7 @@
  * Lookup for all the schema.json and add create a list with their path and related package information
  * */
 import { createDocumentMetadata } from '@nx/nx-dev-models-document';
-import * as chalk from 'chalk';
+import { styleText } from 'node:util';
 import { join, resolve } from 'path';
 import { compare } from 'semver';
 import {
@@ -79,7 +79,7 @@ export function generatePackageSchemas(
   sourcePackagesDirectory = 'packages',
   specificPackages?: string[] | undefined
 ): Promise<void[]> {
-  console.log(`${chalk.blue('i')} Generating Package Schemas`);
+  console.log(`${styleText('blue', 'i')} Generating Package Schemas`);
   const absoluteRoot = resolve(join(__dirname, '../../../'));
   const sourceRepositoryRoot = resolve(
     join(__dirname, '../../../', sourceRepositoryRelativePath)

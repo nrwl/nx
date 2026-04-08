@@ -102,7 +102,7 @@ export function ShortEmbeds({
           leaveFrom="opacity-100 translate-y-0"
           leaveTo="opacity-0 translate-y-full"
         >
-          <div className="coding relative mt-12 flex h-full w-full flex-col rounded-xl border border-slate-200 bg-slate-50 p-2 leading-normal text-slate-800 subpixel-antialiased shadow-xl dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+          <div className="coding relative mt-12 flex h-full w-full flex-col rounded-xl border border-zinc-200 bg-zinc-50 p-2 leading-normal text-zinc-800 subpixel-antialiased shadow-xl dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
             <Button
               size="small"
               variant="secondary"
@@ -135,7 +135,7 @@ export function ShortEmbeds({
                             setUserInteraction(true);
                             setCurrentVideo(config);
                           }}
-                          className="flex h-24 overflow-hidden rounded-lg border border-slate-200 bg-white/40 text-sm shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:cursor-pointer hover:bg-white dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+                          className="flex h-24 overflow-hidden rounded-lg border border-zinc-200 bg-white/40 text-sm shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:cursor-pointer hover:bg-white dark:border-zinc-800/40 dark:bg-zinc-800/60 dark:hover:bg-zinc-800"
                         >
                           <div className="w-32 shrink-0">
                             <img

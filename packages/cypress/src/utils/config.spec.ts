@@ -19,12 +19,10 @@ export default defineConfig({
     expect(actual).toMatchInlineSnapshot(`
       "import { defineConfig } from 'cypress';
       import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-
       export default defineConfig({
-        e2e: nxE2EPreset(__filename),
-        component: nxComponentTestingPreset(__filename) 
-      });
-      "
+          e2e: nxE2EPreset(__filename),
+          component: nxComponentTestingPreset(__filename)
+      });"
     `);
   });
 
@@ -46,16 +44,14 @@ export default defineConfig({
       "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
       import { defineConfig } from 'cypress';
       import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
-
       export default defineConfig({
-        component: nxComponentTestingPreset(__filename),
-        e2e: {
-          ...nxE2EPreset(__filename, {
-            "cypressDir": "cypress"
-          })
-        } 
-      });
-      "
+          component: nxComponentTestingPreset(__filename),
+          e2e: {
+              ...nxE2EPreset(__filename, {
+                  "cypressDir": "cypress"
+              })
+          }
+      });"
     `);
   });
 
@@ -141,16 +137,14 @@ export default defineConfig({
       "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
       import { defineConfig } from 'cypress';
       import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
-
       export default defineConfig({
-        e2e: {
-          ...nxE2EPreset(__filename, {
-            "cypressDir": "cypress"
-          }),
-          baseUrl: 'https://example.com'
-        }
-      });
-      "
+          e2e: {
+              ...nxE2EPreset(__filename, {
+                  "cypressDir": "cypress"
+              }),
+              baseUrl: 'https://example.com'
+          }
+      });"
     `);
   });
 
@@ -176,20 +170,18 @@ export default defineConfig({
       "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
       import { defineConfig } from 'cypress';
       import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
-
       export default defineConfig({
-        e2e: {
-          ...nxE2EPreset(__filename, {
-            "cypressDir": "cypress",
-            "webServerCommands": {
-              "default": "my-app:serve",
-              "production": "my-app:serve:production"
-            },
-            "ciWebServerCommand": "my-app:serve-static"
-          })
-        }
-      });
-      "
+          e2e: {
+              ...nxE2EPreset(__filename, {
+                  "cypressDir": "cypress",
+                  "webServerCommands": {
+                      "default": "my-app:serve",
+                      "production": "my-app:serve:production"
+                  },
+                  "ciWebServerCommand": "my-app:serve-static"
+              })
+          }
+      });"
     `);
   });
 
@@ -212,17 +204,16 @@ declare global {
     expect(actual).toMatchInlineSnapshot(`
       "/// <reference types="cypress" />
       declare global {
-      // eslint-disable-next-line @typescript-eslint/no-namespace
-        namespace Cypress {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          interface Chainable<Subject> {
-            login(email: string, password: string): void;
-            blah: string;
-            mount: typeof mount;
+          // eslint-disable-next-line @typescript-eslint/no-namespace
+          namespace Cypress {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              interface Chainable<Subject> {
+                  login(email: string, password: string): void;
+                  blah: string;
+                  mount: typeof mount;
+              }
           }
-        }
       }
-
       Cypress.Commands.add('mount', mount);"
     `);
   });

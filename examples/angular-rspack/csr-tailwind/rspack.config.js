@@ -2,6 +2,7 @@ module.exports = () => {
   if (global.NX_GRAPH_CREATION === undefined) {
     // This is needed to ensure that the `@nx/angular-rspack` package can find the build artefact for `@nx/devkit`
     // TODO(colum): Remove this once packages in Nx are built to local dist
+    // eslint-disable-next-line @nx/enforce-module-boundaries
     const { patchDevkitRequestPath } = require('../patch-devkit-request-path');
     const cleanupPatch = patchDevkitRequestPath();
     const { createConfig } = require('@nx/angular-rspack');

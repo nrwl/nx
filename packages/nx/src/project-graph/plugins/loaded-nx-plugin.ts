@@ -1,5 +1,6 @@
 import type { ProjectGraph } from '../../config/project-graph';
 import { type PluginConfiguration } from '../../config/nx-json';
+import { customDimensions } from '../../analytics';
 import {
   AggregateCreateNodesError,
   isAggregateCreateNodesError,
@@ -24,7 +25,6 @@ import { isDaemonEnabled } from '../../daemon/client/client';
  * the devkit-internals
  */
 export class LoadedNxPlugin {
-  index?: number;
   readonly name: string;
   readonly createNodes?: [
     filePattern: string,
@@ -35,7 +35,7 @@ export class LoadedNxPlugin {
       context: CreateNodesContextV2
     ) => Promise<
       Array<readonly [plugin: string, file: string, result: CreateNodesResult]>
-    >
+    >,
   ];
   readonly createDependencies?: (
     context: CreateDependenciesContext
@@ -55,7 +55,22 @@ export class LoadedNxPlugin {
   readonly include?: string[];
   readonly exclude?: string[];
 
-  constructor(plugin: NxPluginV2, pluginDefinition: PluginConfiguration) {
+  /**
+   * Notifies the plugin that a phase was aborted mid-flight.
+   * Overridden by IsolatedPlugin to reset lifecycle phase tracking so
+   * the worker can still shut down properly.
+   *
+   * @param phase The phase that was aborted (e.g. 'graph').
+   * @param lastCompletedHook The last hook that was called before the
+   *   abort (e.g. 'createNodes').
+   */
+  notifyPhaseAborted?(phase: string, lastCompletedHook: string): void;
+
+  constructor(
+    plugin: NxPluginV2,
+    pluginDefinition: PluginConfiguration,
+    public readonly index?: number
+  ) {
     this.name = plugin.name;
     if (typeof pluginDefinition !== 'string') {
       this.options = pluginDefinition.options;
@@ -86,8 +101,13 @@ export class LoadedNxPlugin {
       const inner = this.createNodes[1];
       this.createNodes[1] = async (...args) => {
         performance.mark(`${plugin.name}:createNodes - start`);
+        let projectCount = 0;
         try {
-          return await inner(...args);
+          const result = await inner(...args);
+          for (const [, , r] of result) {
+            projectCount += Object.keys(r.projects ?? {}).length;
+          }
+          return result;
         } catch (e) {
           if (isAggregateCreateNodesError(e)) {
             throw e;
@@ -96,11 +116,16 @@ export class LoadedNxPlugin {
           throw new AggregateCreateNodesError([[null, e]], []);
         } finally {
           performance.mark(`${plugin.name}:createNodes - end`);
-          performance.measure(
-            `${plugin.name}:createNodes`,
-            `${plugin.name}:createNodes - start`,
-            `${plugin.name}:createNodes - end`
-          );
+          performance.measure(`${plugin.name}:createNodes`, {
+            start: `${plugin.name}:createNodes - start`,
+            end: `${plugin.name}:createNodes - end`,
+            detail: {
+              track: true,
+              ...(customDimensions && {
+                [customDimensions.projectCount]: projectCount,
+              }),
+            },
+          });
         }
       };
     }

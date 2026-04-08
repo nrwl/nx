@@ -2,16 +2,14 @@ import {
   CreateNodesV2,
   CreateNodesContextV2,
   ProjectConfiguration,
-  readJsonFile,
-  writeJsonFile,
   workspaceRoot,
   ProjectGraphExternalNode,
   normalizePath,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
 
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
@@ -28,10 +26,6 @@ import {
 } from './utils/gradle-plugin-options';
 
 type GradleTargets = Record<string, Partial<ProjectConfiguration>>;
-
-function readProjectsCache(cachePath: string): GradleTargets {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
 
 /**
  * Strips nxConfig from project and all targets, returning only Gradle-detected configuration.
@@ -111,10 +105,6 @@ function extractNxConfigOnly(
   return result;
 }
 
-export function writeTargetsToCache(cachePath: string, results: GradleTargets) {
-  writeJsonFile(cachePath, results);
-}
-
 export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
   gradleConfigAndTestGlob,
   async (files, options, context) => {
@@ -125,7 +115,9 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
       workspaceDataDirectory,
       `gradle-${optionsHash}.hash`
     );
-    const projectsCache = readProjectsCache(cachePath);
+    const pluginCache = new PluginCache<Partial<ProjectConfiguration>>(
+      cachePath
+    );
 
     await populateProjectGraph(
       context.workspaceRoot,
@@ -145,11 +137,6 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
       const normalizedOptions = normalizeOptions(options);
 
       for (const gradleFilePath of allBuildFiles) {
-        // Skip on Vercel and Netlify
-        if (process.env.VERCEL || process.env.NETLIFY) {
-          continue;
-        }
-
         const projectRoot = dirname(gradleFilePath);
         const hash = await calculateHashForCreateNodes(
           projectRoot,
@@ -158,9 +145,14 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
         );
 
         // Get project from cache or nodes
-        projectsCache[hash] ??=
-          nodes[projectRoot] ?? nodes[join(workspaceRoot, projectRoot)];
-        const project = projectsCache[hash];
+        if (!pluginCache.has(hash)) {
+          const nodeProject =
+            nodes[projectRoot] ?? nodes[join(workspaceRoot, projectRoot)];
+          if (nodeProject) {
+            pluginCache.set(hash, nodeProject);
+          }
+        }
+        const project = pluginCache.get(hash);
 
         if (!project) {
           continue;
@@ -200,7 +192,7 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
 
       return results;
     } finally {
-      writeTargetsToCache(cachePath, projectsCache);
+      pluginCache.writeToDisk(cachePath);
     }
   },
 ];
@@ -216,12 +208,6 @@ export const makeCreateNodesForGradleConfigFile =
     options: GradlePluginOptions | undefined,
     context: CreateNodesContextV2
   ) => {
-    // Vercel does not allow JAVA_VERSION to be set, skip on Vercel
-    if (process.env.VERCEL) return {};
-
-    // Netlify only supports Java 8 but we require 17, skip on Netlify
-    if (process.env.NETLIFY) return {};
-
     const projectRoot = dirname(gradleFilePath);
     options = normalizeOptions(options);
 

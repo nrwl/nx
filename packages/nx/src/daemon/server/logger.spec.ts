@@ -1,4 +1,4 @@
-import { serverLogger } from './logger';
+import { serverLogger } from '../logger';
 
 jest.mock('../../utils/versions', () => ({
   ...jest.requireActual('../../utils/versions'),

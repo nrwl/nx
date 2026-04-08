@@ -2,11 +2,21 @@ import { CreateNodesContextV2 } from '@nx/devkit';
 import { minimatch } from 'minimatch';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { createNodesV2, EslintPluginOptions } from './plugin';
-import { mkdirSync, rmdirSync } from 'fs';
+import { mkdirSync, rmSync } from 'fs';
 
 jest.mock('nx/src/utils/cache-directory', () => ({
   ...jest.requireActual('nx/src/utils/cache-directory'),
   workspaceDataDirectory: 'tmp/project-graph-cache',
+}));
+
+const resolveESLintClassSpy = jest.fn();
+jest.mock('../utils/resolve-eslint-class', () => ({
+  resolveESLintClass: (...args) => {
+    resolveESLintClassSpy(...args);
+    return jest
+      .requireActual('../utils/resolve-eslint-class')
+      .resolveESLintClass(...args);
+  },
 }));
 
 describe('@nx/eslint/plugin', () => {
@@ -33,13 +43,15 @@ describe('@nx/eslint/plugin', () => {
       },
       workspaceRoot: tempFs.tempDir,
     };
+    tempFs.createFileSync('package-lock.json', '{}');
   });
 
   afterEach(() => {
     jest.resetModules();
+    resolveESLintClassSpy.mockClear();
     tempFs.cleanup();
     tempFs = null;
-    rmdirSync('tmp/project-graph-cache', { recursive: true });
+    rmSync('tmp/project-graph-cache', { recursive: true, force: true });
   });
 
   it('should not create any nodes when there are no eslint configs', async () => {
@@ -780,6 +792,33 @@ describe('@nx/eslint/plugin', () => {
           },
         }
       `);
+    });
+
+    it('should determine ESLint class from root config, not nested stray configs', async () => {
+      createFiles({
+        'eslint.config.mjs': `export default [];`,
+        'package.json': `{}`,
+        'eslint-local-rules/.eslintrc.json': `{}`,
+        'apps/my-app/project.json': `{}`,
+        'apps/my-app/index.ts': `console.log('hello world')`,
+      });
+      // FlatESLint instantiation may fail in jest due to dynamic imports,
+      // but we only need to verify the correct config type was selected
+      try {
+        await invokeCreateNodesOnMatchingFiles(context, {
+          targetName: 'lint',
+        });
+      } catch (e) {
+        // Re-throw if failure happened before resolveESLintClass was called
+        if (resolveESLintClassSpy.mock.calls.length === 0) {
+          throw e;
+        }
+      }
+      // Root config is eslint.config.mjs (flat) — should use flat config
+      // regardless of stray .eslintrc.json in eslint-local-rules/
+      expect(resolveESLintClassSpy).toHaveBeenCalledWith({
+        useFlatConfigOverrideVal: true,
+      });
     });
   });
 

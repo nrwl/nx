@@ -1,7 +1,7 @@
 import { detectPackageManager, type CreateNodesContextV2 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import picomatch = require('picomatch');
-import { mkdirSync, rmdirSync } from 'node:fs';
+import { mkdirSync, rmSync } from 'node:fs';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 import { setupWorkspaceContext } from 'nx/src/utils/workspace-context';
@@ -46,7 +46,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     tempFs.cleanup();
     process.chdir(cwd);
     process.env.NX_CACHE_PROJECT_GRAPH = originalCacheProjectGraph;
-    rmdirSync('tmp/project-graph-cache', { recursive: true });
+    rmSync('tmp/project-graph-cache', { recursive: true, force: true });
   });
 
   it('should handle missing lock file', async () => {
@@ -91,13 +91,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build --emitDeclarationOnly",
+                  "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                   "dependsOn": [
                     "^typecheck",
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -116,7 +123,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
@@ -140,13 +149,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build --emitDeclarationOnly",
+                  "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                   "dependsOn": [
                     "^typecheck",
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -165,7 +181,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
@@ -192,13 +210,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build --emitDeclarationOnly",
+                  "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                   "dependsOn": [
                     "^typecheck",
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -217,7 +242,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
@@ -246,13 +273,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build --emitDeclarationOnly --verbose",
+                  "command": "tsc --build tsconfig.json --emitDeclarationOnly --verbose",
                   "dependsOn": [
                     "^typecheck",
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -271,7 +305,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
@@ -298,13 +334,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build --emitDeclarationOnly --verbose",
+                  "command": "tsc --build tsconfig.json --emitDeclarationOnly --verbose",
                   "dependsOn": [
                     "^typecheck",
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -323,7 +366,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
@@ -353,13 +398,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build --emitDeclarationOnly --verbose",
+                  "command": "tsc --build tsconfig.json --emitDeclarationOnly --verbose",
                   "dependsOn": [
                     "^typecheck",
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -378,7 +430,370 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create a typecheck target with custom compiler option (tsgo)', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
+        'libs/my-lib/package.json': `{}`,
+      });
+      expect(
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
+          compiler: 'tsgo',
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "typecheck": {
+                  "cache": true,
+                  "command": "tsgo --build tsconfig.json --emitDeclarationOnly",
+                  "dependsOn": [
+                    "^typecheck",
+                  ],
+                  "inputs": [
+                    "production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsgo --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create a typecheck target with custom compiler option (tsgo) and verboseOutput', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
+        'libs/my-lib/package.json': `{}`,
+      });
+      expect(
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
+          compiler: 'tsgo',
+          verboseOutput: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "typecheck": {
+                  "cache": true,
+                  "command": "tsgo --build tsconfig.json --emitDeclarationOnly --verbose",
+                  "dependsOn": [
+                    "^typecheck",
+                  ],
+                  "inputs": [
+                    "production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsgo --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create a typecheck target with custom compiler option (tsgo) and custom targetName', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
+        'libs/my-lib/package.json': `{}`,
+      });
+      expect(
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
+          compiler: 'tsgo',
+          typecheck: {
+            targetName: 'type-check',
+          },
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "type-check": {
+                  "cache": true,
+                  "command": "tsgo --build tsconfig.json --emitDeclarationOnly",
+                  "dependsOn": [
+                    "^type-check",
+                  ],
+                  "inputs": [
+                    "production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsgo --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create a typecheck target with explicit tsc compiler option', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
+        'libs/my-lib/package.json': `{}`,
+      });
+      expect(
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
+          compiler: 'tsc',
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "typecheck": {
+                  "cache": true,
+                  "command": "tsc --build tsconfig.json --emitDeclarationOnly",
+                  "dependsOn": [
+                    "^typecheck",
+                  ],
+                  "inputs": [
+                    "production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create both typecheck and build targets with custom compiler option (tsgo)', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
+        'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
+        'libs/my-lib/package.json': `{ "main": "dist/index.js" }`,
+      });
+      expect(
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
+          compiler: 'tsgo',
+          build: {
+            configName: 'tsconfig.lib.json',
+          },
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "build": {
+                  "cache": true,
+                  "command": "tsgo --build tsconfig.lib.json",
+                  "dependsOn": [
+                    "^build",
+                  ],
+                  "inputs": [
+                    "production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsgo --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+                "typecheck": {
+                  "cache": true,
+                  "command": "tsgo --build tsconfig.json --emitDeclarationOnly",
+                  "dependsOn": [
+                    "build",
+                    "^typecheck",
+                  ],
+                  "inputs": [
+                    "production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsgo --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
@@ -453,7 +868,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -472,7 +894,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
@@ -508,7 +932,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -527,7 +958,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
@@ -565,7 +998,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Runs type-checking for the project.",
@@ -584,7 +1024,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/tsconfig.tsbuildinfo",
+                    "{projectRoot}/tsconfig.lib.tsbuildinfo",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
@@ -640,7 +1083,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -660,8 +1110,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/out-tsc/my-lib",
-                    "{projectRoot}/out-tsc/*.tsbuildinfo",
+                    "{projectRoot}/out-tsc/my-lib/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/out-tsc/my-lib/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
@@ -693,7 +1143,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -702,7 +1152,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/foo.ts",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -754,7 +1211,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -763,7 +1220,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/foo.ts",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -815,7 +1279,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -829,7 +1293,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.d.cts",
                       "{projectRoot}/src/**/*.mts",
                       "{projectRoot}/src/**/*.d.mts",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -881,7 +1352,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -899,7 +1370,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.mts",
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.mjs",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -954,7 +1432,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -969,7 +1447,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.mts",
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.json",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1025,7 +1510,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1044,7 +1529,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.mjs",
                       "{projectRoot}/src/**/*.json",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1102,7 +1594,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1114,7 +1606,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/tmp",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1174,7 +1673,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1187,7 +1686,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/dist",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1260,7 +1766,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1273,7 +1779,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/tmp",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1359,7 +1872,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1375,8 +1888,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/cypress.config.ts",
                       "{projectRoot}/**/*.cy.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.d.ts",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
+                      "^{projectRoot}/tsconfig.json",
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1398,6 +1917,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "outputs": [
                       "{projectRoot}/dist/**/*.d.ts",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
+                      "{projectRoot}/dist/tsconfig.spec.tsbuildinfo",
                       "{projectRoot}/cypress/dist/**/*.d.ts",
                       "{projectRoot}/cypress/dist/tsconfig.tsbuildinfo",
                     ],
@@ -1411,7 +1932,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1419,7 +1940,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/package.json",
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/lib/**/*.ts",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1451,6 +1979,113 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             },
           }
         `);
+      });
+
+      it('should collect distinct tsconfig patterns from file-specific external project references', async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+          'libs/my-lib/tsconfig.json': JSON.stringify({
+            include: ['src/**/*.ts'],
+            references: [
+              { path: './tsconfig.lib.json' },
+              { path: './tsconfig.spec.json' },
+            ],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+            include: ['src/**/*.ts'],
+            exclude: ['src/**/*.spec.ts'],
+            references: [
+              { path: '../other-lib/tsconfig.lib.json' }, // file-specific external ref
+            ],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/tsconfig.spec.json': JSON.stringify({
+            include: ['src/**/*.spec.ts'],
+            references: [
+              { path: './tsconfig.lib.json' },
+              { path: '../other-lib/tsconfig.spec.json' }, // file-specific external ref
+            ],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/package.json': `{}`,
+          'libs/other-lib/tsconfig.json': JSON.stringify({
+            references: [
+              { path: './tsconfig.lib.json' },
+              { path: './tsconfig.spec.json' },
+            ],
+          }),
+          'libs/other-lib/tsconfig.lib.json': JSON.stringify({
+            include: ['src/**/*.ts'],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/other-lib/tsconfig.spec.json': JSON.stringify({
+            include: ['src/**/*.spec.ts'],
+            compilerOptions: { outDir: 'dist' },
+          }),
+        });
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          {}
+        );
+        const myLibTargets = result.projects['libs/my-lib']?.targets;
+        // typecheck collects both tsconfig.lib.json and tsconfig.spec.json
+        // because both internal refs have file-specific external references
+        expect(myLibTargets.typecheck.inputs).toContain(
+          '^{projectRoot}/tsconfig.lib.json'
+        );
+        expect(myLibTargets.typecheck.inputs).toContain(
+          '^{projectRoot}/tsconfig.spec.json'
+        );
+      });
+
+      it('should use relative paths for nested tsconfig references in external deps', async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+          'libs/my-lib/tsconfig.json': JSON.stringify({
+            include: ['src/**/*.ts'],
+            references: [
+              { path: './tsconfig.lib.json' },
+              { path: '../other-lib' }, // directory ref to external dep
+            ],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+            include: ['src/**/*.ts'],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/package.json': `{}`,
+          'libs/other-lib/tsconfig.json': JSON.stringify({
+            references: [
+              { path: './tsconfig.lib.json' },
+              { path: './cypress/tsconfig.json' }, // nested dir inner ref
+            ],
+          }),
+          'libs/other-lib/tsconfig.lib.json': JSON.stringify({
+            include: ['src/**/*.ts'],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/other-lib/cypress/tsconfig.json': JSON.stringify({
+            include: ['**/*.cy.ts'],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/other-lib/package.json': `{}`,
+        });
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          {}
+        );
+        const myLibTargets = result.projects['libs/my-lib']?.targets;
+        // should include nested path, not just the basename
+        expect(myLibTargets.typecheck.inputs).toContain(
+          '^{projectRoot}/cypress/tsconfig.json'
+        );
+        expect(myLibTargets.typecheck.inputs).toContain(
+          '^{projectRoot}/tsconfig.lib.json'
+        );
+        expect(myLibTargets.typecheck.inputs).toContain(
+          '^{projectRoot}/tsconfig.json'
+        );
       });
 
       it('should normalize and add directories in `include` from internal project references', async () => {
@@ -1490,7 +2125,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1511,7 +2146,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tests/**/*.mts",
                       "{projectRoot}/tests/**/*.d.mts",
                       "{projectRoot}/tests/**/*.mjs",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1533,6 +2175,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "outputs": [
                       "{projectRoot}/dist/**/*.d.ts",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
+                      "{projectRoot}/dist/tsconfig.spec.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -1579,7 +2223,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/tsconfig.spec.json",
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/src/**/*.spec.ts",
-            "^production",
+            {
+              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "transitive": true,
+            },
+            {
+              "dependencies": true,
+              "fileset": "{projectRoot}/**/*.d.ts",
+            },
           ]
         `);
 
@@ -1615,7 +2266,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/tsconfig.spec.json",
             "{projectRoot}/**/*.ts",
             "{projectRoot}/src/**/*.spec.ts",
-            "^production",
+            {
+              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "transitive": true,
+            },
+            {
+              "dependencies": true,
+              "fileset": "{projectRoot}/**/*.d.ts",
+            },
           ]
         `);
 
@@ -1651,7 +2309,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/tsconfig.spec.json",
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/**/*.spec.ts",
-            "^production",
+            {
+              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "transitive": true,
+            },
+            {
+              "dependencies": true,
+              "fileset": "{projectRoot}/**/*.d.ts",
+            },
           ]
         `);
 
@@ -1687,7 +2352,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/tsconfig.spec.json",
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/**/*.spec.ts",
-            "^production",
+            {
+              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "transitive": true,
+            },
+            {
+              "dependencies": true,
+              "fileset": "{projectRoot}/**/*.d.ts",
+            },
           ]
         `);
 
@@ -1727,7 +2399,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/**/*.spec.ts",
             "!{projectRoot}/src/**/foo.ts",
-            "^production",
+            {
+              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "transitive": true,
+            },
+            {
+              "dependencies": true,
+              "fileset": "{projectRoot}/**/*.d.ts",
+            },
           ]
         `);
       });
@@ -1745,13 +2424,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1814,13 +2500,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1873,13 +2566,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -1945,7 +2645,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -1965,8 +2672,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/out-tsc/my-lib",
-                      "{projectRoot}/out-tsc/*.tsbuildinfo",
+                      "{projectRoot}/out-tsc/my-lib/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/out-tsc/my-lib/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -1974,14 +2681,21 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   },
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "build",
                       "^typecheck",
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2001,8 +2715,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
+                      "{projectRoot}/tsconfig.tsbuildinfo",
                       "{projectRoot}/out-tsc/my-lib/**/*.d.ts",
-                      "{projectRoot}/out-tsc/*.tsbuildinfo",
+                      "{projectRoot}/out-tsc/my-lib/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -2030,13 +2745,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2129,7 +2851,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -2141,8 +2863,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/cypress/tsconfig.json",
                       "{projectRoot}/src/**/*.spec.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.d.ts",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
+                      "^{projectRoot}/tsconfig.json",
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2162,13 +2890,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
+                      "{projectRoot}/tsconfig.tsbuildinfo",
                       "{workspaceRoot}/dist/libs/my-lib/lib.js",
                       "{workspaceRoot}/dist/libs/my-lib/lib.js.map",
                       "{workspaceRoot}/dist/libs/my-lib/lib.d.ts",
                       "{workspaceRoot}/dist/libs/my-lib/lib.d.ts.map",
                       "{workspaceRoot}/dist/libs/my-lib/lib.tsbuildinfo",
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/specs/**/*.d.ts",
-                      "{workspaceRoot}/dist/out-tsc/libs/my-lib/specs/tsconfig.tsbuildinfo",
+                      "{workspaceRoot}/dist/out-tsc/libs/my-lib/specs/tsconfig.spec.tsbuildinfo",
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/cypress/**/*.d.ts",
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/cypress/tsconfig.tsbuildinfo",
                     ],
@@ -2182,13 +2911,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2242,13 +2978,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2302,13 +3045,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2373,13 +3123,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2433,13 +3190,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2489,13 +3253,20 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly",
+                    "command": "tsc --build tsconfig.json --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs type-checking for the project.",
@@ -2691,7 +3462,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -2711,7 +3489,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
@@ -2763,7 +3542,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -2783,7 +3569,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
@@ -2833,7 +3620,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -2853,10 +3647,23 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
+                  ],
+                },
+                "build-deps": {
+                  "dependsOn": [
+                    "^build",
+                  ],
+                },
+                "watch-deps": {
+                  "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
+                  "continuous": true,
+                  "dependsOn": [
+                    "build-deps",
                   ],
                 },
               },
@@ -2906,7 +3713,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -2926,7 +3740,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
@@ -2977,7 +3792,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -2997,10 +3819,23 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
+                  ],
+                },
+                "build-deps": {
+                  "dependsOn": [
+                    "^build",
+                  ],
+                },
+                "watch-deps": {
+                  "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
+                  "continuous": true,
+                  "dependsOn": [
+                    "build-deps",
                   ],
                 },
               },
@@ -3039,7 +3874,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3059,7 +3901,76 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create a build target with custom compiler option (tsgo)', async () => {
+      configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': `{}`,
+        'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
+        'libs/my-lib/package.json': `{ "main": "dist/index.js" }`,
+      });
+      expect(
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {
+          compiler: 'tsgo',
+          typecheck: false,
+          build: {
+            configName: 'tsconfig.lib.json',
+          },
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "targets": {
+                "build": {
+                  "cache": true,
+                  "command": "tsgo --build tsconfig.lib.json",
+                  "dependsOn": [
+                    "^build",
+                  ],
+                  "inputs": [
+                    "production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsgo --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
@@ -3101,7 +4012,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -3121,7 +4039,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.build.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
@@ -3185,7 +4104,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/*.spec.ts",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3205,7 +4131,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -3251,7 +4178,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/*.spec.ts",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3271,7 +4205,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -3320,7 +4255,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.d.cts",
                       "{projectRoot}/src/**/*.mts",
                       "{projectRoot}/src/**/*.d.mts",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3340,7 +4282,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -3393,7 +4336,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.mts",
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.mjs",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3413,7 +4363,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -3463,7 +4414,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.mts",
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.json",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3483,7 +4441,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,json,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -3541,7 +4500,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.mjs",
                       "{projectRoot}/src/**/*.json",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3561,7 +4527,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,json,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -3616,7 +4583,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/tmp",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3636,7 +4610,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -3692,7 +4667,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/dist",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3712,7 +4694,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -3783,7 +4766,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/tmp",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3803,7 +4793,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -3862,8 +4853,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/other/**/*.ts",
                       "{projectRoot}/src/**/foo.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.d.ts",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
                       },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
+                      "^{projectRoot}/tsconfig.json",
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3883,7 +4880,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
+                      "{projectRoot}/dist/tsconfig.other.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -3894,6 +4893,48 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             },
           }
         `);
+      });
+
+      it('should only collect tsconfig patterns from the build reference chain', async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+          'libs/my-lib/tsconfig.json': '{}',
+          'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+            include: ['src/**/*.ts'],
+            references: [
+              { path: '../other-lib/tsconfig.lib.json' }, // file-specific external ref
+            ],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/package.json': `{"main": "dist/index.js"}`,
+          'libs/other-lib/tsconfig.json': JSON.stringify({
+            references: [
+              { path: './tsconfig.lib.json' },
+              { path: './tsconfig.spec.json' },
+            ],
+          }),
+          'libs/other-lib/tsconfig.lib.json': JSON.stringify({
+            include: ['src/**/*.ts'],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/other-lib/tsconfig.spec.json': JSON.stringify({
+            include: ['src/**/*.spec.ts'],
+            compilerOptions: { outDir: 'dist' },
+          }),
+        });
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          { typecheck: false, build: true }
+        );
+        const myLibTargets = result.projects['libs/my-lib']?.targets;
+        // build only collects tsconfig.lib.json because the reference chain
+        // from tsconfig.lib.json only goes through dep/tsconfig.lib.json
+        expect(myLibTargets.build.inputs).toContain(
+          '^{projectRoot}/tsconfig.lib.json'
+        );
+        expect(myLibTargets.build.inputs).not.toContain(
+          '^{projectRoot}/tsconfig.spec.json'
+        );
       });
 
       it('should normalize and add directories in `include` from internal project references', async () => {
@@ -3945,7 +4986,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/other/**/*.d.mts",
                       "{projectRoot}/other/**/*.json",
                       "{projectRoot}/src/**/foo.ts",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -3965,7 +5013,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,json,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.other.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -4011,7 +5062,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/src/**/foo.ts",
-            "^production",
+            {
+              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "transitive": true,
+            },
+            {
+              "dependencies": true,
+              "fileset": "{projectRoot}/**/*.d.ts",
+            },
           ]
         `);
 
@@ -4042,7 +5100,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/**/*.ts",
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/src/**/foo.ts",
-            "^production",
+            {
+              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "transitive": true,
+            },
+            {
+              "dependencies": true,
+              "fileset": "{projectRoot}/**/*.d.ts",
+            },
           ]
         `);
 
@@ -4073,7 +5138,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/**/foo.ts",
-            "^production",
+            {
+              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "transitive": true,
+            },
+            {
+              "dependencies": true,
+              "fileset": "{projectRoot}/**/*.d.ts",
+            },
           ]
         `);
 
@@ -4104,7 +5176,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/**/foo.ts",
-            "^production",
+            {
+              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "transitive": true,
+            },
+            {
+              "dependencies": true,
+              "fileset": "{projectRoot}/**/*.d.ts",
+            },
           ]
         `);
 
@@ -4139,7 +5218,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/src/**/foo.ts",
             "!{projectRoot}/src/**/bar.ts",
-            "^production",
+            {
+              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "transitive": true,
+            },
+            {
+              "dependencies": true,
+              "fileset": "{projectRoot}/**/*.d.ts",
+            },
           ]
         `);
       });
@@ -4171,7 +5257,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4191,7 +5284,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -4235,7 +5329,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4301,7 +5402,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4321,7 +5429,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{workspaceRoot}/dist/libs/my-lib",
+                      "{workspaceRoot}/dist/libs/my-lib/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{workspaceRoot}/dist/libs/my-lib/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -4360,7 +5469,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4444,7 +5560,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/tsconfig.other.json",
                       "{projectRoot}/other/**/*.ts",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4469,7 +5592,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/dist/libs/my-lib/lib.d.ts",
                       "{workspaceRoot}/dist/libs/my-lib/lib.d.ts.map",
                       "{workspaceRoot}/dist/libs/my-lib/lib.tsbuildinfo",
-                      "{workspaceRoot}/dist/libs/my-lib/other",
+                      "{workspaceRoot}/dist/libs/my-lib/other/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{workspaceRoot}/dist/libs/my-lib/other/tsconfig.other.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -4513,7 +5637,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4578,7 +5709,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4654,7 +5792,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4674,7 +5819,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
                       "{projectRoot}/my-lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
@@ -4719,7 +5864,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4739,7 +5891,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/my-lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -4781,7 +5934,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "inputs": [
                       "production",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "transitive": true,
+                      },
+                      {
+                        "dependencies": true,
+                        "fileset": "{projectRoot}/**/*.d.ts",
+                      },
                     ],
                     "metadata": {
                       "description": "Builds the project with \`tsc\`.",
@@ -4801,7 +5961,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist",
+                      "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                      "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -4850,7 +6011,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/package.json",
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/typescript/**/*.ts",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -4870,7 +6038,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/src",
+                    "{projectRoot}/src/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/src/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
@@ -4916,7 +6085,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/package.json",
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -4936,7 +6112,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/lib",
+                    "{projectRoot}/lib/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/lib/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
@@ -5013,7 +6190,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/package.json",
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5033,7 +6217,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
@@ -5079,7 +6264,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/package.json",
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5099,7 +6291,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{workspaceRoot}/libs/build/my-lib",
+                    "{workspaceRoot}/libs/build/my-lib/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{workspaceRoot}/libs/build/my-lib/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
@@ -5145,7 +6338,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/package.json",
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/source/**/*.ts",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5165,7 +6365,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
@@ -5242,7 +6443,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/**/src/**/*.ts",
                     "{projectRoot}/utils/*.ts",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5262,7 +6470,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/compiled",
+                    "{projectRoot}/compiled/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/compiled/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
@@ -5308,7 +6517,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/package.json",
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5328,7 +6544,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "external-build",
+                    "external-build/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "external-build/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
@@ -5374,7 +6591,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/package.json",
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5394,7 +6618,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/dist",
+                    "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
@@ -5467,7 +6692,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5487,7 +6719,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/build",
+                    "{projectRoot}/build/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/build/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
@@ -5559,7 +6792,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   ],
                   "inputs": [
                     "production",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5579,7 +6819,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [
-                    "{projectRoot}/build",
+                    "{projectRoot}/build/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+                    "{projectRoot}/build/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
@@ -5655,7 +6896,14 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/package.json",
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/lib/**/*.ts",
-                    "^production",
+                    {
+                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "transitive": true,
+                    },
+                    {
+                      "dependencies": true,
+                      "fileset": "{projectRoot}/**/*.d.ts",
+                    },
                   ],
                   "metadata": {
                     "description": "Builds the project with \`tsc\`.",
@@ -5699,6 +6947,33 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         }
       `);
     });
+  });
+
+  it('should handle concurrent invocations without crashing', async () => {
+    configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+      'libs/my-lib/tsconfig.json': JSON.stringify({
+        compilerOptions: { outDir: '../../dist/libs/my-lib' },
+        files: [],
+      }),
+      'libs/my-lib/package.json': `{}`,
+      'libs/other-lib/tsconfig.json': JSON.stringify({
+        compilerOptions: { outDir: '../../dist/libs/other-lib' },
+        files: [],
+      }),
+      'libs/other-lib/package.json': `{}`,
+    });
+
+    const [result1, result2] = await Promise.all([
+      invokeCreateNodesOnMatchingFiles(configFiles, context, {}),
+      invokeCreateNodesOnMatchingFiles(configFiles, context, {}),
+    ]);
+
+    expect(result1.projects['libs/my-lib']).toBeDefined();
+    expect(result1.projects['libs/other-lib']).toBeDefined();
+    expect(result2.projects['libs/my-lib']).toBeDefined();
+    expect(result2.projects['libs/other-lib']).toBeDefined();
+    expect(result1.projects['libs/my-lib'].targets.typecheck).toBeDefined();
+    expect(result2.projects['libs/my-lib'].targets.typecheck).toBeDefined();
   });
 });
 

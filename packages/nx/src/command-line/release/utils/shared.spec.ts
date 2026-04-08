@@ -7,14 +7,24 @@ import {
 import { ProjectGraph } from '../../../config/project-graph';
 import { GitCommit } from './git';
 import { readNxJson } from '../../../config/nx-json';
+import { ReleaseGraph } from './release-graph';
+import { filterAffected } from '../../../project-graph/affected/affected-project-graph';
+import { calculateFileChanges } from '../../../project-graph/file-utils';
+import { NxArgs } from '../../../utils/command-line-utils';
 
 jest.mock('../../../config/nx-json', () => ({
   ...jest.requireActual('../../../config/nx-json'),
   readNxJson: jest.fn(),
 }));
+
+// Mock getPlugins to return an empty array, avoiding plugin worker spawning
+// while still allowing filterAffected to run its real logic
+jest.mock('../../../project-graph/plugins/get-plugins', () => ({
+  getPlugins: jest.fn().mockResolvedValue([]),
+}));
+
 import { createVersionConfig } from './test/test-utils';
 import { createNxReleaseConfig, NxReleaseConfig } from '../config/config';
-import { createProjectFileMapUsingProjectGraph } from '../../../project-graph/file-map-utils';
 
 describe('shared', () => {
   describe('createCommitMessageValues()', () => {
@@ -173,6 +183,74 @@ describe('shared', () => {
           [
             "chore(release): publish",
             "- project: foo 1.0.1",
+          ]
+        `);
+      });
+
+      it('should include dependent projects that were versioned but not in the filtered projects set', () => {
+        const releaseGroups: ReleaseGroupWithName[] = [
+          {
+            name: 'one',
+            projectsRelationship: 'independent',
+            projects: ['projectA', 'projectB'],
+            version: {
+              ...createVersionConfig(),
+              conventionalCommits: true,
+            },
+            changelog: false,
+            releaseTag: {
+              pattern: '{projectName}-{version}',
+              checkAllBranchesWhen: undefined,
+              requireSemver: true,
+              preferDockerVersion: undefined,
+              strictPreid: false,
+            },
+            versionPlans: false,
+            resolvedVersionPlans: false,
+          },
+        ];
+        // Only projectA is in the filtered projects (user ran --projects=projectA)
+        const releaseGroupToFilteredProjects = new Map().set(
+          releaseGroups[0],
+          new Set(['projectA'])
+        );
+        // But projectB was also versioned as a side-effect (dependent bump)
+        // projectB depends on projectA, so when projectA is bumped,
+        // projectB gets a patch bump via updateDependents
+        const versionData = {
+          projectA: {
+            currentVersion: '1.0.0',
+            dependentProjects: [
+              {
+                source: 'projectB',
+                target: 'projectA',
+                type: 'static',
+                dependencyCollection: 'dependencies',
+                rawVersionSpec: '1.0.0',
+              },
+            ],
+            newVersion: '2.0.0',
+            dockerVersion: null,
+          },
+          projectB: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.0.1',
+            dockerVersion: null,
+          },
+        };
+        const userCommitMessage = 'chore(release): publish';
+        const result = createCommitMessageValues(
+          releaseGroups,
+          releaseGroupToFilteredProjects,
+          versionData,
+          userCommitMessage
+        );
+        expect(result).toMatchInlineSnapshot(`
+          [
+            "chore(release): publish",
+            "- project: projectA 2.0.0",
+            "- project: projectB 1.0.1",
           ]
         `);
       });
@@ -457,6 +535,347 @@ describe('shared', () => {
       ]);
     });
 
+    it('should sanitize Gradle-style project names with colons in independent groups', () => {
+      const projects = [':common:iam-client'];
+      const releaseGroup: ReleaseGroupWithName = {
+        name: 'gradle-group',
+        projects,
+        projectsRelationship: 'independent',
+        releaseTag: {
+          pattern: 'release/{projectName}/{version}',
+          checkAllBranchesWhen: undefined,
+          requireSemver: true,
+          preferDockerVersion: undefined,
+          strictPreid: false,
+        },
+        changelog: undefined,
+        version: undefined,
+        versionPlans: false,
+        resolvedVersionPlans: false,
+      };
+
+      const releaseGroupToFilteredProjects = new Map<
+        ReleaseGroupWithName,
+        Set<string>
+      >().set(releaseGroup, new Set(projects));
+
+      const versionData = {
+        ':common:iam-client': {
+          currentVersion: '1.0.0',
+          dependentProjects: [],
+          newVersion: '1.0.1',
+        },
+      };
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        versionData
+      );
+
+      // Colons should be replaced with slashes
+      expect(tags).toEqual(['release/common/iam-client/1.0.1']);
+    });
+
+    it('should sanitize nested Gradle-style project names', () => {
+      const projects = [':apps:backend:api-service'];
+      const releaseGroup: ReleaseGroupWithName = {
+        name: 'gradle-group',
+        projects,
+        projectsRelationship: 'independent',
+        releaseTag: {
+          pattern: '{projectName}@{version}',
+          checkAllBranchesWhen: undefined,
+          requireSemver: true,
+          preferDockerVersion: undefined,
+          strictPreid: false,
+        },
+        changelog: undefined,
+        version: undefined,
+        versionPlans: false,
+        resolvedVersionPlans: false,
+      };
+
+      const releaseGroupToFilteredProjects = new Map<
+        ReleaseGroupWithName,
+        Set<string>
+      >().set(releaseGroup, new Set(projects));
+
+      const versionData = {
+        ':apps:backend:api-service': {
+          currentVersion: '2.0.0',
+          dependentProjects: [],
+          newVersion: '2.1.0',
+        },
+      };
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        versionData
+      );
+
+      expect(tags).toEqual(['apps/backend/api-service@2.1.0']);
+    });
+
+    it('should interpolate {releaseGroupName} in tag pattern for fixed groups', () => {
+      const projects = ['a', 'b'];
+      const releaseGroup: ReleaseGroupWithName = {
+        name: 'forge',
+        projects,
+        projectsRelationship: 'fixed',
+        releaseTag: {
+          pattern: '{releaseGroupName}@{version}',
+          checkAllBranchesWhen: undefined,
+          requireSemver: true,
+          preferDockerVersion: undefined,
+          strictPreid: false,
+        },
+        changelog: undefined,
+        version: undefined,
+        versionPlans: false,
+        resolvedVersionPlans: false,
+      };
+      const releaseGroupToFilteredProjects = new Map().set(
+        releaseGroup,
+        new Set(projects)
+      );
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+          },
+        }
+      );
+
+      expect(tags).toEqual(['forge@1.1.0']);
+    });
+
+    it('should interpolate {releaseGroupName} in tag pattern for independent groups', () => {
+      const projects = ['a', 'b'];
+      const releaseGroup: ReleaseGroupWithName = {
+        name: 'my-group',
+        projects,
+        projectsRelationship: 'independent',
+        releaseTag: {
+          pattern: '{releaseGroupName}/{projectName}@{version}',
+          checkAllBranchesWhen: undefined,
+          requireSemver: true,
+          preferDockerVersion: undefined,
+          strictPreid: false,
+        },
+        changelog: undefined,
+        version: undefined,
+        versionPlans: false,
+        resolvedVersionPlans: false,
+      };
+      const releaseGroupToFilteredProjects = new Map().set(
+        releaseGroup,
+        new Set(projects)
+      );
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.2.0',
+          },
+        }
+      );
+
+      expect(tags).toEqual(['my-group/a@1.1.0', 'my-group/b@1.2.0']);
+    });
+
+    it('should fall back to newVersion when preferDockerVersion is true but dockerVersion is null (fixed group)', () => {
+      const { releaseGroup, releaseGroupToFilteredProjects } =
+        setUpReleaseGroup();
+      releaseGroup.releaseTag.preferDockerVersion = true;
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+            dockerVersion: null,
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+            dockerVersion: null,
+          },
+        }
+      );
+
+      expect(tags).toEqual(['my-group-1.1.0']);
+    });
+
+    it('should fall back to newVersion when preferDockerVersion is true but dockerVersion is null (independent group)', () => {
+      const projects = ['a', 'b'];
+      const releaseGroup: ReleaseGroupWithName = {
+        name: 'my-group',
+        projects,
+        projectsRelationship: 'independent',
+        releaseTag: {
+          pattern: '{projectName}-{version}',
+          checkAllBranchesWhen: undefined,
+          requireSemver: true,
+          preferDockerVersion: true,
+          strictPreid: false,
+        },
+        changelog: undefined,
+        version: undefined,
+        versionPlans: false,
+        resolvedVersionPlans: false,
+      };
+      const releaseGroupToFilteredProjects = new Map().set(
+        releaseGroup,
+        new Set(projects)
+      );
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+            dockerVersion: null,
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.2.0',
+            dockerVersion: null,
+          },
+        }
+      );
+
+      expect(tags).toEqual(['a-1.1.0', 'b-1.2.0']);
+    });
+
+    it('should produce no tag when both dockerVersion and newVersion are null with preferDockerVersion true', () => {
+      const { releaseGroup, releaseGroupToFilteredProjects } =
+        setUpReleaseGroup();
+      releaseGroup.releaseTag.preferDockerVersion = true;
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: null,
+            dockerVersion: null,
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: null,
+            dockerVersion: null,
+          },
+        }
+      );
+
+      expect(tags).toEqual([]);
+    });
+
+    it('should fall back to dockerVersion when preferDockerVersion is false but newVersion is null', () => {
+      const { releaseGroup, releaseGroupToFilteredProjects } =
+        setUpReleaseGroup();
+      releaseGroup.releaseTag.preferDockerVersion = false;
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: null,
+            dockerVersion: '2024.01.abc123',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: null,
+            dockerVersion: '2024.01.abc123',
+          },
+        }
+      );
+
+      expect(tags).toEqual(['my-group-2024.01.abc123']);
+    });
+
+    it('should handle mixed independent group where some projects have docker version and some do not', () => {
+      const projects = ['a', 'b'];
+      const releaseGroup: ReleaseGroupWithName = {
+        name: 'my-group',
+        projects,
+        projectsRelationship: 'independent',
+        releaseTag: {
+          pattern: '{projectName}-{version}',
+          checkAllBranchesWhen: undefined,
+          requireSemver: true,
+          preferDockerVersion: true,
+          strictPreid: false,
+        },
+        changelog: undefined,
+        version: undefined,
+        versionPlans: false,
+        resolvedVersionPlans: false,
+      };
+      const releaseGroupToFilteredProjects = new Map().set(
+        releaseGroup,
+        new Set(projects)
+      );
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+            dockerVersion: '2024.01.abc123',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.2.0',
+            dockerVersion: null,
+          },
+        }
+      );
+
+      // Project 'a' has dockerVersion so uses it; project 'b' falls back to newVersion
+      expect(tags).toEqual(['a-2024.01.abc123', 'b-1.2.0']);
+    });
+
     function setUpReleaseGroup() {
       const projects = ['a', 'b'];
       const releaseGroup: ReleaseGroupWithName = {
@@ -486,6 +905,7 @@ describe('shared', () => {
   describe(`getCommitsRelevantToProjects()`, () => {
     let mockProjectGraph: ProjectGraph;
     let mockReleaseConfig: NxReleaseConfig | null;
+    let mockReleaseGraph: ReleaseGraph;
 
     beforeEach(async () => {
       (readNxJson as jest.Mock).mockReturnValue({});
@@ -536,9 +956,15 @@ describe('shared', () => {
         externalNodes: {},
       };
 
+      // Create mock project file map based on the mock project graph
+      const mockProjectFileMap: Record<string, any[]> = {};
+      for (const projectName of Object.keys(mockProjectGraph.nodes)) {
+        mockProjectFileMap[projectName] = [];
+      }
+
       ({ nxReleaseConfig: mockReleaseConfig } = await createNxReleaseConfig(
         mockProjectGraph,
-        await createProjectFileMapUsingProjectGraph(mockProjectGraph),
+        mockProjectFileMap,
         {
           projects: Object.keys(mockProjectGraph.nodes),
           changelog: {
@@ -548,6 +974,19 @@ describe('shared', () => {
           },
         }
       ));
+
+      // Create a mock ReleaseGraph with the required method
+      mockReleaseGraph = {
+        resolveAffectedFilesPerCommitInProjectGraph: jest.fn(
+          async (commit: GitCommit, projectGraph: ProjectGraph) => {
+            const touchedFiles = calculateFileChanges(commit.affectedFiles, {
+              base: `${commit.shortHash}^`,
+              head: commit.shortHash,
+            } as NxArgs);
+            return filterAffected(projectGraph, touchedFiles);
+          }
+        ),
+      } as unknown as ReleaseGraph;
     });
 
     it('should include commits that directly touch target projects', async () => {
@@ -561,7 +1000,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a', 'lib-b'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       expect(result.size).toBe(2);
@@ -582,7 +1022,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       // Both commits should be included - nx.json affects all, and lib-a is directly touched
@@ -603,7 +1044,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       expect(result.size).toBe(1);
@@ -630,7 +1072,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       // lib-a depends on lib-c, so commit touching lib-c should affect lib-a
@@ -652,7 +1095,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       expect(result.size).toBe(1);
@@ -672,7 +1116,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a', 'lib-b'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       // Same commit should appear for both projects
@@ -690,7 +1135,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a', 'lib-b'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       // Global file should appear for all requested projects
@@ -710,7 +1156,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a', 'lib-b'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       expect(result.has('lib-a')).toBe(false);
@@ -723,7 +1170,8 @@ describe('shared', () => {
         mockProjectGraph,
         [],
         ['lib-a'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       expect(result.size).toBe(0);
@@ -738,7 +1186,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         [],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       expect(result.size).toBe(0);
@@ -754,7 +1203,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       // Lock file changes typically affect all or many projects
@@ -771,7 +1221,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       // package.json changes typically affect projects
@@ -796,7 +1247,8 @@ describe('shared', () => {
         mockProjectGraph,
         commits,
         ['lib-a'],
-        mockReleaseConfig!
+        mockReleaseConfig!,
+        mockReleaseGraph
       );
 
       expect(result.size).toBe(0);

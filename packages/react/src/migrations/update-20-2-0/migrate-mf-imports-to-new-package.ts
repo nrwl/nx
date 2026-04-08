@@ -1,6 +1,6 @@
 import { createProjectGraphAsync, Tree } from '@nx/devkit';
 import { formatFiles, visitNotIgnoredFiles } from '@nx/devkit';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 
 const MF_IMPORT_TO_UPDATE = 'ModuleFederationConfig';
 const MF_CONFIG_IMPORT_SELECTOR = `ImportDeclaration:has(StringLiteral[value=@nx/webpack]):has(Identifier[name=ModuleFederationConfig]),ImportDeclaration:has(StringLiteral[value=@nx/rspack/module-federation]):has(Identifier[name=ModuleFederationConfig])`;
@@ -36,15 +36,15 @@ export default async function migrateMfImportsToNewPackage(tree: Tree) {
         return;
       }
 
-      const ast = tsquery.ast(contents);
-      const importNodes = tsquery(ast, MF_CONFIG_IMPORT_SELECTOR);
+      const sourceFile = ast(contents);
+      const importNodes = query(sourceFile, MF_CONFIG_IMPORT_SELECTOR);
       if (importNodes.length === 0) {
         return;
       }
       const importNode = importNodes[0];
-      const importSpecifiers = tsquery(importNode, IMPORT_TOKENS_SELECTOR);
+      const importSpecifiers = query(importNode, IMPORT_TOKENS_SELECTOR);
       if (importSpecifiers.length > 1) {
-        const mfConfigImportSpecifierNode = tsquery(
+        const mfConfigImportSpecifierNode = query(
           importNode,
           MF_CONFIG_IMPORT_SPECIFIER_SELECTOR
         )[0];
@@ -58,11 +58,11 @@ export default async function migrateMfImportsToNewPackage(tree: Tree) {
         mfConfigImportSpecifierNode.getStart()
       )}${contents.slice(end)}`;
       } else {
-        const nxWebpackImportStringNodes = tsquery(
+        const nxWebpackImportStringNodes = query(
           importNode,
           WEBPACK_IMPORT_SELECTOR
         );
-        const nxRspackImportStringNodes = tsquery(
+        const nxRspackImportStringNodes = query(
           importNode,
           RSPACK_IMPORT_SELECTOR
         );

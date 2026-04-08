@@ -1,6 +1,12 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
+// const mockFormatFiles = jest.fn();
+// jest.mock('@nx/devkit', () => {
+//   return {
+//     ...jest.requireActual('@nx/devkit'),
+//     formatFiles: (...args) => mockFormatFiles(...args),
+// }
+// })
 
-import * as devkit from '@nx/devkit';
 import {
   getProjects,
   readJson,
@@ -127,7 +133,7 @@ describe('app', () => {
               optimization: false,
               outputHashing: 'none',
               generatePackageJson: true,
-              sourceMaps: true,
+              sourceMap: true,
             }),
           ],
         };
@@ -593,27 +599,36 @@ describe('app', () => {
   });
 
   describe('--skipFormat', () => {
-    it('should format files by default', async () => {
-      jest.spyOn(devkit, 'formatFiles');
+    let formatFilesSpy: jest.SpyInstance;
 
+    beforeEach(() => {
+      const devkitModule = require('@nx/devkit');
+      formatFilesSpy = jest
+        .spyOn(devkitModule, 'formatFiles')
+        .mockImplementation(() => Promise.resolve());
+    });
+
+    afterAll(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should format files by default', async () => {
       await applicationGenerator(tree, {
         directory: 'my-node-app',
         addPlugin: true,
       });
 
-      expect(devkit.formatFiles).toHaveBeenCalled();
+      expect(formatFilesSpy).toHaveBeenCalled();
     });
 
     it('should not format files when --skipFormat=true', async () => {
-      jest.spyOn(devkit, 'formatFiles');
-
       await applicationGenerator(tree, {
         directory: 'my-node-app',
         skipFormat: true,
         addPlugin: true,
       });
 
-      expect(devkit.formatFiles).not.toHaveBeenCalled();
+      expect(formatFilesSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -890,7 +905,7 @@ describe('app', () => {
 
         // Reading the SWC compilation config for the spec files
         const swcJestConfig = JSON.parse(
-          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
+          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
         );
 
         // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
@@ -968,7 +983,7 @@ describe('app', () => {
               optimization: false,
               outputHashing: 'none',
               generatePackageJson: false,
-              sourceMaps: true,
+              sourceMap: true,
             })
           ],
         };

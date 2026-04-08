@@ -1,9 +1,8 @@
-import * as ora from 'ora';
+import ora from 'ora';
 import { join } from 'path';
 import { CreateWorkspaceOptions } from './create-workspace-options';
 import { execAndWait } from './utils/child-process-utils';
-import { mapErrorToBodyLines } from './utils/error-utils';
-import { output } from './utils/output';
+import { CnwError } from './utils/error-utils';
 import {
   getPackageManagerCommand,
   getPackageManagerVersion,
@@ -38,15 +37,18 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
   // See: https://github.com/nrwl/nx/issues/31834
   delete (options as any).skipInstall;
 
+  // workingDir is consumed by CNW itself, not passed to `nx new`
+  const { workingDir: _workingDir, ...nxNewOptions } = options;
+
   const args = unparse({
-    ...options,
+    ...nxNewOptions,
   }).join(' ');
 
   const pmc = getPackageManagerCommand(packageManager);
 
   const command = `new ${args}`;
 
-  const workingDir = process.cwd().replace(/\\/g, '/');
+  const workingDir = (options.workingDir ?? process.cwd()).replace(/\\/g, '/');
   let nxWorkspaceRoot = `"${workingDir}"`;
 
   // If path contains spaces there is a problem in Windows for npm@6.
@@ -76,15 +78,11 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
     );
   } catch (e) {
     workspaceSetupSpinner.fail();
-    if (e instanceof Error) {
-      output.error({
-        title: `Failed to create a workspace.`,
-        bodyLines: mapErrorToBodyLines(e),
-      });
-    } else {
-      console.error(e);
-    }
-    process.exit(1);
+    const message = e instanceof Error ? e.message : String(e);
+    throw new CnwError(
+      'WORKSPACE_CREATION_FAILED',
+      `Failed to create a workspace: ${message}`
+    );
   } finally {
     workspaceSetupSpinner.stop();
   }

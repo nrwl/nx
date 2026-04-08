@@ -1,4 +1,4 @@
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast } from '@phenomnomnominal/tsquery';
 import { writeNewWebpackConfig } from './write-new-webpack-config';
 
 describe('writeNewWebpackConfig', () => {
@@ -14,10 +14,10 @@ describe('writeNewWebpackConfig', () => {
         ]
     }`;
 
-    const ast = tsquery.ast(sourceText);
+    const sourceFile = ast(sourceText);
 
     // ACT
-    const result = writeNewWebpackConfig(ast, 'host', 'host1');
+    const result = writeNewWebpackConfig(sourceFile, 'host', 'host1');
 
     // ASSERT
     expect(result).toMatchSnapshot();
@@ -35,10 +35,10 @@ describe('writeNewWebpackConfig', () => {
         ]
     }`;
 
-    const ast = tsquery.ast(sourceText);
+    const sourceFile = ast(sourceText);
 
     // ACT
-    const result = writeNewWebpackConfig(ast, 'remote', 'remote1');
+    const result = writeNewWebpackConfig(sourceFile, 'remote', 'remote1');
 
     // ASSERT
     expect(result).toMatchSnapshot();
@@ -59,10 +59,10 @@ describe('writeNewWebpackConfig', () => {
         ]
     }`;
 
-    const ast = tsquery.ast(sourceText);
+    const sourceFile = ast(sourceText);
 
     // ACT
-    const result = writeNewWebpackConfig(ast, 'both', 'both1');
+    const result = writeNewWebpackConfig(sourceFile, 'both', 'both1');
 
     // ASSERT
     expect(result).toMatchSnapshot();
@@ -76,10 +76,10 @@ describe('writeNewWebpackConfig', () => {
         ]
     }`;
 
-    const ast = tsquery.ast(sourceText);
+    const sourceFile = ast(sourceText);
 
     // ACT
-    const result = writeNewWebpackConfig(ast, false, 'neither');
+    const result = writeNewWebpackConfig(sourceFile, false, 'neither');
 
     // ASSERT
     expect(result).toMatchSnapshot();

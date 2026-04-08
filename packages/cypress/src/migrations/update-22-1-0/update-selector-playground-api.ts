@@ -1,6 +1,6 @@
 import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, replace } from '@phenomnomnominal/tsquery';
 import type { CallExpression, Printer, PropertyName } from 'typescript';
 import { cypressProjectConfigs } from '../../utils/migrations';
 
@@ -46,10 +46,10 @@ function migrateSelectorPlaygroundApi(fileContent: string): string {
   ts ??= ensureTypescript();
   printer ??= ts.createPrinter();
 
-  const sourceFile = tsquery.ast(updated);
+  const sourceFile = ast(updated);
   let hasChanges = false;
 
-  const result = tsquery.replace(
+  const result = replace(
     updated,
     'CallExpression:has(Identifier[name="defaults"])',
     (node: CallExpression) => {

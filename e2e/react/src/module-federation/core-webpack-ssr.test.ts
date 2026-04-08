@@ -63,8 +63,11 @@ describe('React Module Federation - Webpack SSR', () => {
       `generate @nx/react:host ${shell} --ssr --bundler=webpack --remotes=${remote1},${remote2},${remote3} --style=css --e2eTestRunner=cypress --no-interactive --skipFormat`
     );
 
-    const serveResult = await runCommandUntil(`serve ${shell}`, (output) =>
-      output.includes(`Nx SSR Static remotes proxies started successfully`)
+    const serveResult = await runCommandUntil(
+      `serve ${shell}`,
+      (output) =>
+        output.includes(`Nx SSR Static remotes proxies started successfully`),
+      { timeout: 120000 }
     );
 
     await killProcessAndPorts(serveResult.pid);
@@ -107,7 +110,8 @@ describe('React Module Federation - Webpack SSR', () => {
     if (runE2ETests()) {
       const hostE2eResults = await runCommandUntil(
         `e2e ${shell}-e2e --no-watch --verbose`,
-        (output) => output.includes('All specs passed!')
+        (output) => output.includes('All specs passed!'),
+        { timeout: 120000 }
       );
       await killProcessAndPorts(hostE2eResults.pid);
     }

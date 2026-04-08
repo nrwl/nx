@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Init MF --federationType=dynamic should create a host with the correct configurations 1`] = `
 "import { registerRemotes } from '@module-federation/enhanced/runtime';

@@ -36,9 +36,12 @@ describe('React Module Federation - Webpack Basic - Playwright', () => {
     checkFilesExist(`apps/${remote2}/module-federation.config.ts`);
     checkFilesExist(`apps/${remote3}/module-federation.config.ts`);
 
+    // TODO(@jaysoo): Remove these logs once we identify why this test hangs in CI.
+    console.log(`[core-webpack-basic-playwright] Running test for ${shell}`);
     await expect(runCLIAsync(`test ${shell}`)).resolves.toMatchObject({
       combinedOutput: expect.stringContaining('Test Suites: 1 passed, 1 total'),
     });
+    console.log(`[core-webpack-basic-playwright] Test complete`);
 
     updateFile(
       `apps/${shell}-e2e/src/example.spec.ts`,
@@ -67,21 +70,50 @@ describe('React Module Federation - Webpack Basic - Playwright', () => {
     );
 
     if (runE2ETests()) {
+      console.log(
+        `[core-webpack-basic-playwright] Starting e2e (swc) for ${shell}-e2e`
+      );
       const e2eResultsSwc = await runCommandUntil(
         `e2e ${shell}-e2e`,
-        (output) => output.includes('Successfully ran target e2e for project')
+        (output) => output.includes('Successfully ran target e2e for project'),
+        { timeout: 120_000 }
+      );
+      console.log(
+        `[core-webpack-basic-playwright] e2e (swc) completed with PID ${e2eResultsSwc.pid}`
       );
 
+      console.log(
+        `[core-webpack-basic-playwright] Killing e2eResultsSwc (PID: ${
+          e2eResultsSwc.pid
+        }, port: ${readPort(shell)})`
+      );
       await killProcessAndPorts(e2eResultsSwc.pid, readPort(shell));
+      console.log(`[core-webpack-basic-playwright] Killed e2eResultsSwc`);
 
+      console.log(
+        `[core-webpack-basic-playwright] Starting e2e (ts-node) for ${shell}-e2e`
+      );
       const e2eResultsTsNode = await runCommandUntil(
         `e2e ${shell}-e2e`,
         (output) => output.includes('Successfully ran target e2e for project'),
         {
+          timeout: 120_000,
           env: { NX_PREFER_TS_NODE: 'true' },
         }
       );
+      console.log(
+        `[core-webpack-basic-playwright] e2e (ts-node) completed with PID ${e2eResultsTsNode.pid}`
+      );
+
+      console.log(
+        `[core-webpack-basic-playwright] Killing e2eResultsTsNode (PID: ${
+          e2eResultsTsNode.pid
+        }, port: ${readPort(shell)})`
+      );
       await killProcessAndPorts(e2eResultsTsNode.pid, readPort(shell));
+      console.log(
+        `[core-webpack-basic-playwright] Killed e2eResultsTsNode - test complete`
+      );
     }
   }, 500_000);
 });

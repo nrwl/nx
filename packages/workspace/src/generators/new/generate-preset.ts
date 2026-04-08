@@ -12,7 +12,7 @@ import {
 import { getNpmPackageVersion } from '../utils/get-npm-package-version';
 import { NormalizedSchema } from './new';
 import { join } from 'path';
-import * as yargsParser from 'yargs-parser';
+import yargsParser from 'yargs-parser';
 import { fork, ForkOptions } from 'child_process';
 import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
 
@@ -99,6 +99,11 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
         : null,
       opts.ssr ? `--ssr` : null,
       opts.prefix !== undefined ? `--prefix=${opts.prefix}` : null,
+      opts.zoneless
+        ? `--zoneless`
+        : opts.zoneless === false
+          ? `--no-zoneless`
+          : null,
       opts.nxCloudToken ? `--nxCloudToken=${opts.nxCloudToken}` : null,
       opts.formatter ? `--formatter=${opts.formatter}` : null,
       opts.workspaces !== false ? `--workspaces` : `--no-workspaces`,

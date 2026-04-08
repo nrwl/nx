@@ -2,14 +2,12 @@ import {
   type Tree,
   formatFiles,
   readProjectConfiguration,
-  logger,
-  addDependenciesToPackageJson,
   applyChangesToString,
   ChangeType,
   type StringChange,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 
 export default async function addSvgrToNextConfig(tree: Tree) {
@@ -27,12 +25,12 @@ export default async function addSvgrToNextConfig(tree: Tree) {
       const content = tree.read(nextConfigPath, 'utf-8');
 
       if (!content.includes('withNx')) return;
-      const ast = tsquery.ast(content);
+      const sourceFile = ast(content);
 
       let svgrValue: boolean | Record<string, unknown> | undefined;
 
-      const nextConfigDeclarations = tsquery(
-        ast,
+      const nextConfigDeclarations = query(
+        sourceFile,
         'VariableDeclaration:has(Identifier[name=nextConfig]) > ObjectLiteralExpression'
       );
 
@@ -96,11 +94,11 @@ export default async function addSvgrToNextConfig(tree: Tree) {
   // Update next.config.js files to add SVGR webpack configuration
   for (const [nextConfigPath, config] of projects.entries()) {
     let content = tree.read(nextConfigPath, 'utf-8');
-    const ast = tsquery.ast(content);
+    const sourceFile = ast(content);
     const changes: StringChange[] = [];
 
-    const nextConfigDeclarations = tsquery(
-      ast,
+    const nextConfigDeclarations = query(
+      sourceFile,
       'VariableDeclaration:has(Identifier[name=nextConfig]) > ObjectLiteralExpression'
     );
 
@@ -197,27 +195,32 @@ export default async function addSvgrToNextConfig(tree: Tree) {
   const originalWebpack = config.webpack;
   // @ts-ignore
   config.webpack = (webpackConfig, ctx) => {
-    // Add SVGR support
+    // Add SVGR support with webpack 5 asset modules
     webpackConfig.module.rules.push({
       test: /\.svg$/,
-      issuer: { not: /\.(css|scss|sass)$/ },
-      resourceQuery: {
-        not: [
-          /__next_metadata__/,
-          /__next_metadata_route__/,
-          /__next_metadata_image_meta__/,
-        ],
-      },
-      use: [
+      oneOf: [
         {
-          loader: require.resolve('@svgr/webpack'),
-          options: ${svgrOptions},
+          resourceQuery: /url/,
+          type: 'asset/resource',
+          generator: {
+            filename: 'static/media/[name].[hash][ext]',
+          },
         },
         {
-          loader: require.resolve('file-loader'),
-          options: {
-            name: 'static/media/[name].[hash].[ext]',
+          issuer: { not: /\.(css|scss|sass)$/ },
+          resourceQuery: {
+            not: [
+              /__next_metadata__/,
+              /__next_metadata_route__/,
+              /__next_metadata_image_meta__/,
+            ],
           },
+          use: [
+            {
+              loader: require.resolve('@svgr/webpack'),
+              options: ${svgrOptions},
+            },
+          ],
         },
       ],
     });
@@ -228,8 +231,8 @@ export default async function addSvgrToNextConfig(tree: Tree) {
   return config;
 };`;
 
-      const pluginsArrayDeclarations = tsquery(
-        ast,
+      const pluginsArrayDeclarations = query(
+        sourceFile,
         'VariableDeclaration:has(Identifier[name=plugins]) ArrayLiteralExpression'
       );
 
@@ -245,8 +248,8 @@ export default async function addSvgrToNextConfig(tree: Tree) {
         });
       }
 
-      const composePluginsCalls = tsquery(
-        ast,
+      const composePluginsCalls = query(
+        sourceFile,
         'CallExpression[expression.name=composePlugins]'
       );
 
@@ -272,13 +275,4 @@ export default async function addSvgrToNextConfig(tree: Tree) {
   }
 
   await formatFiles(tree);
-
-  // Add file-loader as a dev dependency since it's now required for SVGR
-  return addDependenciesToPackageJson(
-    tree,
-    {},
-    {
-      'file-loader': '^6.2.0',
-    }
-  );
 }

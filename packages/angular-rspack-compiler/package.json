@@ -28,8 +28,8 @@
   },
   "type": "commonjs",
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "module": "./dist/index.js",
-  "typings": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -37,7 +37,7 @@
     }
   },
   "dependencies": {
-    "@angular/build": ">=19.0.0 <21.0.0",
+    "@angular/build": "catalog:angular-supported-versions",
     "sass-embedded": "^1.79.3",
     "semver": "catalog:",
     "ts-morph": "catalog:typescript",
@@ -50,7 +50,7 @@
     "memfs": "^4.17.0"
   },
   "peerDependencies": {
-    "@angular/compiler-cli": ">=19.0.0 <21.0.0",
+    "@angular/compiler-cli": "catalog:angular-supported-versions",
     "@rsbuild/core": ">=1.0.5 <2.0.0"
   },
   "nx": {

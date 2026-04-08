@@ -235,7 +235,6 @@ describe('vitest generator', () => {
       expect(tree.read('apps/my-test-angular-app/src/test-setup.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import '@analogjs/vitest-angular/setup-zone';
-
         import {
           BrowserDynamicTestingModule,
           platformBrowserDynamicTesting,
@@ -244,7 +243,7 @@ describe('vitest generator', () => {
 
         getTestBed().initTestEnvironment(
           BrowserDynamicTestingModule,
-          platformBrowserDynamicTesting()
+          platformBrowserDynamicTesting(),
         );
         "
       `);

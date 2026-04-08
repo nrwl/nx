@@ -13,6 +13,7 @@ describe('getViteE2EWebServerInfo', () => {
 
     tree.write(`app/vite.config.ts`, ``);
     tempFs.createFileSync(`app/vite.config.ts`, ``);
+    tempFs.createFileSync('package-lock.json', '{}');
   });
 
   afterEach(() => {

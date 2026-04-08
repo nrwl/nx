@@ -1,0 +1,7 @@
+extends: existence
+message: "Use the Oxford (serial) comma before 'and' or 'or' in a list of three or more items."
+level: suggestion
+scope: sentence
+tokens:
+  - '\w+,\s\w+\sand\s'
+  - '\w+,\s\w+\sor\s'

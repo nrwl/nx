@@ -29,7 +29,7 @@ xdescribe('--help output', () => {
       expect(output).toMatch(/--coverage|--watch|--bail/i);
 
       // Should NOT contain Nx's help
-      expect(output).not.toContain('Smart Repos');
+      expect(output).not.toContain('Smart Monorepos');
       expect(output).not.toContain('Run target');
       expect(output).not.toContain('Run a target for a project');
     });
@@ -44,7 +44,7 @@ xdescribe('--help output', () => {
       expect(output).toMatch(/--coverage|--watch|--bail/i);
 
       // Should NOT contain Nx's help
-      expect(output).not.toContain('Smart Repos');
+      expect(output).not.toContain('Smart Monorepos');
       expect(output).not.toContain('Run target');
       expect(output).not.toContain('Run a target for a project');
     });
@@ -60,7 +60,7 @@ xdescribe('--help output', () => {
       expect(lintOutput).toMatch(/--fix|--format|--quiet/i);
 
       // Should NOT contain Nx's help
-      expect(lintOutput).not.toContain('Smart Repos');
+      expect(lintOutput).not.toContain('Smart Monorepos');
       expect(lintOutput).not.toContain('Run target');
     });
 
@@ -79,7 +79,7 @@ xdescribe('--help output', () => {
       expect(buildOutput).toMatch(/webpack|build.*production/i);
 
       // Should NOT contain Nx's help
-      expect(buildOutput).not.toContain('Smart Repos');
+      expect(buildOutput).not.toContain('Smart Monorepos');
       expect(buildOutput).not.toContain('Run target');
     });
   });
@@ -317,7 +317,7 @@ xdescribe('--help output', () => {
 
       // Should still show Jest help even with additional flags
       expect(output).toContain('Usage: jest');
-      expect(output).not.toContain('Smart Repos');
+      expect(output).not.toContain('Smart Monorepos');
     });
   });
 });

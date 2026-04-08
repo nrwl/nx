@@ -5,6 +5,7 @@ import {
   addImportToFlatConfig,
   generateAst,
   generateFlatOverride,
+  generateFlatPredefinedConfig,
   generatePluginExtendsElementWithCompatFixup,
   hasOverride,
   removeCompatExtends,
@@ -270,6 +271,85 @@ describe('ast-utils', () => {
             { ignores: ["my-lib/.cache/**/*"] }
         ];
         "
+      `);
+    });
+
+    it('should insert before baseConfig when checkBaseConfig is true (ESM)', () => {
+      const content = `import baseConfig from "../../eslint.config.mjs";
+    export default [
+        ...baseConfig,
+        {
+            files: ["**/*.ts"],
+            rules: {}
+        },
+    ];`;
+      const result = addBlockToFlatConfigExport(
+        content,
+        generateFlatPredefinedConfig('flat/react', 'nx', true),
+        { checkBaseConfig: true }
+      );
+      expect(result).toMatchInlineSnapshot(`
+        "import baseConfig from "../../eslint.config.mjs";
+
+        export default [
+            ...nx.configs["flat/react"],
+            ...baseConfig,
+            {
+                files: ["**/*.ts"],
+                rules: {}
+            }
+        ];
+        "
+      `);
+    });
+
+    it('should append when checkBaseConfig is true but no baseConfig exists (ESM)', () => {
+      const content = `import nx from "@nx/eslint-plugin";
+    export default [
+        ...nx.configs["flat/base"],
+        ...nx.configs["flat/typescript"],
+    ];`;
+      const result = addBlockToFlatConfigExport(
+        content,
+        generateFlatPredefinedConfig('flat/react', 'nx', true),
+        { checkBaseConfig: true }
+      );
+      expect(result).toMatchInlineSnapshot(`
+        "import nx from "@nx/eslint-plugin";
+
+        export default [
+            ...nx.configs["flat/base"],
+            ...nx.configs["flat/typescript"],
+            ...nx.configs["flat/react"]
+        ];
+        "
+      `);
+    });
+
+    it('should insert before baseConfig when checkBaseConfig is true (CJS)', () => {
+      const content = `const baseConfig = require("../../eslint.config.cjs");
+module.exports = [
+    ...baseConfig,
+    {
+        files: ["**/*.ts"],
+        rules: {}
+    },
+];`;
+      const result = addBlockToFlatConfigExport(
+        content,
+        generateFlatPredefinedConfig('flat/react', 'nx', true),
+        { checkBaseConfig: true }
+      );
+      expect(result).toMatchInlineSnapshot(`
+        "const baseConfig = require("../../eslint.config.cjs");
+        module.exports = [
+            ...nx.configs["flat/react"],
+            ...baseConfig,
+            {
+                files: ["**/*.ts"],
+                rules: {}
+            },
+        ];"
       `);
     });
   });
@@ -681,22 +761,22 @@ export default [
 
         export default [
             {
-              "files": [
-                "my-lib/**/*.ts",
-                "my-lib/**/*.tsx"
-              ],
-              "rules": {
-                "my-rule": "error"
-              }
+                files: [
+                    "my-lib/**/*.ts",
+                    "my-lib/**/*.tsx"
+                ],
+                rules: {
+              "my-rule": "error"
+            }
             },
             {
-              "files": [
-                "my-lib/**/*.ts",
-                "my-lib/**/*.js"
-              ],
-              "rules": {
-                "my-rule": "error"
-              }
+                files: [
+                    "my-lib/**/*.ts",
+                    "my-lib/**/*.js"
+                ],
+                rules: {
+              "my-rule": "error"
+            }
             },
             {
                 files: [
@@ -752,14 +832,14 @@ export default [
 
         export default [
             {
-              "files": [
-                "my-lib/**/*.ts",
-                "my-lib/**/*.tsx"
-              ],
-              "rules": {
-                "my-ts-rule": "error",
-                "my-new-rule": "error"
-              }
+                files: [
+                    "my-lib/**/*.ts",
+                    "my-lib/**/*.tsx"
+                ],
+                rules: {
+              "my-ts-rule": "error",
+              "my-new-rule": "error"
+            }
             },
             {
                 files: [
@@ -808,17 +888,239 @@ export default [
         export default [
             ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
             ...config,
-              "files": [
+            files: [
                 "my-lib/**/*.ts",
                 "my-lib/**/*.tsx"
-              ],
-              "rules": {
-                "my-ts-rule": "error",
-                "my-new-rule": "error"
-              }
+            ],
+            rules: {
+              "my-ts-rule": "error",
+              "my-new-rule": "error"
+            }
           }),
         ];"
       `);
+    });
+
+    it('should update files while preserving variable references (ESM)', () => {
+      const content = `
+import pluginPackageJson from "eslint-plugin-package-json";
+import jsoncParser from "jsonc-eslint-parser";
+
+export default [
+    {
+        files: ["package.json"],
+        plugins: { "package-json": pluginPackageJson },
+        languageOptions: {
+            parser: jsoncParser,
+        },
+        rules: {
+            '@nx/nx-plugin-checks': 'error'
+        }
+    }
+];`;
+
+      const result = replaceOverride(
+        content,
+        '',
+        (o) =>
+          Object.keys(o.rules ?? {}).includes('@nx/nx-plugin-checks') ||
+          Object.keys(o.rules ?? {}).includes('@nrwl/nx/nx-plugin-checks'),
+        (o) => {
+          const files = Array.isArray(o.files) ? o.files : [o.files];
+          return {
+            ...o,
+            files: [...files, './migrations.json'],
+          };
+        }
+      );
+
+      // Property-level AST update: only files is modified, plugins with variable refs is preserved
+      expect(result).toMatchInlineSnapshot(`
+        "
+        import pluginPackageJson from "eslint-plugin-package-json";
+        import jsoncParser from "jsonc-eslint-parser";
+
+        export default [
+            {
+                files: [
+              "package.json",
+              "./migrations.json"
+            ],
+                plugins: { "package-json": pluginPackageJson },
+                languageOptions: {
+                    parser: jsoncParser,
+                },
+                rules: {
+                    '@nx/nx-plugin-checks': 'error'
+                }
+            }
+        ];"
+      `);
+    });
+
+    it('should update files while preserving variable references (CJS)', () => {
+      const content = `
+const pluginPackageJson = require("eslint-plugin-package-json");
+const jsoncParser = require("jsonc-eslint-parser");
+
+module.exports = [
+    {
+        files: ["package.json"],
+        plugins: { "package-json": pluginPackageJson },
+        languageOptions: {
+            parser: jsoncParser,
+        },
+        rules: {
+            '@nx/nx-plugin-checks': 'error'
+        }
+    }
+];`;
+
+      const result = replaceOverride(
+        content,
+        '',
+        (o) =>
+          Object.keys(o.rules ?? {}).includes('@nx/nx-plugin-checks') ||
+          Object.keys(o.rules ?? {}).includes('@nrwl/nx/nx-plugin-checks'),
+        (o) => {
+          const files = Array.isArray(o.files) ? o.files : [o.files];
+          return {
+            ...o,
+            files: [...files, './migrations.json'],
+          };
+        }
+      );
+
+      // Property-level AST update: only files is modified, plugins with variable refs is preserved
+      expect(result).toMatchInlineSnapshot(`
+        "
+        const pluginPackageJson = require("eslint-plugin-package-json");
+        const jsoncParser = require("jsonc-eslint-parser");
+
+        module.exports = [
+            {
+                files: [
+              "package.json",
+              "./migrations.json"
+            ],
+                plugins: { "package-json": pluginPackageJson },
+                languageOptions: {
+                    parser: jsoncParser,
+                },
+                rules: {
+                    '@nx/nx-plugin-checks': 'error'
+                }
+            }
+        ];"
+      `);
+    });
+
+    it('should delete entire override block when update returns undefined (ESM)', () => {
+      const content = `import baseConfig from "../../eslint.config.mjs";
+
+export default [
+    ...baseConfig,
+    {
+        files: ["**/*.*"],
+        rules: { "@next/next/no-html-link-for-pages": "off" },
+    },
+    {
+        files: ["my-lib/**/*.ts", "my-lib/**/*.tsx"],
+        rules: {
+            "no-console": "error",
+        },
+    },
+];`;
+
+      const result = replaceOverride(
+        content,
+        '',
+        (o) =>
+          o.rules?.['@next/next/no-html-link-for-pages'] &&
+          o.files?.includes('**/*.*'),
+        () => undefined
+      );
+
+      expect(result).not.toContain('@next/next/no-html-link-for-pages');
+      expect(result).not.toContain('files: ["**/*.*"]');
+      // Other override should remain
+      expect(result).toContain('no-console');
+      expect(result).toMatchInlineSnapshot(`
+        "import baseConfig from "../../eslint.config.mjs";
+
+        export default [
+            ...baseConfig,
+            {
+                files: ["my-lib/**/*.ts", "my-lib/**/*.tsx"],
+                rules: {
+                    "no-console": "error",
+                },
+            },
+        ];"
+      `);
+    });
+
+    it('should delete entire override block when update returns undefined (CJS)', () => {
+      const content = `const baseConfig = require("../../eslint.config.js");
+
+module.exports = [
+    ...baseConfig,
+    {
+        files: ["**/*.*"],
+        rules: { "@next/next/no-html-link-for-pages": "off" },
+    },
+    {
+        files: ["my-lib/**/*.ts"],
+        rules: { "no-console": "error" },
+    },
+];`;
+
+      const result = replaceOverride(
+        content,
+        '',
+        (o) =>
+          o.rules?.['@next/next/no-html-link-for-pages'] &&
+          o.files?.includes('**/*.*'),
+        () => undefined
+      );
+
+      expect(result).not.toContain('@next/next/no-html-link-for-pages');
+      expect(result).toContain('no-console');
+      expect(result).toMatchInlineSnapshot(`
+        "const baseConfig = require("../../eslint.config.js");
+
+        module.exports = [
+            ...baseConfig,
+            {
+                files: ["my-lib/**/*.ts"],
+                rules: { "no-console": "error" },
+            },
+        ];"
+      `);
+    });
+
+    it('should not delete override when update function is not provided', () => {
+      const content = `import baseConfig from "../../eslint.config.mjs";
+
+export default [
+    ...baseConfig,
+    {
+        files: ["**/*.*"],
+        rules: { "@next/next/no-html-link-for-pages": "off" },
+    },
+];`;
+
+      const result = replaceOverride(
+        content,
+        '',
+        (o) =>
+          o.rules?.['@next/next/no-html-link-for-pages'] &&
+          o.files?.includes('**/*.*')
+      );
+
+      // Content should remain unchanged when no update function provided
+      expect(result).toContain('@next/next/no-html-link-for-pages');
+      expect(result).toBe(content);
     });
   });
 

@@ -12,15 +12,8 @@ export function getStylesheetProcessorFactoryProvider(): FactoryProvider {
   return {
     provide: STYLESHEET_PROCESSOR_TOKEN,
     useFactory: () => {
-      if (ngPackagrMajorVersion >= 19) {
-        const {
-          getStylesheetProcessor,
-        } = require('./v19+/stylesheet-processor');
-        return getStylesheetProcessor();
-      }
-
-      const { StylesheetProcessor } = require('./pre-v19/stylesheet-processor');
-      return StylesheetProcessor;
+      const { getStylesheetProcessor } = require('./stylesheet-processor');
+      return getStylesheetProcessor();
     },
     deps: [],
   };

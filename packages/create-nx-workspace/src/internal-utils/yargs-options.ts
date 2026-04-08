@@ -81,6 +81,13 @@ export function withGitOptions<T = unknown>(argv: yargs.Argv<T>) {
     });
 }
 
+export function withAnalytics<T = unknown>(argv: yargs.Argv<T>) {
+  return argv.option('analytics', {
+    describe: chalk.dim`Help improve Nx by sharing your usage data.`,
+    type: 'boolean',
+  });
+}
+
 export function withOptions<T>(
   argv: yargs.Argv<T>,
   ...options: ((argv: yargs.Argv<T>) => yargs.Argv<T>)[]

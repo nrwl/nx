@@ -13,8 +13,8 @@ export default async function createAiInstructionsForNext16(tree: Tree) {
   }
 
   const contents = readFileSync(pathToAiInstructions, 'utf-8');
-  tree.write('ai-migrations/MIGRATE_NEXT_16.md', contents);
+  tree.write('tools/ai-migrations/MIGRATE_NEXT_16.md', contents);
   return [
-    `We created 'ai-migrations/MIGRATE_NEXT_16.md' with instructions for an AI Agent to help migrate your Next.js projects to Next.js 16.`,
+    `We created 'tools/ai-migrations/MIGRATE_NEXT_16.md' with instructions for an AI Agent to help migrate your Next.js projects to Next.js 16.`,
   ];
 }

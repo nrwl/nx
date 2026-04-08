@@ -142,7 +142,14 @@ function pnpmResolver(
       exportsConditionNames,
       mainFields
     );
-    const lookupStartPath = dirname(context.originModulePath);
+    let lookupStartPath = dirname(context.originModulePath);
+
+    // Defensive: ensure path is within workspace root.
+    // Handles Expo SDK 54+ where originModulePath may be project-relative.
+    if (!lookupStartPath.startsWith(workspaceRoot)) {
+      lookupStartPath = workspaceRoot;
+    }
+
     const filePath = pnpmResolve.resolveSync(
       {},
       lookupStartPath,

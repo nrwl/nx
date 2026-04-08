@@ -1,198 +1,196 @@
-import type { ProjectGraph } from '../../../config/project-graph';
+import type { Serializable } from 'child_process';
+import type { Socket } from 'net';
 import type { PluginConfiguration } from '../../../config/nx-json';
+import type { ProjectGraph } from '../../../config/project-graph';
+import { MESSAGE_END_SEQ } from '../../../utils/consume-messages-from-socket';
+import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import type {
   CreateDependenciesContext,
   CreateMetadataContext,
   CreateNodesContextV2,
-  PreTasksExecutionContext,
   PostTasksExecutionContext,
+  PreTasksExecutionContext,
 } from '../public-api';
-import type { LoadedNxPlugin } from '../loaded-nx-plugin';
-import type { Serializable } from 'child_process';
-import type { Socket } from 'net';
-import { MESSAGE_END_SEQ } from '../../../utils/consume-messages-from-socket';
+import type {
+  AllMessages,
+  AllResults,
+  DefineMessages,
+  Handlers,
+  MaybePromise,
+  ResultOf,
+  WithResult,
+} from './message-types';
 
-export interface PluginWorkerLoadMessage {
-  type: 'load';
-  payload: {
-    plugin: PluginConfiguration;
-    root: string;
-    name: string;
-    pluginPath: string;
-    shouldRegisterTSTranspiler: boolean;
+// =============================================================================
+// PLUGIN MESSAGE DEFINITIONS
+// =============================================================================
+
+/**
+ * All plugin worker message definitions in one place.
+ * Each entry defines:
+ * - payload: what the message carries
+ * - result (optional): what the response carries
+ */
+type PluginMessageDefs = DefineMessages<{
+  load: {
+    payload: {
+      plugin: PluginConfiguration;
+      root: string;
+      name: string;
+      pluginPath: string;
+      shouldRegisterTSTranspiler: boolean;
+    };
+    result:
+      | {
+          name: string;
+          include?: string[];
+          exclude?: string[];
+          createNodesPattern: string;
+          hasCreateDependencies: boolean;
+          hasProcessProjectGraph: boolean;
+          hasCreateMetadata: boolean;
+          hasPreTasksExecution: boolean;
+          hasPostTasksExecution: boolean;
+          success: true;
+        }
+      | {
+          success: false;
+          error: Error;
+        };
   };
-}
 
-export interface PluginWorkerLoadResult {
-  type: 'load-result';
-  payload:
-    | {
-        name: string;
-        include?: string[];
-        exclude?: string[];
-        createNodesPattern: string;
-        hasCreateDependencies: boolean;
-        hasProcessProjectGraph: boolean;
-        hasCreateMetadata: boolean;
-        hasPreTasksExecution: boolean;
-        hasPostTasksExecution: boolean;
-        success: true;
-      }
-    | {
-        success: false;
-        error: Error;
-      };
-}
-
-export interface PluginWorkerCreateNodesMessage {
-  type: 'createNodes';
-  payload: {
-    configFiles: string[];
-    context: CreateNodesContextV2;
-    tx: string;
+  createNodes: {
+    payload: {
+      configFiles: string[];
+      context: CreateNodesContextV2;
+    };
+    result:
+      | {
+          success: true;
+          result: Awaited<ReturnType<LoadedNxPlugin['createNodes'][1]>>;
+        }
+      | {
+          success: false;
+          error: Error;
+        };
   };
-}
 
-export interface PluginWorkerCreateNodesResult {
-  type: 'createNodesResult';
-  payload:
-    | {
-        success: true;
-        result: Awaited<ReturnType<LoadedNxPlugin['createNodes'][1]>>;
-        tx: string;
-      }
-    | {
-        success: false;
-        error: Error;
-        tx: string;
-      };
-}
-
-export interface PluginCreateDependenciesMessage {
-  type: 'createDependencies';
-  payload: {
-    context: CreateDependenciesContext;
-    tx: string;
+  createDependencies: {
+    payload: {
+      context: CreateDependenciesContext;
+    };
+    result:
+      | {
+          dependencies: Awaited<
+            ReturnType<LoadedNxPlugin['createDependencies']>
+          >;
+          success: true;
+        }
+      | {
+          success: false;
+          error: Error;
+        };
   };
-}
 
-export interface PluginCreateMetadataMessage {
-  type: 'createMetadata';
-  payload: {
-    graph: ProjectGraph;
-    context: CreateMetadataContext;
-    tx: string;
+  createMetadata: {
+    payload: {
+      graph: ProjectGraph;
+      context: CreateMetadataContext;
+    };
+    result:
+      | {
+          metadata: Awaited<ReturnType<LoadedNxPlugin['createMetadata']>>;
+          success: true;
+        }
+      | {
+          success: false;
+          error: Error;
+        };
   };
-}
 
-export interface PluginCreateDependenciesResult {
-  type: 'createDependenciesResult';
-  payload:
-    | {
-        dependencies: Awaited<ReturnType<LoadedNxPlugin['createDependencies']>>;
-        success: true;
-        tx: string;
-      }
-    | {
-        success: false;
-        error: Error;
-        tx: string;
-      };
-}
-
-export interface PluginCreateMetadataResult {
-  type: 'createMetadataResult';
-  payload:
-    | {
-        metadata: Awaited<ReturnType<LoadedNxPlugin['createMetadata']>>;
-        success: true;
-        tx: string;
-      }
-    | {
-        success: false;
-        error: Error;
-        tx: string;
-      };
-}
-
-export interface PluginWorkerPreTasksExecutionMessage {
-  type: 'preTasksExecution';
-  payload: {
-    tx: string;
-    context: PreTasksExecutionContext;
+  preTasksExecution: {
+    payload: {
+      context: PreTasksExecutionContext;
+    };
+    result:
+      | {
+          success: true;
+          mutations: NodeJS.ProcessEnv;
+        }
+      | {
+          success: false;
+          error: Error;
+        };
   };
-}
 
-export interface PluginWorkerPreTasksExecutionMessageResult {
-  type: 'preTasksExecutionResult';
-  payload:
-    | {
-        tx: string;
-        success: true;
-        mutations: NodeJS.ProcessEnv;
-      }
-    | {
-        success: false;
-        error: Error;
-        tx: string;
-      };
-}
-
-export interface PluginWorkerPostTasksExecutionMessage {
-  type: 'postTasksExecution';
-  payload: {
-    tx: string;
-    context: PostTasksExecutionContext;
+  postTasksExecution: {
+    payload: {
+      context: PostTasksExecutionContext;
+    };
+    result:
+      | {
+          success: true;
+        }
+      | {
+          success: false;
+          error: Error;
+        };
   };
-}
+}>;
 
-export interface PluginWorkerPostTasksExecutionMessageResult {
-  type: 'postTasksExecutionResult';
-  payload:
-    | {
-        tx: string;
-        success: true;
-      }
-    | {
-        success: false;
-        error: Error;
-        tx: string;
-      };
-}
+// =============================================================================
+// EXPORTED TYPES (derived from PluginMessageDefs)
+// =============================================================================
 
-export type PluginWorkerMessage =
-  | PluginWorkerLoadMessage
-  | PluginWorkerCreateNodesMessage
-  | PluginCreateDependenciesMessage
-  | PluginCreateMetadataMessage
-  | PluginWorkerPreTasksExecutionMessage
-  | PluginWorkerPostTasksExecutionMessage;
+/** Union of all plugin worker message types */
+export type PluginWorkerMessage = AllMessages<PluginMessageDefs>;
 
-export type PluginWorkerResult =
-  | PluginWorkerLoadResult
-  | PluginWorkerCreateNodesResult
-  | PluginCreateDependenciesResult
-  | PluginCreateMetadataResult
-  | PluginWorkerPreTasksExecutionMessageResult
-  | PluginWorkerPostTasksExecutionMessageResult;
+/** Union of all plugin worker result types */
+export type PluginWorkerResult = AllResults<PluginMessageDefs>;
+
+/** Result type for the load message */
+export type PluginWorkerLoadResult = ResultOf<PluginMessageDefs, 'load'>;
+
+/**
+ * Maps a message type to its result type.
+ * e.g., MessageResult<'createNodes'> gives the createNodes result type
+ */
+export type MessageResult<T extends PluginWorkerMessage['type']> = ResultOf<
+  PluginMessageDefs,
+  T & WithResult<PluginMessageDefs>
+>;
+
+// =============================================================================
+// TYPE GUARDS
+// =============================================================================
+
+const MESSAGE_TYPES: ReadonlyArray<PluginWorkerMessage['type']> = [
+  'load',
+  'createNodes',
+  'createDependencies',
+  'createMetadata',
+  'preTasksExecution',
+  'postTasksExecution',
+];
+
+const RESULT_TYPES: ReadonlyArray<PluginWorkerResult['type']> = [
+  'loadResult',
+  'createNodesResult',
+  'createDependenciesResult',
+  'createMetadataResult',
+  'preTasksExecutionResult',
+  'postTasksExecutionResult',
+];
 
 export function isPluginWorkerMessage(
   message: Serializable
 ): message is PluginWorkerMessage {
   return (
     typeof message === 'object' &&
+    message !== null &&
     'type' in message &&
     typeof message.type === 'string' &&
-    [
-      'load',
-      'createNodes',
-      'createDependencies',
-      'createMetadata',
-      'processProjectGraph',
-      'shutdown',
-      'preTasksExecution',
-      'postTasksExecution',
-    ].includes(message.type)
+    (MESSAGE_TYPES as readonly string[]).includes(message.type)
   );
 }
 
@@ -201,55 +199,57 @@ export function isPluginWorkerResult(
 ): message is PluginWorkerResult {
   return (
     typeof message === 'object' &&
+    message !== null &&
     'type' in message &&
     typeof message.type === 'string' &&
-    [
-      'load-result',
-      'createNodesResult',
-      'createDependenciesResult',
-      'processProjectGraphResult',
-      'createMetadataResult',
-      'preTasksExecutionResult',
-      'postTasksExecutionResult',
-    ].includes(message.type)
+    (RESULT_TYPES as readonly string[]).includes(message.type)
   );
 }
 
-type MaybePromise<T> = T | Promise<T>;
+// =============================================================================
+// MESSAGE HANDLING
+// =============================================================================
 
-// The handler can return a message to be sent back to the process from which the message originated
-type MessageHandlerReturn<T extends PluginWorkerMessage | PluginWorkerResult> =
-  T extends PluginWorkerResult
-    ? MaybePromise<PluginWorkerMessage | void>
-    : MaybePromise<PluginWorkerResult | void>;
-
-// Takes a message and a map of handlers and calls the appropriate handler
-// type safe and requires all handlers to be handled
-export async function consumeMessage<
-  T extends PluginWorkerMessage | PluginWorkerResult
->(
+/**
+ * Consumes a message and dispatches to the appropriate handler.
+ * If the handler returns a value, it's automatically wrapped in a result message
+ * with the correct type and transaction ID.
+ *
+ * Handlers return just the result payload - the infrastructure handles wrapping.
+ */
+export async function consumeMessage(
   socket: Socket,
-  raw: T,
-  handlers: {
-    [K in T['type']]: (
-      // Extract restricts the type of payload to the payload of the message with the type K
-      payload: Extract<T, { type: K }>['payload']
-    ) => MessageHandlerReturn<T>;
-  }
-) {
-  const message: T = raw;
-  const handler = handlers[message.type];
-  if (handler) {
-    const response = await handler(message.payload);
-    if (response) {
-      sendMessageOverSocket(socket, response);
-    }
+  raw: PluginWorkerMessage,
+  handlers: Handlers<PluginMessageDefs>
+): Promise<void> {
+  const message = raw;
+  const type = message.type as keyof PluginMessageDefs & string;
+
+  const handler = handlers[type];
+
+  // Type widening for dynamic dispatch - safe because types guarantee
+  // message.type always indexes into the matching handler
+  const resultPayload = await (
+    handler as (
+      payload: PluginWorkerMessage['payload']
+    ) => MaybePromise<unknown>
+  )(message.payload);
+
+  if (resultPayload !== undefined && resultPayload !== null) {
+    sendMessageOverSocket(socket, {
+      type: `${type}Result` as PluginWorkerResult['type'],
+      payload: resultPayload,
+      tx: message.tx,
+    } as PluginWorkerResult);
   }
 }
 
+/**
+ * Sends a message over the socket with proper formatting.
+ */
 export function sendMessageOverSocket(
   socket: Socket,
   message: PluginWorkerMessage | PluginWorkerResult
-) {
+): void {
   socket.write(JSON.stringify(message) + MESSAGE_END_SEQ);
 }

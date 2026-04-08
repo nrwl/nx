@@ -31,7 +31,7 @@ export async function generateMetadata(
           url: post.ogImage,
           width: 800,
           height: 421,
-          alt: 'Nx: Smart, Fast and Extensible Build System',
+          alt: 'Nx: Smart, Fast and Extensible Monorepo Platform',
           type: `image/${post.ogImageType}`,
         },
         ...previousImages,

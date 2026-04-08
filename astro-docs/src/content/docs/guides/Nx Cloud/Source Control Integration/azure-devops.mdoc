@@ -8,7 +8,7 @@ sidebar:
 
 The Nx Cloud + Azure Devops Integration lets you access the result of every run—with all its logs and build insights—straight from your PR.
 
-## Connecting Your Workspace
+## Connecting your workspace
 
 ![Access VCS Setup](../../../../../assets/nx-cloud/set-up/access-vcs-setup.webp)
 
@@ -29,9 +29,9 @@ For example, a URL of `https://dev.azure.com/nrwl/_git/large-monorepo` has the r
 
 ![Add Azure DevOps Repository](../../../../../assets/nx-cloud/set-up/add-azure-devops-repository.webp)
 
-### Configuring Authentication
+### Configuring authentication
 
-#### Using a Personal Access Token
+#### Using a personal access token
 
 To use a Personal Access Token for authentication, one must be generated with proper permissions. The minimum required permissions are shown in the screenshot below.
 
@@ -43,6 +43,6 @@ This will verify that Nx Cloud can connect to your repo. Upon a successful test,
 
 Please note that Azure DevOps will impose rate limits which can degrade the performance of the integration leading to missing data or functionality. To mitigate the impact, we recommend you assign the [Basic + Test plan](https://learn.microsoft.com/en-us/azure/devops/organizations/billing/buy-basic-access-add-users?view=azure-devops#assign-basic-or-basic--test-plans) to the user whose token you utilise for this integration.
 
-### Advanced Configuration
+### Advanced configuration
 
 If your company runs a self-hosted Azure DevOps installation, you may need to override the default URL that Nx Cloud uses to connect to the Azure Devops API. To do so, check the box labeled "Override Azure DevOps API URL" and enter the correct URL for your organization.

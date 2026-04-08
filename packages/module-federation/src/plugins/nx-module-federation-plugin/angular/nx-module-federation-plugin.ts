@@ -24,7 +24,7 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
     compiler.options.optimization ??= {};
     compiler.options.optimization.runtimeChunk =
       process.env['WEBPACK_SERVE'] && !this._options.config.exposes
-        ? compiler.options.optimization?.runtimeChunk ?? undefined
+        ? (compiler.options.optimization?.runtimeChunk ?? undefined)
         : false;
 
     if (compiler.options.optimization.splitChunks) {
@@ -44,6 +44,13 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
         type: 'commonjs-module',
       };
       compiler.options.output.library.type = 'commonjs-module';
+    } else {
+      // Ensure ESM output is enabled when using library type 'module'.
+      // Without these, remoteEntry.js emits `export` statements but the
+      // runtime loads it as a classic script, causing "Unexpected token 'export'".
+      compiler.options.experiments ??= {};
+      compiler.options.experiments.outputModule = true;
+      compiler.options.output.module = true;
     }
 
     const config = getModuleFederationConfigSync(

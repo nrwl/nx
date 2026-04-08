@@ -108,6 +108,22 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "22.3.2": {
+      "version": "22.3.2-beta.0",
+      "requires": {
+        "cypress": ">=15.0.0 <15.8.0"
+      },
+      "packages": {
+        "cypress": {
+          "version": "^15.8.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@cypress/webpack-dev-server": {
+          "version": "^5.4.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

@@ -114,6 +114,7 @@ describe('app', () => {
     expect(
       packageJson.devDependencies['@testing-library/react-native']
     ).toBeDefined();
+    expect(packageJson.devDependencies['react-test-renderer']).toBeDefined();
     expect(packageJson.devDependencies['jest-expo']).toBeDefined();
   });
 
@@ -179,6 +180,15 @@ describe('app', () => {
   });
 
   describe('detox', () => {
+    beforeEach(() => {
+      // Expo 54+ does not support detox, so we test with Expo 53
+      updateJson(appTree, 'package.json', (json) => {
+        json.dependencies = json.dependencies || {};
+        json.dependencies['expo'] = '~53.0.0';
+        return json;
+      });
+    });
+
     it('should create e2e app with directory', async () => {
       await expoApplicationGenerator(appTree, {
         name: 'my-app',
@@ -466,7 +476,6 @@ describe('app', () => {
             "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
-            "jest.resolver.js",
             "eslint.config.js",
             "eslint.config.cjs",
             "eslint.config.mjs",
@@ -515,7 +524,6 @@ describe('app', () => {
             "src/**/*.test.jsx",
             "src/**/*.spec.jsx",
             "src/**/*.d.ts",
-            "jest.resolver.js",
           ],
           "references": [
             {

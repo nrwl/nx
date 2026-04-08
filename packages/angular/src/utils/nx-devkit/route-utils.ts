@@ -30,7 +30,7 @@ export function addRoute(
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@phenomnomnominal/tsquery');
 
   let routesFileContents = tree.read(routesFile, 'utf-8');
 
@@ -53,14 +53,12 @@ export function addRoute(
     routesFileContents = tree.read(routesFile, 'utf-8');
   }
 
-  const ast = tsquery.ast(routesFileContents);
+  const sourceFile = ast(routesFileContents);
 
   const ROUTES_ARRAY_SELECTOR =
     'VariableDeclaration:has(ArrayType > TypeReference > Identifier[name=Route], Identifier[name=Routes]) > ArrayLiteralExpression';
 
-  const routesArrayNodes = tsquery(ast, ROUTES_ARRAY_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const routesArrayNodes = query(sourceFile, ROUTES_ARRAY_SELECTOR);
   const isRoutesArray = routesArrayNodes.length > 0;
 
   if (!isRoutesArray) {
@@ -110,17 +108,15 @@ export function addProviderToRoute(
   }
 
   ensureTypescript();
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@phenomnomnominal/tsquery');
   let routesFileContents = tree.read(routesFile, 'utf-8');
 
-  const ast = tsquery.ast(routesFileContents);
+  const sourceFile = ast(routesFileContents);
 
   const ROUTES_ARRAY_SELECTOR =
     'VariableDeclaration:has(ArrayType > TypeReference > Identifier[name=Route], Identifier[name=Routes]) > ArrayLiteralExpression';
 
-  const routesArrayNodes = tsquery(ast, ROUTES_ARRAY_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const routesArrayNodes = query(sourceFile, ROUTES_ARRAY_SELECTOR);
   const isRoutesArray = routesArrayNodes.length > 0;
 
   if (!isRoutesArray) {
@@ -133,9 +129,7 @@ export function addProviderToRoute(
   const ROUTE_PATH_PROVIDERS_SELECTOR =
     'ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=providers])';
 
-  const selectedRouteNodes = tsquery(routesArrayNodes[0], ROUTE_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const selectedRouteNodes = query(routesArrayNodes[0], ROUTE_SELECTOR);
   if (selectedRouteNodes.length === 0) {
     throw new Error(
       `Could not find '${routeToAddProviderTo}' in routes definition.`
@@ -143,12 +137,9 @@ export function addProviderToRoute(
   }
 
   for (const selectedRouteNode of selectedRouteNodes) {
-    const routeProivdersNodes = tsquery(
+    const routeProivdersNodes = query(
       selectedRouteNode,
-      ROUTE_PATH_PROVIDERS_SELECTOR,
-      {
-        visitAllChildren: true,
-      }
+      ROUTE_PATH_PROVIDERS_SELECTOR
     );
 
     if (routeProivdersNodes.length === 0) {

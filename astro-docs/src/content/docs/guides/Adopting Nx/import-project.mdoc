@@ -85,13 +85,13 @@ Every code base is different, so you will still need to manually:
 - Manage any dependency conflicts between the two code bases
 - Migrate over code outside the source project's root folder that the source project depends on
 
-## Manage Dependencies
+## Manage dependencies
 
 If both repositories are managed with npm workspaces, the imported project will have all its required dependencies defined in its `package.json` file that is moved over. You'll need to make sure that the destination repository includes the `destinationDirectory` in the `workspaces` defined in the root `package.json`.
 
 If the destination repository does not use npm workspaces, it will ease the import process to temporarily enable it. With npm workspaces enabled, you can easily import a self-contained project and gain the benefits of code sharing, atomic commits and shared infrastructure. Once the import process is complete, you can make a follow-up PR that merges the dependencies into the root `package.json` and disables npm workspaces again.
 
-## Migrate External Code and Configuration
+## Migrate external code and configuration
 
 Few projects are completely isolated from the rest of the repository where they are located. After `nx import` has run, here are a few types of external code references that you should account for:
 

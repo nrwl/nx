@@ -27,7 +27,7 @@ export default async function* extractI18nExecutor(
 
   const builderContext = await createBuilderContext(
     {
-      builderName: 'extrct-i18n',
+      builderName: '@nx/angular:extract-i18n',
       description: 'Extracts i18n messages from source code.',
       optionSchema: require('./schema.json'),
     },

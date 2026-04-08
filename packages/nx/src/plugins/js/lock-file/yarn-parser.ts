@@ -49,7 +49,7 @@ function parseLockFile(lockFileContent: string, lockFileHash: string) {
   }
 
   const { parseSyml } =
-    require('@yarnpkg/parsers') as typeof import('@yarnpkg/parsers');
+    require('../../../utils/yarn-syml') as typeof import('../../../utils/yarn-syml');
 
   const result = parseSyml(lockFileContent);
   cachedParsedLockFile = result;
@@ -185,7 +185,14 @@ function getNodes(
 
   const externalNodes: Record<string, ProjectGraphExternalNode> = {};
   for (const [packageName, versionMap] of nodes.entries()) {
-    const hoistedNode = findHoistedNode(packageName, versionMap, combinedDeps);
+    // If there's only one version of a package, treat it as hoisted
+    // This ensures deterministic hashing across environments for packages
+    // like optional platform-specific dependencies (e.g., @nx/nx-darwin-arm64)
+    const hoistedNode: ProjectGraphExternalNode =
+      versionMap.size === 1
+        ? versionMap.values().next().value
+        : findHoistedNode(packageName, versionMap, combinedDeps);
+
     if (hoistedNode) {
       hoistedNode.name = `npm:${packageName}`;
     }
@@ -362,7 +369,7 @@ export function stringifyYarnLockfile(
   rootLockFileContent: string,
   packageJson: NormalizedPackageJson
 ): string {
-  const { parseSyml, stringifySyml } = require('@yarnpkg/parsers');
+  const { parseSyml, stringifySyml } = require('../../../utils/yarn-syml');
   const { __metadata, ...dependencies } = parseSyml(rootLockFileContent);
   const isBerry = !!__metadata;
   const workspaceModules = getWorkspacePackagesFromGraph(graph);

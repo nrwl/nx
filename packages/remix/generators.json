@@ -69,7 +69,8 @@
     "setup-tailwind": {
       "implementation": "./src/generators/setup-tailwind/setup-tailwind.impl",
       "schema": "./src/generators/setup-tailwind/schema.json",
-      "description": "Generates a TailwindCSS configuration for the Remix application"
+      "description": "Generates a TailwindCSS configuration for the Remix application",
+      "x-deprecated": "Generating Tailwind configuration is no longer maintained. This generator will be removed in Nx 23."
     },
     "storybook-configuration": {
       "implementation": "./src/generators/storybook-configuration/storybook-configuration.impl#remixStorybookConfiguration",

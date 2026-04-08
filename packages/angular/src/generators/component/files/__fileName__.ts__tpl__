@@ -1,7 +1,7 @@
 import { <% if(changeDetection !== 'Default') { %>ChangeDetectionStrategy, <% }%>Component<% if(!!viewEncapsulation) { %>, ViewEncapsulation<% }%> } from '@angular/core';
 
 @Component({<% if(!skipSelector) {%>
-  selector: '<%= selector %>',<%}%><% if (setStandalone) { %>
+  selector: '<%= selector %>',<%}%><% if (!standalone) { %>
   standalone: <%= standalone %>,<% } %>
   imports: [],<% if(inlineTemplate) { %>
   template: `<p><%= name %> works!</p>`<% } else { %>

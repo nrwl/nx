@@ -432,10 +432,10 @@ export function addExtendsToLintConfig(
     const eslintConfigFormat = fileName.endsWith('.mjs')
       ? 'mjs'
       : fileName.endsWith('.cjs')
-      ? 'cjs'
-      : tree.read(fileName, 'utf-8').includes('module.exports')
-      ? 'cjs'
-      : 'mjs';
+        ? 'cjs'
+        : tree.read(fileName, 'utf-8').includes('module.exports')
+          ? 'cjs'
+          : 'mjs';
 
     let shouldImportEslintCompat = false;
     // assume eslint version is 9 if not found, as it's what we'd be generating by default
@@ -535,11 +535,22 @@ export function addPredefinedConfigToFlatLintConfig(
   tree: Tree,
   root: string,
   predefinedConfigName: string,
-  moduleName = 'nx',
-  moduleImportPath = '@nx/eslint-plugin',
-  spread = true,
-  insertAtTheEnd = true
+  options: {
+    moduleName?: string;
+    moduleImportPath?: string;
+    spread?: boolean;
+    insertAtTheEnd?: boolean;
+    checkBaseConfig?: boolean;
+  } = {}
 ): void {
+  const {
+    moduleName = 'nx',
+    moduleImportPath = '@nx/eslint-plugin',
+    spread = true,
+    insertAtTheEnd = true,
+    checkBaseConfig = false,
+  } = options;
+
   if (!useFlatConfig(tree))
     throw new Error('Predefined configs can only be used with flat configs');
 
@@ -556,7 +567,7 @@ export function addPredefinedConfigToFlatLintConfig(
   content = addBlockToFlatConfigExport(
     content,
     generateFlatPredefinedConfig(predefinedConfigName, moduleName, spread),
-    { insertAtTheEnd }
+    { insertAtTheEnd, checkBaseConfig }
   );
 
   tree.write(fileName, content);

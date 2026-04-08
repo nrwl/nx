@@ -3,6 +3,7 @@ import axios from 'axios';
 import type { PostGitTask } from '../../changelog';
 import { ResolvedCreateRemoteReleaseProvider } from '../../config/config';
 import type { Reference } from '../git';
+import { handleImport } from '../../../../utils/handle-import';
 import { printDiff } from '../print-changes';
 import { noDiffInChangelogMessage, type ReleaseVersion } from '../shared';
 import type { GithubRemoteReleaseClient } from './github';
@@ -38,7 +39,7 @@ export interface RemoteReleaseResult {
  * Abstract base class for remote release clients
  */
 export abstract class RemoteReleaseClient<
-  RemoteRelease extends Record<string, any>
+  RemoteRelease extends Record<string, any>,
 > {
   /**
    * Used in user-facing messaging
@@ -138,8 +139,8 @@ export abstract class RemoteReleaseClient<
         ? 'body' in existingRelease
           ? existingRelease.body
           : 'description' in existingRelease
-          ? existingRelease.description
-          : ''
+            ? existingRelease.description
+            : ''
         : '',
       changelogContents
     );
@@ -250,7 +251,10 @@ export async function createRemoteReleaseClient(
         createReleaseConfig.provider === 'github'):
     // If remote releases are disabled, assume GitHub repo data resolution (but don't attempt to resolve a token) to match existing behavior
     case createReleaseConfig === false: {
-      const { GithubRemoteReleaseClient } = await import('./github');
+      const { GithubRemoteReleaseClient } = await handleImport(
+        './github.js',
+        __dirname
+      );
       const repoData = GithubRemoteReleaseClient.resolveRepoData(
         createReleaseConfig,
         remoteName
@@ -268,7 +272,10 @@ export async function createRemoteReleaseClient(
     // GitLab
     case typeof createReleaseConfig === 'object' &&
       createReleaseConfig.provider === 'gitlab': {
-      const { GitLabRemoteReleaseClient } = await import('./gitlab');
+      const { GitLabRemoteReleaseClient } = await handleImport(
+        './gitlab.js',
+        __dirname
+      );
       const repoData = GitLabRemoteReleaseClient.resolveRepoData(
         createReleaseConfig,
         remoteName

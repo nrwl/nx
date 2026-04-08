@@ -1,0 +1,15 @@
+{
+  "outDir": "dist/packages/devkit",
+  "assets": [
+    {
+      "glob": "**/files/**"
+    },
+    {
+      "glob": "**/files/**/.gitkeep"
+    },
+    {
+      "glob": "src/**/schema.d.ts"
+    },
+    "LICENSE"
+  ]
+}

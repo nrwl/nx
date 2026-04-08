@@ -194,12 +194,11 @@ export function newProject({
       newProjectEnd.name
     );
 
-    if (isVerbose()) {
-      logInfo(
-        `NX`,
-        `E2E created a project: ${projectDirectory} in ${
-          perfMeasure.duration / 1000
-        } seconds
+    logInfo(
+      `NX`,
+      `E2E created a project: ${projectDirectory} in ${
+        perfMeasure.duration / 1000
+      } seconds
 ${
   createNxWorkspaceMeasure
     ? `create-nx-workspace: ${
@@ -207,14 +206,11 @@ ${
       } seconds\n`
     : ''
 }${
-          packageInstallMeasure
-            ? `packageInstall: ${
-                packageInstallMeasure.duration / 1000
-              } seconds\n`
-            : ''
-        }`
-      );
-    }
+        packageInstallMeasure
+          ? `packageInstall: ${packageInstallMeasure.duration / 1000} seconds\n`
+          : ''
+      }`
+    );
 
     openInEditor(projectDirectory);
     return projScope;
@@ -228,6 +224,7 @@ export function runCreateWorkspace(
   name: string,
   {
     preset,
+    template,
     appName,
     style,
     base,
@@ -244,12 +241,14 @@ export function runCreateWorkspace(
     nextSrcDir,
     linter = 'eslint',
     formatter = 'prettier',
+    unitTestRunner,
     e2eTestRunner,
     ssr,
     framework,
     prefix,
   }: {
-    preset: string;
+    preset?: string;
+    template?: string;
     appName?: string;
     style?: string;
     base?: string;
@@ -265,6 +264,12 @@ export function runCreateWorkspace(
     nextAppDir?: boolean;
     nextSrcDir?: boolean;
     linter?: 'none' | 'eslint';
+    unitTestRunner?:
+      | 'jest'
+      | 'vitest'
+      | 'vitest-angular'
+      | 'vitest-analog'
+      | 'none';
     e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
     formatter?: 'prettier' | 'none';
     ssr?: boolean;
@@ -272,6 +277,15 @@ export function runCreateWorkspace(
     prefix?: string;
   }
 ) {
+  if (preset && template) {
+    throw new Error(
+      'Cannot specify both preset and template. Use one or the other.'
+    );
+  }
+  if (!preset && !template) {
+    throw new Error('Must specify either preset or template.');
+  }
+
   projName = name;
 
   const pm = getPackageManagerCommand({ packageManager });
@@ -279,7 +293,14 @@ export function runCreateWorkspace(
   // Needed for bun workarounds, see below
   const registry = execSync('npm config get registry').toString().trim();
 
-  let command = `${pm.createWorkspace} ${name} --preset=${preset} --nxCloud=skip --no-interactive`;
+  let command = `${pm.createWorkspace} ${name} --no-interactive`;
+
+  if (preset) {
+    command += ` --preset=${preset}`;
+  }
+  if (template) {
+    command += ` --template=${template}`;
+  }
 
   if (appName) {
     command += ` --appName=${appName}`;
@@ -330,6 +351,10 @@ export function runCreateWorkspace(
 
   if (formatter) {
     command += ` --formatter=${formatter}`;
+  }
+
+  if (unitTestRunner) {
+    command += ` --unitTestRunner=${unitTestRunner}`;
   }
 
   if (e2eTestRunner) {
@@ -492,6 +517,10 @@ export function runNgNew(
     // we need to reuse the same name that's cached in order to avoid issues
     // with tests relying on a different name
     projName = Object.keys(angularJson.projects)[0];
+    // The cached Angular CLI workspace includes symlinked node_modules/.bin entries.
+    // If cleanup left the destination behind, fs-extra will fail while overwriting
+    // those links, so always start from a clean restore target.
+    removeSync(tmpProjPath());
     copySync(tmpBackupNgCliProjPath(), tmpProjPath());
 
     if (isVerboseE2ERun()) {
@@ -618,8 +647,8 @@ export function newLernaWorkspace({
         packageManager === 'pnpm'
           ? ' --workspace-root'
           : packageManager === 'yarn'
-          ? ' -W'
-          : ''
+            ? ' -W'
+            : ''
       }`,
       {
         cwd: tmpProjPath(),
@@ -723,6 +752,10 @@ export function cleanupProject({
   skipReset,
   ...opts
 }: RunCmdOpts & { skipReset?: boolean } = {}) {
+  if (process.env.NX_E2E_SKIP_CLEANUP) {
+    resetWorkspaceContext();
+    return;
+  }
   if (isCI) {
     // Stopping the daemon is not required for tests to pass, but it cleans up background processes
     try {

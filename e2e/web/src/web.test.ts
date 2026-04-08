@@ -215,7 +215,7 @@ describe('Web Components Applications', () => {
     runCLI(`build ${appName}`);
 
     expect(readFile(`dist/apps/${appName}/main.js`)).toMatch(
-      /Foo=.*?_decorate/
+      /class Foo.*_ts_metadata/
     );
   }, 120000);
 

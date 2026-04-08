@@ -108,7 +108,7 @@ describe('component Generator', () => {
 
           fixture = TestBed.createComponent(ExampleComponent);
           component = fixture.componentInstance;
-          fixture.detectChanges();
+          await fixture.whenStable();
         });
 
         it('should create', () => {
@@ -1166,7 +1166,7 @@ export class LibModule {}
 
             fixture = TestBed.createComponent(ExampleComponent);
             component = fixture.componentInstance;
-            fixture.detectChanges();
+            await fixture.whenStable();
           });
 
           it('should create', () => {

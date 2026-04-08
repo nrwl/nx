@@ -700,7 +700,7 @@ describe('nx release', () => {
       ### 🚀 Features
 
 
-      NX   Previewing an entry in {project-name}/CHANGELOG.md for {releaseGroupName}-v1000.0.0-next.0
+      NX   Previewing an entry in {project-name}/CHANGELOG.md for default-v1000.0.0-next.0
 
 
       + ## 1000.0.0-next.0
@@ -708,7 +708,7 @@ describe('nx release', () => {
       + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
-      NX   Previewing an entry in {project-name}/CHANGELOG.md for {releaseGroupName}-v1000.0.0-next.0
+      NX   Previewing an entry in {project-name}/CHANGELOG.md for default-v1000.0.0-next.0
 
 
       + ## 1000.0.0-next.0
@@ -716,7 +716,7 @@ describe('nx release', () => {
       + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
-      NX   Previewing an entry in {project-name}/CHANGELOG.md for {releaseGroupName}-v1000.0.0-next.0
+      NX   Previewing an entry in {project-name}/CHANGELOG.md for default-v1000.0.0-next.0
 
 
       + ## 1000.0.0-next.0

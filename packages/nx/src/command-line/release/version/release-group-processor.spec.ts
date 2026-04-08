@@ -1,32 +1,50 @@
-let mockDeriveSpecifierFromConventionalCommits = jest.fn();
-let mockDeriveSpecifierFromVersionPlan = jest.fn();
-let mockResolveVersionActionsForProject = jest.fn();
+// Module-level mock container - initialized early so jest.mock factories can reference it
+const mocks = {
+  deriveSpecifierFromConventionalCommits: jest.fn(),
+  deriveSpecifierFromVersionPlan: jest.fn(),
+  resolveVersionActionsForProject: jest.fn(),
+  resolveCurrentVersion: jest.fn(),
+};
 
-jest.doMock('./derive-specifier-from-conventional-commits', () => ({
-  deriveSpecifierFromConventionalCommits:
-    mockDeriveSpecifierFromConventionalCommits,
+// Aliases for test usage
+const mockDeriveSpecifierFromConventionalCommits =
+  mocks.deriveSpecifierFromConventionalCommits;
+const mockDeriveSpecifierFromVersionPlan = mocks.deriveSpecifierFromVersionPlan;
+const mockResolveVersionActionsForProject =
+  mocks.resolveVersionActionsForProject;
+const mockResolveCurrentVersion = mocks.resolveCurrentVersion;
+
+jest.mock('./derive-specifier-from-conventional-commits', () => ({
+  deriveSpecifierFromConventionalCommits: (...args: any[]) =>
+    mocks.deriveSpecifierFromConventionalCommits(...args),
 }));
 
-// Use jest.mock (hoisted) to ensure it's set up before any imports
-jest.mock('./version-actions', () => ({
-  ...jest.requireActual('./version-actions'),
-  deriveSpecifierFromVersionPlan: mockDeriveSpecifierFromVersionPlan,
-  resolveVersionActionsForProject: mockResolveVersionActionsForProject,
-}));
+jest.mock('./version-actions', () => {
+  const actual = jest.requireActual('./version-actions');
+  return {
+    ...actual,
+    deriveSpecifierFromVersionPlan: (...args: any[]) =>
+      mocks.deriveSpecifierFromVersionPlan(...args),
+    resolveVersionActionsForProject: (...args: any[]) =>
+      mocks.resolveVersionActionsForProject(...args),
+  };
+});
 
-jest.doMock('./project-logger', () => ({
-  ...jest.requireActual('./project-logger'),
-  // Don't slow down or add noise to unit tests output unnecessarily
-  ProjectLogger: class ProjectLogger {
-    buffer() {}
+jest.mock('./project-logger', () => {
+  const actual = jest.requireActual('./project-logger');
+  return {
+    ...actual,
+    // Don't slow down or add noise to unit tests output unnecessarily
+    ProjectLogger: class ProjectLogger {
+      buffer() {}
+      flush() {}
+    },
+  };
+});
 
-    flush() {}
-  },
-}));
-
-let mockResolveCurrentVersion = jest.fn();
-jest.doMock('./resolve-current-version', () => ({
-  resolveCurrentVersion: mockResolveCurrentVersion,
+jest.mock('./resolve-current-version', () => ({
+  resolveCurrentVersion: (...args: any[]) =>
+    mocks.resolveCurrentVersion(...args),
 }));
 
 import { createTreeWithEmptyWorkspace } from '../../../generators/testing-utils/create-tree-with-empty-workspace';
@@ -698,23 +716,21 @@ describe('ReleaseGroupProcessor', () => {
         // Initial state of rustLibA
         expect(tree.read('rustLibA/Cargo.toml', 'utf-8'))
           .toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'rustLibA'
-          version = '1.0.0'
+          "[package]
+          name = "rustLibA"
+          version = "1.0.0"
           "
         `);
 
         // Initial state of rustLibB
         expect(tree.read('rustLibB/Cargo.toml', 'utf-8'))
           .toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'rustLibB'
-          version = '1.0.0'
+          "[package]
+          name = "rustLibB"
+          version = "1.0.0"
 
-          [dependencies]
-          rustLibA = { version = '1.0.0' }
+          [dependencies.rustLibA]
+          version = "1.0.0"
           "
         `);
 
@@ -739,23 +755,21 @@ describe('ReleaseGroupProcessor', () => {
         // rustLibA is bumped by minor
         expect(tree.read('rustLibA/Cargo.toml', 'utf-8'))
           .toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'rustLibA'
-          version = '1.1.0'
+          "[package]
+          name = "rustLibA"
+          version = "1.1.0"
           "
         `);
 
         // rustLibB is bumped by minor, and its dependency on rustLibA is updated
         expect(tree.read('rustLibB/Cargo.toml', 'utf-8'))
           .toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'rustLibB'
-          version = '1.1.0'
+          "[package]
+          name = "rustLibB"
+          version = "1.1.0"
 
           [dependencies]
-          rustLibA = '1.1.0'
+          rustLibA = "1.1.0"
           "
         `);
 
@@ -805,23 +819,21 @@ describe('ReleaseGroupProcessor', () => {
         // Initial state of rustLibA
         expect(tree.read('rustLibA/Cargo.toml', 'utf-8'))
           .toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'rustLibA'
-          version = '1.0.0'
+          "[package]
+          name = "rustLibA"
+          version = "1.0.0"
           "
         `);
 
         // Initial state of rustLibB
         expect(tree.read('rustLibB/Cargo.toml', 'utf-8'))
           .toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'rustLibB'
-          version = '2.0.0'
+          "[package]
+          name = "rustLibB"
+          version = "2.0.0"
 
-          [dependencies]
-          rustLibA = { version = '1.0.0' }
+          [dependencies.rustLibA]
+          version = "1.0.0"
           "
         `);
 
@@ -851,23 +863,21 @@ describe('ReleaseGroupProcessor', () => {
         // rustLibA is bumped by minor
         expect(tree.read('rustLibA/Cargo.toml', 'utf-8'))
           .toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'rustLibA'
-          version = '1.1.0'
+          "[package]
+          name = "rustLibA"
+          version = "1.1.0"
           "
         `);
 
         // rustLibB is bumped by updateDependents default of "patch", and its dependency on rustLibA is updated
         expect(tree.read('rustLibB/Cargo.toml', 'utf-8'))
           .toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'rustLibB'
-          version = '2.0.1'
+          "[package]
+          name = "rustLibB"
+          version = "2.0.1"
 
           [dependencies]
-          rustLibA = '1.1.0'
+          rustLibA = "1.1.0"
           "
         `);
 

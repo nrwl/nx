@@ -25,7 +25,10 @@ export class TempFs {
 
   private previousWorkspaceRoot: string;
 
-  constructor(private dirname: string, overrideWorkspaceRoot = true) {
+  constructor(
+    private dirname: string,
+    overrideWorkspaceRoot = true
+  ) {
     this.tempDir = realpathSync(mkdtempSync(join(tmpdir(), this.dirname)));
     this.previousWorkspaceRoot = workspaceRoot;
 
@@ -62,6 +65,11 @@ export class TempFs {
       mkdirSync(dir, { recursive: true });
     }
     writeFileSync(joinPathFragments(this.tempDir, filePath), content);
+  }
+
+  createDirSync(dirPath: string) {
+    const dir = joinPathFragments(this.tempDir, dirPath);
+    mkdirSync(dir, { recursive: true });
   }
 
   createSymlinkSync(

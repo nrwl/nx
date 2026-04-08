@@ -92,9 +92,9 @@ If you don't already have `@ngrx/router-store` in your dependencies, the migrati
   "dependencies": {
     "@nx/angular": "^21.0.0",
     "@ngrx/store": "^19.1.0",
-    "@ngrx/effects": "^19.1.0"
+    "@ngrx/effects": "^19.1.0",
     // ...
-  }
+  },
 }
 ```
 
@@ -106,8 +106,8 @@ If you don't already have `@ngrx/router-store` in your dependencies, the migrati
     "@nx/angular": "^21.0.0",
     "@ngrx/store": "^19.1.0",
     "@ngrx/effects": "^19.1.0",
-    "@ngrx/router-store": "^19.1.0"
+    "@ngrx/router-store": "^19.1.0",
     // ...
-  }
+  },
 }
 ```

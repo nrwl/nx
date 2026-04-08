@@ -16,6 +16,7 @@
     "@nx/nx-dev-ui-icons": "workspace:*",
     "@nx/nx-dev-ui-markdoc": "workspace:*",
     "@tailwindcss/vite": "^4.1.11",
+    "@types/hast": "^3.0.4",
     "astro": "^5.10.1",
     "astro-og-canvas": "^0.7.0",
     "canvaskit-wasm": "^0.40.0",

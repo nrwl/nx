@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { bold } from 'chalk';
+import { bold } from 'picocolors';
 
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import {

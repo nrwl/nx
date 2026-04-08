@@ -4,6 +4,7 @@ import {
   cleanupProject,
   expectCodeIsFormatted,
   getSelectedPackageManager,
+  readJson,
   runCreateWorkspace,
   uniq,
 } from '@nx/e2e-utils';
@@ -23,6 +24,7 @@ describe('create-nx-workspace --preset=angular', () => {
       packageManager,
       standaloneApi: false,
       routing: false,
+      unitTestRunner: 'jest',
       e2eTestRunner: 'none',
       bundler: 'webpack',
       ssr: false,
@@ -33,6 +35,9 @@ describe('create-nx-workspace --preset=angular', () => {
     checkFilesExist('src/app/app-module.ts');
     checkFilesDoNotExist('src/app/app.routes.ts');
     expectCodeIsFormatted();
+
+    const nxJson = readJson(`nx.json`);
+    expect(nxJson.nxCloudId).toBeUndefined();
   });
 
   it('should create a workspace with a single angular app at the root using standalone APIs', () => {
@@ -45,6 +50,7 @@ describe('create-nx-workspace --preset=angular', () => {
       packageManager,
       standaloneApi: true,
       routing: true,
+      unitTestRunner: 'jest',
       e2eTestRunner: 'none',
       bundler: 'webpack',
       ssr: false,
@@ -67,6 +73,7 @@ describe('create-nx-workspace --preset=angular', () => {
       packageManager,
       standaloneApi: false,
       routing: true,
+      unitTestRunner: 'jest',
       e2eTestRunner: 'none',
       bundler: 'webpack',
       ssr: false,

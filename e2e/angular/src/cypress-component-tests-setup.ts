@@ -19,7 +19,9 @@ export interface CypressComponentTestsSetup {
   buildableLibName: string;
 }
 
-export function setupCypressComponentTests(): CypressComponentTestsSetup {
+export function setupCypressComponentTests(
+  zoneless: boolean = true
+): CypressComponentTestsSetup {
   const projectName = newProject({
     name: uniq('cy-ng'),
     packages: ['@nx/angular'],
@@ -29,7 +31,7 @@ export function setupCypressComponentTests(): CypressComponentTestsSetup {
   const usedInAppLibName = uniq('cy-angular-lib');
   const buildableLibName = uniq('cy-angular-buildable-lib');
 
-  createApp(appName);
+  createApp(appName, zoneless ? [] : ['--no-zoneless']);
   createLib(projectName, appName, usedInAppLibName);
   useLibInApp(projectName, appName, usedInAppLibName);
   createBuildableLib(projectName, buildableLibName);
@@ -47,9 +49,11 @@ export function cleanupCypressComponentTests(): void {
   cleanupProject();
 }
 
-function createApp(appName: string) {
+function createApp(appName: string, extraArgs: string[] = []) {
   runCLI(
-    `generate @nx/angular:app ${appName} --bundler=webpack --no-interactive`
+    `generate @nx/angular:app ${appName} --bundler=webpack --no-interactive ${extraArgs.join(
+      ' '
+    )}`
   );
   runCLI(
     `generate @nx/angular:component ${appName}/src/lib/fancy-component/fancy-component --no-interactive`

@@ -1,5 +1,6 @@
 import type { CommandModule } from 'yargs';
 import { withVerbose } from '../yargs-utils/shared-options';
+import { handleImport } from '../../utils/handle-import';
 
 export interface SyncArgs {
   verbose?: boolean;
@@ -13,7 +14,11 @@ export const yargsSyncCommand: CommandModule<
   describe: 'Sync the workspace files by running all the sync generators.',
   builder: (yargs) => withVerbose(yargs),
   handler: async (args) => {
-    process.exit(await import('./sync').then((m) => m.syncHandler(args)));
+    process.exit(
+      await handleImport('./sync.js', __dirname).then((m) =>
+        m.syncHandler(args)
+      )
+    );
   },
 };
 
@@ -27,7 +32,7 @@ export const yargsSyncCheckCommand: CommandModule<
   builder: (yargs) => withVerbose(yargs),
   handler: async (args) => {
     process.exit(
-      await import('./sync').then((m) =>
+      await handleImport('./sync.js', __dirname).then((m) =>
         m.syncHandler({ ...args, check: true })
       )
     );

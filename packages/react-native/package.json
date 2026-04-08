@@ -24,6 +24,7 @@
   "license": "MIT",
   "author": "Victor Savkin",
   "main": "./index.js",
+  "type": "commonjs",
   "types": "index.d.ts",
   "dependencies": {
     "@nx/devkit": "workspace:*",
@@ -41,6 +42,9 @@
   "peerDependencies": {
     "metro-config": ">= 0.82.0",
     "metro-resolver": ">= 0.82.0"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "optionalDependencies": {
     "@nx/detox": "workspace:*",

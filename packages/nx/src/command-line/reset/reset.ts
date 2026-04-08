@@ -2,9 +2,16 @@ import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { daemonClient } from '../../daemon/client/client';
-import { cacheDir, workspaceDataDirectory } from '../../utils/cache-directory';
+import { DAEMON_DIR_FOR_CURRENT_WORKSPACE } from '../../daemon/tmp-dir';
+import {
+  cacheDir,
+  workspaceDataDirectory,
+  workspaceDataDirectoryForWorkspace,
+} from '../../utils/cache-directory';
 import { output } from '../../utils/output';
 import { getNativeFileCacheLocation } from '../../native/native-file-cache-location';
+import { getMainWorktreeRoot } from '../../native';
+import { workspaceRoot } from '../../utils/workspace-root';
 import { ResetCommandOptions } from './command-object';
 import { getCloudClient } from '../../nx-cloud/utilities/client';
 import { getCloudOptions } from '../../nx-cloud/utilities/get-cloud-options';
@@ -35,7 +42,7 @@ export async function resetHandler(args: ResetCommandOptions) {
   const bodyLines = [];
   if (!all) {
     if (args.onlyDaemon) {
-      bodyLines.push('- Nx Daemon');
+      bodyLines.push('- Nx Daemon and its workspace data');
     }
     if (args.onlyCache) {
       bodyLines.push('- Cache directory');
@@ -54,6 +61,14 @@ export async function resetHandler(args: ResetCommandOptions) {
       await killDaemon();
     } catch (e) {
       errors.push('Failed to stop the Nx Daemon.', e.toString());
+    }
+    try {
+      await cleanupDaemonWorkspaceData();
+    } catch (e) {
+      errors.push(
+        'Failed to clean up the daemon workspace data directory.',
+        e.toString()
+      );
     }
   }
   if (all || args.onlyCache) {
@@ -105,6 +120,19 @@ async function killDaemon(): Promise<void> {
   }
 }
 
+function cleanupDaemonWorkspaceData() {
+  return incrementalBackoff(
+    INCREMENTAL_BACKOFF_FIRST_DELAY,
+    INCREMENTAL_BACKOFF_MAX_DURATION,
+    () => {
+      rmSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE, {
+        recursive: true,
+        force: true,
+      });
+    }
+  );
+}
+
 async function resetCloudClient() {
   // Remove nx cloud marker files. This helps if the use happens to run `nx-cloud start-ci-run` or
   // similar commands on their local machine.
@@ -150,6 +178,20 @@ function cleanupWorkspaceData() {
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
       rmSync(workspaceDataDirectory, { recursive: true, force: true });
+
+      // If in a worktree, also clean the shared workspace data directory
+      // in the main repo where the DB actually lives
+      try {
+        const mainRoot = getMainWorktreeRoot(workspaceRoot);
+        if (mainRoot) {
+          const sharedDir = workspaceDataDirectoryForWorkspace(mainRoot);
+          if (sharedDir !== workspaceDataDirectory) {
+            rmSync(sharedDir, { recursive: true, force: true });
+          }
+        }
+      } catch {
+        // Worktree detection is best-effort during reset
+      }
     }
   );
 }

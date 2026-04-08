@@ -18,6 +18,8 @@ import {
   getSourceFilePath,
 } from '../utils/runtime-lint-utils';
 
+const WORKSPACE_VERSION_WILDCARD = 'workspace:*';
+
 export type Options = [
   {
     buildTargets?: string[];
@@ -29,7 +31,8 @@ export type Options = [
     includeTransitiveDependencies?: boolean;
     useLocalPathsForWorkspaceDependencies?: boolean;
     runtimeHelpers?: string[];
-  }
+    peerDepsVersionStrategy?: 'installed' | 'workspace';
+  },
 ];
 
 export type MessageIds =
@@ -65,6 +68,12 @@ export default ESLintUtils.RuleCreator(
           includeTransitiveDependencies: { type: 'boolean' },
           useLocalPathsForWorkspaceDependencies: { type: 'boolean' },
           runtimeHelpers: { type: 'array', items: { type: 'string' } },
+          peerDepsVersionStrategy: {
+            type: 'string',
+            enum: ['installed', 'workspace'],
+            description:
+              'Strategy for peer dependency versions. "installed" uses versions from root package.json (default). "workspace" uses workspace:* for all peer dependencies to ensure version synchronization in integrated monorepos.',
+          },
         },
         additionalProperties: false,
       },
@@ -88,6 +97,7 @@ export default ESLintUtils.RuleCreator(
       includeTransitiveDependencies: false,
       useLocalPathsForWorkspaceDependencies: false,
       runtimeHelpers: [],
+      peerDepsVersionStrategy: 'installed',
     },
   ],
   create(
@@ -103,6 +113,7 @@ export default ESLintUtils.RuleCreator(
         includeTransitiveDependencies,
         useLocalPathsForWorkspaceDependencies,
         runtimeHelpers,
+        peerDepsVersionStrategy = 'installed',
       },
     ]
   ) {
@@ -164,6 +175,104 @@ export default ESLintUtils.RuleCreator(
 
     const rootPackageJsonDeps = getAllDependencies(rootPackageJson);
 
+    const catalogManager = getCatalogManager(workspaceRoot);
+    const catalogDefs = catalogManager?.getCatalogDefinitions(workspaceRoot);
+
+    function catalogEntryMatchesInstalled(
+      catalogVersionSpec: string,
+      installedVersion: string
+    ): boolean {
+      if (installedVersion === '*') {
+        return true;
+      }
+      // For non-semver values (file:, link:, etc.), use exact comparison
+      if (installedVersion.includes(':') || catalogVersionSpec.includes(':')) {
+        return installedVersion === catalogVersionSpec;
+      }
+      return satisfies(installedVersion, catalogVersionSpec, {
+        includePrerelease: true,
+      });
+    }
+
+    function getCatalogVersionForPackage(packageName: string): string | null {
+      if (!catalogDefs) {
+        return null;
+      }
+
+      const matches: { catalogRef: string; versionSpec: string }[] = [];
+
+      // Check default catalog — `catalog` takes precedence over `catalogs.default`.
+      // Both existing simultaneously is a pnpm error caught by validateCatalogReference.
+      const defaultEntry =
+        catalogDefs.catalog?.[packageName] ??
+        catalogDefs.catalogs?.default?.[packageName];
+      if (defaultEntry) {
+        matches.push({ catalogRef: 'catalog:', versionSpec: defaultEntry });
+      }
+
+      // Check named catalogs (skip "default" — handled above)
+      if (catalogDefs.catalogs) {
+        for (const [name, entries] of Object.entries(catalogDefs.catalogs)) {
+          if (name === 'default' || !entries?.[packageName]) {
+            continue;
+          }
+          matches.push({
+            catalogRef: `catalog:${name}`,
+            versionSpec: entries[packageName],
+          });
+        }
+      }
+
+      if (!matches.length) {
+        return null;
+      }
+
+      // Filter by installed version compatibility when available
+      const installedVersion = npmDependencies[packageName];
+      const valid = installedVersion
+        ? matches.filter((m) =>
+            catalogEntryMatchesInstalled(m.versionSpec, installedVersion)
+          )
+        : matches;
+
+      if (valid.length !== 1) {
+        return null;
+      }
+
+      return valid[0].catalogRef;
+    }
+
+    function getVersionForMissingDependency(packageName: string): string {
+      if (rootPackageJsonDeps[packageName]) {
+        return rootPackageJsonDeps[packageName];
+      }
+
+      const catalogVersion = getCatalogVersionForPackage(packageName);
+      if (catalogVersion) {
+        return catalogVersion;
+      }
+
+      return npmDependencies[packageName];
+    }
+
+    function getDependencySection(node: AST.JSONProperty): string | undefined {
+      // Check if this node is a dependency section itself
+      const directSection = (node.key as JSONLiteral)?.value as string;
+      if (
+        ['dependencies', 'peerDependencies', 'optionalDependencies'].includes(
+          directSection
+        )
+      ) {
+        return directSection;
+      }
+
+      // Otherwise, traverse up to find the parent section
+      const sectionProp = node.parent?.parent as AST.JSONProperty | undefined;
+      return (sectionProp?.key as JSONLiteral | undefined)?.value as
+        | string
+        | undefined;
+    }
+
     function validateMissingDependencies(node: AST.JSONProperty) {
       if (!checkMissingDependencies) {
         return;
@@ -173,6 +282,8 @@ export default ESLintUtils.RuleCreator(
       );
 
       if (missingDeps.length) {
+        const dependencySection = getDependencySection(node);
+
         context.report({
           node: node as any,
           messageId: 'missingDependency',
@@ -183,8 +294,14 @@ export default ESLintUtils.RuleCreator(
           },
           fix(fixer) {
             missingDeps.forEach((d) => {
-              projPackageJsonDeps[d] =
-                rootPackageJsonDeps[d] || npmDependencies[d];
+              if (
+                dependencySection === 'peerDependencies' &&
+                peerDepsVersionStrategy === 'workspace'
+              ) {
+                projPackageJsonDeps[d] = WORKSPACE_VERSION_WILDCARD;
+              } else {
+                projPackageJsonDeps[d] = getVersionForMissingDependency(d);
+              }
             });
 
             const deps = (node.value as AST.JSONObjectExpression).properties;
@@ -213,17 +330,16 @@ export default ESLintUtils.RuleCreator(
       packageName: string,
       packageRange: string
     ) {
-      const manager = getCatalogManager(workspaceRoot);
-      if (!manager) {
+      if (!catalogManager) {
         return;
       }
 
-      if (!manager.isCatalogReference(packageRange)) {
+      if (!catalogManager.isCatalogReference(packageRange)) {
         return;
       }
 
       try {
-        manager.validateCatalogReference(
+        catalogManager.validateCatalogReference(
           workspaceRoot,
           packageName,
           packageRange
@@ -245,16 +361,33 @@ export default ESLintUtils.RuleCreator(
       packageName: string,
       packageRange: string
     ) {
-      if (!checkVersionMismatches) {
+      if (!checkVersionMismatches) return;
+
+      const dependencySection = getDependencySection(node);
+
+      if (
+        dependencySection === 'peerDependencies' &&
+        peerDepsVersionStrategy === 'workspace' &&
+        !packageRange.startsWith('workspace:')
+      ) {
+        context.report({
+          node: node as any,
+          messageId: 'versionMismatch',
+          data: { packageName, version: WORKSPACE_VERSION_WILDCARD },
+          fix: (fixer) =>
+            fixer.replaceText(
+              node as any,
+              `"${packageName}": "${WORKSPACE_VERSION_WILDCARD}"`
+            ),
+        });
         return;
       }
 
       // Resolve catalog references before validation
       let resolvedPackageRange = packageRange;
-      const manager = getCatalogManager(workspaceRoot);
 
-      if (manager?.isCatalogReference(packageRange)) {
-        const resolved = manager.resolveCatalogReference(
+      if (catalogManager?.isCatalogReference(packageRange)) {
+        const resolved = catalogManager.resolveCatalogReference(
           workspaceRoot,
           packageName,
           packageRange
@@ -370,7 +503,7 @@ export default ESLintUtils.RuleCreator(
           },
           fix: (fixer) => {
             expectedDependencyNames.sort().reduce((acc, d) => {
-              acc[d] = rootPackageJsonDeps[d] || npmDependencies[d];
+              acc[d] = getVersionForMissingDependency(d);
               return acc;
             }, projPackageJsonDeps);
 

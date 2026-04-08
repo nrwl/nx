@@ -106,7 +106,7 @@ export default class JsVersionActions extends VersionActions {
         exec(
           `npm view ${packageName} version --"${registryConfigKey}=${registry}" --tag=${tag}`,
           {
-            windowsHide: false,
+            windowsHide: true,
           },
           (error, stdout, stderr) => {
             if (error) {
@@ -235,10 +235,10 @@ export default class JsVersionActions extends VersionActions {
           this.finalConfigForProject.preserveMatchingDependencyRanges === true
             ? dependencyTypes
             : this.finalConfigForProject.preserveMatchingDependencyRanges ===
-              false
-            ? []
-            : this.finalConfigForProject.preserveMatchingDependencyRanges ||
-              dependencyTypes;
+                false
+              ? []
+              : this.finalConfigForProject.preserveMatchingDependencyRanges ||
+                dependencyTypes;
 
         for (const depType of dependencyTypes) {
           if (json[depType]) {

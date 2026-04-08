@@ -23,6 +23,7 @@ const config: ConfigArray = tseslint.config(
     ...c,
   })),
   {
+    files: ['**/*.ts'],
     languageOptions: {
       globals: {
         ...globals.browser,
@@ -31,7 +32,7 @@ const config: ConfigArray = tseslint.config(
       },
     },
     processor: angularEslint.processInlineTemplates,
-    plugins: { '@angular-eslint': angularEslint.tsPlugin },
+    plugins: { '@angular-eslint': angularEslint.tsPlugin as any },
   }
 );
 

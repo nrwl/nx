@@ -1,6 +1,6 @@
 import { commandsObject } from './nx-commands';
 
-import * as yargsParser from 'yargs-parser';
+import yargsParser from 'yargs-parser';
 
 describe('nx-commands', () => {
   it('should parse dot notion cli args', () => {

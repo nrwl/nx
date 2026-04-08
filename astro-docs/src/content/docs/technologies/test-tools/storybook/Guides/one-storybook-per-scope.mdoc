@@ -7,7 +7,7 @@ filter: 'type:Guides'
 ---
 
 This guide extends the
-[Using Storybook in a Nx workspace - Best practices](/docs/technologies/test-tools/storybook/guides/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. In this guide, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one Storybook per scope (eg. theme, app, framework) for your workspace.
+[Using Storybook in a Nx workspace - Best practices](/docs/technologies/test-tools/storybook/guides/best-practices) guide. It discussed the best practices of using Storybook in a Nx workspace, explaining the main concepts and the mental model of how to best set up Storybook. Now, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one Storybook per scope (eg. theme, app, framework) for your workspace.
 
 Sometimes, you have multiple apps and libraries, and each of these is associated with a specific scope. You can read more about grouping libraries and scoping them in the [Library Types](/docs/concepts/decisions/project-dependency-rules) documentation page.
 
@@ -80,7 +80,7 @@ Now, we want to have one Storybook instance per _thematic scope_. This is quite 
 
 First of all, we need to generate three new libraries (or as many as our "thematic scopes"), which will host all the stories for each specific scope. We can do this following the same steps described above.
 
-It's important to note that if we want to combine stories from different libraries in the same Storybook instance, _the stories need to use the same framework_.
+If we want to combine stories from different libraries in the same Storybook instance, _the stories need to use the same framework_.
 
 Let's assume in this case that all our libraries are using Angular.
 
@@ -162,6 +162,6 @@ And don't forget the `libs/storybook-host-admin/.storybook/tsconfig.json`:
 
 - Workspaces that have multiple apps and libs divided by theme and by framework, that do not mind having more than one Storybook
 
-## Extras - Dependencies
+## Extras - dependencies
 
 In this example, you can still use the implicit dependencies to manually tell Nx which projects your new libraries depend on.

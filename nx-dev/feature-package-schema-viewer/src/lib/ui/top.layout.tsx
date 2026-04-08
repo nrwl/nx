@@ -11,7 +11,7 @@ export function TopSchemaLayout({
     <div className="mb-8 flex w-full items-center space-x-2">
       <div className="w-full flex-grow">
         <div
-          className="relative inline-flex rounded-md border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-medium uppercase dark:border-slate-700 dark:bg-slate-800/60"
+          className="relative inline-flex rounded-md border border-zinc-200 bg-zinc-50 px-4 py-2 text-xs font-medium uppercase dark:border-zinc-700 dark:bg-zinc-800/60"
           aria-hidden="true"
           data-tooltip="Installable Package"
         >
@@ -26,7 +26,7 @@ export function TopSchemaLayout({
             rel="noreferrer"
             aria-hidden="true"
             title="See package on GitHub"
-            className="relative inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-medium dark:border-slate-700 dark:bg-slate-800/60"
+            className="relative inline-flex items-center rounded-md border border-zinc-200 bg-zinc-50 px-4 py-2 text-xs font-medium dark:border-zinc-700 dark:bg-zinc-800/60"
           >
             <svg
               className="mr-2 h-4 w-4"

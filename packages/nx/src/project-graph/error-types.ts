@@ -1,7 +1,5 @@
-import {
-  ConfigurationResult,
-  ConfigurationSourceMaps,
-} from './utils/project-configuration-utils';
+import { ConfigurationResult } from './utils/project-configuration-utils';
+import type { ConfigurationSourceMaps } from './utils/project-configuration/source-maps';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { ProjectGraph } from '../config/project-graph';
 import { CreateNodesFunctionV2 } from './plugins/public-api';
@@ -127,7 +125,10 @@ export class MultipleProjectsWithSameNameError extends Error {
 }
 
 export class ProjectWithExistingNameError extends Error {
-  constructor(public projectName: string, public projectRoot: string) {
+  constructor(
+    public projectName: string,
+    public projectRoot: string
+  ) {
     super(`The project "${projectName}" is defined in multiple locations.`);
     this.name = this.constructor.name;
   }
@@ -316,15 +317,13 @@ export function formatAggregateCreateNodesError(
   error: AggregateCreateNodesError,
   pluginName: string
 ) {
+  const errorCount =
+    error.errors.length > 1 ? `${error.errors.length} errors` : 'An error';
+  const pluginLocation = error.pluginIndex
+    ? ` (Defined at nx.json#plugins[${error.pluginIndex}])`
+    : '';
   const errorBodyLines = [
-    `${
-      error.errors.length > 1 ? `${error.errors.length} errors` : 'An error'
-    } occurred while processing files for the ${pluginName} plugin${
-      error.pluginIndex
-        ? ` (Defined at nx.json#plugins[${error.pluginIndex}])`
-        : ''
-    }`,
-    `.`,
+    `${errorCount} occurred while processing files for the ${pluginName} plugin${pluginLocation}.`,
   ];
   const errorStackLines = [];
 
@@ -382,7 +381,10 @@ export class MergeNodesError extends Error {
 }
 
 export class CreateMetadataError extends Error {
-  constructor(public readonly error: Error, public readonly plugin: string) {
+  constructor(
+    public readonly error: Error,
+    public readonly plugin: string
+  ) {
     super(
       `The "${plugin}" plugin threw an error while creating metadata: ${error.message}`,
       {
@@ -394,7 +396,10 @@ export class CreateMetadataError extends Error {
 }
 
 export class ProcessDependenciesError extends Error {
-  constructor(public readonly pluginName: string, { cause }) {
+  constructor(
+    public readonly pluginName: string,
+    { cause }
+  ) {
     super(
       `The "${pluginName}" plugin threw an error while creating dependencies: ${cause.message}`,
       {
@@ -501,7 +506,10 @@ export class DaemonProjectGraphError extends Error {
 }
 
 export class LoadPluginError extends Error {
-  constructor(public plugin: string, cause: Error) {
+  constructor(
+    public plugin: string,
+    cause: Error
+  ) {
     super(`Could not load plugin ${plugin}`, {
       cause,
     });

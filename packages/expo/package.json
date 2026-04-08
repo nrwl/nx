@@ -26,6 +26,7 @@
   "license": "MIT",
   "author": "Victor Savkin",
   "main": "./index.js",
+  "type": "commonjs",
   "types": "index.d.ts",
   "dependencies": {
     "@nx/devkit": "workspace:*",
@@ -34,12 +35,16 @@
     "@nx/react": "workspace:*",
     "enhanced-resolve": "^5.8.3",
     "picocolors": "catalog:",
+    "semver": "catalog:",
     "tsconfig-paths": "catalog:typescript",
     "tslib": "catalog:typescript"
   },
   "peerDependencies": {
     "metro-config": ">= 0.82.0",
     "metro-resolver": ">= 0.82.0"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "optionalDependencies": {
     "@nx/detox": "workspace:*",

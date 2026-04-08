@@ -1,0 +1,9 @@
+{
+  "name": "alias-test",
+  "version": "1.0.0",
+  "dependencies": {
+    "another-string-width": "npm:string-width@*",
+    "string-width": "^5.1.2",
+    "string-width-cjs": "npm:string-width@^4.2.0"
+  }
+}

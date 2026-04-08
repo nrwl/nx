@@ -8,7 +8,7 @@ filter: 'type:Guides'
 
 The Nx Console Migrate UI provides a visual, guided way to apply migrations in your Nx workspace. This tool simplifies the process of updating your workspace by offering an easy-to-use interface that walks you through each step of the migration process.
 
-## Starting the Migration
+## Starting the migration
 
 The Migrate UI is available for VSCode and Cursor editors. Make sure you have the [Nx Console extension](/docs/getting-started/editor-setup) installed before you continue.
 
@@ -28,7 +28,7 @@ Once you start the migration, Nx Console runs the `nx migrate` command to update
 
 ![](../../../../assets/guides/nx-console/console-migrate-3-confirm.avif)
 
-## The Migration Process
+## The migration process
 
 After confirming the `package.json` changes, the Migrate UI opens and guides you step-by-step through each migration action. Each migration will be executed in the order as they appear in `migration.json`. If a migration results in file changes, you will be prompted to review the changes before continuing. You can either `Accept` or `Undo` the migration.
 
@@ -42,7 +42,7 @@ You can click through to view the migration source code, giving you the opportun
 
 Alternatively, you may choose to skip a problematic migration.
 
-## Finalizing the Migration
+## Finalizing the migration
 
 When all migrations are done, or you don't want to run further migrations, you can finish the process by clicking the Finish button. By default, this will squash all commits created during the migration together, but you can opt into preserving them.
 

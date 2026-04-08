@@ -139,7 +139,7 @@ describe('app migrator', () => {
         `The "build" target is using a builder "@not/supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular/build:application", "@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular/build:extract-i18n", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular/build:dev-server", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
+        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular/build:application", "@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular/build:extract-i18n", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular/build:dev-server", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular/build:unit-test", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
 
@@ -162,7 +162,7 @@ describe('app migrator', () => {
         `The "test" target is using a builder "@other/not-supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular/build:application", "@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular/build:extract-i18n", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular/build:dev-server", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
+        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular/build:application", "@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular/build:extract-i18n", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular/build:dev-server", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular/build:unit-test", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
 
@@ -181,7 +181,7 @@ describe('app migrator', () => {
         `The "my-build" target is using a builder "@not/supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular/build:application", "@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular/build:extract-i18n", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular/build:dev-server", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
+        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular/build:application", "@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular/build:extract-i18n", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular/build:dev-server", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular/build:unit-test", "@angular/build:karma", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
 
@@ -1251,6 +1251,119 @@ describe('app migrator', () => {
           main: 'apps/app1/src/test.ts',
           tsConfig: 'apps/app1/tsconfig.spec.json',
           karmaConfig: 'apps/app1/karma.conf.js',
+        },
+      });
+    });
+
+    it('should update test target using @angular/build:unit-test builder', async () => {
+      const project = addProject('app1', {
+        root: '',
+        sourceRoot: 'src',
+        architect: {
+          test: {
+            builder: '@angular/build:unit-test',
+            options: {
+              tsConfig: 'tsconfig.spec.json',
+            },
+          },
+        },
+      });
+      const migrator = new AppMigrator(tree, {}, project);
+
+      await migrator.migrate();
+
+      const { targets } = readProjectConfiguration(tree, 'app1');
+      expect(targets.test).toStrictEqual({
+        executor: '@angular/build:unit-test',
+        options: {
+          tsConfig: 'apps/app1/tsconfig.spec.json',
+        },
+      });
+    });
+
+    it('should update test target with setupFiles, providersFile, and configuration-level options', async () => {
+      const project = addProject('app1', {
+        root: '',
+        sourceRoot: 'src',
+        architect: {
+          test: {
+            builder: '@angular/build:unit-test',
+            options: {
+              tsConfig: 'tsconfig.spec.json',
+              runnerConfig: 'vitest.config.ts',
+              setupFiles: ['src/test-setup.ts', 'src/polyfills.ts'],
+              providersFile: 'src/test-providers.ts',
+            },
+            configurations: {
+              ci: {
+                outputFile: 'test-results/junit.xml',
+              },
+            },
+          },
+        },
+      });
+      const migrator = new AppMigrator(tree, {}, project);
+
+      await migrator.migrate();
+
+      const { targets } = readProjectConfiguration(tree, 'app1');
+      expect(targets.test).toStrictEqual({
+        executor: '@angular/build:unit-test',
+        options: {
+          tsConfig: 'apps/app1/tsconfig.spec.json',
+          runnerConfig: 'apps/app1/vitest.config.ts',
+          setupFiles: [
+            'apps/app1/src/test-setup.ts',
+            'apps/app1/src/polyfills.ts',
+          ],
+          providersFile: 'apps/app1/src/test-providers.ts',
+        },
+        configurations: {
+          ci: {
+            outputFile: 'apps/app1/test-results/junit.xml',
+          },
+        },
+      });
+    });
+
+    it('should update test target with custom reporter paths', async () => {
+      const project = addProject('app1', {
+        root: '',
+        sourceRoot: 'src',
+        architect: {
+          test: {
+            builder: '@angular/build:unit-test',
+            options: {
+              tsConfig: 'tsconfig.spec.json',
+              reporters: [
+                'default',
+                './custom-reporters/my-reporter.js',
+                [
+                  './custom-reporters/another-reporter.js',
+                  { outputFile: 'report.json' },
+                ],
+              ],
+            },
+          },
+        },
+      });
+      const migrator = new AppMigrator(tree, {}, project);
+
+      await migrator.migrate();
+
+      const { targets } = readProjectConfiguration(tree, 'app1');
+      expect(targets.test).toStrictEqual({
+        executor: '@angular/build:unit-test',
+        options: {
+          tsConfig: 'apps/app1/tsconfig.spec.json',
+          reporters: [
+            'default',
+            'apps/app1/custom-reporters/my-reporter.js',
+            [
+              'apps/app1/custom-reporters/another-reporter.js',
+              { outputFile: 'report.json' },
+            ],
+          ],
         },
       });
     });

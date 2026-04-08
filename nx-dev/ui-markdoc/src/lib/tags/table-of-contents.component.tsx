@@ -46,8 +46,8 @@ export function TableOfContents({
   }
 
   return (
-    <nav className="toc not-prose mb-8 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
-      <p className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">
+    <nav className="toc not-prose mb-8 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+      <p className="mb-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
         Table of Contents
       </p>
       <ul className="space-y-2 text-sm">
@@ -58,7 +58,7 @@ export function TableOfContents({
           >
             <a
               href={`#${heading.id}`}
-              className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+              className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
             >
               {heading.text}
             </a>

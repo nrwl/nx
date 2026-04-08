@@ -46,4 +46,22 @@ describe('consumeMessagesFromSocket', () => {
 
     expect(messages).toEqual([{ one: 1 }, { two: 2 }, { three: 3 }]);
   });
+
+  it('should handle multibyte UTF-8 characters split across chunks', () => {
+    const messages = [] as any[];
+    const r = consumeMessagesFromSocket((message) =>
+      messages.push(JSON.parse(message))
+    );
+
+    // "한글테스트" path included in JSON
+    const json = JSON.stringify({ path: '/test/한글테스트.tsx' });
+    const buffer = Buffer.from(json + MESSAGE_END_SEQ, 'utf8');
+
+    // Split in the middle of a multibyte character
+    const mid = Math.floor(buffer.length / 2);
+    r(buffer.subarray(0, mid));
+    r(buffer.subarray(mid));
+
+    expect(messages).toEqual([{ path: '/test/한글테스트.tsx' }]);
+  });
 });

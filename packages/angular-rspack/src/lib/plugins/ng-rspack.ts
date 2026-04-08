@@ -1,3 +1,4 @@
+import { VERSION } from '@angular/core';
 import {
   Compiler,
   CopyRspackPlugin,
@@ -10,13 +11,13 @@ import type {
   I18nOptions,
   NormalizedAngularRspackPluginOptions,
 } from '../models';
+import { loadEsmModule } from '../utils/misc-helpers';
 import { AngularRspackPlugin } from './angular-rspack-plugin';
 import { AngularSsrDevServer } from './angular-ssr-dev-server';
 import { I18nInlinePlugin } from './i18n-inline-plugin';
 import { IndexHtmlPlugin } from './index-html-plugin';
-import { RxjsEsmResolutionPlugin } from './rxjs-esm-resolution';
 import { ProgressPlugin } from './progress-plugin';
-import { loadEsmModule } from '../utils/misc-helpers';
+import { RxjsEsmResolutionPlugin } from './rxjs-esm-resolution';
 
 export class NgRspackPlugin implements RspackPluginInstance {
   readonly pluginOptions: NormalizedAngularRspackPluginOptions;
@@ -57,7 +58,11 @@ export class NgRspackPlugin implements RspackPluginInstance {
       ...(this.pluginOptions.optimization.scripts
         ? { ngDevMode: 'false' }
         : {}),
-      ngJitMode: this.pluginOptions.aot ? undefined : 'true',
+      ngJitMode: this.pluginOptions.aot
+        ? +VERSION.major >= 21
+          ? 'false'
+          : undefined
+        : 'true',
       ngServerMode: this.isPlatformServer,
       ngHmrMode:
         this.pluginOptions.devServer?.hmr && isDevServer ? 'true' : 'false',

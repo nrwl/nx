@@ -15,6 +15,7 @@ import {
 } from '@nx/angular-rspack-compiler';
 import { workspaceRoot } from '@nx/devkit';
 import {
+  type Compilation,
   type Compiler,
   type RspackOptionsNormalized,
   type RspackPluginInstance,
@@ -95,14 +96,21 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       }
     );
 
+    let currentWatchingModifiedFiles = new Set<string>();
+    let watchRunInitialized = false;
+
+    // Register compilation hook once - adds modified files to dependencies
+    compiler.hooks.compilation.tap(PLUGIN_NAME + '_fileDeps', (compilation) => {
+      currentWatchingModifiedFiles.forEach((file) => {
+        compilation.fileDependencies.add(file);
+      });
+    });
+
     compiler.hooks.watchRun.tapAsync(
       PLUGIN_NAME,
       async (compiler, callback) => {
-        if (
-          !compiler.hooks.beforeCompile.taps.some(
-            (tap) => tap.name === PLUGIN_NAME
-          )
-        ) {
+        if (!watchRunInitialized) {
+          watchRunInitialized = true;
           compiler.hooks.beforeCompile.tapAsync(
             PLUGIN_NAME,
             async (params, callback) => {
@@ -127,11 +135,9 @@ export class AngularRspackPlugin implements RspackPluginInstance {
                 this.#sourceFileCache.typeScriptFileCache,
                 this.#javascriptTransformer
               );
-              compiler.hooks.compilation.tap(PLUGIN_NAME, (compilation) => {
-                watchingModifiedFiles.forEach((file) => {
-                  compilation.fileDependencies.add(file);
-                });
-              });
+
+              // Update shared state for compilation hook
+              currentWatchingModifiedFiles = watchingModifiedFiles;
 
               callback();
             }
@@ -264,50 +270,73 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       callback();
     });
 
+    // Store compilation reference for budget checking in done hook
+    let currentEmitCompilation: Compilation | undefined;
+
     compiler.hooks.afterEmit.tap(PLUGIN_NAME, (compilation) => {
-      // Check for budget errors and display them to the user.
+      currentEmitCompilation = compilation;
+    });
+
+    // Register done hook once - checks budgets using stored compilation
+    compiler.hooks.done.tap(PLUGIN_NAME + '_budgets', (statsValue) => {
+      if (!currentEmitCompilation) return;
+
       const budgets = this.#_options.budgets;
-      let budgetFailures: BudgetCalculatorResult[] | undefined;
+      const isPlatformServer = Array.isArray(compiler.options.target)
+        ? compiler.options.target.some(
+            (target) => target === 'node' || target == 'async-node'
+          )
+        : compiler.options.target === 'node' ||
+          compiler.options.target === 'async-node';
 
-      compiler.hooks.done.tap(PLUGIN_NAME, (statsValue) => {
-        const stats = statsValue.toJson();
-        const isPlatformServer = Array.isArray(compiler.options.target)
-          ? compiler.options.target.some(
-              (target) => target === 'node' || target == 'async-node'
-            )
-          : compiler.options.target === 'node' ||
-            compiler.options.target === 'async-node';
-        if (budgets?.length && !isPlatformServer) {
-          budgetFailures = [...checkBudgets(budgets, stats)];
-          for (const { severity, message } of budgetFailures) {
-            switch (severity) {
-              case ThresholdSeverity.Warning:
-                addWarning(compilation, {
-                  message,
-                  name: PLUGIN_NAME,
-                  hideStack: true,
-                });
-                break;
-              case ThresholdSeverity.Error:
-                addError(compilation, {
-                  message,
-                  name: PLUGIN_NAME,
-                  hideStack: true,
-                });
-                break;
-              default:
-                assertNever(severity);
-            }
-          }
-        }
+      // Early exit - skip expensive toJson() when budgets not needed
+      if (!budgets?.length || isPlatformServer) {
+        return;
+      }
+
+      // Only serialize what's needed for budget checking
+      const stats = statsValue.toJson({
+        all: false,
+        assets: true,
+        chunks: true,
       });
 
-      compiler.hooks.afterDone.tap(PLUGIN_NAME, (stats) => {
-        rspackStatsLogger(stats, getStatsOptions(this.#_options.verbose));
-        if (stats.hasErrors()) {
-          process.exit(1);
+      const budgetFailures = [...checkBudgets(budgets, stats)];
+      for (const { severity, message } of budgetFailures) {
+        switch (severity) {
+          case ThresholdSeverity.Warning:
+            addWarning(currentEmitCompilation, {
+              message,
+              name: PLUGIN_NAME,
+              hideStack: true,
+            });
+            break;
+          case ThresholdSeverity.Error:
+            addError(currentEmitCompilation, {
+              message,
+              name: PLUGIN_NAME,
+              hideStack: true,
+            });
+            break;
+          default:
+            assertNever(severity);
         }
-      });
+      }
+    });
+
+    compiler.hooks.afterDone.tap(PLUGIN_NAME, (stats) => {
+      // Get stats options - merge defaults with user's config if provided
+      const configStats = compiler.options.stats;
+      const defaultStatsOptions = getStatsOptions(this.#_options.verbose);
+      const statsOptions =
+        typeof configStats === 'object' && configStats !== null
+          ? { ...defaultStatsOptions, ...configStats }
+          : defaultStatsOptions;
+
+      rspackStatsLogger(stats, statsOptions);
+      if (stats.hasErrors()) {
+        process.exit(1);
+      }
     });
 
     compiler.hooks.normalModuleFactory.tap(

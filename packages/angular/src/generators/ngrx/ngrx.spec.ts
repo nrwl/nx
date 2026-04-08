@@ -419,38 +419,49 @@ describe('ngrx', () => {
       expect(tree.read(libConfig.barrel, 'utf-8')).toMatchSnapshot();
     });
 
-    it('should format files', async () => {
-      jest.spyOn(devkit, 'formatFiles');
+    describe('--skipFormat', () => {
+      let formatFilesSpy: jest.SpyInstance;
 
-      await ngrxGenerator(tree, { ...defaultOptions, skipFormat: false });
+      beforeEach(() => {
+        const devkitModule = require('@nx/devkit');
+        formatFilesSpy = jest
+          .spyOn(devkitModule, 'formatFiles')
+          .mockImplementation(() => Promise.resolve());
+      });
 
-      expect(devkit.formatFiles).toHaveBeenCalled();
-      expect(
-        tree.read('myapp/src/app/app-module.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(
-        tree.read('myapp/src/app/+state/users.actions.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(
-        tree.read('myapp/src/app/+state/users.effects.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(
-        tree.read('myapp/src/app/+state/users.models.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(
-        tree.read('myapp/src/app/+state/users.reducer.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(
-        tree.read('myapp/src/app/+state/users.selectors.ts', 'utf-8')
-      ).toMatchSnapshot();
-    });
+      afterAll(() => {
+        jest.restoreAllMocks();
+      });
 
-    it('should not format files when skipFormat is true', async () => {
-      jest.spyOn(devkit, 'formatFiles');
+      it('should format files', async () => {
+        await ngrxGenerator(tree, { ...defaultOptions, skipFormat: false });
 
-      await ngrxGenerator(tree, { ...defaultOptions, skipFormat: true });
+        expect(formatFilesSpy).toHaveBeenCalled();
+        expect(
+          tree.read('myapp/src/app/app-module.ts', 'utf-8')
+        ).toMatchSnapshot();
+        expect(
+          tree.read('myapp/src/app/+state/users.actions.ts', 'utf-8')
+        ).toMatchSnapshot();
+        expect(
+          tree.read('myapp/src/app/+state/users.effects.ts', 'utf-8')
+        ).toMatchSnapshot();
+        expect(
+          tree.read('myapp/src/app/+state/users.models.ts', 'utf-8')
+        ).toMatchSnapshot();
+        expect(
+          tree.read('myapp/src/app/+state/users.reducer.ts', 'utf-8')
+        ).toMatchSnapshot();
+        expect(
+          tree.read('myapp/src/app/+state/users.selectors.ts', 'utf-8')
+        ).toMatchSnapshot();
+      });
 
-      expect(devkit.formatFiles).not.toHaveBeenCalled();
+      it('should not format files when skipFormat is true', async () => {
+        await ngrxGenerator(tree, { ...defaultOptions, skipFormat: true });
+
+        expect(formatFilesSpy).not.toHaveBeenCalled();
+      });
     });
 
     describe('generated unit tests', () => {
@@ -671,35 +682,35 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcome }];
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '18.0.0',
+          '@angular/core': '19.0.0',
         },
       }));
     });
 
-    it('should install the ngrx 18 packages', async () => {
+    it('should install the ngrx 19 packages', async () => {
       await ngrxGenerator(tree, defaultOptions);
 
       const packageJson = devkit.readJson(tree, 'package.json');
       expect(packageJson.dependencies['@ngrx/store']).toEqual(
-        backwardCompatibleVersions.angularV18.ngrxVersion
+        backwardCompatibleVersions[19].ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/effects']).toEqual(
-        backwardCompatibleVersions.angularV18.ngrxVersion
+        backwardCompatibleVersions[19].ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/entity']).toEqual(
-        backwardCompatibleVersions.angularV18.ngrxVersion
+        backwardCompatibleVersions[19].ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/router-store']).toEqual(
-        backwardCompatibleVersions.angularV18.ngrxVersion
+        backwardCompatibleVersions[19].ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/component-store']).toEqual(
-        backwardCompatibleVersions.angularV18.ngrxVersion
+        backwardCompatibleVersions[19].ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/schematics']).toEqual(
-        backwardCompatibleVersions.angularV18.ngrxVersion
+        backwardCompatibleVersions[19].ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/store-devtools']).toEqual(
-        backwardCompatibleVersions.angularV18.ngrxVersion
+        backwardCompatibleVersions[19].ngrxVersion
       );
       expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
     });

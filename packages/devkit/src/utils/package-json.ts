@@ -293,13 +293,13 @@ function isIncomingVersionGreater(
   const incomingVersionCompareBy =
     incomingVersion in NON_SEMVER_TAGS
       ? incomingVersion
-      : cleanSemver(tree, incomingVersion, packageName)?.toString() ??
-        UNIDENTIFIED_VERSION;
+      : (cleanSemver(tree, incomingVersion, packageName)?.toString() ??
+        UNIDENTIFIED_VERSION);
   const existingVersionCompareBy =
     resolvedExistingVersion in NON_SEMVER_TAGS
       ? resolvedExistingVersion
-      : cleanSemver(tree, resolvedExistingVersion, packageName)?.toString() ??
-        UNIDENTIFIED_VERSION;
+      : (cleanSemver(tree, resolvedExistingVersion, packageName)?.toString() ??
+        UNIDENTIFIED_VERSION);
 
   if (
     incomingVersionCompareBy in NON_SEMVER_TAGS &&
@@ -917,9 +917,11 @@ export function ensurePackage<T extends any = any>(
   (Module as any)._initPaths();
 
   try {
-    const result = require(require.resolve(pkg, {
-      paths: [tempDir],
-    }));
+    const result = require(
+      require.resolve(pkg, {
+        paths: [tempDir],
+      })
+    );
 
     packageMapCache.set(pkg, result);
 

@@ -34,14 +34,17 @@ import {
   normalizeOptions,
   setGeneratorDefaults,
   updateTsconfigFiles,
+  validateOptions,
 } from './lib';
 import type { Schema } from './schema';
 
 export async function applicationGenerator(
   tree: Tree,
-  schema: Partial<Schema>
+  schema: Schema
 ): Promise<GeneratorCallback> {
   assertNotUsingTsSolutionSetup(tree, 'application');
+  validateOptions(tree, schema);
+
   const isRspack = schema.bundler === 'rspack';
   if (isRspack) {
     schema.bundler = 'webpack';
@@ -63,7 +66,7 @@ export async function applicationGenerator(
   });
 
   if (!options.skipPackageJson) {
-    ensureAngularDependencies(tree);
+    ensureAngularDependencies(tree, options.zoneless);
   }
 
   createProject(tree, options);
@@ -116,6 +119,8 @@ export async function applicationGenerator(
     });
 
     if (options.ssr) {
+      const { major: angularMajorVersion } =
+        getInstalledAngularVersionInfo(tree);
       generateFiles(
         tree,
         joinPathFragments(__dirname, './files/rspack-ssr'),
@@ -126,6 +131,9 @@ export async function applicationGenerator(
             options.outputPath,
             'browser'
           ),
+          zoneless: options.zoneless,
+          useDefaultImport: angularMajorVersion >= 21,
+          angularMajorVersion,
           tmpl: '',
         }
       );

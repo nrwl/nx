@@ -4,6 +4,7 @@ import { writeJson } from '../../generators/utils/json';
 import { getCatalogDependenciesFromPackageJson } from './index';
 import type { CatalogManager } from './manager';
 import { PnpmCatalogManager } from './pnpm-manager';
+import { YarnCatalogManager } from './yarn-manager';
 
 describe('package manager catalogs', () => {
   let tree: Tree;
@@ -13,62 +14,65 @@ describe('package manager catalogs', () => {
   });
 
   describe('getCatalogDependenciesFromPackageJson', () => {
-    let manager: CatalogManager;
+    describe('with PnpmCatalogManager', () => {
+      let manager: CatalogManager;
 
-    beforeEach(() => {
-      manager = new PnpmCatalogManager();
-    });
+      beforeEach(() => {
+        manager = new PnpmCatalogManager();
+      });
 
-    it('should return empty map when package.json does not exist', () => {
-      const result = getCatalogDependenciesFromPackageJson(
-        tree,
-        'package.json',
-        manager
-      );
+      it('should return empty map when package.json does not exist', () => {
+        const result = getCatalogDependenciesFromPackageJson(
+          tree,
+          'package.json',
+          manager
+        );
 
-      expect(result).toStrictEqual(new Map());
-    });
+        expect(result).toStrictEqual(new Map());
+      });
 
-    it('should return empty map when package.json cannot be read', () => {
-      tree.write('package.json', 'invalid: json: content: [');
+      it('should return empty map when package.json cannot be read', () => {
+        tree.write('package.json', 'invalid: json: content: [');
 
-      const result = getCatalogDependenciesFromPackageJson(
-        tree,
-        'package.json',
-        manager
-      );
+        const result = getCatalogDependenciesFromPackageJson(
+          tree,
+          'package.json',
+          manager
+        );
 
-      expect(result).toStrictEqual(new Map());
-    });
+        expect(result).toStrictEqual(new Map());
+      });
 
-    it('should return empty map when package.json has no dependencies', () => {
-      tree.write('package.json', '{}');
+      it('should return empty map when package.json has no dependencies', () => {
+        tree.write('package.json', '{}');
 
-      const result = getCatalogDependenciesFromPackageJson(
-        tree,
-        'package.json',
-        manager
-      );
+        const result = getCatalogDependenciesFromPackageJson(
+          tree,
+          'package.json',
+          manager
+        );
 
-      expect(result).toStrictEqual(new Map());
-    });
+        expect(result).toStrictEqual(new Map());
+      });
 
-    it('should return empty map when package.json has no catalog dependencies', () => {
-      writeJson(tree, 'package.json', { dependencies: { lodash: '^4.17.21' } });
+      it('should return empty map when package.json has no catalog dependencies', () => {
+        writeJson(tree, 'package.json', {
+          dependencies: { lodash: '^4.17.21' },
+        });
 
-      const result = getCatalogDependenciesFromPackageJson(
-        tree,
-        'package.json',
-        manager
-      );
+        const result = getCatalogDependenciesFromPackageJson(
+          tree,
+          'package.json',
+          manager
+        );
 
-      expect(result).toStrictEqual(new Map());
-    });
+        expect(result).toStrictEqual(new Map());
+      });
 
-    it('should return map with catalog dependencies', () => {
-      tree.write(
-        'pnpm-workspace.yaml',
-        `
+      it('should return map with catalog dependencies', () => {
+        tree.write(
+          'pnpm-workspace.yaml',
+          `
 packages:
   - packages/*
 catalog:
@@ -80,23 +84,89 @@ catalogs:
   other:
     lodash: ^4.17.21
 `
-      );
-      writeJson(tree, 'package.json', {
-        dependencies: { react: 'catalog:', lodash: 'catalog:other' },
+        );
+        writeJson(tree, 'package.json', {
+          dependencies: { react: 'catalog:', lodash: 'catalog:other' },
+        });
+
+        const result = getCatalogDependenciesFromPackageJson(
+          tree,
+          'package.json',
+          manager
+        );
+
+        expect(result).toStrictEqual(
+          new Map([
+            ['react', undefined],
+            ['lodash', 'other'],
+          ])
+        );
+      });
+    });
+
+    describe('with YarnCatalogManager', () => {
+      let manager: CatalogManager;
+
+      beforeEach(() => {
+        manager = new YarnCatalogManager();
       });
 
-      const result = getCatalogDependenciesFromPackageJson(
-        tree,
-        'package.json',
-        manager
-      );
+      it('should return empty map when package.json has no catalog dependencies', () => {
+        writeJson(tree, 'package.json', {
+          dependencies: { lodash: '^4.17.21' },
+        });
 
-      expect(result).toStrictEqual(
-        new Map([
-          ['react', undefined],
-          ['lodash', 'other'],
-        ])
-      );
+        const result = getCatalogDependenciesFromPackageJson(
+          tree,
+          'package.json',
+          manager
+        );
+
+        expect(result).toStrictEqual(new Map());
+      });
+
+      it('should return map with catalog dependencies', () => {
+        writeJson(tree, 'package.json', {
+          dependencies: { react: 'catalog:', lodash: 'catalog:other' },
+        });
+
+        const result = getCatalogDependenciesFromPackageJson(
+          tree,
+          'package.json',
+          manager
+        );
+
+        expect(result).toStrictEqual(
+          new Map([
+            ['react', undefined],
+            ['lodash', 'other'],
+          ])
+        );
+      });
+
+      it('should detect catalog references across all dependency types', () => {
+        writeJson(tree, 'package.json', {
+          dependencies: { react: 'catalog:' },
+          devDependencies: { typescript: 'catalog:' },
+          peerDependencies: { lodash: 'catalog:utils' },
+          optionalDependencies: { sharp: 'catalog:optional' },
+        });
+
+        const result = getCatalogDependenciesFromPackageJson(
+          tree,
+          'package.json',
+          manager
+        );
+
+        expect(result).toStrictEqual(
+          new Map([
+            ['react', undefined],
+            ['typescript', undefined],
+            ['lodash', 'utils'],
+            ['sharp', 'optional'],
+          ])
+        );
+      });
     });
   });
 });

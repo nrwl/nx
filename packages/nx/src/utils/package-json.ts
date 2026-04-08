@@ -13,7 +13,7 @@ import {
 } from '../config/workspace-json-project-json';
 import type { Tree } from '../generators/tree';
 import { readJson } from '../generators/utils/json';
-import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration-utils';
+import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration/target-merging';
 import { getCatalogManager } from './catalog';
 import { readJsonFile } from './fileutils';
 import { getNxRequirePaths } from './installation-directory';
@@ -85,6 +85,15 @@ export interface PackageJson {
   resolutions?: Record<string, string>;
   pnpm?: {
     overrides?: PackageOverride;
+    onlyBuiltDependencies?: string[];
+    neverBuiltDependencies?: string[];
+    allowBuilds?: Record<string, boolean>;
+    supportedArchitectures?: {
+      os?: string[];
+      cpu?: string[];
+      libc?: string[];
+    };
+    ignoredOptionalDependencies?: string[];
   };
   overrides?: PackageOverride;
   bin?: Record<string, string> | string;
@@ -109,6 +118,13 @@ export interface PackageJson {
   packageManager?: string;
   description?: string;
   keywords?: string[];
+}
+
+export interface NxPackageJson extends PackageJson {
+  'nx-migrations'?: {
+    migrations?: string;
+    packageGroup?: (string | { package: string; version: string })[];
+  };
 }
 
 export function normalizePackageGroup(
@@ -380,7 +396,7 @@ function preparePackageInstallation(pkg: string, requiredVersion: string) {
   const execOptions = {
     cwd: tempDir,
     stdio: isVerbose ? 'inherit' : 'ignore',
-    windowsHide: false,
+    windowsHide: true,
   } as const;
 
   return {

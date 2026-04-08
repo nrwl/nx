@@ -22,7 +22,11 @@ dependencies {
   implementation(libs.kotlinx.coroutines.core)
   runtimeOnly(libs.slf4j.simple)
   implementation(libs.gson)
+  testImplementation(libs.kotlin.test)
+  testImplementation(libs.junit.jupiter)
 }
+
+tasks.test { useJUnitPlatform() }
 
 application {
   // Define the main class for the application.

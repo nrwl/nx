@@ -46,6 +46,7 @@ describe('@nx/vite/plugin', () => {
       tempFs.createFileSync('vite.config.ts', '');
       tempFs.createFileSync('index.html', '');
       tempFs.createFileSync('package.json', '{}');
+      tempFs.createFileSync('package-lock.json', '{}');
     });
 
     afterEach(() => {
@@ -261,6 +262,7 @@ describe('@nx/vite/plugin', () => {
       );
       tempFs.createFileSync('my-app/vite.config.ts', '');
       tempFs.createFileSync('my-app/index.html', '');
+      tempFs.createFileSync('package-lock.json', '{}');
     });
 
     afterEach(() => {
@@ -321,7 +323,7 @@ describe('@nx/vite/plugin', () => {
   describe('Library mode', () => {
     it('should exclude serve and preview targets when vite.config.ts is in library mode', async () => {
       const tempFs = new TempFs('test');
-      (loadViteDynamicImport as jest.Mock).mockResolvedValue({
+      ((loadViteDynamicImport as jest.Mock).mockResolvedValue({
         resolveConfig: jest.fn().mockResolvedValue({
           build: {
             lib: {
@@ -339,12 +341,13 @@ describe('@nx/vite/plugin', () => {
             },
           },
           workspaceRoot: tempFs.tempDir,
-        });
+        }));
       tempFs.createFileSync(
         'my-lib/project.json',
         JSON.stringify({ name: 'my-lib' })
       );
       tempFs.createFileSync('my-lib/vite.config.ts', '');
+      tempFs.createFileSync('package-lock.json', '{}');
 
       const nodes = await createNodesFunction(
         ['my-lib/vite.config.ts'],
@@ -360,7 +363,7 @@ describe('@nx/vite/plugin', () => {
     });
     it('should not exclude serve and preview targets when vite.config.ts is in library mode when user has defined a server config', async () => {
       const tempFs = new TempFs('test-exclude');
-      (loadViteDynamicImport as jest.Mock).mockResolvedValue({
+      ((loadViteDynamicImport as jest.Mock).mockResolvedValue({
         resolveConfig: jest.fn().mockResolvedValue({
           build: {
             lib: {
@@ -382,12 +385,13 @@ describe('@nx/vite/plugin', () => {
             },
           },
           workspaceRoot: tempFs.tempDir,
-        });
+        }));
       tempFs.createFileSync(
         'my-lib/project.json',
         JSON.stringify({ name: 'my-lib' })
       );
       tempFs.createFileSync('my-lib/vite.config.ts', '');
+      tempFs.createFileSync('package-lock.json', '{}');
 
       const nodes = await createNodesFunction(
         ['my-lib/vite.config.ts'],

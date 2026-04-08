@@ -19,6 +19,12 @@ jest.mock('node:fs', () => {
   };
 });
 
+const { readFileSync: realReadFileSync } =
+  jest.requireActual<typeof import('fs')>('fs');
+function loadJsonFixture(path: string) {
+  return JSON.parse(realReadFileSync(path, 'utf-8'));
+}
+
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual<any>('@nx/devkit'),
   workspaceRoot: '/root',
@@ -173,14 +179,12 @@ describe('yarn LockFile utility', () => {
     let graph: ProjectGraph;
 
     beforeEach(() => {
-      lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/nextjs/yarn.lock'
-      )).default;
-      packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/nextjs/package.json'
-      ));
+      lockFile = require(
+        joinPathFragments(__dirname, '__fixtures__/nextjs/yarn.lock')
+      ).default;
+      packageJson = loadJsonFixture(
+        joinPathFragments(__dirname, '__fixtures__/nextjs/package.json.fixture')
+      );
 
       const hash = uniq('mock-hash');
       const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
@@ -231,10 +235,12 @@ describe('yarn LockFile utility', () => {
     });
 
     it('should prune lock file', async () => {
-      const appPackageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/nextjs/app/package.json'
-      ));
+      const appPackageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/nextjs/app/package.json.fixture'
+        )
+      );
 
       // this is our pruned lock file structure
       const prunedGraph = pruneProjectGraph(graph, appPackageJson);
@@ -245,18 +251,19 @@ describe('yarn LockFile utility', () => {
         appPackageJson
       );
       expect(result).toEqual(
-        require(joinPathFragments(
-          __dirname,
-          '__fixtures__/nextjs/app/yarn.lock'
-        )).default
+        require(
+          joinPathFragments(__dirname, '__fixtures__/nextjs/app/yarn.lock')
+        ).default
       );
     });
 
     it('should match pruned lock file', () => {
-      const appPackageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/nextjs/app/package.json'
-      ));
+      const appPackageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/nextjs/app/package.json.fixture'
+        )
+      );
       const prunedGraph = pruneProjectGraph(graph, appPackageJson);
       const result = stringifyYarnLockfile(
         prunedGraph,
@@ -264,10 +271,9 @@ describe('yarn LockFile utility', () => {
         appPackageJson
       );
       expect(result).toEqual(
-        require(joinPathFragments(
-          __dirname,
-          '__fixtures__/nextjs/app/yarn.lock'
-        )).default
+        require(
+          joinPathFragments(__dirname, '__fixtures__/nextjs/app/yarn.lock')
+        ).default
       );
     });
   });
@@ -420,14 +426,18 @@ describe('yarn LockFile utility', () => {
     });
 
     it('should parse yarn classic', async () => {
-      const classicLockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/yarn.lock'
-      )).default;
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/package.json'
-      ));
+      const classicLockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/yarn.lock'
+        )
+      ).default;
+      const packageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/package.json.fixture'
+        )
+      );
 
       const hash = uniq('mock-hash');
       const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
@@ -486,14 +496,18 @@ describe('yarn LockFile utility', () => {
     });
 
     it('should prune yarn classic', () => {
-      const lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/yarn.lock'
-      )).default;
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/package.json'
-      ));
+      const lockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/yarn.lock'
+        )
+      ).default;
+      const packageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/package.json.fixture'
+        )
+      );
       const normalizedPackageJson = {
         name: 'test',
         version: '0.0.0',
@@ -510,10 +524,12 @@ describe('yarn LockFile utility', () => {
           react: '18.2.0',
         },
       };
-      const prunedLockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/yarn.lock.pruned'
-      )).default;
+      const prunedLockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/yarn.lock.pruned'
+        )
+      ).default;
 
       const hash = uniq('mock-hash');
       const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
@@ -568,10 +584,12 @@ describe('yarn LockFile utility', () => {
     });
 
     it('should prune yarn classic with package json with ranges', () => {
-      const lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/yarn.lock'
-      )).default;
+      const lockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/yarn.lock'
+        )
+      ).default;
       const normalizedPackageJson = {
         name: 'test',
         version: '0.0.0',
@@ -588,10 +606,12 @@ describe('yarn LockFile utility', () => {
           react: '>=18 < 19',
         },
       };
-      const prunedLockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/yarn.lock.pruned'
-      )).default;
+      const prunedLockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/yarn.lock.pruned'
+        )
+      ).default;
 
       const hash = uniq('mock-hash');
       const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
@@ -651,14 +671,18 @@ describe('yarn LockFile utility', () => {
     });
 
     it('should parse yarn berry', async () => {
-      const berryLockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/yarn-berry.lock'
-      )).default;
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/package.json'
-      ));
+      const berryLockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/yarn-berry.lock'
+        )
+      ).default;
+      const packageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/package.json.fixture'
+        )
+      );
 
       const hash = uniq('mock-hash');
       const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
@@ -717,10 +741,12 @@ describe('yarn LockFile utility', () => {
     });
 
     it('should prune yarn berry', () => {
-      const lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/yarn-berry.lock'
-      )).default;
+      const lockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/yarn-berry.lock'
+        )
+      ).default;
       const normalizedPackageJson = {
         name: 'test',
         version: '0.0.0',
@@ -738,14 +764,18 @@ describe('yarn LockFile utility', () => {
           react: '18.2.0',
         },
       };
-      const prunedLockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/yarn-berry.lock.pruned'
-      )).default;
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/package.json'
-      ));
+      const prunedLockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/yarn-berry.lock.pruned'
+        )
+      ).default;
+      const packageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/package.json.fixture'
+        )
+      );
 
       const hash = uniq('mock-hash');
       const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
@@ -1069,31 +1099,31 @@ __metadata:
 
         expect(graph.externalNodes).toMatchInlineSnapshot(`
           {
-            "npm:@babel/runtime@7.26.0": {
+            "npm:@babel/runtime": {
               "data": {
                 "hash": "sha512-FDSOghenHTiToteC/QRlv2q3DhPZ/oOXTBoirfWNx1Cx3TMVcGWQtMMmQcSvb/JjpNeGzx8Pq/b4fKEJuWm1sw==",
                 "packageName": "@babel/runtime",
                 "version": "7.26.0",
               },
-              "name": "npm:@babel/runtime@7.26.0",
+              "name": "npm:@babel/runtime",
               "type": "npm",
             },
-            "npm:@docusaurus/core@3.7.0": {
+            "npm:@docusaurus/core": {
               "data": {
                 "hash": "sha512-b0fUmaL+JbzDIQaamzpAFpTviiaU4cX3Qz8cuo14+HGBCwa0evEK0UYCBFY3n4cLzL8Op1BueeroUD2LYAIHbQ==",
                 "packageName": "@docusaurus/core",
                 "version": "3.7.0",
               },
-              "name": "npm:@docusaurus/core@3.7.0",
+              "name": "npm:@docusaurus/core",
               "type": "npm",
             },
-            "npm:@docusaurus/module-type-aliases@3.7.0": {
+            "npm:@docusaurus/module-type-aliases": {
               "data": {
                 "hash": "sha512-g7WdPqDNaqA60CmBrr0cORTrsOit77hbsTj7xE2l71YhBn79sxdm7WMK7wfhcaafkbpIh7jv5ef5TOpf1Xv9Lg==",
                 "packageName": "@docusaurus/module-type-aliases",
                 "version": "3.7.0",
               },
-              "name": "npm:@docusaurus/module-type-aliases@3.7.0",
+              "name": "npm:@docusaurus/module-type-aliases",
               "type": "npm",
             },
             "npm:react-helmet-async": {
@@ -1310,14 +1340,18 @@ nx-cloud@latest:
 
   describe('auxiliary packages PnP', () => {
     it('should parse yarn berry pnp', () => {
-      const berryLockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/yarn-berry.lock'
-      )).default;
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/package.json'
-      ));
+      const berryLockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/yarn-berry.lock'
+        )
+      ).default;
+      const packageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/package.json.fixture'
+        )
+      );
 
       const hash = uniq('mock-hash');
       const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
@@ -1427,14 +1461,15 @@ nx-cloud@latest:
     });
 
     it('should parse root lock file', async () => {
-      const classicLockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/duplicate-package/yarn.lock'
-      )).default;
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/duplicate-package/package.json'
-      ));
+      const classicLockFile = require(
+        joinPathFragments(__dirname, '__fixtures__/duplicate-package/yarn.lock')
+      ).default;
+      const packageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/duplicate-package/package.json.fixture'
+        )
+      );
       const hash = uniq('mock-hash');
       const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
         classicLockFile,
@@ -1461,14 +1496,15 @@ nx-cloud@latest:
     });
 
     it('should match parsed and pruned graph', async () => {
-      const lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/optional/yarn.lock'
-      )).default;
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/optional/package.json'
-      ));
+      const lockFile = require(
+        joinPathFragments(__dirname, '__fixtures__/optional/yarn.lock')
+      ).default;
+      const packageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/optional/package.json.fixture'
+        )
+      );
 
       const hash = uniq('mock-hash');
       const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
@@ -1680,19 +1716,22 @@ nx-cloud@latest:
     });
 
     it('should prune single package', () => {
-      const lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/pruning/yarn.lock'
-      )).default;
+      const lockFile = require(
+        joinPathFragments(__dirname, '__fixtures__/pruning/yarn.lock')
+      ).default;
 
-      const typescriptPackageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/pruning/typescript/package.json'
-      ));
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/pruning/package.json'
-      ));
+      const typescriptPackageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/typescript/package.json.fixture'
+        )
+      );
+      const packageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/package.json.fixture'
+        )
+      );
 
       const hash = uniq('mock-hash');
       const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
@@ -1744,27 +1783,32 @@ nx-cloud@latest:
         typescriptPackageJson
       );
       expect(result).toEqual(
-        require(joinPathFragments(
-          __dirname,
-          '__fixtures__/pruning/typescript/yarn.lock'
-        )).default
+        require(
+          joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/typescript/yarn.lock'
+          )
+        ).default
       );
     });
 
     it('should prune multi packages', () => {
-      const lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/pruning/yarn.lock'
-      )).default;
+      const lockFile = require(
+        joinPathFragments(__dirname, '__fixtures__/pruning/yarn.lock')
+      ).default;
 
-      const multiPackageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/pruning/devkit-yargs/package.json'
-      ));
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/pruning/package.json'
-      ));
+      const multiPackageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/devkit-yargs/package.json.fixture'
+        )
+      );
+      const packageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/package.json.fixture'
+        )
+      );
 
       const hash = uniq('mock-hash');
       const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
@@ -1816,10 +1860,12 @@ nx-cloud@latest:
         multiPackageJson
       );
       expect(result).toEqual(
-        require(joinPathFragments(
-          __dirname,
-          '__fixtures__/pruning/devkit-yargs/yarn.lock'
-        )).default
+        require(
+          joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/devkit-yargs/yarn.lock'
+          )
+        ).default
       );
     });
   });
@@ -1835,14 +1881,15 @@ nx-cloud@latest:
     });
 
     it('should parse classic lock file', async () => {
-      const lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/workspaces/yarn.lock'
-      )).default;
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/workspaces/package.json'
-      ));
+      const lockFile = require(
+        joinPathFragments(__dirname, '__fixtures__/workspaces/yarn.lock')
+      ).default;
+      const packageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/workspaces/package.json.fixture'
+        )
+      );
       const hash = uniq('mock-hash');
       const { nodes: externalNodes } = getYarnLockfileNodes(
         lockFile,
@@ -1854,14 +1901,15 @@ nx-cloud@latest:
     });
 
     it('should parse berry lock file', async () => {
-      const lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/workspaces/yarn.lock.berry'
-      )).default;
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/workspaces/package.json'
-      ));
+      const lockFile = require(
+        joinPathFragments(__dirname, '__fixtures__/workspaces/yarn.lock.berry')
+      ).default;
+      const packageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/workspaces/package.json.fixture'
+        )
+      );
       const hash = uniq('mock-hash');
       const { nodes: externalNodes } = getYarnLockfileNodes(
         lockFile,
@@ -2189,14 +2237,15 @@ __metadata:
     });
 
     it('should parse classic and prune packages with mixed keys', () => {
-      const lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/mixed-keys/yarn.lock'
-      )).default;
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/mixed-keys/package.json'
-      ));
+      const lockFile = require(
+        joinPathFragments(__dirname, '__fixtures__/mixed-keys/yarn.lock')
+      ).default;
+      const packageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/mixed-keys/package.json.fixture'
+        )
+      );
 
       const hash = uniq('mock-hash');
       const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
@@ -2441,14 +2490,15 @@ __metadata:
     });
 
     it('should parse berry and prune packages with mixed keys', () => {
-      const lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/mixed-keys/yarn-berry.lock'
-      )).default;
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/mixed-keys/package.json'
-      ));
+      const lockFile = require(
+        joinPathFragments(__dirname, '__fixtures__/mixed-keys/yarn-berry.lock')
+      ).default;
+      const packageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/mixed-keys/package.json.fixture'
+        )
+      );
 
       const hash = uniq('mock-hash');
       const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
@@ -3085,22 +3135,30 @@ __metadata:
 
   describe('resolutions and patches', () => {
     it('should parse yarn.lock with resolutions and patches', () => {
-      const lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/resolutions-and-patches/yarn.lock'
-      )).default;
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/resolutions-and-patches/package.json'
-      ));
-      const appLockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/resolutions-and-patches/app/yarn.lock'
-      )).default;
-      const appPackageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/resolutions-and-patches/app/package.json'
-      ));
+      const lockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/resolutions-and-patches/yarn.lock'
+        )
+      ).default;
+      const packageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/resolutions-and-patches/package.json.fixture'
+        )
+      );
+      const appLockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/resolutions-and-patches/app/yarn.lock'
+        )
+      ).default;
+      const appPackageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/resolutions-and-patches/app/package.json.fixture'
+        )
+      );
 
       const hash = uniq('mock-hash');
       const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(

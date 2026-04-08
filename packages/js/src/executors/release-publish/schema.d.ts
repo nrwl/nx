@@ -6,4 +6,8 @@ export interface PublishExecutorSchema {
   dryRun?: boolean;
   access?: 'public' | 'restricted';
   firstRelease?: boolean;
+  nxReleaseVersionData?: Record<
+    string,
+    { currentVersion: string; newVersion: string | null; [key: string]: any }
+  >;
 }

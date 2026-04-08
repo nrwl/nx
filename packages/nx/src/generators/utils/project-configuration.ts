@@ -11,7 +11,7 @@ import {
 import {
   mergeProjectConfigurationIntoRootMap,
   readProjectConfigurationsFromRootMap,
-} from '../../project-graph/utils/project-configuration-utils';
+} from '../../project-graph/utils/project-configuration/project-nodes-manager';
 import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
 import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
@@ -427,9 +427,8 @@ function handleEmptyTargets(
   ) {
     // Re-order `targets` to appear after the `// target` comment.
     delete projectConfiguration.targets;
-    projectConfiguration[
-      '// targets'
-    ] = `to see all targets run: nx show project ${projectName} --web`;
+    projectConfiguration['// targets'] =
+      `to see all targets run: nx show project ${projectName} --web`;
     projectConfiguration.targets = {};
   } else {
     delete projectConfiguration['// targets'];

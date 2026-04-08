@@ -37,6 +37,33 @@ import {
 import { clean, coerce, major } from 'semver';
 
 /**
+ * Determines whether to use vitest.config.mts instead of vite.config.mts.
+ * Returns true for new non-framework projects that don't already have a vite.config.
+ */
+function shouldUseVitestConfig(
+  tree: Tree,
+  projectRoot: string,
+  uiFramework: string
+): boolean {
+  // Keep vite.config for framework projects (need vite plugins like react, angular, etc.)
+  if (uiFramework !== 'none') {
+    return false;
+  }
+
+  // Keep existing vite.config (backwards compatibility)
+  const extensions = ['ts', 'mts', 'js', 'mjs'];
+  const hasExistingViteConfig = extensions.some((ext) =>
+    tree.exists(joinPathFragments(projectRoot, `vite.config.${ext}`))
+  );
+  if (hasExistingViteConfig) {
+    return false;
+  }
+
+  // New non-framework project → use vitest.config.mts
+  return true;
+}
+
+/**
  * @param hasPlugin some frameworks (e.g. Nuxt) provide their own plugin. Their generators handle the plugin detection.
  */
 export function configurationGenerator(
@@ -82,9 +109,14 @@ export async function configurationGeneratorInternal(
     addPlugin: schema.addPlugin,
     projectRoot: root,
     viteVersion: schema.viteVersion,
+    skipPackageJson: schema.skipPackageJson,
+    keepExistingVersions: true,
   });
   tasks.push(initTask);
-  tasks.push(await ensureDependencies(tree, { ...schema, uiFramework }));
+
+  if (!schema.skipPackageJson) {
+    tasks.push(await ensureDependencies(tree, { ...schema, uiFramework }));
+  }
 
   addOrChangeTestTarget(tree, schema, hasPlugin);
 
@@ -94,12 +126,25 @@ export async function configurationGeneratorInternal(
 
       const setupFile = joinPathFragments(root, relativeTestSetupPath);
       if (!tree.exists(setupFile)) {
-        if (isAngularV20(tree)) {
+        const angularMajorVersion = getAngularMajorVersion(tree);
+        const zoneless =
+          schema.zoneless ?? isZonelessProject(tree, schema.project);
+
+        if (angularMajorVersion >= 21) {
           tree.write(
             setupFile,
             `import '@angular/compiler';
-import '@analogjs/vitest-angular/setup-zone';
+import '@analogjs/vitest-angular/setup-snapshots';
+import { setupTestBed } from '@analogjs/vitest-angular/setup-testbed';
 
+setupTestBed(${zoneless ? '' : '{ zoneless: false }'});
+`
+          );
+        } else if (angularMajorVersion === 20) {
+          tree.write(
+            setupFile,
+            `import '@angular/compiler';
+import '@analogjs/vitest-angular/${zoneless ? 'setup-snapshots' : 'setup-zone'}';
 import {
   BrowserTestingModule,
   platformBrowserTesting,
@@ -108,15 +153,14 @@ import { getTestBed } from '@angular/core/testing';
 
 getTestBed().initTestEnvironment(
   BrowserTestingModule,
-  platformBrowserTesting()
+  platformBrowserTesting(),
 );
 `
           );
         } else {
           tree.write(
             setupFile,
-            `import '@analogjs/vitest-angular/setup-zone';
-
+            `import '@analogjs/vitest-angular/${zoneless ? 'setup-snapshots' : 'setup-zone'}';
 import {
   BrowserDynamicTestingModule,
   platformBrowserDynamicTesting,
@@ -125,7 +169,7 @@ import { getTestBed } from '@angular/core/testing';
 
 getTestBed().initTestEnvironment(
   BrowserDynamicTestingModule,
-  platformBrowserDynamicTesting()
+  platformBrowserDynamicTesting(),
 );
 `
           );
@@ -144,7 +188,8 @@ getTestBed().initTestEnvironment(
           setupFile: relativeTestSetupPath,
           useEsmExtension: true,
         },
-        true
+        true,
+        { skipPackageJson: schema.skipPackageJson }
       );
     } else if (uiFramework === 'react') {
       createOrEditViteConfig(
@@ -168,9 +213,11 @@ getTestBed().initTestEnvironment(
           coverageProvider: schema.coverageProvider,
           useEsmExtension: true,
         },
-        true
+        true,
+        { skipPackageJson: schema.skipPackageJson }
       );
     } else {
+      const useVitestConfig = shouldUseVitestConfig(tree, root, uiFramework);
       createOrEditViteConfig(
         tree,
         {
@@ -179,7 +226,11 @@ getTestBed().initTestEnvironment(
           includeLib: getProjectType(tree, root, projectType) === 'library',
           useEsmExtension: true,
         },
-        true
+        true,
+        {
+          vitestFileName: useVitestConfig,
+          skipPackageJson: schema.skipPackageJson,
+        }
       );
     }
   }
@@ -209,12 +260,16 @@ getTestBed().initTestEnvironment(
   );
   devDependencies['@types/node'] = typesNodeVersion;
 
-  const installDependenciesTask = addDependenciesToPackageJson(
-    tree,
-    {},
-    devDependencies
-  );
-  tasks.push(installDependenciesTask);
+  if (!schema.skipPackageJson) {
+    const installDependenciesTask = addDependenciesToPackageJson(
+      tree,
+      {},
+      devDependencies,
+      undefined,
+      true
+    );
+    tasks.push(installDependenciesTask);
+  }
 
   // Setup workspace config file (https://vitest.dev/guide/workspace.html)
   if (
@@ -407,26 +462,65 @@ function tryFindSetupFile(tree: Tree, projectRoot: string) {
   }
 }
 
-function isAngularV20(tree: Tree) {
+function getAngularMajorVersion(tree: Tree): number {
   const angularVersion = getDependencyVersionFromPackageJson(
     tree,
     '@angular/core'
   );
 
   if (!angularVersion) {
-    // assume the latest version will be installed, which will be 20 or later
-    return true;
+    // assume the latest version will be installed
+    return 21;
   }
 
   const cleanedAngularVersion =
-    clean(angularVersion) ?? coerce(angularVersion).version;
+    clean(angularVersion) ?? coerce(angularVersion)?.version;
 
   if (typeof cleanedAngularVersion !== 'string') {
-    // assume the latest version will be installed,
-    return true;
+    // assume the latest version will be installed
+    return 21;
   }
 
-  return major(cleanedAngularVersion) >= 20;
+  return major(cleanedAngularVersion);
+}
+
+function isZonelessProject(tree: Tree, projectName: string): boolean {
+  const project = readProjectConfiguration(tree, projectName);
+
+  if (project.projectType === 'application') {
+    const buildTarget = findBuildTarget(project);
+    if (!buildTarget?.options?.polyfills) {
+      return true;
+    }
+    const polyfills = buildTarget.options.polyfills as string[] | string;
+    const polyfillsList = Array.isArray(polyfills) ? polyfills : [polyfills];
+    return !polyfillsList.includes('zone.js');
+  }
+
+  // For libraries, check if zone.js is installed in the workspace
+  return getDependencyVersionFromPackageJson(tree, 'zone.js') === null;
+}
+
+function findBuildTarget(project: {
+  targets?: Record<string, { executor?: string; options?: any }>;
+}): { executor?: string; options?: any } | null {
+  for (const target of Object.values(project.targets ?? {})) {
+    if (
+      [
+        '@angular-devkit/build-angular:browser',
+        '@angular-devkit/build-angular:browser-esbuild',
+        '@angular-devkit/build-angular:application',
+        '@angular/build:application',
+        '@nx/angular:application',
+        '@nx/angular:browser-esbuild',
+        '@nx/angular:webpack-browser',
+      ].includes(target.executor)
+    ) {
+      return target;
+    }
+  }
+
+  return project.targets?.build ?? null;
 }
 
 export default configurationGenerator;

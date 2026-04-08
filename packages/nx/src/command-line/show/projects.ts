@@ -57,12 +57,15 @@ export async function showProjectsHandler(
 
   // Grab only the nodes with the specified target
   if (args.withTarget) {
-    graph.nodes = Object.entries(graph.nodes).reduce((acc, [name, node]) => {
-      if (args.withTarget.some((target) => node.data.targets?.[target])) {
-        acc[name] = node;
-      }
-      return acc;
-    }, {} as ProjectGraph['nodes']);
+    graph.nodes = Object.entries(graph.nodes).reduce(
+      (acc, [name, node]) => {
+        if (args.withTarget.some((target) => node.data.targets?.[target])) {
+          acc[name] = node;
+        }
+        return acc;
+      },
+      {} as ProjectGraph['nodes']
+    );
   }
 
   const selectedProjects = new Set(Object.keys(graph.nodes));

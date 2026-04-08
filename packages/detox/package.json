@@ -25,6 +25,7 @@
   "license": "MIT",
   "author": "Victor Savkin",
   "main": "./index.js",
+  "type": "commonjs",
   "types": "index.d.ts",
   "dependencies": {
     "@nx/devkit": "workspace:*",
@@ -32,6 +33,7 @@
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/react": "workspace:*",
+    "semver": "catalog:",
     "tslib": "catalog:typescript"
   },
   "devDependencies": {

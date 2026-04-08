@@ -44,10 +44,17 @@ pub struct TaskGraph {
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
+pub enum CwdMode {
+    Absolute,
+    Relative,
+}
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub enum HashInstruction {
     WorkspaceFileSet(Vec<String>),
     Runtime(String),
     Environment(String),
+    Cwd(CwdMode),
     ProjectFileSet(String, Vec<String>),
     ProjectConfiguration(String),
     TsConfiguration(String),
@@ -67,12 +74,26 @@ impl ToNapiValue for HashInstruction {
 
         check_status!(
             unsafe {
-                sys::napi_create_string_utf8(env, val.as_ptr() as *const _, val.len(), &mut ptr)
+                sys::napi_create_string_utf8(
+                    env,
+                    val.as_ptr() as *const _,
+                    val.len() as isize,
+                    &mut ptr,
+                )
             },
             "Failed to convert rust `String` into napi `string`"
         )?;
 
         Ok(ptr)
+    }
+}
+
+impl fmt::Display for CwdMode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            CwdMode::Absolute => write!(f, "absolute"),
+            CwdMode::Relative => write!(f, "relative"),
+        }
     }
 }
 
@@ -90,6 +111,7 @@ impl fmt::Display for HashInstruction {
                     format!("workspace:[{}]", file_set.join(",")),
                 HashInstruction::Runtime(runtime) => format!("runtime:{}", runtime),
                 HashInstruction::Environment(env) => format!("env:{}", env),
+                HashInstruction::Cwd(mode) => format!("cwd:{}", mode),
                 HashInstruction::TaskOutput(task_output, dep_outputs) => {
                     let dep_outputs = dep_outputs.join(",");
                     format!("{task_output}:{dep_outputs}")

@@ -18,7 +18,7 @@ import type { BuilderMigrator, BuilderMigratorClassType } from '../builders';
 import { Migrator } from '../migrator';
 
 export class ProjectMigrator<
-  TargetType extends string = string
+  TargetType extends string = string,
 > extends Migrator {
   public get projectName(): string {
     return this.project.name;

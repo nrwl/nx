@@ -22,7 +22,8 @@
   },
   "homepage": "https://nx.dev",
   "main": "./index.js",
-  "typings": "./index.d.ts",
+  "type": "commonjs",
+  "types": "./index.d.ts",
   "generators": "./generators.json",
   "executors": "./executors.json",
   "nx-migrations": {
@@ -41,7 +42,7 @@
     "@nx/vitest": "workspace:*"
   },
   "peerDependencies": {
-    "@remix-run/dev": "^2.14.0"
+    "@remix-run/dev": "^2.17.3"
   },
   "publishConfig": {
     "access": "public"

@@ -7,11 +7,9 @@
     "inlineSources": true,
     "types": []
   },
+  "include": ["src/**/*.ts"],
   "exclude": [
-    "src/**/*.spec.ts",<% if(unitTesting) { %>
-    "src/test-setup.ts",<% } %>
-    "jest.config.ts",
+    "src/**/*.spec.ts",
     "src/**/*.test.ts"
-  ],
-  "include": ["src/**/*.ts"]
+  ]
 }

@@ -1,4 +1,4 @@
-import * as CopyWebpackPlugin from 'copy-webpack-plugin';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { AssetGlobPattern } from '../executors/webpack/schema';
 
 export function createCopyPlugin(assets: AssetGlobPattern[]) {
@@ -18,6 +18,7 @@ export function createCopyPlugin(assets: AssetGlobPattern[]) {
           ],
           dot: true,
         },
+        noErrorOnMissing: true,
       };
     }),
   });

@@ -99,4 +99,50 @@ We can also set this via project configuration as a default option.
 
 **Note:** In contrast to other configuration formats, the `Flat Config` requires that all configuration files are converted to `eslint.config.cjs`. Built-in migrations and generators support only `.eslintrc.json` at the moment.
 
+##### Bulk Suppression
+
+ESLint v9.24.0 introduced bulk suppression features that allow you to suppress existing violations while only new violations trigger errors. This is particularly useful when migrating to stricter lint rules in existing codebases.
+
+**Suppress all existing violations:**
+
+```json
+"lint": {
+  "executor": "@nx/eslint:lint",
+  "outputs": ["{options.outputFile}"],
+  "options": {
+    "lintFilePatterns": ["apps/frontend/**/*.ts"],
+    "suppressAll": true
+  }
+}
+```
+
+**Suppress specific rules:**
+
+```json
+"lint": {
+  "executor": "@nx/eslint:lint",
+  "outputs": ["{options.outputFile}"],
+  "options": {
+    "lintFilePatterns": ["apps/frontend/**/*.ts"],
+    "suppressRule": ["no-console", "no-unused-vars"]
+  }
+}
+```
+
+**Specify custom suppressions file location:**
+
+```json
+"lint": {
+  "executor": "@nx/eslint:lint",
+  "outputs": ["{options.outputFile}"],
+  "options": {
+    "lintFilePatterns": ["apps/frontend/**/*.ts"],
+    "suppressAll": true,
+    "suppressionsLocation": "./custom-suppressions.json"
+  }
+}
+```
+
+**Note:** Bulk suppression options require ESLint v9.24.0 or higher. When using these options with older ESLint versions, the executor will throw an error.
+
 ---

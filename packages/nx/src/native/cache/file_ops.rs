@@ -43,6 +43,7 @@ where
         copied_size
     } else if src.is_symlink() {
         trace!("Copying symlink: {:?}", &src);
+        remove_existing_symlink(&dest)?;
         symlink(fs::read_link(&src)?, &dest)?;
         trace!("Successfully copied symlink: {:?}", &src);
         0
@@ -87,6 +88,20 @@ fn symlink<P: AsRef<Path>, Q: AsRef<Path>>(original: P, link: Q) -> io::Result<(
     std::os::wasi::fs::symlink_path(original, link)
 }
 
+/// Removes an existing symlink at `path` if one exists.
+/// Uses `symlink_metadata` which does not follow symlinks, so it correctly
+/// detects dangling symlinks that `is_file()`/`is_dir()` would miss.
+fn remove_existing_symlink(path: &Path) -> io::Result<()> {
+    match fs::symlink_metadata(path) {
+        Ok(meta) if meta.file_type().is_symlink() => {
+            trace!("Removing existing symlink at {:?}", path);
+            fs::remove_file(path)?;
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
 fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<u64> {
     trace!("Creating directory: {:?}", dst.as_ref());
     fs::create_dir_all(&dst)?;
@@ -115,6 +130,7 @@ fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<u64>
             subdir_size
         } else if ty.is_symlink() {
             trace!("Copying symlink: {:?}", entry.path());
+            remove_existing_symlink(&dest_path)?;
             symlink(fs::read_link(entry.path())?, dest_path)?;
             symlinks_copied += 1;
             trace!("Successfully copied symlink: {:?}", entry_name);

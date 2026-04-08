@@ -34,8 +34,6 @@ export interface RemixPluginOptions {
   serveStaticTargetName?: string;
 }
 
-const pmc = getPackageManagerCommand();
-
 type RemixTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 function readTargetsCache(
@@ -66,6 +64,9 @@ export const createNodes: CreateNodesV2<RemixPluginOptions> = [
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `remix-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -74,7 +75,8 @@ export const createNodes: CreateNodesV2<RemixPluginOptions> = [
             options,
             context,
             targetsCache,
-            _isUsingTsSolutionSetup()
+            _isUsingTsSolutionSetup(),
+            pmc
           ),
         configFilePaths,
         options,
@@ -93,7 +95,8 @@ async function createNodesInternal(
   options: RemixPluginOptions,
   context: CreateNodesContextV2,
   targetsCache: Record<string, RemixTargets>,
-  isUsingTsSolutionSetup: boolean
+  isUsingTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const projectRoot = dirname(configFilePath);
   const fullyQualifiedProjectRoot = join(context.workspaceRoot, projectRoot);
@@ -132,7 +135,8 @@ async function createNodesInternal(
     context,
     siblingFiles,
     remixCompiler,
-    isUsingTsSolutionSetup
+    isUsingTsSolutionSetup,
+    pmc
   );
 
   const { targets, metadata } = targetsCache[hash];
@@ -157,7 +161,8 @@ async function buildRemixTargets(
   context: CreateNodesContextV2,
   siblingFiles: string[],
   remixCompiler: RemixCompiler,
-  isUsingTsSolutionSetup: boolean
+  isUsingTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
   const { buildDirectory, assetsBuildDirectory, serverBuildPath } =
@@ -203,7 +208,8 @@ async function buildRemixTargets(
     projectRoot,
     namedInputs,
     siblingFiles,
-    isUsingTsSolutionSetup
+    isUsingTsSolutionSetup,
+    pmc
   );
 
   addBuildAndWatchDepsTargets(
@@ -326,7 +332,8 @@ function typecheckTarget(
   projectRoot: string,
   namedInputs: { [inputName: string]: any[] },
   siblingFiles: string[],
-  isUsingTsSolutionSetup: boolean
+  isUsingTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): TargetConfiguration {
   const hasTsConfigAppJson = siblingFiles.includes('tsconfig.app.json');
   const typecheckTarget: TargetConfiguration = {

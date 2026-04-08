@@ -1,15 +1,11 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { prompt } from 'enquirer';
 import { readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { ReleaseType, prerelease } from 'semver';
+import { prerelease } from 'semver';
 import { dirSync } from 'tmp';
 import type { DependencyBump } from '../../../release/changelog-renderer';
 import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
-import {
-  FileData,
-  ProjectFileMap,
-  ProjectGraphProjectNode,
-} from '../../config/project-graph';
+import { ProjectGraphProjectNode } from '../../config/project-graph';
 import { FsTree, Tree } from '../../generators/tree';
 import {
   createFileMapUsingProjectGraph,
@@ -22,6 +18,22 @@ import { isCI } from '../../utils/is-ci';
 import { output } from '../../utils/output';
 import { joinPathFragments } from '../../utils/path';
 import { workspaceRoot } from '../../utils/workspace-root';
+import {
+  createChangesFromCommits,
+  createFileToProjectMap,
+  filterHiddenChanges,
+  mapCommitToChange,
+} from './changelog/commit-utils';
+import {
+  filterVersionPlansByCommitRange,
+  resolveChangelogFromSHA,
+  resolveWorkspaceChangelogFromSHA,
+} from './changelog/version-plan-filtering';
+import {
+  ChangelogChange,
+  createChangesFromGroupVersionPlans,
+  createChangesFromProjectsVersionPlans,
+} from './changelog/version-plan-utils';
 import { ChangelogOptions } from './command-object';
 import {
   NxReleaseConfig,
@@ -39,11 +51,8 @@ import {
 } from './config/version-plans';
 import {
   GitCommit,
-  Reference,
   getCommitHash,
-  getFirstGitCommit,
   getGitDiff,
-  getLatestGitTagForPattern,
   gitAdd,
   gitPush,
   gitTag,
@@ -55,6 +64,7 @@ import { printAndFlushChanges } from './utils/print-changes';
 import { printConfigAndExit } from './utils/print-config';
 import { ReleaseGraph, createReleaseGraph } from './utils/release-graph';
 import { createRemoteReleaseClient } from './utils/remote-release-clients/remote-release-client';
+import type { CheckAllBranchesWhen } from './utils/repository-git-tags';
 import { resolveChangelogRenderer } from './utils/resolve-changelog-renderer';
 import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
 import {
@@ -72,22 +82,6 @@ import {
   areAllVersionPlanProjectsFiltered,
   validateResolvedVersionPlansAgainstFilter,
 } from './utils/version-plan-utils';
-import {
-  ChangelogChange,
-  createChangesFromGroupVersionPlans,
-  createChangesFromProjectsVersionPlans,
-} from './changelog/version-plan-utils';
-import {
-  createChangesFromCommits,
-  createFileToProjectMap,
-  filterHiddenChanges,
-  mapCommitToChange,
-} from './changelog/commit-utils';
-import {
-  filterVersionPlansByCommitRange,
-  resolveWorkspaceChangelogFromSHA,
-  resolveChangelogFromSHA,
-} from './changelog/version-plan-filtering';
 
 export interface NxReleaseChangelogResult {
   workspaceChangelog?: {
@@ -244,6 +238,8 @@ export function createAPI(
       args,
       nxReleaseConfig,
       useAutomaticFromRef,
+      resolveRepositoryTags:
+        releaseGraph.resolveRepositoryTags.bind(releaseGraph),
     });
 
     // Filter version plans based on resolveVersionPlans option
@@ -322,7 +318,7 @@ export function createAPI(
 
     // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
     const gitTagValues: string[] =
-      args.gitTag ?? nxReleaseConfig.changelog.git.tag
+      (args.gitTag ?? nxReleaseConfig.changelog.git.tag)
         ? createGitTagValues(
             releaseGraph.releaseGroups,
             releaseGraph.releaseGroupToFilteredProjects,
@@ -372,7 +368,7 @@ export function createAPI(
       pattern: string,
       templateValues: Record<string, string>,
       preid: string | undefined,
-      checkAllBranchesWhen: boolean | string[],
+      checkAllBranchesWhen: CheckAllBranchesWhen,
       requireSemver: boolean,
       strictPreid: boolean
     ): Promise<string | null> => {
@@ -383,6 +379,8 @@ export function createAPI(
         fromRef: args.from,
         tagPattern: pattern,
         tagPatternValues: templateValues,
+        resolveRepositoryTags:
+          releaseGraph.resolveRepositoryTags.bind(releaseGraph),
         checkAllBranchesWhen,
         preid,
         requireSemver,
@@ -455,15 +453,19 @@ export function createAPI(
       const projects = args.projects?.length
         ? // If the user has passed a list of projects, we need to use the filtered list of projects within the release group, plus any dependents
           Array.from(
-            releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup)
-          ).flatMap((project) => {
-            return [
-              project,
-              ...(projectsVersionData[project]?.dependentProjects.map(
-                (dep) => dep.source
-              ) || []),
-            ];
-          })
+            new Set(
+              Array.from(
+                releaseGraph.releaseGroupToFilteredProjects.get(releaseGroup)
+              ).flatMap((project) => {
+                return [
+                  project,
+                  ...(projectsVersionData[project]?.dependentProjects.map(
+                    (dep) => dep.source
+                  ) || []),
+                ];
+              })
+            )
+          )
         : // Otherwise, we use the full list of projects within the release group
           releaseGroup.projects;
       const projectNodes = projects.map((name) => projectGraph.nodes[name]);
@@ -527,9 +529,8 @@ export function createAPI(
               });
             }
 
-            const { fileMap } = await createFileMapUsingProjectGraph(
-              projectGraph
-            );
+            const { fileMap } =
+              await createFileMapUsingProjectGraph(projectGraph);
             const fileToProjectMap = createFileToProjectMap(
               fileMap.projectFileMap
             );
@@ -596,9 +597,8 @@ export function createAPI(
             );
           }
 
-          const { fileMap } = await createFileMapUsingProjectGraph(
-            projectGraph
-          );
+          const { fileMap } =
+            await createFileMapUsingProjectGraph(projectGraph);
           const fileToProjectMap = createFileToProjectMap(
             fileMap.projectFileMap
           );
@@ -957,12 +957,13 @@ async function generateChangelogForWorkspace({
   const releaseVersion = new ReleaseVersion({
     version: workspaceChangelogVersion,
     releaseTagPattern: nxReleaseConfig.releaseTag.pattern,
+    releaseGroupName: Object.keys(nxReleaseConfig.groups)[0],
   });
 
   if (interpolatedTreePath) {
     const prefix = dryRun ? 'Previewing' : 'Generating';
     output.log({
-      title: `${prefix} an entry in ${interpolatedTreePath} for ${chalk.white(
+      title: `${prefix} an entry in ${interpolatedTreePath} for ${pc.white(
         releaseVersion.gitTag
       )}`,
     });
@@ -1124,12 +1125,13 @@ async function generateChangelogForProjects({
           : projectsVersionData[project.name].newVersion,
       releaseTagPattern: releaseGroup.releaseTag.pattern,
       projectName: project.name,
+      releaseGroupName: releaseGroup.name,
     });
 
     if (interpolatedTreePath) {
       const prefix = dryRun ? 'Previewing' : 'Generating';
       output.log({
-        title: `${prefix} an entry in ${interpolatedTreePath} for ${chalk.white(
+        title: `${prefix} an entry in ${interpolatedTreePath} for ${pc.white(
           releaseVersion.gitTag
         )}`,
       });

@@ -1,7 +1,7 @@
 import { type Tree, formatFiles, visitNotIgnoredFiles } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import picomatch = require('picomatch');
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 
 export default async function (tree: Tree) {
   visitNotIgnoredFiles(tree, '', (path) => {
@@ -23,21 +23,19 @@ export default async function (tree: Tree) {
       'CallExpression:has(Identifier[name=withModuleFederation]),CallExpression:has(Identifier[name=withModuleFederationForSSR])';
     const EXISTING_MF_OVERRIDES_SELECTOR = 'ObjectLiteralExpression';
 
-    const ast = tsquery.ast(webpackConfigContents);
-    const withModuleFederationNodes = tsquery(
-      ast,
-      WITH_MODULE_FEDERATION_SELECTOR,
-      { visitAllChildren: true }
+    const sourceFile = ast(webpackConfigContents);
+    const withModuleFederationNodes = query(
+      sourceFile,
+      WITH_MODULE_FEDERATION_SELECTOR
     );
     if (!withModuleFederationNodes.length) {
       return;
     }
 
     const withModuleFederationNode = withModuleFederationNodes[0];
-    const existingOverridesNodes = tsquery(
+    const existingOverridesNodes = query(
       withModuleFederationNode,
-      EXISTING_MF_OVERRIDES_SELECTOR,
-      { visitAllChildren: true }
+      EXISTING_MF_OVERRIDES_SELECTOR
     );
     if (!existingOverridesNodes.length) {
       // doesn't exist, add it
@@ -59,7 +57,7 @@ export default async function (tree: Tree) {
         existingOverrideNode = node;
       }
       const DTS_PROPERTY_SELECTOR = 'PropertyAssignment > Identifier[name=dts]';
-      const dtsPropertyNode = tsquery(
+      const dtsPropertyNode = query(
         existingOverrideNode,
         DTS_PROPERTY_SELECTOR
       );

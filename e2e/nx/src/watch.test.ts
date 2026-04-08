@@ -11,7 +11,7 @@ import {
 } from '@nx/e2e-utils';
 import { spawn } from 'child_process';
 import { join } from 'path';
-import { writeFileSync, mkdtempSync } from 'fs';
+import { writeFileSync, mkdtempSync, mkdirSync } from 'fs';
 import { tmpdir } from 'os';
 
 let cacheDirectory = mkdtempSync(join(tmpdir(), 'daemon'));
@@ -22,6 +22,14 @@ async function writeFileForWatcher(path: string, content: string) {
 
   console.log(`writing to: ${e2ePath}`);
   writeFileSync(e2ePath, content);
+  await wait(10);
+}
+
+async function mkdirForWatcher(path: string) {
+  const e2ePath = join(tmpProjPath(), path);
+
+  console.log(`creating directory: ${e2ePath}`);
+  mkdirSync(e2ePath, { recursive: true });
   await wait(10);
 }
 
@@ -154,6 +162,53 @@ describe('Nx Watch', () => {
 
     expect(results).toEqual([proj1, proj3]);
   }, 50000);
+
+  it('should detect files created in newly created directories', async () => {
+    const getOutput = await runWatch(`--all -- echo \\$NX_FILE_CHANGES`);
+
+    // Create a new subdirectory inside an existing project
+    await mkdirForWatcher(`libs/${proj1}/src/newsubdir`);
+    // Wait for the watcher to register the new directory
+    await wait(2000);
+
+    // Create a file in the newly created directory
+    await writeFileForWatcher(
+      `libs/${proj1}/src/newsubdir/newfile.ts`,
+      'export const x = 1;'
+    );
+
+    let output = (await getOutput())[0];
+    let results = output.split(' ').sort();
+
+    expect(results).toContain(`libs/${proj1}/src/newsubdir/newfile.ts`);
+  }, 50000);
+
+  it('should reconnect after daemon restart', async () => {
+    const getOutput = await runWatchWithReconnect(
+      `--projects=${proj1} -- echo \\$NX_PROJECT_NAME`
+    );
+
+    // Write file before daemon restart
+    await writeFileForWatcher(`libs/${proj1}/before-restart.txt`, 'content');
+    await wait(1000);
+
+    // Kill the daemon
+    runCLI('daemon --stop', {
+      env: {
+        NX_DAEMON: 'true',
+        NX_PROJECT_GRAPH_CACHE_DIRECTORY: cacheDirectory,
+      },
+    });
+
+    // Wait for reconnection to happen (exponential backoff)
+    await wait(3000);
+
+    // Write file after daemon restart - watch should reconnect and receive this
+    await writeFileForWatcher(`libs/${proj1}/after-restart.txt`, 'content');
+
+    const output = await getOutput();
+    expect(output).toContain(proj1);
+  }, 60000);
 });
 
 async function wait(timeout = 200) {
@@ -194,6 +249,49 @@ async function runWatch(command: string) {
             .filter((line) => line.length > 0 && !line.includes('NX'));
         });
       }
+    });
+  });
+}
+
+async function runWatchWithReconnect(command: string) {
+  const runCommand = `npx -c 'nx watch --verbose ${command}'`;
+  isVerboseE2ERun() && console.log(runCommand);
+  return new Promise<(timeout?: number) => Promise<string[]>>((resolve) => {
+    const p = spawn(runCommand, {
+      cwd: tmpProjPath(),
+      env: {
+        CI: 'true',
+        ...getStrippedEnvironmentVariables(),
+        FORCE_COLOR: 'false',
+        NX_DAEMON: 'true',
+        NX_PROJECT_GRAPH_CACHE_DIRECTORY: cacheDirectory,
+      },
+      shell: true,
+      stdio: 'pipe',
+    });
+
+    let output = '';
+    let resolved = false;
+    p.stdout?.on('data', (data) => {
+      output += data;
+      const s = data.toString().trim();
+      isVerboseE2ERun() && console.log(s);
+      // Resolve once we see the watch is ready, but don't kill the process yet
+      if (s.includes('watch process waiting') && !resolved) {
+        resolved = true;
+        resolve(async (timeout = 8000) => {
+          await wait(timeout);
+          p.kill();
+          return output
+            .split('\n')
+            .filter((line) => line.length > 0 && !line.includes('NX'));
+        });
+      }
+    });
+
+    p.stderr?.on('data', (data) => {
+      const s = data.toString().trim();
+      isVerboseE2ERun() && console.log('stderr:', s);
     });
   });
 }

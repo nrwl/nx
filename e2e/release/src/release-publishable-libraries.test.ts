@@ -29,6 +29,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*B\s+src\//g, 'XXB src/')
         .replaceAll(/\d*B\s+lib\//g, 'XXB lib/')
         .replaceAll(/\d*B\s+index/g, 'XXB index')
+        .replaceAll(/\d*B\s+types\//g, 'XXB types/')
         .replaceAll(/total files:\s+\d*/g, 'total files: X')
         .replaceAll(/\d*B\s+README.md/g, 'XXB README.md')
         .replaceAll(/[a-fA-F0-9]{7}/g, '{COMMIT_SHA}')
@@ -236,8 +237,8 @@ describe('release publishable libraries', () => {
       XXB README.md
       XXX.XXX kb fesm2022/proj-{project-name}.mjs
       XXX.XXX kb fesm2022/proj-{project-name}.mjs.map
-      XXB index.d.ts
       XXXB package.json
+      XXB types/proj-{project-name}.d.ts
       === Tarball Details ===
       name:          @proj/{project-name}
       version:       0.0.4

@@ -246,8 +246,21 @@ function createEsLintConfiguration(
   const overrides: Linter.ConfigOverride<Linter.RulesRecord>[] = useFlatConfig(
     tree
   )
-    ? // For flat configs, we don't need to generate different overrides for each file. Users should add their own overrides as needed.
-      []
+    ? // For flat configs, keep generated overrides minimal; only add parserOptions when explicitly requested.
+      [
+        ...(setParserOptionsProject
+          ? [
+              {
+                files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+                languageOptions: {
+                  parserOptions: {
+                    project: [`${projectConfig.root}/tsconfig.*?.json`],
+                  },
+                },
+              } as unknown as Linter.ConfigOverride<Linter.RulesRecord>,
+            ]
+          : []),
+      ]
     : [
         {
           files: ['*.ts', '*.tsx', '*.js', '*.jsx'],

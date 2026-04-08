@@ -237,7 +237,11 @@ describe('nx release - independent projects', () => {
       const versionWithGitActionsCLIOutput = runCLI(
         `release version 999.9.9-version-git-operations-test.2 -p ${pkg1} --git-commit --git-tag --verbose` // add verbose so we get richer output
       );
-      expect(versionWithGitActionsCLIOutput).toMatchInlineSnapshot(`
+      const filteredOutput = versionWithGitActionsCLIOutput.replace(
+        /\[(isolated-plugin|plugin-worker)\].*\n/g,
+        ''
+      );
+      expect(filteredOutput).toMatchInlineSnapshot(`
 
         NX   Your filter "{project-name}" matched the following projects:
 
@@ -320,7 +324,11 @@ describe('nx release - independent projects', () => {
       const versionWithGitActionsConfigOutput = runCLI(
         `release version 999.9.9-version-git-operations-test.3 --verbose --gitTag` // add verbose so we get richer output
       );
-      expect(versionWithGitActionsConfigOutput).toMatchInlineSnapshot(`
+      const filteredConfigOutput = versionWithGitActionsConfigOutput.replace(
+        /\[(isolated-plugin|plugin-worker)\].*\n/g,
+        ''
+      );
+      expect(filteredConfigOutput).toMatchInlineSnapshot(`
 
         NX   Running release version for project: {project-name}
 
@@ -516,7 +524,11 @@ describe('nx release - independent projects', () => {
       const versionWithGitActionsCLIOutput = runCLI(
         `release changelog 999.9.9-changelog-git-operations-test.1 -p ${pkg1} --verbose`
       );
-      expect(versionWithGitActionsCLIOutput).toMatchInlineSnapshot(`
+      const filteredChangelogOutput = versionWithGitActionsCLIOutput.replace(
+        /\[(isolated-plugin|plugin-worker)\].*\n/g,
+        ''
+      );
+      expect(filteredChangelogOutput).toMatchInlineSnapshot(`
 
         NX   Your filter "{project-name}" matched the following projects:
 
@@ -1251,6 +1263,66 @@ describe('nx release - independent projects', () => {
           )
         ).length
       ).toEqual(1);
+    });
+
+    it('should include dependent projects in the commit message when using --projects filter with updateDependents', async () => {
+      // pkg2 depends on pkg3 (set up in beforeAll)
+      updateJson('nx.json', () => {
+        return {
+          release: {
+            projectsRelationship: 'independent',
+            version: {
+              updateDependents: 'always',
+              git: {
+                commit: true,
+                tag: true,
+              },
+            },
+          },
+        };
+      });
+
+      runCommand(`git add .`);
+      runCommand(`git commit -m "chore: initial commit"`);
+
+      const headSHA = runCommand(`git rev-parse HEAD`).trim();
+
+      // Run release version filtering to only pkg3, but pkg2 depends on pkg3
+      // so pkg2 should also get a side-effect bump and appear in the commit message
+      const releaseOutput = runCLI(
+        `release version 999.9.9-dependent-commit-test.1 -p ${pkg3} --verbose`
+      );
+
+      // A new commit should have been created
+      expect(runCommand(`git rev-parse HEAD`).trim()).not.toEqual(headSHA);
+
+      // pkg3 should be versioned (explicitly filtered)
+      expect(
+        releaseOutput.match(
+          new RegExp(
+            `New version 999\\.9\\.9-dependent-commit-test\\.1 written`,
+            'g'
+          )
+        ).length
+      ).toBeGreaterThanOrEqual(1);
+
+      // pkg2 should also be versioned (dependent of pkg3)
+      expect(releaseOutput).toContain(
+        `Applied semver relative bump "patch", because a dependency was bumped`
+      );
+
+      // The commit message should include BOTH pkg3 (explicitly filtered)
+      // and pkg2 (dependent that received a side-effect bump)
+      const commitMessage = runCommand(
+        `git --no-pager log -1 --pretty=format:%B`
+      ).trim();
+      expect(commitMessage).toContain(`- project: ${pkg3}`);
+      expect(commitMessage).toContain(`- project: ${pkg2}`);
+
+      // Tags should also include both projects
+      const tagsAtHead = runCommand('git tag --points-at HEAD');
+      expect(tagsAtHead).toContain(`${pkg3}@`);
+      expect(tagsAtHead).toContain(`${pkg2}@`);
     });
   });
 });

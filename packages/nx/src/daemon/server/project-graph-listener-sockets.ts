@@ -1,6 +1,6 @@
 import { Socket } from 'net';
 import { ProjectGraph } from '../../config/project-graph';
-import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
+import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
 import { handleResult } from './server';
 import { isV8SerializerEnabled } from '../is-v8-serializer-enabled';
 
@@ -17,7 +17,8 @@ export function hasRegisteredProjectGraphListenerSockets() {
 
 export async function notifyProjectGraphListenerSockets(
   projectGraph: ProjectGraph,
-  sourceMaps: ConfigurationSourceMaps
+  sourceMaps: ConfigurationSourceMaps,
+  error: Error | null
 ) {
   if (!hasRegisteredProjectGraphListenerSockets()) {
     return;
@@ -31,7 +32,7 @@ export async function notifyProjectGraphListenerSockets(
         () =>
           Promise.resolve({
             description: 'Project graph updated',
-            response: { projectGraph, sourceMaps },
+            response: { projectGraph, sourceMaps, error },
           }),
         isV8SerializerEnabled() ? 'v8' : 'json'
       )

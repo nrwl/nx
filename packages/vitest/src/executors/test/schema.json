@@ -19,7 +19,13 @@
     },
     "mode": {
       "type": "string",
-      "description": "Mode for Vite."
+      "description": "Vite mode for loading configuration."
+    },
+    "runMode": {
+      "type": "string",
+      "description": "Vitest execution mode.",
+      "enum": ["test", "benchmark"],
+      "default": "test"
     },
     "testFiles": {
       "aliases": ["testFile"],

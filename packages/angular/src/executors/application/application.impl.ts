@@ -46,7 +46,7 @@ export default async function* applicationExecutor(
 
   const builderContext = await createBuilderContext(
     {
-      builderName: 'application',
+      builderName: '@nx/angular:application',
       description: 'Build an application.',
       optionSchema: require('./schema.json'),
     },

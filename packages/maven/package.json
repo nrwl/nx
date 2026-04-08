@@ -13,6 +13,7 @@
   },
   "homepage": "https://nx.dev",
   "main": "./dist/index.js",
+  "type": "commonjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -33,6 +34,7 @@
     "dist",
     "generators.json",
     "executors.json",
+    "migrations.json",
     "!dist/tsconfig.lib.tsbuildinfo"
   ],
   "keywords": [
@@ -47,6 +49,7 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@xmldom/xmldom": "^0.8.10",
+    "tree-kill": "^1.2.2",
     "tslib": "catalog:typescript"
   },
   "devDependencies": {

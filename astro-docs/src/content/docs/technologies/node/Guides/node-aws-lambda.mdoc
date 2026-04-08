@@ -20,7 +20,7 @@ Depending on your current situation, you can either
 - create a new project with the goal of primarily developing and publishing AWS Lambda functions
 - add AWS Lambda functions to an existing Node.js project in an Nx workspace
 
-### Starting a New Project
+### Starting a new project
 
 To create a new project, run
 
@@ -28,7 +28,7 @@ To create a new project, run
 npx create-nx-workspace@latest my-functions --preset=@nx/aws-lambda
 ```
 
-### Configure Existing Projects
+### Configure existing projects
 
 First, make sure you have `@nx/aws-lambda` installed.
 
@@ -48,7 +48,7 @@ This will setup your project to use AWS Lambda functions:
 2. Adds `samconfig.toml` and `template.yaml` in the root of the project.
 3. Updates your `project.json` to have 2 new targets `serve-functions` & `deploy-functions`.
 
-## Serve and Develop Your Functions Locally
+## Serve and develop your functions locally
 
 The `project.json` should have a new target `serve-functions`:
 
@@ -69,7 +69,7 @@ The `project.json` should have a new target `serve-functions`:
 
 This allows to just run `nx serve-functions` to start a local server that serves your functions. As you can see it leverages the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-command-reference.html) underneath.
 
-## Configure Your AWS Lambda Deploy Settings
+## Configure your AWS Lambda deploy settings
 
 {% aside type="note" title="Prerequiste" %}
 You need to configure your AWS credentials inside AWS before attempting to deploy.

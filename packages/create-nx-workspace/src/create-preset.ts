@@ -1,5 +1,5 @@
 import { CreateWorkspaceOptions } from './create-workspace-options';
-import { output } from './utils/output';
+import { CnwError } from './utils/error-utils';
 import {
   getPackageManagerCommand,
   getPackageManagerVersion,
@@ -14,7 +14,13 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
   packageManager: PackageManager,
   directory: string
 ): Promise<void> {
-  const { skipGit, commit, nxCloud, ...restArgs } = parsedArgs;
+  const {
+    skipGit,
+    commit,
+    nxCloud,
+    workingDir: _workingDir,
+    ...restArgs
+  } = parsedArgs;
 
   // Delete verbose because it will conflict with the --quiet flag
   if (!restArgs.verbose) {
@@ -28,7 +34,10 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
 
   const pmc = getPackageManagerCommand(packageManager);
 
-  const workingDir = process.cwd().replace(/\\/g, '/');
+  const workingDir = (parsedArgs.workingDir ?? process.cwd()).replace(
+    /\\/g,
+    '/'
+  );
   let nxWorkspaceRoot = `"${workingDir}"`;
 
   // If path contains spaces there is a problem in Windows for npm@6.
@@ -63,10 +72,6 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
     );
     await spawnAndWait(exec, args, directory);
   } catch (e) {
-    output.error({
-      title: `Failed to apply preset: ${preset}`,
-      bodyLines: ['See above'],
-    });
-    process.exit(1);
+    throw new CnwError('PRESET_FAILED', `Failed to apply preset: ${preset}`);
   }
 }

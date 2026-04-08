@@ -18,69 +18,49 @@
       "{workspaceRoot}/.nx/workflows/agents.yaml",
       "{workspaceRoot}/.github/workflows/ci.yml"
     ],
+    "copyReadme": [
+      "{projectRoot}/README.md",
+      "{projectRoot}/readme-template.md",
+      "{workspaceRoot}/scripts/copy-readme.js",
+      "{workspaceRoot}/scripts/readme-fragments/**/*",
+      "{workspaceRoot}/.prettierignore"
+    ],
     "native": [
       "{projectRoot}/**/*.rs",
       "{projectRoot}/**/Cargo.*",
-      {
-        "runtime": "node -p '`${process.platform}_${process.arch}`'"
-      },
-      {
-        "runtime": "rustc --version"
-      },
-      {
-        "externalDependencies": ["npm:@monodon/rust", "npm:@napi-rs/cli"]
-      }
+      { "runtime": "node -p '`${process.platform}_${process.arch}`'" },
+      { "runtime": "rustc --version" },
+      { "externalDependencies": ["npm:@monodon/rust", "npm:@napi-rs/cli"] }
     ],
     "e2eInputs": [
       "default",
+      "{workspaceRoot}/scripts/patched-jest-resolver.js",
       "{workspaceRoot}/jest.preset.js",
+      "{workspaceRoot}/e2e/jest.preset.e2e.js",
       "{workspaceRoot}/.verdaccio/config.yml",
       "{workspaceRoot}/scripts/local-registry/**/*",
       "{workspaceRoot}/scripts/nx-release.ts",
-      {
-        "env": "SELECTED_CLI"
-      },
-      {
-        "env": "SELECTED_PM"
-      },
-      {
-        "env": "NX_E2E_CI_CACHE_KEY"
-      },
-      {
-        "env": "CI"
-      },
-      {
-        "env": "NX_E2E_RUN_E2E"
-      }
+      { "env": "SELECTED_CLI" },
+      { "env": "SELECTED_PM" },
+      { "env": "NX_E2E_CI_CACHE_KEY" },
+      { "env": "CI" },
+      { "env": "NX_E2E_RUN_E2E" }
     ]
   },
   "release": {
     "projects": ["packages/*", "packages/nx/native-packages/*"],
     "releaseTagPattern": "{version}",
     "changelog": {
-      "workspaceChangelog": {
-        "createRelease": "github",
-        "file": false
-      },
-      "git": {
-        "commit": false,
-        "stageChanges": false,
-        "tag": false
-      }
+      "workspaceChangelog": { "createRelease": "github", "file": false },
+      "git": { "commit": false, "stageChanges": false, "tag": false }
     },
     "version": {
-      "git": {
-        "commit": false,
-        "stageChanges": false,
-        "tag": false
-      },
+      "git": { "commit": false, "stageChanges": false, "tag": false },
       "currentVersionResolver": "registry",
       "preserveLocalDependencyProtocols": false,
       "preserveMatchingDependencyRanges": false,
       "manifestRootsToUpdate": ["dist/packages/{projectName}"],
-      "versionActionsOptions": {
-        "skipLockFileUpdate": true
-      }
+      "versionActionsOptions": { "skipLockFileUpdate": true }
     }
   },
   "targetDefaults": {
@@ -91,28 +71,16 @@
       }
     },
     "nx-release-publish": {
-      "options": {
-        "packageRoot": "dist/packages/{projectName}"
-      }
+      "options": { "packageRoot": "dist/packages/{projectName}" }
     },
     "build": {
-      "dependsOn": [
-        "^build",
-        "typecheck",
-        "legacy-post-build",
-        "build-base",
-        "build-native"
-      ],
+      "dependsOn": ["^build", "typecheck", "build-base"],
       "inputs": ["production", "^production"],
       "cache": true
     },
-    "build-native": {
-      "inputs": ["native"],
-      "cache": true
-    },
+    "build-native": { "inputs": ["native"], "cache": true },
     "build-base": {
-      "dependsOn": ["^build-base", "build-native"],
-      "inputs": ["production", "^production"],
+      "dependsOn": ["^build-base", "build-native", "copy-assets"],
       "cache": true
     },
     "test-native": {
@@ -123,18 +91,18 @@
     },
     "test": {
       "dependsOn": ["test-native", "build-native", "^build-native"],
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
       "options": {
-        "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"]
+        "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
+        "env": { "NODE_OPTIONS": "--experimental-vm-modules" }
       }
     },
     "lint": {
-      "dependsOn": ["build-native", "^build-native"]
+      "dependsOn": ["build-native", "^build-native"],
+      "options": {
+        "max-warnings": 5
+      }
     },
-    "e2e": {
-      "cache": true,
-      "inputs": ["e2eInputs", "^production"]
-    },
+    "e2e": { "cache": true, "inputs": ["e2eInputs", "^production"] },
     "e2e-local": {
       "cache": true,
       "inputs": ["e2eInputs", "^production"],
@@ -143,9 +111,7 @@
         "@nx/nx-source:local-registry"
       ]
     },
-    "e2e-ci": {
-      "inputs": ["e2eInputs", "^production"]
-    },
+    "e2e-ci": { "inputs": ["e2eInputs", "^production"] },
     "e2e-macos-local": {
       "cache": true,
       "inputs": ["e2eInputs", "^production"],
@@ -154,18 +120,14 @@
         "@nx/nx-source:local-registry"
       ]
     },
-    "e2e-macos-ci": {
-      "inputs": ["e2eInputs", "^production"]
-    },
+    "e2e-macos-ci": { "inputs": ["e2eInputs", "^production"] },
     "e2e-ci--**/**": {
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:local-registry"
       ],
-      "options": {
-        "args": ["--forceExit"]
-      }
+      "options": { "args": ["--forceExit"] }
     },
     "e2e-macos-ci--**/*": {
       "inputs": ["e2eInputs", "^production"],
@@ -174,9 +136,7 @@
         "@nx/nx-source:local-registry"
       ]
     },
-    "e2e-base": {
-      "inputs": ["default", "^production"]
-    },
+    "e2e-base": { "inputs": ["default", "^production"] },
     "build-storybook": {
       "inputs": [
         "default",
@@ -187,72 +147,39 @@
       ],
       "cache": true
     },
-    "build-ng": {
-      "cache": true
-    },
-    "sitemap": {
-      "cache": true
-    },
-    "copy-docs": {
-      "cache": true
-    },
-    "legacy-post-build": {
-      "dependsOn": ["build-base"],
-      "cache": true,
-      "inputs": ["production", "^production"],
-      "outputs": ["{workspaceRoot}/dist/packages/{projectName}"]
-    }
+    "build-ng": { "cache": true },
+    "sitemap": { "cache": true },
+    "copy-docs": { "cache": true }
   },
   "plugins": [
+    "./tools/workspace-plugin/src/plugins/copy-assets-plugin.ts",
     "@monodon/rust",
     {
       "plugin": "@nx/vite/plugin",
       "include": [
         "packages/angular-rspack-compiler/**",
         "packages/angular-rspack/**"
-      ],
-      "options": {
-        "testTargetName": "test"
-      }
+      ]
     },
-    {
-      "plugin": "@nx/vite/plugin",
-      "include": ["astro-docs/**"],
-      "options": {
-        "testTargetName": "vite:test"
-      }
-    },
+    { "plugin": "@nx/vite/plugin", "include": ["astro-docs/**"] },
     {
       "plugin": "@nx/js/typescript",
       "exclude": ["examples/angular-rspack/**/*", "nx-dev/**/*", "e2e/**/*"],
-      "options": {
-        "typecheck": true,
-        "build": {
-          "targetName": "build-base"
-        }
-      }
+      "options": { "typecheck": true, "build": { "targetName": "build-base" } }
     },
     {
       "plugin": "@nx/js/typescript",
       "include": ["e2e/**/*"],
-      "options": {
-        "typecheck": true,
-        "build": false
-      }
+      "options": { "typecheck": true, "build": false }
     },
     {
       "plugin": "@nx/playwright/plugin",
-      "options": {
-        "targetName": "pw-e2e",
-        "ciTargetName": "e2e-ci"
-      }
+      "options": { "targetName": "pw-e2e", "ciTargetName": "e2e-ci" }
     },
     {
       "plugin": "@nx/eslint/plugin",
       "exclude": ["packages/**/__fixtures__/**/*"],
-      "options": {
-        "targetName": "lint"
-      }
+      "options": { "targetName": "lint" }
     },
     {
       "plugin": "@nx/jest/plugin",
@@ -261,9 +188,7 @@
         "packages/**/__fixtures__/**/*",
         "jest.config.ts"
       ],
-      "options": {
-        "targetName": "test"
-      }
+      "options": { "targetName": "test" }
     },
     {
       "plugin": "@nx/webpack/plugin",
@@ -276,10 +201,7 @@
       "plugin": "@nx/jest/plugin",
       "include": ["e2e/**/*"],
       "exclude": ["e2e/detox/**/*", "e2e/react-native/**/*", "e2e/expo/**/*"],
-      "options": {
-        "targetName": "e2e-local",
-        "ciTargetName": "e2e-ci"
-      }
+      "options": { "targetName": "e2e-local", "ciTargetName": "e2e-ci" }
     },
     {
       "plugin": "@nx/jest/plugin",
@@ -300,14 +222,12 @@
     },
     {
       "plugin": "@nx/gradle",
-      "exclude": [
-        "packages/react-native/src/generators/application/files/**/*"
-      ],
       "options": {
-        "testTargetName": "test-kt"
-      }
+        "targetNamePrefix": "gradle:",
+        "ciTestTargetName": "test-ci"
+      },
+      "exclude": ["packages/react-native/src/generators/application/files/**/*"]
     },
-    "@nx/enterprise-cloud",
     {
       "plugin": "@nx/storybook/plugin",
       "options": {
@@ -327,6 +247,19 @@
         "buildDepsTargetName": "build-deps",
         "watchDepsTargetName": "watch-deps"
       }
+    },
+    {
+      "plugin": "@nx/vitest",
+      "options": { "testTargetName": "test" },
+      "include": [
+        "packages/angular-rspack-compiler/**",
+        "packages/angular-rspack/**"
+      ]
+    },
+    {
+      "plugin": "@nx/vitest",
+      "options": { "testTargetName": "vite:test" },
+      "include": ["astro-docs/**"]
     }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
@@ -334,27 +267,21 @@
   "parallel": 1,
   "bust": 3,
   "defaultBase": "master",
-  "sync": {
-    "applyChanges": true
-  },
+  "sync": { "applyChanges": true },
   "conformance": {
     "rules": [
       {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/blog-description",
+        "rule": "./dist/workspace-plugin/src/conformance-rules/blog-description",
         "projects": ["docs"],
-        "options": {
-          "mdGlobPattern": "{blog,shared}/**/!(sitemap).md"
-        }
+        "options": { "mdGlobPattern": "{blog,shared}/**/!(sitemap).md" }
       },
       {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/blog-cover-image",
+        "rule": "./dist/workspace-plugin/src/conformance-rules/blog-cover-image",
         "projects": ["docs"],
-        "options": {
-          "mdGlobPattern": "blog/**/!(sitemap).md"
-        }
+        "options": { "mdGlobPattern": "blog/**/!(sitemap).md" }
       },
       {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/project-package-json",
+        "rule": "./dist/workspace-plugin/src/conformance-rules/project-package-json",
         "projects": [
           "!.",
           "!create-nx-*",
@@ -388,7 +315,7 @@
         ]
       },
       {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/migration-groups",
+        "rule": "./dist/workspace-plugin/src/conformance-rules/migration-groups",
         "options": {
           "versionRange": ">= 19.8",
           "groups": [
@@ -440,14 +367,18 @@
         }
       },
       {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/no-ignored-tracked-files"
+        "rule": "./dist/workspace-plugin/src/conformance-rules/no-ignored-tracked-files"
       },
       {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/codeblock-language"
+        "rule": "./dist/workspace-plugin/src/conformance-rules/codeblock-language"
       },
       {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/relative-image-imports"
+        "rule": "./dist/workspace-plugin/src/conformance-rules/relative-image-imports"
+      },
+      {
+        "rule": "./dist/workspace-plugin/src/conformance-rules/types-versions-exports-sync"
       }
     ]
-  }
+  },
+  "analytics": true
 }

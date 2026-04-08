@@ -90,7 +90,8 @@
       "factory": "./src/generators/setup-tailwind/setup-tailwind#setupTailwindGenerator",
       "schema": "./src/generators/setup-tailwind/schema.json",
       "description": "Set up Tailwind configuration for a project.",
-      "hidden": false
+      "hidden": false,
+      "x-deprecated": "Generating Tailwind configuration is no longer maintained. This generator will be removed in Nx 23."
     },
     "setup-ssr": {
       "factory": "./src/generators/setup-ssr/setup-ssr#setupSsrGenerator",

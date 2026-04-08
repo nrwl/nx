@@ -1,5 +1,15 @@
 {
-  "generators": {},
+  "generators": {
+    "update-22-0-0-remove-config-plugins-detox-for-expo-54": {
+      "requires": {
+        "expo": ">= 54.0.0"
+      },
+      "version": "22.2.0-beta.2",
+      "cli": "nx",
+      "description": "Remove @config-plugins/detox for Expo 54+ projects (package discontinued)",
+      "factory": "./src/migrations/update-22-0-0/remove-config-plugins-detox-for-expo-54"
+    }
+  },
   "packageJsonUpdates": {
     "20.3.0": {
       "version": "20.3.0-beta.0",

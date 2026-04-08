@@ -25,12 +25,14 @@ export async function updateSsrSetup(
     port,
     standalone,
     typescriptConfiguration,
+    zoneless,
     skipPackageJson,
   }: {
     appName: string;
     port: number;
     standalone: boolean;
     typescriptConfiguration: boolean;
+    zoneless: boolean;
     skipPackageJson?: boolean;
   }
 ) {
@@ -44,14 +46,8 @@ export async function updateSsrSetup(
     joinPathFragments(sourceRoot, 'bootstrap.server.ts')
   );
 
-  const pathToServerEntry = joinPathFragments(
-    angularMajorVersion >= 19 ? sourceRoot : project.root,
-    'server.ts'
-  );
-  tree.write(
-    pathToServerEntry,
-    `import('./${angularMajorVersion >= 19 ? '' : 'src/'}main.server');`
-  );
+  const pathToServerEntry = joinPathFragments(sourceRoot, 'server.ts');
+  tree.write(pathToServerEntry, `import('./main.server');`);
 
   const browserBundleOutput = project.targets.build.options.outputPath;
   const serverBundleOutput = project.targets.build.options.outputPath.replace(
@@ -64,8 +60,9 @@ export async function updateSsrSetup(
     browserBundleOutput,
     serverBundleOutput,
     standalone,
-    commonEngineEntryPoint:
-      angularMajorVersion >= 19 ? '@angular/ssr/node' : '@angular/ssr',
+    zoneless,
+    useDefaultImport: angularMajorVersion >= 21,
+    angularMajorVersion,
     tmpl: '',
   });
 
@@ -88,9 +85,7 @@ export async function updateSsrSetup(
       // https://github.com/angular/angular-cli/releases/tag/20.3.0
       gte(angularVersion, '20.3.0') ||
       // https://github.com/angular/angular-cli/releases/tag/19.2.16
-      (angularMajorVersion === 19 && gte(angularVersion, '19.2.16')) ||
-      // https://github.com/angular/angular-cli/releases/tag/18.2.21
-      (angularMajorVersion === 18 && gte(angularVersion, '18.2.21'));
+      (angularMajorVersion === 19 && gte(angularVersion, '19.2.16'));
 
     generateFiles(
       tree,

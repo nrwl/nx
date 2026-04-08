@@ -32,9 +32,9 @@ export function normalizeOptions(
     parentDirectory: options.module
       ? dirname(options.module)
       : options.parent
-      ? dirname(options.parent)
-      : undefined,
-    route: options.route === '' ? `''` : options.route ?? `''`,
+        ? dirname(options.parent)
+        : undefined,
+    route: options.route === '' ? `''` : (options.route ?? `''`),
     directory: names(options.directory).fileName,
     rxjsVersion,
     rxjsMajorVersion,

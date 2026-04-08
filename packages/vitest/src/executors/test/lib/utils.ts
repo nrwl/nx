@@ -3,10 +3,11 @@ import {
   joinPathFragments,
   logger,
   stripIndents,
+  workspaceRoot,
 } from '@nx/devkit';
 import { VitestExecutorOptions } from '../schema';
 import { normalizeViteConfigFilePath } from '../../../utils/options-utils';
-import { relative } from 'path';
+import { isAbsolute, relative, resolve } from 'path';
 import {
   loadViteDynamicImport,
   loadVitestDynamicImport,
@@ -16,9 +17,9 @@ export async function getOptions(
   options: VitestExecutorOptions,
   context: ExecutorContext,
   projectRoot: string
-) {
+): Promise<Record<string, any>> {
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
-  const { loadConfigFromFile, mergeConfig } = await loadViteDynamicImport();
+  const { loadConfigFromFile } = await loadViteDynamicImport();
 
   const viteConfigPath = normalizeViteConfigFilePath(
     context.root,
@@ -40,13 +41,13 @@ export async function getOptions(
 
   const resolved = await loadConfigFromFile(
     {
-      mode: options?.mode ?? 'production',
+      mode: options?.mode ?? 'test',
       command: 'serve',
     },
     viteConfigPath
   );
 
-  if (!viteConfigPath || !resolved?.config?.['test']) {
+  if (!resolved?.config?.['test']) {
     logger.warn(stripIndents`Unable to load test config from config file ${
       resolved?.path ?? viteConfigPath
     }
@@ -63,29 +64,72 @@ export async function getOptions(
 
   const { parseCLI } = await loadVitestDynamicImport();
 
+  // Use parseCLI for Vitest-specific normalization/validation
   const {
     options: { watch, ...normalizedExtraArgs },
   } = parseCLI(['vitest', ...getOptionsAsArgv(options)]);
 
-  const { reportsDirectory, coverage, ...restNormalizedArgs } =
-    normalizedExtraArgs as Record<string, any>;
+  // Filter out options that are handled specially or are parseCLI artifacts
+  const {
+    // Handled specially by executor
+    testFiles: _testFiles,
+    configFile: _configFile,
+    mode: _mode,
+    runMode: _runMode,
+    reportsDirectory,
+    coverage,
+    reporter,
+    reporters,
+    // parseCLI artifacts
+    '--': _dashdash,
+    color: _color,
+    w: _w,
+    // Pass through any additional Vitest options
+    ...passThroughOptions
+  } = normalizedExtraArgs as Record<string, any>;
 
-  const settings = {
+  return {
     // Explicitly set watch mode to false if not provided otherwise vitest
     // will enable watch mode by default for non CI environments
     watch: watch ?? false,
-    ...restNormalizedArgs,
+    // Pass through any additional Vitest options
+    ...passThroughOptions,
     // This should not be needed as it's going to be set in vite.config.ts
     // but leaving it here in case someone did not migrate correctly
-    root: resolved.config.root ?? root,
+    root: resolved?.config?.root ?? root,
     config: viteConfigPath,
+    // Vitest's resolveConfig processes reporters in two steps:
+    // 1. options.reporters (plural) sets resolved.reporters
+    // 2. resolved.reporter (singular, from config) overwrites resolved.reporters
+    // Setting reporter to [] prevents config's reporter from overriding NxReporter
+    // (which is pushed onto reporters in vitest.impl.ts).
+    reporter: [],
+    reporters:
+      reporter ??
+      reporters ??
+      // reporter (singular) has higher priority in vitest but is not declared in InlineConfig
+      (resolved?.config?.['test'] as Record<string, any>)?.reporter ??
+      resolved?.config?.['test']?.reporters,
     coverage: {
       ...(coverage ?? {}),
-      ...(reportsDirectory && { reportsDirectory }),
+      ...(reportsDirectory && {
+        reportsDirectory: resolveReportsDirectory(reportsDirectory),
+      }),
     },
-  };
+  } as Record<string, any>;
+}
 
-  return mergeConfig(resolved?.config?.['test'] ?? {}, settings);
+/**
+ * Nx's resolveNxTokensInOptions strips {workspaceRoot}/ from option values,
+ * leaving a workspace-root-relative path. However, vitest resolves
+ * reportsDirectory relative to the project root. This function converts
+ * the path to absolute so vitest resolves it correctly.
+ */
+export function resolveReportsDirectory(reportsDirectory: string): string {
+  if (isAbsolute(reportsDirectory)) {
+    return reportsDirectory;
+  }
+  return resolve(workspaceRoot, reportsDirectory);
 }
 
 export function getOptionsAsArgv(obj: Record<string, any>): string[] {

@@ -23,7 +23,7 @@ For the best experience, we recommend that you [migrate](/docs/features/automate
 npx nx migrate latest
 ```
 
-## Migrate All Plugins
+## Migrate all plugins
 
 You can use the `infer-targets` generator to quickly migrate all available plugins to use inferred tasks. See the sections below for more details on the individual plugins' migration processes.
 
@@ -33,7 +33,7 @@ npx nx g infer-targets
 
 The generator will automatically detect all available `convert-to-inferred` generators and run the ones you choose. If you only want to try it on a single project, pass the `--project` option.
 
-## Migrate a Single Plugin
+## Migrate a single plugin
 
 Most of the official plugins come with a `convert-to-inferred` generator. This generator will
 
@@ -58,7 +58,7 @@ For third-party plugins that provide `convert-to-inferred` generators, you shoul
 
 We recommend that you check that the configurations are correct before continuing to the next plugin. If you only want to try it on a single project, pass the `--project` option.
 
-## Understand the Migration Process
+## Understand the migration process
 
 The `convert-to-inferred` generator removes uses of executors from the corresponding plugin. For example, if `@nx/vite` is migrated, then uses of [`@nx/vite:build`](/docs/technologies/build-tools/vite/executors#build), [`@nx/vite:dev-server`](/docs/technologies/build-tools/vite/executors#dev-server), [`@nx/vite:preview-server`](/docs/technologies/build-tools/vite/executors#preview-server), and [`@nx/vite:test`](/docs/technologies/build-tools/vite/executors#test) executors will be removed.
 
@@ -118,7 +118,7 @@ The same CLI setup applies to other plugins as well.
 
 Read the recipe on [passing args to commands](/docs/guides/tasks--caching/pass-args-to-commands) for more information.
 
-### Configuration File Changes
+### Configuration file changes
 
 There may also be changes to the configuration files used by the underlying tool. The changes come with comments to explain them, and may also provide next steps for you to take. One common change is to add support for different configuration options. For example, if we have an existing Vite app with the following build target:
 
@@ -187,7 +187,7 @@ Lastly, you can inspect the `nx.json` file to see a new `plugins` entry. For `@n
 
 You may change the target name options to change how Nx adds them to the project. For example, if you use `"serveTargetName": "dev"` then you would run `nx dev demo` rather than `nx serve demo` for your Vite project.
 
-## Verify the Migration
+## Verify the migration
 
 The migrations maintain the same targets and configurations for each project, thus to verify it you should run the affected targets.
 
@@ -202,7 +202,7 @@ Remember that the target names are defined in the plugin configuration in `nx.js
 
 Make sure that the tasks are all passing before migrating another plugin.
 
-## Enable Atomizer (task splitting)
+## Enable atomizer (task splitting)
 
 These plugins come with the [Atomizer](/docs/features/ci-features/split-e2e-tasks) feature.
 

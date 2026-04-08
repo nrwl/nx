@@ -110,8 +110,8 @@ describe('updateEslint', () => {
       module.exports = [
           { plugins: { "@next/next": nextEslintPluginNext } },
 
-          ...baseConfig,
           ...nx.configs["flat/react-typescript"],
+          ...baseConfig,
           {
               ignores: [
                   ".next/**/*"

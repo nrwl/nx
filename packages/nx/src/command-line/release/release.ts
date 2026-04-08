@@ -60,7 +60,7 @@ export function createAPI(
 
   return async function release(
     args: ReleaseOptions
-  ): Promise<NxReleaseVersionResult | number> {
+  ): Promise<NxReleaseVersionResult> {
     const projectGraph = await createProjectGraphAsync({ exitOnError: true });
     const overriddenConfig = overrideReleaseConfig ?? {};
     const userProvidedReleaseConfig = ignoreNxJsonConfig
@@ -75,9 +75,8 @@ export function createAPI(
       const jsonConfigErrorPath = hasVersionGitConfig
         ? ['release', 'version', 'git']
         : ['release', 'changelog', 'git'];
-      const nxJsonMessage = await resolveNxJsonConfigErrorMessage(
-        jsonConfigErrorPath
-      );
+      const nxJsonMessage =
+        await resolveNxJsonConfigErrorMessage(jsonConfigErrorPath);
       output.error({
         title: `The "release" top level command cannot be used with granular git configuration. Instead, configure git options in the "release.git" property in nx.json, or use the version, changelog, and publish subcommands or programmatic API directly.`,
         bodyLines: [nxJsonMessage],

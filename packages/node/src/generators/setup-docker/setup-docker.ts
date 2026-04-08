@@ -78,8 +78,8 @@ async function addDocker(tree: Tree, options: SetUpDockerOptions) {
     buildLocation = finalOutputPath.startsWith(projectRootWithSlash)
       ? finalOutputPath.substring(projectRootWithSlash.length)
       : finalOutputPath.startsWith(projectConfig.root)
-      ? finalOutputPath.substring(projectConfig.root.length)
-      : 'dist';
+        ? finalOutputPath.substring(projectConfig.root.length)
+        : 'dist';
   }
 
   const packageManager = existsSync(projectConfig.root)

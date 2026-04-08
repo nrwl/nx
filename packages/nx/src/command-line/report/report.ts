@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { output } from '../../utils/output';
 import { join } from 'path';
 import {
@@ -9,6 +9,7 @@ import {
 } from '../../utils/package-manager';
 import { readJsonFile } from '../../utils/fileutils';
 import {
+  NxPackageJson,
   PackageJson,
   readModulePackageJson,
   readNxMigrateConfig,
@@ -38,9 +39,10 @@ import {
   formatCacheSize,
   resolveMaxCacheSize,
 } from '../../tasks-runner/cache';
+import { daemonClient } from '../../daemon/client/client';
 
-const nxPackageJson = readJsonFile<typeof import('../../../package.json')>(
-  join(__dirname, '../../../package.json')
+const nxPackageJson = readJsonFile<NxPackageJson>(
+  require.resolve('nx/package.json')
 );
 
 export const packagesWeCareAbout = [
@@ -86,6 +88,7 @@ export async function reportHandler() {
     projectGraphError,
     nativeTarget,
     cache,
+    daemon,
   } = await getReportData();
 
   const fields = [
@@ -93,6 +96,16 @@ export async function reportHandler() {
     ['OS', `${process.platform}-${process.arch}`],
     ['Native Target', nativeTarget ?? 'Unavailable'],
     [pm, pmVersion],
+    [
+      'daemon',
+      'error' in daemon
+        ? `Error: ${daemon.error}`
+        : daemon.disabled
+          ? 'Disabled'
+          : daemon.available
+            ? 'Available'
+            : 'Unavailable',
+    ],
   ];
   let padding = Math.max(...fields.map((f) => f[0].length));
   const bodyLines = fields.map(
@@ -105,14 +118,14 @@ export async function reportHandler() {
     Math.max(...packageVersionsWeCareAbout.map((x) => x.package.length)) + 1;
   packageVersionsWeCareAbout.forEach((p) => {
     bodyLines.push(
-      `${chalk.green(p.package.padEnd(padding))} : ${chalk.bold(p.version)}`
+      `${pc.green(p.package.padEnd(padding))} : ${pc.bold(p.version)}`
     );
   });
 
   if (nxKey) {
     bodyLines.push('');
     bodyLines.push(LINE_SEPARATOR);
-    bodyLines.push(chalk.green('Nx key licensed packages'));
+    bodyLines.push(pc.green('Nx key licensed packages'));
 
     bodyLines.push(createNxKeyLicenseeInformation(nxKey));
 
@@ -159,7 +172,7 @@ export async function reportHandler() {
       ) + 1;
     for (const powerpackPlugin of powerpackPlugins) {
       bodyLines.push(
-        `${chalk.green(powerpackPlugin.name.padEnd(padding))} : ${chalk.bold(
+        `${pc.green(powerpackPlugin.name.padEnd(padding))} : ${pc.bold(
           powerpackPlugin.version
         )}`
       );
@@ -167,7 +180,7 @@ export async function reportHandler() {
     bodyLines.push('');
   } else if (nxKeyError) {
     bodyLines.push('');
-    bodyLines.push(chalk.red('Nx key'));
+    bodyLines.push(pc.red('Nx key'));
     bodyLines.push(LINE_SEPARATOR);
     bodyLines.push(nxKeyError.message);
     bodyLines.push('');
@@ -177,7 +190,7 @@ export async function reportHandler() {
     bodyLines.push(LINE_SEPARATOR);
     bodyLines.push('Registered Plugins:');
     for (const plugin of registeredPlugins) {
-      bodyLines.push(`${chalk.green(plugin)}`);
+      bodyLines.push(`${pc.green(plugin)}`);
     }
   }
 
@@ -187,7 +200,7 @@ export async function reportHandler() {
     bodyLines.push('Community plugins:');
     communityPlugins.forEach((p) => {
       bodyLines.push(
-        `${chalk.green(p.name.padEnd(padding))}: ${chalk.bold(p.version)}`
+        `${pc.green(p.name.padEnd(padding))}: ${pc.bold(p.version)}`
       );
     });
   }
@@ -198,7 +211,7 @@ export async function reportHandler() {
     bodyLines.push('Local workspace plugins:');
 
     for (const plugin of localPlugins) {
-      bodyLines.push(`${chalk.green(plugin)}`);
+      bodyLines.push(`${pc.green(plugin)}`);
     }
   }
 
@@ -227,17 +240,17 @@ export async function reportHandler() {
 
   if (mismatchedNxVersions && mismatchedNxVersions.length > 0) {
     bodyLines.push(LINE_SEPARATOR);
-    bodyLines.push(chalk.yellow('⚠️ Multiple Nx versions detected'));
+    bodyLines.push(pc.yellow('⚠️ Multiple Nx versions detected'));
     bodyLines.push('');
     bodyLines.push(
       `Your workspace uses nx@${nxVersion}, but other packages depend on a different version:`
     );
     for (const { version, chain } of mismatchedNxVersions) {
       if (chain.length === 0) {
-        bodyLines.push(`  - ${chalk.bold(`nx@${version}`)}`);
+        bodyLines.push(`  - ${pc.bold(`nx@${version}`)}`);
       } else {
         bodyLines.push(
-          `  - ${chain.reverse().join(' → ')} → ${chalk.bold(`nx@${version}`)}`
+          `  - ${chain.reverse().join(' → ')} → ${pc.bold(`nx@${version}`)}`
         );
       }
     }
@@ -273,6 +286,12 @@ export interface ReportData {
   localPlugins: string[];
   communityPlugins: PackageJson[];
   registeredPlugins: string[];
+  daemon:
+    | {
+        available: boolean;
+        disabled: boolean;
+      }
+    | { error: unknown };
   packageVersionsWeCareAbout: {
     package: string;
     version: string;
@@ -386,7 +405,9 @@ export async function getReportData(): Promise<ReportData> {
     });
   }
 
-  const outOfSyncPackageGroup = findMisalignedPackagesForPackage(nxPackageJson);
+  const outOfSyncPackageGroup = findMisalignedPackagesForPackage(
+    nxPackageJson as PackageJson
+  );
 
   const mismatchedNxVersions = findMismatchedNxVersions(graph);
 
@@ -424,7 +445,23 @@ export async function getReportData(): Promise<ReportData> {
     projectGraphError,
     nativeTarget: native ? native.getBinaryTarget() : null,
     cache,
+    daemon: await getDaemonStatus(),
   };
+}
+
+async function getDaemonStatus(): Promise<ReportData['daemon']> {
+  try {
+    const enabled = daemonClient.enabled();
+    const available = enabled && (await daemonClient.isServerAvailable());
+    return {
+      available,
+      disabled: !enabled,
+    };
+  } catch (e) {
+    return {
+      error: e,
+    };
+  }
 }
 
 async function tryGetProjectGraph() {

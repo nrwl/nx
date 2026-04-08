@@ -63,7 +63,7 @@ This is where Nx comes in.
 
 Monorepos don't come for free. While they improve visibility and collaboration, they introduce scaling challenges. This is where tools like Nx step in, helping you get the benefits of a monorepo while managing the complexity that comes with it.
 
-Over the years, we've built features like [Nx Replay](/docs/features/ci-features/remote-cache) and [Nx Agents](/docs/features/ci-features/distribute-task-execution) to keep CI fast, while [conformance rules](/docs/enterprise/powerpack/conformance), [ownership](/docs/enterprise/powerpack/owners), and [local repository automation](/docs/extending-nx/intro) help manage and scale a monorepo in the long run.
+Over the years, we've built features like [Nx Replay](/docs/features/ci-features/remote-cache) and [Nx Agents](/docs/features/ci-features/distribute-task-execution) to keep CI fast, while [conformance rules](/docs/enterprise/conformance), [ownership](/docs/enterprise/owners), and [local repository automation](/docs/extending-nx/intro) help manage and scale a monorepo in the long run.
 
 To power these features, **Nx collects metadata about your workspace**, understanding relationships between projects, ownership, technology types, available tasks, and more. The [Nx daemon](/docs/concepts/nx-daemon) runs in the background, keeping this metadata up to date and making sure Nx operates efficiently.
 
@@ -71,7 +71,7 @@ To power these features, **Nx collects metadata about your workspace**, understa
 
 ![nx-ai-project-relationships.avif](/blog/images/articles/nx-ai-project-relationships.avif)
 
-**Nx also tracks available targets for each project**. If you're using [Code Owners](/docs/enterprise/powerpack/owners), it **knows who owns what within your monorepo**.
+**Nx also tracks available targets for each project**. If you're using [Code Owners](/docs/enterprise/owners), it **knows who owns what within your monorepo**.
 
 ![nx-ai-project-detail-view.avif](/blog/images/articles/nx-ai-project-detail-view.avif)
 

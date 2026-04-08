@@ -3,6 +3,7 @@ import {
   tmpProjPath,
   readFile,
   updateFile,
+  fileExists,
 } from '@nx/e2e-utils';
 import { execSync } from 'child_process';
 import { writeFileSync } from 'fs-extra';
@@ -13,7 +14,7 @@ import {
   unlinkSync,
   chmodSync,
 } from 'fs';
-import * as extract from 'extract-zip';
+import extract from 'extract-zip';
 
 async function downloadFile(
   url: string,
@@ -92,7 +93,7 @@ export async function createMavenProject(
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <spring-boot.version>3.4.0</spring-boot.version>
+    <spring-boot.version>4.0.0</spring-boot.version>
   </properties>
 
   <dependencyManagement>
@@ -155,6 +156,11 @@ export async function createMavenProject(
     '.mvn/wrapper/maven-wrapper.properties',
     readFile('app/.mvn/wrapper/maven-wrapper.properties')
   );
+  if (fileExists('.gitignore')) {
+    updateFile('.gitignore', readFile('.gitignore') + '\ntarget');
+  } else {
+    updateFile('.gitignore', 'target');
+  }
 
   chmodSync(join(cwd, 'mvnw'), 0o755);
   chmodSync(join(cwd, 'mvnw.cmd'), 0o755);
@@ -180,7 +186,7 @@ async function createModule(
     {
       type: 'maven-project',
       language: 'java',
-      bootVersion: '3.4.0',
+      bootVersion: '4.0.0',
       baseDir: moduleName,
       groupId: 'com.example',
       artifactId: moduleName,

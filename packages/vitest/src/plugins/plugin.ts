@@ -6,6 +6,7 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
+  normalizePath,
   ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
@@ -21,8 +22,6 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 
-const pmc = getPackageManagerCommand();
-
 export interface VitestPluginOptions {
   testTargetName?: string;
   /**
@@ -33,6 +32,12 @@ export interface VitestPluginOptions {
    * The name that should be used to group atomized tasks on CI
    */
   ciGroupName?: string;
+  /**
+   * Default mode for running tests.
+   * - 'watch': Tests run in watch mode locally, auto-run in CI (default)
+   * - 'run': Tests run once and exit
+   */
+  testMode?: 'watch' | 'run';
 }
 
 type VitestTargets = Pick<
@@ -65,6 +70,9 @@ const vitestConfigGlob = '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}';
 export const createNodes: CreateNodesV2<VitestPluginOptions> = [
   vitestConfigGlob,
   async (configFilePaths, options, context) => {
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
     const optionsHash = hashObject(options);
     const normalizedOptions = normalizeOptions(options);
     const cachePath = join(
@@ -117,7 +125,8 @@ export const createNodes: CreateNodesV2<VitestPluginOptions> = [
               configFile,
               projectRoot,
               normalizedOptions,
-              context
+              context,
+              pmc
             ));
 
           const project: ProjectConfiguration = {
@@ -149,7 +158,8 @@ async function buildVitestTargets(
   configFilePath: string,
   projectRoot: string,
   options: VitestPluginOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<VitestTargets> {
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,
@@ -178,6 +188,19 @@ async function buildVitestTargets(
     // Plugin not installed or not needed, ignore
   }
 
+  // Workaround for race condition with vitest/node on Node 24+
+  // When multiple vitest.config files are processed in parallel, Node can throw:
+  // Error [ERR_INTERNAL_ASSERTION]: Cannot require() ES Module vitest/dist/node.js
+  // because it is not yet fully loaded.
+  // See: https://github.com/nrwl/nx/issues/34028
+  try {
+    const importVitestNode = () =>
+      new Function('return import("vitest/node")')();
+    await importVitestNode();
+  } catch {
+    // vitest/node not available or not needed, ignore
+  }
+
   const { resolveConfig } = await loadViteDynamicImport();
   const viteBuildConfig = await resolveConfig(
     {
@@ -186,6 +209,18 @@ async function buildVitestTargets(
     },
     'build'
   );
+
+  // If this is a root workspace config file with projects property, don't infer targets.
+  // The root config is just an orchestrator - the actual tests live in the individual project configs.
+  const isWorkspaceRoot = projectRoot === '.';
+  // TODO(jack): Remove this cast when @nx/vitest switches to moduleResolution:
+  // "nodenext". Vite 8's rolldown types break vitest's test augmentation.
+  const hasProjectsProperty = Array.isArray(
+    (viteBuildConfig as any)?.test?.projects
+  );
+  if (isWorkspaceRoot && hasProjectsProperty) {
+    return { targets: {}, metadata: {}, projectType: 'library' };
+  }
 
   let metadata: ProjectConfiguration['metadata'] = {};
 
@@ -204,7 +239,9 @@ async function buildVitestTargets(
     targets[options.testTargetName] = await testTarget(
       namedInputs,
       testOutputs,
-      projectRoot
+      projectRoot,
+      options.testMode,
+      pmc
     );
 
     if (options.ciTargetName) {
@@ -303,10 +340,13 @@ async function testTarget(
     [inputName: string]: any[];
   },
   outputs: string[],
-  projectRoot: string
+  projectRoot: string,
+  testMode: 'watch' | 'run' = 'watch',
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
+  const command = testMode === 'run' ? 'vitest run' : 'vitest';
   return {
-    command: `vitest`,
+    command,
     options: { cwd: joinPathFragments(projectRoot) },
     cache: true,
     inputs: [
@@ -375,9 +415,9 @@ function normalizeOutputPath(
       return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
     } else {
       if (outputPath.startsWith('..')) {
-        return join('{workspaceRoot}', join(projectRoot, outputPath));
+        return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);
       } else {
-        return join('{projectRoot}', outputPath);
+        return joinPathFragments('{projectRoot}', outputPath);
       }
     }
   }
@@ -386,6 +426,7 @@ function normalizeOutputPath(
 function normalizeOptions(options: VitestPluginOptions): VitestPluginOptions {
   options ??= {};
   options.testTargetName ??= 'test';
+  options.testMode ??= 'watch';
   return options;
 }
 
@@ -423,5 +464,5 @@ async function getTestPathsRelativeToProjectRoot(
     .filter((ts) =>
       fullProjectRoot === '.' ? true : ts.moduleId.startsWith(fullProjectRoot)
     )
-    .map((ts) => relative(projectRoot, ts.moduleId));
+    .map((ts) => normalizePath(relative(projectRoot, ts.moduleId)));
 }

@@ -2,7 +2,7 @@ import { getDependencyVersionFromPackageJson, Tree } from '@nx/devkit';
 
 export const nxVersion = require('../../package.json').version;
 
-export const remixVersion = '^2.15.0';
+export const remixVersion = '^2.17.3';
 export const isbotVersion = '^4.4.0';
 export const reactVersion = '^18.2.0';
 export const reactDomVersion = '^18.2.0';
@@ -18,7 +18,7 @@ export const testingLibraryReactVersion = '^14.1.2';
 export const testingLibraryJestDomVersion = '6.4.2';
 export const testingLibraryDomVersion = '^10.4.0';
 export const testingLibraryUserEventsVersion = '^14.5.2';
-export const viteVersion = '^5.0.0';
+export const viteVersion = '^6.0.0';
 
 export function getRemixVersion(tree: Tree): string {
   return (

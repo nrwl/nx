@@ -22,12 +22,6 @@ jest.mock('@nx/cypress/src/utils/versions', () => ({
   ...jest.requireActual('@nx/cypress/src/utils/versions'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
-jest.mock('@nx/devkit', () => {
-  return {
-    ...jest.requireActual('@nx/devkit'),
-    ensurePackage: jest.fn((pkg) => jest.requireActual(pkg)),
-  };
-});
 
 describe('app', () => {
   let tree: Tree;
@@ -182,7 +176,6 @@ describe('app', () => {
         .toMatchInlineSnapshot(`
         "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
         import { defineConfig } from 'cypress';
-
         export default defineConfig({
           e2e: {
             ...nxE2EPreset(__filename, {
@@ -214,7 +207,6 @@ describe('app', () => {
         .toMatchInlineSnapshot(`
         "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
         import { defineConfig } from 'cypress';
-
         export default defineConfig({
           e2e: {
             ...nxE2EPreset(__filename, {
@@ -581,7 +573,7 @@ describe('app', () => {
         unitTestRunner: 'vitest',
         addPlugin: true,
       });
-      expect(tree.exists('my-webpack-app/vite.config.mts')).toBeTruthy();
+      expect(tree.exists('my-webpack-app/vitest.config.mts')).toBeTruthy();
       expect(tree.exists('my-webpack-app/jest.config.cts')).toBeFalsy();
       expect(
         readJson(tree, 'my-webpack-app/tsconfig.spec.json').compilerOptions

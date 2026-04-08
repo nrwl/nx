@@ -10,7 +10,7 @@ For local conformance rules, the resolution utilities from `@nx/js` are used in 
 
 In practice, writing your local conformance rules in an Nx generated library is the easiest way to organize them and ensure that they are easily resolvable via TypeScript. The library in question could also be an Nx plugin, but it does not have to be.
 
-## Generate a Conformance Rule
+## Generate a conformance rule
 
 To write your own conformance rule, run the `@nx/conformance:create-rule` generator and answer the prompts.
 
@@ -65,7 +65,7 @@ To enable the rule, you need to register it in the `nx.json` file.
 
 Note that the severity of the error is defined by the rule author and can be adjusted based on the specific violations that are found.
 
-## Understanding Rule Context
+## Understanding rule context
 
 The implementation function of the rule is passed a `context` object which contains:
 
@@ -74,7 +74,7 @@ The implementation function of the rule is passed a `context` object which conta
 - **`fileMapCache`**: The Nx file map cache
 - **`ruleOptions`**: The resolved rule configuration options based on the current workspace
 
-## Violation Interface
+## Violation interface
 
 Violations must follow this interface:
 
@@ -87,7 +87,7 @@ interface ConformanceViolation {
 }
 ```
 
-### Automatic Project Inference
+### Automatic project inference
 
 ```typescript
 violations.push({
@@ -96,14 +96,14 @@ violations.push({
 });
 ```
 
-### Best Practices for Violations
+### Best practices for violations
 
 1. **Use `workspaceViolation: true`** for issues affecting the entire workspace (global configs, workspace structure, etc.)
 2. **Use `sourceProject` only** for project-wide issues (missing configuration, structure problems)
 3. **Use `file` (and optional explicit `sourceProject`)** for violations tied to specific files in projects
 4. **Use `file` only** for files that may not belong to projects (CI configs, root files, etc.)
 
-## Conformance Rule Examples
+## Conformance rule examples
 
 The following examples demonstrate how to write rules that report violations at different scopes.
 
@@ -319,18 +319,18 @@ function isModuleSpecifierViolated(
 {% /tabitem %}
 {% /tabs %}
 
-## Auto-fixing Violations with Fix Generators
+## Auto-fixing violations with fix generators
 
 Rules can optionally implement a `fixGenerator` function that will be used to automatically fix violations.
 
-### When Fix Generators Run
+### When fix generators run
 
 - **`nx conformance`**: Evaluates rules and applies any available fix generators. Changes are written to disk and rules are evaluated once more to calculate how many violations were fixed.
 - **`nx conformance:check`**: Evaluates rules only. Fix generators are not applied (useful for CI).
 
 Fix generators are only ever applied for rules whose final status is not `disabled`.
 
-### Fix Generator Function Signature
+### Fix generator function signature
 
 Fix generators are essentially standard Nx generators. They receive a `WritableConformanceTree` (an extension of the `FsTree` used in other Nx generators) and a schema containing violations, rule options, and optional extra data exposed by the rule implementation via `result.details.fixGeneratorData`.
 
@@ -347,7 +347,7 @@ type ConformanceRuleFixGenerator<RuleOptions> = (
 
 During rule evaluation (diagnostics phase) the `tree` is read-only. During the fix phase, the `tree` is writable for generators to modify files.
 
-### Passing Data from Rules to Fix Generators
+### Passing data from rules to fix generators
 
 There are two supported ways to pass data from your rule implementation to its fix generator:
 
@@ -377,13 +377,13 @@ There are two supported ways to pass data from your rule implementation to its f
 
    Useful for expensive precomputed lookups or workspace-wide context that applies to all violations.
 
-### Additional Notes
+### Additional notes
 
 - **Project filtering**: If the rule is configured with `projects`, the runner filters the violations accordingly before calling the fix generator. The generator receives only the filtered set.
 - **File-to-project inference**: If a violation specifies `file` but not `sourceProject`, the runner attempts to infer the owning project and will include that on the violation provided to the fix generator where possible.
 - **Data privacy**: Both `details.fixGeneratorData` and per-violation `fixGeneratorData` are never included in the emitted report. They are only available to the fix generator.
 
-### Example Conformance Rule with Fix Generator
+### Example conformance rule with fix generator
 
 ```typescript
 import { createConformanceRule } from '@nx/conformance';
@@ -435,7 +435,7 @@ export default createConformanceRule<RuleOptions>({
 });
 ```
 
-### Best Practices for Fix Generators
+### Best practices for fix generators
 
 - **Idempotent**: Generators should be safe to run multiple times without changing files after the first successful run.
 - **Minimal changes**: Modify only what is necessary to address the reported violations.
@@ -443,7 +443,7 @@ export default createConformanceRule<RuleOptions>({
 - **Avoid re-discovery**: Prefer using the provided `violations` and optional `fixGeneratorData` rather than rescanning the workspace.
 - **Clear boundaries**: Keep heavy computation inside the rule implementation and pass the results via `fixGeneratorData` to the generator.
 
-## Share Conformance Rules Across Workspaces
+## Share conformance rules across workspaces
 
 If you have an Enterprise Nx Cloud contract, you can share your conformance rules across every repository in your organization. Read more in these articles:
 

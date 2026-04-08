@@ -5,6 +5,7 @@ export interface CypressComponentConfigurationSchema {
   bundler?: 'webpack' | 'vite';
   jsx?: boolean;
   addPlugin?: boolean;
+  skipPackageJson?: boolean;
 
   /**
    * @internal

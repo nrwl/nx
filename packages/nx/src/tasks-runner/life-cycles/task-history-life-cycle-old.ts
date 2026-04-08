@@ -13,7 +13,7 @@ import { LifeCycle, TaskResult } from '../life-cycle';
 
 export class LegacyTaskHistoryLifeCycle implements LifeCycle {
   private startTimings: Record<string, number> = {};
-  private taskRuns: TaskRun[] = [];
+  private pendingResults: TaskResult[] = [];
   private flakyTasks: string[];
 
   startTasks(tasks: Task[]): void {
@@ -23,24 +23,41 @@ export class LegacyTaskHistoryLifeCycle implements LifeCycle {
   }
 
   async endTasks(taskResults: TaskResult[]) {
-    const taskRuns: TaskRun[] = taskResults.map((taskResult) => ({
-      project: taskResult.task.target.project,
-      target: taskResult.task.target.target,
-      configuration: taskResult.task.target.configuration,
-      hash: taskResult.task.hash,
-      code: taskResult.code.toString(),
-      status: taskResult.status,
-      start: (
-        taskResult.task.startTime ?? this.startTimings[taskResult.task.id]
-      ).toString(),
-      end: (taskResult.task.endTime ?? new Date().getTime()).toString(),
-    }));
-    this.taskRuns.push(...taskRuns);
+    for (const taskResult of taskResults) {
+      this.pendingResults.push(taskResult);
+    }
   }
 
   async endCommand() {
-    await writeTaskRunsToHistory(this.taskRuns);
-    const history = await getHistoryForHashes(this.taskRuns.map((t) => t.hash));
+    // Build TaskRun objects now — task.hash is guaranteed to be set by this point
+    const taskRuns: TaskRun[] = [];
+    const cacheableHashes = new Set<string>();
+    for (const taskResult of this.pendingResults) {
+      if (taskResult.task.cache === true) {
+        cacheableHashes.add(taskResult.task.hash);
+      }
+      taskRuns.push({
+        project: taskResult.task.target.project,
+        target: taskResult.task.target.target,
+        configuration: taskResult.task.target.configuration,
+        hash: taskResult.task.hash,
+        code: taskResult.code.toString(),
+        status: taskResult.status,
+        start: (
+          taskResult.task.startTime ?? this.startTimings[taskResult.task.id]
+        ).toString(),
+        end: (taskResult.task.endTime ?? new Date().getTime()).toString(),
+      });
+    }
+
+    await writeTaskRunsToHistory(taskRuns);
+    // Only check for flaky tasks among cacheable tasks
+    const cacheableTaskRuns = taskRuns.filter((t) =>
+      cacheableHashes.has(t.hash)
+    );
+    const history = await getHistoryForHashes(
+      cacheableTaskRuns.map((t) => t.hash)
+    );
     this.flakyTasks = [];
 
     // check if any hash has different exit codes => flaky

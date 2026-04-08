@@ -135,7 +135,6 @@ describe('lib', () => {
             "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
-            "jest.resolver.js",
           ],
           "extends": "./tsconfig.json",
           "include": [
@@ -327,8 +326,7 @@ describe('lib', () => {
             "src/**/*.spec.js",
             "src/**/*.test.jsx",
             "src/**/*.spec.jsx",
-            "src/**/*.d.ts",
-            "jest.resolver.js"
+            "src/**/*.d.ts"
           ]
         }
         "
@@ -339,21 +337,20 @@ describe('lib', () => {
         /// <reference types="node" />
         module.exports = {
           displayName: 'my-lib',
-          resolver: require.resolve('./jest.resolver.js'),
           preset: 'jest-expo',
           moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           moduleNameMapper: {
-            '\\\\.svg$': '@nx/expo/plugins/jest/svg-mock',
+            '[.]svg$': '@nx/expo/plugins/jest/svg-mock',
           },
           transform: {
-            '\\\\.[jt]sx?$': [
+            '[.][jt]sx?$': [
               'babel-jest',
               {
                 configFile: __dirname + '/.babelrc.js',
               },
             ],
-            '^.+\\\\.(bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp|ttf|otf|m4v|mov|mp4|mpeg|mpg|webm|aac|aiff|caf|m4a|mp3|wav|html|pdf|obj)$':
+            '^.+[.](bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp|ttf|otf|m4v|mov|mp4|mpeg|mpg|webm|aac|aiff|caf|m4a|mp3|wav|html|pdf|obj)$':
               require.resolve('jest-expo/src/preset/assetFileTransformer.js'),
           },
           coverageDirectory: '../coverage/my-lib',
@@ -563,8 +560,8 @@ describe('lib', () => {
           "main": "./src/index.ts",
           "name": "@proj/my-lib",
           "peerDependencies": {
-            "react": "^19.0.0",
-            "react-native": "0.79.3",
+            "react": "^19.1.0",
+            "react-native": "0.81.5",
           },
           "types": "./src/index.ts",
           "version": "0.0.1",
@@ -629,7 +626,6 @@ describe('lib', () => {
             "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
-            "jest.resolver.js",
           ],
           "extends": "../tsconfig.base.json",
           "include": [
@@ -667,7 +663,6 @@ describe('lib', () => {
             "src/**/*.test.jsx",
             "src/**/*.spec.jsx",
             "src/**/*.d.ts",
-            "jest.resolver.js",
           ],
         }
       `);
@@ -696,8 +691,8 @@ describe('lib', () => {
           "module": "./dist/index.esm.js",
           "name": "@proj/my-lib",
           "peerDependencies": {
-            "react": "^19.0.0",
-            "react-native": "0.79.3",
+            "react": "^19.1.0",
+            "react-native": "0.81.5",
           },
           "types": "./dist/index.esm.d.ts",
           "version": "0.0.1",

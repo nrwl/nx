@@ -1,3 +1,4 @@
+import { handleImport } from '../../../utils/handle-import';
 import { output } from '../../../utils/output';
 import { readNxJson } from '../../../config/configuration';
 import { FsTree, flushChanges } from '../../../generators/tree';
@@ -17,9 +18,12 @@ import {
   messages,
 } from '../../../utils/ab-testing';
 import { nxVersion } from '../../../utils/versions';
+import { isCI } from '../../../utils/is-ci';
+import { isAiAgent } from '../../../native';
+import { detectPackageManager } from '../../../utils/package-manager';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getVcsRemoteInfo } from '../../../utils/git-utils';
-import chalk = require('chalk');
+import * as pc from 'picocolors';
 const ora = require('ora');
 const open = require('open');
 
@@ -171,7 +175,15 @@ export async function connectExistingRepoToNxCloudPrompt(
     command,
     nxVersion,
     useCloud: res,
-    meta: messages.codeOfSelectedPromptMessage(key),
+    meta: {
+      type: 'complete',
+      setupCloudPrompt: messages.codeOfSelectedPromptMessage(key) || '',
+      nodeVersion: process.versions.node,
+      os: process.platform,
+      packageManager: detectPackageManager(),
+      aiAgent: isAiAgent(),
+      isCI: isCI(),
+    },
   });
   return res;
 }
@@ -186,7 +198,16 @@ export async function connectToNxCloudWithPrompt(command: string) {
     command,
     nxVersion,
     useCloud,
-    meta: messages.codeOfSelectedPromptMessage('setupNxCloud'),
+    meta: {
+      type: 'complete',
+      setupCloudPrompt:
+        messages.codeOfSelectedPromptMessage('setupNxCloud') || '',
+      nodeVersion: process.versions.node,
+      os: process.platform,
+      packageManager: detectPackageManager(),
+      aiAgent: isAiAgent(),
+      isCI: isCI(),
+    },
   });
 }
 
@@ -201,15 +222,16 @@ async function nxCloudPrompt(key: MessageKey): Promise<MessageOptionKey> {
     initial,
   } as any; // meeroslav: types in enquirer are not up to date
   if (footer) {
-    promptConfig.footer = () => chalk.dim(footer);
+    promptConfig.footer = () => pc.dim(footer);
   }
   if (hint) {
-    promptConfig.hint = () => chalk.dim(hint);
+    promptConfig.hint = () => pc.dim(hint);
   }
 
-  return await (await import('enquirer'))
-    .prompt<{ NxCloud: MessageOptionKey }>([promptConfig])
-    .then((a) => {
+  const enquirer = await handleImport('enquirer');
+  return await enquirer
+    .prompt([promptConfig])
+    .then((a: { NxCloud: MessageOptionKey }) => {
       return a.NxCloud;
     });
 }

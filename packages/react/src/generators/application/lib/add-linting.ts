@@ -41,7 +41,8 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
         addPredefinedConfigToFlatLintConfig(
           host,
           options.appProjectRoot,
-          'flat/react'
+          'flat/react',
+          { checkBaseConfig: true }
         );
         // Add an empty rules object to users know how to add/override rules
         addOverrideToLintConfig(host, options.appProjectRoot, {
@@ -100,7 +101,7 @@ async function ignoreReactRouterFilesInEslintConfig(
   }
 
   // for flat config, we update the root config file
-  const directory = isUsingFlatConfig ? '' : projectRoot ?? '';
+  const directory = isUsingFlatConfig ? '' : (projectRoot ?? '');
 
   addIgnoresToLintConfig(tree, directory, ['**/build', '**/.react-router']);
 }

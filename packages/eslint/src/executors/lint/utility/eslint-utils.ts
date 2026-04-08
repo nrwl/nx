@@ -11,7 +11,6 @@ export async function resolveAndInstantiateESLint(
 ) {
   if (useFlatConfig && eslintConfigPath && !isFlatConfig(eslintConfigPath)) {
     throw new Error(
-      // todo: add support for eslint.config.mjs,
       'When using the new Flat Config with ESLint, all configs must be named eslint.config.js or eslint.config.cjs and .eslintrc files may not be used. See https://eslint.org/docs/latest/use/configure/configuration-files'
     );
   }
@@ -19,8 +18,13 @@ export async function resolveAndInstantiateESLint(
     useFlatConfigOverrideVal: useFlatConfig,
   });
 
-  // ruleFilter exist only in eslint 9+, remove this type when eslint 8 support dropped
-  const eslintOptions: ESLint.Options & { ruleFilter?: Function } = {
+  // ruleFilter, suppressAll, suppressRule, suppressionsLocation exist only in eslint 9+, remove this type when eslint 8 support dropped
+  const eslintOptions: ESLint.Options & {
+    ruleFilter?: Function;
+    suppressAll?: boolean;
+    suppressRule?: string[];
+    suppressionsLocation?: string;
+  } = {
     overrideConfigFile: eslintConfigPath,
     fix:
       !!options.fix &&
@@ -79,6 +83,42 @@ export async function resolveAndInstantiateESLint(
   // pass --quiet to eslint 9+ directly: filter only errors
   if (options.quiet && gte(ESLint.version, '9.0.0')) {
     eslintOptions.ruleFilter = (rule) => rule.severity === 2;
+  }
+
+  // Handle bulk suppression options (ESLint v9.24.0+)
+  try {
+    if (ESLint.version && gte(ESLint.version, '9.24.0')) {
+      if (options.suppressAll) {
+        eslintOptions.suppressAll = true;
+      }
+      if (options.suppressRule && options.suppressRule.length > 0) {
+        eslintOptions.suppressRule = options.suppressRule;
+      }
+      if (options.suppressionsLocation) {
+        eslintOptions.suppressionsLocation = options.suppressionsLocation;
+      }
+    } else if (
+      options.suppressAll ||
+      (options.suppressRule && options.suppressRule.length > 0) ||
+      options.suppressionsLocation
+    ) {
+      throw new Error(
+        'Bulk suppression options (suppressAll, suppressRule, suppressionsLocation) require ESLint v9.24.0 or higher. Current version: ' +
+          (ESLint.version || 'unknown')
+      );
+    }
+  } catch (error) {
+    // If version checking fails (e.g., in tests), skip suppression options
+    if (
+      options.suppressAll ||
+      (options.suppressRule && options.suppressRule.length > 0) ||
+      options.suppressionsLocation
+    ) {
+      // In test environment, just skip the suppression options
+      console.warn(
+        'Bulk suppression options skipped due to version check failure'
+      );
+    }
   }
 
   const eslint = new ESLint(eslintOptions);

@@ -52,6 +52,7 @@
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
               "@angular-devkit/architect",
+              "@angular-devkit/core",
               "@angular-devkit/schematics",
               "@nx/cypress",
               "@nx/jest",
@@ -66,7 +67,8 @@
               "injection-js",
               "nx",
               "piscina",
-              "typescript"
+              "typescript",
+              "vite"
             ]
           }
         ]
