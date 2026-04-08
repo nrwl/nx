@@ -127,10 +127,12 @@ fn enumerate_watch_paths<P: AsRef<Path>>(directory: P, use_ignores: bool) -> Has
 type NotifyResult = std::result::Result<notify::Event, notify::Error>;
 
 /// Collect a batch of events from the channel, waiting up to `timeout` for the
-/// first event, then draining any additional events that have already arrived.
+/// first event, then debouncing for `debounce` to let related events accumulate
+/// before returning the batch.
 fn collect_batch(
     rx: &std::sync::mpsc::Receiver<NotifyResult>,
     timeout: Duration,
+    debounce: Duration,
 ) -> Vec<notify::Event> {
     let mut batch = Vec::new();
 
@@ -144,7 +146,12 @@ fn collect_batch(
         Err(_) => return batch, // timeout or disconnected
     }
 
-    // Drain any additional events that arrived during the first event's processing
+    // Debounce: wait for related events to accumulate (e.g. rapid file writes).
+    // Without this, each event would be processed individually, causing duplicate
+    // callback invocations for what should be a single batch.
+    std::thread::sleep(debounce);
+
+    // Drain all events that arrived during the debounce window
     while let Ok(result) = rx.try_recv() {
         if let Ok(event) = result {
             batch.push(event);
@@ -284,7 +291,8 @@ impl Watcher {
                     break;
                 }
 
-                let batch = collect_batch(&rx, Duration::from_millis(100));
+                let batch =
+                    collect_batch(&rx, Duration::from_millis(100), Duration::from_millis(200));
                 if batch.is_empty() {
                     continue;
                 }
