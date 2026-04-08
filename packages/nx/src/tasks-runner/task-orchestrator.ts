@@ -113,7 +113,6 @@ export class TaskOrchestrator {
   private discreteTaskExitHandled = new Map<string, Promise<void>>();
   private continuousTaskExitHandled = new Map<string, Promise<void>>();
   private cleanupPromise: Promise<void> | null = null;
-  private workerCompletedCallbacks: (() => void)[] = [];
   // endregion internal state
 
   constructor(
@@ -217,8 +216,7 @@ export class TaskOrchestrator {
    * Coordinator loop. All batch operations (hashing, cache resolution)
    * happen on this single thread — no races. Cache misses are dispatched
    * as fire-and-forget workers. Workers signal completion via
-   * workerCompletedCallbacks which wakes the coordinator to schedule
-   * the next round.
+   * scheduleNextTasksAndReleaseThreads which wakes all waiting loops.
    *
    * Safety: the dispatch phase (step 5) is fully synchronous — no
    * worker can run during it. So all tasks picked up by nextTask()
@@ -293,9 +291,6 @@ export class TaskOrchestrator {
           () => {
             this.openGroup(groupId);
             inFlightWorkers--;
-            // Wake coordinator
-            this.workerCompletedCallbacks.forEach((f) => f());
-            this.workerCompletedCallbacks.length = 0;
           }
         );
       }
@@ -306,8 +301,8 @@ export class TaskOrchestrator {
         break;
       }
 
-      // 7. Wait for a worker to finish
-      await new Promise<void>((res) => this.workerCompletedCallbacks.push(res));
+      // 7. Wait for a worker to finish (woken by scheduleNextTasksAndReleaseThreads)
+      await new Promise((res) => this.waitingForTasks.push(res));
     }
   }
 
