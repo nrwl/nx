@@ -158,10 +158,11 @@ export async function determineAiAgents(
   }>
 ): Promise<Agent[]> {
   if (parsedArgs.aiAgents) {
-    if (parsedArgs.aiAgents.includes('none')) {
-      return [];
+    const filtered = parsedArgs.aiAgents.filter((a) => a !== 'none') as Agent[];
+    if (filtered.length > 0) {
+      return filtered;
     }
-    return parsedArgs.aiAgents as Agent[];
+    return [];
   }
   const detected = detectAiAgentName();
   if (detected) {

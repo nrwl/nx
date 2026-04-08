@@ -8,20 +8,17 @@ export async function determineAiAgents(
   aiAgents?: (Agent | 'none')[],
   interactive?: boolean
 ): Promise<Agent[]> {
-  if (aiAgents && aiAgents.includes('none' as any)) {
+  if (aiAgents) {
+    const filtered = aiAgents.filter((a) => a !== 'none') as Agent[];
+    if (filtered.length > 0) {
+      return filtered;
+    }
     return [];
   }
 
   if (interactive === false || isCI()) {
-    if (aiAgents) {
-      return aiAgents as Agent[];
-    }
     const detected = detectAiAgent();
     return detected ? [detected] : [];
-  }
-
-  if (aiAgents) {
-    return aiAgents as Agent[];
   }
   return await aiAgentsPrompt();
 }
