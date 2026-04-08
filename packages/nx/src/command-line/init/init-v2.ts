@@ -25,6 +25,7 @@ import {
   initCloud,
   isMonorepo,
   printFinalMessage,
+  setNeverConnectToCloud,
   updateGitIgnore,
 } from './implementation/utils';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
@@ -33,6 +34,9 @@ import { handleImport } from '../../utils/handle-import';
 import { isAiAgent } from '../../native';
 import { Agent } from '../../ai/utils';
 import { detectAiAgent } from '../../ai/detect-ai-agent';
+import { MessageOptionKey, recordStat } from '../../utils/ab-testing';
+import { isCI } from '../../utils/is-ci';
+import { detectPackageManager } from '../../utils/package-manager';
 import {
   logProgress,
   writeAiOutput,
@@ -337,16 +341,37 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
     }
   }
 
-  let useNxCloud: any = options.nxCloud;
-  if (useNxCloud === undefined) {
-    output.log({ title: '🛠️ Setting up Self-Healing CI and Remote Caching' });
-    useNxCloud = options.interactive
+  let nxCloudChoice: MessageOptionKey;
+  if (options.nxCloud === true) {
+    nxCloudChoice = 'yes';
+  } else if (options.nxCloud === false) {
+    nxCloudChoice = 'skip';
+  } else {
+    nxCloudChoice = options.interactive
       ? await connectExistingRepoToNxCloudPrompt()
-      : false;
+      : 'skip';
   }
-  if (useNxCloud) {
+  if (nxCloudChoice === 'yes') {
     await initCloud('nx-init');
+  } else if (nxCloudChoice === 'never') {
+    setNeverConnectToCloud(repoRoot);
   }
+
+  await recordStat({
+    command: 'init',
+    nxVersion: version,
+    useCloud: nxCloudChoice === 'yes',
+    meta: {
+      type: 'complete',
+      nxCloudArg: nxCloudChoice,
+      nodeVersion: process.versions.node,
+      os: process.platform,
+      packageManager: detectPackageManager(),
+      aiAgent: aiMode,
+      isCI: isCI(),
+      pluginsInstalled: pluginsToInstall.join(','),
+    },
+  });
 
   // Output success result for AI agents
   if (aiMode) {

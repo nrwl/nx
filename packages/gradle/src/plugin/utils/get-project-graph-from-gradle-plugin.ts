@@ -74,7 +74,6 @@ let projectGraphReportCachePath: string = join(
   workspaceDataDirectory,
   'gradle-nodes.hash'
 );
-
 export function getCurrentProjectGraphReport(): ProjectGraphReport {
   if (!projectGraphReportCache) {
     throw new AggregateCreateNodesError(
@@ -131,32 +130,44 @@ export async function populateProjectGraph(
     'gradleProjectGraphReport:start'
   );
 
-  const projectGraphLines = await gradlewFiles.reduce(
-    async (
-      projectGraphLines: Promise<string[]>,
-      gradlewFile: string
-    ): Promise<string[]> => {
-      const getNxProjectGraphLinesStart = performance.mark(
-        `${gradlewFile}GetNxProjectGraphLines:start`
-      );
-      const allLines = await projectGraphLines;
-      const currentLines = await getNxProjectGraphLines(
-        gradlewFile,
-        gradleConfigHash,
-        normalizedOptions
-      );
-      const getNxProjectGraphLinesEnd = performance.mark(
-        `${gradlewFile}GetNxProjectGraphLines:end`
-      );
-      performance.measure(
-        `${gradlewFile}GetNxProjectGraphLines`,
-        getNxProjectGraphLinesStart.name,
-        getNxProjectGraphLinesEnd.name
-      );
-      return [...allLines, ...currentLines];
-    },
-    Promise.resolve([])
-  );
+  let projectGraphLines: string[];
+  try {
+    projectGraphLines = await gradlewFiles.reduce(
+      async (
+        projectGraphLines: Promise<string[]>,
+        gradlewFile: string
+      ): Promise<string[]> => {
+        const getNxProjectGraphLinesStart = performance.mark(
+          `${gradlewFile}GetNxProjectGraphLines:start`
+        );
+        const allLines = await projectGraphLines;
+        const currentLines = await getNxProjectGraphLines(
+          gradlewFile,
+          gradleConfigHash,
+          normalizedOptions
+        );
+        const getNxProjectGraphLinesEnd = performance.mark(
+          `${gradlewFile}GetNxProjectGraphLines:end`
+        );
+        performance.measure(
+          `${gradlewFile}GetNxProjectGraphLines`,
+          getNxProjectGraphLinesStart.name,
+          getNxProjectGraphLinesEnd.name
+        );
+        return [...allLines, ...currentLines];
+      },
+      Promise.resolve([])
+    );
+  } catch (e) {
+    if (
+      e instanceof Error &&
+      e.message === 'Gradle project graph generation was cancelled'
+    ) {
+      // Cancelled by a newer populateProjectGraph call — silently return
+      return;
+    }
+    throw e;
+  }
 
   const gradleProjectGraphReportEnd = performance.mark(
     'gradleProjectGraphReport:end'

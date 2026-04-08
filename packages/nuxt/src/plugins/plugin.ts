@@ -6,6 +6,7 @@ import {
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
+  joinPathFragments,
   readJsonFile,
   TargetConfiguration,
   workspaceRoot,
@@ -23,8 +24,6 @@ import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util'
 
 const cachePath = join(workspaceDataDirectory, 'nuxt.hash');
 const targetsCache = readTargetsCache();
-
-const pmc = getPackageManagerCommand();
 
 function readTargetsCache(): Record<
   string,
@@ -84,6 +83,10 @@ async function createNodesInternal(
 
   options = normalizeOptions(options);
 
+  const pmc = getPackageManagerCommand(
+    detectPackageManager(context.workspaceRoot)
+  );
+
   const hash = await calculateHashForCreateNodes(
     projectRoot,
     options,
@@ -94,7 +97,8 @@ async function createNodesInternal(
     configFilePath,
     projectRoot,
     options,
-    context
+    context,
+    pmc
   );
 
   return {
@@ -111,7 +115,8 @@ async function buildNuxtTargets(
   configFilePath: string,
   projectRoot: string,
   options: NuxtPluginOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const nuxtConfig: {
     buildDir: string;
@@ -291,9 +296,9 @@ function normalizeOutputPath(
       return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
     } else {
       if (outputPath.startsWith('..')) {
-        return join('{workspaceRoot}', join(projectRoot, outputPath));
+        return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);
       } else {
-        return join('{projectRoot}', outputPath);
+        return joinPathFragments('{projectRoot}', outputPath);
       }
     }
   }

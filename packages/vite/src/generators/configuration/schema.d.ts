@@ -13,4 +13,5 @@ export interface ViteConfigurationGeneratorSchema {
   addPlugin?: boolean;
   projectType?: 'application' | 'library';
   previewPort?: number;
+  useViteV7?: boolean;
 }

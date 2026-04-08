@@ -17,7 +17,7 @@
     "index.ts",
     "mf/**/*"
   ],
-  "include": ["**/*.ts", "**/*.json"],
+  "include": ["**/*.ts"],
   "references": [
     {
       "path": "../vitest/tsconfig.lib.json"

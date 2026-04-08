@@ -28,6 +28,10 @@
     "native": [
       "{projectRoot}/**/*.rs",
       "{projectRoot}/**/Cargo.*",
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/clippy.toml",
+      "{workspaceRoot}/.cargo/config.toml",
       { "runtime": "node -p '`${process.platform}_${process.arch}`'" },
       { "runtime": "rustc --version" },
       { "externalDependencies": ["npm:@monodon/rust", "npm:@napi-rs/cli"] }
@@ -74,19 +78,13 @@
       "options": { "packageRoot": "dist/packages/{projectName}" }
     },
     "build": {
-      "dependsOn": [
-        "^build",
-        "typecheck",
-        "copy-assets",
-        "build-base",
-        "build-native"
-      ],
+      "dependsOn": ["^build", "typecheck", "build-base"],
       "inputs": ["production", "^production"],
       "cache": true
     },
     "build-native": { "inputs": ["native"], "cache": true },
     "build-base": {
-      "dependsOn": ["^build-base", "build-native"],
+      "dependsOn": ["^build-base", "build-native", "copy-assets"],
       "cache": true
     },
     "test-native": {
@@ -102,7 +100,12 @@
         "env": { "NODE_OPTIONS": "--experimental-vm-modules" }
       }
     },
-    "lint": { "dependsOn": ["build-native", "^build-native"] },
+    "lint": {
+      "dependsOn": ["build-native", "^build-native"],
+      "options": {
+        "max-warnings": 5
+      }
+    },
     "e2e": { "cache": true, "inputs": ["e2eInputs", "^production"] },
     "e2e-local": {
       "cache": true,
@@ -375,6 +378,9 @@
       },
       {
         "rule": "./dist/workspace-plugin/src/conformance-rules/relative-image-imports"
+      },
+      {
+        "rule": "./dist/workspace-plugin/src/conformance-rules/types-versions-exports-sync"
       }
     ]
   },

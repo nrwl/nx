@@ -51,7 +51,7 @@
       }
     },
     "copy-assets": {
-      "dependsOn": ["build-base", "build-analyzer"]
+      "dependsOn": ["build-analyzer"]
     },
     "nx-release-publish": {
       "executor": "@nx/js:release-publish",

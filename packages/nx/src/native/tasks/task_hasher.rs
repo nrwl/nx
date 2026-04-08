@@ -16,9 +16,9 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        CachedTaskOutput, hash_all_externals, hash_external, hash_project_config,
-        hash_project_files_with_inputs, hash_task_output, hash_tsconfig_selectively,
-        hash_workspace_files_with_inputs,
+        CachedTaskOutput, ProjectFileSetCache, hash_all_externals, hash_external,
+        hash_project_config, hash_project_files_with_inputs_cached, hash_task_output,
+        hash_tsconfig_selectively, hash_workspace_files_with_inputs,
     },
     types::FileData,
     workspace::types::ProjectFiles,
@@ -203,7 +203,7 @@ impl TaskHasher {
         // the TaskHasher instance.
         let task_output_cache = DashMap::new();
         let runtime_cache: DashMap<String, String> = DashMap::new();
-        let project_file_set_cache: DashMap<String, CachedFileSetHash> = DashMap::new();
+        let project_file_set_cache = ProjectFileSetCache::new();
         let workspace_file_set_cache: DashMap<String, CachedFileSetHash> = DashMap::new();
         let should_collect_inputs = collect_task_inputs.unwrap_or(false);
 
@@ -404,33 +404,22 @@ impl TaskHasher {
                 (hashed_cwd, empty)
             }
             HashInstruction::ProjectFileSet(project_name, file_sets) => {
-                let cache_key = instruction.to_string();
-                // Check cache first; clone and drop the Ref before any insert
-                let cached_entry = if let Some(entry) = project_file_set_cache.get(&cache_key) {
-                    entry.clone()
-                } else {
-                    let result = hash_project_files_with_inputs(
-                        project_name,
-                        file_sets,
-                        &self.project_file_map,
-                    )?;
-                    let entry = CachedFileSetHash {
-                        hash: result.hash,
-                        files: result.files,
-                    };
-                    project_file_set_cache.insert(cache_key, entry.clone());
-                    entry
-                };
+                let cached_entry = hash_project_files_with_inputs_cached(
+                    project_name,
+                    file_sets,
+                    &self.project_file_map,
+                    project_file_set_cache,
+                )?;
                 trace!(parent: &span, "hash_project_files: {:?}", now.elapsed());
                 let inputs = if collect_inputs {
                     HashInputsBuilder {
-                        files: cached_entry.files.into_iter().collect(),
+                        files: cached_entry.files.iter().cloned().collect(),
                         ..Default::default()
                     }
                 } else {
                     empty
                 };
-                (cached_entry.hash, inputs)
+                (cached_entry.hash.clone(), inputs)
             }
             HashInstruction::ProjectConfiguration(project_name) => {
                 let hashed_project_config =
@@ -547,7 +536,7 @@ struct HashInstructionArgs<'a> {
     selectively_hash_tsconfig: bool,
     task_output_cache: &'a DashMap<String, CachedTaskOutput>,
     runtime_cache: &'a DashMap<String, String>,
-    project_file_set_cache: &'a DashMap<String, CachedFileSetHash>,
+    project_file_set_cache: &'a ProjectFileSetCache,
     workspace_file_set_cache: &'a DashMap<String, CachedFileSetHash>,
     cwd: &'a std::path::Path,
     collect_inputs: bool,

@@ -1,0 +1,9 @@
+{
+  "name": "group-03-sub-02-leaf-05",
+  "implicitDependencies": ["group-03-sub-02"],
+  "targets": {
+    "build": {},
+    "copy": {},
+    "cat": {}
+  }
+}

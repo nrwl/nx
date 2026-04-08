@@ -410,6 +410,263 @@ describe('native task hasher', () => {
     `);
   });
 
+  it.each([
+    [
+      'before production',
+      ['default', '^{projectRoot}/tsconfig*.json', '^prod'],
+    ],
+    ['after production', ['default', '^prod', '^{projectRoot}/tsconfig*.json']],
+  ])(
+    'should apply multiple dependency inputs to the same dependency when tsconfig inputs are listed %s',
+    async (_, targetInputs) => {
+      await tempFs.createFiles({
+        'libs/child/tsconfig.spec.json': JSON.stringify({
+          extends: '../../tsconfig.base.json',
+        }),
+        'libs/child/src/runtime.ts': 'export const runtime = true;',
+        'libs/child/src/runtime.spec.ts': 'export {};',
+      });
+
+      const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+        'libs/parent': 'parent',
+        'libs/child': 'child',
+      });
+      const builder = new ProjectGraphBuilder(
+        undefined,
+        workspaceFiles.fileMap.projectFileMap
+      );
+
+      builder.addNode({
+        name: 'parent',
+        type: 'e2e',
+        data: {
+          root: 'libs/parent',
+          targets: {
+            e2e: {
+              executor: 'nx:run-commands',
+              inputs: targetInputs,
+            },
+          },
+        },
+      });
+      builder.addNode({
+        name: 'child',
+        type: 'lib',
+        data: {
+          root: 'libs/child',
+          targets: {},
+        },
+      });
+      builder.addStaticDependency(
+        'parent',
+        'child',
+        'libs/parent/src/index.ts'
+      );
+
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['parent'],
+        ['e2e'],
+        undefined,
+        {}
+      );
+
+      const localNxJson: NxJsonConfiguration = {
+        namedInputs: {
+          default: ['{projectRoot}/**/*'],
+          prod: [
+            '!{projectRoot}/**/*.spec.ts',
+            '!{projectRoot}/tsconfig.spec.json',
+          ],
+        },
+      };
+
+      const hash = await new NativeTaskHasherImpl(
+        tempFs.tempDir,
+        localNxJson,
+        projectGraph,
+        workspaceFiles.rustReferences,
+        { selectivelyHashTsConfig: false }
+      ).hashTask(taskGraph.tasks['parent:e2e'], taskGraph, {});
+
+      expect(hash.inputs.files).toEqual(
+        expect.arrayContaining([
+          'libs/child/src/runtime.ts',
+          'libs/child/tsconfig.spec.json',
+        ])
+      );
+      expect(hash.inputs.files).not.toContain('libs/child/src/runtime.spec.ts');
+    }
+  );
+
+  it('should apply multiple dependency inputs to shared transitive dependencies', async () => {
+    await tempFs.createFiles({
+      'libs/left/src/index.ts': 'export const left = true;',
+      'libs/right/src/index.ts': 'export const right = true;',
+      'libs/shared/tsconfig.spec.json': JSON.stringify({
+        extends: '../../tsconfig.base.json',
+      }),
+      'libs/shared/src/runtime.ts': 'export const runtime = true;',
+      'libs/shared/src/runtime.spec.ts': 'export {};',
+    });
+
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/left': 'left',
+      'libs/right': 'right',
+      'libs/shared': 'shared',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+
+    builder.addNode({
+      name: 'parent',
+      type: 'e2e',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          e2e: {
+            executor: 'nx:run-commands',
+            inputs: ['default', '^{projectRoot}/tsconfig*.json', '^prod'],
+          },
+        },
+      },
+    });
+    for (const name of ['left', 'right', 'shared']) {
+      builder.addNode({
+        name,
+        type: 'lib',
+        data: {
+          root: `libs/${name}`,
+          targets: {},
+        },
+      });
+    }
+    builder.addStaticDependency('parent', 'left', 'libs/parent/src/index.ts');
+    builder.addStaticDependency('parent', 'right', 'libs/parent/src/index.ts');
+    builder.addStaticDependency('left', 'shared', 'libs/left/src/index.ts');
+    builder.addStaticDependency('right', 'shared', 'libs/right/src/index.ts');
+
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['parent'],
+      ['e2e'],
+      undefined,
+      {}
+    );
+
+    const localNxJson: NxJsonConfiguration = {
+      namedInputs: {
+        default: ['{projectRoot}/**/*'],
+        prod: [
+          '!{projectRoot}/**/*.spec.ts',
+          '!{projectRoot}/tsconfig.spec.json',
+        ],
+      },
+    };
+
+    const hash = await new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      localNxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    ).hashTask(taskGraph.tasks['parent:e2e'], taskGraph, {});
+
+    expect(hash.inputs.files).toEqual(
+      expect.arrayContaining([
+        'libs/shared/src/runtime.ts',
+        'libs/shared/tsconfig.spec.json',
+      ])
+    );
+    expect(hash.inputs.files).not.toContain('libs/shared/src/runtime.spec.ts');
+  });
+
+  it('should apply multiple dependency inputs in circular dependencies', async () => {
+    await tempFs.createFiles({
+      'libs/child/tsconfig.spec.json': JSON.stringify({
+        extends: '../../tsconfig.base.json',
+      }),
+      'libs/child/src/runtime.ts': 'export const runtime = true;',
+      'libs/child/src/runtime.spec.ts': 'export {};',
+    });
+
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+
+    builder.addNode({
+      name: 'parent',
+      type: 'e2e',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          e2e: {
+            executor: 'nx:run-commands',
+            inputs: ['default', '^{projectRoot}/tsconfig*.json', '^prod'],
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'libs/child',
+        targets: {},
+      },
+    });
+    builder.addStaticDependency('parent', 'child', 'libs/parent/src/index.ts');
+    builder.addStaticDependency('child', 'parent', 'libs/child/src/index.ts');
+
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['parent'],
+      ['e2e'],
+      undefined,
+      {}
+    );
+
+    const localNxJson: NxJsonConfiguration = {
+      namedInputs: {
+        default: ['{projectRoot}/**/*'],
+        prod: [
+          '!{projectRoot}/**/*.spec.ts',
+          '!{projectRoot}/tsconfig.spec.json',
+        ],
+      },
+    };
+
+    const hash = await new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      localNxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    ).hashTask(taskGraph.tasks['parent:e2e'], taskGraph, {});
+
+    expect(hash.inputs.files).toEqual(
+      expect.arrayContaining([
+        'libs/child/src/runtime.ts',
+        'libs/child/tsconfig.spec.json',
+      ])
+    );
+    expect(hash.inputs.files).not.toContain('libs/child/src/runtime.spec.ts');
+  });
+
   it('should make a plan with multiple filesets of a project', async () => {
     let nxJson = {
       namedInputs: {

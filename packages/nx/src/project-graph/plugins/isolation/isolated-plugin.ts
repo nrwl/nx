@@ -1,5 +1,5 @@
 import { ChildProcess, spawn } from 'child_process';
-import { Socket, connect } from 'net';
+import { Socket } from 'net';
 import { Readable, Writable } from 'stream';
 import path = require('path');
 
@@ -9,6 +9,7 @@ import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { logger } from '../../../utils/logger';
+import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
 import type { RawProjectGraphDependency } from '../../project-graph-builder';
 import { LoadedNxPlugin } from '../loaded-nx-plugin';
 import type {
@@ -196,7 +197,12 @@ export class IsolatedPlugin implements LoadedNxPlugin {
 
     if (!this._connectPromise) {
       logger.verbose(`[plugin-client] restarting worker for "${this.name}"`);
-      this._connectPromise = this.spawnAndConnect();
+      this._connectPromise = this.spawnAndConnect().catch((err) => {
+        // Clear the cached promise so subsequent calls can retry
+        // instead of re-awaiting a permanently-rejected promise.
+        this._connectPromise = null;
+        throw err;
+      });
     }
 
     await this._connectPromise;
@@ -561,49 +567,55 @@ async function startPluginWorker(name: string) {
 
   worker.unref();
 
-  let attempts = 0;
-  return new Promise<{ worker: ChildProcess; socket: Socket }>(
-    (resolve, reject) => {
-      const id = setInterval(async () => {
-        const socket = await isServerAvailable(ipcPath);
-        if (socket) {
-          socket.unref();
-          clearInterval(id);
-          logger.verbose(
-            `[isolated-plugin] connected to worker for "${name}" (pid: ${worker.pid}) after ${attempts} attempt(s)`
-          );
-          resolve({ worker, socket });
-        } else if (attempts > 10000) {
-          clearInterval(id);
-          reject(new Error(`Failed to start plugin worker for plugin ${name}`));
-        } else {
-          attempts++;
-        }
-      }, 10);
-    }
-  ).finally(() => {
+  try {
+    const socket = await connectToWorker(worker, ipcPath, name);
+    return { worker, socket };
+  } finally {
     performance.mark(`start-plugin-worker-end:${name}`);
     performance.measure(
       `start-plugin-worker:${name}`,
       `start-plugin-worker:${name}`,
       `start-plugin-worker-end:${name}`
     );
-  });
+  }
 }
 
-function isServerAvailable(ipcPath: string): Promise<Socket | false> {
-  return new Promise((resolve) => {
-    try {
-      const socket = connect(ipcPath, () => {
-        resolve(socket);
-      });
-      socket.once('error', () => {
-        resolve(false);
-      });
-    } catch {
-      resolve(false);
+async function connectToWorker(
+  worker: ChildProcess,
+  ipcPath: string,
+  name: string
+): Promise<Socket> {
+  const abortController = new AbortController();
+  let earlyExitError: Error | null = null;
+
+  // If the worker exits before we connect, abort polling immediately
+  // rather than burning through attempts against a dead socket.
+  worker.once('exit', (code) => {
+    if (!abortController.signal.aborted) {
+      earlyExitError = new Error(
+        `Plugin worker for "${name}" exited with code ${code} before the connection was established.`
+      );
+      abortController.abort();
     }
   });
+
+  const socket = await waitForSocketConnection(ipcPath, {
+    signal: abortController.signal,
+  });
+
+  if (socket) {
+    abortController.abort();
+    socket.unref();
+    logger.verbose(
+      `[isolated-plugin] connected to worker for "${name}" (pid: ${worker.pid})`
+    );
+    return socket;
+  }
+
+  if (earlyExitError) {
+    throw earlyExitError;
+  }
+  throw new Error(`Failed to start plugin worker for plugin ${name}`);
 }
 
 function getTypeName(u: unknown): string {

@@ -43,7 +43,6 @@ import { yargsDownloadCloudClientCommand } from './nx-cloud/download-cloud-clien
 import { yargsFixCiCommand } from './nx-cloud/fix-ci/command-object';
 import { yargsLoginCommand } from './nx-cloud/login/command-object';
 import { yargsLogoutCommand } from './nx-cloud/logout/command-object';
-import { yargsPolygraphCommand } from './nx-cloud/polygraph/command-object';
 import { yargsRecordCommand } from './nx-cloud/record/command-object';
 import { yargsStartAgentCommand } from './nx-cloud/start-agent/command-object';
 import { yargsStartCiRunCommand } from './nx-cloud/start-ci-run/command-object';
@@ -118,7 +117,6 @@ export const commandsObject = yargs
   .command(yargsStartAgentCommand)
   .command(yargsStopAllAgentsCommand)
   .command(yargsFixCiCommand)
-  .command(yargsPolygraphCommand)
   .command(yargsApplyLocallyCommand)
   .command(yargsDownloadCloudClientCommand)
   .command(yargsMcpCommand)
