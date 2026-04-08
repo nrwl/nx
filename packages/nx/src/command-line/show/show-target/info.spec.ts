@@ -312,6 +312,40 @@ describe('show target info', () => {
     );
   });
 
+  it('should not duplicate inputs when multiple scoped input references expand to the same named input', async () => {
+    setGraph(
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              build: {
+                executor: '@nx/web:build',
+                inputs: [
+                  { input: 'production', projects: ['tag:npm:public'] },
+                  { input: 'production', projects: ['tag:maven:dev'] },
+                  '{workspaceRoot}/scripts/**/*',
+                ],
+              },
+            },
+          },
+          'app'
+        )
+        .build()
+    );
+
+    await showTargetInfoHandler({ target: 'my-app:build', json: true });
+
+    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    // Scoped inputs should be preserved as objects, not expanded
+    expect(parsed.inputs).toEqual([
+      { input: 'production', projects: ['tag:npm:public'] },
+      { input: 'production', projects: ['tag:maven:dev'] },
+      '{workspaceRoot}/scripts/**/*',
+    ]);
+  });
+
   it('should indicate custom hasher in JSON output', async () => {
     setGraph(
       new GraphBuilder()

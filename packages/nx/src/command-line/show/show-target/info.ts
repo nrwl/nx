@@ -176,7 +176,10 @@ function expandInputsForDisplay(
       }
     } else if ('input' in input) {
       const name = input.input;
-      if (!name.startsWith('^') && namedInputs[name]) {
+      // Don't expand when the input has additional qualifiers (e.g. projects)
+      // since those scopes are meaningful and would be lost by expansion
+      const hasQualifiers = Object.keys(input).length > 1;
+      if (!hasQualifiers && !name.startsWith('^') && namedInputs[name]) {
         for (const expanded of namedInputs[name]) {
           result.push({ value: expanded, originalIndex: i });
         }
