@@ -1,5 +1,4 @@
 import type { ChildProcess, Serializable } from 'child_process';
-import treeKill from 'tree-kill';
 import type { TaskResult } from '../../config/misc-interfaces';
 import { signalToCode } from '../../utils/exit-codes';
 import {
@@ -127,10 +126,8 @@ export class BatchProcess {
   }
 
   kill(signal?: NodeJS.Signals): void {
-    if (this.childProcess?.pid) {
-      treeKill(this.childProcess.pid, signal, () => {
-        // Ignore errors - process may have already exited
-      });
+    if (this.childProcess.connected) {
+      this.childProcess.kill(signal);
     }
   }
 }
