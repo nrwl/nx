@@ -605,6 +605,298 @@ describe('spread syntax in mergeTargetConfigurations', () => {
 
     expect(result.inputs).toEqual(['only-new-input']);
   });
+
+  describe('options-level spread ("..." key in options object)', () => {
+    it('should use object spread semantics when options contains "..." key', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          options: {
+            myNewOption: 'new-value',
+            '...': true,
+            sharedOption: 'overridden',
+          },
+        },
+        {
+          executor: 'nx:run-commands',
+          options: {
+            baseOption: 'base-value',
+            sharedOption: 'original',
+          },
+        }
+      );
+
+      // Keys before '...' in new options can be overridden by base;
+      // keys after '...' override base. Last-write-wins.
+      expect(result.options).toEqual({
+        myNewOption: 'new-value',
+        baseOption: 'base-value',
+        sharedOption: 'overridden',
+      });
+      // The '...' key itself must not appear in the result
+      expect(result.options['...']).toBeUndefined();
+    });
+
+    it('should let base win for options keys that appear before "..."', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          options: {
+            outputPath: 'dist/my-override',
+            '...': true,
+          },
+        },
+        {
+          executor: 'nx:run-commands',
+          options: {
+            outputPath: 'dist/inferred',
+            tsConfig: 'tsconfig.app.json',
+          },
+        }
+      );
+
+      // outputPath is before '...' so base wins; tsConfig comes from base via spread
+      expect(result.options).toEqual({
+        outputPath: 'dist/inferred',
+        tsConfig: 'tsconfig.app.json',
+      });
+    });
+
+    it('should let new options win for keys that appear after "..."', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          options: {
+            '...': true,
+            outputPath: 'dist/my-override',
+          },
+        },
+        {
+          executor: 'nx:run-commands',
+          options: {
+            outputPath: 'dist/inferred',
+            tsConfig: 'tsconfig.app.json',
+          },
+        }
+      );
+
+      // outputPath is after '...' so new options win; tsConfig comes from base
+      expect(result.options).toEqual({
+        outputPath: 'dist/my-override',
+        tsConfig: 'tsconfig.app.json',
+      });
+    });
+
+    it('should add new options keys that are not in base when "..." is at end', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          options: {
+            brandNewOption: 'value',
+            '...': true,
+          },
+        },
+        {
+          executor: 'nx:run-commands',
+          options: {
+            existingOption: 'base-value',
+          },
+        }
+      );
+
+      // brandNewOption is not in base so it survives even though it's before '...'
+      expect(result.options).toEqual({
+        brandNewOption: 'value',
+        existingOption: 'base-value',
+      });
+    });
+  });
+
+  describe('target root spread ("..." key in target object)', () => {
+    it('should let base win for top-level keys before "..." (only add new keys)', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          dependsOn: ['lint'],
+          '...': true,
+        },
+        {
+          executor: 'nx:run-commands',
+          dependsOn: ['typecheck'],
+          inputs: ['production'],
+        }
+      );
+
+      // dependsOn is before '...' and exists in base → base wins
+      expect(result.dependsOn).toEqual(['typecheck']);
+      // inputs is only in base → comes through via spread
+      expect(result.inputs).toEqual(['production']);
+      // '...' must not appear in the result
+      expect((result as any)['...']).toBeUndefined();
+    });
+
+    it('should let target win for top-level keys after "..."', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          '...': true,
+          dependsOn: ['lint'],
+        },
+        {
+          executor: 'nx:run-commands',
+          dependsOn: ['typecheck'],
+          inputs: ['production'],
+        }
+      );
+
+      // dependsOn is after '...' → target wins
+      expect(result.dependsOn).toEqual(['lint']);
+      // inputs is only in base → comes through via spread
+      expect(result.inputs).toEqual(['production']);
+    });
+
+    it('should add target-only keys that appear before "..."', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          cache: true,
+          '...': true,
+        },
+        {
+          executor: 'nx:run-commands',
+          inputs: ['production'],
+        }
+      );
+
+      // cache is before '...' but NOT in base → it survives as a new addition
+      expect(result.cache).toBe(true);
+      // inputs comes from base via spread
+      expect(result.inputs).toEqual(['production']);
+    });
+
+    it('should not spread when targets are not compatible', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:webpack:webpack',
+          dependsOn: ['lint'],
+          '...': true,
+        },
+        {
+          executor: 'nx:run-commands',
+          inputs: ['production'],
+        }
+      );
+
+      // Incompatible targets: target wins entirely, base is discarded
+      // so inputs should not appear (base is ignored)
+      expect(result.inputs).toBeUndefined();
+      expect(result.dependsOn).toEqual(['lint']);
+    });
+
+    it('options are always merged with their own logic regardless of "..." position', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          options: { myOption: 'my-value' },
+          '...': true,
+        },
+        {
+          executor: 'nx:run-commands',
+          options: { baseOption: 'base-value', myOption: 'base-my-value' },
+          inputs: ['production'],
+        }
+      );
+
+      // options use their own merge logic (not overridden by root spread):
+      // target's options wins by default for shared keys
+      expect(result.options).toEqual({
+        myOption: 'my-value',
+        baseOption: 'base-value',
+      });
+      // inputs: only in base → comes through via root spread
+      expect(result.inputs).toEqual(['production']);
+    });
+  });
+
+  describe('configurations-level spread ("..." key in configurations object)', () => {
+    it('should let base win for named configurations before "..."', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          configurations: {
+            'my-config': { outputPath: 'dist/custom' },
+            '...': true,
+          },
+        },
+        {
+          executor: 'nx:run-commands',
+          configurations: {
+            production: { sourceMap: false },
+            development: { sourceMap: true },
+          },
+        }
+      );
+
+      // 'my-config' is before '...' and not in base → survives
+      expect(result.configurations['my-config']).toEqual({
+        outputPath: 'dist/custom',
+      });
+      // base named configs come through via spread
+      expect(result.configurations['production']).toEqual({ sourceMap: false });
+      expect(result.configurations['development']).toEqual({ sourceMap: true });
+      expect((result.configurations as any)['...']).toBeUndefined();
+    });
+
+    it('should let target win for named configurations after "..."', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          configurations: {
+            '...': true,
+            production: { outputPath: 'dist/my-override' },
+          },
+        },
+        {
+          executor: 'nx:run-commands',
+          configurations: {
+            production: { sourceMap: false, outputPath: 'dist/base' },
+            development: { sourceMap: true },
+          },
+        }
+      );
+
+      // 'production' is after '...' → target options merged with base options (target wins)
+      expect(result.configurations['production'].outputPath).toBe(
+        'dist/my-override'
+      );
+      // development comes from base via spread
+      expect(result.configurations['development']).toEqual({ sourceMap: true });
+    });
+
+    it('should add new named configurations that do not exist in base', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          configurations: {
+            'my-config': { outputPath: 'dist/custom' },
+            '...': true,
+          },
+        },
+        {
+          executor: 'nx:run-commands',
+          configurations: {
+            production: { sourceMap: false },
+          },
+        }
+      );
+
+      // 'my-config' is before '...' but not in base → survives as a new addition
+      expect(result.configurations['my-config']).toEqual({
+        outputPath: 'dist/custom',
+      });
+      expect(result.configurations['production']).toEqual({ sourceMap: false });
+    });
+  });
 });
 
 describe('isCompatibleTarget', () => {

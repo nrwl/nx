@@ -10,6 +10,7 @@ import { recordSourceMapKeysByIndex } from './source-maps';
 import type { SourceInformation } from './source-maps';
 import {
   getMergeValueResult,
+  NX_SPREAD_TOKEN,
   uniqueKeysInObjects,
 } from '../project-configuration-utils/utils';
 
@@ -135,6 +136,23 @@ function mergeOptions(
   sourceInformation?: SourceInformation,
   targetIdentifier?: string
 ): Record<string, any> | undefined {
+  // If the options object itself contains a spread token, use object-level spread
+  // semantics — the position of '...' in key order controls merge priority,
+  // just as getMergeValueResult does for nested objects.
+  if (newOptions?.[NX_SPREAD_TOKEN] === true) {
+    return getMergeValueResult(
+      baseOptions,
+      newOptions,
+      projectConfigSourceMap
+        ? {
+            sourceMap: projectConfigSourceMap,
+            key: `${targetIdentifier}.options`,
+            sourceInformation,
+          }
+        : undefined
+    ) as Record<string, any>;
+  }
+
   const mergedOptionKeys = uniqueKeysInObjects(
     baseOptions ?? {},
     newOptions ?? {}
@@ -165,23 +183,45 @@ function mergeConfigurations<T extends Object>(
   sourceInformation?: SourceInformation,
   targetIdentifier?: string
 ): Record<string, T> | undefined {
-  const mergedConfigurations = {};
+  const mergedConfigurations: Record<string, T> = {};
 
-  const configurations = uniqueKeysInObjects(
+  // uniqueKeysInObjects(base, new) puts base keys first. Since NX_SPREAD_TOKEN
+  // only ever appears in newConfigurations, it always lands after all base keys,
+  // so every base-named configuration is "before the spread" when '...' is present.
+  const configNames = uniqueKeysInObjects(
     baseConfigurations ?? {},
     newConfigurations ?? {}
   );
-  for (const configuration of configurations) {
-    // Intentionally doesn't pass source map, as that is handled below
-    mergedConfigurations[configuration] = mergeOptions(
-      newConfigurations?.[configuration],
-      baseConfigurations?.[configuration]
-    );
+
+  const spreadIndex =
+    newConfigurations?.[NX_SPREAD_TOKEN] === true
+      ? configNames.indexOf(NX_SPREAD_TOKEN)
+      : -1;
+
+  for (let i = 0; i < configNames.length; i++) {
+    const configName = configNames[i];
+    if (configName === NX_SPREAD_TOKEN) continue;
+
+    if (spreadIndex >= 0 && i < spreadIndex) {
+      // Before '...': base wins for shared named configurations; only include the
+      // new configuration if base doesn't define one with the same name.
+      mergedConfigurations[configName] =
+        configName in (baseConfigurations ?? {})
+          ? baseConfigurations[configName]
+          : (mergeOptions(newConfigurations?.[configName], undefined) as T);
+    } else {
+      // Intentionally doesn't pass source map here; handled below.
+      mergedConfigurations[configName] = mergeOptions(
+        newConfigurations?.[configName],
+        baseConfigurations?.[configName]
+      ) as T;
+    }
   }
 
   // record new configurations & configuration properties in source map
   if (projectConfigSourceMap) {
     for (const newConfiguration in newConfigurations) {
+      if (newConfiguration === NX_SPREAD_TOKEN) continue;
       projectConfigSourceMap[
         `${targetIdentifier}.configurations.${newConfiguration}`
       ] = sourceInformation;
@@ -240,17 +280,49 @@ export function mergeTargetConfigurations(
   const result: Partial<TargetConfiguration> = {};
   const mergeBase = isCompatible ? baseTargetProperties : {};
 
+  // uniqueKeysInObjects(base, target) puts base keys first. Since NX_SPREAD_TOKEN
+  // only appears in target, it always lands after all base keys. This means every
+  // base-target shared key is "before the spread" → base wins when '...' is present.
   const keys = isCompatible
     ? uniqueKeysInObjects(baseTargetProperties, target)
     : Object.keys(target);
 
-  for (const key of keys) {
+  // spreadIndex is the position of '...' in the merged key list, or -1 if absent.
+  // Keys at index < spreadIndex: base wins (target only contributes new-only keys).
+  // Keys at index >= spreadIndex: normal merge (target wins for conflicts).
+  const spreadIndex =
+    isCompatible && target[NX_SPREAD_TOKEN] === true
+      ? keys.indexOf(NX_SPREAD_TOKEN)
+      : -1;
+
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
     // options and configurations have their own merge logic below
-    if (key === 'options' || key === 'configurations') {
+    if (
+      key === 'options' ||
+      key === 'configurations' ||
+      key === NX_SPREAD_TOKEN
+    ) {
       continue;
     }
 
-    if (key in target) {
+    if (spreadIndex >= 0 && i < spreadIndex) {
+      // Before '...': base wins for shared keys; only add the key if base lacks it.
+      result[key] =
+        key in mergeBase
+          ? mergeBase[key]
+          : getMergeValueResult(
+              undefined,
+              target[key],
+              projectConfigSourceMap
+                ? {
+                    sourceMap: projectConfigSourceMap,
+                    key: `${targetIdentifier}.${key}`,
+                    sourceInformation,
+                  }
+                : undefined
+            );
+    } else if (key in target) {
       result[key] = getMergeValueResult(
         mergeBase[key],
         target[key],

@@ -1,6 +1,6 @@
 import type { SourceInformation } from '../project-configuration/source-maps';
 
-const NX_SPREAD_TOKEN = '...';
+export const NX_SPREAD_TOKEN = '...';
 
 /**
  * Returns deduplicated keys from all provided objects.
