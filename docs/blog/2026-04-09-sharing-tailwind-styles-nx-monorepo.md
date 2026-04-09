@@ -125,7 +125,7 @@ The admin app uses `bg-secondary`. Same tokens, different choices.
 
 Tailwind v4 needs `@source` directives to know which files to scan for utility classes. In a monorepo, that means pointing at every library your app depends on. Maintaining those paths by hand gets fragile fast.
 
-Nx has [sync generators](/concepts/sync-generators) that can automate this. The [`@juristr/nx-tailwind-sync`](https://www.npmjs.com/package/@juristr/nx-tailwind-sync) package reads the project dependency graph and auto-manages `@source` directives on every build. For a deeper walkthrough on how this works, check out [this blog post](/blog/setup-tailwind-4-npm-workspace).
+Nx has [sync generators](/docs/concepts/sync-generators) that can automate this. The [`@juristr/nx-tailwind-sync`](https://www.npmjs.com/package/@juristr/nx-tailwind-sync) package reads the project dependency graph and auto-manages `@source` directives on every build. For a deeper walkthrough on how this works, check out [this blog post](/blog/setup-tailwind-4-npm-workspace).
 
 If you're not using Nx yet, you can add it to any existing PNPM or NPM workspace by running `nx init` in the root of your project. It picks up your existing `package.json` scripts and workspace structure without requiring changes. From there you can wire up the sync generator.
 
