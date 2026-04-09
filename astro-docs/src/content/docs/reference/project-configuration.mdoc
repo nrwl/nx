@@ -631,6 +631,75 @@ In the case of an explicit target using an executor, you can specify the executo
 }
 ```
 
+### Spread token
+
+By default, each configuration source overwrites the previous one for every property it defines. The spread token (`"..."`) lets you control merge priority rather than always replacing.
+
+**In arrays**, `"..."` is substituted with the items from the base array at that position:
+
+```json
+// project.json
+{
+  "targets": {
+    "build": {
+      "inputs": ["my-project-input", "..."]
+    }
+  }
+}
+```
+
+If the inferred target has `inputs: ["default", "^production"]`, the result is `["my-project-input", "default", "^production"]`.
+
+**In objects**, a key of `"..."` set to `true` spreads base properties at that position. Keys defined after `"..."` override base values; keys defined before `"..."` can be overridden by base values.
+
+```json
+// project.json
+{
+  "targets": {
+    "build": {
+      "options": {
+        "env": {
+          "MY_VAR": "my-value",
+          "...": true
+        }
+      }
+    }
+  }
+}
+```
+
+Spread is resolved at these levels of the target configuration:
+
+| Level                                              | Example                                                                     |
+| -------------------------------------------------- | --------------------------------------------------------------------------- |
+| Target root                                        | `"build": { "dependsOn": ["lint"], "...": true }`                           |
+| `inputs`, `outputs`, `dependsOn`, `syncGenerators` | `"inputs": ["my-input", "..."]`                                             |
+| `options`                                          | `"options": { "...": true, "outputPath": "dist/custom" }`                   |
+| `options[x]`                                       | `"options": { "env": { "MY_VAR": "val", "...": true } }`                    |
+| `configurations`                                   | `"configurations": { "my-config": { ... }, "...": true }`                   |
+| `configurations[x]`                                | `"configurations": { "prod": { "...": true, "sourceMap": false } }`         |
+| `configurations[x][y]`                             | `"configurations": { "prod": { "env": { "MY_VAR": "val", "...": true } } }` |
+
+`options[x]` and `configurations[x][y]` are equivalent depths — both are the innermost level the merge pipeline processes. The spread token has no effect nested inside those values (for example, `options.webpack.plugins: { "...": true }` is ignored because Nx treats `options.webpack` as an opaque value that fully replaces the base).
+
+#### Placing `"..."` at the end of a target
+
+Placing `"..."` at the end of a target object switches the merge to "add-only" mode: properties defined before `"..."` can be overridden by the base, so only keys the base does not define survive from your configuration.
+
+```json
+// project.json
+{
+  "targets": {
+    "build": {
+      "dependsOn": ["lint"],
+      "...": true
+    }
+  }
+}
+```
+
+If the inferred target already defines `dependsOn`, the inferred value wins. If it does not, `["lint"]` is used. This lets you add new target properties without accidentally overwriting values a plugin carefully computed.
+
 ### Target metadata
 
 You can add additional metadata to be attached to a target. For example, you can provide a description stating what the
