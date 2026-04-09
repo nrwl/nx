@@ -9,3 +9,13 @@ task-exclusions:
   - target: lint
     exclude-reads:
       - '**/dist/**/*.json'
+  # TODO: populate-local-registry-storage is doing too much — it reads all build
+  # outputs and writes version-bumped packages across the entire workspace during
+  # nx-release. We're reworking this task to have more focused I/O and will fix
+  # the inputs/outputs properly after that.
+  - project: '@nx/nx-source'
+    target: populate-local-registry-storage
+    exclude-reads:
+      - '**'
+    exclude-writes:
+      - '**'
