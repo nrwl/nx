@@ -338,8 +338,8 @@ importers:
         specifier: 3.0.2
         version: 3.0.2
       axios:
-        specifier: 1.13.5
-        version: 1.13.5
+        specifier: 1.15.0
+        version: 1.15.0
       classnames:
         specifier: ^2.5.1
         version: 2.5.1
@@ -2241,8 +2241,8 @@ importers:
         specifier: 3.0.19
         version: 3.0.19(react@18.3.1)(solid-js@1.9.7)(svelte@5.35.5)(vue@3.5.30(typescript@5.9.2))(zod@4.3.6)
       axios:
-        specifier: 1.13.5
-        version: 1.13.5
+        specifier: 1.15.0
+        version: 1.15.0
       classnames:
         specifier: 2.5.1
         version: 2.5.1
@@ -2746,8 +2746,8 @@ importers:
   packages/create-nx-workspace:
     dependencies:
       axios:
-        specifier: 1.13.5
-        version: 1.13.5
+        specifier: 1.15.0
+        version: 1.15.0
       chalk:
         specifier: 'catalog:'
         version: 4.1.2
@@ -3496,8 +3496,8 @@ importers:
         specifier: 'catalog:'
         version: 0.0.7
       axios:
-        specifier: 1.13.5
-        version: 1.13.5
+        specifier: 1.15.0
+        version: 1.15.0
       cli-cursor:
         specifier: 3.1.0
         version: 3.1.0
@@ -14798,6 +14798,9 @@ packages:
   axios@1.13.5:
     resolution: {integrity: sha512-cz4ur7Vb0xS4/KUN0tPWe44eqxrIu31me+fbang3ijiNscE129POzipJJA6zniq2C/Z6sJCjMimjS8Lc/GAs8Q==}
 
+  axios@1.15.0:
+    resolution: {integrity: sha512-wWyJDlAatxk30ZJer+GeCWS209sA42X+N5jU2jy6oHTp7ufw8uzUTVFBX9+wTfAlhiJXGS0Bq7X6efruWjuK9Q==}
+
   axobject-query@4.1.0:
     resolution: {integrity: sha512-qIj0G9wZbMGNLjLmg1PT6v2mE9AH2zlnADJD/2tC6E00hgmhUOfEB6greHPAfLRSufHqROIUTkw6E+M3lH0PTQ==}
     engines: {node: '>= 0.4'}
@@ -23413,6 +23416,10 @@ packages:
   proxy-from-env@1.1.0:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
 
+  proxy-from-env@2.1.0:
+    resolution: {integrity: sha512-cJ+oHTW1VAEa8cJslgmUZrc+sjRKgAKl3Zyse6+PV38hZe/V6Z14TbCuXcan9F9ghlz4QrFr2c92TNF82UkYHA==}
+    engines: {node: '>=10'}
+
   prr@1.0.1:
     resolution: {integrity: sha512-yPw4Sng1gWghHQWj0B3ZggWUm4qVbPwPFcRG8KyxiU7J2OHFSoEHKS+EZ3fv5l1t9CyCiop6l/ZYeWbrgoQejw==}
 
@@ -31900,7 +31907,7 @@ snapshots:
       combined-stream: 1.0.8
       extend: 3.0.2
       forever-agent: 0.6.1
-      form-data: 4.0.4
+      form-data: 4.0.5
       http-signature: 1.4.0
       is-typedarray: 1.0.0
       isstream: 0.1.2
@@ -34570,7 +34577,7 @@ snapshots:
       '@module-federation/third-party-dts-extractor': 0.21.2
       adm-zip: 0.5.16
       ansi-colors: 4.1.3
-      axios: 1.13.5
+      axios: 1.15.0
       chalk: 3.0.0
       fs-extra: 9.1.0
       isomorphic-ws: 5.0.0(ws@8.18.0)
@@ -34595,7 +34602,7 @@ snapshots:
       '@module-federation/third-party-dts-extractor': 2.1.0
       adm-zip: 0.5.16
       ansi-colors: 4.1.3
-      axios: 1.13.5
+      axios: 1.15.0
       chalk: 3.0.0
       fs-extra: 9.1.0
       isomorphic-ws: 5.0.0(ws@8.18.0)
@@ -36764,8 +36771,8 @@ snapshots:
   '@nx/key@3.0.0':
     dependencies:
       '@napi-rs/wasm-runtime': 0.2.4
-      axios: 1.13.5
-      axios-retry: 4.5.0(axios@1.13.5)
+      axios: 1.15.0
+      axios-retry: 4.5.0(axios@1.15.0)
       chalk: 4.1.2
       enquirer: 2.4.1
       ora: 5.4.1
@@ -36785,8 +36792,8 @@ snapshots:
   '@nx/key@4.0.0':
     dependencies:
       '@napi-rs/wasm-runtime': 0.2.4
-      axios: 1.13.5
-      axios-retry: 4.5.0(axios@1.13.5)
+      axios: 1.15.0
+      axios-retry: 4.5.0(axios@1.15.0)
       chalk: 4.1.2
       enquirer: 2.4.1
       ora: 5.4.1
@@ -42652,9 +42659,9 @@ snapshots:
 
   axe-core@4.10.3: {}
 
-  axios-retry@4.5.0(axios@1.13.5):
+  axios-retry@4.5.0(axios@1.15.0):
     dependencies:
-      axios: 1.13.5
+      axios: 1.15.0
       is-retry-allowed: 2.2.0
 
   axios@1.12.0:
@@ -42670,6 +42677,14 @@ snapshots:
       follow-redirects: 1.15.11(debug@4.4.1)
       form-data: 4.0.5
       proxy-from-env: 1.1.0
+    transitivePeerDependencies:
+      - debug
+
+  axios@1.15.0:
+    dependencies:
+      follow-redirects: 1.15.11(debug@4.4.1)
+      form-data: 4.0.5
+      proxy-from-env: 2.1.0
     transitivePeerDependencies:
       - debug
 
@@ -54565,6 +54580,8 @@ snapshots:
   proxy-from-env@1.0.0: {}
 
   proxy-from-env@1.1.0: {}
+
+  proxy-from-env@2.1.0: {}
 
   prr@1.0.1:
     optional: true
