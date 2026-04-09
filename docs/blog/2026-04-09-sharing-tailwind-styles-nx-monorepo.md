@@ -4,12 +4,12 @@ slug: 'sharing-tailwind-styles-nx-monorepo'
 authors: ['Juri Strumpflohner']
 cover_image: '/blog/images/articles/bg-tailwind-styles-share-monorepo.avif'
 tags: [nx, tailwind, pnpm, monorepo, sync-generators]
-description: 'Share Tailwind v4 design tokens across multiple apps in a PNPM + Nx monorepo using a shared styles package and automated @source directives.'
+description: 'Share Tailwind v4 design tokens across multiple apps in a pnpm + Nx monorepo using a shared styles package and automated @source directives.'
 ---
 
 When you have multiple apps in a monorepo, you want consistent design tokens: colors, typography, spacing, shadows. Copy-pasting a Tailwind config between apps doesn't scale. Every time you tweak a color, you have to update it everywhere.
 
-Tailwind v4 makes this simpler. The new CSS-first configuration with `@theme` means your design tokens live in a plain CSS file. In a PNPM/NPM workspaces based monorepo you can put that CSS file in its own package and share it just as you'd do with your TypeScript packages.
+Tailwind v4 makes this simpler. The new CSS-first configuration with `@theme` means your design tokens live in a plain CSS file. In a pnpm/npm workspaces based monorepo you can put that CSS file in its own package and share it just as you'd do with your TypeScript packages.
 
 This article walks through the mechanics of how to set that up. We'll create a shared styles package, consume it from multiple apps, and automate the Tailwind content scanning so it all stays in sync.
 
@@ -46,7 +46,7 @@ Create a new folder in `packages/shared/styles`. Create a `package.json` with th
 }
 ```
 
-There's no build step involved. All we want to do is tell your package manager (PNPM/NPM) where to find our `@org/shared-styles` package so we can import it.
+There's no build step involved. All we want to do is tell your package manager (pnpm/npm) where to find our `@org/shared-styles` package so we can import it.
 
 The key is the `exports` field pointing directly to the CSS file. Any consumer can `@import '@org/shared-styles'` and get the tokens.
 
@@ -127,14 +127,14 @@ Tailwind v4 needs `@source` directives to know which files to scan for utility c
 
 Nx has [sync generators](/docs/concepts/sync-generators) that can automate this. The [`@juristr/nx-tailwind-sync`](https://www.npmjs.com/package/@juristr/nx-tailwind-sync) package reads the project dependency graph and auto-manages `@source` directives on every build. For a deeper walkthrough on how this works, check out [this blog post](/blog/setup-tailwind-4-npm-workspace).
 
-If you're not using Nx yet, you can add it to any existing PNPM or NPM workspace by running `nx init` in the root of your project. It picks up your existing `package.json` scripts and workspace structure without requiring changes. From there you can wire up the sync generator.
+If you're not using Nx yet, you can add it to any existing pnpm or npm workspace by running `nx init` in the root of your project. It picks up your existing `package.json` scripts and workspace structure without requiring changes. From there you can wire up the sync generator.
 
 ```bash
 npx nx@latest init
 ```
 
 {% callout type="info" title="New to Nx?" %}
-Check out our [PNPM + Nx course](/courses/pnpm-nx-next/lessons-01-nx-init) for a step-by-step walkthrough of adding Nx to an existing workspace.
+Check out our [pnpm + Nx course](/courses/pnpm-nx-next/lessons-01-nx-init) for a step-by-step walkthrough of adding Nx to an existing workspace.
 {% /callout %}
 
 ## Full Example
@@ -146,7 +146,7 @@ Clone it, run `pnpm install`, then `pnpm nx dev shop` or `pnpm nx dev admin` to 
 ## Learn More
 
 - [Nx Docs](/docs/getting-started/intro)
-- [Configure Tailwind v4 with Vite in an NPM Workspace](/blog/setup-tailwind-4-npm-workspace)
+- [Configure Tailwind v4 with Vite in an npm Workspace](/blog/setup-tailwind-4-npm-workspace)
 - [Nx Community Discord](https://go.nx.dev/community)
 - [X / Twitter](https://twitter.com/nxdevtools)
 - [Nx GitHub](https://github.com/nrwl/nx)
