@@ -66,12 +66,10 @@ Resolved outputs:
 
 exports[`Nx Commands show show target human-readable output should render target info 1`] = `
 "Target: <APP>:build
-Executor: nx:run-commands
 Command: webpack-cli build
-Options:
-  cwd: "apps/<APP>"
-  args: ["--node-env=production"]
-  command: "webpack-cli build"
+Parallelism: true
+Continuous: false
+Cache: true
 Inputs:
   - !{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)
   - !{projectRoot}/.eslintrc.json
@@ -83,9 +81,13 @@ Inputs:
   - {"externalDependencies":["webpack-cli"]}
 Outputs:
   - {workspaceRoot}/dist/apps/<APP>
+Options:
+  cwd: "apps/<APP>"
+  args:
+    [
+      "--node-env=production"
+    ]
 Configurations: production
-Cache: true
-Parallelism: true
-Continuous: false
+
 "
 `;
