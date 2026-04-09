@@ -87,6 +87,52 @@ describe('NPM lock file utility', () => {
       expect(Object.keys(graph.externalNodes).length).toEqual(1285);
     });
 
+    it('should include overrides in stringified lock file', async () => {
+      const appPackageJson = {
+        name: 'test',
+        version: '0.0.0',
+        dependencies: {
+          next: rootLockFile.packages['node_modules/next'].version,
+        },
+        overrides: {
+          minimatch: '10.2.1',
+        },
+      };
+
+      const prunedGraph = pruneProjectGraph(graph, appPackageJson);
+      const result = stringifyNpmLockfile(
+        prunedGraph,
+        JSON.stringify(rootLockFile),
+        appPackageJson
+      );
+      const parsed = JSON.parse(result);
+
+      // overrides should be at the top level
+      expect(parsed.overrides).toEqual({ minimatch: '10.2.1' });
+      // overrides should also be in the root packages entry
+      expect(parsed.packages[''].overrides).toEqual({ minimatch: '10.2.1' });
+    });
+
+    it('should not include overrides when not present', async () => {
+      const appPackageJson = {
+        name: 'test',
+        version: '0.0.0',
+        dependencies: {
+          next: rootLockFile.packages['node_modules/next'].version,
+        },
+      };
+
+      const prunedGraph = pruneProjectGraph(graph, appPackageJson);
+      const result = stringifyNpmLockfile(
+        prunedGraph,
+        JSON.stringify(rootLockFile),
+        appPackageJson
+      );
+      const parsed = JSON.parse(result);
+
+      expect(parsed.overrides).toBeUndefined();
+    });
+
     it('should prune lock file', async () => {
       const appPackageJson = loadJsonFixture(
         joinPathFragments(
