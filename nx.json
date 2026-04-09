@@ -48,7 +48,8 @@
       { "env": "SELECTED_PM" },
       { "env": "NX_E2E_CI_CACHE_KEY" },
       { "env": "CI" },
-      { "env": "NX_E2E_RUN_E2E" }
+      { "env": "NX_E2E_RUN_E2E" },
+      { "dependentTasksOutputFiles": "**/*.d.ts", "transitive": true }
     ]
   },
   "release": {
