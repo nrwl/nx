@@ -1,5 +1,5 @@
 import type { ChildProcess, Serializable } from 'child_process';
-import treeKill from 'tree-kill';
+import * as treeKill from 'tree-kill';
 import type { TaskResult } from '../../config/misc-interfaces';
 import { signalToCode } from '../../utils/exit-codes';
 import {

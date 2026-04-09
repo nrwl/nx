@@ -30,7 +30,6 @@ import { ConfigurationSourceMaps } from '../../project-graph/utils/project-confi
 import { isJsonMessage } from '../../utils/consume-messages-from-socket';
 import { waitForSocketConnection } from '../../utils/wait-for-socket-connection';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
-import { handleImport } from '../../utils/handle-import';
 import { isCI } from '../../utils/is-ci';
 import { isSandbox } from '../../utils/is-sandbox';
 import { output } from '../../utils/output';
