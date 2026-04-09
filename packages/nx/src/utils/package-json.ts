@@ -235,10 +235,15 @@ export function readTargetsFromPackageJson(
     res[script] = buildTargetFromScript(script, scripts, packageManagerCommand);
   }
   for (const targetName in nx?.targets) {
-    res[targetName] = mergeTargetConfigurations(
-      nx?.targets[targetName],
-      res[targetName]
-    );
+    const nxTarget = nx.targets[targetName];
+    // If the nx target specifies how to run (via executor or command shorthand),
+    // it's incompatible with the inferred nx:run-script target from scripts,
+    // so overwrite instead of merge.
+    if (res[targetName] && (nxTarget.executor || nxTarget.command)) {
+      res[targetName] = nxTarget;
+    } else {
+      res[targetName] = mergeTargetConfigurations(nxTarget, res[targetName]);
+    }
   }
 
   /**
