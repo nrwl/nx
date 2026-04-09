@@ -18,14 +18,7 @@ import {
   getTaskDetails,
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
 } from '../hasher/hash-task';
-import {
-  hashArray,
-  IS_WASM,
-  logDebug,
-  RunMode,
-  TaskInvocationTracker,
-} from '../native';
-import { getLocalDbConnection } from '../utils/db-connection';
+import { hashArray, logDebug, RunMode } from '../native';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
@@ -399,14 +392,6 @@ function createTaskGraphAndRunValidations(
     loadDotEnvFiles: boolean;
   }
 ) {
-  const taskInvocationTracker = !IS_WASM
-    ? new TaskInvocationTracker(
-        getLocalDbConnection(),
-        Number(process.env.NX_INVOCATION_ROOT_PID ?? process.pid)
-      )
-    : undefined;
-  taskInvocationTracker?.cleanupStale();
-
   const taskGraph = createTaskGraph(
     projectGraph,
     extraTargetDependencies,
@@ -414,8 +399,7 @@ function createTaskGraphAndRunValidations(
     nxArgs.targets,
     nxArgs.configuration,
     overrides,
-    extraOptions.excludeTaskDependencies,
-    taskInvocationTracker
+    extraOptions.excludeTaskDependencies
   );
 
   assertTaskGraphDoesNotContainInvalidTargets(taskGraph);

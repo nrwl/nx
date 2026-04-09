@@ -165,6 +165,7 @@ export class TaskOrchestrator {
 
   async init() {
     this.setupSignalHandlers();
+    this.taskInvocationTracker?.cleanupStale();
 
     // Init the ForkedProcessTaskRunner, TasksSchedule, and Cache
     await Promise.all([
@@ -398,11 +399,50 @@ export class TaskOrchestrator {
 
   public processAllScheduledTasks() {
     const { scheduledTasks } = this.tasksSchedule.getAllScheduledTasks();
+
+    if (this.taskInvocationTracker) {
+      for (const taskId of scheduledTasks) {
+        this.detectTaskInvocationLoop(this.taskGraph.tasks[taskId]);
+      }
+    }
+
     for (const taskId of scheduledTasks) {
       // Task is already handled or being handled
       if (!this.processedTasks.has(taskId)) {
         this.processedTasks.set(taskId, this.processTask(taskId));
       }
+    }
+  }
+
+  /**
+   * Registers a task invocation and checks for loops across nested Nx processes.
+   * Uses the task_invocations DB table keyed by root PID. registerTask() throws
+   * on unique constraint violation when a parent Nx process already registered
+   * this task — indicating an infinite loop.
+   */
+  private detectTaskInvocationLoop(task: Task): void {
+    try {
+      this.taskInvocationTracker.registerTask(process.pid, task.id);
+    } catch {
+      // Unique constraint violation — task already registered by parent process
+      const chain = this.taskInvocationTracker.getInvocationChain();
+      const chainDisplay = chain.map((r) => r.taskId).join(' -> ');
+
+      output.error({
+        title: 'Recursive task invocation detected',
+        bodyLines: [
+          `Nx detected a recursive loop of task invocations:`,
+          ``,
+          `  ${chainDisplay} -> ${task.id}`,
+          ``,
+          `Task "${task.id}" was already invoked by a parent Nx process in this chain.`,
+          `This typically happens when a task's command (e.g., "nx ${task.target.target} ${task.target.project}")`,
+          `triggers a chain of tasks that eventually re-invokes itself.`,
+          ``,
+          `To fix this, review the command configuration for the tasks in the chain above.`,
+        ],
+      });
+      process.exit(1);
     }
   }
 
