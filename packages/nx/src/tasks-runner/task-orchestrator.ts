@@ -399,13 +399,6 @@ export class TaskOrchestrator {
 
   public processAllScheduledTasks() {
     const { scheduledTasks } = this.tasksSchedule.getAllScheduledTasks();
-
-    if (this.taskInvocationTracker) {
-      for (const taskId of scheduledTasks) {
-        this.detectTaskInvocationLoop(this.taskGraph.tasks[taskId]);
-      }
-    }
-
     for (const taskId of scheduledTasks) {
       // Task is already handled or being handled
       if (!this.processedTasks.has(taskId)) {
@@ -421,10 +414,11 @@ export class TaskOrchestrator {
    * this task — indicating an infinite loop.
    */
   private detectTaskInvocationLoop(task: Task): void {
+    if (!this.taskInvocationTracker) return;
     try {
       this.taskInvocationTracker.registerTask(process.pid, task.id);
     } catch {
-      // Unique constraint violation — task already registered by parent process
+      // Unique constraint violation — task already invoked by an ancestor Nx process
       const chain = this.taskInvocationTracker.getInvocationChain();
       const chainDisplay = chain.map((r) => r.taskId).join(' -> ');
 
@@ -715,6 +709,10 @@ export class TaskOrchestrator {
 
     if (taskIdsToSkip.length < tasks.length) {
       const runGraph = removeTasksFromTaskGraph(batch.taskGraph, taskIdsToSkip);
+
+      for (const task of Object.values(runGraph.tasks)) {
+        this.detectTaskInvocationLoop(task);
+      }
 
       batchResults = await this.runBatch(
         {
@@ -1036,6 +1034,8 @@ export class TaskOrchestrator {
     );
     this.discreteTaskExitHandled.set(task.id, discreteExitHandled);
 
+    this.detectTaskInvocationLoop(task);
+
     const childProcess = await this.runTask(
       task,
       streamOutput,
@@ -1338,6 +1338,7 @@ export class TaskOrchestrator {
           temporaryOutputPath,
           streamOutput
         );
+    this.detectTaskInvocationLoop(task);
     const childProcess = await this.runTask(
       task,
       streamOutput,
