@@ -166,33 +166,26 @@ impl NxCache {
              RETURNING hash, code, size",
         )?;
 
-        // Collect (hash, code, size) tuples from DB. Propagate row-level
-        // errors instead of silently skipping malformed rows — a bad row
-        // means schema drift or corruption and shouldn't masquerade as a
-        // cache miss.
-        let db_results: Vec<(String, i16, i64)> = stmt
+        // Collect rows straight into a lookup map keyed by hash. Propagate
+        // row-level errors instead of silently skipping malformed rows — a
+        // bad row means schema drift or corruption and shouldn't masquerade
+        // as a cache miss.
+        let db_map: std::collections::HashMap<String, (i16, i64)> = stmt
             .query_map([values], |row| {
                 Ok((
                     row.get::<_, String>(0)?,
-                    row.get::<_, i16>(1)?,
-                    row.get::<_, i64>(2)?,
+                    (row.get::<_, i16>(1)?, row.get::<_, i64>(2)?),
                 ))
             })?
-            .collect::<rusqlite::Result<Vec<_>>>()?;
+            .collect::<rusqlite::Result<_>>()?;
         drop(stmt);
         drop(db);
-
-        // Build a lookup map: hash -> (code, size)
-        let db_map: std::collections::HashMap<&str, (i16, i64)> = db_results
-            .iter()
-            .map(|(h, c, s)| (h.as_str(), (*c, *s)))
-            .collect();
 
         // Read terminal outputs in parallel for found hashes
         let results: Vec<Option<CachedResult>> = hashes
             .par_iter()
             .map(|hash| {
-                if let Some(&(code, size)) = db_map.get(hash.as_str()) {
+                if let Some(&(code, size)) = db_map.get(hash) {
                     let terminal_output_path = self.cache_path.join("terminalOutputs").join(hash);
                     let terminal_output = read_to_string(terminal_output_path).unwrap_or_default();
                     let task_dir = self.cache_path.join(hash);
