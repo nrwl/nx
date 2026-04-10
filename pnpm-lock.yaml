@@ -2026,24 +2026,6 @@ importers:
         specifier: workspace:*
         version: link:../ui-markdoc
 
-  nx-dev/data-access-menu:
-    dependencies:
-      '@nx/nx-dev-models-menu':
-        specifier: workspace:*
-        version: link:../models-menu
-
-  nx-dev/data-access-packages:
-    dependencies:
-      '@nx/nx-dev-data-access-documents':
-        specifier: workspace:*
-        version: link:../data-access-documents
-      '@nx/nx-dev-models-document':
-        specifier: workspace:*
-        version: link:../models-document
-      '@nx/nx-dev-models-package':
-        specifier: workspace:*
-        version: link:../models-package
-
   nx-dev/feature-ai:
     dependencies:
       '@nx/nx-dev-feature-analytics':
@@ -2070,27 +2052,6 @@ importers:
 
   nx-dev/feature-analytics: {}
 
-  nx-dev/feature-doc-viewer:
-    dependencies:
-      '@nx/nx-dev-feature-analytics':
-        specifier: workspace:*
-        version: link:../feature-analytics
-      '@nx/nx-dev-feature-feedback':
-        specifier: workspace:*
-        version: link:../feature-feedback
-      '@nx/nx-dev-models-document':
-        specifier: workspace:*
-        version: link:../models-document
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-      '@nx/nx-dev-ui-markdoc':
-        specifier: workspace:*
-        version: link:../ui-markdoc
-      '@nx/nx-dev-ui-primitives':
-        specifier: workspace:*
-        version: link:../ui-primitives
-
   nx-dev/feature-feedback:
     dependencies:
       '@nx/nx-dev-ui-common':
@@ -2099,30 +2060,6 @@ importers:
       '@nx/nx-dev-ui-primitives':
         specifier: workspace:*
         version: link:../ui-primitives
-
-  nx-dev/feature-package-schema-viewer:
-    dependencies:
-      '@nx/nx-dev-data-access-packages':
-        specifier: workspace:*
-        version: link:../data-access-packages
-      '@nx/nx-dev-models-document':
-        specifier: workspace:*
-        version: link:../models-document
-      '@nx/nx-dev-models-package':
-        specifier: workspace:*
-        version: link:../models-package
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-      '@nx/nx-dev-ui-markdoc':
-        specifier: workspace:*
-        version: link:../ui-markdoc
-      '@nx/nx-dev-ui-primitives':
-        specifier: workspace:*
-        version: link:../ui-primitives
-      '@nx/nx-dev-ui-theme':
-        specifier: workspace:*
-        version: link:../ui-theme
 
   nx-dev/feature-search: {}
 
