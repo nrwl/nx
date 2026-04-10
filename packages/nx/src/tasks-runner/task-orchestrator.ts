@@ -62,6 +62,11 @@ import {
 } from './utils';
 import { SharedRunningTask } from './running-tasks/shared-running-task';
 
+type CacheHit = {
+  task: Task;
+  cachedResult: CachedResult & { remote: boolean };
+};
+
 export class TaskOrchestrator {
   private taskDetails: TaskDetails | null = getTaskDetails();
   private cache: DbCache | Cache = getCache(this.options);
@@ -97,12 +102,10 @@ export class TaskOrchestrator {
 
   private processedTasks = new Map<string, Promise<NodeJS.ProcessEnv>>();
 
-  private completedTasks: {
-    [id: string]: TaskStatus;
-  } = {};
+  private completedTasks = new Map<string, TaskStatus>();
   private waitingForTasks: Function[] = [];
 
-  private groups = [];
+  private groups: boolean[] = [];
   private continuousTasksStarted = 0;
 
   private bailed = false;
@@ -218,7 +221,9 @@ export class TaskOrchestrator {
     }
     await this.cleanup();
 
-    return this.completedTasks;
+    // Public API (defaultTasksRunner) returns a plain object keyed by
+    // task id. Internal state is a Map for faster lookup.
+    return Object.fromEntries(this.completedTasks);
   }
 
   public nextBatch() {
@@ -253,8 +258,8 @@ export class TaskOrchestrator {
           .filter(
             (t) =>
               !t.hash &&
-              this.taskGraph.dependencies[t.id].every(
-                (depId) => this.completedTasks[depId]
+              this.taskGraph.dependencies[t.id].every((depId) =>
+                this.completedTasks.has(depId)
               )
           );
         if (unhashed.length > 1) {
@@ -304,10 +309,10 @@ export class TaskOrchestrator {
           .catch(async (e) => {
             // Ensure failures (e.g. remote cache errors) are still reported
             // rather than silently dropped. Guard against double-finalize:
-            // completeTasks() populates `completedTasks[task.id]` when it
-            // runs, so if the rejection happened AFTER postRunSteps had
-            // already finalized the task we must not run postRunSteps again.
-            if (this.completedTasks[task.id] !== undefined) return;
+            // completeTasks() populates `completedTasks` when it runs, so
+            // if the rejection happened AFTER postRunSteps had already
+            // finalized the task we must not run postRunSteps again.
+            if (this.completedTasks.has(task.id)) return;
             const terminalOutput = e?.message ?? '';
             this.options.lifeCycle.printTaskTerminalOutput(
               task,
@@ -379,15 +384,6 @@ export class TaskOrchestrator {
     }
   }
 
-  private processTasks(taskIds: string[]) {
-    for (const taskId of taskIds) {
-      // Task is already handled or being handled
-      if (!this.processedTasks.has(taskId)) {
-        this.processedTasks.set(taskId, this.processTask(taskId));
-      }
-    }
-  }
-
   // region Processing Scheduled Tasks
   private async processTask(taskId: string): Promise<NodeJS.ProcessEnv> {
     const task = this.taskGraph.tasks[taskId];
@@ -411,42 +407,64 @@ export class TaskOrchestrator {
 
   public processAllScheduledTasks() {
     const { scheduledTasks } = this.tasksSchedule.getAllScheduledTasks();
-
-    this.processTasks(scheduledTasks);
+    for (const taskId of scheduledTasks) {
+      // Task is already handled or being handled
+      if (!this.processedTasks.has(taskId)) {
+        this.processedTasks.set(taskId, this.processTask(taskId));
+      }
+    }
   }
 
   // endregion Processing Scheduled Tasks
 
   // region Applying Cache
+
   private async applyCachedResults(tasks: Task[]): Promise<TaskResult[]> {
     const cacheableTasks = tasks.filter((t) =>
       isCacheableTask(t, this.options)
     );
     if (cacheableTasks.length === 0) return [];
 
-    // 1. Batch cache lookup — one Rust/SQL call for local hits + parallel
-    //    remote retrievals for local misses, all inside DbCache.getBatch.
-    const batchResults = await this.cache.getBatch(cacheableTasks);
-    const cacheHits: {
-      task: Task;
-      cachedResult: CachedResult & { remote: boolean };
-    }[] = [];
-    for (const task of cacheableTasks) {
+    const cacheHits = await this.fetchCacheHits(cacheableTasks);
+    if (cacheHits.length === 0) return [];
+
+    return this.finalizeCacheHits(cacheHits);
+  }
+
+  /**
+   * Batch cache lookup + filter to successful entries. Handles both
+   * local (one rarray SQL call) and remote (parallel HTTP retrievals)
+   * inside DbCache.getBatch.
+   */
+  private async fetchCacheHits(tasks: Task[]): Promise<CacheHit[]> {
+    const batchResults = await this.cache.getBatch(tasks);
+    const cacheHits: CacheHit[] = [];
+    for (const task of tasks) {
       const cachedResult = batchResults.get(task.hash);
       if (cachedResult && cachedResult.code === 0) {
         cacheHits.push({ task, cachedResult });
       }
     }
+    return cacheHits;
+  }
 
-    if (cacheHits.length === 0) return [];
-
-    // 2. Batch-check which tasks need outputs copied from cache
-    const _dbCacheEnabled = dbCacheEnabled();
+  /**
+   * For each confirmed cache hit: decide whether to copy outputs from
+   * the cache (skipping if the on-disk outputs already match the
+   * recorded hash), copy in parallel, derive the task status, print
+   * terminal output, and return the assembled results.
+   */
+  private async finalizeCacheHits(
+    cacheHits: CacheHit[]
+  ): Promise<TaskResult[]> {
+    // Batch-check which tasks need outputs copied from cache. Remote
+    // cache entries come pre-restored to their output dirs when the
+    // db cache is on, so we only check ones that aren't.
+    const usingDbCache = dbCacheEnabled();
     const tasksNeedingOutputCheck = cacheHits.filter(
       ({ task, cachedResult }) =>
-        task.outputs.length > 0 && (!cachedResult.remote || !_dbCacheEnabled)
+        task.outputs.length > 0 && (!cachedResult.remote || !usingDbCache)
     );
-
     const shouldCopyMap = await this.shouldCopyOutputsFromCacheBatch(
       tasksNeedingOutputCheck.map(({ task }) => ({
         outputs: task.outputs,
@@ -454,20 +472,24 @@ export class TaskOrchestrator {
       }))
     );
 
-    // 3. Copy outputs and build results
+    // Copy outputs in parallel for tasks that need it.
+    await Promise.all(
+      cacheHits.map(async ({ task, cachedResult }) => {
+        if (shouldCopyMap.get(task.hash)) {
+          await this.cache.copyFilesFromCache(
+            task.hash,
+            cachedResult,
+            task.outputs
+          );
+        }
+      })
+    );
+
+    // Derive status, print terminal output, build results.
     const results: TaskResult[] = [];
     for (const { task, cachedResult } of cacheHits) {
       const shouldCopy = shouldCopyMap.get(task.hash) ?? false;
-
-      if (shouldCopy) {
-        await this.cache.copyFilesFromCache(
-          task.hash,
-          cachedResult,
-          task.outputs
-        );
-      }
-
-      const status = cachedResult.remote
+      const status: TaskStatus = cachedResult.remote
         ? 'remote-cache'
         : shouldCopy
           ? 'local-cache'
@@ -479,7 +501,12 @@ export class TaskOrchestrator {
         cachedResult.terminalOutput
       );
 
-      results.push({ code: cachedResult.code, task, status });
+      results.push({
+        task,
+        code: cachedResult.code,
+        status,
+        terminalOutput: cachedResult.terminalOutput,
+      });
     }
 
     return results;
@@ -509,46 +536,8 @@ export class TaskOrchestrator {
     }
     if (candidates.length <= 1) return false;
 
-    // Batch cache lookup — single Rust/SQL call + parallel file reads
-    // (legacy file cache falls through to a parallel per-task loop internally)
-    const cacheHits: {
-      task: Task;
-      cachedResult: CachedResult & { remote: boolean };
-    }[] = [];
-    const batchResults = await this.cache.getBatch(candidates);
-    for (const task of candidates) {
-      const cachedResult = batchResults.get(task.hash);
-      if (cachedResult && cachedResult.code === 0) {
-        cacheHits.push({ task, cachedResult });
-      }
-    }
+    const cacheHits = await this.fetchCacheHits(candidates);
     if (cacheHits.length === 0) return false;
-
-    // Batch-check output hashes (1 daemon call instead of N)
-    const _dbCacheEnabled = dbCacheEnabled();
-    const tasksNeedingOutputCheck = cacheHits.filter(
-      ({ task, cachedResult }) =>
-        task.outputs.length > 0 && (!cachedResult.remote || !_dbCacheEnabled)
-    );
-    const shouldCopyMap = await this.shouldCopyOutputsFromCacheBatch(
-      tasksNeedingOutputCheck.map(({ task }) => ({
-        outputs: task.outputs,
-        hash: task.hash,
-      }))
-    );
-
-    // Copy outputs in parallel for tasks that need it
-    await Promise.all(
-      cacheHits.map(async ({ task, cachedResult }) => {
-        if (shouldCopyMap.get(task.hash)) {
-          await this.cache.copyFilesFromCache(
-            task.hash,
-            cachedResult,
-            task.outputs
-          );
-        }
-      })
-    );
 
     // Fire scheduleTask lifecycle for hits not yet processed.
     // (No need to remove hits from scheduledTasks here — postRunSteps →
@@ -560,34 +549,7 @@ export class TaskOrchestrator {
         .map(({ task }) => this.options.lifeCycle.scheduleTask(task))
     );
 
-    // Build results and run lifecycle
-    const results: {
-      task: Task;
-      code: number;
-      status: TaskStatus;
-      terminalOutput?: string;
-    }[] = [];
-    for (const { task, cachedResult } of cacheHits) {
-      const shouldCopy = shouldCopyMap.get(task.hash) ?? false;
-      const status: TaskStatus = cachedResult.remote
-        ? 'remote-cache'
-        : shouldCopy
-          ? 'local-cache'
-          : 'local-cache-kept-existing';
-
-      this.options.lifeCycle.printTaskTerminalOutput(
-        task,
-        status,
-        cachedResult.terminalOutput
-      );
-
-      results.push({
-        task,
-        code: cachedResult.code,
-        status,
-        terminalOutput: cachedResult.terminalOutput,
-      });
-    }
+    const results = await this.finalizeCacheHits(cacheHits);
 
     // Set timing on tasks before lifecycle — prevents negative durations
     // in TUI since these tasks resolved instantly from cache.
@@ -762,7 +724,7 @@ export class TaskOrchestrator {
 
     // Update batch status based on all task results
     const hasFailures = taskEntries.some(([taskId]) => {
-      const status = this.completedTasks[taskId];
+      const status = this.completedTasks.get(taskId);
       return status === 'failure' || status === 'skipped';
     });
     this.options.lifeCycle.setBatchStatus?.(
@@ -772,8 +734,8 @@ export class TaskOrchestrator {
 
     this.forkedProcessTaskRunner.cleanUpBatchProcesses();
 
-    const tasksCompleted = taskEntries.filter(
-      ([taskId]) => this.completedTasks[taskId]
+    const tasksCompleted = taskEntries.filter(([taskId]) =>
+      this.completedTasks.has(taskId)
     );
 
     // Batch is still not done, run it again
@@ -1414,7 +1376,7 @@ export class TaskOrchestrator {
     for (const { task, status, terminalOutput } of results) {
       taskIds.push(task.id);
 
-      if (this.completedTasks[task.id] === undefined && status !== 'skipped') {
+      if (!this.completedTasks.has(task.id) && status !== 'skipped') {
         tasksToReport.push({
           task,
           status,
@@ -1440,9 +1402,9 @@ export class TaskOrchestrator {
     // 3. Set completedTasks + update TUI + collect dependent tasks to skip
     const dependentTasksToSkip: { task: Task; status: TaskStatus }[] = [];
     for (const { task, status, displayStatus } of results) {
-      if (this.completedTasks[task.id] !== undefined) continue;
+      if (this.completedTasks.has(task.id)) continue;
 
-      this.completedTasks[task.id] = status;
+      this.completedTasks.set(task.id, status);
 
       if (this.tuiEnabled) {
         this.options.lifeCycle.setTaskStatus(
@@ -1527,6 +1489,12 @@ export class TaskOrchestrator {
         return i;
       }
     }
+    // Coordinator gates dispatch on inFlightWorkers < parallelism, so
+    // there should always be a free slot when this is called. If not,
+    // we'd corrupt the return type (undefined as number) — fail loudly.
+    throw new Error(
+      `closeGroup called with no free slot (parallel=${this.options.parallel})`
+    );
   }
 
   private openGroup(id: number) {
@@ -1570,7 +1538,7 @@ export class TaskOrchestrator {
     ownsRunningTasksService: boolean
   ) {
     // If cleanup already completed this task, nothing left to do
-    if (this.completedTasks[task.id] !== undefined) {
+    if (this.completedTasks.has(task.id)) {
       return;
     }
 
@@ -1605,7 +1573,7 @@ export class TaskOrchestrator {
     ownsRunningTasksService: boolean,
     reason: 'fulfilled' | 'interrupted' | 'crashed'
   ) {
-    if (this.completedTasks[task.id] !== undefined) return;
+    if (this.completedTasks.has(task.id)) return;
 
     this.runningContinuousTasks.delete(task.id);
     if (ownsRunningTasksService) {
