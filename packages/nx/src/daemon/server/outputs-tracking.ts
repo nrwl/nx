@@ -40,10 +40,6 @@ export function _outputsHashesMatch(outputs: string[], hash: string) {
   return true;
 }
 
-export function recordedHash(output: string) {
-  return recordedHashes[output];
-}
-
 export function processFileChangesInOutputs(
   changeEvents: WatchEvent[],
   now: number = undefined
