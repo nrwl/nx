@@ -1,0 +1,194 @@
+{
+  "name": "tsc",
+  "implementation": "/packages/js/src/executors/tsc/tsc.impl.ts",
+  "batchImplementation": "./src/executors/tsc/tsc.batch-impl",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "title": "Typescript Build Target",
+    "description": "Builds using TypeScript.",
+    "cli": "nx",
+    "type": "object",
+    "properties": {
+      "main": {
+        "type": "string",
+        "description": "The name of the main entry-point file.",
+        "x-completion-type": "file",
+        "x-completion-glob": "main@(.js|.ts|.jsx|.tsx)",
+        "x-priority": "important"
+      },
+      "generateExportsField": {
+        "type": "boolean",
+        "alias": "exports",
+        "description": "Update the output package.json file's 'exports' field. This field is used by Node and bundles.",
+        "default": false,
+        "x-priority": "important"
+      },
+      "additionalEntryPoints": {
+        "type": "array",
+        "description": "Additional entry-points to add to exports field in the package.json file.",
+        "items": { "type": "string" },
+        "x-priority": "important"
+      },
+      "rootDir": {
+        "type": "string",
+        "description": "Sets the rootDir for TypeScript compilation. When not defined, it uses the root of project."
+      },
+      "outputPath": {
+        "type": "string",
+        "description": "The output path of the generated files.",
+        "x-completion-type": "directory",
+        "x-priority": "important"
+      },
+      "outputFileName": {
+        "type": "string",
+        "description": "The path to the main file relative to the outputPath",
+        "x-completion-type": "file"
+      },
+      "tsConfig": {
+        "type": "string",
+        "description": "The path to the Typescript configuration file.",
+        "x-completion-type": "file",
+        "x-completion-glob": "tsconfig.*.json",
+        "x-priority": "important"
+      },
+      "assets": {
+        "type": "array",
+        "description": "List of static assets.",
+        "default": [],
+        "items": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "glob": {
+                  "type": "string",
+                  "description": "The pattern to match."
+                },
+                "input": {
+                  "type": "string",
+                  "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
+                },
+                "ignore": {
+                  "description": "An array of globs to ignore.",
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "output": {
+                  "type": "string",
+                  "description": "Absolute path within the output."
+                }
+              },
+              "additionalProperties": false,
+              "required": ["glob", "input", "output"]
+            },
+            { "type": "string" }
+          ]
+        }
+      },
+      "watch": {
+        "type": "boolean",
+        "description": "Enable re-building when files change.",
+        "default": false
+      },
+      "clean": {
+        "type": "boolean",
+        "description": "Remove previous output before build.",
+        "default": true
+      },
+      "transformers": {
+        "type": "array",
+        "description": "List of TypeScript Transformer Plugins.",
+        "default": [],
+        "items": {
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "options": { "type": "object", "additionalProperties": true }
+              },
+              "additionalProperties": false,
+              "required": ["name"]
+            }
+          ]
+        },
+        "x-priority": "important"
+      },
+      "external": {
+        "description": "A list projects to be treated as external. This feature is experimental",
+        "oneOf": [
+          { "type": "string", "enum": ["all", "none"] },
+          { "type": "array", "items": { "type": "string" } }
+        ],
+        "x-deprecated": "Make sure all dependencies are buildable by running `nx g @nx/js:setup-build`. This option will be removed in Nx 20."
+      },
+      "externalBuildTargets": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "List of target names that annotate a build target for a project",
+        "default": ["build"]
+      },
+      "generateLockfile": {
+        "type": "boolean",
+        "description": "Generate a lockfile (e.g. package-lock.json) that matches the workspace lockfile to ensure package versions match.",
+        "default": false,
+        "x-priority": "internal"
+      }
+    },
+    "required": ["main", "outputPath", "tsConfig"],
+    "definitions": {
+      "assetPattern": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "glob": {
+                "type": "string",
+                "description": "The pattern to match."
+              },
+              "input": {
+                "type": "string",
+                "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
+              },
+              "ignore": {
+                "description": "An array of globs to ignore.",
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "output": {
+                "type": "string",
+                "description": "Absolute path within the output."
+              }
+            },
+            "additionalProperties": false,
+            "required": ["glob", "input", "output"]
+          },
+          { "type": "string" }
+        ]
+      },
+      "transformerPattern": {
+        "oneOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "options": { "type": "object", "additionalProperties": true }
+            },
+            "additionalProperties": false,
+            "required": ["name"]
+          }
+        ]
+      }
+    },
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Using TypeScript Transformer Plugins\" %}\n\n`@nx/js:tsc` can run the [TypeScript Transformers](https://github.com/madou/typescript-transformer-handbook) by using the `transformers` option.\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nx/js:tsc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"transformers\": [\n        \"@nestjs/swagger/plugin\",\n        {\n          \"name\": \"@automapper/classes/transformer-plugin\",\n          \"options\": {}\n        }\n      ]\n    }\n  }\n}\n```\n\n{% /tab %}\n{% tab label=\"Inline libraries\" %}\n\n`@nx/js:tsc` can inline non-buildable libraries by opt-in to **Inlining** mode with `external` option.\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nx/js:tsc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"external\": \"all\"\n    }\n  }\n}\n```\n\n```shell\nnpx nx build ts-lib --external=all\n```\n\n`@nx/js:tsc` can also inline buildable libraries by setting `external: 'none'`\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nx/js:tsc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"external\": \"none\"\n    }\n  }\n}\n```\n\n```shell\nnpx nx build ts-lib --external=none\n```\n\n{% /tab %}\n{% tab label=\"Batch mode execution\" %}\n\n{% callout type=\"check\" title=\"Available since Nx 16.6.0\" %}\nThe `@nx/js:tsc` batch implementation was introduced in Nx **16.6.0**.\n{% /callout %}\n\nThe `@nx/js:tsc` executor supports running multiple tasks in a single process. When running in batch mode, the executor uses the [TypeScript APIs for incremental builds](https://www.typescriptlang.org/docs/handbook/project-references.html#build-mode-for-typescript). This results in a much faster build time when compared to the default implementation (the bigger the task graph to run, the more the performance improvements).\n\n{% callout type=\"warning\" title=\"Experimental feature\" %}\nExecuting tasks in batch mode is an experimental feature.\n{% /callout %}\n\n{% callout type=\"info\" title=\"Requirements\" %}\nBuilding a project with the `@nx/js:tsc` executor in batch mode requires all dependent projects to be buildable and built using the `@nx/js:tsc` executor.\n{% /callout %}\n\nTo run your builds using the batch implementation, pass in `--batch` flag:\n\n```shell\nnx build ts-lib --batch\n```\n\nFor optimal performance, you could set the `clean` option to `false`. Otherwise, the executor cleans the output folder before running the build, which results in the loss of the [`.tsbuildinfo` file](https://www.typescriptlang.org/tsconfig/#tsBuildInfoFile) and, consequently, the loss of important optimizations performed by TypeScript. This is not a requirement. Even if the `clean` option is not set to `false` there are other important optimizations that are performed by the batch implementation.\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nx/js:tsc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"clean\": false\n    }\n  }\n}\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "presets": []
+  },
+  "description": "Build a project using TypeScript.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/js/src/executors/tsc/schema.json",
+  "type": "executor"
+}

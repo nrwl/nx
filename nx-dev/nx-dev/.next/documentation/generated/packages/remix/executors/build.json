@@ -1,0 +1,56 @@
+{
+  "name": "build",
+  "implementation": "/packages/remix/src/executors/build/build.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "pipe",
+    "$schema": "https://json-schema.org/schema",
+    "cli": "nx",
+    "title": "Remix Build",
+    "description": "Build a Remix app.",
+    "type": "object",
+    "properties": {
+      "outputPath": {
+        "type": "string",
+        "description": "The output path of the generated files.",
+        "x-completion-type": "directory",
+        "x-priority": "important"
+      },
+      "includeDevDependenciesInPackageJson": {
+        "type": "boolean",
+        "description": "Include `devDependencies` in the generated package.json file. By default only production `dependencies` are included.",
+        "default": false
+      },
+      "generatePackageJson": {
+        "type": "boolean",
+        "description": "Generate package.json file in the output folder.",
+        "default": false
+      },
+      "generateLockfile": {
+        "type": "boolean",
+        "description": "Generate a lockfile (e.g. package-lock.json) that matches the workspace lockfile to ensure package versions match.",
+        "default": false
+      },
+      "skipOverrides": {
+        "type": "boolean",
+        "description": "Do not add a `overrides` and `resolutions` entries to the generated package.json file. Only works in conjunction with `generatePackageJson` option."
+      },
+      "skipPackageManager": {
+        "type": "boolean",
+        "description": "Do not add a `packageManager` entry to the generated package.json file. Only works in conjunction with `generatePackageJson` option."
+      },
+      "sourcemap": {
+        "type": "boolean",
+        "description": "Generate source maps for production.",
+        "default": false
+      }
+    },
+    "required": ["outputPath"],
+    "presets": []
+  },
+  "description": "Build a Remix application.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/remix/src/executors/build/schema.json",
+  "type": "executor"
+}

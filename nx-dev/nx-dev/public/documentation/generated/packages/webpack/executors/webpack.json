@@ -1,0 +1,482 @@
+{
+  "name": "webpack",
+  "implementation": "/packages/webpack/src/executors/webpack/webpack.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "title": "Webpack builder",
+    "description": "Build a project using webpack.",
+    "cli": "nx",
+    "type": "object",
+    "properties": {
+      "crossOrigin": {
+        "type": "string",
+        "description": "The `crossorigin` attribute to use for generated javascript script tags.  One of 'none' | 'anonymous' | 'use-credentials'."
+      },
+      "main": {
+        "type": "string",
+        "description": "The name of the main entry-point file.",
+        "x-completion-type": "file",
+        "x-completion-glob": "**/*@(.js|.ts|.tsx)",
+        "x-priority": "important"
+      },
+      "tsConfig": {
+        "type": "string",
+        "description": "The name of the Typescript configuration file.",
+        "x-completion-type": "file",
+        "x-completion-glob": "tsconfig.*.json",
+        "x-priority": "important"
+      },
+      "compiler": {
+        "type": "string",
+        "description": "The compiler to use.",
+        "enum": ["babel", "swc", "tsc"]
+      },
+      "outputPath": {
+        "type": "string",
+        "description": "The output path of the generated files.",
+        "x-completion-type": "directory",
+        "x-priority": "important"
+      },
+      "target": {
+        "type": "string",
+        "alias": "platform",
+        "description": "Target platform for the build, same as the Webpack target option.",
+        "enum": ["node", "web", "webworker"]
+      },
+      "deleteOutputPath": {
+        "type": "boolean",
+        "description": "Delete the output path before building.",
+        "default": true
+      },
+      "watch": {
+        "type": "boolean",
+        "description": "Enable re-building when files change."
+      },
+      "baseHref": {
+        "type": "string",
+        "description": "Base url for the application being built."
+      },
+      "deployUrl": {
+        "type": "string",
+        "description": "URL where the application will be deployed."
+      },
+      "vendorChunk": {
+        "type": "boolean",
+        "description": "Use a separate bundle containing only vendor libraries."
+      },
+      "commonChunk": {
+        "type": "boolean",
+        "description": "Use a separate bundle containing code used across multiple bundles."
+      },
+      "runtimeChunk": {
+        "type": "boolean",
+        "description": "Use a separate bundle containing the runtime."
+      },
+      "sourceMap": {
+        "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
+        "oneOf": [{ "type": "boolean" }, { "type": "string" }]
+      },
+      "progress": {
+        "type": "boolean",
+        "description": "Log progress to the console while building."
+      },
+      "assets": {
+        "type": "array",
+        "description": "List of static application assets.",
+        "items": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "glob": {
+                  "type": "string",
+                  "description": "The pattern to match."
+                },
+                "input": {
+                  "type": "string",
+                  "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
+                },
+                "ignore": {
+                  "description": "An array of globs to ignore.",
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "output": {
+                  "type": "string",
+                  "description": "Absolute path within the output."
+                }
+              },
+              "additionalProperties": false,
+              "required": ["glob", "input", "output"]
+            },
+            { "type": "string" }
+          ]
+        }
+      },
+      "index": {
+        "type": "string",
+        "description": "HTML File which will be contain the application.",
+        "x-completion-type": "file",
+        "x-completion-glob": "**/*@(.html|.htm)"
+      },
+      "scripts": {
+        "type": "array",
+        "description": "External Scripts which will be included before the main application entry.",
+        "items": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": "string",
+                  "description": "The file to include.",
+                  "x-completion-type": "file",
+                  "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+                },
+                "bundleName": {
+                  "type": "string",
+                  "description": "The bundle name for this extra entry point."
+                },
+                "inject": {
+                  "type": "boolean",
+                  "description": "If the bundle will be referenced in the HTML file.",
+                  "default": true
+                }
+              },
+              "additionalProperties": false,
+              "required": ["input"]
+            },
+            {
+              "type": "string",
+              "description": "The file to include.",
+              "x-completion-type": "file",
+              "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+            }
+          ]
+        }
+      },
+      "styles": {
+        "type": "array",
+        "description": "External Styles which will be included with the application",
+        "items": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": "string",
+                  "description": "The file to include.",
+                  "x-completion-type": "file",
+                  "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+                },
+                "bundleName": {
+                  "type": "string",
+                  "description": "The bundle name for this extra entry point."
+                },
+                "inject": {
+                  "type": "boolean",
+                  "description": "If the bundle will be referenced in the HTML file.",
+                  "default": true
+                }
+              },
+              "additionalProperties": false,
+              "required": ["input"]
+            },
+            {
+              "type": "string",
+              "description": "The file to include.",
+              "x-completion-type": "file",
+              "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+            }
+          ]
+        }
+      },
+      "namedChunks": {
+        "type": "boolean",
+        "description": "Names the produced bundles according to their entry file."
+      },
+      "outputHashing": {
+        "type": "string",
+        "description": "Define the output filename cache-busting hashing mode.",
+        "enum": ["none", "all", "media", "bundles"]
+      },
+      "stylePreprocessorOptions": {
+        "description": "Options to pass to style preprocessors.",
+        "type": "object",
+        "properties": {
+          "includePaths": {
+            "description": "Paths to include. Paths will be resolved to project root.",
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "additionalProperties": false
+      },
+      "optimization": {
+        "description": "Enables optimization of the build output.",
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "scripts": {
+                "type": "boolean",
+                "description": "Enables optimization of the scripts output.",
+                "default": true
+              },
+              "styles": {
+                "type": "boolean",
+                "description": "Enables optimization of the styles output.",
+                "default": true
+              }
+            },
+            "additionalProperties": false
+          },
+          { "type": "boolean" }
+        ]
+      },
+      "generatePackageJson": {
+        "type": "boolean",
+        "description": "Generates a `package.json` and pruned lock file with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated."
+      },
+      "skipOverrides": {
+        "type": "boolean",
+        "description": "Do not add a `overrides` and `resolutions` entries to the generated package.json file. Only works in conjunction with `generatePackageJson` option."
+      },
+      "skipPackageManager": {
+        "type": "boolean",
+        "description": "Do not add a `packageManager` entry to the generated package.json file. Only works in conjunction with `generatePackageJson` option."
+      },
+      "transformers": {
+        "type": "array",
+        "description": "List of TypeScript Compiler Transfomers Plugins.",
+        "aliases": ["tsPlugins"],
+        "items": {
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "options": { "type": "object", "additionalProperties": true }
+              },
+              "additionalProperties": false,
+              "required": ["name"]
+            }
+          ]
+        }
+      },
+      "additionalEntryPoints": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "entryName": {
+              "type": "string",
+              "description": "Name of the additional entry file."
+            },
+            "entryPath": {
+              "type": "string",
+              "description": "Path to the additional entry file.",
+              "x-completion-type": "file",
+              "x-completion-glob": "**/*@(.js|.ts)"
+            }
+          }
+        }
+      },
+      "outputFileName": {
+        "type": "string",
+        "description": "Name of the main output file.",
+        "default": "main.js"
+      },
+      "externalDependencies": {
+        "oneOf": [
+          { "type": "string", "enum": ["none", "all"] },
+          { "type": "array", "items": { "type": "string" } }
+        ],
+        "description": "Dependencies to keep external to the bundle. (`all` (default), `none`, or an array of module names)"
+      },
+      "extractCss": {
+        "type": "boolean",
+        "description": "Extract CSS into a `.css` file."
+      },
+      "subresourceIntegrity": {
+        "type": "boolean",
+        "description": "Enables the use of subresource integrity validation."
+      },
+      "polyfills": {
+        "type": "string",
+        "description": "Polyfills to load before application",
+        "x-completion-type": "file",
+        "x-completion-glob": "**/*@(.js|.ts|.tsx)"
+      },
+      "verbose": { "type": "boolean", "description": "Emits verbose output" },
+      "statsJson": {
+        "type": "boolean",
+        "description": "Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or `<https://webpack.github.io/analyse>`."
+      },
+      "isolatedConfig": {
+        "type": "boolean",
+        "description": "Do not apply Nx webpack plugins automatically. Plugins need to be applied in the project's webpack.config.js file (e.g. withNx, withReact, etc.).",
+        "default": true,
+        "x-deprecated": "Automatic configuration of Webpack is deprecated in favor of an explicit 'webpack.config.js' file. This option will be removed in Nx 20. See https://nx.dev/recipes/webpack/webpack-config-setup."
+      },
+      "standardWebpackConfigFunction": {
+        "type": "boolean",
+        "description": "Set to true if the webpack config exports a standard webpack function, not an Nx-specific one. See: https://webpack.js.org/configuration/configuration-types/#exporting-a-function",
+        "default": false
+      },
+      "extractLicenses": {
+        "type": "boolean",
+        "description": "Extract all licenses in a separate file, in the case of production builds only."
+      },
+      "memoryLimit": {
+        "type": "number",
+        "description": "Memory limit for type checking service process in `MB`."
+      },
+      "fileReplacements": {
+        "description": "Replace files with other files in the build.",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "replace": {
+              "type": "string",
+              "description": "The file to be replaced.",
+              "x-completion-type": "file"
+            },
+            "with": {
+              "type": "string",
+              "description": "The file to replace with.",
+              "x-completion-type": "file"
+            }
+          },
+          "additionalProperties": false,
+          "required": ["replace", "with"]
+        }
+      },
+      "buildLibsFromSource": {
+        "type": "boolean",
+        "description": "Read buildable libraries from source instead of building them separately. If set to `false`, the `tsConfig` option must also be set to remap paths.",
+        "default": true
+      },
+      "generateIndexHtml": {
+        "type": "boolean",
+        "description": "Generates `index.html` file to the output path. This can be turned off if using a webpack plugin to generate HTML such as `html-webpack-plugin`."
+      },
+      "postcssConfig": {
+        "type": "string",
+        "description": "Set a path to PostCSS config that applies to the app and all libs. Defaults to `undefined`, which auto-detects postcss.config.js files in each `app`/`lib` directory."
+      },
+      "webpackConfig": {
+        "type": "string",
+        "description": "Path to a function which takes a webpack config, some context and returns the resulting webpack config. See https://nx.dev/guides/customize-webpack",
+        "x-completion-type": "file",
+        "x-completion-glob": "webpack?(*)@(.js|.ts)",
+        "x-priority": "important"
+      },
+      "babelUpwardRootMode": {
+        "type": "boolean",
+        "description": "Whether to set rootmode to upward. See https://babeljs.io/docs/en/options#rootmode"
+      },
+      "babelConfig": {
+        "type": "string",
+        "description": "Path to the babel configuration file of your project. If not provided, Nx will default to the .babelrc file at the root of your project. See https://babeljs.io/docs/en/config-files",
+        "x-completion-type": "file"
+      },
+      "publicPath": {
+        "type": "string",
+        "description": "Set a public path for assets resources with absolute paths."
+      },
+      "rebaseRootRelative": {
+        "type": "boolean",
+        "description": "Whether to rebase absolute path for assets in postcss cli resources."
+      }
+    },
+    "required": [],
+    "definitions": {
+      "assetPattern": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "glob": {
+                "type": "string",
+                "description": "The pattern to match."
+              },
+              "input": {
+                "type": "string",
+                "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
+              },
+              "ignore": {
+                "description": "An array of globs to ignore.",
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "output": {
+                "type": "string",
+                "description": "Absolute path within the output."
+              }
+            },
+            "additionalProperties": false,
+            "required": ["glob", "input", "output"]
+          },
+          { "type": "string" }
+        ]
+      },
+      "extraEntryPoint": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "string",
+                "description": "The file to include.",
+                "x-completion-type": "file",
+                "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+              },
+              "bundleName": {
+                "type": "string",
+                "description": "The bundle name for this extra entry point."
+              },
+              "inject": {
+                "type": "boolean",
+                "description": "If the bundle will be referenced in the HTML file.",
+                "default": true
+              }
+            },
+            "additionalProperties": false,
+            "required": ["input"]
+          },
+          {
+            "type": "string",
+            "description": "The file to include.",
+            "x-completion-type": "file",
+            "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+          }
+        ]
+      },
+      "transformerPattern": {
+        "oneOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "options": { "type": "object", "additionalProperties": true }
+            },
+            "additionalProperties": false,
+            "required": ["name"]
+          }
+        ]
+      }
+    },
+    "examplesFile": "---\ntitle: Examples for the @nx/webpack:webpack build executor\ndescription: Examples and a short guide on how to use the @nx/webpack:webpack build executor\n---\n\n`project.json`:\n\n```json5\n//...\n\"my-app\": {\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@nx/webpack:webpack\",\n      \"options\": {\n        \"webpackConfig\": \"apps/my-app/webpack.config.js\"\n      }\n    },\n    //...\n  }\n}\n```\n\n```bash\nnx build my-app\n```\n\n## Examples\n\n{% tabs %}\n\n{% tab label=\"Using `babelUpwardRootMode`\" %}\n\nCopying from the [Babel documentation](https://babeljs.io/docs/config-files#root-babelconfigjson-file):\n\n> [...] if you are running your Babel compilation process from within a subpackage, you need to tell Babel where to look for the config. There are a few ways to do that, but the recommended way is the \"rootMode\" option with \"upward\", which will make Babel search from the working directory upward looking for your babel.config.json file, and will use its location as the \"root\" value.\n\nSetting `babelUpwardRootMode` to `true` in your `project.json` will set `rootMode` option to `upward` in the Babel config. You may want the `upward` mode in a monorepo when projects must apply their individual `.babelrc` file. We recommend that you don't set it at all, so it will use the default to `false` as the `upward` mode brings additional complexity to the build process.\n\n```json5\n//...\n\"my-app\": {\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@nx/webpack:webpack\",\n      \"options\": {\n        \"webpackConfig\": \"apps/my-app/webpack.config.js\",\n        \"babelUpwardRootMode\": true\n      }\n    },\n    //...\n  }\n}\n```\n\nWhen `babelUpwardRootMode` is `true`, Babel will look for a root `babel.config.json` at the root of the workspace, which should look something like this to include all packages:\n\n```json\n{ \"babelrcRoots\": [\"*\"] }\n```\n\nThen for each package, you must have a `.babelrc` file that will be applied to that package. For example:\n\n```json\n{\n  \"presets\": [\"@babel/preset-env\", \"@babel/preset-typescript\"]\n}\n```\n\nAll packages will use its own `.babelrc` file, thus you must ensure the right presets and plugins are set in each config file. This behavior can lead to build discrepancies between packages, so we recommend that you don't set `babelUpwardRootMode` at all.\n\n```treeview\n├── apps\n│   └── demo\n│       └── .babelrc\n├── libs\n│   ├── a\n│   │   └── .babelrc\n│   └── b\n│       └── .babelrc\n└── babel.config.json\n```\n\nIn workspace above, if `demo` imports `a` and `b`, it will apply the config `libs/a/.babelrc` and `libs/b/.babelrc` to the respective packages and not apply its own `apps/demo/.babelrc` to `a` and `b`. Anything in `babel.config.json` will apply to all packages.\n\n{% /tab %}\n\n{% tab label=\"Specify a custom Babel config file\" %}\n\nIf you have a custom Babel config file (i.e. not `.babelrc`), you can use the `configFile` option as follows:\n\n```json5\n//...\n\"my-app\": {\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@nx/webpack:webpack\",\n      \"options\": {\n        \"webpackConfig\": \"apps/my-app/webpack.config.js\",\n        \"babelConfig\": \"apps/my-app/.babelrc.custom.json\",\n      }\n    },\n    // ...\n  }\n}\n```\n\nIf you do not set the path to the `.babelrc` file, Nx will look for a `.babelrc` file in the root of your application.\n\nNote that this option does not work if `babelUpwardRootMode` is set to `true`.\n\n{% /tab %}\n\n{% tab label=\"Run webpack with `isolatedConfig`\" %}\n\nSetting `isolatedConfig` to `true` in your `project.json` file means that Nx will not apply the Nx webpack plugins automatically. In that case, the Nx plugins need to be applied in the project's `webpack.config.js` file (e.g. `withNx`, `withReact`, etc.). So don't forget to also specify the path to your webpack config file (using the `webpackConfig` option).\n\nRead more on how to configure Webpack in our [Nx Webpack config guide](/recipes/webpack/webpack-config-setup) an in our [Webpack Plugins guide](/recipes/webpack/webpack-plugins).\n\nNote that this is the new default setup for webpack in the latest version of Nx.\n\nSet `isolatedConfig` to `true` in your `project.json` file in the `build` target options like this:\n\n```json\n//...\n\"my-app\": {\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@nx/webpack:webpack\",\n      \"options\": {\n        \"webpackConfig\": \"apps/my-app/webpack.config.js\",\n        \"isolatedConfig\": true\n      }\n    },\n  }\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
+    "presets": []
+  },
+  "description": "Run webpack build.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/webpack/src/executors/webpack/schema.json",
+  "type": "executor"
+}

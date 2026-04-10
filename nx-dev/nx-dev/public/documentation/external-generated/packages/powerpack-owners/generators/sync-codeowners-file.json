@@ -1,0 +1,19 @@
+{
+  "name": "sync-codeowners-file",
+  "factory": "./src/generators/sync-codeowners-file/generator",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "$id": "NxPowerpackOwnersSyncCodeownersFileGenerator",
+    "title": "Nx Powerpack Owners Sync CODEOWNERS File Generator",
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "presets": []
+  },
+  "description": "Sync Nx Powerpack Owners config to a CODEOWNERS file",
+  "implementation": "/libs/nx-packages/powerpack-owners/src/generators/sync-codeowners-file/generator.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/libs/nx-packages/powerpack-owners/src/generators/sync-codeowners-file/schema.json",
+  "type": "generator"
+}

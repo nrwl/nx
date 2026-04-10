@@ -1,0 +1,170 @@
+{
+  "name": "module-federation-dev-server",
+  "implementation": "/packages/angular/src/executors/module-federation-dev-server/module-federation-dev-server.impl.ts",
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "title": "Schema for Module Federation Dev Server",
+    "outputCapture": "direct-nodejs",
+    "description": "Serves host [Module Federation](https://module-federation.io/) applications ([webpack](https://webpack.js.org/)-based) allowing to specify which remote applications should be served with the host.",
+    "type": "object",
+    "presets": [
+      { "name": "Using a Different Port", "keys": ["buildTarget", "port"] }
+    ],
+    "properties": {
+      "browserTarget": {
+        "type": "string",
+        "description": "A browser builder target to serve in the format of `project:target[:configuration]`.",
+        "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$",
+        "x-deprecated": "Use 'buildTarget' instead. It will be removed in Nx v20."
+      },
+      "buildTarget": {
+        "type": "string",
+        "description": "A build builder target to serve in the format of `project:target[:configuration]`.",
+        "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$"
+      },
+      "port": {
+        "type": "number",
+        "description": "Port to listen on.",
+        "default": 4200
+      },
+      "host": {
+        "type": "string",
+        "description": "Host to listen on.",
+        "default": "localhost"
+      },
+      "proxyConfig": {
+        "type": "string",
+        "description": "Proxy configuration file. For more information, see https://angular.dev/tools/cli/serve#proxying-to-a-backend-server."
+      },
+      "ssl": {
+        "type": "boolean",
+        "description": "Serve using HTTPS.",
+        "default": false
+      },
+      "sslKey": {
+        "type": "string",
+        "description": "SSL key to use for serving HTTPS."
+      },
+      "sslCert": {
+        "type": "string",
+        "description": "SSL certificate to use for serving HTTPS."
+      },
+      "headers": {
+        "type": "object",
+        "description": "Custom HTTP headers to be added to all responses.",
+        "propertyNames": { "pattern": "^[-_A-Za-z0-9]+$" },
+        "additionalProperties": { "type": "string" }
+      },
+      "open": {
+        "type": "boolean",
+        "description": "Opens the url in default browser.",
+        "default": false,
+        "alias": "o"
+      },
+      "verbose": {
+        "type": "boolean",
+        "description": "Adds more details to output logging."
+      },
+      "liveReload": {
+        "type": "boolean",
+        "description": "Whether to reload the page on change, using live-reload.",
+        "default": true
+      },
+      "publicHost": {
+        "type": "string",
+        "description": "The URL that the browser client (or live-reload client, if enabled) should use to connect to the development server. Use for a complex dev server setup, such as one with reverse proxies."
+      },
+      "allowedHosts": {
+        "type": "array",
+        "description": "List of hosts that are allowed to access the dev server.",
+        "default": [],
+        "items": { "type": "string" }
+      },
+      "servePath": {
+        "type": "string",
+        "description": "The pathname where the app will be served."
+      },
+      "disableHostCheck": {
+        "type": "boolean",
+        "description": "Don't verify connected clients are part of allowed hosts.",
+        "default": false
+      },
+      "hmr": {
+        "type": "boolean",
+        "description": "Enable hot module replacement.",
+        "default": false
+      },
+      "watch": {
+        "type": "boolean",
+        "description": "Rebuild on change.",
+        "default": true
+      },
+      "poll": {
+        "type": "number",
+        "description": "Enable and define the file watching poll time period in milliseconds."
+      },
+      "devRemotes": {
+        "type": "array",
+        "items": {
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "object",
+              "properties": {
+                "remoteName": { "type": "string" },
+                "configuration": { "type": "string" }
+              },
+              "required": ["remoteName"],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "description": "List of remote applications to run in development mode (i.e. using serve target).",
+        "x-priority": "important"
+      },
+      "skipRemotes": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "List of remote applications to not automatically serve, either statically or in development mode. This will not remove the remotes from the `module-federation.config` file, and therefore the application may still try to fetch these remotes.\nThis option is useful if you have other means for serving the `remote` application(s).\n**NOTE:** Remotes that are not in the workspace will be skipped automatically."
+      },
+      "pathToManifestFile": {
+        "type": "string",
+        "description": "Path to a Module Federation manifest file (e.g. `my/path/to/module-federation.manifest.json`) containing the dynamic remote applications relative to the workspace root."
+      },
+      "static": {
+        "type": "boolean",
+        "description": "Whether to use a static file server instead of the webpack-dev-server. This should be used for remote applications that are also host applications."
+      },
+      "isInitialHost": {
+        "type": "boolean",
+        "description": "Whether the host that is running this executor is the first in the project tree to do so.",
+        "default": true,
+        "x-priority": "internal"
+      },
+      "parallel": {
+        "type": "number",
+        "description": "Max number of parallel processes for building static remotes"
+      },
+      "staticRemotesPort": {
+        "type": "number",
+        "description": "The port at which to serve the file-server for the static remotes."
+      },
+      "buildLibsFromSource": {
+        "type": "boolean",
+        "description": "Read buildable libraries from source instead of building them separately. If not set, it will take the value specified in the `browserTarget` options, or it will default to `true` if it's also not set in the `browserTarget` options.",
+        "x-priority": "important"
+      }
+    },
+    "additionalProperties": false,
+    "anyOf": [
+      { "required": ["buildTarget"] },
+      { "required": ["browserTarget"] }
+    ],
+    "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\nThe Module Federation Dev Server will serve a host application and find the remote applications associated with the host and serve them statically also.  \nSee an example set up of it below:\n\n```json\n{\n  \"serve\": {\n    \"executor\": \"@nx/angular:module-federation-dev-server\",\n    \"configurations\": {\n      \"production\": {\n        \"buildTarget\": \"host:build:production\"\n      },\n      \"development\": {\n        \"buildTarget\": \"host:build:development\"\n      }\n    },\n    \"defaultConfiguration\": \"development\",\n    \"options\": {\n      \"port\": 4200,\n      \"publicHost\": \"http://localhost:4200\"\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"Serve host with remotes that can be live reloaded\" %}\nThe Module Federation Dev Server will serve a host application and find the remote applications associated with the host and serve a set selection with live reloading enabled also.  \nSee an example set up of it below:\n\n```json\n{\n  \"serve-with-hmr-remotes\": {\n    \"executor\": \"@nx/angular:module-federation-dev-server\",\n    \"configurations\": {\n      \"production\": {\n        \"buildTarget\": \"host:build:production\"\n      },\n      \"development\": {\n        \"buildTarget\": \"host:build:development\"\n      }\n    },\n    \"defaultConfiguration\": \"development\",\n    \"options\": {\n      \"port\": 4200,\n      \"publicHost\": \"http://localhost:4200\",\n      \"devRemotes\": [\n        \"remote1\",\n        {\n          \"remoteName\": \"remote2\",\n          \"configuration\": \"development\"\n        }\n      ]\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n"
+  },
+  "description": "Serves host [Module Federation](https://module-federation.io/) applications ([webpack](https://webpack.js.org/)-based) allowing to specify which remote applications should be served with the host.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/executors/module-federation-dev-server/schema.json",
+  "type": "executor"
+}

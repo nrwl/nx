@@ -1,0 +1,40 @@
+{
+  "name": "preview-server",
+  "implementation": "/packages/vite/src/executors/preview-server/preview-server.impl.ts",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "version": 2,
+    "cli": "nx",
+    "title": "Vite Preview Server",
+    "description": "Preview Server for Vite.",
+    "type": "object",
+    "presets": [
+      { "name": "Default minimum setup", "keys": ["buildTarget"] },
+      { "name": "Using a Different Port", "keys": ["buildTarget", "port"] }
+    ],
+    "properties": {
+      "buildTarget": {
+        "type": "string",
+        "description": "Target which builds the application."
+      },
+      "proxyConfig": {
+        "type": "string",
+        "description": "Path to the proxy configuration file.",
+        "x-completion-type": "file"
+      },
+      "staticFilePath": {
+        "type": "string",
+        "description": "Path where the build artifacts are located. If not provided then it will be infered from the buildTarget executor options as outputPath",
+        "x-completion-type": "directory"
+      }
+    },
+    "definitions": {},
+    "required": ["buildTarget"],
+    "examplesFile": "---\ntitle: Examples for the Vite preview server executor\ndescription: This page contains examples for the Vite @nx/vite:preview-server executor.\n---\n\n`project.json`:\n\n```json\n//...\n\"my-app\": {\n    \"targets\": {\n        //...\n        \"preview\": {\n            \"executor\": \"@nx/vite:preview-server\",\n            \"defaultConfiguration\": \"development\",\n            \"options\": {\n                \"buildTarget\": \"my-app:build\",\n            },\n            \"configurations\": {\n                ...\n            }\n        },\n    }\n}\n```\n\n```bash\nnx preview my-app\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Set up a custom port\" %}\n\nYou can always set the port in your `vite.config.ts` file. However, you can also set it directly in your `project.json` file, in the `preview` target options:\n\n```json\n//...\n\"my-app\": {\n    \"targets\": {\n        //...\n        \"preview\": {\n            \"executor\": \"@nx/vite:preview-server\",\n            \"defaultConfiguration\": \"development\",\n            \"options\": {\n                \"buildTarget\": \"my-app:build\",\n                \"port\": 4200,\n            },\n            \"configurations\": {\n                ...\n            }\n        },\n    }\n}\n```\n\n{% /tab %}\n{% tab label=\"Specify a proxyConfig\" %}\n\nYou can specify a proxy config by pointing to the path of your proxy configuration file:\n\n```json\n//...\n\"my-app\": {\n    \"targets\": {\n        //...\n        \"preview\": {\n            \"executor\": \"@nx/vite:preview-server\",\n            \"defaultConfiguration\": \"development\",\n            \"options\": {\n                \"buildTarget\": \"my-app:build\",\n                \"proxyConfig\": \"apps/my-app/proxy.conf.json\"\n            },\n            \"configurations\": {\n                ...\n            }\n        },\n    }\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n"
+  },
+  "description": "Vite preview server",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/vite/src/executors/preview-server/schema.json",
+  "type": "executor"
+}

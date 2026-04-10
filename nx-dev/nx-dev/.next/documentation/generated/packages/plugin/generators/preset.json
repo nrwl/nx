@@ -1,0 +1,42 @@
+{
+  "name": "preset",
+  "factory": "./src/generators/preset/generator",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxPluginPreset",
+    "title": "Generator ran by create-nx-plugin",
+    "description": "Initializes a workspace with an nx-plugin inside of it. Use as: `create-nx-plugin` or `create-nx-workspace --preset @nx/nx-plugin`.",
+    "examples": [
+      {
+        "command": "npx create-nx-plugin",
+        "description": "Creates a new Nx workspace containing an Nx plugin."
+      },
+      {
+        "command": "npx create-nx-workspace --preset @nx/plugin",
+        "description": "Creates a new Nx workspace containing an Nx plugin."
+      }
+    ],
+    "type": "object",
+    "properties": {
+      "pluginName": {
+        "type": "string",
+        "description": "Plugin name",
+        "aliases": ["name"]
+      },
+      "createPackageName": {
+        "type": "string",
+        "description": "Name of package which creates a workspace"
+      }
+    },
+    "required": ["pluginName"],
+    "presets": []
+  },
+  "description": "Initializes a workspace with an nx-plugin inside of it. Use as: `create-nx-workspace --preset @nx/plugin`.",
+  "hidden": true,
+  "x-use-standalone-layout": true,
+  "implementation": "/packages/plugin/src/generators/preset/generator.ts",
+  "aliases": [],
+  "path": "/packages/plugin/src/generators/preset/schema.json",
+  "type": "generator"
+}

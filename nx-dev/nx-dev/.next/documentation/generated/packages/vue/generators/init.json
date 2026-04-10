@@ -1,0 +1,38 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "$id": "NxVueInit",
+    "title": "Init Vue Plugin",
+    "description": "Initialize a Vue Plugin.",
+    "cli": "nx",
+    "type": "object",
+    "properties": {
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false
+      },
+      "skipPackageJson": {
+        "description": "Do not add dependencies to `package.json`.",
+        "type": "boolean",
+        "default": false
+      },
+      "keepExistingVersions": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Keep existing dependencies versions",
+        "default": false
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Initialize the `@nx/vue` plugin.",
+  "aliases": ["ng-add"],
+  "hidden": true,
+  "implementation": "/packages/vue/src/generators/init/init.ts",
+  "path": "/packages/vue/src/generators/init/schema.json",
+  "type": "generator"
+}

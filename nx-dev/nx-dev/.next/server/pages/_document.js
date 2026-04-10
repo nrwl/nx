@@ -1,0 +1,9 @@
+"use strict";(()=>{var e={};e.id=660,e.ids=[660],e.modules={51826:(e,s,i)=>{i.r(s),i.d(s,{default:()=>a});var r=i(20997),t=i(331);function a(){return(0,r.jsxs)(t.Html,{className:"h-full scroll-smooth",lang:"en",children:[(0,r.jsxs)(t.Head,{children:[r.jsx("link",{rel:"icon",href:"/favicon/favicon.svg",type:"image/svg+xml"}),r.jsx("link",{rel:"apple-touch-icon",sizes:"180x180",href:"/favicon/apple-touch-icon.png"}),r.jsx("link",{rel:"icon",type:"image/png",sizes:"32x32",href:"/favicon/favicon-32x32.png"}),r.jsx("link",{rel:"icon",type:"image/png",sizes:"16x16",href:"/favicon/favicon-16x16.png"}),r.jsx("link",{rel:"icon",type:"image/x-icon",href:"/favicon/favicon.ico"}),r.jsx("link",{rel:"mask-icon",href:"/favicon/safari-pinned-tab.svg",color:"#5bbad5"}),r.jsx("script",{dangerouslySetInnerHTML:{__html:`
+                try {
+                  if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark')
+                  } else {
+                    document.documentElement.classList.remove('dark')
+                  }
+                } catch (_) {}
+              `}})]}),(0,r.jsxs)("body",{className:"h-full bg-white text-slate-700 antialiased selection:bg-blue-500 selection:text-white dark:bg-slate-900 dark:text-slate-400 dark:selection:bg-sky-500",children:[r.jsx(t.Main,{}),r.jsx(t.NextScript,{})]})]})}},62785:e=>{e.exports=require("next/dist/compiled/next-server/pages.runtime.prod.js")},16689:e=>{e.exports=require("react")},20997:e=>{e.exports=require("react/jsx-runtime")},71017:e=>{e.exports=require("path")}};var s=require("../webpack-runtime.js");s.C(e);var i=e=>s(s.s=e),r=s.X(0,[2546,331],()=>i(51826));module.exports=r})();
