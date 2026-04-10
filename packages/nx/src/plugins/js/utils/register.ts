@@ -370,10 +370,12 @@ export function registerTranspiler(
   // Function to register transpiler that returns cleanup function
   const transpiler = getTranspiler(compilerOptions, tsConfigRaw);
 
-  // If Node.js natively supports TypeScript (22.6+), no transpiler is needed.
-  // Don't warn — Node will handle .ts files via type stripping.
-  if (!transpiler && !nodeSupportsNativeTypescript) {
-    warnNoTranspiler();
+  if (!transpiler) {
+    // If Node.js natively supports TypeScript (22.6+), no transpiler is needed.
+    // Don't warn — Node will handle .ts files via type stripping.
+    if (!nodeSupportsNativeTypescript) {
+      warnNoTranspiler();
+    }
     return () => {};
   }
 
