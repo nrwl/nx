@@ -1,9 +1,10 @@
 import { existsSync } from 'fs';
+import { basename } from 'path';
 
 import { prompt } from 'enquirer';
 import { prerelease } from 'semver';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
-import { readJsonFile } from '../../utils/fileutils';
+import { readJsonFile, writeJsonFile } from '../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
 import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
@@ -142,6 +143,45 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
       learnMoreLink: 'https://nx.dev/technologies/angular/migration/angular',
     });
     return;
+  }
+
+  // When in an empty directory (no package.json) and the user hasn't explicitly
+  // chosen a setup method, prompt them to pick between .nx and package.json setup.
+  // Skip the prompt when stdin is not a TTY (e.g. CI, e2e tests) to avoid hangs.
+  if (
+    !existsSync('package.json') &&
+    !options.useDotNxInstallation &&
+    options.interactive &&
+    !aiMode &&
+    process.stdin.isTTY
+  ) {
+    const setupMode = await prompt<{ setupMode: string }>([
+      {
+        type: 'select',
+        name: 'setupMode',
+        message: 'How would you like to set up Nx in this directory?',
+        choices: [
+          {
+            name: '.nx installation (recommended for non-JavaScript projects)',
+          },
+          {
+            name: 'package.json installation (recommended for JavaScript/TypeScript projects)',
+          },
+        ],
+      },
+    ]).then((r) => r.setupMode);
+
+    if (setupMode.startsWith('package.json')) {
+      // Create a minimal package.json so the JS/TS workflow takes over
+      const workspaceName = basename(process.cwd());
+      writeJsonFile('package.json', {
+        name: workspaceName,
+        version: '0.0.0',
+        private: true,
+      });
+    } else {
+      options.useDotNxInstallation = true;
+    }
   }
 
   const _isNonJs = !existsSync('package.json') || options.useDotNxInstallation;

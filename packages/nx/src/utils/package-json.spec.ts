@@ -76,6 +76,16 @@ describe('installPackageToTmp', () => {
 });
 
 describe('readTargetsFromPackageJson', () => {
+  beforeEach(() => {
+    jest
+      .spyOn(pacakgeManager, 'getPackageManagerCommand')
+      .mockReturnValue({ run: (script) => `npm run ${script}` } as any);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   const packageJson: PackageJson = {
     name: 'my-app',
     version: '0.0.0',
@@ -315,6 +325,33 @@ describe('readTargetsFromPackageJson', () => {
             "echo 2",
           ],
         },
+      }
+    `);
+  });
+
+  it('should override script target when nx target uses command shorthand', () => {
+    const result = readTargetsFromPackageJson(
+      {
+        name: 'my-other-app',
+        version: '',
+        scripts: {
+          build: 'echo 1',
+        },
+        nx: {
+          targets: {
+            build: {
+              command: 'echo 2',
+            },
+          },
+        },
+      },
+      {},
+      workspaceRoot,
+      '/root'
+    );
+    expect(result.build).toMatchInlineSnapshot(`
+      {
+        "command": "echo 2",
       }
     `);
   });
