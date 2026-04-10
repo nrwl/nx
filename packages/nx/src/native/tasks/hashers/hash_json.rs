@@ -78,24 +78,20 @@ pub fn hash_json_files(
         for file_path in &matched_files {
             let file_start = std::time::Instant::now();
             let abs_path = Path::new(workspace_root).join(file_path);
-            let content = match std::fs::read_to_string(&abs_path) {
-                Ok(c) => c,
-                Err(e) => {
-                    trace!("Failed to read JSON file {:?}: {}", abs_path, e);
-                    continue;
-                }
+            let Ok(bytes) = std::fs::read(&abs_path)
+                .inspect_err(|e| trace!("Failed to read JSON file {:?}: {}", abs_path, e))
+            else {
+                continue;
             };
 
-            let parsed: Value = match serde_json::from_str(&content) {
-                Ok(v) => v,
-                Err(e) => {
-                    trace!("Failed to parse JSON file {:?}: {}", abs_path, e);
-                    // If we can't parse it as JSON, hash the raw content
-                    hasher.update(file_path.as_bytes());
-                    hasher.update(content.as_bytes());
-                    result_files.push(file_path.to_string());
-                    continue;
-                }
+            let Ok(parsed) = serde_json::from_slice::<Value>(&bytes)
+                .inspect_err(|e| trace!("Failed to parse JSON file {:?}: {}", abs_path, e))
+            else {
+                // If we can't parse it as JSON, hash the raw bytes
+                hasher.update(file_path.as_bytes());
+                hasher.update(&bytes);
+                result_files.push(file_path.to_string());
+                continue;
             };
 
             let filtered = filter_json_value(&parsed, fields, exclude_fields);
