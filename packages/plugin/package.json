@@ -34,6 +34,14 @@
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*"
   },
+  "peerDependencies": {
+    "@nx/vitest": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@nx/vitest": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "nx": "workspace:*"
   },
