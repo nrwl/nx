@@ -30,10 +30,12 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
 ) {
   performance.mark('hashMultipleTasks:start');
 
+  const projects =
+    readProjectsConfigurationFromProjectGraph(projectGraph).projects;
   const tasks = Object.values(taskGraph.tasks);
   const tasksWithHashers = await Promise.all(
     tasks.map(async (task) => {
-      const customHasher = getCustomHasher(task, projectGraph);
+      const customHasher = getCustomHasher(task, projects);
       return { task, customHasher };
     })
   );
@@ -93,9 +95,9 @@ export async function hashTask(
 ) {
   performance.mark('hashSingleTask:start');
 
-  const customHasher = getCustomHasher(task, projectGraph);
   const projectsConfigurations =
     readProjectsConfigurationFromProjectGraph(projectGraph);
+  const customHasher = getCustomHasher(task, projectsConfigurations.projects);
 
   const { value, details, inputs } = await (customHasher
     ? customHasher(task, {
@@ -159,7 +161,7 @@ export async function hashTasks(
   const tasksWithoutCustomHashers: Task[] = [];
 
   for (const task of tasks) {
-    const customHasher = getCustomHasher(task, projectGraph);
+    const customHasher = getCustomHasher(task, projectsConfigurations.projects);
     if (customHasher) {
       tasksWithCustomHashers.push(task);
     } else {
@@ -171,7 +173,7 @@ export async function hashTasks(
   const ioService = getTaskIOService();
   const hasInputSubscribers = ioService.hasTaskInputSubscribers();
   const customHasherPromises = tasksWithCustomHashers.map(async (task) => {
-    const customHasher = getCustomHasher(task, projectGraph);
+    const customHasher = getCustomHasher(task, projectsConfigurations.projects);
     const { value, details, inputs } = await customHasher(task, {
       hasher,
       projectGraph,

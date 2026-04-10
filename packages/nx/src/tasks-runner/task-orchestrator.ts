@@ -5,6 +5,7 @@ import { relative } from 'path';
 import { performance } from 'perf_hooks';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
+import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
@@ -65,6 +66,11 @@ export class TaskOrchestrator {
   private taskDetails: TaskDetails | null = getTaskDetails();
   private cache: DbCache | Cache = getCache(this.options);
   private readonly tuiEnabled = isTuiEnabled();
+  // Derived from projectGraph once — passed to getExecutorForTask /
+  // getCustomHasher so they don't have to re-walk the graph per call.
+  private readonly projects = readProjectsConfigurationFromProjectGraph(
+    this.projectGraph
+  ).projects;
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(
     this.options,
     this.tuiEnabled
@@ -75,6 +81,7 @@ export class TaskOrchestrator {
     : null;
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
+    this.projects,
     this.taskGraph,
     this.options
   );
@@ -1000,7 +1007,7 @@ export class TaskOrchestrator {
       targetConfiguration.executor === 'nx:run-commands'
     ) {
       try {
-        const { schema } = getExecutorForTask(task, this.projectGraph);
+        const { schema } = getExecutorForTask(task, this.projects);
         const combinedOptions = combineOptionsForExecutor(
           task.overrides,
           task.target.configuration ?? targetConfiguration.defaultConfiguration,
@@ -1495,7 +1502,7 @@ export class TaskOrchestrator {
         return true;
       }
 
-      const { schema } = getExecutorForTask(task, this.projectGraph);
+      const { schema } = getExecutorForTask(task, this.projects);
 
       return (
         schema.outputCapture === 'pipe' ||

@@ -155,18 +155,19 @@ export class DbCache {
     const hashes = tasks.map((t) => t.hash);
 
     // 1. Local: one rarray SQL query + parallel terminal output reads.
+    //    batchResults is index-aligned with tasks, so we walk in lockstep.
     const batchResults = this.cache.getBatch(hashes);
     const remoteMisses: Task[] = [];
-    for (let i = 0; i < tasks.length; i++) {
+    for (const [i, task] of tasks.entries()) {
       const res = batchResults[i];
       if (res) {
-        results.set(tasks[i].hash, {
+        results.set(task.hash, {
           ...res,
           terminalOutput: res.terminalOutput ?? '',
           remote: false,
         });
       } else if (this.remoteCache) {
-        remoteMisses.push(tasks[i]);
+        remoteMisses.push(task);
       }
     }
 

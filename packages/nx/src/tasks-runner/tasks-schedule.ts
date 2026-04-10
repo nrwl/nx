@@ -7,6 +7,7 @@ import {
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph } from '../config/project-graph';
+import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
 import { reverse } from '../project-graph/operators';
 import { TaskHistory, getTaskHistory } from '../utils/task-history';
@@ -34,6 +35,7 @@ export class TasksSchedule {
 
   constructor(
     private readonly projectGraph: ProjectGraph,
+    private readonly projects: Record<string, ProjectConfiguration>,
     private readonly taskGraph: TaskGraph,
     private readonly options: DefaultTasksRunnerOptions
   ) {}
@@ -258,7 +260,7 @@ export class TasksSchedule {
 
     const { batchImplementationFactory, preferBatch } = getExecutorForTask(
       task,
-      this.projectGraph
+      this.projects
     );
     const executorName = getExecutorNameForTask(task, this.projectGraph);
     if (rootExecutorName !== executorName) {
