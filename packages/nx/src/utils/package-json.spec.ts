@@ -38,9 +38,9 @@ describe('installPackageToTmp', () => {
 
   it('should always disable lifecycle scripts via environment variables', () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'nx-install-test-'));
-    const cleanup = jest.fn(() =>
-      rmSync(tempDir, { recursive: true, force: true })
-    );
+    const cleanup = jest.fn(async () => {
+      rmSync(tempDir, { recursive: true, force: true });
+    });
     jest.spyOn(pacakgeManager, 'createTempNpmDirectory').mockReturnValue({
       dir: tempDir,
       cleanup,
