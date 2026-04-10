@@ -138,9 +138,7 @@ export class DbCache {
     }
   }
 
-  async getBatch(
-    tasks: Task[]
-  ): Promise<Map<string, CachedResult & { remote: boolean }>> {
+  getBatch(tasks: Task[]): Map<string, CachedResult & { remote: boolean }> {
     const results = new Map<string, CachedResult & { remote: boolean }>();
     const hashes = tasks.map((t) => t.hash);
     const batchResults = this.cache.getBatch(hashes);
