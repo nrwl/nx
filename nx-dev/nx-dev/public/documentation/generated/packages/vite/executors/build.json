@@ -1,0 +1,72 @@
+{
+  "name": "build",
+  "implementation": "/packages/vite/src/executors/build/build.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "title": "Vite Prod Builder",
+    "cli": "nx",
+    "description": "Builds a Vite.js application for production.",
+    "type": "object",
+    "presets": [{ "name": "Default minimum setup", "keys": [] }],
+    "properties": {
+      "outputPath": {
+        "type": "string",
+        "description": "The output path of the generated files.",
+        "x-completion-type": "directory",
+        "x-priority": "important"
+      },
+      "buildLibsFromSource": {
+        "type": "boolean",
+        "description": "Read buildable libraries from source instead of building them separately.",
+        "default": true
+      },
+      "skipTypeCheck": {
+        "type": "boolean",
+        "description": "Skip type-checking via TypeScript. Skipping type-checking speeds up the build but type errors are not caught.",
+        "default": false
+      },
+      "tsConfig": {
+        "type": "string",
+        "description": "The path to custom tsconfig file for type-checking when skipTypeCheck is false. Required when tsconfig file is not at the projectRoot level.",
+        "x-completion-type": "file",
+        "x-completion-glob": "tsconfig.*.json"
+      },
+      "configFile": {
+        "type": "string",
+        "description": "The name of the Vite.js configuration file.",
+        "x-completion-type": "file",
+        "x-completion-glob": "vite.config.@(js|ts)"
+      },
+      "watch": {
+        "description": "Enable re-building when files change.",
+        "oneOf": [{ "type": "boolean" }, { "type": "object" }],
+        "default": false
+      },
+      "generatePackageJson": {
+        "description": "Generate a package.json for the build output.",
+        "type": "boolean"
+      },
+      "includeDevDependenciesInPackageJson": {
+        "description": "Include devDependencies in the generated package.json.",
+        "type": "boolean"
+      },
+      "skipOverrides": {
+        "type": "boolean",
+        "description": "Do not add a `overrides` and `resolutions` entries to the generated package.json file. Only works in conjunction with `generatePackageJson` option."
+      },
+      "skipPackageManager": {
+        "type": "boolean",
+        "description": "Do not add a `packageManager` entry to the generated package.json file. Only works in conjunction with `generatePackageJson` option."
+      }
+    },
+    "definitions": {},
+    "required": [],
+    "examplesFile": "---\ntitle: Examples for the Vite builder executor\ndescription: This page contains examples for the Vite @nx/vite:build executor.\n---\n\n`project.json`:\n\n```json\n//...\n\"my-app\": {\n    \"targets\": {\n        //...\n        \"build\": {\n            \"executor\": \"@nx/vite:build\",\n            //...\n            //...\n            \"options\": {\n                \"outputPath\": \"dist/apps/my-app\"\n            },\n                //...\n            }\n        },\n    }\n}\n```\n\n```bash\nnx serve my-app\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Set a custom path for vite.config.ts\" %}\n\nNx will automatically look in the root of your application for a `vite.config.ts` (or a `vite.config.js`) file. If you want to use a different path, you can set it in your `project.json` file, in the `build` target options:\n\n```json\n//...\n\"my-app\": {\n    \"targets\": {\n        //...\n        \"build\": {\n            \"executor\": \"@nx/vite:build\",\n            //...\n            \"options\": {\n                \"outputPath\": \"dist/apps/my-app\",\n                \"configFile\": \"apps/my-app/vite.config.other-path.ts\"\n            },\n            \"configurations\": {\n                ...\n            }\n        },\n    }\n}\n```\n\nor even\n\n```json\n//...\n\"my-app\": {\n    \"targets\": {\n        //...\n        \"build\": {\n            \"executor\": \"@nx/vite:build\",\n            //...\n            \"options\": {\n                \"outputPath\": \"dist/apps/my-app\",\n                \"configFile\": \"vite.config.base.ts\"\n            },\n            \"configurations\": {\n                ...\n            }\n        },\n    }\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n"
+  },
+  "description": "Build with Vite.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/vite/src/executors/build/schema.json",
+  "type": "executor"
+}

@@ -1,0 +1,19 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/generator",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "$id": "Init",
+    "title": "",
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "presets": []
+  },
+  "description": "Add the shared fs cache",
+  "implementation": "/libs/nx-packages/powerpack-shared-fs-cache/src/generators/init/generator.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/libs/nx-packages/powerpack-shared-fs-cache/src/generators/init/schema.json",
+  "type": "generator"
+}

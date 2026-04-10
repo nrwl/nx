@@ -1,0 +1,186 @@
+{
+  "project": {
+    "name": "vue-app",
+    "type": "lib",
+    "data": {
+      "root": ".",
+      "targets": {
+        "vite:build": {
+          "options": {
+            "cwd": ".",
+            "command": "vite build"
+          },
+          "cache": true,
+          "dependsOn": ["^vite:build"],
+          "inputs": [
+            "default",
+            "^default",
+            {
+              "externalDependencies": ["vite"]
+            }
+          ],
+          "outputs": ["{projectRoot}/dist"],
+          "executor": "nx:run-commands",
+          "configurations": {}
+        },
+        "build-only": {
+          "executor": "nx:run-script",
+          "metadata": {
+            "scriptContent": "nx vite:build",
+            "runCommand": "npm run build-only"
+          },
+          "outputs": ["{projectRoot}/dist"],
+          "cache": true,
+          "options": {
+            "script": "build-only"
+          },
+          "configurations": {}
+        },
+        "build": {
+          "executor": "nx:run-script",
+          "metadata": {
+            "scriptContent": "nx exec -- echo 'Ran type-check and build-only'",
+            "runCommand": "npm run build"
+          },
+          "dependsOn": [
+            "type-check",
+            {
+              "target": "build-only",
+              "params": "forward"
+            }
+          ],
+          "options": {
+            "script": "build"
+          },
+          "configurations": {}
+        }
+      },
+      "sourceRoot": ".",
+      "name": "vue-app",
+      "projectType": "library",
+      "metadata": {
+        "targetGroups": {
+          "NPM Scripts": ["build", "build-only"]
+        }
+      },
+      "implicitDependencies": [],
+      "tags": []
+    }
+  },
+  "sourceMap": {
+    "root": ["package.json", "nx/core/package-json-workspaces"],
+    "targets": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:build": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:build.options": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:build.cache": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:build.dependsOn": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:build.inputs": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:build.outputs": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:build.executor": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:build.options.cwd": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:build.options.command": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.build-only": ["package.json", "nx/core/package-json-workspaces"],
+    "targets.build-only.executor": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.build-only.options": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.build-only.metadata": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.build-only.outputs": ["nx.json", "nx/core/target-defaults"],
+    "targets.build-only.cache": ["nx.json", "nx/core/target-defaults"],
+    "targets.build-only.options.script": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.build-only.metadata.scriptContent": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.build-only.metadata.runCommand": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "sourceRoot": ["package.json", "nx/core/package-json-workspaces"],
+    "name": ["package.json", "nx/core/package-json-workspaces"],
+    "projectType": ["package.json", "nx/core/package-json-workspaces"],
+    "metadata.targetGroups": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "metadata.targetGroups.NPM Scripts": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "metadata.targetGroups.NPM Scripts.0": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "metadata.targetGroups.NPM Scripts.1": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "metadata.targetGroups.NPM Scripts.2": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "metadata.targetGroups.NPM Scripts.3": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "metadata.targetGroups.NPM Scripts.4": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "metadata.targetGroups.NPM Scripts.5": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "metadata.targetGroups.NPM Scripts.6": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "metadata.targetGroups.NPM Scripts.7": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "metadata.targetGroups.NPM Scripts.8": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.build": ["package.json", "nx/core/package-json-workspaces"],
+    "targets.build.executor": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.build.metadata": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.build.dependsOn": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.build.options": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.build.options.script": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.build.metadata.scriptContent": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.build.metadata.runCommand": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ]
+  }
+}

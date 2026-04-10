@@ -1,0 +1,43 @@
+{
+  "name": "pod-install",
+  "implementation": "/packages/react-native/src/executors/pod-install/pod-install.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "cli": "nx",
+    "$id": "NxReactNativePodInstall",
+    "$schema": "https://json-schema.org/schema",
+    "title": "Run Pod Install for React Native iOS Project",
+    "description": "Run `pod install` for React Native iOS Project.",
+    "type": "object",
+    "properties": {
+      "buildFolder": {
+        "description": "Location for iOS build artifacts. Corresponds to Xcode's \"-derivedDataPath\". Relative to ios directory.",
+        "type": "string",
+        "default": "./build"
+      },
+      "repoUpdate": {
+        "description": "Force running `pod repo update` before install.",
+        "type": "boolean",
+        "default": false
+      },
+      "deployment": {
+        "description": "Disallow any changes to the Podfile or the Podfile.lock during installation.",
+        "type": "boolean",
+        "default": false
+      },
+      "useBundler": {
+        "description": "Run cocoapods within a Bundler environment, i.e. with the `bundle exec pod install` command",
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": ["buildFolder"],
+    "presets": []
+  },
+  "description": "Run `pod install` in the `ios` directory.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/react-native/src/executors/pod-install/schema.json",
+  "type": "executor"
+}

@@ -1,0 +1,39 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "$id": "NxNestInitGenerator",
+    "title": "Init Nest Plugin",
+    "description": "Init Nest Plugin.",
+    "cli": "nx",
+    "type": "object",
+    "properties": {
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false
+      },
+      "skipPackageJson": {
+        "description": "Do not add dependencies to `package.json`.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      },
+      "keepExistingVersions": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Keep existing dependencies versions",
+        "default": false
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Initialize the `@nx/nest` plugin.",
+  "aliases": ["ng-add"],
+  "hidden": true,
+  "implementation": "/packages/nest/src/generators/init/init.ts",
+  "path": "/packages/nest/src/generators/init/schema.json",
+  "type": "generator"
+}

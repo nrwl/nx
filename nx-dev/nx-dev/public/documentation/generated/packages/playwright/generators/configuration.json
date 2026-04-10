@@ -1,0 +1,82 @@
+{
+  "name": "configuration",
+  "factory": "./src/generators/configuration/configuration#configurationGeneratorInternal",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "$id": "NxPlaywrightConfiguration",
+    "description": "Add a Playwright configuration.",
+    "title": "Add a Playwright configuration",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The project to add a Playwright configuration to.",
+        "$default": { "$source": "projectName" },
+        "x-priority": "important",
+        "x-prompt": "What is the name of the project to set up Playwright for?"
+      },
+      "directory": {
+        "type": "string",
+        "description": "A directory where the project is placed relative from the project root.",
+        "x-priority": "important",
+        "default": "e2e"
+      },
+      "js": {
+        "type": "boolean",
+        "description": "Generate JavaScript files rather than TypeScript files.",
+        "default": false
+      },
+      "webServerCommand": {
+        "type": "string",
+        "description": "The command to start the web server."
+      },
+      "webServerAddress": {
+        "type": "string",
+        "description": "The address of the web server."
+      },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "enum": ["eslint", "none"],
+        "default": "eslint"
+      },
+      "setParserOptionsProject": {
+        "type": "boolean",
+        "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+        "default": false
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      },
+      "skipPackageJson": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not add dependencies to `package.json`.",
+        "x-priority": "internal"
+      },
+      "rootProject": {
+        "description": "Create a application at the root of the workspace",
+        "type": "boolean",
+        "default": false,
+        "hidden": true,
+        "x-priority": "internal"
+      },
+      "skipInstall": {
+        "type": "boolean",
+        "description": "Skip running `playwright install`. This is to ensure that playwright browsers are installed.",
+        "default": false
+      }
+    },
+    "required": ["project"],
+    "presets": []
+  },
+  "description": "Add Nx Playwright configuration to your project",
+  "implementation": "/packages/playwright/src/generators/configuration/configuration#configurationGeneratorInternal.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/playwright/src/generators/configuration/schema.json",
+  "type": "generator"
+}

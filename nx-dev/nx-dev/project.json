@@ -1,0 +1,11 @@
+{
+  "name": "nx-dev",
+  "targets": {
+    "deploy-build": {
+      "command": "echo 'Pre-built static site'",
+      "configurations": {
+        "netlify": {}
+      }
+    }
+  }
+}

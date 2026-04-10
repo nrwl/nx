@@ -1,0 +1,11 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/careers/page": "app/careers/page.js",
+  "/brands/page": "app/brands/page.js",
+  "/nx-cloud/page": "app/nx-cloud/page.js",
+  "/blog/page": "app/blog/page.js",
+  "/powerpack/page": "app/powerpack/page.js",
+  "/pricing/page": "app/pricing/page.js",
+  "/podcast/page": "app/podcast/page.js",
+  "/blog/[slug]/page": "app/blog/[slug]/page.js"
+}

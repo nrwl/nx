@@ -1,0 +1,23 @@
+# Auto-generated for versioned docs branch — overrides Netlify UI settings.
+# NETLIFY_NEXT_PLUGIN_SKIP disables @netlify/plugin-nextjs = pure static serving.
+
+[build]
+  command = "npx nx run nx-dev:deploy-build:netlify --skip-nx-cache"
+  publish = "nx-dev/nx-dev/.next"
+
+[build.environment]
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    Content-Security-Policy = "frame-ancestors 'none'"
+
+[[redirects]]
+  from = "/docs"
+  to = "/getting-started/intro"
+
+[[redirects]]
+  from = "/"
+  to = "/getting-started/intro"
