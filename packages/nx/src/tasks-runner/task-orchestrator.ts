@@ -107,6 +107,12 @@ export class TaskOrchestrator {
 
   private groups: boolean[] = [];
   private continuousTasksStarted = 0;
+  // Counter for groupIds that need lifecycle metadata but don't compete
+  // with workers for child-process slots — cache-hit resolution,
+  // batch executor fallback when all worker slots happen to be claimed.
+  // Counts down from MAX_SAFE_INTEGER so overflow ids can't collide
+  // with slot indices (0..parallel) or continuous ids (parallel + n).
+  private nextOverflowGroupId = Number.MAX_SAFE_INTEGER;
 
   private bailed = false;
   private resolveStopPromise: (() => void) | null = null;
@@ -1520,15 +1526,17 @@ export class TaskOrchestrator {
         return i;
       }
     }
-    // Coordinator gates dispatch on inFlightWorkers < parallelism, so
-    // there should always be a free slot when this is called. If not,
-    // we'd corrupt the return type (undefined as number) — fail loudly.
-    throw new Error(
-      `closeGroup called with no free slot (parallel=${this.options.parallel})`
-    );
+    // All worker slots claimed. Hand out an overflow id — only safe
+    // for callers that don't actually run a child process in this slot
+    // (cache-hit resolution, batch executor under pressure). The
+    // coordinator's step 5 worker dispatch gates on
+    // `inFlightWorkers < parallelism`, so it never reaches this path.
+    return this.nextOverflowGroupId--;
   }
 
   private openGroup(id: number) {
+    // Overflow ids aren't in the slot pool — nothing to release.
+    if (id < 0 || id >= this.options.parallel) return;
     this.groups[id] = false;
   }
 
