@@ -1,0 +1,13 @@
+{
+  "name": "use-legacy-cache",
+  "version": "20.0.1",
+  "description": "Set `useLegacyCache` to true for migrating workspaces",
+  "implementation": "/packages/nx/src/migrations/update-20-0-1/use-legacy-cache.ts",
+  "x-repair-skip": true,
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/nx",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": "#### Use Legacy Cache\n\nSet `useLegacyCache` to true for migrating workspaces\n\n#### Sample Code Changes\n\nAdd `useLegacyCache` to `nx.json` unless `enableDbCache` was set to true.\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```json {% fileName=\"nx.json\" %}\n{\n  \"targetDefaults\": {}\n}\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```json {% fileName=\"nx.json\" %}\n{\n  \"targetDefaults\": {},\n  \"useLegacyCache\": true\n}\n```\n\n{% /tab %}\n{% /tabs %}\n"
+}

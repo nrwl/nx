@@ -1,0 +1,13 @@
+{
+  "name": "update-19-6-0-add-nx-packages",
+  "cli": "nx",
+  "version": "19.6.0-beta.0",
+  "description": "Update workspace to use Storybook v8",
+  "implementation": "/packages/storybook/src/migrations/update-19-6-0/update-sb-8.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/storybook",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

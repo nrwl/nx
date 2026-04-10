@@ -1,0 +1,5 @@
+{
+  "headers": {
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/courses/layout,_N_T_/courses/[courseId]/layout,_N_T_/courses/[courseId]/[lessonId]/layout,_N_T_/courses/[courseId]/[lessonId]/page,_N_T_/courses/pnpm-nx-next/lessons-08-remote-caching"
+  }
+}

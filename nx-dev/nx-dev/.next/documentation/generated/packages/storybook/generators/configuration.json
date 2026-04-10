@@ -1,0 +1,99 @@
+{
+  "name": "configuration",
+  "factory": "./src/generators/configuration/configuration#configurationGeneratorInternal",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxStorybookConfigure",
+    "title": "Storybook Configuration",
+    "description": "Add Storybook configuration to a UI library or an application.",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "aliases": ["name", "projectName"],
+        "description": "Project for which to generate Storybook configuration.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "For which project do you want to generate Storybook configuration?",
+        "x-dropdown": "projects",
+        "x-priority": "important"
+      },
+      "interactionTests": {
+        "type": "boolean",
+        "description": "Set up Storybook interaction tests.",
+        "x-prompt": "Do you want to set up Storybook interaction tests?",
+        "alias": ["configureTestRunner"],
+        "default": true
+      },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "enum": ["eslint", "none"],
+        "default": "eslint"
+      },
+      "js": {
+        "type": "boolean",
+        "description": "Generate JavaScript story files rather than TypeScript story files.",
+        "default": false
+      },
+      "tsConfiguration": {
+        "type": "boolean",
+        "description": "Configure your project with TypeScript. Generate main.ts and preview.ts files, instead of main.js and preview.js.",
+        "default": true,
+        "x-priority": "important"
+      },
+      "standaloneConfig": {
+        "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
+        "type": "boolean",
+        "default": true,
+        "x-deprecated": "Nx only supports standaloneConfig"
+      },
+      "configureStaticServe": {
+        "type": "boolean",
+        "description": "Add a static-storybook to serve the static storybook built files.",
+        "default": false
+      },
+      "uiFramework": {
+        "type": "string",
+        "description": "Storybook UI Framework to use.",
+        "enum": [
+          "@storybook/angular",
+          "@storybook/html-webpack5",
+          "@storybook/nextjs",
+          "@storybook/preact-webpack5",
+          "@storybook/react-webpack5",
+          "@storybook/react-vite",
+          "@storybook/server-webpack5",
+          "@storybook/svelte-webpack5",
+          "@storybook/svelte-vite",
+          "@storybook/sveltekit",
+          "@storybook/vue-webpack5",
+          "@storybook/vue-vite",
+          "@storybook/vue3-webpack5",
+          "@storybook/vue3-vite",
+          "@storybook/web-components-webpack5",
+          "@storybook/web-components-vite"
+        ],
+        "aliases": ["storybook7UiFramework"],
+        "x-prompt": "Choose the Storybook framework that you need to use.",
+        "x-priority": "important",
+        "hidden": false
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      }
+    },
+    "required": ["project", "uiFramework"],
+    "examplesFile": "---\ntitle: Storybook configuration generator examples\ndescription: This page contains examples for the @nx/storybook:configuration generator.\n---\n\nThis is a framework-agnostic generator for setting up Storybook configuration for a project.\n\n```bash\nnx g @nx/storybook:configuration\n```\n\n{% callout type=\"info\" title=\"Nx uses Storybook 7\" %}\nNx does not support Storybook v6 any more. So, Nx will configure your project to use Storybook v7. If you are not on Storybook 7 yet, please migrate. Please follow our [Storybook 7 migration generator](/nx-api/storybook/generators/migrate-7) guide.\n{% /callout %}\n\nIf you are using Angular, React, Next.js, Vue or React Native in your project, it's best to use the framework specific Storybook configuration generator:\n\n- [React Storybook Configuration Generator](/nx-api/react/generators/storybook-configuration) (React and Next.js projects)\n\n- [Angular Storybook Configuration Generator](/nx-api/angular/generators/storybook-configuration)\n\n- [React Native Storybook Configuration Generator](/nx-api/react-native/generators/storybook-configuration)\n\n- [Vue Storybook Configuration Generator](/nx-api/vue/generators/storybook-configuration)\n\nIf you are not using one of the framework-specific generators mentioned above, when running this generator you will be prompted to provide the following:\n\n- The `name` of the project you want to generate the configuration for.\n- The `uiFramework` you want to use. Supported values are:\n  - `@storybook/angular`\n  - `@storybook/html-webpack5`\n  - `@storybook/nextjs`\n  - `@storybook/preact-webpack5`\n  - `@storybook/react-webpack5`\n  - `@storybook/react-vite`\n  - `@storybook/server-webpack5`\n  - `@storybook/svelte-webpack5`\n  - `@storybook/svelte-vite`\n  - `@storybook/sveltekit`\n  - `@storybook/vue-webpack5`\n  - `@storybook/vue-vite`\n  - `@storybook/vue3-webpack5`\n  - `@storybook/vue3-vite`\n  - `@storybook/web-components-webpack5`\n  - `@storybook/web-components-vite`\n- Whether you want to set up [Storybook interaction tests](https://storybook.js.org/docs/angular/writing-tests/interaction-testing) (`interactionTests`). If you choose `yes`, all the necessary dependencies will be installed. Also, a `test-storybook` target will be generated in your project's `project.json`, with a command to invoke the [Storybook `test-runner`](https://storybook.js.org/docs/angular/writing-tests/test-runner). You can read more about this in the [Nx Storybook interaction tests documentation page](/recipes/storybook/storybook-interaction-tests#setup-storybook-interaction-tests).\n\nYou must provide a `name` and a `uiFramework` for the generator to work.\n\nYou can read more about how this generator works, in the [Storybook package overview page](/nx-api/storybook#generating-storybook-configuration).\n\n## Examples\n\n### Generate Storybook configuration using JavaScript\n\n```bash\nnx g @nx/storybook:configuration ui --uiFramework=@storybook/web-components-vite --tsConfiguration=false\n```\n\nBy default, our generator generates TypeScript Storybook configuration files. You can choose to use JavaScript for the Storybook configuration files of your project (the files inside the `.storybook` directory, eg. `.storybook/main.js`).\n",
+    "presets": []
+  },
+  "description": "Add Storybook configuration to a UI library or an application.",
+  "hidden": false,
+  "implementation": "/packages/storybook/src/generators/configuration/configuration#configurationGeneratorInternal.ts",
+  "aliases": [],
+  "path": "/packages/storybook/src/generators/configuration/schema.json",
+  "type": "generator"
+}

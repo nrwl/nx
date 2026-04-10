@@ -1,0 +1,19 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/brands/page": "app/brands/page.js",
+  "/blog/[slug]/page": "app/blog/[slug]/page.js",
+  "/courses/page": "app/courses/page.js",
+  "/java/page": "app/java/page.js",
+  "/careers/page": "app/careers/page.js",
+  "/courses/[courseId]/[lessonId]/page": "app/courses/[courseId]/[lessonId]/page.js",
+  "/blog/page": "app/blog/page.js",
+  "/courses/[courseId]/page": "app/courses/[courseId]/page.js",
+  "/podcast/page": "app/podcast/page.js",
+  "/nx-cloud/page": "app/nx-cloud/page.js",
+  "/react/page": "app/react/page.js",
+  "/remote-cache/page": "app/remote-cache/page.js",
+  "/webinar/page": "app/webinar/page.js",
+  "/resources/page": "app/resources/page.js",
+  "/pricing/page": "app/pricing/page.js",
+  "/powerpack/page": "app/powerpack/page.js"
+}

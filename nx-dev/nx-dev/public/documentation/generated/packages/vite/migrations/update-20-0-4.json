@@ -1,0 +1,12 @@
+{
+  "name": "update-20-0-4",
+  "version": "20.0.4-beta.0",
+  "description": "Add gitignore entry for temporary vite config files.",
+  "implementation": "/packages/vite/src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/vite",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": "#### Add Vite Temp Files to Git Ignore\n\nAdd gitignore entry for temporary vite config files.\n\n#### Sample Code Changes\n\nAdds the following entries to the `.gitignore` file.\n\n```text {% fileName=\".gitignore\" %}\nvite.config.*.timestamp*\nvitest.config.*.timestamp*\n```\n"
+}

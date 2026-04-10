@@ -1,0 +1,47 @@
+{
+  "projects": [
+    {
+      "name": "app1",
+      "type": "app",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    },
+    {
+      "name": "app2",
+      "type": "app",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    },
+    {
+      "name": "lib",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    }
+  ],
+  "dependencies": {
+    "app1": [{ "source": "app1", "target": "lib", "type": "static" }],
+    "app2": [{ "source": "app2", "target": "lib", "type": "static" }],
+    "lib": []
+  },
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
+  },
+  "affectedProjectIds": [],
+  "focus": null,
+  "groupByFolder": false,
+  "exclude": []
+}
