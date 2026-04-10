@@ -522,20 +522,20 @@ export class TaskOrchestrator {
   }
 
   /**
-   * Peeks at scheduled tasks, batch-checks cache, then resolves
-   * confirmed hits. Does NOT consume tasks from the scheduler until
-   * we know they're cache hits — avoids disrupting scheduler state.
-   * Returns true if any tasks were resolved.
+   * Coordinator wrapper around {@link resolveCachedTasks}: peeks at
+   * scheduledTasks (without removing anything from the schedule),
+   * filters to cacheable hashed discrete candidates, and delegates the
+   * cache fetch + lifecycle to the public method. Returns true if any
+   * tasks were resolved.
    *
    * The coordinator relies on this running unconditionally (when cache
    * is enabled): tasks dispatched in step 5 via runTaskDirectly skip
-   * their own cache lookup on the assumption that this method has
-   * already confirmed them as misses. Don't add length-based bails.
+   * their own cache lookup on the assumption that this has already
+   * confirmed them as misses. Don't add length-based bails.
    */
   private async resolveCachedTasksBulk(): Promise<boolean> {
     const { scheduledTasks } = this.tasksSchedule.getAllScheduledTasks();
 
-    // Peek: identify cacheable discrete tasks (don't remove from schedule)
     const candidates: Task[] = [];
     for (const id of scheduledTasks) {
       const task = this.taskGraph.tasks[id];
@@ -549,38 +549,16 @@ export class TaskOrchestrator {
     }
     if (candidates.length === 0) return false;
 
-    const cacheHits = await this.fetchCacheHits(candidates);
-    if (cacheHits.length === 0) return false;
-
-    // Fire scheduleTask lifecycle for hits not yet processed.
-    // (No need to remove hits from scheduledTasks here — postRunSteps →
-    // complete() → tasksSchedule.complete() filters them out before we
-    // return, and the coordinator loop only picks up tasks after that.)
-    await Promise.all(
-      cacheHits
-        .filter(({ task }) => !this.processedTasks.has(task.id))
-        .map(({ task }) => this.options.lifeCycle.scheduleTask(task))
-    );
-
-    const results = await this.finalizeCacheHits(cacheHits);
-
-    // Set timing on tasks before lifecycle — prevents negative durations
-    // in TUI since these tasks resolved instantly from cache.
-    const now = Date.now();
-    for (const { task } of results) {
-      task.startTime = now;
-      task.endTime = now;
-    }
-
+    // postRunSteps → complete() → tasksSchedule.complete() will filter
+    // resolved hits out of scheduledTasks before we return, so there's
+    // no need to mutate the schedule here.
     const groupId = this.closeGroup();
-    await this.preRunSteps(
-      results.map((r) => r.task),
-      { groupId }
-    );
-    await this.postRunSteps(results, true, { groupId });
-    this.openGroup(groupId);
-
-    return true;
+    try {
+      const results = await this.resolveCachedTasks(true, candidates, groupId);
+      return results.length > 0;
+    } finally {
+      this.openGroup(groupId);
+    }
   }
 
   // endregion Applying Cache
@@ -875,71 +853,54 @@ export class TaskOrchestrator {
   // region Single Task
 
   /**
-   * Bulk "check cache or run" for a set of discrete tasks. Resolves every
-   * cache hit in one batch (one SQL call + parallel remote retrievals),
-   * fires lifecycle around the hits, and runs the remaining misses in
-   * parallel via {@link runTaskDirectly}.
+   * Bulk-resolve cache hits for a set of tasks: fetch cached entries,
+   * copy outputs as needed, fire lifecycle, and return the TaskResults
+   * for the hits. Tasks that aren't in the cache (or aren't cacheable)
+   * are silently omitted from the return value — callers are responsible
+   * for running those via {@link runTaskDirectly}.
    *
-   * This is the external entry point for callers that don't drive the
-   * coordinator loop themselves (e.g. the programmatic `runDiscreteTasks`
-   * API). The coordinator uses {@link resolveCachedTasksBulk} +
-   * {@link runTaskDirectly} directly for the same effect inside its loop.
+   * Fires scheduleTask lifecycle for hits that haven't been through
+   * processAllScheduledTasks yet. That's a coordinator gap-filler and
+   * a no-op for callers that pre-process the schedule.
+   *
+   * The caller provides `groupId` — cache hits share one slot since they
+   * don't actually compete for parallelism.
    */
-  async applyFromCacheOrRunTasks(
+  async resolveCachedTasks(
     doNotSkipCache: boolean,
     tasks: Task[],
-    baseGroupId: number
+    groupId: number
   ): Promise<TaskResult[]> {
-    if (tasks.length === 0) return [];
+    if (!doNotSkipCache || tasks.length === 0) return [];
 
-    // 1. Bulk cache resolve — one batch per run, not N per-task calls.
-    let cacheHits: CacheHit[] = [];
-    if (doNotSkipCache) {
-      const cacheableTasks = tasks.filter((t) =>
-        isCacheableTask(t, this.options)
-      );
-      if (cacheableTasks.length > 0) {
-        cacheHits = await this.fetchCacheHits(cacheableTasks);
-      }
-    }
+    const cacheableTasks = tasks.filter((t) =>
+      isCacheableTask(t, this.options)
+    );
+    if (cacheableTasks.length === 0) return [];
 
-    // 2. Fire lifecycle around the cached results. Cache hits share one
-    //    groupId since they don't execute anything that competes for a
-    //    parallelism slot.
-    let hitResults: TaskResult[] = [];
-    if (cacheHits.length > 0) {
-      const hitTasks = cacheHits.map((h) => h.task);
-      const hitGroupId = this.closeGroup();
-      try {
-        await this.preRunSteps(hitTasks, { groupId: hitGroupId });
-        hitResults = await this.finalizeCacheHits(cacheHits);
-        await this.postRunSteps(hitResults, doNotSkipCache, {
-          groupId: hitGroupId,
-        });
-      } finally {
-        this.openGroup(hitGroupId);
-      }
-    }
+    const cacheHits = await this.fetchCacheHits(cacheableTasks);
+    if (cacheHits.length === 0) return [];
 
-    // 3. Run confirmed misses in parallel, each with its own groupId so
-    //    they occupy distinct parallelism slots. baseGroupId anchors the
-    //    numbering for the miss group — callers pre-allocate a range.
-    const hitIds = new Set(cacheHits.map(({ task }) => task.id));
-    const missTasks = tasks.filter((t) => !hitIds.has(t.id));
-    const missResults = await Promise.all(
-      missTasks.map((task, i) =>
-        this.runTaskDirectly(doNotSkipCache, task, baseGroupId + i)
-      )
+    // scheduleTask lifecycle for hits the coordinator resolved before
+    // processAllScheduledTasks could fire it. No-op for callers that
+    // already ran processAllScheduledTasks (every hit is in processedTasks).
+    await Promise.all(
+      cacheHits
+        .filter(({ task }) => !this.processedTasks.has(task.id))
+        .map(({ task }) => this.options.lifeCycle.scheduleTask(task))
     );
 
-    return [...hitResults, ...missResults];
+    const hitTasks = cacheHits.map((h) => h.task);
+    await this.preRunSteps(hitTasks, { groupId });
+    const results = await this.finalizeCacheHits(cacheHits);
+    await this.postRunSteps(results, doNotSkipCache, { groupId });
+    return results;
   }
 
   /**
    * Spawn and wait on a task's child process, unconditionally — no cache
-   * lookup. Intended for the coordinator's step 5 dispatch, which has
-   * already confirmed the task is a cache miss via
-   * {@link resolveCachedTasksBulk}.
+   * lookup. Callers must have already confirmed the task is a cache miss
+   * (or disabled caching entirely).
    */
   async runTaskDirectly(
     doNotSkipCache: boolean,
