@@ -307,9 +307,14 @@ export class TaskOrchestrator {
         const groupId = this.closeGroup();
         // Fire-and-forget: the coordinator dispatches the worker and keeps
         // looping. `void` signals the intentional unawait to linters.
+        //
+        // runTaskDirectly (not applyFromCacheOrRun*) because
+        // resolveCachedTasksBulk already confirmed this task is a cache
+        // miss — another lookup would re-query the DB and (for Nx Cloud
+        // users) repeat the remote HTTP retrieval.
         void (async () => {
           try {
-            await this.applyFromCacheOrRunTask(doNotSkipCache, task, groupId);
+            await this.runTaskDirectly(doNotSkipCache, task, groupId);
           } catch (e) {
             // Ensure failures (e.g. remote cache errors) are still reported
             // rather than silently dropped. Guard against double-finalize:
@@ -521,10 +526,14 @@ export class TaskOrchestrator {
    * confirmed hits. Does NOT consume tasks from the scheduler until
    * we know they're cache hits — avoids disrupting scheduler state.
    * Returns true if any tasks were resolved.
+   *
+   * The coordinator relies on this running unconditionally (when cache
+   * is enabled): tasks dispatched in step 5 via runTaskDirectly skip
+   * their own cache lookup on the assumption that this method has
+   * already confirmed them as misses. Don't add length-based bails.
    */
   private async resolveCachedTasksBulk(): Promise<boolean> {
     const { scheduledTasks } = this.tasksSchedule.getAllScheduledTasks();
-    if (scheduledTasks.length <= 1) return false;
 
     // Peek: identify cacheable discrete tasks (don't remove from schedule)
     const candidates: Task[] = [];
@@ -538,7 +547,7 @@ export class TaskOrchestrator {
         candidates.push(task);
       }
     }
-    if (candidates.length <= 1) return false;
+    if (candidates.length === 0) return false;
 
     const cacheHits = await this.fetchCacheHits(candidates);
     if (cacheHits.length === 0) return false;
@@ -864,7 +873,75 @@ export class TaskOrchestrator {
   // endregion Batch
 
   // region Single Task
-  async applyFromCacheOrRunTask(
+
+  /**
+   * Bulk "check cache or run" for a set of discrete tasks. Resolves every
+   * cache hit in one batch (one SQL call + parallel remote retrievals),
+   * fires lifecycle around the hits, and runs the remaining misses in
+   * parallel via {@link runTaskDirectly}.
+   *
+   * This is the external entry point for callers that don't drive the
+   * coordinator loop themselves (e.g. the programmatic `runDiscreteTasks`
+   * API). The coordinator uses {@link resolveCachedTasksBulk} +
+   * {@link runTaskDirectly} directly for the same effect inside its loop.
+   */
+  async applyFromCacheOrRunTasks(
+    doNotSkipCache: boolean,
+    tasks: Task[],
+    baseGroupId: number
+  ): Promise<TaskResult[]> {
+    if (tasks.length === 0) return [];
+
+    // 1. Bulk cache resolve — one batch per run, not N per-task calls.
+    let cacheHits: CacheHit[] = [];
+    if (doNotSkipCache) {
+      const cacheableTasks = tasks.filter((t) =>
+        isCacheableTask(t, this.options)
+      );
+      if (cacheableTasks.length > 0) {
+        cacheHits = await this.fetchCacheHits(cacheableTasks);
+      }
+    }
+
+    // 2. Fire lifecycle around the cached results. Cache hits share one
+    //    groupId since they don't execute anything that competes for a
+    //    parallelism slot.
+    let hitResults: TaskResult[] = [];
+    if (cacheHits.length > 0) {
+      const hitTasks = cacheHits.map((h) => h.task);
+      const hitGroupId = this.closeGroup();
+      try {
+        await this.preRunSteps(hitTasks, { groupId: hitGroupId });
+        hitResults = await this.finalizeCacheHits(cacheHits);
+        await this.postRunSteps(hitResults, doNotSkipCache, {
+          groupId: hitGroupId,
+        });
+      } finally {
+        this.openGroup(hitGroupId);
+      }
+    }
+
+    // 3. Run confirmed misses in parallel, each with its own groupId so
+    //    they occupy distinct parallelism slots. baseGroupId anchors the
+    //    numbering for the miss group — callers pre-allocate a range.
+    const hitIds = new Set(cacheHits.map(({ task }) => task.id));
+    const missTasks = tasks.filter((t) => !hitIds.has(t.id));
+    const missResults = await Promise.all(
+      missTasks.map((task, i) =>
+        this.runTaskDirectly(doNotSkipCache, task, baseGroupId + i)
+      )
+    );
+
+    return [...hitResults, ...missResults];
+  }
+
+  /**
+   * Spawn and wait on a task's child process, unconditionally — no cache
+   * lookup. Intended for the coordinator's step 5 dispatch, which has
+   * already confirmed the task is a cache miss via
+   * {@link resolveCachedTasksBulk}.
+   */
+  async runTaskDirectly(
     doNotSkipCache: boolean,
     task: Task,
     groupId: number
@@ -875,14 +952,13 @@ export class TaskOrchestrator {
     await this.preRunSteps([task], { groupId });
 
     const pipeOutput = await this.pipeOutputCapture(task);
-    // obtain metadata
     const temporaryOutputPath = this.cache.temporaryOutputPath(task);
     const streamOutput =
       this.outputStyle === 'static'
         ? false
         : shouldStreamOutput(task, this.initiatingProject);
 
-    let env = pipeOutput
+    const env = pipeOutput
       ? getEnvVariablesForTask(
           task,
           taskSpecificEnv,
@@ -904,53 +980,43 @@ export class TaskOrchestrator {
           streamOutput
         );
 
-    let results: {
-      task: Task;
-      code: number;
-      status: TaskStatus;
-      terminalOutput?: string;
-    }[] = doNotSkipCache ? await this.applyCachedResults([task]) : [];
+    let resolveDiscreteExit: () => void;
+    const discreteExitHandled = new Promise<void>(
+      (r) => (resolveDiscreteExit = r)
+    );
+    this.discreteTaskExitHandled.set(task.id, discreteExitHandled);
 
-    // the task wasn't cached
-    let resolveDiscreteExit: (() => void) | undefined;
-    if (results.length === 0) {
-      const discreteExitHandled = new Promise<void>(
-        (r) => (resolveDiscreteExit = r)
-      );
-      this.discreteTaskExitHandled.set(task.id, discreteExitHandled);
+    const childProcess = await this.runTask(
+      task,
+      streamOutput,
+      env,
+      temporaryOutputPath,
+      pipeOutput
+    );
+    this.runningDiscreteTasks.set(task.id, {
+      runningTask: childProcess,
+      stopping: false,
+    });
 
-      const childProcess = await this.runTask(
-        task,
-        streamOutput,
-        env,
-        temporaryOutputPath,
-        pipeOutput
-      );
-      this.runningDiscreteTasks.set(task.id, {
-        runningTask: childProcess,
-        stopping: false,
-      });
+    const { code, terminalOutput } = await childProcess.getResults();
+    const isStopping =
+      this.runningDiscreteTasks.get(task.id)?.stopping ?? false;
+    this.runningDiscreteTasks.delete(task.id);
 
-      const { code, terminalOutput } = await childProcess.getResults();
-      const isStopping =
-        this.runningDiscreteTasks.get(task.id)?.stopping ?? false;
-      this.runningDiscreteTasks.delete(task.id);
-      results.push({
-        task,
-        code,
-        status: isStopping ? 'stopped' : code === 0 ? 'success' : 'failure',
-        terminalOutput,
-      });
-    }
+    const result: TaskResult = {
+      task,
+      code,
+      status: isStopping ? 'stopped' : code === 0 ? 'success' : 'failure',
+      terminalOutput,
+    };
+
     try {
-      await this.postRunSteps(results, doNotSkipCache, { groupId });
+      await this.postRunSteps([result], doNotSkipCache, { groupId });
     } finally {
-      if (resolveDiscreteExit) {
-        this.discreteTaskExitHandled.delete(task.id);
-        resolveDiscreteExit();
-      }
+      this.discreteTaskExitHandled.delete(task.id);
+      resolveDiscreteExit!();
     }
-    return results[0];
+    return result;
   }
 
   private async runTask(

@@ -179,7 +179,7 @@ export async function runDiscreteTasks(
 
   let groupId = 0;
   let nextBatch = orchestrator.nextBatch();
-  let batchResults: Array<Promise<TaskResult[]>> = [];
+  const batchResults: Array<Promise<TaskResult[]>> = [];
   /**
    * Set of task ids that were part of batches
    */
@@ -196,16 +196,20 @@ export async function runDiscreteTasks(
     nextBatch = orchestrator.nextBatch();
   }
 
-  const taskResults = tasks
-    // Filter out tasks which were not part of batches
-    .filter((task) => !batchTasks.has(task.id))
-    .map((task) =>
-      orchestrator
-        .applyFromCacheOrRunTask(true, task, groupId++)
-        .then((r) => [r])
+  // Discrete tasks: bulk cache resolve in one shot, then run misses in
+  // parallel. Pre-allocate a groupId range for the miss dispatch so each
+  // worker gets a distinct parallelism slot.
+  const discreteTasks = tasks.filter((task) => !batchTasks.has(task.id));
+  const discreteBaseGroupId = groupId;
+  groupId += discreteTasks.length;
+  const discreteResults: Promise<TaskResult[]> =
+    orchestrator.applyFromCacheOrRunTasks(
+      true,
+      discreteTasks,
+      discreteBaseGroupId
     );
 
-  return [...batchResults, ...taskResults];
+  return [...batchResults, discreteResults];
 }
 
 export async function runContinuousTasks(
