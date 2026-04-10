@@ -128,11 +128,6 @@
           "^build-native",
           "angular-rspack-compiler:build"
         ],
-        "inputs": [
-          "default",
-          "^production",
-          "{projectRoot}/vitest.config.mts"
-        ],
         "options": {
           "args": [
             "--passWithNoTests"
