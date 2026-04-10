@@ -1,0 +1,36 @@
+# Auto-generated for versioned docs branch — overrides Netlify UI settings.
+# No @netlify/plugin-nextjs = pure static file serving from the publish dir.
+
+[build]
+  command = "npx nx run nx-dev:deploy-build:netlify --skip-nx-cache"
+  publish = "nx-dev/nx-dev/.next"
+
+[build.environment]
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+
+# Permanent redirects (301 by default)
+[[redirects]]
+from = "/docs"
+to = "/docs/getting-started/intro"
+
+[[redirects]]
+from = "/"
+to = "/docs/getting-started/intro"
+
+[[redirects]]
+from = "/showcase"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/example-repos/*"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/benchmarks/*"
+to = "/docs/reference/benchmarks/:splat"
+
+# Rewrite for base path handling (keeps URL the same)
+[[redirects]]
+from = "/docs/*"
+to = "/:splat"
+status = 200

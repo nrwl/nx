@@ -1,0 +1,1 @@
+var s={};function d(e,o,t,n,r){if(!(typeof window<"u"&&!window.__CONFIG?.disableCookiebot&&typeof process=="object"&&s.NEXT_PUBLIC_COOKIEBOT_DISABLE!=="true"&&window.Cookiebot&&!window.Cookiebot.consent?.statistics)&&!(typeof gtag>"u"))try{gtag("event",e,{event_category:o,event_label:t,value:n,...r})}catch(i){throw new Error(`Cannot send Google Tag event: ${i}`)}}export{d as s};
