@@ -63,11 +63,7 @@ export async function getPlugins(
     if (result.status === 'fulfilled') {
       (i === 0 ? defaultPlugins : specifiedPlugins).push(...result.value);
     } else {
-      errors.push(
-        result.reason instanceof Error
-          ? result.reason
-          : new Error(String(result.reason))
-      );
+      errors.push(reasonToError(result.reason));
     }
   }
 
@@ -164,10 +160,7 @@ async function loadDefaultNxPlugins(root = workspaceRoot) {
     } else {
       errors.push({
         pluginName: plugins[i],
-        error:
-          result.reason instanceof Error
-            ? result.reason
-            : new Error(String(result.reason)),
+        error: reasonToError(result.reason),
       });
     }
   }
@@ -263,10 +256,7 @@ async function loadSpecifiedNxPlugins(
         typeof pluginConfig === 'string' ? pluginConfig : pluginConfig.plugin;
       errors.push({
         pluginName,
-        error:
-          result.reason instanceof Error
-            ? result.reason
-            : new Error(String(result.reason)),
+        error: reasonToError(result.reason),
       });
     }
   }
@@ -295,6 +285,20 @@ async function loadSpecifiedNxPlugins(
   };
 
   return plugins;
+}
+
+export function reasonToError(reason: unknown): Error {
+  if (reason instanceof Error) {
+    return reason;
+  }
+  if (typeof reason === 'object' && reason !== null && 'message' in reason) {
+    const error = new Error(String(reason.message));
+    if ('stack' in reason) {
+      error.stack = String(reason.stack);
+    }
+    return error;
+  }
+  return new Error(String(reason));
 }
 
 function getDefaultPlugins(root: string) {

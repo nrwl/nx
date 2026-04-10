@@ -49,9 +49,11 @@ function addTargetDefaults(tree: Tree, format: 'mjs' | 'cjs') {
   nxJson.targetDefaults['@nx/eslint:lint'].cache ??= true;
   nxJson.targetDefaults['@nx/eslint:lint'].inputs ??= [
     'default',
+    '^default',
     `{workspaceRoot}/.eslintrc.json`,
     `{workspaceRoot}/.eslintignore`,
     `{workspaceRoot}/eslint.config.${format}`,
+    '{workspaceRoot}/tools/eslint-rules/**/*',
   ];
   updateNxJson(tree, nxJson);
 }

@@ -1,5 +1,13 @@
 // Ensure that the preset loads from node_modules rather than our local typescript source
 const nxPreset = require('./node_modules/@nx/jest/preset').default;
+const path = require('path');
+
+// SWC resolves bare plugin names by walking node_modules upward from cwd.
+// Tests that chdir into temp dirs would fail resolution since the temp dir
+// has no node_modules. Pre-resolving to an absolute path bypasses this.
+const mutCjsExportsPlugin = path.dirname(
+  require.resolve('@swc-contrib/mut-cjs-exports/package.json')
+);
 
 module.exports = {
   ...nxPreset,
@@ -16,7 +24,7 @@ module.exports = {
             useDefineForClassFields: false,
           },
           experimental: {
-            plugins: [['@swc-contrib/mut-cjs-exports', {}]],
+            plugins: [[mutCjsExportsPlugin, {}]],
           },
         },
         module: { type: 'commonjs' },

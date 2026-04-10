@@ -17,14 +17,12 @@ import { getLockFileName } from '@nx/js';
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { minimatch } from 'minimatch';
 import { readdirSync } from 'node:fs';
-import { dirname, join, parse, posix, relative, resolve } from 'node:path';
+import { dirname, join, parse, relative, resolve } from 'node:path';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
 import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
 import { getReporterOutputs, type ReporterOutput } from '../utils/reporters';
-
-const pmc = getPackageManagerCommand();
 
 export interface PlaywrightPluginOptions {
   targetName?: string;
@@ -49,10 +47,13 @@ export const createNodes: CreateNodesV2<PlaywrightPluginOptions> = [
       `playwright-${optionsHash}.hash`
     );
     const pluginCache = new PluginCache<PlaywrightTargets>(cachePath);
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, pluginCache),
+          createNodesInternal(configFile, options, context, pluginCache, pmc),
         configFilePaths,
         options,
         context
@@ -69,7 +70,8 @@ async function createNodesInternal(
   configFilePath: string,
   options: PlaywrightPluginOptions,
   context: CreateNodesContextV2,
-  pluginCache: PluginCache<PlaywrightTargets>
+  pluginCache: PluginCache<PlaywrightTargets>,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const projectRoot = dirname(configFilePath);
 
@@ -101,7 +103,8 @@ async function createNodesInternal(
         configFilePath,
         projectRoot,
         normalizedOptions,
-        context
+        context,
+        pmc
       )
     );
   }
@@ -122,7 +125,8 @@ async function buildPlaywrightTargets(
   configFilePath: string,
   projectRoot: string,
   options: NormalizedOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<PlaywrightTargets> {
   // Playwright forbids importing the `@playwright/test` module twice. This would affect running the tests,
   // but we're just reading the config so let's delete the variable they are using to detect this.
@@ -270,7 +274,7 @@ async function buildPlaywrightTargets(
         ),
         command: `${
           baseTargetConfig.command
-        } ${relativeSpecFilePath} --output=${join(
+        } ${relativeSpecFilePath} --output=${joinPathFragments(
           testOutput,
           outputSubfolder
         )}`,
@@ -339,7 +343,7 @@ async function buildPlaywrightTargets(
       inputs: ciBaseTargetConfig.inputs,
       outputs: Array.from(mergeReportsTargetOutputs),
       options: {
-        config: posix.relative(projectRoot, configFilePath),
+        config: normalizePath(relative(projectRoot, configFilePath)),
         expectedSuites: dependsOn.length,
       },
       metadata: {
@@ -470,9 +474,9 @@ function getAtomizedTaskOutputs(
 function addSubfolderToOutput(output: string, subfolder: string): string {
   const parts = parse(output);
   if (parts.ext !== '') {
-    return join(parts.dir, subfolder, parts.base);
+    return joinPathFragments(parts.dir, subfolder, parts.base);
   }
-  return join(output, subfolder);
+  return joinPathFragments(output, subfolder);
 }
 
 function getWebserverCommandTasks(
@@ -602,6 +606,6 @@ function normalizeAtomizedTaskBlobReportOutput(
 ): string {
   // set unique name for the blob report file
   return output.endsWith('.zip')
-    ? join(dirname(output), `${subfolder}.zip`)
-    : join(output, `${subfolder}.zip`);
+    ? joinPathFragments(dirname(output), `${subfolder}.zip`)
+    : joinPathFragments(output, `${subfolder}.zip`);
 }

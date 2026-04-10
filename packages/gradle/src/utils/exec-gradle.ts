@@ -9,6 +9,7 @@ import { dirname, join, isAbsolute } from 'node:path';
 import { LARGE_BUFFER } from 'nx/src/executors/run-commands/run-commands.impl';
 import { GradlePluginOptions } from '../plugin/utils/gradle-plugin-options';
 import { signalToCode } from 'nx/src/utils/exit-codes';
+import treeKill from 'tree-kill';
 
 export const fileSeparator = process.platform.startsWith('win')
   ? 'file:///'
@@ -38,6 +39,10 @@ export function execGradleAsync(
   args: ReadonlyArray<string>,
   execOptions: ExecFileOptions = {}
 ): Promise<Buffer> {
+  // Extract signal so we can handle cancellation with tree-kill
+  // instead of Node's default which only kills the immediate child.
+  const { signal, ...restOptions } = execOptions;
+
   return new Promise<Buffer>((res, rej: (stdout: Buffer) => void) => {
     const cp = execFile(
       gradleBinaryPath,
@@ -48,10 +53,19 @@ export function execGradleAsync(
         windowsHide: true,
         env: process.env,
         maxBuffer: LARGE_BUFFER,
-        ...execOptions,
+        ...restOptions,
       },
       undefined
     );
+
+    // Use tree-kill on abort to kill the entire process tree
+    // (cmd.exe → gradlew.bat → java.exe), not just the shell.
+    const onAbort = () => {
+      if (cp.pid) {
+        treeKill(cp.pid);
+      }
+    };
+    signal?.addEventListener('abort', onAbort, { once: true });
 
     let stdout = Buffer.from('');
     cp.stdout?.on('data', (data) => {
@@ -61,8 +75,9 @@ export function execGradleAsync(
       stdout += data;
     });
 
-    cp.on('exit', (code, signal) => {
-      if (code === null) code = signalToCode(signal);
+    cp.on('exit', (code, s) => {
+      signal?.removeEventListener('abort', onAbort);
+      if (code === null) code = signalToCode(s);
       if (code === 0) {
         res(stdout);
       } else {

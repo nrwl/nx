@@ -11,7 +11,7 @@ export default async function run(
   options: Schema,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
-  // this is only used for the hasher
+  // hasTypeAwareRules is deprecated and no longer used, delete it so it's not passed to ESLint
   delete options.hasTypeAwareRules;
 
   const systemRoot = context.root;
