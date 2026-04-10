@@ -185,24 +185,25 @@ function mergeConfigurations<T extends Object>(
 ): Record<string, T> | undefined {
   const mergedConfigurations: Record<string, T> = {};
 
-  // uniqueKeysInObjects(base, new) puts base keys first. Since NX_SPREAD_TOKEN
-  // only ever appears in newConfigurations, it always lands after all base keys,
-  // so every base-named configuration is "before the spread" when '...' is present.
   const configNames = uniqueKeysInObjects(
     baseConfigurations ?? {},
     newConfigurations ?? {}
   );
 
-  const spreadIndex =
-    newConfigurations?.[NX_SPREAD_TOKEN] === true
-      ? configNames.indexOf(NX_SPREAD_TOKEN)
-      : -1;
+  // Determine which keys appear before '...' in newConfigurations' own key order.
+  // Keys before the spread: base wins for shared keys.
+  // Keys after the spread (or when no spread): normal merge (new wins).
+  const newKeys = Object.keys(newConfigurations ?? {});
+  const spreadPosInNew = newKeys.indexOf(NX_SPREAD_TOKEN);
+  const hasSpread = spreadPosInNew >= 0;
+  const keysBeforeSpread = hasSpread
+    ? new Set(newKeys.slice(0, spreadPosInNew))
+    : new Set<string>();
 
-  for (let i = 0; i < configNames.length; i++) {
-    const configName = configNames[i];
+  for (const configName of configNames) {
     if (configName === NX_SPREAD_TOKEN) continue;
 
-    if (spreadIndex >= 0 && i < spreadIndex) {
+    if (hasSpread && keysBeforeSpread.has(configName)) {
       // Before '...': base wins for shared named configurations; only include the
       // new configuration if base doesn't define one with the same name.
       mergedConfigurations[configName] =
@@ -280,23 +281,21 @@ export function mergeTargetConfigurations(
   const result: Partial<TargetConfiguration> = {};
   const mergeBase = isCompatible ? baseTargetProperties : {};
 
-  // uniqueKeysInObjects(base, target) puts base keys first. Since NX_SPREAD_TOKEN
-  // only appears in target, it always lands after all base keys. This means every
-  // base-target shared key is "before the spread" → base wins when '...' is present.
   const keys = isCompatible
     ? uniqueKeysInObjects(baseTargetProperties, target)
     : Object.keys(target);
 
-  // spreadIndex is the position of '...' in the merged key list, or -1 if absent.
-  // Keys at index < spreadIndex: base wins (target only contributes new-only keys).
-  // Keys at index >= spreadIndex: normal merge (target wins for conflicts).
-  const spreadIndex =
-    isCompatible && target[NX_SPREAD_TOKEN] === true
-      ? keys.indexOf(NX_SPREAD_TOKEN)
-      : -1;
+  // Determine which keys appear before '...' in the target's own key order.
+  // Keys before the spread: base wins for shared keys.
+  // Keys after the spread (or when no spread): normal merge (target wins).
+  const targetKeys = Object.keys(target);
+  const spreadPosInTarget = targetKeys.indexOf(NX_SPREAD_TOKEN);
+  const hasSpread = isCompatible && spreadPosInTarget >= 0;
+  const keysBeforeSpread = hasSpread
+    ? new Set(targetKeys.slice(0, spreadPosInTarget))
+    : new Set<string>();
 
-  for (let i = 0; i < keys.length; i++) {
-    const key = keys[i];
+  for (const key of keys) {
     // options and configurations have their own merge logic below
     if (
       key === 'options' ||
@@ -306,7 +305,7 @@ export function mergeTargetConfigurations(
       continue;
     }
 
-    if (spreadIndex >= 0 && i < spreadIndex) {
+    if (hasSpread && keysBeforeSpread.has(key)) {
       // Before '...': base wins for shared keys; only add the key if base lacks it.
       result[key] =
         key in mergeBase
