@@ -305,8 +305,12 @@ export class TaskOrchestrator {
         dispatched = true;
         inFlightWorkers++;
         const groupId = this.closeGroup();
-        this.applyFromCacheOrRunTask(doNotSkipCache, task, groupId)
-          .catch(async (e) => {
+        // Fire-and-forget: the coordinator dispatches the worker and keeps
+        // looping. `void` signals the intentional unawait to linters.
+        void (async () => {
+          try {
+            await this.applyFromCacheOrRunTask(doNotSkipCache, task, groupId);
+          } catch (e) {
             // Ensure failures (e.g. remote cache errors) are still reported
             // rather than silently dropped. Guard against double-finalize:
             // completeTasks() populates `completedTasks` when it runs, so
@@ -324,8 +328,7 @@ export class TaskOrchestrator {
               doNotSkipCache,
               { groupId }
             );
-          })
-          .finally(() => {
+          } finally {
             this.openGroup(groupId);
             inFlightWorkers--;
             // Wake coordinator — the decrement above may satisfy the
@@ -333,7 +336,8 @@ export class TaskOrchestrator {
             // when scheduleNextTasksAndReleaseThreads fired earlier.
             this.waitingForTasks.forEach((f) => f(null));
             this.waitingForTasks.length = 0;
-          });
+          }
+        })();
       }
       if (dispatched) continue;
 
