@@ -54,8 +54,9 @@ const isInvokedByTsx: boolean = (() => {
  *
  * process.features.typescript is 'strip' | 'transform' | false in Node 22.6+
  */
-const nodeSupportsNativeTypescript: boolean =
-  (process as any).features?.typescript === 'strip';
+
+const nodeSupportsNativeTypescript: boolean = !!(process as any).features
+  ?.typescript;
 
 /**
  * When process.features.typescript is truthy and the user has opted in via
