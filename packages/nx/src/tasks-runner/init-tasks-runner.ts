@@ -198,23 +198,22 @@ export async function runDiscreteTasks(
 
   const discreteTasks = tasks.filter((task) => !batchTasks.has(task.id));
 
-  // Bulk-resolve every cacheable discrete task's cache state in one
-  // shot — single SQL call plus parallel remote retrievals — under a
-  // shared lifecycle groupId. Misses fall through to runTaskDirectly
-  // and consume a groupId there; hits never allocate one.
-  const cacheResolveGroupId = groupId++;
-  const cacheHitsPromise = orchestrator.resolveCachedTasks(
+  // Bulk-resolve every discrete task's cache state in one shot —
+  // single SQL call plus parallel remote retrievals. Batches kicked
+  // off above continue running concurrently while we await this.
+  const cacheHits = await orchestrator.resolveCachedTasks(
     true,
     discreteTasks,
-    cacheResolveGroupId
+    groupId++
   );
+  const cacheHitsById = new Map(cacheHits.map((h) => [h.task.id, h]));
 
-  const taskResults: Array<Promise<TaskResult[]>> = discreteTasks.map((task) =>
-    cacheHitsPromise.then(async (hits) => {
-      const hit = hits.find((h) => h.task.id === task.id);
+  const taskResults: Array<Promise<TaskResult[]>> = discreteTasks.map(
+    async (task) => {
+      const hit = cacheHitsById.get(task.id);
       if (hit) return [hit];
       return [await orchestrator.runTaskDirectly(true, task, groupId++)];
-    })
+    }
   );
 
   return [...batchResults, ...taskResults];
