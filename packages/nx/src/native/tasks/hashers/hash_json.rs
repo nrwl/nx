@@ -3,7 +3,8 @@ use std::path::Path;
 
 use anyhow::Result;
 use serde_json::Value;
-use tracing::trace;
+use tracing::{debug, debug_span, trace};
+use xxhash_rust::xxh3::Xxh3;
 
 use crate::native::glob::build_glob_set;
 use crate::native::hasher::hash;
@@ -70,45 +71,51 @@ pub fn hash_json_files(
         });
     }
 
-    let mut hasher = xxhash_rust::xxh3::Xxh3::new();
+    let mut hasher = Xxh3::new();
     let mut result_files = Vec::with_capacity(matched_files.len());
 
-    for file_path in &matched_files {
-        let abs_path = Path::new(workspace_root).join(file_path);
-        let content = match std::fs::read_to_string(&abs_path) {
-            Ok(c) => c,
-            Err(e) => {
-                trace!("Failed to read JSON file {:?}: {}", abs_path, e);
-                continue;
-            }
-        };
+    debug_span!("Hashing JSON fileset with inputs").in_scope(|| {
+        for file_path in &matched_files {
+            let file_start = std::time::Instant::now();
+            let abs_path = Path::new(workspace_root).join(file_path);
+            let content = match std::fs::read_to_string(&abs_path) {
+                Ok(c) => c,
+                Err(e) => {
+                    trace!("Failed to read JSON file {:?}: {}", abs_path, e);
+                    continue;
+                }
+            };
 
-        let parsed: Value = match serde_json::from_str(&content) {
-            Ok(v) => v,
-            Err(e) => {
-                trace!("Failed to parse JSON file {:?}: {}", abs_path, e);
-                // If we can't parse it as JSON, hash the raw content
-                hasher.update(file_path.as_bytes());
-                hasher.update(content.as_bytes());
-                result_files.push(file_path.to_string());
-                continue;
-            }
-        };
+            let parsed: Value = match serde_json::from_str(&content) {
+                Ok(v) => v,
+                Err(e) => {
+                    trace!("Failed to parse JSON file {:?}: {}", abs_path, e);
+                    // If we can't parse it as JSON, hash the raw content
+                    hasher.update(file_path.as_bytes());
+                    hasher.update(content.as_bytes());
+                    result_files.push(file_path.to_string());
+                    continue;
+                }
+            };
 
-        let filtered = filter_json_value(&parsed, fields, exclude_fields);
+            let filtered = filter_json_value(&parsed, fields, exclude_fields);
 
-        // Serialize deterministically (serde_json sorts keys for Value::Object when using BTreeMap internally)
-        let serialized = canonical_json_string(&filtered);
-        trace!("JSON hash input for {}: {}", file_path, serialized);
+            // Stream canonical (sorted-key) JSON bytes straight into the hasher.
+            // The byte sequence is deterministic and defines the cache key, so it
+            // MUST NOT change once released — do not reformat without a migration.
+            debug!("Adding {} to hash", file_path);
+            hasher.update(file_path.as_bytes());
+            hash_canonical_json(&mut hasher, &filtered);
+            result_files.push(file_path.to_string());
+            trace!("hash_json {}: {:?}", file_path, file_start.elapsed());
+        }
+        let hashed_value = hasher.digest().to_string();
+        debug!("Hash Value: {}", hashed_value);
 
-        hasher.update(file_path.as_bytes());
-        hasher.update(serialized.as_bytes());
-        result_files.push(file_path.to_string());
-    }
-
-    Ok(JsonHashResult {
-        hash: hasher.digest().to_string(),
-        files: result_files,
+        Ok(JsonHashResult {
+            hash: hashed_value,
+            files: result_files,
+        })
     })
 }
 
@@ -221,29 +228,45 @@ fn remove_nested_field(obj: &mut serde_json::Map<String, Value>, path: &str) {
     }
 }
 
-/// Produces a canonical (deterministic) JSON string by sorting object keys.
-fn canonical_json_string(value: &Value) -> String {
+/// Feeds a canonical (deterministic) JSON encoding of `value` directly into
+/// `hasher`. Object keys are sorted at every level; arrays preserve their
+/// order. Matches `{"a":1,"b":{...}}`-style compact JSON without whitespace.
+///
+/// The produced byte sequence defines the cache key and MUST NOT change once
+/// released — do not reformat without a migration.
+fn hash_canonical_json(hasher: &mut Xxh3, value: &Value) {
     match value {
         Value::Object(map) => {
             let mut sorted: Vec<(&String, &Value)> = map.iter().collect();
-            sorted.sort_by_key(|(k, _)| *k);
-            let entries: Vec<String> = sorted
-                .into_iter()
-                .map(|(k, v)| {
-                    format!(
-                        "{}:{}",
-                        serde_json::to_string(k).unwrap(),
-                        canonical_json_string(v)
-                    )
-                })
-                .collect();
-            format!("{{{}}}", entries.join(","))
+            sorted.sort_by_key(|(k, _)| k.as_str());
+            hasher.update(b"{");
+            for (i, (k, v)) in sorted.iter().enumerate() {
+                if i > 0 {
+                    hasher.update(b",");
+                }
+                // Keys go through serde_json so escaping matches JSON rules
+                let key_json = serde_json::to_string(k).unwrap();
+                hasher.update(key_json.as_bytes());
+                hasher.update(b":");
+                hash_canonical_json(hasher, v);
+            }
+            hasher.update(b"}");
         }
         Value::Array(arr) => {
-            let items: Vec<String> = arr.iter().map(|v| canonical_json_string(v)).collect();
-            format!("[{}]", items.join(","))
+            hasher.update(b"[");
+            for (i, v) in arr.iter().enumerate() {
+                if i > 0 {
+                    hasher.update(b",");
+                }
+                hash_canonical_json(hasher, v);
+            }
+            hasher.update(b"]");
         }
-        _ => serde_json::to_string(value).unwrap_or_default(),
+        // Leaves: numbers, strings, bools, null — serde_json handles escaping/formatting
+        _ => {
+            let leaf = serde_json::to_string(value).unwrap_or_default();
+            hasher.update(leaf.as_bytes());
+        }
     }
 }
 
@@ -305,18 +328,33 @@ mod tests {
         assert_eq!(result, expected);
     }
 
-    #[test]
-    fn test_canonical_json_string_sorts_keys() {
-        let json: Value = serde_json::from_str(r#"{"z": 1, "a": 2, "m": 3}"#).unwrap();
-        let result = canonical_json_string(&json);
-        assert_eq!(result, r#"{"a":2,"m":3,"z":1}"#);
+    fn hash_of(value: &Value) -> String {
+        let mut hasher = Xxh3::new();
+        hash_canonical_json(&mut hasher, value);
+        hasher.digest().to_string()
     }
 
     #[test]
-    fn test_canonical_json_nested() {
-        let json: Value = serde_json::from_str(r#"{"b": {"z": 1, "a": 2}, "a": 3}"#).unwrap();
-        let result = canonical_json_string(&json);
-        assert_eq!(result, r#"{"a":3,"b":{"a":2,"z":1}}"#);
+    fn test_hash_canonical_sorts_keys() {
+        // Different insertion order, same content → identical hash
+        let a: Value = serde_json::from_str(r#"{"z": 1, "a": 2, "m": 3}"#).unwrap();
+        let b: Value = serde_json::from_str(r#"{"a": 2, "m": 3, "z": 1}"#).unwrap();
+        assert_eq!(hash_of(&a), hash_of(&b));
+    }
+
+    #[test]
+    fn test_hash_canonical_nested_deterministic() {
+        let a: Value = serde_json::from_str(r#"{"b": {"z": 1, "a": 2}, "a": 3}"#).unwrap();
+        let b: Value = serde_json::from_str(r#"{"a": 3, "b": {"a": 2, "z": 1}}"#).unwrap();
+        assert_eq!(hash_of(&a), hash_of(&b));
+    }
+
+    #[test]
+    fn test_hash_canonical_distinguishes_array_order() {
+        // Arrays are order-sensitive, unlike objects
+        let a: Value = serde_json::from_str(r#"[1, 2, 3]"#).unwrap();
+        let b: Value = serde_json::from_str(r#"[3, 2, 1]"#).unwrap();
+        assert_ne!(hash_of(&a), hash_of(&b));
     }
 
     #[test]
