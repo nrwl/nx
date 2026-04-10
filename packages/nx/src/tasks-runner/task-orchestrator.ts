@@ -1522,42 +1522,24 @@ export class TaskOrchestrator {
     this.groups[id] = false;
   }
 
-  private async shouldCopyOutputsFromCache(
-    outputs: string[],
-    hash: string
-  ): Promise<boolean> {
-    if (this.daemon?.enabled()) {
-      return !(await this.daemon.outputsHashesMatch(outputs, hash));
-    }
-    return true;
-  }
-
   private async shouldCopyOutputsFromCacheBatch(
     tasks: { outputs: string[]; hash: string }[]
   ): Promise<Map<string, boolean>> {
     const resultMap = new Map<string, boolean>();
-    if (tasks.length === 1) {
-      resultMap.set(
-        tasks[0].hash,
-        await this.shouldCopyOutputsFromCache(tasks[0].outputs, tasks[0].hash)
-      );
-    } else if (this.daemon?.enabled() && tasks.length > 1) {
+    if (tasks.length === 0) return resultMap;
+
+    if (this.daemon?.enabled()) {
       const matches = await this.daemon.outputsHashesMatchBatch(tasks);
       for (let i = 0; i < tasks.length; i++) {
         resultMap.set(tasks[i].hash, !matches[i]);
       }
     } else {
+      // No daemon → can't verify on-disk outputs, always copy.
       for (const task of tasks) {
         resultMap.set(task.hash, true);
       }
     }
     return resultMap;
-  }
-
-  private async recordOutputsHash(task: Task) {
-    if (this.daemon?.enabled()) {
-      return this.daemon.recordOutputsHash(task.outputs, task.hash);
-    }
   }
 
   private async recordOutputsHashBatch(

@@ -777,32 +777,12 @@ export class DaemonClient {
     );
   }
 
-  recordOutputsHash(outputs: string[], hash: string): Promise<any> {
-    return this.sendToDaemonViaQueue({
-      type: 'RECORD_OUTPUTS_HASH',
-      data: {
-        outputs,
-        hash,
-      },
-    });
-  }
-
   recordOutputsHashBatch(
     entries: { outputs: string[]; hash: string }[]
   ): Promise<any> {
     return this.sendToDaemonViaQueue({
       type: 'RECORD_OUTPUTS_HASH_BATCH',
       data: entries,
-    });
-  }
-
-  outputsHashesMatch(outputs: string[], hash: string): Promise<any> {
-    return this.sendToDaemonViaQueue({
-      type: 'OUTPUTS_HASHES_MATCH',
-      data: {
-        outputs,
-        hash,
-      },
     });
   }
 

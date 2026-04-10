@@ -1,9 +1,5 @@
 import { dirname } from 'path';
-import {
-  WatchEvent,
-  getFilesForOutputs,
-  getFilesForOutputsBatch,
-} from '../../native';
+import { WatchEvent, getFilesForOutputsBatch } from '../../native';
 import { collapseExpandedOutputs } from '../../utils/collapse-expanded-outputs';
 import { workspaceRoot } from '../../utils/workspace-root';
 
@@ -48,27 +44,6 @@ export function recordedHash(output: string) {
   return recordedHashes[output];
 }
 
-export async function recordOutputsHash(_outputs: string[], hash: string) {
-  const outputs = await normalizeOutputs(_outputs);
-  if (disabled) return;
-  _recordOutputsHash(outputs, hash);
-}
-
-export async function outputsHashesMatch(_outputs: string[], hash: string) {
-  if (disabled) return false;
-  // Skip filesystem scan if no hash was recorded — result is always false.
-  if (numberOfExpandedOutputs[hash] === undefined) return false;
-  const outputs = await normalizeOutputs(_outputs);
-  return _outputsHashesMatch(outputs, hash);
-}
-
-async function normalizeOutputs(outputs: string[]) {
-  let expandedOutputs = collapseExpandedOutputs(
-    getFilesForOutputs(workspaceRoot, outputs)
-  );
-  return expandedOutputs;
-}
-
 export function processFileChangesInOutputs(
   changeEvents: WatchEvent[],
   now: number = undefined
@@ -101,8 +76,9 @@ export function processFileChangesInOutputs(
 }
 
 /**
- * Batch version of outputsHashesMatch that uses Rayon-parallel
- * filesystem scanning for uncached entries.
+ * Check whether the on-disk outputs of each entry still match the hash
+ * the daemon recorded for them. Uses Rayon-parallel filesystem scanning
+ * for uncached entries.
  */
 export function outputsHashesMatchBatch(
   entries: { outputs: string[]; hash: string }[]
@@ -140,8 +116,9 @@ export function outputsHashesMatchBatch(
 }
 
 /**
- * Batch version of recordOutputsHash that uses Rayon-parallel
- * filesystem scanning.
+ * Record the hash of each entry's on-disk outputs so future
+ * outputsHashesMatchBatch calls can skip redundant cache copies.
+ * Uses Rayon-parallel filesystem scanning.
  */
 export function recordOutputsHashBatch(
   entries: { outputs: string[]; hash: string }[]
