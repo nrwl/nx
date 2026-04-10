@@ -437,9 +437,12 @@ export function getExecutorNameForTask(task: Task, projectGraph: ProjectGraph) {
   return getTargetConfigurationForTask(task, projectGraph)?.executor;
 }
 
-let cachedProjectsForExecutor: Record<string, ProjectConfiguration> | null =
-  null;
-let cachedProjectGraphRef: ProjectGraph | null = null;
+// Keyed by ProjectGraph identity so old graphs are released as soon as
+// callers drop their references.
+const projectsForExecutorCache = new WeakMap<
+  ProjectGraph,
+  Record<string, ProjectConfiguration>
+>();
 
 export function getExecutorForTask(
   task: Task,
@@ -448,17 +451,17 @@ export function getExecutorForTask(
   const executor = getExecutorNameForTask(task, projectGraph);
   const [nodeModule, executorName] = parseExecutor(executor);
 
-  if (cachedProjectGraphRef !== projectGraph) {
-    cachedProjectsForExecutor =
-      readProjectsConfigurationFromProjectGraph(projectGraph).projects;
-    cachedProjectGraphRef = projectGraph;
+  let projects = projectsForExecutorCache.get(projectGraph);
+  if (!projects) {
+    projects = readProjectsConfigurationFromProjectGraph(projectGraph).projects;
+    projectsForExecutorCache.set(projectGraph, projects);
   }
 
   return getExecutorInformation(
     nodeModule,
     executorName,
     workspaceRoot,
-    cachedProjectsForExecutor
+    projects
   );
 }
 

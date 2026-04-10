@@ -83,7 +83,6 @@ export function processFileChangesInOutputs(
     if (dirsContainingOutputs[current]) {
       dirsContainingOutputs[current].forEach((output) => {
         if (now - timestamps[output] > 2000) {
-          const hash = recordedHashes[output];
           recordedHashes[output] = undefined;
         }
       });

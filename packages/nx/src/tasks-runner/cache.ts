@@ -138,7 +138,9 @@ export class DbCache {
     }
   }
 
-  getBatch(tasks: Task[]): Map<string, CachedResult & { remote: boolean }> {
+  async getBatch(
+    tasks: Task[]
+  ): Promise<Map<string, CachedResult & { remote: boolean }>> {
     const results = new Map<string, CachedResult & { remote: boolean }>();
     const hashes = tasks.map((t) => t.hash);
     const batchResults = this.cache.getBatch(hashes);
@@ -401,6 +403,20 @@ export class Cache {
     } else {
       return null;
     }
+  }
+
+  async getBatch(
+    tasks: Task[]
+  ): Promise<Map<string, CachedResult & { remote: boolean }>> {
+    // Legacy file-based cache has no native batch support — loop in parallel.
+    const results = new Map<string, CachedResult & { remote: boolean }>();
+    const entries = await Promise.all(
+      tasks.map(async (t) => ({ task: t, res: await this.get(t) }))
+    );
+    for (const { task, res } of entries) {
+      if (res) results.set(task.hash, res);
+    }
+    return results;
   }
 
   async put(

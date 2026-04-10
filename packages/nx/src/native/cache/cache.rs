@@ -161,7 +161,10 @@ impl NxCache {
         let params: Vec<&dyn rusqlite::ToSql> =
             hashes.iter().map(|h| h as &dyn rusqlite::ToSql).collect();
 
-        // Collect (hash, code, size) tuples from DB
+        // Collect (hash, code, size) tuples from DB. Propagate row-level
+        // errors instead of silently skipping malformed rows — a bad row
+        // means schema drift or corruption and shouldn't masquerade as a
+        // cache miss.
         let db_results: Vec<(String, i16, i64)> = stmt
             .query_map(params.as_slice(), |row| {
                 Ok((
@@ -170,8 +173,7 @@ impl NxCache {
                     row.get::<_, i64>(2)?,
                 ))
             })?
-            .filter_map(|r| r.ok())
-            .collect();
+            .collect::<rusqlite::Result<Vec<_>>>()?;
         drop(stmt);
         drop(db);
 

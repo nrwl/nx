@@ -28,7 +28,13 @@ import {
   EXPECTED_TERMINATION_SIGNALS,
   signalToCode,
 } from '../utils/exit-codes';
-import { Cache, DbCache, dbCacheEnabled, getCache } from './cache';
+import {
+  Cache,
+  CachedResult,
+  DbCache,
+  dbCacheEnabled,
+  getCache,
+} from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { isTuiEnabled } from './is-tui-enabled';
@@ -290,7 +296,11 @@ export class TaskOrchestrator {
         this.applyFromCacheOrRunTask(doNotSkipCache, task, groupId)
           .catch(async (e) => {
             // Ensure failures (e.g. remote cache errors) are still reported
-            // rather than silently dropped.
+            // rather than silently dropped. Guard against double-finalize:
+            // completeTasks() populates `completedTasks[task.id]` when it
+            // runs, so if the rejection happened AFTER postRunSteps had
+            // already finalized the task we must not run postRunSteps again.
+            if (this.completedTasks[task.id] !== undefined) return;
             const terminalOutput = e?.message ?? '';
             this.options.lifeCycle.printTaskTerminalOutput(
               task,
@@ -489,28 +499,16 @@ export class TaskOrchestrator {
     if (candidates.length <= 1) return false;
 
     // Batch cache lookup — single Rust/SQL call + parallel file reads
-    const cacheHits: { task: Task; cachedResult: any }[] = [];
-    if ('getBatch' in this.cache) {
-      const batchResults = (this.cache as any).getBatch(candidates);
-      for (const task of candidates) {
-        const cachedResult = batchResults.get(task.hash);
-        if (cachedResult && cachedResult.code === 0) {
-          cacheHits.push({ task, cachedResult });
-        }
-      }
-    } else {
-      // Fallback for non-db cache
-      const entries = await Promise.all(
-        candidates.map(async (task) => {
-          const cachedResult = await this.cache.get(task);
-          if (cachedResult && cachedResult.code === 0) {
-            return { task, cachedResult };
-          }
-          return null;
-        })
-      );
-      for (const e of entries) {
-        if (e) cacheHits.push(e);
+    // (legacy file cache falls through to a parallel per-task loop internally)
+    const cacheHits: {
+      task: Task;
+      cachedResult: CachedResult & { remote: boolean };
+    }[] = [];
+    const batchResults = await this.cache.getBatch(candidates);
+    for (const task of candidates) {
+      const cachedResult = batchResults.get(task.hash);
+      if (cachedResult && cachedResult.code === 0) {
+        cacheHits.push({ task, cachedResult });
       }
     }
     if (cacheHits.length === 0) return false;
@@ -541,24 +539,15 @@ export class TaskOrchestrator {
       })
     );
 
-    // NOW remove hits from scheduledTasks (they're confirmed resolved)
-    const hitIds = new Set(cacheHits.map(({ task }) => task.id));
-    const hitIdxs: number[] = [];
-    for (let i = scheduledTasks.length - 1; i >= 0; i--) {
-      if (hitIds.has(scheduledTasks[i])) {
-        hitIdxs.push(i);
-      }
-    }
-    for (const idx of hitIdxs) {
-      scheduledTasks.splice(idx, 1);
-    }
-
-    // Fire scheduleTask lifecycle for hits not yet processed
-    for (const { task } of cacheHits) {
-      if (!this.processedTasks.has(task.id)) {
-        await this.options.lifeCycle.scheduleTask(task);
-      }
-    }
+    // Fire scheduleTask lifecycle for hits not yet processed.
+    // (No need to remove hits from scheduledTasks here — postRunSteps →
+    // complete() → tasksSchedule.complete() filters them out before we
+    // return, and the coordinator loop only picks up tasks after that.)
+    await Promise.all(
+      cacheHits
+        .filter(({ task }) => !this.processedTasks.has(task.id))
+        .map(({ task }) => this.options.lifeCycle.scheduleTask(task))
+    );
 
     // Build results and run lifecycle
     const results: {
@@ -1318,9 +1307,7 @@ export class TaskOrchestrator {
         tasksToRecord.push({ outputs: task.outputs, hash: task.hash });
       }
     }
-    if (tasksToRecord.length === 1) {
-      await this.recordOutputsHash(results[0].task);
-    } else if (tasksToRecord.length > 1) {
+    if (tasksToRecord.length > 0) {
       await this.recordOutputsHashBatch(tasksToRecord);
     }
 
