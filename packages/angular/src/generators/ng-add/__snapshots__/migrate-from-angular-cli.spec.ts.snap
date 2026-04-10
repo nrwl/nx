@@ -103,9 +103,11 @@ exports[`workspace move to nx layout should create nx.json 1`] = `
       "cache": true,
       "inputs": [
         "default",
+        "^default",
         "{workspaceRoot}/.eslintrc.json",
         "{workspaceRoot}/.eslintignore",
         "{workspaceRoot}/eslint.config.mjs",
+        "{workspaceRoot}/tools/eslint-rules/**/*",
       ],
     },
     "build": {

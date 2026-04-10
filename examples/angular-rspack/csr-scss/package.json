@@ -14,9 +14,23 @@
     "targets": {
       "build": {
         "inputs": [
+          "production",
+          "^production",
           {
             "env": "NGRS_CONFIG"
-          }
+          },
+          {
+            "dependentTasksOutputFiles": "**/*.js",
+            "transitive": true
+          },
+          "{workspaceRoot}/examples/angular-rspack/patch-devkit-request-path.js",
+          "{workspaceRoot}/examples/angular-rspack/tsconfig.base.json",
+          "{workspaceRoot}/LICENSE",
+          "{workspaceRoot}/tsconfig.json",
+          "{workspaceRoot}/examples/angular-rspack/shared/**/*"
+        ],
+        "outputs": [
+          "{projectRoot}/dist"
         ],
         "dependsOn": [
           "^build"

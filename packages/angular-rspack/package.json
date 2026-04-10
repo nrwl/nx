@@ -116,9 +116,7 @@
       "build": {
         "command": "node ./scripts/copy-readme.js angular-rspack packages/angular-rspack/readme-template.md packages/angular-rspack/README.md",
         "inputs": [
-          "{projectRoot}/readme-template.md",
-          "{workspaceRoot}/scripts/copy-readme.js",
-          "{workspaceRoot}/scripts/readme-fragments"
+          "copyReadme"
         ],
         "outputs": [
           "{projectRoot}/README.md"
