@@ -72,10 +72,10 @@ fn parse_json_or_jsonc(bytes: &[u8]) -> Option<Value> {
     if let Ok(v) = serde_json::from_slice::<Value>(bytes) {
         return Some(v);
     }
-    // serde_json rejected it — might be JSONC. Retry with the JSONC parser.
-    // Requires valid UTF-8; jsonc_parser takes &str.
     let text = std::str::from_utf8(bytes).ok()?;
-    jsonc_parser::parse_to_serde_value(text, &Default::default()).ok()?
+    jsonc_parser::parse_to_serde_value(text, &Default::default())
+        .inspect_err(|e| trace!("jsonc parse failed: {}", e))
+        .ok()?
 }
 
 /// Hashes JSON files, optionally filtering to specific fields.
