@@ -318,12 +318,6 @@ export declare function getDefaultMaxCacheSize(cachePath: string): number
 export declare function getEventDimensions(): EventDimensions
 
 /**
- * Expands the given outputs into a list of existing files.
- * This is used when hashing outputs
- */
-export declare function getFilesForOutputs(directory: string, entries: Array<string>): Array<string>
-
-/**
  * Batch version of get_files_for_outputs that processes multiple output
  * entries in parallel using Rayon. Each entry is a list of output paths
  * for a single task.

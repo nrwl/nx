@@ -124,17 +124,13 @@ fn partition_globs_into_map(globs: Vec<String>) -> anyhow::Result<HashMap<String
         )
 }
 
-#[napi]
 /// Expands the given outputs into a list of existing files.
-/// This is used when hashing outputs
+/// This is used when hashing outputs. Takes a borrowed directory so batch
+/// callers don't pay a String clone per task.
 pub fn get_files_for_outputs(
-    directory: String,
+    directory: &Path,
     entries: Vec<String>,
 ) -> anyhow::Result<Vec<String>> {
-    enable_logger();
-
-    let directory: PathBuf = directory.into();
-
     let mut globs: Vec<String> = vec![];
     let mut files: Vec<String> = vec![];
     let mut directories: Vec<String> = vec![];
@@ -210,71 +206,11 @@ pub fn get_files_for_outputs_batch(
     entries_batch: Vec<Vec<String>>,
 ) -> anyhow::Result<Vec<Vec<String>>> {
     enable_logger();
-
-    let results: Vec<anyhow::Result<Vec<String>>> = entries_batch
+    let directory = Path::new(&directory);
+    entries_batch
         .into_par_iter()
-        .map(|entries| {
-            let dir: PathBuf = (&directory).into();
-            let mut globs: Vec<String> = vec![];
-            let mut files: Vec<String> = vec![];
-            let mut directories: Vec<String> = vec![];
-            for entry in entries.into_iter() {
-                let path = dir.join(&entry);
-                if !path.exists() {
-                    if contains_glob_pattern(&entry) {
-                        globs.push(entry);
-                    }
-                } else if path.is_dir() {
-                    directories.push(entry);
-                } else {
-                    files.push(entry);
-                }
-            }
-
-            if !globs.is_empty() {
-                let partitioned_globs = partition_globs_into_map(globs)?;
-                for (root, patterns) in partitioned_globs {
-                    let root_path = dir.join(&root);
-                    let glob_set = build_glob_set(&patterns)?;
-                    let found_paths: Vec<String> = nx_walker(&root_path, false)
-                        .filter_map(|file| {
-                            if glob_set.is_match(&file.normalized_path) {
-                                Some(
-                                    PathBuf::from(&root)
-                                        .join(&file.normalized_path)
-                                        .to_normalized_string(),
-                                )
-                            } else {
-                                None
-                            }
-                        })
-                        .collect();
-                    files.extend(found_paths);
-                }
-            }
-
-            if !directories.is_empty() {
-                for d in directories {
-                    let d = PathBuf::from(d);
-                    let dir_path = dir.join(&d);
-                    let files_in_dir = nx_walker(&dir_path, false).filter_map(|e| {
-                        let path = dir_path.join(&e.normalized_path);
-                        if path.is_file() {
-                            Some(d.join(e.normalized_path).to_normalized_string())
-                        } else {
-                            None
-                        }
-                    });
-                    files.extend(files_in_dir);
-                }
-            }
-
-            files.sort();
-            Ok(files)
-        })
-        .collect();
-
-    results.into_iter().collect()
+        .map(|entries| get_files_for_outputs(directory, entries))
+        .collect()
 }
 
 #[cfg(test)]
@@ -377,7 +313,7 @@ mod test {
             "folder/nested-folder".to_string(),
             "test.txt".to_string(),
         ];
-        let mut result = get_files_for_outputs(temp.display().to_string(), entries).unwrap();
+        let mut result = get_files_for_outputs(temp.path(), entries).unwrap();
         result.sort();
         assert_eq!(
             result,
@@ -546,7 +482,7 @@ mod test {
         temp.child("out/visible.txt").write_str("content").unwrap();
 
         let entries = vec!["out".to_string()];
-        let mut result = get_files_for_outputs(temp.display().to_string(), entries).unwrap();
+        let mut result = get_files_for_outputs(temp.path(), entries).unwrap();
         result.sort();
 
         assert!(result.contains(&"out/visible.txt".to_string()));
@@ -613,7 +549,7 @@ mod test {
 
             // Test both functions
             let _result1 = expand_outputs(temp.display().to_string(), entries.clone());
-            let _result2 = get_files_for_outputs(temp.display().to_string(), entries);
+            let _result2 = get_files_for_outputs(temp.path(), entries);
 
             drop(temp);
         }

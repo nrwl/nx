@@ -607,7 +607,6 @@ module.exports.flushTelemetry = nativeBinding.flushTelemetry
 module.exports.getBinaryTarget = nativeBinding.getBinaryTarget
 module.exports.getDefaultMaxCacheSize = nativeBinding.getDefaultMaxCacheSize
 module.exports.getEventDimensions = nativeBinding.getEventDimensions
-module.exports.getFilesForOutputs = nativeBinding.getFilesForOutputs
 module.exports.getFilesForOutputsBatch = nativeBinding.getFilesForOutputsBatch
 module.exports.getMainWorktreeRoot = nativeBinding.getMainWorktreeRoot
 module.exports.getTransformableOutputs = nativeBinding.getTransformableOutputs
