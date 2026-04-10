@@ -94,14 +94,20 @@ pub fn hash_json_files(
                 continue;
             };
 
-            let filtered = filter_json_value(&parsed, fields, exclude_fields);
-
-            // Stream canonical (sorted-key) JSON bytes straight into the hasher.
-            // The byte sequence is deterministic and defines the cache key, so it
-            // MUST NOT change once released — do not reformat without a migration.
+            // Stream the JSON bytes (object keys sorted at every level) straight
+            // into the hasher. The byte sequence is deterministic and defines the
+            // cache key, so it MUST NOT change once released — do not reformat
+            // without a migration.
             debug!("Adding {} to hash", file_path);
             hasher.update(file_path.as_bytes());
-            hash_canonical_json(&mut hasher, &filtered);
+            // When no filters are set, skip the filter step to avoid cloning the
+            // parsed tree just to return it unchanged.
+            if fields.is_none() && exclude_fields.is_none() {
+                hash_sorted_json(&mut hasher, &parsed);
+            } else {
+                let filtered = filter_json_value(&parsed, fields, exclude_fields);
+                hash_sorted_json(&mut hasher, &filtered);
+            }
             result_files.push(file_path.to_string());
             trace!("hash_json {}: {:?}", file_path, file_start.elapsed());
         }
@@ -122,7 +128,6 @@ fn filter_json_value(
     fields: Option<&[String]>,
     exclude_fields: Option<&[String]>,
 ) -> Value {
-    // If no filtering specified, return the whole value
     if fields.is_none() && exclude_fields.is_none() {
         return value.clone();
     }
@@ -132,39 +137,40 @@ fn filter_json_value(
     };
 
     let mut result = if let Some(fields) = fields {
-        // Allowlist: only include specified fields
         let mut filtered = serde_json::Map::new();
         for field_path in fields {
-            let parts: Vec<&str> = field_path.splitn(2, '.').collect();
-            let key = parts[0];
-            if let Some(val) = obj.get(key) {
-                if parts.len() > 1 {
-                    // Nested path: extract nested field
-                    let nested = extract_nested_field(val, parts[1]);
-                    if let Some(nested_val) = nested {
-                        // Merge into existing key if already present
-                        if let Some(existing) = filtered.get(key) {
-                            if let (Some(existing_obj), Some(nested_obj)) =
-                                (existing.as_object(), nested_val.as_object())
-                            {
-                                let mut merged = existing_obj.clone();
-                                for (k, v) in nested_obj {
-                                    merged.insert(k.clone(), v.clone());
-                                }
-                                filtered.insert(key.to_string(), Value::Object(merged));
-                            }
-                        } else {
-                            filtered.insert(key.to_string(), nested_val);
-                        }
+            let (key, rest) = match field_path.split_once('.') {
+                Some((k, r)) => (k, Some(r)),
+                None => (field_path.as_str(), None),
+            };
+            let Some(val) = obj.get(key) else {
+                continue;
+            };
+            let Some(rest) = rest else {
+                filtered.insert(key.to_string(), val.clone());
+                continue;
+            };
+            let Some(nested_val) = extract_nested_field(val, rest) else {
+                continue;
+            };
+            // Merge into existing key if already present so sibling paths like
+            // ["a.b", "a.c"] produce a single {"a": {"b", "c"}} entry.
+            if let Some(existing) = filtered.get(key) {
+                if let (Some(existing_obj), Some(nested_obj)) =
+                    (existing.as_object(), nested_val.as_object())
+                {
+                    let mut merged = existing_obj.clone();
+                    for (k, v) in nested_obj {
+                        merged.insert(k.clone(), v.clone());
                     }
-                } else {
-                    filtered.insert(key.to_string(), val.clone());
+                    filtered.insert(key.to_string(), Value::Object(merged));
                 }
+            } else {
+                filtered.insert(key.to_string(), nested_val);
             }
         }
         filtered
     } else {
-        // No allowlist — start with everything
         obj.clone()
     };
 
@@ -180,57 +186,53 @@ fn filter_json_value(
 
 /// Extracts a nested field from a JSON value using dot-notation path.
 /// Returns the value wrapped in its parent structure.
-/// e.g., for path "target" on {"target": "ES2021", "paths": {...}},
-/// returns {"target": "ES2021"}
-fn extract_nested_field(value: &Value, remaining_path: &str) -> Option<Value> {
-    let parts: Vec<&str> = remaining_path.splitn(2, '.').collect();
-    let key = parts[0];
-
-    match value.as_object() {
-        Some(obj) => {
-            if let Some(val) = obj.get(key) {
-                if parts.len() > 1 {
-                    // More nesting
-                    extract_nested_field(val, parts[1]).map(|nested| {
-                        let mut wrapper = serde_json::Map::new();
-                        wrapper.insert(key.to_string(), nested);
-                        Value::Object(wrapper)
-                    })
-                } else {
-                    let mut wrapper = serde_json::Map::new();
-                    wrapper.insert(key.to_string(), val.clone());
-                    Some(Value::Object(wrapper))
-                }
-            } else {
-                None
-            }
-        }
-        None => None,
-    }
+/// e.g., for path "target" on `{"target": "ES2021", "paths": {...}}`,
+/// returns `{"target": "ES2021"}`.
+fn extract_nested_field(value: &Value, path: &str) -> Option<Value> {
+    let (key, rest) = match path.split_once('.') {
+        Some((k, r)) => (k, Some(r)),
+        None => (path, None),
+    };
+    let val = value.as_object()?.get(key)?;
+    let inner = match rest {
+        Some(rest) => extract_nested_field(val, rest)?,
+        None => val.clone(),
+    };
+    let mut wrapper = serde_json::Map::new();
+    wrapper.insert(key.to_string(), inner);
+    Some(Value::Object(wrapper))
 }
 
 /// Removes a field from a JSON object using dot-notation path.
 fn remove_nested_field(obj: &mut serde_json::Map<String, Value>, path: &str) {
-    let parts: Vec<&str> = path.splitn(2, '.').collect();
-    let key = parts[0];
-
-    if parts.len() > 1 {
-        // Recurse into nested object
-        if let Some(Value::Object(nested)) = obj.get_mut(key) {
-            remove_nested_field(nested, parts[1]);
+    match path.split_once('.') {
+        Some((key, rest)) => {
+            if let Some(Value::Object(nested)) = obj.get_mut(key) {
+                remove_nested_field(nested, rest);
+            }
         }
-    } else {
-        obj.remove(key);
+        None => {
+            obj.remove(path);
+        }
     }
 }
 
-/// Feeds a canonical (deterministic) JSON encoding of `value` directly into
-/// `hasher`. Object keys are sorted at every level; arrays preserve their
-/// order. Matches `{"a":1,"b":{...}}`-style compact JSON without whitespace.
+/// Feeds a deterministic byte encoding of `value` into `hasher` so that two
+/// JSON objects with the same contents but different key insertion order
+/// produce the same hash.
+///
+/// The encoding is compact JSON (no whitespace) with object keys sorted at
+/// every level. Arrays preserve their order. Leaf values are serialized by
+/// `serde_json` so strings, numbers, bools, and null match standard JSON.
+///
+/// This is **not** RFC 8785 / JCS-compliant canonical JSON — it only sorts
+/// keys. Number normalization, Unicode escape canonicalization, etc. are not
+/// performed. The goal here is cache-key stability within this codebase, not
+/// cross-implementation interoperability.
 ///
 /// The produced byte sequence defines the cache key and MUST NOT change once
 /// released — do not reformat without a migration.
-fn hash_canonical_json(hasher: &mut Xxh3, value: &Value) {
+fn hash_sorted_json(hasher: &mut Xxh3, value: &Value) {
     match value {
         Value::Object(map) => {
             let mut sorted: Vec<(&String, &Value)> = map.iter().collect();
@@ -244,7 +246,7 @@ fn hash_canonical_json(hasher: &mut Xxh3, value: &Value) {
                 let key_json = serde_json::to_string(k).unwrap();
                 hasher.update(key_json.as_bytes());
                 hasher.update(b":");
-                hash_canonical_json(hasher, v);
+                hash_sorted_json(hasher, v);
             }
             hasher.update(b"}");
         }
@@ -254,7 +256,7 @@ fn hash_canonical_json(hasher: &mut Xxh3, value: &Value) {
                 if i > 0 {
                     hasher.update(b",");
                 }
-                hash_canonical_json(hasher, v);
+                hash_sorted_json(hasher, v);
             }
             hasher.update(b"]");
         }
@@ -311,6 +313,25 @@ mod tests {
     }
 
     #[test]
+    fn test_filter_merges_sibling_fields() {
+        // Sibling paths under the same parent must merge, not overwrite each other
+        let json: Value = serde_json::from_str(
+            r#"{"compilerOptions": {"target": "ES2021", "module": "commonjs", "strict": true}}"#,
+        )
+        .unwrap();
+        let fields = vec![
+            "compilerOptions.target".to_string(),
+            "compilerOptions.module".to_string(),
+        ];
+        let result = filter_json_value(&json, Some(&fields), None);
+        let expected: Value = serde_json::from_str(
+            r#"{"compilerOptions": {"target": "ES2021", "module": "commonjs"}}"#,
+        )
+        .unwrap();
+        assert_eq!(result, expected);
+    }
+
+    #[test]
     fn test_filter_exclude_nested() {
         let json: Value = serde_json::from_str(
             r#"{"compilerOptions": {"target": "ES2021", "paths": {"@foo": ["libs/foo"]}}}"#,
@@ -326,12 +347,12 @@ mod tests {
 
     fn hash_of(value: &Value) -> String {
         let mut hasher = Xxh3::new();
-        hash_canonical_json(&mut hasher, value);
+        hash_sorted_json(&mut hasher, value);
         hasher.digest().to_string()
     }
 
     #[test]
-    fn test_hash_canonical_sorts_keys() {
+    fn test_hash_sorted_json_sorts_keys() {
         // Different insertion order, same content → identical hash
         let a: Value = serde_json::from_str(r#"{"z": 1, "a": 2, "m": 3}"#).unwrap();
         let b: Value = serde_json::from_str(r#"{"a": 2, "m": 3, "z": 1}"#).unwrap();
@@ -339,14 +360,14 @@ mod tests {
     }
 
     #[test]
-    fn test_hash_canonical_nested_deterministic() {
+    fn test_hash_sorted_json_nested_deterministic() {
         let a: Value = serde_json::from_str(r#"{"b": {"z": 1, "a": 2}, "a": 3}"#).unwrap();
         let b: Value = serde_json::from_str(r#"{"a": 3, "b": {"a": 2, "z": 1}}"#).unwrap();
         assert_eq!(hash_of(&a), hash_of(&b));
     }
 
     #[test]
-    fn test_hash_canonical_distinguishes_array_order() {
+    fn test_hash_sorted_json_distinguishes_array_order() {
         // Arrays are order-sensitive, unlike objects
         let a: Value = serde_json::from_str(r#"[1, 2, 3]"#).unwrap();
         let b: Value = serde_json::from_str(r#"[3, 2, 1]"#).unwrap();
