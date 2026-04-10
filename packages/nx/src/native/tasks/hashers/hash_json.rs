@@ -180,7 +180,7 @@ fn filter_json_value(
     };
 
     let mut result = if let Some(fields) = fields {
-        let mut filtered = serde_json::Map::new();
+        let mut filtered: serde_json::Map<String, Value> = serde_json::Map::new();
         for field_path in fields {
             let (key, rest) = match field_path.split_once('.') {
                 Some((k, r)) => (k, Some(r)),
@@ -189,27 +189,26 @@ fn filter_json_value(
             let Some(val) = obj.get(key) else {
                 continue;
             };
-            let Some(rest) = rest else {
-                filtered.insert(key.to_string(), val.clone());
-                continue;
-            };
-            let Some(nested_val) = extract_nested_field(val, rest) else {
-                continue;
-            };
-            // Merge into existing key if already present so sibling paths like
-            // ["a.b", "a.c"] produce a single {"a": {"b", "c"}} entry.
-            if let Some(existing) = filtered.get(key) {
-                if let (Some(existing_obj), Some(nested_obj)) =
-                    (existing.as_object(), nested_val.as_object())
-                {
-                    let mut merged = existing_obj.clone();
-                    for (k, v) in nested_obj {
-                        merged.insert(k.clone(), v.clone());
-                    }
-                    filtered.insert(key.to_string(), Value::Object(merged));
+            // Build this field's contribution under `key`: either the full
+            // value (no sub-path) or a wrapper containing just the nested
+            // slice. `deep_merge_value` then unions it into any prior entry
+            // at `key` — recursing through nested objects so sibling paths
+            // at arbitrary depth (e.g. ["a.b.c", "a.b.d"]) accumulate
+            // instead of overwriting each other.
+            let contribution = match rest {
+                None => val.clone(),
+                Some(rest) => {
+                    let Some(nested_val) = extract_nested_field(val, rest) else {
+                        continue;
+                    };
+                    nested_val
                 }
-            } else {
-                filtered.insert(key.to_string(), nested_val);
+            };
+            match filtered.get_mut(key) {
+                Some(existing) => deep_merge_value(existing, contribution),
+                None => {
+                    filtered.insert(key.to_string(), contribution);
+                }
             }
         }
         filtered
@@ -225,6 +224,30 @@ fn filter_json_value(
     }
 
     Value::Object(result)
+}
+
+/// Recursively merges `source` into `target`.
+///
+/// When both sides are objects, keys are unioned and colliding values are
+/// deep-merged. When the two sides are not both objects (one is a primitive
+/// or array, or their types differ), `source` wins — matching the "more
+/// specific path wins" semantics so that a broader path like `["a"]` coming
+/// after a narrower path like `["a.b"]` ends with the full `a` value, and
+/// a re-specified primitive overwrites rather than silently being dropped.
+fn deep_merge_value(target: &mut Value, source: Value) {
+    match (target, source) {
+        (Value::Object(target_map), Value::Object(source_map)) => {
+            for (k, v) in source_map {
+                match target_map.get_mut(&k) {
+                    Some(existing) => deep_merge_value(existing, v),
+                    None => {
+                        target_map.insert(k, v);
+                    }
+                }
+            }
+        }
+        (target, source) => *target = source,
+    }
 }
 
 /// Extracts a nested field from a JSON value using dot-notation path.
@@ -371,6 +394,33 @@ mod tests {
             r#"{"compilerOptions": {"target": "ES2021", "module": "commonjs"}}"#,
         )
         .unwrap();
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_filter_deep_sibling_merge_preserves_all_branches() {
+        // Regression: the prior shallow merge would overwrite at depth 2.
+        // Paths ["a.b.c", "a.b.d"] against a nested source must keep BOTH
+        // `c` and `d`, not just the last one processed.
+        let json: Value =
+            serde_json::from_str(r#"{"a": {"b": {"c": 1, "d": 2, "e": 3}}}"#).unwrap();
+        let fields = vec!["a.b.c".to_string(), "a.b.d".to_string()];
+        let result = filter_json_value(&json, Some(&fields), None);
+        let expected: Value = serde_json::from_str(r#"{"a": {"b": {"c": 1, "d": 2}}}"#).unwrap();
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_filter_broader_path_subsumes_narrower() {
+        // When a narrower path comes first and a broader path comes second,
+        // the broader path wins at the shared key — the user effectively
+        // asked for everything under `a`, so sibling keys like `x` that
+        // weren't mentioned by the narrower path should still appear.
+        let json: Value =
+            serde_json::from_str(r#"{"a": {"b": {"c": 1}, "x": 99}, "other": 7}"#).unwrap();
+        let fields = vec!["a.b".to_string(), "a".to_string()];
+        let result = filter_json_value(&json, Some(&fields), None);
+        let expected: Value = serde_json::from_str(r#"{"a": {"b": {"c": 1}, "x": 99}}"#).unwrap();
         assert_eq!(result, expected);
     }
 
