@@ -415,17 +415,21 @@ export class TaskOrchestrator {
     const cacheableTasks = tasks.filter((t) =>
       isCacheableTask(t, this.options)
     );
+    if (cacheableTasks.length === 0) return [];
 
-    // 1. Fetch all cache entries in parallel
-    const cacheHits = (
-      await Promise.all(
-        cacheableTasks.map(async (task) => {
-          const cachedResult = await this.cache.get(task);
-          if (!cachedResult || cachedResult.code !== 0) return null;
-          return { task, cachedResult };
-        })
-      )
-    ).filter((r) => r !== null);
+    // 1. Batch cache lookup — one Rust/SQL call for local hits + parallel
+    //    remote retrievals for local misses, all inside DbCache.getBatch.
+    const batchResults = await this.cache.getBatch(cacheableTasks);
+    const cacheHits: {
+      task: Task;
+      cachedResult: CachedResult & { remote: boolean };
+    }[] = [];
+    for (const task of cacheableTasks) {
+      const cachedResult = batchResults.get(task.hash);
+      if (cachedResult && cachedResult.code === 0) {
+        cacheHits.push({ task, cachedResult });
+      }
+    }
 
     if (cacheHits.length === 0) return [];
 

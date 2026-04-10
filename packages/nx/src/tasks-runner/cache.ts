@@ -138,10 +138,25 @@ export class DbCache {
     }
   }
 
-  getBatch(tasks: Task[]): Map<string, CachedResult & { remote: boolean }> {
+  async getBatch(
+    tasks: Task[]
+  ): Promise<Map<string, CachedResult & { remote: boolean }>> {
     const results = new Map<string, CachedResult & { remote: boolean }>();
+    if (tasks.length === 0) return results;
+
+    // Single-task fast path: direct primary-key lookup beats rarray
+    // vtable overhead when there's nothing to amortize over.
+    if (tasks.length === 1) {
+      const res = await this.get(tasks[0]);
+      if (res) results.set(tasks[0].hash, res);
+      return results;
+    }
+
     const hashes = tasks.map((t) => t.hash);
+
+    // 1. Local: one rarray SQL query + parallel terminal output reads.
     const batchResults = this.cache.getBatch(hashes);
+    const remoteMisses: Task[] = [];
     for (let i = 0; i < tasks.length; i++) {
       const res = batchResults[i];
       if (res) {
@@ -150,8 +165,33 @@ export class DbCache {
           terminalOutput: res.terminalOutput ?? '',
           remote: false,
         });
+      } else if (this.remoteCache) {
+        remoteMisses.push(tasks[i]);
       }
     }
+
+    // 2. Remote: parallel HTTP retrievals for anything the local SQL missed.
+    //    The RemoteCache interface has no batch endpoint, so this is just
+    //    Promise.all over individual retrieve() calls.
+    if (remoteMisses.length > 0) {
+      await Promise.all(
+        remoteMisses.map(async (task) => {
+          const res = await this.remoteCache.retrieve(
+            task.hash,
+            this.cache.cacheDirectory
+          );
+          if (res) {
+            this.applyRemoteCacheResults(task.hash, res, task.outputs);
+            results.set(task.hash, {
+              ...res,
+              terminalOutput: res.terminalOutput ?? '',
+              remote: true,
+            });
+          }
+        })
+      );
+    }
+
     return results;
   }
 
