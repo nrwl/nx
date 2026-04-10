@@ -11,9 +11,71 @@ use crate::native::hasher::hash;
 use crate::native::tasks::hashers::hash_workspace_files::globs_from_workspace_globs;
 use crate::native::types::FileData;
 
+#[derive(Clone)]
 pub struct JsonHashResult {
     pub hash: String,
     pub files: Vec<String>,
+}
+
+/// Returns the file paths that a JsonFileSet instruction would read, without
+/// any disk I/O or hashing. Used by both `hash_json_files` (to know which
+/// files to open) and by `HashPlanInspector` (to report inputs without side
+/// effects).
+///
+/// `project_name` is `Some` for `{projectRoot}` inputs (match against
+/// `project_file_map`) and `None` for `{workspaceRoot}` inputs (match against
+/// `all_workspace_files` after stripping the prefix). Token resolution has
+/// already been performed upstream by the `HashPlanner`.
+pub fn collect_json_input_files<'a>(
+    json_path: &str,
+    project_name: Option<&str>,
+    project_file_map: &'a HashMap<String, Vec<FileData>>,
+    all_workspace_files: &'a [FileData],
+) -> Result<Vec<&'a str>> {
+    if let Some(project_name) = project_name {
+        // Project-root path: already resolved by the planner (e.g. "libs/my-lib/package.json")
+        let glob_set = build_glob_set(&[json_path.to_string()])?;
+        Ok(project_file_map
+            .get(project_name)
+            .map(|files| {
+                files
+                    .iter()
+                    .filter(|f| glob_set.is_match(&f.file))
+                    .map(|f| f.file.as_str())
+                    .collect()
+            })
+            .unwrap_or_default())
+    } else {
+        // Workspace-root path: still carries the `{workspaceRoot}/` prefix
+        let globs = globs_from_workspace_globs(&[json_path.to_string()]);
+        if globs.is_empty() {
+            return Ok(vec![]);
+        }
+        let glob_set = build_glob_set(&globs)?;
+        Ok(all_workspace_files
+            .iter()
+            .filter(|f| glob_set.is_match(&f.file))
+            .map(|f| f.file.as_str())
+            .collect())
+    }
+}
+
+/// Parses `bytes` as JSON, falling back to JSONC on strict-parse failure so
+/// `tsconfig.json` (with `//` comments or trailing commas) works with field
+/// filters. The fast path is `serde_json` since the overwhelming majority of
+/// JSON inputs (`package.json`, `project.json`, lockfiles) are strict JSON and
+/// we don't want to pay JSONC parsing overhead on every file.
+///
+/// Returns `None` when neither parser accepts the bytes — callers should fall
+/// back to hashing the raw bytes in that case.
+fn parse_json_or_jsonc(bytes: &[u8]) -> Option<Value> {
+    if let Ok(v) = serde_json::from_slice::<Value>(bytes) {
+        return Some(v);
+    }
+    // serde_json rejected it — might be JSONC. Retry with the JSONC parser.
+    // Requires valid UTF-8; jsonc_parser takes &str.
+    let text = std::str::from_utf8(bytes).ok()?;
+    jsonc_parser::parse_to_serde_value(text, &Default::default()).ok()?
 }
 
 /// Hashes JSON files, optionally filtering to specific fields.
@@ -24,8 +86,9 @@ pub struct JsonHashResult {
 /// `project_file_map`) and `None` for `{workspaceRoot}` patterns (match against
 /// `all_workspace_files` after stripping the prefix).
 ///
-/// Reads matching files from disk, parses JSON, filters by fields/excludeFields,
-/// and hashes the result deterministically.
+/// Reads matching files from disk, parses JSON (falling back to JSONC for files
+/// like `tsconfig.json` that may carry `//` comments or trailing commas),
+/// filters by fields/excludeFields, and hashes the result deterministically.
 pub fn hash_json_files(
     workspace_root: &str,
     json_path: &str,
@@ -35,34 +98,12 @@ pub fn hash_json_files(
     project_file_map: &HashMap<String, Vec<FileData>>,
     all_workspace_files: &[FileData],
 ) -> Result<JsonHashResult> {
-    // Resolve file paths matching the glob
-    let matched_files: Vec<&str> = if let Some(project_name) = project_name {
-        // Project-root path: already resolved by the planner (e.g. "libs/my-lib/package.json")
-        let glob_set = build_glob_set(&[json_path.to_string()])?;
-        project_file_map
-            .get(project_name)
-            .map(|files| {
-                files
-                    .iter()
-                    .filter(|f| glob_set.is_match(&f.file))
-                    .map(|f| f.file.as_str())
-                    .collect()
-            })
-            .unwrap_or_default()
-    } else {
-        // Workspace-root path: still carries the `{workspaceRoot}/` prefix
-        let globs = globs_from_workspace_globs(&[json_path.to_string()]);
-        if globs.is_empty() {
-            vec![]
-        } else {
-            let glob_set = build_glob_set(&globs)?;
-            all_workspace_files
-                .iter()
-                .filter(|f| glob_set.is_match(&f.file))
-                .map(|f| f.file.as_str())
-                .collect()
-        }
-    };
+    let matched_files = collect_json_input_files(
+        json_path,
+        project_name,
+        project_file_map,
+        all_workspace_files,
+    )?;
 
     if matched_files.is_empty() {
         return Ok(JsonHashResult {
@@ -84,10 +125,12 @@ pub fn hash_json_files(
                 continue;
             };
 
-            let Ok(parsed) = serde_json::from_slice::<Value>(&bytes)
-                .inspect_err(|e| trace!("Failed to parse JSON file {:?}: {}", abs_path, e))
-            else {
-                // If we can't parse it as JSON, hash the raw bytes
+            let Some(parsed) = parse_json_or_jsonc(&bytes) else {
+                // Neither strict JSON nor JSONC accepted the bytes. Fall back
+                // to hashing the raw file contents so the input is still
+                // covered by the cache key — but field filters are necessarily
+                // ignored in this branch since we have no parsed tree.
+                trace!("Failed to parse JSON/JSONC file {:?}", abs_path);
                 hasher.update(file_path.as_bytes());
                 hasher.update(&bytes);
                 result_files.push(file_path.to_string());
@@ -489,5 +532,68 @@ mod tests {
 
         assert!(!result.hash.is_empty());
         assert_eq!(result.files, vec!["libs/my-lib/package.json"]);
+    }
+
+    #[test]
+    fn test_hash_json_jsonc_fallback_respects_field_filter() {
+        // A `tsconfig.json` written as JSONC (with `//` comments and a
+        // trailing comma) must still go through the field filter — the
+        // hash should match a strict-JSON equivalent with the same filtered
+        // fields, proving we parsed it rather than falling back to raw bytes.
+        let dir = tempfile::tempdir().unwrap();
+        let ws_root = dir.path().to_str().unwrap();
+
+        let jsonc = r#"{
+            // compiler settings
+            "compilerOptions": {
+                "target": "ES2021",
+                "module": "commonjs", /* module system */
+                "strict": true,
+            },
+            "exclude": ["node_modules"],
+        }"#;
+        std::fs::write(dir.path().join("tsconfig.json"), jsonc).unwrap();
+
+        let all_workspace_files = vec![FileData {
+            file: "tsconfig.json".into(),
+            hash: "abc".into(),
+        }];
+        let project_file_map: HashMap<String, Vec<FileData>> = HashMap::new();
+
+        let jsonc_result = hash_json_files(
+            ws_root,
+            "{workspaceRoot}/tsconfig.json",
+            None,
+            Some(&["compilerOptions.target".to_string()]),
+            None,
+            &project_file_map,
+            &all_workspace_files,
+        )
+        .unwrap();
+
+        // Now write a strict-JSON file with the same semantic content but
+        // different whitespace and key order — filtered hash must match.
+        let dir2 = tempfile::tempdir().unwrap();
+        let ws_root2 = dir2.path().to_str().unwrap();
+        let strict = r#"{"exclude":["node_modules"],"compilerOptions":{"strict":true,"module":"commonjs","target":"ES2021"}}"#;
+        std::fs::write(dir2.path().join("tsconfig.json"), strict).unwrap();
+
+        let strict_result = hash_json_files(
+            ws_root2,
+            "{workspaceRoot}/tsconfig.json",
+            None,
+            Some(&["compilerOptions.target".to_string()]),
+            None,
+            &project_file_map,
+            &all_workspace_files,
+        )
+        .unwrap();
+
+        assert_eq!(
+            jsonc_result.hash, strict_result.hash,
+            "JSONC file with comments/trailing commas should produce the \
+             same filtered hash as strict JSON — if this fails, the JSONC \
+             fallback is not being hit and we're hashing raw bytes"
+        );
     }
 }
