@@ -6,7 +6,7 @@ import { isCI } from 'nx/src/devkit-internals';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { MavenAnalysisData, MavenPluginOptions } from './types';
 import { detectMavenExecutable } from '../utils/detect-maven-executable';
-import * as treeKill from 'tree-kill';
+const treeKill = require('tree-kill');
 
 const DEFAULT_ANALYSIS_TIMEOUT_SECONDS = isCI() ? 600 : 120;
 
