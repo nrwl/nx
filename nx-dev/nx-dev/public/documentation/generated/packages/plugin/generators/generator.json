@@ -1,0 +1,70 @@
+{
+  "name": "generator",
+  "factory": "./src/generators/generator/generator",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxPluginGenerator",
+    "title": "Create a Generator for an Nx Plugin",
+    "description": "Create a Generator for an Nx Plugin.",
+    "type": "object",
+    "examples": [
+      {
+        "description": "Generate a generator exported with the name matching the file name. It results in the generator `foo` at `mylib/src/generators/foo.ts`",
+        "command": "nx g @nx/plugin:generator mylib/src/generators/foo.ts"
+      },
+      {
+        "description": "Generate a generator without providing the file extension. It results in the generator `foo` at `mylib/src/generators/foo.ts`",
+        "command": "nx g @nx/plugin:generator mylib/src/generators/foo"
+      },
+      {
+        "description": "Generate a generator exported with a different name from the file name. It results in the generator `custom` at `mylib/src/generators/foo.ts`",
+        "command": "nx g @nx/plugin:generator mylib/src/generators/foo --name=custom"
+      }
+    ],
+    "properties": {
+      "path": {
+        "type": "string",
+        "description": "The file path to the generator. Relative to the current working directory.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What is the generator file path?",
+        "x-priority": "important"
+      },
+      "name": {
+        "type": "string",
+        "description": "The generator name to export in the plugin generators collection."
+      },
+      "description": {
+        "type": "string",
+        "description": "Generator description.",
+        "x-priority": "important"
+      },
+      "unitTestRunner": {
+        "type": "string",
+        "enum": ["jest", "vitest", "none"],
+        "description": "Test runner to use for unit tests.",
+        "default": "jest"
+      },
+      "skipLintChecks": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not add an eslint configuration for plugin json files."
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not format files with prettier.",
+        "x-priority": "internal"
+      }
+    },
+    "required": ["path"],
+    "additionalProperties": false,
+    "presets": []
+  },
+  "description": "Create a generator for an Nx Plugin.",
+  "implementation": "/packages/plugin/src/generators/generator/generator.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/plugin/src/generators/generator/schema.json",
+  "type": "generator"
+}

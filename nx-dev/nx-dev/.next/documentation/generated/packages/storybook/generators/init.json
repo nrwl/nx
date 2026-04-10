@@ -1,0 +1,42 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init#initGeneratorInternal",
+  "schema": {
+    "cli": "nx",
+    "title": "Add Storybook Configuration to the workspace",
+    "description": "Add Storybook Configuration to the workspace.",
+    "$id": "init-storybook-plugin",
+    "type": "object",
+    "properties": {
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false
+      },
+      "skipPackageJson": {
+        "description": "Do not add dependencies to `package.json`.",
+        "type": "boolean",
+        "default": false
+      },
+      "keepExistingVersions": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Keep existing dependencies versions",
+        "default": false
+      },
+      "updatePackageScripts": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Update `package.json` scripts with inferred targets",
+        "default": false
+      }
+    },
+    "presets": []
+  },
+  "description": "Add Storybook configuration to the workspace.",
+  "aliases": ["ng-add"],
+  "hidden": true,
+  "implementation": "/packages/storybook/src/generators/init/init#initGeneratorInternal.ts",
+  "path": "/packages/storybook/src/generators/init/schema.json",
+  "type": "generator"
+}

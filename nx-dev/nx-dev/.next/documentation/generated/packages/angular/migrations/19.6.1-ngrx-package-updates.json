@@ -1,0 +1,15 @@
+{
+  "name": "19.6.1-ngrx-package-updates",
+  "version": "19.6.1-beta.0",
+  "requires": { "@angular/core": "^18.0.0" },
+  "packages": {
+    "@ngrx/store": { "version": "^18.0.2", "alwaysAddToPackageJson": false }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration"
+}

@@ -1,0 +1,14 @@
+{
+  "name": "add-project-report-all",
+  "version": "19.4.0-beta.1",
+  "cli": "nx",
+  "description": "Add task projectReportAll to build.gradle file",
+  "factory": "./src/migrations/19-4-0/add-project-report-all",
+  "implementation": "/packages/gradle/src/migrations/19-4-0/add-project-report-all.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/gradle",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

@@ -1,0 +1,262 @@
+{
+  "name": "20.8.0-package-updates",
+  "version": "20.8.0-beta.0",
+  "packages": {
+    "@storybook/test-runner": {
+      "version": "^0.22.0",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/core-server": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/angular": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/react": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/react-vite": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/react-webpack5": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/web-components-vite": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/web-components-webpack5": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/addon-a11y": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/addon-actions": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/addon-backgrounds": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/addon-controls": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/addon-docs": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/addon-essentials": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/addon-interactions": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/addon-mdx-gfm": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/addon-highlight": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/addon-jest": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/addon-links": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/addon-measure": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/addon-outline": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/addon-storysource": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/addon-toolbars": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/addon-viewport": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/vue3": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/vue3-vite": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/addon-onboarding": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/addon-themes": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/blocks": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/builder-manager": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/builder-webpack5": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/cli": { "version": "^8.6.11", "alwaysAddToPackageJson": false },
+    "@storybook/components": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/core": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/core-common": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/core-events": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/core-webpack": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/csf-tools": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/html": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/html-vite": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/html-webpack5": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/manager": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/manager-api": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/nextjs": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/preact": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/preact-vite": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/preact-webpack5": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/preset-create-react-app": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/preset-html-webpack": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/preset-preact-webpack": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/preset-react-webpack": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/preset-server-webpack": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/preset-vue3-webpack": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/router": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/server": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/server-webpack5": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/svelte": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/svelte-vite": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/sveltekit": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/theming": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/types": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/vue3-webpack5": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/web-components": {
+      "version": "^8.6.11",
+      "alwaysAddToPackageJson": false
+    }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/storybook",
+  "schema": null,
+  "type": "migration"
+}

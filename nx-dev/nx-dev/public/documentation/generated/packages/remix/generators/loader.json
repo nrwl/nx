@@ -1,0 +1,25 @@
+{
+  "name": "loader",
+  "implementation": "/packages/remix/src/generators/loader/loader.impl.ts",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "$id": "data-loader",
+    "type": "object",
+    "description": "Generate an loader for a given route.",
+    "properties": {
+      "path": {
+        "type": "string",
+        "description": "The route path or path to the filename of the route.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What is the path of the route? (e.g. 'apps/demo/app/routes/foo/bar.tsx')"
+      }
+    },
+    "required": ["path"],
+    "presets": []
+  },
+  "description": "Add a loader function to an existing route",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/remix/src/generators/loader/schema.json",
+  "type": "generator"
+}
