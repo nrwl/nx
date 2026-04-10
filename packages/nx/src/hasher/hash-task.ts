@@ -214,6 +214,10 @@ export async function hashTasks(
   await Promise.all([...customHasherPromises, batchHashPromise]);
 
   if (taskDetails?.recordTaskDetails) {
+    // Guard against a custom hasher resolving with a falsy value —
+    // the built-in batch hasher always produces a hash, but user-written
+    // custom hashers are untrusted and an empty/undefined hash would
+    // violate the task_details schema downstream.
     const hashedTasks = tasks.filter((task) => task.hash);
     if (hashedTasks.length > 0) {
       taskDetails.recordTaskDetails(
