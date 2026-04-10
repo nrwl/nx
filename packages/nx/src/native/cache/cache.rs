@@ -1,12 +1,13 @@
 use std::fs::{create_dir_all, read_to_string, write};
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 use std::time::Instant;
 use tracing::{debug, trace};
 
 use fs_extra::remove_items;
 use rayon::prelude::*;
 use regex::Regex;
-use rusqlite::params;
+use rusqlite::{params, types::Value};
 use sysinfo::Disks;
 
 use crate::native::cache::expand_outputs::_expand_outputs;
@@ -148,25 +149,29 @@ impl NxCache {
             return Ok(vec![]);
         }
 
-        // Build a single UPDATE ... WHERE hash IN (...) RETURNING query
-        let placeholders: Vec<String> = (1..=hashes.len()).map(|i| format!("?{}", i)).collect();
-        let sql = format!(
-            "UPDATE cache_outputs SET accessed_at = CURRENT_TIMESTAMP WHERE hash IN ({}) RETURNING hash, code, size",
-            placeholders.join(", ")
+        // rarray binds the whole Vec as one parameter so the SQL text is
+        // constant regardless of batch size — the prepared-statement cache
+        // hits forever and we sidestep SQLite's per-statement parameter cap.
+        let values = Rc::new(
+            hashes
+                .iter()
+                .map(|h| Value::from(h.clone()))
+                .collect::<Vec<Value>>(),
         );
 
         let db = self.db.lock().unwrap();
-        let mut stmt = db.prepare(&sql)?;
-
-        let params: Vec<&dyn rusqlite::ToSql> =
-            hashes.iter().map(|h| h as &dyn rusqlite::ToSql).collect();
+        let mut stmt = db.prepare(
+            "UPDATE cache_outputs SET accessed_at = CURRENT_TIMESTAMP
+             WHERE hash IN rarray(?1)
+             RETURNING hash, code, size",
+        )?;
 
         // Collect (hash, code, size) tuples from DB. Propagate row-level
         // errors instead of silently skipping malformed rows — a bad row
         // means schema drift or corruption and shouldn't masquerade as a
         // cache miss.
         let db_results: Vec<(String, i16, i64)> = stmt
-            .query_map(params.as_slice(), |row| {
+            .query_map([values], |row| {
                 Ok((
                     row.get::<_, String>(0)?,
                     row.get::<_, i16>(1)?,
