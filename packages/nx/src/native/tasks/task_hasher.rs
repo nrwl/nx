@@ -166,9 +166,8 @@ impl TaskHasher {
         #[napi(ts_arg_type = "ExternalObject<ProjectGraph>")] project_graph: &External<
             Arc<ProjectGraph>,
         >,
-        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<FileData>>>")] project_file_map: &External<
-            Arc<ProjectFiles>,
-        >,
+        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<FileData>>>")]
+        project_file_map: &External<Arc<ProjectFiles>>,
         #[napi(ts_arg_type = "ExternalObject<Array<FileData>>")] all_workspace_files: &External<
             Arc<Vec<FileData>>,
         >,
