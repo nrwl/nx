@@ -1,6 +1,17 @@
 ---
-title: Nx Fails in Claude Code Sandbox
-description: Fix Nx commands failing inside Claude Code's sandbox by allowing Unix socket access for daemon and plugin communication.
+title: Fix Nx Commands Failing in Claude Code Sandbox
+description: Nx commands fail inside Claude Code sandbox because Unix sockets are blocked. Set allowAllUnixSockets to fix daemon, plugin isolation, and forked process errors.
+keywords:
+  [
+    Claude Code,
+    sandbox,
+    Unix sockets,
+    Nx daemon,
+    allowAllUnixSockets,
+    Seatbelt,
+    bubblewrap,
+    plugin isolation,
+  ]
 filter: 'type:References'
 ---
 

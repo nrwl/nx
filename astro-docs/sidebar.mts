@@ -578,7 +578,7 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'troubleshooting/troubleshoot-nx-install-issues',
           },
           {
-            label: 'Nx fails in Claude Code sandbox',
+            label: 'Fix Nx in Claude Code sandbox',
             link: 'troubleshooting/nx-sandbox-unix-sockets',
           },
           {
