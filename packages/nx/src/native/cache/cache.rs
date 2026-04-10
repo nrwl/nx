@@ -104,11 +104,10 @@ impl NxCache {
     pub fn get(&mut self, hash: String) -> anyhow::Result<Option<CachedResult>> {
         let start = Instant::now();
         trace!("GET {}", &hash);
-        let task_dir = self.cache_path.join(&hash);
 
-        let terminal_output_path = self.get_task_outputs_path_internal(&hash);
-
-        let r = self
+        // Direct primary-key lookup — cheaper per call than routing through
+        // fetch_cache_rows() + rarray for a single hash.
+        let row_data: Option<(i16, i64)> = self
             .db
             .lock()
             .unwrap()
@@ -118,26 +117,15 @@ impl NxCache {
                     WHERE hash = ?1
                     RETURNING code, size",
                 params![hash],
-                |row| {
-                    let code: i16 = row.get(0)?;
-                    let size: i64 = row.get(1)?;
-
-                    let start = Instant::now();
-                    let terminal_output =
-                        read_to_string(terminal_output_path).unwrap_or(String::from(""));
-                    trace!("TIME reading terminal outputs {:?}", start.elapsed());
-
-                    Ok(CachedResult {
-                        code,
-                        terminal_output: Some(terminal_output),
-                        outputs_path: task_dir.to_normalized_string(),
-                        size: Some(size),
-                    })
-                },
+                |row| Ok((row.get::<_, i16>(0)?, row.get::<_, i64>(1)?)),
             )
             .map_err(|e| anyhow::anyhow!("Unable to get {}: {:?}", &hash, e))?;
+
+        // Terminal output file read happens AFTER the lock is released.
+        let result = row_data.map(|(code, size)| self.build_cached_result(&hash, code, size));
+
         trace!("GET {} {:?}", &hash, start.elapsed());
-        Ok(r)
+        Ok(result)
     }
 
     #[napi]
