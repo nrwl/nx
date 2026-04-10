@@ -42,7 +42,13 @@
     "@nx/vitest": "workspace:*"
   },
   "peerDependencies": {
-    "@remix-run/dev": "^2.17.3"
+    "@remix-run/dev": "^2.17.3",
+    "@nx/jest": "workspace:"
+  },
+  "peerDependenciesMeta": {
+    "@nx/jest": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"
