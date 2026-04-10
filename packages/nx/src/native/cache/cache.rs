@@ -149,9 +149,34 @@ impl NxCache {
             return Ok(vec![]);
         }
 
-        // rarray binds the whole Vec as one parameter so the SQL text is
-        // constant regardless of batch size — the prepared-statement cache
-        // hits forever and we sidestep SQLite's per-statement parameter cap.
+        // 1. One SQL round-trip: look up every hash and bump accessed_at.
+        let rows = self.fetch_cache_rows(&hashes)?;
+
+        // 2. For each requested hash, read its terminal output file in
+        //    parallel. Misses stay as None so callers can correlate by index.
+        let results = hashes
+            .par_iter()
+            .map(|hash| {
+                rows.get(hash)
+                    .map(|&(code, size)| self.build_cached_result(hash, code, size))
+            })
+            .collect();
+
+        trace!("GET_BATCH {} hashes {:?}", hashes.len(), start.elapsed());
+        Ok(results)
+    }
+
+    /// Runs one `UPDATE ... RETURNING` across every requested hash and
+    /// returns the matching rows keyed by hash.
+    ///
+    /// Uses `rarray` to bind the whole Vec as a single parameter so the SQL
+    /// text is constant regardless of batch size — the prepared-statement
+    /// cache hits forever and we sidestep SQLite's per-statement parameter
+    /// cap.
+    fn fetch_cache_rows(
+        &self,
+        hashes: &[String],
+    ) -> anyhow::Result<std::collections::HashMap<String, (i16, i64)>> {
         let values = Rc::new(
             hashes
                 .iter()
@@ -166,43 +191,32 @@ impl NxCache {
              RETURNING hash, code, size",
         )?;
 
-        // Collect rows straight into a lookup map keyed by hash. Propagate
-        // row-level errors instead of silently skipping malformed rows — a
-        // bad row means schema drift or corruption and shouldn't masquerade
-        // as a cache miss.
-        let db_map: std::collections::HashMap<String, (i16, i64)> = stmt
+        // Propagate row errors instead of silently skipping malformed rows —
+        // a bad row means schema drift or corruption and shouldn't
+        // masquerade as a cache miss.
+        let rows = stmt
             .query_map([values], |row| {
-                Ok((
-                    row.get::<_, String>(0)?,
-                    (row.get::<_, i16>(1)?, row.get::<_, i64>(2)?),
-                ))
+                let hash: String = row.get(0)?;
+                let code: i16 = row.get(1)?;
+                let size: i64 = row.get(2)?;
+                Ok((hash, (code, size)))
             })?
             .collect::<rusqlite::Result<_>>()?;
-        drop(stmt);
-        drop(db);
+        Ok(rows)
+    }
 
-        // Read terminal outputs in parallel for found hashes
-        let results: Vec<Option<CachedResult>> = hashes
-            .par_iter()
-            .map(|hash| {
-                if let Some(&(code, size)) = db_map.get(hash) {
-                    let terminal_output_path = self.cache_path.join("terminalOutputs").join(hash);
-                    let terminal_output = read_to_string(terminal_output_path).unwrap_or_default();
-                    let task_dir = self.cache_path.join(hash);
-                    Some(CachedResult {
-                        code,
-                        terminal_output: Some(terminal_output),
-                        outputs_path: task_dir.to_normalized_string(),
-                        size: Some(size),
-                    })
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        trace!("GET_BATCH {} hashes {:?}", hashes.len(), start.elapsed());
-        Ok(results)
+    /// Assemble a `CachedResult` for a confirmed hit by reading its
+    /// terminal output file. Safe to call concurrently — Rayon invokes
+    /// this from multiple threads during `get_batch`.
+    fn build_cached_result(&self, hash: &str, code: i16, size: i64) -> CachedResult {
+        let terminal_output =
+            read_to_string(self.get_task_outputs_path_internal(hash)).unwrap_or_default();
+        CachedResult {
+            code,
+            terminal_output: Some(terminal_output),
+            outputs_path: self.cache_path.join(hash).to_normalized_string(),
+            size: Some(size),
+        }
     }
 
     #[napi]
