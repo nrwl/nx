@@ -10,7 +10,8 @@ When running Nx commands inside [Claude Code](https://docs.anthropic.com/en/docs
 
 Add `allowAllUnixSockets: true` to your Claude Code sandbox permissions. You can set this at the project level (`.claude/settings.local.json`) or user level (`~/.claude/settings.json`):
 
-```json {% fileName=".claude/settings.local.json" %}
+```json
+// .claude/settings.local.json
 {
   "permissions": {
     "allowAllUnixSockets": true
