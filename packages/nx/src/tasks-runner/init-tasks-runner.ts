@@ -196,29 +196,23 @@ export async function runDiscreteTasks(
     nextBatch = orchestrator.nextBatch();
   }
 
-  // Discrete tasks: bulk-resolve cache hits first, then run the
-  // remaining misses in parallel. Each returns its own Promise so the
-  // caller can await individual tasks/batches as they finish.
-  const discreteTasks = tasks.filter((task) => !batchTasks.has(task.id));
-  const cacheHitGroupId = groupId++;
-  const cacheHitsPromise = orchestrator.resolveCachedTasks(
-    true,
-    discreteTasks,
-    cacheHitGroupId
-  );
+  const taskResults = tasks
+    // Filter out tasks which were not part of batches
+    .filter((task) => !batchTasks.has(task.id))
+    .map((task) => {
+      const taskGroupId = groupId++;
+      return (async () => {
+        const hits = await orchestrator.resolveCachedTasks(
+          true,
+          [task],
+          taskGroupId
+        );
+        if (hits.length > 0) return hits;
+        return [await orchestrator.runTaskDirectly(true, task, taskGroupId)];
+      })();
+    });
 
-  const discreteTaskResults: Array<Promise<TaskResult[]>> = discreteTasks.map(
-    (task) => {
-      const missGroupId = groupId++;
-      return cacheHitsPromise.then(async (hits) => {
-        const hit = hits.find((h) => h.task.id === task.id);
-        if (hit) return [hit];
-        return [await orchestrator.runTaskDirectly(true, task, missGroupId)];
-      });
-    }
-  );
-
-  return [...batchResults, ...discreteTaskResults];
+  return [...batchResults, ...taskResults];
 }
 
 export async function runContinuousTasks(
