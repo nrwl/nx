@@ -362,7 +362,7 @@ export function findFileInPackageJsonDirectory(
  * @returns Updated string contents of the yarnrc.yml file
  */
 export function modifyYarnRcYmlToFitNewDirectory(contents: string): string {
-  const { parseSyml, stringifySyml } = require('@yarnpkg/parsers');
+  const { parseSyml, stringifySyml } = require('./yarn-syml');
   const parsed: {
     yarnPath?: string;
     plugins?: (string | { path: string; spec: string })[];

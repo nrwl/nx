@@ -78,7 +78,7 @@ import {
 import { readNxJson } from '../../config/configuration';
 import { runNxSync } from '../../utils/child-process';
 import { daemonClient } from '../../daemon/client/client';
-import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import { isNxCloudUsed, isNxCloudDisabled } from '../../utils/nx-cloud-utils';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
@@ -1551,6 +1551,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
         ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
         (await isMigratingToNewMajor(from, opts.targetVersion)) &&
         !isCI() &&
+        !isNxCloudDisabled(originalNxJson) &&
         !isNxCloudUsed(originalNxJson)
       ) {
         output.success({

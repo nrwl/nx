@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node", "jest"]
+  },
+  "include": [],
+  "files": [],
+  "references": [
+    {
+      "path": "../utils"
+    },
+    {
+      "path": "../../packages/nx"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}

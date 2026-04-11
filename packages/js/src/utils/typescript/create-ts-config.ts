@@ -14,7 +14,6 @@ export const tsConfigBaseOptions = {
   lib: ['es2020', 'dom'],
   skipLibCheck: true,
   skipDefaultLibCheck: true,
-  baseUrl: '.',
   paths: {},
 };
 
@@ -30,10 +29,6 @@ export function extractTsConfigBase(host: Tree) {
         tsconfig.compilerOptions[compilerOption];
       delete tsconfig.compilerOptions[compilerOption];
     }
-  }
-  // If we don't set baseDir then builds will fail when more than one projects exist.
-  if (typeof baseCompilerOptions.baseUrl === 'undefined') {
-    baseCompilerOptions.baseUrl = '.';
   }
   writeJson(host, 'tsconfig.base.json', {
     compileOnSave: false,

@@ -1,5 +1,5 @@
 import * as pc from 'picocolors';
-import { ChildProcess, exec, Serializable } from 'child_process';
+import { ChildProcess, spawn, Serializable } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { isAbsolute, join } from 'path';
 import treeKill from 'tree-kill';
@@ -17,7 +17,6 @@ import {
 import { registerTaskProcessStart } from '../../tasks-runner/task-io-service';
 import { signalToCode } from '../../utils/exit-codes';
 import {
-  LARGE_BUFFER,
   NormalizedRunCommandsOptions,
   RunCommandsCommandOptions,
 } from './run-commands.impl';
@@ -399,8 +398,8 @@ class RunningNodeProcess implements RunningTask {
     if (streamOutput) {
       process.stdout.write(header);
     }
-    this.childProcess = exec(commandConfig.command, {
-      maxBuffer: LARGE_BUFFER,
+    this.childProcess = spawn(commandConfig.command, [], {
+      shell: true,
       env,
       cwd,
       windowsHide: true,

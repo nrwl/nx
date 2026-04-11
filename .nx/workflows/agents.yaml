@@ -52,6 +52,10 @@ common-init-steps: &common-init-steps
     script: |
       cargo fetch
 
+  - name: Install hyperfine
+    script: |
+      cargo install hyperfine
+
   - name: Setup gradle
     script: |
       ./gradlew wrapper
