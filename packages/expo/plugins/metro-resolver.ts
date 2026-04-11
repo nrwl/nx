@@ -1,5 +1,6 @@
 import type { MatchPath } from 'tsconfig-paths';
 import { createMatchPath, loadConfig } from 'tsconfig-paths';
+import { resolvePathsBaseUrl } from '@nx/js/src/utils/typescript/ts-config';
 import * as pc from 'picocolors';
 import { CachedInputFileSystem, ResolverFactory } from 'enhanced-resolve';
 import { dirname, join } from 'path';
@@ -211,7 +212,7 @@ function getMatcher(debug: boolean) {
   if (!matcher) {
     const result = loadConfig();
     if (result.resultType === 'success') {
-      absoluteBaseUrl = result.absoluteBaseUrl;
+      absoluteBaseUrl = resolvePathsBaseUrl(result.configFileAbsolutePath);
       paths = result.paths;
       if (debug) {
         console.log(

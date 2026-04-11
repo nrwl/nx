@@ -58,7 +58,7 @@ use super::tui_state::TuiState;
 /// }
 ///
 /// impl App {
-///     fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
+///     fn update_task_status(&mut self, task_id: &str, status: TaskStatus) {
 ///         self.core.update_task_status(task_id, status);
 ///     }
 /// }
@@ -103,18 +103,18 @@ impl TuiCore {
     pub fn start_tasks(&self, tasks: &[Task]) {
         let mut state = self.state.lock();
         for task in tasks {
-            state.record_task_start(task.id.clone());
-            state.update_task_status(task.id.clone(), TaskStatus::InProgress);
+            state.record_task_start(&task.id);
+            state.update_task_status(&task.id, TaskStatus::InProgress);
         }
     }
 
     /// Update task status with automatic timing recording
-    pub fn update_task_status(&self, task_id: String, status: TaskStatus) {
+    pub fn update_task_status(&self, task_id: &str, status: TaskStatus) {
         let mut state = self.state.lock();
 
         // Record start time when task transitions to InProgress
-        if status == TaskStatus::InProgress && state.get_task_timing(&task_id).0.is_none() {
-            state.record_task_start(task_id.clone());
+        if status == TaskStatus::InProgress && state.get_task_timing(task_id).0.is_none() {
+            state.record_task_start(task_id);
         }
 
         state.update_task_status(task_id, status);
@@ -124,13 +124,13 @@ impl TuiCore {
     pub fn end_tasks(&self, task_results: &[TaskResult]) {
         let mut state = self.state.lock();
         for result in task_results {
-            state.record_task_end(result.task.id.clone());
+            state.record_task_end(&result.task.id);
             let status = if result.code == 0 {
                 TaskStatus::Success
             } else {
                 TaskStatus::Failure
             };
-            state.update_task_status(result.task.id.clone(), status);
+            state.update_task_status(&result.task.id, status);
         }
     }
 

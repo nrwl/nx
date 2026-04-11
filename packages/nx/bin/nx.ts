@@ -215,7 +215,6 @@ function isNxCloudCommand(command: string): boolean {
     'view-logs',
     'fix-ci',
     'record',
-    'polygraph',
     'download-cloud-client',
   ];
   return nxCloudCommands.includes(command);

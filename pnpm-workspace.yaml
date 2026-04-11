@@ -1,4 +1,5 @@
 packages:
+  - 'benchmarks'
   - 'packages/*'
   - 'e2e/*'
   - 'graph/*'

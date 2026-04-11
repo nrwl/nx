@@ -13,7 +13,8 @@ import {
   resolvePackageVersionUsingRegistry,
 } from '../../../../utils/package-manager';
 import { connectExistingRepoToNxCloudPrompt } from '../../../nx-cloud/connect/connect-to-nx-cloud';
-import { initCloud } from '../utils';
+import { initCloud, setNeverConnectToCloud } from '../utils';
+import { MessageOptionKey } from '../../../../utils/ab-testing';
 import type { Options } from './types';
 
 // map of Angular major versions to Nx versions to use for legacy `nx init` migrations,
@@ -107,11 +108,14 @@ export async function getLegacyMigrationFunctionIfApplicable(
 
   return async () => {
     output.log({ title: '🐳 Nx initialization' });
-    const useNxCloud =
-      options.nxCloud ??
-      (options.interactive
-        ? await connectExistingRepoToNxCloudPrompt()
-        : false);
+    const nxCloudChoice: MessageOptionKey =
+      options.nxCloud === true
+        ? 'yes'
+        : options.nxCloud === false
+          ? 'skip'
+          : options.interactive
+            ? await connectExistingRepoToNxCloudPrompt()
+            : 'skip';
 
     output.log({ title: '📦 Installing dependencies' });
     const pmc = getPackageManagerCommand();
@@ -132,9 +136,11 @@ export async function getLegacyMigrationFunctionIfApplicable(
       windowsHide: true,
     });
 
-    if (useNxCloud) {
+    if (nxCloudChoice === 'yes') {
       output.log({ title: '🛠️ Setting up Nx Cloud' });
       await initCloud('nx-init-angular');
+    } else if (nxCloudChoice === 'never') {
+      setNeverConnectToCloud(repoRoot);
     }
   };
 }

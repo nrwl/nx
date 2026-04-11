@@ -536,9 +536,14 @@
 /nx-api/powerpack-s3-cache /docs/reference/remote-cache-plugins/s3-cache 301
 /nx-api/powerpack-gcs-cache /docs/reference/remote-cache-plugins/gcs-cache 301
 
+# --- remoteCacheShortUrl ---
+/remote-cache /docs/guides/tasks--caching/self-hosted-caching 301
+
 # --- powerpackRedirects ---
-/powerpack /enterprise 301
-/powerpack/* /enterprise 301
+/powerpack /docs/guides/tasks--caching/self-hosted-caching 301
+/powerpack/conformance /docs/enterprise/conformance 301
+/powerpack/owners /docs/enterprise/owners 301
+/powerpack/* /docs/enterprise 301
 /nx-enterprise/powerpack/custom-caching /docs/guides/tasks--caching/self-hosted-caching 301
 /nx-enterprise/powerpack/free-licenses-and-trials /docs/enterprise 301
 /nx-api/powerpack-owners /nx-api/owners 301

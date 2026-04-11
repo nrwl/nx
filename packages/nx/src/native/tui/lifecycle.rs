@@ -660,7 +660,7 @@ impl AppLifeCycle {
 
     #[napi]
     pub fn set_task_status(&mut self, task_id: String, status: TaskStatus) {
-        self.with_app(|app| app.update_task_status(task_id, status));
+        self.with_app(|app| app.update_task_status(&task_id, status));
     }
 
     #[napi]

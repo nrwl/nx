@@ -128,8 +128,6 @@ module.exports = withNx({
   // Transpile nx-dev packages
   transpilePackages: [
     '@nx/nx-dev-data-access-documents',
-    '@nx/nx-dev-data-access-packages',
-    '@nx/nx-dev-data-access-menu',
     '@nx/nx-dev-data-access-courses',
     '@nx/nx-dev-models-document',
     '@nx/nx-dev-models-package',
@@ -144,8 +142,6 @@ module.exports = withNx({
     '@nx/nx-dev-feature-search',
     '@nx/nx-dev-feature-analytics',
     '@nx/nx-dev-feature-feedback',
-    '@nx/nx-dev-feature-doc-viewer',
-    '@nx/nx-dev-feature-package-schema-viewer',
     '@nx/nx-dev-feature-ai',
     '@nx/nx-dev-ui-animations',
     '@nx/nx-dev-ui-blog',

@@ -15,7 +15,9 @@ export interface Schema extends JsonObject {
   maxWarnings: number;
   quiet: boolean;
   ignorePath: string | null;
-  hasTypeAwareRules: boolean;
+
+  /** @deprecated No longer has any effect. Will be removed in Nx v23. */
+  hasTypeAwareRules?: boolean;
   cacheStrategy: 'content' | 'metadata' | null;
   rulesdir: string[];
   resolvePluginsRelativeTo: string | null;
