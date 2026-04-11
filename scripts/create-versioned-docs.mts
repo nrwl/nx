@@ -358,9 +358,12 @@ if (latestTag) {
 // --- Resolve GITHUB_TOKEN (needed for GitHub stars in docs build) ---
 if (!process.env.GITHUB_TOKEN) {
   try {
-    const token = execSync("op read 'op://Employee/API Keys/github_token'", {
-      cwd: ROOT,
-    })
+    const token = execSync(
+      "op read --account tuskteam 'op://Employee/API Keys/github_token'",
+      {
+        cwd: ROOT,
+      }
+    )
       .toString()
       .trim();
     if (token) {
@@ -370,7 +373,7 @@ if (!process.env.GITHUB_TOKEN) {
   } catch {
     console.warn(
       'Could not resolve GITHUB_TOKEN from 1Password.\n' +
-        'Re-run with: GITHUB_TOKEN="$(op read \'op://Employee/API Keys/github_token\')" node ./scripts/create-versioned-docs.mts ...\n'
+        'Re-run with: GITHUB_TOKEN="$(op read --account tuskteam \'op://Employee/API Keys/github_token\')" node ./scripts/create-versioned-docs.mts ...\n'
     );
   }
 }
