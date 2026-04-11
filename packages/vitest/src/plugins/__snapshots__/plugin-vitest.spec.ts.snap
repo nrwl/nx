@@ -25,6 +25,10 @@ exports[`@nx/vitest root project should create nodes 1`] = `
                 {
                   "env": "CI",
                 },
+                {
+                  "dependentTasksOutputFiles": "**/*.js",
+                  "transitive": true,
+                },
               ],
               "metadata": {
                 "description": "Run Vitest tests",
@@ -93,6 +97,10 @@ exports[`@nx/vitest root project should create nodes with ci target name 1`] = `
                 {
                   "env": "CI",
                 },
+                {
+                  "dependentTasksOutputFiles": "**/*.js",
+                  "transitive": true,
+                },
               ],
               "metadata": {
                 "description": "Run Vitest Tests in CI",
@@ -126,6 +134,10 @@ exports[`@nx/vitest root project should create nodes with ci target name 1`] = `
                 },
                 {
                   "env": "CI",
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*.js",
+                  "transitive": true,
                 },
               ],
               "metadata": {
@@ -164,6 +176,10 @@ exports[`@nx/vitest root project should create nodes with ci target name 1`] = `
                 {
                   "env": "CI",
                 },
+                {
+                  "dependentTasksOutputFiles": "**/*.js",
+                  "transitive": true,
+                },
               ],
               "metadata": {
                 "description": "Run Vitest Tests in src/test-2.ts",
@@ -200,6 +216,10 @@ exports[`@nx/vitest root project should create nodes with ci target name 1`] = `
                 },
                 {
                   "env": "CI",
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*.js",
+                  "transitive": true,
                 },
               ],
               "metadata": {
@@ -269,6 +289,10 @@ exports[`@nx/vitest root project should create nodes with ci target name and ci 
                 {
                   "env": "CI",
                 },
+                {
+                  "dependentTasksOutputFiles": "**/*.js",
+                  "transitive": true,
+                },
               ],
               "metadata": {
                 "description": "Run Vitest Tests in CI",
@@ -302,6 +326,10 @@ exports[`@nx/vitest root project should create nodes with ci target name and ci 
                 },
                 {
                   "env": "CI",
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*.js",
+                  "transitive": true,
                 },
               ],
               "metadata": {
@@ -340,6 +368,10 @@ exports[`@nx/vitest root project should create nodes with ci target name and ci 
                 {
                   "env": "CI",
                 },
+                {
+                  "dependentTasksOutputFiles": "**/*.js",
+                  "transitive": true,
+                },
               ],
               "metadata": {
                 "description": "Run Vitest Tests in src/test-2.ts",
@@ -376,6 +408,10 @@ exports[`@nx/vitest root project should create nodes with ci target name and ci 
                 },
                 {
                   "env": "CI",
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*.js",
+                  "transitive": true,
                 },
               ],
               "metadata": {

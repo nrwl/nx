@@ -84,7 +84,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
 
     // update tsconfig.json
     const tsConfig = readJson('tsconfig.json');
-    tsConfig.compilerOptions.paths = { a: ['b'] };
+    tsConfig.compilerOptions.paths = { a: ['./b'] };
     updateFile('tsconfig.json', JSON.stringify(tsConfig, null, 2));
 
     // add an extra script file

@@ -1417,6 +1417,15 @@ export class TaskOrchestrator {
           console.error(`Unable to terminate ${taskId}\nError:`, e);
         }
       }),
+      ...Array.from(this.runningDiscreteTasks).map(
+        async ([taskId, { runningTask }]) => {
+          try {
+            await runningTask.kill();
+          } catch (e) {
+            console.error(`Unable to terminate ${taskId}\nError:`, e);
+          }
+        }
+      ),
       ...Array.from(this.runningRunCommandsTasks).map(async ([taskId, t]) => {
         try {
           await t.kill();

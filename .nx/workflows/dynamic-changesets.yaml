@@ -75,9 +75,16 @@ assignment-rules:
       - agent: linux-extra-large
         parallelism: 3
 
+  - targets:
+      - bench:*
+    run-on:
+      - agent: linux-large
+        parallelism: 1
+
   # These projects should not need to be isolated.
   - projects:
       - nx-dev
+      - astro-docs
     targets:
       - build*
     run-on:

@@ -17,7 +17,7 @@ import {
   getCustomGradleExecutableDirectoryFromPlugin,
 } from '../../utils/exec-gradle';
 import { dirname, join } from 'path';
-import { execSync } from 'child_process';
+import { spawn } from 'child_process';
 import {
   getAllDependsOn,
   getExcludeTasks,
@@ -192,26 +192,43 @@ async function runTasksInBatch(
 ): Promise<BatchResults> {
   const gradlewBatchStart = performance.mark(`gradlew-batch:start`);
 
-  const debugOptions = ' ' + (process.env.NX_GRADLE_BATCH_DEBUG ?? '');
-  const command = `java${debugOptions} -jar ${batchRunnerPath} --tasks='${JSON.stringify(
-    gradlewTasksToRun
-  )}' --workspaceRoot=${root} --args='${args
-    .join(' ')
-    .replaceAll("'", '"')}' --excludeTasks='${Array.from(excludeTasks).join(
-    ','
-  )}' --excludeTestTasks='${Array.from(excludeTestTasks).join(',')}' ${
-    process.env.NX_VERBOSE_LOGGING === 'true' ? '' : '--quiet'
-  }`;
+  const debugOptions = (process.env.NX_GRADLE_BATCH_DEBUG ?? '').trim();
+  const spawnArgs = [
+    ...(debugOptions ? debugOptions.split(/\s+/) : []),
+    '-jar',
+    batchRunnerPath,
+    `--tasks=${JSON.stringify(gradlewTasksToRun)}`,
+    `--workspaceRoot=${root}`,
+    `--args=${args.join(' ').replaceAll("'", '"')}`,
+    `--excludeTasks=${Array.from(excludeTasks).join(',')}`,
+    `--excludeTestTasks=${Array.from(excludeTestTasks).join(',')}`,
+    ...(process.env.NX_VERBOSE_LOGGING === 'true' ? [] : ['--quiet']),
+  ];
+
   // Use 'inherit' for stderr so Gradle output (tee'd to System.err
   // by TeeOutputStream) flows to the terminal in real-time.
   // stdout is piped to capture the JSON batch results.
-  const batchResults = execSync(command, {
-    cwd: workspaceRoot,
-    windowsHide: true,
-    env: process.env,
-    stdio: ['pipe', 'pipe', 'inherit'],
-    maxBuffer: LARGE_BUFFER,
-  }).toString();
+  const batchResults = await new Promise<string>((resolve, reject) => {
+    const cp = spawn('java', spawnArgs, {
+      cwd: workspaceRoot,
+      windowsHide: true,
+      env: process.env,
+      stdio: ['pipe', 'pipe', 'inherit'],
+    });
+
+    const chunks: Buffer[] = [];
+    cp.stdout.on('data', (chunk) => chunks.push(chunk));
+
+    cp.on('error', reject);
+    cp.on('close', (code) => {
+      if (code !== 0) {
+        reject(new Error(`Gradle batch runner exited with code ${code}`));
+      } else {
+        resolve(Buffer.concat(chunks).toString());
+      }
+    });
+  });
+
   const gradlewBatchEnd = performance.mark(`gradlew-batch:end`);
   performance.measure(
     `gradlew-batch`,

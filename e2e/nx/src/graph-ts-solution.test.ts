@@ -207,11 +207,10 @@ describe('Graph - TS solution setup', () => {
     runCommand(pmc.install);
 
     updateJson('tsconfig.base.json', (json) => {
-      json.compilerOptions.baseUrl = '.';
       json.compilerOptions.paths = {
-        '@proj/pkg8': ['packages/pkg8/src/index.ts'],
-        '@proj/pkg9': ['dist/packages/pkg9'],
-        '@proj/pkg14': ['packages/pkg13/src/index.ts'],
+        '@proj/pkg8': ['./packages/pkg8/src/index.ts'],
+        '@proj/pkg9': ['./dist/packages/pkg9'],
+        '@proj/pkg14': ['./packages/pkg13/src/index.ts'],
       };
       return json;
     });

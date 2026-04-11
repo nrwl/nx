@@ -25,8 +25,8 @@ describe('updatePaths', () => {
     };
     updatePaths(deps, paths);
     expect(paths).toEqual({
-      '@proj/lib': ['dist/libs/lib'],
-      '@proj/test': ['libs/test/src/index.ts'],
+      '@proj/lib': ['./dist/libs/lib'],
+      '@proj/test': ['./libs/test/src/index.ts'],
     });
   });
 
@@ -37,11 +37,11 @@ describe('updatePaths', () => {
     };
     updatePaths(deps, paths);
     expect(paths).toEqual({
-      '@proj/lib': ['dist/libs/lib'],
+      '@proj/lib': ['./dist/libs/lib'],
       '@proj/lib/sub': [
-        'dist/libs/lib/sub',
-        'dist/libs/lib/sub/src/index',
-        'dist/libs/lib/sub/src/index.ts',
+        './dist/libs/lib/sub',
+        './dist/libs/lib/sub/src/index',
+        './dist/libs/lib/sub/src/index.ts',
       ],
     });
   });
@@ -75,9 +75,9 @@ describe('updatePaths', () => {
     );
 
     expect(paths).toEqual({
-      '@proj/lib1': ['dist/libs/lib1'],
-      '@proj/lib2': ['dist/libs/lib2'],
-      '@proj/lib3': ['dist/libs/lib3'],
+      '@proj/lib1': ['./dist/libs/lib1'],
+      '@proj/lib2': ['./dist/libs/lib2'],
+      '@proj/lib3': ['./dist/libs/lib3'],
     });
   });
 });
