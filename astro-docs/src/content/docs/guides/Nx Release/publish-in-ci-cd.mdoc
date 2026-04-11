@@ -17,7 +17,7 @@ When running `nx release`, after the version updates and changelog generation, y
 ? Do you want to publish these versions? (y/N) ›
 ```
 
-To move publishing into an automated pipeline, you will want to skip publishing when running `nx release` locally. To do this automatically, use the `--skip-publish` flag:
+To move publishing into an automated pipeline, you will want to skip publishing when running [`nx release`](/docs/reference/nx-commands#nx-release) locally. To do this automatically, use the `--skip-publish` flag:
 
 ```text {% frame="terminal" title="nx release --skip-publish" %}
 ...
@@ -27,7 +27,7 @@ Skipped publishing packages.
 
 ### Use the publish subcommand
 
-Nx Release provides a publishing subcommand that performs just the publishing step. Use this in your CI/CD pipeline to publish the packages.
+Nx Release provides a publishing subcommand ([`nx release publish`](/docs/reference/nx-commands#nx-release-publish)) that performs just the publishing step. Use this in your CI/CD pipeline to publish the packages.
 
 ```text {% frame="terminal" title="nx release publish" %}
 NX   Running target nx-release-publish for 3 projects:
@@ -350,7 +350,9 @@ Before publishing Docker images, ensure you're authenticated with your Docker re
   run: npx nx release publish
 ```
 
-For changelogs, you can run `npx nx release changelog <version>` locally with the new version from the pipeline. For example, if the new version is `2501.01.be49ad6` you would run `npx nx release changelog 2501.01.be49ad6`. This will create or update the `CHANGELOG.md` files in your projects.
+See the [`nx release version`](/docs/reference/nx-commands#nx-release-version) and [`nx release publish`](/docs/reference/nx-commands#nx-release-publish) CLI references for all available options.
+
+For changelogs, you can run [`nx release changelog`](/docs/reference/nx-commands#nx-release-changelog) `<version>` locally with the new version from the pipeline. For example, if the new version is `2501.01.be49ad6` you would run `npx nx release changelog 2501.01.be49ad6`. This will create or update the `CHANGELOG.md` files in your projects.
 
 ### Using different registries
 

@@ -39,25 +39,28 @@ interface Lockfile {
   snapshots: Record<string, LockfileSnapshot>;
 }
 
-function parseArgs(): { project: string; dryRun: boolean } {
+function parseArgs(): { project: string; dryRun: boolean; verbose: boolean } {
   const args = process.argv.slice(2);
   let project = '';
   let dryRun = false;
+  let verbose = false;
 
   for (const arg of args) {
     if (arg === '--dry-run') {
       dryRun = true;
+    } else if (arg === '--verbose') {
+      verbose = true;
     } else if (!arg.startsWith('-')) {
       project = arg;
     }
   }
 
   if (!project) {
-    console.error('Usage: expand-deps <project> [--dry-run]');
+    console.error('Usage: expand-deps <project> [--dry-run] [--verbose]');
     process.exit(1);
   }
 
-  return { project, dryRun };
+  return { project, dryRun, verbose };
 }
 
 /**
@@ -145,7 +148,7 @@ function walkDeps(
 }
 
 function main() {
-  const { project, dryRun } = parseArgs();
+  const { project, dryRun, verbose } = parseArgs();
 
   const packageJsonPath = join(
     workspaceRoot,
@@ -182,18 +185,38 @@ function main() {
     string,
     { specifier: string; resolvedVersion: string }
   >();
+  const skippedDeps: string[] = [];
   for (const depName of directDepNames) {
     const importerDep = importerDeps[depName];
     if (!importerDep) {
-      console.error(
-        `ERROR: Direct dependency "${depName}" not found in lockfile importers section`
-      );
-      process.exit(1);
+      // This dep is in package.json but not in the lockfile importer section.
+      // This happens when package.json is dirty from a previous expand-deps run
+      // that wasn't cleaned up, or when someone forgot to run `pnpm install`.
+      // In CI we fail hard; locally we skip and warn.
+      if (process.env.CI) {
+        console.error(
+          `ERROR: Direct dependency "${depName}" not found in lockfile importers section. Run \`pnpm install\` first.`
+        );
+        process.exit(1);
+      }
+      skippedDeps.push(depName);
+      continue;
     }
     directDepsResolved.set(depName, {
       specifier: originalDeps[depName],
       resolvedVersion: stripPeerQualifier(importerDep.version),
     });
+  }
+
+  if (skippedDeps.length > 0) {
+    console.warn(
+      `\nWARNING: ${skippedDeps.length} dependencies were not expanded since they were missing in the lockfile. Run with --verbose to see the list. Make sure you run \`pnpm install\` first.`
+    );
+    if (verbose) {
+      for (const dep of skippedDeps) {
+        console.warn(`  - ${dep}`);
+      }
+    }
   }
 
   // Walk the full transitive dependency tree

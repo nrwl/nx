@@ -236,12 +236,15 @@ async function buildVitestTargets(
 
   // if file is vitest.config or vite.config has definition for test, create targets for test and/or atomized tests
   if (configFilePath.includes('vitest.config') || hasTest) {
+    const isTypecheckEnabled = !!(viteBuildConfig as any)?.test?.typecheck
+      ?.enabled;
     targets[options.testTargetName] = await testTarget(
       namedInputs,
       testOutputs,
       projectRoot,
       options.testMode,
-      pmc
+      pmc,
+      isTypecheckEnabled
     );
 
     if (options.ciTargetName) {
@@ -342,9 +345,11 @@ async function testTarget(
   outputs: string[],
   projectRoot: string,
   testMode: 'watch' | 'run' = 'watch',
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  isTypecheckEnabled: boolean
 ) {
   const command = testMode === 'run' ? 'vitest run' : 'vitest';
+  const depOutputsGlob = isTypecheckEnabled ? '**/*.{js,d.ts}' : '**/*.js';
   return {
     command,
     options: { cwd: joinPathFragments(projectRoot) },
@@ -357,6 +362,7 @@ async function testTarget(
         externalDependencies: ['vitest'],
       },
       { env: 'CI' },
+      { dependentTasksOutputFiles: depOutputsGlob, transitive: true },
     ],
     outputs,
     metadata: {

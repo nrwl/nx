@@ -290,10 +290,14 @@ function getInputs(
 ): TargetConfiguration['inputs'] {
   return [
     ...('production' in namedInputs
-      ? ['default', '^production']
+      ? ['default', '^default']
       : ['default', '^default']),
     {
       externalDependencies: ['next'],
+    },
+    {
+      dependentTasksOutputFiles: '**/*.d.ts',
+      transitive: true,
     },
   ];
 }

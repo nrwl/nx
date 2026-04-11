@@ -34,7 +34,7 @@ export function findProjectForPath(
    * Windows may pass Win-style file paths
    * Ensure filePath is in UNIX-style
    */
-  let currentPath = posix.normalize(filePath);
+  let currentPath = posix.normalize(filePath.replaceAll('\\', '/'));
   for (
     ;
     currentPath != posix.dirname(currentPath);

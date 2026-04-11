@@ -35,6 +35,11 @@ import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
 import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { getLockFileName } from '@nx/js';
+import {
+  walkTsconfigExtendsChain,
+  type RawTsconfigJsonCache,
+} from '@nx/js/src/internal';
 import { getInstalledJestMajorVersion } from '../utils/versions';
 
 const REPORTER_BUILTINS = new Set(['default', 'github-actions', 'summary']);
@@ -65,6 +70,11 @@ export interface JestPluginOptions {
   useJestResolver?: boolean;
 }
 
+type IsolatedModulesResult = {
+  value: boolean | undefined;
+  visitedFiles: ReadonlySet<string>;
+};
+
 type JestTargets = Awaited<ReturnType<typeof buildJestTargets>>;
 
 function readTargetsCache(cachePath: string): Record<string, JestTargets> {
@@ -90,6 +100,11 @@ export const createNodes: CreateNodesV2<JestPluginOptions> = [
     const targetsCache = readTargetsCache(cachePath);
     // Cache jest preset(s) to avoid penalties of module load times. Most of jest configs will use the same preset.
     const presetCache: Record<string, unknown> = {};
+    // Cache tsconfig reads + isolatedModules resolution. Many projects share
+    // the same base tsconfig in their extends chain — read each file once.
+    const tsconfigJsonCache: RawTsconfigJsonCache = new Map();
+    const tsconfigExistsCache = new Map<string, boolean>();
+    const isolatedModulesCache = new Map<string, IsolatedModulesResult>();
 
     const isInPackageManagerWorkspaces = buildPackageJsonWorkspacesMatcher(
       context.workspaceRoot
@@ -97,9 +112,8 @@ export const createNodes: CreateNodesV2<JestPluginOptions> = [
 
     options = normalizeOptions(options);
 
-    const pmc = getPackageManagerCommand(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
 
     const { roots: projectRoots, configFiles: validConfigFiles } =
       configFiles.reduce(
@@ -127,10 +141,52 @@ export const createNodes: CreateNodesV2<JestPluginOptions> = [
         }
       );
 
+    const lockFilePattern = getLockFileName(packageManager);
+
+    let requireCacheCleared = false;
+    const loadedConfigs: Array<{
+      rawConfig: any;
+      externalFiles: string[];
+      needsDtsInputs: boolean;
+    }> = [];
+    for (let i = 0; i < validConfigFiles.length; i++) {
+      const configFilePath = validConfigFiles[i];
+      const projectRoot = projectRoots[i];
+      const absConfigFilePath = resolve(context.workspaceRoot, configFilePath);
+      if (!requireCacheCleared && require.cache[absConfigFilePath]) {
+        clearRequireCache();
+        requireCacheCleared = true;
+      }
+      const rawConfig = await loadConfigFile(absConfigFilePath, [
+        'tsconfig.spec.json',
+        'tsconfig.test.json',
+        'tsconfig.jest.json',
+        'tsconfig.json',
+      ]);
+      const { externalFiles, needsDtsInputs } =
+        await collectExternalFileReferences(
+          rawConfig,
+          absConfigFilePath,
+          projectRoot,
+          context.workspaceRoot,
+          {
+            presetCache,
+            tsconfigJsonCache,
+            tsconfigExistsCache,
+            isolatedModulesCache,
+          }
+        );
+      loadedConfigs.push({ rawConfig, externalFiles, needsDtsInputs });
+    }
+
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
       options,
-      context
+      context,
+      loadedConfigs.map(({ externalFiles }) => [
+        lockFilePattern,
+        ...externalFiles,
+      ])
     );
 
     try {
@@ -138,8 +194,11 @@ export const createNodes: CreateNodesV2<JestPluginOptions> = [
         async (configFilePath, options, context, idx) => {
           const projectRoot = projectRoots[idx];
           const hash = hashes[idx];
+          const { rawConfig, needsDtsInputs } = loadedConfigs[idx];
 
           targetsCache[hash] ??= await buildJestTargets(
+            rawConfig,
+            needsDtsInputs,
             configFilePath,
             projectRoot,
             options,
@@ -226,6 +285,8 @@ function checkIfConfigFileShouldBeProject(
 }
 
 async function buildJestTargets(
+  rawConfig: any,
+  needsDtsInputs: boolean,
   configFilePath: string,
   projectRoot: string,
   options: JestPluginOptions,
@@ -234,18 +295,6 @@ async function buildJestTargets(
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<Pick<ProjectConfiguration, 'targets' | 'metadata'>> {
   const absConfigFilePath = resolve(context.workspaceRoot, configFilePath);
-
-  if (require.cache[absConfigFilePath]) clearRequireCache();
-  const rawConfig = await loadConfigFile(
-    absConfigFilePath,
-    // lookup for the same files we look for in the resolver and fall back to tsconfig.json
-    [
-      'tsconfig.spec.json',
-      'tsconfig.test.json',
-      'tsconfig.jest.json',
-      'tsconfig.json',
-    ]
-  );
 
   const targets: Record<string, TargetConfiguration> = {};
   const namedInputs = getNamedInputs(projectRoot, context);
@@ -299,6 +348,7 @@ async function buildJestTargets(
     projectRoot,
     context.workspaceRoot,
     presetCache,
+    needsDtsInputs,
     useJestResolver
   ));
 
@@ -466,7 +516,7 @@ async function buildJestTargets(
       ) as typeof import('jest');
       const source = new jest.SearchSource(jestContext);
 
-      const jestVersion = getInstalledJestMajorVersion()!;
+      const jestVersion = getJestMajorVersion()!;
       const specs =
         jestVersion >= 30
           ? await source.getTestPaths(config.globalConfig, config.projectConfig)
@@ -571,6 +621,7 @@ async function getInputs(
   projectRoot: string,
   workspaceRoot: string,
   presetCache: Record<string, unknown>,
+  needsDtsInputs: boolean,
   useJestResolver?: boolean
 ): Promise<TargetConfiguration['inputs']> {
   const inputs: TargetConfiguration['inputs'] = [
@@ -654,6 +705,17 @@ async function getInputs(
   }
 
   inputs.push({ externalDependencies });
+
+  // When ts-jest runs without isolatedModules, it creates a TypeScript
+  // Language Service that reads .d.ts files from dependency projects.
+  // Declare these as dependentTasksOutputFiles so changes to dependency
+  // type declarations correctly invalidate the test cache.
+  if (needsDtsInputs) {
+    inputs.push({
+      dependentTasksOutputFiles: '**/*.d.ts',
+      transitive: true,
+    });
+  }
 
   return inputs;
 }
@@ -961,6 +1023,117 @@ async function getTestPaths(
   return { specs: paths, testMatch };
 }
 
+/**
+ * Collects workspace-relative paths to files whose CONTENT the plugin reads
+ * when computing inferred targets and that live OUTSIDE the project root.
+ *
+ * Only two kinds of files qualify:
+ *  - The jest preset (loaded to read its `transform`, etc.)
+ *  - Tsconfig files in the extends chain referenced by ts-jest (read to
+ *    determine `isolatedModules`); only walked when ts-jest is not already
+ *    known to be in isolated mode.
+ *
+ * Other config references (setup files, custom resolvers, transformers,
+ * etc.) are NOT collected — the plugin only resolves their paths and emits
+ * them as task inputs; their content is not read by the plugin, so changes
+ * to them don't influence inference.
+ */
+async function collectExternalFileReferences(
+  rawConfig: any,
+  absConfigFilePath: string,
+  projectRoot: string,
+  workspaceRoot: string,
+  caches: {
+    presetCache: Record<string, unknown>;
+    tsconfigJsonCache: RawTsconfigJsonCache;
+    tsconfigExistsCache: Map<string, boolean>;
+    isolatedModulesCache: Map<string, IsolatedModulesResult>;
+  }
+): Promise<{ externalFiles: string[]; needsDtsInputs: boolean }> {
+  const {
+    presetCache,
+    tsconfigJsonCache,
+    tsconfigExistsCache,
+    isolatedModulesCache,
+  } = caches;
+  const absWorkspaceRoot = resolve(workspaceRoot);
+  const rootDir = rawConfig.rootDir
+    ? resolve(dirname(absConfigFilePath), rawConfig.rootDir)
+    : resolve(absWorkspaceRoot, projectRoot);
+  const absoluteProjectRoot = resolve(absWorkspaceRoot, projectRoot);
+
+  const externalFiles = new Set<string>();
+  const addIfExternal = (absolutePath: string | null) => {
+    if (!absolutePath) return;
+    const rel = normalizePath(relative(absWorkspaceRoot, absolutePath));
+    if (rel.startsWith('..') || isAbsolute(rel)) return; // outside workspace
+    if (rel.includes('node_modules/')) return; // covered by lockfile
+    const relToProject = normalizePath(
+      relative(absoluteProjectRoot, absolutePath)
+    );
+    if (!relToProject.startsWith('..') && !isAbsolute(relToProject)) return; // inside project root
+    externalFiles.add(rel);
+  };
+
+  // Preset path (content is loaded by the plugin to merge with rawConfig)
+  if (typeof rawConfig.preset === 'string') {
+    const replaced = replaceRootDirInPath(rootDir, rawConfig.preset);
+    if (replaced.startsWith('.') || isAbsolute(replaced)) {
+      addIfExternal(resolve(rootDir, replaced));
+    }
+  }
+
+  // ts-jest tsconfig extends chain — only walked when ts-jest is in
+  // non-isolated mode (otherwise the chain doesn't influence the output).
+  // Loading the preset is required to merge its transform with the raw
+  // config, since presets are the common source of ts-jest configuration.
+  const presetConfig = await loadPresetConfig(rawConfig, rootDir, presetCache);
+  const transform: Record<string, string | [string, unknown]> = {
+    ...(presetConfig?.transform ?? {}),
+    ...(rawConfig.transform ?? {}),
+  };
+  let needsDtsInputs = false;
+  for (const value of Object.values(transform)) {
+    let transformPath: string;
+    let transformOptions: Record<string, any> | undefined;
+    if (Array.isArray(value)) {
+      transformPath = value[0];
+      transformOptions = value[1] as Record<string, any>;
+    } else if (typeof value === 'string') {
+      transformPath = value;
+    } else {
+      continue;
+    }
+    if (!isTsJestTransformer(transformPath)) continue;
+    if (transformOptions?.isolatedModules === true) {
+      const tsJestMajor = getTsJestMajorVersion();
+      if (tsJestMajor !== null && tsJestMajor < 30) continue;
+    }
+    const tsconfigAbsPath = transformOptions?.tsconfig
+      ? resolve(
+          rootDir,
+          replaceRootDirInPath(rootDir, transformOptions.tsconfig)
+        )
+      : findNearestTsconfig(rootDir, absWorkspaceRoot, tsconfigExistsCache);
+    if (!tsconfigAbsPath) {
+      // No tsconfig found — ts-jest defaults to non-isolated mode
+      needsDtsInputs = true;
+      continue;
+    }
+    const { value: isolatedValue, visitedFiles } = resolveIsolatedModules(
+      tsconfigAbsPath,
+      tsconfigJsonCache,
+      isolatedModulesCache
+    );
+    for (const visitedFile of visitedFiles) {
+      addIfExternal(visitedFile);
+    }
+    if (isolatedValue !== true) needsDtsInputs = true;
+  }
+
+  return { externalFiles: [...externalFiles], needsDtsInputs };
+}
+
 async function loadPresetConfig(
   rawConfig: any,
   rootDir: string,
@@ -1113,6 +1286,111 @@ async function getConfigFileInputs(
     fileInputs: [...fileInputs],
     externalDeps: [...externalDeps],
   };
+}
+
+/**
+ * Walks up from `startDir` looking for `tsconfig.json`, stopping at
+ * `stopDir` (inclusive). Mirrors `ts.findConfigFile` but capped at the
+ * workspace root to avoid escaping the monorepo.
+ */
+function findNearestTsconfig(
+  startDir: string,
+  stopDir: string,
+  existsCache: Map<string, boolean>
+): string | null {
+  let dir = startDir;
+  while (true) {
+    const candidate = join(dir, 'tsconfig.json');
+    let exists = existsCache.get(candidate);
+    if (exists === undefined) {
+      exists = existsSync(candidate);
+      existsCache.set(candidate, exists);
+    }
+    if (exists) return candidate;
+    if (dir === stopDir) return null;
+    const parent = dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+}
+
+function isTsJestTransformer(value: string): boolean {
+  if (value === 'ts-jest' || value.startsWith('ts-jest/')) {
+    return true;
+  }
+
+  // Handle resolved paths (e.g. from require.resolve('ts-jest') in configs)
+  const normalized = normalizePath(value);
+  return (
+    normalized.includes('/node_modules/ts-jest/') ||
+    normalized.endsWith('/node_modules/ts-jest')
+  );
+}
+
+/**
+ * Returns the effective `compilerOptions.isolatedModules` for a tsconfig,
+ * walking the `extends` chain via `walkTsconfigExtendsChain`. Tri-state:
+ * `value` is `undefined` when the option is not set anywhere in the chain.
+ */
+function resolveIsolatedModules(
+  tsconfigPath: string,
+  jsonCache: RawTsconfigJsonCache,
+  resultCache: Map<string, IsolatedModulesResult>
+): IsolatedModulesResult {
+  const cached = resultCache.get(tsconfigPath);
+  if (cached) return cached;
+
+  let value: boolean | undefined;
+  const visitedFiles = new Set<string>();
+
+  walkTsconfigExtendsChain(
+    tsconfigPath,
+    (absPath, rawJson) => {
+      visitedFiles.add(absPath);
+      const opts = (rawJson as any)?.compilerOptions;
+      if (opts?.isolatedModules !== undefined) {
+        value = opts.isolatedModules === true;
+        return 'stop';
+      }
+      // verbatimModuleSyntax: true implies isolatedModules: true (TS 5.0+,
+      // the minimum TS version Nx supports)
+      if (opts?.verbatimModuleSyntax === true) {
+        value = true;
+        return 'stop';
+      }
+      return 'continue';
+    },
+    { jsonCache }
+  );
+
+  const result: IsolatedModulesResult = { value, visitedFiles };
+  resultCache.set(tsconfigPath, result);
+  return result;
+}
+
+// Module-level memoization: package versions don't change during a process
+// lifetime, so it's safe to cache across createNodes invocations.
+let cachedJestMajorVersion: number | null | undefined;
+function getJestMajorVersion(): number | null {
+  if (cachedJestMajorVersion === undefined) {
+    cachedJestMajorVersion = getInstalledJestMajorVersion();
+  }
+  return cachedJestMajorVersion;
+}
+
+let cachedTsJestMajorVersion: number | null | undefined;
+function getTsJestMajorVersion(): number | null {
+  if (cachedTsJestMajorVersion !== undefined) {
+    return cachedTsJestMajorVersion;
+  }
+  try {
+    const { major } = require('semver');
+    const version = require('ts-jest/package.json').version as string;
+    cachedTsJestMajorVersion = major(version) as number;
+  } catch {
+    cachedTsJestMajorVersion = null;
+  }
+  return cachedTsJestMajorVersion;
 }
 
 async function getJestOption<T = any>(

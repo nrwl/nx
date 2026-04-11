@@ -418,6 +418,12 @@ export declare function isAiAgent(): boolean
 
 export declare function isEditorInstalled(editor: SupportedEditor): Promise<boolean>
 
+export interface JsonInput {
+  json: string
+  fields?: Array<string>
+  excludeFields?: Array<string>
+}
+
 export declare function logDebug(message: string): void
 
 /** Combined metadata for groups and processes */

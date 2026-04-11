@@ -578,6 +578,10 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'troubleshooting/troubleshoot-nx-install-issues',
           },
           {
+            label: 'Fix Nx in Claude Code sandbox',
+            link: 'troubleshooting/nx-sandbox-unix-sockets',
+          },
+          {
             label: 'Resolve circular dependencies',
             link: 'troubleshooting/resolve-circular-dependencies',
           },
