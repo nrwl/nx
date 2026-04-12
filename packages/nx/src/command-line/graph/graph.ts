@@ -528,7 +528,7 @@ export async function generateGraph(
         graphState ??= { config: {} };
         graphState.state = {
           type: 'focused',
-          nodeId: encodeURIComponent(`project-${args.focus}`),
+          nodeId: `project-${args.focus}`,
         };
       }
     }
