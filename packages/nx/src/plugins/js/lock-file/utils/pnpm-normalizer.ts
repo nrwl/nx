@@ -55,8 +55,8 @@ export function loadPnpmHoistedDepsDefinition() {
  * Parsing and mapping logic from pnpm lockfile `read` function
  */
 export function parseAndNormalizePnpmLockfile(content: string): Lockfile {
-  const { load } = require('@zkochan/js-yaml');
-  return convertToLockfileObject(load(content));
+  const { loadAll } = require('@zkochan/js-yaml');
+  return convertToLockfileObject(selectPnpmLockfileDocument(loadAll(content)));
 }
 
 // https://github.com/pnpm/pnpm/blob/50e37072f42bcca6d393a74bed29f7f0e029805d/lockfile/lockfile-file/src/write.ts#L22
@@ -267,6 +267,77 @@ type LockfileFileV9 = Omit<InlineSpecifiersLockfile, 'importers' | 'packages'> &
       >
     >;
   };
+
+function selectPnpmLockfileDocument(
+  documents: unknown[]
+): LockfileFile | LockfileFileV9 {
+  const lockfileDocuments = documents.filter(isPnpmLockfileDocument);
+
+  if (lockfileDocuments.length === 0) {
+    throw new Error('Could not find a valid pnpm lockfile document.');
+  }
+
+  let selectedDocument = lockfileDocuments[0];
+  let selectedScore = scorePnpmLockfileDocument(selectedDocument);
+
+  for (const candidate of lockfileDocuments.slice(1)) {
+    const candidateScore = scorePnpmLockfileDocument(candidate);
+    if (candidateScore >= selectedScore) {
+      selectedDocument = candidate;
+      selectedScore = candidateScore;
+    }
+  }
+
+  return selectedDocument;
+}
+
+function isPnpmLockfileDocument(
+  value: unknown
+): value is LockfileFile | LockfileFileV9 {
+  return (
+    typeof value === 'object' && value !== null && 'lockfileVersion' in value
+  );
+}
+
+function scorePnpmLockfileDocument(
+  lockfile: LockfileFile | LockfileFileV9
+): number {
+  let score = 0;
+
+  if ('snapshots' in lockfile && lockfile.snapshots) {
+    score += 4;
+  }
+
+  if (
+    'settings' in lockfile ||
+    'catalog' in lockfile ||
+    'catalogs' in lockfile ||
+    'patchedDependencies' in lockfile
+  ) {
+    score += 2;
+  }
+
+  const rootImporter = lockfile.importers?.['.'];
+  if (rootImporter) {
+    if (
+      rootImporter.dependencies ||
+      rootImporter.devDependencies ||
+      rootImporter.optionalDependencies ||
+      rootImporter.peerDependencies
+    ) {
+      score += 2;
+    }
+
+    if (
+      'packageManagerDependencies' in rootImporter ||
+      'configDependencies' in rootImporter
+    ) {
+      score -= 1;
+    }
+  }
+
+  return score;
+}
 
 // https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/packages/types/src/misc.ts#L6
 const DEPENDENCIES_FIELDS = [
