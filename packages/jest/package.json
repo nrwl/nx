@@ -41,7 +41,6 @@
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@phenomnomnominal/tsquery": "catalog:typescript",
-    "identity-obj-proxy": "catalog:jest",
     "jest-config": "catalog:jest",
     "jest-resolve": "catalog:jest",
     "jest-util": "catalog:jest",

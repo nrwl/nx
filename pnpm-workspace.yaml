@@ -75,7 +75,6 @@ catalogs:
     '@jest/types': '30.0.1'
     '@types/jest': '30.0.0'
     babel-jest: '^30.0.2'
-    identity-obj-proxy: '3.0.0'
     jest: '^30.0.2'
     jest-config: '^30.0.2'
     jest-diff: '^30.0.2'

@@ -41,7 +41,7 @@ function getCompilerSetup(rootDir: string) {
 module.exports = function (path: string, options: ResolverOptions) {
   const ext = extname(path);
   if (ext === '.css' || ext === '.scss' || ext === '.sass' || ext === '.less') {
-    return require.resolve('identity-obj-proxy');
+    return require.resolve('./css-module-stub.js');
   }
   try {
     try {

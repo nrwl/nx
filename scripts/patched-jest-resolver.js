@@ -97,7 +97,7 @@ module.exports = function (modulePath, options) {
 
   // Handle CSS imports
   if (ext === '.css' || ext === '.scss' || ext === '.sass' || ext === '.less') {
-    return require.resolve('identity-obj-proxy');
+    return require.resolve('./css-module-stub.js');
   }
 
   try {
