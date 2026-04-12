@@ -484,7 +484,7 @@ export interface MetricsUpdate {
 
 /** Stripped version of the NxJson interface for use in rust */
 export interface NxJson {
-  namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput>>
+  namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput>>
 }
 
 export interface NxWorkspaceFiles {
@@ -526,7 +526,7 @@ export interface ProcessMetrics {
 
 export interface Project {
   root: string
-  namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput>>
+  namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput>>
   tags?: Array<string>
   targets: Record<string, Target>
 }
@@ -567,7 +567,7 @@ export interface SystemInfo {
 
 export interface Target {
   executor?: string
-  inputs?: Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput>
+  inputs?: Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput>
   outputs?: Array<string>
   options?: string
   configurations?: string
