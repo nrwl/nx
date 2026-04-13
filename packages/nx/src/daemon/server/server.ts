@@ -141,7 +141,7 @@ import {
 import {
   addUpdatedAndDeletedFiles,
   registerProjectGraphRecomputationListener,
-  triggerGraphRecomputation,
+  invalidateGraphCache,
 } from './project-graph-incremental-recomputation';
 import {
   hasRegisteredProjectGraphListenerSockets,
@@ -267,7 +267,7 @@ async function handleMessage(socket: Socket, data: string) {
     if (shouldRecomputeGraph) {
       serverLogger.log('Graph recompute necessary due to env variable refresh');
       forwardEnvToPluginWorkers(payload.env);
-      triggerGraphRecomputation();
+      invalidateGraphCache();
     }
   }
 

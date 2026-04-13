@@ -310,7 +310,7 @@ async function processCollectedUpdatedAndDeletedFiles(
   }
 }
 
-export function triggerGraphRecomputation() {
+export function invalidateGraphCache() {
   // Clear the cached promise so the next request triggers a fresh computation.
   // We intentionally do NOT call getCachedSerializedProjectGraphPromise() here
   // because assigning its return Promise to the module-level variable causes a
