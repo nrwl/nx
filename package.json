@@ -196,7 +196,7 @@
     "czg": "^1.4.0",
     "detect-port": "^1.5.1",
     "dotenv": "~16.4.5",
-    "dotenv-expand": "~11.0.6",
+    "dotenv-expand": "~12.0.3",
     "ejs": "5.0.1",
     "emnapi": "^1.2.0",
     "enhanced-resolve": "^5.8.3",

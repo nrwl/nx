@@ -5,6 +5,7 @@ import netlify from '@astrojs/netlify';
 import react from '@astrojs/react';
 import markdoc from '@astrojs/markdoc';
 import tailwindcss from '@tailwindcss/vite';
+import sitemap from '@astrojs/sitemap';
 import { sidebar } from './sidebar.mts';
 import rehypeTableOptionLinks from './src/plugins/utils/rehype-table-option-links.ts';
 import { resolveNxDevUrl } from './src/utils/resolve-nx-dev-url.ts';
@@ -57,6 +58,7 @@ export default defineConfig({
         replacesTitle: true,
       },
       disable404Route: true,
+      lastUpdated: true,
       head: [
         {
           tag: 'script',
@@ -81,6 +83,7 @@ export default defineConfig({
         './src/plugins/github-stars.middleware.ts',
         './src/plugins/raw-content.middleware.ts',
         './src/plugins/canonical.middleware.ts',
+        './src/plugins/schema.middleware.ts',
       ],
       markdown: {
         headingLinks: true,
@@ -140,5 +143,8 @@ export default defineConfig({
       },
     }),
     react(),
+    sitemap({
+      lastmod: new Date(),
+    }),
   ],
 });

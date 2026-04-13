@@ -936,8 +936,8 @@ importers:
         specifier: ~16.4.5
         version: 16.4.7
       dotenv-expand:
-        specifier: ~11.0.6
-        version: 11.0.7
+        specifier: ~12.0.3
+        version: 12.0.3
       ejs:
         specifier: 5.0.1
         version: 5.0.1
@@ -1379,6 +1379,9 @@ importers:
       '@astrojs/react':
         specifier: ^4.3.0
         version: 4.3.0(@types/node@24.2.0)(@types/react-dom@18.3.1)(@types/react@18.3.1)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(yaml@2.8.2)
+      '@astrojs/sitemap':
+        specifier: ^3.3.0
+        version: 3.4.1
       '@astrojs/starlight':
         specifier: 0.34.6
         version: 0.34.6(patch_hash=228878a1bd48ba76f2630925a90b16047a4b87b4559f750d4372442909652235)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2))
@@ -3448,8 +3451,8 @@ importers:
         specifier: ~16.4.5
         version: 16.4.7
       dotenv-expand:
-        specifier: ~11.0.6
-        version: 11.0.7
+        specifier: ~12.0.3
+        version: 12.0.3
       ejs:
         specifier: 5.0.1
         version: 5.0.1
@@ -16659,6 +16662,10 @@ packages:
 
   dotenv-expand@11.0.7:
     resolution: {integrity: sha512-zIHwmZPRshsCdpMDyVsqGmgyP0yT8GAgXUnkdAoJisxvf33k7yO6OuoKmcTGuXPWSsm8Oh88nZicRLA9Y0rUeA==}
+    engines: {node: '>=12'}
+
+  dotenv-expand@12.0.3:
+    resolution: {integrity: sha512-uc47g4b+4k/M/SeaW1y4OApx+mtLWl92l5LMPP0GNXctZqELk+YGgOPIIC5elYmUH4OuoK3JLhuRUYegeySiFA==}
     engines: {node: '>=12'}
 
   dotenv@16.4.7:
@@ -44859,6 +44866,10 @@ snapshots:
     dependencies:
       dotenv: 16.4.7
 
+  dotenv-expand@12.0.3:
+    dependencies:
+      dotenv: 16.4.7
+
   dotenv@16.4.7: {}
 
   dotenv@16.6.1: {}
@@ -56619,7 +56630,7 @@ snapshots:
       css-what: 6.2.2
       csso: 5.0.5
       picocolors: 1.1.1
-      sax: 1.4.1
+      sax: 1.6.0
 
   svgo@4.0.1:
     dependencies:
@@ -59493,7 +59504,7 @@ snapshots:
 
   xml-js@1.6.11:
     dependencies:
-      sax: 1.4.1
+      sax: 1.6.0
 
   xml-name-validator@5.0.0: {}
 

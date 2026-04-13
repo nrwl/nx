@@ -2,10 +2,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { env } from 'npm-run-path';
 import { relative } from 'path';
 import { dirSync, fileSync } from 'tmp';
-import runCommands, {
-  interpolateArgsIntoCommand,
-  LARGE_BUFFER,
-} from './run-commands.impl';
+import runCommands, { interpolateArgsIntoCommand } from './run-commands.impl';
 
 function normalize(p: string) {
   return p.startsWith('/private') ? p.substring(8) : p;
@@ -685,7 +682,7 @@ describe('Run Commands', () => {
 
   describe('--color', () => {
     it('should not set FORCE_COLOR=true', async () => {
-      const exec = jest.spyOn(require('child_process'), 'exec');
+      const spawn = jest.spyOn(require('child_process'), 'spawn');
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
@@ -695,17 +692,17 @@ describe('Run Commands', () => {
         context
       );
 
-      expect(exec).toHaveBeenCalledTimes(2);
-      expect(exec).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, {
-        maxBuffer: LARGE_BUFFER,
+      expect(spawn).toHaveBeenCalledTimes(2);
+      expect(spawn).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, [], {
+        shell: true,
         env: {
           ...process.env,
           ...env(),
         },
         windowsHide: true,
       });
-      expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
-        maxBuffer: LARGE_BUFFER,
+      expect(spawn).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, [], {
+        shell: true,
         env: {
           ...process.env,
           ...env(),
@@ -715,7 +712,7 @@ describe('Run Commands', () => {
     });
 
     it('should not set FORCE_COLOR=true when --no-color is passed', async () => {
-      const exec = jest.spyOn(require('child_process'), 'exec');
+      const spawn = jest.spyOn(require('child_process'), 'spawn');
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
@@ -726,17 +723,17 @@ describe('Run Commands', () => {
         context
       );
 
-      expect(exec).toHaveBeenCalledTimes(2);
-      expect(exec).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, {
-        maxBuffer: LARGE_BUFFER,
+      expect(spawn).toHaveBeenCalledTimes(2);
+      expect(spawn).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, [], {
+        shell: true,
         env: {
           ...process.env,
           ...env(),
         },
         windowsHide: true,
       });
-      expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
-        maxBuffer: LARGE_BUFFER,
+      expect(spawn).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, [], {
+        shell: true,
         env: {
           ...process.env,
           ...env(),
@@ -746,7 +743,7 @@ describe('Run Commands', () => {
     });
 
     it('should set FORCE_COLOR=true when running with --color', async () => {
-      const exec = jest.spyOn(require('child_process'), 'exec');
+      const spawn = jest.spyOn(require('child_process'), 'spawn');
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
@@ -757,14 +754,14 @@ describe('Run Commands', () => {
         context
       );
 
-      expect(exec).toHaveBeenCalledTimes(2);
-      expect(exec).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, {
-        maxBuffer: LARGE_BUFFER,
+      expect(spawn).toHaveBeenCalledTimes(2);
+      expect(spawn).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, [], {
+        shell: true,
         env: { ...process.env, FORCE_COLOR: `true`, ...env() },
         windowsHide: true,
       });
-      expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
-        maxBuffer: LARGE_BUFFER,
+      expect(spawn).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, [], {
+        shell: true,
         env: { ...process.env, FORCE_COLOR: `true`, ...env() },
         windowsHide: true,
       });
@@ -1151,6 +1148,57 @@ describe('Run Commands', () => {
       const duration = Date.now() - startTime;
       // Should complete quickly after failure and cleanup
       expect(duration).toBeLessThan(500);
+    });
+  });
+
+  describe('large output handling', () => {
+    it('should handle output that exceeds default maxBuffer without crashing', async () => {
+      // Node.js default maxBuffer for exec() is 1MB (1024 * 1024).
+      // This command generates ~2MB of output, which would crash exec()
+      // unless LARGE_BUFFER was set. With spawn(), there is no maxBuffer
+      // limit at all — output streams through data events.
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              // Generate ~2MB of output (each line is ~80 chars, 25000 lines ≈ 2MB)
+              command: `node -e "for(let i=0;i<25000;i++){console.log('x'.repeat(80))}"`,
+            },
+          ],
+          parallel: false,
+          __unparsed__: [],
+        },
+        context
+      );
+
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+    });
+
+    it('exec() with small maxBuffer crashes on large output, spawn() does not', async () => {
+      const { exec, spawn } = require('child_process');
+      const cmd = `node -e "for(let i=0;i<1000;i++){console.log('x'.repeat(200))}"`;
+
+      // Prove exec() crashes when output exceeds maxBuffer
+      const execResult = await new Promise<{ error: Error | null }>((res) => {
+        exec(cmd, { maxBuffer: 1024 * 50 }, (error) => res({ error }));
+      });
+      expect(execResult.error).toBeTruthy();
+      expect(execResult.error.message).toContain('maxBuffer');
+
+      // Prove spawn() handles the same output without any crash
+      const spawnResult = await new Promise<{
+        code: number;
+        totalBytes: number;
+      }>((res) => {
+        let totalBytes = 0;
+        const child = spawn(cmd, [], { shell: true });
+        child.stdout.on('data', (chunk) => {
+          totalBytes += chunk.length;
+        });
+        child.on('exit', (code) => res({ code, totalBytes }));
+      });
+      expect(spawnResult.code).toBe(0);
+      expect(spawnResult.totalBytes).toBeGreaterThan(1024 * 50); // well over 50KB
     });
   });
 });

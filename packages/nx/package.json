@@ -60,7 +60,7 @@
     "cli-spinners": "2.6.1",
     "cliui": "^8.0.1",
     "dotenv": "~16.4.5",
-    "dotenv-expand": "~11.0.6",
+    "dotenv-expand": "~12.0.3",
     "ejs": "5.0.1",
     "enquirer": "catalog:",
     "figures": "3.2.0",

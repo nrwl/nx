@@ -89,7 +89,7 @@
       "cache": true
     },
     "test-native": {
-      "inputs": ["native"],
+      "inputs": ["native", "{projectRoot}/**/*.snap"],
       "executor": "@monodon/rust:test",
       "options": {},
       "cache": true
