@@ -55,7 +55,9 @@ export declare class HashPlanInspector {
    * Like `inspect()` but returns structured `HashInputs` objects instead of flat strings.
    * Each `HashInstruction` is categorized into the appropriate bucket (files, runtime,
    * environment, depOutputs, external). TsConfiguration is resolved to the root tsconfig
-   * file path. ProjectConfiguration is skipped for now. Cwd is skipped as it's ambient.
+   * file path. JsonFileSet is resolved to the matched JSON file paths (field/excludeField
+   * filters only affect hashing, not which files are reported as inputs).
+   * ProjectConfiguration is skipped for now. Cwd is skipped as it's ambient.
    */
   inspectInputs(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, HashInputs>
 }
