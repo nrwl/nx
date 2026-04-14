@@ -10,8 +10,8 @@ import { consumeMessage, isPluginWorkerMessage } from './messaging';
 
 import { unlinkSync } from 'fs';
 import { createServer } from 'net';
-import '../../../utils/perf-logging';
 import { startAnalytics } from '../../../analytics';
+import '../../../utils/perf-logging';
 
 type Environment = Pick<
   NodeJS.ProcessEnv,
@@ -77,7 +77,7 @@ const server = createServer((socket) => {
         }) => {
           loadErrorTimeout?.clear();
           process.chdir(root);
-          try {
+          return withErrorHandling(async () => {
             const { loadResolvedNxPluginAsync } = await Promise.resolve(
               require(require.resolve('../load-resolved-plugin'))
             );
@@ -112,70 +112,38 @@ const server = createServer((socket) => {
                 'preTasksExecution' in plugin && !!plugin.preTasksExecution,
               hasPostTasksExecution:
                 'postTasksExecution' in plugin && !!plugin.postTasksExecution,
-              success: true,
+              success: true as const,
             };
-          } catch (e) {
-            return {
-              success: false,
-              error: createSerializableError(e),
-            };
-          }
+          });
         },
-        createNodes: async function createNodes({ configFiles, context }) {
-          try {
+        createNodes: async ({ configFiles, context }) =>
+          withErrorHandling(async () => {
             const result = await plugin.createNodes[1](configFiles, context);
-            return { result, success: true };
-          } catch (e) {
-            return {
-              success: false,
-              error: createSerializableError(e),
-            };
-          }
-        },
-        createDependencies: async function createDependencies({ context }) {
-          try {
+            return { result, success: true as const };
+          }),
+        createDependencies: async ({ context }) =>
+          withErrorHandling(async () => {
             const result = await plugin.createDependencies(context);
-            return { dependencies: result, success: true };
-          } catch (e) {
-            return {
-              success: false,
-              error: createSerializableError(e),
-            };
-          }
-        },
-        createMetadata: async function createMetadata({ graph, context }) {
-          try {
+            return { dependencies: result, success: true as const };
+          }),
+        createMetadata: async ({ graph, context }) =>
+          withErrorHandling(async () => {
             const result = await plugin.createMetadata(graph, context);
-            return { metadata: result, success: true };
-          } catch (e) {
-            return {
-              success: false,
-              error: createSerializableError(e),
-            };
-          }
-        },
-        preTasksExecution: async ({ context }) => {
-          try {
+            return { metadata: result, success: true as const };
+          }),
+        preTasksExecution: async ({ context }) =>
+          withErrorHandling(async () => {
             const mutations = await plugin.preTasksExecution?.(context);
-            return { success: true, mutations };
-          } catch (e) {
-            return {
-              success: false,
-              error: createSerializableError(e),
-            };
-          }
-        },
-        postTasksExecution: async ({ context }) => {
-          try {
-            await plugin.postTasksExecution?.(context);
-            return { success: true };
-          } catch (e) {
-            return {
-              success: false,
-              error: createSerializableError(e),
-            };
-          }
-        },
+            return { success: true as const, mutations };
+          }),
+        postTasksExecution: async ({ context }) =>
+          withErrorHandling(() => plugin.postTasksExecution?.(context)),
+        setWorkerEnv: (env) =>
+          withErrorHandling(() => {
+            for (const envKey in env) {
+              process.env[envKey] = env[envKey];
+            }
+          }),
       });
     })
   );
@@ -194,6 +162,26 @@ server.listen(socketPath);
 logger.verbose(
   `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) listening on ${socketPath}`
 );
+
+async function withErrorHandling(
+  cb: () => void | Promise<void>
+): Promise<{ success: true } | { success: false; error: Error }>;
+async function withErrorHandling<T>(
+  cb: () => T | Promise<T>
+): Promise<T | { success: false; error: Error }>;
+async function withErrorHandling<T>(
+  cb: () => T | Promise<T>
+): Promise<T | { success: true } | { success: false; error: Error }> {
+  try {
+    const result = await cb();
+    return result ?? ({ success: true as const } as any);
+  } catch (e) {
+    return {
+      success: false as const,
+      error: createSerializableError(e) as Error,
+    };
+  }
+}
 
 function setErrorTimeout(
   timeoutMs: number,

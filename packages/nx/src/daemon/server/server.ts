@@ -1,39 +1,122 @@
 import { existsSync, statSync } from 'fs';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
-import '../../utils/perf-logging';
+import { deserialize, serialize } from 'v8';
+import { startAnalytics } from '../../analytics';
 import { hashArray } from '../../hasher/file-hasher';
 import { hashFile } from '../../native';
 import {
   consumeMessagesFromSocket,
   isJsonMessage,
 } from '../../utils/consume-messages-from-socket';
+import '../../utils/perf-logging';
 import { nxVersion } from '../../utils/versions';
 import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { getPlugins } from '../../project-graph/plugins/get-plugins';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
-import { startAnalytics } from '../../analytics';
 import {
   getInstalledNxVersion,
   isNxVersionMismatch,
 } from '../is-nx-version-mismatch';
+import { serverLogger } from '../logger';
+import {
+  GET_CONFIGURE_AI_AGENTS_STATUS,
+  isHandleGetConfigureAiAgentsStatusMessage,
+  isHandleResetConfigureAiAgentsStatusMessage,
+  RESET_CONFIGURE_AI_AGENTS_STATUS,
+} from '../message-types/configure-ai-agents';
+import { isDaemonMessage } from '../message-types/daemon-message';
+import {
+  FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
+  isHandleFlushSyncGeneratorChangesToDiskMessage,
+} from '../message-types/flush-sync-generator-changes-to-disk';
+import { isHandleForceShutdownMessage } from '../message-types/force-shutdown';
+import {
+  GET_CONTEXT_FILE_DATA,
+  isHandleContextFileDataMessage,
+} from '../message-types/get-context-file-data';
+import {
+  GET_FILES_IN_DIRECTORY,
+  isHandleGetFilesInDirectoryMessage,
+} from '../message-types/get-files-in-directory';
+import {
+  GET_NX_WORKSPACE_FILES,
+  isHandleNxWorkspaceFilesMessage,
+} from '../message-types/get-nx-workspace-files';
+import {
+  GET_REGISTERED_SYNC_GENERATORS,
+  isHandleGetRegisteredSyncGeneratorsMessage,
+} from '../message-types/get-registered-sync-generators';
+import {
+  GET_SYNC_GENERATOR_CHANGES,
+  isHandleGetSyncGeneratorChangesMessage,
+} from '../message-types/get-sync-generator-changes';
+import {
+  GLOB,
+  isHandleGlobMessage,
+  isHandleMultiGlobMessage,
+  MULTI_GLOB,
+} from '../message-types/glob';
+import {
+  HASH_GLOB,
+  isHandleHashGlobMessage,
+  isHandleHashMultiGlobMessage,
+} from '../message-types/hash-glob';
+import {
+  GET_NX_CONSOLE_STATUS,
+  isHandleGetNxConsoleStatusMessage,
+  isHandleSetNxConsolePreferenceAndInstallMessage,
+  SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
+} from '../message-types/nx-console';
+import { isRegisterProjectGraphListenerMessage } from '../message-types/register-project-graph-listener';
+import {
+  isHandlePostTasksExecutionMessage,
+  isHandlePreTasksExecutionMessage,
+  POST_TASKS_EXECUTION,
+  PRE_TASKS_EXECUTION,
+} from '../message-types/run-tasks-execution-hooks';
+import {
+  GET_ESTIMATED_TASK_TIMINGS,
+  GET_FLAKY_TASKS,
+  isHandleGetEstimatedTaskTimings,
+  isHandleGetFlakyTasksMessage,
+  isHandleWriteTaskRunsToHistoryMessage,
+  RECORD_TASK_RUNS,
+} from '../message-types/task-history';
+import {
+  isHandleUpdateWorkspaceContextMessage,
+  UPDATE_WORKSPACE_CONTEXT,
+} from '../message-types/update-workspace-context';
 import {
   getFullOsSocketPath,
   isWindows,
   killSocketOrPath,
-  serializeResult,
 } from '../socket-utils';
+import { registerFileChangeListener } from './file-watching/file-change-events';
 import {
   hasRegisteredFileWatcherSockets,
   registeredFileWatcherSockets,
   removeRegisteredFileWatcherSocket,
 } from './file-watching/file-watcher-sockets';
 import {
-  hasRegisteredProjectGraphListenerSockets,
-  registeredProjectGraphListenerSockets,
-  removeRegisteredProjectGraphListenerSocket,
-} from './project-graph-listener-sockets';
+  handleGetConfigureAiAgentsStatus,
+  handleResetConfigureAiAgentsStatus,
+} from './handle-configure-ai-agents';
+import { handleContextFileData } from './handle-context-file-data';
+import { handleFlushSyncGeneratorChangesToDisk } from './handle-flush-sync-generator-changes-to-disk';
+import { handleForceShutdown } from './handle-force-shutdown';
+import { handleGetFilesInDirectory } from './handle-get-files-in-directory';
+import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-generators';
+import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
+import { handleGlob, handleMultiGlob } from './handle-glob';
+import { handleHashGlob, handleHashMultiGlob } from './handle-hash-glob';
 import { handleHashTasks } from './handle-hash-tasks';
+import {
+  handleGetNxConsoleStatus,
+  handleSetNxConsolePreferenceAndInstall,
+} from './handle-nx-console';
+import { handleNxWorkspaceFiles } from './handle-nx-workspace-files';
 import {
   handleOutputsHashesMatch,
   handleRecordOutputsHash,
@@ -41,7 +124,16 @@ import {
 import { handleProcessInBackground } from './handle-process-in-background';
 import { handleRequestProjectGraph } from './handle-request-project-graph';
 import { handleRequestShutdown } from './handle-request-shutdown';
-import { serverLogger } from '../logger';
+import {
+  handleGetEstimatedTaskTimings,
+  handleGetFlakyTasks,
+  handleRecordTaskRuns,
+} from './handle-task-history';
+import {
+  handleRunPostTasksExecution,
+  handleRunPreTasksExecution,
+} from './handle-tasks-execution-hooks';
+import { handleUpdateWorkspaceContext } from './handle-update-workspace-context';
 import {
   disableOutputsTracking,
   processFileChangesInOutputs,
@@ -49,7 +141,13 @@ import {
 import {
   addUpdatedAndDeletedFiles,
   registerProjectGraphRecomputationListener,
+  invalidateGraphCache,
 } from './project-graph-incremental-recomputation';
+import {
+  hasRegisteredProjectGraphListenerSockets,
+  registeredProjectGraphListenerSockets,
+  removeRegisteredProjectGraphListenerSocket,
+} from './project-graph-listener-sockets';
 import {
   getOutputWatcherInstance,
   getWatcherInstance,
@@ -63,119 +161,21 @@ import {
   storeWatcherInstance,
 } from './shutdown-utils';
 import {
+  clearSyncGeneratorsCache,
+  collectAndScheduleSyncGenerators,
+} from './sync-generators';
+import {
   convertChangeEventsToLogMessage,
   FileWatcherCallback,
   watchOutputFiles,
   watchWorkspace,
 } from './watcher';
-import { handleGlob, handleMultiGlob } from './handle-glob';
-import {
-  GLOB,
-  isHandleGlobMessage,
-  isHandleMultiGlobMessage,
-  MULTI_GLOB,
-} from '../message-types/glob';
-import {
-  GET_NX_WORKSPACE_FILES,
-  isHandleNxWorkspaceFilesMessage,
-} from '../message-types/get-nx-workspace-files';
-import { handleNxWorkspaceFiles } from './handle-nx-workspace-files';
-import {
-  GET_CONTEXT_FILE_DATA,
-  isHandleContextFileDataMessage,
-} from '../message-types/get-context-file-data';
-import { handleContextFileData } from './handle-context-file-data';
-import {
-  GET_FILES_IN_DIRECTORY,
-  isHandleGetFilesInDirectoryMessage,
-} from '../message-types/get-files-in-directory';
-import { handleGetFilesInDirectory } from './handle-get-files-in-directory';
-import {
-  HASH_GLOB,
-  isHandleHashGlobMessage,
-  isHandleHashMultiGlobMessage,
-} from '../message-types/hash-glob';
-import { handleHashGlob, handleHashMultiGlob } from './handle-hash-glob';
-import {
-  GET_ESTIMATED_TASK_TIMINGS,
-  GET_FLAKY_TASKS,
-  isHandleGetEstimatedTaskTimings,
-  isHandleGetFlakyTasksMessage,
-  isHandleWriteTaskRunsToHistoryMessage,
-  RECORD_TASK_RUNS,
-} from '../message-types/task-history';
-import {
-  handleRecordTaskRuns,
-  handleGetFlakyTasks,
-  handleGetEstimatedTaskTimings,
-} from './handle-task-history';
-import { isHandleForceShutdownMessage } from '../message-types/force-shutdown';
-import { handleForceShutdown } from './handle-force-shutdown';
-import {
-  GET_SYNC_GENERATOR_CHANGES,
-  isHandleGetSyncGeneratorChangesMessage,
-} from '../message-types/get-sync-generator-changes';
-import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
-import {
-  clearSyncGeneratorsCache,
-  collectAndScheduleSyncGenerators,
-} from './sync-generators';
-import { registerFileChangeListener } from './file-watching/file-change-events';
-import {
-  GET_REGISTERED_SYNC_GENERATORS,
-  isHandleGetRegisteredSyncGeneratorsMessage,
-} from '../message-types/get-registered-sync-generators';
-import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-generators';
-import {
-  UPDATE_WORKSPACE_CONTEXT,
-  isHandleUpdateWorkspaceContextMessage,
-} from '../message-types/update-workspace-context';
-import { handleUpdateWorkspaceContext } from './handle-update-workspace-context';
-import {
-  FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
-  isHandleFlushSyncGeneratorChangesToDiskMessage,
-} from '../message-types/flush-sync-generator-changes-to-disk';
-import { handleFlushSyncGeneratorChangesToDisk } from './handle-flush-sync-generator-changes-to-disk';
-import {
-  isHandlePostTasksExecutionMessage,
-  isHandlePreTasksExecutionMessage,
-  POST_TASKS_EXECUTION,
-  PRE_TASKS_EXECUTION,
-} from '../message-types/run-tasks-execution-hooks';
-import {
-  handleRunPostTasksExecution,
-  handleRunPreTasksExecution,
-} from './handle-tasks-execution-hooks';
-import {
-  isRegisterProjectGraphListenerMessage,
-  REGISTER_PROJECT_GRAPH_LISTENER,
-} from '../message-types/register-project-graph-listener';
-import {
-  GET_NX_CONSOLE_STATUS,
-  isHandleGetNxConsoleStatusMessage,
-  isHandleSetNxConsolePreferenceAndInstallMessage,
-  SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
-} from '../message-types/nx-console';
-import {
-  handleGetNxConsoleStatus,
-  handleSetNxConsolePreferenceAndInstall,
-} from './handle-nx-console';
-import {
-  GET_CONFIGURE_AI_AGENTS_STATUS,
-  RESET_CONFIGURE_AI_AGENTS_STATUS,
-  isHandleGetConfigureAiAgentsStatusMessage,
-  isHandleResetConfigureAiAgentsStatusMessage,
-} from '../message-types/configure-ai-agents';
-import {
-  handleGetConfigureAiAgentsStatus,
-  handleResetConfigureAiAgentsStatus,
-} from './handle-configure-ai-agents';
-import { deserialize, serialize } from 'v8';
 
 let workspaceWatcherError: Error | undefined;
 let outputsWatcherError: Error | undefined;
 
 global.NX_DAEMON = true;
+process.env.NX_DAEMON_PROCESS = 'true';
 
 export type HandlerResult = {
   description: string;
@@ -254,6 +254,22 @@ async function handleMessage(socket: Socket, data: string) {
     );
   }
   serverLogger.log(`Received ${mode} message of type ${payload.type}`);
+
+  if (isDaemonMessage(payload) && payload.env) {
+    let shouldRecomputeGraph = false;
+    for (const key in payload.env) {
+      if (process.env[key] !== payload.env[key]) {
+        serverLogger.log(`Refreshing env var ${key} from client connection.`);
+        process.env[key] = payload.env[key];
+        shouldRecomputeGraph = true;
+      }
+    }
+    if (shouldRecomputeGraph) {
+      serverLogger.log('Graph recompute necessary due to env variable refresh');
+      forwardEnvToPluginWorkers(payload.env);
+      invalidateGraphCache();
+    }
+  }
 
   if (payload.type === 'PING') {
     await handleResult(
@@ -816,6 +832,22 @@ export async function startServer(): Promise<Server> {
     }
   });
 }
+function forwardEnvToPluginWorkers(env: Record<string, string>) {
+  getPlugins()
+    .then((plugins) => {
+      for (const plugin of plugins) {
+        plugin.setWorkerEnv?.(env)?.catch((e) => {
+          serverLogger.log(
+            `Failed to forward env to plugin worker "${plugin.name}": ${e.message}`
+          );
+        });
+      }
+    })
+    .catch(() => {
+      // Plugins may not be loaded yet — env will be picked up on next load
+    });
+}
+
 function serializeUnserializedResult(
   response: boolean | object,
   mode: 'json' | 'v8'

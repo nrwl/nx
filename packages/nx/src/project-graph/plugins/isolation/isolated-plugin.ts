@@ -444,6 +444,16 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     this.shutdown();
   }
 
+  async setWorkerEnv(env: Record<string, string>): Promise<void> {
+    if (!this._alive) {
+      return;
+    }
+    const result = await this.sendRequest('setWorkerEnv', env);
+    if (result.success === false) {
+      throw result.error;
+    }
+  }
+
   notifyPhaseAborted(phase: Phase, lastCompletedHook: Hook): void {
     if (this.lifecycle?.notifyPhaseAborted(phase, lastCompletedHook)) {
       this.shutdownIfInactive(lastCompletedHook);
