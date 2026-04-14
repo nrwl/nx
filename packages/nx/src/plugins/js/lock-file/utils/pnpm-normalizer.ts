@@ -322,8 +322,7 @@ function scorePnpmLockfileDocument(
     if (
       rootImporter.dependencies ||
       rootImporter.devDependencies ||
-      rootImporter.optionalDependencies ||
-      rootImporter.peerDependencies
+      rootImporter.optionalDependencies
     ) {
       score += 2;
     }
