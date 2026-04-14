@@ -537,7 +537,8 @@
             "NX_PREFIX_OUTPUT",
             "NX_INFER_ALL_PACKAGE_JSONS",
             "NX_AI_FILES_USE_LOCAL",
-            "NX_WINDOWS_PTY_SUPPORT"
+            "NX_WINDOWS_PTY_SUPPORT",
+            "NX_ORIGINAL_FORCE_COLOR"
           ]
         }
       }
