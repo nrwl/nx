@@ -34,7 +34,7 @@ describe('MF Remote App Generator', () => {
     expect(tree.read('test/webpack.config.js', 'utf-8')).toMatchSnapshot();
     const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
     expect(tsconfigJson.compilerOptions.paths['test/Module']).toEqual([
-      'test/src/app/remote-entry/entry-module.ts',
+      './test/src/app/remote-entry/entry-module.ts',
     ]);
   });
 
@@ -93,7 +93,7 @@ describe('MF Remote App Generator', () => {
     `);
     const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
     expect(tsconfigJson.compilerOptions.paths['test/Module']).toEqual([
-      'test/src/app/remote-entry/entry.module.ts',
+      './test/src/app/remote-entry/entry.module.ts',
     ]);
   });
 
@@ -268,7 +268,7 @@ describe('MF Remote App Generator', () => {
     ).toMatchSnapshot();
     const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
     expect(tsconfigJson.compilerOptions.paths['test/Routes']).toEqual([
-      'test/src/app/remote-entry/entry.routes.ts',
+      './test/src/app/remote-entry/entry.routes.ts',
     ]);
   });
 

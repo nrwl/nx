@@ -164,7 +164,7 @@ describe('librarySecondaryEntryPoint generator', () => {
     const tsConfig = readJson(tree, 'tsconfig.base.json');
     expect(
       tsConfig.compilerOptions.paths['@my-org/lib1/testing']
-    ).toStrictEqual(['libs/lib1/testing/src/index.ts']);
+    ).toStrictEqual(['./libs/lib1/testing/src/index.ts']);
   });
 
   it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
@@ -187,7 +187,7 @@ describe('librarySecondaryEntryPoint generator', () => {
     const tsConfig = readJson(tree, 'tsconfig.json');
     expect(
       tsConfig.compilerOptions.paths['@my-org/lib1/testing']
-    ).toStrictEqual(['libs/lib1/testing/src/index.ts']);
+    ).toStrictEqual(['./libs/lib1/testing/src/index.ts']);
   });
 
   it('should update the tsconfig "include" and "exclude" options', async () => {

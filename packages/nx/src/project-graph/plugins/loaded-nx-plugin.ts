@@ -66,6 +66,13 @@ export class LoadedNxPlugin {
    */
   notifyPhaseAborted?(phase: string, lastCompletedHook: string): void;
 
+  /**
+   * Forwards updated environment variables to the plugin worker process.
+   * Only meaningful for isolated plugins; in-process plugins share the
+   * daemon's process.env automatically.
+   */
+  setWorkerEnv?(env: Record<string, string>): Promise<void>;
+
   constructor(
     plugin: NxPluginV2,
     pluginDefinition: PluginConfiguration,

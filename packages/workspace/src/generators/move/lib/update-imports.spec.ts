@@ -376,7 +376,7 @@ export MyExtendedClass extends MyClass {};`
 
     const tsConfig = readJson(tree, '/tsconfig.base.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
-      '@proj/my-destination': ['my-destination/src/index.ts'],
+      '@proj/my-destination': ['./my-destination/src/index.ts'],
     });
   });
 
@@ -386,10 +386,10 @@ export MyExtendedClass extends MyClass {};`
     });
     updateJson(tree, '/tsconfig.base.json', (json) => {
       json.compilerOptions.paths['@proj/my-source/testing'] = [
-        'my-source/testing/src/index.ts',
+        './my-source/testing/src/index.ts',
       ];
       json.compilerOptions.paths['@proj/different-alias'] = [
-        'my-source/some-path/src/index.ts',
+        './my-source/some-path/src/index.ts',
       ];
       return json;
     });
@@ -403,9 +403,9 @@ export MyExtendedClass extends MyClass {};`
 
     const tsConfig = readJson(tree, '/tsconfig.base.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
-      '@proj/my-destination': ['my-destination/src/index.ts'],
-      '@proj/my-destination/testing': ['my-destination/testing/src/index.ts'],
-      '@proj/different-alias': ['my-destination/some-path/src/index.ts'],
+      '@proj/my-destination': ['./my-destination/src/index.ts'],
+      '@proj/my-destination/testing': ['./my-destination/testing/src/index.ts'],
+      '@proj/different-alias': ['./my-destination/some-path/src/index.ts'],
     });
   });
 
@@ -424,7 +424,7 @@ export MyExtendedClass extends MyClass {};`
 
     const tsConfig = readJson(tree, '/tsconfig.base.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
-      '@proj/my-destination': ['my-destination/src/index.ts'],
+      '@proj/my-destination': ['./my-destination/src/index.ts'],
     });
   });
 
@@ -443,7 +443,7 @@ export MyExtendedClass extends MyClass {};`
 
     const tsConfig = readJson(tree, '/tsconfig.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
-      '@proj/my-destination': ['my-destination/src/index.ts'],
+      '@proj/my-destination': ['./my-destination/src/index.ts'],
     });
   });
 
@@ -466,7 +466,7 @@ export MyExtendedClass extends MyClass {};`
 
     const tsConfig = readJson(tree, '/tsconfig.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
-      '@proj/my-destination': ['my-destination/src/index.ts'],
+      '@proj/my-destination': ['./my-destination/src/index.ts'],
     });
   });
 
@@ -492,7 +492,7 @@ export MyExtendedClass extends MyClass {};`
 
     const tsConfig = readJson(tree, '/tsconfig.base.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
-      '@proj/my-source': ['my-destination/src/index.ts'],
+      '@proj/my-source': ['./my-destination/src/index.ts'],
     });
   });
 
@@ -505,7 +505,7 @@ export MyExtendedClass extends MyClass {};`
 
     updateJson(tree, '/tsconfig.base.json', (json) => {
       json.compilerOptions.paths['@proj/my-source/server'] = [
-        'my-source/src/server.ts',
+        './my-source/src/server.ts',
       ];
       return json;
     });
@@ -527,8 +527,8 @@ export MyExtendedClass extends MyClass {};`
 
     const tsConfig = readJson(tree, '/tsconfig.base.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
-      '@proj/my-source': ['my-destination/src/index.ts'],
-      '@proj/my-source/server': ['my-destination/src/server.ts'],
+      '@proj/my-source': ['./my-destination/src/index.ts'],
+      '@proj/my-source/server': ['./my-destination/src/server.ts'],
     });
   });
 

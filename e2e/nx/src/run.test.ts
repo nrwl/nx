@@ -2,6 +2,7 @@ import {
   checkFilesExist,
   cleanupProject,
   fileExists,
+  getStrippedEnvironmentVariables,
   isWindows,
   newProject,
   readJson,
@@ -14,6 +15,7 @@ import {
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
+import { execSync } from 'child_process';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
 
@@ -773,6 +775,301 @@ describe('Nx Running Tests', () => {
     });
   });
 
+  describe('SIGINT process cleanup', () => {
+    if (isWindows()) {
+      it('skipped on windows', () => {});
+    } else {
+      it('should kill executor-based (discrete) task processes on SIGINT', async () => {
+        const lib = uniq('sigint-lib');
+        runCLI(`generate @nx/js:lib libs/${lib}`);
+
+        const pidFile = path.join(tmpProjPath(), `libs/${lib}/build.pid`);
+        const scriptBody = writePidScript('build.pid');
+
+        updateFile(`libs/${lib}/slow-build.js`, scriptBody);
+
+        // nx:run-script executor goes through the discrete/forked process path
+        updateJson(`libs/${lib}/project.json`, (config) => {
+          config.targets = {
+            build: {
+              executor: 'nx:run-script',
+              options: { script: 'build' },
+            },
+          };
+          return config;
+        });
+
+        updateJson(`libs/${lib}/package.json`, (pkg) => {
+          pkg.scripts = { build: 'node slow-build.js' };
+          return pkg;
+        });
+
+        const pids = await runNxAndSigint(
+          ['build', lib, '--skip-nx-cache'],
+          pidFile
+        );
+
+        for (const pid of pids) {
+          expect(isProcessAlive(pid)).toBe(false);
+        }
+      }, 60_000);
+
+      it('should kill run-commands task processes on SIGINT', async () => {
+        const lib = uniq('sigint-rc');
+        runCLI(`generate @nx/js:lib libs/${lib}`);
+
+        const pidFile = path.join(tmpProjPath(), `libs/${lib}/build.pid`);
+
+        updateFile(`libs/${lib}/slow-build.js`, writePidScript('build.pid'));
+
+        updateJson(`libs/${lib}/project.json`, (config) => {
+          config.targets = {
+            build: {
+              command: 'node slow-build.js',
+              options: { cwd: `libs/${lib}` },
+            },
+          };
+          return config;
+        });
+
+        const pids = await runNxAndSigint(
+          ['build', lib, '--skip-nx-cache'],
+          pidFile
+        );
+
+        for (const pid of pids) {
+          expect(isProcessAlive(pid)).toBe(false);
+        }
+      }, 60_000);
+
+      it('should kill continuous task processes on SIGINT', async () => {
+        const lib = uniq('sigint-cont');
+        runCLI(`generate @nx/js:lib libs/${lib}`);
+
+        const pidFile = path.join(tmpProjPath(), `libs/${lib}/serve.pid`);
+
+        updateFile(`libs/${lib}/serve.js`, writePidScript('serve.pid'));
+
+        updateJson(`libs/${lib}/project.json`, (config) => {
+          config.targets = {
+            serve: {
+              command: 'node serve.js',
+              options: { cwd: `libs/${lib}` },
+              continuous: true,
+            },
+          };
+          return config;
+        });
+
+        const pids = await runNxAndSigint(
+          ['serve', lib, '--skip-nx-cache'],
+          pidFile
+        );
+
+        for (const pid of pids) {
+          expect(isProcessAlive(pid)).toBe(false);
+        }
+      }, 60_000);
+
+      it('should kill executor-based (discrete) task processes on SIGINT (TUI mode)', async () => {
+        const lib = uniq('sigint-tui');
+        runCLI(`generate @nx/js:lib libs/${lib}`);
+
+        const pidFile = path.join(tmpProjPath(), `libs/${lib}/build.pid`);
+
+        updateFile(`libs/${lib}/slow-build.js`, writePidScript('build.pid'));
+
+        updateJson(`libs/${lib}/project.json`, (config) => {
+          config.targets = {
+            build: {
+              executor: 'nx:run-script',
+              options: { script: 'build' },
+            },
+          };
+          return config;
+        });
+
+        updateJson(`libs/${lib}/package.json`, (pkg) => {
+          pkg.scripts = { build: 'node slow-build.js' };
+          return pkg;
+        });
+
+        const pids = await runNxAndSigint(
+          ['build', lib, '--skip-nx-cache'],
+          pidFile,
+          { useTui: true }
+        );
+
+        for (const pid of pids) {
+          expect(isProcessAlive(pid)).toBe(false);
+        }
+      }, 60_000);
+
+      it('should kill run-commands task processes on SIGINT (TUI mode)', async () => {
+        const lib = uniq('sigint-tui-rc');
+        runCLI(`generate @nx/js:lib libs/${lib}`);
+
+        const pidFile = path.join(tmpProjPath(), `libs/${lib}/build.pid`);
+
+        updateFile(`libs/${lib}/slow-build.js`, writePidScript('build.pid'));
+
+        updateJson(`libs/${lib}/project.json`, (config) => {
+          config.targets = {
+            build: {
+              command: 'node slow-build.js',
+              options: { cwd: `libs/${lib}` },
+            },
+          };
+          return config;
+        });
+
+        const pids = await runNxAndSigint(
+          ['build', lib, '--skip-nx-cache'],
+          pidFile,
+          { useTui: true }
+        );
+
+        for (const pid of pids) {
+          expect(isProcessAlive(pid)).toBe(false);
+        }
+      }, 60_000);
+
+      it('should kill continuous task processes on SIGINT (TUI mode)', async () => {
+        const lib = uniq('sigint-tui-cont');
+        runCLI(`generate @nx/js:lib libs/${lib}`);
+
+        const pidFile = path.join(tmpProjPath(), `libs/${lib}/serve.pid`);
+
+        updateFile(`libs/${lib}/serve.js`, writePidScript('serve.pid'));
+
+        updateJson(`libs/${lib}/project.json`, (config) => {
+          config.targets = {
+            serve: {
+              command: 'node serve.js',
+              options: { cwd: `libs/${lib}` },
+              continuous: true,
+            },
+          };
+          return config;
+        });
+
+        const pids = await runNxAndSigint(
+          ['serve', lib, '--skip-nx-cache'],
+          pidFile,
+          { useTui: true }
+        );
+
+        for (const pid of pids) {
+          expect(isProcessAlive(pid)).toBe(false);
+        }
+      }, 60_000);
+    }
+
+    /** Script that writes its PID to a file and keeps running. */
+    function writePidScript(filename: string): string {
+      return `
+        const fs = require('fs');
+        const path = require('path');
+        fs.writeFileSync(path.join(__dirname, '${filename}'), String(process.pid));
+        setInterval(() => {}, 1000);
+      `;
+    }
+
+    /**
+     * Runs nx inside a real pseudo-terminal, polls for a PID file,
+     * sends SIGINT (identical to Ctrl+C), and asserts nx exits
+     * promptly with all processes in the tree dead.
+     */
+    async function runNxAndSigint(
+      args: string[],
+      pidFile: string,
+      { useTui }: { useTui?: boolean } = {}
+    ): Promise<number[]> {
+      const { existsSync, readFileSync, unlinkSync } = require('fs');
+      const { RustPseudoTerminal } = require('nx/src/native');
+
+      try {
+        unlinkSync(pidFile);
+      } catch {}
+
+      const nxBin = path.join(tmpProjPath(), 'node_modules', '.bin', 'nx');
+      const command = `${nxBin} ${args.join(' ')}`;
+
+      const pty = new RustPseudoTerminal();
+      const childProcess = pty.runCommand(command, tmpProjPath(), {
+        ...getStrippedEnvironmentVariables(),
+        CI: 'true',
+        FORCE_COLOR: 'false',
+        NX_DAEMON: 'false',
+        NX_TUI: useTui ? 'true' : 'false',
+        ...(useTui ? { NX_TUI_SKIP_CAPABILITY_CHECK: 'true' } : {}),
+      });
+
+      const nxPid = childProcess.getPid();
+      console.log(`[sigint-test] started PID=${nxPid}, useTui=${!!useTui}`);
+
+      // Track exit immediately so we don't miss it
+      let exited = false;
+      let exitResolve: (clean: boolean) => void;
+      const exitPromise = new Promise<boolean>((r) => (exitResolve = r));
+      childProcess.onExit((msg) => {
+        console.log(`[sigint-test] onExit: ${msg}`);
+        exited = true;
+        exitResolve(true);
+      });
+
+      // Poll for PID file written by the task script
+      let taskPid: number | undefined;
+      const startTime = Date.now();
+      while (Date.now() - startTime < 30_000 && !exited) {
+        if (existsSync(pidFile)) {
+          taskPid = parseInt(readFileSync(pidFile, 'utf-8').trim(), 10);
+          if (taskPid && !isNaN(taskPid)) break;
+        }
+        await new Promise((r) => setTimeout(r, 200));
+      }
+
+      if (!taskPid) {
+        childProcess.kill('SIGKILL');
+        throw new Error(
+          exited
+            ? 'nx exited before task script wrote PID file'
+            : 'Timed out waiting for PID file from task'
+        );
+      }
+
+      expect(isProcessAlive(taskPid)).toBe(true);
+
+      // Capture entire process tree before sending SIGINT
+      const processTree = getProcessTree(nxPid);
+
+      console.log(
+        `[sigint-test] taskPid=${taskPid} alive=${isProcessAlive(taskPid)}, tree=${JSON.stringify(processTree)}`
+      );
+
+      // Send SIGINT — identical to Ctrl+C in a real terminal
+      console.log(`[sigint-test] sending SIGINT`);
+      childProcess.kill('SIGINT');
+
+      // Nx should exit promptly. Without the fix, cleanup hangs
+      // waiting for unkilled discrete tasks.
+      const exitTimeout = setTimeout(() => {
+        console.log(`[sigint-test] TIMEOUT — sending SIGKILL`);
+        childProcess.kill('SIGKILL');
+        exitResolve(false);
+      }, 10_000);
+      const exitedCleanly = await exitPromise;
+      clearTimeout(exitTimeout);
+
+      console.log(`[sigint-test] exitedCleanly=${exitedCleanly}`);
+      expect(exitedCleanly).toBe(true);
+
+      await new Promise((r) => setTimeout(r, 2000));
+
+      return processTree;
+    }
+  });
+
   describe('exec', () => {
     let pkg: string;
     let pkg2: string;
@@ -945,3 +1242,46 @@ describe('Nx Running Tests', () => {
     });
   });
 });
+
+function isProcessAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Get all descendant PIDs of a process (recursive).
+ * Uses `pgrep -P` on macOS/Linux.
+ */
+function getProcessTree(rootPid: number): number[] {
+  const pids: number[] = [rootPid];
+  try {
+    const children = execSync(`pgrep -P ${rootPid}`, { encoding: 'utf-8' })
+      .trim()
+      .split('\n')
+      .filter(Boolean)
+      .map(Number);
+    for (const child of children) {
+      pids.push(...getProcessTree(child));
+    }
+  } catch {
+    // No children or process already exited
+  }
+  return pids;
+}
+
+/**
+ * Kill an entire process tree by walking descendants.
+ * Used as a fallback when cleanup times out.
+ */
+function killProcessTree(pid: number) {
+  const pids = getProcessTree(pid);
+  for (const p of pids) {
+    try {
+      process.kill(p, 'SIGKILL');
+    } catch {}
+  }
+}

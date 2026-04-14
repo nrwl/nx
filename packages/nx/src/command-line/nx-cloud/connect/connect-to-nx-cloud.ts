@@ -1,3 +1,4 @@
+import { join } from 'path';
 import { handleImport } from '../../../utils/handle-import';
 import { output } from '../../../utils/output';
 import { readNxJson } from '../../../config/configuration';
@@ -8,6 +9,7 @@ import {
 } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 import { createNxCloudOnboardingURL } from '../../../nx-cloud/utilities/url-shorten';
 import { isNxCloudUsed } from '../../../utils/nx-cloud-utils';
+import { writeJsonFile } from '../../../utils/fileutils';
 import { runNxSync } from '../../../utils/child-process';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { NxArgs } from '../../../utils/command-line-utils';
@@ -167,17 +169,16 @@ function sleep(ms: number) {
 export async function connectExistingRepoToNxCloudPrompt(
   command = 'init',
   key: MessageKey = 'setupNxCloud'
-): Promise<boolean> {
-  const res = await nxCloudPrompt(key).then(
-    (value: MessageOptionKey) => value === 'yes'
-  );
+): Promise<MessageOptionKey> {
+  const res = await nxCloudPrompt(key);
   await recordStat({
     command,
     nxVersion,
-    useCloud: res,
+    useCloud: res === 'yes',
     meta: {
       type: 'complete',
       setupCloudPrompt: messages.codeOfSelectedPromptMessage(key) || '',
+      nxCloudArg: res,
       nodeVersion: process.versions.node,
       os: process.platform,
       packageManager: detectPackageManager(),
@@ -190,10 +191,17 @@ export async function connectExistingRepoToNxCloudPrompt(
 
 export async function connectToNxCloudWithPrompt(command: string) {
   const setNxCloud = await nxCloudPrompt('setupNxCloud');
-  const useCloud =
-    setNxCloud === 'yes'
-      ? await connectToNxCloudCommand({ generateToken: false }, command)
-      : false;
+  let useCloud = false;
+  if (setNxCloud === 'yes') {
+    useCloud = await connectToNxCloudCommand({ generateToken: false }, command);
+  } else if (setNxCloud === 'never') {
+    const nxJsonPath = join(workspaceRoot, 'nx.json');
+    const nxJson = readNxJson();
+    if (nxJson) {
+      nxJson.neverConnectToCloud = true;
+      writeJsonFile(nxJsonPath, nxJson);
+    }
+  }
   await recordStat({
     command,
     nxVersion,
@@ -202,6 +210,7 @@ export async function connectToNxCloudWithPrompt(command: string) {
       type: 'complete',
       setupCloudPrompt:
         messages.codeOfSelectedPromptMessage('setupNxCloud') || '',
+      nxCloudArg: setNxCloud,
       nodeVersion: process.versions.node,
       os: process.platform,
       packageManager: detectPackageManager(),

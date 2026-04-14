@@ -18,6 +18,7 @@
     "dist",
     "**/*.spec.ts",
     "**/*_spec.ts",
+    "**/test-utils.ts",
     "jest.config.ts",
     "**/__fixtures__/**/*.*",
     "./src/internal-testing-utils/**/*.ts",
