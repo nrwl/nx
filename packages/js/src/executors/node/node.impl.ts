@@ -453,7 +453,13 @@ function getFileToRun(
         projectRoot: project.data.root,
         workspaceRoot: context.root,
       });
-      return path.join(outputFilePath, 'main.js');
+      // `outputs` are cache patterns and may contain globs (e.g. the inferred
+      // `@nx/js/typescript` build target scopes its output to
+      // `{projectRoot}/dist/**/*.{js,...}` to avoid caching non-tsc files).
+      // Strip the glob portion back to the last path separator before it to
+      // recover the base output directory.
+      const outputDir = stripGlobToBaseDir(outputFilePath);
+      return path.join(outputDir, 'main.js');
     }
     const fallbackFile = path.join('dist', project.data.root, 'main.js');
 
@@ -483,6 +489,16 @@ function getFileToRun(
   }
 
   return join(context.root, buildOptions.outputPath, outputFileName);
+}
+
+function stripGlobToBaseDir(pathWithGlob: string): string {
+  const globIdx = pathWithGlob.search(/[*?[{(]/);
+  if (globIdx === -1) {
+    return pathWithGlob.replace(/[\\/]+$/, '');
+  }
+  const prefix = pathWithGlob.slice(0, globIdx);
+  const lastSep = Math.max(prefix.lastIndexOf('/'), prefix.lastIndexOf('\\'));
+  return lastSep === -1 ? '' : prefix.slice(0, lastSep);
 }
 
 function fileToRunCorrectPath(fileToRun: string): string {
