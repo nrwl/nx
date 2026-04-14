@@ -10,6 +10,7 @@ export const NG_RSPACK_SYMBOL_NAME = 'NG_RSPACK_BUILD';
 export type NG_RSPACK_COMPILATION_STATE = {
   javascriptTransformer: JavaScriptTransformer;
   typescriptFileCache: SourceFileCache['typeScriptFileCache'];
+  rawEmitCache: Map<string, string>;
   i18n?: I18nOptions;
 };
 export type NgRspackCompilation = Compilation & {

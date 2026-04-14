@@ -6,6 +6,7 @@ import {
 } from '@angular/build/private';
 import {
   buildAndAnalyze,
+  rawEmitCache,
   DiagnosticModes,
   JavaScriptTransformer,
   SourceFileCache,
@@ -127,7 +128,8 @@ export class AngularRspackPlugin implements RspackPluginInstance {
                 compiler.options.resolve.tsConfig,
                 watchingModifiedFiles.size > 0
                   ? watchingModifiedFiles
-                  : undefined
+                  : undefined,
+                true
               );
 
               await buildAndAnalyze(
@@ -266,6 +268,13 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         }
       }
 
+      callback();
+    });
+
+    // Tear down the JavaScriptTransformer worker pool only when the compiler
+    // shuts down. Doing it per-build would respawn workers on every rebuild
+    // and discard their warm in-memory state.
+    compiler.hooks.shutdown.tapAsync(PLUGIN_NAME, async (callback) => {
       await this.#javascriptTransformer.close();
       callback();
     });
@@ -358,6 +367,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         javascriptTransformer: this
           .#javascriptTransformer as unknown as JavaScriptTransformer,
         typescriptFileCache: this.#sourceFileCache.typeScriptFileCache,
+        rawEmitCache,
         i18n: this.#i18n,
       });
     });
@@ -410,7 +420,8 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   private async setupCompilation(
     root: string,
     tsConfig: RspackOptionsNormalized['resolve']['tsConfig'],
-    modifiedFiles?: Set<string>
+    modifiedFiles?: Set<string>,
+    watch = false
   ) {
     const tsconfigPath = tsConfig
       ? typeof tsConfig === 'string'
@@ -433,6 +444,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         hasServer: this.#_options.hasServer,
         includePaths: this.#_options.stylePreprocessorOptions?.includePaths,
         sass: this.#_options.stylePreprocessorOptions?.sass,
+        watch,
       },
       this.#sourceFileCache,
       this.#angularCompilation,

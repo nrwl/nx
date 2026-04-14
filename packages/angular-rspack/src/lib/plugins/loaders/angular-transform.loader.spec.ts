@@ -23,9 +23,15 @@ describe('angular-transform.loader', () => {
   const callback = vi.fn();
   const addDependency = vi.fn();
   const typescriptFileCache = new Map<string, string | Buffer>();
+  const rawEmitCache = new Map<string, string>();
+  const javascriptTransformer = {
+    transformData: vi.fn(),
+  };
   const _compilation = {
     [NG_RSPACK_SYMBOL_NAME]: () => ({
       typescriptFileCache,
+      rawEmitCache,
+      javascriptTransformer,
     }),
   } as unknown as NgRspackCompilation;
   const thisValue = {
