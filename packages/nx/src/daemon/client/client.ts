@@ -28,7 +28,6 @@ import {
 import { preventRecursionInGraphConstruction } from '../../project-graph/project-graph';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
 import { isJsonMessage } from '../../utils/consume-messages-from-socket';
-import { waitForSocketConnection } from '../../utils/wait-for-socket-connection';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import { handleImport } from '../../utils/handle-import';
 import { isCI } from '../../utils/is-ci';
@@ -39,6 +38,7 @@ import type {
   FlushSyncGeneratorChangesResult,
   SyncGeneratorRunResult,
 } from '../../utils/sync-generators';
+import { waitForSocketConnection } from '../../utils/wait-for-socket-connection';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getDaemonProcessIdSync, readDaemonProcessJsonCache } from '../cache';
 import { isNxVersionMismatch } from '../is-nx-version-mismatch';
@@ -50,6 +50,7 @@ import {
   type HandleResetConfigureAiAgentsStatusMessage,
   RESET_CONFIGURE_AI_AGENTS_STATUS,
 } from '../message-types/configure-ai-agents';
+import { DaemonMessage } from '../message-types/daemon-message';
 import {
   FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
   type HandleFlushSyncGeneratorChangesToDiskMessage,
@@ -119,20 +120,10 @@ import {
 } from '../tmp-dir';
 import {
   DaemonSocketMessenger,
-  Message,
   VersionMismatchError,
 } from './daemon-socket-messenger';
 
-const DAEMON_ENV_REQUIRED_SETTINGS = {
-  NX_PROJECT_GLOB_CACHE: 'false',
-  NX_CACHE_PROJECTS_CONFIG: 'false',
-};
-
-const DAEMON_ENV_OVERRIDABLE_SETTINGS = {
-  NX_VERBOSE_LOGGING: 'true',
-  NX_PERF_LOGGING: 'true',
-  NX_NATIVE_LOGGING: 'nx=debug',
-};
+import { getDaemonEnv } from './daemon-environment';
 
 export type UnregisterCallback = () => void;
 export type ChangedFile = {
@@ -1051,8 +1042,8 @@ export class DaemonClient {
     }
   }
 
-  private async sendToDaemonViaQueue(
-    messageToDaemon: Message,
+  private async sendToDaemonViaQueue<T extends DaemonMessage>(
+    messageToDaemon: T,
     force?: 'v8' | 'json'
   ): Promise<any> {
     return this.queue.sendToQueue(() =>
@@ -1211,10 +1202,17 @@ export class DaemonClient {
     return false;
   }
 
+  private envReflectionSent = false;
   private async sendMessageToDaemon(
-    message: Message,
+    message: DaemonMessage,
     force?: 'v8' | 'json'
   ): Promise<any> {
+    // the first message sent to the daemon includes an env prop
+    // that updates the process.env values on the daemon.
+    if (!this.envReflectionSent && !global.NX_PLUGIN_WORKER) {
+      message.env = getDaemonEnv();
+      this.envReflectionSent = true;
+    }
     await this.startDaemonIfNecessary();
 
     let keepAlive: NodeJS.Timeout;
@@ -1332,13 +1330,12 @@ export class DaemonClient {
         detached: true,
         windowsHide: true,
         shell: false,
-        env: {
-          ...DAEMON_ENV_OVERRIDABLE_SETTINGS,
-          ...process.env,
-          ...DAEMON_ENV_REQUIRED_SETTINGS,
-        },
+        env: getDaemonEnv(),
       }
     );
+    // if this process is the process that spawned the daemon,
+    // the daemon env is already up to date
+    this.envReflectionSent = true;
     backgroundProcess.unref();
 
     /**
