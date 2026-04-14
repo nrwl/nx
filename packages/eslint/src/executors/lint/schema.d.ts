@@ -27,6 +27,8 @@ export interface Schema extends JsonObject {
   suppressAll?: boolean;
   suppressRule?: string[];
   suppressionsLocation?: string;
+  pruneSuppressions?: boolean;
+  passOnUnprunedSuppressions?: boolean;
 }
 
 type Formatter =
