@@ -1,26 +1,24 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { prompt } from 'enquirer';
-import { execSync } from 'node:child_process';
+import { execFileSync, execSync } from 'node:child_process';
 import { existsSync, promises as fsp } from 'node:fs';
 import { homedir } from 'node:os';
-import { output } from '../../../../utils/output';
+import { orange, output } from '../../../../utils/output';
 import { joinPathFragments } from '../../../../utils/path';
 import type { PostGitTask } from '../../changelog';
 import { type ResolvedCreateRemoteReleaseProvider } from '../../config/config';
 import { Reference } from '../git';
 import { ReleaseVersion } from '../shared';
+import { extractGitHubRepoSlug } from './extract-repo-slug';
 import {
   RemoteReleaseClient,
   RemoteReleaseOptions,
   RemoteReleaseResult,
   RemoteRepoData,
-  RemoteRepoSlug,
 } from './remote-release-client';
 
-// axios types and values don't seem to match
-import _axios = require('axios');
-
-const axios = _axios as any as (typeof _axios)['default'];
+// Use default import with esModuleInterop
+import axios from 'axios';
 
 export interface GithubRepoData extends RemoteRepoData {}
 
@@ -34,6 +32,18 @@ export interface GithubRemoteRelease {
   draft?: boolean;
   prerelease?: boolean;
   make_latest?: 'legacy' | boolean;
+}
+
+interface UnghUserLookupResponse {
+  user?: {
+    username?: string;
+  } | null;
+}
+
+interface GithubUserSearchResponse {
+  items?: Array<{
+    login?: string;
+  }>;
 }
 
 export const defaultCreateReleaseProvider: ResolvedCreateRemoteReleaseProvider =
@@ -57,6 +67,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
       const remoteUrl = execSync(`git remote get-url ${remoteName}`, {
         encoding: 'utf8',
         stdio: 'pipe',
+        windowsHide: true,
       }).trim();
 
       // Use the default provider if custom one is not specified or releases are disabled
@@ -66,29 +77,22 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
         createReleaseConfig !== false &&
         typeof createReleaseConfig !== 'string'
       ) {
-        hostname = createReleaseConfig.hostname;
+        hostname = createReleaseConfig.hostname || hostname;
         apiBaseUrl = createReleaseConfig.apiBaseUrl;
       }
 
-      // Extract the 'user/repo' part from the URL
-      const escapedHostname = hostname.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regexString = `${escapedHostname}[/:]([\\w.-]+/[\\w.-]+)(\\.git)?`;
-      const regex = new RegExp(regexString);
-      const match = remoteUrl.match(regex);
-
-      if (match && match[1]) {
-        return {
-          hostname,
-          apiBaseUrl,
-          // Ensure any trailing .git is stripped
-          slug: match[1].replace(/\.git$/, '') as RemoteRepoSlug,
-        };
+      const slug = extractGitHubRepoSlug(remoteUrl, hostname);
+      if (slug) {
+        return { hostname, apiBaseUrl, slug };
       } else {
         throw new Error(
           `Could not extract "user/repo" data from the resolved remote URL: ${remoteUrl}`
         );
       }
     } catch (error) {
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        console.error(error);
+      }
       return null;
     }
   }
@@ -128,7 +132,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
           const token = execSync(`gh auth token`, {
             encoding: 'utf8',
             stdio: 'pipe',
-            windowsHide: false,
+            windowsHide: true,
           }).trim();
           return { token, headerName: 'Authorization' };
         }
@@ -177,16 +181,60 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
           const { data } = await axios
             .get<
               any,
-              { data?: { user?: { username: string } } }
+              { data?: UnghUserLookupResponse }
             >(`https://ungh.cc/users/find/${email}`)
             .catch(() => ({ data: { user: null } }));
-          if (data?.user) {
+          if (data?.user?.username) {
             meta.username = data.user.username;
+            break;
+          }
+          const usernameFromGhCli = this.resolveUsernameFromGhCli(email);
+          if (usernameFromGhCli) {
+            meta.username = usernameFromGhCli;
             break;
           }
         }
       })
     );
+  }
+
+  private resolveUsernameFromGhCli(email: string): string | null {
+    const hostname =
+      this.getRemoteRepoData<GithubRepoData>()?.hostname ??
+      defaultCreateReleaseProvider.hostname;
+
+    try {
+      const stdout = execFileSync(
+        'gh',
+        [
+          'api',
+          '--hostname',
+          hostname,
+          '--method',
+          'GET',
+          'search/users',
+          '-f',
+          `q=${email} in:email`,
+        ],
+        {
+          encoding: 'utf8',
+          stdio: 'pipe',
+          windowsHide: true,
+        }
+      ).trim();
+
+      if (!stdout) {
+        return null;
+      }
+
+      const data = JSON.parse(stdout) as GithubUserSearchResponse;
+      return data.items?.[0]?.login ?? null;
+    } catch (error) {
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        console.error(error);
+      }
+      return null;
+    }
   }
 
   /**
@@ -263,15 +311,11 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
     const logTitle = `https://${githubRepoData.hostname}/${githubRepoData.slug}/releases/tag/${gitTag}`;
     if (existingRelease) {
       console.error(
-        `${chalk.white('UPDATE')} ${logTitle}${
-          dryRun ? chalk.keyword('orange')(' [dry-run]') : ''
-        }`
+        `${pc.white('UPDATE')} ${logTitle}${dryRun ? orange(' [dry-run]') : ''}`
       );
     } else {
       console.error(
-        `${chalk.green('CREATE')} ${logTitle}${
-          dryRun ? chalk.keyword('orange')(' [dry-run]') : ''
-        }`
+        `${pc.green('CREATE')} ${logTitle}${dryRun ? orange(' [dry-run]') : ''}`
       );
     }
   }
@@ -314,14 +358,14 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
       .then(() => {
         console.info(
           `\nFollow up in the browser to manually create the release:\n\n` +
-            chalk.underline(chalk.cyan(result.url)) +
+            pc.underline(pc.cyan(result.url)) +
             `\n`
         );
       })
       .catch(() => {
         console.info(
           `Open this link to manually create a release: \n` +
-            chalk.underline(chalk.cyan(result.url)) +
+            pc.underline(pc.cyan(result.url)) +
             '\n'
         );
       });

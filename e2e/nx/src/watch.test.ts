@@ -11,7 +11,7 @@ import {
 } from '@nx/e2e-utils';
 import { spawn } from 'child_process';
 import { join } from 'path';
-import { writeFileSync, mkdtempSync } from 'fs';
+import { writeFileSync, mkdtempSync, mkdirSync } from 'fs';
 import { tmpdir } from 'os';
 
 let cacheDirectory = mkdtempSync(join(tmpdir(), 'daemon'));
@@ -22,6 +22,14 @@ async function writeFileForWatcher(path: string, content: string) {
 
   console.log(`writing to: ${e2ePath}`);
   writeFileSync(e2ePath, content);
+  await wait(10);
+}
+
+async function mkdirForWatcher(path: string) {
+  const e2ePath = join(tmpProjPath(), path);
+
+  console.log(`creating directory: ${e2ePath}`);
+  mkdirSync(e2ePath, { recursive: true });
   await wait(10);
 }
 
@@ -153,6 +161,26 @@ describe('Nx Watch', () => {
     let results = output.sort();
 
     expect(results).toEqual([proj1, proj3]);
+  }, 50000);
+
+  it('should detect files created in newly created directories', async () => {
+    const getOutput = await runWatch(`--all -- echo \\$NX_FILE_CHANGES`);
+
+    // Create a new subdirectory inside an existing project
+    await mkdirForWatcher(`libs/${proj1}/src/newsubdir`);
+    // Wait for the watcher to register the new directory
+    await wait(2000);
+
+    // Create a file in the newly created directory
+    await writeFileForWatcher(
+      `libs/${proj1}/src/newsubdir/newfile.ts`,
+      'export const x = 1;'
+    );
+
+    let output = (await getOutput())[0];
+    let results = output.split(' ').sort();
+
+    expect(results).toContain(`libs/${proj1}/src/newsubdir/newfile.ts`);
   }, 50000);
 
   it('should reconnect after daemon restart', async () => {

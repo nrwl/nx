@@ -424,6 +424,48 @@ describe('project-graph-pruning', () => {
         '4.17.20'
       );
     });
+
+    it('should not crash when nested nodes have no path to package.json deps', () => {
+      // This tests the fix for https://github.com/nrwl/nx/issues/34322
+      // When transitive dependencies have multiple versions where neither version
+      // is reachable from a direct dependency, the code should not crash.
+
+      // Setup: Add multiple nested versions that are NOT in packageJsonDeps
+      builder.addExternalNode({
+        type: 'npm',
+        name: 'npm:lodash@4.17.20',
+        data: {
+          packageName: 'lodash',
+          version: '4.17.20',
+        },
+      });
+      builder.addExternalNode({
+        type: 'npm',
+        name: 'npm:lodash@4.17.19',
+        data: {
+          packageName: 'lodash',
+          version: '4.17.19',
+        },
+      });
+      // Connect them as nested dependencies
+      builder.addStaticDependency('npm:lodash@4.17.20', 'npm:lodash@4.17.19');
+
+      // packageJsonDeps does NOT include lodash, so pathLengthToIncoming
+      // will return undefined for both nested nodes
+      const packageJsonDeps = {
+        typescript: '5.0.0',
+      };
+
+      // Should NOT throw "Cannot read properties of undefined (reading 'name')"
+      expect(() => rehoistNodes(graph, packageJsonDeps, builder)).not.toThrow();
+
+      const result = builder.getUpdatedProjectGraph();
+      // Nested nodes should remain as-is (not rehoisted)
+      expect(result.externalNodes?.['npm:lodash@4.17.20']).toBeDefined();
+      expect(result.externalNodes?.['npm:lodash@4.17.19']).toBeDefined();
+      // npm:lodash should NOT be created since we couldn't determine which to hoist
+      expect(result.externalNodes?.['npm:lodash']).toBeUndefined();
+    });
   });
 
   describe('pruneProjectGraph', () => {

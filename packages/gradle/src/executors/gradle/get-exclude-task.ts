@@ -1,7 +1,37 @@
 import {
-  ProjectGraph,
   ProjectGraphProjectNode,
-} from 'nx/src/config/project-graph';
+  Target,
+  targetToTargetString,
+} from '@nx/devkit';
+
+/**
+ * Resolves a dependsOn entry to a Target.
+ * Handles both string format ("target") and object format
+ * ({ target: "name", projects?: ["proj1"] }).
+ * For same-project object deps (no projects field), uses the owning project name.
+ */
+function resolveDepToTarget(
+  dep: string | { target?: string; projects?: string | string[] },
+  owningProject: string
+): Target | null {
+  if (typeof dep === 'string') {
+    return { project: owningProject, target: dep };
+  }
+  const target = dep?.target;
+  if (!target) {
+    return null;
+  }
+  if (dep.projects) {
+    const projectList = Array.isArray(dep.projects)
+      ? dep.projects
+      : [dep.projects];
+    return {
+      project: projectList[0] !== 'self' ? projectList[0] : owningProject,
+      target,
+    };
+  }
+  return { project: owningProject, target };
+}
 
 /**
  * Returns Gradle CLI arguments to exclude dependent tasks
@@ -10,28 +40,31 @@ import {
  * For example, if a project defines `dependsOn: ['lint']` for the `test` target,
  * and only `test` is running, this will return: ['lint']
  *
- * @param taskIds - Set of Nx task IDs to process
+ * @param tasks - Set of Target to process
  * @param nodes - Project graph nodes
- * @param runningTaskIds - Set of task IDs that are currently running (won't be excluded)
+ * @param runningTasks - Set of Target that are currently running (won't be excluded)
  * @param includeDependsOnTasks - Set of Gradle task names that should be included (not excluded)
  *   (typically provider-based dependencies that Gradle must resolve)
  */
 export function getExcludeTasks(
-  taskIds: Set<string>,
+  tasks: Set<Target>,
   nodes: Record<string, ProjectGraphProjectNode>,
-  runningTaskIds: Set<string> = new Set(),
+  runningTasks: Set<Target> = new Set(),
   includeDependsOnTasks: Set<string> = new Set()
 ): Set<string> {
   const excludes = new Set<string>();
+  const runningKeys = new Set(
+    Array.from(runningTasks).map(targetToTargetString)
+  );
 
-  for (const taskId of taskIds) {
-    const [project, target] = taskId.split(':');
-    const taskDeps = nodes[project]?.data?.targets?.[target]?.dependsOn ?? [];
+  for (const task of tasks) {
+    const taskDeps =
+      nodes[task.project]?.data?.targets?.[task.target]?.dependsOn ?? [];
 
     for (const dep of taskDeps) {
-      const taskId = typeof dep === 'string' ? dep : dep?.target;
-      if (taskId && !runningTaskIds.has(taskId)) {
-        const gradleTaskName = getGradleTaskNameWithNxTaskId(taskId, nodes);
+      const depPt = resolveDepToTarget(dep, task.project);
+      if (depPt && !runningKeys.has(targetToTargetString(depPt))) {
+        const gradleTaskName = getGradleTaskName(depPt, nodes);
         if (gradleTaskName && !includeDependsOnTasks.has(gradleTaskName)) {
           excludes.add(gradleTaskName);
         }
@@ -42,43 +75,47 @@ export function getExcludeTasks(
   return excludes;
 }
 
-export function getGradleTaskNameWithNxTaskId(
-  nxTaskId: string,
+export function getGradleTaskName(
+  pt: Target,
   nodes: Record<string, ProjectGraphProjectNode>
 ): string | null {
-  const [projectName, targetName] = nxTaskId.split(':');
-  const gradleTaskName =
-    nodes[projectName]?.data?.targets?.[targetName]?.options?.taskName;
-  return gradleTaskName;
+  return nodes[pt.project]?.data?.targets?.[pt.target]?.options?.taskName;
 }
 
 export function getAllDependsOn(
   nodes: Record<string, ProjectGraphProjectNode>,
   projectName: string,
   targetName: string
-): Set<string> {
+): Set<Target> {
   const allDependsOn = new Set<string>();
-  const stack: string[] = [`${projectName}:${targetName}`];
+  const result = new Set<Target>();
+  const startKey = targetToTargetString({
+    project: projectName,
+    target: targetName,
+  });
+  const stack: Target[] = [{ project: projectName, target: targetName }];
 
   while (stack.length > 0) {
-    const currentTaskId = stack.pop();
-    if (currentTaskId && !allDependsOn.has(currentTaskId)) {
-      allDependsOn.add(currentTaskId);
+    const current = stack.pop();
+    const key = targetToTargetString(current);
+    if (!allDependsOn.has(key)) {
+      allDependsOn.add(key);
+      if (key !== startKey) {
+        result.add(current);
+      }
 
-      const [currentProjectName, currentTargetName] = currentTaskId.split(':');
       const directDependencies =
-        nodes[currentProjectName]?.data?.targets?.[currentTargetName]
-          ?.dependsOn ?? [];
+        nodes[current.project]?.data?.targets?.[current.target]?.dependsOn ??
+        [];
 
       for (const dep of directDependencies) {
-        const depTaskId = typeof dep === 'string' ? dep : dep?.target;
-        if (depTaskId && !allDependsOn.has(depTaskId)) {
-          stack.push(depTaskId);
+        const depPt = resolveDepToTarget(dep, current.project);
+        if (depPt && !allDependsOn.has(targetToTargetString(depPt))) {
+          stack.push(depPt);
         }
       }
     }
   }
-  allDependsOn.delete(`${projectName}:${targetName}`); // Exclude the starting task itself
 
-  return allDependsOn;
+  return result;
 }

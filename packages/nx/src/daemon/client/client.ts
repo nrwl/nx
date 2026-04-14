@@ -1,5 +1,6 @@
-import { workspaceRoot } from '../../utils/workspace-root';
 import { ChildProcess, spawn } from 'child_process';
+import { FileHandle, open } from 'fs/promises';
+import { connect } from 'net';
 import {
   existsSync,
   mkdirSync,
@@ -7,46 +8,53 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs';
-import { FileHandle, open } from 'fs/promises';
-import { connect } from 'net';
+import { deserialize } from 'node:v8';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { output } from '../../utils/output';
-import {
-  DAEMON_DIR_FOR_CURRENT_WORKSPACE,
-  DAEMON_OUTPUT_LOG_FILE,
-  isDaemonDisabled,
-  removeSocketDir,
-} from '../tmp-dir';
-import { FileData, ProjectGraph } from '../../config/project-graph';
-import { isCI } from '../../utils/is-ci';
-import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
-import { PromisedBasedQueue } from '../../utils/promised-based-queue';
-import {
-  DaemonSocketMessenger,
-  Message,
-  VersionMismatchError,
-} from './daemon-socket-messenger';
-import { clientLogger } from '../logger';
-import { getDaemonProcessIdSync, readDaemonProcessJsonCache } from '../cache';
-import { isNxVersionMismatch } from '../is-nx-version-mismatch';
-import { Hash } from '../../hasher/task-hasher';
+import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
+import { FileData, ProjectGraph } from '../../config/project-graph';
 import { Task, TaskGraph } from '../../config/task-graph';
-import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
+import { Hash } from '../../hasher/task-hasher';
+import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
 import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
-import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
 import {
-  HandleGlobMessage,
-  HandleMultiGlobMessage,
-} from '../message-types/glob';
+  PostTasksExecutionContext,
+  PreTasksExecutionContext,
+} from '../../project-graph/plugins/public-api';
+import { preventRecursionInGraphConstruction } from '../../project-graph/project-graph';
+import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
+import { isJsonMessage } from '../../utils/consume-messages-from-socket';
+import { DelayedSpinner } from '../../utils/delayed-spinner';
+import { handleImport } from '../../utils/handle-import';
+import { isCI } from '../../utils/is-ci';
+import { isSandbox } from '../../utils/is-sandbox';
+import { output } from '../../utils/output';
+import { PromisedBasedQueue } from '../../utils/promised-based-queue';
+import type {
+  FlushSyncGeneratorChangesResult,
+  SyncGeneratorRunResult,
+} from '../../utils/sync-generators';
+import { waitForSocketConnection } from '../../utils/wait-for-socket-connection';
+import { workspaceRoot } from '../../utils/workspace-root';
+import { getDaemonProcessIdSync, readDaemonProcessJsonCache } from '../cache';
+import { isNxVersionMismatch } from '../is-nx-version-mismatch';
+import { clientLogger } from '../logger';
 import {
-  GET_NX_WORKSPACE_FILES,
-  HandleNxWorkspaceFilesMessage,
-} from '../message-types/get-nx-workspace-files';
+  type ConfigureAiAgentsStatusResponse,
+  GET_CONFIGURE_AI_AGENTS_STATUS,
+  type HandleGetConfigureAiAgentsStatusMessage,
+  type HandleResetConfigureAiAgentsStatusMessage,
+  RESET_CONFIGURE_AI_AGENTS_STATUS,
+} from '../message-types/configure-ai-agents';
+import { DaemonMessage } from '../message-types/daemon-message';
+import {
+  FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
+  type HandleFlushSyncGeneratorChangesToDiskMessage,
+} from '../message-types/flush-sync-generator-changes-to-disk';
 import {
   GET_CONTEXT_FILE_DATA,
   HandleContextFileDataMessage,
@@ -56,11 +64,42 @@ import {
   HandleGetFilesInDirectoryMessage,
 } from '../message-types/get-files-in-directory';
 import {
+  GET_NX_WORKSPACE_FILES,
+  HandleNxWorkspaceFilesMessage,
+} from '../message-types/get-nx-workspace-files';
+import {
+  GET_REGISTERED_SYNC_GENERATORS,
+  type HandleGetRegisteredSyncGeneratorsMessage,
+} from '../message-types/get-registered-sync-generators';
+import {
+  GET_SYNC_GENERATOR_CHANGES,
+  type HandleGetSyncGeneratorChangesMessage,
+} from '../message-types/get-sync-generator-changes';
+import {
+  HandleGlobMessage,
+  HandleMultiGlobMessage,
+} from '../message-types/glob';
+import {
   HandleHashGlobMessage,
   HandleHashMultiGlobMessage,
   HASH_GLOB,
   HASH_MULTI_GLOB,
 } from '../message-types/hash-glob';
+import {
+  GET_NX_CONSOLE_STATUS,
+  type HandleGetNxConsoleStatusMessage,
+  type HandleSetNxConsolePreferenceAndInstallMessage,
+  type NxConsoleStatusResponse,
+  SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
+  type SetNxConsolePreferenceAndInstallResponse,
+} from '../message-types/nx-console';
+import { REGISTER_PROJECT_GRAPH_LISTENER } from '../message-types/register-project-graph-listener';
+import {
+  HandlePostTasksExecutionMessage,
+  HandlePreTasksExecutionMessage,
+  POST_TASKS_EXECUTION,
+  PRE_TASKS_EXECUTION,
+} from '../message-types/run-tasks-execution-hooks';
 import {
   GET_ESTIMATED_TASK_TIMINGS,
   GET_FLAKY_TASKS,
@@ -70,56 +109,21 @@ import {
   RECORD_TASK_RUNS,
 } from '../message-types/task-history';
 import {
-  GET_SYNC_GENERATOR_CHANGES,
-  type HandleGetSyncGeneratorChangesMessage,
-} from '../message-types/get-sync-generator-changes';
-import type {
-  FlushSyncGeneratorChangesResult,
-  SyncGeneratorRunResult,
-} from '../../utils/sync-generators';
-import {
-  GET_REGISTERED_SYNC_GENERATORS,
-  type HandleGetRegisteredSyncGeneratorsMessage,
-} from '../message-types/get-registered-sync-generators';
-import {
   type HandleUpdateWorkspaceContextMessage,
   UPDATE_WORKSPACE_CONTEXT,
 } from '../message-types/update-workspace-context';
 import {
-  FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
-  type HandleFlushSyncGeneratorChangesToDiskMessage,
-} from '../message-types/flush-sync-generator-changes-to-disk';
-import { DelayedSpinner } from '../../utils/delayed-spinner';
+  DAEMON_DIR_FOR_CURRENT_WORKSPACE,
+  DAEMON_OUTPUT_LOG_FILE,
+  isDaemonDisabled,
+  removeSocketDir,
+} from '../tmp-dir';
 import {
-  PostTasksExecutionContext,
-  PreTasksExecutionContext,
-} from '../../project-graph/plugins/public-api';
-import {
-  HandlePostTasksExecutionMessage,
-  HandlePreTasksExecutionMessage,
-  POST_TASKS_EXECUTION,
-  PRE_TASKS_EXECUTION,
-} from '../message-types/run-tasks-execution-hooks';
-import { REGISTER_PROJECT_GRAPH_LISTENER } from '../message-types/register-project-graph-listener';
-import {
-  GET_NX_CONSOLE_STATUS,
-  type HandleGetNxConsoleStatusMessage,
-  type HandleSetNxConsolePreferenceAndInstallMessage,
-  type NxConsoleStatusResponse,
-  SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
-  type SetNxConsolePreferenceAndInstallResponse,
-} from '../message-types/nx-console';
-import { deserialize } from 'node:v8';
-import { isJsonMessage } from '../../utils/consume-messages-from-socket';
-import { preventRecursionInGraphConstruction } from '../../project-graph/project-graph';
+  DaemonSocketMessenger,
+  VersionMismatchError,
+} from './daemon-socket-messenger';
 
-const DAEMON_ENV_SETTINGS = {
-  NX_PROJECT_GLOB_CACHE: 'false',
-  NX_CACHE_PROJECTS_CONFIG: 'false',
-  NX_VERBOSE_LOGGING: 'true',
-  NX_PERF_LOGGING: 'true',
-  NX_NATIVE_LOGGING: 'nx=debug',
-};
+import { getDaemonEnv } from './daemon-environment';
 
 export type UnregisterCallback = () => void;
 export type ChangedFile = {
@@ -227,7 +231,7 @@ export class DaemonClient {
       // version mismatch => no daemon because the installed nx version differs from the running one
       if (
         isNxVersionMismatch() ||
-        ((isCI() || isDocker()) && env !== 'true') ||
+        ((isCI() || isDocker() || isSandbox()) && env !== 'true') ||
         isDaemonDisabled() ||
         nxJsonIsNotPresent() ||
         (useDaemonProcessOption === undefined && env === 'false') ||
@@ -338,7 +342,8 @@ export class DaemonClient {
     tasks: Task[],
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
-    cwd: string
+    cwd: string,
+    collectInputs?: boolean
   ): Promise<Hash[]> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
@@ -350,6 +355,7 @@ export class DaemonClient {
       tasks,
       taskGraph,
       cwd,
+      collectInputs,
     });
   }
 
@@ -960,6 +966,20 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
+  getConfigureAiAgentsStatus(): Promise<ConfigureAiAgentsStatusResponse> {
+    const message: HandleGetConfigureAiAgentsStatusMessage = {
+      type: GET_CONFIGURE_AI_AGENTS_STATUS,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  resetConfigureAiAgentsStatus(): Promise<{ success: boolean }> {
+    const message: HandleResetConfigureAiAgentsStatusMessage = {
+      type: RESET_CONFIGURE_AI_AGENTS_STATUS,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
   async isServerAvailable(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       try {
@@ -1022,8 +1042,8 @@ export class DaemonClient {
     }
   }
 
-  private async sendToDaemonViaQueue(
-    messageToDaemon: Message,
+  private async sendToDaemonViaQueue<T extends DaemonMessage>(
+    messageToDaemon: T,
     force?: 'v8' | 'json'
   ): Promise<any> {
     return this.queue.sendToQueue(() =>
@@ -1034,9 +1054,12 @@ export class DaemonClient {
   private setUpConnection() {
     const socketPath = this.getSocketPath();
 
-    this.socketMessenger = new DaemonSocketMessenger(
-      connect(socketPath)
-    ).listen(
+    const socket = connect(socketPath);
+    // Unref the socket so it doesn't keep the process alive. The
+    // sendMessageToDaemon method uses a keep-alive setTimeout to
+    // explicitly hold the event loop open while awaiting a response.
+    socket.unref();
+    this.socketMessenger = new DaemonSocketMessenger(socket).listen(
       (message) => this.handleMessage(message),
       () => {
         // it's ok for the daemon to terminate if the client doesn't wait on
@@ -1113,13 +1136,13 @@ export class DaemonClient {
 
       // Resend the pending message if one exists
       if (this.currentMessage && this.currentResolve && this.currentReject) {
-        // Decrement the queue counter that was incremented when the error occurred
-        this.queue.decrementQueueCounter();
-        // Retry the message through the normal queue
+        // Retry the message directly (not through the queue) to resolve the
+        // pending promise that the original queue entry is waiting on.
+        // This allows the original queue entry to complete naturally.
         const msg = this.currentMessage;
         const res = this.currentResolve;
         const rej = this.currentReject;
-        this.sendToDaemonViaQueue(msg).then(res, rej);
+        this.sendMessageToDaemon(msg).then(res, rej);
       }
     } else {
       // Failed to reconnect after all attempts, reject the pending request
@@ -1143,35 +1166,34 @@ export class DaemonClient {
   private async waitForServerToBeAvailable(options: {
     ignoreVersionMismatch: boolean;
   }): Promise<boolean> {
-    let attempts = 0;
-
     clientLogger.log(
       `[Client] Waiting for server (max: ${WAIT_FOR_SERVER_CONFIG.maxAttempts} attempts, ${WAIT_FOR_SERVER_CONFIG.delayMs}ms interval)`
     );
 
-    while (attempts < WAIT_FOR_SERVER_CONFIG.maxAttempts) {
-      await new Promise((resolve) =>
-        setTimeout(resolve, WAIT_FOR_SERVER_CONFIG.delayMs)
-      );
-      attempts++;
-
-      try {
-        if (await this.isServerAvailable()) {
-          clientLogger.log(
-            `[Client] Server available after ${attempts} attempts`
-          );
-          return true;
-        }
-      } catch (err) {
-        if (err instanceof VersionMismatchError) {
-          if (!options.ignoreVersionMismatch) {
-            throw err;
+    const socket = await waitForSocketConnection(
+      () => {
+        try {
+          return this.getSocketPath();
+        } catch (err) {
+          if (err instanceof VersionMismatchError) {
+            if (!options.ignoreVersionMismatch) {
+              throw err;
+            }
           }
-          // Keep waiting - old cache file may exist
-        } else {
-          throw err;
+          // Socket path not available yet — keep polling
+          return null;
         }
+      },
+      {
+        maxAttempts: WAIT_FOR_SERVER_CONFIG.maxAttempts,
+        delayMs: WAIT_FOR_SERVER_CONFIG.delayMs,
       }
+    );
+
+    if (socket) {
+      socket.destroy();
+      clientLogger.log(`[Client] Server available`);
+      return true;
     }
 
     clientLogger.log(
@@ -1180,17 +1202,36 @@ export class DaemonClient {
     return false;
   }
 
+  private envReflectionSent = false;
   private async sendMessageToDaemon(
-    message: Message,
+    message: DaemonMessage,
     force?: 'v8' | 'json'
   ): Promise<any> {
+    // the first message sent to the daemon includes an env prop
+    // that updates the process.env values on the daemon.
+    if (!this.envReflectionSent && !global.NX_PLUGIN_WORKER) {
+      message.env = getDaemonEnv();
+      this.envReflectionSent = true;
+    }
     await this.startDaemonIfNecessary();
-    // An open promise isn't enough to keep the event loop
-    // alive, so we set a timeout here and clear it when we hear
-    // back
-    const keepAlive = setTimeout(() => {}, 10 * 60 * 1000);
+
+    let keepAlive: NodeJS.Timeout;
     return new Promise((resolve, reject) => {
       performance.mark('sendMessageToDaemon-start');
+
+      // An open promise isn't enough to keep the event loop
+      // alive, so we set a timeout here and clear it when we hear
+      // back. This **must** be longer than the message timeout used
+      // in the plugin isolation messages, or the daemon will timeout before
+      // a plugin worker would, and that can result in odd exit behavior.
+      keepAlive = setTimeout(
+        () => {
+          reject(
+            new Error('The daemon timed out while processing ' + message.type)
+          );
+        },
+        20 * 60 * 1000
+      );
 
       this.currentMessage = message;
       this.currentResolve = resolve;
@@ -1210,8 +1251,9 @@ export class DaemonClient {
     }
 
     try {
-      const { getProcessMetricsService } = await import(
-        '../../tasks-runner/process-metrics-service'
+      const { getProcessMetricsService } = await handleImport(
+        '../../tasks-runner/process-metrics-service.js',
+        __dirname
       );
       getProcessMetricsService().registerDaemonProcess(daemonPid);
     } catch {
@@ -1286,14 +1328,14 @@ export class DaemonClient {
         cwd: workspaceRoot,
         stdio: ['ignore', this._out.fd, this._err.fd],
         detached: true,
-        windowsHide: false,
+        windowsHide: true,
         shell: false,
-        env: {
-          ...process.env,
-          ...DAEMON_ENV_SETTINGS,
-        },
+        env: getDaemonEnv(),
       }
     );
+    // if this process is the process that spawned the daemon,
+    // the daemon env is already up to date
+    this.envReflectionSent = true;
     backgroundProcess.unref();
 
     /**

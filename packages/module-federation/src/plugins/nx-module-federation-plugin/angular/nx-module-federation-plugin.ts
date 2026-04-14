@@ -5,6 +5,7 @@ import {
 } from '../../../utils/models';
 import { getModuleFederationConfigSync } from '../../../with-module-federation/angular/utils';
 import { normalizeProjectName } from '../../../utils';
+import { workspaceRoot } from '@nx/devkit';
 
 export class NxModuleFederationPlugin implements RspackPluginInstance {
   constructor(
@@ -37,6 +38,13 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
       ? 'auto'
       : compiler.options.output.publicPath;
     compiler.options.output.uniqueName = this._options.config.name;
+    // Ensure workspace root is in resolve.modules so that expose paths
+    // like "apps/remote/src/..." resolve correctly without baseUrl.
+    compiler.options.resolve ??= {};
+    compiler.options.resolve.modules = [
+      ...(compiler.options.resolve.modules ?? ['node_modules']),
+      workspaceRoot,
+    ];
 
     if (this._options.isServer) {
       compiler.options.target = 'async-node';
@@ -44,6 +52,13 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
         type: 'commonjs-module',
       };
       compiler.options.output.library.type = 'commonjs-module';
+    } else {
+      // Ensure ESM output is enabled when using library type 'module'.
+      // Without these, remoteEntry.js emits `export` statements but the
+      // runtime loads it as a classic script, causing "Unexpected token 'export'".
+      compiler.options.experiments ??= {};
+      compiler.options.experiments.outputModule = true;
+      compiler.options.output.module = true;
     }
 
     const config = getModuleFederationConfigSync(

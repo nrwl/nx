@@ -48,7 +48,7 @@ export function BlogDetails({ post, allPosts }: BlogDetailsProps) {
         <div className="mx-auto flex justify-between px-4">
           <Link
             href="/blog"
-            className="flex w-20 shrink-0 items-center gap-2 text-slate-400 hover:text-slate-800 dark:text-slate-600 dark:hover:text-slate-200"
+            className="flex w-20 shrink-0 items-center gap-2 text-zinc-400 hover:text-zinc-800 dark:text-zinc-600 dark:hover:text-zinc-200"
             prefetch={false}
           >
             <ChevronLeftIcon className="h-3 w-3" />
@@ -56,7 +56,7 @@ export function BlogDetails({ post, allPosts }: BlogDetailsProps) {
           </Link>
           <div className="flex max-w-sm flex-1 grow items-center justify-end gap-2">
             <BlogAuthors authors={post.authors} />
-            <span className="text-sm text-slate-400 dark:text-slate-600">
+            <span className="text-sm text-zinc-400 dark:text-zinc-600">
               {formattedDate}
             </span>
           </div>
@@ -64,7 +64,7 @@ export function BlogDetails({ post, allPosts }: BlogDetailsProps) {
 
         {/* Title */}
         <header className="mx-auto mb-16 mt-8 px-4">
-          <h1 className="text-center text-4xl font-semibold text-slate-900 dark:text-white">
+          <h1 className="text-center text-4xl font-semibold text-zinc-900 dark:text-white">
             {post.title}
           </h1>
         </header>
@@ -120,7 +120,7 @@ export function BlogDetails({ post, allPosts }: BlogDetailsProps) {
             )}
             <div
               data-document="main"
-              className="prose prose-lg prose-slate dark:prose-invert w-full max-w-none"
+              className="prose prose-lg prose-zinc dark:prose-invert w-full max-w-none"
             >
               {node}
             </div>
@@ -137,10 +137,10 @@ export function BlogDetails({ post, allPosts }: BlogDetailsProps) {
 
       {/* Related Posts Section */}
       {post.tags.length > 0 && relatedPosts.length > 0 && (
-        <section className="mt-24 border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900">
+        <section className="mt-24 border-b border-t border-zinc-200 bg-zinc-50 py-24 sm:py-32 dark:border-zinc-800 dark:bg-zinc-900">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-none">
-              <h2 className="mb-8 flex items-center gap-3 text-2xl font-semibold text-slate-900 dark:text-white">
+              <h2 className="mb-8 flex items-center gap-3 text-2xl font-semibold text-zinc-900 dark:text-white">
                 {primaryTopic ? (
                   <>
                     <primaryTopic.icon className="h-7 w-7" />

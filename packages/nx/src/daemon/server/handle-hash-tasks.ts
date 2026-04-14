@@ -16,6 +16,7 @@ export async function handleHashTasks(payload: {
   tasks: Task[];
   taskGraph: TaskGraph;
   cwd: string;
+  collectInputs?: boolean;
 }) {
   const { error, projectGraph, allWorkspaceFiles, fileMap, rustReferences } =
     await getCachedSerializedProjectGraphPromise();
@@ -39,7 +40,8 @@ export async function handleHashTasks(payload: {
     payload.tasks,
     payload.taskGraph,
     payload.env,
-    payload.cwd
+    payload.cwd,
+    payload.collectInputs
   );
   return {
     response,

@@ -71,10 +71,11 @@ export function getBarrelEntryPointProjectNode(
       .filter((entry) => {
         const sourceFolderPaths = tsConfigBase.compilerOptions.paths[entry];
         return sourceFolderPaths.some((sourceFolderPath) => {
+          const normalizedPath = sourceFolderPath.replace(/^\.\//, '');
           const sourceRoot = getProjectSourceRoot(projectNode.data);
           return (
-            sourceFolderPath === sourceRoot ||
-            sourceFolderPath.indexOf(`${sourceRoot}/`) === 0
+            normalizedPath === sourceRoot ||
+            normalizedPath.indexOf(`${sourceRoot}/`) === 0
           );
         });
       })

@@ -15,7 +15,7 @@ In a monorepo setup, you don't just run tasks for a single project; you might ha
 - only run tasks for **projects affected by a given change**
 - **speed up task execution** with [caching](/docs/features/cache-task-results)
 
-## Define Tasks
+## Define tasks
 
 Nx tasks can be created from existing `package.json` scripts, [inferred from tooling configuration files](/docs/concepts/inferred-tasks), or defined in a `project.json` file. Nx combines these three sources to determine the tasks for a particular project.
 
@@ -98,7 +98,7 @@ Learn more about [inferred tasks here](/docs/concepts/inferred-tasks).
 
 The [project configuration docs](/docs/reference/project-configuration) has the details for all the available configuration options.
 
-## Run Tasks
+## Run tasks
 
 Nx uses the following syntax:
 
@@ -110,7 +110,7 @@ In Nx 21, task output is displayed in an [interactive terminal UI](/docs/guides/
 
 {% /aside %}
 
-### Run a Single Task
+### Run a single task
 
 To run the `test` task for the `header` project run this command:
 
@@ -118,7 +118,7 @@ To run the `test` task for the `header` project run this command:
 npx nx test header
 ```
 
-### Run Tasks for Multiple Projects
+### Run tasks for multiple projects
 
 You can use the `run-many` command to run a task for multiple projects. Here are a couple of examples.
 
@@ -144,7 +144,7 @@ Nx parallelizes these tasks, ensuring they **run in the correct order based on t
 
 Learn more about the [run-many](/docs/reference/nx-commands#nx-run-many) command.
 
-### Run Tasks on Projects Affected by a PR
+### Run tasks on projects affected by a PR
 
 You can also run a command for all the projects affected by your PR like this:
 
@@ -154,7 +154,7 @@ npx nx affected -t test
 
 Learn more about the [affected command here](/docs/features/ci-features/affected).
 
-## Defining a Task Pipeline
+## Defining a task pipeline
 
 It is pretty common to have dependencies between tasks, requiring one task to be run before another. For example, you might want to run the `build` target on the `header` project before running the `build` target on the `app` project.
 
@@ -236,7 +236,7 @@ Learn more about:
 
 Learn more about leveraging `targetDefaults` to reduce repetitive configuration in the [dedicated recipe](/docs/guides/tasks--caching/reduce-repetitive-configuration).
 
-## Run Root-Level Tasks
+## Run root-level tasks
 
 Sometimes, you need tasks that apply to the entire codebase rather than a single project. To still benefit from caching, you can run these tasks through the "Nx pipeline". Define them in the root-level `package.json` or `project.json` as follows:
 

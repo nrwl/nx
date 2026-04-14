@@ -2,7 +2,6 @@ use arboard::Clipboard;
 use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyModifiers};
 use hashbrown::HashSet;
-use napi::bindgen_prelude::External;
 use parking_lot::Mutex;
 use ratatui::layout::{Constraint, Direction, Layout, Size};
 use ratatui::style::Modifier;
@@ -27,9 +26,10 @@ use crate::native::{
 
 use super::action::Action;
 use super::components::countdown_popup::CountdownPopup;
+use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
-use super::lifecycle::{RunMode, TuiMode};
+use super::lifecycle::{BatchStatus, RunMode, TuiMode};
 use super::pty::PtyInstance;
 use super::tui;
 use super::tui_app::TuiApp;
@@ -62,9 +62,9 @@ pub struct InlineApp {
     core: TuiCore,
 
     // === Inline UI State ===
-    /// The task whose output should be displayed (required for inline mode)
-    /// This is set during mode switching or defaults to the first running task
-    selected_task: Option<String>,
+    /// The item (task or batch) whose output should be displayed (required for inline mode)
+    /// This is set during mode switching or defaults to the first running item
+    selected_item: Option<SelectionEntry>,
     /// Countdown popup for auto-exit (shared with full-screen mode)
     countdown_popup: CountdownPopup,
     /// Whether we're in interactive mode (forwarding keys to PTY)
@@ -73,8 +73,6 @@ pub struct InlineApp {
     // === Scrollback Rendering ===
     /// Track scrollback line count per task for incremental rendering
     task_scrollback_lines: HashMap<String, usize>,
-    /// Track last rendered scrollback lines per task for buffered rendering
-    task_last_rendered_scrollback: HashMap<String, usize>,
     /// Counter for buffering scrollback renders (render every 20th iteration)
     scrollback_render_counter: u32,
     /// Total lines inserted above TUI (for cleanup on exit)
@@ -121,11 +119,11 @@ impl InlineApp {
 
         Ok(Self {
             core: TuiCore::new(state),
-            selected_task: None, // Will auto-select first running task on render
+            selected_item: None, // Will auto-select first running item on render
             countdown_popup: CountdownPopup::new(),
             is_interactive: false,
             task_scrollback_lines: HashMap::new(),
-            task_last_rendered_scrollback: HashMap::new(),
+
             scrollback_render_counter: 0,
             total_inserted_lines: 0,
             status_message: None,
@@ -142,17 +140,20 @@ impl InlineApp {
     /// # Arguments
     ///
     /// * `state` - Existing shared TuiState from another app instance
-    /// * `selected_task` - Optional task to display (from full-screen selection)
-    pub fn with_state(state: Arc<Mutex<TuiState>>, selected_task: Option<String>) -> Result<Self> {
+    /// * `selected_item` - Optional item (task or batch) to display (from full-screen selection)
+    pub fn with_state(
+        state: Arc<Mutex<TuiState>>,
+        selected_item: Option<SelectionEntry>,
+    ) -> Result<Self> {
         Ok(Self {
             core: TuiCore::new(state),
-            selected_task, // Use the provided selection from mode switch
+            selected_item, // Use the provided selection from mode switch
             countdown_popup: CountdownPopup::new(),
             is_interactive: false, // Always start non-interactive when switching modes
             // Reset all scrollback tracking when mode switching
             // PTYs will be resized in init(), which changes scrollback calculations
             task_scrollback_lines: HashMap::new(),
-            task_last_rendered_scrollback: HashMap::new(),
+
             // Start at 19 so the first render (increment to 20) will trigger scrollback rendering
             // This ensures existing PTY content from full-screen mode is immediately displayed
             scrollback_render_counter: 19,
@@ -175,9 +176,9 @@ impl InlineApp {
         self.core.quit_immediately();
     }
 
-    /// Get the task ID of the currently running task (if any)
-    fn get_current_running_task(&self) -> Option<String> {
-        self.core.state().lock().get_current_running_task()
+    /// Get the ID of the currently running item (task or batch, if any)
+    fn get_current_running_item(&self) -> Option<String> {
+        self.core.state().lock().get_current_running_item()
     }
 
     /// Internal method to handle Action::EndCommand
@@ -216,41 +217,32 @@ impl InlineApp {
     /// Called when switching to inline mode via init().
     /// This ensures PTY output fits the available space, pushing excess content
     /// into scrollback.
-    fn resize_selected_pty(&mut self, terminal_dimensions: (u16, u16)) {
+    fn resize_selected_pty(&mut self, terminal_dimensions: (u16, u16)) -> Option<()> {
         let (rows, cols) = terminal_dimensions;
+        let state = self.core.state().lock();
 
-        let mut state = self.core.state().lock();
+        let task_id = self.selected_item.as_ref()?.id();
+        let pty_arc = state.get_pty_instance(task_id)?;
+        let (current_rows, current_cols) = pty_arc.get_dimensions();
 
-        // Collect task IDs to avoid holding immutable borrow during mutation
-        let task_id = self.selected_task.clone();
+        // Only resize if dimensions actually changed
+        if current_rows != rows || current_cols != cols {
+            tracing::trace!(
+                "InlineApp resizing PTY for {} from {}x{} to {}x{}",
+                task_id,
+                current_cols,
+                current_rows,
+                cols,
+                rows
+            );
 
-        let task_id = if let Some(task_id) = task_id {
-            task_id
-        } else {
-            return;
-        };
-
-        if let Some(pty_arc) = state.get_pty_instance(&task_id) {
-            let (current_rows, current_cols) = pty_arc.get_dimensions();
-
-            // Only resize if dimensions actually changed
-            if current_rows != rows || current_cols != cols {
-                tracing::trace!(
-                    "InlineApp resizing PTY for {} from {}x{} to {}x{}",
-                    task_id,
-                    current_cols,
-                    current_rows,
-                    cols,
-                    rows
-                );
-
-                // Clone the PTY instance, resize it, and replace the Arc
-                let mut pty_clone = pty_arc.as_ref().clone();
-                if let Ok(()) = pty_clone.resize(rows, cols) {
-                    state.register_pty_instance(task_id, Arc::new(pty_clone));
-                }
-            }
+            // Async resize moves the expensive reparse off the event loop.
+            // Scrollback rendering is skipped until the resize completes
+            // (detected via is_resize_pending).
+            pty_arc.resize_async(rows, cols);
         }
+
+        Some(())
     }
 
     fn dispatch_action(&self, action: Action) {
@@ -283,12 +275,13 @@ impl InlineApp {
 
     /// Handle keyboard input in interactive mode - forward to PTY
     fn handle_interactive_key(&mut self, key: crossterm::event::KeyEvent) -> Result<()> {
-        let current_task = self
-            .selected_task
-            .clone()
-            .or_else(|| self.get_current_running_task());
+        let task_id = self
+            .selected_item
+            .as_ref()
+            .map(|s| s.id().to_string())
+            .or_else(|| self.get_current_running_item());
 
-        let Some(task_id) = current_task else {
+        let Some(task_id) = task_id else {
             return Ok(());
         };
 
@@ -472,12 +465,13 @@ impl TuiApp for InlineApp {
                 // Handle 'c' for copying terminal output to clipboard (same as full-screen mode)
                 if matches!(key.code, KeyCode::Char('c')) && key.modifiers.is_empty() {
                     // Get the task to display (selected or first running)
-                    let current_task = self
-                        .selected_task
-                        .clone()
-                        .or_else(|| self.get_current_running_task());
+                    let task_id = self
+                        .selected_item
+                        .as_ref()
+                        .map(|s| s.id().to_string())
+                        .or_else(|| self.get_current_running_item());
 
-                    if let Some(task_id) = current_task {
+                    if let Some(task_id) = task_id {
                         let state = self.core.state().lock();
                         if let Some(pty) = state.get_pty_instance(&task_id) {
                             if let Some(screen) = pty.get_screen() {
@@ -617,8 +611,6 @@ impl TuiApp for InlineApp {
     fn on_pty_registered(&mut self, task_id: &str) {
         // Initialize scrollback tracking for inline mode
         self.task_scrollback_lines.insert(task_id.to_string(), 0);
-        self.task_last_rendered_scrollback
-            .insert(task_id.to_string(), 0);
     }
 
     /// Override to resize interactive PTYs to inline dimensions
@@ -628,7 +620,7 @@ impl TuiApp for InlineApp {
     fn register_running_interactive_task(
         &mut self,
         task_id: String,
-        parser_and_writer: External<(ParserArc, WriterArc)>,
+        parser_and_writer: &(ParserArc, WriterArc),
     ) {
         let mut pty =
             PtyInstance::interactive(parser_and_writer.0.clone(), parser_and_writer.1.clone());
@@ -650,15 +642,22 @@ impl TuiApp for InlineApp {
 
     // === Mode-specific overrides ===
 
-    fn get_selected_task_name(&self) -> Option<String> {
-        // Include fallback to first running task for inline mode
+    fn get_selected_item(&self) -> Option<SelectionEntry> {
+        // Include fallback to first running item for inline mode
         // This ensures can_be_interactive and other trait methods work correctly
-        self.selected_task
-            .clone()
-            .or_else(|| self.get_current_running_task())
+        self.selected_item.clone().or_else(|| {
+            let item_id = self.get_current_running_item()?;
+            let state = self.core.state().lock();
+            // Check if item is a batch or a task
+            if state.get_batch_metadata().contains_key(&item_id) {
+                Some(SelectionEntry::BatchGroup(item_id))
+            } else {
+                Some(SelectionEntry::Task(item_id))
+            }
+        })
     }
 
-    fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
+    fn update_task_status(&mut self, task_id: &str, status: TaskStatus) {
         debug!("Updating task '{}' status to {:?}", task_id, status);
         self.core.update_task_status(task_id, status);
         let can_be_interactive = self.can_be_interactive();
@@ -671,26 +670,58 @@ impl TuiApp for InlineApp {
     fn end_tasks(&mut self, task_results: Vec<crate::native::tasks::types::TaskResult>) {
         debug!(
             "Ending tasks in InlineApp - {:?}. Selected task: {:?}",
-            task_results
-                .clone()
-                .iter()
-                .map(|t| &t.task.id)
-                .collect::<Vec<_>>(),
-            self.selected_task
+            task_results.iter().map(|t| &t.task.id).collect::<Vec<_>>(),
+            self.selected_item
         );
         self.core.end_tasks(&task_results);
-        if task_results
-            .iter()
-            .find(|t| {
-                self.selected_task
-                    .as_ref()
-                    .map_or(false, |id| id == &t.task.id)
-            })
-            .is_some()
-        {
+        if task_results.iter().any(|t| {
+            self.selected_item
+                .as_ref()
+                .is_some_and(|s| s.id() == t.task.id)
+        }) {
             // If the selected task has completed, exit interactive mode
             self.is_interactive = false;
         }
+    }
+
+    fn set_batch_status(&mut self, batch_id: String, status: BatchStatus) {
+        if batch_id.is_empty() || status == BatchStatus::Running {
+            return;
+        }
+
+        debug!(
+            "Updating batch '{}' status to {:?} in InlineApp",
+            batch_id, status
+        );
+
+        // Get display name from batch_metadata
+        let display_name = {
+            let state = self.core.state().lock();
+            state
+                .get_batch_metadata()
+                .get(&batch_id)
+                .map(|b| {
+                    format!(
+                        "Batch: {} ({})",
+                        b.info.executor_name,
+                        b.info.task_ids.len()
+                    )
+                })
+                .unwrap_or_else(|| format!("Batch: {}", batch_id))
+        };
+
+        // Update batch_metadata with completion status
+        let completion_time = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis() as i64)
+            .unwrap_or(0);
+
+        self.core.state().lock().complete_batch_metadata(
+            &batch_id,
+            status,
+            display_name,
+            completion_time,
+        );
     }
 }
 
@@ -706,41 +737,33 @@ impl InlineApp {
 
         // Get the task to display (selected or first running)
         let current_task = self
-            .selected_task
-            .clone()
-            .or_else(|| self.get_current_running_task());
+            .selected_item
+            .as_ref()
+            .map(|s| s.id().to_string())
+            .or_else(|| self.get_current_running_item());
 
-        if let Some(current_task) = current_task {
+        if let Some(ref current_task) = current_task {
             let state = self.core.state().lock();
-            if let Some(pty) = state.get_pty_instance(&current_task) {
+            if let Some(pty) = state.get_pty_instance(current_task) {
                 let pty = pty.clone();
                 drop(state);
 
-                // Get last rendered scrollback line count for this task
-                let last_rendered_lines = self
-                    .task_last_rendered_scrollback
-                    .get(&current_task)
-                    .copied()
-                    .unwrap_or(0);
+                const MAX_LINES_PER_RENDER: usize = 250;
 
-                // Get buffered scrollback content since last render
-                let buffered_scrollback_lines =
-                    pty.get_buffered_scrollback_content_for_inline(last_rendered_lines);
-
-                // Update tracking for next buffered render
-                let current_scrollback_lines = pty.get_scrollback_line_count();
+                // Get buffered scrollback content produced by the background thread.
+                // The background thread tracks its own cursor into the scrollback
+                // region and appends new lines to pending_lines. We drain up to
+                // MAX_LINES_PER_RENDER per frame — the rest stay in pending_lines.
+                let (buffered_scrollback_lines, current_scrollback_lines) =
+                    pty.get_buffered_scrollback_content_for_inline(MAX_LINES_PER_RENDER);
 
                 self.task_scrollback_lines
                     .insert(current_task.clone(), current_scrollback_lines);
 
                 // Render buffered scrollback above TUI using terminal.insert_before
-                // Render in batches to avoid overwhelming the terminal
                 if !buffered_scrollback_lines.is_empty() {
-                    const MAX_LINES_PER_RENDER: usize = 250;
-
-                    // Calculate how many lines to render this cycle
-                    let lines_to_render = buffered_scrollback_lines.len().min(MAX_LINES_PER_RENDER);
-                    let batch = &buffered_scrollback_lines[0..lines_to_render];
+                    let lines_to_render = buffered_scrollback_lines.len();
+                    let batch = &buffered_scrollback_lines[..];
 
                     use crate::native::tui::theme::THEME;
                     use ratatui::style::Style;
@@ -767,17 +790,10 @@ impl InlineApp {
                         // Track total lines inserted for cleanup on exit
                         self.total_inserted_lines += height as u32;
 
-                        // Update last rendered count to reflect what we actually rendered
-                        // This is incremental - we only advance by the batch size
-                        let new_last_rendered = last_rendered_lines + lines_to_render;
-                        self.task_last_rendered_scrollback
-                            .insert(current_task.clone(), new_last_rendered);
-
                         tracing::trace!(
-                            "render_scrollback_above_tui: Updated last_rendered from {} to {} (remaining: {})",
-                            last_rendered_lines,
-                            new_last_rendered,
-                            current_scrollback_lines - new_last_rendered
+                            "render_scrollback_above_tui: Rendered {} lines (total scrollback: {})",
+                            lines_to_render,
+                            current_scrollback_lines
                         );
                     } else {
                         tracing::error!(
@@ -818,21 +834,64 @@ impl InlineApp {
         use crate::native::tui::theme::THEME;
         use ratatui::style::Style;
 
-        // Get current task and its status for color coding
-        let current_task = self
-            .selected_task
-            .clone()
-            .or_else(|| self.get_current_running_task());
-
         let (task_name, status, status_style, duration_text) =
-            if let Some(ref task_id) = current_task {
+            if let Some(ref selection) = self.selected_item {
+                let state = self.core.state().lock();
+
+                // Get status based on selection type
+                let (display_name, status, start_time, end_time, estimated_ms) = match selection {
+                    SelectionEntry::Task(task_id) => {
+                        let status = state
+                            .get_task_status(task_id)
+                            .unwrap_or(TaskStatus::NotStarted);
+                        let (start_time, end_time) = state.get_task_timing(task_id);
+                        let estimated_ms = state.estimated_task_timings().get(task_id).copied();
+                        (task_id.clone(), status, start_time, end_time, estimated_ms)
+                    }
+                    SelectionEntry::BatchGroup(batch_id) => {
+                        // Get batch status from batch_metadata
+                        let batch_metadata = state.get_batch_metadata();
+                        if let Some(batch_state) = batch_metadata.get(batch_id) {
+                            let status = match batch_state.final_status {
+                                Some(BatchStatus::Success) => TaskStatus::Success,
+                                Some(BatchStatus::Failure) => TaskStatus::Failure,
+                                Some(BatchStatus::Running) | None => TaskStatus::InProgress,
+                            };
+                            let display_name = batch_state
+                                .display_name
+                                .clone()
+                                .unwrap_or_else(|| batch_id.clone());
+                            (
+                                display_name,
+                                status,
+                                Some(batch_state.start_time),
+                                batch_state.completion_time,
+                                None, // No estimates for batches
+                            )
+                        } else {
+                            // Batch not found in metadata - show as not started
+                            (batch_id.clone(), TaskStatus::NotStarted, None, None, None)
+                        }
+                    }
+                };
+                drop(state);
+
+                let actual_ms = calculate_actual_duration_ms(status, start_time, end_time);
+                let duration = actual_ms
+                    .map(|actual_ms| format_duration_with_estimate(actual_ms, estimated_ms));
+
+                (
+                    display_name,
+                    status,
+                    get_task_status_style(status),
+                    duration,
+                )
+            } else if let Some(ref task_id) = self.get_current_running_item() {
+                // Fallback: no selection but there's a running item
                 let state = self.core.state().lock();
                 let status = state
                     .get_task_status(task_id)
-                    .unwrap_or(TaskStatus::NotStarted);
-
-                // Get timing information and format duration using shared utility
-                // Now both are in milliseconds since epoch
+                    .unwrap_or(TaskStatus::InProgress);
                 let (start_time, end_time) = state.get_task_timing(task_id);
                 let estimated_ms = state.estimated_task_timings().get(task_id).copied();
                 drop(state);
@@ -966,13 +1025,14 @@ impl InlineApp {
     fn render_inline_main_content(&mut self, f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
         // Show selected task output if available, otherwise first running task
         let current_task = self
-            .selected_task
-            .clone()
-            .or_else(|| self.get_current_running_task());
+            .selected_item
+            .as_ref()
+            .map(|s| s.id().to_string())
+            .or_else(|| self.get_current_running_item());
 
-        if let Some(current_task) = current_task {
+        if let Some(ref current_task) = current_task {
             let state = self.core.state().lock();
-            if let Some(pty) = state.get_pty_instance(&current_task) {
+            if let Some(pty) = state.get_pty_instance(current_task) {
                 let pty = pty.clone();
                 drop(state);
                 self.render_inline_task_output(f, area, &pty);
@@ -1152,8 +1212,8 @@ mod tests {
         let (tx, _rx) = mpsc::unbounded_channel();
 
         // Mark all tasks as completed
-        app.update_task_status(String::from("app1"), TaskStatus::Success);
-        app.update_task_status(String::from("app2"), TaskStatus::Success);
+        app.update_task_status("app1", TaskStatus::Success);
+        app.update_task_status("app2", TaskStatus::Success);
 
         let event = tui::Event::Key(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE));
         let result = app.handle_event(event, &tx).unwrap();
@@ -1289,7 +1349,6 @@ mod tests {
 
         // Verify scrollback tracking initialized
         assert_eq!(app.task_scrollback_lines.get("app1"), Some(&0));
-        assert_eq!(app.task_last_rendered_scrollback.get("app1"), Some(&0));
 
         // Verify PTY registered in state
         let state_ref = app.get_state();
@@ -1326,7 +1385,7 @@ mod tests {
     fn test_update_task_status() {
         let mut app = create_test_inline_app();
 
-        app.update_task_status(String::from("app1"), TaskStatus::Success);
+        app.update_task_status("app1", TaskStatus::Success);
 
         let state_ref = app.get_state();
         let state = state_ref.lock();
@@ -1360,17 +1419,17 @@ mod tests {
     // === Helper Method Tests ===
 
     #[test]
-    fn test_get_current_running_task() {
+    fn test_get_current_running_item() {
         let mut app = create_test_inline_app();
 
         // No running tasks initially
-        assert!(app.get_current_running_task().is_none());
+        assert!(app.get_current_running_item().is_none());
 
         // Start a task
-        app.update_task_status(String::from("app1"), TaskStatus::InProgress);
+        app.update_task_status("app1", TaskStatus::InProgress);
 
         // Should find running task
-        assert_eq!(app.get_current_running_task(), Some(String::from("app1")));
+        assert_eq!(app.get_current_running_item(), Some(String::from("app1")));
     }
 
     #[test]
@@ -1572,7 +1631,7 @@ mod tests {
         let mut app = create_test_inline_app();
 
         // Should not panic
-        app.update_task_status(String::from("nonexistent"), TaskStatus::Success);
+        app.update_task_status("nonexistent", TaskStatus::Success);
 
         // Status should be recorded anyway
         let state_ref = app.get_state();
@@ -1648,7 +1707,7 @@ mod integration_tests {
         app.register_running_non_interactive_task(String::from("app1"));
 
         // Update to success
-        app.update_task_status(String::from("app1"), TaskStatus::Success);
+        app.update_task_status("app1", TaskStatus::Success);
 
         // End tasks
         app.end_tasks(vec![TaskResult {
@@ -1700,7 +1759,7 @@ mod integration_tests {
         let app2 = InlineApp::with_state(state.clone(), None).unwrap();
 
         // Modify through app1
-        app1.update_task_status(String::from("shared"), TaskStatus::Success);
+        app1.update_task_status("shared", TaskStatus::Success);
 
         // Verify visible through app2
         assert!(!app2.should_quit()); // Can access state without issues

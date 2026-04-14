@@ -8,6 +8,7 @@ export interface ParsedCliCommand {
   name?: string;
   command?: string;
   description?: string;
+  supportedVersionRange?: string;
   aliases?: string[];
   options?: Array<{
     name: string[];
@@ -18,6 +19,10 @@ export interface ParsedCliCommand {
     choices?: string[];
   }>;
   subcommands?: ParsedCliCommand[];
+  examples?: Array<{
+    command: string;
+    description: string;
+  }>;
 }
 
 export async function loadNxCliPackage(
@@ -38,6 +43,7 @@ export async function loadNxCliPackage(
       cwd: workspaceRoot,
       silent: true,
       stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+      windowsHide: true,
     });
 
     child.on('message', (message: any) => {
@@ -84,8 +90,8 @@ export async function loadNxCliPackage(
       docType: 'cli',
       description: 'Complete reference for Nx CLI commands',
       filter: 'type:References',
+      weight: 4,
     },
-    // @ts-expect-error - astro types are mismatched bc of auto generated location loading, etc
     rendered: await renderMarkdown(markdown),
     collection: 'nx-reference-packages',
   };
@@ -183,6 +189,35 @@ function generateOptionsTable(
   return section;
 }
 
+function generateExamplesSection(
+  examples: ParsedCliCommand['examples'],
+  commandName: string
+): string {
+  if (!examples || examples.length === 0) {
+    return '';
+  }
+
+  let section = `\n#### \`nx ${commandName}\` Examples\n\n`;
+
+  for (const example of examples) {
+    section += `${example.description}:\n\n`;
+    section += `\`\`\`bash\nnx ${example.command}\n\`\`\`\n\n`;
+  }
+
+  return section;
+}
+
+function generateVersionNote(
+  commandName: string,
+  supportedVersionRange?: string
+): string {
+  if (!supportedVersionRange) {
+    return '';
+  }
+
+  return `\n**Requires ${supportedVersionRange}**\n\n`;
+}
+
 function generateCLIMarkdown(
   commands: Record<string, ParsedCliCommand>
 ): string {
@@ -193,12 +228,14 @@ The Nx command line has various subcommands and options to help you manage your 
 Below is a complete reference for all available commands and their options.
 You can run nx --help to view all available options.
 
-## Available Commands
-
 ${flattenedCommands
   .map(({ fullName, cmd, parentOptions }) => {
-    let section = `### \`nx ${fullName}\`\n`;
+    const isSubCommand = parentOptions !== undefined;
+    const headingLevel = isSubCommand ? '###' : '##';
 
+    let section = `${headingLevel} \`nx ${fullName}\`\n`;
+
+    section += generateVersionNote(fullName, cmd.supportedVersionRange);
     section += cmd.description || 'No description available';
 
     if (cmd.aliases && cmd.aliases.length > 0) {
@@ -208,15 +245,29 @@ ${flattenedCommands
     }
 
     // Build the usage command string
-    const usageCmd = cmd.command
-      ? cmd.command.replace('$0', fullName)
-      : fullName;
+    let usageCmd: string;
+    if (cmd.command && cmd.command.includes('$0')) {
+      // Has $0 placeholder - replace with full name
+      usageCmd = cmd.command.replace('$0', fullName);
+    } else if (cmd.command && parentOptions !== undefined) {
+      // Sub-command without $0: use fullName, append positional args from cmd.command
+      const firstSpaceIdx = cmd.command.indexOf(' ');
+      usageCmd =
+        firstSpaceIdx !== -1
+          ? fullName + cmd.command.substring(firstSpaceIdx)
+          : fullName;
+    } else {
+      usageCmd = cmd.command || fullName;
+    }
 
     section += `\n\n**Usage:**
 \`\`\`bash
 nx ${usageCmd}
 \`\`\`
 `;
+
+    // Add examples section if available
+    section += generateExamplesSection(cmd.examples, fullName);
 
     // If this is a parent command with subcommands, label options as "Shared Options"
     const hasSubcommands = cmd.subcommands && cmd.subcommands.length > 0;

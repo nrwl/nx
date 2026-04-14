@@ -3,7 +3,6 @@ import { join } from 'path';
 
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import {
-  directoryExists,
   fileExists,
   readJsonFile,
   writeJsonFile,
@@ -231,9 +230,9 @@ export function runInstall(
   pmc: PackageManagerCommands = getPackageManagerCommand()
 ) {
   execSync(pmc.install, {
-    stdio: [0, 1, 2],
+    stdio: ['ignore', 'ignore', 'inherit'],
     cwd: repoRoot,
-    windowsHide: false,
+    windowsHide: true,
   });
 }
 
@@ -241,7 +240,6 @@ export async function initCloud(
   installationSource:
     | 'nx-init'
     | 'nx-init-angular'
-    | 'nx-init-cra'
     | 'nx-init-monorepo'
     | 'nx-init-nest'
     | 'nx-init-npm-repo'
@@ -251,6 +249,13 @@ export async function initCloud(
     installationSource,
   });
   await printSuccessMessage(token, installationSource);
+}
+
+export function setNeverConnectToCloud(repoRoot: string): void {
+  const nxJsonPath = join(repoRoot, 'nx.json');
+  const nxJson = readJsonFile(nxJsonPath);
+  nxJson.neverConnectToCloud = true;
+  writeJsonFile(nxJsonPath, nxJson);
 }
 
 export function addVsCodeRecommendedExtensions(
@@ -345,19 +350,4 @@ export function isMonorepo(packageJson: PackageJson) {
   if (existsSync('lerna.json')) return true;
 
   return false;
-}
-
-export function isCRA(packageJson: PackageJson) {
-  const combinedDependencies = {
-    ...packageJson.dependencies,
-    ...packageJson.devDependencies,
-  };
-  return (
-    // Required dependencies for CRA projects
-    combinedDependencies['react'] &&
-    combinedDependencies['react-dom'] &&
-    combinedDependencies['react-scripts'] &&
-    directoryExists('src') &&
-    directoryExists('public')
-  );
 }

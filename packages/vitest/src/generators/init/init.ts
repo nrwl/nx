@@ -15,19 +15,29 @@ import {
   vitestVersion,
   viteV5Version,
   viteV6Version,
+  viteV7Version,
   viteVersion,
 } from '../../utils/versions';
 import { createNodesV2 } from '../../plugins/plugin';
+import { getInstalledViteMajorVersion } from '../../utils/version-utils';
 import { ignoreVitestTempFiles } from '../../utils/ignore-vitest-temp-files';
 
 export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
-  const viteVersionToUse = schema.viteVersion
-    ? schema.viteVersion === 5
+  // Determine which vite version to install:
+  // 1. Explicit viteVersion flag takes priority
+  // 2. If vite is already installed, keep the matching major version
+  // 3. Otherwise, use the latest default (^8.0.0)
+  const installedMajor =
+    schema.viteVersion ?? getInstalledViteMajorVersion(tree);
+  const viteVersionToUse =
+    installedMajor === 5
       ? viteV5Version
-      : schema.viteVersion === 6
+      : installedMajor === 6
         ? viteV6Version
-        : viteVersion
-    : viteVersion;
+        : installedMajor === 7
+          ? viteV7Version
+          : viteVersion;
+
   return addDependenciesToPackageJson(
     tree,
     {},
@@ -71,14 +81,7 @@ export function updateNxJsonSettings(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-export function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
-  return initGeneratorInternal(tree, { addPlugin: false, ...schema });
-}
-
-export async function initGeneratorInternal(
-  tree: Tree,
-  schema: InitGeneratorSchema
-) {
+export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
   const nxJson = readNxJson(tree);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&

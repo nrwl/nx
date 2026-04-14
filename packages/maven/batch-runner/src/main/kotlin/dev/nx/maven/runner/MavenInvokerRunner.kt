@@ -75,66 +75,72 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
       // Submit worker tasks that pull from the queue
       repeat(numWorkers) {
         executor.submit {
-          while (true) {
-            val taskId = taskQueue.poll() ?: break
+            while (completionLatch.count > 0L) {
+              // take() blocks until a task is available. If all tasks complete while
+              // a worker is blocked here, shutdownNow() will interrupt it.
+              val taskId = try {
+                taskQueue.take()
+              } catch (_: InterruptedException) { break }
 
-            if (taskStates.containsKey(taskId)) {
-              completionLatch.countDown()
-              continue
-            }
+              if (taskStates.containsKey(taskId)) {
+                completionLatch.countDown()
+                continue
+              }
 
-            val result = executeSingleTask(taskId, results)
+              val result = executeSingleTask(taskId, results)
 
-            // Emit result to stderr for streaming to Nx
-            emitResult(taskId, result)
+              // Record build state for all batch projects BEFORE emitting result.
+              // emitResult() triggers Nx to cache task outputs, so nx-build-state.json
+              // must be written first to ensure the cached outputs include fresh build state.
+              recordBuildStatesForBatchProjects(taskId)
 
-            // Record task state
-            val success = results[taskId]?.success == true
-            taskStates[taskId] = if (success) TaskState.SUCCEEDED else TaskState.FAILED
+              // Emit result to stderr for streaming to Nx
+              emitResult(taskId, result)
 
-            // Update graph and find newly available tasks
-            synchronized(graphRef) {
-              val currentGraph = graphRef.get()
-              val newGraph = removeTasksFromTaskGraph(
-                currentGraph,
-                if (success) listOf(taskId) else emptyList(),
-                if (!success) listOf(taskId) else emptyList()
-              )
-              graphRef.set(newGraph)
+              // Record task state
+              val success = results[taskId]?.success == true
+              taskStates[taskId] = if (success) TaskState.SUCCEEDED else TaskState.FAILED
 
-              // Add newly available root tasks to queue
-              val previousRoots = currentGraph.roots.toSet()
-              val newRoots = newGraph.roots.filter { it !in previousRoots && !taskStates.containsKey(it) }
-              newRoots.forEach { newTaskId ->
-                if (!taskStates.containsKey(newTaskId)) {
-                  taskQueue.offer(newTaskId)
-                  log.debug("Added newly available task to queue: $newTaskId")
+              // Update graph and find newly available tasks
+              synchronized(graphRef) {
+                val currentGraph = graphRef.get()
+                val newGraph = removeTasksFromTaskGraph(
+                  currentGraph,
+                  if (success) listOf(taskId) else emptyList(),
+                  if (!success) listOf(taskId) else emptyList()
+                )
+                graphRef.set(newGraph)
+
+                // Add newly available root tasks to queue
+                val previousRoots = currentGraph.roots.toSet()
+                val newRoots = newGraph.roots.filter { it !in previousRoots && !taskStates.containsKey(it) }
+                newRoots.forEach { newTaskId ->
+                  if (!taskStates.containsKey(newTaskId)) {
+                    taskQueue.offer(newTaskId)
+                    log.debug("Added newly available task to queue: $newTaskId")
+                  }
+                }
+
+                // Mark skipped tasks (those removed due to failed dependencies)
+                // Skipped tasks are omitted from results, not marked as failed
+                val oldTasks = currentGraph.tasks.keys
+                val newTasks = newGraph.tasks.keys
+                val skippedTasks = oldTasks - newTasks - taskStates.keys
+                skippedTasks.forEach { skippedTaskId ->
+                  log.debug("Task $skippedTaskId was skipped due to a failed dependency")
+                  taskStates[skippedTaskId] = TaskState.SKIPPED
+                  // IMPORTANT: Count down skipped tasks too, or latch will never reach zero
+                  completionLatch.countDown()
                 }
               }
 
-              // Mark skipped tasks (those removed due to failed dependencies)
-              // Skipped tasks are omitted from results, not marked as failed
-              val oldTasks = currentGraph.tasks.keys
-              val newTasks = newGraph.tasks.keys
-              val skippedTasks = oldTasks - newTasks - taskStates.keys
-              skippedTasks.forEach { skippedTaskId ->
-                log.debug("Task $skippedTaskId was skipped due to a failed dependency")
-                taskStates[skippedTaskId] = TaskState.SKIPPED
-                // IMPORTANT: Count down skipped tasks too, or latch will never reach zero
-                completionLatch.countDown()
-              }
+              completionLatch.countDown()
             }
-
-            completionLatch.countDown()
-          }
         }
       }
 
       // Wait for all tasks to complete
       completionLatch.await()
-
-      // Record build states for all projects that had tasks executed
-      recordBuildStatesForExecutedTasks()
     } finally {
       // Threads are daemon threads, so they won't prevent JVM exit
       // Just try to shutdown gracefully without waiting
@@ -149,35 +155,29 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     return results.toMap()
   }
 
+  /** All unique project selectors in the batch, computed once. */
+  private val allBatchProjectSelectors: Set<String> by lazy {
+    options.taskGraph?.tasks?.values
+      ?.map { it.target.project }
+      ?.toSet() ?: emptySet()
+  }
+
   /**
-   * Record build states for all unique projects that had tasks executed.
-   * This is called after all tasks complete to save the build state for future batches.
+   * Record build state for all projects in the batch.
+   * Called after each task execution but before emitting the result to Nx,
+   * ensuring nx-build-state.json is up-to-date when Nx caches the task's outputs.
+   *
+   * We record ALL batch projects (not just the current task's project) because
+   * a task in projectA can modify the Maven session state of projectB
+   * (e.g., adding source roots or classpath entries). The lastWrittenState cache
+   * in BuildStateRecorder ensures we only perform file I/O for projects whose
+   * state actually changed.
    */
-  private fun recordBuildStatesForExecutedTasks() {
+  private fun recordBuildStatesForBatchProjects(taskId: String) {
     try {
-      // Get NxMaven instance if available (only available with ResidentMavenExecutor)
-      val nxMaven = (mavenExecutor as? ResidentMavenExecutor)?.getNxMaven()
-
-      if (nxMaven == null) {
-        log.debug("NxMaven not available, skipping build state recording")
-        return
-      }
-
-      // Extract unique project selectors from executed tasks
-      val uniqueProjectSelectors = options.taskGraph?.tasks?.values
-        ?.map { it.target.project }
-        ?.toSet() ?: emptySet()
-
-      if (uniqueProjectSelectors.isEmpty()) {
-        log.debug("No projects to record build states for")
-        return
-      }
-
-      log.debug("📝 Preparing to record build states for ${uniqueProjectSelectors.size} unique projects")
-      log.debug("Projects: ${uniqueProjectSelectors.joinToString(", ")}")
-      nxMaven.recordBuildStates(uniqueProjectSelectors)
+      (mavenExecutor as? ResidentMavenExecutor)?.recordBuildStates(allBatchProjectSelectors)
     } catch (e: Exception) {
-      log.error("❌ Error recording build states: ${e.message}", e)
+      log.error("Error recording build states after task $taskId: ${e.message}", e)
     }
   }
 

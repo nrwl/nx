@@ -227,7 +227,7 @@ function setPresetProperty(tree: Tree, options: NormalizedSchema) {
 
 function createNxJson(
   tree: Tree,
-  { directory, defaultBase, preset }: NormalizedSchema
+  { directory, defaultBase, preset, analytics }: NormalizedSchema
 ) {
   const nxJson: NxJsonConfiguration & { $schema: string } = {
     $schema: './node_modules/nx/schemas/nx-schema.json',
@@ -244,6 +244,7 @@ function createNxJson(
             },
           }
         : undefined,
+    analytics,
   };
 
   if (defaultBase === 'main') {

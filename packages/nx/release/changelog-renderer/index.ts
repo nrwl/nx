@@ -36,7 +36,8 @@ export interface DefaultChangelogRenderOptions extends ChangelogRenderOptions {
   authors?: boolean;
   /**
    * If authors is enabled, controls whether or not to try to map the authors to their GitHub usernames
-   * using https://ungh.cc (from https://github.com/unjs/ungh) and the email addresses found in the commits.
+   * using https://ungh.cc (from https://github.com/unjs/ungh) and, if needed, the GitHub search API via
+   * the gh CLI and the email addresses found in the commits.
    * Defaults to true.
    */
   applyUsernameToAuthors?: boolean;

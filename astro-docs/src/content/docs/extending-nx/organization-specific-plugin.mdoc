@@ -6,14 +6,14 @@ filter: 'type:Guides'
 
 Every repository has a unique set of conventions and best practices that developers need to learn in order to write code that integrates well with the rest of the code base. It is important to document those best practices, but developers don't always read the documentation and even if they have read the documentation, they don't consistently follow the documentation every time they perform a task. Nx allows you to encode these best practices in code generators that have been tailored to your specific repository.
 
-In this tutorial, we will create a generator that helps enforce the follow best practices:
+We will create a generator that helps enforce the follow best practices:
 
 - Every project in this repository should use Vitest for unit tests.
 - Every project in this repository should be tagged with a `scope:*` tag that is chosen from the list of available scopes.
 - Projects should be placed in folders that match the scope that they are assigned.
 - Vitest should clear mocks before running tests.
 
-## Get Started
+## Get started
 
 Let's first create a new workspace with the `create-nx-workspace` command:
 
@@ -30,7 +30,7 @@ npx nx g @nx/plugin:plugin tools/recommended
 
 This will create a `recommended` project that contains all your plugin code.
 
-## Create a Customized Library Generator
+## Create a customized library generator
 
 To create a new generator run:
 
@@ -82,7 +82,7 @@ If your package.json has a different name, adjust the command accordingly.
 
 Remove the `--dry-run` flag to actually create a new project.
 
-### Add Generator Options
+### Add generator options
 
 The `schema.d.ts` file contains all the options that the generator supports. By default, it includes only a `name` option. Let's add a directory option to pass on to the `@nx/react` generator.
 
@@ -143,7 +143,7 @@ Notice how we made the `description` argument optional in both the JSON and type
 npx nx g @myorg/recommended:library test-library --directory=nested/directory/test-library --dry-run
 ```
 
-### Choose a Scope
+### Choose a scope
 
 It can be helpful to tag a library with a scope that matches the application it should be associated with. With these tags in place, you can [set up rules](/docs/features/enforce-module-boundaries) for how projects can depend on each other. For our repository, let's say the scopes can be `store`, `api` or `shared` and the default directory structure should match the chosen scope. We can update the generator to encourage developers to maintain this structure.
 
@@ -251,7 +251,7 @@ npx nx g @myorg/recommended:library test-library --scope=shared --dry-run
 
 This should create the `test-library` in the `shared` folder.
 
-## Configure Tasks
+## Configure tasks
 
 You can also use your Nx plugin to configure how your tasks are run. Usually, organization focused plugins configure tasks by modifying the configuration files for each project. If you have developed your own tooling scripts for your organization, you may want to create an executor or infer tasks, but that process is covered in more detail in the tooling plugin tutorial.
 
@@ -322,14 +322,14 @@ git commit -am "library generator"
 npx nx g @myorg/recommended:library store-test --scope=store
 ```
 
-## Next Steps
+## Next steps
 
 Now that we have a working library generator, here are some more topics you may want to investigate.
 
 - [Generate files](/docs/extending-nx/creating-files) from EJS templates
 - [Modify files](/docs/extending-nx/modifying-files) with string replacement or AST transformations
 
-## Encourage Adoption
+## Encourage adoption
 
 Once you have a set of generators in place in your organization's plugin, the rest of the work is all communication. Let your developers know that the plugin is available and encourage them to use it. These are the most important points to communicate to your developers:
 

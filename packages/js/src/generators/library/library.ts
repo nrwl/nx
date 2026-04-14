@@ -5,6 +5,7 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  getDependencyVersionFromPackageJson,
   installPackagesTask,
   joinPathFragments,
   names,
@@ -173,7 +174,6 @@ export async function libraryGeneratorInternal(
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // Test would have been set up already
   ) {
-    const { createOrEditViteConfig } = ensurePackage('@nx/vite', nxVersion);
     ensurePackage('@nx/vitest', nxVersion);
     // nx-ignore-next-line
     const { configurationGenerator } = require('@nx/vitest/generators');
@@ -188,16 +188,6 @@ export async function libraryGeneratorInternal(
       addPlugin: options.addPlugin,
     });
     tasks.push(vitestTask);
-    createOrEditViteConfig(
-      tree,
-      {
-        project: options.name,
-        includeLib: false,
-        includeVitest: true,
-        testEnvironment: options.testEnvironment,
-      },
-      true
-    );
   }
 
   if (!schema.skipTsConfig && !options.isUsingTsSolutionConfig) {
@@ -934,7 +924,9 @@ function addProjectDependencies(
       {
         '@nx/esbuild': nxVersion,
         '@types/node': typesNodeVersion,
-        esbuild: esbuildVersion,
+        esbuild:
+          getDependencyVersionFromPackageJson(tree, 'esbuild') ??
+          esbuildVersion,
       }
     );
   } else if (options.bundler == 'rollup') {

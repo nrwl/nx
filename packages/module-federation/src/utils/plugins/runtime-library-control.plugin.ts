@@ -58,7 +58,7 @@ const nxRuntimeLibraryControlPlugin: () => ModuleFederationRuntimePlugin =
             remotePkgInfo.useIn.push(runtimeStore.name);
             remotePkgInfo.useIn = Array.from(new Set(remotePkgInfo.useIn));
             shareScopeMap[scope][pkgName][version] = remotePkgInfo;
-            return remotePkgInfo;
+            return { shared: remotePkgInfo, useTreesShaking: false };
           } catch {
             return originalResolver();
           }

@@ -1,13 +1,16 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "allowJs": true
+    "types": ["node", "jest"]
   },
-  "include": ["**/*.ts", "**/*.js"],
-  "exclude": ["node_modules", "dist"],
+  "include": [],
+  "files": [],
   "references": [
     {
       "path": "../utils"
+    },
+    {
+      "path": "./tsconfig.spec.json"
     }
   ]
 }

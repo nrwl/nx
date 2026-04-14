@@ -12,11 +12,11 @@ Once you have one or more rules published to your Nx Cloud Organization, you can
 
 [https://cloud.nx.app/go/organization/conformance-rules](https://cloud.nx.app/go/organization/conformance-rules)
 
-## Understanding the Conformance Rules Dashboard
+## Understanding the conformance rules dashboard
 
 The conformance rules dashboard provides comprehensive visibility into your organization's rule adoption and compliance across all workspaces. The interface is designed with two main views to help platform and engineering leaders track and manage conformance standards effectively.
 
-### Rule Overview
+### Rule overview
 
 The **Rule Overview** screen provides a summary of all conformance rules that have been applied across your organization's workspaces. This view displays:
 
@@ -27,7 +27,7 @@ The **Rule Overview** screen provides a summary of all conformance rules that ha
 
 This overview enables you to quickly track adoption and compliance with organizational standards across both Nx and non-Nx repositories.
 
-### Rule Metadata Overview
+### Rule metadata overview
 
 The **Rule Metadata Overview** screen gives you a detailed dive into the technical and organizational metadata attached to each rule. This comprehensive view includes:
 
@@ -40,17 +40,17 @@ The **Rule Metadata Overview** screen gives you a detailed dive into the technic
 
 This detailed view supports thorough auditing and makes it easier to manage the lifecycle of rules across a large set of codebases. Both screens are designed to streamline governance and visibility, allowing you to evaluate rollout effectiveness and adoption patterns across your entire organization.
 
-## Choose the Scope of Configured Rules
+## Choose the scope of configured rules
 
 The value in the dropdown will determine what workspace(s) the rules will be applied to. By default, "All Workspaces" is the selected value, but you can change this to focus on a specific workspace instead.
 
-## Configure a Rule for the Chosen Workspace Scope
+## Configure a rule for the chosen workspace scope
 
 After choosing the target workspace(s), click on the "Configure rule" to open the rule configuration dialog.
 
 Here you will choose which of the rules published to your Nx Cloud Organization should be applied to the chosen workspace(s), and configure any options that the chosen rule supports.
 
-### Rule Options
+### Rule options
 
 {% aside type="note" title="Rule Options UI" %}
 The rule options are currently provided via JSON, but in the near future we will dynamically generate a UI for configuring the options of each rule.
@@ -58,7 +58,7 @@ The rule options are currently provided via JSON, but in the near future we will
 
 The rule options will be validated against the rule's JSON schema definition before being saved, and you will be notified of any validation errors.
 
-### Rule Status
+### Rule status
 
 Here you will choose whether or not the rule should be:
 
@@ -71,13 +71,13 @@ Here you will choose whether or not the rule should be:
 - **Disabled**
   - The rule will not be executed at all in the chosen workspace(s) and violations will therefore not be reported.
 
-### Scheduled Status
+### Scheduled status
 
 By toggling on the "Schedule configuration", you can choose to set a future date on which the rule should be automatically transitioned to an alternate status.
 
 Most commonly this would be used to transition a rule from **Evaluated** to **Enabled** after a grace period, to allow contributors to address the violations before enforcement begins, but any combination of current and scheduled statuses is supported.
 
-## Notes on the Application of Rules at Runtime
+## Notes on the application of rules at runtime
 
 When `nx-cloud conformance` or `nx-cloud conformance:check` are run, any configured rules for the current workspace will be dynamically downloaded from your Nx Cloud Organization and applied to the resolved conformance configuration. This means that the conformance configuration itself is completely optional when using it with Nx Cloud, but it can still be useful if the workspace wants to combine cloud rules with other locally-defined rules.
 

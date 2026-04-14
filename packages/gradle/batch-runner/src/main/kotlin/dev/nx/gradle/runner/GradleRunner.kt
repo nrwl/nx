@@ -9,20 +9,6 @@ import java.io.ByteArrayOutputStream
 import org.gradle.tooling.BuildCancelledException
 import org.gradle.tooling.ProjectConnection
 import org.gradle.tooling.events.OperationType
-import org.gradle.tooling.model.build.BuildEnvironment
-import org.gradle.util.GradleVersion
-
-private val GRADLE_RERUN_MIN_VERSION = GradleVersion.version("7.6")
-
-fun getGradleVersion(connection: ProjectConnection): GradleVersion? {
-  return try {
-    val buildEnvironment = connection.getModel(BuildEnvironment::class.java)
-    GradleVersion.version(buildEnvironment.gradle.gradleVersion)
-  } catch (e: Exception) {
-    logger.warning("Failed to get Gradle version: ${e.message}")
-    null
-  }
-}
 
 fun runTasksInParallel(
     connection: ProjectConnection,
@@ -43,13 +29,6 @@ fun runTasksInParallel(
   val outputStream2 = ByteArrayOutputStream()
   val errorStream2 = ByteArrayOutputStream()
 
-  // --rerun used to skip Gradle caching since we use Nx caching
-  // Fall back to --rerun-tasks if version detection fails (null) or version is < 7.6
-  val gradleVersion = getGradleVersion(connection)
-  val rerunFlag =
-      if (gradleVersion != null && gradleVersion >= GRADLE_RERUN_MIN_VERSION) "--rerun"
-      else "--rerun-tasks"
-
   // --info is for terminal per task
   // --continue is for continue running tasks if one failed in a batch
   // --parallel is for performance
@@ -62,7 +41,6 @@ fun runTasksInParallel(
           "--continue",
           "-Dorg.gradle.daemon.idletimeout=0",
           "--parallel",
-          rerunFlag,
           "-Dorg.gradle.workers.max=$workersMax")
 
   if (additionalArgs.isNotBlank()) {
@@ -127,8 +105,8 @@ fun runBuildLauncher(
         .apply {
           forTasks(*taskNames)
           addArguments(*(args + excludeArgs).toTypedArray())
-          setStandardOutput(outputStream)
-          setStandardError(errorStream)
+          setStandardOutput(TeeOutputStream(outputStream, System.err))
+          setStandardError(TeeOutputStream(errorStream, System.err))
           withDetailedFailure()
           addProgressListener(buildListener(tasks, taskStartTimes, taskResults), OperationType.TASK)
         }
@@ -197,8 +175,8 @@ fun runTestLauncher(
           // arguments here
           addArguments(
               *(args + excludeArgs).toTypedArray()) // Combine your existing args with JUnit args
-          setStandardOutput(outputStream)
-          setStandardError(errorStream)
+          setStandardOutput(TeeOutputStream(outputStream, System.err))
+          setStandardError(TeeOutputStream(errorStream, System.err))
           addProgressListener(
               testListener(tasks, testTaskStatus, testStartTimes, testEndTimes), eventTypes)
           withDetailedFailure()

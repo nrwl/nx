@@ -55,8 +55,8 @@ export function Filters({ selectedFilter, filters }: FiltersProps) {
                 aria-current={isActive ? 'true' : undefined}
                 className={`flex items-center justify-center gap-2 rounded-full border px-2.5 py-1.5 font-medium shadow-sm transition ${
                   isActive
-                    ? 'border-blue-500 bg-blue-500 text-white hover:bg-blue-600 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-600'
-                    : 'border-slate-400 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
+                    ? 'border-blue-500 bg-blue-500 text-white hover:bg-blue-600 dark:border-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600'
+                    : 'border-zinc-400 bg-white text-zinc-700 hover:bg-zinc-50 hover:text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700'
                 }`}
               >
                 {filter.icon && (
@@ -73,7 +73,7 @@ export function Filters({ selectedFilter, filters }: FiltersProps) {
       <div className="relative lg:hidden">
         <Menu as="div" className="inline-block text-left">
           <MenuButton
-            className="inline-flex w-full justify-center rounded-md border border-slate-400 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            className="inline-flex w-full justify-center rounded-md border border-zinc-400 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 hover:text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
             aria-label="Select filter category"
           >
             Categories
@@ -93,7 +93,7 @@ export function Filters({ selectedFilter, filters }: FiltersProps) {
           >
             <MenuItems
               as="ul"
-              className="absolute right-0 z-[31] mt-2 flex w-56 origin-top-right flex-col gap-4 rounded-md bg-white p-4 shadow-lg ring-1 ring-black/5 focus:outline-none dark:bg-slate-800 dark:text-white"
+              className="absolute right-0 z-[31] mt-2 flex w-56 origin-top-right flex-col gap-4 rounded-md bg-white p-4 shadow-lg ring-1 ring-black/5 focus:outline-none dark:bg-zinc-800 dark:text-white"
               aria-label="Filter categories"
             >
               {filters.map((filter) => {
@@ -103,7 +103,7 @@ export function Filters({ selectedFilter, filters }: FiltersProps) {
                     <Link
                       className={`flex items-center gap-2 ${
                         isActive
-                          ? 'font-semibold text-blue-600 dark:text-sky-400'
+                          ? 'font-semibold text-blue-600 dark:text-blue-400'
                           : ''
                       }`}
                       href={updateFilter(filter.value)}

@@ -15,11 +15,11 @@ Requires Nx 22.1 or higher.
 The CI resource usage feature with Nx Cloud requires an [Enterprise plan](https://nx.dev/enterprise?utm_source=nx.dev&utm_medium=documentation-guide&utm_campaign=nx-cloud-task-metrics).
 {% /aside %}
 
-## Resource Usage with Nx Agents
+## Resource usage with Nx Agents
 
 With [Nx Agents](/docs/features/ci-features/distribute-task-execution), resource metrics are collected automatically. You can view this data in the Nx Cloud dashboard for any CI pipeline execution.
 
-### Viewing the Analysis Summary
+### Viewing the analysis summary
 
 Open any CI pipeline execution in Nx Cloud and go to the analysis section. You'll see a list of agents used for the run, along with:
 
@@ -31,7 +31,7 @@ This gives you a quick look at how resources were used across all agents.
 
 ![Resource usage summary showing agents with CPU and memory stats](../../../../assets/guides/nx-cloud/agent-resource-usage-table.png)
 
-### Viewing Usage Details
+### Viewing usage details
 
 Click on any agent to see a breakdown of resource usage over time. The detail view shows:
 
@@ -44,7 +44,7 @@ This view helps you find exactly which task is using the most resources, not jus
 
 ![Resource usage details showing memory and CPU by process](../../../../assets/guides/nx-cloud/resource-chart-details.png)
 
-### Using the Detail View
+### Using the detail view
 
 The detail view has a few features to help you dig into resource usage:
 
@@ -59,7 +59,7 @@ The detail view has a few features to help you dig into resource usage:
 
 - **CSV export**: Download the raw data if you need to dig into sub-process details
 
-## Common Use Cases
+## Common use cases
 
 - **Finding memory-hungry tasks**: Figure out which project eats the most memory when running tasks in parallel. You can then run just that project with lower parallelism instead of slowing down everything.
 - **Spotting misconfigured tooling**: See when a bundler or build tool is pulling in more files than it should.
@@ -68,11 +68,11 @@ The detail view has a few features to help you dig into resource usage:
 - **Detecting memory leaks**: Look for tasks where memory keeps climbing over time.
 - **Picking the right resource class**: Figure out the right agent size when moving to Nx Agents from GitHub Actions or other CI providers.
 
-## Manual Metrics Upload
+## Manual metrics upload
 
 If you're running your own CI runners instead of Nx Agents, you can still collect resource metrics and upload them to Nx Cloud.
 
-### How It Works
+### How it works
 
 Nx writes resource metrics to a local directory during task execution. To view this data in Nx Cloud:
 
@@ -94,7 +94,7 @@ Metrics are written to the local Nx cache directory by default (`.nx/cache/metri
 export NX_CLOUD_METRICS_DIRECTORY=/path/to/metrics
 ```
 
-### Saving Metrics as CI Artifacts
+### Saving metrics as CI artifacts
 
 Set up your CI to save the metrics directory as an artifact so you can download it later. The following examples assume that the default cache directory (`.nx/cache/metrics`) is used. If you overwrite the metrics directory, adjust the paths in the artifact upload step accordingly.
 
@@ -155,7 +155,7 @@ jobs:
 {% /tabitem %}
 {% /tabs %}
 
-### Uploading Metrics to Nx Cloud
+### Uploading metrics to Nx Cloud
 
 Once your CI run finishes, download the metrics artifact from your CI provider. Then go to the CI pipeline execution in Nx Cloud, open the analysis screen, and upload the metrics file.
 

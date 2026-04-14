@@ -33,6 +33,9 @@ describe('create-nx-workspace --preset=react', () => {
     checkFilesExist('vite.config.mts');
     checkFilesDoNotExist('tsconfig.base.json');
     expectCodeIsFormatted();
+
+    const nxJson = readJson(`nx.json`);
+    expect(nxJson.nxCloudId).toBeUndefined();
   });
 
   it('should create a workspace with a single react app with webpack and playwright at the root', () => {

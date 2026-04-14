@@ -22,7 +22,8 @@ env:
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
   NODE_VERSION: 22.16.0
-  PNPM_VERSION: 10.11.1 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
+  PNPM_VERSION: 10.28.2 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
+  NX_GRADLE_PROJECT_GRAPH_TIMEOUT: 600
 
 jobs:
   # We first need to determine the version we are releasing, and if we need a custom repo or ref to use for the git checkout in subsequent steps.
@@ -174,7 +175,7 @@ jobs:
               bash -c "
                 set -e
                 echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
-                apk add --no-cache curl xz openjdk21
+                apk add --no-cache curl xz openjdk21 build-base lld
 
                 # Set up Java 21
                 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
@@ -193,6 +194,10 @@ jobs:
                 # Install PNPM
                 npm i -g pnpm@${PNPM_VERSION} --force
                 pnpm --version
+
+                # Help clang find GCC runtime (crtbeginS.o, libgcc) and use lld for jemalloc build
+                GCC_DIR=\$(dirname \$(find /usr/lib/gcc -name crtbeginS.o | head -1))
+                export CFLAGS=\"\${CFLAGS} -fuse-ld=lld --gcc-install-dir=\${GCC_DIR}\"
 
                 # Install deps and run native build
                 pnpm install --frozen-lockfile
@@ -230,6 +235,9 @@ jobs:
               node --version
               npm --version
 
+              # Help clang find GCC runtime (crtbeginS.o, libgcc) and use lld for jemalloc build
+              export CFLAGS="${CFLAGS} -fuse-ld=lld --gcc-toolchain=/usr/aarch64-unknown-linux-gnu"
+
               npm i -g pnpm@${PNPM_VERSION} --force
               pnpm --version
 
@@ -260,7 +268,7 @@ jobs:
               bash -c "
                 set -e
                 echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
-                apk add --no-cache curl xz openjdk21
+                apk add --no-cache curl xz openjdk21 build-base lld
 
                 # Set up Java 21
                 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
@@ -279,6 +287,10 @@ jobs:
                 # Install PNPM
                 npm i -g pnpm@${PNPM_VERSION} --force
                 pnpm --version
+
+                # Help clang find GCC runtime (crtbeginS.o, libgcc) and use lld for jemalloc build
+                GCC_DIR=\$(dirname \$(find /aarch64-linux-musl-cross/lib/gcc -name crtbeginS.o | head -1))
+                export CFLAGS=\"\${CFLAGS} -fuse-ld=lld --gcc-install-dir=\${GCC_DIR}\"
 
                 # Install deps and run native build
                 pnpm install --frozen-lockfile
@@ -302,6 +314,10 @@ jobs:
         with:
           repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
           ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
+
+      - name: Set verbose logging from debug mode
+        if: runner.debug == '1'
+        run: echo "NX_VERBOSE_LOGGING=true" >> "$GITHUB_ENV"
 
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
@@ -354,12 +370,26 @@ jobs:
           architecture: x86
 
       - name: Build in docker
-        uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185 # v3
         if: ${{ matrix.settings.docker }}
-        with:
-          image: ${{ matrix.settings.docker }}
-          options: --user 0:0 -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index -v ${{ github.workspace }}:/build -w /build
-          run: ${{ matrix.settings.build }}
+        shell: bash
+        env:
+          BUILD_SCRIPT: ${{ matrix.settings.build }}
+        run: |
+          SCRIPT_FILE=$(mktemp)
+          echo "$BUILD_SCRIPT" > "$SCRIPT_FILE"
+          docker run --rm \
+            --user 0:0 \
+            -e PNPM_VERSION \
+            -e NX_GRADLE_PROJECT_GRAPH_TIMEOUT \
+            -e NX_VERBOSE_LOGGING \
+            -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db \
+            -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache \
+            -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index \
+            -v ${{ github.workspace }}:/build \
+            -v "$SCRIPT_FILE:/build-script.sh" \
+            -w /build \
+            ${{ matrix.settings.docker }} \
+            bash /build-script.sh
 
       - name: Build
         run: ${{ matrix.settings.build }}
@@ -396,21 +426,18 @@ jobs:
           NX_PREFER_TS_NODE: true
           PLAYWRIGHT_BROWSERS_PATH: 0
           NODE_VERSION: 22.16.0
+          NX_GRADLE_DISABLE: 'true'
         with:
           operating_system: freebsd
           version: '14.0'
           architecture: x86-64
-          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH NODE_VERSION
+          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE
           shell: bash
           run: |
             env
             whoami
-            sudo pkg install -y -f node libnghttp2 www/npm git openjdk17
-            sudo npm install --location=global --ignore-scripts pnpm@10.11.1
-            # Set up Java 17
-            export JAVA_HOME=/usr/local/openjdk17
-            export PATH="$JAVA_HOME/bin:$PATH"
-            java --version
+            sudo pkg install -y -f node libnghttp2 www/npm git ca_root_nss
+            sudo npm install --location=global --ignore-scripts pnpm@10.28.2
             curl https://sh.rustup.rs -sSf --output rustup.sh
             sh rustup.sh -y --profile minimal --default-toolchain stable
             source "$HOME/.cargo/env"
@@ -466,17 +493,31 @@ jobs:
             pnpm store prune || true
             rm -rf ~/.npm || true
             rm -rf ~/.pnpm-store || true
-            # Remove Rust build artifacts if any
-            rm -rf ~/.cargo/registry || true
-            rm -rf ~/.cargo/git || true
+            # Clean Rust extras but keep registry/git (needed for cargo to resolve deps)
             rm -rf ~/.rustup/toolchains/*/share || true
             # Remove other development tool caches
             rm -rf ~/.cache/* || true
+
+            # Remove unnecessary workspace directories
+            rm -rf docs astro-docs nx-dev || true
+
             echo "Checking disk space after cleanup"
             df -h
             
             echo "Building FreeBSD bindings"
-            pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
+            BUILD_EXIT=0
+            pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd || BUILD_EXIT=$?
+
+            echo "=== Disk usage after build ==="
+            df -h
+
+            if [ "$BUILD_EXIT" -ne 0 ]; then
+              echo "Build failed with exit code $BUILD_EXIT"
+              exit $BUILD_EXIT
+            fi
+
+            echo "Build succeeded"
+            
             echo "Cleaning up"
             pnpm nx reset
             rm -rf node_modules
@@ -514,6 +555,10 @@ jobs:
           repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
           ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
 
+      - name: Set verbose logging from debug mode
+        if: runner.debug == '1'
+        run: echo "NX_VERBOSE_LOGGING=true" >> "$GITHUB_ENV"
+
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
 
@@ -548,7 +593,6 @@ jobs:
           VERSION: ${{ needs.resolve-required-data.outputs.version }}
           DRY_RUN: ${{ needs.resolve-required-data.outputs.dry_run_flag }}
           PUBLISH_BRANCH: ${{ needs.resolve-required-data.outputs.publish_branch }}
-          NX_VERBOSE_LOGGING: true
         run: |
           echo ""
           # Create and check out the publish branch

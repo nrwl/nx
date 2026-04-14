@@ -62,25 +62,11 @@ awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' your-key.pem # keep a note of the o
 
 Save the output of the above, as we'll also use it in a bit.
 
-## Configure Permissions for the GitHub App
+## Configure permissions for the GitHub app
 
-The following permissions are required for Nx Cloud to work:
+See the [GitHub App Permissions](/docs/guides/nx-cloud/source-control-integration/github-app-permissions) reference for the full list of required permissions and a detailed breakdown of what each one is used for.
 
-Repository permissions:
-
-- `Contents: Read & Write`
-- `Pull requests: Read & Write`
-- `Checks: Read Only`
-- `Commit Statuses: Read & Write`
-- `Issues: Read & Write`
-- `Metadata: Read Only`
-
-Organization permissions:
-
-- `Administration: Read Only`
-- `Members: Read Only`
-
-## Connect Your Nx Cloud Installation
+## Connect your Nx Cloud installation
 
 Provide the following values to your developer productivity engineer so they can help connect Nx Cloud to your custom GitHub app:
 

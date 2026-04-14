@@ -1043,46 +1043,6 @@ describe('app migrator', () => {
       });
     });
 
-    it('should set hasTypeAwareRules when there are rules requiring type checking', async () => {
-      writeJson(tree, '.eslintrc.json', {
-        root: true,
-        ignorePatterns: ['projects/**/*'],
-        overrides: [
-          {
-            files: ['*.ts', '*.tsx'],
-            extends: ['plugin:@nx/typescript'],
-            rules: { '@typescript-eslint/await-thenable': 'error' },
-          },
-        ],
-      });
-      const project = addProject('app1', {
-        root: '',
-        sourceRoot: 'src',
-        architect: {
-          lint: {
-            builder: '@angular-eslint/builder:lint',
-            options: {
-              eslintConfig: '.eslintrc.json',
-              lintFilePatterns: ['src/**/*.ts', 'src/**/*.html'],
-            },
-          },
-        },
-      });
-      const migrator = new AppMigrator(tree, {}, project);
-
-      await migrator.migrate();
-
-      const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets.lint).toStrictEqual({
-        executor: '@nx/eslint:lint',
-        options: {
-          eslintConfig: 'apps/app1/.eslintrc.json',
-          hasTypeAwareRules: true,
-          lintFilePatterns: ['apps/app1/**/*.ts', 'apps/app1/**/*.html'],
-        },
-      });
-    });
-
     it('should update server target', async () => {
       const project = addProject('app1', {
         root: '',

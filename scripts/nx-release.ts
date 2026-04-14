@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 import { createProjectGraphAsync, workspaceRoot } from '@nx/devkit';
-import * as chalk from 'chalk';
+import { styleText } from 'node:util';
 import { execSync } from 'node:child_process';
 import { rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { URL } from 'node:url';
 import { isRelativeVersionKeyword } from 'nx/src/command-line/release/utils/semver';
-import { ReleaseType, inc, major, parse } from 'semver';
-import * as yargs from 'yargs';
+import { ReleaseType, major, parse } from 'semver';
+import yargs from 'yargs';
 
 const LARGE_BUFFER = 1024 * 1000000;
 
@@ -42,7 +42,7 @@ const VALID_AUTHORS_FOR_LATEST = [
   if (!options.local && process.env.GITHUB_ACTIONS) {
     // Delete all .node files that were built during the previous steps
     // Always run before the artifacts step because we still need the .node files for native-packages
-    execSync('find ./dist -name "*.node" -delete', {
+    execSync('find ./dist ./packages/nx/dist -name "*.node" -delete', {
       stdio: [0, 1, 2],
       maxBuffer: LARGE_BUFFER,
       windowsHide: false,
@@ -73,6 +73,35 @@ const VALID_AUTHORS_FOR_LATEST = [
     });
   };
 
+  const packagesToReset = [
+    'packages/angular-rspack',
+    'packages/angular-rspack-compiler',
+    'packages/dotnet',
+    'packages/maven',
+    'packages/nx',
+  ];
+
+  const packageSnapshots: { [key: string]: string } = {};
+  for (const packagePath of packagesToReset) {
+    const packageJsonPath = join(workspaceRoot, packagePath, 'package.json');
+    const packageJson = readFileSync(packageJsonPath, 'utf-8');
+    packageSnapshots[packagePath] = packageJson;
+  }
+
+  const resetPackageJsons = () => {
+    for (const packagePath of packagesToReset) {
+      const packageJsonPath = join(workspaceRoot, packagePath, 'package.json');
+      writeFileSync(packageJsonPath, packageSnapshots[packagePath]);
+    }
+  };
+
+  // Reset package.json files even on ctrl+C
+  process.on('SIGINT', () => {
+    console.log('\nReceived SIGINT, restoring package.json files...');
+    resetPackageJsons();
+    process.exit(1);
+  });
+
   // Intended for creating a github release which triggers the publishing workflow
   // This runs locally (not in CI) to create the GitHub release that triggers the actual publish workflow
   if (!options.local && !process.env.GITHUB_ACTIONS) {
@@ -84,11 +113,57 @@ const VALID_AUTHORS_FOR_LATEST = [
     });
 
     if (isRelativeVersionKeyword(options.version)) {
+      resetPackageJsons();
       throw new Error(
         'When creating actual releases, you must use an exact semver version'
       );
     }
 
+    try {
+      runNxReleaseVersion();
+
+      execSync(`pnpm nx run-many -t add-extra-dependencies --parallel 8`, {
+        stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+        maxBuffer: LARGE_BUFFER,
+        windowsHide: false,
+      });
+
+      execSync(`pnpm nx run nx:expand-deps`, {
+        stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+        maxBuffer: LARGE_BUFFER,
+        windowsHide: false,
+      });
+
+      let changelogCommand = `pnpm nx release changelog ${options.version} --interactive workspace`;
+      if (options.from) {
+        changelogCommand += ` --from ${options.from}`;
+      }
+      if (options.gitRemote) {
+        changelogCommand += ` --git-remote ${options.gitRemote}`;
+      }
+      if (options.dryRun) {
+        changelogCommand += ' --dry-run';
+      }
+      if (isVerboseLogging) {
+        changelogCommand += ' --verbose';
+      }
+      console.log(`> ${changelogCommand}`);
+      execSync(changelogCommand, {
+        stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+        maxBuffer: LARGE_BUFFER,
+        windowsHide: false,
+      });
+
+      console.log(
+        'Check github: https://github.com/nrwl/nx/actions/workflows/publish.yml'
+      );
+    } finally {
+      resetPackageJsons();
+    }
+    process.exit(0);
+  }
+
+  try {
     runNxReleaseVersion();
 
     execSync(`pnpm nx run-many -t add-extra-dependencies --parallel 8`, {
@@ -97,153 +172,101 @@ const VALID_AUTHORS_FOR_LATEST = [
       windowsHide: false,
     });
 
-    let changelogCommand = `pnpm nx release changelog ${options.version} --interactive workspace`;
-    if (options.from) {
-      changelogCommand += ` --from ${options.from}`;
-    }
-    if (options.gitRemote) {
-      changelogCommand += ` --git-remote ${options.gitRemote}`;
-    }
-    if (options.dryRun) {
-      changelogCommand += ' --dry-run';
-    }
-    if (isVerboseLogging) {
-      changelogCommand += ' --verbose';
-    }
-    console.log(`> ${changelogCommand}`);
-    execSync(changelogCommand, {
+    execSync(`pnpm nx run nx:expand-deps`, {
       stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
       maxBuffer: LARGE_BUFFER,
       windowsHide: false,
     });
 
-    console.log(
-      'Check github: https://github.com/nrwl/nx/actions/workflows/publish.yml'
-    );
-    process.exit(0);
-  }
+    const distTag = determineDistTag(options.version);
 
-  const packagesToReset = [
-    'packages/angular-rspack',
-    'packages/angular-rspack-compiler',
-    'packages/dotnet',
-    'packages/maven',
-  ];
-
-  const packageSnapshots: { [key: string]: string } = {};
-  for (const packagePath of packagesToReset) {
-    const packageJsonPath = join(workspaceRoot, packagePath, 'package.json');
-    const packageJson = readFileSync(packageJsonPath, 'utf-8');
-    packageSnapshots[packagePath] = packageJson;
-  }
-
-  runNxReleaseVersion();
-
-  execSync(`pnpm nx run-many -t add-extra-dependencies --parallel 8`, {
-    stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
-    maxBuffer: LARGE_BUFFER,
-    windowsHide: false,
-  });
-
-  const distTag = determineDistTag(options.version);
-
-  // If publishing locally, force all projects to not be private first
-  if (options.local) {
-    console.log(
-      chalk.dim`\n  Publishing locally, so setting all packages with existing nx-release-publish targets to not be private. If you have created a new private package and you want it to be published, you will need to manually configure the "nx-release-publish" target using executor "@nx/js:release-publish"`
-    );
-    const projectGraph = await createProjectGraphAsync();
-    for (const proj of Object.values(projectGraph.nodes)) {
-      if (proj.data.targets?.['nx-release-publish']) {
-        const packageJsonPath = join(
-          workspaceRoot,
-          proj.data.targets?.['nx-release-publish']?.options.packageRoot,
-          'package.json'
-        );
-        try {
-          const packageJson = require(packageJsonPath);
-          if (packageJson.private) {
-            console.log(
-              '- Publishing private package locally:',
-              packageJson.name
-            );
-            writeFileSync(
-              packageJsonPath,
-              JSON.stringify({ ...packageJson, private: false })
-            );
-          }
-        } catch {}
+    // If publishing locally, force all projects to not be private first
+    if (options.local) {
+      console.log(
+        styleText(
+          'dim',
+          `\n  Publishing locally, so setting all packages with existing nx-release-publish targets to not be private. If you have created a new private package and you want it to be published, you will need to manually configure the "nx-release-publish" target using executor "@nx/js:release-publish"`
+        )
+      );
+      const projectGraph = await createProjectGraphAsync();
+      for (const proj of Object.values(projectGraph.nodes)) {
+        if (proj.data.targets?.['nx-release-publish']) {
+          const packageJsonPath = join(
+            workspaceRoot,
+            proj.data.targets?.['nx-release-publish']?.options.packageRoot,
+            'package.json'
+          );
+          try {
+            const packageJson = require(packageJsonPath);
+            if (packageJson.private) {
+              console.log(
+                '- Publishing private package locally:',
+                packageJson.name
+              );
+              writeFileSync(
+                packageJsonPath,
+                JSON.stringify({ ...packageJson, private: false })
+              );
+            }
+          } catch {}
+        }
       }
     }
-  }
 
-  if (!options.local && (!distTag || distTag === 'latest')) {
-    // We are only expecting non-local latest releases to be performed within publish.yml on GitHub
-    const author = process.env.GITHUB_ACTOR ?? '';
-    if (!VALID_AUTHORS_FOR_LATEST.includes(author)) {
-      throw new Error(
-        `The GitHub user "${author}" is not allowed to publish to "latest". Please request one of the following users to carry out the release: ${VALID_AUTHORS_FOR_LATEST.join(
-          ', '
-        )}`
+    if (!options.local && (!distTag || distTag === 'latest')) {
+      // We are only expecting non-local latest releases to be performed within publish.yml on GitHub
+      const author = process.env.GITHUB_ACTOR ?? '';
+      if (!VALID_AUTHORS_FOR_LATEST.includes(author)) {
+        throw new Error(
+          `The GitHub user "${author}" is not allowed to publish to "latest". Please request one of the following users to carry out the release: ${VALID_AUTHORS_FOR_LATEST.join(
+            ', '
+          )}`
+        );
+      }
+    }
+
+    // Clean up tsconfig files before publishing
+    console.log('Cleaning up tsconfig files...');
+    execSync('node ./scripts/cleanup-tsconfig-files.js', {
+      stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+      maxBuffer: LARGE_BUFFER,
+      windowsHide: false,
+    });
+
+    hackFixForDevkitPeerDependencies();
+
+    // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
+    let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
+    if (options.dryRun) {
+      publishCommand += ' --dry-run';
+    }
+    console.log(`\n> ${publishCommand}`);
+    execSync(publishCommand, {
+      stdio: [0, 1, 2],
+      maxBuffer: LARGE_BUFFER,
+      windowsHide: false,
+    });
+
+    if (!options.dryRun) {
+      let version;
+      if (['minor', 'major', 'patch'].includes(options.version)) {
+        version = execSync(`npm view nx@${distTag} version`, {
+          windowsHide: false,
+        })
+          .toString()
+          .trim();
+      } else {
+        version = options.version;
+      }
+
+      console.log(styleText('green', ` > Published version: ` + version));
+      console.log(
+        styleText('dim', `   Use: npx create-nx-workspace@${version}\n`)
       );
     }
+  } finally {
+    resetPackageJsons();
   }
-
-  // Clean up tsconfig files before publishing
-  console.log('Cleaning up tsconfig files...');
-  execSync('node ./scripts/cleanup-tsconfig-files.js', {
-    stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
-    maxBuffer: LARGE_BUFFER,
-    windowsHide: false,
-  });
-
-  hackFixForDevkitPeerDependencies();
-
-  // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
-  let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
-  if (options.dryRun) {
-    publishCommand += ' --dry-run';
-  }
-  console.log(`\n> ${publishCommand}`);
-  execSync(publishCommand, {
-    stdio: [0, 1, 2],
-    maxBuffer: LARGE_BUFFER,
-    windowsHide: false,
-  });
-
-  if (!options.dryRun) {
-    let version;
-    if (['minor', 'major', 'patch'].includes(options.version)) {
-      version = execSync(`npm view nx@${distTag} version`, {
-        windowsHide: false,
-      })
-        .toString()
-        .trim();
-    } else {
-      version = options.version;
-    }
-
-    console.log(chalk.green` > Published version: ` + version);
-    console.log(chalk.dim`   Use: npx create-nx-workspace@${version}\n`);
-  }
-
-  // TODO(colum): Remove when we have a better way to handle this
-
-  console.log(
-    'Resetting angular-rspack package.json versions to previous versions'
-  );
-
-  for (const packagePath of packagesToReset) {
-    const packageJsonPath = join(workspaceRoot, packagePath, 'package.json');
-    writeFileSync(packageJsonPath, packageSnapshots[packagePath]);
-  }
-
-  execSync(
-    `npx prettier --write packages/angular-rspack/package.json packages/angular-rspack-compiler/package.json`,
-    {
-      cwd: workspaceRoot,
-    }
-  );
 
   process.exit(0);
 })();
@@ -311,37 +334,25 @@ function parseArgs() {
         }
         /**
          * Handle the special case of `canary`
+         *
+         * Use the base version from nx@next so that canary versions
+         * are always aligned with the current next/beta release line.
          */
 
-        const currentLatestVersion = execSync('npm view nx@latest version', {
-          windowsHide: false,
-        })
-          .toString()
-          .trim();
         const currentNextVersion = execSync('npm view nx@next version', {
           windowsHide: false,
         })
           .toString()
           .trim();
 
-        let canaryBaseVersion: string | null = null;
-
-        // If the latest and next are not on the same major version, then we need to publish a canary version of the next major
-        if (major(currentLatestVersion) !== major(currentNextVersion)) {
-          canaryBaseVersion = `${major(currentNextVersion)}.0.0`;
-        } else {
-          // Determine next minor version above the currentLatestVersion
-          const nextMinorRelease = inc(
-            currentLatestVersion,
-            'minor',
-            undefined
+        const parsedNext = parse(currentNextVersion);
+        if (!parsedNext) {
+          throw new Error(
+            `Unable to parse the current next version from the npm registry: "${currentNextVersion}"`
           );
-          canaryBaseVersion = nextMinorRelease;
         }
 
-        if (!canaryBaseVersion) {
-          throw new Error(`Unable to determine a base for the canary version.`);
-        }
+        const canaryBaseVersion = `${parsedNext.major}.${parsedNext.minor}.${parsedNext.patch}`;
 
         // Create YYYYMMDD string
         const date = new Date();
@@ -360,7 +371,6 @@ function parseArgs() {
         const canaryVersion = `${canaryBaseVersion}-canary.${YYYYMMDD}-${gitSha}`;
 
         console.log(`\nDerived canary version dynamically`, {
-          currentLatestVersion,
           currentNextVersion,
           canaryVersion,
         });
@@ -440,8 +450,8 @@ function determineDistTag(
     return 'canary';
   }
 
-  // Special case of PR release
-  if (newVersion.startsWith('0.0.0-pr-')) {
+  // Special case of PR release (e.g. 22.5.0-pr.1234.abc1234)
+  if (/^\d+\.\d+\.\d+-pr\./.test(newVersion)) {
     return 'pull-request';
   }
 

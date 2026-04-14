@@ -51,7 +51,7 @@ export function FeedAnswer({
 
   return (
     <>
-      <div className="grid h-12 w-12 items-center justify-center rounded-full bg-white text-slate-900 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-white dark:ring-slate-700">
+      <div className="grid h-12 w-12 items-center justify-center rounded-full bg-white text-zinc-900 ring-1 ring-zinc-200 dark:bg-zinc-900 dark:text-white dark:ring-zinc-700">
         <svg
           role="img"
           viewBox="0 0 24 24"
@@ -65,23 +65,20 @@ export function FeedAnswer({
       </div>
       <div className="min-w-0 flex-1">
         <div>
-          <div className="flex items-center gap-2 text-lg text-slate-900 dark:text-slate-100">
+          <div className="flex items-center gap-2 text-lg text-zinc-900 dark:text-zinc-100">
             Nx Assistant
           </div>
-          <p className="mt-0.5 flex items-center gap-x-1 text-sm text-slate-500">
-            <ChatGptLogo
-              className="h-4 w-4 text-slate-400"
-              aria-hidden="true"
-            />{' '}
+          <p className="mt-0.5 flex items-center gap-x-1 text-sm text-zinc-500">
+            <ChatGptLogo className="h-4 w-4 text-zinc-400" aria-hidden="true" />{' '}
             AI powered
           </p>
         </div>
-        <div className="prose prose-slate dark:prose-invert mt-2 w-full max-w-none 2xl:max-w-4xl">
+        <div className="prose prose-zinc dark:prose-invert mt-2 w-full max-w-none 2xl:max-w-4xl">
           {!isFirst && callout}
           {renderMarkdown(normalizedContent, { filePath: '' }).node}
         </div>
         {!isFirst && (
-          <div className="text-md group flex-1 gap-4 text-slate-400 transition hover:text-slate-500 md:flex md:items-center md:justify-end">
+          <div className="text-md group flex-1 gap-4 text-zinc-400 transition hover:text-zinc-500 md:flex md:items-center md:justify-end">
             {feedbackStatement ? (
               <p className="italic group-hover:flex">
                 {feedbackStatement === 'good'
@@ -96,7 +93,7 @@ export function FeedAnswer({
             <div className="flex gap-4">
               <button
                 className={cx(
-                  'p-1 transition-all hover:rotate-12 hover:text-blue-500 disabled:cursor-not-allowed dark:hover:text-sky-500',
+                  'p-1 transition-all hover:rotate-12 hover:text-blue-500 disabled:cursor-not-allowed dark:hover:text-blue-500',
                   { 'text-blue-500': feedbackStatement === 'bad' }
                 )}
                 disabled={!!feedbackStatement}
@@ -108,7 +105,7 @@ export function FeedAnswer({
               </button>
               <button
                 className={cx(
-                  'p-1 transition-all hover:rotate-12 hover:text-blue-500 disabled:cursor-not-allowed dark:hover:text-sky-500',
+                  'p-1 transition-all hover:rotate-12 hover:text-blue-500 disabled:cursor-not-allowed dark:hover:text-blue-500',
                   { 'text-blue-500': feedbackStatement === 'good' }
                 )}
                 disabled={!!feedbackStatement}

@@ -110,7 +110,10 @@ export async function getStylesConfig(
         PostcssCliResources({
           baseHref: buildOptions.baseHref,
           deployUrl: buildOptions.deployUrl,
-          resourcesOutputPath: buildOptions.outputPath.media,
+          resourcesOutputPath: relative(
+            buildOptions.outputPath.browser,
+            buildOptions.outputPath.media
+          ),
           loader,
           filename: assetNameTemplate,
           emitFile: platform !== 'server',

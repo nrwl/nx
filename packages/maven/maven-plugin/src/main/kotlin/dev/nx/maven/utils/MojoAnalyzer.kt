@@ -20,6 +20,7 @@ class MojoAnalyzer(
   private val expressionResolver: MavenExpressionResolver,
   private val pathResolver: PathFormatter,
   private val gitIgnoreClassifier: GitIgnoreClassifier,
+  private val workspaceRoot: File,
 ) {
   private val log = LoggerFactory.getLogger(MojoAnalyzer::class.java)
 
@@ -82,15 +83,16 @@ class MojoAnalyzer(
       val paths = expressionResolver.resolveParameter(parameter, project)
 
       paths.forEach { path ->
-        val pathWithGlob = paramConfig.glob?.let { "$path/$it" } ?: path
-        val pathFile = File(pathWithGlob);
+        val pathFile = File(path)
         val isIgnored = gitIgnoreClassifier.isIgnored(pathFile)
         if (isIgnored) {
           log.warn("Input path is gitignored: ${pathFile.path}")
-          val input = pathResolver.toDependentTaskOutputs(pathFile, project.basedir)
-          dependentTaskOutputInputs.add(input)
+          // Use the parameter's glob pattern if provided, otherwise use **/*
+          val globPattern = paramConfig.glob ?: "**/*"
+          dependentTaskOutputInputs.add(DependentTaskOutputs(globPattern, transitive = true))
         } else {
-          val input = pathResolver.formatInputPath(pathFile, projectRoot = project.basedir)
+          val pathWithGlob = paramConfig.glob?.let { "$path/$it" } ?: path
+          val input = pathResolver.formatInputPath(File(pathWithGlob), projectRoot = project.basedir)
 
           inputs.add(input)
         }
@@ -105,8 +107,8 @@ class MojoAnalyzer(
         val isIgnored = gitIgnoreClassifier.isIgnored(pathFile)
         if (isIgnored) {
           log.warn("Input path is gitignored: ${pathFile.path}")
-          val input = pathResolver.toDependentTaskOutputs(pathFile, project.basedir)
-          dependentTaskOutputInputs.add(input)
+          // For properties, always use **/* pattern
+          dependentTaskOutputInputs.add(DependentTaskOutputs("**/*", transitive = true))
         } else {
           val input = pathResolver.formatInputPath(pathFile, projectRoot = project.basedir)
 
@@ -121,14 +123,34 @@ class MojoAnalyzer(
         val isIgnored = gitIgnoreClassifier.isIgnored(pathFile)
         if (isIgnored) {
           log.warn("Input path is gitignored: ${pathFile.path}")
-          val input = pathResolver.toDependentTaskOutputs(pathFile, project.basedir)
-          dependentTaskOutputInputs.add(input)
+          // For default inputs, always use **/* pattern
+          dependentTaskOutputInputs.add(DependentTaskOutputs("**/*", transitive = true))
         } else {
           val input = pathResolver.formatInputPath(pathFile, projectRoot = project.basedir)
 
           inputs.add(input)
         }
       }
+    }
+
+    // Always include pom.xml and in-workspace ancestor pom.xml files as inputs
+    val canonicalWorkspaceRoot = workspaceRoot.canonicalPath
+    val canonicalProjectRoot = project.basedir.canonicalPath
+    var currentProject: MavenProject? = project
+    while (currentProject != null) {
+      val pomFile = File(currentProject.basedir, "pom.xml")
+      val canonicalPomPath = pomFile.canonicalPath
+      if (pomFile.exists() && canonicalPomPath.startsWith(canonicalWorkspaceRoot)) {
+        val pomInput = if (canonicalPomPath.startsWith(canonicalProjectRoot)) {
+          // Within project directory - use {projectRoot}
+          pathResolver.formatInputPath(pomFile, projectRoot = project.basedir)
+        } else {
+          // Outside project directory - use {workspaceRoot}
+          pathResolver.toWorkspacePath(pomFile, workspaceRoot)
+        }
+        inputs.add(pomInput)
+      }
+      currentProject = currentProject.parent
     }
 
     return Pair(inputs, dependentTaskOutputInputs)

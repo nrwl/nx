@@ -1,35 +1,37 @@
-import { workspaceRoot } from '../utils/workspace-root';
-import { join } from 'path';
-import { performance } from 'perf_hooks';
-import {
-  DefaultTasksRunnerOptions,
-  RemoteCache,
-  RemoteCacheV2,
-} from './default-tasks-runner';
 import { spawn } from 'child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { cacheDir } from '../utils/cache-directory';
-import { Task } from '../config/task-graph';
-import { machineId } from 'node-machine-id';
-import {
-  NxCache,
-  CachedResult as NativeCacheResult,
-  IS_WASM,
-  getDefaultMaxCacheSize,
-  HttpRemoteCache,
-} from '../native';
-import { getDbConnection } from '../utils/db-connection';
-import { isNxCloudUsed } from '../utils/nx-cloud-utils';
+import { join } from 'path';
+import { performance } from 'perf_hooks';
+import { getCurrentMachineId } from '../utils/machine-id-cache';
 import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
+import { Task } from '../config/task-graph';
+import {
+  HttpRemoteCache,
+  IS_WASM,
+  CachedResult as NativeCacheResult,
+  NxCache,
+  getDefaultMaxCacheSize,
+} from '../native';
 import {
   NxCloudClientUnavailableError,
   verifyOrUpdateNxCloudClient,
 } from '../nx-cloud/update-manager';
 import { getCloudOptions } from '../nx-cloud/utilities/get-cloud-options';
+import { cacheDir } from '../utils/cache-directory';
+import { getDbConnection } from '../utils/db-connection';
 import { isCI } from '../utils/is-ci';
-import { output } from '../utils/output';
 import { logger } from '../utils/logger';
+import { isNxCloudUsed } from '../utils/nx-cloud-utils';
+import { output } from '../utils/output';
+import { workspaceRoot } from '../utils/workspace-root';
+import {
+  DefaultTasksRunnerOptions,
+  RemoteCache,
+  RemoteCacheV2,
+} from './default-tasks-runner';
+import { getTaskIOService } from './task-io-service';
+import { handleImport } from '../utils/handle-import';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -155,7 +157,15 @@ export class DbCache {
     code: number
   ) {
     return tryAndRetry(async () => {
-      this.cache.put(task.hash, terminalOutput, outputs, code);
+      const expandedOutputs = this.cache.put(
+        task.hash,
+        terminalOutput,
+        outputs,
+        code
+      );
+
+      // Notify TaskIOService of actual output files
+      getTaskIOService().notifyTaskOutputs(task.id, expandedOutputs);
 
       if (this.remoteCache) {
         await this.remoteCache.store(
@@ -280,7 +290,8 @@ export class DbCache {
   private async resolveRemoteCache(pkg: string): Promise<RemoteCacheV2 | null> {
     let getRemoteCache = null;
     try {
-      getRemoteCache = (await import(this.resolvePackage(pkg))).getRemoteCache;
+      getRemoteCache = (await handleImport(this.resolvePackage(pkg)))
+        .getRemoteCache;
     } catch {
       return null;
     }
@@ -323,8 +334,6 @@ export class Cache {
   cachePath = this.createCacheDir();
   terminalOutputsDir = this.createTerminalOutputsDir();
 
-  private _currentMachineId: string = null;
-
   constructor(private readonly options: DefaultTasksRunnerOptions) {
     if (this.options.skipRemoteCache) {
       output.warn({
@@ -349,7 +358,7 @@ export class Cache {
           stdio: 'ignore',
           detached: true,
           shell: false,
-          windowsHide: false,
+          windowsHide: true,
         });
         p.unref();
       } catch (e) {
@@ -357,20 +366,6 @@ export class Cache {
         console.log(e.message);
       }
     }
-  }
-
-  async currentMachineId() {
-    if (!this._currentMachineId) {
-      try {
-        this._currentMachineId = await machineId();
-      } catch (e) {
-        if (process.env.NX_VERBOSE_LOGGING === 'true') {
-          console.log(`Unable to get machineId. Error: ${e.message}`);
-        }
-        this._currentMachineId = '';
-      }
-    }
-    return this._currentMachineId;
   }
 
   async get(task: Task): Promise<CachedResult | null> {
@@ -431,7 +426,7 @@ export class Cache {
       // so if the process gets terminated while we are copying stuff into cache,
       // the cache entry won't be used.
       await writeFile(join(td, 'code'), code.toString());
-      await writeFile(join(td, 'source'), await this.currentMachineId());
+      await writeFile(join(td, 'source'), await getCurrentMachineId());
       await writeFile(tdCommit, 'true');
 
       if (this.options.remoteCache && !this.options.skipRemoteCache) {
@@ -560,7 +555,7 @@ export class Cache {
       sourceMachineId = await readFile(join(td, 'source'), 'utf-8');
     } catch {}
 
-    if (sourceMachineId && sourceMachineId != (await this.currentMachineId())) {
+    if (sourceMachineId && sourceMachineId != (await getCurrentMachineId())) {
       if (
         process.env.NX_REJECT_UNKNOWN_LOCAL_CACHE != '0' &&
         process.env.NX_REJECT_UNKNOWN_LOCAL_CACHE != 'false'

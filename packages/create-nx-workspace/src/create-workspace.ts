@@ -7,6 +7,7 @@ import { CreateWorkspaceOptions } from './create-workspace-options';
 import { setupCI } from './utils/ci/setup-ci';
 import { mapErrorToBodyLines } from './utils/error-utils';
 import {
+  GitHubPushError,
   initializeGitRepo,
   pushToGitHub,
   VcsPushStatus,
@@ -16,17 +17,24 @@ import {
   createNxCloudOnboardingUrl,
   getNxCloudInfo,
   getSkippedNxCloudInfo,
+  openCloudSetupUrl,
   readNxCloudToken,
+  setNeverConnectToCloud,
 } from './utils/nx/nx-cloud';
 import { output } from './utils/output';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
 import { Preset } from './utils/preset/preset';
 import { cloneTemplate } from './utils/template/clone-template';
+import {
+  addConnectUrlToReadme,
+  amendOrCommitReadme,
+} from './utils/template/update-readme';
 import { execAndWait } from './utils/child-process-utils';
 import {
   generatePackageManagerFiles,
   getPackageManagerCommand,
 } from './utils/package-manager';
+import { isAiAgent, logProgress } from './utils/ai/ai-output';
 
 // State for SIGINT handler - only set after workspace is fully installed
 let workspaceDirectory: string | undefined;
@@ -40,7 +48,7 @@ export function getInterruptedWorkspaceState(): {
 }
 
 export async function createWorkspace<T extends CreateWorkspaceOptions>(
-  preset: string,
+  preset: string | undefined,
   options: T,
   rawArgs?: T
 ) {
@@ -64,21 +72,33 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   let directory: string;
 
   if (options.template) {
+    // Resolve shorthand template names to full GitHub org/repo format
+    options.template = resolveTemplateShorthand(options.template);
+
     if (!options.template.startsWith('nrwl/'))
       throw new Error(
         `Invalid template. Only templates from the 'nrwl' GitHub org are supported.`
       );
     const templateUrl = `https://github.com/${options.template}`;
-    const workingDir = process.cwd().replace(/\\/g, '/');
+    const workingDir = (options.workingDir ?? process.cwd()).replace(
+      /\\/g,
+      '/'
+    );
     directory = join(workingDir, name);
 
-    const ora = require('ora');
-    const workspaceSetupSpinner = ora(
-      `Creating workspace from template`
-    ).start();
+    const aiMode = isAiAgent();
+
+    // Use spinner for human mode, progress logs for AI mode
+    let workspaceSetupSpinner: any;
+    if (aiMode) {
+      logProgress('cloning', `Cloning template ${options.template}...`);
+    } else {
+      const ora = require('ora');
+      workspaceSetupSpinner = ora(`Creating workspace from template`).start();
+    }
 
     try {
-      await cloneTemplate(templateUrl, name);
+      await cloneTemplate(templateUrl, name, workingDir);
 
       // Remove npm lockfile from template since we'll generate the correct one
       const npmLockPath = join(directory, 'package-lock.json');
@@ -90,6 +110,13 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       generatePackageManagerFiles(directory, packageManager);
 
       // Install dependencies with the user's package manager
+      if (aiMode) {
+        logProgress(
+          'installing',
+          `Installing dependencies with ${packageManager}...`
+        );
+      }
+
       const pmc = getPackageManagerCommand(packageManager);
       if (pmc.preInstall) {
         await execAndWait(pmc.preInstall, directory);
@@ -99,16 +126,29 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       // Mark workspace as ready for SIGINT handler
       workspaceDirectory = directory;
 
-      workspaceSetupSpinner.succeed(
-        `Successfully created the workspace: ${directory}`
-      );
+      if (aiMode) {
+        logProgress(
+          'configuring',
+          `Successfully created the workspace: ${directory}`
+        );
+      } else {
+        workspaceSetupSpinner.succeed(
+          `Successfully created the workspace: ${directory}`
+        );
+      }
     } catch (e) {
-      workspaceSetupSpinner.fail();
+      if (!aiMode) {
+        workspaceSetupSpinner.fail();
+      }
       throw e;
     }
 
     // Connect to Nx Cloud for template flow
-    if (nxCloud !== 'skip') {
+    if (
+      nxCloud !== 'skip' &&
+      nxCloud !== 'never' &&
+      !options.skipCloudConnect
+    ) {
       await connectToNxCloudForTemplate(
         directory,
         'create-nx-workspace',
@@ -117,6 +157,11 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     }
   } else {
     // Preset flow - existing behavior
+    if (!preset) {
+      throw new Error(
+        'Preset is required when not using a template. Please provide --preset or --template.'
+      );
+    }
     const tmpDir = await createSandbox(packageManager);
     const workspaceGlobs = getWorkspaceGlobsFromPreset(preset);
 
@@ -125,6 +170,9 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       ...options,
       preset,
       workspaceGlobs,
+      // We want new workspaces to have a short URL to finish Cloud onboarding, but not have nxCloudId set up since it will be handled as part of the onboarding flow.
+      // This is skipping nxCloudId for the "custom" flow.
+      nxCloud: 'skip',
     });
 
     // Mark workspace as ready for SIGINT handler
@@ -146,16 +194,33 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
   const isTemplate = !!options.template;
 
+  // Handle "Never" opt-out: set neverConnectToCloud in nx.json
+  if (options.neverConnectToCloud) {
+    setNeverConnectToCloud(directory);
+  }
+
+  // For template flow, save analytics preference directly to nx.json.
+  // For preset flow, this is handled by the workspace generator via createNxJson.
+  if (isTemplate && typeof options.analytics === 'boolean') {
+    setAnalyticsPreference(directory, options.analytics);
+  }
+
   // Generate CI for preset flow (not template)
   // When nxCloud === 'yes' (from simplified prompt), use GitHub as the CI provider
-  if (nxCloud !== 'skip' && !isTemplate) {
+  if (nxCloud !== 'skip' && nxCloud !== 'never' && !isTemplate) {
     const ciProvider = nxCloud === 'yes' ? 'github' : nxCloud;
     await setupCI(directory, ciProvider, packageManager);
   }
 
   let pushedToVcs = VcsPushStatus.SkippedGit;
+  let pushFailReason: string | undefined;
 
   if (!skipGit) {
+    const aiMode = isAiAgent();
+    if (aiMode) {
+      logProgress('initializing', 'Initializing git repository...');
+    }
+
     try {
       await initializeGitRepo(directory, { defaultBase, commit });
 
@@ -175,11 +240,29 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
         });
       }
     } catch (e) {
-      if (e instanceof Error) {
-        output.error({
-          title: 'Could not initialize git repository',
-          bodyLines: mapErrorToBodyLines(e),
-        });
+      if (e instanceof GitHubPushError) {
+        // GitHub push issues are never fatal — CNW always succeeds.
+        // All reasons are logged in telemetry via pushFailReason.
+        pushedToVcs = VcsPushStatus.FailedToPushToVcs;
+        pushFailReason = e.reason;
+
+        // Only show the push hint when the user actually attempted a push
+        // and it failed. Pre-push issues (gh not installed, auth failed,
+        // timed out during auth) are silent — no point telling the user
+        // about a push they never asked for.
+        if (e.reason === 'push-failed' || e.reason === 'push-timeout') {
+          const githubNewUrl = `https://github.com/new?name=${encodeURIComponent(name)}`;
+          output.log({
+            title: `Push your repo to GitHub: ${githubNewUrl}`,
+          });
+        }
+      } else if (e instanceof Error) {
+        if (!aiMode) {
+          output.error({
+            title: 'Could not initialize git repository',
+            bodyLines: mapErrorToBodyLines(e),
+          });
+        }
       } else {
         console.error(e);
       }
@@ -189,8 +272,18 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   // Create onboarding URL AFTER git operations so getVcsRemoteInfo() can detect the repo
   let connectUrl: string | undefined;
   let nxCloudInfo: string | undefined;
-  if (nxCloud !== 'skip') {
-    const token = readNxCloudToken(directory) as string;
+
+  if (nxCloud !== 'skip' && nxCloud !== 'never') {
+    // "Yes" or "Maybe later" — generate URL, update README, show banner
+    const aiModeForCloud = isAiAgent();
+    if (aiModeForCloud) {
+      logProgress('configuring', 'Configuring Nx Cloud...');
+    }
+    // skipCloudConnect=true (Maybe later): Skip readNxCloudToken() since no token exists
+    // skipCloudConnect=false (Yes): Read the token as before (cloud was connected)
+    const token = options.skipCloudConnect
+      ? undefined
+      : readNxCloudToken(directory);
 
     connectUrl = await createNxCloudOnboardingUrl(
       nxCloud,
@@ -202,28 +295,73 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     // Store for SIGINT handler
     cloudConnectUrl = connectUrl;
 
+    // Update README with connect URL (strips markers, adds connect section)
+    // Then commit the change - amend if not pushed, new commit if already pushed
+    if (isTemplate) {
+      const readmeUpdated = addConnectUrlToReadme(directory, connectUrl);
+      if (readmeUpdated && !skipGit && commit) {
+        const alreadyPushed = pushedToVcs === VcsPushStatus.PushedToVcs;
+        await amendOrCommitReadme(directory, alreadyPushed);
+      }
+    }
+
     nxCloudInfo = await getNxCloudInfo(
       connectUrl,
       pushedToVcs,
-      options.completionMessageKey
+      options.completionMessageKey,
+      name
     );
-  } else if (isTemplate && nxCloud === 'skip') {
-    // Show nx connect message when user skips cloud in template flow
-    nxCloudInfo = getSkippedNxCloudInfo();
+
+    // Auto-open the Cloud setup URL in the browser when user selected 'yes'
+    if (!options.skipCloudConnect) {
+      await openCloudSetupUrl(connectUrl);
+    }
+  } else if (isTemplate && (nxCloud === 'skip' || nxCloud === 'never')) {
+    // Strip marker comments from README
+    const readmeUpdated = addConnectUrlToReadme(directory, undefined);
+    if (readmeUpdated && !skipGit && commit) {
+      const alreadyPushed = pushedToVcs === VcsPushStatus.PushedToVcs;
+      await amendOrCommitReadme(directory, alreadyPushed);
+    }
+
+    // Only show "nx connect" message for 'skip', not 'never'
+    if (nxCloud === 'skip') {
+      nxCloudInfo = getSkippedNxCloudInfo();
+    }
   }
 
   return {
     nxCloudInfo,
     directory,
     pushedToVcs,
+    pushFailReason,
     connectUrl,
   };
+}
+
+function setAnalyticsPreference(directory: string, enabled: boolean): void {
+  const { readFileSync, writeFileSync } = require('fs');
+  const nxJsonPath = join(directory, 'nx.json');
+  const nxJson = JSON.parse(readFileSync(nxJsonPath, 'utf-8'));
+  nxJson.analytics = enabled;
+  writeFileSync(nxJsonPath, JSON.stringify(nxJson, null, 2) + '\n');
 }
 
 export function extractConnectUrl(text: string): string | null {
   const urlPattern = /(https:\/\/[^\s]+\/connect\/[^\s]+)/g;
   const match = text.match(urlPattern);
   return match ? match[0] : null;
+}
+
+const templateShorthands: Record<string, string> = {
+  angular: 'nrwl/angular-template',
+  react: 'nrwl/react-template',
+  typescript: 'nrwl/typescript-template',
+  empty: 'nrwl/empty-template',
+};
+
+export function resolveTemplateShorthand(template: string): string {
+  return templateShorthands[template] ?? template;
 }
 
 function getWorkspaceGlobsFromPreset(preset: string): string[] {

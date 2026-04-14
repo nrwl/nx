@@ -86,8 +86,14 @@ function _makeAcyclic(
   const continuousDeps = graph.continuousDependencies?.[id] ?? [];
   for (const d of [...deps, ...continuousDeps]) {
     if (path.includes(d)) {
-      deps.splice(deps.indexOf(d), 1);
-      continuousDeps.splice(continuousDeps.indexOf(d), 1);
+      const depsIdx = deps.indexOf(d);
+      if (depsIdx >= 0) {
+        deps.splice(depsIdx, 1);
+      }
+      const continuousIdx = continuousDeps.indexOf(d);
+      if (continuousIdx >= 0) {
+        continuousDeps.splice(continuousIdx, 1);
+      }
     } else {
       _makeAcyclic(graph, d, visited, [...path, d]);
     }
@@ -267,4 +273,38 @@ function reverseTaskGraph(taskGraph: TaskGraph): TaskGraph {
     }
   }
   return reversed;
+}
+
+/**
+ * Walk a task graph topologically, calling walkFn for each wave of roots.
+ * Considers both dependencies and continuousDependencies.
+ */
+export async function walkTaskGraph(
+  taskGraph: TaskGraph,
+  walkFn: (rootTaskIds: string[]) => Promise<void>
+): Promise<void> {
+  const reversed = reverseTaskGraph(taskGraph);
+  const inDegree: Record<string, number> = {};
+  for (const id of Object.keys(taskGraph.tasks)) {
+    inDegree[id] =
+      (taskGraph.dependencies[id]?.length ?? 0) +
+      (taskGraph.continuousDependencies?.[id]?.length ?? 0);
+  }
+
+  let currentRoots = taskGraph.roots.slice();
+
+  while (currentRoots.length > 0) {
+    await walkFn(currentRoots);
+
+    const nextRoots: string[] = [];
+    for (const id of currentRoots) {
+      for (const depId of reversed.dependencies[id] ?? []) {
+        inDegree[depId]--;
+        if (inDegree[depId] === 0) {
+          nextRoots.push(depId);
+        }
+      }
+    }
+    currentRoots = nextRoots;
+  }
 }

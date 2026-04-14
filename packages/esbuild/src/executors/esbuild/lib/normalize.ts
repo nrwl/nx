@@ -17,7 +17,7 @@ export function normalizeOptions(
   const isTsSolutionSetup = isUsingTsSolutionSetup();
   if (isTsSolutionSetup && options.generatePackageJson) {
     throw new Error(
-      `Setting 'generatePackageJson: true' is not supported with the current TypeScript setup. Update the 'package.json' file at the project root as needed and unset the 'generatePackageJson' option.`
+      `Setting 'generatePackageJson: true' is not supported with the current TypeScript setup. Update the 'package.json' file at the project root as needed and unset the 'generatePackageJson' option. See https://nx.dev/docs/technologies/node/guides/deploying-node-projects for the recommended pruned package.json workflow.`
     );
   }
 

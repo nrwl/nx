@@ -1,9 +1,18 @@
 #!/usr/bin/env node
+
+// TODO: Remove this workaround once picocolors handles FORCE_COLOR=0 correctly
+// See: https://github.com/alexeyraspopov/picocolors/issues/100
+
+if (process.env.FORCE_COLOR === '0') {
+  process.env.NO_COLOR = '1';
+  delete process.env.FORCE_COLOR;
+}
+
 import {
   findWorkspaceRoot,
   WorkspaceTypeAndRoot,
 } from '../src/utils/find-workspace-root';
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { loadRootEnvFiles } from '../src/utils/dotenv';
 import { initLocal } from './init-local';
 import { output } from '../src/utils/output';
@@ -13,14 +22,21 @@ import {
 } from '../src/utils/installation-directory';
 import { major } from 'semver';
 import { stripIndents } from '../src/utils/strip-indents';
-import { readModulePackageJson } from '../src/utils/package-json';
 import { execSync } from 'child_process';
-import { join } from 'path';
+import { createRequire } from 'module';
+import { extname, join } from 'path';
+import { existsSync } from 'fs';
 import { assertSupportedPlatform } from '../src/native/assert-supported-platform';
 import { performance } from 'perf_hooks';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { daemonClient } from '../src/daemon/client/client';
 import { removeDbConnections } from '../src/utils/db-connection';
+import { ensureAnalyticsPreferenceSet } from '../src/utils/analytics-prompt';
+import { flushAnalytics, startAnalytics } from '../src/analytics';
+import '../src/utils/perf-logging';
+
+const isTsExt = extname(__filename).endsWith('.ts');
+const pathToPkgJson = isTsExt ? '../package.json' : '../../package.json';
 
 async function main() {
   if (
@@ -31,8 +47,6 @@ async function main() {
   ) {
     assertSupportedPlatform();
   }
-
-  require('nx/src/utils/perf-logging');
 
   const workspace = findWorkspaceRoot(process.cwd());
 
@@ -58,10 +72,6 @@ async function main() {
     process.env.NX_DAEMON = 'false';
     require('nx/src/command-line/nx-commands').commandsObject.argv;
   } else {
-    if (!daemonClient.enabled() && workspace !== null) {
-      setupWorkspaceContext(workspace.dir);
-    }
-
     // polyfill rxjs observable to avoid issues with multiple version of Observable installed in node_modules
     // https://twitter.com/BenLesh/status/1192478226385428483?s=20
     if (!(Symbol as any).observable)
@@ -75,7 +85,8 @@ async function main() {
       localNx = null;
     }
 
-    const isLocalInstall = localNx === resolveNx(null);
+    const isLocalInstall =
+      localNx === resolveNx(null) || localNx === __filename;
     const { LOCAL_NX_VERSION, GLOBAL_NX_VERSION } = determineNxVersions(
       localNx,
       workspace,
@@ -86,7 +97,7 @@ async function main() {
       handleNxVersionCommand(LOCAL_NX_VERSION, GLOBAL_NX_VERSION);
     }
 
-    if (!workspace) {
+    if (!workspace && !isNxCloudCommand(process.argv[2])) {
       handleNoWorkspace(GLOBAL_NX_VERSION);
     }
 
@@ -96,13 +107,23 @@ async function main() {
 
     // this file is already in the local workspace
     if (isNxCloudCommand(process.argv[2])) {
+      if (!daemonClient.enabled() && workspace !== null) {
+        setupWorkspaceContext(workspace.dir);
+      }
+      await initAnalytics();
       // nx-cloud commands can run without local Nx installation
       process.env.NX_DAEMON = 'false';
       require('nx/src/command-line/nx-commands').commandsObject.argv;
     } else if (isLocalInstall) {
+      if (!daemonClient.enabled() && workspace !== null) {
+        setupWorkspaceContext(workspace.dir);
+      }
+      await initAnalytics();
       await initLocal(workspace);
     } else if (localNx) {
       // Nx is being run from globally installed CLI - hand off to the local
+      // Don't start analytics, connect to the DB, or set up the workspace
+      // context here — the local Nx will handle it when it runs its own bin/nx.ts
       warnIfUsingOutdatedGlobalInstall(GLOBAL_NX_VERSION, LOCAL_NX_VERSION);
       if (localNx.includes('.nx')) {
         const nxWrapperPath = localNx.replace(/\.nx.*/, '.nx/') + 'nxw.js';
@@ -119,10 +140,10 @@ function handleNoWorkspace(globalNxVersion?: string) {
     title: `The current directory isn't part of an Nx workspace.`,
     bodyLines: [
       `To create a workspace run:`,
-      chalk.bold.white(`npx create-nx-workspace@latest <workspace name>`),
+      pc.bold(pc.white(`npx create-nx-workspace@latest <workspace name>`)),
       '',
       `To add Nx to an existing workspace with a workspace-specific nx.json, run:`,
-      chalk.bold.white(`npx nx@latest init`),
+      pc.bold(pc.white(`npx nx@latest init`)),
     ],
   });
 
@@ -155,7 +176,7 @@ function determineNxVersions(
     : null;
   const GLOBAL_NX_VERSION: string | null = isLocalInstall
     ? null
-    : require('../package.json').version;
+    : require(pathToPkgJson).version;
 
   globalThis.GLOBAL_NX_VERSION ??= GLOBAL_NX_VERSION;
   return { LOCAL_NX_VERSION, GLOBAL_NX_VERSION };
@@ -163,19 +184,23 @@ function determineNxVersions(
 
 function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
   // root relative to location of the nx bin
-  const globalsRoot = join(__dirname, '../../../');
+  const globalsRoot = join(__dirname, '../../../../');
+  const root = workspace ? workspace.dir : globalsRoot;
 
+  // Use createRequire to resolve from outside the nx package,
+  // avoiding self-referencing caused by the exports field
   // prefer Nx installed in .nx/installation
   try {
-    return require.resolve('nx/bin/nx.js', {
-      paths: [getNxInstallationPath(workspace ? workspace.dir : globalsRoot)],
-    });
+    const installPath = getNxInstallationPath(root);
+    if (existsSync(installPath)) {
+      const installRequire = createRequire(join(installPath, 'package.json'));
+      return installRequire.resolve('nx/bin/nx.js');
+    }
   } catch {}
 
   // check for root install
-  return require.resolve('nx/bin/nx.js', {
-    paths: [workspace ? workspace.dir : globalsRoot],
-  });
+  const rootRequire = createRequire(join(root, 'package.json'));
+  return rootRequire.resolve('nx/bin/nx.js');
 }
 
 function isNxCloudCommand(command: string): boolean {
@@ -190,8 +215,16 @@ function isNxCloudCommand(command: string): boolean {
     'view-logs',
     'fix-ci',
     'record',
+    'download-cloud-client',
   ];
   return nxCloudCommands.includes(command);
+}
+
+async function initAnalytics() {
+  try {
+    await ensureAnalyticsPreferenceSet();
+  } catch {}
+  await startAnalytics();
 }
 
 function handleMissingLocalInstallation(detectedWorkspaceRoot: string | null) {
@@ -199,7 +232,7 @@ function handleMissingLocalInstallation(detectedWorkspaceRoot: string | null) {
     title: detectedWorkspaceRoot
       ? `Could not find Nx modules at "${detectedWorkspaceRoot}".`
       : `Could not find Nx modules in this workspace.`,
-    bodyLines: [`Have you run ${chalk.bold.white(`npm/yarn install`)}?`],
+    bodyLines: [`Have you run ${pc.bold(pc.white(`npm/yarn install`))}?`],
   });
   process.exit(1);
 }
@@ -265,25 +298,33 @@ function checkOutdatedGlobalInstallation(
 
 function getLocalNxVersion(workspace: WorkspaceTypeAndRoot): string | null {
   try {
-    const { packageJson } = readModulePackageJson(
-      'nx',
-      getNxRequirePaths(workspace.dir)
-    );
-    return packageJson.version;
+    const searchPaths = getNxRequirePaths(workspace.dir);
+    for (const searchPath of searchPaths) {
+      if (!existsSync(searchPath)) {
+        continue;
+      }
+
+      try {
+        const externalRequire = createRequire(join(searchPath, 'package.json'));
+        const pkgJsonPath = externalRequire.resolve('nx/package.json');
+        return require(pkgJsonPath).version;
+      } catch {}
+    }
   } catch {}
+  return null;
 }
 
 function _getLatestVersionOfNx(): string {
   try {
     return execSync('npm view nx@latest version', {
-      windowsHide: false,
+      windowsHide: true,
     })
       .toString()
       .trim();
   } catch {
     try {
       return execSync('pnpm view nx@latest version', {
-        windowsHide: false,
+        windowsHide: true,
       })
         .toString()
         .trim();
@@ -304,5 +345,6 @@ process.on('exit', () => {
 
 main().catch((error) => {
   console.error(error);
+  flushAnalytics();
   process.exit(1);
 });

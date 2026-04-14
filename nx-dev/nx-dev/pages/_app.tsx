@@ -1,7 +1,6 @@
-import { sendPageViewEvent } from '@nx/nx-dev-feature-analytics';
+import { sendPageViewEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import { DefaultSeo } from 'next-seo';
 import { AppProps } from 'next/app';
-import Script from 'next/script';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
@@ -17,24 +16,23 @@ export default function CustomApp({
   pageProps,
 }: AppProps): JSX.Element {
   const router = useRouter();
-  const gaMeasurementId = 'UA-88380372-10';
   const gtmMeasurementId = 'GTM-KW8423B6';
 
   useEffect(() => {
     const handleRouteChange = (url: URL) =>
-      sendPageViewEvent({ gaId: gaMeasurementId, path: url.toString() });
+      sendPageViewEventViaGtm({ path: url.toString() });
     router.events.on('routeChangeStart', handleRouteChange);
     return () => router.events.off('routeChangeStart', handleRouteChange);
-  }, [router.events, gaMeasurementId]);
+  }, [router.events]);
   return (
     <>
       <FrontendObservability />
       <DefaultSeo
-        title="Nx: Smart Repos · Fast Builds"
+        title="Nx: Smart Monorepos · Fast Builds"
         description="Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Nx: Smart Repos · Fast Builds',
+          title: 'Nx: Smart Monorepos · Fast Builds',
           description:
             'Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.',
           images: [
@@ -42,7 +40,7 @@ export default function CustomApp({
               url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart Repos · Fast Builds',
+              alt: 'Nx: Smart Monorepos · Fast Builds',
               type: 'image/png',
             },
           ],
@@ -78,17 +76,6 @@ export default function CustomApp({
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      {process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE !== 'true' &&
-      process.env.NEXT_PUBLIC_COOKIEBOT_ID ? (
-        <Script
-          id="Cookiebot"
-          src="https://consent.cookiebot.com/uc.js"
-          data-cbid={process.env.NEXT_PUBLIC_COOKIEBOT_ID}
-          data-blockingmode="auto"
-          type="text/javascript"
-          strategy="beforeInteractive"
-        />
-      ) : null}
       <Link
         id="skip-to-content-link"
         href="#main"
@@ -121,10 +108,7 @@ export default function CustomApp({
       })}
 
       {/* All tracking scripts consolidated in GlobalScripts component */}
-      <GlobalScripts
-        gaMeasurementId={gaMeasurementId}
-        gtmMeasurementId={gtmMeasurementId}
-      />
+      <GlobalScripts gtmMeasurementId={gtmMeasurementId} />
     </>
   );
 }

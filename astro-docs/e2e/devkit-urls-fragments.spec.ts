@@ -11,7 +11,7 @@ test('links in descriptions of properties should correctly link to the same page
 
   await page
     .getByTestId('main-pane')
-    .getByRole('link', { name: 'nxCloudAccessToken' })
+    .getByRole('link', { name: 'nxCloudAccessToken', exact: true })
     .click();
 
   await expect(

@@ -53,6 +53,7 @@ type NpmLockFile = {
   version?: string;
   lockfileVersion: number;
   requires?: boolean;
+  overrides?: NormalizedPackageJson['overrides'];
   packages?: Record<string, NpmDependencyV3>;
   dependencies?: Record<string, NpmDependencyV1>;
 };
@@ -302,7 +303,12 @@ function findTarget(
   sourcePath: string,
   keyMap: Map<string, ProjectGraphExternalNode>,
   targetName: string,
-  versionRange: string
+  versionRange: string,
+  // When a package is found at a path but its version doesn't satisfy the
+  // range (e.g. due to npm overrides), we keep it as a fallback. npm already
+  // resolved this dependency to that location, so it is the correct target
+  // even though the semver check fails.
+  fallback?: ProjectGraphExternalNode
 ): ProjectGraphExternalNode {
   if (sourcePath && !sourcePath.endsWith('/')) {
     sourcePath = `${sourcePath}/`;
@@ -329,16 +335,21 @@ function findTarget(
     ) {
       return child;
     }
+    // Version mismatch — save as fallback (could be an npm override)
+    if (!fallback) {
+      fallback = child;
+    }
   }
   // the hoisted package did not match, this dependency is missing
   if (!sourcePath) {
-    return;
+    return fallback;
   }
   return findTarget(
     sourcePath.split('node_modules/').slice(0, -1).join('node_modules/'),
     keyMap,
     targetName,
-    versionRange
+    versionRange,
+    fallback
   );
 }
 
@@ -417,6 +428,9 @@ export function stringifyNpmLockfile(
   };
   if (rootLockFile.requires) {
     output.requires = rootLockFile.requires;
+  }
+  if (packageJson.overrides && Object.keys(packageJson.overrides).length > 0) {
+    output.overrides = packageJson.overrides;
   }
   if (lockfileVersion > 1) {
     const packages = mapV3Snapshots(mappedPackages, packageJson);

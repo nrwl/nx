@@ -13,7 +13,7 @@ Learn more about [cache security best practices](/docs/concepts/ci-concepts/cach
 
 ![Access Control Settings Page](../../../../assets/nx-cloud/access-control-settings.avif)
 
-## Access Types
+## Access types
 
 {% aside type="caution" title="Use Caution With Read-Write Tokens" %}
 The `read-write` tokens allow full write access to your remote cache. They should only be used in trusted environments.
@@ -24,16 +24,16 @@ There are currently two (2) types of CI Access Token for Nx Cloud's runner that 
 - `read-only`
 - `read-write`
 
-### Read Only Access
+### Read only access
 
 The `read-only` access tokens can only read from the global remote cache. Task results produced with this type of access token will be stored in an isolated remote cache accessible _only_ by that specific branch in a CI context, and cannot influence the global shared cache.  
 The isolated remote cache produced with a `read-only` token is accessible to all machines or agents in the same CI execution, enabling cache sharing during distributed task execution.
 
-### Read & Write Access
+### Read & write access
 
 The `read-write` access tokens allow task results to be stored in the remote cache for other machines or CI pipelines to download and replay. This access level should only be used for trusted environments such as protected branches within your CI Pipeline.
 
-## Setting CI Access Tokens
+## Setting CI access tokens
 
 You can configure an access token in CI by setting the `NX_CLOUD_ACCESS_TOKEN` environment variable.
 
@@ -92,7 +92,7 @@ BitBucket Cloud supports setting environment variables per environment called _D
      ![Use deployments variables to provide protected environment variable access](../../../../assets/nx-cloud/bitbucket-deployment-env.avif)
 3. Set the environment variable `NX_CLOUD_ACCESS_TOKEN` with the `read-write` token from Nx Cloud.
 4. Navigate to the _Repository settings_ > _Repository variables_ tab and set the variable `NX_CLOUD_ACCESS_TOKEN` with the `read-only` token from Nx Cloud.
-   ![add read-only nx cloud access token to bitbucket](../../../../assets/nx-cloud/bitbucket-repo-vars.avif)
+   ![add read-only Nx Cloud access token to bitbucket](../../../../assets/nx-cloud/bitbucket-repo-vars.avif)
 5. Update the `bitbucket-pipelines.yml` file to include the deployment name mentioned in step 2.
 
 Example usage:
@@ -120,7 +120,7 @@ Circle CI allows creating _contexts_ and restricting those based on various rule
 3. Click on _Add Environment Variable_ and add the `NX_CLOUD_ACCESS_TOKEN` environment variable with the `read-write` token from Nx Cloud.
 4. Back on the organization home page, navigate to your projects, then view the pipeline settings.
 5. Navigate to _Environment Variables_ and click _Add Environment Variable_ and add the `NX_CLOUD_ACCESS_TOKEN` environment variable with the `read-only` token from Nx Cloud.
-   ![add read-only nx cloud access token to circleci](../../../../assets/nx-cloud/circle-new-env-var-token.avif)
+   ![add read-only Nx Cloud access token to circleci](../../../../assets/nx-cloud/circle-new-env-var-token.avif)
 6. Update your pipeline to include steps where you want to write to the nx cache with the correct contexts.
 
 Example usage:
@@ -197,7 +197,7 @@ GitLab allows creating variables scoped to specific environments. You can read t
    - Key: `NX_CLOUD_ACCESS_TOKEN`
    - Value: Your `read-only` token from Nx Cloud
 4. Click _Add variable_.
-   ![add read-only nx cloud access token to gitlab](../../../../assets/nx-cloud/gitlab-variable-settings-readonly.avif)
+   ![add read-only Nx Cloud access token to gitlab](../../../../assets/nx-cloud/gitlab-variable-settings-readonly.avif)
 5. Click on _Add variable_ again and fill in the following information:
    - Type: _Variable_
    - Environments: Your protected environment created in step 1
@@ -207,7 +207,7 @@ GitLab allows creating variables scoped to specific environments. You can read t
    - Key: `NX_CLOUD_ACCESS_TOKEN`
    - Value: Your `read-write` token from Nx Cloud
 6. Click _Add variable_.
-   ![add read-write nx cloud access token to gitlab](../../../../assets/nx-cloud/gitlab-variable-settings-readwrite.avif)
+   ![add read-write Nx Cloud access token to gitlab](../../../../assets/nx-cloud/gitlab-variable-settings-readwrite.avif)
 7. Now you should see 2 secrets where 1 is a part of the protected & tagged to the environment and the other is not.
    ![GitLab project variable configuration screen](../../../../assets/nx-cloud/gitlab-variable-setting.avif)
 8. Update your pipeline to include steps where you want to write to the nx cache with the correct contexts.
@@ -249,7 +249,7 @@ pipeline {
     stage('Build') {
       steps {
         withCredentials([string(credentialsId: 'NX_CLOUD_ACCESS_TOKEN', variable: 'NX_CLOUD_ACCESS_TOKEN')]) {
-          sh 'echo "nx cloud access token is now set in this context"'
+          sh 'echo "Nx Cloud access token is now set in this context"'
         }
       }
     }
@@ -257,9 +257,9 @@ pipeline {
 }
 ```
 
-### Legacy methods of setting CI Access Tokens
+### Legacy methods of setting CI access tokens
 
-#### Using CI Access Tokens in nx.json
+#### Using CI access tokens in nx.json
 
 We **do not recommend** that you commit an access token to your repository but older versions of Nx do support this and if you open your `nx.json`, you may see something like this:
 

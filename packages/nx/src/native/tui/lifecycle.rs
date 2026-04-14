@@ -1,4 +1,4 @@
-use napi::JsObject;
+use napi::bindgen_prelude::External;
 use napi::bindgen_prelude::*;
 use parking_lot::{Mutex, MutexGuard};
 use std::io::Write;
@@ -6,7 +6,9 @@ use std::sync::Arc;
 use tracing::{debug, trace};
 
 #[cfg(not(test))]
-use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
+use napi::threadsafe_function::ThreadsafeFunction;
+#[cfg(not(test))]
+use napi::{Status, bindgen_prelude::Unknown};
 
 #[cfg(not(test))]
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
@@ -72,9 +74,25 @@ impl From<(TuiConfig, &RustTuiCliArgs)> for RustTuiConfig {
 }
 
 #[napi]
+#[derive(Clone, Copy)]
 pub enum RunMode {
     RunOne,
     RunMany,
+}
+
+#[napi(object)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BatchInfo {
+    pub executor_name: String,
+    pub task_ids: Vec<String>,
+}
+
+#[napi(string_enum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BatchStatus {
+    Running,
+    Success,
+    Failure,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -104,7 +122,7 @@ pub enum TuiAppInstance {
 /// directly call trait methods on the guard:
 ///
 /// # Example
-/// ```
+/// ```ignore
 /// app.lock().start_command(None);
 /// ```
 pub enum TuiAppGuard<'a> {
@@ -136,7 +154,7 @@ impl TuiAppInstance {
     /// Lock and get a guard that derefs to `&mut dyn TuiApp`
     ///
     /// This allows direct method calls on the trait without closures:
-    /// ```
+    /// ```ignore
     /// app.lock().start_command(None);
     /// ```
     fn lock(&self) -> TuiAppGuard<'_> {
@@ -198,17 +216,17 @@ fn switch_mode(
     }
 
     // Save UI state before switching (for full-screen mode persistence)
-    // and get the task to display in inline mode
-    let (shared_state, focused_task) = {
+    // and get the item to display in inline mode
+    let (shared_state, focused_item) = {
         let app_instance = shared_app.lock();
         let guard = app_instance.lock();
         // Save the current UI state so it can be restored later
         guard.save_ui_state_for_mode_switch();
-        // For inline mode, prefer the focused pane task over just the selected task
-        let task = guard
-            .get_focused_pane_task()
-            .or_else(|| guard.get_selected_task_name());
-        (guard.get_shared_state(), task)
+        // For inline mode, prefer the focused pane item over just the selected item
+        let item = guard
+            .get_focused_pane_item()
+            .or_else(|| guard.get_selected_item());
+        (guard.get_shared_state(), item)
     };
 
     // Switch terminal viewport
@@ -226,8 +244,8 @@ fn switch_mode(
             TuiAppInstance::FullScreen(Arc::new(Mutex::new(app_instance)))
         }
         TuiMode::Inline => {
-            debug!("Creating inline app with focused task: {:?}", focused_task);
-            let app_instance = InlineApp::with_state(shared_state, focused_task)
+            debug!("Creating inline app with focused item: {:?}", focused_item);
+            let app_instance = InlineApp::with_state(shared_state, focused_item)
                 .expect("Failed to create inline app");
             TuiAppInstance::Inline(Arc::new(Mutex::new(app_instance)))
         }
@@ -356,7 +374,7 @@ impl AppLifeCycle {
     }
 
     #[napi]
-    pub fn start_tasks(&mut self, tasks: Vec<Task>, _metadata: JsObject) -> napi::Result<()> {
+    pub fn start_tasks(&mut self, tasks: Vec<Task>, _metadata: Object) -> napi::Result<()> {
         self.with_app(|app| app.start_tasks(tasks));
         Ok(())
     }
@@ -377,13 +395,13 @@ impl AppLifeCycle {
     pub fn end_tasks(
         &mut self,
         task_results: Vec<TaskResult>,
-        _metadata: JsObject,
+        _metadata: Object,
     ) -> napi::Result<()> {
         self.with_app(|app| app.end_tasks(task_results));
         Ok(())
     }
 
-    #[napi]
+    #[napi(async_runtime)]
     pub fn end_command(&self) -> napi::Result<()> {
         self.with_app(|app| app.end_command());
         Ok(())
@@ -396,7 +414,7 @@ impl AppLifeCycle {
     #[napi(js_name = "__init")]
     pub fn __init(
         &self,
-        done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
+        done_callback: ThreadsafeFunction<(), Unknown<'static>, (), Status, false>,
     ) -> napi::Result<()> {
         debug!("AppLifeCycle::__init called");
 
@@ -459,7 +477,11 @@ impl AppLifeCycle {
         let mut tui_mode = initial_mode;
 
         // Spawn unified async task (identical for both modes!)
-        napi::tokio::spawn(async move {
+        spawn(async move {
+            // Start the TUI event loop. This must happen inside the async block
+            // because start() uses tokio::spawn() which requires a runtime context.
+            tui.start();
+
             // Set up console messenger (identical for both modes)
             {
                 let connection = NxConsoleMessageConnection::new(&workspace_root).await;
@@ -618,9 +640,9 @@ impl AppLifeCycle {
     pub fn register_running_task(
         &mut self,
         task_id: String,
-        parser_and_writer: External<(ParserArc, WriterArc)>,
+        parser_and_writer: &External<(ParserArc, WriterArc)>,
     ) {
-        self.with_app(|app| app.register_running_interactive_task(task_id, parser_and_writer));
+        self.with_app(|app| app.register_running_interactive_task(task_id, &**parser_and_writer));
     }
 
     #[napi]
@@ -638,7 +660,12 @@ impl AppLifeCycle {
 
     #[napi]
     pub fn set_task_status(&mut self, task_id: String, status: TaskStatus) {
-        self.with_app(|app| app.update_task_status(task_id, status));
+        self.with_app(|app| app.update_task_status(&task_id, status));
+    }
+
+    #[napi]
+    pub fn set_task_timing(&mut self, task_id: String, start_time: i64, end_time: i64) {
+        self.with_app(|app| app.set_task_timing(task_id, start_time, end_time));
     }
 
     // This method is excluded from test builds because it uses ThreadsafeFunction
@@ -647,7 +674,7 @@ impl AppLifeCycle {
     #[napi]
     pub fn register_forced_shutdown_callback(
         &self,
-        forced_shutdown_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
+        forced_shutdown_callback: ThreadsafeFunction<(), Unknown<'static>, (), Status, false>,
     ) -> napi::Result<()> {
         self.with_app(|app| app.set_forced_shutdown_callback(forced_shutdown_callback));
         Ok(())
@@ -666,6 +693,29 @@ impl AppLifeCycle {
         timings: std::collections::HashMap<String, i64>,
     ) -> napi::Result<()> {
         self.with_app(|app| app.set_estimated_task_timings(timings));
+        Ok(())
+    }
+
+    // Batch lifecycle methods
+    #[napi]
+    pub fn register_running_batch(
+        &self,
+        batch_id: String,
+        batch_info: BatchInfo,
+    ) -> napi::Result<()> {
+        self.with_app(|app| app.register_running_batch(batch_id, batch_info));
+        Ok(())
+    }
+
+    #[napi]
+    pub fn append_batch_output(&self, batch_id: String, output: String) -> napi::Result<()> {
+        self.with_app(|app| app.append_batch_output(batch_id, output));
+        Ok(())
+    }
+
+    #[napi]
+    pub fn set_batch_status(&self, batch_id: String, status: BatchStatus) -> napi::Result<()> {
+        self.with_app(|app| app.set_batch_status(batch_id, status));
         Ok(())
     }
 }

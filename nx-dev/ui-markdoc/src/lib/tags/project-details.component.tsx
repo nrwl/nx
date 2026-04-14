@@ -17,7 +17,7 @@ export function Loading() {
   return (
     <div className="flex h-[450px] w-full items-center justify-center">
       <div
-        className="spinner-border inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-r-slate-400 dark:border-slate-700 dark:border-r-slate-500"
+        className="spinner-border inline-block h-8 w-8 animate-spin rounded-full border-4 border-zinc-200 border-r-zinc-400 dark:border-zinc-700 dark:border-r-zinc-500"
         role="status"
       >
         <span className="sr-only">Loading...</span>
@@ -115,9 +115,9 @@ export function ProjectDetails({
   }
 
   return parsedProps ? (
-    <div className="not-content w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
+    <div className="not-content w-full place-content-center overflow-hidden rounded-md ring-1 ring-zinc-200 dark:ring-zinc-700">
       {title && (
-        <div className="relative flex justify-center border-b border-slate-200 bg-slate-100/50 p-2 font-bold dark:border-slate-700 dark:bg-slate-700/50">
+        <div className="relative flex justify-center border-b border-zinc-200 bg-zinc-100/50 p-2 font-bold dark:border-zinc-700 dark:bg-zinc-700/50">
           {title}
         </div>
       )}

@@ -97,7 +97,9 @@ function defaultReadFileAtRevision(
 ): string {
   try {
     const fileFullPath = `${workspaceRoot}${sep}${file}`;
-    const gitRepositoryPath = execSync('git rev-parse --show-toplevel')
+    const gitRepositoryPath = execSync('git rev-parse --show-toplevel', {
+      windowsHide: true,
+    })
       .toString()
       .trim();
     const filePathInGitRepository = relative(gitRepositoryPath, fileFullPath)
@@ -108,7 +110,7 @@ function defaultReadFileAtRevision(
       : execSync(`git show ${revision}:${filePathInGitRepository}`, {
           maxBuffer: TEN_MEGABYTES,
           stdio: ['pipe', 'pipe', 'ignore'],
-          windowsHide: false,
+          windowsHide: true,
         })
           .toString()
           .trim();

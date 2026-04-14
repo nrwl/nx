@@ -14,7 +14,13 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
   packageManager: PackageManager,
   directory: string
 ): Promise<void> {
-  const { skipGit, commit, nxCloud, ...restArgs } = parsedArgs;
+  const {
+    skipGit,
+    commit,
+    nxCloud,
+    workingDir: _workingDir,
+    ...restArgs
+  } = parsedArgs;
 
   // Delete verbose because it will conflict with the --quiet flag
   if (!restArgs.verbose) {
@@ -28,7 +34,10 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
 
   const pmc = getPackageManagerCommand(packageManager);
 
-  const workingDir = process.cwd().replace(/\\/g, '/');
+  const workingDir = (parsedArgs.workingDir ?? process.cwd()).replace(
+    /\\/g,
+    '/'
+  );
   let nxWorkspaceRoot = `"${workingDir}"`;
 
   // If path contains spaces there is a problem in Windows for npm@6.

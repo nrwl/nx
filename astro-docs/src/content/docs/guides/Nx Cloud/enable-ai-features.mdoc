@@ -6,7 +6,7 @@ filter: 'type:Guides'
 
 This guide walks you through enabling AI features in Nx Cloud for both cloud-hosted and on-prem installations.
 
-## Nx Cloud Hosted Setup
+## Nx Cloud hosted setup
 
 To enable AI features for your organization, go to [your organization's settings](https://cloud.nx.app/go/organization/edit) on Nx Cloud and select the organization where you want to enable AI.
 
@@ -22,7 +22,7 @@ AI features are available on Hobby, Team and Enterprise [Nx Cloud plans](https:/
 
 {% /aside %}
 
-## Self-Healing CI for Enterprise On-Prem Installations
+## Self-healing CI for enterprise on-prem installations
 
 To enable Self-Healing CI for enterprise on-prem installations, follow these steps:
 
@@ -50,9 +50,9 @@ frontend
 
 Then, enable AI features in the [organization settings](https://cloud.nx.app/go/organization/edit) and enable Self-Healing CI in the [workspace settings](https://cloud.nx.app/go/workspace/settings).
 
-### Running Self-Healing CI On-Prem
+### Running self-healing CI on-prem
 
-#### Automatic DTE Agents
+#### Automatic DTE agents
 
 If using DTE agents, the self-healing CI step will be automatically added when the setting is enabled in the workspace settings.
 
@@ -66,6 +66,6 @@ For manual DTE configurations, the `nx fix-ci` command must be included in the a
 
 For non-DTE setups, refer to the [Self-Healing CI documentation](/docs/features/ci-features/self-healing-ci) for detailed configuration instructions.
 
-## Regional Availability
+## Regional availability
 
 AI features are not available for the EU cluster in public cloud installations due to regional restrictions. However, on-prem customers in the EU can still use these features by providing their own Anthropic API key (for Self-Healing CI) and enabling the required environment variables.

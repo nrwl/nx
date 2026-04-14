@@ -2239,6 +2239,429 @@ describe('Dependency checks (eslint)', () => {
 
       expect(result).toContain('"external1": "catalog:"');
     });
+
+    it('should use catalog: for missing dep when package is in default catalog but not in root package.json', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        dependencies: {
+          external1: '^16.0.0',
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+        './pnpm-workspace.yaml': `catalog:\n  random-external: '^1.0.0'\n`,
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [
+              { source: 'liba', target: 'npm:external1', type: 'static' },
+              {
+                source: 'liba',
+                target: 'npm:random-external',
+                type: 'static',
+              },
+            ],
+          },
+        },
+        {
+          liba: [
+            createFile(`libs/liba/src/main.ts`, [
+              'npm:external1',
+              'npm:random-external',
+            ]),
+            createFile(`libs/liba/package.json`, ['npm:external1']),
+          ],
+        }
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toContain('random-external');
+
+      const content = JSON.stringify(packageJson, null, 2);
+      const result =
+        content.slice(0, failures[0].fix!.range[0]) +
+        failures[0].fix!.text +
+        content.slice(failures[0].fix!.range[1]);
+
+      expect(result).toContain('"random-external": "catalog:"');
+    });
+
+    it('should use catalog: for missing dep when package is in catalogs.default', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        dependencies: {
+          external1: '^16.0.0',
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+        './pnpm-workspace.yaml': `catalogs:\n  default:\n    random-external: '^1.0.0'\n`,
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [
+              { source: 'liba', target: 'npm:external1', type: 'static' },
+              {
+                source: 'liba',
+                target: 'npm:random-external',
+                type: 'static',
+              },
+            ],
+          },
+        },
+        {
+          liba: [
+            createFile(`libs/liba/src/main.ts`, [
+              'npm:external1',
+              'npm:random-external',
+            ]),
+            createFile(`libs/liba/package.json`, ['npm:external1']),
+          ],
+        }
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toContain('random-external');
+
+      const content = JSON.stringify(packageJson, null, 2);
+      const result =
+        content.slice(0, failures[0].fix!.range[0]) +
+        failures[0].fix!.text +
+        content.slice(failures[0].fix!.range[1]);
+
+      expect(result).toContain('"random-external": "catalog:"');
+    });
+
+    it('should use catalog:name for missing dep when package is in a named catalog but not in root package.json', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        dependencies: {
+          external1: '^16.0.0',
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+        './pnpm-workspace.yaml': `catalogs:\n  react:\n    random-external: '^1.0.0'\n`,
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [
+              { source: 'liba', target: 'npm:external1', type: 'static' },
+              {
+                source: 'liba',
+                target: 'npm:random-external',
+                type: 'static',
+              },
+            ],
+          },
+        },
+        {
+          liba: [
+            createFile(`libs/liba/src/main.ts`, [
+              'npm:external1',
+              'npm:random-external',
+            ]),
+            createFile(`libs/liba/package.json`, ['npm:external1']),
+          ],
+        }
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toContain('random-external');
+
+      const content = JSON.stringify(packageJson, null, 2);
+      const result =
+        content.slice(0, failures[0].fix!.range[0]) +
+        failures[0].fix!.text +
+        content.slice(failures[0].fix!.range[1]);
+
+      expect(result).toContain('"random-external": "catalog:react"');
+    });
+
+    it('should fall back to installed version when package is in multiple catalogs', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        dependencies: {
+          external1: '^16.0.0',
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+        './pnpm-workspace.yaml': `catalog:\n  random-external: '^1.0.0'\ncatalogs:\n  react:\n    random-external: '^1.2.0'\n`,
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [
+              { source: 'liba', target: 'npm:external1', type: 'static' },
+              {
+                source: 'liba',
+                target: 'npm:random-external',
+                type: 'static',
+              },
+            ],
+          },
+        },
+        {
+          liba: [
+            createFile(`libs/liba/src/main.ts`, [
+              'npm:external1',
+              'npm:random-external',
+            ]),
+            createFile(`libs/liba/package.json`, ['npm:external1']),
+          ],
+        }
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toContain('random-external');
+
+      const content = JSON.stringify(packageJson, null, 2);
+      const result =
+        content.slice(0, failures[0].fix!.range[0]) +
+        failures[0].fix!.text +
+        content.slice(failures[0].fix!.range[1]);
+
+      // Should use installed version, not catalog reference
+      expect(result).toContain('"random-external": "1.2.3"');
+      expect(result).not.toContain('catalog:');
+    });
+
+    it('should use the catalog whose version satisfies when package is in multiple catalogs', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        dependencies: {
+          external1: '^16.0.0',
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+        './pnpm-workspace.yaml': `catalogs:\n  react:\n    random-external: '^1.0.0'\n  angular:\n    random-external: '^2.0.0'\n`,
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [
+              { source: 'liba', target: 'npm:external1', type: 'static' },
+              {
+                source: 'liba',
+                target: 'npm:random-external',
+                type: 'static',
+              },
+            ],
+          },
+        },
+        {
+          liba: [
+            createFile(`libs/liba/src/main.ts`, [
+              'npm:external1',
+              'npm:random-external',
+            ]),
+            createFile(`libs/liba/package.json`, ['npm:external1']),
+          ],
+        }
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toContain('random-external');
+
+      const content = JSON.stringify(packageJson, null, 2);
+      const result =
+        content.slice(0, failures[0].fix!.range[0]) +
+        failures[0].fix!.text +
+        content.slice(failures[0].fix!.range[1]);
+
+      // installed 1.2.3 satisfies ^1.0.0 (react) but not ^2.0.0 (angular)
+      expect(result).toContain('"random-external": "catalog:react"');
+    });
+
+    it('should match file: protocol catalog entry by exact comparison', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        dependencies: {
+          external1: '^16.0.0',
+        },
+      };
+
+      const fileExternalNodes: Record<string, ProjectGraphExternalNode> = {
+        ...externalNodes,
+        'npm:random-external': {
+          name: 'npm:random-external',
+          type: 'npm',
+          data: {
+            packageName: 'random-external',
+            version: 'file:../random-external',
+          },
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+        './pnpm-workspace.yaml': `catalog:\n  random-external: 'file:../random-external'\n`,
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes: fileExternalNodes,
+          dependencies: {
+            liba: [
+              { source: 'liba', target: 'npm:external1', type: 'static' },
+              {
+                source: 'liba',
+                target: 'npm:random-external',
+                type: 'static',
+              },
+            ],
+          },
+        },
+        {
+          liba: [
+            createFile(`libs/liba/src/main.ts`, [
+              'npm:external1',
+              'npm:random-external',
+            ]),
+            createFile(`libs/liba/package.json`, ['npm:external1']),
+          ],
+        }
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toContain('random-external');
+
+      const content = JSON.stringify(packageJson, null, 2);
+      const result =
+        content.slice(0, failures[0].fix!.range[0]) +
+        failures[0].fix!.text +
+        content.slice(failures[0].fix!.range[1]);
+
+      expect(result).toContain('"random-external": "catalog:"');
+    });
   });
 
   it('should require swc if @nx/js:swc executor', () => {

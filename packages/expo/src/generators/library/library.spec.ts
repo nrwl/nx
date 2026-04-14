@@ -58,7 +58,7 @@ describe('lib', () => {
       await expoLibraryGenerator(appTree, defaultSchema);
       const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-lib/src/index.ts',
+        './my-lib/src/index.ts',
       ]);
     });
 
@@ -71,7 +71,7 @@ describe('lib', () => {
       await expoLibraryGenerator(appTree, defaultSchema);
       const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-lib/src/index.ts',
+        './my-lib/src/index.ts',
       ]);
     });
 
@@ -224,7 +224,7 @@ describe('lib', () => {
       });
       const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-dir/src/index.ts',
+        './my-dir/src/index.ts',
       ]);
       expect(tsconfigJson.compilerOptions.paths['my-dir/*']).toBeUndefined();
     });
@@ -341,16 +341,16 @@ describe('lib', () => {
           moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           moduleNameMapper: {
-            '\\\\.svg$': '@nx/expo/plugins/jest/svg-mock',
+            '[.]svg$': '@nx/expo/plugins/jest/svg-mock',
           },
           transform: {
-            '\\\\.[jt]sx?$': [
+            '[.][jt]sx?$': [
               'babel-jest',
               {
                 configFile: __dirname + '/.babelrc.js',
               },
             ],
-            '^.+\\\\.(bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp|ttf|otf|m4v|mov|mp4|mpeg|mpg|webm|aac|aiff|caf|m4a|mp3|wav|html|pdf|obj)$':
+            '^.+[.](bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp|ttf|otf|m4v|mov|mp4|mpeg|mpg|webm|aac|aiff|caf|m4a|mp3|wav|html|pdf|obj)$':
               require.resolve('jest-expo/src/preset/assetFileTransformer.js'),
           },
           coverageDirectory: '../coverage/my-lib',

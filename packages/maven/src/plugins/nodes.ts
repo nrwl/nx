@@ -5,6 +5,7 @@ import { runMavenAnalysis } from './maven-analyzer';
 import {
   getCachePath,
   readMavenCache,
+  setCurrentMavenData,
   writeMavenCache,
 } from './maven-data-cache';
 import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
@@ -53,17 +54,31 @@ export const createNodes: CreateNodesV2<MavenPluginOptions> = [
 
     try {
       // Try to get cached data first (skip cache if in verbose mode)
-      let mavenData = isVerbose ? null : mavenCache[hash];
+      let mavenData = isVerbose ? null : mavenCache.get(hash);
 
       // If no cached data or cache is stale, run fresh Maven analysis
       if (!mavenData) {
-        mavenData = await runMavenAnalysis(context.workspaceRoot, {
-          ...opts,
-          verbose: isVerbose,
-        });
+        try {
+          mavenData = await runMavenAnalysis(context.workspaceRoot, {
+            ...opts,
+            verbose: isVerbose,
+          });
+        } catch (e) {
+          if (
+            e instanceof Error &&
+            e.message === 'Maven analysis was cancelled'
+          ) {
+            // Cancelled by a newer createNodes call — silently return empty
+            return [];
+          }
+          throw e;
+        }
         // Cache the results with the hash
-        mavenCache[hash] = mavenData;
+        mavenCache.set(hash, mavenData);
       }
+
+      // Store in module-level variable for createDependencies to use
+      setCurrentMavenData(mavenData);
 
       // Return createNodesResults (atomization now handled in Kotlin)
       return mavenData.createNodesResults.map(

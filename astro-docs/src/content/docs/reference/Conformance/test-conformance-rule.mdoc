@@ -88,7 +88,7 @@ describe('my-rule', () => {
 });
 ```
 
-## Adding Files to the Test Workspace
+## Adding files to the test workspace
 
 You can optionally provide an async callback to `createReadOnlyTree` to add files or even run Nx generators before the tests run:
 
@@ -106,7 +106,7 @@ const { tree, cleanup } = await createReadOnlyTree(async (writableTree) => {
 });
 ```
 
-## Testing Fix Generators
+## Testing fix generators
 
 If your rule includes a fix generator, you can test it by converting the read-only tree to a writable one using `convertToWritable` and then running the fix generator:
 
@@ -135,7 +135,7 @@ it('should fix violations when fix generator is applied', async () => {
 });
 ```
 
-## Complete Example
+## Complete example
 
 Here's a complete example testing a rule that checks for license headers and includes a fix generator:
 
@@ -234,22 +234,22 @@ describe('license-header-rule', () => {
 });
 ```
 
-## Conformance Testing Best Practices
+## Conformance testing best practices
 
 1. **Use snapshots**: Use `toMatchInlineSnapshot()` for violation arrays to easily see changes in test output.
 2. **Test isolation**: Always use cleanup in the `afterEach` (or your testing framework equivalent) to ensure tests don't interfere with each other.
 3. **Test both detection and fixes**: If your rule has a fix generator, test both that violations are detected and that the fix works correctly.
 4. **Test edge cases**: Test with empty workspaces, missing files, and various project configurations.
 
-### Writing Performant Conformance Rules
+### Writing performant conformance rules
 
 Each rule will show its respective execution time and you can use this to identify rules that are slow to run.
 
-#### Avoid Blocking the Main Thread
+#### Avoid blocking the main thread
 
 Sometimes you may notice that a rule that seems to take a while to complete when run as part of the full rule set but is much faster when run individually. This is because another rule is blocking the main thread. Conformance rules are executed in parallel on the main thread so it is important to avoid blocking actions in a particular rule or it will impact the execution of others.
 
-## Available Conformance Testing Utilities
+## Available conformance testing utilities
 
 The `@nx/conformance/testing` package exports the following utilities:
 

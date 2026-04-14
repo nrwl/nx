@@ -36,14 +36,14 @@ describe('Gradle Plugin V1', () => {
       });
       afterAll(() => cleanupProject());
 
-      it('should build', () => {
+      it('should build without batch mode', () => {
         const projects = runCLI(`show projects`);
         expect(projects).toContain('app');
         expect(projects).toContain('list');
         expect(projects).toContain('utilities');
         expect(projects).toContain(gradleProjectName);
 
-        const buildOutput = runCLI('build app', { verbose: true });
+        const buildOutput = runCLI('build app --no-batch', { verbose: true });
         expect(buildOutput).toContain('nx run list:build');
         expect(buildOutput).toContain(':list:classes');
         expect(buildOutput).toContain('nx run utilities:build');
@@ -56,7 +56,7 @@ describe('Gradle Plugin V1', () => {
         );
       });
 
-      it('should track dependencies for new app', () => {
+      it('should track dependencies for new app without batch mode', () => {
         if (type === 'groovy') {
           createFile(
             `app2/build.gradle`,
@@ -94,7 +94,7 @@ dependencies {
           }
         );
 
-        let buildOutput = runCLI('build app2', { verbose: true });
+        let buildOutput = runCLI('build app2 --no-batch', { verbose: true });
         // app2 depends on app
         expect(buildOutput).toContain('nx run app:build');
         expect(buildOutput).toContain(':app:classes');

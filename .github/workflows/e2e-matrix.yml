@@ -397,7 +397,7 @@ jobs:
     if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     needs: e2e
-    timeout-minutes: 10
+    timeout-minutes: 15
     outputs:
       message: ${{ steps.process-json.outputs.slack_message }}
       proj_duration: ${{ steps.process-json.outputs.slack_proj_duration }}
@@ -425,8 +425,10 @@ jobs:
           combined=$(jq -sc . outputs/*/matrix.json)
           echo "combined=$combined" >> $GITHUB_OUTPUT
 
-      - name: Process results with TypeScript script
+      - name: Process results and collect failure details
         id: process-json
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           echo '${{ steps.combine-json.outputs.combined }}' | npx tsx .github/workflows/nightly/process-result.ts
 

@@ -12,12 +12,12 @@ import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
 import {
   agentsMdPath,
-  claudeMcpPath,
   claudeMdPath,
   codexConfigTomlPath,
   geminiMdPath,
   geminiSettingsPath,
   nxMcpTomlHeader,
+  opencodeMcpPath,
   parseGeminiSettings,
 } from './constants';
 import setupAiAgentsGenerator from './set-up-ai-agents/set-up-ai-agents';
@@ -30,6 +30,7 @@ export const supportedAgents = [
   'copilot',
   'cursor',
   'gemini',
+  'opencode',
 ] as const;
 export type Agent = (typeof supportedAgents)[number];
 export const agentDisplayMap: Record<Agent, string> = {
@@ -38,6 +39,7 @@ export const agentDisplayMap: Record<Agent, string> = {
   codex: 'OpenAI Codex',
   copilot: 'GitHub Copilot for VSCode',
   cursor: 'Cursor',
+  opencode: 'OpenCode',
 };
 
 export type AgentConfiguration = {
@@ -98,21 +100,27 @@ async function getAgentConfiguration(
   >;
   switch (agent) {
     case 'claude': {
-      const mcpPath = claudeMcpPath(workspaceRoot);
-      let mcpConfigured: boolean;
+      // Claude uses a plugin from marketplace which includes the MCP server
+      const claudeSettingsPath = resolve(
+        workspaceRoot,
+        '.claude',
+        'settings.json'
+      );
+      let pluginConfigured: boolean;
       try {
-        const mcpContents = readJsonFile(mcpPath);
-        mcpConfigured = !!mcpContents?.['mcpServers']?.['nx-mcp'];
+        const settingsContents = readJsonFile(claudeSettingsPath);
+        pluginConfigured =
+          !!settingsContents?.['enabledPlugins']?.['nx@nx-claude-plugins'];
       } catch {
-        mcpConfigured = false;
+        pluginConfigured = false;
       }
       const rulesPath = claudeMdPath(workspaceRoot);
       const rulesExists = existsSync(rulesPath);
       agentConfiguration = {
         rules: rulesExists,
-        mcp: mcpConfigured,
+        mcp: pluginConfigured,
         rulesPath: rulesPath,
-        mcpPath: mcpPath,
+        mcpPath: claudeSettingsPath,
       };
       break;
     }
@@ -146,16 +154,18 @@ async function getAgentConfiguration(
     }
     case 'copilot': {
       const rulesPath = agentsMdPath(workspaceRoot);
-      const hasInstalledVSCode = isEditorInstalled(SupportedEditor.VSCode);
-      const hasInstalledVSCodeInsiders = isEditorInstalled(
+      const hasInstalledVSCode = await isEditorInstalled(
+        SupportedEditor.VSCode
+      );
+      const hasInstalledVSCodeInsiders = await isEditorInstalled(
         SupportedEditor.VSCodeInsiders
       );
       const hasInstalledNxConsoleForVSCode =
         hasInstalledVSCode &&
-        !canInstallNxConsoleForEditor(SupportedEditor.VSCode);
+        !(await canInstallNxConsoleForEditor(SupportedEditor.VSCode));
       const hasInstalledNxConsoleForVSCodeInsiders =
         hasInstalledVSCodeInsiders &&
-        !canInstallNxConsoleForEditor(SupportedEditor.VSCodeInsiders);
+        !(await canInstallNxConsoleForEditor(SupportedEditor.VSCodeInsiders));
 
       const agentsMdExists = existsSync(rulesPath);
 
@@ -172,10 +182,12 @@ async function getAgentConfiguration(
     }
     case 'cursor': {
       const rulesPath = agentsMdPath(workspaceRoot);
-      const hasInstalledCursor = isEditorInstalled(SupportedEditor.Cursor);
-      const hasInstalledNxConsole = !canInstallNxConsoleForEditor(
+      const hasInstalledCursor = await isEditorInstalled(
         SupportedEditor.Cursor
       );
+      const hasInstalledNxConsole = !(await canInstallNxConsoleForEditor(
+        SupportedEditor.Cursor
+      ));
       const agentsMdExists = existsSync(rulesPath);
 
       agentConfiguration = {
@@ -190,9 +202,10 @@ async function getAgentConfiguration(
     case 'codex': {
       const rulesPath = agentsMdPath(workspaceRoot);
       const agentsMdExists = existsSync(rulesPath);
+      const mcpPath = codexConfigTomlPath(workspaceRoot);
       let mcpConfigured: boolean;
-      if (existsSync(codexConfigTomlPath)) {
-        const tomlContents = readFileSync(codexConfigTomlPath, 'utf-8');
+      if (existsSync(mcpPath)) {
+        const tomlContents = readFileSync(mcpPath, 'utf-8');
         mcpConfigured = tomlContents.includes(nxMcpTomlHeader);
       } else {
         mcpConfigured = false;
@@ -202,7 +215,28 @@ async function getAgentConfiguration(
         mcp: mcpConfigured,
         rules: agentsMdExists,
         rulesPath,
-        mcpPath: codexConfigTomlPath,
+        mcpPath,
+      };
+      break;
+    }
+    case 'opencode': {
+      const rulesPath = agentsMdPath(workspaceRoot);
+      const agentsMdExists = existsSync(rulesPath);
+      const mcpPath = opencodeMcpPath(workspaceRoot);
+      let mcpConfigured: boolean;
+      try {
+        const mcpContents = readJsonFile(mcpPath);
+        // OpenCode uses 'mcp' property, not 'mcpServers'
+        mcpConfigured = !!mcpContents?.['mcp']?.['nx-mcp'];
+      } catch {
+        mcpConfigured = false;
+      }
+
+      agentConfiguration = {
+        mcp: mcpConfigured,
+        rules: agentsMdExists,
+        rulesPath,
+        mcpPath,
       };
       break;
     }

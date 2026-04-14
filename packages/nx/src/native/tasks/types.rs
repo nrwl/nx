@@ -61,6 +61,12 @@ pub enum HashInstruction {
     TaskOutput(String, Vec<String>),
     External(String),
     AllExternalDependencies,
+    JsonFileSet {
+        project_name: Option<String>,
+        json_path: String,
+        fields: Option<Vec<String>>,
+        exclude_fields: Option<Vec<String>>,
+    },
 }
 
 impl ToNapiValue for HashInstruction {
@@ -74,7 +80,12 @@ impl ToNapiValue for HashInstruction {
 
         check_status!(
             unsafe {
-                sys::napi_create_string_utf8(env, val.as_ptr() as *const _, val.len(), &mut ptr)
+                sys::napi_create_string_utf8(
+                    env,
+                    val.as_ptr() as *const _,
+                    val.len() as isize,
+                    &mut ptr,
+                )
             },
             "Failed to convert rust `String` into napi `string`"
         )?;
@@ -117,6 +128,26 @@ impl fmt::Display for HashInstruction {
                 }
                 HashInstruction::TsConfiguration(project_name) => {
                     format!("{project_name}:TsConfig")
+                }
+                HashInstruction::JsonFileSet {
+                    project_name,
+                    json_path,
+                    fields,
+                    exclude_fields,
+                } => {
+                    let prefix = project_name
+                        .as_deref()
+                        .map(|p| format!("{p}:"))
+                        .unwrap_or_default();
+                    let fields_str = fields
+                        .as_ref()
+                        .map(|f| format!("[{}]", f.join(",")))
+                        .unwrap_or_default();
+                    let exclude_str = exclude_fields
+                        .as_ref()
+                        .map(|f| format!("![{}]", f.join(",")))
+                        .unwrap_or_default();
+                    format!("{prefix}json:{json_path}{fields_str}{exclude_str}")
                 }
             }
         )

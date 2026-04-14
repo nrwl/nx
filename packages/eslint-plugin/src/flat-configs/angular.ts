@@ -23,6 +23,7 @@ const config: ConfigArray = tseslint.config(
     ...c,
   })),
   {
+    files: ['**/*.ts'],
     languageOptions: {
       globals: {
         ...globals.browser,

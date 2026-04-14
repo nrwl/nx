@@ -26,6 +26,12 @@ class PathFormatter {
     return "{projectRoot}/$relativePath"
   }
 
+  fun toWorkspacePath(path: File, workspaceRoot: File): String {
+    val relativePath = path.canonicalFile.relativeTo(workspaceRoot.canonicalFile)
+
+    return "{workspaceRoot}/$relativePath"
+  }
+
   fun normalizeRelativePath(path: String): String = path.takeIf { it.isNotEmpty() } ?: "."
 }
 

@@ -5,12 +5,17 @@
     "package": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "./mvnw clean package -am -pl dev.nx.maven:maven-batch-runner"
+        "command": "./mvnw clean package -am -pl dev.nx.maven:maven-batch-runner,dev.nx.maven:maven3-adapter,dev.nx.maven:maven4-adapter"
       },
       "outputs": ["{projectRoot}/target/*.jar"]
     },
     "_package": {
-      "command": "node scripts/run-native-target.js package maven-batch-runner"
+      "command": "node scripts/run-native-target.js package maven-batch-runner",
+      "outputs": [
+        "{projectRoot}/target/*.jar",
+        "{workspaceRoot}/packages/maven/batch-runner-adapters/maven3/target/*.jar",
+        "{workspaceRoot}/packages/maven/batch-runner-adapters/maven4/target/*.jar"
+      ]
     }
   },
   "tags": ["maven:dev.nx.maven"],
