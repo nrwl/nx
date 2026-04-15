@@ -23,7 +23,7 @@ describe('Node Applications + webpack', () => {
   // TODO(nicholas): Look into how this can work with npm instead of forcing pnpm.
   beforeAll(() => {
     proj = newProject({
-      packages: ['@nx/node'],
+      packages: ['@nx/node', '@nx/nest', '@nx/webpack'],
       // npm has resolution for ajv some packages require ajv6 and some require ajv8 and npm resolves it to ajv6 (Error: Cannot find module 'ajv/dist/compile/codegen')
       // - ajv@6 (fork-ts-checker-webpack-plugin, terser-webpack-plugin, webpack)
       // - ajv@8 (babel-loader)

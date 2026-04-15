@@ -14,7 +14,14 @@ import {
 describe('Build React applications and libraries with Vite', () => {
   beforeAll(() => {
     newProject({
-      packages: ['@nx/react'],
+      packages: [
+        '@nx/react',
+        '@nx/vite',
+        '@nx/vitest',
+        '@nx/jest',
+        '@nx/eslint',
+        '@nx/playwright',
+      ],
     });
   });
 

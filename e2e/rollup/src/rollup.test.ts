@@ -12,7 +12,11 @@ import {
 } from '@nx/e2e-utils';
 
 describe('Rollup Plugin', () => {
-  beforeAll(() => newProject({ packages: ['@nx/rollup', '@nx/js'] }));
+  beforeAll(() =>
+    newProject({
+      packages: ['@nx/rollup', '@nx/js', '@nx/eslint', '@nx/jest'],
+    })
+  );
   afterAll(() => cleanupProject());
 
   it('should be able to setup project to build node programs with rollup and different compilers', async () => {

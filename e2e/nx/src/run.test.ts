@@ -22,7 +22,10 @@ import * as path from 'path';
 describe('Nx Running Tests', () => {
   let proj: string;
   beforeAll(
-    () => (proj = newProject({ packages: ['@nx/js', '@nx/web', '@nx/node'] }))
+    () =>
+      (proj = newProject({
+        packages: ['@nx/js', '@nx/node', '@nx/vite', '@nx/vitest', '@nx/web'],
+      }))
   );
   afterAll(() => cleanupProject());
 

@@ -45,7 +45,7 @@ const selectedPm = detectPackageManager();
 describe('Node.js Framework ESM Support', () => {
   beforeAll(() => {
     newProject({
-      packages: ['@nx/node'],
+      packages: ['@nx/node', '@nx/nest', '@nx/webpack'],
       packageManager: selectedPm === 'npm' ? 'pnpm' : selectedPm,
     });
   });

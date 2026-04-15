@@ -10,7 +10,7 @@ describe('Next.js Jest Configuration', () => {
   let proj: string;
 
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/next'] });
+    proj = newProject({ packages: ['@nx/next', '@nx/jest'] });
   });
 
   afterAll(() => cleanupProject());

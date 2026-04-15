@@ -17,7 +17,7 @@ import { runCLI } from './utils';
 
 describe('Dynamic Module Federation', () => {
   beforeAll(() => {
-    newProject({ packages: ['@nx/react'] });
+    newProject({ packages: ['@nx/react', '@nx/rspack', '@nx/cypress'] });
   });
 
   afterAll(() => cleanupProject());

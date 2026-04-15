@@ -16,7 +16,9 @@ describe('Independent Deployability', () => {
   let proj: string;
   beforeAll(() => {
     process.env.NX_ADD_PLUGINS = 'false';
-    proj = newProject({ packages: ['@nx/react', '@nx/js'] });
+    proj = newProject({
+      packages: ['@nx/react', '@nx/js', '@nx/webpack', '@nx/cypress'],
+    });
   });
 
   afterAll(() => {

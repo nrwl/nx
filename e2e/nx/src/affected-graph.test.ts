@@ -20,7 +20,18 @@ import { join } from 'path';
 describe('Nx Affected and Graph Tests', () => {
   let proj: string;
 
-  beforeAll(() => (proj = newProject({ packages: ['@nx/js', '@nx/web'] })));
+  beforeAll(
+    () =>
+      (proj = newProject({
+        packages: [
+          '@nx/js',
+          '@nx/vite',
+          '@nx/vitest',
+          '@nx/web',
+          '@nx/webpack',
+        ],
+      }))
+  );
   afterAll(() => cleanupProject());
 
   describe('affected:*', () => {
@@ -530,7 +541,12 @@ describe('Nx Affected and Graph Tests', () => {
 describe('show projects --affected', () => {
   let proj: string;
 
-  beforeAll(() => (proj = newProject({ packages: ['@nx/js', '@nx/web'] })));
+  beforeAll(
+    () =>
+      (proj = newProject({
+        packages: ['@nx/js', '@nx/vite', '@nx/vitest', '@nx/web'],
+      }))
+  );
   afterAll(() => cleanupProject());
 
   it('should print information about affected projects', async () => {

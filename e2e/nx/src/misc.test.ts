@@ -31,7 +31,15 @@ import { join } from 'path';
 describe('Nx Commands', () => {
   beforeAll(() =>
     newProject({
-      packages: ['@nx/web', '@nx/angular', '@nx/next'],
+      packages: [
+        '@nx/angular',
+        '@nx/eslint',
+        '@nx/next',
+        '@nx/vite',
+        '@nx/vitest',
+        '@nx/web',
+        '@nx/webpack',
+      ],
     })
   );
 
