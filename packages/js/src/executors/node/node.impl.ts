@@ -405,7 +405,11 @@ function calculateResolveMappings(
   );
   return dependencies.reduce((m, c) => {
     if (c.node.type !== 'npm' && c.outputs[0] != null) {
-      m[c.name] = joinPathFragments(context.root, c.outputs[0]);
+      // `outputs` are cache patterns and may contain globs (e.g. from the
+      // inferred `@nx/js/typescript` build target). Strip the glob portion
+      // so the runtime require overrides resolve to the actual output dir.
+      const outputDir = stripGlobToBaseDir(c.outputs[0]);
+      m[c.name] = joinPathFragments(context.root, outputDir);
     }
     return m;
   }, {});
