@@ -1,7 +1,10 @@
 import { workspaceRoot } from '../utils/workspace-root';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { assertWorkspaceValidity } from '../utils/assert-workspace-validity';
+import {
+  assertWorkspaceProjectGraphValidity,
+  assertWorkspaceValidity,
+} from '../utils/assert-workspace-validity';
 import { FileData } from './file-utils';
 import {
   CachedFileData,
@@ -164,6 +167,15 @@ export async function buildProjectGraphUsingProjectFileMap(
       plugins,
       sourceMap
     );
+    try {
+      assertWorkspaceProjectGraphValidity(projectGraph, nxJson);
+    } catch (e) {
+      if (isWorkspaceValidityError(e)) {
+        errors.push(e);
+      } else {
+        throw e;
+      }
+    }
     projectFileMapCache = createProjectFileMapCache(
       nxJson,
       packageJsonDeps,

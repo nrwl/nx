@@ -31,6 +31,7 @@ The following is an expanded example showing all options. Your `nx.json` will li
   "parallel": 4,
   "cacheDirectory": "tmp/my-nx-cache",
   "defaultBase": "main",
+  "strictProjectGraphCycles": true,
   "namedInputs": {
     "default": ["{projectRoot}/**/*"],
     "production": ["!{projectRoot}/**/*.spec.tsx"]
@@ -199,6 +200,29 @@ You can configure `parallel` in `nx.json`, but you can also set a `--parallel` f
 Tells Nx which base branch to use when calculating affected projects.
 
 - `defaultBase` defines the default base branch, defaults to `main`.
+
+## Project graph validation
+
+Set `strictProjectGraphCycles` to `true` if you want Nx to fail as soon as the workspace project graph contains a cycle.
+This validates project relationships directly, before a specific command creates a cyclic command graph or task graph.
+
+```jsonc
+// nx.json
+{
+  "strictProjectGraphCycles": true,
+}
+```
+
+When this option is enabled, Nx stops project graph creation with a configuration error and prints the first cycle it finds.
+Use this if you want CI to fail at the root cause instead of waiting for a later command to surface a cycle.
+
+`strictProjectGraphCycles` is separate from `NX_IGNORE_CYCLES` and `--nxIgnoreCycles`.
+Those only ignore cycles in derived command graphs and task graphs.
+They do not bypass this project graph validation.
+
+{% cardgrid %}
+{% linkcard title="Resolve circular dependencies" description="Fix cycles in your workspace when Nx reports them during project graph creation" href="/docs/troubleshooting/resolve-circular-dependencies" /%}
+{% /cardgrid %}
 
 ## Target defaults
 
