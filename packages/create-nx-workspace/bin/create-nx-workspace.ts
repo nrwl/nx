@@ -47,7 +47,8 @@ import {
   CnwErrorCode,
   mapErrorToBodyLines,
 } from '../src/utils/error-utils';
-import { existsSync } from 'fs';
+import { existsSync, readdirSync } from 'fs';
+import { basename, dirname, isAbsolute, join, resolve } from 'path';
 import { isCI } from '../src/utils/ci/is-ci';
 import { isGhCliAvailable } from '../src/utils/git/git';
 import {
@@ -317,15 +318,15 @@ if (isAiAgent()) {
   commandsObject
     .example(chalk.green('AI AGENTS (RECOMMENDED):'), '')
     .example(
-      '  npx create-nx-workspace@latest myorg --template=nrwl/empty-template --nxCloud=yes --interactive=false',
+      '  npx create-nx-workspace@latest myorg --template=empty --nxCloud=yes --interactive=false',
       ''
     )
     .example('', '')
     .example(chalk.green('AVAILABLE TEMPLATES:'), '')
-    .example('  --template=nrwl/empty-template       Empty monorepo', '')
-    .example('  --template=nrwl/react-template       React fullstack', '')
-    .example('  --template=nrwl/angular-template     Angular fullstack', '')
-    .example('  --template=nrwl/typescript-template  NPM packages', '')
+    .example('  --template=empty                     Empty monorepo', '')
+    .example('  --template=react                     React fullstack', '')
+    .example('  --template=angular                   Angular fullstack', '')
+    .example('  --template=typescript                NPM packages', '')
     .epilogue(
       `${chalk.cyan('AI Agent Mode:')}
   Set CLAUDECODE=1 or OPENCODE=1 for JSON output and non-interactive mode.
@@ -424,6 +425,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       nxCloudArg: parsedArgs.nxCloud ?? '',
       nxCloudArgRaw: rawArgs.nxCloud ?? '',
       pushedToVcs: workspaceInfo.pushedToVcs ?? '',
+      pushFailReason: workspaceInfo.pushFailReason ?? '',
       template: chosenTemplate ?? '',
       preset: chosenPreset ?? '',
       connectUrl: workspaceInfo.connectUrl ?? '',
@@ -831,18 +833,72 @@ export function validateWorkspaceName(name: string): void {
   }
 }
 
+/**
+ * Resolves special folder name patterns (`.`, `./`, absolute paths) into a
+ * workspace name and a `workingDir` override so that downstream functions
+ * create the workspace at the intended location.
+ *
+ * @visibleForTesting
+ *
+ * Returns `{ name, workingDir }` for special inputs, or `null` if the
+ * input is a regular name that needs no special handling.
+ */
+export function resolveSpecialFolderName(
+  folderName: string
+): { name: string; workingDir: string } | null {
+  // Handle "." and "./" — user wants to init in the current directory
+  if (folderName === '.' || folderName === './') {
+    const cwd = resolve(process.cwd());
+    if (readdirSync(cwd).length > 0) {
+      throw new CnwError(
+        'DIRECTORY_EXISTS',
+        `The current directory is not empty. Use "nx init" to add Nx to an existing project.`
+      );
+    }
+    return { name: basename(cwd), workingDir: dirname(cwd) };
+  }
+
+  // Handle absolute paths like /tmp/acme
+  if (isAbsolute(folderName)) {
+    const parentDir = dirname(folderName);
+    const name = basename(folderName);
+
+    if (!existsSync(parentDir)) {
+      throw new CnwError(
+        'INVALID_PATH',
+        `The parent directory "${parentDir}" does not exist.`
+      );
+    }
+
+    return { name, workingDir: parentDir };
+  }
+
+  return null;
+}
+
 async function determineFolder(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<string> {
-  const folderName: string = parsedArgs._[0]
+  const rawFolderName: string = parsedArgs._[0]
     ? parsedArgs._[0].toString()
     : parsedArgs.name;
 
-  if (folderName) {
+  if (rawFolderName) {
+    // Resolve ".", "./", and absolute paths before validation
+    const resolved = resolveSpecialFolderName(rawFolderName);
+    const folderName = resolved?.name ?? rawFolderName;
+    if (resolved?.workingDir) {
+      parsedArgs.workingDir = resolved.workingDir;
+    }
+
     validateWorkspaceName(folderName);
 
     // If directory exists, either re-prompt (interactive) or error (non-interactive)
-    if (existsSync(folderName)) {
+    // Check relative to workingDir when set (e.g. absolute path resolved to a different parent)
+    const targetDir = resolved?.workingDir
+      ? join(resolved.workingDir, folderName)
+      : folderName;
+    if (existsSync(targetDir)) {
       if (parsedArgs.interactive && !isCI()) {
         output.warn({
           title: `Directory ${folderName} already exists.`,
@@ -1439,7 +1495,18 @@ async function determineAngularOptions(
     }
   }
 
+  const validAngularBundlers = ['esbuild', 'rspack', 'webpack'] as const;
   if (parsedArgs.bundler) {
+    if (
+      !validAngularBundlers.includes(
+        parsedArgs.bundler as (typeof validAngularBundlers)[number]
+      )
+    ) {
+      throw new CnwError(
+        'INVALID_BUNDLER',
+        `Invalid bundler "${parsedArgs.bundler}" for Angular. Valid options are: ${validAngularBundlers.join(', ')}`
+      );
+    }
     bundler = parsedArgs.bundler;
   } else {
     const reply = await enquirer.prompt<{ bundler: 'esbuild' | 'webpack' }>([

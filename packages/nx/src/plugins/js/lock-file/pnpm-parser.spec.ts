@@ -24,6 +24,12 @@ jest.mock('node:fs', () => {
   };
 });
 
+const { readFileSync: realReadFileSync } =
+  jest.requireActual<typeof import('fs')>('fs');
+function loadJsonFixture(path: string) {
+  return JSON.parse(realReadFileSync(path, 'utf-8'));
+}
+
 jest.mock('../../../utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
@@ -190,8 +196,11 @@ describe('pnpm LockFile utility', () => {
       });
 
       it('should prune lock file', async () => {
-        const appPackageJson = require(
-          joinPathFragments(__dirname, '__fixtures__/nextjs/app/package.json')
+        const appPackageJson = loadJsonFixture(
+          joinPathFragments(
+            __dirname,
+            '__fixtures__/nextjs/app/package.json.fixture'
+          )
         );
 
         // this is our pruned lock file structure
@@ -267,8 +276,11 @@ describe('pnpm LockFile utility', () => {
       });
 
       it('should prune lock file', async () => {
-        const appPackageJson = require(
-          joinPathFragments(__dirname, '__fixtures__/nextjs/app/package.json')
+        const appPackageJson = loadJsonFixture(
+          joinPathFragments(
+            __dirname,
+            '__fixtures__/nextjs/app/package.json.fixture'
+          )
         );
         // this is original generated lock file
         const appLockFile = require(
@@ -688,8 +700,11 @@ describe('pnpm LockFile utility', () => {
       graph = builder.getUpdatedProjectGraph();
       expect(Object.keys(graph.externalNodes).length).toEqual(8);
 
-      const packageJson = require(
-        joinPathFragments(__dirname, '__fixtures__/optional/package.json')
+      const packageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/optional/package.json.fixture'
+        )
       );
       const prunedGraph = pruneProjectGraph(graph, packageJson);
       expect(Object.keys(prunedGraph.externalNodes).length).toEqual(8);
@@ -777,10 +792,10 @@ describe('pnpm LockFile utility', () => {
       });
 
       it('should prune single package', () => {
-        const typescriptPackageJson = require(
+        const typescriptPackageJson = loadJsonFixture(
           joinPathFragments(
             __dirname,
-            '__fixtures__/pruning/typescript/package.json'
+            '__fixtures__/pruning/typescript/package.json.fixture'
           )
         );
         const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
@@ -801,10 +816,10 @@ describe('pnpm LockFile utility', () => {
       });
 
       it('should prune multi packages', () => {
-        const multiPackageJson = require(
+        const multiPackageJson = loadJsonFixture(
           joinPathFragments(
             __dirname,
-            '__fixtures__/pruning/devkit-yargs/package.json'
+            '__fixtures__/pruning/devkit-yargs/package.json.fixture'
           )
         );
         const prunedGraph = pruneProjectGraph(graph, multiPackageJson);
@@ -889,10 +904,10 @@ describe('pnpm LockFile utility', () => {
       });
 
       it('should prune single package', () => {
-        const typescriptPackageJson = require(
+        const typescriptPackageJson = loadJsonFixture(
           joinPathFragments(
             __dirname,
-            '__fixtures__/pruning/typescript/package.json'
+            '__fixtures__/pruning/typescript/package.json.fixture'
           )
         );
         const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
@@ -913,10 +928,10 @@ describe('pnpm LockFile utility', () => {
       });
 
       it('should prune multi packages', () => {
-        const multiPackageJson = require(
+        const multiPackageJson = loadJsonFixture(
           joinPathFragments(
             __dirname,
-            '__fixtures__/pruning/devkit-yargs/package.json'
+            '__fixtures__/pruning/devkit-yargs/package.json.fixture'
           )
         );
         const prunedGraph = pruneProjectGraph(graph, multiPackageJson);
@@ -1001,10 +1016,10 @@ describe('pnpm LockFile utility', () => {
       });
 
       it('should prune single package', () => {
-        const typescriptPackageJson = require(
+        const typescriptPackageJson = loadJsonFixture(
           joinPathFragments(
             __dirname,
-            '__fixtures__/pruning/typescript/package.json'
+            '__fixtures__/pruning/typescript/package.json.fixture'
           )
         );
         const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
@@ -1025,10 +1040,10 @@ describe('pnpm LockFile utility', () => {
       });
 
       it('should prune multi packages', () => {
-        const multiPackageJson = require(
+        const multiPackageJson = loadJsonFixture(
           joinPathFragments(
             __dirname,
-            '__fixtures__/pruning/devkit-yargs/package.json'
+            '__fixtures__/pruning/devkit-yargs/package.json.fixture'
           )
         );
         const prunedGraph = pruneProjectGraph(graph, multiPackageJson);
@@ -1049,10 +1064,10 @@ describe('pnpm LockFile utility', () => {
       });
 
       it('should strip catalogs from pruned lockfile', () => {
-        const typescriptPackageJson = require(
+        const typescriptPackageJson = loadJsonFixture(
           joinPathFragments(
             __dirname,
-            '__fixtures__/pruning/typescript/package.json'
+            '__fixtures__/pruning/typescript/package.json.fixture'
           )
         );
         const lockFileWithCatalogs = lockFile.replace(
@@ -1134,8 +1149,11 @@ describe('pnpm LockFile utility', () => {
       ).default;
       lockFileHash = '__fixtures__/mixed-keys/pnpm-lock.yaml';
 
-      const packageJson = require(
-        joinPathFragments(__dirname, '__fixtures__/mixed-keys/package.json')
+      const packageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/mixed-keys/package.json.fixture'
+        )
       );
 
       const { nodes: externalNodes, keyMap } = getPnpmLockfileNodes(
@@ -1392,8 +1410,11 @@ describe('pnpm LockFile utility', () => {
       ).default;
       lockFileHash = '__fixtures__/mixed-keys/pnpm-lock-v9.yaml';
 
-      const packageJson = require(
-        joinPathFragments(__dirname, '__fixtures__/mixed-keys/package.json')
+      const packageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/mixed-keys/package.json.fixture'
+        )
       );
 
       const { nodes: externalNodes, keyMap } = getPnpmLockfileNodes(
@@ -1672,10 +1693,10 @@ describe('pnpm LockFile utility', () => {
       ).default;
       lockFileHash = '__fixtures__/pnpm-regression/pnpm-lock.yaml';
 
-      const packageJson = require(
+      const packageJson = loadJsonFixture(
         joinPathFragments(
           __dirname,
-          '__fixtures__/pnpm-regression/package.json'
+          '__fixtures__/pnpm-regression/package.json.fixture'
         )
       );
 
@@ -1758,10 +1779,10 @@ describe('pnpm LockFile utility', () => {
         )
       ).default;
 
-      const packageJson = require(
+      const packageJson = loadJsonFixture(
         joinPathFragments(
           __dirname,
-          '__fixtures__/pnpm-semver-range-specifier/app/package.json'
+          '__fixtures__/pnpm-semver-range-specifier/app/package.json.fixture'
         )
       );
 

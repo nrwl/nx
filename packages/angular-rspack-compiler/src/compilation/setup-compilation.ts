@@ -45,6 +45,9 @@ export const DEFAULT_NG_COMPILER_OPTIONS: ts.CompilerOptions = {
   supportJitMode: false,
 };
 
+let COMPONENT_STYLESHEET_BUNDLER: ComponentStylesheetBundler | undefined =
+  undefined;
+
 export async function setupCompilation(
   config: Pick<RsbuildConfig, 'mode' | 'source'>,
   options: SetupCompilationOptions
@@ -86,7 +89,7 @@ export async function setupCompilation(
     }
   }
 
-  const componentStylesheetBundler = new ComponentStylesheetBundler(
+  COMPONENT_STYLESHEET_BUNDLER ??= new ComponentStylesheetBundler(
     {
       workspaceRoot: options.root,
       optimization: config.mode === 'production',
@@ -116,7 +119,7 @@ export async function setupCompilation(
   return {
     rootNames,
     compilerOptions,
-    componentStylesheetBundler,
+    componentStylesheetBundler: COMPONENT_STYLESHEET_BUNDLER,
   };
 }
 

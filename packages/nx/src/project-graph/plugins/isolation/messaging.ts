@@ -136,6 +136,18 @@ type PluginMessageDefs = DefineMessages<{
           error: Error;
         };
   };
+
+  setWorkerEnv: {
+    payload: Record<string, string>;
+    result:
+      | {
+          success: true;
+        }
+      | {
+          success: false;
+          error: Error;
+        };
+  };
 }>;
 
 // =============================================================================
@@ -171,6 +183,7 @@ const MESSAGE_TYPES: ReadonlyArray<PluginWorkerMessage['type']> = [
   'createMetadata',
   'preTasksExecution',
   'postTasksExecution',
+  'setWorkerEnv',
 ];
 
 const RESULT_TYPES: ReadonlyArray<PluginWorkerResult['type']> = [
@@ -180,6 +193,7 @@ const RESULT_TYPES: ReadonlyArray<PluginWorkerResult['type']> = [
   'createMetadataResult',
   'preTasksExecutionResult',
   'postTasksExecutionResult',
+  'setWorkerEnvResult',
 ];
 
 export function isPluginWorkerMessage(

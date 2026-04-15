@@ -292,7 +292,7 @@ describe('lib', () => {
       // ASSERT
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-lib/src/index.ts',
+        './my-lib/src/index.ts',
       ]);
     });
 
@@ -588,7 +588,7 @@ describe('lib', () => {
       // ASSERT
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-dir/my-lib/src/index.ts',
+        './my-dir/my-lib/src/index.ts',
       ]);
       expect(tsconfigJson.compilerOptions.paths['my-lib/*']).toBeUndefined();
     });
@@ -607,7 +607,7 @@ describe('lib', () => {
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
 
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-dir/my-lib/src/index.ts',
+        './my-dir/my-lib/src/index.ts',
       ]);
       expect(tsconfigJson.compilerOptions.paths['my-lib/*']).toBeUndefined();
     });
@@ -735,7 +735,7 @@ describe('lib', () => {
         {
           path: 'tsconfig.base.json',
           lookupFn: (json) => json.compilerOptions.paths['@myorg/lib'],
-          expectedValue: ['my-dir/my-lib/src/index.ts'],
+          expectedValue: ['./my-dir/my-lib/src/index.ts'],
         },
         {
           path: 'my-dir/my-lib/ng-package.json',
@@ -2173,7 +2173,7 @@ describe('lib', () => {
       // ASSERT
       const tsconfigJson = readJson(tree, 'tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-lib/src/index.ts',
+        './my-lib/src/index.ts',
       ]);
     });
 
@@ -2184,7 +2184,7 @@ describe('lib', () => {
       // ASSERT
       const tsconfigJson = readJson(tree, 'tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-lib/src/index.ts',
+        './my-lib/src/index.ts',
       ]);
     });
   });

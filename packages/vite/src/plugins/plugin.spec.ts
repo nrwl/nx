@@ -46,6 +46,7 @@ describe('@nx/vite/plugin', () => {
       tempFs.createFileSync('vite.config.ts', '');
       tempFs.createFileSync('index.html', '');
       tempFs.createFileSync('package.json', '{}');
+      tempFs.createFileSync('package-lock.json', '{}');
     });
 
     afterEach(() => {
@@ -261,6 +262,7 @@ describe('@nx/vite/plugin', () => {
       );
       tempFs.createFileSync('my-app/vite.config.ts', '');
       tempFs.createFileSync('my-app/index.html', '');
+      tempFs.createFileSync('package-lock.json', '{}');
     });
 
     afterEach(() => {
@@ -345,6 +347,7 @@ describe('@nx/vite/plugin', () => {
         JSON.stringify({ name: 'my-lib' })
       );
       tempFs.createFileSync('my-lib/vite.config.ts', '');
+      tempFs.createFileSync('package-lock.json', '{}');
 
       const nodes = await createNodesFunction(
         ['my-lib/vite.config.ts'],
@@ -388,6 +391,7 @@ describe('@nx/vite/plugin', () => {
         JSON.stringify({ name: 'my-lib' })
       );
       tempFs.createFileSync('my-lib/vite.config.ts', '');
+      tempFs.createFileSync('package-lock.json', '{}');
 
       const nodes = await createNodesFunction(
         ['my-lib/vite.config.ts'],

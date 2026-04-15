@@ -1,0 +1,15 @@
+{
+  "outDir": "dist/packages/create-nx-workspace",
+  "assets": [
+    {
+      "glob": "**/files/**"
+    },
+    {
+      "glob": "**/files/**/.gitkeep"
+    },
+    {
+      "glob": "src/**/schema.d.ts"
+    },
+    "LICENSE"
+  ]
+}

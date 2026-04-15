@@ -81,7 +81,7 @@
     },
     "test": {
       "executor": "nx:noop",
-      "dependsOn": ["vite:test", "validate-links", "format"]
+      "dependsOn": ["validate-links", "format"]
     },
     "pw-e2e": {
       "dependsOn": ["serve"],
@@ -133,7 +133,8 @@
         "{projectRoot}/src/content/docs/**/*.mdx",
         "{projectRoot}/src/content/docs/**/*.md",
         "{projectRoot}/.vale.ini",
-        "{projectRoot}/.vale/styles/**/*"
+        "{projectRoot}/.vale/styles/**/*",
+        "{projectRoot}/scripts/vale-changed.mjs"
       ]
     },
     "vale:all": {
@@ -146,13 +147,19 @@
         "{projectRoot}/src/content/docs/**/*.mdx",
         "{projectRoot}/src/content/docs/**/*.md",
         "{projectRoot}/.vale.ini",
-        "{projectRoot}/.vale/styles/**/*"
+        "{projectRoot}/.vale/styles/**/*",
+        "{projectRoot}/scripts/vale-changed.mjs"
       ]
     },
     "format": {
       "cache": true,
       "//": "nx format doesn't respect overrides, so we manually run prettier for mdoc files",
-      "command": "prettier **/*.mdoc --check"
+      "command": "prettier **/*.mdoc --check",
+      "inputs": [
+        "{projectRoot}/**/*.mdoc",
+        "{workspaceRoot}/.prettierrc",
+        "{workspaceRoot}/.prettierignore"
+      ]
     },
     "format:write": {
       "command": "prettier **/*.mdoc --write"

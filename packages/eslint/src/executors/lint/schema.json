@@ -106,7 +106,8 @@
     },
     "hasTypeAwareRules": {
       "type": "boolean",
-      "description": "When set to `true`, the linter will invalidate its cache when any of its dependencies changes."
+      "description": "Deprecated. No longer has any effect.",
+      "x-deprecated": "No longer has any effect. Will be removed in Nx v23."
     },
     "cacheStrategy": {
       "type": "string",

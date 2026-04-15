@@ -1,5 +1,6 @@
 import {
   type Tree,
+  detectPackageManager,
   getPackageManagerCommand,
   readNxJson,
 } from 'nx/src/devkit-exports';
@@ -36,7 +37,7 @@ export async function getE2EWebServerInfo(
   defaultValues: E2EWebServerDefaultValues,
   isPluginBeingAdded: boolean
 ): Promise<E2EWebServerDetails> {
-  const pm = getPackageManagerCommand();
+  const pm = getPackageManagerCommand(detectPackageManager(tree.root));
   if (isPluginBeingAdded) {
     return await getE2EWebServerInfoForPlugin(
       tree,

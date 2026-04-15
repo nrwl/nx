@@ -40,24 +40,40 @@ const learnGroups: SidebarItems = [
         collapsed: false,
         items: [
           {
-            label: 'React monorepo',
-            link: 'getting-started/tutorials/react-monorepo-tutorial',
+            label: 'Crafting your workspace',
+            link: 'getting-started/tutorials/crafting-your-workspace',
           },
           {
-            label: 'Angular monorepo',
-            link: 'getting-started/tutorials/angular-monorepo-tutorial',
+            label: 'Managing dependencies',
+            link: 'getting-started/tutorials/managing-dependencies',
           },
           {
-            label: 'TypeScript monorepo',
-            link: 'getting-started/tutorials/typescript-packages-tutorial',
+            label: 'Configuring tasks',
+            link: 'getting-started/tutorials/configuring-tasks',
           },
           {
-            label: 'Gradle monorepo',
-            link: 'getting-started/tutorials/gradle-tutorial',
+            label: 'Running tasks',
+            link: 'getting-started/tutorials/running-tasks',
+          },
+          {
+            label: 'Caching tasks',
+            link: 'getting-started/tutorials/caching',
+          },
+          {
+            label: 'Understanding your workspace',
+            link: 'getting-started/tutorials/understanding-your-workspace',
+          },
+          {
+            label: 'Reducing boilerplate',
+            link: 'getting-started/tutorials/reducing-configuration-boilerplate',
           },
           {
             label: 'Setting up CI',
             link: 'getting-started/tutorials/self-healing-ci-tutorial',
+          },
+          {
+            label: 'Gradle monorepo',
+            link: 'getting-started/tutorials/gradle-tutorial',
           },
         ],
       },
@@ -66,7 +82,7 @@ const learnGroups: SidebarItems = [
 
   {
     label: 'How Nx works',
-    collapsed: false,
+    collapsed: true,
     items: [
       { label: 'Mental model', link: 'concepts/mental-model' },
       { label: 'How caching works', link: 'concepts/how-caching-works' },
@@ -101,7 +117,7 @@ const learnGroups: SidebarItems = [
   },
   {
     label: 'Platform features',
-    collapsed: false,
+    collapsed: true,
     items: [
       { label: 'Run tasks', link: 'features/run-tasks' },
       {
@@ -562,6 +578,10 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'troubleshooting/troubleshoot-nx-install-issues',
           },
           {
+            label: 'Fix Nx in Claude Code sandbox',
+            link: 'troubleshooting/nx-sandbox-unix-sockets',
+          },
+          {
             label: 'Resolve circular dependencies',
             link: 'troubleshooting/resolve-circular-dependencies',
           },
@@ -824,6 +844,10 @@ const knowledgeBaseGroups: SidebarItems = [
           {
             label: 'Launch templates',
             link: 'reference/nx-cloud/launch-templates',
+          },
+          {
+            label: 'Launch template examples',
+            link: 'reference/nx-cloud/launch-template-examples',
           },
           {
             label: 'Reduce waste in CI',

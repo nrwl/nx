@@ -23,6 +23,18 @@ fun createNodeForProject(
     workspaceRoot: String,
     atomized: Boolean,
     targetNamePrefix: String = ""
+): GradleNodeReport =
+    NxTracing.withSpan("createNodeForProject", mapOf("project" to project.name)) {
+      createNodeForProjectImpl(
+          project, targetNameOverrides, workspaceRoot, atomized, targetNamePrefix)
+    }
+
+private fun createNodeForProjectImpl(
+    project: Project,
+    targetNameOverrides: Map<String, String>,
+    workspaceRoot: String,
+    atomized: Boolean,
+    targetNamePrefix: String = ""
 ): GradleNodeReport {
   val logger = project.logger
   logger.info("${Date()} ${project.name} createNodeForProject: get nodes and dependencies")
@@ -88,6 +100,21 @@ fun createNodeForProject(
  * @return targets and targetGroups
  */
 fun processTargetsForProject(
+    project: Project,
+    dependencies: MutableSet<Dependency>,
+    targetNameOverrides: Map<String, String>,
+    workspaceRoot: String,
+    atomized: Boolean,
+    targetNamePrefix: String = ""
+): GradleTargets =
+    NxTracing.withSpan(
+        "processTargetsForProject",
+        mapOf("project" to project.name, "atomized" to atomized.toString())) {
+          processTargetsForProjectImpl(
+              project, dependencies, targetNameOverrides, workspaceRoot, atomized, targetNamePrefix)
+        }
+
+private fun processTargetsForProjectImpl(
     project: Project,
     dependencies: MutableSet<Dependency>,
     targetNameOverrides: Map<String, String>,

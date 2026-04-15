@@ -332,7 +332,7 @@ You can choose to name your agent types anything you want, but they must be set 
 You can then reference your assignment rules file within your `start-ci-run` command:
 
 ```shell
-npx nx-cloud start-ci-run --distribute-on="manual" --assignment-rules=".nx/workflows/assignment-rules.yaml"
+npx nx start-ci-run --distribute-on="manual" --assignment-rules=".nx/workflows/assignment-rules.yaml"
 ```
 
 The following is an example of what this looks like within a Github Actions pipeline:
@@ -347,7 +347,7 @@ jobs:
     steps:
       - ... # setup steps for your main job
 
-      - run: npx nx-cloud start-ci-run --distribute-on="manual" --assignment-rules=".nx/workflows/assignment-rules.yaml" --stop-agents-after="e2e-ci"
+      - run: npx nx start-ci-run --distribute-on="manual" --assignment-rules=".nx/workflows/assignment-rules.yaml" --stop-agents-after="e2e-ci"
 
       - ... # Nx commands you want to distribute
 
@@ -373,7 +373,7 @@ jobs:
         run: npm ci
 
       - name: Start Agent ${{ matrix.agent }}
-        run: npx nx-cloud start-agent
+        run: npx nx start-agent
         env:
           NX_AGENT_NAME: ${{ matrix.agent }}
           NX_AGENT_LAUNCH_TEMPLATE: 'linux-medium' # This value needs to match one of the 'run-on' values defined in the assignment rules
@@ -401,7 +401,7 @@ jobs:
         run: npm ci
 
       - name: Start Agent ${{ matrix.agent }}
-        run: npx nx-cloud start-agent
+        run: npx nx start-agent
         env:
           NX_AGENT_NAME: ${{ matrix.agent }}
           NX_AGENT_LAUNCH_TEMPLATE: 'linux-large' # This value needs to match one of the 'run-on' values defined in the assignment rules
@@ -450,7 +450,7 @@ jobs:
     ...
     steps:
       ...
-      - run: npx nx-cloud start-ci-run --distribute-on=".nx/workflows/distribution-config.yaml" --stop-agents-after="e2e-ci"
+      - run: npx nx start-ci-run --distribute-on=".nx/workflows/distribution-config.yaml" --stop-agents-after="e2e-ci"
       - ..
 ```
 

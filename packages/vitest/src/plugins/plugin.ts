@@ -6,6 +6,7 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
+  normalizePath,
   ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
@@ -20,8 +21,6 @@ import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
 import { loadViteDynamicImport } from '../utils/executor-utils';
-
-const pmc = getPackageManagerCommand();
 
 export interface VitestPluginOptions {
   testTargetName?: string;
@@ -71,6 +70,9 @@ const vitestConfigGlob = '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}';
 export const createNodes: CreateNodesV2<VitestPluginOptions> = [
   vitestConfigGlob,
   async (configFilePaths, options, context) => {
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
     const optionsHash = hashObject(options);
     const normalizedOptions = normalizeOptions(options);
     const cachePath = join(
@@ -123,7 +125,8 @@ export const createNodes: CreateNodesV2<VitestPluginOptions> = [
               configFile,
               projectRoot,
               normalizedOptions,
-              context
+              context,
+              pmc
             ));
 
           const project: ProjectConfiguration = {
@@ -155,7 +158,8 @@ async function buildVitestTargets(
   configFilePath: string,
   projectRoot: string,
   options: VitestPluginOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<VitestTargets> {
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,
@@ -209,7 +213,11 @@ async function buildVitestTargets(
   // If this is a root workspace config file with projects property, don't infer targets.
   // The root config is just an orchestrator - the actual tests live in the individual project configs.
   const isWorkspaceRoot = projectRoot === '.';
-  const hasProjectsProperty = Array.isArray(viteBuildConfig?.test?.projects);
+  // TODO(jack): Remove this cast when @nx/vitest switches to moduleResolution:
+  // "nodenext". Vite 8's rolldown types break vitest's test augmentation.
+  const hasProjectsProperty = Array.isArray(
+    (viteBuildConfig as any)?.test?.projects
+  );
   if (isWorkspaceRoot && hasProjectsProperty) {
     return { targets: {}, metadata: {}, projectType: 'library' };
   }
@@ -228,11 +236,15 @@ async function buildVitestTargets(
 
   // if file is vitest.config or vite.config has definition for test, create targets for test and/or atomized tests
   if (configFilePath.includes('vitest.config') || hasTest) {
+    const isTypecheckEnabled = !!(viteBuildConfig as any)?.test?.typecheck
+      ?.enabled;
     targets[options.testTargetName] = await testTarget(
       namedInputs,
       testOutputs,
       projectRoot,
-      options.testMode
+      options.testMode,
+      pmc,
+      isTypecheckEnabled
     );
 
     if (options.ciTargetName) {
@@ -332,9 +344,12 @@ async function testTarget(
   },
   outputs: string[],
   projectRoot: string,
-  testMode: 'watch' | 'run' = 'watch'
+  testMode: 'watch' | 'run' = 'watch',
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  isTypecheckEnabled: boolean
 ) {
   const command = testMode === 'run' ? 'vitest run' : 'vitest';
+  const depOutputsGlob = isTypecheckEnabled ? '**/*.{js,d.ts}' : '**/*.js';
   return {
     command,
     options: { cwd: joinPathFragments(projectRoot) },
@@ -347,6 +362,7 @@ async function testTarget(
         externalDependencies: ['vitest'],
       },
       { env: 'CI' },
+      { dependentTasksOutputFiles: depOutputsGlob, transitive: true },
     ],
     outputs,
     metadata: {
@@ -405,9 +421,9 @@ function normalizeOutputPath(
       return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
     } else {
       if (outputPath.startsWith('..')) {
-        return join('{workspaceRoot}', join(projectRoot, outputPath));
+        return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);
       } else {
-        return join('{projectRoot}', outputPath);
+        return joinPathFragments('{projectRoot}', outputPath);
       }
     }
   }
@@ -454,5 +470,5 @@ async function getTestPathsRelativeToProjectRoot(
     .filter((ts) =>
       fullProjectRoot === '.' ? true : ts.moduleId.startsWith(fullProjectRoot)
     )
-    .map((ts) => relative(projectRoot, ts.moduleId));
+    .map((ts) => normalizePath(relative(projectRoot, ts.moduleId)));
 }

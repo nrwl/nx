@@ -657,7 +657,7 @@ impl TuiApp for InlineApp {
         })
     }
 
-    fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
+    fn update_task_status(&mut self, task_id: &str, status: TaskStatus) {
         debug!("Updating task '{}' status to {:?}", task_id, status);
         self.core.update_task_status(task_id, status);
         let can_be_interactive = self.can_be_interactive();
@@ -670,11 +670,7 @@ impl TuiApp for InlineApp {
     fn end_tasks(&mut self, task_results: Vec<crate::native::tasks::types::TaskResult>) {
         debug!(
             "Ending tasks in InlineApp - {:?}. Selected task: {:?}",
-            task_results
-                .clone()
-                .iter()
-                .map(|t| &t.task.id)
-                .collect::<Vec<_>>(),
+            task_results.iter().map(|t| &t.task.id).collect::<Vec<_>>(),
             self.selected_item
         );
         self.core.end_tasks(&task_results);
@@ -1216,8 +1212,8 @@ mod tests {
         let (tx, _rx) = mpsc::unbounded_channel();
 
         // Mark all tasks as completed
-        app.update_task_status(String::from("app1"), TaskStatus::Success);
-        app.update_task_status(String::from("app2"), TaskStatus::Success);
+        app.update_task_status("app1", TaskStatus::Success);
+        app.update_task_status("app2", TaskStatus::Success);
 
         let event = tui::Event::Key(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE));
         let result = app.handle_event(event, &tx).unwrap();
@@ -1389,7 +1385,7 @@ mod tests {
     fn test_update_task_status() {
         let mut app = create_test_inline_app();
 
-        app.update_task_status(String::from("app1"), TaskStatus::Success);
+        app.update_task_status("app1", TaskStatus::Success);
 
         let state_ref = app.get_state();
         let state = state_ref.lock();
@@ -1430,7 +1426,7 @@ mod tests {
         assert!(app.get_current_running_item().is_none());
 
         // Start a task
-        app.update_task_status(String::from("app1"), TaskStatus::InProgress);
+        app.update_task_status("app1", TaskStatus::InProgress);
 
         // Should find running task
         assert_eq!(app.get_current_running_item(), Some(String::from("app1")));
@@ -1635,7 +1631,7 @@ mod tests {
         let mut app = create_test_inline_app();
 
         // Should not panic
-        app.update_task_status(String::from("nonexistent"), TaskStatus::Success);
+        app.update_task_status("nonexistent", TaskStatus::Success);
 
         // Status should be recorded anyway
         let state_ref = app.get_state();
@@ -1711,7 +1707,7 @@ mod integration_tests {
         app.register_running_non_interactive_task(String::from("app1"));
 
         // Update to success
-        app.update_task_status(String::from("app1"), TaskStatus::Success);
+        app.update_task_status("app1", TaskStatus::Success);
 
         // End tasks
         app.end_tasks(vec![TaskResult {
@@ -1763,7 +1759,7 @@ mod integration_tests {
         let app2 = InlineApp::with_state(state.clone(), None).unwrap();
 
         // Modify through app1
-        app1.update_task_status(String::from("shared"), TaskStatus::Success);
+        app1.update_task_status("shared", TaskStatus::Success);
 
         // Verify visible through app2
         assert!(!app2.should_quit()); // Can access state without issues

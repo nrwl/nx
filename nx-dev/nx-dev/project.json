@@ -5,14 +5,22 @@
   "projectType": "application",
   "targets": {
     "next:build": {
-      "dependsOn": ["copy-docs", "prebuild-banner"],
+      "dependsOn": [
+        "^build",
+        "^typecheck",
+        "typecheck",
+        "copy-docs",
+        "prebuild-banner"
+      ],
       "inputs": [
-        "production",
-        "^production",
-        "{projectRoot}/lib/banner.json",
+        "default",
+        "^default",
+        { "dependentTasksOutputFiles": "**/*" },
         { "env": "NEXT_PUBLIC_ASTRO_URL" },
         { "env": "NX_DEV_URL" },
-        { "env": "NEXT_PUBLIC_NO_INDEX" }
+        { "env": "NEXT_PUBLIC_NO_INDEX" },
+        { "externalDependencies": ["next"] },
+        { "dependentTasksOutputFiles": "**/*.d.ts", "transitive": true }
       ],
       "outputs": [
         "{workspaceRoot}/nx-dev/nx-dev/.next",

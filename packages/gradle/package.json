@@ -16,7 +16,8 @@
     "Backend"
   ],
   "main": "./index.js",
-  "typings": "./index.d.ts",
+  "type": "commonjs",
+  "types": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -40,7 +41,9 @@
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "toml-eslint-parser": "^0.10.0"
+    "toml-eslint-parser": "^0.10.0",
+    "tree-kill": "^1.2.2",
+    "tslib": "catalog:typescript"
   },
   "devDependencies": {
     "nx": "workspace:*"

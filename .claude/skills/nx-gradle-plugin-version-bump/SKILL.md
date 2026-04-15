@@ -18,7 +18,7 @@ Collect these values from the master branch before starting:
    The NEW_VERSION will be the `OLD_VERSION` + 1.
 
 2. `NX_MIGRATION_VERSION` - the version of Nx that will trigger our version bump migration
-   Example: OLD_VERSION: 22.6.0 => NEW_VERSION: 22.7.0-beta.1
+   Example: OLD_VERSION: 22.7.0-beta.0 => NEW_VERSION: 22.7.0-beta.1
    You can find this value by looking at the `nx` version in `package.json` under `devDependencies`. The NEW_VERSION will be the `OLD_VERSION` + 1.
 
 3. `MIGRATION_FOLDER` - the folder name under `packages/gradle/src/migrations/` that will contain our migration files

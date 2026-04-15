@@ -7,6 +7,7 @@ import { CreateWorkspaceOptions } from './create-workspace-options';
 import { setupCI } from './utils/ci/setup-ci';
 import { mapErrorToBodyLines } from './utils/error-utils';
 import {
+  GitHubPushError,
   initializeGitRepo,
   pushToGitHub,
   VcsPushStatus,
@@ -16,6 +17,7 @@ import {
   createNxCloudOnboardingUrl,
   getNxCloudInfo,
   getSkippedNxCloudInfo,
+  openCloudSetupUrl,
   readNxCloudToken,
   setNeverConnectToCloud,
 } from './utils/nx/nx-cloud';
@@ -70,12 +72,18 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   let directory: string;
 
   if (options.template) {
+    // Resolve shorthand template names to full GitHub org/repo format
+    options.template = resolveTemplateShorthand(options.template);
+
     if (!options.template.startsWith('nrwl/'))
       throw new Error(
         `Invalid template. Only templates from the 'nrwl' GitHub org are supported.`
       );
     const templateUrl = `https://github.com/${options.template}`;
-    const workingDir = process.cwd().replace(/\\/g, '/');
+    const workingDir = (options.workingDir ?? process.cwd()).replace(
+      /\\/g,
+      '/'
+    );
     directory = join(workingDir, name);
 
     const aiMode = isAiAgent();
@@ -90,7 +98,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     }
 
     try {
-      await cloneTemplate(templateUrl, name);
+      await cloneTemplate(templateUrl, name, workingDir);
 
       // Remove npm lockfile from template since we'll generate the correct one
       const npmLockPath = join(directory, 'package-lock.json');
@@ -205,6 +213,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   }
 
   let pushedToVcs = VcsPushStatus.SkippedGit;
+  let pushFailReason: string | undefined;
 
   if (!skipGit) {
     const aiMode = isAiAgent();
@@ -231,14 +240,29 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
         });
       }
     } catch (e) {
-      if (e instanceof Error) {
+      if (e instanceof GitHubPushError) {
+        // GitHub push issues are never fatal — CNW always succeeds.
+        // All reasons are logged in telemetry via pushFailReason.
+        pushedToVcs = VcsPushStatus.FailedToPushToVcs;
+        pushFailReason = e.reason;
+
+        // Only show the push hint when the user actually attempted a push
+        // and it failed. Pre-push issues (gh not installed, auth failed,
+        // timed out during auth) are silent — no point telling the user
+        // about a push they never asked for.
+        if (e.reason === 'push-failed' || e.reason === 'push-timeout') {
+          const githubNewUrl = `https://github.com/new?name=${encodeURIComponent(name)}`;
+          output.log({
+            title: `Push your repo to GitHub: ${githubNewUrl}`,
+          });
+        }
+      } else if (e instanceof Error) {
         if (!aiMode) {
           output.error({
             title: 'Could not initialize git repository',
             bodyLines: mapErrorToBodyLines(e),
           });
         }
-        // In AI mode, error will be handled by the caller
       } else {
         console.error(e);
       }
@@ -287,6 +311,11 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       options.completionMessageKey,
       name
     );
+
+    // Auto-open the Cloud setup URL in the browser when user selected 'yes'
+    if (!options.skipCloudConnect) {
+      await openCloudSetupUrl(connectUrl);
+    }
   } else if (isTemplate && (nxCloud === 'skip' || nxCloud === 'never')) {
     // Strip marker comments from README
     const readmeUpdated = addConnectUrlToReadme(directory, undefined);
@@ -305,6 +334,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     nxCloudInfo,
     directory,
     pushedToVcs,
+    pushFailReason,
     connectUrl,
   };
 }
@@ -321,6 +351,17 @@ export function extractConnectUrl(text: string): string | null {
   const urlPattern = /(https:\/\/[^\s]+\/connect\/[^\s]+)/g;
   const match = text.match(urlPattern);
   return match ? match[0] : null;
+}
+
+const templateShorthands: Record<string, string> = {
+  angular: 'nrwl/angular-template',
+  react: 'nrwl/react-template',
+  typescript: 'nrwl/typescript-template',
+  empty: 'nrwl/empty-template',
+};
+
+export function resolveTemplateShorthand(template: string): string {
+  return templateShorthands[template] ?? template;
 }
 
 function getWorkspaceGlobsFromPreset(preset: string): string[] {
