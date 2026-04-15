@@ -162,9 +162,8 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
   ];
 
   if (options.bundler === 'webpack') {
-    const { configurationGenerator } = ensurePackage<
-      typeof import('@nx/webpack')
-    >('@nx/webpack', nxVersion);
+    const { configurationGenerator } =
+      require('@nx/webpack') as typeof import('@nx/webpack');
     await configurationGenerator(tree, {
       target: 'web',
       project: options.projectName,
@@ -301,6 +300,34 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     await addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
   }
 
+  // Collect every Nx plugin this generator may need to use so that we can
+  // install them all in a single intermediate tmp install instead of
+  // spinning up one per package as each branch below runs.
+  const packagesToEnsure: Record<string, string> = {};
+  if (options.bundler === 'webpack') {
+    packagesToEnsure['@nx/webpack'] = nxVersion;
+  }
+  if (options.bundler === 'vite') {
+    packagesToEnsure['@nx/vite'] = nxVersion;
+  }
+  if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
+    packagesToEnsure['@nx/vite'] = nxVersion;
+    packagesToEnsure['@nx/vitest'] = nxVersion;
+  }
+  if (options.linter === 'eslint') {
+    packagesToEnsure['@nx/eslint'] = nxVersion;
+  }
+  if (options.e2eTestRunner === 'cypress') {
+    packagesToEnsure['@nx/cypress'] = nxVersion;
+  }
+  if (options.e2eTestRunner === 'playwright') {
+    packagesToEnsure['@nx/playwright'] = nxVersion;
+  }
+  if (options.unitTestRunner === 'jest') {
+    packagesToEnsure['@nx/jest'] = nxVersion;
+  }
+  ensurePackage(packagesToEnsure);
+
   const tasks: GeneratorCallback[] = [];
 
   const jsInitTask = await jsInitGenerator(host, {
@@ -324,10 +351,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   createApplicationFiles(host, options);
 
   if (options.linter === 'eslint') {
-    const { lintProjectGenerator } = ensurePackage<typeof import('@nx/eslint')>(
-      '@nx/eslint',
-      nxVersion
-    );
+    const { lintProjectGenerator } =
+      require('@nx/eslint') as typeof import('@nx/eslint');
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
       project: options.projectName,
@@ -352,7 +377,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   if (options.bundler === 'vite') {
     const { viteConfigurationGenerator, createOrEditViteConfig } =
-      ensurePackage<typeof import('@nx/vite')>('@nx/vite', nxVersion);
+      require('@nx/vite') as typeof import('@nx/vite');
     // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
     // See: https://vite.dev/guide/env-and-mode.html
     if (
@@ -387,11 +412,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
-    const { createOrEditViteConfig } = ensurePackage<typeof import('@nx/vite')>(
-      '@nx/vite',
-      nxVersion
-    );
-    ensurePackage('@nx/vitest', nxVersion);
+    const { createOrEditViteConfig } =
+      require('@nx/vite') as typeof import('@nx/vite');
     const { configurationGenerator } = await import('@nx/vitest/generators');
     const vitestTask = await configurationGenerator(host, {
       uiFramework: 'none',
@@ -460,9 +482,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   };
 
   if (options.bundler === 'webpack') {
-    const { getWebpackE2EWebServerInfo } = ensurePackage<
-      typeof import('@nx/webpack')
-    >('@nx/webpack', nxVersion);
+    const { getWebpackE2EWebServerInfo } =
+      require('@nx/webpack') as typeof import('@nx/webpack');
     e2eWebServerInfo = await getWebpackE2EWebServerInfo(
       host,
       options.projectName,
@@ -471,9 +492,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       4200
     );
   } else if (options.bundler === 'vite') {
-    const { getViteE2EWebServerInfo } = ensurePackage<
-      typeof import('@nx/vite')
-    >('@nx/vite', nxVersion);
+    const { getViteE2EWebServerInfo } =
+      require('@nx/vite') as typeof import('@nx/vite');
     e2eWebServerInfo = await getViteE2EWebServerInfo(
       host,
       options.projectName,
@@ -484,9 +504,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (options.e2eTestRunner === 'cypress') {
-    const { configurationGenerator } = ensurePackage<
-      typeof import('@nx/cypress')
-    >('@nx/cypress', nxVersion);
+    const { configurationGenerator } =
+      require('@nx/cypress') as typeof import('@nx/cypress');
 
     const packageJson: PackageJson = {
       name: options.e2eProjectName,
@@ -534,9 +553,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
     tasks.push(cypressTask);
   } else if (options.e2eTestRunner === 'playwright') {
-    const { configurationGenerator: playwrightConfigGenerator } = ensurePackage<
-      typeof import('@nx/playwright')
-    >('@nx/playwright', nxVersion);
+    const { configurationGenerator: playwrightConfigGenerator } =
+      require('@nx/playwright') as typeof import('@nx/playwright');
 
     const packageJson: PackageJson = {
       name: options.e2eProjectName,
@@ -583,10 +601,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     tasks.push(playwrightTask);
   }
   if (options.unitTestRunner === 'jest') {
-    const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
-      '@nx/jest',
-      nxVersion
-    );
+    const { configurationGenerator } =
+      require('@nx/jest') as typeof import('@nx/jest');
     const jestTask = await configurationGenerator(host, {
       project: options.projectName,
       skipSerializers: true,

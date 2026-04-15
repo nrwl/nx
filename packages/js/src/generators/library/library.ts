@@ -105,6 +105,27 @@ export async function libraryGeneratorInternal(
   );
   const options = await normalizeOptions(tree, schema);
 
+  // Batch every Nx plugin this generator (and its local helpers like
+  // `addLint` / `addJest`) may need into a single intermediate tmp install.
+  // Downstream `ensurePackage` calls will hit the module cache for free.
+  const packagesToEnsure: Record<string, string> = {};
+  if (options.bundler === 'rollup') {
+    packagesToEnsure['@nx/rollup'] = nxVersion;
+  }
+  if (options.bundler === 'vite') {
+    packagesToEnsure['@nx/vite'] = nxVersion;
+  }
+  if (options.unitTestRunner === 'vitest' && options.bundler !== 'vite') {
+    packagesToEnsure['@nx/vitest'] = nxVersion;
+  }
+  if (options.linter !== 'none') {
+    packagesToEnsure['@nx/eslint'] = nxVersion;
+  }
+  if (options.unitTestRunner === 'jest') {
+    packagesToEnsure['@nx/jest'] = nxVersion;
+  }
+  ensurePackage(packagesToEnsure);
+
   createFiles(tree, options);
 
   await configureProject(tree, options);
@@ -120,7 +141,10 @@ export async function libraryGeneratorInternal(
   }
 
   if (options.bundler === 'rollup') {
-    const { configurationGenerator } = ensurePackage('@nx/rollup', nxVersion);
+    // `@nx/rollup` isn't on the type-resolution path for `@nx/js`, so it's
+    // required untyped here. The preceding batch `ensurePackage` call
+    // guarantees the module is resolvable at runtime.
+    const { configurationGenerator } = require('@nx/rollup');
     await configurationGenerator(tree, {
       project: options.name,
       compiler: 'swc',
@@ -131,7 +155,7 @@ export async function libraryGeneratorInternal(
 
   if (options.bundler === 'vite') {
     const { viteConfigurationGenerator, createOrEditViteConfig } =
-      ensurePackage('@nx/vite', nxVersion);
+      require('@nx/vite') as typeof import('@nx/vite');
     const viteTask = await viteConfigurationGenerator(tree, {
       project: options.name,
       newProject: true,
@@ -174,7 +198,6 @@ export async function libraryGeneratorInternal(
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // Test would have been set up already
   ) {
-    ensurePackage('@nx/vitest', nxVersion);
     // nx-ignore-next-line
     const { configurationGenerator } = require('@nx/vitest/generators');
     const vitestTask = await configurationGenerator(tree, {
@@ -716,7 +739,8 @@ async function addJest(
   tree: Tree,
   options: NormalizedLibraryGeneratorOptions
 ): Promise<GeneratorCallback> {
-  const { configurationGenerator } = ensurePackage('@nx/jest', nxVersion);
+  const { configurationGenerator } =
+    require('@nx/jest') as typeof import('@nx/jest');
   return await configurationGenerator(tree, {
     ...options,
     project: options.name,

@@ -12,6 +12,7 @@ import {
   buildTargetFromScript,
   getDependencyVersionFromPackageJson,
   installPackageToTmp,
+  installPackagesToTmp,
   PackageJson,
   readModulePackageJson,
   readTargetsFromPackageJson,
@@ -70,6 +71,46 @@ describe('installPackageToTmp', () => {
         })
       );
     }
+
+    cleanup();
+  });
+
+  it('should install multiple packages in a single package manager command', () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'nx-install-test-'));
+    const cleanup = jest.fn(() =>
+      rmSync(tempDir, { recursive: true, force: true })
+    );
+    jest.spyOn(pacakgeManager, 'createTempNpmDirectory').mockReturnValue({
+      dir: tempDir,
+      cleanup,
+    });
+    jest.spyOn(pacakgeManager, 'detectPackageManager').mockReturnValue('npm');
+    jest
+      .spyOn(pacakgeManager, 'getPackageManagerVersion')
+      .mockReturnValue('10.0.0');
+    jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+      addDev: 'npm install -D',
+      ignoreScriptsFlag: '--ignore-scripts',
+    } as any);
+    const execSyncSpy = jest
+      .spyOn(childProcess, 'execSync')
+      .mockReturnValue('' as any);
+
+    installPackagesToTmp([
+      { pkg: '@nx/vite', requiredVersion: '1.2.3' },
+      { pkg: '@nx/jest', requiredVersion: '4.5.6' },
+    ]);
+
+    const packageInstallCalls = execSyncSpy.mock.calls.filter(([command]) =>
+      command.toString().includes('@nx/vite@1.2.3')
+    );
+    expect(packageInstallCalls).toHaveLength(1);
+    expect(packageInstallCalls[0]).toEqual(
+      expect.arrayContaining([
+        'npm install -D @nx/vite@1.2.3 @nx/jest@4.5.6 --ignore-scripts',
+        expect.objectContaining({ cwd: tempDir }),
+      ])
+    );
 
     cleanup();
   });

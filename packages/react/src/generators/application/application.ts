@@ -1,4 +1,5 @@
 import {
+  ensurePackage,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
@@ -16,6 +17,7 @@ import {
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
+import { nxVersion } from '../../utils/versions';
 import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import reactInitGenerator from '../init/init';
@@ -109,6 +111,30 @@ export async function applicationGeneratorInternal(
           { response: 'No' }
         ).then((r) => r.response === 'Yes')))
       : false;
+
+  const packagesToEnsure: Record<string, string> = {};
+  if (options.bundler === 'webpack') {
+    packagesToEnsure['@nx/webpack'] = nxVersion;
+  } else if (options.bundler === 'rspack') {
+    packagesToEnsure['@nx/rspack'] = nxVersion;
+  } else if (options.bundler === 'rsbuild') {
+    packagesToEnsure['@nx/rsbuild'] = nxVersion;
+  } else if (options.bundler === 'vite') {
+    packagesToEnsure['@nx/vite'] = nxVersion;
+  }
+  if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
+    packagesToEnsure['@nx/vite'] = nxVersion;
+    packagesToEnsure['@nx/vitest'] = nxVersion;
+  }
+  if (options.e2eTestRunner === 'cypress') {
+    packagesToEnsure['@nx/cypress'] = nxVersion;
+  } else if (options.e2eTestRunner === 'playwright') {
+    packagesToEnsure['@nx/playwright'] = nxVersion;
+  }
+  if (options.unitTestRunner === 'jest') {
+    packagesToEnsure['@nx/jest'] = nxVersion;
+  }
+  ensurePackage(packagesToEnsure);
 
   showPossibleWarnings(tree, options);
 

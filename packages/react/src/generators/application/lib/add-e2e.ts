@@ -29,6 +29,26 @@ export async function addE2e(
       (await hasRsbuildPlugin(tree, options.appProjectRoot))) ||
     (options.bundler === 'vite' && hasVitePlugin(tree));
 
+  // Batch the tmp install for the bundler helper + e2e runner together so
+  // the common cypress/playwright + bundler case only provisions one tmp
+  // project instead of two.
+  const packagesToEnsure: Record<string, string> = {};
+  if (options.bundler === 'webpack') {
+    packagesToEnsure['@nx/webpack'] = nxVersion;
+  } else if (options.bundler === 'rspack') {
+    packagesToEnsure['@nx/rspack'] = nxVersion;
+  } else if (options.bundler === 'vite') {
+    packagesToEnsure['@nx/vite'] = nxVersion;
+  } else if (options.bundler === 'rsbuild') {
+    packagesToEnsure['@nx/rsbuild'] = nxVersion;
+  }
+  if (options.e2eTestRunner === 'cypress') {
+    packagesToEnsure['@nx/cypress'] = nxVersion;
+  } else if (options.e2eTestRunner === 'playwright') {
+    packagesToEnsure['@nx/playwright'] = nxVersion;
+  }
+  ensurePackage(packagesToEnsure);
+
   let e2eWebServerInfo: E2EWebServerDetails = {
     e2eWebServerAddress: `http://localhost:${options.devServerPort ?? 4200}`,
     e2eWebServerCommand: `${getPackageManagerCommand().exec} nx run ${
@@ -42,9 +62,8 @@ export async function addE2e(
   };
 
   if (options.bundler === 'webpack') {
-    const { getWebpackE2EWebServerInfo } = ensurePackage<
-      typeof import('@nx/webpack')
-    >('@nx/webpack', nxVersion);
+    const { getWebpackE2EWebServerInfo } =
+      require('@nx/webpack') as typeof import('@nx/webpack');
     e2eWebServerInfo = await getWebpackE2EWebServerInfo(
       tree,
       options.projectName,
@@ -56,9 +75,8 @@ export async function addE2e(
       options.devServerPort ?? 4200
     );
   } else if (options.bundler === 'rspack') {
-    const { getRspackE2EWebServerInfo } = ensurePackage<
-      typeof import('@nx/rspack')
-    >('@nx/rspack', nxVersion);
+    const { getRspackE2EWebServerInfo } =
+      require('@nx/rspack') as typeof import('@nx/rspack');
     e2eWebServerInfo = await getRspackE2EWebServerInfo(
       tree,
       options.projectName,
@@ -71,7 +89,7 @@ export async function addE2e(
     );
   } else if (options.bundler === 'vite') {
     const { getViteE2EWebServerInfo, getReactRouterE2EWebServerInfo } =
-      ensurePackage<typeof import('@nx/vite')>('@nx/vite', nxVersion);
+      require('@nx/vite') as typeof import('@nx/vite');
     e2eWebServerInfo = options.useReactRouter
       ? await getReactRouterE2EWebServerInfo(
           tree,
@@ -98,7 +116,6 @@ export async function addE2e(
           options.port
         );
   } else if (options.bundler === 'rsbuild') {
-    ensurePackage('@nx/rsbuild', nxVersion);
     const { getRsbuildE2EWebServerInfo } = await import(
       '@nx/rsbuild/config-utils'
     );
@@ -124,9 +141,8 @@ export async function addE2e(
   }
   switch (options.e2eTestRunner) {
     case 'cypress': {
-      const { configurationGenerator } = ensurePackage<
-        typeof import('@nx/cypress')
-      >('@nx/cypress', nxVersion);
+      const { configurationGenerator } =
+        require('@nx/cypress') as typeof import('@nx/cypress');
 
       const packageJson: PackageJson = {
         name: options.e2eProjectName,
@@ -184,9 +200,8 @@ export async function addE2e(
       return e2eTask;
     }
     case 'playwright': {
-      const { configurationGenerator } = ensurePackage<
-        typeof import('@nx/playwright')
-      >('@nx/playwright', nxVersion);
+      const { configurationGenerator } =
+        require('@nx/playwright') as typeof import('@nx/playwright');
 
       const packageJson: PackageJson = {
         name: options.e2eProjectName,

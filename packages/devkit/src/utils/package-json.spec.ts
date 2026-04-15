@@ -696,6 +696,15 @@ describe('ensurePackage', () => {
 
     expect(ensurePackage('@nx/devkit', '>=15.0.0')).toEqual(
       require('@nx/devkit')
-    ); // return void
+    );
+  });
+
+  it('should warm the package cache when multiple packages are present', () => {
+    writeJson(tree, 'package.json', {});
+
+    expect(ensurePackage({ '@nx/devkit': '>=15.0.0' })).toBeUndefined();
+    expect(ensurePackage('@nx/devkit', '>=15.0.0')).toEqual(
+      require('@nx/devkit')
+    );
   });
 });

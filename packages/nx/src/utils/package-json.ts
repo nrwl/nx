@@ -372,17 +372,29 @@ export function readModulePackageJson(
   };
 }
 
+export type PackageToInstall = {
+  pkg: string;
+  requiredVersion: string;
+};
+
 /**
  * Prepares all necessary information for installing a package to a temporary directory.
  * This is used by both sync and async installation functions.
  */
-function preparePackageInstallation(pkg: string, requiredVersion: string) {
+function preparePackageInstallation(packages: PackageToInstall[]) {
+  if (packages.length === 0) {
+    throw new Error(
+      'preparePackageInstallation requires at least one package to install.'
+    );
+  }
+
   const { dir: tempDir, cleanup } = createTempNpmDirectory?.() ?? {
     dir: dirSync().name,
     cleanup: () => {},
   };
 
-  console.log(`Fetching ${pkg}...`);
+  const pkgDisplay = packages.map(({ pkg }) => pkg).join(', ');
+  console.log(`Fetching ${pkgDisplay}...`);
   const packageManager = detectPackageManager();
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
   generatePackageManagerFiles(tempDir, packageManager);
@@ -394,7 +406,10 @@ function preparePackageInstallation(pkg: string, requiredVersion: string) {
     addCommand = 'pnpm add -D'; // we need to ensure that we are not using workspace command
   }
 
-  const installCommand = `${addCommand} ${pkg}@${requiredVersion} ${
+  const pkgArgs = packages
+    .map(({ pkg, requiredVersion }) => `${pkg}@${requiredVersion}`)
+    .join(' ');
+  const installCommand = `${addCommand} ${pkgArgs} ${
     pmCommands.ignoreScriptsFlag ?? ''
   }`;
 
@@ -425,9 +440,21 @@ export function installPackageToTmp(
 ): {
   tempDir: string;
   cleanup: () => void;
+};
+export function installPackageToTmp(packages: PackageToInstall[]): {
+  tempDir: string;
+  cleanup: () => void;
+};
+export function installPackageToTmp(
+  pkgOrPackages: string | PackageToInstall[],
+  requiredVersion?: string
+): {
+  tempDir: string;
+  cleanup: () => void;
 } {
+  const packages = normalizePackagesInput(pkgOrPackages, requiredVersion);
   const { tempDir, cleanup, preInstallCommand, installCommand, execOptions } =
-    preparePackageInstallation(pkg, requiredVersion);
+    preparePackageInstallation(packages);
 
   if (preInstallCommand) {
     // ensure package.json and repo in tmp folder is set to a proper package manager state
@@ -448,9 +475,23 @@ export async function installPackageToTmpAsync(
 ): Promise<{
   tempDir: string;
   cleanup: () => void;
+}>;
+export async function installPackageToTmpAsync(
+  packages: PackageToInstall[]
+): Promise<{
+  tempDir: string;
+  cleanup: () => void;
+}>;
+export async function installPackageToTmpAsync(
+  pkgOrPackages: string | PackageToInstall[],
+  requiredVersion?: string
+): Promise<{
+  tempDir: string;
+  cleanup: () => void;
 }> {
+  const packages = normalizePackagesInput(pkgOrPackages, requiredVersion);
   const { tempDir, cleanup, preInstallCommand, installCommand, execOptions } =
-    preparePackageInstallation(pkg, requiredVersion);
+    preparePackageInstallation(packages);
 
   try {
     if (preInstallCommand) {
@@ -469,6 +510,41 @@ export async function installPackageToTmpAsync(
     cleanup();
     throw error;
   }
+}
+
+function normalizePackagesInput(
+  pkgOrPackages: string | PackageToInstall[],
+  requiredVersion?: string
+): PackageToInstall[] {
+  if (typeof pkgOrPackages === 'string') {
+    return [{ pkg: pkgOrPackages, requiredVersion: requiredVersion! }];
+  }
+  return pkgOrPackages;
+}
+
+/**
+ * Install multiple packages into a single temporary directory. Use this when
+ * a caller knows up front that it needs several packages. It avoids
+ * provisioning a fresh tmp project per package.
+ *
+ * Exposed as a distinct named export (separate from {@link installPackageToTmp})
+ * so that consumers like `@nx/devkit` can feature-detect batch support when
+ * running against an older `nx` core that predates this signature.
+ */
+export function installPackagesToTmp(packages: PackageToInstall[]): {
+  tempDir: string;
+  cleanup: () => void;
+} {
+  return installPackageToTmp(packages);
+}
+
+export async function installPackagesToTmpAsync(
+  packages: PackageToInstall[]
+): Promise<{
+  tempDir: string;
+  cleanup: () => void;
+}> {
+  return installPackageToTmpAsync(packages);
 }
 
 /**

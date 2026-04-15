@@ -33,9 +33,15 @@ export async function cypressComponentConfigurationInternal(
 ) {
   const tasks: GeneratorCallback[] = [];
 
-  const { componentConfigurationGenerator: baseCyCtConfig } = ensurePackage<
-    typeof import('@nx/cypress')
-  >('@nx/cypress', nxVersion);
+  // Batch the cypress + webpack tmp installs so both plugins share a single
+  // intermediate tmp project.
+  ensurePackage({
+    '@nx/cypress': nxVersion,
+    '@nx/webpack': nxVersion,
+  });
+
+  const { componentConfigurationGenerator: baseCyCtConfig } =
+    require('@nx/cypress') as typeof import('@nx/cypress');
   tasks.push(
     await baseCyCtConfig(tree, {
       project: options.project,
@@ -46,10 +52,8 @@ export async function cypressComponentConfigurationInternal(
     })
   );
 
-  const { webpackInitGenerator } = ensurePackage<typeof import('@nx/webpack')>(
-    '@nx/webpack',
-    nxVersion
-  );
+  const { webpackInitGenerator } =
+    require('@nx/webpack') as typeof import('@nx/webpack');
   tasks.push(
     await webpackInitGenerator(tree, {
       skipFormat: true,
