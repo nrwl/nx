@@ -104,7 +104,7 @@ export class TaskOrchestrator {
 
   private completedTasks = new Map<string, TaskStatus>();
   private waitingForTasks: Function[] = [];
-  private pendingDiscreteWorkers = new Set<Promise<void>>();
+  private pendingDiscreteWorkers = new Set<Promise<TaskResult | void>>();
 
   private groups: boolean[] = [];
   private continuousTasksStarted = 0;
@@ -866,12 +866,7 @@ export class TaskOrchestrator {
     task: Task,
     groupId: number
   ): void {
-    const worker: Promise<void> = this.runTaskDirectly(
-      doNotSkipCache,
-      task,
-      groupId
-    )
-      .then(() => {})
+    const worker = this.runTaskDirectly(doNotSkipCache, task, groupId)
       .catch((e) =>
         this.handleDiscreteWorkerFailure(doNotSkipCache, task, groupId, e)
       )

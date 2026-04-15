@@ -220,16 +220,21 @@ export async function hashTasks(
     // the built-in batch hasher always produces a hash, but user-written
     // custom hashers are untrusted and an empty/undefined hash would
     // violate the task_details schema downstream.
-    const hashedTasks = tasks.filter((task) => task.hash);
+    const hashedTasks = [];
+    for (const t of tasks) {
+      if (!t.hash) {
+        continue;
+      }
+
+      hashedTasks.push({
+        hash: t.hash,
+        project: t.target.project,
+        target: t.target.target,
+        configuration: t.target.configuration,
+      });
+    }
     if (hashedTasks.length > 0) {
-      taskDetails.recordTaskDetails(
-        hashedTasks.map((task) => ({
-          hash: task.hash,
-          project: task.target.project,
-          target: task.target.target,
-          configuration: task.target.configuration,
-        }))
-      );
+      taskDetails.recordTaskDetails(hashedTasks);
     }
   }
 
