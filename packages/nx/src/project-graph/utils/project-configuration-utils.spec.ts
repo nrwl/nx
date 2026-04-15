@@ -8,6 +8,8 @@ import { createNodesFromFiles, NxPluginV2 } from '../plugins';
 import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import {
   createProjectConfigurationsWithPlugins,
+  CreateNodesResultEntry,
+  MergeError,
   mergeCreateNodesResults,
 } from './project-configuration-utils';
 import { mergeProjectConfigurationIntoRootMap } from './project-configuration/project-nodes-manager';
@@ -50,6 +52,316 @@ describe('project-configuration-utils', () => {
           "lib-b:jar",
         ]
       `);
+    });
+
+    // Regression: default-plugin batches merge into an intermediate
+    // rootmap, not the manager's main rootmap, so filtering substitutor
+    // registration to roots the manager already knows about used to drop
+    // every default-plugin project's own dependsOn/inputs. Any
+    // cross-project reference those arrays introduced therefore never
+    // received a sentinel and stayed stale through applySubstitutions.
+    //
+    // This test drives that gap by having a default plugin rename a
+    // specified-plugin project (libs/b 'b-old' → 'b-new') while a
+    // separate default-plugin project.json owns a dependsOn referencing
+    // the *old* name. Without sentinel registration on the default
+    // batch, the final dependsOn would still say 'b-old:build'.
+    it('should resolve dependsOn refs owned by default plugins when the referenced project is renamed during the default apply', () => {
+      const specifiedResults: CreateNodesResultEntry[][] = [
+        [
+          [
+            '@acme/tool',
+            'libs/b/tool.config.ts',
+            {
+              projects: {
+                'libs/b': {
+                  name: 'b-old',
+                  targets: { build: {} },
+                },
+              },
+            },
+          ],
+        ],
+      ];
+
+      const defaultResults: CreateNodesResultEntry[][] = [
+        [
+          [
+            'nx/core/project-json',
+            'libs/a/project.json',
+            {
+              projects: {
+                'libs/a': {
+                  name: 'a',
+                  root: 'libs/a',
+                  targets: {
+                    test: {
+                      dependsOn: ['b-old:build'],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+          [
+            'nx/core/project-json',
+            'libs/b/project.json',
+            {
+              projects: {
+                'libs/b': {
+                  name: 'b-new',
+                  root: 'libs/b',
+                },
+              },
+            },
+          ],
+        ],
+      ];
+
+      const errors: MergeError[] = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults,
+        defaultResults,
+        {},
+        '/tmp/test',
+        errors
+      );
+
+      expect(errors).toEqual([]);
+      const aTargets = result.projectRootMap['libs/a'].targets!;
+      expect(aTargets.test.dependsOn).toEqual(['b-new:build']);
+    });
+
+    // Mirror of the dependsOn P2 regression for the inputs path:
+    // processInputs and processDependsOn share writeReplacement /
+    // createRef plumbing, but the top-level walk is separate. Locks in
+    // that default-plugin inputs references get sentinel treatment too.
+    it('should resolve inputs refs owned by default plugins when the referenced project is renamed during the default apply', () => {
+      const specifiedResults: CreateNodesResultEntry[][] = [
+        [
+          [
+            '@acme/tool',
+            'libs/b/tool.config.ts',
+            {
+              projects: {
+                'libs/b': {
+                  name: 'b-old',
+                  targets: { build: {} },
+                },
+              },
+            },
+          ],
+        ],
+      ];
+
+      const defaultResults: CreateNodesResultEntry[][] = [
+        [
+          [
+            'nx/core/project-json',
+            'libs/a/project.json',
+            {
+              projects: {
+                'libs/a': {
+                  name: 'a',
+                  root: 'libs/a',
+                  targets: {
+                    test: {
+                      executor: 'nx:noop',
+                      inputs: [{ input: 'default', projects: 'b-old' }],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+          [
+            'nx/core/project-json',
+            'libs/b/project.json',
+            {
+              projects: {
+                'libs/b': {
+                  name: 'b-new',
+                  root: 'libs/b',
+                },
+              },
+            },
+          ],
+        ],
+      ];
+
+      const errors: MergeError[] = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults,
+        defaultResults,
+        {},
+        '/tmp/test',
+        errors
+      );
+
+      expect(errors).toEqual([]);
+      const aTargets = result.projectRootMap['libs/a'].targets!;
+      expect(aTargets.test.inputs).toEqual([
+        { input: 'default', projects: 'b-new' },
+      ]);
+    });
+
+    // Forward reference from one default-plugin batch to another:
+    // intermediate merges don't touch the manager's nameMap, so a
+    // default-plugin reference to a project that won't be created
+    // until a later default batch starts life as a usage (forward)
+    // ref. The intermediate apply loop later fires
+    // identifyProjectWithRoot for the new project; that promotion has
+    // to reach the earlier batch's pending sentinel or the final
+    // configuration will still hold a leftover NameRef object.
+    it('should promote forward refs introduced by one default plugin to a project created by another default plugin', () => {
+      const defaultResults: CreateNodesResultEntry[][] = [
+        [
+          [
+            'nx/core/package-json',
+            'libs/a/package.json',
+            {
+              projects: {
+                'libs/a': {
+                  name: 'a',
+                  root: 'libs/a',
+                  targets: {
+                    test: {
+                      executor: 'nx:noop',
+                      inputs: [{ input: 'default', projects: 'b-final' }],
+                      dependsOn: ['b-final:build'],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+        [
+          [
+            'nx/core/project-json',
+            'libs/b/project.json',
+            {
+              projects: {
+                'libs/b': {
+                  name: 'b-final',
+                  root: 'libs/b',
+                  targets: { build: {} },
+                },
+              },
+            },
+          ],
+        ],
+      ];
+
+      const errors: MergeError[] = [];
+      const result = mergeCreateNodesResults(
+        [],
+        defaultResults,
+        {},
+        '/tmp/test',
+        errors
+      );
+
+      expect(errors).toEqual([]);
+      const aTargets = result.projectRootMap['libs/a'].targets!;
+      // Plain strings — no internal sentinel objects left behind.
+      expect(aTargets.test.inputs).toEqual([
+        { input: 'default', projects: 'b-final' },
+      ]);
+      expect(aTargets.test.dependsOn).toEqual(['b-final:build']);
+      expect(typeof (aTargets.test.dependsOn as unknown[])[0]).toBe('string');
+    });
+
+    // Rebinding-after-spread regression: when a specified plugin seeds
+    // a dependsOn array and a default plugin contributes a spread
+    // (`['...', ...]`), the intermediate apply runs merge logic on the
+    // owner and rebuilds the array. Sentinels inserted against the
+    // specified-plugin merge now live in an array that's been
+    // discarded — the follow-up
+    //   nodesManager.registerSubstitutors(intermediateDefaultRootMap)
+    // call after the intermediate apply rebinds them to the merged
+    // array. Without it, the later rename would leave an unresolved
+    // sentinel in the first slot (the one originating from specified).
+    it('should rebind sentinels inserted by specified plugins when the intermediate apply spread-merges their array', () => {
+      const specifiedResults: CreateNodesResultEntry[][] = [
+        [
+          [
+            '@acme/tool',
+            'libs/a/tool.config.ts',
+            {
+              projects: {
+                'libs/a': {
+                  name: 'a',
+                  targets: {
+                    build: {
+                      dependsOn: ['b-old:build'],
+                    },
+                  },
+                },
+                'libs/b': {
+                  name: 'b-old',
+                  targets: { build: {} },
+                },
+              },
+            },
+          ],
+        ],
+      ];
+
+      const defaultResults: CreateNodesResultEntry[][] = [
+        [
+          [
+            'nx/core/project-json',
+            'libs/a/project.json',
+            {
+              projects: {
+                'libs/a': {
+                  name: 'a',
+                  root: 'libs/a',
+                  targets: {
+                    build: {
+                      dependsOn: ['...', '^compile'],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+          [
+            'nx/core/project-json',
+            'libs/b/project.json',
+            {
+              projects: {
+                'libs/b': {
+                  name: 'b-new',
+                  root: 'libs/b',
+                },
+              },
+            },
+          ],
+        ],
+      ];
+
+      const errors: MergeError[] = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults,
+        defaultResults,
+        {},
+        '/tmp/test',
+        errors
+      );
+
+      expect(errors).toEqual([]);
+      const aTargets = result.projectRootMap['libs/a'].targets!;
+      // The base dependsOn entry must have been rewritten to the new
+      // name *in the merged array* — if rebinding were missed, the
+      // replacement would have been written to the orphaned specified-
+      // plugin array and the merged slot would still hold the sentinel.
+      expect(aTargets.build.dependsOn).toEqual(['b-new:build', '^compile']);
+      // And every slot is a plain string, not a leftover NameRef.
+      for (const entry of aTargets.build.dependsOn as unknown[]) {
+        expect(typeof entry).toBe('string');
+      }
     });
 
     it('should apply target defaults between specified and default plugin results', () => {

@@ -557,9 +557,15 @@ describe('ProjectNameInNodePropsManager', () => {
     it('should substitute references for targets expanded from glob keys', () => {
       const manager = createManager();
 
+      // The real merge expands glob target names into concrete keys while
+      // preserving element identity — the expanded target's dependsOn
+      // array shares element references with the glob target's source
+      // array. We simulate that here so the sentinel the manager inserts
+      // on the plugin result is visible through the expanded key too.
+      const globTarget = createTargetWithDependsOn('project-b');
       const projectA = createProject('project-a', 'libs/a', {
         targets: {
-          'build-*': createTargetWithDependsOn('project-b'),
+          'build-*': globTarget,
         },
       });
       const projectB = createProject('project-b', 'libs/b');
@@ -570,7 +576,7 @@ describe('ProjectNameInNodePropsManager', () => {
       renameProject(manager, 'libs/b', 'renamed-b');
 
       const expandedTargets = {
-        'build-prod': createTargetWithDependsOn('project-b'),
+        'build-prod': globTarget,
       };
       const rootMap = createRootMap([
         { name: 'project-a', root: 'libs/a', targets: expandedTargets },
@@ -889,11 +895,16 @@ describe('ProjectNameInNodePropsManager', () => {
         targets: { compile: {} },
       });
 
+      // Glob target expansion during merge preserves the underlying
+      // target object — the expanded key points at the same object so
+      // sentinels inserted on the glob target are visible through the
+      // expansion.
+      const globTarget: { dependsOn: unknown[] } = {
+        dependsOn: ['project-b:compile'],
+      };
       const projectA = createProject('project-a', 'libs/a', {
         targets: {
-          'build-*': {
-            dependsOn: ['project-b:compile'],
-          },
+          'build-*': globTarget,
         },
       });
 
@@ -903,9 +914,7 @@ describe('ProjectNameInNodePropsManager', () => {
       renameProject(manager, 'libs/b', 'renamed-b');
 
       const expandedTargets = {
-        'build-prod': {
-          dependsOn: ['project-b:compile'],
-        },
+        'build-prod': globTarget,
       };
       const rootMap = createRootMap([
         { name: 'project-a', root: 'libs/a', targets: expandedTargets },
@@ -1980,15 +1989,12 @@ describe('ProjectNameInNodePropsManager', () => {
   });
 
   describe('spread tokens in arrays with cross-project references', () => {
-    // Substitutors are registered against raw plugin-result arrays keyed by
-    // index. When a spread token (`...`) in the array gets expanded during
-    // merge, entries that sit AFTER the spread shift to higher indices in
-    // the final merged array. The substitutor, still pointing at the raw
-    // index, ends up looking at the wrong element.
-    //
-    // This test locks in that expectation so the eventual fix (index
-    // remapping through spread expansion, or registering against the merged
-    // form) can be validated.
+    // The sentinel-based approach survives spread expansion because the
+    // element carrying the sentinel is the same *object* in both the raw
+    // plugin-result array and the post-merge array — spread builds the
+    // new array by pushing element references, not by cloning. The
+    // sentinel's back-reference points at that shared element, so the
+    // index it ends up at after expansion is immaterial.
     it('should substitute a project reference that sits after an expanded spread in dependsOn', () => {
       const manager = createManager();
 
@@ -2006,13 +2012,18 @@ describe('ProjectNameInNodePropsManager', () => {
       manager.registerSubstitutorsForNodeResults(basePluginResult);
 
       // Later plugin contributes a dependsOn with a leading spread followed
-      // by a cross-project ref. In the raw array the ref sits at index 1,
-      // but after merging the spread expands to two base entries, shifting
-      // the ref to index 2.
+      // by a cross-project ref. The cross-project ref is a shared element
+      // reference — the same object lives in both the raw plugin result
+      // and the simulated post-merge array below, matching what
+      // getMergeValueResult produces at runtime.
+      const projectBRef: { target: string; projects: unknown } = {
+        target: 'build',
+        projects: 'project-b',
+      };
       const projectA = createProject('project-a', 'libs/a', {
         targets: {
           build: {
-            dependsOn: ['...', { target: 'build', projects: 'project-b' }],
+            dependsOn: ['...', projectBRef],
           },
         },
       });
@@ -2024,12 +2035,10 @@ describe('ProjectNameInNodePropsManager', () => {
 
       renameProject(manager, 'libs/b', 'project-b-renamed');
 
-      // Simulate the post-merge rootMap — dependsOn has the spread expanded.
-      const mergedDependsOn: Array<unknown> = [
-        '^build',
-        '^test',
-        { target: 'build', projects: 'project-b' },
-      ];
+      // Simulate the post-merge rootMap — dependsOn has the spread
+      // expanded, with the cross-project entry shifted to a later index.
+      // The element identity is preserved so the sentinel reaches it.
+      const mergedDependsOn: Array<unknown> = ['^build', '^test', projectBRef];
       const rootMap = createRootMap([
         {
           name: 'project-a',
@@ -2041,17 +2050,146 @@ describe('ProjectNameInNodePropsManager', () => {
 
       manager.applySubstitutions(rootMap);
 
-      // The ref now lives at index 2 post-expansion. It should still be
-      // rewritten to the new name even though the substitutor was
-      // originally registered against index 1 of the raw array.
+      // The ref now lives at index 2 post-expansion and its `projects`
+      // field is rewritten to the new name even though the substitutor
+      // was never told about the new index.
       expect(mergedDependsOn[2]).toEqual({
         target: 'build',
         projects: 'project-b-renamed',
       });
       // And nothing should have been written to the string entries that
-      // now occupy the indices the substitutor was originally registered at.
+      // now occupy the indices the sentinel was originally reachable at.
       expect(mergedDependsOn[0]).toBe('^build');
       expect(mergedDependsOn[1]).toBe('^test');
+    });
+
+    // Regression for string-form dependsOn sentinels specifically:
+    // because the sentinel replaces a primitive *slot*, it lives
+    // directly as an array element rather than inside a stable wrapper
+    // object. When a later plugin contributes a dependsOn with a spread
+    // token, getMergeValueResult produces a fresh array and pushes the
+    // sentinel reference into it. If `processDependsOn` doesn't rebind
+    // the sentinel's parent back-ref when it re-encounters the ref in
+    // the fresh array, applySubstitutions writes the replacement to the
+    // now-orphaned original array and the final dependsOn still holds
+    // the internal sentinel object.
+    it('should rebind a string-form dependsOn sentinel after a later spread merge copies it into a fresh array', () => {
+      const manager = createManager();
+
+      // First plugin provides a base dependsOn with one cross-project
+      // target-string entry.
+      const baseProjectA = createProject('project-a', 'libs/a', {
+        targets: {
+          build: {
+            dependsOn: ['project-b:build'],
+          },
+        },
+      });
+      const projectB = createProject('project-b', 'libs/b');
+      const baseResult = createPluginResult([baseProjectA, projectB]);
+      identifyProjects(manager, baseResult);
+      manager.registerSubstitutorsForNodeResults(baseResult);
+
+      // The sentinel is now inline in baseProjectA's dependsOn array —
+      // element 0 is no longer a string; it is a NameRef whose parent
+      // points at that array.
+      const baseDependsOn = baseProjectA.targets.build.dependsOn as unknown[];
+
+      // Simulate what getMergeValueResult does for a spread merge:
+      // build a fresh array that pushes the base entry (the sentinel)
+      // followed by a new entry from a later plugin. Element identity
+      // is preserved.
+      const mergedDependsOn: unknown[] = [baseDependsOn[0], '^build'];
+      const mergedProjectA = {
+        name: 'project-a',
+        root: 'libs/a',
+        targets: { build: { dependsOn: mergedDependsOn } },
+      } as unknown as Record<string, any>;
+      const mergedResult = createPluginResult([mergedProjectA]);
+
+      // Re-registering against the merged form must notice the existing
+      // sentinel and rebind its parent to `mergedDependsOn`.
+      identifyProjects(manager, mergedResult);
+      manager.registerSubstitutorsForNodeResults(mergedResult);
+
+      renameProject(manager, 'libs/b', 'renamed-b');
+
+      const rootMap = createRootMap([
+        {
+          name: 'project-a',
+          root: 'libs/a',
+          targets: mergedProjectA.targets,
+        },
+        { name: 'renamed-b', root: 'libs/b' },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      expect(mergedDependsOn[0]).toBe('renamed-b:build');
+      expect(mergedDependsOn[1]).toBe('^build');
+      // And nothing left behind that looks like an internal sentinel.
+      expect(typeof mergedDependsOn[0]).toBe('string');
+    });
+
+    // Regression: getMergeValueResult pushes element *references* when it
+    // expands a spread token, so a later dependsOn of the form
+    // `['...', '...']` concatenates the base array twice and the same
+    // sentinel object ends up at multiple indices. applySubstitutions
+    // used to walk only the first `indexOf(ref)` match, leaving the
+    // duplicate slot holding the internal sentinel object in the final
+    // configuration.
+    it('should replace every occurrence when the same sentinel is copied into multiple array slots', () => {
+      const manager = createManager();
+
+      const projectA = createProject('project-a', 'libs/a', {
+        targets: {
+          build: {
+            dependsOn: ['project-b:build'],
+          },
+        },
+      });
+      const projectB = createProject('project-b', 'libs/b');
+      const baseResult = createPluginResult([projectA, projectB]);
+      identifyProjects(manager, baseResult);
+      manager.registerSubstitutorsForNodeResults(baseResult);
+
+      // After registration, dependsOn[0] is a sentinel pointing at
+      // libs/b. Simulate `getMergeValueResult` for a later
+      // `['...', '...']` that doubles the base into a fresh array —
+      // the same sentinel reference lands at indices 0 and 1.
+      const baseDependsOn = projectA.targets.build.dependsOn as unknown[];
+      const sentinel = baseDependsOn[0];
+      const mergedDependsOn: unknown[] = [sentinel, sentinel];
+      const mergedProjectA = {
+        name: 'project-a',
+        root: 'libs/a',
+        targets: { build: { dependsOn: mergedDependsOn } },
+      } as unknown as Record<string, any>;
+
+      identifyProjects(manager, createPluginResult([mergedProjectA]));
+      manager.registerSubstitutorsForNodeResults(
+        createPluginResult([mergedProjectA])
+      );
+
+      renameProject(manager, 'libs/b', 'renamed-b');
+
+      const rootMap = createRootMap([
+        {
+          name: 'project-a',
+          root: 'libs/a',
+          targets: mergedProjectA.targets,
+        },
+        { name: 'renamed-b', root: 'libs/b' },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      // Both slots must be resolved — neither should still hold the
+      // sentinel object.
+      expect(mergedDependsOn[0]).toBe('renamed-b:build');
+      expect(mergedDependsOn[1]).toBe('renamed-b:build');
+      expect(typeof mergedDependsOn[0]).toBe('string');
+      expect(typeof mergedDependsOn[1]).toBe('string');
     });
   });
 });

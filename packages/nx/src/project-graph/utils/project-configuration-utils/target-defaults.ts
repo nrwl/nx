@@ -93,7 +93,13 @@ export function createTargetDefaultsResults(
       let syntheticTarget: TargetConfiguration | undefined;
 
       if (!resolvedDefault && resolvedSpecified) {
-        // Case 1: Specified target only, no default plugin target
+        // Case 1: Specified target only, no default plugin target.
+        // Target defaults take precedence over specified plugins, so
+        // they're always layered on even when the executor differs —
+        // the subsequent merge treats incompatible defaults as a full
+        // replacement, which matches the
+        //   specified plugin < target defaults < default plugin
+        // precedence order.
         executorForDefaults = resolvedSpecified.executor;
         const targetDefaults = readAndPrepareTargetDefaults(
           targetName,
@@ -101,7 +107,6 @@ export function createTargetDefaultsResults(
           root
         );
         if (targetDefaults) {
-          // Return defaults as-is, they'll merge on top of specified target
           syntheticTarget = targetDefaults;
         }
       } else if (resolvedDefault && !resolvedSpecified) {

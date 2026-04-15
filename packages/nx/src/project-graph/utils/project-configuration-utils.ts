@@ -256,14 +256,14 @@ export async function createProjectConfigurationsWithPlugins(
   });
 }
 
-type CreateNodesResultEntry = readonly [
+export type CreateNodesResultEntry = readonly [
   plugin: string,
   file: string,
   result: CreateNodesResult,
   pluginIndex?: number,
 ];
 
-type MergeError =
+export type MergeError =
   | AggregateCreateNodesError
   | MergeNodesError
   | ProjectsWithNoNameError
@@ -302,11 +302,7 @@ export function mergeCreateNodesResults(
   ) => void;
 
   const mergeToManager: MergeFn = (project, sourceInfo) =>
-    nodesManager.mergeProjectNode(
-      project,
-      configurationSourceMaps,
-      sourceInfo
-    );
+    nodesManager.mergeProjectNode(project, configurationSourceMaps, sourceInfo);
 
   const mergeToIntermediate: MergeFn = (project, sourceInfo) => {
     mergeProjectConfigurationIntoRootMap(
@@ -321,7 +317,8 @@ export function mergeCreateNodesResults(
 
   const processBatch = (
     pluginResults: CreateNodesResultEntry[],
-    mergeFn: MergeFn
+    mergeFn: MergeFn,
+    substitutorRootMap: Record<string, ProjectConfiguration>
   ) => {
     for (const result of pluginResults) {
       const [pluginName, file, nodes, pluginIndex] = result;
@@ -346,13 +343,15 @@ export function mergeCreateNodesResults(
     }
 
     // Substitutor registration runs after all projects in the batch are
-    // merged so forward references inside the same batch resolve.
+    // merged so forward references inside the same batch resolve. We
+    // pass the rootMap the batch was merged into so sentinels land on
+    // the objects that actually received the just-merged targets.
     for (const result of pluginResults) {
       const [pluginName, file, nodes, pluginIndex] = result;
       const { projects: projectNodes } = nodes;
 
       try {
-        nodesManager.registerSubstitutors(projectNodes);
+        nodesManager.registerSubstitutors(projectNodes, substitutorRootMap);
       } catch (error) {
         errors.push(
           new MergeNodesError({ file, pluginName, error, pluginIndex })
@@ -362,11 +361,15 @@ export function mergeCreateNodesResults(
   };
 
   for (const pluginResults of specifiedResults) {
-    processBatch(pluginResults, mergeToManager);
+    processBatch(pluginResults, mergeToManager, nodesManager.getRootMap());
   }
 
   for (const pluginResults of defaultResults) {
-    processBatch(pluginResults, mergeToIntermediate);
+    processBatch(
+      pluginResults,
+      mergeToIntermediate,
+      intermediateDefaultRootMap
+    );
   }
 
   const targetDefaultsResults = createTargetDefaultsResults(
@@ -376,7 +379,11 @@ export function mergeCreateNodesResults(
   );
 
   if (targetDefaultsResults.length > 0) {
-    processBatch(targetDefaultsResults, mergeToManager);
+    processBatch(
+      targetDefaultsResults,
+      mergeToManager,
+      nodesManager.getRootMap()
+    );
   }
 
   // Apply the intermediate default rootMap as a single layer. Preserved
@@ -398,6 +405,14 @@ export function mergeCreateNodesResults(
       );
     }
   }
+
+  // The intermediate apply may have rebuilt dependsOn / inputs arrays
+  // via spread merges, leaving sentinels inserted against the
+  // intermediate rootMap pointing at now-orphaned arrays. Re-walking
+  // the final merged targets rebinds each encountered sentinel's
+  // `parent` to the current array (see
+  // ProjectNameInNodePropsManager#processInputs / processDependsOn).
+  nodesManager.registerSubstitutors(intermediateDefaultRootMap);
 
   // Overlay default-plugin attribution onto the main source maps.
   //

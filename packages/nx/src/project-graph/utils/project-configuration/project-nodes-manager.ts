@@ -337,18 +337,35 @@ export class ProjectNodesManager {
   }
 
   /**
-   * Registers substitutors for a plugin result's project references
-   * in `inputs` and `dependsOn`.
+   * Inserts project-name sentinels for a plugin result's references in
+   * `inputs` and `dependsOn`. Walks the *merged* entries from the
+   * provided `mergedRootMap` (defaulting to this manager's rootMap), so
+   * sentinels land on the target objects that actually reach consumers
+   * — including the rare case where `mergeTargetConfigurations` produced
+   * a fresh array due to a spread token.
+   *
+   * The `mergedRootMap` override exists so default-plugin batches, which
+   * merge into an intermediate rootMap rather than this manager's, can
+   * still register sentinels on the objects they just merged. After the
+   * intermediate rootMap is applied onto this manager's rootMap, call
+   * this again with the manager's rootMap to rebind sentinel parents
+   * onto the final merged arrays.
    */
   registerSubstitutors(
     pluginResultProjects?: Record<
       string,
       Omit<ProjectConfiguration, 'root'> & Partial<ProjectConfiguration>
-    >
+    >,
+    mergedRootMap: Record<string, ProjectConfiguration> = this.rootMap
   ): void {
-    this.nameSubstitutionManager.registerSubstitutorsForNodeResults(
-      pluginResultProjects
-    );
+    if (!pluginResultProjects) return;
+    const scoped: Record<string, ProjectConfiguration> = {};
+    for (const root in pluginResultProjects) {
+      if (mergedRootMap[root]) {
+        scoped[root] = mergedRootMap[root];
+      }
+    }
+    this.nameSubstitutionManager.registerSubstitutorsForNodeResults(scoped);
   }
 
   /**

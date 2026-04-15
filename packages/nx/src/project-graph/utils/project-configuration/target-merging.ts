@@ -234,11 +234,7 @@ function mergeConfigurations<T extends Object>(
     }
   }
 
-  if (
-    hasSpread &&
-    preserveUnknownSpreads &&
-    baseConfigurations === undefined
-  ) {
+  if (hasSpread && preserveUnknownSpreads && baseConfigurations === undefined) {
     (mergedConfigurations as Record<string, unknown>)[NX_SPREAD_TOKEN] = true;
   }
 
