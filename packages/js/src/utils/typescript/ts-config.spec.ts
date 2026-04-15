@@ -1,5 +1,5 @@
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { resolvePathsBaseUrl } from './ts-config';
+import { readTsConfigPaths, resolvePathsBaseUrl } from './ts-config';
 import { join } from 'path';
 
 describe('resolvePathsBaseUrl', () => {
@@ -221,5 +221,66 @@ describe('resolvePathsBaseUrl', () => {
     expect(resolvePathsBaseUrl(join(tempFs.tempDir, 'nonexistent.json'))).toBe(
       tempFs.tempDir
     );
+  });
+});
+
+describe('readTsConfigPaths', () => {
+  let tempFs: TempFs;
+
+  beforeEach(() => {
+    tempFs = new TempFs('read-ts-config-paths', false);
+  });
+
+  afterEach(() => {
+    tempFs.cleanup();
+  });
+
+  it('should return paths defined in the tsconfig', () => {
+    tempFs.createFileSync(
+      'tsconfig.base.json',
+      JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+          paths: { '@app/*': ['libs/app/src/*'] },
+        },
+      })
+    );
+
+    const paths = readTsConfigPaths(join(tempFs.tempDir, 'tsconfig.base.json'));
+
+    expect(paths).toEqual({
+      '@app/*': ['libs/app/src/*'],
+    });
+  });
+
+  it('should return paths inherited via extends', () => {
+    tempFs.createFileSync(
+      'tsconfig.base.json',
+      JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+          paths: { '@lib/*': ['libs/*/src/index.ts'] },
+        },
+      })
+    );
+    tempFs.createFileSync(
+      'tsconfig.json',
+      JSON.stringify({ extends: './tsconfig.base.json' })
+    );
+
+    const paths = readTsConfigPaths(join(tempFs.tempDir, 'tsconfig.json'));
+
+    expect(paths).toEqual({
+      '@lib/*': ['libs/*/src/index.ts'],
+    });
+  });
+
+  it('should return null when paths are not defined', () => {
+    tempFs.createFileSync(
+      'tsconfig.json',
+      JSON.stringify({ compilerOptions: {} })
+    );
+
+    expect(readTsConfigPaths(join(tempFs.tempDir, 'tsconfig.json'))).toBeNull();
   });
 });
