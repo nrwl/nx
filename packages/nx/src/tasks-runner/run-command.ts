@@ -1019,9 +1019,11 @@ export async function invokeTasksRunner({
           return hasher.hashTask(task, taskGraph_, env);
         },
         hashTasks(
-          task: Task[],
+          tasks: Task[],
           taskGraph_?: TaskGraph,
-          env?: NodeJS.ProcessEnv
+          envOrPerTaskEnvs?:
+            | NodeJS.ProcessEnv
+            | Record<string, NodeJS.ProcessEnv>
         ) {
           if (!taskGraph_) {
             output.warn({
@@ -1033,7 +1035,7 @@ export async function invokeTasksRunner({
             });
             taskGraph_ = taskGraph;
           }
-          if (!env) {
+          if (!envOrPerTaskEnvs) {
             output.warn({
               title: `The environment variables are now required as an argument to hashTasks`,
               bodyLines: [
@@ -1041,10 +1043,15 @@ export async function invokeTasksRunner({
                 'This will result in an error in Nx 20',
               ],
             });
-            env = process.env;
+            envOrPerTaskEnvs = process.env;
           }
-
-          return hasher.hashTasks(task, taskGraph_, env);
+          // hasher.hashTasks accepts either legacy single-env or the new
+          // per-task-env shape and normalizes internally.
+          return hasher.hashTasks(
+            tasks,
+            taskGraph_,
+            envOrPerTaskEnvs as NodeJS.ProcessEnv
+          );
         },
       },
       daemon: daemonClient,

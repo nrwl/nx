@@ -248,8 +248,12 @@ export class TaskOrchestrator {
     while (true) {
       if (this.bailed || this.stopRequested) break;
 
-      // 1. Batch-hash BEFORE processAll so processTask sees hashes set.
-      //    Single thread — no race with individual hashing.
+      // 1. Hash BEFORE processAll so processTask sees hashes set, and so
+      //    resolveCachedTasksBulk can look them up in the cache. Each task
+      //    is hashed with its own task-specific env (project/target .env
+      //    files, custom hasher env reads) — the shared batchEnv would
+      //    compute a different cache key than the single-task path and
+      //    risk stale cache reuse after env changes.
       {
         const { scheduledTasks } = this.tasksSchedule.getAllScheduledTasks();
         const unhashed = scheduledTasks
@@ -262,11 +266,15 @@ export class TaskOrchestrator {
               )
           );
         if (unhashed.length > 1) {
+          const perTaskEnvs: Record<string, NodeJS.ProcessEnv> = {};
+          for (const task of unhashed) {
+            perTaskEnvs[task.id] = getTaskSpecificEnv(task, this.projectGraph);
+          }
           await hashTasks(
             this.hasher,
             this.projectGraph,
             this.taskGraphForHashing,
-            this.batchEnv,
+            perTaskEnvs,
             this.taskDetails,
             unhashed
           );
@@ -596,11 +604,19 @@ export class TaskOrchestrator {
   }
 
   private async hashBatchTasks(tasks: Task[]): Promise<void> {
+    // Batch executors run every task in the same forked process, but
+    // each task still has its own .env files / custom-hasher env — use
+    // task-specific env for hashing so the cache key matches the
+    // single-task path.
+    const perTaskEnvs: Record<string, NodeJS.ProcessEnv> = {};
+    for (const task of tasks) {
+      perTaskEnvs[task.id] = getTaskSpecificEnv(task, this.projectGraph);
+    }
     await hashTasks(
       this.hasher,
       this.projectGraph,
       this.taskGraphForHashing,
-      this.batchEnv,
+      perTaskEnvs,
       this.taskDetails,
       tasks
     );

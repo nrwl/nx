@@ -172,24 +172,29 @@ impl NxCache {
                 .collect::<Vec<Value>>(),
         );
 
-        let db = self.db.lock().unwrap();
-        let mut stmt = db.prepare(
-            "UPDATE cache_outputs SET accessed_at = CURRENT_TIMESTAMP
-             WHERE hash IN rarray(?1)
-             RETURNING hash, code, size",
-        )?;
-
-        // Propagate row errors instead of silently skipping malformed rows —
-        // a bad row means schema drift or corruption and shouldn't
-        // masquerade as a cache miss.
-        let rows = stmt
-            .query_map([values], |row| {
-                let hash: String = row.get(0)?;
-                let code: i16 = row.get(1)?;
-                let size: i64 = row.get(2)?;
-                Ok((hash, (code, size)))
-            })?
-            .collect::<rusqlite::Result<_>>()?;
+        // Route through NxDbConnection::query_map so the whole prepare +
+        // query is wrapped in the busy-retry logic, matching the
+        // single-task cache.get() path. Otherwise a brief SQLite write
+        // lock from another Nx process would surface DatabaseBusy and
+        // fail the whole run.
+        let rows = self
+            .db
+            .lock()
+            .unwrap()
+            .query_map(
+                "UPDATE cache_outputs SET accessed_at = CURRENT_TIMESTAMP
+                 WHERE hash IN rarray(?1)
+                 RETURNING hash, code, size",
+                [values],
+                |row| {
+                    let hash: String = row.get(0)?;
+                    let code: i16 = row.get(1)?;
+                    let size: i64 = row.get(2)?;
+                    Ok((hash, (code, size)))
+                },
+            )?
+            .into_iter()
+            .collect();
         Ok(rows)
     }
 

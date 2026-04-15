@@ -341,17 +341,14 @@ export class DaemonClient {
     runnerOptions: any,
     tasks: Task[],
     taskGraph: TaskGraph,
-    env: NodeJS.ProcessEnv,
+    perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
     collectInputs?: boolean
   ): Promise<Hash[]> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
       runnerOptions,
-      env:
-        process.env.NX_USE_V8_SERIALIZER !== 'false'
-          ? structuredClone(process.env)
-          : env,
+      perTaskEnvs,
       tasks,
       taskGraph,
       cwd,

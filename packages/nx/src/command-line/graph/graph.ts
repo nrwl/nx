@@ -1489,7 +1489,7 @@ async function createJsonOutput(
 
     const hasher = createTaskHasher(rawGraph, readNxJson());
     let tasks = Object.values(taskGraph.tasks);
-    const hashes = await hasher.hashTasks(tasks, taskGraph);
+    const hashes = await hasher.hashTasks(tasks, taskGraph, process.env);
     response.tasks = taskGraph;
     response.taskPlans = tasks.reduce((acc, task, index) => {
       acc[task.id] = Object.keys(hashes[index].details.nodes).sort();

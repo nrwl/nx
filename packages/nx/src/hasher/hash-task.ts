@@ -54,7 +54,11 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     })
     .map((t) => t.task);
 
-  const hashes = await hasher.hashTasks(tasksToHash, taskGraph, process.env);
+  const perTaskEnvs: Record<string, NodeJS.ProcessEnv> = {};
+  for (const task of tasksToHash) {
+    perTaskEnvs[task.id] = process.env;
+  }
+  const hashes = await hasher.hashTasks(tasksToHash, taskGraph, perTaskEnvs);
   const ioService = getTaskIOService();
   const hasInputSubscribers = ioService.hasTaskInputSubscribers();
   for (let i = 0; i < tasksToHash.length; i++) {
@@ -138,11 +142,19 @@ export async function hashTask(
   );
 }
 
+/**
+ * Batch-hash `tasks`. `perTaskEnvs` must contain an entry keyed by
+ * `task.id` for every task — the per-task env is what each task's
+ * custom hasher sees and what the built-in hasher reads
+ * `HashInstruction::Environment` inputs against. Callers that
+ * genuinely want to hash against a single shared env should build
+ * `{ [task.id]: env }` for every task.
+ */
 export async function hashTasks(
   hasher: TaskHasher,
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
-  env: NodeJS.ProcessEnv,
+  perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
   taskDetails: TaskDetails | null,
   tasksToHashOverride?: Task[]
 ) {
@@ -181,7 +193,7 @@ export async function hashTasks(
       workspaceConfig: projectsConfigurations,
       projectsConfigurations,
       nxJsonConfiguration: nxJson,
-      env,
+      env: perTaskEnvs[task.id],
     } as any);
     task.hash = value;
     task.hashDetails = details;
@@ -196,7 +208,7 @@ export async function hashTasks(
   let batchHashPromise: Promise<void> = Promise.resolve();
   if (tasksWithoutCustomHashers.length > 0) {
     batchHashPromise = hasher
-      .hashTasks(tasksWithoutCustomHashers, taskGraph, env)
+      .hashTasks(tasksWithoutCustomHashers, taskGraph, perTaskEnvs)
       .then((hashes) => {
         for (let i = 0; i < tasksWithoutCustomHashers.length; i++) {
           tasksWithoutCustomHashers[i].hash = hashes[i].value;

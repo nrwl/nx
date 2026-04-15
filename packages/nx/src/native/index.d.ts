@@ -175,7 +175,15 @@ export declare class TaskDetails {
 
 export declare class TaskHasher {
   constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<ProjectFiles>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath?: string | undefined | null, options?: HasherOptions | undefined | null)
-  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>, cwd: string, collectTaskInputs?: boolean | undefined | null): NapiDashMap<string, HashDetails>
+  /**
+   * Hash each task's instructions using the env map keyed by `task.id`.
+   * Every task in `hash_plans` must have an entry in `per_task_envs` —
+   * a missing id surfaces as an error rather than silently hashing
+   * against an empty env. Callers that want to hash all tasks against
+   * the same env should build `per_task_envs` by keying that env under
+   * every task id.
+   */
+  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): NapiDashMap<string, HashDetails>
 }
 
 export declare class Watcher {
