@@ -293,17 +293,14 @@ export class TaskOrchestrator {
       }
 
       // 5. Dispatch cache misses as individual workers
-      let dispatched = false;
       while (this.pendingDiscreteWorkers.size < parallelism) {
         const task = this.tasksSchedule.nextTask((t) => !t.continuous);
         if (!task) break;
-        dispatched = true;
         const groupId = this.closeGroup();
         this.dispatchDiscreteWorker(doNotSkipCache, task, groupId);
       }
-      if (dispatched) continue;
 
-      // 6. Nothing to dispatch — check if done
+      // 6. Nothing left to dispatch and nothing in flight — done.
       if (
         !this.tasksSchedule.hasTasks() &&
         this.pendingDiscreteWorkers.size === 0
