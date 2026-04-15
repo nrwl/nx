@@ -26,6 +26,6 @@ describe('versions(tree)', () => {
     const flatResult = versions(tree);
 
     expect(eslintrcResult).toEqual(flatResult);
-    expect(eslintrcResult.eslintVersion).toMatch(/^\^9\./);
+    expect(eslintrcResult.eslintVersion).toMatch(/^\^10\./);
   });
 });
