@@ -168,8 +168,8 @@ module.exports = [
       expect(readJson(tree, 'package.json').devDependencies)
         .toMatchInlineSnapshot(`
         {
-          "@eslint/compat": "^1.1.1",
-          "@eslint/eslintrc": "^3.0.0",
+          "@eslint/compat": "^2.0.5",
+          "@eslint/eslintrc": "^3.3.0",
           "eslint": "9.0.0",
         }
       `);
