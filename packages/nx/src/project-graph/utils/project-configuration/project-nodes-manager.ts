@@ -27,7 +27,8 @@ export function mergeProjectConfigurationIntoRootMap(
   sourceInformation?: SourceInformation,
   // This function is used when reading project configuration
   // in generators, where we don't want to do this.
-  skipTargetNormalization?: boolean
+  skipTargetNormalization?: boolean,
+  preserveUnknownSpreads?: boolean
 ): {
   nameChanged: boolean;
 } {
@@ -197,7 +198,8 @@ export function mergeProjectConfigurationIntoRootMap(
             matchingProject.targets?.[matchingTargetName],
             sourceMap,
             sourceInformation,
-            `targets.${matchingTargetName}`
+            `targets.${matchingTargetName}`,
+            preserveUnknownSpreads
           );
       }
     }

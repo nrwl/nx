@@ -1978,4 +1978,80 @@ describe('ProjectNameInNodePropsManager', () => {
       expect(projectA.targets.build.dependsOn[0]).toBe('renamed-b:compile');
     });
   });
+
+  describe('spread tokens in arrays with cross-project references', () => {
+    // Substitutors are registered against raw plugin-result arrays keyed by
+    // index. When a spread token (`...`) in the array gets expanded during
+    // merge, entries that sit AFTER the spread shift to higher indices in
+    // the final merged array. The substitutor, still pointing at the raw
+    // index, ends up looking at the wrong element.
+    //
+    // This test locks in that expectation so the eventual fix (index
+    // remapping through spread expansion, or registering against the merged
+    // form) can be validated.
+    it('should substitute a project reference that sits after an expanded spread in dependsOn', () => {
+      const manager = createManager();
+
+      // Base plugin seeds dependsOn with two entries.
+      const basePluginResult = createPluginResult([
+        createProject('project-a', 'libs/a', {
+          targets: {
+            build: {
+              dependsOn: ['^build', '^test'],
+            },
+          },
+        }),
+      ]);
+      identifyProjects(manager, basePluginResult);
+      manager.registerSubstitutorsForNodeResults(basePluginResult);
+
+      // Later plugin contributes a dependsOn with a leading spread followed
+      // by a cross-project ref. In the raw array the ref sits at index 1,
+      // but after merging the spread expands to two base entries, shifting
+      // the ref to index 2.
+      const projectA = createProject('project-a', 'libs/a', {
+        targets: {
+          build: {
+            dependsOn: ['...', { target: 'build', projects: 'project-b' }],
+          },
+        },
+      });
+      const projectB = createProject('project-b', 'libs/b');
+
+      const spreadPluginResult = createPluginResult([projectA, projectB]);
+      identifyProjects(manager, spreadPluginResult);
+      manager.registerSubstitutorsForNodeResults(spreadPluginResult);
+
+      renameProject(manager, 'libs/b', 'project-b-renamed');
+
+      // Simulate the post-merge rootMap — dependsOn has the spread expanded.
+      const mergedDependsOn: Array<unknown> = [
+        '^build',
+        '^test',
+        { target: 'build', projects: 'project-b' },
+      ];
+      const rootMap = createRootMap([
+        {
+          name: 'project-a',
+          root: 'libs/a',
+          targets: { build: { dependsOn: mergedDependsOn } },
+        },
+        { name: 'project-b-renamed', root: 'libs/b' },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      // The ref now lives at index 2 post-expansion. It should still be
+      // rewritten to the new name even though the substitutor was
+      // originally registered against index 1 of the raw array.
+      expect(mergedDependsOn[2]).toEqual({
+        target: 'build',
+        projects: 'project-b-renamed',
+      });
+      // And nothing should have been written to the string entries that
+      // now occupy the indices the substitutor was originally registered at.
+      expect(mergedDependsOn[0]).toBe('^build');
+      expect(mergedDependsOn[1]).toBe('^test');
+    });
+  });
 });

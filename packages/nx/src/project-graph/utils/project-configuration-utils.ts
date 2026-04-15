@@ -4,6 +4,7 @@ import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
   createRootMap,
+  mergeProjectConfigurationIntoRootMap,
   ProjectNodesManager,
 } from './project-configuration/project-nodes-manager';
 import { validateAndNormalizeProjectRootMap } from './project-configuration/target-normalization';
@@ -270,43 +271,13 @@ type MergeError =
   | WorkspaceValidityError;
 
 /**
- * Builds a lightweight snapshot of projects from raw plugin results.
- * Only collects target names/executors and project root/name — enough
- * for createTargetDefaultsResults to look up which defaults to emit.
- * Much cheaper than a full merge.
- */
-function buildTargetSnapshotsFromResults(
-  results: CreateNodesResultEntry[][]
-): Record<string, ProjectConfiguration> {
-  const rootMap: Record<string, ProjectConfiguration> = {};
-  for (const pluginResults of results) {
-    for (const [, , nodes] of pluginResults) {
-      for (const root in nodes.projects) {
-        if (!nodes.projects[root]) continue;
-        const project = nodes.projects[root];
-        if (!rootMap[root]) {
-          rootMap[root] = { root };
-        }
-        if (project.targets) {
-          rootMap[root].targets = {
-            ...rootMap[root].targets,
-            ...project.targets,
-          };
-        }
-        if (project.name) {
-          rootMap[root].name = project.name;
-        }
-      }
-    }
-  }
-  return rootMap;
-}
-
-/**
- * Merges create nodes results using ProjectNodesManager.
- * Target defaults are included as a synthetic middle layer between
- * specified and default plugin results, so normalization never needs
- * to apply them separately.
+ * Merges create nodes results into a single rootMap.
+ *
+ * Default plugin results are merged twice: first into an intermediate
+ * rootMap with unresolved spread sentinels preserved, so target
+ * defaults selection sees the real merged shape of defaults; then
+ * applied as a single layer onto the main rootMap where the preserved
+ * spreads resolve against the specified + target-defaults base.
  */
 export function mergeCreateNodesResults(
   specifiedResults: CreateNodesResultEntry[][],
@@ -317,37 +288,41 @@ export function mergeCreateNodesResults(
 ) {
   performance.mark('createNodes:merge - start');
 
-  // Build lightweight snapshots for target defaults lookup
-  const specifiedSnapshot = buildTargetSnapshotsFromResults(specifiedResults);
-  const defaultSnapshot = buildTargetSnapshotsFromResults(defaultResults);
-
-  // Create synthetic target defaults as a middle layer
-  const targetDefaultsResults = createTargetDefaultsResults(
-    specifiedSnapshot,
-    defaultSnapshot,
-    nxJsonConfiguration
-  );
-
-  // Combine in correct merge order:
-  //   specified plugins → target defaults → default plugins
-  // This ensures '...' in default plugins expands against (specified + TD)
-  const orderedResults: CreateNodesResultEntry[][] = [
-    ...specifiedResults,
-    ...(targetDefaultsResults.length > 0 ? [targetDefaultsResults] : []),
-    ...defaultResults,
-  ];
-
   const nodesManager = new ProjectNodesManager();
   const externalNodes: Record<string, ProjectGraphExternalNode> = {};
-  const configurationSourceMaps: Record<
-    string,
-    Record<string, SourceInformation>
-  > = {};
+  const configurationSourceMaps: ConfigurationSourceMaps = {};
+  const intermediateDefaultRootMap: Record<string, ProjectConfiguration> = {};
+  // Kept separate so the intermediate merge doesn't clobber
+  // specified/TD attribution on fields the defaults don't touch.
+  const defaultConfigurationSourceMaps: ConfigurationSourceMaps = {};
 
-  // Process each plugin's results in two phases:
-  //   Phase 1: Merge all projects from this plugin into rootMap/nameMap
-  //   Phase 2: Register substitutors for this plugin's results
-  for (const pluginResults of orderedResults) {
+  type MergeFn = (
+    project: ProjectConfiguration,
+    sourceInfo: SourceInformation
+  ) => void;
+
+  const mergeToManager: MergeFn = (project, sourceInfo) =>
+    nodesManager.mergeProjectNode(
+      project,
+      configurationSourceMaps,
+      sourceInfo
+    );
+
+  const mergeToIntermediate: MergeFn = (project, sourceInfo) => {
+    mergeProjectConfigurationIntoRootMap(
+      intermediateDefaultRootMap,
+      project,
+      defaultConfigurationSourceMaps,
+      sourceInfo,
+      false,
+      true
+    );
+  };
+
+  const processBatch = (
+    pluginResults: CreateNodesResultEntry[],
+    mergeFn: MergeFn
+  ) => {
     for (const result of pluginResults) {
       const [pluginName, file, nodes, pluginIndex] = result;
       const { projects: projectNodes, externalNodes: pluginExternalNodes } =
@@ -359,11 +334,7 @@ export function mergeCreateNodesResults(
         const project = { root, ...projectNodes[root] };
 
         try {
-          nodesManager.mergeProjectNode(
-            project,
-            configurationSourceMaps,
-            sourceInfo
-          );
+          mergeFn(project, sourceInfo);
         } catch (error) {
           errors.push(
             new MergeNodesError({ file, pluginName, error, pluginIndex })
@@ -374,6 +345,8 @@ export function mergeCreateNodesResults(
       Object.assign(externalNodes, pluginExternalNodes);
     }
 
+    // Substitutor registration runs after all projects in the batch are
+    // merged so forward references inside the same batch resolve.
     for (const result of pluginResults) {
       const [pluginName, file, nodes, pluginIndex] = result;
       const { projects: projectNodes } = nodes;
@@ -386,6 +359,58 @@ export function mergeCreateNodesResults(
         );
       }
     }
+  };
+
+  for (const pluginResults of specifiedResults) {
+    processBatch(pluginResults, mergeToManager);
+  }
+
+  for (const pluginResults of defaultResults) {
+    processBatch(pluginResults, mergeToIntermediate);
+  }
+
+  const targetDefaultsResults = createTargetDefaultsResults(
+    nodesManager.getRootMap(),
+    intermediateDefaultRootMap,
+    nxJsonConfiguration
+  );
+
+  if (targetDefaultsResults.length > 0) {
+    processBatch(targetDefaultsResults, mergeToManager);
+  }
+
+  // Apply the intermediate default rootMap as a single layer. Preserved
+  // spread sentinels resolve here against the real specified + TD base.
+  // Source maps are intentionally not written — TD attribution for
+  // fields that yield to the base (e.g. keys before `...`) stays intact.
+  for (const root in intermediateDefaultRootMap) {
+    const project = intermediateDefaultRootMap[root];
+    try {
+      nodesManager.mergeProjectNode(project, undefined, undefined);
+    } catch (error) {
+      errors.push(
+        new MergeNodesError({
+          file: 'nx.json',
+          pluginName: 'nx/default-plugins',
+          error,
+          pluginIndex: undefined,
+        })
+      );
+    }
+  }
+
+  // Overlay default-plugin attribution onto the main source maps.
+  //
+  // Known edge case: if a default plugin placed `...` after other keys,
+  // those keys yield to the base during the single-layer apply above
+  // but still appear here from the intermediate merge — in that rare
+  // case the overlay misattributes the field to the default plugin.
+  for (const root in defaultConfigurationSourceMaps) {
+    configurationSourceMaps[root] ??= {};
+    Object.assign(
+      configurationSourceMaps[root],
+      defaultConfigurationSourceMaps[root]
+    );
   }
 
   const projectRootMap = nodesManager.getRootMap();

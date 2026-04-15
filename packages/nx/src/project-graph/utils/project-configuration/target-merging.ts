@@ -134,7 +134,8 @@ function mergeOptions(
   baseOptions: Record<string, any> | undefined,
   projectConfigSourceMap?: Record<string, SourceInformation>,
   sourceInformation?: SourceInformation,
-  targetIdentifier?: string
+  targetIdentifier?: string,
+  preserveUnknownSpreads?: boolean
 ): Record<string, any> | undefined {
   // If the options object itself contains a spread token, use object-level spread
   // semantics — the position of '...' in key order controls merge priority,
@@ -149,7 +150,8 @@ function mergeOptions(
             key: `${targetIdentifier}.options`,
             sourceInformation,
           }
-        : undefined
+        : undefined,
+      preserveUnknownSpreads
     ) as Record<string, any>;
   }
 
@@ -169,7 +171,8 @@ function mergeOptions(
             key: `${targetIdentifier}.options.${optionKey}`,
             sourceInformation,
           }
-        : undefined
+        : undefined,
+      preserveUnknownSpreads
     );
   }
 
@@ -181,7 +184,8 @@ function mergeConfigurations<T extends Object>(
   baseConfigurations: Record<string, T> | undefined,
   projectConfigSourceMap?: Record<string, SourceInformation>,
   sourceInformation?: SourceInformation,
-  targetIdentifier?: string
+  targetIdentifier?: string,
+  preserveUnknownSpreads?: boolean
 ): Record<string, T> | undefined {
   const mergedConfigurations: Record<string, T> = {};
 
@@ -209,14 +213,33 @@ function mergeConfigurations<T extends Object>(
       mergedConfigurations[configName] =
         configName in (baseConfigurations ?? {})
           ? baseConfigurations[configName]
-          : (mergeOptions(newConfigurations?.[configName], undefined) as T);
+          : (mergeOptions(
+              newConfigurations?.[configName],
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              preserveUnknownSpreads
+            ) as T);
     } else {
       // Intentionally doesn't pass source map here; handled below.
       mergedConfigurations[configName] = mergeOptions(
         newConfigurations?.[configName],
-        baseConfigurations?.[configName]
+        baseConfigurations?.[configName],
+        undefined,
+        undefined,
+        undefined,
+        preserveUnknownSpreads
       ) as T;
     }
+  }
+
+  if (
+    hasSpread &&
+    preserveUnknownSpreads &&
+    baseConfigurations === undefined
+  ) {
+    (mergedConfigurations as Record<string, unknown>)[NX_SPREAD_TOKEN] = true;
   }
 
   // record new configurations & configuration properties in source map
@@ -255,7 +278,8 @@ export function mergeTargetConfigurations(
   baseTarget?: TargetConfiguration,
   projectConfigSourceMap?: Record<string, SourceInformation>,
   sourceInformation?: SourceInformation,
-  targetIdentifier?: string
+  targetIdentifier?: string,
+  preserveUnknownSpreads?: boolean
 ): TargetConfiguration {
   const {
     configurations: defaultConfigurations,
@@ -319,7 +343,8 @@ export function mergeTargetConfigurations(
                     key: `${targetIdentifier}.${key}`,
                     sourceInformation,
                   }
-                : undefined
+                : undefined,
+              preserveUnknownSpreads
             );
     } else if (key in target) {
       result[key] = getMergeValueResult(
@@ -331,11 +356,20 @@ export function mergeTargetConfigurations(
               key: `${targetIdentifier}.${key}`,
               sourceInformation,
             }
-          : undefined
+          : undefined,
+        preserveUnknownSpreads
       );
     } else {
       result[key] = mergeBase[key];
     }
+  }
+
+  if (
+    spreadPosInTarget >= 0 &&
+    preserveUnknownSpreads &&
+    baseTarget === undefined
+  ) {
+    (result as Record<string, unknown>)[NX_SPREAD_TOKEN] = true;
   }
 
   // Update source map once after loop
@@ -351,7 +385,8 @@ export function mergeTargetConfigurations(
       isCompatible ? defaultOptions : undefined,
       projectConfigSourceMap,
       sourceInformation,
-      targetIdentifier
+      targetIdentifier,
+      preserveUnknownSpreads
     );
     if (projectConfigSourceMap && target.options) {
       projectConfigSourceMap[`${targetIdentifier}.options`] = sourceInformation;
@@ -366,7 +401,8 @@ export function mergeTargetConfigurations(
       isCompatible ? defaultConfigurations : undefined,
       projectConfigSourceMap,
       sourceInformation,
-      targetIdentifier
+      targetIdentifier,
+      preserveUnknownSpreads
     );
     if (projectConfigSourceMap && target.configurations) {
       projectConfigSourceMap[`${targetIdentifier}.configurations`] =

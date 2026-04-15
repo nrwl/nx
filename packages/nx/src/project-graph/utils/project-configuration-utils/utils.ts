@@ -33,6 +33,12 @@ export function uniqueKeysInObjects(...objs: Record<string, any>[]): string[] {
  * When `sourceMapContext` is provided, the source map is updated per property
  * to track which source each element/key came from. The existing source map
  * entry for `key` is used as the base source information.
+ *
+ * When `preserveUnknownSpreads` is true and the base value is undefined (no
+ * earlier layer contributed anything to merge against), the spread sentinel is
+ * kept in the result so a later merge pass can resolve it against the
+ * eventual base. Used by intermediate merges that must defer spread
+ * resolution until the final layer order is known.
  */
 export function getMergeValueResult(
   baseValue: any,
@@ -41,7 +47,8 @@ export function getMergeValueResult(
     sourceMap: Record<string, SourceInformation>;
     key: string;
     sourceInformation: SourceInformation;
-  }
+  },
+  preserveUnknownSpreads?: boolean
 ): any {
   // no new value, use old value — source map stays as-is (base source)
   if (newValue === undefined && baseValue !== undefined) {
@@ -55,6 +62,7 @@ export function getMergeValueResult(
     if (spreadIndex !== -1) {
       const baseArray = Array.isArray(baseValue) ? baseValue : [];
       const baseSourceInfo = sourceMapContext?.sourceMap[sourceMapContext.key];
+      const keepSpread = preserveUnknownSpreads && baseValue === undefined;
 
       // Build the result array element by element so we can track each
       // element's source in the source map.
@@ -62,6 +70,16 @@ export function getMergeValueResult(
       let resultIdx = 0;
       for (let i = 0; i < newValue.length; i++) {
         if (newValue[i] === NX_SPREAD_TOKEN) {
+          if (keepSpread) {
+            result.push(NX_SPREAD_TOKEN);
+            if (sourceMapContext) {
+              sourceMapContext.sourceMap[
+                `${sourceMapContext.key}.${resultIdx}`
+              ] = sourceMapContext.sourceInformation;
+            }
+            resultIdx++;
+            continue;
+          }
           for (let j = 0; j < baseArray.length; j++) {
             result.push(baseArray[j]);
             if (sourceMapContext && baseSourceInfo) {
@@ -102,6 +120,7 @@ export function getMergeValueResult(
     const baseObj =
       typeof baseValue === 'object' && baseValue != null ? baseValue : {};
     const baseSourceInfo = sourceMapContext?.sourceMap[sourceMapContext.key];
+    const keepSpread = preserveUnknownSpreads && baseValue === undefined;
 
     // Build the result object key by key so we can track each property's
     // source in the source map. The last write wins — if a key appears in
@@ -114,6 +133,13 @@ export function getMergeValueResult(
         if (sourceMapContext) {
           sourceMapContext.sourceMap[`${sourceMapContext.key}.${newKey}`] =
             sourceMapContext.sourceInformation;
+        }
+      } else if (keepSpread) {
+        res[NX_SPREAD_TOKEN] = true;
+        if (sourceMapContext) {
+          sourceMapContext.sourceMap[
+            `${sourceMapContext.key}.${NX_SPREAD_TOKEN}`
+          ] = sourceMapContext.sourceInformation;
         }
       } else {
         for (const baseKey in baseObj) {

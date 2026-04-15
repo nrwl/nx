@@ -986,7 +986,9 @@ describe('project-configuration-utils', () => {
       expect(error.message).toContain(
         'The {workspaceRoot} token is only valid at the beginning of an option'
       );
-      expect(error.message).toContain('nx.json[targetDefaults]:test');
+      // Token validation now happens during normalization on the merged
+      // rootMap, so the error is keyed by project root + target name.
+      expect(error.message).toContain('libs/my-lib:test');
     });
 
     describe('negation pattern support', () => {

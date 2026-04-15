@@ -10,7 +10,6 @@ import {
   deepClone,
   isCompatibleTarget,
   resolveCommandSyntacticSugar,
-  resolveNxTokensInOptions,
 } from '../project-configuration/target-merging';
 
 type CreateNodesResultEntry = readonly [
@@ -40,7 +39,6 @@ export function createTargetDefaultsResults(
 
   const syntheticProjects: Record<string, ProjectConfiguration> = {};
 
-  // Helper to read target defaults and prepare them with token resolution
   const readAndPrepareTargetDefaults = (
     targetName: string,
     executor: string | undefined,
@@ -55,31 +53,7 @@ export function createTargetDefaultsResults(
     if (!rawTargetDefaults) return undefined;
 
     const targetDefaults = deepClone(rawTargetDefaults);
-    const errorMsgKey = ['nx.json[targetDefaults]', targetName].join(':');
-    const normalizedDefaults = resolveCommandSyntacticSugar(
-      targetDefaults,
-      root
-    );
-
-    // Resolve Nx tokens in target default options
-    const projectForTokens = specifiedPluginRootMap[root] ||
-      defaultPluginRootMap[root] ||
-      syntheticProjects[root] || { root };
-    normalizedDefaults.options = resolveNxTokensInOptions(
-      normalizedDefaults.options,
-      projectForTokens,
-      errorMsgKey
-    );
-    for (const configuration in normalizedDefaults.configurations) {
-      normalizedDefaults.configurations[configuration] =
-        resolveNxTokensInOptions(
-          normalizedDefaults.configurations[configuration],
-          projectForTokens,
-          `${errorMsgKey}:${configuration}`
-        );
-    }
-
-    return normalizedDefaults;
+    return resolveCommandSyntacticSugar(targetDefaults, root);
   };
 
   // Get all unique project roots that have targets from either specified or default plugins
