@@ -118,7 +118,6 @@ import {
 } from './handle-nx-console';
 import { handleNxWorkspaceFiles } from './handle-nx-workspace-files';
 import {
-  handleOutputsHashesMatch,
   handleOutputsHashesMatchBatch,
   handleRecordOutputsHashBatch,
 } from './handle-outputs-tracking';
