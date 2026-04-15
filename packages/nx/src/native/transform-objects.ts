@@ -6,6 +6,20 @@ import {
   ProjectGraph as RustProjectGraph,
 } from './index';
 
+function sortObjectKeys(obj: unknown): unknown {
+  if (obj === null || obj === undefined || typeof obj !== 'object') {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(sortObjectKeys);
+  }
+  const sorted: Record<string, unknown> = {};
+  for (const key of Object.keys(obj).sort()) {
+    sorted[key] = sortObjectKeys((obj as Record<string, unknown>)[key]);
+  }
+  return sorted;
+}
+
 export function transformProjectGraphForRust(
   graph: ProjectGraph
 ): RustProjectGraph {
@@ -21,8 +35,8 @@ export function transformProjectGraphForRust(
         executor: targetConfig.executor,
         inputs: targetConfig.inputs,
         outputs: targetConfig.outputs,
-        options: JSON.stringify(targetConfig.options),
-        configurations: JSON.stringify(targetConfig.configurations),
+        options: JSON.stringify(sortObjectKeys(targetConfig.options)),
+        configurations: JSON.stringify(sortObjectKeys(targetConfig.configurations)),
         parallelism: targetConfig.parallelism,
       };
     }
