@@ -188,6 +188,8 @@ ${headersAndRedirects}`
 // Used to retire an old versioned subdomain without maintaining its docs.
 // ---------------------------------------------------------------------------
 function stageRedirectToProd(tmpDir: string): void {
+  // Publish dir must match the Netlify UI setting (nx-dev/nx-dev/.next) —
+  // the UI value is authoritative; a toml `publish` override isn't honored.
   const publishDir = resolve(tmpDir, PUBLISH_DIR);
   mkdirSync(publishDir, { recursive: true });
 
@@ -209,13 +211,28 @@ function stageRedirectToProd(tmpDir: string): void {
 `
   );
 
-  const headersAndRedirects = `[[redirects]]
+  // netlify.toml: overrides the UI build command to a no-op and force-301s
+  // every path to nx.dev/docs. Publish dir stays as the UI-configured
+  // ${PUBLISH_DIR}. No package.json / lockfile / nx scaffolding needed.
+  writeFileSync(
+    resolve(tmpDir, 'netlify.toml'),
+    `# Auto-generated for redirect-to-prod versioned branch.
+# Overrides Netlify UI build command so no install/build runs.
+# Publish dir stays as the UI-configured ${PUBLISH_DIR}.
+
+[build]
+  command = "echo 'redirect-only branch — no build'"
+
+[build.environment]
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+
+[[redirects]]
   from = "/*"
   to = "https://nx.dev/docs"
   status = 301
-  force = true`;
-
-  writeSharedScaffolding(tmpDir, headersAndRedirects);
+  force = true
+`
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -482,15 +499,23 @@ try {
   run('git rm -rf .');
 
   // Copy staged files into the working tree
-  cpSync(resolve(tmpDir, 'package.json'), resolve(ROOT, 'package.json'));
-  cpSync(resolve(tmpDir, 'nx.json'), resolve(ROOT, 'nx.json'));
-  cpSync(resolve(tmpDir, 'pnpm-lock.yaml'), resolve(ROOT, 'pnpm-lock.yaml'));
-  cpSync(resolve(tmpDir, 'netlify.toml'), resolve(ROOT, 'netlify.toml'));
-  cpSync(resolve(tmpDir, 'nx-dev'), resolve(ROOT, 'nx-dev'), {
-    recursive: true,
-  });
-
-  run('git add package.json nx.json pnpm-lock.yaml netlify.toml nx-dev/');
+  if (redirectToProd) {
+    cpSync(resolve(tmpDir, 'netlify.toml'), resolve(ROOT, 'netlify.toml'));
+    // Publish dir tree lives at nx-dev/nx-dev/.next/ — matches Netlify UI.
+    cpSync(resolve(tmpDir, 'nx-dev'), resolve(ROOT, 'nx-dev'), {
+      recursive: true,
+    });
+    run('git add netlify.toml nx-dev/');
+  } else {
+    cpSync(resolve(tmpDir, 'package.json'), resolve(ROOT, 'package.json'));
+    cpSync(resolve(tmpDir, 'nx.json'), resolve(ROOT, 'nx.json'));
+    cpSync(resolve(tmpDir, 'pnpm-lock.yaml'), resolve(ROOT, 'pnpm-lock.yaml'));
+    cpSync(resolve(tmpDir, 'netlify.toml'), resolve(ROOT, 'netlify.toml'));
+    cpSync(resolve(tmpDir, 'nx-dev'), resolve(ROOT, 'nx-dev'), {
+      recursive: true,
+    });
+    run('git add package.json nx.json pnpm-lock.yaml netlify.toml nx-dev/');
+  }
   run(
     `git commit -m "docs: versioned docs snapshot for ${branchName} (from ${sourceRef})"`
   );
