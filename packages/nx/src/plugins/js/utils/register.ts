@@ -1,4 +1,5 @@
-import { join, sep } from 'path';
+import { dirname, isAbsolute, join, resolve, sep } from 'path';
+import { existsSync, readFileSync } from 'fs';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
@@ -49,6 +50,16 @@ const isInvokedByTsx: boolean = (() => {
 })();
 
 /**
+ * Whether the current Node.js version supports native TypeScript execution
+ * via type stripping (Node 22.6+).
+ *
+ * process.features.typescript is 'strip' | 'transform' | false in Node 22.6+
+ */
+
+const nodeSupportsNativeTypescript: boolean = !!(process as any).features
+  ?.typescript;
+
+/**
  * When process.features.typescript is truthy and the user has opted in via
  * NX_PREFER_NODE_STRIP_TYPES=true, we can skip registering swc-node or ts-node
  * transpilers since Node.js will handle TypeScript natively.
@@ -62,8 +73,7 @@ const preferNodeStripTypes: boolean = (() => {
   if (process.env.NX_PREFER_NODE_STRIP_TYPES !== 'true') {
     return false;
   }
-  // process.features.typescript is 'strip' | 'transform' | false in Node 22.6+
-  return !!(process as any).features?.typescript;
+  return nodeSupportsNativeTypescript;
 })();
 
 /**
@@ -363,7 +373,11 @@ export function registerTranspiler(
   const transpiler = getTranspiler(compilerOptions, tsConfigRaw);
 
   if (!transpiler) {
-    warnNoTranspiler();
+    // If Node.js natively supports TypeScript (22.6+), no transpiler is needed.
+    // Don't warn — Node will handle .ts files via type stripping.
+    if (!nodeSupportsNativeTypescript) {
+      warnNoTranspiler();
+    }
     return () => {};
   }
 
@@ -387,7 +401,7 @@ export function registerTsConfigPaths(tsConfigPath): () => void {
      */
     if (tsConfigResult.resultType === 'success') {
       return tsconfigPaths.register({
-        baseUrl: tsConfigResult.absoluteBaseUrl,
+        baseUrl: resolvePathsBaseUrl(tsConfigPath),
         paths: tsConfigResult.paths,
       });
     }
@@ -551,3 +565,72 @@ export function getTsNodeCompilerOptions(compilerOptions: CompilerOptions) {
 type RemoveIndex<T> = {
   [K in keyof T as {} extends Record<K, 1> ? never : K]: T[K];
 };
+
+function resolvePathsBaseUrl(tsconfigPath: string): string {
+  const chain: { dir: string; raw: any }[] = [];
+  const queue: string[] = [tsconfigPath];
+  while (queue.length > 0) {
+    const absolute = resolve(queue.shift()!);
+    const dir = dirname(absolute);
+    try {
+      const raw = JSON.parse(readFileSync(absolute, 'utf-8'));
+      chain.push({ dir, raw });
+      const exts: string[] = raw.extends
+        ? Array.isArray(raw.extends)
+          ? raw.extends
+          : [raw.extends]
+        : [];
+      for (const ext of exts) {
+        const resolved = resolveExtendsPath(ext, dir);
+        if (resolved) {
+          queue.push(resolved);
+        }
+      }
+    } catch {
+      // skip unreadable files
+    }
+  }
+
+  let pathsIndex = -1;
+  for (let i = 0; i < chain.length; i++) {
+    if (
+      chain[i].raw.compilerOptions?.paths &&
+      Object.keys(chain[i].raw.compilerOptions.paths).length > 0
+    ) {
+      pathsIndex = i;
+      break;
+    }
+  }
+
+  const searchStart = pathsIndex >= 0 ? pathsIndex : 0;
+  for (let i = searchStart; i < chain.length; i++) {
+    if (chain[i].raw.compilerOptions?.baseUrl) {
+      return resolve(chain[i].dir, chain[i].raw.compilerOptions.baseUrl);
+    }
+  }
+
+  return pathsIndex >= 0
+    ? chain[pathsIndex].dir
+    : dirname(resolve(tsconfigPath));
+}
+
+function resolveExtendsPath(ext: string, fromDir: string): string | null {
+  if (ext.startsWith('.') || isAbsolute(ext)) {
+    let resolved = resolve(fromDir, ext);
+    if (existsSync(resolved)) return resolved;
+    if (!resolved.endsWith('.json')) {
+      resolved += '.json';
+      if (existsSync(resolved)) return resolved;
+    }
+    return null;
+  }
+  try {
+    return require.resolve(ext, { paths: [fromDir] });
+  } catch {
+    try {
+      return require.resolve(`${ext}/tsconfig.json`, { paths: [fromDir] });
+    } catch {
+      return null;
+    }
+  }
+}

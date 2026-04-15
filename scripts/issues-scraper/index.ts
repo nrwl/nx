@@ -1,10 +1,10 @@
-import { ensureDirSync, readJsonSync, writeJsonSync } from 'fs-extra';
-import { dirname, join } from 'path';
-import { ReportData, ScopeData, TrendData } from './model';
-import { scrapeIssues } from './scrape-issues';
-import { formatGhReport, getSlackMessageJson } from './format-slack-message';
 import { setOutput } from '@actions/core';
+import { ensureDirSync, readJsonSync, writeJsonSync } from 'fs-extra';
 import isCI from 'is-ci';
+import { dirname, join } from 'path';
+import { formatGhReport, getSlackMessageJson } from './format-slack-message';
+import { ReportData, ScopeData, TrendData } from './model';
+import { getScopeLabels, scrapeIssues } from './scrape-issues';
 
 const CACHE_FILE = join(__dirname, 'cached', 'data.json');
 
@@ -14,9 +14,16 @@ async function main() {
     oldData.collectedDate ? new Date(oldData.collectedDate) : undefined
   );
   const trendData = getTrendData(currentData, oldData);
-  const formatted = formatGhReport(currentData, trendData, oldData);
-  setOutput('SLACK_MESSAGE', getSlackMessageJson(formatted));
-  console.log(formatted.replace(/\<(.*)\|(.*)\>/g, '[$1]($0)'));
+  const formatted = formatGhReport(
+    currentData,
+    trendData,
+    oldData,
+    getUnlabeledIssuesUrl(await getScopeLabels())
+  );
+  if (process.env.GITHUB_ACTIONS) {
+    setOutput('SLACK_MESSAGE', getSlackMessageJson(formatted));
+  }
+  console.log(formatted.replace(/\<(.*)\|(.*)\>/g, '[$2]($1)'));
   saveCacheData(currentData);
 }
 
@@ -25,6 +32,13 @@ if (require.main === module) {
     console.error(e);
     process.exit(1);
   });
+}
+
+function getUnlabeledIssuesUrl(scopeLabels: string[]) {
+  const labelFilters = scopeLabels.map((s) => `-label:"${s}"`);
+  return `https://github.com/nrwl/nx/issues/?q=is%3Aopen+is%3Aissue+sort%3Aupdated-desc+${encodeURIComponent(
+    labelFilters.join(' ')
+  )}`;
 }
 
 function getTrendData(newData: ReportData, oldData: ReportData): TrendData {

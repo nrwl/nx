@@ -37,6 +37,13 @@ export const onRequest = defineRouteMiddleware(async (context) => {
   }
 
   const { head } = context.locals.starlightRoute;
+  const title =
+    context.locals.starlightRoute.entry.data.title || 'Nx Documentation';
+  const description =
+    (
+      context.locals.starlightRoute.entry.data as Record<string, unknown>
+    ).description?.toString() || '';
+
   head.push(
     {
       tag: 'meta',
@@ -49,6 +56,22 @@ export const onRequest = defineRouteMiddleware(async (context) => {
     {
       tag: 'meta',
       attrs: { property: 'og:image:height', content: '630' },
-    }
+    },
+    {
+      tag: 'meta',
+      attrs: { name: 'twitter:image', content: ogImageUrl.href },
+    },
+    {
+      tag: 'meta',
+      attrs: { name: 'twitter:title', content: title },
+    },
+    ...(description
+      ? [
+          {
+            tag: 'meta' as const,
+            attrs: { name: 'twitter:description', content: description },
+          },
+        ]
+      : [])
   );
 });

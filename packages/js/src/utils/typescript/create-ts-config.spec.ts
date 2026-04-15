@@ -22,9 +22,7 @@ describe('extractTsConfigBase', () => {
 
     expect(readJson(tree, 'tsconfig.base.json')).toEqual({
       compileOnSave: false,
-      compilerOptions: {
-        baseUrl: '.',
-      },
+      compilerOptions: {},
     });
   });
 });

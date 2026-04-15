@@ -1,0 +1,73 @@
+---
+title: Fix Nx Commands Failing in Claude Code Sandbox
+description: Nx commands fail inside Claude Code sandbox because Unix sockets are blocked. Set allowAllUnixSockets to fix daemon, plugin isolation, and forked process errors.
+keywords:
+  [
+    Claude Code,
+    sandbox,
+    Unix sockets,
+    Nx daemon,
+    allowAllUnixSockets,
+    Seatbelt,
+    bubblewrap,
+    plugin isolation,
+  ]
+filter: 'type:References'
+---
+
+When running Nx commands inside [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview)'s sandbox mode, you may see errors related to the Nx daemon, plugin isolation, or forked processes failing to communicate. This happens because Claude Code's sandbox (Seatbelt on macOS, bubblewrap on Linux) blocks Unix socket access by default, and Nx relies on Unix sockets for inter-process communication.
+
+## The fix
+
+Add `allowAllUnixSockets: true` to your Claude Code sandbox permissions. You can set this at the project level (`.claude/settings.local.json`) or user level (`~/.claude/settings.json`):
+
+```json
+// .claude/settings.local.json
+{
+  "permissions": {
+    "allowAllUnixSockets": true
+  }
+}
+```
+
+This grants Nx the ability to create and connect to Unix sockets, which it needs for daemon communication, plugin isolation, and forked task execution.
+
+## Why `allowAllUnixSockets` instead of specific paths
+
+Claude Code's `allowUnixSockets` setting accepts specific socket paths, but Nx generates socket paths dynamically using `process.pid`, a counter, and `performance.now()`. These paths change on every run and can't be predicted ahead of time. Allowlisting individual paths isn't feasible, so `allowAllUnixSockets: true` is the recommended approach.
+
+## Alternative workarounds
+
+If you prefer not to enable blanket Unix socket access, you can disable the Nx features that require sockets. These workarounds come with tradeoffs:
+
+### Disable the Nx daemon
+
+```shell
+NX_DAEMON=false nx <command>
+```
+
+The [Nx daemon](/docs/concepts/nx-daemon) keeps a persistent process running to speed up repeated operations. Disabling it means Nx starts fresh on every invocation, resulting in slower cold starts (especially in large workspaces).
+
+### Disable plugin isolation
+
+```shell
+NX_ISOLATE_PLUGINS=false nx <command>
+```
+
+[Plugin isolation](/docs/concepts/inferred-tasks) runs each plugin in a separate forked process to prevent conflicts between multiple TypeScript compilers, module-level caches, and global state. Disabling it runs all plugins in the main process, which can cause issues in workspaces with plugins that have conflicting dependencies.
+
+{% aside type="caution" title="Workarounds are not recommended for regular use" %}
+Both environment variables work around the symptom rather than fixing the root cause. The `allowAllUnixSockets` setting is the proper fix and doesn't sacrifice any Nx functionality.
+{% /aside %}
+
+## Socket path environment variables
+
+For advanced use cases, Nx provides environment variables to override where socket files are created:
+
+| Variable                         | Description                                                        |
+| -------------------------------- | ------------------------------------------------------------------ |
+| `NX_SOCKET_DIR`                  | Overrides the directory for both daemon and forked process sockets |
+| `NX_DAEMON_SOCKET_DIR`           | Overrides the daemon socket directory specifically                 |
+| `NX_NATIVE_FILE_CACHE_DIRECTORY` | Overrides the native file cache path                               |
+
+These are primarily useful for environments with restricted temp directory access (e.g., certain Docker or CI setups). For Claude Code's sandbox, `allowAllUnixSockets: true` is simpler and more reliable.

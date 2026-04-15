@@ -45,7 +45,15 @@ export function addVSCodeDebugConfiguration(
   tree: Tree,
   options: VSCodeDebugConfigOptions
 ): void {
-  const pmCommand = getPackageManagerCommand().exec;
+  // `getPackageManagerCommand().exec` returns the full subcommand string,
+  // e.g. `pnpm exec` for pnpm or `npm exec --` for npm. VS Code's
+  // `runtimeExecutable` expects an actual executable path, not a string
+  // with embedded arguments — passing `"pnpm exec"` fails on Windows with
+  // `Can't find Node.js binary "pnpm exec": path does not exist`. Split
+  // the command and prepend any extra tokens to runtimeArgs. (#35276)
+  const pmCommandTokens = getPackageManagerCommand().exec.split(' ');
+  const runtimeExecutable = pmCommandTokens[0];
+  const extraExecArgs = pmCommandTokens.slice(1);
 
   // Determine the output path based on project configuration
   let outputPath: string;
@@ -69,8 +77,8 @@ export function addVSCodeDebugConfiguration(
     type: 'node',
     request: 'launch',
     name: `Debug ${options.projectName} with Nx`,
-    runtimeExecutable: pmCommand,
-    runtimeArgs: ['nx', 'serve', options.projectName],
+    runtimeExecutable,
+    runtimeArgs: [...extraExecArgs, 'nx', 'serve', options.projectName],
     env: {
       NODE_OPTIONS: `--inspect=${debugPort}`,
     },

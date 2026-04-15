@@ -20,7 +20,7 @@ impl ProcessKiller {
     pub fn kill(&self, signal: Option<&str>) -> anyhow::Result<()> {
         let signal = signal.unwrap_or("SIGINT");
         debug!("Killing process {} with {}", &self.pid, signal);
-        let pid = Pid::from_raw(self.pid);
+        let pid = Pid::from_raw(-self.pid);
         match kill(
             pid,
             NixSignal::from(Signal::try_from(signal).map_err(|e| anyhow::anyhow!(e))?),

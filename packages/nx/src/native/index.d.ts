@@ -55,7 +55,9 @@ export declare class HashPlanInspector {
    * Like `inspect()` but returns structured `HashInputs` objects instead of flat strings.
    * Each `HashInstruction` is categorized into the appropriate bucket (files, runtime,
    * environment, depOutputs, external). TsConfiguration is resolved to the root tsconfig
-   * file path. ProjectConfiguration is skipped for now. Cwd is skipped as it's ambient.
+   * file path. JsonFileSet is resolved to the matched JSON file paths (field/excludeField
+   * filters only affect hashing, not which files are reported as inputs).
+   * ProjectConfiguration is skipped for now. Cwd is skipped as it's ambient.
    */
   inspectInputs(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, HashInputs>
 }
@@ -238,7 +240,7 @@ export interface DepsOutputsInput {
 
 /**
  * Detects which AI agent is running and returns its name.
- * Returns None if no agent is detected.
+ * Returns None if no agent is detected or when running inside the Nx daemon.
  * Filtering against supported agents should be done on the TypeScript side.
  */
 export declare function detectAiAgent(): string | null
@@ -413,10 +415,21 @@ export declare function installNxConsoleForEditor(editor: SupportedEditor): Prom
 
 export const IS_WASM: boolean
 
-/** Detects if the current process is being run by an AI agent */
+/**
+ * Detects if the current process is being run by an AI agent.
+ * Always returns false when running inside the Nx daemon, since the daemon
+ * is a long-lived process that should not inherit AI agent behavior from
+ * the client that connected to it.
+ */
 export declare function isAiAgent(): boolean
 
 export declare function isEditorInstalled(editor: SupportedEditor): Promise<boolean>
+
+export interface JsonInput {
+  json: string
+  fields?: Array<string>
+  excludeFields?: Array<string>
+}
 
 export declare function logDebug(message: string): void
 

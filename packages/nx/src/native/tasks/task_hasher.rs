@@ -16,9 +16,9 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        CachedTaskOutput, ProjectFileSetCache, hash_all_externals, hash_external,
-        hash_project_config, hash_project_files_with_inputs_cached, hash_task_output,
-        hash_tsconfig_selectively, hash_workspace_files_with_inputs,
+        CachedTaskOutput, JsonHashResult, ProjectFileSetCache, hash_all_externals, hash_external,
+        hash_json_files, hash_project_config, hash_project_files_with_inputs_cached,
+        hash_task_output, hash_tsconfig_selectively, hash_workspace_files_with_inputs,
     },
     types::FileData,
     workspace::types::ProjectFiles,
@@ -205,6 +205,7 @@ impl TaskHasher {
         let runtime_cache: DashMap<String, String> = DashMap::new();
         let project_file_set_cache = ProjectFileSetCache::new();
         let workspace_file_set_cache: DashMap<String, CachedFileSetHash> = DashMap::new();
+        let json_file_set_cache: DashMap<String, JsonHashResult> = DashMap::new();
         let should_collect_inputs = collect_task_inputs.unwrap_or(false);
 
         let function_start = std::time::Instant::now();
@@ -263,6 +264,7 @@ impl TaskHasher {
                         runtime_cache: &runtime_cache,
                         project_file_set_cache: &project_file_set_cache,
                         workspace_file_set_cache: &workspace_file_set_cache,
+                        json_file_set_cache: &json_file_set_cache,
                         cwd: cwd_path,
                         collect_inputs: should_collect_inputs,
                     },
@@ -340,6 +342,7 @@ impl TaskHasher {
             runtime_cache,
             project_file_set_cache,
             workspace_file_set_cache,
+            json_file_set_cache,
             cwd,
             collect_inputs,
         }: HashInstructionArgs,
@@ -523,6 +526,46 @@ impl TaskHasher {
                 };
                 (hashed_all_externals, inputs)
             }
+            HashInstruction::JsonFileSet {
+                project_name,
+                json_path,
+                fields,
+                exclude_fields,
+            } => {
+                // Cache is keyed on the full instruction string so
+                // different fields/excludeFields against the same file
+                // remain distinct. `instruction.to_string()` already
+                // encodes (project_name, json_path, fields, exclude_fields)
+                // via the Display impl — see types.rs.
+                let cache_key = instruction.to_string();
+                // Clone the cached entry and drop the Ref before any
+                // subsequent insert to avoid deadlocking DashMap.
+                let cached_entry = if let Some(entry) = json_file_set_cache.get(&cache_key) {
+                    entry.clone()
+                } else {
+                    let result = hash_json_files(
+                        &self.workspace_root,
+                        json_path,
+                        project_name.as_deref(),
+                        fields.as_deref(),
+                        exclude_fields.as_deref(),
+                        &self.project_file_map,
+                        &self.all_workspace_files,
+                    )?;
+                    json_file_set_cache.insert(cache_key, result.clone());
+                    result
+                };
+                trace!(parent: &span, "hash_json: {:?}", now.elapsed());
+                let inputs = if collect_inputs {
+                    HashInputsBuilder {
+                        files: cached_entry.files.into_iter().collect(),
+                        ..Default::default()
+                    }
+                } else {
+                    empty
+                };
+                (cached_entry.hash, inputs)
+            }
         };
         Ok((instruction.to_string(), hash, inputs))
     }
@@ -538,6 +581,7 @@ struct HashInstructionArgs<'a> {
     runtime_cache: &'a DashMap<String, String>,
     project_file_set_cache: &'a ProjectFileSetCache,
     workspace_file_set_cache: &'a DashMap<String, CachedFileSetHash>,
+    json_file_set_cache: &'a DashMap<String, JsonHashResult>,
     cwd: &'a std::path::Path,
     collect_inputs: bool,
 }

@@ -1,3 +1,4 @@
+import type { JsonInput } from '../native';
 import type { PackageJson } from '../utils/package-json';
 import type {
   NxJsonConfiguration,
@@ -203,6 +204,10 @@ export interface TargetDependencyConfig {
   options?: 'ignore' | 'forward';
 }
 
+// TODO: import the remaining variants from '../native' so the TS types stay
+// in sync with the Rust/napi-generated shapes. Some variants (fileset/input
+// discrimination, workingDirectory literal union) carry richer TS semantics
+// than their native counterparts and will need a layered type to preserve.
 export type InputDefinition =
   | { input: string; projects: string | string[] }
   | { input: string; dependencies: true }
@@ -213,7 +218,8 @@ export type InputDefinition =
   | { externalDependencies: string[] }
   | { dependentTasksOutputFiles: string; transitive?: boolean }
   | { env: string }
-  | { workingDirectory: 'relative' | 'absolute' };
+  | { workingDirectory: 'relative' | 'absolute' }
+  | JsonInput;
 
 /**
  * Target's configuration

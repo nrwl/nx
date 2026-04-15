@@ -450,6 +450,23 @@ impl HashPlanner {
                 };
                 Some(HashInstruction::Cwd(cwd_mode))
             }
+            Input::Json {
+                json,
+                fields,
+                exclude_fields,
+            } => {
+                let proj_name = if json.starts_with("{projectRoot}") {
+                    Some(project_name.to_string())
+                } else {
+                    None
+                };
+                Some(HashInstruction::JsonFileSet {
+                    project_name: proj_name,
+                    json_path: resolve_tokens(json, project_root, project_name),
+                    fields: fields.map(|f| f.to_vec()),
+                    exclude_fields: exclude_fields.map(|f| f.to_vec()),
+                })
+            }
             _ => None,
         });
 
