@@ -159,7 +159,16 @@ describe('@nx/workspace:infer-targets', () => {
 
 describe('@nx/workspace:convert-to-monorepo', () => {
   beforeEach(() => {
-    proj = newProject({ packages: ['@nx/react', '@nx/js'] });
+    proj = newProject({
+      packages: [
+        '@nx/eslint',
+        '@nx/js',
+        '@nx/playwright',
+        '@nx/react',
+        '@nx/vite',
+        '@nx/vitest',
+      ],
+    });
   });
 
   afterEach(() => cleanupProject());
@@ -189,7 +198,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
 
 describe('Workspace Tests', () => {
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/workspace', '@nx/js'] });
+    proj = newProject({ packages: ['@nx/workspace', '@nx/js', '@nx/jest'] });
   });
 
   afterAll(() => cleanupProject());

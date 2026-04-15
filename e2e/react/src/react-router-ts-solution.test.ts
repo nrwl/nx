@@ -13,7 +13,18 @@ import {
 describe('React Router Applications - TS Solution', () => {
   const appName = uniq('app');
   beforeAll(() => {
-    newProject({ preset: 'ts', packages: ['@nx/react'] });
+    newProject({
+      preset: 'ts',
+      packages: [
+        '@nx/react',
+        '@nx/vite',
+        '@nx/vitest',
+        '@nx/jest',
+        '@nx/cypress',
+        '@nx/playwright',
+        '@nx/eslint',
+      ],
+    });
     ensurePlaywrightBrowsersInstallation();
     runCLI(
       `generate @nx/react:app ${appName} --use-react-router --routing --linter=eslint --unit-test-runner=vitest --e2e-test-runner=playwright --no-interactive`

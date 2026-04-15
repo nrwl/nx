@@ -19,7 +19,7 @@ describe('Playwright E2E Test runner', () => {
   beforeAll(() => {
     newProject({
       name: uniq('playwright'),
-      packages: ['@nx/playwright', '@nx/web'],
+      packages: ['@nx/playwright', '@nx/web', '@nx/vite'],
     });
   });
 

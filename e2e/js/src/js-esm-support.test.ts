@@ -46,7 +46,7 @@ describe('JS ESM/CJS Support', () => {
   const selectedPm = getSelectedPackageManager();
   beforeAll(() => {
     newProject({
-      packages: ['@nx/node', '@nx/js', '@nx/esbuild'],
+      packages: ['@nx/node', '@nx/js', '@nx/esbuild', '@nx/eslint', '@nx/jest'],
       packageManager: selectedPm === 'npm' ? 'pnpm' : selectedPm,
     });
   });

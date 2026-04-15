@@ -15,7 +15,7 @@ describe('Storybook generators and executors for Vue projects', () => {
     originalEnv = process.env.NX_ADD_PLUGINS;
     process.env.NX_ADD_PLUGINS = 'true';
     proj = newProject({
-      packages: ['@nx/vue'],
+      packages: ['@nx/vue', '@nx/vite', '@nx/storybook'],
     });
     runCLI(`generate @nx/vue:app ${vueStorybookApp} --no-interactive`);
     runCLI(

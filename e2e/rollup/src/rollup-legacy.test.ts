@@ -20,7 +20,9 @@ describe('Rollup Plugin', () => {
   beforeAll(() => {
     originalAddPluginsEnv = process.env.NX_ADD_PLUGINS;
     process.env.NX_ADD_PLUGINS = 'false';
-    newProject({ packages: ['@nx/rollup', '@nx/js'] });
+    newProject({
+      packages: ['@nx/rollup', '@nx/js', '@nx/eslint', '@nx/jest'],
+    });
   });
 
   afterAll(() => {

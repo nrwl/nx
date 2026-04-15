@@ -6,7 +6,15 @@ export interface ModuleFederationTestSetup {
 }
 
 export function setupModuleFederationTest(): ModuleFederationTestSetup {
-  const proj = newProject({ packages: ['@nx/angular'] });
+  const proj = newProject({
+    packages: [
+      '@nx/angular',
+      '@nx/jest',
+      '@nx/vitest',
+      '@nx/playwright',
+      '@nx/cypress',
+    ],
+  });
   const oldVerboseLoggingValue = process.env.NX_E2E_VERBOSE_LOGGING;
   process.env.NX_E2E_VERBOSE_LOGGING = 'true';
 

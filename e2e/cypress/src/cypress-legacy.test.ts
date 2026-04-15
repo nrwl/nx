@@ -14,7 +14,7 @@ const TEN_MINS_MS = 600_000;
 
 describe('Cypress E2E Test runner (legacy)', () => {
   beforeAll(() => {
-    newProject({ packages: ['@nx/angular', '@nx/react'] });
+    newProject({ packages: ['@nx/angular', '@nx/react', '@nx/cypress'] });
   });
 
   afterAll(() => cleanupProject());

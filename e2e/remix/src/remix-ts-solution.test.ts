@@ -9,7 +9,13 @@ import {
 describe('Remix - TS solution setup', () => {
   beforeEach(() => {
     newProject({
-      packages: ['@nx/remix'],
+      packages: [
+        '@nx/remix',
+        '@nx/vite',
+        '@nx/vitest',
+        '@nx/jest',
+        '@nx/eslint',
+      ],
       preset: 'ts',
     });
   });

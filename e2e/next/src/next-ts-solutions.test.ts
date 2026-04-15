@@ -14,7 +14,7 @@ describe('Next TS Solutions', () => {
 
   beforeAll(() => {
     proj = newProject({
-      packages: ['@nx/next'],
+      packages: ['@nx/next', '@nx/js', '@nx/vite', '@nx/eslint'],
       preset: 'ts',
     });
   });

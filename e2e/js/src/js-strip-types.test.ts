@@ -18,6 +18,9 @@ describe('native Node.js TypeScript support (NX_PREFER_NODE_STRIP_TYPES)', () =>
         '@nx/playwright',
         '@nx/cypress',
         '@nx/web',
+        '@nx/vite',
+        '@nx/eslint',
+        '@nx/jest',
       ],
     });
   });

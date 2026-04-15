@@ -9,7 +9,7 @@ import {
 
 describe('NgRx', () => {
   beforeAll(() => {
-    newProject({ packages: ['@nx/angular'] });
+    newProject({ packages: ['@nx/angular', '@nx/playwright'] });
   });
   afterAll(() => {
     cleanupProject();

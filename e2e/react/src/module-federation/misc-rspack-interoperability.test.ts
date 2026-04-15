@@ -17,7 +17,9 @@ import { stripIndents } from 'nx/src/utils/strip-indents';
 describe.skip('React Rspack Module Federation Misc - Interoperability', () => {
   beforeEach(() => {
     process.env.NX_ADD_PLUGINS = 'false';
-    newProject({ packages: ['@nx/react'] });
+    newProject({
+      packages: ['@nx/react', '@nx/webpack', '@nx/rspack', '@nx/cypress'],
+    });
   });
   afterEach(() => {
     cleanupProject();

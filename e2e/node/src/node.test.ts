@@ -412,7 +412,7 @@ describe('Build Node apps', () => {
   beforeAll(() => {
     originalEnvPort = process.env.PORT;
     scope = newProject({
-      packages: ['@nx/node', '@nx/express', '@nx/nest'],
+      packages: ['@nx/node', '@nx/express', '@nx/nest', '@nx/webpack'],
     });
   });
 

@@ -7,7 +7,13 @@ export interface NextTestSetup {
 
 export function setupNextTest(): NextTestSetup {
   const proj = newProject({
-    packages: ['@nx/next', '@nx/cypress'],
+    packages: [
+      '@nx/next',
+      '@nx/cypress',
+      '@nx/jest',
+      '@nx/eslint',
+      '@nx/playwright',
+    ],
   });
   const originalEnv = process.env.NODE_ENV;
 

@@ -14,7 +14,7 @@ describe('Next.js Styles', () => {
 
   beforeAll(() => {
     newProject({
-      packages: ['@nx/next'],
+      packages: ['@nx/next', '@nx/jest', '@nx/eslint'],
     });
   });
 

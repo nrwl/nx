@@ -10,7 +10,7 @@ import {
 
 describe('vue tailwind support', () => {
   beforeAll(() => {
-    newProject({ packages: ['@nx/vue'] });
+    newProject({ packages: ['@nx/vue', '@nx/vite'] });
   });
 
   afterAll(() => {

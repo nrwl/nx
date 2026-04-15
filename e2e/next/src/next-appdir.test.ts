@@ -16,7 +16,7 @@ describe('Next.js App Router', () => {
   beforeAll(
     () =>
       (proj = newProject({
-        packages: ['@nx/next'],
+        packages: ['@nx/next', '@nx/js', '@nx/playwright'],
       }))
   );
 

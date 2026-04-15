@@ -22,7 +22,16 @@ describe('@nx/expo', () => {
   let libName: string;
 
   beforeAll(() => {
-    newProject({ packages: ['@nx/expo'] });
+    newProject({
+      packages: [
+        '@nx/cypress',
+        '@nx/expo',
+        '@nx/jest',
+        '@nx/react',
+        '@nx/rollup',
+        '@nx/storybook',
+      ],
+    });
     appName = uniq('app');
     libName = uniq('lib');
     runCLI(

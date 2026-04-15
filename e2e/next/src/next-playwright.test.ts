@@ -15,7 +15,7 @@ describe('Next Playwright e2e tests', () => {
   beforeAll(async () => {
     projectName = newProject({
       name: uniq('pw-next'),
-      packages: ['@nx/next'],
+      packages: ['@nx/next', '@nx/js', '@nx/playwright'],
     });
     runCLI(
       `generate @nx/next:app ${appName} --e2eTestRunner=playwright --no-interactive`

@@ -58,6 +58,7 @@ const nxPackages = [
   `@nx/rollup`,
   `@nx/react`,
   `@nx/remix`,
+  `@nx/rsbuild`,
   `@nx/rspack`,
   `@nx/storybook`,
   `@nx/vue`,

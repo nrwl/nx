@@ -20,7 +20,15 @@ export interface ProjectsTestSetup {
 }
 
 export function setupProjectsTest(): ProjectsTestSetup {
-  const proj = newProject({ packages: ['@nx/angular'] });
+  const proj = newProject({
+    packages: [
+      '@nx/angular',
+      '@nx/webpack',
+      '@nx/vitest',
+      '@nx/playwright',
+      '@nx/rspack',
+    ],
+  });
   const app1 = uniq('app1');
   const esbuildApp = uniq('esbuild-app');
   const lib1 = uniq('lib1');

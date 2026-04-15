@@ -16,7 +16,9 @@ describe('Move Angular Project', () => {
   let newPath: string;
 
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/angular'] });
+    proj = newProject({
+      packages: ['@nx/angular', '@nx/jest', '@nx/playwright'],
+    });
     app1 = uniq('app1');
     app2 = uniq('app2');
     newPath = `subfolder/${app2}`;
@@ -154,7 +156,15 @@ describe('Convert Angular Webpack Project to Rspack', () => {
   let app1: string;
 
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/angular'] });
+    proj = newProject({
+      packages: [
+        '@nx/angular',
+        '@nx/webpack',
+        '@nx/vitest',
+        '@nx/playwright',
+        '@nx/rspack',
+      ],
+    });
     app1 = uniq('app1');
     runCLI(
       `generate @nx/angular:app ${app1} --bundler=webpack --no-interactive`

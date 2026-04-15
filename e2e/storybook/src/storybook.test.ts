@@ -19,7 +19,7 @@ describe('Storybook generators and executors for monorepos', () => {
   let proj;
   beforeAll(async () => {
     proj = newProject({
-      packages: ['@nx/react'],
+      packages: ['@nx/react', '@nx/webpack'],
     });
     runCLI(
       `generate @nx/react:app ${reactStorybookApp} --bundler=webpack --no-interactive`

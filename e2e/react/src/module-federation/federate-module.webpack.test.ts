@@ -17,7 +17,9 @@ describe.skip('Federate Module', () => {
   let proj: string;
 
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/react', '@nx/js'] });
+    proj = newProject({
+      packages: ['@nx/react', '@nx/js', '@nx/webpack', '@nx/cypress'],
+    });
   });
 
   afterAll(() => cleanupProject());

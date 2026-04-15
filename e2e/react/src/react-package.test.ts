@@ -38,7 +38,9 @@ describe('Build React libraries and apps', () => {
     childLib = uniq('childlib');
     childLib2 = uniq('childlib2');
 
-    proj = newProject({ packages: ['@nx/react'] });
+    proj = newProject({
+      packages: ['@nx/react', '@nx/rspack', '@nx/rollup', '@nx/jest'],
+    });
 
     // create dependencies by importing
     const createDep = (parent, children: string[]) => {

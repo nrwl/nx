@@ -19,7 +19,7 @@ import { runCLI } from './utils';
 // eslint-disable-next-line jest/no-disabled-tests
 describe.skip('Dynamic Module Federation', () => {
   beforeAll(() => {
-    newProject({ packages: ['@nx/react'] });
+    newProject({ packages: ['@nx/react', '@nx/webpack', '@nx/cypress'] });
   });
 
   afterAll(() => cleanupProject());
