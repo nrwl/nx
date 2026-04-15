@@ -22,13 +22,31 @@ export function getEnvVariablesForBatchProcess(
   };
 }
 
+// The orchestrator now calls this eagerly during the coordinator pre-hash
+// in addition to processTask (and again in hashBatchTasks), so the same
+// task hits this function multiple times per run. Each call reads 3+ .env
+// files from disk — memoize by task.id to skip the repeat work.
+//
+// Cache lifetime is the current Nx invocation: the function is only called
+// from CLI/orchestrator code (not the long-lived daemon), so the map is
+// scoped to a single run. Callers must not mutate the returned env — they
+// already spread it into new objects before adding task-specific overrides
+// (see getEnvVariablesForTask).
+const taskSpecificEnvCache = new Map<string, NodeJS.ProcessEnv>();
+
 export function getTaskSpecificEnv(task: Task, graph: ProjectGraph) {
+  const cached = taskSpecificEnvCache.get(task.id);
+  if (cached) return cached;
+
   // Unload any dot env files at the root of the workspace that were loaded on init of Nx.
   const taskEnv = unloadDotEnvFiles({ ...process.env });
-  return process.env.NX_LOAD_DOT_ENV_FILES === 'true'
-    ? loadDotEnvFilesForTask(task, graph, taskEnv)
-    : // If not loading dot env files, ensure env vars created by system are still loaded
-      taskEnv;
+  const env =
+    process.env.NX_LOAD_DOT_ENV_FILES === 'true'
+      ? loadDotEnvFilesForTask(task, graph, taskEnv)
+      : // If not loading dot env files, ensure env vars created by system are still loaded
+        taskEnv;
+  taskSpecificEnvCache.set(task.id, env);
+  return env;
 }
 
 export function getEnvVariablesForTask(
