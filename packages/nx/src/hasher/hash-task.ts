@@ -4,6 +4,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { IS_WASM, TaskDetails } from '../native';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
+import { getTaskSpecificEnv } from '../tasks-runner/task-env';
 import { getCustomHasher } from '../tasks-runner/utils';
 import { getDbConnection } from '../utils/db-connection';
 import { getInputs, TaskHasher } from './task-hasher';
@@ -56,7 +57,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
 
   const perTaskEnvs: Record<string, NodeJS.ProcessEnv> = {};
   for (const task of tasksToHash) {
-    perTaskEnvs[task.id] = process.env;
+    perTaskEnvs[task.id] = getTaskSpecificEnv(task, projectGraph);
   }
   const hashes = await hasher.hashTasks(tasksToHash, taskGraph, perTaskEnvs);
   const ioService = getTaskIOService();
