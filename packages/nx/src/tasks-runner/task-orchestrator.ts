@@ -104,6 +104,7 @@ export class TaskOrchestrator {
 
   private completedTasks = new Map<string, TaskStatus>();
   private waitingForTasks: Function[] = [];
+  private pendingDiscreteWorkers = new Set<Promise<void>>();
 
   private groups: boolean[] = [];
   private continuousTasksStarted = 0;
@@ -244,8 +245,6 @@ export class TaskOrchestrator {
     doNotSkipCache: boolean,
     parallelism: number
   ) {
-    let inFlightWorkers = 0;
-
     while (true) {
       if (this.bailed || this.stopRequested) break;
 
@@ -263,18 +262,14 @@ export class TaskOrchestrator {
               )
           );
         if (unhashed.length > 1) {
-          try {
-            await hashTasks(
-              this.hasher,
-              this.projectGraph,
-              this.taskGraphForHashing,
-              this.batchEnv,
-              this.taskDetails,
-              unhashed
-            );
-          } catch {
-            // processTask will hash individually as fallback
-          }
+          await hashTasks(
+            this.hasher,
+            this.projectGraph,
+            this.taskGraphForHashing,
+            this.batchEnv,
+            this.taskDetails,
+            unhashed
+          );
         }
       }
 
@@ -299,55 +294,20 @@ export class TaskOrchestrator {
 
       // 5. Dispatch cache misses as individual workers
       let dispatched = false;
-      while (inFlightWorkers < parallelism) {
+      while (this.pendingDiscreteWorkers.size < parallelism) {
         const task = this.tasksSchedule.nextTask((t) => !t.continuous);
         if (!task) break;
         dispatched = true;
-        inFlightWorkers++;
         const groupId = this.closeGroup();
-        // Fire-and-forget: the coordinator dispatches the worker and keeps
-        // looping. `void` signals the intentional unawait to linters.
-        //
-        // runTaskDirectly (not applyFromCacheOrRun*) because
-        // resolveCachedTasksBulk already confirmed this task is a cache
-        // miss — another lookup would re-query the DB and (for Nx Cloud
-        // users) repeat the remote HTTP retrieval.
-        void (async () => {
-          try {
-            await this.runTaskDirectly(doNotSkipCache, task, groupId);
-          } catch (e) {
-            // Ensure failures (e.g. remote cache errors) are still reported
-            // rather than silently dropped. Guard against double-finalize:
-            // completeTasks() populates `completedTasks` when it runs, so
-            // if the rejection happened AFTER postRunSteps had already
-            // finalized the task we must not run postRunSteps again.
-            if (this.completedTasks.has(task.id)) return;
-            const terminalOutput = e?.message ?? '';
-            this.options.lifeCycle.printTaskTerminalOutput(
-              task,
-              'failure',
-              terminalOutput
-            );
-            await this.postRunSteps(
-              [{ task, status: 'failure', terminalOutput }],
-              doNotSkipCache,
-              { groupId }
-            );
-          } finally {
-            this.openGroup(groupId);
-            inFlightWorkers--;
-            // Wake coordinator — the decrement above may satisfy the
-            // exit condition (inFlightWorkers === 0) that was missed
-            // when scheduleNextTasksAndReleaseThreads fired earlier.
-            this.waitingForTasks.forEach((f) => f(null));
-            this.waitingForTasks.length = 0;
-          }
-        })();
+        this.dispatchDiscreteWorker(doNotSkipCache, task, groupId);
       }
       if (dispatched) continue;
 
       // 6. Nothing to dispatch — check if done
-      if (!this.tasksSchedule.hasTasks() && inFlightWorkers === 0) {
+      if (
+        !this.tasksSchedule.hasTasks() &&
+        this.pendingDiscreteWorkers.size === 0
+      ) {
         break;
       }
 
@@ -895,6 +855,66 @@ export class TaskOrchestrator {
     const results = await this.finalizeCacheHits(cacheHits);
     await this.postRunSteps(results, doNotSkipCache, { groupId });
     return results;
+  }
+
+  /**
+   * Fire a discrete-task worker and track it in pendingDiscreteWorkers until
+   * it settles. Uses runTaskDirectly (not applyFromCacheOrRun*) because
+   * resolveCachedTasksBulk already confirmed this task is a cache miss —
+   * another lookup would re-query the DB and (for Nx Cloud users) repeat
+   * the remote HTTP retrieval.
+   */
+  private dispatchDiscreteWorker(
+    doNotSkipCache: boolean,
+    task: Task,
+    groupId: number
+  ): void {
+    const worker: Promise<void> = this.runTaskDirectly(
+      doNotSkipCache,
+      task,
+      groupId
+    )
+      .then(() => {})
+      .catch((e) =>
+        this.handleDiscreteWorkerFailure(doNotSkipCache, task, groupId, e)
+      )
+      .finally(() => {
+        this.openGroup(groupId);
+        this.pendingDiscreteWorkers.delete(worker);
+        // Wake coordinator — the delete above may satisfy the exit condition
+        // (pendingDiscreteWorkers.size === 0) that was missed when
+        // scheduleNextTasksAndReleaseThreads fired earlier.
+        this.waitingForTasks.forEach((f) => f(null));
+        this.waitingForTasks.length = 0;
+      });
+    this.pendingDiscreteWorkers.add(worker);
+  }
+
+  /**
+   * Route a worker rejection (e.g. remote cache errors) through the normal
+   * failure path instead of letting it become an unhandled promise. Guard
+   * against double-finalize: completeTasks() populates `completedTasks`,
+   * so a rejection arriving after postRunSteps has already finalized the
+   * task must not run postRunSteps again.
+   */
+  private async handleDiscreteWorkerFailure(
+    doNotSkipCache: boolean,
+    task: Task,
+    groupId: number,
+    e: any
+  ): Promise<void> {
+    if (this.completedTasks.has(task.id)) return;
+    const terminalOutput = e?.message ?? '';
+    this.options.lifeCycle.printTaskTerminalOutput(
+      task,
+      'failure',
+      terminalOutput
+    );
+    await this.postRunSteps(
+      [{ task, status: 'failure', terminalOutput }],
+      doNotSkipCache,
+      { groupId }
+    );
   }
 
   /**
