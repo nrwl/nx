@@ -1,0 +1,15 @@
+# Auto-generated for redirect-to-prod versioned branch.
+# Overrides Netlify UI settings so no install/build runs.
+
+[build]
+  command = "echo 'redirect-only branch — no build'"
+  publish = "."
+
+[build.environment]
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+
+[[redirects]]
+  from = "/*"
+  to = "https://nx.dev/docs"
+  status = 301
+  force = true
