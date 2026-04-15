@@ -169,18 +169,14 @@ impl DependencyViewState {
             KeyCode::PageUp => {
                 if has_scrollable_content && self.scroll_offset > 0 {
                     let page = viewport_height.saturating_sub(2).max(1);
-                    for _ in 0..page {
-                        self.scroll_up();
-                    }
+                    self.scroll_offset = self.scroll_offset.saturating_sub(page);
                 }
                 None
             }
             KeyCode::PageDown => {
                 if has_scrollable_content && self.scroll_offset < max_scroll {
                     let page = viewport_height.saturating_sub(2).max(1);
-                    for _ in 0..page {
-                        self.scroll_down(viewport_height);
-                    }
+                    self.scroll_offset = (self.scroll_offset + page).min(max_scroll);
                 }
                 None
             }

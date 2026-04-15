@@ -92,13 +92,13 @@ impl TerminalPaneData {
                 // Handle PageUp/PageDown for full-page scrolling when not in interactive mode
                 KeyCode::PageUp if !self.is_interactive => {
                     let (rows, _) = pty_mut.get_dimensions();
-                    let page = (rows as u8).saturating_sub(2).max(1);
+                    let page = (rows.min(255) as u8).saturating_sub(2).max(1);
                     pty_mut.scroll_up(page);
                     return Ok(None);
                 }
                 KeyCode::PageDown if !self.is_interactive => {
                     let (rows, _) = pty_mut.get_dimensions();
-                    let page = (rows as u8).saturating_sub(2).max(1);
+                    let page = (rows.min(255) as u8).saturating_sub(2).max(1);
                     pty_mut.scroll_down(page);
                     return Ok(None);
                 }
