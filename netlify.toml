@@ -10,6 +10,6 @@
 
 [[redirects]]
   from = "/*"
-  to = "https://nx.dev/docs"
+  to = "https://master.nx.dev/docs"
   status = 301
   force = true
