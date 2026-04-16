@@ -263,9 +263,6 @@ overrides:
   underscore: ^1.13.8
 
 patchedDependencies:
-  '@astrojs/starlight':
-    hash: 228878a1bd48ba76f2630925a90b16047a4b87b4559f750d4372442909652235
-    path: patches/@astrojs__starlight.patch
   '@nx/jest@22.7.0-beta.12':
     hash: 393101d17cde75c811fcef5a3488f3a602c0016eb1fb3d875af0bf2e3fd015d1
     path: patches/@nx__jest@22.7.0-beta.12.patch
@@ -426,7 +423,7 @@ importers:
         version: 0.33.5
       starlight-typedoc:
         specifier: ^0.21.3
-        version: 0.21.3(@astrojs/starlight@0.34.6(patch_hash=228878a1bd48ba76f2630925a90b16047a4b87b4559f750d4372442909652235)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.19.19)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.0)))(typedoc-plugin-markdown@3.17.1(typedoc@0.25.12(typescript@5.9.2)))(typedoc@0.25.12(typescript@5.9.2))
+        version: 0.21.3(@astrojs/starlight@0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.19.19)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.0)))(typedoc-plugin-markdown@3.17.1(typedoc@0.25.12(typescript@5.9.2)))(typedoc@0.25.12(typescript@5.9.2))
       string-width:
         specifier: ^4.2.3
         version: 4.2.3
@@ -1387,13 +1384,13 @@ importers:
         version: 3.4.1
       '@astrojs/starlight':
         specifier: 0.34.6
-        version: 0.34.6(patch_hash=228878a1bd48ba76f2630925a90b16047a4b87b4559f750d4372442909652235)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2))
+        version: 0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2))
       '@astrojs/starlight-markdoc':
         specifier: ^0.4.0
-        version: 0.4.0(@astrojs/markdoc@0.15.1(@types/react@18.3.1)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2))(react@18.3.1))(@astrojs/starlight@0.34.6(patch_hash=228878a1bd48ba76f2630925a90b16047a4b87b4559f750d4372442909652235)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2)))
+        version: 0.4.0(@astrojs/markdoc@0.15.1(@types/react@18.3.1)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2))(react@18.3.1))(@astrojs/starlight@0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2)))
       '@astrojs/starlight-tailwind':
         specifier: ^4.0.1
-        version: 4.0.1(@astrojs/starlight@0.34.6(patch_hash=228878a1bd48ba76f2630925a90b16047a4b87b4559f750d4372442909652235)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2)))(tailwindcss@4.1.11)
+        version: 4.0.1(@astrojs/starlight@0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2)))(tailwindcss@4.1.11)
       '@nx/nx-dev-feature-analytics':
         specifier: workspace:*
         version: link:../nx-dev/feature-analytics
@@ -28799,17 +28796,17 @@ snapshots:
       stream-replace-string: 2.0.0
       zod: 3.25.76
 
-  '@astrojs/starlight-markdoc@0.4.0(@astrojs/markdoc@0.15.1(@types/react@18.3.1)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2))(react@18.3.1))(@astrojs/starlight@0.34.6(patch_hash=228878a1bd48ba76f2630925a90b16047a4b87b4559f750d4372442909652235)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2)))':
+  '@astrojs/starlight-markdoc@0.4.0(@astrojs/markdoc@0.15.1(@types/react@18.3.1)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2))(react@18.3.1))(@astrojs/starlight@0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2)))':
     dependencies:
       '@astrojs/markdoc': 0.15.1(@types/react@18.3.1)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2))(react@18.3.1)
-      '@astrojs/starlight': 0.34.6(patch_hash=228878a1bd48ba76f2630925a90b16047a4b87b4559f750d4372442909652235)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2))
+      '@astrojs/starlight': 0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2))
 
-  '@astrojs/starlight-tailwind@4.0.1(@astrojs/starlight@0.34.6(patch_hash=228878a1bd48ba76f2630925a90b16047a4b87b4559f750d4372442909652235)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2)))(tailwindcss@4.1.11)':
+  '@astrojs/starlight-tailwind@4.0.1(@astrojs/starlight@0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2)))(tailwindcss@4.1.11)':
     dependencies:
-      '@astrojs/starlight': 0.34.6(patch_hash=228878a1bd48ba76f2630925a90b16047a4b87b4559f750d4372442909652235)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2))
+      '@astrojs/starlight': 0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2))
       tailwindcss: 4.1.11
 
-  '@astrojs/starlight@0.34.6(patch_hash=228878a1bd48ba76f2630925a90b16047a4b87b4559f750d4372442909652235)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.19.19)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.0))':
+  '@astrojs/starlight@0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.19.19)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.0))':
     dependencies:
       '@astrojs/markdown-remark': 6.3.3
       '@astrojs/mdx': 4.3.1(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.19.19)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.0))
@@ -28842,7 +28839,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@astrojs/starlight@0.34.6(patch_hash=228878a1bd48ba76f2630925a90b16047a4b87b4559f750d4372442909652235)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2))':
+  '@astrojs/starlight@0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2))':
     dependencies:
       '@astrojs/markdown-remark': 6.3.3
       '@astrojs/mdx': 4.3.1(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@24.2.0)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.59.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.2))
@@ -56191,9 +56188,9 @@ snapshots:
 
   standard-as-callback@2.1.0: {}
 
-  starlight-typedoc@0.21.3(@astrojs/starlight@0.34.6(patch_hash=228878a1bd48ba76f2630925a90b16047a4b87b4559f750d4372442909652235)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.19.19)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.0)))(typedoc-plugin-markdown@3.17.1(typedoc@0.25.12(typescript@5.9.2)))(typedoc@0.25.12(typescript@5.9.2)):
+  starlight-typedoc@0.21.3(@astrojs/starlight@0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.19.19)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.0)))(typedoc-plugin-markdown@3.17.1(typedoc@0.25.12(typescript@5.9.2)))(typedoc@0.25.12(typescript@5.9.2)):
     dependencies:
-      '@astrojs/starlight': 0.34.6(patch_hash=228878a1bd48ba76f2630925a90b16047a4b87b4559f750d4372442909652235)(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.19.19)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.0))
+      '@astrojs/starlight': 0.34.6(astro@5.12.3(@netlify/blobs@10.0.7)(@types/node@20.19.19)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.10.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(rollup@4.44.2)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.0))
       github-slugger: 2.0.0
       typedoc: 0.25.12(typescript@5.9.2)
       typedoc-plugin-markdown: 3.17.1(typedoc@0.25.12(typescript@5.9.2))
