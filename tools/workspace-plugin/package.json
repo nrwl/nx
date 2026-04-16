@@ -11,7 +11,6 @@
     "@nx/plugin": "22.7.0-beta.12",
     "@xmldom/xmldom": "^0.8.10",
     "glob": "7.1.4",
-    "js-yaml": "^4.1.0",
     "semver": "catalog:",
     "shiki": "^4.0.2",
     "tslib": "catalog:typescript"
