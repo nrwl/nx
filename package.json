@@ -415,7 +415,6 @@
       "underscore": "^1.13.8"
     },
     "patchedDependencies": {
-      "@astrojs/starlight": "patches/@astrojs__starlight.patch",
       "@nx/jest@22.7.0-beta.12": "patches/@nx__jest@22.7.0-beta.12.patch"
     }
   },
