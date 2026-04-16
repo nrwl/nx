@@ -143,56 +143,54 @@ export const createNodes: CreateNodesV2<JestPluginOptions> = [
 
     const lockFilePattern = getLockFileName(packageManager);
 
-    // Collect external file references (tsconfig chains) and needsDtsInputs
-    // WITHOUT loading jest configs via require(). This avoids holding all
-    // config module trees in memory simultaneously, which caused OOM on
-    // constrained environments (e.g. FreeBSD VM with 8GB RAM, 21 workers).
-    // We optimistically assume any project might use ts-jest and always walk
-    // the tsconfig extends chain.
-    const absWorkspaceRoot = resolve(context.workspaceRoot);
-    const configMetadata: Array<{
-      externalFiles: string[];
-      needsDtsInputs: boolean;
-    }> = [];
-    for (let i = 0; i < validConfigFiles.length; i++) {
-      const projectRoot = projectRoots[i];
-      const absoluteProjectRoot = resolve(absWorkspaceRoot, projectRoot);
-      const externalFiles = new Set<string>();
-
-      const tsconfigAbsPath = findNearestTsconfig(
-        absoluteProjectRoot,
-        absWorkspaceRoot,
-        tsconfigExistsCache
-      );
-
-      let needsDtsInputs = !tsconfigAbsPath;
-      if (tsconfigAbsPath) {
-        const { value: isolatedValue, visitedFiles } = resolveIsolatedModules(
-          tsconfigAbsPath,
-          tsconfigJsonCache,
-          isolatedModulesCache
+    // Load configs in parallel. `loadConfigFile` calls `registerTsProject`,
+    // whose transpiler dedup is refcounted: serial register/unregister cycles
+    // drop refCount to 0 between iterations and recreate a fresh ts-node
+    // service each time (ts-node has no cleanup — see
+    // packages/nx/src/plugins/js/utils/register.js), stacking N services in
+    // `require.extensions` and OOM'ing under NX_PREFER_TS_NODE. Parallel
+    // loads keep all registrations alive concurrently so the dedup holds and
+    // a single transpiler instance is shared.
+    let requireCacheCleared = false;
+    const loadedConfigs = await Promise.all(
+      validConfigFiles.map(async (configFilePath, i) => {
+        const projectRoot = projectRoots[i];
+        const absConfigFilePath = resolve(
+          context.workspaceRoot,
+          configFilePath
         );
-        if (isolatedValue !== true) needsDtsInputs = true;
-        for (const visitedFile of visitedFiles) {
-          collectExternalFile(
-            visitedFile,
-            absWorkspaceRoot,
-            absoluteProjectRoot,
-            externalFiles
-          );
+        if (!requireCacheCleared && require.cache[absConfigFilePath]) {
+          clearRequireCache();
+          requireCacheCleared = true;
         }
-      }
-      configMetadata.push({
-        externalFiles: [...externalFiles],
-        needsDtsInputs,
-      });
-    }
+        const rawConfig = await loadConfigFile(absConfigFilePath, [
+          'tsconfig.spec.json',
+          'tsconfig.test.json',
+          'tsconfig.jest.json',
+          'tsconfig.json',
+        ]);
+        const { externalFiles, needsDtsInputs } =
+          await collectExternalFileReferences(
+            rawConfig,
+            absConfigFilePath,
+            projectRoot,
+            context.workspaceRoot,
+            {
+              presetCache,
+              tsconfigJsonCache,
+              tsconfigExistsCache,
+              isolatedModulesCache,
+            }
+          );
+        return { rawConfig, externalFiles, needsDtsInputs };
+      })
+    );
 
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
       options,
       context,
-      configMetadata.map(({ externalFiles }) => [
+      loadedConfigs.map(({ externalFiles }) => [
         lockFilePattern,
         ...externalFiles,
       ])
@@ -203,10 +201,10 @@ export const createNodes: CreateNodesV2<JestPluginOptions> = [
         async (configFilePath, options, context, idx) => {
           const projectRoot = projectRoots[idx];
           const hash = hashes[idx];
-          const { needsDtsInputs } = configMetadata[idx];
+          const { rawConfig, needsDtsInputs } = loadedConfigs[idx];
 
           targetsCache[hash] ??= await buildJestTargets(
-            await loadJestConfig(context.workspaceRoot, configFilePath),
+            rawConfig,
             needsDtsInputs,
             configFilePath,
             projectRoot,
@@ -1033,43 +1031,6 @@ async function getTestPaths(
 }
 
 /**
- * Adds a file to the external files set if it is inside the workspace but
- * outside the project root (and not in node_modules).
- */
-function collectExternalFile(
-  absolutePath: string | null,
-  absWorkspaceRoot: string,
-  absoluteProjectRoot: string,
-  externalFiles: Set<string>
-): void {
-  if (!absolutePath) return;
-  const rel = normalizePath(relative(absWorkspaceRoot, absolutePath));
-  if (rel.startsWith('..') || isAbsolute(rel)) return;
-  if (rel.includes('node_modules/')) return;
-  const relToProject = normalizePath(
-    relative(absoluteProjectRoot, absolutePath)
-  );
-  if (!relToProject.startsWith('..') && !isAbsolute(relToProject)) return;
-  externalFiles.add(rel);
-}
-
-async function loadJestConfig(
-  workspaceRoot: string,
-  configFilePath: string
-): Promise<any> {
-  const absConfigFilePath = resolve(workspaceRoot, configFilePath);
-  if (require.cache[absConfigFilePath]) {
-    clearRequireCache();
-  }
-  return loadConfigFile(absConfigFilePath, [
-    'tsconfig.spec.json',
-    'tsconfig.test.json',
-    'tsconfig.jest.json',
-    'tsconfig.json',
-  ]);
-}
-
-/**
  * Collects workspace-relative paths to files whose CONTENT the plugin reads
  * when computing inferred targets and that live OUTSIDE the project root.
  *
@@ -1109,17 +1070,23 @@ async function collectExternalFileReferences(
   const absoluteProjectRoot = resolve(absWorkspaceRoot, projectRoot);
 
   const externalFiles = new Set<string>();
+  const addIfExternal = (absolutePath: string | null) => {
+    if (!absolutePath) return;
+    const rel = normalizePath(relative(absWorkspaceRoot, absolutePath));
+    if (rel.startsWith('..') || isAbsolute(rel)) return; // outside workspace
+    if (rel.includes('node_modules/')) return; // covered by lockfile
+    const relToProject = normalizePath(
+      relative(absoluteProjectRoot, absolutePath)
+    );
+    if (!relToProject.startsWith('..') && !isAbsolute(relToProject)) return; // inside project root
+    externalFiles.add(rel);
+  };
 
   // Preset path (content is loaded by the plugin to merge with rawConfig)
   if (typeof rawConfig.preset === 'string') {
     const replaced = replaceRootDirInPath(rootDir, rawConfig.preset);
     if (replaced.startsWith('.') || isAbsolute(replaced)) {
-      collectExternalFile(
-        resolve(rootDir, replaced),
-        absWorkspaceRoot,
-        absoluteProjectRoot,
-        externalFiles
-      );
+      addIfExternal(resolve(rootDir, replaced));
     }
   }
 
@@ -1166,12 +1133,7 @@ async function collectExternalFileReferences(
       isolatedModulesCache
     );
     for (const visitedFile of visitedFiles) {
-      collectExternalFile(
-        visitedFile,
-        absWorkspaceRoot,
-        absoluteProjectRoot,
-        externalFiles
-      );
+      addIfExternal(visitedFile);
     }
     if (isolatedValue !== true) needsDtsInputs = true;
   }

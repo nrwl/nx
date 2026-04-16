@@ -1,92 +1,35 @@
 diff --git a/src/plugins/plugin.js b/src/plugins/plugin.js
-index b275f0648406163b0a37b870a2bc83b3a212f370..98bebb7b8c8d2771b0c83835f4e97edebd79540d 100644
+index b275f0648406163b0a37b870a2bc83b3a212f370..b0517fe43273a783d8f231d5b44f4a1cbae90607 100644
 --- a/src/plugins/plugin.js
 +++ b/src/plugins/plugin.js
-@@ -57,31 +57,38 @@ exports.createNodes = [
+@@ -57,10 +57,16 @@ exports.createNodes = [
              configFiles: [],
          });
          const lockFilePattern = (0, js_1.getLockFileName)(packageManager);
--        let requireCacheCleared = false;
++        // Load configs in parallel. `loadConfigFile` calls `registerTsProject`,
++        // whose transpiler dedup is refcounted: serial register/unregister cycles
++        // drop refCount to 0 between iterations and recreate a fresh ts-node
++        // service each time (ts-node has no cleanup — see
++        // packages/nx/src/plugins/js/utils/register.js), stacking N services in
++        // `require.extensions` and OOM'ing under NX_PREFER_TS_NODE. Parallel
++        // loads keep all registrations alive concurrently so the dedup holds and
++        // a single transpiler instance is shared.
+         let requireCacheCleared = false;
 -        const loadedConfigs = [];
-+        // Collect external file references (tsconfig chains) WITHOUT loading
-+        // jest configs. Instead of require()'ing each config to check if it uses
-+        // ts-jest, we optimistically assume any project might use ts-jest and
-+        // always walk the tsconfig extends chain. This avoids holding all config
-+        // module trees in memory simultaneously, which caused OOM on constrained
-+        // environments (FreeBSD VM with 8GB RAM).
-+        const absWorkspaceRoot = (0, node_path_1.resolve)(context.workspaceRoot);
-+        const configExternalFiles = [];
-         for (let i = 0; i < validConfigFiles.length; i++) {
+-        for (let i = 0; i < validConfigFiles.length; i++) {
 -            const configFilePath = validConfigFiles[i];
++        const loadedConfigs = await Promise.all(validConfigFiles.map(async (configFilePath, i) => {
              const projectRoot = projectRoots[i];
--            const absConfigFilePath = (0, node_path_1.resolve)(context.workspaceRoot, configFilePath);
--            if (!requireCacheCleared && require.cache[absConfigFilePath]) {
--                (0, config_utils_1.clearRequireCache)();
--                requireCacheCleared = true;
-+            const absoluteProjectRoot = (0, node_path_1.resolve)(absWorkspaceRoot, projectRoot);
-+            const externalFiles = new Set();
-+            const addIfExternal = (absolutePath) => {
-+                if (!absolutePath) return;
-+                const rel = (0, devkit_1.normalizePath)((0, node_path_1.relative)(absWorkspaceRoot, absolutePath));
-+                if (rel.startsWith('..') || (0, node_path_1.isAbsolute)(rel)) return;
-+                if (rel.includes('node_modules/')) return;
-+                const relToProject = (0, devkit_1.normalizePath)((0, node_path_1.relative)(absoluteProjectRoot, absolutePath));
-+                if (!relToProject.startsWith('..') && !(0, node_path_1.isAbsolute)(relToProject)) return;
-+                externalFiles.add(rel);
-+            };
-+            // Always walk tsconfig chain — assume ts-jest might be in use
-+            const tsconfigAbsPath = findNearestTsconfig(absoluteProjectRoot, absWorkspaceRoot, tsconfigExistsCache);
-+            if (tsconfigAbsPath) {
-+                const { visitedFiles } = resolveIsolatedModules(tsconfigAbsPath, tsconfigJsonCache, isolatedModulesCache);
-+                for (const visitedFile of visitedFiles) {
-+                    addIfExternal(visitedFile);
-+                }
-             }
--            const rawConfig = await (0, config_utils_1.loadConfigFile)(absConfigFilePath, [
--                'tsconfig.spec.json',
--                'tsconfig.test.json',
--                'tsconfig.jest.json',
--                'tsconfig.json',
--            ]);
--            const { externalFiles, needsDtsInputs } = await collectExternalFileReferences(rawConfig, absConfigFilePath, projectRoot, context.workspaceRoot, {
--                presetCache,
--                tsconfigJsonCache,
--                tsconfigExistsCache,
--                isolatedModulesCache,
--            });
+             const absConfigFilePath = (0, node_path_1.resolve)(context.workspaceRoot, configFilePath);
+             if (!requireCacheCleared && require.cache[absConfigFilePath]) {
+@@ -79,8 +85,8 @@ exports.createNodes = [
+                 tsconfigExistsCache,
+                 isolatedModulesCache,
+             });
 -            loadedConfigs.push({ rawConfig, externalFiles, needsDtsInputs });
-+            configExternalFiles.push([...externalFiles]);
-         }
--        const hashes = await (0, calculate_hash_for_create_nodes_1.calculateHashesForCreateNodes)(projectRoots, options, context, loadedConfigs.map(({ externalFiles }) => [
-+        const hashes = await (0, calculate_hash_for_create_nodes_1.calculateHashesForCreateNodes)(projectRoots, options, context, configExternalFiles.map((externalFiles) => [
+-        }
++            return { rawConfig, externalFiles, needsDtsInputs };
++        }));
+         const hashes = await (0, calculate_hash_for_create_nodes_1.calculateHashesForCreateNodes)(projectRoots, options, context, loadedConfigs.map(({ externalFiles }) => [
              lockFilePattern,
              ...externalFiles,
-         ]));
-@@ -89,8 +96,25 @@ exports.createNodes = [
-             return await (0, devkit_1.createNodesFromFiles)(async (configFilePath, options, context, idx) => {
-                 const projectRoot = projectRoots[idx];
-                 const hash = hashes[idx];
--                const { rawConfig, needsDtsInputs } = loadedConfigs[idx];
--                targetsCache[hash] ??= await buildJestTargets(rawConfig, needsDtsInputs, configFilePath, projectRoot, options, context, presetCache, pmc);
-+                if (!targetsCache[hash]) {
-+                    const absConfigFilePath = (0, node_path_1.resolve)(context.workspaceRoot, configFilePath);
-+                    if (require.cache[absConfigFilePath]) {
-+                        (0, config_utils_1.clearRequireCache)();
-+                    }
-+                    const rawConfig = await (0, config_utils_1.loadConfigFile)(absConfigFilePath, [
-+                        'tsconfig.spec.json',
-+                        'tsconfig.test.json',
-+                        'tsconfig.jest.json',
-+                        'tsconfig.json',
-+                    ]);
-+                    const { needsDtsInputs } = await collectExternalFileReferences(rawConfig, absConfigFilePath, projectRoot, context.workspaceRoot, {
-+                        presetCache,
-+                        tsconfigJsonCache,
-+                        tsconfigExistsCache,
-+                        isolatedModulesCache,
-+                    });
-+                    targetsCache[hash] = await buildJestTargets(rawConfig, needsDtsInputs, configFilePath, projectRoot, options, context, presetCache, pmc);
-+                }
-                 const { targets, metadata } = targetsCache[hash];
-                 return {
-                     projects: {
