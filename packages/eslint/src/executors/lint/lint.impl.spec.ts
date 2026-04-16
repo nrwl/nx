@@ -65,10 +65,10 @@ jest.mock('./utility/eslint-utils', () => {
   return {
     resolveAndInstantiateESLint: (...args: any[]) =>
       mockResolveAndInstantiateESLint(...args),
-    applySuppressions: (...args: any[]) =>
-      mockApplySuppressions(...args),
+    applySuppressions: (...args: any[]) => mockApplySuppressions(...args),
     getSuppressionsFilePath: (...args: any[]) =>
       mockGetSuppressionsFilePath(...args),
+    validateSuppressionOptions: jest.fn(),
   };
 });
 import lintExecutor from './lint.impl';
@@ -1082,7 +1082,9 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
     it('should call applySuppressions for ESLint v9.x when suppressions file exists', async () => {
       setupMocks();
       MockESLint.version = '9.24.0';
-      mockGetSuppressionsFilePath.mockReturnValue('/tmp/eslint-suppressions.json');
+      mockGetSuppressionsFilePath.mockReturnValue(
+        '/tmp/eslint-suppressions.json'
+      );
       (fs.existsSync as jest.Mock).mockImplementation((p: string) => {
         if (p === '/tmp/eslint-suppressions.json') return true;
         return realFs.existsSync(p);
@@ -1120,7 +1122,9 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
     it('should call applySuppressions with suppressAll when suppressAll is true', async () => {
       setupMocks();
       MockESLint.version = '9.24.0';
-      mockGetSuppressionsFilePath.mockReturnValue('/tmp/eslint-suppressions.json');
+      mockGetSuppressionsFilePath.mockReturnValue(
+        '/tmp/eslint-suppressions.json'
+      );
       (fs.existsSync as jest.Mock).mockImplementation((p: string) => {
         if (p === '/tmp/eslint-suppressions.json') return true;
         return realFs.existsSync(p);
@@ -1150,7 +1154,9 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
     it('should call applySuppressions with pruneSuppressions when pruneSuppressions is true', async () => {
       setupMocks();
       MockESLint.version = '9.24.0';
-      mockGetSuppressionsFilePath.mockReturnValue('/tmp/eslint-suppressions.json');
+      mockGetSuppressionsFilePath.mockReturnValue(
+        '/tmp/eslint-suppressions.json'
+      );
       (fs.existsSync as jest.Mock).mockImplementation((p: string) => {
         if (p === '/tmp/eslint-suppressions.json') return true;
         return realFs.existsSync(p);
@@ -1180,7 +1186,9 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
     it('should fail when passOnUnprunedSuppressions is true and there are unused suppressions', async () => {
       setupMocks();
       MockESLint.version = '9.24.0';
-      mockGetSuppressionsFilePath.mockReturnValue('/tmp/eslint-suppressions.json');
+      mockGetSuppressionsFilePath.mockReturnValue(
+        '/tmp/eslint-suppressions.json'
+      );
       (fs.existsSync as jest.Mock).mockImplementation((p: string) => {
         if (p === '/tmp/eslint-suppressions.json') return true;
         return realFs.existsSync(p);
@@ -1212,7 +1220,9 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
           isEslintV10: true,
         })
       );
-      mockGetSuppressionsFilePath.mockReturnValue('/tmp/eslint-suppressions.json');
+      mockGetSuppressionsFilePath.mockReturnValue(
+        '/tmp/eslint-suppressions.json'
+      );
       (fs.existsSync as jest.Mock).mockImplementation((p: string) => {
         if (p === '/tmp/eslint-suppressions.json') return true;
         return realFs.existsSync(p);
@@ -1240,7 +1250,9 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
           isEslintV10: true,
         })
       );
-      mockGetSuppressionsFilePath.mockReturnValue('/tmp/eslint-suppressions.json');
+      mockGetSuppressionsFilePath.mockReturnValue(
+        '/tmp/eslint-suppressions.json'
+      );
       (fs.existsSync as jest.Mock).mockImplementation((p: string) => {
         if (p === '/tmp/eslint-suppressions.json') return true;
         return realFs.existsSync(p);
