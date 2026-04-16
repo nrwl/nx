@@ -504,6 +504,9 @@ jobs:
             echo "Checking disk space after cleanup"
             df -h
             
+            # Disable core dumps - OOM'd Node processes write multi-GB core files that fill the disk
+            ulimit -c 0
+
             echo "Building FreeBSD bindings"
             BUILD_EXIT=0
             pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd || BUILD_EXIT=$?
