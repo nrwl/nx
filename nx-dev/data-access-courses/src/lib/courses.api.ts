@@ -44,9 +44,7 @@ export class CoursesApi {
   }
 
   async getCourse(folderName: string): Promise<Course> {
-    const authors = JSON.parse(
-      readFileSync(this.options.authorsPath, 'utf8')
-    );
+    const authors = JSON.parse(readFileSync(this.options.authorsPath, 'utf8'));
     const coursePath = join(this.options.coursesRoot, folderName);
     const courseFilePath = join(coursePath, 'course.md');
 

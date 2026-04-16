@@ -36,10 +36,7 @@ export default function AiChat(): JSX.Element {
           type: 'website',
         }}
       />
-      <div
-        id="shell"
-        className={cx('flex flex-col', 'h-[calc(100dvh)]')}
-      >
+      <div id="shell" className={cx('flex flex-col', 'h-[calc(100dvh)]')}>
         <header className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-200 bg-white px-4 dark:border-zinc-800 dark:bg-zinc-900">
           <Link
             href="/docs"
