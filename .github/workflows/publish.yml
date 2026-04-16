@@ -513,6 +513,18 @@ jobs:
 
             if [ "$BUILD_EXIT" -ne 0 ]; then
               echo "Build failed with exit code $BUILD_EXIT"
+              echo "=== Disk usage by top-level directories ==="
+              du -sh /* 2>/dev/null | sort -rh | head -20
+              echo "=== Disk usage in home directory ==="
+              du -sh ~/* 2>/dev/null | sort -rh | head -20
+              echo "=== Disk usage in workspace ==="
+              du -sh /home/runner/work/nx/nx/* 2>/dev/null | sort -rh | head -20
+              echo "=== Disk usage in .nx ==="
+              du -sh /home/runner/work/nx/nx/.nx/* 2>/dev/null | sort -rh | head -20
+              echo "=== Disk usage in cargo/rustup ==="
+              du -sh ~/.cargo/* ~/.rustup/* 2>/dev/null | sort -rh | head -20
+              echo "=== Core dumps ==="
+              find / -name "*.core" -o -name "core.*" -o -name "core" 2>/dev/null | head -10
               exit $BUILD_EXIT
             fi
 
