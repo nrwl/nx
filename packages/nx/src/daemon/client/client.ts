@@ -341,17 +341,14 @@ export class DaemonClient {
     runnerOptions: any,
     tasks: Task[],
     taskGraph: TaskGraph,
-    env: NodeJS.ProcessEnv,
+    perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
     collectInputs?: boolean
   ): Promise<Hash[]> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
       runnerOptions,
-      env:
-        process.env.NX_USE_V8_SERIALIZER !== 'false'
-          ? structuredClone(process.env)
-          : env,
+      perTaskEnvs,
       tasks,
       taskGraph,
       cwd,
@@ -777,23 +774,21 @@ export class DaemonClient {
     );
   }
 
-  recordOutputsHash(outputs: string[], hash: string): Promise<any> {
+  recordOutputsHashBatch(
+    entries: { outputs: string[]; hash: string }[]
+  ): Promise<any> {
     return this.sendToDaemonViaQueue({
-      type: 'RECORD_OUTPUTS_HASH',
-      data: {
-        outputs,
-        hash,
-      },
+      type: 'RECORD_OUTPUTS_HASH_BATCH',
+      data: entries,
     });
   }
 
-  outputsHashesMatch(outputs: string[], hash: string): Promise<any> {
+  outputsHashesMatchBatch(
+    entries: { outputs: string[]; hash: string }[]
+  ): Promise<boolean[]> {
     return this.sendToDaemonViaQueue({
-      type: 'OUTPUTS_HASHES_MATCH',
-      data: {
-        outputs,
-        hash,
-      },
+      type: 'OUTPUTS_HASHES_MATCH_BATCH',
+      data: entries,
     });
   }
 

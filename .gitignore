@@ -83,6 +83,7 @@ storybook-static
 .kotlin
 
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
 CLAUDE.local.md
 
 .cursor/mcp.json

@@ -113,7 +113,11 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
     .option('nxBail', {
       describe: 'Stop command execution after the first failed task.',
       type: 'boolean',
-      default: false,
+    })
+    .middleware((args) => {
+      if (args.nxBail === undefined) {
+        args.nxBail = process.env.NX_BAIL === 'true';
+      }
     })
     .option('nxIgnoreCycles', {
       describe: 'Ignore cycles in the task graph.',
