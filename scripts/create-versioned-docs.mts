@@ -396,8 +396,8 @@ console.log(
     redirectToProd
       ? 'redirect-to-prod (no build)'
       : isAstro
-      ? 'Astro (v21+)'
-      : 'Next.js (legacy v18-v20)'
+        ? 'Astro (v21+)'
+        : 'Next.js (legacy v18-v20)'
   }\n`
 );
 

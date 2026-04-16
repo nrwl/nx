@@ -194,8 +194,8 @@ Example:
 
 ```markdown
 ---
-title: "My New Guide"
-description: "Learn how to use this feature"
+title: 'My New Guide'
+description: 'Learn how to use this feature'
 ---
 
 # Introduction
