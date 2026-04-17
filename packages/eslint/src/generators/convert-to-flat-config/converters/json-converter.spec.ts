@@ -332,17 +332,12 @@ describe('convertEslintJsonToFlatConfig', () => {
       `);
     });
 
-    it('should preserve non-sentinel negated ignorePatterns', async () => {
+    it('should preserve negated ignorePatterns paired with broader ignores', async () => {
       tree.write(
         '.eslintrc.json',
         JSON.stringify({
           root: true,
-          ignorePatterns: [
-            '**/*',
-            'dist/**',
-            '!dist/keep.js',
-            '.next/**/*',
-          ],
+          ignorePatterns: ['**/*', 'dist/**', '!dist/keep.js', '.next/**/*'],
           plugins: ['@nx'],
         })
       );

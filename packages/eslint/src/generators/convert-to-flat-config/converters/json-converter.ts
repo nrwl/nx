@@ -50,7 +50,10 @@ function renameLegacyWorkspaceRules(
 // inside rule option values (e.g. `@nx/dependency-checks`'s `ignoredFiles`) to point at the
 // generated flat-config files instead. Without this, rule options keep pointing at files that
 // no longer exist after the conversion.
-function rewriteStaleEslintrcRefs(value: unknown, format: 'mjs' | 'cjs'): unknown {
+function rewriteStaleEslintrcRefs(
+  value: unknown,
+  format: 'mjs' | 'cjs'
+): unknown {
   if (typeof value === 'string') {
     return renameLegacyEslintrcFile(value, format);
   }
@@ -305,9 +308,11 @@ export function convertEslintJsonToFlatConfig(
         : [config.ignorePatterns]
     ).filter(
       (pattern) =>
-        // Drop sentinels that are meaningless in flat config. Real negations
-        // (e.g. `['dist/**', '!dist/keep.js']`) are preserved — flat config
-        // still supports un-ignoring within a broader ignores block.
+        // Drop patterns that are meaningless in flat config. `'**/*'` and
+        // `'!**/*'` were eslintrc cascading toggles; `node_modules` is already
+        // ignored by default. Real negations like `['dist/**', '!dist/keep.js']`
+        // are preserved — flat config still supports un-ignoring within a
+        // broader ignores block.
         !['**/*', '!**/*', 'node_modules'].includes(pattern)
     );
     if (patterns.length > 0) {
