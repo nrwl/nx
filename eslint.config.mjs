@@ -16,7 +16,7 @@ const compat = new FlatCompat({
 
 export default [
   {
-    ignores: ['**/dist', '**/out-tsc'],
+    ignores: ['**/dist', '**/out-tsc', '**/test-output'],
   },
   ...compat.extends('plugin:storybook/recommended'),
   ...nx.configs['flat/base'],
@@ -148,7 +148,4 @@ export default [
         'jest/no-disabled-tests': 'warn',
       },
     })),
-  {
-    ignores: ['**/*.ts', '**/test-output', '**/dist'],
-  },
 ];
