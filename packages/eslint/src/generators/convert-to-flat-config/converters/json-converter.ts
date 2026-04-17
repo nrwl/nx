@@ -14,15 +14,21 @@ import {
 import { getPluginImport } from '../../utils/eslint-file';
 import { mapFilePath } from '../../utils/flat-config/path-utils';
 
+// Rewrites legacy `.eslintrc[.base].json` filenames to their flat-config counterparts.
+// Used both for `extends` local paths and for rule option values that embed these filenames.
+function renameLegacyEslintrcFile(path: string, format: 'mjs' | 'cjs'): string {
+  return path.replace(
+    /(^|.*?)\.eslintrc(\.base)?\.json$/,
+    `$1eslint$2.config.${format}`
+  );
+}
+
 // In flat config, `@nx/workspace/<rule>` is parsed as plugin `@nx/workspace`, rule `<rule>`.
 // The `@nx` plugin already exposes workspace rules under both `workspace/<rule>` and `workspace-<rule>` keys.
 // Rewriting to `@nx/workspace-<rule>` makes ESLint resolve them via the already-registered `@nx` plugin.
 function renameLegacyWorkspaceRules(
-  rules: Record<string, unknown> | undefined
-): Record<string, unknown> | undefined {
-  if (!rules || typeof rules !== 'object') {
-    return rules;
-  }
+  rules: Record<string, unknown>
+): Record<string, unknown> {
   const renamed: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(rules)) {
     const newKey = key.startsWith('@nx/workspace/')
@@ -33,33 +39,40 @@ function renameLegacyWorkspaceRules(
   return renamed;
 }
 
-// Rewrites references to the legacy `.eslintrc.json` / `.eslintrc.base.json` that may appear
-// inside rule option values (e.g. `@nx/dependency-checks`'s `ignoredFiles`) to point at the
-// generated flat-config files instead. Without this, rule options keep pointing at files that
-// no longer exist after the conversion.
-function rewriteStaleEslintrcRefs<T>(value: T, format: 'mjs' | 'cjs'): T {
+// Rewrites references to the legacy `.eslintrc[.base].json` that may appear inside rule option
+// values (e.g. `@nx/dependency-checks`'s `ignoredFiles`) to point at the generated flat-config
+// files instead. Without this, rule options keep pointing at files that no longer exist.
+function rewriteStaleEslintrcRefs(value: unknown, format: 'mjs' | 'cjs'): unknown {
   if (typeof value === 'string') {
-    return value
-      .replace(/\.eslintrc\.base\.json$/, `eslint.base.config.${format}`)
-      .replace(/\.eslintrc\.json$/, `eslint.config.${format}`) as unknown as T;
+    return renameLegacyEslintrcFile(value, format);
   }
   if (Array.isArray(value)) {
     const mapped = value.map((v) => rewriteStaleEslintrcRefs(v, format));
     // Rewriting may collapse distinct strings (e.g. `.eslintrc.json` and
     // `.eslintrc.base.json`) into identical entries; dedupe string arrays.
     if (mapped.every((v) => typeof v === 'string')) {
-      return Array.from(new Set(mapped as string[])) as unknown as T;
+      return Array.from(new Set(mapped as string[]));
     }
-    return mapped as unknown as T;
+    return mapped;
   }
   if (value && typeof value === 'object') {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
       out[k] = rewriteStaleEslintrcRefs(v, format);
     }
-    return out as unknown as T;
+    return out;
   }
   return value;
+}
+
+function preprocessRules(
+  rules: Record<string, unknown>,
+  format: 'mjs' | 'cjs'
+): ESLint.ConfigData['rules'] {
+  return rewriteStaleEslintrcRefs(
+    renameLegacyWorkspaceRules(rules),
+    format
+  ) as ESLint.ConfigData['rules'];
 }
 
 /**
@@ -81,20 +94,18 @@ export function convertEslintJsonToFlatConfig(
   let languageOptions: ts.PropertyAssignment[] = [];
 
   if (config.rules) {
-    config.rules = renameLegacyWorkspaceRules(
-      config.rules as Record<string, unknown>
-    ) as ESLint.ConfigData['rules'];
-    config.rules = rewriteStaleEslintrcRefs(config.rules, format);
+    config.rules = preprocessRules(
+      config.rules as Record<string, unknown>,
+      format
+    );
   }
   if (config.overrides) {
     config.overrides = config.overrides.map((override) =>
       override.rules
         ? {
             ...override,
-            rules: rewriteStaleEslintrcRefs(
-              renameLegacyWorkspaceRules(
-                override.rules as Record<string, unknown>
-              ) as ESLint.ConfigData['rules'],
+            rules: preprocessRules(
+              override.rules as Record<string, unknown>,
               format
             ),
           }
@@ -284,9 +295,12 @@ export function convertEslintJsonToFlatConfig(
       Array.isArray(config.ignorePatterns)
         ? config.ignorePatterns
         : [config.ignorePatterns]
-    )
-      .filter((pattern) => !['**/*', '!**/*', 'node_modules'].includes(pattern)) // these are useless in a flat config
-      .filter((pattern) => !pattern.startsWith('!')); // negated patterns rely on eslintrc cascading and have no meaning in flat config
+    ).filter(
+      (pattern) =>
+        // Drop patterns that are useless in flat config: universal selectors and
+        // negated entries (un-ignores relied on eslintrc cascading, which flat config lacks).
+        !['**/*', 'node_modules'].includes(pattern) && !pattern.startsWith('!')
+    );
     if (patterns.length > 0) {
       exportElements.push(
         generateAst({
@@ -342,14 +356,10 @@ function addExtends(
   extendsConfig
     .filter((imp) => imp.match(/^\.?(\.\/)/))
     .forEach((imp, index) => {
-      if (imp.match(/\.eslintrc(.base)?\.json$/)) {
+      if (imp.match(/\.eslintrc(\.base)?\.json$/)) {
         const localName = index ? `baseConfig${index}` : 'baseConfig';
         configBlocks.push(generateSpreadElement(localName));
-        const newImport = imp.replace(
-          /^(.*)\.eslintrc(.base)?\.json$/,
-          `$1eslint$2.config.${format}`
-        );
-        importsMap.set(newImport, localName);
+        importsMap.set(renameLegacyEslintrcFile(imp, format), localName);
       } else {
         eslintrcConfigs.push(imp);
       }

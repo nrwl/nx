@@ -17,7 +17,7 @@ import {
 import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { findEslintFile } from '../utils/eslint-file';
 import { hasEslintPlugin } from '../utils/plugin';
-import { join } from 'path';
+import { basename, join } from 'path';
 import {
   eslint9__eslintVersion,
   eslint9__typescriptESLintVersion,
@@ -215,7 +215,8 @@ function convertConfigToFlatConfig(
     ? [ignorePath, `${root}/.eslintignore`]
     : [`${root}/.eslintignore`];
 
-  if (source.endsWith('.json') || /(^|\/)\.eslintrc$/.test(source)) {
+  // `.eslintrc` (no extension) is JSON by convention.
+  if (source.endsWith('.json') || basename(source) === '.eslintrc') {
     const config: ESLint.ConfigData = readJson(tree, `${root}/${source}`);
     const conversionResult = convertEslintJsonToFlatConfig(
       tree,

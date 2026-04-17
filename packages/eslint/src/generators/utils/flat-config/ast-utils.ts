@@ -1914,22 +1914,16 @@ export function mapFilePaths<
   const override: T = {
     ..._override,
   };
-  if (override.files) {
-    override.files = Array.isArray(override.files)
-      ? override.files
-      : [override.files];
-    // Dedupe after mapping — both source-side duplicates and map collisions collapse.
-    override.files = Array.from(
-      new Set(override.files.map((file) => mapFilePath(file)))
+  // Dedupe after mapping — both source-side duplicates and glob-mapping collisions collapse.
+  const normalize = (value: string | string[]): string[] =>
+    Array.from(
+      new Set((Array.isArray(value) ? value : [value]).map(mapFilePath))
     );
+  if (override.files) {
+    override.files = normalize(override.files);
   }
   if (override.excludedFiles) {
-    override.excludedFiles = Array.isArray(override.excludedFiles)
-      ? override.excludedFiles
-      : [override.excludedFiles];
-    override.excludedFiles = Array.from(
-      new Set(override.excludedFiles.map((file) => mapFilePath(file)))
-    );
+    override.excludedFiles = normalize(override.excludedFiles);
   }
   return override;
 }
