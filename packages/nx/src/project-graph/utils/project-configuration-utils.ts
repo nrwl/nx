@@ -445,18 +445,25 @@ export function mergeCreateNodesResults(
   // ProjectNameInNodePropsManager#processInputs / processDependsOn).
   nodesManager.registerNameRefs(intermediateDefaultRootMap);
 
-  // Overlay default-plugin attribution onto the main source maps.
-  //
-  // Known edge case: if a default plugin placed `...` after other keys,
-  // those keys yield to the base during the single-layer apply above
-  // but still appear here from the intermediate merge — in that rare
-  // case the overlay misattributes the field to the default plugin.
+  // Overlay default-plugin attribution onto the main source maps using
+  // "only fill missing" semantics. Any key already present in
+  // configurationSourceMaps was written by a specified plugin or by
+  // target defaults, and that attribution is strictly more correct:
+  //  - For fields the default plugin never shadowed, the existing entry
+  //    already matches what the default plugin would overlay.
+  //  - For fields where a default plugin placed `...` after other keys,
+  //    those keys yielded to the base during the single-layer apply
+  //    above. The stale default-plugin entry in
+  //    `defaultConfigurationSourceMaps` must NOT clobber the base
+  //    attribution that the specified plugin / TD already recorded.
   for (const root in defaultConfigurationSourceMaps) {
-    configurationSourceMaps[root] ??= {};
-    Object.assign(
-      configurationSourceMaps[root],
-      defaultConfigurationSourceMaps[root]
-    );
+    const existing = (configurationSourceMaps[root] ??= {});
+    const incoming = defaultConfigurationSourceMaps[root];
+    for (const key in incoming) {
+      if (existing[key] === undefined) {
+        existing[key] = incoming[key];
+      }
+    }
   }
 
   const projectRootMap = nodesManager.getRootMap();

@@ -770,6 +770,175 @@ describe('project-configuration-utils', () => {
       expect(project.targets!['lint'].executor).toEqual('@nx/eslint:lint');
       expect(errors).toEqual([]);
     });
+
+    // Regression guard for the `defaultConfigurationSourceMaps` overlay
+    // in project-configuration-utils.ts: when a default plugin target
+    // lists keys before `...`, those keys yield to the specified-plugin
+    // base during the final apply, but the intermediate merge already
+    // wrote their attribution into `defaultConfigurationSourceMaps`.
+    // The overlay uses "only fill missing" semantics so that stale
+    // default-plugin entries can't clobber the correct specified-plugin
+    // attribution already recorded in `configurationSourceMaps`.
+    it('should attribute target-level keys that yield to base via `...` to the base source, not the default plugin', () => {
+      const specifiedResults: CreateNodesResultEntry[][] = [
+        [
+          [
+            '@acme/tool',
+            'libs/a/tool.config.ts',
+            {
+              projects: {
+                'libs/a': {
+                  name: 'a',
+                  root: 'libs/a',
+                  targets: {
+                    build: {
+                      executor: 'nx:run-commands',
+                      cache: false,
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ];
+
+      const defaultResults: CreateNodesResultEntry[][] = [
+        [
+          [
+            'nx/core/project-json',
+            'libs/a/project.json',
+            {
+              projects: {
+                'libs/a': {
+                  name: 'a',
+                  root: 'libs/a',
+                  targets: {
+                    build: {
+                      cache: true,
+                      '...': true,
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ];
+
+      const errors: MergeError[] = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults,
+        defaultResults,
+        {},
+        '/tmp/test',
+        errors
+      );
+
+      const build = result.projectRootMap['libs/a'].targets!.build;
+      // Sanity: `cache` before `...` means base (specified) wins.
+      expect(build.cache).toEqual(false);
+
+      // But the overlay misattributes `cache` to the default plugin
+      // because the intermediate merge wrote it into
+      // defaultConfigurationSourceMaps before the final apply
+      // decided base won.
+      const sm = result.configurationSourceMaps['libs/a'];
+      expect(sm['targets.build.cache']).toEqual([
+        'libs/a/tool.config.ts',
+        '@acme/tool',
+      ]);
+    });
+
+    // Known gap in target-merging.ts#mergeConfigurations: the
+    // per-configuration `mergeOptions` call is passed an undefined
+    // source map, and a separate loop then unconditionally attributes
+    // every property of every new configuration to the new source —
+    // even when a spread inside the configuration made the base win
+    // for a given property. Properties that survive only because of
+    // the spread should keep base-plugin attribution.
+    it.failing(
+      'should attribute spread-shadowed configuration properties to the base, not the new plugin',
+      () => {
+        const specifiedResults: CreateNodesResultEntry[][] = [
+          [
+            [
+              '@acme/base',
+              'libs/a/base.config.ts',
+              {
+                projects: {
+                  'libs/a': {
+                    name: 'a',
+                    root: 'libs/a',
+                    targets: {
+                      build: {
+                        executor: '@acme/build',
+                        configurations: {
+                          prod: {
+                            minify: false,
+                            sourceMap: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            ],
+          ],
+          [
+            [
+              '@acme/extend',
+              'libs/a/extend.config.ts',
+              {
+                projects: {
+                  'libs/a': {
+                    targets: {
+                      build: {
+                        configurations: {
+                          prod: {
+                            // `minify` is before `...` → base wins for it.
+                            minify: true,
+                            '...': true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            ],
+          ],
+        ];
+
+        const errors: MergeError[] = [];
+        const result = mergeCreateNodesResults(
+          specifiedResults,
+          [],
+          {},
+          '/tmp/test',
+          errors
+        );
+
+        const build = result.projectRootMap['libs/a'].targets!.build;
+        // Sanity: spread resolved correctly — base wins for `minify`,
+        // `sourceMap` survives via the `...` expansion.
+        expect(build.configurations!.prod).toEqual({
+          minify: false,
+          sourceMap: true,
+        });
+
+        const sm = result.configurationSourceMaps['libs/a'];
+        expect(sm['targets.build.configurations.prod.minify']).toEqual([
+          'libs/a/base.config.ts',
+          '@acme/base',
+        ]);
+        expect(sm['targets.build.configurations.prod.sourceMap']).toEqual([
+          'libs/a/base.config.ts',
+          '@acme/base',
+        ]);
+      }
+    );
   });
 
   describe('createProjectConfigurations', () => {
