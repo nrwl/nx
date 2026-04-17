@@ -1,0 +1,70 @@
+import { FlatCompat } from '@eslint/eslintrc';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import js from '@eslint/js';
+import baseConfig from '../../eslint.config.mjs';
+import jsoncEslintParser from 'jsonc-eslint-parser';
+
+const compat = new FlatCompat({
+  baseDirectory: dirname(fileURLToPath(import.meta.url)),
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  {
+    ignores: ['**/dist', '**/out-tsc'],
+  },
+  ...baseConfig,
+  {
+    rules: {},
+  },
+  {
+    files: [
+      './package.json',
+      './generators.json',
+      './executors.json',
+      './migrations.json',
+    ],
+    rules: {
+      '@nx/nx-plugin-checks': 'error',
+    },
+    languageOptions: {
+      parser: jsoncEslintParser,
+    },
+  },
+  {
+    files: ['./package.json'],
+    rules: {
+      '@nx/dependency-checks': [
+        'error',
+        {
+          buildTargets: ['build-base'],
+          ignoredDependencies: ['nx'],
+        },
+      ],
+    },
+    languageOptions: {
+      parser: jsoncEslintParser,
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          name: 'chalk',
+          message:
+            'Please use `picocolors` in place of `chalk` for rendering terminal colors',
+        },
+        {
+          name: 'fs-extra',
+          message: 'Please use equivalent utilities from `node:fs` instead.',
+        },
+      ],
+    },
+  },
+  {
+    ignores: ['dist'],
+  },
+];
