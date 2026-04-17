@@ -13,13 +13,21 @@ import { e2eConsoleLogger } from './log-utils';
 export const isWindows = require('is-windows');
 
 export function getPublishedVersion(): string {
-  process.env.PUBLISHED_VERSION =
-    process.env.PUBLISHED_VERSION ||
-    // read version of built nx package
-    readJsonFile(join(workspaceRoot, `./dist/packages/nx/package.json`))
-      .version ||
-    // fallback to latest if built nx package is missing
-    'latest';
+  if (process.env.PUBLISHED_VERSION) {
+    return process.env.PUBLISHED_VERSION;
+  }
+
+  const distPath = join(workspaceRoot, './dist/packages/nx/package.json');
+  const pkgPath = join(workspaceRoot, './packages/nx/dist/package.json');
+
+  if (existsSync(distPath)) {
+    process.env.PUBLISHED_VERSION = readJsonFile(distPath).version;
+  } else if (existsSync(pkgPath)) {
+    process.env.PUBLISHED_VERSION = readJsonFile(pkgPath).version;
+  } else {
+    process.env.PUBLISHED_VERSION = 'latest';
+  }
+
   return process.env.PUBLISHED_VERSION as string;
 }
 
@@ -148,6 +156,11 @@ export function getStrippedEnvironmentVariables() {
       }
 
       const allowedKeys = [
+        'PATH',
+        'HOME',
+        'USER',
+        'SHELL',
+        'COMSPEC',
         'NX_ADD_PLUGINS',
         'NX_ISOLATE_PLUGINS',
         'NX_VERBOSE_LOGGING',
