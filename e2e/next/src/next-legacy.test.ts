@@ -9,6 +9,7 @@ import {
   newProject,
   packageManagerLockFile,
   readFile,
+  reservePort,
   runCLI,
   runCommand,
   runCommandUntil,
@@ -250,7 +251,7 @@ describe('@nx/next (legacy)', () => {
     expect(nextConfigPath).not.toContain(`require("@nx/`); // dev-only packages
 
     // Check that `nx serve <app> --prod` works with previous production build (e.g. `nx build <app>`).
-    const prodServePort = 4001;
+    const prodServePort = reservePort();
     const prodServeProcess = await runCommandUntil(
       `run ${appName}:serve --prod --port=${prodServePort}`,
       (output) => {
@@ -259,7 +260,7 @@ describe('@nx/next (legacy)', () => {
     );
 
     // Check that the output is self-contained (i.e. can run with its own package.json + node_modules)
-    const selfContainedPort = 3000;
+    const selfContainedPort = reservePort();
     runCLI(
       `generate @nx/workspace:run-commands serve-prod --project ${appName} --cwd=dist/packages/${appName} --command="npx next start --port=${selfContainedPort}"`,
       {

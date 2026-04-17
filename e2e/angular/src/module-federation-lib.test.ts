@@ -1,5 +1,6 @@
 import {
   killProcessAndPorts,
+  reservePort,
   runCLI,
   runCommandUntil,
   runE2ETests,
@@ -27,7 +28,7 @@ describe('Angular Module Federation - Federated Libraries', () => {
     const module = uniq('module');
     const host = uniq('host');
 
-    const hostPort = 4200;
+    const hostPort = reservePort();
 
     runCLI(
       `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`
@@ -101,7 +102,7 @@ describe('Angular Module Federation - Federated Libraries', () => {
     const childRemote = uniq('childremote');
     const module = uniq('module');
     const host = uniq('host');
-    const hostPort = 4200;
+    const hostPort = reservePort();
 
     runCLI(
       `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`

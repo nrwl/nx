@@ -5,6 +5,7 @@ import {
   killProcessAndPorts,
   newProject,
   readFile,
+  reservePort,
   runCLI,
   runCommandUntil,
   runE2ETests,
@@ -34,8 +35,8 @@ describe('Angular Module Federation', () => {
     const sharedLib = uniq('shared-lib');
     const wildcardLib = uniq('wildcard-lib');
     const secondaryEntry = uniq('secondary');
-    const hostPort = 4300;
-    const remotePort = 4301;
+    const hostPort = reservePort();
+    const remotePort = reservePort();
 
     // generate host app
     runCLI(
@@ -179,8 +180,8 @@ describe('Angular Module Federation', () => {
   it('should load remote app in the browser via ESM module federation', async () => {
     const hostApp = uniq('host');
     const remoteApp = uniq('remote');
-    const hostPort = 4200;
-    const remotePort = 4401;
+    const hostPort = reservePort();
+    const remotePort = reservePort();
 
     // generate host with playwright e2e runner
     runCLI(
