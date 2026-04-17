@@ -1,6 +1,6 @@
 import {
   cleanupProject,
-  getAvailablePort,
+  reservePort,
   killProcessAndPorts,
   newProject,
   runCommandUntil,
@@ -24,7 +24,7 @@ describe('Federate Module', () => {
     const module = uniq('module');
     const host = uniq('host');
 
-    const shellPort = await getAvailablePort();
+    const shellPort = reservePort();
 
     runCLI(
       `generate @nx/react:host ${host} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --devServerPort=${shellPort} --no-interactive --skipFormat`
@@ -125,7 +125,7 @@ describe('Federate Module', () => {
     const module = uniq('module');
     const host = uniq('host');
 
-    const shellPort = await getAvailablePort();
+    const shellPort = reservePort();
 
     runCLI(
       `generate @nx/react:host ${host} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --devServerPort=${shellPort} --no-interactive --skipFormat`

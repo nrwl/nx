@@ -6,7 +6,7 @@ import {
   runE2ETests,
   uniq,
   updateFile,
-  getAvailablePort,
+  reservePort,
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 import { stripIndents } from 'nx/src/utils/strip-indents';
@@ -25,7 +25,7 @@ describe('React Rspack Module Federation Misc - Interoperability', () => {
     const shell = uniq('shell');
     const remote1 = uniq('remote1');
     const remote2 = uniq('remote2');
-    const shellPort = await getAvailablePort();
+    const shellPort = reservePort();
 
     runCLI(
       `generate @nx/react:host apps/${shell} --name=${shell} --remotes=${remote1} --bundler=webpack --devServerPort=${shellPort} --e2eTestRunner=cypress --style=css --no-interactive --skipFormat`
@@ -86,7 +86,7 @@ describe('React Rspack Module Federation Misc - Interoperability', () => {
     const shell = uniq('shell');
     const remote1 = uniq('remote1');
     const remote2 = uniq('remote2');
-    const shellPort = await getAvailablePort();
+    const shellPort = reservePort();
 
     runCLI(
       `generate @nx/react:host apps/${shell} --name=${shell} --remotes=${remote1} --bundler=rspack --devServerPort=${shellPort} --e2eTestRunner=cypress --style=css --no-interactive --skipFormat`

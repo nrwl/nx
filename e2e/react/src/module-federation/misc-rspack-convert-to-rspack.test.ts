@@ -6,7 +6,7 @@ import {
   runE2ETests,
   uniq,
   updateFile,
-  getAvailablePort,
+  reservePort,
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 import { stripIndents } from 'nx/src/utils/strip-indents';
@@ -24,7 +24,7 @@ describe('React Rspack Module Federation Misc - Convert To Rspack', () => {
   it('should generate host and remote apps in webpack, convert to rspack and use playwright for e2es', async () => {
     const shell = uniq('shell');
     const remote1 = uniq('remote1');
-    const shellPort = await getAvailablePort();
+    const shellPort = reservePort();
 
     runCLI(
       `generate @nx/react:host ${shell} --remotes=${remote1} --bundler=webpack --devServerPort=${shellPort} --e2eTestRunner=playwright --style=css --no-interactive --skipFormat`

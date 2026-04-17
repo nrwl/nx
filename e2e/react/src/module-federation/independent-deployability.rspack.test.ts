@@ -1,6 +1,6 @@
 import {
   cleanupProject,
-  getAvailablePort,
+  reservePort,
   killProcessAndPorts,
   newProject,
   runCommandUntil,
@@ -26,7 +26,7 @@ describe('Independent Deployability', () => {
   it('should support promised based remotes', async () => {
     const remote = uniq('remote');
     const host = uniq('host');
-    const shellPort = await getAvailablePort();
+    const shellPort = reservePort();
 
     runCLI(
       `generate @nx/react:host ${host} --remotes=${remote} --devServerPort=${shellPort} --bundler=rspack --e2eTestRunner=cypress --no-interactive --typescriptConfiguration=false --skipFormat`
@@ -143,7 +143,7 @@ describe('Independent Deployability', () => {
     const remote = uniq('remote');
     const lib = uniq('lib');
 
-    const shellPort = await getAvailablePort();
+    const shellPort = reservePort();
 
     runCLI(
       `generate @nx/react:host ${shell} --remotes=${remote} --devServerPort=${shellPort} --bundler=rspack --e2eTestRunner=cypress --no-interactive --skipFormat`
@@ -292,7 +292,7 @@ describe('Independent Deployability', () => {
     const shell = uniq('shell');
     const remote = uniq('remote');
 
-    const shellPort = await getAvailablePort();
+    const shellPort = reservePort();
 
     runCLI(
       `generate @nx/react:host ${shell} --remotes=${remote} --bundler=rspack --devServerPort=${shellPort} --e2eTestRunner=cypress --no-interactive --skipFormat`
