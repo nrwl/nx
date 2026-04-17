@@ -265,7 +265,7 @@ export class TaskOrchestrator {
                 this.completedTasks.has(depId)
               )
           );
-        if (unhashed.length > 1) {
+        if (unhashed.length > 0) {
           const perTaskEnvs: Record<string, NodeJS.ProcessEnv> = {};
           for (const task of unhashed) {
             perTaskEnvs[task.id] = getTaskSpecificEnv(task, this.projectGraph);
