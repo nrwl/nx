@@ -18,8 +18,10 @@ export async function resolveAndInstantiateESLint(
     useFlatConfigOverrideVal: useFlatConfig,
   });
 
-  // ruleFilter, suppressAll, suppressRule, suppressionsLocation exist only in eslint 9+, remove this type when eslint 8 support dropped
-  const eslintOptions: ESLint.Options & {
+  // Use the broader legacy options shape so the v8 (legacy-only) fields assigned
+  // below type-check. Flat-only fields (ruleFilter, suppress*) are intersected
+  // in; they're ignored at runtime by legacy ESLint and are version-gated below.
+  const eslintOptions: ESLint.LegacyOptions & {
     ruleFilter?: Function;
     suppressAll?: boolean;
     suppressRule?: string[];
@@ -121,7 +123,10 @@ export async function resolveAndInstantiateESLint(
     }
   }
 
-  const eslint = new ESLint(eslintOptions);
+  // Runtime ESLint class may be the flat or legacy implementation; the built
+  // options object is compatible with either at runtime, but the two Options
+  // shapes diverge in v9 types so cast at the boundary.
+  const eslint = new ESLint(eslintOptions as ESLint.Options);
 
   return {
     ESLint,
