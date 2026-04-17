@@ -851,6 +851,10 @@ export class TaskOrchestrator {
     );
     if (cacheableTasks.length === 0) return [];
 
+    // Wait for any queued processTask promises to settle so task.hash is
+    // populated before cache.getBatch maps it into a Rust String.
+    await Promise.all(cacheableTasks.map((t) => this.processedTasks.get(t.id)));
+
     const cacheHits = await this.fetchCacheHits(cacheableTasks);
     if (cacheHits.length === 0) return [];
 
