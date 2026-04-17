@@ -13,8 +13,6 @@ import {
   WorkspaceTypeAndRoot,
 } from '../src/utils/find-workspace-root';
 import * as pc from 'picocolors';
-import { loadRootEnvFiles } from '../src/utils/dotenv';
-import { initLocal } from './init-local';
 import { output } from '../src/utils/output';
 import {
   getNxInstallationPath,
@@ -26,13 +24,11 @@ import { execSync } from 'child_process';
 import { createRequire } from 'module';
 import { extname, join } from 'path';
 import { existsSync } from 'fs';
-import { assertSupportedPlatform } from '../src/native/assert-supported-platform';
 import { performance } from 'perf_hooks';
-import { setupWorkspaceContext } from '../src/utils/workspace-context';
-import { daemonClient } from '../src/daemon/client/client';
-import { removeDbConnections } from '../src/utils/db-connection';
-import { ensureAnalyticsPreferenceSet } from '../src/utils/analytics-prompt';
-import { flushAnalytics, startAnalytics } from '../src/analytics';
+// Register the performance observer as early as possible so any
+// `performance.mark` / `measure` anywhere downstream is captured. The module
+// is side-effect only and its heavy deps (analytics, daemon logger) are
+// lazy-loaded inside the observer callback, so the import itself is cheap.
 import '../src/utils/perf-logging';
 
 const isTsExt = extname(__filename).endsWith('.ts');
@@ -45,12 +41,18 @@ async function main() {
     process.argv[2] !== '--help' &&
     process.argv[2] !== 'reset'
   ) {
+    const {
+      assertSupportedPlatform,
+    } = require('../src/native/assert-supported-platform');
     assertSupportedPlatform();
   }
 
   const workspace = findWorkspaceRoot(process.cwd());
 
-  if (workspace) {
+  // --version doesn't need any env / daemon / analytics state — skip dotenv
+  // loading (and the heavy modules it would pull in).
+  if (workspace && process.argv[2] !== '--version') {
+    const { loadRootEnvFiles } = require('../src/utils/dotenv');
     performance.mark('loading dotenv files:start');
     loadRootEnvFiles(workspace.dir);
     performance.mark('loading dotenv files:end');
@@ -107,7 +109,12 @@ async function main() {
 
     // this file is already in the local workspace
     if (isNxCloudCommand(process.argv[2])) {
+      const { daemonClient } =
+        require('../src/daemon/client/client') as typeof import('../src/daemon/client/client');
       if (!daemonClient.enabled() && workspace !== null) {
+        const {
+          setupWorkspaceContext,
+        } = require('../src/utils/workspace-context');
         setupWorkspaceContext(workspace.dir);
       }
       await initAnalytics();
@@ -115,10 +122,16 @@ async function main() {
       process.env.NX_DAEMON = 'false';
       require('nx/src/command-line/nx-commands').commandsObject.argv;
     } else if (isLocalInstall) {
+      const { daemonClient } =
+        require('../src/daemon/client/client') as typeof import('../src/daemon/client/client');
       if (!daemonClient.enabled() && workspace !== null) {
+        const {
+          setupWorkspaceContext,
+        } = require('../src/utils/workspace-context');
         setupWorkspaceContext(workspace.dir);
       }
       await initAnalytics();
+      const { initLocal } = require('./init-local');
       await initLocal(workspace);
     } else if (localNx) {
       // Nx is being run from globally installed CLI - hand off to the local
@@ -221,6 +234,10 @@ function isNxCloudCommand(command: string): boolean {
 }
 
 async function initAnalytics() {
+  const {
+    ensureAnalyticsPreferenceSet,
+  } = require('../src/utils/analytics-prompt');
+  const { startAnalytics } = require('../src/analytics');
   try {
     await ensureAnalyticsPreferenceSet();
   } catch {}
@@ -340,11 +357,18 @@ const getLatestVersionOfNx = ((fn: () => string) => {
 })(_getLatestVersionOfNx);
 
 process.on('exit', () => {
-  removeDbConnections();
+  // Only clean up if db-connection was actually loaded during this run.
+  const cached = require.cache[require.resolve('../src/utils/db-connection')];
+  if (cached) {
+    cached.exports.removeDbConnections();
+  }
 });
 
 main().catch((error) => {
   console.error(error);
-  flushAnalytics();
+  const cached = require.cache[require.resolve('../src/analytics')];
+  if (cached) {
+    cached.exports.flushAnalytics();
+  }
   process.exit(1);
 });

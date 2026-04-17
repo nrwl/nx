@@ -1,10 +1,6 @@
 import { PerformanceObserver } from 'perf_hooks';
 
-import { customDimensions, reportEvent } from '../analytics';
-import type { EventParameters } from '../analytics';
 import type { TrackedDetail } from './perf-hooks';
-import { isOnDaemon } from '../daemon/is-on-daemon';
-import { serverLogger } from '../daemon/logger';
 
 function isTrackedDetail(detail: unknown): detail is TrackedDetail {
   return (
@@ -14,41 +10,43 @@ function isTrackedDetail(detail: unknown): detail is TrackedDetail {
   );
 }
 
-const dimensionValues = customDimensions
-  ? new Set(Object.values(customDimensions))
-  : null;
+new PerformanceObserver((list) => {
+  const entries = list.getEntries();
+  const logEnabled = process.env.NX_PERF_LOGGING === 'true';
+  const tracked = entries.filter((e) => isTrackedDetail(e.detail));
 
-let initialized = false;
+  // Short-circuit before loading analytics / daemon logger (~60ms of native
+  // binding + module init) when there's nothing to do.
+  if (!logEnabled && tracked.length === 0) return;
 
-if (!initialized) {
-  initialized = true;
-
-  const obs = new PerformanceObserver((list) => {
-    for (const entry of list.getEntries()) {
-      const { detail } = entry;
-
-      if (process.env.NX_PERF_LOGGING === 'true') {
-        const message = `Time taken for '${entry.name}' ${entry.duration}ms`;
-        if (isOnDaemon()) {
-          serverLogger.log(message);
-        } else {
-          console.log(message);
-        }
-      }
-
-      if (isTrackedDetail(detail) && dimensionValues) {
-        const { track, ...rest } = detail;
-        const eventParameters: EventParameters = {
-          [customDimensions.duration]: entry.duration,
-        };
-        for (const [key, value] of Object.entries(rest)) {
-          if (dimensionValues.has(key)) {
-            eventParameters[key] = value;
-          }
-        }
-        reportEvent(entry.name, eventParameters);
-      }
+  if (logEnabled) {
+    const { isOnDaemon } =
+      require('../daemon/is-on-daemon') as typeof import('../daemon/is-on-daemon');
+    const { serverLogger } =
+      require('../daemon/logger') as typeof import('../daemon/logger');
+    const log = isOnDaemon()
+      ? (msg: string) => serverLogger.log(msg)
+      : console.log;
+    for (const entry of entries) {
+      log(`Time taken for '${entry.name}' ${entry.duration}ms`);
     }
-  });
-  obs.observe({ entryTypes: ['measure'] });
-}
+  }
+
+  if (tracked.length === 0) return;
+
+  const { customDimensions, reportEvent } =
+    require('../analytics') as typeof import('../analytics');
+  if (!customDimensions) return;
+  const dimensionValues = new Set(Object.values(customDimensions));
+
+  for (const entry of tracked) {
+    const { track, ...rest } = entry.detail as TrackedDetail;
+    const params: import('../analytics').EventParameters = {
+      [customDimensions.duration]: entry.duration,
+    };
+    for (const [key, value] of Object.entries(rest)) {
+      if (dimensionValues.has(key)) params[key] = value;
+    }
+    reportEvent(entry.name, params);
+  }
+}).observe({ entryTypes: ['measure'] });
