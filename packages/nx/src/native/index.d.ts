@@ -66,6 +66,15 @@ export declare class HashPlanner {
   constructor(nxJson: NxJson, projectGraph: ExternalObject<ProjectGraph>)
   getPlans(taskIds: Array<string>, taskGraph: TaskGraph): Record<string, string[]>
   getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph): ExternalObject<Record<string, Array<HashInstruction>>>
+  /**
+   * For each task id, report whether the task has any inputs that depend on
+   * the outputs of other tasks (`dependentTasksOutputFiles`). Tasks that
+   * return `true` cannot be hashed until their dependencies have produced
+   * outputs; tasks that return `false` can be hashed immediately.
+   *
+   * Cheap by design — no globbing, no file reads, just input shape splitting.
+   */
+  classifyTasks(taskIds: Array<string>, taskGraph: TaskGraph): Record<string, boolean>
 }
 
 export declare class HttpRemoteCache {
@@ -338,6 +347,20 @@ export declare function getFilesForOutputsBatch(directory: string, entriesBatch:
  */
 export declare function getMainWorktreeRoot(workspaceRoot: string): string | null
 
+/**
+ * Expand a target's `inputs` declaration into the fileset glob patterns
+ * for project-local inputs (`self_inputs`) and dependency-bound inputs
+ * (`dependency_inputs`). Non-fileset shapes (env, runtime, externalDependencies,
+ * dependentTasksOutputFiles, json, …) are intentionally dropped — this is
+ * scoped to the package-json builder's "which files to walk for npm imports"
+ * use case, not full input enumeration.
+ *
+ * Callers must resolve `target_inputs` themselves (applying the
+ * `target.inputs || targetDefaults.inputs || project default` fallback chain
+ * before calling this) so the function does no implicit defaulting.
+ */
+export declare function getTargetInputFilesets(targetInputs: Array<JsInputs> | undefined | null, namedInputs: Record<string, Array<JsInputs>>): TargetInputFilesets
+
 export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
 
 /**
@@ -552,6 +575,11 @@ export interface Target {
   options?: string
   configurations?: string
   parallelism?: boolean
+}
+
+export interface TargetInputFilesets {
+  selfInputs: Array<string>
+  dependencyInputs: Array<string>
 }
 
 export interface Task {

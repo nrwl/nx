@@ -970,7 +970,6 @@ export async function invokeTasksRunner({
     hasher,
     projectGraph,
     taskGraph,
-    nxJson,
     taskDetails
   );
   const taskResultsLifecycle = new TaskResultsLifeCycle();
@@ -1052,6 +1051,9 @@ export async function invokeTasksRunner({
             taskGraph_,
             envOrPerTaskEnvs as NodeJS.ProcessEnv
           );
+        },
+        classifyTasks(taskIds: string[], taskGraph: TaskGraph) {
+          return hasher.classifyTasks(taskIds, taskGraph);
         },
       },
       daemon: daemonClient,

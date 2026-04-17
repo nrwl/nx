@@ -147,7 +147,6 @@ async function createOrchestrator(
     tasks,
     projectGraph,
     taskGraph,
-    nxJson,
     nxArgs,
     false,
     daemonClient,

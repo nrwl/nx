@@ -112,6 +112,7 @@ import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-chang
 import { handleGlob, handleMultiGlob } from './handle-glob';
 import { handleHashGlob, handleHashMultiGlob } from './handle-hash-glob';
 import { handleHashTasks } from './handle-hash-tasks';
+import { handleClassifyTasks } from './handle-classify-tasks';
 import {
   handleGetNxConsoleStatus,
   handleSetNxConsolePreferenceAndInstall,
@@ -290,6 +291,13 @@ async function handleMessage(socket: Socket, data: string) {
       socket,
       'HASH_TASKS',
       () => handleHashTasks(payload),
+      mode
+    );
+  } else if (payload.type === 'CLASSIFY_TASKS') {
+    await handleResult(
+      socket,
+      'CLASSIFY_TASKS',
+      () => handleClassifyTasks(payload),
       mode
     );
   } else if (payload.type === 'PROCESS_IN_BACKGROUND') {

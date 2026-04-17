@@ -102,4 +102,11 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     );
     return tasks.map((t) => hashes[t.id]);
   }
+
+  async classifyTasks(
+    taskIds: string[],
+    taskGraph: TaskGraph
+  ): Promise<Record<string, boolean>> {
+    return this.planner.classifyTasks(taskIds, taskGraph);
+  }
 }

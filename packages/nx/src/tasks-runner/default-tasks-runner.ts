@@ -150,7 +150,6 @@ async function runAllTasks(
     context.initiatingTasks,
     context.projectGraph,
     context.taskGraph,
-    context.nxJson,
     options,
     context.nxArgs?.nxBail,
     context.daemon,

@@ -356,6 +356,17 @@ export class DaemonClient {
     });
   }
 
+  classifyTasks(
+    taskIds: string[],
+    taskGraph: TaskGraph
+  ): Promise<Record<string, boolean>> {
+    return this.sendToDaemonViaQueue({
+      type: 'CLASSIFY_TASKS',
+      taskIds,
+      taskGraph,
+    });
+  }
+
   async registerFileWatcher(
     config: {
       watchProjects: string[] | 'all';

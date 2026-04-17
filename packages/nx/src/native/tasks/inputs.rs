@@ -1,6 +1,6 @@
 use crate::native::project_graph::types::{Project, ProjectGraph};
 use crate::native::tasks::types::Task;
-use crate::native::types::{Input, NxJson};
+use crate::native::types::{Input, JsInputs, NxJson};
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -39,7 +39,7 @@ pub(super) fn get_inputs<'a>(
         .as_ref()
         .map(|i| i.iter().map(|v| v.into()).collect());
 
-    split_inputs_into_self_and_deps(inputs, named_inputs)
+    split_inputs_into_self_and_deps(inputs, &named_inputs)
 }
 
 pub(super) fn get_inputs_for_dependency<'a>(
@@ -94,7 +94,7 @@ pub(super) fn get_inputs_for_dependency<'a>(
 
 fn split_inputs_into_self_and_deps<'a>(
     inputs: Option<Vec<Input<'a>>>,
-    named_inputs: HashMap<&str, Vec<Input<'a>>>,
+    named_inputs: &HashMap<&str, Vec<Input<'a>>>,
 ) -> anyhow::Result<SplitInputs<'a>> {
     let inputs = inputs.unwrap_or_else(|| {
         vec![
@@ -152,7 +152,7 @@ fn split_inputs_into_self_and_deps<'a>(
         },
     );
 
-    let expanded_inputs = expand_single_project_inputs(&self_inputs, &named_inputs)?;
+    let expanded_inputs = expand_single_project_inputs(&self_inputs, named_inputs)?;
 
     let (self_inputs, deps_outputs): (Vec<_>, Vec<_>) = expanded_inputs
         .into_iter()
@@ -299,4 +299,75 @@ pub(super) fn get_named_inputs<'a>(
     }
 
     collected_named_inputs
+}
+
+#[napi(object)]
+pub struct TargetInputFilesets {
+    pub self_inputs: Vec<String>,
+    pub dependency_inputs: Vec<String>,
+}
+
+/// Expand a target's `inputs` declaration into the fileset glob patterns
+/// for project-local inputs (`self_inputs`) and dependency-bound inputs
+/// (`dependency_inputs`). Non-fileset shapes (env, runtime, externalDependencies,
+/// dependentTasksOutputFiles, json, …) are intentionally dropped — this is
+/// scoped to the package-json builder's "which files to walk for npm imports"
+/// use case, not full input enumeration.
+///
+/// Callers must resolve `target_inputs` themselves (applying the
+/// `target.inputs || targetDefaults.inputs || project default` fallback chain
+/// before calling this) so the function does no implicit defaulting.
+#[napi]
+pub fn get_target_input_filesets(
+    target_inputs: Option<Vec<JsInputs>>,
+    named_inputs: HashMap<String, Vec<JsInputs>>,
+) -> anyhow::Result<TargetInputFilesets> {
+    let inputs: Option<Vec<Input>> = target_inputs
+        .as_ref()
+        .map(|i| i.iter().map(|v| v.into()).collect());
+
+    let named_inputs_borrowed: HashMap<&str, Vec<Input>> = named_inputs
+        .iter()
+        .map(|(k, v)| (k.as_str(), v.iter().map(|v| v.into()).collect()))
+        .collect();
+
+    let split = split_inputs_into_self_and_deps(inputs, &named_inputs_borrowed)?;
+
+    let self_inputs: Vec<String> = split
+        .self_inputs
+        .iter()
+        .filter_map(|i| match i {
+            Input::FileSet { fileset, .. } => Some(fileset.to_string()),
+            _ => None,
+        })
+        .collect();
+
+    let mut dependency_inputs: Vec<String> = Vec::new();
+    for input in &split.deps_inputs {
+        match input {
+            Input::Inputs {
+                input: name,
+                dependencies: true,
+            } => {
+                let expanded = expand_named_input(name, &named_inputs_borrowed)?;
+                for e in expanded {
+                    if let Input::FileSet { fileset, .. } = e {
+                        dependency_inputs.push(fileset.to_string());
+                    }
+                }
+            }
+            Input::FileSet {
+                fileset,
+                dependencies: true,
+            } => {
+                dependency_inputs.push(fileset.to_string());
+            }
+            _ => {}
+        }
+    }
+
+    Ok(TargetInputFilesets {
+        self_inputs,
+        dependency_inputs,
+    })
 }

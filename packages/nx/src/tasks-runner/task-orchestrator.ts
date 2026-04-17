@@ -3,7 +3,6 @@ import { writeFileSync } from 'fs';
 import * as pc from 'picocolors';
 import { relative } from 'path';
 import { performance } from 'perf_hooks';
-import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
@@ -11,7 +10,7 @@ import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
 import { walkTaskGraph } from './task-graph-utils';
-import { getInputs, TaskHasher } from '../hasher/task-hasher';
+import { TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
   IS_WASM,
@@ -138,7 +137,6 @@ export class TaskOrchestrator {
     private readonly initiatingTasks: Task[],
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
-    private readonly nxJson: NxJsonConfiguration,
     private readonly options: NxArgs & DefaultTasksRunnerOptions,
     private readonly bail: boolean,
     private readonly daemon: DaemonClient,
@@ -556,6 +554,10 @@ export class TaskOrchestrator {
     }
 
     const nonCachedTaskIds = new Set<string>();
+    const dependsOnSiblingOutputs = await this.hasher.classifyTasks(
+      tasks.map((t) => t.id),
+      batch.taskGraph
+    );
 
     await walkTaskGraph(batch.taskGraph, async (rootTaskIds) => {
       const rootTasks = rootTaskIds.map((id) => batch.taskGraph.tasks[id]);
@@ -567,10 +569,7 @@ export class TaskOrchestrator {
         const depIds = batch.taskGraph.dependencies[task.id];
         const hasNonCachedDep = depIds.some((id) => nonCachedTaskIds.has(id));
 
-        if (
-          hasNonCachedDep &&
-          getInputs(task, this.projectGraph, this.nxJson).depsOutputs.length > 0
-        ) {
+        if (hasNonCachedDep && dependsOnSiblingOutputs[task.id]) {
           nonCachedTaskIds.add(task.id);
           needsRehashAfterExecution.add(task.id);
         } else {

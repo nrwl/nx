@@ -146,6 +146,31 @@ impl HashPlanner {
         Ok(External::new(plans))
     }
 
+    /// For each task id, report whether the task has any inputs that depend on
+    /// the outputs of other tasks (`dependentTasksOutputFiles`). Tasks that
+    /// return `true` cannot be hashed until their dependencies have produced
+    /// outputs; tasks that return `false` can be hashed immediately.
+    ///
+    /// Cheap by design — no globbing, no file reads, just input shape splitting.
+    #[napi]
+    pub fn classify_tasks(
+        &self,
+        task_ids: Vec<String>,
+        task_graph: TaskGraph,
+    ) -> anyhow::Result<HashMap<String, bool>> {
+        task_ids
+            .par_iter()
+            .map(|id| {
+                let task = task_graph
+                    .tasks
+                    .get(id)
+                    .ok_or_else(|| anyhow::anyhow!("Task with id '{id}' not found"))?;
+                let inputs = get_inputs(task, &self.project_graph, &self.nx_json)?;
+                Ok((id.clone(), !inputs.deps_outputs.is_empty()))
+            })
+            .collect()
+    }
+
     fn target_input<'a>(
         &'a self,
         project_name: &str,

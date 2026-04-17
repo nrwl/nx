@@ -968,4 +968,81 @@ describe('task planner', () => {
       expect(plans).toMatchSnapshot();
     });
   });
+
+  describe('classifyTasks', () => {
+    it('returns true for tasks with dependentTasksOutputFiles inputs and false for those without', async () => {
+      const projectFileMap = {
+        parent: [{ file: 'libs/parent/index.ts', hash: 'a.hash' }],
+        child: [{ file: 'libs/child/index.ts', hash: 'b.hash' }],
+      };
+      const builder = new ProjectGraphBuilder(undefined, projectFileMap);
+      builder.addNode({
+        name: 'parent',
+        type: 'lib',
+        data: {
+          root: 'libs/parent',
+          targets: {
+            build: {
+              dependsOn: ['^build'],
+              inputs: [
+                'default',
+                { dependentTasksOutputFiles: '**/*.d.ts', transitive: true },
+              ],
+              executor: 'nx:run-commands',
+              outputs: ['{workspaceRoot}/dist/{projectRoot}'],
+            },
+            lint: {
+              inputs: ['default'],
+              executor: 'nx:run-commands',
+            },
+          },
+        },
+      });
+      builder.addNode({
+        name: 'child',
+        type: 'lib',
+        data: {
+          root: 'libs/child',
+          targets: {
+            build: {
+              inputs: ['default'],
+              executor: 'nx:run-commands',
+              outputs: ['{workspaceRoot}/dist/{projectRoot}'],
+            },
+          },
+        },
+      });
+      builder.addStaticDependency('parent', 'child', 'libs/parent/index.ts');
+
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        { build: ['^build'], lint: [] },
+        ['parent'],
+        ['build', 'lint'],
+        undefined,
+        {}
+      );
+
+      const nxJson = {
+        namedInputs: { default: ['{projectRoot}/**/*'] },
+      } as any;
+
+      const transformed = transferProjectGraph(
+        transformProjectGraphForRust(projectGraph)
+      );
+      const planner = new HashPlanner(nxJson, transformed);
+
+      const result = planner.classifyTasks(
+        ['parent:build', 'parent:lint', 'child:build'],
+        taskGraph
+      );
+
+      expect(result).toEqual({
+        'parent:build': true,
+        'parent:lint': false,
+        'child:build': false,
+      });
+    });
+  });
 });

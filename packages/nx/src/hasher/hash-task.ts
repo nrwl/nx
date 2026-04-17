@@ -1,4 +1,4 @@
-import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
+import { readNxJson } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { IS_WASM, TaskDetails } from '../native';
@@ -7,7 +7,7 @@ import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { getTaskSpecificEnv } from '../tasks-runner/task-env';
 import { getCustomHasher } from '../tasks-runner/utils';
 import { getDbConnection } from '../utils/db-connection';
-import { getInputs, TaskHasher } from './task-hasher';
+import { TaskHasher } from './task-hasher';
 
 let taskDetails: TaskDetails;
 
@@ -26,7 +26,6 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   hasher: TaskHasher,
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
-  nxJson: NxJsonConfiguration,
   tasksDetails: TaskDetails | null
 ) {
   performance.mark('hashMultipleTasks:start');
@@ -41,6 +40,11 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     })
   );
 
+  const dependsOnSiblingOutputs = await hasher.classifyTasks(
+    tasks.map((t) => t.id),
+    taskGraph
+  );
+
   const tasksToHash = tasksWithHashers
     .filter(({ task, customHasher }) => {
       // If a task has a custom hasher, it might depend on the outputs of other tasks
@@ -50,7 +54,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
 
       return !(
         taskGraph.dependencies[task.id].length > 0 &&
-        getInputs(task, projectGraph, nxJson).depsOutputs.length > 0
+        dependsOnSiblingOutputs[task.id]
       );
     })
     .map((t) => t.task);
