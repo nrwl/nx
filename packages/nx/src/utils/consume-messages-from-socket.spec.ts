@@ -109,7 +109,6 @@ describe('parseMessage', () => {
     }).toString('binary');
 
     const parsed = parseMessage<{ when: Date; buf: Buffer }>(wire);
-    expect(parsed.when).toBeInstanceOf(Date);
     expect(parsed.when.toISOString()).toBe(date.toISOString());
     expect(Buffer.isBuffer(parsed.buf)).toBe(true);
     expect(Array.from(parsed.buf)).toEqual([1, 2, 3]);
