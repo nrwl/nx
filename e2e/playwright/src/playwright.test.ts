@@ -1,12 +1,13 @@
 import {
   cleanupProject,
-  newProject,
-  uniq,
-  runCLI,
   ensurePlaywrightBrowsersInstallation,
   getPackageManagerCommand,
   getSelectedPackageManager,
+  newProject,
   readJson,
+  reservePort,
+  runCLI,
+  uniq,
 } from '@nx/e2e-utils';
 
 const TEN_MINS_MS = 600_000;
@@ -31,11 +32,12 @@ describe('Playwright E2E Test runner', () => {
     () => {
       ensurePlaywrightBrowsersInstallation();
 
+      const port = reservePort();
       runCLI(
         `g @nx/web:app demo-e2e --unitTestRunner=none --bundler=vite --e2eTestRunner=none --style=css --no-interactive`
       );
       runCLI(
-        `g @nx/playwright:configuration --project demo-e2e --webServerCommand="${pmc.runNx} serve demo-e2e" --webServerAddress="http://localhost:4200"`
+        `g @nx/playwright:configuration --project demo-e2e --webServerCommand="${pmc.runNx} serve demo-e2e --port=${port}" --webServerAddress="http://localhost:${port}"`
       );
 
       const e2eResults = runCLI(`e2e demo-e2e`);
@@ -52,11 +54,12 @@ describe('Playwright E2E Test runner', () => {
     () => {
       ensurePlaywrightBrowsersInstallation();
 
+      const port = reservePort();
       runCLI(
         `g @nx/web:app demo-js-e2e --unitTestRunner=none --bundler=vite --e2eTestRunner=none --style=css --no-interactive`
       );
       runCLI(
-        `g @nx/playwright:configuration --project demo-js-e2e --js  --webServerCommand="${pmc.runNx} serve demo-e2e" --webServerAddress="http://localhost:4200"`
+        `g @nx/playwright:configuration --project demo-js-e2e --js  --webServerCommand="${pmc.runNx} serve demo-e2e --port=${port}" --webServerAddress="http://localhost:${port}"`
       );
 
       const e2eResults = runCLI(`e2e demo-js-e2e`);
@@ -95,12 +98,13 @@ describe('Playwright E2E Test Runner - legacy', () => {
       ensurePlaywrightBrowsersInstallation();
 
       const pmc = getPackageManagerCommand();
+      const port = reservePort();
 
       runCLI(
         `g @nx/web:app demo-e2e --directory apps/demo-e2e --unitTestRunner=none --bundler=vite --e2eTestRunner=none --style=css --no-interactive`
       );
       runCLI(
-        `g @nx/playwright:configuration --project demo-e2e --webServerCommand="${pmc.runNx} serve demo-e2e" --webServerAddress="http://localhost:4200"`
+        `g @nx/playwright:configuration --project demo-e2e --webServerCommand="${pmc.runNx} serve demo-e2e --port=${port}" --webServerAddress="http://localhost:${port}"`
       );
 
       const e2eResults = runCLI(`e2e demo-e2e`);
@@ -118,12 +122,13 @@ describe('Playwright E2E Test Runner - legacy', () => {
       ensurePlaywrightBrowsersInstallation();
 
       const pmc = getPackageManagerCommand();
+      const port = reservePort();
 
       runCLI(
         `g @nx/web:app demo-js-e2e --directory apps/demo-js-e2e --unitTestRunner=none --bundler=vite --e2eTestRunner=none --style=css --no-interactive`
       );
       runCLI(
-        `g @nx/playwright:configuration --project demo-js-e2e --js  --webServerCommand="${pmc.runNx} serve demo-e2e" --webServerAddress="http://localhost:4200"`
+        `g @nx/playwright:configuration --project demo-js-e2e --js  --webServerCommand="${pmc.runNx} serve demo-e2e --port=${port}" --webServerAddress="http://localhost:${port}"`
       );
 
       const e2eResults = runCLI(`e2e demo-js-e2e`);
