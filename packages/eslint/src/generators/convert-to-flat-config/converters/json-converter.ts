@@ -14,15 +14,19 @@ import {
 import { getPluginImport } from '../../utils/eslint-file';
 import { mapFilePath } from '../../utils/flat-config/path-utils';
 
-// Rewrites legacy `.eslintrc[.base].json` / `.eslintignore` filenames to their flat-config
+// Rewrites legacy `.eslintrc[.base][.json]` / `.eslintignore` filenames to their flat-config
 // counterparts. Used for `extends` local paths, rule option values that embed these filenames,
-// and nx.json / project.json input globs that referenced the deleted files.
+// and nx.json / project.json input globs that referenced the deleted files. Accepts
+// extensionless `.eslintrc` since ESLint treats that as JSON by convention.
 export function renameLegacyEslintrcFile(
   path: string,
   format: 'mjs' | 'cjs'
 ): string {
   return path
-    .replace(/(^|.*?)\.eslintrc(\.base)?\.json$/, `$1eslint$2.config.${format}`)
+    .replace(
+      /(^|.*?)\.eslintrc(\.base)?(\.json)?$/,
+      `$1eslint$2.config.${format}`
+    )
     .replace(/(^|.*?)\.eslintignore$/, `$1eslint.config.${format}`);
 }
 
@@ -301,9 +305,10 @@ export function convertEslintJsonToFlatConfig(
         : [config.ignorePatterns]
     ).filter(
       (pattern) =>
-        // Drop patterns that are useless in flat config: universal selectors and
-        // negated entries (un-ignores relied on eslintrc cascading, which flat config lacks).
-        !['**/*', 'node_modules'].includes(pattern) && !pattern.startsWith('!')
+        // Drop sentinels that are meaningless in flat config. Real negations
+        // (e.g. `['dist/**', '!dist/keep.js']`) are preserved — flat config
+        // still supports un-ignoring within a broader ignores block.
+        !['**/*', '!**/*', 'node_modules'].includes(pattern)
     );
     if (patterns.length > 0) {
       exportElements.push(
@@ -360,7 +365,7 @@ function addExtends(
   extendsConfig
     .filter((imp) => imp.match(/^\.?(\.\/)/))
     .forEach((imp, index) => {
-      if (imp.match(/\.eslintrc(\.base)?\.json$/)) {
+      if (imp.match(/\.eslintrc(\.base)?(\.json)?$/)) {
         const localName = index ? `baseConfig${index}` : 'baseConfig';
         configBlocks.push(generateSpreadElement(localName));
         importsMap.set(renameLegacyEslintrcFile(imp, format), localName);

@@ -332,6 +332,58 @@ describe('convertEslintJsonToFlatConfig', () => {
       `);
     });
 
+    it('should preserve non-sentinel negated ignorePatterns', async () => {
+      tree.write(
+        '.eslintrc.json',
+        JSON.stringify({
+          root: true,
+          ignorePatterns: [
+            '**/*',
+            'dist/**',
+            '!dist/keep.js',
+            '.next/**/*',
+          ],
+          plugins: ['@nx'],
+        })
+      );
+
+      const { content } = convertEslintJsonToFlatConfig(
+        tree,
+        '',
+        readJson(tree, '.eslintrc.json'),
+        [],
+        'mjs'
+      );
+
+      expect(content).toContain('"dist/**"');
+      expect(content).toContain('"!dist/keep.js"');
+      expect(content).toContain('".next/**/*"');
+    });
+
+    it('should rewrite extends pointing at extensionless .eslintrc', async () => {
+      tree.write(
+        'mylib/.eslintrc.json',
+        JSON.stringify({
+          extends: ['../../.eslintrc'],
+          rules: {},
+        })
+      );
+
+      const { content } = convertEslintJsonToFlatConfig(
+        tree,
+        'mylib',
+        readJson(tree, 'mylib/.eslintrc.json'),
+        [],
+        'mjs'
+      );
+
+      expect(content).toContain(
+        'import baseConfig from "../../eslint.config.mjs"'
+      );
+      expect(content).toContain('...baseConfig');
+      expect(content).not.toContain('compat.extends');
+    });
+
     it('should handle overrides with mixed Nx and non-Nx extends', async () => {
       tree.write(
         '.eslintrc.json',
