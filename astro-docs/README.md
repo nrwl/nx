@@ -322,3 +322,34 @@ The Framer page should render JSON inside a `<pre>` tag:
 - Users can dismiss the banner (stored in localStorage)
 - If `enabled` is `false` or `activeUntil` has passed, the banner won't show
 - If `BANNER_URL` is not set, an empty collection is generated
+
+## Versioned Docs
+
+When a new major Nx version is released (or about to be released), create a versioned snapshot of the docs site so the previous version remains accessible at `v{major}.nx.dev` (e.g. `v22.nx.dev`).
+
+### Creating a Version Snapshot
+
+```bash
+node ./scripts/create-versioned-docs.mts v22
+```
+
+This will:
+
+1. Fetch tags from origin, find the latest stable release for that major (e.g. `22.6.4`)
+2. Checkout that tag, install deps, and build astro-docs
+3. Create an orphan git branch `v22` containing only the pre-built static site
+4. Return to your original branch
+
+If no stable tags exist for that major version, it builds from the current branch.
+
+The branch contains a no-op `project.json` build target so Netlify's existing build command (`pnpm nx build astro-docs --force`) succeeds instantly without rebuilding.
+
+### Pushing the Branch
+
+```bash
+git push -f origin v22
+```
+
+### Netlify Setup
+
+Each versioned branch is deployed as a [Netlify branch deploy](https://docs.netlify.com/site-deploys/overview/#branch-deploy-controls). Configure the branch subdomain in Netlify to point `v22.nx.dev` to the `v22` branch deploy.

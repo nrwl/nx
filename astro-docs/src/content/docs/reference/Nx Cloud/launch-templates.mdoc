@@ -72,6 +72,13 @@ See their detailed description and pricing in the [credits pricing reference](/d
 
 A launch template's `image` defines the available base software for the agent machine.
 
+{% aside type="tip" title="Looking for Docker in Docker support?" %}
+
+Docker in Docker support (DinD) is currently limited to Organizations on the enterprise plan.
+
+If you're interested in our [Enterprise plan please reach out!](/contact/sales)
+{% /aside %}
+
 ```yaml
 // .nx/workflows/agents.yaml
 launch-templates:
@@ -94,8 +101,6 @@ Nx Cloud provides the following images:
 - `ubuntu22.04-node20.11-v10`: added Docker support (Docker 24.0.2 binaries)
 - `ubuntu22.04-node20.11-v11`: bumped default `pnpm` from v8 to v9
 - `ubuntu22.04-node20.11-v12`: updated Playwright system dependencies
-- `ubuntu22.04-node20.11-dockerd-v2`: Docker daemon via `get-docker.sh` script with pnpm bumped to v9
-- `ubuntu22.04-node20.11-dockerd-v3`: updated Playwright system dependencies
 - `ubuntu22.04-node20.19-v1`: upgrade default node version to Node 20.19.1
 - `ubuntu22.04-node20.19-v2`: updated Playwright system dependencies
 - `ubuntu22.04-node20.19-v3`: upgraded Docker from 24.0.2 to 28.3.1

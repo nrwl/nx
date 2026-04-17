@@ -213,8 +213,58 @@ describe('librarySecondaryEntryPoint generator', () => {
     });
 
     tsConfig = readJson(tree, 'libs/lib1/tsconfig.lib.json');
-    expect(tsConfig.include).toStrictEqual(['**/*.ts']);
-    expect(tsConfig.exclude).toStrictEqual(['**/*.spec.ts', '**/*.test.ts']);
+    expect(tsConfig.include).toStrictEqual([
+      'src/**/*.ts',
+      'testing/src/**/*.ts',
+    ]);
+    expect(tsConfig.exclude).toStrictEqual([
+      'src/**/*.spec.ts',
+      'src/**/*.test.ts',
+      'testing/src/**/*.spec.ts',
+      'testing/src/**/*.test.ts',
+    ]);
+  });
+
+  it('should not modify non-glob exclude paths like "src/test-setup.ts"', async () => {
+    await generateTestLibrary(tree, {
+      name: 'lib1',
+      directory: 'libs/lib1',
+      importPath: '@my-org/lib1',
+      publishable: true,
+      skipFormat: true,
+    });
+    // Simulate jest setup adding src/test-setup.ts to exclude
+    updateJson(tree, 'libs/lib1/tsconfig.lib.json', (json) => {
+      json.exclude = [...(json.exclude ?? []), 'src/test-setup.ts'];
+      return json;
+    });
+    // verify initial state
+    let tsConfig = readJson(tree, 'libs/lib1/tsconfig.lib.json');
+    expect(tsConfig.include).toStrictEqual(['src/**/*.ts']);
+    expect(tsConfig.exclude).toStrictEqual([
+      'src/**/*.spec.ts',
+      'src/**/*.test.ts',
+      'src/test-setup.ts',
+    ]);
+
+    await librarySecondaryEntryPointGenerator(tree, {
+      name: 'testing',
+      library: 'lib1',
+      skipFormat: true,
+    });
+
+    tsConfig = readJson(tree, 'libs/lib1/tsconfig.lib.json');
+    expect(tsConfig.include).toStrictEqual([
+      'src/**/*.ts',
+      'testing/src/**/*.ts',
+    ]);
+    expect(tsConfig.exclude).toStrictEqual([
+      'src/**/*.spec.ts',
+      'src/**/*.test.ts',
+      'src/test-setup.ts',
+      'testing/src/**/*.spec.ts',
+      'testing/src/**/*.test.ts',
+    ]);
   });
 
   describe('--skipFormat', () => {

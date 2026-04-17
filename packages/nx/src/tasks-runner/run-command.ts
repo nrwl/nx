@@ -27,7 +27,7 @@ import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { NxArgs } from '../utils/command-line-utils';
 import { handleErrors } from '../utils/handle-errors';
 import { isCI } from '../utils/is-ci';
-import { isNxCloudUsed } from '../utils/nx-cloud-utils';
+import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { printNxKey } from '../utils/nx-key';
 import { output } from '../utils/output';
 import {
@@ -1019,9 +1019,11 @@ export async function invokeTasksRunner({
           return hasher.hashTask(task, taskGraph_, env);
         },
         hashTasks(
-          task: Task[],
+          tasks: Task[],
           taskGraph_?: TaskGraph,
-          env?: NodeJS.ProcessEnv
+          envOrPerTaskEnvs?:
+            | NodeJS.ProcessEnv
+            | Record<string, NodeJS.ProcessEnv>
         ) {
           if (!taskGraph_) {
             output.warn({
@@ -1033,7 +1035,7 @@ export async function invokeTasksRunner({
             });
             taskGraph_ = taskGraph;
           }
-          if (!env) {
+          if (!envOrPerTaskEnvs) {
             output.warn({
               title: `The environment variables are now required as an argument to hashTasks`,
               bodyLines: [
@@ -1041,10 +1043,15 @@ export async function invokeTasksRunner({
                 'This will result in an error in Nx 20',
               ],
             });
-            env = process.env;
+            envOrPerTaskEnvs = process.env;
           }
-
-          return hasher.hashTasks(task, taskGraph_, env);
+          // hasher.hashTasks accepts either legacy single-env or the new
+          // per-task-env shape and normalizes internally.
+          return hasher.hashTasks(
+            tasks,
+            taskGraph_,
+            envOrPerTaskEnvs as NodeJS.ProcessEnv
+          );
         },
       },
       daemon: daemonClient,
@@ -1211,7 +1218,13 @@ function getTasksRunnerPath(
     // Nx Cloud ID specified in nxJson
     nxJson.nxCloudId;
 
-  return isCloudRunner ? 'nx-cloud' : defaultTasksRunnerPath;
+  // NX_NO_CLOUD / neverConnectToCloud wins over any ambient token — otherwise
+  // a surrounding CI env variable would still route through the cloud shell,
+  // which resolves the default tasks runner via its own require bridge and
+  // can pull in a different Nx version than the workspace's own.
+  return isCloudRunner && !isNxCloudDisabled(nxJson)
+    ? 'nx-cloud'
+    : defaultTasksRunnerPath;
 }
 
 export function getRunnerOptions(

@@ -48,7 +48,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
 
       - name: Set SHAs
-        uses: nrwl/nx-set-shas@1859e66a83ac9be0dceecbd9a023702e27ac47f4 # v4.3.3
+        uses: nrwl/nx-set-shas@310288c04d90696f9f1bc27c5e3caea6642b53d4 # v5.0.0
         with:
           main-branch-name: 'master'
 
@@ -100,13 +100,13 @@ jobs:
         run: |
           pids=()
 
-          pnpm nx-cloud record -- nx format:check &
+          pnpm nx record -- nx format:check &
           pids+=($!)
 
-          pnpm nx-cloud record -- nx sync:check
+          pnpm nx record -- nx sync:check
           pids+=($!)
 
-          pnpm nx build workspace-plugin && pnpm nx-cloud record -- pnpm nx conformance:check
+          pnpm nx build workspace-plugin && pnpm nx record -- pnpm nx-cloud conformance:check
           pids+=($!)
 
           pnpm nx run-many -t check-imports check-lock-files check-codeowners --parallel=1 --no-dte &
@@ -120,7 +120,7 @@ jobs:
           done
         timeout-minutes: 100
       - name: Fix CI
-        run: pnpm nx-cloud fix-ci
+        run: pnpm nx fix-ci
         if: failure()
 
   main-macos:
@@ -167,7 +167,7 @@ jobs:
           corepack prepare --activate
 
       - name: Set SHAs
-        uses: nrwl/nx-set-shas@1859e66a83ac9be0dceecbd9a023702e27ac47f4 # v4.3.3
+        uses: nrwl/nx-set-shas@310288c04d90696f9f1bc27c5e3caea6642b53d4 # v5.0.0
         with:
           main-branch-name: 'master'
 

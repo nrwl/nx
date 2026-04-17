@@ -10,5 +10,8 @@
   },
   "copy-warm": {
     "max": 1.0
+  },
+  "build-warm": {
+    "max": 5.0
   }
 }

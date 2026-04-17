@@ -9,6 +9,7 @@ import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import {
+  ProjectConfiguration,
   TargetConfiguration,
   TargetDependencyConfig,
 } from '../config/workspace-json-project-json';
@@ -16,7 +17,6 @@ import {
   getTransformableOutputs,
   validateOutputs as nativeValidateOutputs,
 } from '../native';
-import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { isRelativePath } from '../utils/fileutils';
 import { findMatchingProjects } from '../utils/find-matching-projects';
 import { isGlobPattern } from '../utils/globs';
@@ -438,24 +438,25 @@ export function getExecutorNameForTask(task: Task, projectGraph: ProjectGraph) {
 
 export function getExecutorForTask(
   task: Task,
-  projectGraph: ProjectGraph
+  projects: Record<string, ProjectConfiguration>
 ): ExecutorConfig & { isNgCompat: boolean; isNxExecutor: boolean } {
-  const executor = getExecutorNameForTask(task, projectGraph);
+  const executor =
+    projects[task.target.project]?.targets?.[task.target.target]?.executor;
   const [nodeModule, executorName] = parseExecutor(executor);
 
   return getExecutorInformation(
     nodeModule,
     executorName,
     workspaceRoot,
-    readProjectsConfigurationFromProjectGraph(projectGraph).projects
+    projects
   );
 }
 
 export function getCustomHasher(
   task: Task,
-  projectGraph: ProjectGraph
+  projects: Record<string, ProjectConfiguration>
 ): CustomHasher | null {
-  const factory = getExecutorForTask(task, projectGraph).hasherFactory;
+  const factory = getExecutorForTask(task, projects).hasherFactory;
   return factory ? factory() : null;
 }
 
