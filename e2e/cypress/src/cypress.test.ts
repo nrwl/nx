@@ -7,7 +7,6 @@ import {
   killPort,
   newProject,
   readJson,
-  reservePort,
   runCLI,
   runCommand,
   runE2ETests,
@@ -21,10 +20,8 @@ const TEN_MINS_MS = 600_000;
 
 describe('Cypress E2E Test runner', () => {
   const myapp = uniq('myapp');
-  let appPort: number;
 
   beforeAll(() => {
-    appPort = reservePort();
     newProject({ packages: ['@nx/angular', '@nx/next', '@nx/react'] });
   });
 
@@ -36,16 +33,6 @@ describe('Cypress E2E Test runner', () => {
       runCLI(
         `generate @nx/react:app apps/${myapp} --e2eTestRunner=cypress --linter=eslint`
       );
-      // Override the default serve port so parallel e2e tasks don't collide.
-      updateJson(`apps/${myapp}/project.json`, (json) => {
-        if (json.targets?.serve?.options) {
-          json.targets.serve.options.port = appPort;
-        }
-        if (json.targets?.['serve-static']?.options) {
-          json.targets['serve-static'].options.port = appPort;
-        }
-        return json;
-      });
 
       // Ensure project typechecks (See: https://github.com/nrwl/nx/issues/32930)
       expect(() =>
@@ -126,7 +113,7 @@ export default defineConfig({
         timeout: 60_000,
       },
     }),
-    baseUrl: 'http://localhost:${appPort}',
+    baseUrl: 'http://localhost:4200',
   },
   env: {
     fromCyConfig: 'i am from the cypress config file'
