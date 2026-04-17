@@ -175,6 +175,14 @@ export async function runDiscreteTasks(
     lifeCycle
   );
 
+  // Kick off hashing + scheduleTask lifecycle for every task immediately so
+  // they overlap with the batch dispatch loop below. Both helpers are
+  // idempotent (hashTasks filters !task.hash; lifecycle dedupes via Set), so
+  // the per-task defensive calls in runTaskDirectly stay cheap no-ops.
+  const prepared = orchestrator
+    .ensureHashes(tasks)
+    .then(() => orchestrator.fireScheduleLifecycle(tasks));
+
   let groupId = 0;
   let nextBatch = orchestrator.nextBatch();
   const batchResults: Array<Promise<TaskResult[]>> = [];
@@ -195,6 +203,10 @@ export async function runDiscreteTasks(
   }
 
   const discreteTasks = tasks.filter((task) => !batchTasks.has(task.id));
+
+  // Wait for the bulk prepare before any cache lookup. resolveCachedTasks
+  // would also self-hash, but waiting here means it hits a no-op filter.
+  await prepared;
 
   // Bulk-resolve every discrete task's cache state in one shot —
   // single SQL call plus parallel remote retrievals. Batches kicked
@@ -231,6 +243,13 @@ export async function runContinuousTasks(
     nxJson,
     lifeCycle
   );
+
+  // Bulk-prepare so each startContinuousTask doesn't serialize on a single-
+  // task hash call. Per-task defensive calls inside startContinuousTask hit
+  // the no-op filter once these resolve.
+  await orchestrator.ensureHashes(tasks);
+  await orchestrator.fireScheduleLifecycle(tasks);
+
   return tasks.reduce(
     (current, task, index) => {
       current[task.id] = orchestrator.startContinuousTask(task, index);

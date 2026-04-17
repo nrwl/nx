@@ -796,7 +796,7 @@ export class TaskOrchestrator {
    * any path; the dedupe Set guarantees at-most-once even when the
    * coordinator and a leaf path both reach the same task.
    */
-  private async fireScheduleLifecycle(tasks: Task[]): Promise<void> {
+  async fireScheduleLifecycle(tasks: Task[]): Promise<void> {
     const newlyScheduled: Task[] = [];
     for (const task of tasks) {
       if (this.scheduledIds.has(task.id)) continue;
@@ -817,7 +817,7 @@ export class TaskOrchestrator {
    * env changes. `hashTasks` filters by `!task.hash` internally, so this
    * is safe to call on already-hashed sets.
    */
-  private async ensureHashes(tasks: Task[]): Promise<void> {
+  async ensureHashes(tasks: Task[]): Promise<void> {
     const unhashed = tasks.filter((t) => !t.hash);
     if (unhashed.length === 0) return;
 
