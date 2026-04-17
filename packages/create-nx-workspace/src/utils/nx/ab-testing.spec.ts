@@ -118,8 +118,8 @@ describe('ab-testing', () => {
 
     it.each([
       { flowVariant: '0', expectedCode: 'connect-to-cloud' },
-      { flowVariant: '1', expectedCode: 'cloud-ab-remote-cache-speed' },
-      { flowVariant: '2', expectedCode: 'cloud-ab-fast-ci-setup' },
+      { flowVariant: '1', expectedCode: 'cloud-ab-never-rebuild' },
+      { flowVariant: '2', expectedCode: 'cloud-ab-ci-providers-speed' },
     ])(
       'should select $expectedCode for flow variant $flowVariant',
       ({ flowVariant, expectedCode }) => {

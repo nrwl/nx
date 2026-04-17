@@ -28,6 +28,10 @@
     "native": [
       "{projectRoot}/**/*.rs",
       "{projectRoot}/**/Cargo.*",
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/clippy.toml",
+      "{workspaceRoot}/.cargo/config.toml",
       { "runtime": "node -p '`${process.platform}_${process.arch}`'" },
       { "runtime": "rustc --version" },
       { "externalDependencies": ["npm:@monodon/rust", "npm:@napi-rs/cli"] }
@@ -44,7 +48,8 @@
       { "env": "SELECTED_PM" },
       { "env": "NX_E2E_CI_CACHE_KEY" },
       { "env": "CI" },
-      { "env": "NX_E2E_RUN_E2E" }
+      { "env": "NX_E2E_RUN_E2E" },
+      { "dependentTasksOutputFiles": "**/*.d.ts", "transitive": true }
     ]
   },
   "release": {
@@ -84,7 +89,7 @@
       "cache": true
     },
     "test-native": {
-      "inputs": ["native"],
+      "inputs": ["native", "{projectRoot}/**/*.snap"],
       "executor": "@monodon/rust:test",
       "options": {},
       "cache": true
@@ -96,7 +101,12 @@
         "env": { "NODE_OPTIONS": "--experimental-vm-modules" }
       }
     },
-    "lint": { "dependsOn": ["build-native", "^build-native"] },
+    "lint": {
+      "dependsOn": ["build-native", "^build-native"],
+      "options": {
+        "max-warnings": 5
+      }
+    },
     "e2e": { "cache": true, "inputs": ["e2eInputs", "^production"] },
     "e2e-local": {
       "cache": true,
@@ -159,21 +169,7 @@
     { "plugin": "@nx/vite/plugin", "include": ["astro-docs/**"] },
     {
       "plugin": "@nx/js/typescript",
-      "include": ["packages/nx/**"],
-      "options": {
-        "typecheck": true,
-        "build": { "targetName": "build-base" },
-        "compiler": "tsgo"
-      }
-    },
-    {
-      "plugin": "@nx/js/typescript",
-      "exclude": [
-        "examples/angular-rspack/**/*",
-        "nx-dev/**/*",
-        "e2e/**/*",
-        "packages/nx/**"
-      ],
+      "exclude": ["examples/angular-rspack/**/*", "nx-dev/**/*", "e2e/**/*"],
       "options": { "typecheck": true, "build": { "targetName": "build-base" } }
     },
     {
@@ -279,16 +275,6 @@
   "sync": { "applyChanges": true },
   "conformance": {
     "rules": [
-      {
-        "rule": "./dist/workspace-plugin/src/conformance-rules/blog-description",
-        "projects": ["docs"],
-        "options": { "mdGlobPattern": "{blog,shared}/**/!(sitemap).md" }
-      },
-      {
-        "rule": "./dist/workspace-plugin/src/conformance-rules/blog-cover-image",
-        "projects": ["docs"],
-        "options": { "mdGlobPattern": "blog/**/!(sitemap).md" }
-      },
       {
         "rule": "./dist/workspace-plugin/src/conformance-rules/project-package-json",
         "projects": [

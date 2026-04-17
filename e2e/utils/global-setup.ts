@@ -3,6 +3,8 @@ import { existsSync, removeSync } from 'fs-extra';
 import * as isCI from 'is-ci';
 import { exec, execSync } from 'node:child_process';
 import { join } from 'node:path';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { registerTsConfigPaths } from '../../packages/nx/src/plugins/js/utils/register';
 import { runLocalRelease } from '../../scripts/local-registry/populate-storage';
 
@@ -48,6 +50,15 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     // yarnv2
     process.env.YARN_NPM_REGISTRY_SERVER = registry;
     process.env.YARN_UNSAFE_HTTP_WHITELIST = listenAddress;
+
+    // Use fresh cache directories to avoid serving stale packages when the
+    // same version is republished to the local registry.
+    const e2eCacheDir = mkdtempSync(join(tmpdir(), 'nx-e2e-cache-'));
+    process.env.npm_config_cache = join(e2eCacheDir, 'npm');
+    // yarnv1
+    process.env.YARN_CACHE_FOLDER = join(e2eCacheDir, 'yarn');
+    // yarnv2
+    process.env.YARN_ENABLE_GLOBAL_CACHE = 'false';
 
     process.env.NX_SKIP_PROVENANCE_CHECK = 'true';
 

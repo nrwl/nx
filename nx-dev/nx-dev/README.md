@@ -2,6 +2,42 @@
 
 This folder contains the app and libs to power [nx.dev](https://nx.dev).
 
+## Versioned Docs
+
+The previous major's docs are preserved at `{major}.nx.dev` (e.g. `22.nx.dev`) using pre-built static snapshots on orphan branches, deployed via Netlify branch deploys.
+
+**The primary docs site now lives in `astro-docs/`.** This Next.js app is only built into a versioned snapshot for legacy majors (Nx 18–20) and will stop being versioned once those are retired. See [`astro-docs/README.md`](../../astro-docs/README.md#versioned-docs) for the authoritative versioning workflow.
+
+### Creating a Version Snapshot
+
+From the repo root:
+
+```bash
+# Nx 21+ (builds astro-docs)
+node ./scripts/create-versioned-docs.mts 22
+
+# Nx 18–20 (builds this Next.js app with static export) — legacy path
+node ./scripts/create-versioned-docs.mts 20
+
+# Retire an old versioned site (301 everything to nx.dev/docs, no build)
+node ./scripts/create-versioned-docs.mts 16 --redirect-to-prod
+```
+
+The script finds the latest stable tag for that major, checks it out, builds, and creates an orphan branch named `{major}` containing only the pre-built static site plus minimal scaffolding (root `package.json`, `nx.json`, `pnpm-lock.yaml`, `netlify.toml`, and a no-op `nx-dev` project) so Netlify's UI-configured build command succeeds instantly.
+
+Pass `--force` to overwrite an existing local/remote `{major}` branch.
+
+```bash
+git push -f origin 22
+```
+
+### Deployment Setup
+
+Versioned sites are served via Netlify branch deploys of the main `nx-dev` Netlify site, with custom domains managed in Squarespace.
+
+- **Netlify** — each `{major}` branch is deployed as a [branch deploy](https://docs.netlify.com/site-deploys/overview/#branch-deploy-controls). The branch's root `netlify.toml` overrides the UI build settings so Netlify serves the pre-built static files (no rebuild, no `@netlify/plugin-nextjs`). Add the branch to the site's branch deploy allowlist, then add `{major}.nx.dev` as a domain alias pointing at the branch deploy
+- **Squarespace** — DNS for `nx.dev` is managed in Squarespace. Add a CNAME for `{major}` pointing at the Netlify branch deploy hostname
+
 ## Banner Configuration
 
 The floating banner promotes events/webinars. It's fetched at **build time** from a Framer CMS page and stored locally.

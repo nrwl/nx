@@ -67,6 +67,7 @@ describe('@nx/rollup/plugin', () => {
         JSON.stringify(rollupConfigOptions)
       );
       tempFs.createFileSync('package.json', JSON.stringify({ name: 'mylib' }));
+      tempFs.createFileSync('package-lock.json', '{}');
       tempFs.createFileSync(
         'src/index.js',
         `export function main() { 
@@ -144,6 +145,7 @@ describe('@nx/rollup/plugin', () => {
         'mylib/package.json',
         JSON.stringify({ name: 'mylib' })
       );
+      tempFs.createFileSync('package-lock.json', '{}');
       tempFs.createFileSync(
         'mylib/src/index.js',
         `export function main() { 

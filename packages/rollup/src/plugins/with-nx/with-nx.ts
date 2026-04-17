@@ -6,6 +6,7 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
+import { isAbsolute, resolve } from 'path';
 import { typeDefinitions } from '@nx/js/src/plugins/rollup/type-definitions';
 import {
   calculateProjectBuildableDependencies,
@@ -17,6 +18,7 @@ import {
   getProjectSourceRoot,
   isUsingTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { resolvePathsBaseUrl } from '@nx/js/src/utils/typescript/ts-config';
 import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import autoprefixer from 'autoprefixer';
@@ -232,9 +234,11 @@ export function withNx(
       options.generatePackageJson ??= true;
     }
 
+    const originalTsConfigPath = join(workspaceRoot, options.tsConfig);
     const compilerOptions: Record<string, unknown> = createTsCompilerOptions(
       projectRoot,
       tsConfig,
+      originalTsConfigPath,
       options,
       dependencies
     );
@@ -366,6 +370,7 @@ function createInput(
 function createTsCompilerOptions(
   projectRoot: string,
   config: ReturnType<typeof ts.parseJsonConfigFileContent>,
+  tsConfigPath: string,
   options: RollupWithNxPluginOptions,
   dependencies?: DependentBuildableProjectNode[]
 ) {
@@ -373,6 +378,18 @@ function createTsCompilerOptions(
     config,
     dependencies ?? []
   );
+  // Resolve paths to absolute so they work without baseUrl and regardless
+  // of which tsconfig the plugin reads (project vs workspace root).
+  const pathsBase = resolvePathsBaseUrl(tsConfigPath);
+  for (const key of Object.keys(compilerOptionPaths)) {
+    compilerOptionPaths[key] = compilerOptionPaths[key].map((p) => {
+      if (isAbsolute(p)) {
+        return p;
+      }
+      const stripped = p.startsWith('./') ? p.slice(2) : p;
+      return resolve(pathsBase, stripped).replace(/\\/g, '/');
+    });
+  }
   const compilerOptions = {
     rootDir: projectRoot,
     allowJs: options.allowJs,
