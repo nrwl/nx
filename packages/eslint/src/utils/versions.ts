@@ -37,12 +37,23 @@ const versionMap: Record<CompatVersions, EslintVersions> = {
 
 export function versions(tree: Tree): EslintVersions {
   const installedEslintVersion = getInstalledEslintVersion(tree);
+  const legacyRequested = process.env.ESLINT_USE_FLAT_CONFIG === 'false';
   if (installedEslintVersion) {
     const eslintMajorVersion = major(installedEslintVersion);
+    if (legacyRequested && eslintMajorVersion >= 10) {
+      throw new Error(
+        `ESLint v${eslintMajorVersion} does not support the legacy "eslintrc" configuration format, but ESLINT_USE_FLAT_CONFIG=false was set. ` +
+          `Unset the environment variable to scaffold a flat config, or downgrade ESLint to v9.`
+      );
+    }
     return versionMap[eslintMajorVersion as CompatVersions] ?? latestVersions;
   }
-  // No ESLint declared yet, so fresh installs go to the latest supported stack.
-  return latestVersions;
+  // Fresh install: latest stack (v10) by default. If eslintrc is explicitly
+  // requested via ESLINT_USE_FLAT_CONFIG=false, pin v9, the last major that
+  // still supports eslintrc, so the scaffolded .eslintrc.json stays readable.
+  // We check only the env var, not useFlatConfig(tree): its treeless fallback
+  // reads the CLI's own eslint, unrelated to what we're about to install.
+  return legacyRequested ? versionMap[9] : latestVersions;
 }
 
 export function getInstalledEslintVersion(tree?: Tree): string | null {
