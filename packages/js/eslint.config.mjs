@@ -50,8 +50,6 @@ export default [
       './package.json',
       './generators.json',
       './executors.json',
-      './generators.json',
-      './executors.json',
       './migrations.json',
     ],
     rules: {

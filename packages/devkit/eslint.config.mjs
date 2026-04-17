@@ -70,14 +70,6 @@ export default [
     files: ['./package.json'],
     rules: {
       '@nx/nx-plugin-checks': 'error',
-    },
-    languageOptions: {
-      parser: jsoncEslintParser,
-    },
-  },
-  {
-    files: ['./package.json'],
-    rules: {
       '@nx/dependency-checks': [
         'error',
         {
