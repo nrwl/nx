@@ -42,9 +42,10 @@ function renameLegacyWorkspaceRules(
   return renamed;
 }
 
-// Rewrites references to the legacy `.eslintrc[.base].json` that may appear inside rule option
-// values (e.g. `@nx/dependency-checks`'s `ignoredFiles`) to point at the generated flat-config
-// files instead. Without this, rule options keep pointing at files that no longer exist.
+// Rewrites references to the legacy `.eslintrc[.base].json` / `.eslintignore` that may appear
+// inside rule option values (e.g. `@nx/dependency-checks`'s `ignoredFiles`) to point at the
+// generated flat-config files instead. Without this, rule options keep pointing at files that
+// no longer exist after the conversion.
 function rewriteStaleEslintrcRefs(value: unknown, format: 'mjs' | 'cjs'): unknown {
   if (typeof value === 'string') {
     return renameLegacyEslintrcFile(value, format);

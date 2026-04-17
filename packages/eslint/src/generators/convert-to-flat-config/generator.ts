@@ -200,7 +200,12 @@ function rewriteLegacyInputs(
       seenStrings.add(rewritten);
       result.push(rewritten);
     } else if ('fileset' in entry) {
-      result.push({ ...entry, fileset: renameLegacyEslintrcFile(entry.fileset, format) });
+      const rewritten = renameLegacyEslintrcFile(entry.fileset, format);
+      // Preserve the original reference when nothing changed so downstream identity
+      // checks (e.g. `inputsEqual`) don't see a spurious mutation.
+      result.push(
+        rewritten === entry.fileset ? entry : { ...entry, fileset: rewritten }
+      );
     } else {
       result.push(entry);
     }
