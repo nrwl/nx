@@ -463,7 +463,8 @@ export function expandSingleProjectInputs(
         (d as any).runtime ||
         (d as any).externalDependencies ||
         (d as any).dependentTasksOutputFiles ||
-        (d as any).workingDirectory
+        (d as any).workingDirectory ||
+        (d as any).json
       ) {
         expanded.push(d);
       } else {
