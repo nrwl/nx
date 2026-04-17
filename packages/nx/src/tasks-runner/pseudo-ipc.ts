@@ -19,20 +19,13 @@
 
 import { connect, Server, Socket } from 'net';
 import { unlinkSync } from 'fs';
-import { deserialize } from 'v8';
 import {
   consumeMessagesFromSocket,
-  isJsonMessage,
   MESSAGE_END_SEQ,
+  parseMessage,
 } from '../utils/consume-messages-from-socket';
 import { Serializable } from 'child_process';
 import { isWindows, serialize } from '../daemon/socket-utils';
-
-function parseIPCMessage(rawMessage: string): PseudoIPCMessage {
-  return isJsonMessage(rawMessage)
-    ? JSON.parse(rawMessage)
-    : deserialize(Buffer.from(rawMessage, 'binary'));
-}
 
 /**
  * Remove a stale socket file if it exists.
@@ -94,7 +87,7 @@ export class PseudoIPCServer {
     socket.on(
       'data',
       consumeMessagesFromSocket(async (rawMessage) => {
-        const { type, message } = parseIPCMessage(rawMessage);
+        const { type, message } = parseMessage<PseudoIPCMessage>(rawMessage);
         if (type === 'TO_PARENT_FROM_CHILDREN') {
           for (const childMessage of this.childMessages) {
             childMessage.onMessage(message);
@@ -184,7 +177,8 @@ export class PseudoIPCClient {
     this.socket.on(
       'data',
       consumeMessagesFromSocket(async (rawMessage) => {
-        const { id, type, message } = parseIPCMessage(rawMessage);
+        const { id, type, message } =
+          parseMessage<PseudoIPCMessage>(rawMessage);
         if (type === 'TO_CHILDREN_FROM_PARENT') {
           if (id && id === forkId) {
             onMessage(message);
