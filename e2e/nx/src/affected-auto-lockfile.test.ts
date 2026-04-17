@@ -43,13 +43,13 @@ describe('nx affected -- projectsAffectedByDependencyUpdates (e2e)', () => {
     );
     updateFile(
       `libs/${libB}/src/index.ts`,
-      `import isEven from 'is-even';\nexport default isEven;\n`
+      `import leftPad from 'left-pad';\nexport default leftPad;\n`
     );
 
     updateJson('package.json', (json) => {
       json.dependencies ??= {};
       json.dependencies['is-odd'] = '3.0.0';
-      json.dependencies['is-even'] = '1.0.0';
+      json.dependencies['left-pad'] = '1.3.0';
       return json;
     });
 
