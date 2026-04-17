@@ -28,7 +28,7 @@ export function mergeProjectConfigurationIntoRootMap(
   // This function is used when reading project configuration
   // in generators, where we don't want to do this.
   skipTargetNormalization?: boolean,
-  preserveUnknownSpreads?: boolean
+  deferSpreadsWithoutBase?: boolean
 ): {
   nameChanged: boolean;
 } {
@@ -199,7 +199,7 @@ export function mergeProjectConfigurationIntoRootMap(
             sourceMap,
             sourceInformation,
             `targets.${matchingTargetName}`,
-            preserveUnknownSpreads
+            deferSpreadsWithoutBase
           );
       }
     }
@@ -337,19 +337,14 @@ export class ProjectNodesManager {
   }
 
   /**
-   * Inserts project-name sentinels for a plugin result's references in
-   * `inputs` and `dependsOn`. Walks the *merged* entries from the
-   * provided `mergedRootMap` (defaulting to this manager's rootMap), so
-   * sentinels land on the target objects that actually reach consumers
-   * — including the rare case where `mergeTargetConfigurations` produced
-   * a fresh array due to a spread token.
+   * Inserts project-name sentinels into `inputs` and `dependsOn` on the
+   * merged objects from `mergedRootMap` (defaulting to this manager's
+   * rootMap). Walking the merged entries matters because a spread-produced
+   * array is a fresh instance.
    *
-   * The `mergedRootMap` override exists so default-plugin batches, which
-   * merge into an intermediate rootMap rather than this manager's, can
-   * still register sentinels on the objects they just merged. After the
-   * intermediate rootMap is applied onto this manager's rootMap, call
-   * this again with the manager's rootMap to rebind sentinel parents
-   * onto the final merged arrays.
+   * Pass a different `mergedRootMap` for the default-plugin intermediate
+   * pass, then call again with `this.rootMap` after it's applied so
+   * sentinel parents rebind onto the final arrays.
    */
   registerNameRefs(
     pluginResultProjects?: Record<

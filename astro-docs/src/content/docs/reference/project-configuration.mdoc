@@ -668,7 +668,7 @@ If the inferred target has `inputs: ["default", "^production"]`, the result is `
 }
 ```
 
-Spread is resolved at these levels of the target configuration:
+Nx processes target configuration down to `options[x]` and `configurations[x][y]`; values below that are opaque to the merge pipeline. Spread is therefore resolved at these levels:
 
 | Level                                              | Example                                                                     |
 | -------------------------------------------------- | --------------------------------------------------------------------------- |
@@ -681,7 +681,7 @@ Spread is resolved at these levels of the target configuration:
 | `configurations[x][y]`                             | `"configurations": { "prod": { "env": { "MY_VAR": "val", "...": true } } }` |
 
 {% aside type="caution" title="Spread does not apply to deeply nested options" %}
-`options[x]` and `configurations[x][y]` are the innermost levels the merge pipeline processes. Inside those values Nx treats the result as opaque and fully replaces the base, so a spread token nested deeper has no effect — for example, `options.webpack.plugins: { "...": true }` is ignored because Nx does not look inside `options.webpack`.
+Because `options[x]` and `configurations[x][y]` are the innermost levels Nx inspects, a spread token nested any deeper has no effect — for example, `options.webpack.plugins: { "...": true }` is ignored because Nx does not look inside `options.webpack`.
 {% /aside %}
 
 ### Target metadata

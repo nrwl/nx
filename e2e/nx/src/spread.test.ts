@@ -816,7 +816,7 @@ describe('Spread Token Merging', () => {
       expect(project.targets.echo.options.env).toEqual({ MY_VAR: 'value' });
     });
 
-    it('should handle multiple spread tokens (only first is processed)', () => {
+    it('should expand every spread token in an array against the base', () => {
       const lib = uniq('lib');
       runCLI(`generate @nx/js:lib libs/${lib}`);
 
@@ -841,13 +841,15 @@ describe('Spread Token Merging', () => {
       });
 
       const project = getResolvedProject(lib);
-      // First '...' is expanded, second '...' is treated as a literal or removed
-      // The exact behavior here documents whatever the implementation does
-      expect(project.targets.echo.inputs).toContain('before');
-      expect(project.targets.echo.inputs).toContain('default-1');
-      expect(project.targets.echo.inputs).toContain('default-2');
-      expect(project.targets.echo.inputs).toContain('middle');
-      expect(project.targets.echo.inputs).toContain('after');
+      expect(project.targets.echo.inputs).toEqual([
+        'before',
+        'default-1',
+        'default-2',
+        'middle',
+        'default-1',
+        'default-2',
+        'after',
+      ]);
     });
 
     it('should not treat string "..." value in object as spread (only boolean true triggers spread)', () => {

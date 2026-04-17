@@ -240,11 +240,15 @@ describe('getMergeValueResult - spread token behavior', () => {
 
       // Layer B: ['...', 4] → spread of A then 4; A's items keep A,
       // 4 gets B.
-      const afterB = getMergeValueResult<unknown[]>(afterA, [NX_SPREAD_TOKEN, 4], {
-        sourceMap,
-        key: 'arr',
-        sourceInformation: sourceB,
-      });
+      const afterB = getMergeValueResult<unknown[]>(
+        afterA,
+        [NX_SPREAD_TOKEN, 4],
+        {
+          sourceMap,
+          key: 'arr',
+          sourceInformation: sourceB,
+        }
+      );
       expect(afterB).toEqual([1, 2, 3, 4]);
       expect(sourceMap['arr.0']).toEqual(sourceA);
       expect(sourceMap['arr.1']).toEqual(sourceA);
@@ -357,6 +361,107 @@ describe('getMergeValueResult - spread token behavior', () => {
       const result = getMergeValueResult(base, newValue);
       // Both spread tokens expand the base array
       expect(result).toEqual(['x', 'y', 'a', 'x', 'y', 'b']);
+    });
+  });
+
+  describe('object spread — per-key source provenance (bug_013)', () => {
+    it('should preserve base per-key attribution when a shared key appears before the spread token', () => {
+      // Layer A wrote `{ z: 1 }` with per-key attribution recorded at
+      // sourceMap['obj.z']. Layer B authors `{ z: 99, '...': true }` —
+      // `z` sits *before* the spread, so base wins for `z`. The surviving
+      // value came from A, so its attribution must stay with A.
+      const sourceMap: Record<string, [string | null, string]> = {
+        obj: ['a.json', 'plugin-a'],
+        'obj.z': ['a.json', 'plugin-a'],
+      };
+
+      const result = getMergeValueResult<Record<string, unknown>>(
+        { z: 1 },
+        { z: 99, [NX_SPREAD_TOKEN]: true },
+        {
+          sourceMap,
+          key: 'obj',
+          sourceInformation: ['b.json', 'plugin-b'],
+        }
+      );
+
+      expect(result).toEqual({ z: 1 });
+      expect(sourceMap['obj.z']).toEqual(['a.json', 'plugin-a']);
+    });
+
+    it('should preserve base per-key attribution across three spread layers', () => {
+      const sourceMap: Record<string, [string | null, string]> = {};
+      const sourceA: [string, string] = ['a.json', 'plugin-a'];
+      const sourceB: [string, string] = ['b.json', 'plugin-b'];
+      const sourceC: [string, string] = ['c.json', 'plugin-c'];
+
+      // Layer A: seed `{ x: 1 }` — plain object, no spread.
+      getMergeValueResult<Record<string, unknown>>(
+        undefined,
+        { x: 1 },
+        {
+          sourceMap,
+          key: 'obj',
+          sourceInformation: sourceA,
+        }
+      );
+
+      // Layer B: `{ x: 99, '...': true }` — x before spread, base wins.
+      // After this merge, `obj.x` should still be attributed to A.
+      getMergeValueResult<Record<string, unknown>>(
+        { x: 1 },
+        { x: 99, [NX_SPREAD_TOKEN]: true },
+        {
+          sourceMap,
+          key: 'obj',
+          sourceInformation: sourceB,
+        }
+      );
+      expect(sourceMap['obj.x']).toEqual(sourceA);
+
+      // Layer C: `{ '...': true, y: 2 }` — x spread from base, y added.
+      // x's attribution must remain A, not get clobbered to C.
+      const final = getMergeValueResult<Record<string, unknown>>(
+        { x: 1 },
+        { [NX_SPREAD_TOKEN]: true, y: 2 },
+        {
+          sourceMap,
+          key: 'obj',
+          sourceInformation: sourceC,
+        }
+      );
+
+      expect(final).toEqual({ x: 1, y: 2 });
+      expect(sourceMap['obj.x']).toEqual(sourceA);
+      expect(sourceMap['obj.y']).toEqual(sourceC);
+    });
+  });
+
+  describe('integer-like keys with spread token (bug_001)', () => {
+    // ECMAScript enumerates integer-index string keys first in ascending
+    // numeric order regardless of insertion order, so there is no way to
+    // recover the authored position of an integer-like key relative to
+    // `'...'` from a plain object. Rather than silently misclassify such
+    // keys as before/after the spread, reject the ambiguous shape so the
+    // author is forced to rewrite it unambiguously.
+    it('should throw when an object mixes integer-like keys with the spread token', () => {
+      const newValue = { foo: 'a', [NX_SPREAD_TOKEN]: true, '1': 'x' };
+      expect(() =>
+        getMergeValueResult<Record<string, unknown>>(
+          { '1': 'base1', foo: 'basefoo' },
+          newValue
+        )
+      ).toThrow(/integer-like key/i);
+    });
+
+    it('should not throw when the object has no spread token', () => {
+      // Without `'...'` the key ordering doesn't affect merge semantics,
+      // so integer-like keys are fine.
+      const result = getMergeValueResult<Record<string, unknown>>(
+        { '1': 'base1' },
+        { '1': 'x', foo: 'a' }
+      );
+      expect(result).toEqual({ '1': 'x', foo: 'a' });
     });
   });
 });

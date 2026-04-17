@@ -21,13 +21,8 @@ type CreateNodesResultEntry = readonly [
 ];
 
 /**
- * Creates a synthetic plugin result containing target defaults for targets
- * that will be introduced by default plugins. This forms a middle layer that
- * gets merged between specified plugins and default plugins.
- *
- * @param specifiedPluginRootMap Merged results from specified plugins (from nx.json)
- * @param defaultPluginRootMap Merged results from default plugins (project.json, package.json)
- * @param nxJsonConfiguration The nx.json configuration containing target defaults
+ * Builds a synthetic plugin result from nx.json's `targetDefaults`, layered
+ * between specified-plugin and default-plugin results during merging.
  */
 export function createTargetDefaultsResults(
   specifiedPluginRootMap: Record<string, ProjectConfiguration>,
@@ -84,15 +79,9 @@ export function createTargetDefaultsResults(
   ];
 }
 
-/**
- * Decides whether a synthetic target-defaults entry should sit between a
- * specified-plugin target and a default-plugin target for `targetName` at
- * `root`. Returns the synthetic target to insert, or `undefined` if no
- * insertion is needed (e.g. no matching defaults, or the default plugin
- * will fully override the layer anyway).
- *
- * Layering order is: specified plugins < target defaults < default plugins.
- */
+// Returns the synthetic defaults target to insert for `targetName` at
+// `root`, or undefined if no defaults apply.
+// Layering: specified plugins < target defaults < default plugins.
 function buildSyntheticTargetForRoot(
   targetName: string,
   root: string,
@@ -107,9 +96,8 @@ function buildSyntheticTargetForRoot(
     ? resolveCommandSyntacticSugar(defaultTarget, root)
     : undefined;
 
-  // Specified-only: layer defaults on top regardless of executor match.
-  // The downstream merge treats incompatible defaults as a full replace,
-  // which is the right behaviour for the precedence order.
+  // Specified-only: layer defaults on top; the downstream merge handles
+  // executor mismatches by replacing.
   if (resolvedSpecified && !resolvedDefault) {
     return readAndPrepareTargetDefaults(
       targetName,
@@ -119,7 +107,7 @@ function buildSyntheticTargetForRoot(
     );
   }
 
-  // Default-only: layer defaults beneath the default plugin target.
+  // Default-only.
   if (resolvedDefault && !resolvedSpecified) {
     return readAndPrepareTargetDefaults(
       targetName,
@@ -131,9 +119,7 @@ function buildSyntheticTargetForRoot(
 
   if (!resolvedSpecified || !resolvedDefault) return undefined;
 
-  // Both exist and are compatible: prefer the default plugin's executor
-  // for the defaults lookup, so the surviving merge sees the target
-  // defaults as a clean layer underneath.
+  // Both compatible: use the default plugin's executor for the lookup.
   if (isCompatibleTarget(resolvedSpecified, resolvedDefault)) {
     return readAndPrepareTargetDefaults(
       targetName,
@@ -143,9 +129,8 @@ function buildSyntheticTargetForRoot(
     );
   }
 
-  // Both exist but are incompatible: the default plugin will replace the
-  // specified target, so the only useful synthetic layer is one whose
-  // executor matches the default plugin.
+  // Incompatible: default plugin will replace specified; only defaults
+  // matching the default plugin's executor are useful.
   const targetDefaults = readAndPrepareTargetDefaults(
     targetName,
     resolvedDefault.executor,
@@ -153,8 +138,7 @@ function buildSyntheticTargetForRoot(
     targetDefaultsConfig
   );
   if (targetDefaults && isCompatibleTarget(resolvedDefault, targetDefaults)) {
-    // Stamp executor/command so the synthetic layer merges cleanly with
-    // the default plugin layer above it.
+    // Stamp executor/command so the default layer merges cleanly on top.
     return {
       ...targetDefaults,
       executor: resolvedDefault.executor,

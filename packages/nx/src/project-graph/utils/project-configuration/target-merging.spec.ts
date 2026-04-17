@@ -993,4 +993,65 @@ describe('isCompatibleTarget', () => {
       )
     ).toBe(false);
   });
+
+  describe('deferred spread preserves authored key position', () => {
+    const NX_SPREAD_TOKEN = '...';
+
+    it('should keep user override winning when the intermediate merge is later applied to a real base (target-level spread)', () => {
+      // Simulates the two-pass flow used by default-plugin batches:
+      //   pass 1: merge the target against no base with deferSpreadsWithoutBase
+      //   pass 2: apply that intermediate target against the real base
+      // The canonical idiom `{ '...': true, cache: true }` must keep
+      // `cache` *after* the spread in the intermediate object so that the
+      // second pass correctly classifies it as "after spread" → new wins.
+      const intermediate = mergeTargetConfigurations(
+        { [NX_SPREAD_TOKEN]: true, cache: true } as TargetConfiguration,
+        undefined,
+        undefined,
+        undefined,
+        'targets.build',
+        true // deferSpreadsWithoutBase
+      );
+
+      const final = mergeTargetConfigurations(
+        intermediate,
+        { cache: 'base-value' } as unknown as TargetConfiguration,
+        undefined,
+        undefined,
+        'targets.build'
+      );
+
+      expect(final.cache).toBe(true);
+    });
+
+    it('should keep configuration override winning through the intermediate merge (configuration-level spread)', () => {
+      const intermediate = mergeTargetConfigurations(
+        {
+          configurations: {
+            [NX_SPREAD_TOKEN]: true,
+            prod: { optimization: false },
+          },
+        } as unknown as TargetConfiguration,
+        undefined,
+        undefined,
+        undefined,
+        'targets.build',
+        true
+      );
+
+      const final = mergeTargetConfigurations(
+        intermediate,
+        {
+          configurations: {
+            prod: { optimization: true },
+          },
+        } as unknown as TargetConfiguration,
+        undefined,
+        undefined,
+        'targets.build'
+      );
+
+      expect(final.configurations?.prod).toEqual({ optimization: false });
+    });
+  });
 });

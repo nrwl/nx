@@ -23,6 +23,19 @@ export function uniqueKeysInObjects(
   return keys;
 }
 
+// Integer-like string keys (`"0"`, `"42"`) are enumerated before
+// insertion-order keys, so we can't tell if they were authored before or
+// after `'...'`. Spread sites reject them instead of guessing.
+export const INTEGER_LIKE_KEY_PATTERN = /^(0|[1-9]\d*)$/;
+
+export function throwIntegerLikeSpreadKey(key: string, context: string): never {
+  throw new Error(
+    `${context} uses an integer-like key (${JSON.stringify(
+      key
+    )}) alongside the '...' spread token. Integer-like keys are enumerated before other keys regardless of authored order, so their position relative to '...' is ambiguous. Rename the key (e.g. add a non-numeric prefix) or restructure the object.`
+  );
+}
+
 type SourceMapContext = {
   sourceMap: Record<string, SourceInformation>;
   key: string;
@@ -30,18 +43,16 @@ type SourceMapContext = {
 };
 
 /**
- * Merges two values. `"..."` anywhere in `newValue` (as an array element
- * or as a key set to `true` on an object) expands the base at that
- * position. Without a spread token `newValue` fully replaces `baseValue`.
- *
- * When `preserveUnknownSpreads` is set and `baseValue` is undefined, the
- * spread sentinel is kept in the result so a later merge can resolve it.
+ * `"..."` in `newValue` (as an array element or a key set to `true`)
+ * expands the base at that position; otherwise `newValue` replaces
+ * `baseValue`. With `deferSpreadsWithoutBase`, an unresolvable spread is
+ * preserved so a later merge layer can expand it.
  */
 export function getMergeValueResult<T>(
   baseValue: unknown,
   newValue: T | undefined,
   sourceMapContext?: SourceMapContext,
-  preserveUnknownSpreads?: boolean
+  deferSpreadsWithoutBase?: boolean
 ): T | undefined {
   if (newValue === undefined && baseValue !== undefined) {
     return baseValue as T;
@@ -52,7 +63,7 @@ export function getMergeValueResult<T>(
       baseValue,
       newValue,
       sourceMapContext,
-      preserveUnknownSpreads
+      deferSpreadsWithoutBase
     ) as T;
   }
 
@@ -61,7 +72,7 @@ export function getMergeValueResult<T>(
       baseValue,
       newValue,
       sourceMapContext,
-      preserveUnknownSpreads
+      deferSpreadsWithoutBase
     ) as T;
   }
 
@@ -74,15 +85,12 @@ function mergeArrayValue<T>(
   baseValue: unknown,
   newValue: T[],
   sourceMapContext: SourceMapContext | undefined,
-  preserveUnknownSpreads: boolean | undefined
+  deferSpreadsWithoutBase: boolean | undefined
 ): T[] {
   const newSpreadIndex = newValue.findIndex((v) => v === NX_SPREAD_TOKEN);
 
   if (newSpreadIndex === -1) {
-    // No spread — newValue fully replaces baseValue. Always write
-    // per-item source info so downstream consumers get accurate
-    // attribution for every surviving element, not just the array as a
-    // whole.
+    // No spread: newValue replaces baseValue entirely.
     if (sourceMapContext) {
       for (let i = 0; i < newValue.length; i++) {
         sourceMapContext.sourceMap[`${sourceMapContext.key}.${i}`] =
@@ -94,12 +102,9 @@ function mergeArrayValue<T>(
   }
 
   const baseArray = Array.isArray(baseValue) ? baseValue : [];
-  // Snapshot per-index base attribution *before* the write loop runs:
-  // we'll be writing into `arr.0`, `arr.1`, … in result order, which
-  // would clobber the base entries we still need to read when the
-  // spread expands. Reading lazily here would mix freshly-written new
-  // sources into base lookups and lose attribution for items that came
-  // from earlier merge layers.
+  // Snapshot per-index base sources before we start writing — the loop
+  // writes into the same `${key}.${i}` entries it needs to read back when
+  // the spread expands.
   const basePerIndexSources: Array<SourceInformation | undefined> =
     sourceMapContext
       ? baseArray.map((_, i) =>
@@ -126,14 +131,11 @@ function mergeArrayValue<T>(
     const element = newValue[newValueIndex];
 
     if (element === NX_SPREAD_TOKEN) {
-      if (preserveUnknownSpreads && baseValue === undefined) {
+      if (deferSpreadsWithoutBase && baseValue === undefined) {
         recordAt(result.length, sourceMapContext?.sourceInformation);
         result.push(NX_SPREAD_TOKEN);
       } else {
         for (let baseIndex = 0; baseIndex < baseArray.length; baseIndex++) {
-          // Prefer the original per-index attribution (whoever wrote
-          // `arr.${baseIndex}` first); the helper falls back to the
-          // parent-key source for items that had no per-index entry.
           recordAt(result.length, basePerIndexSources[baseIndex]);
           result.push(baseArray[baseIndex]);
         }
@@ -153,31 +155,47 @@ function mergeObjectWithSpread(
   baseValue: unknown,
   newValue: Record<string, unknown>,
   sourceMapContext: SourceMapContext | undefined,
-  preserveUnknownSpreads: boolean | undefined
+  deferSpreadsWithoutBase: boolean | undefined
 ): Record<string, unknown> {
   const baseObj = isObject(baseValue) ? baseValue : {};
   const result: Record<string, unknown> = {};
+  const errorContext = sourceMapContext?.key
+    ? `Object at "${sourceMapContext.key}"`
+    : 'Object';
 
-  for (const newKey of Object.keys(newValue)) {
+  // Snapshot per-key base sources before we start writing — a new key
+  // before `'...'` writes into `${key}.${newKey}` that the spread then
+  // needs to read back.
+  const basePerKeySources: Record<string, SourceInformation | undefined> = {};
+  if (sourceMapContext) {
+    for (const baseKey of Object.keys(baseObj)) {
+      basePerKeySources[baseKey] = readObjectPropertySourceInfo(
+        sourceMapContext.sourceMap,
+        sourceMapContext.key,
+        baseKey
+      );
+    }
+  }
+
+  const newKeys = Object.keys(newValue);
+
+  // Integer-like keys are hoisted to the front of enumeration, so if one
+  // exists alongside `'...'` it must be newKeys[0].
+  if (newKeys[0] && INTEGER_LIKE_KEY_PATTERN.test(newKeys[0])) {
+    throwIntegerLikeSpreadKey(newKeys[0], errorContext);
+  }
+
+  for (const newKey of newKeys) {
     if (newKey === NX_SPREAD_TOKEN) {
-      if (preserveUnknownSpreads && baseValue === undefined) {
-        // Preserve the sentinel for a later merge. No source-map entry
-        // is written: the `...` key is a merge marker, not a real
-        // property that will reach the final output.
+      if (deferSpreadsWithoutBase && baseValue === undefined) {
+        // Keep the sentinel for a later merge layer to resolve.
         result[NX_SPREAD_TOKEN] = true;
         continue;
       }
       for (const baseKey of Object.keys(baseObj)) {
         result[baseKey] = baseObj[baseKey];
         if (sourceMapContext) {
-          // Prefer the existing per-key attribution — the base entry
-          // already knows who set it. The helper falls back to the
-          // parent-key source when the per-key entry hasn't been recorded.
-          const baseSource = readObjectPropertySourceInfo(
-            sourceMapContext.sourceMap,
-            sourceMapContext.key,
-            baseKey
-          );
+          const baseSource = basePerKeySources[baseKey];
           if (baseSource) {
             sourceMapContext.sourceMap[`${sourceMapContext.key}.${baseKey}`] =
               baseSource;

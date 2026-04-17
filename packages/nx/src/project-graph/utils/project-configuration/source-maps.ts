@@ -1,34 +1,16 @@
-/**
- * Utilities for constructing source map keys used to track the origin
- * of project configuration properties. Source map keys are dot-delimited
- * paths into a ProjectConfiguration, e.g. `targets.build.inputs.0.projects`.
- *
- * Centralizing key construction here prevents typos and ensures consistent
- * key shapes across the project graph build pipeline.
- */
+// Source map keys are dot-delimited paths into a ProjectConfiguration,
+// e.g. `targets.build.inputs.0.projects`.
 
-/** Describes the file and plugin that contributed a given configuration property. */
+/** [file, plugin] that contributed a configuration property. */
 export type SourceInformation = [file: string | null, plugin: string];
 
-/** Maps each project root to a source map for its configuration properties. */
+/** Source map per project root. */
 export type ConfigurationSourceMaps = Record<
   string,
   Record<string, SourceInformation>
 >;
 
-/**
- * Calls `callback` with the source map key for each index of `array` under
- * `prefixKey`, producing keys like `${prefixKey}.0`, `${prefixKey}.1`, etc.
- *
- * Use this when you need the keys themselves — e.g. to register or clear
- * entries in a name substitution manager — without necessarily writing to a
- * source map.
- *
- * @param prefixKey The dot-delimited path prefix for the array (e.g. `"targets.build.inputs"`).
- * @param array The array whose indices should be iterated.
- * @param callback Called with the key for each index.
- * @param startIndex Index to start from. Useful when appending to an existing array.
- */
+// Iterates `${prefixKey}.0`, `${prefixKey}.1`, ... for each index of `array`.
 export function forEachSourceMapKeyForArray(
   prefixKey: string,
   array: unknown[],
@@ -40,17 +22,7 @@ export function forEachSourceMapKeyForArray(
   }
 }
 
-/**
- * Reads the source-map entry for a single item of an array recorded under
- * `arrayKey`. Falls back to the array's own top-level entry when no
- * per-index entry exists (e.g. for arrays seeded by an earlier merge
- * layer that only wrote the parent key). Returns `undefined` when neither
- * is recorded.
- *
- * @param sourceMap The source map to read from.
- * @param arrayKey The dot-delimited path of the array itself (e.g. `"targets.build.inputs"`).
- * @param itemIndex The numeric index of the item.
- */
+// Reads per-index source info, falling back to the array's top-level entry.
 export function readArrayItemSourceInfo(
   sourceMap: Record<string, SourceInformation>,
   arrayKey: string,
@@ -59,16 +31,7 @@ export function readArrayItemSourceInfo(
   return sourceMap[`${arrayKey}.${itemIndex}`] ?? sourceMap[arrayKey];
 }
 
-/**
- * Reads the source-map entry for a single property of an object recorded
- * under `objectKey`. Falls back to the object's own top-level entry when
- * no per-property entry exists. Returns `undefined` when neither is
- * recorded.
- *
- * @param sourceMap The source map to read from.
- * @param objectKey The dot-delimited path of the object itself.
- * @param propertyKey The property name to look up.
- */
+// Reads per-property source info, falling back to the object's top-level entry.
 export function readObjectPropertySourceInfo(
   sourceMap: Record<string, SourceInformation>,
   objectKey: string,
@@ -77,10 +40,6 @@ export function readObjectPropertySourceInfo(
   return sourceMap[`${objectKey}.${propertyKey}`] ?? sourceMap[objectKey];
 }
 
-/**
- * Records a single source map entry. Prefer this over direct bracket
- * assignment to keep writes consistent with the rest of the source map API.
- */
 export function recordSourceMapInfo(
   sourceMap: Record<string, SourceInformation>,
   key: string,
@@ -89,17 +48,7 @@ export function recordSourceMapInfo(
   sourceMap[key] = sourceInfo;
 }
 
-/**
- * Convenience wrapper that records a source map entry for each index of
- * `array` under `prefixKey`. Equivalent to calling {@link forEachSourceMapKeyForArray}
- * and {@link recordSourceMapInfo} together.
- *
- * @param sourceMap The source map to write into.
- * @param prefixKey The dot-delimited path prefix for the array (e.g. `"targets.build.inputs"`).
- * @param array The array whose indices should be recorded.
- * @param sourceInfo The source information to associate with each index key.
- * @param startIndex Index to start writing from. Useful when appending to an existing array.
- */
+// Records the same source info under every `${prefixKey}.${i}` entry.
 export function recordSourceMapKeysByIndex(
   sourceMap: Record<string, SourceInformation>,
   prefixKey: string,
@@ -115,24 +64,10 @@ export function recordSourceMapKeysByIndex(
   );
 }
 
-/**
- * Builds a source map key for a target entry.
- *
- * @example
- * // Returns "targets.build"
- * targetSourceMapKey('build')
- */
 export function targetSourceMapKey(targetName: string): string {
   return `targets.${targetName}`;
 }
 
-/**
- * Builds a source map key for a specific option within a target.
- *
- * @example
- * // Returns "targets.build.options.outputPath"
- * targetOptionSourceMapKey('build', 'outputPath')
- */
 export function targetOptionSourceMapKey(
   targetName: string,
   optionKey: string
@@ -140,15 +75,6 @@ export function targetOptionSourceMapKey(
   return `targets.${targetName}.options.${optionKey}`;
 }
 
-/**
- * Builds a source map key for a target's configurations section, optionally
- * scoped to a specific configuration name and key within it.
- *
- * @example
- * targetConfigurationsSourceMapKey('build')                         // "targets.build.configurations"
- * targetConfigurationsSourceMapKey('build', 'production')           // "targets.build.configurations.production"
- * targetConfigurationsSourceMapKey('build', 'production', 'outputHashing') // "targets.build.configurations.production.outputHashing"
- */
 export function targetConfigurationsSourceMapKey(
   targetName: string,
   configurationName?: string,

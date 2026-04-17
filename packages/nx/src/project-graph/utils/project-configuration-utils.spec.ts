@@ -857,88 +857,85 @@ describe('project-configuration-utils', () => {
     // even when a spread inside the configuration made the base win
     // for a given property. Properties that survive only because of
     // the spread should keep base-plugin attribution.
-    it.failing(
-      'should attribute spread-shadowed configuration properties to the base, not the new plugin',
-      () => {
-        const specifiedResults: CreateNodesResultEntry[][] = [
+    it('should attribute spread-shadowed configuration properties to the base, not the new plugin', () => {
+      const specifiedResults: CreateNodesResultEntry[][] = [
+        [
           [
-            [
-              '@acme/base',
-              'libs/a/base.config.ts',
-              {
-                projects: {
-                  'libs/a': {
-                    name: 'a',
-                    root: 'libs/a',
-                    targets: {
-                      build: {
-                        executor: '@acme/build',
-                        configurations: {
-                          prod: {
-                            minify: false,
-                            sourceMap: true,
-                          },
+            '@acme/base',
+            'libs/a/base.config.ts',
+            {
+              projects: {
+                'libs/a': {
+                  name: 'a',
+                  root: 'libs/a',
+                  targets: {
+                    build: {
+                      executor: '@acme/build',
+                      configurations: {
+                        prod: {
+                          minify: false,
+                          sourceMap: true,
                         },
                       },
                     },
                   },
                 },
               },
-            ],
+            },
           ],
+        ],
+        [
           [
-            [
-              '@acme/extend',
-              'libs/a/extend.config.ts',
-              {
-                projects: {
-                  'libs/a': {
-                    targets: {
-                      build: {
-                        configurations: {
-                          prod: {
-                            // `minify` is before `...` → base wins for it.
-                            minify: true,
-                            '...': true,
-                          },
+            '@acme/extend',
+            'libs/a/extend.config.ts',
+            {
+              projects: {
+                'libs/a': {
+                  targets: {
+                    build: {
+                      configurations: {
+                        prod: {
+                          // `minify` is before `...` → base wins for it.
+                          minify: true,
+                          '...': true,
                         },
                       },
                     },
                   },
                 },
               },
-            ],
+            },
           ],
-        ];
+        ],
+      ];
 
-        const errors: MergeError[] = [];
-        const result = mergeCreateNodesResults(
-          specifiedResults,
-          [],
-          {},
-          '/tmp/test',
-          errors
-        );
+      const errors: MergeError[] = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults,
+        [],
+        {},
+        '/tmp/test',
+        errors
+      );
 
-        const build = result.projectRootMap['libs/a'].targets!.build;
-        // Sanity: spread resolved correctly — base wins for `minify`,
-        // `sourceMap` survives via the `...` expansion.
-        expect(build.configurations!.prod).toEqual({
-          minify: false,
-          sourceMap: true,
-        });
+      const build = result.projectRootMap['libs/a'].targets!.build;
+      // Sanity: spread resolved correctly — base wins for `minify`,
+      // `sourceMap` survives via the `...` expansion.
+      expect(build.configurations!.prod).toEqual({
+        minify: false,
+        sourceMap: true,
+      });
 
-        const sm = result.configurationSourceMaps['libs/a'];
-        expect(sm['targets.build.configurations.prod.minify']).toEqual([
-          'libs/a/base.config.ts',
-          '@acme/base',
-        ]);
-        expect(sm['targets.build.configurations.prod.sourceMap']).toEqual([
-          'libs/a/base.config.ts',
-          '@acme/base',
-        ]);
-      }
-    );
+      const sm = result.configurationSourceMaps['libs/a'];
+      expect(sm['targets.build.configurations.prod.minify']).toEqual([
+        'libs/a/base.config.ts',
+        '@acme/base',
+      ]);
+      expect(sm['targets.build.configurations.prod.sourceMap']).toEqual([
+        'libs/a/base.config.ts',
+        '@acme/base',
+      ]);
+    });
   });
 
   describe('createProjectConfigurations', () => {

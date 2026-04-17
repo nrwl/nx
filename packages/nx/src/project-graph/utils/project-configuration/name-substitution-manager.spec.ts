@@ -1393,9 +1393,7 @@ describe('ProjectNameInNodePropsManager', () => {
 
       const malformedResult = createPluginResult([projectA, projectB]);
       identifyProjects(manager, malformedResult);
-      expect(() =>
-        manager.registerNameRefs(malformedResult)
-      ).not.toThrow();
+      expect(() => manager.registerNameRefs(malformedResult)).not.toThrow();
 
       renameProject(manager, 'libs/b', 'renamed-b');
       const rootMap = createRootMap([
@@ -2167,9 +2165,7 @@ describe('ProjectNameInNodePropsManager', () => {
       } as unknown as Record<string, any>;
 
       identifyProjects(manager, createPluginResult([mergedProjectA]));
-      manager.registerNameRefs(
-        createPluginResult([mergedProjectA])
-      );
+      manager.registerNameRefs(createPluginResult([mergedProjectA]));
 
       renameProject(manager, 'libs/b', 'renamed-b');
 
