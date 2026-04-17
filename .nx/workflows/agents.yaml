@@ -36,7 +36,16 @@ common-init-steps: &common-init-steps
 
   - name: Install system deps
     script: |
-      sudo apt-get update
+      # archive.ubuntu.com periodically serves a Packages.gz that doesn't
+      # match its own InRelease metadata while the canonical mirror is
+      # mid-sync, breaking apt-get update across all agents at once.
+      # Switch to Azure's mirror — better SLA and historically stable.
+      sudo sed -i 's|http://archive.ubuntu.com/ubuntu|http://azure.archive.ubuntu.com/ubuntu|g; s|http://security.ubuntu.com/ubuntu|http://azure.archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list
+      for i in 1 2 3 4 5; do
+        sudo apt-get -o Acquire::Retries=3 update && break
+        echo "apt-get update failed (attempt $i/5), retrying in 30s..."
+        sleep 30
+      done
       sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev zip unzip
 
   - name: Pnpm Install from lockfile
