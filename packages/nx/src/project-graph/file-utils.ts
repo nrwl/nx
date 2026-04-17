@@ -25,6 +25,14 @@ export class DeletedFileChange implements Change {
   type = 'WholeFileDeleted';
 }
 
+export class LockFileChange implements Change {
+  type = 'LockFileChange';
+  constructor(
+    public baseContent: string,
+    public headContent: string
+  ) {}
+}
+
 export function isWholeFileChange(change: Change): change is WholeFileChange {
   return change.type === 'WholeFileChange';
 }
@@ -34,6 +42,18 @@ export function isDeletedFileChange(
 ): change is DeletedFileChange {
   return change.type === 'WholeFileDeleted';
 }
+
+export function isLockFileChange(change: Change): change is LockFileChange {
+  return change.type === 'LockFileChange';
+}
+
+const TEXT_LOCK_FILES = new Set([
+  'yarn.lock',
+  'package-lock.json',
+  'pnpm-lock.yaml',
+  'pnpm-lock.yml',
+  'bun.lock',
+]);
 
 export function calculateFileChanges(
   files: string[],
@@ -47,6 +67,7 @@ export function calculateFileChanges(
 
   return files.map((f) => {
     const ext = extname(f);
+    const basename = f.split('/').pop() ?? f;
 
     return {
       file: f,
@@ -62,6 +83,17 @@ export function calculateFileChanges(
         if (nxArgs.files && nxArgs.files.includes(f)) {
           return [new WholeFileChange()];
         }
+
+        if (TEXT_LOCK_FILES.has(basename)) {
+          try {
+            const atBase = readFileAtRevision(f, nxArgs.base);
+            const atHead = readFileAtRevision(f, nxArgs.head);
+            return [new LockFileChange(atBase, atHead)];
+          } catch {
+            return [new WholeFileChange()];
+          }
+        }
+
         switch (ext) {
           case '.json':
             try {

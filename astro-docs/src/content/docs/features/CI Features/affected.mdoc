@@ -291,15 +291,11 @@ The `projectsAffectedByDependencyUpdates` option accepts the following values:
 | `string[]` | An array of project names or glob patterns (e.g., `["app-*", "shared-lib"]`). Only the matching projects are marked as affected when the lock file changes.                                                                                  |
 
 {% aside type="note" title="How 'auto' works per package manager" %}
-The level of precision depends on your lock file format:
+In `"auto"` mode, Nx parses both the base and head revisions of your lock file using the same parsers it uses to build the project graph, diffs the resolved dependency versions to find which packages changed, then maps those packages back to the workspace projects that depend on them.
 
-- **pnpm** (`pnpm-lock.yaml`): Inspects the `importers` section to determine exactly which workspace projects had dependency changes.
-- **npm** (`package-lock.json`): Inspects the `packages` entries to determine which workspace projects had dependency changes.
-- **bun** (`bun.lock`): Inspects the `workspaces` section to determine which workspace projects had dependency changes.
-- **yarn** (`yarn.lock`): The lock file is a flat list with no per-project structure, so all projects are marked as affected when any dependency changes.
-- **Binary lock files** (`bun.lockb`): Cannot be parsed for granular changes, so all projects are marked as affected.
+Nx supports the following lock files: `pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, and `bun.lock`.
 
-For yarn and binary lock files, `"auto"` behaves the same as `"all"` since the lock file format does not support per-project change detection.
+Nx cannot parse binary lock files (`bun.lockb`) for granular changes, so `"auto"` falls back to marking all projects as affected for those files.
 {% /aside %}
 
 ## Not using git

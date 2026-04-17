@@ -1,13 +1,15 @@
 import { ProjectGraph } from '../../../../config/project-graph';
-import { WholeFileChange } from '../../../../project-graph/file-utils';
+import {
+  LockFileChange,
+  WholeFileChange,
+} from '../../../../project-graph/file-utils';
 import { getTouchedProjectsFromLockFile } from './lock-file-changes';
 import { TempFs } from '../../../../internal-testing-utils/temp-fs';
-import { JsonDiffType } from '../../../../utils/json-diff';
-import { logger } from '../../../../utils/logger';
+import { output } from '../../../../utils/output';
 
 describe('getTouchedProjectsFromLockFile', () => {
   let graph: ProjectGraph;
-  let allNodes = [];
+  let allNodes: string[] = [];
   let tempFs: TempFs;
 
   beforeEach(() => {
@@ -77,7 +79,7 @@ describe('getTouchedProjectsFromLockFile', () => {
     'bun.lockb',
     'bun.lock',
   ].forEach((lockFile) => {
-    describe(`"${lockFile}"`, () => {
+    describe(`"${lockFile}" in default ("all") mode`, () => {
       it(`should not return changes when "${lockFile}" is not touched`, () => {
         const result = getTouchedProjectsFromLockFile(
           [
@@ -106,225 +108,223 @@ describe('getTouchedProjectsFromLockFile', () => {
     });
   });
 
-  // Each lock file format has a different JSON structure. The changes
-  // array simulates realistic diffs for each format to test that auto
-  // mode can identify which packages changed and return the
-  // corresponding external node names.
-  type AutoModeTestCase = {
-    lockFile: string;
-    changes: {
-      type: JsonDiffType;
-      path: (string | number)[];
-      value: { lhs: any; rhs: any };
-    }[];
-    // External node names that should be returned -- the graph reversal
-    // in filterAffected walks from these to workspace projects.
-    expectedExternalNodes: string[];
-  };
+  describe('auto mode', () => {
+    // Real lock file fragments for each package manager. Each "base"
+    // and "head" pair is parsed by the matching Nx lock file parser;
+    // auto mode extracts changed package names by diffing the resulting
+    // external-node maps.
 
-  // pnpm-lock.yaml / pnpm-lock.yml
-  //
-  //   importers:
-  //     libs/proj1:
-  //       dependencies:
-  //         some-external-package:
-  //           version: 0.0.1 -> 0.0.2
-  //     apps/app1:
-  //       devDependencies:
-  //         some-other-external-package:
-  //           version: (added) 4.0.1
-  //     apps/app-that-was-deleted:
-  //       devDependencies:
-  //         some-other-external-package:
-  //           version: 4.0.1 (deleted)
-  const pnpmChanges: AutoModeTestCase['changes'] = [
-    {
-      type: JsonDiffType.Modified,
-      path: [
-        'importers',
-        'libs/proj1',
-        'dependencies',
-        'some-external-package',
-        'version',
-      ],
-      value: { lhs: '0.0.1', rhs: '0.0.2' },
-    },
-    {
-      type: JsonDiffType.Added,
-      path: [
-        'importers',
-        'apps/app1',
-        'devDependencies',
-        'some-other-external-package',
-        'version',
-      ],
-      value: { lhs: undefined, rhs: '4.0.1' },
-    },
-    {
-      type: JsonDiffType.Deleted,
-      path: [
-        'importers',
-        'apps/app-that-was-deleted',
-        'devDependencies',
-        'some-other-external-package',
-        'version',
-      ],
-      value: { lhs: '4.0.1', rhs: undefined },
-    },
-  ];
+    // pnpm v9 lockfile with two packages. The head content bumps
+    // some-external-package to 0.0.2 and adds some-other-external-package.
+    const pnpmBase = `lockfileVersion: '9.0'
 
-  const AUTO_MODE_LOCK_FILES: AutoModeTestCase[] = [
-    {
-      lockFile: 'pnpm-lock.yaml',
-      changes: pnpmChanges,
-      expectedExternalNodes: [
-        'npm:some-external-package',
-        'npm:some-other-external-package',
-      ],
-    },
-    {
-      lockFile: 'pnpm-lock.yml',
-      changes: pnpmChanges,
-      expectedExternalNodes: [
-        'npm:some-external-package',
-        'npm:some-other-external-package',
-      ],
-    },
-    // package-lock.json (npm v2/v3)
-    //
-    //   {
-    //     "packages": {
-    //       "libs/proj1/node_modules/some-external-package": {
-    //         "version": "0.0.1" -> "0.0.2"
-    //       },
-    //       "apps/app1/node_modules/some-other-external-package": {
-    //         "version": (added) "4.0.1"
-    //       }
-    //     }
-    //   }
-    {
-      lockFile: 'package-lock.json',
-      changes: [
-        {
-          type: JsonDiffType.Modified,
-          path: [
-            'packages',
-            'libs/proj1/node_modules/some-external-package',
-            'version',
-          ],
-          value: { lhs: '0.0.1', rhs: '0.0.2' },
-        },
-        {
-          type: JsonDiffType.Added,
-          path: [
-            'packages',
-            'apps/app1/node_modules/some-other-external-package',
-            'version',
-          ],
-          value: { lhs: undefined, rhs: '4.0.1' },
-        },
-      ],
-      expectedExternalNodes: [
-        'npm:some-external-package',
-        'npm:some-other-external-package',
-      ],
-    },
-    // yarn.lock (flat map -- no per-project structure)
-    //
-    //   "some-external-package@^0.0.1":
-    //     version "0.0.1" -> "0.0.2"
-    //
-    //   "some-other-external-package@^4.0.0":
-    //     version (added) "4.0.1"
-    {
-      lockFile: 'yarn.lock',
-      changes: [
-        {
-          type: JsonDiffType.Modified,
-          path: ['some-external-package@^0.0.1', 'version'],
-          value: { lhs: '0.0.1', rhs: '0.0.2' },
-        },
-        {
-          type: JsonDiffType.Added,
-          path: ['some-other-external-package@^4.0.0', 'version'],
-          value: { lhs: undefined, rhs: '4.0.1' },
-        },
-      ],
-      // yarn now extracts package names from keys and returns external
-      // nodes instead of falling back to "all projects"
-      expectedExternalNodes: [
-        'npm:some-external-package',
-        'npm:some-other-external-package',
-      ],
-    },
-    // bun.lock (JSON with "workspaces" keyed by workspace path)
-    //
-    //   {
-    //     "workspaces": {
-    //       "libs/proj1": {
-    //         "dependencies": {
-    //           "some-external-package": "^0.0.1" -> "^0.0.2"
-    //         }
-    //       },
-    //       "apps/app1": {
-    //         "devDependencies": {
-    //           "some-other-external-package": (added) "^4.0.1"
-    //         }
-    //       }
-    //     }
-    //   }
-    {
-      lockFile: 'bun.lock',
-      changes: [
-        {
-          type: JsonDiffType.Modified,
-          path: [
-            'workspaces',
-            'libs/proj1',
-            'dependencies',
-            'some-external-package',
-          ],
-          value: { lhs: '^0.0.1', rhs: '^0.0.2' },
-        },
-        {
-          type: JsonDiffType.Added,
-          path: [
-            'workspaces',
-            'apps/app1',
-            'devDependencies',
-            'some-other-external-package',
-          ],
-          value: { lhs: undefined, rhs: '^4.0.1' },
-        },
-      ],
-      expectedExternalNodes: [
-        'npm:some-external-package',
-        'npm:some-other-external-package',
-      ],
-    },
-  ];
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
 
-  AUTO_MODE_LOCK_FILES.forEach(
-    ({ lockFile, changes, expectedExternalNodes }) => {
-      describe(`"${lockFile}" with projectsAffectedByDependencyUpdates set to auto`, () => {
-        beforeAll(async () => {
-          tempFs = new TempFs('lock-file-changes-test');
-          await tempFs.createFiles({
-            './nx.json': JSON.stringify({
-              pluginsConfig: {
-                '@nx/js': {
-                  projectsAffectedByDependencyUpdates: 'auto',
-                },
-              },
-            }),
-          });
-        });
+importers:
 
-        afterAll(() => {
-          tempFs.cleanup();
-        });
+  .:
+    dependencies:
+      some-external-package:
+        specifier: ^0.0.1
+        version: 0.0.1
 
-        it(`should not return changes when "${lockFile}" is not touched`, () => {
+packages:
+
+  some-external-package@0.0.1:
+    resolution: {integrity: sha512-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa==}
+
+snapshots:
+
+  some-external-package@0.0.1: {}
+
+`;
+
+    const pnpmHead = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      some-external-package:
+        specifier: ^0.0.2
+        version: 0.0.2
+      some-other-external-package:
+        specifier: ^4.0.1
+        version: 4.0.1
+
+packages:
+
+  some-external-package@0.0.2:
+    resolution: {integrity: sha512-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb==}
+
+  some-other-external-package@4.0.1:
+    resolution: {integrity: sha512-cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc==}
+
+snapshots:
+
+  some-external-package@0.0.2: {}
+
+  some-other-external-package@4.0.1: {}
+
+`;
+
+    // package-lock.json v3 (lockfileVersion: 3) with root and transitive entries
+    const npmBase = JSON.stringify({
+      name: 'test',
+      version: '1.0.0',
+      lockfileVersion: 3,
+      requires: true,
+      packages: {
+        '': {
+          name: 'test',
+          version: '1.0.0',
+          dependencies: {
+            'some-external-package': '^0.0.1',
+          },
+        },
+        'node_modules/some-external-package': {
+          version: '0.0.1',
+          resolved:
+            'https://registry.npmjs.org/some-external-package/-/some-external-package-0.0.1.tgz',
+          integrity:
+            'sha512-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa==',
+        },
+      },
+    });
+
+    const npmHead = JSON.stringify({
+      name: 'test',
+      version: '1.0.0',
+      lockfileVersion: 3,
+      requires: true,
+      packages: {
+        '': {
+          name: 'test',
+          version: '1.0.0',
+          dependencies: {
+            'some-external-package': '^0.0.2',
+            'some-other-external-package': '^4.0.1',
+          },
+        },
+        'node_modules/some-external-package': {
+          version: '0.0.2',
+          resolved:
+            'https://registry.npmjs.org/some-external-package/-/some-external-package-0.0.2.tgz',
+          integrity:
+            'sha512-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb==',
+        },
+        'node_modules/some-other-external-package': {
+          version: '4.0.1',
+          resolved:
+            'https://registry.npmjs.org/some-other-external-package/-/some-other-external-package-4.0.1.tgz',
+          integrity:
+            'sha512-cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc==',
+        },
+      },
+    });
+
+    // yarn classic lockfile format
+    const yarnBase = `# THIS IS AN AUTOGENERATED FILE. DO NOT EDIT THIS FILE DIRECTLY.
+# yarn lockfile v1
+
+
+some-external-package@^0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/some-external-package/-/some-external-package-0.0.1.tgz#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  integrity sha512-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa==
+`;
+
+    const yarnHead = `# THIS IS AN AUTOGENERATED FILE. DO NOT EDIT THIS FILE DIRECTLY.
+# yarn lockfile v1
+
+
+some-external-package@^0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/some-external-package/-/some-external-package-0.0.2.tgz#bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  integrity sha512-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb==
+
+some-other-external-package@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/some-other-external-package/-/some-other-external-package-4.0.1.tgz#cccccccccccccccccccccccccccccccccccccccc"
+  integrity sha512-cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc==
+`;
+
+    // bun text-format lockfile
+    const bunBase = `{
+  "lockfileVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "test",
+      "dependencies": {
+        "some-external-package": "^0.0.1"
+      }
+    }
+  },
+  "packages": {
+    "some-external-package": ["some-external-package@0.0.1", "", {}, "sha512-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=="]
+  }
+}`;
+
+    const bunHead = `{
+  "lockfileVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "test",
+      "dependencies": {
+        "some-external-package": "^0.0.2",
+        "some-other-external-package": "^4.0.1"
+      }
+    }
+  },
+  "packages": {
+    "some-external-package": ["some-external-package@0.0.2", "", {}, "sha512-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb=="],
+    "some-other-external-package": ["some-other-external-package@4.0.1", "", {}, "sha512-cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc=="]
+  }
+}`;
+
+    type AutoModeCase = {
+      lockFile: string;
+      base: string;
+      head: string;
+    };
+
+    const AUTO_CASES: AutoModeCase[] = [
+      { lockFile: 'pnpm-lock.yaml', base: pnpmBase, head: pnpmHead },
+      { lockFile: 'pnpm-lock.yml', base: pnpmBase, head: pnpmHead },
+      { lockFile: 'package-lock.json', base: npmBase, head: npmHead },
+      { lockFile: 'yarn.lock', base: yarnBase, head: yarnHead },
+      { lockFile: 'bun.lock', base: bunBase, head: bunHead },
+    ];
+
+    beforeAll(async () => {
+      tempFs = new TempFs('lock-file-changes-test');
+      await tempFs.createFiles({
+        './nx.json': JSON.stringify({
+          pluginsConfig: {
+            '@nx/js': {
+              projectsAffectedByDependencyUpdates: 'auto',
+            },
+          },
+        }),
+        // pnpm-parser v9 code path reads this at parse time; provide
+        // a minimal empty hoisted definition so parsing succeeds.
+        './node_modules/.modules.yaml': `hoistedDependencies: {}\n`,
+      });
+    });
+
+    afterAll(() => {
+      tempFs.cleanup();
+    });
+
+    AUTO_CASES.forEach(({ lockFile, base, head }) => {
+      describe(`"${lockFile}"`, () => {
+        it('should not return changes when the lock file is untouched', () => {
           const result = getTouchedProjectsFromLockFile(
             [
               {
@@ -340,9 +340,7 @@ describe('getTouchedProjectsFromLockFile', () => {
           expect(result).toStrictEqual([]);
         });
 
-        // When auto mode sees a WholeFileChange it cannot narrow to
-        // specific packages, so all projects should be affected.
-        it(`should return all projects when whole lock file "${lockFile}" is changed`, () => {
+        it('should return all projects when the full lock file changed (WholeFileChange)', () => {
           const result = getTouchedProjectsFromLockFile(
             [
               {
@@ -358,12 +356,12 @@ describe('getTouchedProjectsFromLockFile', () => {
           expect(result).toStrictEqual(allNodes);
         });
 
-        it(`should return external nodes for changed packages when "${lockFile}" has dependency changes`, () => {
+        it('should return no projects when base and head contents are identical', () => {
           const result = getTouchedProjectsFromLockFile(
             [
               {
                 file: lockFile,
-                getChanges: () => changes,
+                getChanges: () => [new LockFileChange(base, base)],
               },
             ],
             graph.nodes,
@@ -371,156 +369,152 @@ describe('getTouchedProjectsFromLockFile', () => {
             undefined,
             graph
           );
-          expect(result).toStrictEqual(expectedExternalNodes);
+          expect(result).toStrictEqual([]);
+        });
+
+        it('should return external nodes for packages whose versions changed or were added', () => {
+          const result = getTouchedProjectsFromLockFile(
+            [
+              {
+                file: lockFile,
+                getChanges: () => [new LockFileChange(base, head)],
+              },
+            ],
+            graph.nodes,
+            undefined,
+            undefined,
+            graph
+          );
+          expect(result.sort()).toStrictEqual(
+            [
+              'npm:some-external-package',
+              'npm:some-other-external-package',
+            ].sort()
+          );
+        });
+
+        it('should return all projects when all changed packages are removed (not in external nodes)', () => {
+          // head has no packages at all; base had some-external-package.
+          // The parser may produce no nodes for an empty lockfile, so
+          // the removed package is the only "changed" one and it will
+          // not map to an external node -- fall back to all projects.
+          const emptyHead =
+            lockFile === 'yarn.lock'
+              ? '# yarn lockfile v1\n\n\n'
+              : lockFile === 'package-lock.json'
+                ? JSON.stringify({
+                    name: 'test',
+                    version: '1.0.0',
+                    lockfileVersion: 3,
+                    requires: true,
+                    packages: {
+                      '': { name: 'test', version: '1.0.0' },
+                    },
+                  })
+                : lockFile === 'bun.lock'
+                  ? `{
+  "lockfileVersion": 1,
+  "workspaces": { "": { "name": "test" } },
+  "packages": {}
+}`
+                  : `lockfileVersion: '9.0'
+
+importers:
+
+  .: {}
+
+`;
+
+          // Mutate the graph so the removed package has no matching
+          // external node -- forcing the "fall back to all projects"
+          // branch.
+          const prunedGraph: ProjectGraph = {
+            ...graph,
+            externalNodes: {
+              'npm:unrelated-package':
+                graph.externalNodes['npm:unrelated-package']!,
+            },
+          };
+
+          const result = getTouchedProjectsFromLockFile(
+            [
+              {
+                file: lockFile,
+                getChanges: () => [new LockFileChange(base, emptyHead)],
+              },
+            ],
+            prunedGraph.nodes,
+            undefined,
+            undefined,
+            prunedGraph
+          );
+          expect(result).toStrictEqual(allNodes);
         });
       });
-    }
-  );
+    });
 
-  // bun.lockb is a binary file (.lockb extension), so the change
-  // detection layer always produces a WholeFileChange -- it never
-  // gets JSON-diffed. Only the WholeFileChange case is meaningful.
-  describe('"bun.lockb" with projectsAffectedByDependencyUpdates set to auto', () => {
-    beforeAll(async () => {
-      tempFs = new TempFs('lock-file-changes-test');
-      await tempFs.createFiles({
-        './nx.json': JSON.stringify({
-          pluginsConfig: {
-            '@nx/js': {
-              projectsAffectedByDependencyUpdates: 'auto',
+    // bun.lockb is a binary file, so affected detection cannot diff
+    // it. It always produces a WholeFileChange, and auto mode falls
+    // back to marking all projects affected.
+    describe('"bun.lockb"', () => {
+      it('should return all projects on WholeFileChange', () => {
+        const warnSpy = jest.spyOn(output, 'warn').mockImplementation();
+        const result = getTouchedProjectsFromLockFile(
+          [
+            {
+              file: 'bun.lockb',
+              getChanges: () => [new WholeFileChange()],
             },
-          },
-        }),
+          ],
+          graph.nodes,
+          undefined,
+          undefined,
+          graph
+        );
+        expect(result).toStrictEqual(allNodes);
+        warnSpy.mockRestore();
       });
     });
 
-    afterAll(() => {
-      tempFs.cleanup();
-    });
-
-    it('should not return changes when "bun.lockb" is not touched', () => {
-      const result = getTouchedProjectsFromLockFile(
-        [
-          {
-            file: 'source.ts',
-            getChanges: () => [new WholeFileChange()],
-          },
-        ],
-        graph.nodes,
-        undefined,
-        undefined,
-        graph
-      );
-      expect(result).toStrictEqual([]);
-    });
-
-    // Since bun.lockb is binary and always produces WholeFileChange,
-    // auto mode should return all projects as a safe fallback.
-    it('should return all projects when whole lock file "bun.lockb" is changed', () => {
-      const result = getTouchedProjectsFromLockFile(
-        [
-          {
-            file: 'bun.lockb',
-            getChanges: () => [new WholeFileChange()],
-          },
-        ],
-        graph.nodes,
-        undefined,
-        undefined,
-        graph
-      );
-      expect(result).toStrictEqual(allNodes);
-    });
-  });
-
-  describe('unrecognized lock file with projectsAffectedByDependencyUpdates set to auto', () => {
-    beforeAll(async () => {
-      tempFs = new TempFs('lock-file-changes-test');
-      await tempFs.createFiles({
-        './nx.json': JSON.stringify({
-          pluginsConfig: {
-            '@nx/js': {
-              projectsAffectedByDependencyUpdates: 'auto',
+    describe('unrecognized lock file', () => {
+      it('should not return changes -- unknown files are not recognized as lock files', () => {
+        const result = getTouchedProjectsFromLockFile(
+          [
+            {
+              file: 'unknown.lock',
+              getChanges: () => [new WholeFileChange()],
             },
-          },
-        }),
+          ],
+          graph.nodes,
+          undefined,
+          undefined,
+          graph
+        );
+        expect(result).toStrictEqual([]);
       });
     });
 
-    afterAll(() => {
-      tempFs.cleanup();
-    });
-
-    // An unrecognized lock file is not in ALL_LOCK_FILES, so it is
-    // filtered out before auto mode runs. No projects are affected.
-    it('should not return changes for an unrecognized lock file', () => {
-      const result = getTouchedProjectsFromLockFile(
-        [
-          {
-            file: 'unknown.lock',
-            getChanges: () => [
-              {
-                type: JsonDiffType.Modified,
-                path: ['some', 'path'],
-                value: { lhs: '1.0.0', rhs: '2.0.0' },
-              },
-            ],
-          },
-        ],
-        graph.nodes,
-        undefined,
-        undefined,
-        graph
-      );
-      expect(result).toStrictEqual([]);
-    });
-  });
-
-  describe('npm root-level dependency changes with auto mode', () => {
-    beforeAll(async () => {
-      tempFs = new TempFs('lock-file-changes-test');
-      await tempFs.createFiles({
-        './nx.json': JSON.stringify({
-          pluginsConfig: {
-            '@nx/js': {
-              projectsAffectedByDependencyUpdates: 'auto',
+    describe('malformed lock file', () => {
+      it('should return all projects when parsing the lock file fails', () => {
+        const warnSpy = jest.spyOn(output, 'warn').mockImplementation();
+        const result = getTouchedProjectsFromLockFile(
+          [
+            {
+              file: 'package-lock.json',
+              getChanges: () => [
+                new LockFileChange('not json at all', 'still not json'),
+              ],
             },
-          },
-        }),
+          ],
+          graph.nodes,
+          undefined,
+          undefined,
+          graph
+        );
+        expect(result).toStrictEqual(allNodes);
+        expect(warnSpy).toHaveBeenCalled();
+        warnSpy.mockRestore();
       });
-    });
-
-    afterAll(() => {
-      tempFs.cleanup();
-    });
-
-    // Root-level dependencies in package-lock.json are stored under
-    // "node_modules/<pkg>" (no project path prefix). The refactored
-    // code extracts the package name and looks it up in externalNodes.
-    it('should return external nodes for root-level npm dependency changes', () => {
-      const result = getTouchedProjectsFromLockFile(
-        [
-          {
-            file: 'package-lock.json',
-            getChanges: () => [
-              {
-                type: JsonDiffType.Modified,
-                path: [
-                  'packages',
-                  'node_modules/some-external-package',
-                  'version',
-                ],
-                value: { lhs: '0.0.1', rhs: '0.0.2' },
-              },
-            ],
-          },
-        ],
-        graph.nodes,
-        undefined,
-        undefined,
-        graph
-      );
-      expect(result).toStrictEqual(['npm:some-external-package']);
     });
   });
 });
