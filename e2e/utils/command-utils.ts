@@ -3,6 +3,7 @@ import {
   PackageManager,
   ProjectConfiguration,
   TargetConfiguration,
+  workspaceRoot,
 } from '@nx/devkit';
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import { existsSync } from 'fs-extra';
@@ -108,6 +109,10 @@ export function runCommand(
 
     return stripVTControlCharacters(r as string);
   } catch (e) {
+    if (e.code === 'ENOENT') {
+      console.error('Spawn ENOENT error detected. PATH:', process.env.PATH);
+      console.error('Stripped Env:', getStrippedEnvironmentVariables());
+    }
     // this is intentional
     // npm ls fails if package is not found
     logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
@@ -144,11 +149,13 @@ export function getPackageManagerCommand({
     : false;
   const isPnpmWorkspace = existsSync(join(path, 'pnpm-workspace.yaml'));
 
+  const createWorkspaceBase = `create-nx-workspace@latest`;
+
   return {
     npm: {
       createWorkspace: `npx ${
         npmMajorVersion && +npmMajorVersion >= 7 ? '--yes' : ''
-      } create-nx-workspace@${publishedVersion}`,
+      } ${createWorkspaceBase}`,
       run: (script: string, args: string) => `npm run ${script} -- ${args}`,
       runNx: `npx nx`,
       runNxSilent: `npx nx`,
@@ -164,7 +171,7 @@ export function getPackageManagerCommand({
     yarn: {
       createWorkspace: `npx ${
         npmMajorVersion && +npmMajorVersion >= 7 ? '--yes' : ''
-      } create-nx-workspace@${publishedVersion}`,
+      } ${createWorkspaceBase}`,
       run: (script: string, args: string) => `yarn ${script} ${args}`,
       runNx: `yarn nx`,
       runNxSilent:
@@ -185,7 +192,7 @@ export function getPackageManagerCommand({
     },
     // Pnpm 3.5+ adds nx to
     pnpm: {
-      createWorkspace: `pnpm dlx create-nx-workspace@${publishedVersion}`,
+      createWorkspace: `pnpm dlx ${createWorkspaceBase}`,
       run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
       runNx: `pnpm exec nx`,
       runNxSilent: `pnpm exec nx`,
@@ -201,7 +208,7 @@ export function getPackageManagerCommand({
     },
     bun: {
       // See note in runCreateWorkspace in create-project-utils.ts for why we don't set @{version} for `bunx create-nx-workspace` right now
-      createWorkspace: `bunx create-nx-workspace`,
+      createWorkspace: `bunx ${createWorkspaceBase}`,
       run: (script: string, args: string) => `bun run ${script} -- ${args}`,
       runNx: `bunx nx`,
       runNxSilent: `bunx nx`,
