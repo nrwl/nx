@@ -14,13 +14,16 @@ import {
 import { getPluginImport } from '../../utils/eslint-file';
 import { mapFilePath } from '../../utils/flat-config/path-utils';
 
-// Rewrites legacy `.eslintrc[.base].json` filenames to their flat-config counterparts.
-// Used both for `extends` local paths and for rule option values that embed these filenames.
-function renameLegacyEslintrcFile(path: string, format: 'mjs' | 'cjs'): string {
-  return path.replace(
-    /(^|.*?)\.eslintrc(\.base)?\.json$/,
-    `$1eslint$2.config.${format}`
-  );
+// Rewrites legacy `.eslintrc[.base].json` / `.eslintignore` filenames to their flat-config
+// counterparts. Used for `extends` local paths, rule option values that embed these filenames,
+// and nx.json / project.json input globs that referenced the deleted files.
+export function renameLegacyEslintrcFile(
+  path: string,
+  format: 'mjs' | 'cjs'
+): string {
+  return path
+    .replace(/(^|.*?)\.eslintrc(\.base)?\.json$/, `$1eslint$2.config.${format}`)
+    .replace(/(^|.*?)\.eslintignore$/, `$1eslint.config.${format}`);
 }
 
 // In flat config, `@nx/workspace/<rule>` is parsed as plugin `@nx/workspace`, rule `<rule>`.
