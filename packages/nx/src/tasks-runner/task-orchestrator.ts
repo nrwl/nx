@@ -9,7 +9,7 @@ import { readProjectsConfigurationFromProjectGraph } from '../project-graph/proj
 import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
-import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
+import { getTaskDetails, hashTasks } from '../hasher/hash-task';
 import { walkTaskGraph } from './task-graph-utils';
 import { getInputs, TaskHasher } from '../hasher/task-hasher';
 import {
@@ -100,7 +100,7 @@ export class TaskOrchestrator {
 
   private initializingTaskIds = new Set(this.initiatingTasks.map((t) => t.id));
 
-  private processedTasks = new Map<string, Promise<NodeJS.ProcessEnv>>();
+  private scheduledIds = new Set<string>();
 
   private completedTasks = new Map<string, TaskStatus>();
   private waitingForTasks: Function[] = [];
@@ -236,10 +236,6 @@ export class TaskOrchestrator {
    * happen on this single thread — no races. Cache misses are dispatched
    * as fire-and-forget workers. Workers signal completion via
    * scheduleNextTasksAndReleaseThreads which wakes all waiting loops.
-   *
-   * Safety: the dispatch phase (step 5) is fully synchronous — no
-   * worker can run during it. So all tasks picked up by nextTask()
-   * are guaranteed to be in processedTasks from step 1.
    */
   private async executeCoordinatorLoop(
     doNotSkipCache: boolean,
@@ -248,50 +244,29 @@ export class TaskOrchestrator {
     while (true) {
       if (this.bailed || this.stopRequested) break;
 
-      // 1. Hash BEFORE processAll so processTask sees hashes set, and so
-      //    resolveCachedTasksBulk can look them up in the cache. Each task
-      //    is hashed with its own task-specific env (project/target .env
-      //    files, custom hasher env reads) — the shared batchEnv would
-      //    compute a different cache key than the single-task path and
-      //    risk stale cache reuse after env changes.
-      {
-        const { scheduledTasks } = this.tasksSchedule.getAllScheduledTasks();
-        const unhashed = scheduledTasks
-          .map((id) => this.taskGraph.tasks[id])
-          .filter(
-            (t) =>
-              !t.hash &&
-              this.taskGraph.dependencies[t.id].every((depId) =>
-                this.completedTasks.has(depId)
-              )
-          );
-        if (unhashed.length > 1) {
-          const perTaskEnvs: Record<string, NodeJS.ProcessEnv> = {};
-          for (const task of unhashed) {
-            perTaskEnvs[task.id] = getTaskSpecificEnv(task, this.projectGraph);
-          }
-          await hashTasks(
-            this.hasher,
-            this.projectGraph,
-            this.taskGraphForHashing,
-            perTaskEnvs,
-            this.taskDetails,
-            unhashed
-          );
-        }
-      }
+      // 1. Hash + scheduleTask all dep-ready scheduled tasks before any
+      //    cache check or dispatch. Hashing must happen first so cache
+      //    lookups have keys; scheduleTask must fire before dispatch to
+      //    match the pre-refactor "queued = scheduled" semantics.
+      const ready = this.tasksSchedule
+        .getAllScheduledTasks()
+        .scheduledTasks.map((id) => this.taskGraph.tasks[id])
+        .filter((t) =>
+          this.taskGraph.dependencies[t.id].every((depId) =>
+            this.completedTasks.has(depId)
+          )
+        );
+      await this.ensureHashes(ready);
+      await this.fireScheduleLifecycle(ready);
 
-      // 2. Bulk-resolve cache hits before processTask — avoids N
-      //    lifecycle calls for tasks that will be resolved from cache.
+      // 2. Bulk-resolve cache hits — one SQL call + parallel remote
+      //    retrievals for everything cacheable in this cycle.
       if (doNotSkipCache) {
         const resolved = await this.resolveCachedTasksBulk();
         if (resolved) continue;
       }
 
-      // 3. Process remaining scheduled tasks (cache misses + non-cacheable).
-      this.processAllScheduledTasks();
-
-      // 4. Handle batch executors
+      // 3. Handle batch executors
       const batch = this.nextBatch();
       if (batch) {
         const groupId = this.closeGroup();
@@ -300,7 +275,7 @@ export class TaskOrchestrator {
         continue;
       }
 
-      // 5. Dispatch cache misses as individual workers
+      // 4. Dispatch cache misses as individual workers
       while (this.pendingDiscreteWorkers.size < parallelism) {
         const task = this.tasksSchedule.nextTask((t) => !t.continuous);
         if (!task) break;
@@ -308,7 +283,7 @@ export class TaskOrchestrator {
         this.dispatchDiscreteWorker(doNotSkipCache, task, groupId);
       }
 
-      // 6. Nothing left to dispatch and nothing in flight — done.
+      // 5. Nothing left to dispatch and nothing in flight — done.
       if (
         !this.tasksSchedule.hasTasks() &&
         this.pendingDiscreteWorkers.size === 0
@@ -316,7 +291,7 @@ export class TaskOrchestrator {
         break;
       }
 
-      // 7. Wait for a worker to finish (woken by scheduleNextTasksAndReleaseThreads)
+      // 6. Wait for a worker to finish (woken by scheduleNextTasksAndReleaseThreads)
       await new Promise((res) => this.waitingForTasks.push(res));
     }
   }
@@ -327,8 +302,6 @@ export class TaskOrchestrator {
       if (!this.tasksSchedule.hasTasks() || this.bailed || this.stopRequested) {
         return null;
       }
-
-      this.processAllScheduledTasks();
 
       const task = this.tasksSchedule.nextTask((t) => t.continuous);
       if (task) {
@@ -357,39 +330,6 @@ export class TaskOrchestrator {
       await new Promise((res) => this.waitingForTasks.push(res));
     }
   }
-
-  // region Processing Scheduled Tasks
-  private async processTask(taskId: string): Promise<NodeJS.ProcessEnv> {
-    const task = this.taskGraph.tasks[taskId];
-    const taskSpecificEnv = getTaskSpecificEnv(task, this.projectGraph);
-
-    if (!task.hash) {
-      await hashTask(
-        this.hasher,
-        this.projectGraph,
-        this.taskGraphForHashing,
-        task,
-        taskSpecificEnv,
-        this.taskDetails
-      );
-    }
-
-    await this.options.lifeCycle.scheduleTask(task);
-
-    return taskSpecificEnv;
-  }
-
-  public processAllScheduledTasks() {
-    const { scheduledTasks } = this.tasksSchedule.getAllScheduledTasks();
-    for (const taskId of scheduledTasks) {
-      // Task is already handled or being handled
-      if (!this.processedTasks.has(taskId)) {
-        this.processedTasks.set(taskId, this.processTask(taskId));
-      }
-    }
-  }
-
-  // endregion Processing Scheduled Tasks
 
   // region Applying Cache
 
@@ -585,9 +525,7 @@ export class TaskOrchestrator {
 
         if (cacheResults.length > 0) {
           const cachedTasks = cacheResults.map((r) => r.task);
-          await Promise.all(
-            cachedTasks.map((task) => this.options.lifeCycle.scheduleTask(task))
-          );
+          await this.fireScheduleLifecycle(cachedTasks);
           await this.preRunSteps(cachedTasks, { groupId });
           await this.postRunSteps(cacheResults, doNotSkipCache, { groupId });
         }
@@ -646,9 +584,7 @@ export class TaskOrchestrator {
     const cachedTaskIds = new Set(cachedResults.map((r) => r.task.id));
     const nonCachedTasks = tasks.filter((t) => !cachedTaskIds.has(t.id));
     if (nonCachedTasks.length > 0) {
-      await Promise.all(
-        nonCachedTasks.map((task) => this.options.lifeCycle.scheduleTask(task))
-      );
+      await this.fireScheduleLifecycle(nonCachedTasks);
       await this.preRunSteps(nonCachedTasks, { groupId });
     }
 
@@ -826,15 +762,11 @@ export class TaskOrchestrator {
   // region Single Task
 
   /**
-   * Bulk-resolve cache hits for a set of tasks: fetch cached entries,
-   * copy outputs as needed, fire lifecycle, and return the TaskResults
-   * for the hits. Tasks that aren't in the cache (or aren't cacheable)
-   * are silently omitted from the return value — callers are responsible
-   * for running those via {@link runTaskDirectly}.
-   *
-   * Fires scheduleTask lifecycle for hits that haven't been through
-   * processAllScheduledTasks yet. That's a coordinator gap-filler and
-   * a no-op for callers that pre-process the schedule.
+   * Bulk-resolve cache hits for a set of tasks: hash any unhashed tasks,
+   * fetch cached entries, copy outputs as needed, fire lifecycle, and
+   * return the TaskResults for the hits. Tasks that aren't in the cache
+   * (or aren't cacheable) are silently omitted from the return value —
+   * callers are responsible for running those via {@link runTaskDirectly}.
    *
    * The caller provides `groupId` — cache hits share one slot since they
    * don't actually compete for parallelism.
@@ -851,23 +783,61 @@ export class TaskOrchestrator {
     );
     if (cacheableTasks.length === 0) return [];
 
+    await this.ensureHashes(cacheableTasks);
+    await this.fireScheduleLifecycle(cacheableTasks);
+
     const cacheHits = await this.fetchCacheHits(cacheableTasks);
     if (cacheHits.length === 0) return [];
-
-    // scheduleTask lifecycle for hits the coordinator resolved before
-    // processAllScheduledTasks could fire it. No-op for callers that
-    // already ran processAllScheduledTasks (every hit is in processedTasks).
-    await Promise.all(
-      cacheHits
-        .filter(({ task }) => !this.processedTasks.has(task.id))
-        .map(({ task }) => this.options.lifeCycle.scheduleTask(task))
-    );
 
     const hitTasks = cacheHits.map((h) => h.task);
     await this.preRunSteps(hitTasks, { groupId });
     const results = await this.finalizeCacheHits(cacheHits);
     await this.postRunSteps(results, doNotSkipCache, { groupId });
     return results;
+  }
+
+  /**
+   * Fire `scheduleTask` lifecycle exactly once per task. Safe to call from
+   * any path; the dedupe Set guarantees at-most-once even when the
+   * coordinator and a leaf path both reach the same task.
+   */
+  private async fireScheduleLifecycle(tasks: Task[]): Promise<void> {
+    const newlyScheduled: Task[] = [];
+    for (const task of tasks) {
+      if (this.scheduledIds.has(task.id)) continue;
+      this.scheduledIds.add(task.id);
+      newlyScheduled.push(task);
+    }
+    if (newlyScheduled.length === 0) return;
+    await Promise.all(
+      newlyScheduled.map((t) => this.options.lifeCycle.scheduleTask(t))
+    );
+  }
+
+  /**
+   * Batch-hash any tasks in the set that lack a hash. Each task is hashed
+   * with its own task-specific env (project/target `.env` files, custom
+   * hasher env reads) — the shared batchEnv would compute a different
+   * cache key than the single-task path and risk stale cache reuse after
+   * env changes. `hashTasks` filters by `!task.hash` internally, so this
+   * is safe to call on already-hashed sets.
+   */
+  private async ensureHashes(tasks: Task[]): Promise<void> {
+    const unhashed = tasks.filter((t) => !t.hash);
+    if (unhashed.length === 0) return;
+
+    const perTaskEnvs: Record<string, NodeJS.ProcessEnv> = {};
+    for (const task of unhashed) {
+      perTaskEnvs[task.id] = getTaskSpecificEnv(task, this.projectGraph);
+    }
+    await hashTasks(
+      this.hasher,
+      this.projectGraph,
+      this.taskGraphForHashing,
+      perTaskEnvs,
+      this.taskDetails,
+      unhashed
+    );
   }
 
   /**
@@ -935,8 +905,9 @@ export class TaskOrchestrator {
     task: Task,
     groupId: number
   ): Promise<TaskResult> {
-    // Wait for task to be processed
-    const taskSpecificEnv = await this.processedTasks.get(task.id);
+    await this.ensureHashes([task]);
+    await this.fireScheduleLifecycle([task]);
+    const taskSpecificEnv = getTaskSpecificEnv(task, this.projectGraph);
 
     await this.preRunSteps([task], { groupId });
 
@@ -1209,6 +1180,9 @@ export class TaskOrchestrator {
   }
 
   async startContinuousTask(task: Task, groupId: number) {
+    await this.ensureHashes([task]);
+    await this.fireScheduleLifecycle([task]);
+
     if (
       this.runningTasksService &&
       this.runningTasksService.getRunningTasks([task.id]).length
@@ -1245,7 +1219,7 @@ export class TaskOrchestrator {
       return runningTask;
     }
 
-    const taskSpecificEnv = await this.processedTasks.get(task.id);
+    const taskSpecificEnv = getTaskSpecificEnv(task, this.projectGraph);
     await this.preRunSteps([task], { groupId });
 
     const pipeOutput = await this.pipeOutputCapture(task);

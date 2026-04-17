@@ -157,8 +157,6 @@ async function createOrchestrator(
 
   await orchestrator.init();
 
-  orchestrator.processAllScheduledTasks();
-
   return orchestrator;
 }
 

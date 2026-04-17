@@ -22,10 +22,9 @@ export function getEnvVariablesForBatchProcess(
   };
 }
 
-// The orchestrator now calls this eagerly during the coordinator pre-hash
-// in addition to processTask (and again in hashBatchTasks), so the same
-// task hits this function multiple times per run. Each call reads 3+ .env
-// files from disk — memoize by task.id to skip the repeat work.
+// Each call reads 3+ .env files from disk and the orchestrator hits this
+// function multiple times per task (coordinator pre-hash, hashBatchTasks,
+// per-task env at run time). Memoize by task.id to skip the repeat work.
 //
 // Cache lifetime is the current Nx invocation: the function is only called
 // from CLI/orchestrator code (not the long-lived daemon), so the map is
