@@ -14,7 +14,7 @@ common-init-steps: &common-init-steps
     uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
 
   - name: Cache restore
-    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+    uses: 'nrwl/nx-cloud-workflows/main/workflow-steps/cache/main.yaml'
     inputs:
       key: 'pnpm-lock.yaml'
       paths: ~/.local/share/pnpm/store
