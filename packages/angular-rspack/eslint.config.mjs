@@ -58,7 +58,7 @@ export default [
         {
           buildTargets: ['build-base'],
           ignoredFiles: [
-            '{projectRoot}/.eslintrc.json',
+            '{projectRoot}/eslint.config.mjs',
             '{projectRoot}/vite.config.{js,ts,mjs,mts}',
           ],
           ignoredDependencies: [
