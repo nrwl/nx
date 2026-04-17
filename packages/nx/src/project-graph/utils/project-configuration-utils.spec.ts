@@ -278,7 +278,7 @@ describe('project-configuration-utils', () => {
     // owner and rebuilds the array. Sentinels inserted against the
     // specified-plugin merge now live in an array that's been
     // discarded — the follow-up
-    //   nodesManager.registerSubstitutors(intermediateDefaultRootMap)
+    //   nodesManager.registerNameRefs(intermediateDefaultRootMap)
     // call after the intermediate apply rebinds them to the merged
     // array. Without it, the later rename would leave an unresolved
     // sentinel in the first slot (the one originating from specified).

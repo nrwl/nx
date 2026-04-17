@@ -286,8 +286,8 @@ export class ProjectNodesManager {
   private nameSubstitutionManager: ProjectNameInNodePropsManager;
 
   constructor() {
-    // Pass a lazy accessor so the substitution manager always sees
-    // the current nameMap without manual synchronization.
+    // Pass a lazy accessor so the substitution manager always sees the
+    // current nameMap without manual synchronization.
     this.nameSubstitutionManager = new ProjectNameInNodePropsManager(
       () => this.nameMap
     );
@@ -351,7 +351,7 @@ export class ProjectNodesManager {
    * this again with the manager's rootMap to rebind sentinel parents
    * onto the final merged arrays.
    */
-  registerSubstitutors(
+  registerNameRefs(
     pluginResultProjects?: Record<
       string,
       Omit<ProjectConfiguration, 'root'> & Partial<ProjectConfiguration>
@@ -365,7 +365,7 @@ export class ProjectNodesManager {
         scoped[root] = mergedRootMap[root];
       }
     }
-    this.nameSubstitutionManager.registerSubstitutorsForNodeResults(scoped);
+    this.nameSubstitutionManager.registerNameRefs(scoped);
   }
 
   /**

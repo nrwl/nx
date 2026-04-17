@@ -680,25 +680,9 @@ Spread is resolved at these levels of the target configuration:
 | `configurations[x]`                                | `"configurations": { "prod": { "...": true, "sourceMap": false } }`         |
 | `configurations[x][y]`                             | `"configurations": { "prod": { "env": { "MY_VAR": "val", "...": true } } }` |
 
-`options[x]` and `configurations[x][y]` are equivalent depths — both are the innermost level the merge pipeline processes. The spread token has no effect nested inside those values (for example, `options.webpack.plugins: { "...": true }` is ignored because Nx treats `options.webpack` as an opaque value that fully replaces the base).
-
-#### Placing `"..."` at the end of a target
-
-Placing `"..."` at the end of a target object switches the merge to "add-only" mode: properties defined before `"..."` can be overridden by the base, so only keys the base does not define survive from your configuration.
-
-```json
-// project.json
-{
-  "targets": {
-    "build": {
-      "dependsOn": ["lint"],
-      "...": true
-    }
-  }
-}
-```
-
-If the inferred target already defines `dependsOn`, the inferred value wins. If it does not, `["lint"]` is used. This lets you add new target properties without accidentally overwriting values a plugin carefully computed.
+{% aside type="caution" title="Spread does not apply to deeply nested options" %}
+`options[x]` and `configurations[x][y]` are the innermost levels the merge pipeline processes. Inside those values Nx treats the result as opaque and fully replaces the base, so a spread token nested deeper has no effect — for example, `options.webpack.plugins: { "...": true }` is ignored because Nx does not look inside `options.webpack`.
+{% /aside %}
 
 ### Target metadata
 

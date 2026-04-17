@@ -6,54 +6,47 @@ import { splitTargetFromConfigurations } from '../../../utils/split-target';
  * Inline sentinel placed in `inputs` / `dependsOn` slots to represent a
  * pending project-name reference.
  *
- * - {@link RootRef} carries the *root* of the referenced project. The final
- *   pass resolves it by looking up the current name at that root.
- * - {@link UsageRef} carries the *name as written* by the plugin. It exists
- *   when the referenced project wasn't in the nameMap at registration
- *   time (forward reference). When the name is later identified, the
- *   sentinel is mutated in place into a {@link RootRef} — because
- *   spread-merges share object identity, a single mutation updates every
- *   copy.
+ * - {@link RootRef} carries the *root* of the referenced project. The
+ *   final pass resolves it by looking up the current name at that root.
+ * - {@link UsageRef} carries the *name as written* by the plugin. It
+ *   exists when the referenced project wasn't in the nameMap at
+ *   registration time (forward reference). When the name is later
+ *   identified, the sentinel's prototype is swapped to {@link RootRef}
+ *   in place — because spread-merges share object identity, a single
+ *   mutation updates every copy.
  *
  * `parent` is a back-reference to the immediate container holding the
  * sentinel: either the wrapping input/dependsOn element object (key
  * form) or the inner projects array (array form). For object parents,
  * `key` identifies the slot; for array parents, the slot is found by
- * identity via `indexOf`.
+ * identity walking the array.
  *
  * `targetPart` is only set for dependsOn string-form entries
  * (`proj:target`) so the final pass can reconstruct the `name:target`
  * string.
  */
-interface NameRefBase {
-  value: string;
-  parent: unknown;
-  key?: string;
-  targetPart?: string;
+export abstract class NameRef {
+  constructor(
+    public value: string,
+    public parent: unknown,
+    public key: string | undefined,
+    public targetPart: string | undefined
+  ) {}
 }
-export interface RootRef extends NameRefBase {
-  __type: 'root';
-}
-export interface UsageRef extends NameRefBase {
-  __type: 'usage';
-}
-export type NameRef = RootRef | UsageRef;
+
+export class RootRef extends NameRef {}
+export class UsageRef extends NameRef {}
 
 export function isNameRef(value: unknown): value is NameRef {
-  if (typeof value !== 'object' || value === null) return false;
-  const type = (value as { __type?: unknown }).__type;
-  return (
-    (type === 'root' || type === 'usage') &&
-    typeof (value as { value?: unknown }).value === 'string'
-  );
+  return value instanceof NameRef;
 }
 
 export function isRootRef(value: unknown): value is RootRef {
-  return isNameRef(value) && value.__type === 'root';
+  return value instanceof RootRef;
 }
 
 export function isUsageRef(value: unknown): value is UsageRef {
-  return isNameRef(value) && value.__type === 'usage';
+  return value instanceof UsageRef;
 }
 
 /**
@@ -73,21 +66,18 @@ export function isUsageRef(value: unknown): value is UsageRef {
  * reference in place with a sentinel object. Because arrays get
  * spread-merged by pushing element *references*, the sentinel objects
  * retain identity through any downstream merges. A flat registry holds
- * weak references to every sentinel, and the final pass walks the
- * registry, writing the current name back through each sentinel's parent
- * back-reference.
+ * every sentinel, and the final pass walks the registry, writing the
+ * current name back through each sentinel's parent back-reference.
  *
- * Orphaned sentinels (from plugin results whose arrays were discarded by
- * a later full-replace merge) are cleaned up automatically via
- * `FinalizationRegistry` once the owning array is garbage collected.
+ * Orphaned sentinels (from plugin results whose arrays were discarded
+ * by a later full-replace merge) still appear in the registry; the
+ * final pass writes into the discarded arrays harmlessly, and the
+ * whole registry is dropped at the end of {@link applySubstitutions}.
  */
 export class ProjectNameInNodePropsManager {
   private getNameMap: () => Record<string, ProjectConfiguration>;
-  private allRefs = new Set<WeakRef<NameRef>>();
-  private pendingByName = new Map<string, Set<WeakRef<NameRef>>>();
-  private finalizer = new FinalizationRegistry<WeakRef<NameRef>>((weak) => {
-    this.allRefs.delete(weak);
-  });
+  private allRefs = new Set<RootRef | UsageRef>();
+  private pendingByName = new Map<string, Set<RootRef | UsageRef>>();
 
   constructor(getNameMap?: () => Record<string, ProjectConfiguration>) {
     this.getNameMap = getNameMap ?? (() => ({}));
@@ -101,7 +91,7 @@ export class ProjectNameInNodePropsManager {
    * identified (via {@link identifyProjectWithRoot}) so that same-batch
    * forward references can resolve eagerly to root refs.
    */
-  registerSubstitutorsForNodeResults(
+  registerNameRefs(
     pluginResultProjects?: Record<
       string,
       Omit<ProjectConfiguration, 'root'> & Partial<ProjectConfiguration>
@@ -251,24 +241,22 @@ export class ProjectNameInNodePropsManager {
     parent: unknown,
     key: string | undefined,
     targetPart?: string
-  ): NameRef {
+  ): RootRef | UsageRef {
     const referencedRoot = this.getNameMap()[referencedName]?.root;
-    const ref: NameRef =
+    const ref: RootRef | UsageRef =
       referencedRoot !== undefined
-        ? { __type: 'root', value: referencedRoot, parent, key, targetPart }
-        : { __type: 'usage', value: referencedName, parent, key, targetPart };
+        ? new RootRef(referencedRoot, parent, key, targetPart)
+        : new UsageRef(referencedName, parent, key, targetPart);
 
-    const weak = new WeakRef(ref);
-    this.allRefs.add(weak);
-    this.finalizer.register(ref, weak);
+    this.allRefs.add(ref);
 
-    if (isUsageRef(ref)) {
+    if (ref instanceof UsageRef) {
       let set = this.pendingByName.get(referencedName);
       if (!set) {
         set = new Set();
         this.pendingByName.set(referencedName, set);
       }
-      set.add(weak);
+      set.add(ref);
     }
 
     return ref;
@@ -276,9 +264,9 @@ export class ProjectNameInNodePropsManager {
 
   /**
    * Records that a project with `name` now lives at `root`. Promotes any
-   * `usage`-form sentinels waiting for that name to `root` form by
-   * mutating them in place — object identity across spread-copies means
-   * one mutation updates every array the sentinel reached.
+   * waiting {@link UsageRef} sentinels to {@link RootRef} by swapping
+   * their prototype in place — object identity across spread-copies
+   * means one promotion updates every array the sentinel reached.
    *
    * Called by {@link ProjectNodesManager} whenever a project name
    * changes at a root (first identification or rename).
@@ -288,11 +276,9 @@ export class ProjectNameInNodePropsManager {
     if (!pending) return;
     this.pendingByName.delete(name);
 
-    for (const weak of pending) {
-      const ref = weak.deref();
-      if (!isUsageRef(ref)) continue;
-      // Mutate in place: narrow via cast since we're flipping the tag.
-      (ref as NameRef).__type = 'root';
+    for (const ref of pending) {
+      if (!(ref instanceof UsageRef)) continue;
+      Object.setPrototypeOf(ref, RootRef.prototype);
       ref.value = root;
     }
   }
@@ -309,15 +295,11 @@ export class ProjectNameInNodePropsManager {
       nameByRoot[root] = rootMap[root]?.name;
     }
 
-    for (const weak of this.allRefs) {
-      const ref = weak.deref();
-      if (!isNameRef(ref)) continue;
-
+    for (const ref of this.allRefs) {
       const finalName = this.resolveFinalName(ref, nameByRoot);
       if (finalName === undefined) {
         // Can't resolve (orphaned root ref or unknown usage ref): leave
-        // the owning slot alone and drop our back-reference.
-        ref.parent = undefined;
+        // the owning slot alone.
         continue;
       }
 
@@ -327,10 +309,6 @@ export class ProjectNameInNodePropsManager {
           : finalName;
 
       this.writeReplacement(ref, replacement);
-
-      // Drop the back-reference to break the sentinel ↔ array cycle so
-      // both can be collected if no one else holds them.
-      ref.parent = undefined;
     }
 
     this.allRefs.clear();
@@ -338,10 +316,10 @@ export class ProjectNameInNodePropsManager {
   }
 
   private resolveFinalName(
-    ref: NameRef,
+    ref: RootRef | UsageRef,
     nameByRoot: Record<string, string | undefined>
   ): string | undefined {
-    if (isRootRef(ref)) {
+    if (ref instanceof RootRef) {
       return nameByRoot[ref.value];
     }
     // Unpromoted forward reference — best-effort name lookup, then fall

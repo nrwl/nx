@@ -159,14 +159,14 @@ describe('ProjectNameInNodePropsManager', () => {
 
     it('should handle empty plugin results without errors', () => {
       const manager = createManager();
-      manager.registerSubstitutorsForNodeResults({});
+      manager.registerNameRefs({});
       manager.applySubstitutions({});
       // No error should be thrown
     });
 
     it('should handle undefined plugin results', () => {
       const manager = createManager();
-      manager.registerSubstitutorsForNodeResults(undefined);
+      manager.registerNameRefs(undefined);
       // No error should be thrown
     });
   });
@@ -189,7 +189,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const pluginResultProjects = createPluginResult([projectA, projectB]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
 
       // Simulate project B's name being changed
       renameProject(manager, 'libs/b', 'project-b-renamed');
@@ -227,7 +227,7 @@ describe('ProjectNameInNodePropsManager', () => {
       ]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
 
       // Simulate both projects being renamed
       renameProject(manager, 'libs/b', 'new-b');
@@ -259,7 +259,7 @@ describe('ProjectNameInNodePropsManager', () => {
 
       const initialResult = createPluginResult([projectAInitial]);
       identifyProjects(manager, initialResult);
-      manager.registerSubstitutorsForNodeResults(initialResult);
+      manager.registerNameRefs(initialResult);
 
       const projectAUpdated = createProject('project-a', 'libs/a', {
         targets: {
@@ -269,7 +269,7 @@ describe('ProjectNameInNodePropsManager', () => {
 
       const updatedResult = createPluginResult([projectAUpdated]);
       identifyProjects(manager, updatedResult);
-      manager.registerSubstitutorsForNodeResults(updatedResult);
+      manager.registerNameRefs(updatedResult);
       renameProject(manager, 'libs/c', 'renamed-c');
 
       const rootMap = createRootMap([
@@ -300,7 +300,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const pluginResultProjects = createPluginResult([projectA]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
 
       // Even if we mark this dirty, 'self' should not be substituted
       renameProject(manager, 'libs/a', 'renamed-a');
@@ -327,7 +327,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const pluginResultProjects = createPluginResult([projectA]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
       renameProject(manager, 'libs/a', 'renamed-a');
 
       const rootMap = createRootMap([
@@ -358,7 +358,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const pluginResultProjects = createPluginResult([projectA, projectB]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
       renameProject(manager, 'libs/b', 'project-b-renamed');
 
       const rootMap = createRootMap([
@@ -392,7 +392,7 @@ describe('ProjectNameInNodePropsManager', () => {
       ]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
       renameProject(manager, 'libs/b', 'new-b');
       renameProject(manager, 'libs/c', 'new-c');
 
@@ -422,7 +422,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const pluginResultProjects = createPluginResult([projectA]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
       renameProject(manager, 'libs/a', 'renamed-a');
 
       const rootMap = createRootMap([
@@ -446,7 +446,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const pluginResultProjects = createPluginResult([projectA]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
       renameProject(manager, 'libs/a', 'renamed-a');
 
       const rootMap = createRootMap([
@@ -470,7 +470,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const pluginResultProjects = createPluginResult([projectA]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
       renameProject(manager, 'libs/a', 'renamed-a');
 
       const rootMap = createRootMap([
@@ -496,7 +496,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const pluginResultProjects = createPluginResult([projectA, projectB]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
       renameProject(manager, 'libs/b', 'new-b');
 
       const rootMap = createRootMap([
@@ -525,7 +525,7 @@ describe('ProjectNameInNodePropsManager', () => {
 
       const initialResult = createPluginResult([projectAInitial]);
       identifyProjects(manager, initialResult);
-      manager.registerSubstitutorsForNodeResults(initialResult);
+      manager.registerNameRefs(initialResult);
 
       const projectAUpdated = createProject('project-a', 'libs/a', {
         targets: {
@@ -535,7 +535,7 @@ describe('ProjectNameInNodePropsManager', () => {
 
       const updatedResult = createPluginResult([projectAUpdated]);
       identifyProjects(manager, updatedResult);
-      manager.registerSubstitutorsForNodeResults(updatedResult);
+      manager.registerNameRefs(updatedResult);
       renameProject(manager, 'libs/c', 'renamed-c');
 
       const rootMap = createRootMap([
@@ -572,7 +572,7 @@ describe('ProjectNameInNodePropsManager', () => {
 
       const globResult = createPluginResult([projectA, projectB]);
       identifyProjects(manager, globResult);
-      manager.registerSubstitutorsForNodeResults(globResult);
+      manager.registerNameRefs(globResult);
       renameProject(manager, 'libs/b', 'renamed-b');
 
       const expandedTargets = {
@@ -610,7 +610,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const pluginResultProjects = createPluginResult([projectA, projectB]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
       renameProject(manager, 'libs/b', 'project-b-renamed');
 
       const rootMap = createRootMap([
@@ -639,7 +639,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const pluginResultProjects = createPluginResult([projectA]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
       renameProject(manager, 'libs/a', 'renamed-a');
 
       const rootMap = createRootMap([
@@ -665,7 +665,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const pluginResultProjects = createPluginResult([projectA]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
       renameProject(manager, 'libs/a', 'renamed-a');
 
       const rootMap = createRootMap([
@@ -702,7 +702,7 @@ describe('ProjectNameInNodePropsManager', () => {
       ]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
       renameProject(manager, 'libs/b', 'new-b');
       renameProject(manager, 'libs/c', 'new-c');
 
@@ -735,9 +735,9 @@ describe('ProjectNameInNodePropsManager', () => {
       const projBResult = createPluginResult([projB]);
 
       identifyProjects(manager, projAResult);
-      manager.registerSubstitutorsForNodeResults(projAResult);
+      manager.registerNameRefs(projAResult);
       identifyProjects(manager, projBResult);
-      manager.registerSubstitutorsForNodeResults(projBResult);
+      manager.registerNameRefs(projBResult);
       renameProject(manager, 'proj-b', 'project-b-renamed');
 
       const rootMap = createRootMap([
@@ -772,7 +772,7 @@ describe('ProjectNameInNodePropsManager', () => {
 
       const quotedResult = createPluginResult([scopedPkg, projectA]);
       identifyProjects(manager, quotedResult);
-      manager.registerSubstitutorsForNodeResults(quotedResult);
+      manager.registerNameRefs(quotedResult);
       renameProject(manager, 'libs/scoped', 'new-pkg');
 
       const rootMap = createRootMap([
@@ -804,7 +804,7 @@ describe('ProjectNameInNodePropsManager', () => {
 
       const colonResult = createPluginResult([projectA, projectB]);
       identifyProjects(manager, colonResult);
-      manager.registerSubstitutorsForNodeResults(colonResult);
+      manager.registerNameRefs(colonResult);
       renameProject(manager, 'libs/b', '@scope:new-b');
 
       const rootMap = createRootMap([
@@ -839,7 +839,7 @@ describe('ProjectNameInNodePropsManager', () => {
 
       const result = createPluginResult([projectAB, projectOwner]);
       identifyProjects(manager, result);
-      manager.registerSubstitutorsForNodeResults(result);
+      manager.registerNameRefs(result);
       renameProject(manager, 'libs/ab', 'new-ab');
 
       const rootMap = createRootMap([
@@ -875,7 +875,7 @@ describe('ProjectNameInNodePropsManager', () => {
 
       const colonLeadingResult = createPluginResult([colonPkg, projectA]);
       identifyProjects(manager, colonLeadingResult);
-      manager.registerSubstitutorsForNodeResults(colonLeadingResult);
+      manager.registerNameRefs(colonLeadingResult);
       renameProject(manager, 'libs/pkg', 'renamed-pkg');
 
       const rootMap = createRootMap([
@@ -910,7 +910,7 @@ describe('ProjectNameInNodePropsManager', () => {
 
       const globStringResult = createPluginResult([projectB, projectA]);
       identifyProjects(manager, globStringResult);
-      manager.registerSubstitutorsForNodeResults(globStringResult);
+      manager.registerNameRefs(globStringResult);
       renameProject(manager, 'libs/b', 'renamed-b');
 
       const expandedTargets = {
@@ -963,9 +963,9 @@ describe('ProjectNameInNodePropsManager', () => {
       ]);
 
       identifyProjects(manager, projAResult);
-      manager.registerSubstitutorsForNodeResults(projAResult);
+      manager.registerNameRefs(projAResult);
       identifyProjects(manager, projBResult);
-      manager.registerSubstitutorsForNodeResults(projBResult);
+      manager.registerNameRefs(projBResult);
       renameProject(manager, 'proj-b', 'project-b-renamed');
       manager.applySubstitutions(projectRootMap);
 
@@ -988,7 +988,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const firstPluginResult = createPluginResult([projectA, projectB]);
 
       identifyProjects(manager, firstPluginResult);
-      manager.registerSubstitutorsForNodeResults(firstPluginResult);
+      manager.registerNameRefs(firstPluginResult);
 
       // Second plugin creates projects C and D, where C references D
       const projectC = createProject('project-c', 'libs/c', {
@@ -1001,7 +1001,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const secondPluginResult = createPluginResult([projectC, projectD]);
 
       identifyProjects(manager, secondPluginResult);
-      manager.registerSubstitutorsForNodeResults(secondPluginResult);
+      manager.registerNameRefs(secondPluginResult);
 
       // Mark both B and D as dirty
       renameProject(manager, 'libs/b', 'renamed-b');
@@ -1028,7 +1028,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const projectB = createProject('project-b', 'libs/b');
       const firstPluginResult = createPluginResult([projectB]);
       identifyProjects(manager, firstPluginResult);
-      manager.registerSubstitutorsForNodeResults(firstPluginResult);
+      manager.registerNameRefs(firstPluginResult);
 
       // Second plugin creates project A that references B (which is in merged configs)
       const projectA = createProject('project-a', 'libs/a', {
@@ -1039,7 +1039,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const secondPluginResult = createPluginResult([projectA]);
 
       identifyProjects(manager, secondPluginResult);
-      manager.registerSubstitutorsForNodeResults(secondPluginResult);
+      manager.registerNameRefs(secondPluginResult);
 
       // Mark B as dirty
       renameProject(manager, 'libs/b', 'renamed-b');
@@ -1075,12 +1075,12 @@ describe('ProjectNameInNodePropsManager', () => {
       // First call
       const firstResult = createPluginResult([projectA, sharedLib]);
       identifyProjects(manager, firstResult);
-      manager.registerSubstitutorsForNodeResults(firstResult);
+      manager.registerNameRefs(firstResult);
 
       // Second call
       const secondResult = createPluginResult([projectB]);
       identifyProjects(manager, secondResult);
-      manager.registerSubstitutorsForNodeResults(secondResult);
+      manager.registerNameRefs(secondResult);
 
       // Rename shared-lib
       renameProject(manager, 'libs/shared', 'renamed-shared');
@@ -1136,7 +1136,7 @@ describe('ProjectNameInNodePropsManager', () => {
       ]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
 
       // Rename all referenced projects
       renameProject(manager, 'libs/b', 'new-b');
@@ -1183,7 +1183,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const projectB = createProject('project-b-original', 'libs/b');
       const renameResult1 = createPluginResult([projectA, projectB]);
       identifyProjects(manager, renameResult1);
-      manager.registerSubstitutorsForNodeResults(renameResult1);
+      manager.registerNameRefs(renameResult1);
 
       // Plugin 2: renames project-b to intermediate and project-c references it
       const projectBIntermediate = createProject(
@@ -1200,7 +1200,7 @@ describe('ProjectNameInNodePropsManager', () => {
         projectC,
       ]);
       identifyProjects(manager, renameResult2);
-      manager.registerSubstitutorsForNodeResults(renameResult2);
+      manager.registerNameRefs(renameResult2);
 
       // project-b-original -> project-b-intermediate -> project-b-final
       renameProject(manager, 'libs/b', 'project-b-intermediate');
@@ -1234,7 +1234,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const pluginResultProjects = createPluginResult([projectA, projectB]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
 
       // Rename both projects
       renameProject(manager, 'libs/a', 'renamed-a');
@@ -1272,7 +1272,7 @@ describe('ProjectNameInNodePropsManager', () => {
 
       const pluginResultProjects = createPluginResult(projects);
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
 
       // Mark all as dirty
       for (let i = 0; i < projectCount; i++) {
@@ -1315,7 +1315,7 @@ describe('ProjectNameInNodePropsManager', () => {
       ]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
 
       // Only rename B — C stays the same
       renameProject(manager, 'libs/b', 'renamed-b');
@@ -1345,7 +1345,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const pluginResultProjects = createPluginResult([projectA]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
       renameProject(manager, 'libs/a', 'renamed-a');
 
       const rootMap = createRootMap([{ name: 'renamed-a', root: 'libs/a' }]);
@@ -1369,7 +1369,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const pluginResultProjects = createPluginResult([projectA]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
       renameProject(manager, 'libs/a', 'renamed-a');
 
       const rootMap = createRootMap([
@@ -1394,7 +1394,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const malformedResult = createPluginResult([projectA, projectB]);
       identifyProjects(manager, malformedResult);
       expect(() =>
-        manager.registerSubstitutorsForNodeResults(malformedResult)
+        manager.registerNameRefs(malformedResult)
       ).not.toThrow();
 
       renameProject(manager, 'libs/b', 'renamed-b');
@@ -1428,7 +1428,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const pluginResultProjects = createPluginResult([projectA, projectB]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
       renameProject(manager, 'libs/b', 'renamed-b');
 
       const rootMap = createRootMap([
@@ -1468,7 +1468,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const pluginResultProjects = createPluginResult([projectA, projectB]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
       renameProject(manager, 'libs/b', 'renamed-b');
 
       const rootMap = createRootMap([
@@ -1500,7 +1500,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const pluginResultProjects = createPluginResult([projectA]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
       renameProject(manager, 'libs/a', 'renamed-a');
 
       const rootMap = createRootMap([
@@ -1526,7 +1526,7 @@ describe('ProjectNameInNodePropsManager', () => {
       // This should not throw, since the referenced project doesn't exist
       // No substitutor will be registered for it
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
 
       const rootMap = createRootMap([
         { name: 'project-a', root: 'libs/a', targets: projectA.targets },
@@ -1553,7 +1553,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const pluginResultProjects = createPluginResult([projectA]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
       renameProject(manager, 'libs/a', 'renamed-a');
 
       const rootMap = createRootMap([
@@ -1578,7 +1578,7 @@ describe('ProjectNameInNodePropsManager', () => {
       );
       const existingResult = createPluginResult([existingProject]);
       identifyProjects(manager, existingResult);
-      manager.registerSubstitutorsForNodeResults(existingResult);
+      manager.registerNameRefs(existingResult);
 
       // Plugin 2: Project A references existing-project (from a different plugin result)
       const projectA = createProject('project-a', 'libs/a', {
@@ -1588,7 +1588,7 @@ describe('ProjectNameInNodePropsManager', () => {
       });
       const projectAResult = createPluginResult([projectA]);
       identifyProjects(manager, projectAResult);
-      manager.registerSubstitutorsForNodeResults(projectAResult);
+      manager.registerNameRefs(projectAResult);
 
       renameProject(manager, 'libs/existing', 'renamed-existing');
 
@@ -1620,7 +1620,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const pluginResultProjects = createPluginResult([projectA, projectBNew]);
 
       identifyProjects(manager, pluginResultProjects);
-      manager.registerSubstitutorsForNodeResults(pluginResultProjects);
+      manager.registerNameRefs(pluginResultProjects);
       renameProject(manager, 'libs/b-new', 'renamed-b');
 
       const rootMap = createRootMap([
@@ -1669,9 +1669,9 @@ describe('ProjectNameInNodePropsManager', () => {
       const plugin2Result = createPluginResult([renamedA, newA, projectC]);
 
       identifyProjects(manager, plugin1Result);
-      manager.registerSubstitutorsForNodeResults(plugin1Result);
+      manager.registerNameRefs(plugin1Result);
       identifyProjects(manager, plugin2Result);
-      manager.registerSubstitutorsForNodeResults(plugin2Result);
+      manager.registerNameRefs(plugin2Result);
 
       // The merge phase detected that libs/a changed from "A" to "B"
       renameProject(manager, 'libs/a', 'B');
@@ -1708,9 +1708,9 @@ describe('ProjectNameInNodePropsManager', () => {
       const plugin2Result = createPluginResult([renamedA, newA, projectC]);
 
       identifyProjects(manager, plugin1Result);
-      manager.registerSubstitutorsForNodeResults(plugin1Result);
+      manager.registerNameRefs(plugin1Result);
       identifyProjects(manager, plugin2Result);
-      manager.registerSubstitutorsForNodeResults(plugin2Result);
+      manager.registerNameRefs(plugin2Result);
 
       renameProject(manager, 'libs/a', 'B');
 
@@ -1751,9 +1751,9 @@ describe('ProjectNameInNodePropsManager', () => {
       ]);
 
       identifyProjects(manager, plugin1Result);
-      manager.registerSubstitutorsForNodeResults(plugin1Result);
+      manager.registerNameRefs(plugin1Result);
       identifyProjects(manager, plugin2Result);
-      manager.registerSubstitutorsForNodeResults(plugin2Result);
+      manager.registerNameRefs(plugin2Result);
 
       renameProject(manager, 'libs/a', 'B');
 
@@ -1811,12 +1811,12 @@ describe('ProjectNameInNodePropsManager', () => {
       // First plugin result: root project with name "nx"
       const plugin1Result = createPluginResult([rootProject]);
       identifyProjects(manager, plugin1Result);
-      manager.registerSubstitutorsForNodeResults(plugin1Result);
+      manager.registerNameRefs(plugin1Result);
 
       // Second plugin result: devkit with the colon target
       const plugin2Result = createPluginResult([nxProject, devkit]);
       identifyProjects(manager, plugin2Result);
-      manager.registerSubstitutorsForNodeResults(plugin2Result);
+      manager.registerNameRefs(plugin2Result);
 
       // Root project renamed from "nx" to "@nx/nx-source"
       renameProject(manager, 'root-dir', '@nx/nx-source');
@@ -1922,13 +1922,13 @@ describe('ProjectNameInNodePropsManager', () => {
         'libs/java/split-client',
         ':libs:java:split-client'
       );
-      manager.registerSubstitutorsForNodeResults(plugin1Result);
+      manager.registerNameRefs(plugin1Result);
 
       // Plugin 2 renames all projects — identify new names, then register
       renameProject(manager, 'apps/ovm-compactor', 'ovm-compactor');
       renameProject(manager, 'libs/java/kafka-stream', 'kafka-stream');
       renameProject(manager, 'libs/java/split-client', 'split-client');
-      manager.registerSubstitutorsForNodeResults(plugin2Result);
+      manager.registerNameRefs(plugin2Result);
 
       const rootMap = createRootMap([
         {
@@ -1973,7 +1973,7 @@ describe('ProjectNameInNodePropsManager', () => {
 
       const crossProjectResult = createPluginResult([projectA, projectB]);
       identifyProjects(manager, crossProjectResult);
-      manager.registerSubstitutorsForNodeResults(crossProjectResult);
+      manager.registerNameRefs(crossProjectResult);
       renameProject(manager, 'libs/b', 'renamed-b');
 
       const rootMap = createRootMap([
@@ -2009,7 +2009,7 @@ describe('ProjectNameInNodePropsManager', () => {
         }),
       ]);
       identifyProjects(manager, basePluginResult);
-      manager.registerSubstitutorsForNodeResults(basePluginResult);
+      manager.registerNameRefs(basePluginResult);
 
       // Later plugin contributes a dependsOn with a leading spread followed
       // by a cross-project ref. The cross-project ref is a shared element
@@ -2031,7 +2031,7 @@ describe('ProjectNameInNodePropsManager', () => {
 
       const spreadPluginResult = createPluginResult([projectA, projectB]);
       identifyProjects(manager, spreadPluginResult);
-      manager.registerSubstitutorsForNodeResults(spreadPluginResult);
+      manager.registerNameRefs(spreadPluginResult);
 
       renameProject(manager, 'libs/b', 'project-b-renamed');
 
@@ -2088,7 +2088,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const projectB = createProject('project-b', 'libs/b');
       const baseResult = createPluginResult([baseProjectA, projectB]);
       identifyProjects(manager, baseResult);
-      manager.registerSubstitutorsForNodeResults(baseResult);
+      manager.registerNameRefs(baseResult);
 
       // The sentinel is now inline in baseProjectA's dependsOn array —
       // element 0 is no longer a string; it is a NameRef whose parent
@@ -2110,7 +2110,7 @@ describe('ProjectNameInNodePropsManager', () => {
       // Re-registering against the merged form must notice the existing
       // sentinel and rebind its parent to `mergedDependsOn`.
       identifyProjects(manager, mergedResult);
-      manager.registerSubstitutorsForNodeResults(mergedResult);
+      manager.registerNameRefs(mergedResult);
 
       renameProject(manager, 'libs/b', 'renamed-b');
 
@@ -2151,7 +2151,7 @@ describe('ProjectNameInNodePropsManager', () => {
       const projectB = createProject('project-b', 'libs/b');
       const baseResult = createPluginResult([projectA, projectB]);
       identifyProjects(manager, baseResult);
-      manager.registerSubstitutorsForNodeResults(baseResult);
+      manager.registerNameRefs(baseResult);
 
       // After registration, dependsOn[0] is a sentinel pointing at
       // libs/b. Simulate `getMergeValueResult` for a later
@@ -2167,7 +2167,7 @@ describe('ProjectNameInNodePropsManager', () => {
       } as unknown as Record<string, any>;
 
       identifyProjects(manager, createPluginResult([mergedProjectA]));
-      manager.registerSubstitutorsForNodeResults(
+      manager.registerNameRefs(
         createPluginResult([mergedProjectA])
       );
 

@@ -41,6 +41,43 @@ export function forEachSourceMapKeyForArray(
 }
 
 /**
+ * Reads the source-map entry for a single item of an array recorded under
+ * `arrayKey`. Falls back to the array's own top-level entry when no
+ * per-index entry exists (e.g. for arrays seeded by an earlier merge
+ * layer that only wrote the parent key). Returns `undefined` when neither
+ * is recorded.
+ *
+ * @param sourceMap The source map to read from.
+ * @param arrayKey The dot-delimited path of the array itself (e.g. `"targets.build.inputs"`).
+ * @param itemIndex The numeric index of the item.
+ */
+export function readArrayItemSourceInfo(
+  sourceMap: Record<string, SourceInformation>,
+  arrayKey: string,
+  itemIndex: number
+): SourceInformation | undefined {
+  return sourceMap[`${arrayKey}.${itemIndex}`] ?? sourceMap[arrayKey];
+}
+
+/**
+ * Reads the source-map entry for a single property of an object recorded
+ * under `objectKey`. Falls back to the object's own top-level entry when
+ * no per-property entry exists. Returns `undefined` when neither is
+ * recorded.
+ *
+ * @param sourceMap The source map to read from.
+ * @param objectKey The dot-delimited path of the object itself.
+ * @param propertyKey The property name to look up.
+ */
+export function readObjectPropertySourceInfo(
+  sourceMap: Record<string, SourceInformation>,
+  objectKey: string,
+  propertyKey: string
+): SourceInformation | undefined {
+  return sourceMap[`${objectKey}.${propertyKey}`] ?? sourceMap[objectKey];
+}
+
+/**
  * Records a single source map entry. Prefer this over direct bracket
  * assignment to keep writes consistent with the rest of the source map API.
  */

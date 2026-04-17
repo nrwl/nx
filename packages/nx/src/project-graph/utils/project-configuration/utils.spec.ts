@@ -210,16 +210,89 @@ describe('getMergeValueResult - spread token behavior', () => {
         'package.json',
         'nx/package-json',
       ]);
-      // When spreading, source info is updated to the most recent layer that did the spreading
-      // The spread elements themselves get the source from afterLayer1's base source (target-defaults)
-      expect(sourceMap['inputs.1']).toEqual([
-        'target-defaults',
-        'nx/target-defaults',
-      ]);
+      // Spread items keep their *original* per-index attribution: 'a'
+      // came in via layer 1's spread of the pre-existing 'inputs'
+      // (attributed to the original plugin), and 'b' was added by the
+      // target-defaults layer. Layer 2 only authors 'c'.
+      expect(sourceMap['inputs.1']).toEqual(['original', 'plugin']);
       expect(sourceMap['inputs.2']).toEqual([
         'target-defaults',
         'nx/target-defaults',
       ]);
+    });
+
+    it('should preserve original per-index source info across chained array spreads', () => {
+      const sourceMap: Record<string, [string | null, string]> = {};
+      const sourceA: [string, string] = ['a.json', 'plugin-a'];
+      const sourceB: [string, string] = ['b.json', 'plugin-b'];
+      const sourceC: [string, string] = ['c.json', 'plugin-c'];
+
+      // Layer A: seeds [1, 2, 3]; every index attributed to A.
+      const afterA = getMergeValueResult<unknown[]>(undefined, [1, 2, 3], {
+        sourceMap,
+        key: 'arr',
+        sourceInformation: sourceA,
+      });
+      expect(afterA).toEqual([1, 2, 3]);
+      expect(sourceMap['arr.0']).toEqual(sourceA);
+      expect(sourceMap['arr.1']).toEqual(sourceA);
+      expect(sourceMap['arr.2']).toEqual(sourceA);
+
+      // Layer B: ['...', 4] → spread of A then 4; A's items keep A,
+      // 4 gets B.
+      const afterB = getMergeValueResult<unknown[]>(afterA, [NX_SPREAD_TOKEN, 4], {
+        sourceMap,
+        key: 'arr',
+        sourceInformation: sourceB,
+      });
+      expect(afterB).toEqual([1, 2, 3, 4]);
+      expect(sourceMap['arr.0']).toEqual(sourceA);
+      expect(sourceMap['arr.1']).toEqual(sourceA);
+      expect(sourceMap['arr.2']).toEqual(sourceA);
+      expect(sourceMap['arr.3']).toEqual(sourceB);
+
+      // Layer C: [0, '...'] → 0 then the full base spread. 0 gets C,
+      // the spread items keep their original sources (A for 1/2/3,
+      // B for 4) — *not* overwritten by C even though `arr.0=C` was
+      // just written before the spread loop reads base attribution.
+      const afterC = getMergeValueResult<unknown[]>(
+        afterB,
+        [0, NX_SPREAD_TOKEN],
+        {
+          sourceMap,
+          key: 'arr',
+          sourceInformation: sourceC,
+        }
+      );
+      expect(afterC).toEqual([0, 1, 2, 3, 4]);
+      expect(sourceMap['arr.0']).toEqual(sourceC);
+      expect(sourceMap['arr.1']).toEqual(sourceA);
+      expect(sourceMap['arr.2']).toEqual(sourceA);
+      expect(sourceMap['arr.3']).toEqual(sourceA);
+      expect(sourceMap['arr.4']).toEqual(sourceB);
+      expect(sourceMap['arr']).toEqual(sourceC);
+    });
+
+    it('should fall back to the parent-key source for base items without a per-index entry', () => {
+      const sourceMap: Record<string, [string | null, string]> = {
+        // Only the parent key has attribution; per-index entries
+        // weren't recorded by whatever populated the base.
+        arr: ['legacy.json', 'legacy-plugin'],
+      };
+      const result = getMergeValueResult<unknown[]>(
+        ['x', 'y'],
+        [NX_SPREAD_TOKEN, 'z'],
+        {
+          sourceMap,
+          key: 'arr',
+          sourceInformation: ['new.json', 'new-plugin'],
+        }
+      );
+
+      expect(result).toEqual(['x', 'y', 'z']);
+      expect(sourceMap['arr.0']).toEqual(['legacy.json', 'legacy-plugin']);
+      expect(sourceMap['arr.1']).toEqual(['legacy.json', 'legacy-plugin']);
+      expect(sourceMap['arr.2']).toEqual(['new.json', 'new-plugin']);
     });
 
     it('should track source information for object spreads', () => {

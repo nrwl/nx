@@ -12,7 +12,7 @@ import {
   getMergeValueResult,
   NX_SPREAD_TOKEN,
   uniqueKeysInObjects,
-} from '../project-configuration-utils/utils';
+} from './utils';
 
 export function deepClone<T>(obj: T): T {
   return structuredClone(obj);
@@ -301,7 +301,7 @@ export function mergeTargetConfigurations(
   const result: Partial<TargetConfiguration> = {};
   const mergeBase = isCompatible ? baseTargetProperties : {};
 
-  const keys = isCompatible
+  const keys: Iterable<string> = isCompatible
     ? uniqueKeysInObjects(baseTargetProperties, target)
     : Object.keys(target);
 

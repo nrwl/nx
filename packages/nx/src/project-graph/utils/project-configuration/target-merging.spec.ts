@@ -3,7 +3,7 @@ import {
   isCompatibleTarget,
   mergeTargetConfigurations,
 } from './target-merging';
-import { readTargetDefaultsForTarget } from '../project-configuration-utils/target-defaults';
+import { readTargetDefaultsForTarget } from './target-defaults';
 import type { SourceInformation } from './source-maps';
 
 describe('target merging', () => {

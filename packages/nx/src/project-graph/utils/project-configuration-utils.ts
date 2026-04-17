@@ -34,10 +34,10 @@ import type {
   SourceInformation,
 } from './project-configuration/source-maps';
 
-import { createTargetDefaultsResults } from './project-configuration-utils/target-defaults';
+import { createTargetDefaultsResults } from './project-configuration/target-defaults';
 
 export { mergeTargetConfigurations } from './project-configuration/target-merging';
-export { readTargetDefaultsForTarget } from './project-configuration-utils/target-defaults';
+export { readTargetDefaultsForTarget } from './project-configuration/target-defaults';
 
 export type ConfigurationResult = {
   /**
@@ -270,6 +270,74 @@ export type MergeError =
   | MultipleProjectsWithSameNameError
   | WorkspaceValidityError;
 
+type MergeFn = (
+  project: ProjectConfiguration,
+  sourceInfo: SourceInformation
+) => void;
+
+/**
+ * Runs a single plugin batch through two passes:
+ *
+ * 1. Every project node in every plugin result is handed to `mergeFn`,
+ *    which decides where it lands (the manager's rootMap, an
+ *    intermediate rootMap, etc.). Any failure is collected into
+ *    `errors`; processing keeps going. External nodes are accumulated
+ *    onto the shared `externalNodes` record.
+ * 2. After every project in the batch has been merged, name-reference
+ *    sentinels for the batch are registered against `nameRefRootMap` —
+ *    the rootMap the batch was merged into — so sentinels point at the
+ *    target objects that actually received the merges.
+ *
+ * The two passes can't be collapsed: a sentinel registered too early
+ * would point at the pre-merge object, and a later project in the same
+ * batch may still rename a project the sentinel refers to. Splitting
+ * the registration into a second pass also lets forward references
+ * inside the same batch resolve eagerly.
+ */
+function mergeCreateNodesResultBatch(
+  pluginResults: CreateNodesResultEntry[],
+  mergeFn: MergeFn,
+  nodesManager: ProjectNodesManager,
+  nameRefRootMap: Record<string, ProjectConfiguration>,
+  externalNodes: Record<string, ProjectGraphExternalNode>,
+  errors: MergeError[]
+): void {
+  for (const result of pluginResults) {
+    const [pluginName, file, nodes, pluginIndex] = result;
+    const { projects: projectNodes, externalNodes: pluginExternalNodes } =
+      nodes;
+    const sourceInfo: SourceInformation = [file, pluginName];
+
+    for (const root in projectNodes) {
+      if (!projectNodes[root]) continue;
+      const project = { root, ...projectNodes[root] };
+
+      try {
+        mergeFn(project, sourceInfo);
+      } catch (error) {
+        errors.push(
+          new MergeNodesError({ file, pluginName, error, pluginIndex })
+        );
+      }
+    }
+
+    Object.assign(externalNodes, pluginExternalNodes);
+  }
+
+  for (const result of pluginResults) {
+    const [pluginName, file, nodes, pluginIndex] = result;
+    const { projects: projectNodes } = nodes;
+
+    try {
+      nodesManager.registerNameRefs(projectNodes, nameRefRootMap);
+    } catch (error) {
+      errors.push(
+        new MergeNodesError({ file, pluginName, error, pluginIndex })
+      );
+    }
+  }
+}
+
 /**
  * Merges create nodes results into a single rootMap.
  *
@@ -296,11 +364,6 @@ export function mergeCreateNodesResults(
   // specified/TD attribution on fields the defaults don't touch.
   const defaultConfigurationSourceMaps: ConfigurationSourceMaps = {};
 
-  type MergeFn = (
-    project: ProjectConfiguration,
-    sourceInfo: SourceInformation
-  ) => void;
-
   const mergeToManager: MergeFn = (project, sourceInfo) =>
     nodesManager.mergeProjectNode(project, configurationSourceMaps, sourceInfo);
 
@@ -315,60 +378,25 @@ export function mergeCreateNodesResults(
     );
   };
 
-  const processBatch = (
-    pluginResults: CreateNodesResultEntry[],
-    mergeFn: MergeFn,
-    substitutorRootMap: Record<string, ProjectConfiguration>
-  ) => {
-    for (const result of pluginResults) {
-      const [pluginName, file, nodes, pluginIndex] = result;
-      const { projects: projectNodes, externalNodes: pluginExternalNodes } =
-        nodes;
-      const sourceInfo: SourceInformation = [file, pluginName];
-
-      for (const root in projectNodes) {
-        if (!projectNodes[root]) continue;
-        const project = { root, ...projectNodes[root] };
-
-        try {
-          mergeFn(project, sourceInfo);
-        } catch (error) {
-          errors.push(
-            new MergeNodesError({ file, pluginName, error, pluginIndex })
-          );
-        }
-      }
-
-      Object.assign(externalNodes, pluginExternalNodes);
-    }
-
-    // Substitutor registration runs after all projects in the batch are
-    // merged so forward references inside the same batch resolve. We
-    // pass the rootMap the batch was merged into so sentinels land on
-    // the objects that actually received the just-merged targets.
-    for (const result of pluginResults) {
-      const [pluginName, file, nodes, pluginIndex] = result;
-      const { projects: projectNodes } = nodes;
-
-      try {
-        nodesManager.registerSubstitutors(projectNodes, substitutorRootMap);
-      } catch (error) {
-        errors.push(
-          new MergeNodesError({ file, pluginName, error, pluginIndex })
-        );
-      }
-    }
-  };
-
   for (const pluginResults of specifiedResults) {
-    processBatch(pluginResults, mergeToManager, nodesManager.getRootMap());
+    mergeCreateNodesResultBatch(
+      pluginResults,
+      mergeToManager,
+      nodesManager,
+      nodesManager.getRootMap(),
+      externalNodes,
+      errors
+    );
   }
 
   for (const pluginResults of defaultResults) {
-    processBatch(
+    mergeCreateNodesResultBatch(
       pluginResults,
       mergeToIntermediate,
-      intermediateDefaultRootMap
+      nodesManager,
+      intermediateDefaultRootMap,
+      externalNodes,
+      errors
     );
   }
 
@@ -379,10 +407,13 @@ export function mergeCreateNodesResults(
   );
 
   if (targetDefaultsResults.length > 0) {
-    processBatch(
+    mergeCreateNodesResultBatch(
       targetDefaultsResults,
       mergeToManager,
-      nodesManager.getRootMap()
+      nodesManager,
+      nodesManager.getRootMap(),
+      externalNodes,
+      errors
     );
   }
 
@@ -412,7 +443,7 @@ export function mergeCreateNodesResults(
   // the final merged targets rebinds each encountered sentinel's
   // `parent` to the current array (see
   // ProjectNameInNodePropsManager#processInputs / processDependsOn).
-  nodesManager.registerSubstitutors(intermediateDefaultRootMap);
+  nodesManager.registerNameRefs(intermediateDefaultRootMap);
 
   // Overlay default-plugin attribution onto the main source maps.
   //
