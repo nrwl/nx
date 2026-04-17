@@ -383,9 +383,8 @@ export function runCreateWorkspace(
     command += ` --prefix=${prefix}`;
   }
 
-  let create;
   try {
-    create = execSync(`${command}${isVerbose() ? ' --verbose' : ''}`, {
+    const create = execSync(`${command}${isVerbose() ? ' --verbose' : ''}`, {
       cwd,
       stdio: 'pipe',
       env: {
@@ -394,7 +393,6 @@ export function runCreateWorkspace(
         ...getStrippedEnvironmentVariables(),
       },
       encoding: 'utf-8',
-      shell: process.platform === 'win32' ? true : '/bin/sh',
     });
 
     if (isVerbose()) {
@@ -407,9 +405,6 @@ export function runCreateWorkspace(
 
     return create;
   } catch (e) {
-    console.error('runCreateWorkspace failed. cwd:', cwd);
-    console.error('Env PATH:', process.env.PATH);
-    console.error('Stripped Env:', getStrippedEnvironmentVariables());
     logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
     throw e;
   }
