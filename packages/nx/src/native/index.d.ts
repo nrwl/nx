@@ -55,7 +55,9 @@ export declare class HashPlanInspector {
    * Like `inspect()` but returns structured `HashInputs` objects instead of flat strings.
    * Each `HashInstruction` is categorized into the appropriate bucket (files, runtime,
    * environment, depOutputs, external). TsConfiguration is resolved to the root tsconfig
-   * file path. ProjectConfiguration is skipped for now. Cwd is skipped as it's ambient.
+   * file path. JsonFileSet is resolved to the matched JSON file paths (field/excludeField
+   * filters only affect hashing, not which files are reported as inputs).
+   * ProjectConfiguration is skipped for now. Cwd is skipped as it's ambient.
    */
   inspectInputs(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, HashInputs>
 }
@@ -83,6 +85,11 @@ export declare class NxCache {
   cacheDirectory: string
   constructor(workspaceRoot: string, cachePath: string, dbConnection: ExternalObject<NxDbConnection>, linkTaskDetails?: boolean | undefined | null, maxCacheSize?: number | undefined | null)
   get(hash: string): CachedResult | null
+  /**
+   * Batch version of get() that fetches multiple cache entries in a single
+   * SQL query and reads terminal output files in parallel via Rayon.
+   */
+  getBatch(hashes: Array<string>): Array<CachedResult | undefined | null>
   put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): Array<string>
   applyRemoteCacheResults(hash: string, result: CachedResult, outputs?: Array<string> | undefined | null): void
   getTaskOutputsPath(hash: string): string
@@ -168,7 +175,15 @@ export declare class TaskDetails {
 
 export declare class TaskHasher {
   constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<ProjectFiles>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath?: string | undefined | null, options?: HasherOptions | undefined | null)
-  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>, cwd: string, collectTaskInputs?: boolean | undefined | null): NapiDashMap<string, HashDetails>
+  /**
+   * Hash each task's instructions using the env map keyed by `task.id`.
+   * Every task in `hash_plans` must have an entry in `per_task_envs` —
+   * a missing id surfaces as an error rather than silently hashing
+   * against an empty env. Callers that want to hash all tasks against
+   * the same env should build `per_task_envs` by keying that env under
+   * every task id.
+   */
+  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): NapiDashMap<string, HashDetails>
 }
 
 export declare class Watcher {
@@ -238,7 +253,7 @@ export interface DepsOutputsInput {
 
 /**
  * Detects which AI agent is running and returns its name.
- * Returns None if no agent is detected.
+ * Returns None if no agent is detected or when running inside the Nx daemon.
  * Filtering against supported agents should be done on the TypeScript side.
  */
 export declare function detectAiAgent(): string | null
@@ -311,10 +326,11 @@ export declare function getDefaultMaxCacheSize(cachePath: string): number
 export declare function getEventDimensions(): EventDimensions
 
 /**
- * Expands the given outputs into a list of existing files.
- * This is used when hashing outputs
+ * Batch version of get_files_for_outputs that processes multiple output
+ * entries in parallel using Rayon. Each entry is a list of output paths
+ * for a single task.
  */
-export declare function getFilesForOutputs(directory: string, entries: Array<string>): Array<string>
+export declare function getFilesForOutputsBatch(directory: string, entriesBatch: Array<Array<string>>): Array<Array<string>>
 
 /**
  * If `workspace_root` is inside a git worktree, returns the main repo root.
@@ -413,10 +429,21 @@ export declare function installNxConsoleForEditor(editor: SupportedEditor): Prom
 
 export const IS_WASM: boolean
 
-/** Detects if the current process is being run by an AI agent */
+/**
+ * Detects if the current process is being run by an AI agent.
+ * Always returns false when running inside the Nx daemon, since the daemon
+ * is a long-lived process that should not inherit AI agent behavior from
+ * the client that connected to it.
+ */
 export declare function isAiAgent(): boolean
 
 export declare function isEditorInstalled(editor: SupportedEditor): Promise<boolean>
+
+export interface JsonInput {
+  json: string
+  fields?: Array<string>
+  excludeFields?: Array<string>
+}
 
 export declare function logDebug(message: string): void
 

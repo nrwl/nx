@@ -2,6 +2,7 @@ import type { Serializable } from 'child_process';
 import type { Socket } from 'net';
 import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
+import { serialize } from '../../../daemon/socket-utils';
 import { MESSAGE_END_SEQ } from '../../../utils/consume-messages-from-socket';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import type {
@@ -136,6 +137,18 @@ type PluginMessageDefs = DefineMessages<{
           error: Error;
         };
   };
+
+  setWorkerEnv: {
+    payload: Record<string, string>;
+    result:
+      | {
+          success: true;
+        }
+      | {
+          success: false;
+          error: Error;
+        };
+  };
 }>;
 
 // =============================================================================
@@ -171,6 +184,7 @@ const MESSAGE_TYPES: ReadonlyArray<PluginWorkerMessage['type']> = [
   'createMetadata',
   'preTasksExecution',
   'postTasksExecution',
+  'setWorkerEnv',
 ];
 
 const RESULT_TYPES: ReadonlyArray<PluginWorkerResult['type']> = [
@@ -180,6 +194,7 @@ const RESULT_TYPES: ReadonlyArray<PluginWorkerResult['type']> = [
   'createMetadataResult',
   'preTasksExecutionResult',
   'postTasksExecutionResult',
+  'setWorkerEnvResult',
 ];
 
 export function isPluginWorkerMessage(
@@ -251,5 +266,6 @@ export function sendMessageOverSocket(
   socket: Socket,
   message: PluginWorkerMessage | PluginWorkerResult
 ): void {
-  socket.write(JSON.stringify(message) + MESSAGE_END_SEQ);
+  socket.write(serialize(message));
+  socket.write(MESSAGE_END_SEQ);
 }

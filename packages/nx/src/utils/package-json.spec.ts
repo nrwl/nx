@@ -1,4 +1,9 @@
+jest.mock('child_process');
+
 import { join } from 'path';
+import * as childProcess from 'child_process';
+import { mkdtempSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
 import { createTreeWithEmptyWorkspace } from '../generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from '../generators/tree';
 import { writeJson } from '../generators/utils/json';
@@ -6,6 +11,7 @@ import { readJsonFile } from './fileutils';
 import {
   buildTargetFromScript,
   getDependencyVersionFromPackageJson,
+  installPackageToTmp,
   PackageJson,
   readModulePackageJson,
   readTargetsFromPackageJson,
@@ -25,7 +31,61 @@ describe('buildTargetFromScript', () => {
   });
 });
 
+describe('installPackageToTmp', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('should always disable lifecycle scripts via environment variables', () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'nx-install-test-'));
+    const cleanup = jest.fn(() =>
+      rmSync(tempDir, { recursive: true, force: true })
+    );
+    jest.spyOn(pacakgeManager, 'createTempNpmDirectory').mockReturnValue({
+      dir: tempDir,
+      cleanup,
+    });
+    jest.spyOn(pacakgeManager, 'detectPackageManager').mockReturnValue('yarn');
+    jest
+      .spyOn(pacakgeManager, 'getPackageManagerVersion')
+      .mockReturnValue('4.0.0');
+    jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+      preInstall: 'yarn set version 4.0.0',
+      addDev: 'yarn add -D',
+      ignoreScriptsFlag: undefined,
+    } as any);
+    const execSyncSpy = jest
+      .spyOn(childProcess, 'execSync')
+      .mockReturnValue('' as any);
+
+    installPackageToTmp('nx', 'latest');
+
+    expect(execSyncSpy).toHaveBeenCalledTimes(2);
+    for (const [, options] of execSyncSpy.mock.calls) {
+      expect(options).toEqual(
+        expect.objectContaining({
+          env: expect.objectContaining({
+            YARN_ENABLE_SCRIPTS: 'false',
+          }),
+        })
+      );
+    }
+
+    cleanup();
+  });
+});
+
 describe('readTargetsFromPackageJson', () => {
+  beforeEach(() => {
+    jest
+      .spyOn(pacakgeManager, 'getPackageManagerCommand')
+      .mockReturnValue({ run: (script) => `npm run ${script}` } as any);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   const packageJson: PackageJson = {
     name: 'my-app',
     version: '0.0.0',
@@ -265,6 +325,33 @@ describe('readTargetsFromPackageJson', () => {
             "echo 2",
           ],
         },
+      }
+    `);
+  });
+
+  it('should override script target when nx target uses command shorthand', () => {
+    const result = readTargetsFromPackageJson(
+      {
+        name: 'my-other-app',
+        version: '',
+        scripts: {
+          build: 'echo 1',
+        },
+        nx: {
+          targets: {
+            build: {
+              command: 'echo 2',
+            },
+          },
+        },
+      },
+      {},
+      workspaceRoot,
+      '/root'
+    );
+    expect(result.build).toMatchInlineSnapshot(`
+      {
+        "command": "echo 2",
       }
     `);
   });

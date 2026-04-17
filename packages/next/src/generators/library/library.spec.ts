@@ -142,8 +142,8 @@ describe('next library', () => {
     expect(
       readJson(appTree, 'tsconfig.base.json').compilerOptions.paths
     ).toMatchObject({
-      '@proj/my-lib': ['my-lib/src/index.ts'],
-      '@proj/my-lib/server': ['my-lib/src/server.ts'],
+      '@proj/my-lib': ['./my-lib/src/index.ts'],
+      '@proj/my-lib/server': ['./my-lib/src/server.ts'],
     });
   });
 

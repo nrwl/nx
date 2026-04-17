@@ -84,6 +84,17 @@ describe('getRunner', () => {
     expect(tasksRunner).toEqual(nxCloudTasksRunnerShell);
   });
 
+  it('does not use cloud runner when NX_NO_CLOUD=true, even if a cloud token is set in env', () => {
+    const { tasksRunner } = withEnvironmentVariables(
+      {
+        NX_CLOUD_AUTH_TOKEN: 'xxx-xx-xxx',
+        NX_NO_CLOUD: 'true',
+      },
+      () => getRunner({}, {})
+    );
+    expect(tasksRunner).not.toEqual(nxCloudTasksRunnerShell);
+  });
+
   it('reads options from base properties if no runner options provided', () => {
     jest.mock(join(__dirname, './default-tasks-runner.ts'), () => mockRunner);
 

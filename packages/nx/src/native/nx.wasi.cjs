@@ -148,7 +148,6 @@ module.exports.copy = __napiModule.exports.copy
 module.exports.expandOutputs = __napiModule.exports.expandOutputs
 module.exports.findImports = __napiModule.exports.findImports
 module.exports.getBinaryTarget = __napiModule.exports.getBinaryTarget
-module.exports.getFilesForOutputs = __napiModule.exports.getFilesForOutputs
 module.exports.getTransformableOutputs = __napiModule.exports.getTransformableOutputs
 module.exports.hashArray = __napiModule.exports.hashArray
 module.exports.hashFile = __napiModule.exports.hashFile

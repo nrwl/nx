@@ -21,8 +21,6 @@ import { hashObject } from 'nx/src/hasher/file-hasher';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
-const pmc = getPackageManagerCommand();
-
 function readTargetsCache(
   cachePath: string
 ): Record<string, Record<string, TargetConfiguration>> {
@@ -62,6 +60,9 @@ export const createNodes: CreateNodesV2<RollupPluginOptions> = [
     );
     const targetsCache = readTargetsCache(cachePath);
     const isTsSolutionSetup = isUsingTsSolutionSetup();
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
 
     try {
       return await createNodesFromFiles(
@@ -71,7 +72,8 @@ export const createNodes: CreateNodesV2<RollupPluginOptions> = [
             normalizedOptions,
             context,
             targetsCache,
-            isTsSolutionSetup
+            isTsSolutionSetup,
+            pmc
           ),
         configFilePaths,
         normalizedOptions,
@@ -90,7 +92,8 @@ async function createNodesInternal(
   options: Required<RollupPluginOptions>,
   context: CreateNodesContextV2,
   targetsCache: Record<string, Record<string, TargetConfiguration>>,
-  isTsSolutionSetup: boolean
+  isTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const projectRoot = dirname(configFilePath);
   const fullyQualifiedProjectRoot = join(context.workspaceRoot, projectRoot);
@@ -116,7 +119,8 @@ async function createNodesInternal(
     projectRoot,
     options,
     context,
-    isTsSolutionSetup
+    isTsSolutionSetup,
+    pmc
   );
 
   return {
@@ -134,7 +138,8 @@ async function buildRollupTarget(
   projectRoot: string,
   options: RollupPluginOptions,
   context: CreateNodesContextV2,
-  isTsSolutionSetup: boolean
+  isTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<Record<string, TargetConfiguration>> {
   let loadConfigFile: (
     path: string,

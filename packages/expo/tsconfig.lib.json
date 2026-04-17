@@ -8,7 +8,7 @@
     "tsBuildInfoFile": "../../dist/packages/expo/tsconfig.tsbuildinfo"
   },
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
-  "include": ["**/*.ts", "**/*.json"],
+  "include": ["**/*.ts"],
   "references": [
     {
       "path": "../rollup/tsconfig.lib.json"

@@ -6,12 +6,12 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "dependencies": {
-    "@nx/nx-dev-feature-analytics": "workspace:*",
     "@nx/nx-dev-util-ai": "workspace:*",
     "@nx/nx-dev-ui-primitives": "workspace:*",
-    "@nx/nx-dev-ui-common": "workspace:*",
-    "@nx/nx-dev-ui-markdoc": "workspace:*",
+    "@heroicons/react": "2.2.0",
+    "@markdoc/markdoc": "0.2.2",
     "ai": "3.0.19",
-    "react": "catalog:react"
+    "react": "catalog:react",
+    "react-textarea-autosize": "8.5.3"
   }
 }
