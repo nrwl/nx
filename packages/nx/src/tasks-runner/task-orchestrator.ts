@@ -244,18 +244,13 @@ export class TaskOrchestrator {
     while (true) {
       if (this.bailed || this.stopRequested) break;
 
-      // 1. Hash + scheduleTask all dep-ready scheduled tasks before any
-      //    cache check or dispatch. Hashing must happen first so cache
-      //    lookups have keys; scheduleTask must fire before dispatch to
-      //    match the pre-refactor "queued = scheduled" semantics.
+      // 1. Hash + scheduleTask everything currently scheduled before any
+      //    cache check or dispatch. tasksSchedule.scheduledTasks only ever
+      //    contains dep-ready tasks (added from the roots of the not-yet-
+      //    scheduled subgraph), so no extra dep filter is needed.
       const ready = this.tasksSchedule
         .getAllScheduledTasks()
-        .scheduledTasks.map((id) => this.taskGraph.tasks[id])
-        .filter((t) =>
-          this.taskGraph.dependencies[t.id].every((depId) =>
-            this.completedTasks.has(depId)
-          )
-        );
+        .scheduledTasks.map((id) => this.taskGraph.tasks[id]);
       await this.ensureHashes(ready);
       await this.fireScheduleLifecycle(ready);
 
