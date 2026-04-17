@@ -109,6 +109,14 @@ describe('getTouchedProjectsFromLockFile', () => {
   });
 
   describe('auto mode', () => {
+    const autoNxJson = {
+      pluginsConfig: {
+        '@nx/js': {
+          projectsAffectedByDependencyUpdates: 'auto' as const,
+        },
+      },
+    };
+
     // Real lock file fragments for each package manager. Each "base"
     // and "head" pair is parsed by the matching Nx lock file parser;
     // auto mode extracts changed package names by diffing the resulting
@@ -305,13 +313,6 @@ some-other-external-package@^4.0.1:
     beforeAll(async () => {
       tempFs = new TempFs('lock-file-changes-test');
       await tempFs.createFiles({
-        './nx.json': JSON.stringify({
-          pluginsConfig: {
-            '@nx/js': {
-              projectsAffectedByDependencyUpdates: 'auto',
-            },
-          },
-        }),
         // pnpm-parser v9 code path reads this at parse time; provide
         // a minimal empty hoisted definition so parsing succeeds.
         './node_modules/.modules.yaml': `hoistedDependencies: {}\n`,
@@ -333,7 +334,7 @@ some-other-external-package@^4.0.1:
               },
             ],
             graph.nodes,
-            undefined,
+            autoNxJson,
             undefined,
             graph
           );
@@ -349,7 +350,7 @@ some-other-external-package@^4.0.1:
               },
             ],
             graph.nodes,
-            undefined,
+            autoNxJson,
             undefined,
             graph
           );
@@ -365,7 +366,7 @@ some-other-external-package@^4.0.1:
               },
             ],
             graph.nodes,
-            undefined,
+            autoNxJson,
             undefined,
             graph
           );
@@ -381,7 +382,7 @@ some-other-external-package@^4.0.1:
               },
             ],
             graph.nodes,
-            undefined,
+            autoNxJson,
             undefined,
             graph
           );
@@ -444,7 +445,7 @@ importers:
               },
             ],
             prunedGraph.nodes,
-            undefined,
+            autoNxJson,
             undefined,
             prunedGraph
           );
@@ -467,7 +468,7 @@ importers:
             },
           ],
           graph.nodes,
-          undefined,
+          autoNxJson,
           undefined,
           graph
         );
@@ -486,7 +487,7 @@ importers:
             },
           ],
           graph.nodes,
-          undefined,
+          autoNxJson,
           undefined,
           graph
         );
@@ -507,7 +508,7 @@ importers:
             },
           ],
           graph.nodes,
-          undefined,
+          autoNxJson,
           undefined,
           graph
         );

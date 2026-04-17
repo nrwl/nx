@@ -1,4 +1,3 @@
-import { readNxJson } from '../../../../config/configuration';
 import { TouchedProjectLocator } from '../../../../project-graph/affected/affected-project-graph-models';
 import {
   FileChange,
@@ -50,11 +49,10 @@ export const getTouchedProjectsFromLockFile: TouchedProjectLocator<
 > = (
   fileChanges,
   projectGraphNodes,
-  _nxJson,
+  nxJson,
   packageJson,
   projectGraph
 ): string[] => {
-  const nxJson = readNxJson();
   const { projectsAffectedByDependencyUpdates } = readJsPluginConfig(nxJson);
 
   const changedLockFile = fileChanges.find((f) =>
