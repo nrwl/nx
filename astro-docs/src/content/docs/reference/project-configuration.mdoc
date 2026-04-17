@@ -681,7 +681,11 @@ Nx processes target configuration down to `options[x]` and `configurations[x][y]
 | `configurations[x][y]`                             | `"configurations": { "prod": { "env": { "MY_VAR": "val", "...": true } } }` |
 
 {% aside type="caution" title="Spread does not apply to deeply nested options" %}
-Because `options[x]` and `configurations[x][y]` are the innermost levels Nx inspects, a spread token nested any deeper has no effect — for example, `options.webpack.plugins: { "...": true }` is ignored because Nx does not look inside `options.webpack`.
+Because `options[x]` and `configurations[x][y]` are the innermost levels Nx inspects, a spread token nested any deeper has no effect. For example, `options.webpack = { "...": true }` works (the spread is at `options[x]`), but `options.webpack.plugins = { "...": true }` is ignored because the spread sits inside the opaque value Nx assigns to `options.webpack`.
+{% /aside %}
+
+{% aside type="note" title="Spread does not apply to `tags` and `implicitDependencies`" %}
+`tags` and `implicitDependencies` always merge across configuration sources — later sources contribute additional entries rather than replacing earlier ones. The spread token is neither needed nor supported for these properties.
 {% /aside %}
 
 ### Target metadata

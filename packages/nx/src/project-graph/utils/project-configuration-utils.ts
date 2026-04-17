@@ -294,7 +294,7 @@ type MergeFn = (
  * the registration into a second pass also lets forward references
  * inside the same batch resolve eagerly.
  */
-function mergeCreateNodesResultBatch(
+function mergeCreateNodesResultsFromSinglePlugin(
   pluginResults: CreateNodesResultEntry[],
   mergeFn: MergeFn,
   nodesManager: ProjectNodesManager,
@@ -379,7 +379,7 @@ export function mergeCreateNodesResults(
   };
 
   for (const pluginResults of specifiedResults) {
-    mergeCreateNodesResultBatch(
+    mergeCreateNodesResultsFromSinglePlugin(
       pluginResults,
       mergeToManager,
       nodesManager,
@@ -390,7 +390,7 @@ export function mergeCreateNodesResults(
   }
 
   for (const pluginResults of defaultResults) {
-    mergeCreateNodesResultBatch(
+    mergeCreateNodesResultsFromSinglePlugin(
       pluginResults,
       mergeToIntermediate,
       nodesManager,
@@ -407,7 +407,7 @@ export function mergeCreateNodesResults(
   );
 
   if (targetDefaultsResults.length > 0) {
-    mergeCreateNodesResultBatch(
+    mergeCreateNodesResultsFromSinglePlugin(
       targetDefaultsResults,
       mergeToManager,
       nodesManager,

@@ -1,6 +1,15 @@
-import { ProjectConfiguration } from '../../../config/workspace-json-project-json';
+import {
+  InputDefinition,
+  ProjectConfiguration,
+  TargetConfiguration,
+  TargetDependencyConfig,
+} from '../../../config/workspace-json-project-json';
 import { isGlobPattern } from '../../../utils/globs';
 import { splitTargetFromConfigurations } from '../../../utils/split-target';
+
+type InputEntry = string | InputDefinition | NameRef;
+type DependsOnEntry = string | TargetDependencyConfig | NameRef;
+type ProjectsEntry = string | NameRef;
 
 /**
  * Sentinel placed in `inputs` / `dependsOn` for a pending project-name
@@ -75,12 +84,12 @@ export class ProjectNameInNodePropsManager {
         if (!targetConfig || typeof targetConfig !== 'object') continue;
 
         if (Array.isArray(targetConfig.inputs)) {
-          this.processInputs(targetConfig.inputs as unknown[]);
+          this.processInputs(targetConfig.inputs);
         }
         if (Array.isArray(targetConfig.dependsOn)) {
           this.processDependsOn(
-            targetConfig.dependsOn as unknown[],
-            project.targets as Record<string, unknown>,
+            targetConfig.dependsOn,
+            project.targets,
             project.name
           );
         }
@@ -88,7 +97,7 @@ export class ProjectNameInNodePropsManager {
     }
   }
 
-  private processInputs(inputs: unknown[]): void {
+  private processInputs(inputs: InputEntry[]): void {
     for (let i = 0; i < inputs.length; i++) {
       const entry = inputs[i];
       // Existing sentinel: spread merges may have copied it out of its
@@ -116,8 +125,8 @@ export class ProjectNameInNodePropsManager {
   }
 
   private processDependsOn(
-    dependsOn: unknown[],
-    ownerTargets: Record<string, unknown> | undefined,
+    dependsOn: DependsOnEntry[],
+    ownerTargets: Record<string, TargetConfiguration> | undefined,
     ownerName: string | undefined
   ): void {
     for (let i = 0; i < dependsOn.length; i++) {
@@ -172,7 +181,7 @@ export class ProjectNameInNodePropsManager {
     }
   }
 
-  private processProjectsArray(projects: unknown[]): void {
+  private processProjectsArray(projects: ProjectsEntry[]): void {
     for (let j = 0; j < projects.length; j++) {
       const name = projects[j];
       if (isNameRef(name)) {

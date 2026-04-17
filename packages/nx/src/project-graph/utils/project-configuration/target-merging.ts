@@ -11,8 +11,8 @@ import type { SourceInformation } from './source-maps';
 import {
   getMergeValueResult,
   INTEGER_LIKE_KEY_PATTERN,
+  IntegerLikeSpreadKeyError,
   NX_SPREAD_TOKEN,
-  throwIntegerLikeSpreadKey,
   uniqueKeysInObjects,
 } from './utils';
 
@@ -181,6 +181,8 @@ function mergeOptions(
 
 // Merges a single named configuration, keyed under its own identifier
 // (e.g. `targets.build.configurations.prod`) rather than under `.options`.
+// Source-map correctness for the spread case is handled inside
+// `getMergeValueResult`'s object-spread path — no post-merge fix-up needed.
 function mergeConfigurationValue(
   newConfig: Record<string, any> | undefined,
   baseConfig: Record<string, any> | undefined,
@@ -190,21 +192,7 @@ function mergeConfigurationValue(
   deferSpreadsWithoutBase?: boolean
 ): Record<string, any> | undefined {
   if (newConfig?.[NX_SPREAD_TOKEN] === true) {
-    // Snapshot base per-key sources: getMergeValueResult iterates new keys
-    // in order and writes the new source for pre-`'...'` keys, which would
-    // clobber the base entries it then reads during spread expansion.
-    // Re-apply base attribution afterward for shared keys that yielded.
-    const baseSourcesForSharedKeys =
-      projectConfigSourceMap && configIdentifier && baseConfig
-        ? captureBasePerKeySources(
-            projectConfigSourceMap,
-            configIdentifier,
-            baseConfig,
-            newConfig
-          )
-        : undefined;
-
-    const result = getMergeValueResult(
+    return getMergeValueResult(
       baseConfig,
       newConfig,
       projectConfigSourceMap && configIdentifier
@@ -216,27 +204,6 @@ function mergeConfigurationValue(
         : undefined,
       deferSpreadsWithoutBase
     ) as Record<string, any>;
-
-    if (
-      baseSourcesForSharedKeys &&
-      projectConfigSourceMap &&
-      configIdentifier
-    ) {
-      for (const sharedKey in baseSourcesForSharedKeys) {
-        // Only restore attribution when the base value actually won
-        // (key was before `'...'`). If new won, keep its fresh source.
-        if (
-          result &&
-          Object.prototype.hasOwnProperty.call(result, sharedKey) &&
-          result[sharedKey] === baseConfig[sharedKey]
-        ) {
-          projectConfigSourceMap[`${configIdentifier}.${sharedKey}`] =
-            baseSourcesForSharedKeys[sharedKey];
-        }
-      }
-    }
-
-    return result;
   }
 
   const mergedKeys = uniqueKeysInObjects(baseConfig ?? {}, newConfig ?? {});
@@ -260,24 +227,6 @@ function mergeConfigurationValue(
   return merged;
 }
 
-// Reads per-key source attribution for keys shared between base and new.
-function captureBasePerKeySources(
-  sourceMap: Record<string, SourceInformation>,
-  configIdentifier: string,
-  baseConfig: Record<string, any>,
-  newConfig: Record<string, any> | undefined
-): Record<string, SourceInformation> {
-  const captured: Record<string, SourceInformation> = {};
-  for (const key of Object.keys(baseConfig)) {
-    if (!newConfig || !(key in newConfig)) continue;
-    const existing = sourceMap[`${configIdentifier}.${key}`];
-    if (existing) {
-      captured[key] = existing;
-    }
-  }
-  return captured;
-}
-
 function mergeConfigurations<T extends Object>(
   newConfigurations: Record<string, T> | undefined,
   baseConfigurations: Record<string, T> | undefined,
@@ -287,11 +236,6 @@ function mergeConfigurations<T extends Object>(
   deferSpreadsWithoutBase?: boolean
 ): Record<string, T> | undefined {
   const mergedConfigurations: Record<string, T> = {};
-
-  const configNames = uniqueKeysInObjects(
-    baseConfigurations ?? {},
-    newConfigurations ?? {}
-  );
 
   // Keys before '...' let base win for shared names; keys after '...'
   // (or when there's no spread) merge normally with new winning.
@@ -305,7 +249,7 @@ function mergeConfigurations<T extends Object>(
   // Integer-like keys get hoisted to newKeys[0], making their position
   // relative to '...' unrecoverable.
   if (hasSpread && newKeys[0] && INTEGER_LIKE_KEY_PATTERN.test(newKeys[0])) {
-    throwIntegerLikeSpreadKey(
+    throw new IntegerLikeSpreadKeyError(
       newKeys[0],
       targetIdentifier
         ? `Configurations at "${targetIdentifier}.configurations"`
@@ -313,9 +257,13 @@ function mergeConfigurations<T extends Object>(
     );
   }
 
-  for (const configName of configNames) {
-    if (configName === NX_SPREAD_TOKEN) continue;
+  // Preserving the unresolved `'...'` sentinel in authored position lets
+  // a later merge layer (which actually has a base) classify the keys as
+  // pre/post-spread correctly.
+  const preserveSpreadSentinel =
+    hasSpread && deferSpreadsWithoutBase && baseConfigurations === undefined;
 
+  const processConfigName = (configName: string): void => {
     const configIdentifier = targetIdentifier
       ? `${targetIdentifier}.configurations.${configName}`
       : undefined;
@@ -340,70 +288,74 @@ function mergeConfigurations<T extends Object>(
           projectConfigSourceMap[configIdentifier] = sourceInformation;
         }
       }
-    } else {
-      mergedConfigurations[configName] = mergeConfigurationValue(
-        newConfigurations?.[configName],
-        baseConfigurations?.[configName],
-        projectConfigSourceMap,
-        sourceInformation,
-        configIdentifier,
-        deferSpreadsWithoutBase
-      ) as T;
-      // Only reattribute the config name when the new plugin introduced it.
-      if (
-        projectConfigSourceMap &&
-        configIdentifier &&
-        newHasConfig &&
-        !baseHasConfig
-      ) {
-        projectConfigSourceMap[configIdentifier] = sourceInformation;
+      return;
+    }
+
+    mergedConfigurations[configName] = mergeConfigurationValue(
+      newConfigurations?.[configName],
+      baseConfigurations?.[configName],
+      projectConfigSourceMap,
+      sourceInformation,
+      configIdentifier,
+      deferSpreadsWithoutBase
+    ) as T;
+    // Only reattribute the config name when the new plugin introduced it.
+    if (
+      projectConfigSourceMap &&
+      configIdentifier &&
+      newHasConfig &&
+      !baseHasConfig
+    ) {
+      projectConfigSourceMap[configIdentifier] = sourceInformation;
+    }
+  };
+
+  if (hasSpread) {
+    // Authored positions of new's own keys relative to `'...'` drive
+    // pre/post-spread classification, so those keys go in authored order.
+    // Base-only keys land right before `'...'` — they weren't authored by
+    // the new layer, so default semantics places them with the pre-spread
+    // keys (the "base layer" slot).
+    const baseOnlyKeys = baseConfigurations
+      ? Object.keys(baseConfigurations).filter(
+          (k) => k !== NX_SPREAD_TOKEN && !(k in (newConfigurations ?? {}))
+        )
+      : [];
+    let baseOnlyInserted = false;
+    const insertBaseOnlyKeys = () => {
+      if (baseOnlyInserted) return;
+      baseOnlyInserted = true;
+      for (const configName of baseOnlyKeys) processConfigName(configName);
+    };
+    for (const configName of newKeys) {
+      if (configName === NX_SPREAD_TOKEN) {
+        insertBaseOnlyKeys();
+        if (preserveSpreadSentinel) {
+          (mergedConfigurations as Record<string, unknown>)[NX_SPREAD_TOKEN] =
+            true;
+        }
+        continue;
+      }
+      processConfigName(configName);
+    }
+    insertBaseOnlyKeys();
+  } else {
+    // No spread — classic `{ ...base, ...new }` ordering: base keys
+    // first, new-only keys after. Shared configs stay at base's position.
+    if (baseConfigurations) {
+      for (const configName of Object.keys(baseConfigurations)) {
+        if (configName === NX_SPREAD_TOKEN) continue;
+        processConfigName(configName);
       }
     }
-  }
-
-  if (
-    hasSpread &&
-    deferSpreadsWithoutBase &&
-    baseConfigurations === undefined
-  ) {
-    // See mergeTargetConfigurations — '...' must stay at its authored
-    // index for pass 2 to classify siblings correctly.
-    reorderToMatchAuthoredKeys(
-      mergedConfigurations as unknown as Record<string, unknown>,
-      newKeys
-    );
+    for (const configName of newKeys) {
+      if (configName === NX_SPREAD_TOKEN) continue;
+      if (configName in mergedConfigurations) continue;
+      processConfigName(configName);
+    }
   }
 
   return mergedConfigurations;
-}
-
-// Reorders `result`'s own-keys to match `authoredKeys`, placing '...' at
-// its authored index. Needed because pass 2 uses key-iteration order to
-// classify before/after-spread; appending '...' at the end would flip it.
-// Keys not in `authoredKeys` are appended last (their position doesn't
-// affect classification). `skipKeys` are handled elsewhere.
-function reorderToMatchAuthoredKeys(
-  result: Record<string, unknown>,
-  authoredKeys: string[],
-  skipKeys?: Set<string>
-): void {
-  const ordered: Record<string, unknown> = {};
-  for (const key of authoredKeys) {
-    if (key === NX_SPREAD_TOKEN) {
-      ordered[NX_SPREAD_TOKEN] = true;
-    } else if ((!skipKeys || !skipKeys.has(key)) && key in result) {
-      ordered[key] = result[key];
-    }
-  }
-  for (const key of Object.keys(result)) {
-    if (!(key in ordered)) {
-      ordered[key] = result[key];
-    }
-  }
-  for (const key of Object.keys(result)) {
-    delete result[key];
-  }
-  Object.assign(result, ordered);
 }
 
 /**
@@ -451,10 +403,6 @@ export function mergeTargetConfigurations(
   const result: Partial<TargetConfiguration> = {};
   const mergeBase = isCompatible ? baseTargetProperties : {};
 
-  const keys: Iterable<string> = isCompatible
-    ? uniqueKeysInObjects(baseTargetProperties, target)
-    : Object.keys(target);
-
   // Keys before '...' let base win; keys after '...' (or when there's no
   // spread) merge normally with target winning.
   const targetKeys = Object.keys(target);
@@ -471,21 +419,28 @@ export function mergeTargetConfigurations(
     targetKeys[0] &&
     INTEGER_LIKE_KEY_PATTERN.test(targetKeys[0])
   ) {
-    throwIntegerLikeSpreadKey(
+    throw new IntegerLikeSpreadKeyError(
       targetKeys[0],
       targetIdentifier ? `Target at "${targetIdentifier}"` : 'Target'
     );
   }
 
-  for (const key of keys) {
-    // options and configurations have their own merge logic below
-    if (
-      key === 'options' ||
-      key === 'configurations' ||
-      key === NX_SPREAD_TOKEN
-    ) {
-      continue;
-    }
+  // Preserving the unresolved `'...'` sentinel in authored position lets a
+  // later merge layer (which actually has a base) classify sibling keys as
+  // pre/post-spread correctly.
+  const preserveSpreadSentinel =
+    spreadPosInTarget >= 0 &&
+    deferSpreadsWithoutBase &&
+    baseTarget === undefined;
+
+  const skipForOwnMerge = new Set<string>([
+    'options',
+    'configurations',
+    NX_SPREAD_TOKEN,
+  ]);
+
+  const processKey = (key: string): void => {
+    if (skipForOwnMerge.has(key)) return;
 
     if (hasSpread && keysBeforeSpread.has(key)) {
       // Before '...': base wins; fall through to target only if base lacks it.
@@ -504,7 +459,9 @@ export function mergeTargetConfigurations(
                 : undefined,
               deferSpreadsWithoutBase
             );
-    } else if (key in target) {
+      return;
+    }
+    if (key in target) {
       result[key] = getMergeValueResult(
         mergeBase[key],
         target[key],
@@ -520,20 +477,54 @@ export function mergeTargetConfigurations(
     } else {
       result[key] = mergeBase[key];
     }
-  }
+  };
 
-  if (
-    spreadPosInTarget >= 0 &&
-    deferSpreadsWithoutBase &&
-    baseTarget === undefined
-  ) {
-    // '...' must stay at its authored index so pass 2's before/after-spread
-    // classification matches what the user wrote.
-    reorderToMatchAuthoredKeys(
-      result as Record<string, unknown>,
-      targetKeys,
-      new Set(['options', 'configurations'])
-    );
+  if (isCompatible) {
+    if (hasSpread) {
+      // Authored positions of the target's own keys relative to `'...'`
+      // drive pre/post-spread classification, so those keys go in
+      // authored order. Base-only keys land right before `'...'` — they
+      // weren't authored, so default semantics ("base layer that yields
+      // to a higher-priority layer") places them with the rest of the
+      // pre-spread keys.
+      const baseOnlyKeys = Object.keys(baseTargetProperties).filter(
+        (k) => !skipForOwnMerge.has(k) && !(k in target)
+      );
+      let baseOnlyInserted = false;
+      const insertBaseOnlyKeys = () => {
+        if (baseOnlyInserted) return;
+        baseOnlyInserted = true;
+        for (const key of baseOnlyKeys) processKey(key);
+      };
+      for (const key of targetKeys) {
+        if (key === NX_SPREAD_TOKEN) {
+          insertBaseOnlyKeys();
+          if (preserveSpreadSentinel) {
+            (result as Record<string, unknown>)[NX_SPREAD_TOKEN] = true;
+          }
+          continue;
+        }
+        if (skipForOwnMerge.has(key)) continue;
+        processKey(key);
+      }
+      // Safety for a sentinel-less iteration (shouldn't happen when
+      // hasSpread is true, but keeps the base-only keys emitted).
+      insertBaseOnlyKeys();
+    } else {
+      // No spread — classic `{ ...base, ...target }` ordering: base keys
+      // first (preserving their own-key order), target-only keys after.
+      // Shared keys stay at base's position with per-key merged value.
+      const mergedKeys = uniqueKeysInObjects(baseTargetProperties, target);
+      for (const key of mergedKeys) {
+        if (skipForOwnMerge.has(key)) continue;
+        processKey(key);
+      }
+    }
+  } else {
+    for (const key of targetKeys) {
+      if (skipForOwnMerge.has(key)) continue;
+      processKey(key);
+    }
   }
 
   // Update source map once after loop

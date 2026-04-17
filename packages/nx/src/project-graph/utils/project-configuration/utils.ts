@@ -28,12 +28,15 @@ export function uniqueKeysInObjects(
 // after `'...'`. Spread sites reject them instead of guessing.
 export const INTEGER_LIKE_KEY_PATTERN = /^(0|[1-9]\d*)$/;
 
-export function throwIntegerLikeSpreadKey(key: string, context: string): never {
-  throw new Error(
-    `${context} uses an integer-like key (${JSON.stringify(
-      key
-    )}) alongside the '...' spread token. Integer-like keys are enumerated before other keys regardless of authored order, so their position relative to '...' is ambiguous. Rename the key (e.g. add a non-numeric prefix) or restructure the object.`
-  );
+export class IntegerLikeSpreadKeyError extends Error {
+  constructor(key: string, context: string) {
+    super(
+      `${context} uses an integer-like key (${JSON.stringify(
+        key
+      )}) alongside the '...' spread token. Integer-like keys are enumerated before other keys regardless of authored order, so their position relative to '...' is ambiguous. Rename the key (e.g. add a non-numeric prefix) or restructure the object.`
+    );
+    this.name = 'IntegerLikeSpreadKeyError';
+  }
 }
 
 type SourceMapContext = {
@@ -104,7 +107,9 @@ function mergeArrayValue<T>(
   const baseArray = Array.isArray(baseValue) ? baseValue : [];
   // Snapshot per-index base sources before we start writing — the loop
   // writes into the same `${key}.${i}` entries it needs to read back when
-  // the spread expands.
+  // the spread expands. Unlike object spread, array spreads can overwrite
+  // indices during their own expansion (when new authors a prefix before
+  // `'...'`), so lazy capture isn't sufficient here.
   const basePerIndexSources: Array<SourceInformation | undefined> =
     sourceMapContext
       ? baseArray.map((_, i) =>
@@ -163,27 +168,18 @@ function mergeObjectWithSpread(
     ? `Object at "${sourceMapContext.key}"`
     : 'Object';
 
-  // Snapshot per-key base sources before we start writing — a new key
-  // before `'...'` writes into `${key}.${newKey}` that the spread then
-  // needs to read back.
-  const basePerKeySources: Record<string, SourceInformation | undefined> = {};
-  if (sourceMapContext) {
-    for (const baseKey of Object.keys(baseObj)) {
-      basePerKeySources[baseKey] = readObjectPropertySourceInfo(
-        sourceMapContext.sourceMap,
-        sourceMapContext.key,
-        baseKey
-      );
-    }
-  }
-
   const newKeys = Object.keys(newValue);
 
   // Integer-like keys are hoisted to the front of enumeration, so if one
   // exists alongside `'...'` it must be newKeys[0].
   if (newKeys[0] && INTEGER_LIKE_KEY_PATTERN.test(newKeys[0])) {
-    throwIntegerLikeSpreadKey(newKeys[0], errorContext);
+    throw new IntegerLikeSpreadKeyError(newKeys[0], errorContext);
   }
+
+  // Base per-key sources captured lazily — only for shared keys the new
+  // object overwrites before `'...'`, since writing their new source
+  // clobbers the base entry the spread will need to restore.
+  const capturedBaseSources: Record<string, SourceInformation | undefined> = {};
 
   for (const newKey of newKeys) {
     if (newKey === NX_SPREAD_TOKEN) {
@@ -195,7 +191,18 @@ function mergeObjectWithSpread(
       for (const baseKey of Object.keys(baseObj)) {
         result[baseKey] = baseObj[baseKey];
         if (sourceMapContext) {
-          const baseSource = basePerKeySources[baseKey];
+          // If we captured a shared key pre-spread, use that; otherwise
+          // the source map still holds the base entry untouched.
+          const baseSource = Object.prototype.hasOwnProperty.call(
+            capturedBaseSources,
+            baseKey
+          )
+            ? capturedBaseSources[baseKey]
+            : readObjectPropertySourceInfo(
+                sourceMapContext.sourceMap,
+                sourceMapContext.key,
+                baseKey
+              );
           if (baseSource) {
             sourceMapContext.sourceMap[`${sourceMapContext.key}.${baseKey}`] =
               baseSource;
@@ -203,6 +210,20 @@ function mergeObjectWithSpread(
         }
       }
       continue;
+    }
+
+    // About to overwrite a base key's source — capture it first so the
+    // spread can restore it.
+    if (
+      sourceMapContext &&
+      newKey in baseObj &&
+      !Object.prototype.hasOwnProperty.call(capturedBaseSources, newKey)
+    ) {
+      capturedBaseSources[newKey] = readObjectPropertySourceInfo(
+        sourceMapContext.sourceMap,
+        sourceMapContext.key,
+        newKey
+      );
     }
 
     result[newKey] = newValue[newKey];

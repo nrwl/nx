@@ -364,7 +364,7 @@ describe('getMergeValueResult - spread token behavior', () => {
     });
   });
 
-  describe('object spread — per-key source provenance (bug_013)', () => {
+  describe('object spread — per-key source provenance', () => {
     it('should preserve base per-key attribution when a shared key appears before the spread token', () => {
       // Layer A wrote `{ z: 1 }` with per-key attribution recorded at
       // sourceMap['obj.z']. Layer B authors `{ z: 99, '...': true }` —
@@ -437,7 +437,7 @@ describe('getMergeValueResult - spread token behavior', () => {
     });
   });
 
-  describe('integer-like keys with spread token (bug_001)', () => {
+  describe('integer-like keys with spread token', () => {
     // ECMAScript enumerates integer-index string keys first in ascending
     // numeric order regardless of insertion order, so there is no way to
     // recover the authored position of an integer-like key relative to
