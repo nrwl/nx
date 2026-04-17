@@ -55,8 +55,31 @@ export function loadPnpmHoistedDepsDefinition() {
  * Parsing and mapping logic from pnpm lockfile `read` function
  */
 export function parseAndNormalizePnpmLockfile(content: string): Lockfile {
-  const { loadAll } = require('@zkochan/js-yaml');
-  return convertToLockfileObject(selectPnpmLockfileDocument(loadAll(content)));
+  const { load } = require('@zkochan/js-yaml');
+  return convertToLockfileObject(load(extractMainLockfileDocument(content)));
+}
+
+// https://github.com/pnpm/pnpm/blob/main/lockfile/fs/src/yamlDocuments.ts
+const YAML_DOCUMENT_START = '---\n';
+const YAML_DOCUMENT_SEPARATOR = '\n---\n';
+
+// pnpm 11 writes a two-document lockfile when `managePackageManagerVersions` is
+// enabled: the first document holds package-manager metadata, and the second
+// holds the workspace lockfile. Mirror pnpm's own positional extraction so we
+// always read the workspace document.
+// https://github.com/pnpm/pnpm/blob/main/lockfile/fs/src/yamlDocuments.ts
+function extractMainLockfileDocument(content: string): string {
+  if (!content.startsWith(YAML_DOCUMENT_START)) {
+    return content;
+  }
+  const separatorIndex = content.indexOf(
+    YAML_DOCUMENT_SEPARATOR,
+    YAML_DOCUMENT_START.length
+  );
+  if (separatorIndex === -1) {
+    return '';
+  }
+  return content.slice(separatorIndex + YAML_DOCUMENT_SEPARATOR.length);
 }
 
 // https://github.com/pnpm/pnpm/blob/50e37072f42bcca6d393a74bed29f7f0e029805d/lockfile/lockfile-file/src/write.ts#L22
@@ -267,76 +290,6 @@ type LockfileFileV9 = Omit<InlineSpecifiersLockfile, 'importers' | 'packages'> &
       >
     >;
   };
-
-function selectPnpmLockfileDocument(
-  documents: unknown[]
-): LockfileFile | LockfileFileV9 {
-  const lockfileDocuments = documents.filter(isPnpmLockfileDocument);
-
-  if (lockfileDocuments.length === 0) {
-    throw new Error('Could not find a valid pnpm lockfile document.');
-  }
-
-  let selectedDocument = lockfileDocuments[0];
-  let selectedScore = scorePnpmLockfileDocument(selectedDocument);
-
-  for (const candidate of lockfileDocuments.slice(1)) {
-    const candidateScore = scorePnpmLockfileDocument(candidate);
-    if (candidateScore >= selectedScore) {
-      selectedDocument = candidate;
-      selectedScore = candidateScore;
-    }
-  }
-
-  return selectedDocument;
-}
-
-function isPnpmLockfileDocument(
-  value: unknown
-): value is LockfileFile | LockfileFileV9 {
-  return (
-    typeof value === 'object' && value !== null && 'lockfileVersion' in value
-  );
-}
-
-function scorePnpmLockfileDocument(
-  lockfile: LockfileFile | LockfileFileV9
-): number {
-  let score = 0;
-
-  if ('snapshots' in lockfile && lockfile.snapshots) {
-    score += 4;
-  }
-
-  if (
-    'settings' in lockfile ||
-    'catalog' in lockfile ||
-    'catalogs' in lockfile ||
-    'patchedDependencies' in lockfile
-  ) {
-    score += 2;
-  }
-
-  const rootImporter = lockfile.importers?.['.'];
-  if (rootImporter) {
-    if (
-      rootImporter.dependencies ||
-      rootImporter.devDependencies ||
-      rootImporter.optionalDependencies
-    ) {
-      score += 2;
-    }
-
-    if (
-      'packageManagerDependencies' in rootImporter ||
-      'configDependencies' in rootImporter
-    ) {
-      score -= 1;
-    }
-  }
-
-  return score;
-}
 
 // https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/packages/types/src/misc.ts#L6
 const DEPENDENCIES_FIELDS = [
