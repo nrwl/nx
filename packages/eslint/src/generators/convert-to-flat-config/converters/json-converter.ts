@@ -14,6 +14,54 @@ import {
 import { getPluginImport } from '../../utils/eslint-file';
 import { mapFilePath } from '../../utils/flat-config/path-utils';
 
+// In flat config, `@nx/workspace/<rule>` is parsed as plugin `@nx/workspace`, rule `<rule>`.
+// The `@nx` plugin already exposes workspace rules under both `workspace/<rule>` and `workspace-<rule>` keys.
+// Rewriting to `@nx/workspace-<rule>` makes ESLint resolve them via the already-registered `@nx` plugin.
+function renameLegacyWorkspaceRules(
+  rules: Record<string, unknown> | undefined
+): Record<string, unknown> | undefined {
+  if (!rules || typeof rules !== 'object') {
+    return rules;
+  }
+  const renamed: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(rules)) {
+    const newKey = key.startsWith('@nx/workspace/')
+      ? '@nx/workspace-' + key.slice('@nx/workspace/'.length)
+      : key;
+    renamed[newKey] = value;
+  }
+  return renamed;
+}
+
+// Rewrites references to the legacy `.eslintrc.json` / `.eslintrc.base.json` that may appear
+// inside rule option values (e.g. `@nx/dependency-checks`'s `ignoredFiles`) to point at the
+// generated flat-config files instead. Without this, rule options keep pointing at files that
+// no longer exist after the conversion.
+function rewriteStaleEslintrcRefs<T>(value: T, format: 'mjs' | 'cjs'): T {
+  if (typeof value === 'string') {
+    return value
+      .replace(/\.eslintrc\.base\.json$/, `eslint.base.config.${format}`)
+      .replace(/\.eslintrc\.json$/, `eslint.config.${format}`) as unknown as T;
+  }
+  if (Array.isArray(value)) {
+    const mapped = value.map((v) => rewriteStaleEslintrcRefs(v, format));
+    // Rewriting may collapse distinct strings (e.g. `.eslintrc.json` and
+    // `.eslintrc.base.json`) into identical entries; dedupe string arrays.
+    if (mapped.every((v) => typeof v === 'string')) {
+      return Array.from(new Set(mapped as string[])) as unknown as T;
+    }
+    return mapped as unknown as T;
+  }
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      out[k] = rewriteStaleEslintrcRefs(v, format);
+    }
+    return out as unknown as T;
+  }
+  return value;
+}
+
 /**
  * Converts an ESLint JSON config to a flat config.
  * Deletes the original file along with .eslintignore if it exists.
@@ -32,12 +80,27 @@ export function convertEslintJsonToFlatConfig(
   let combinedConfig: ts.PropertyAssignment[] = [];
   let languageOptions: ts.PropertyAssignment[] = [];
 
-  // exclude dist and eslint config from being linted, which matches the default for new workspaces
-  exportElements.push(
-    generateAst({
-      ignores: ['**/dist', '**/out-tsc'],
-    })
-  );
+  if (config.rules) {
+    config.rules = renameLegacyWorkspaceRules(
+      config.rules as Record<string, unknown>
+    ) as ESLint.ConfigData['rules'];
+    config.rules = rewriteStaleEslintrcRefs(config.rules, format);
+  }
+  if (config.overrides) {
+    config.overrides = config.overrides.map((override) =>
+      override.rules
+        ? {
+            ...override,
+            rules: rewriteStaleEslintrcRefs(
+              renameLegacyWorkspaceRules(
+                override.rules as Record<string, unknown>
+              ) as ESLint.ConfigData['rules'],
+              format
+            ),
+          }
+        : override
+    );
+  }
 
   if (config.extends) {
     const extendsResult = addExtends(
@@ -197,28 +260,22 @@ export function convertEslintJsonToFlatConfig(
             if (
               remainingOverride.env ||
               remainingOverride.extends ||
-              remainingOverride.plugins ||
-              remainingOverride.parser
+              remainingOverride.plugins
             ) {
               isFlatCompatNeeded = true;
             }
             exportElements.push(
-              generateFlatOverride(remainingOverride, format)
+              generateFlatOverride(remainingOverride, format, importsMap)
             );
           }
           return;
         }
       }
 
-      if (
-        override.env ||
-        override.extends ||
-        override.plugins ||
-        override.parser
-      ) {
+      if (override.env || override.extends || override.plugins) {
         isFlatCompatNeeded = true;
       }
-      exportElements.push(generateFlatOverride(override, format));
+      exportElements.push(generateFlatOverride(override, format, importsMap));
     });
   }
 
@@ -227,7 +284,9 @@ export function convertEslintJsonToFlatConfig(
       Array.isArray(config.ignorePatterns)
         ? config.ignorePatterns
         : [config.ignorePatterns]
-    ).filter((pattern) => !['**/*', '!**/*', 'node_modules'].includes(pattern)); // these are useless in a flat config
+    )
+      .filter((pattern) => !['**/*', '!**/*', 'node_modules'].includes(pattern)) // these are useless in a flat config
+      .filter((pattern) => !pattern.startsWith('!')); // negated patterns rely on eslintrc cascading and have no meaning in flat config
     if (patterns.length > 0) {
       exportElements.push(
         generateAst({

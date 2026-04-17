@@ -215,7 +215,7 @@ function convertConfigToFlatConfig(
     ? [ignorePath, `${root}/.eslintignore`]
     : [`${root}/.eslintignore`];
 
-  if (source.endsWith('.json')) {
+  if (source.endsWith('.json') || /(^|\/)\.eslintrc$/.test(source)) {
     const config: ESLint.ConfigData = readJson(tree, `${root}/${source}`);
     const conversionResult = convertEslintJsonToFlatConfig(
       tree,

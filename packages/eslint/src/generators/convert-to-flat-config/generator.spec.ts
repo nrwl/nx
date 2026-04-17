@@ -191,9 +191,6 @@ describe('convert-to-flat-config generator', () => {
         });
 
         module.exports = [
-          {
-            ignores: ['**/dist', '**/out-tsc'],
-          },
           ...compat.extends('plugin:storybook/recommended'),
           ...nx.configs['flat/base'],
           {
@@ -224,9 +221,6 @@ describe('convert-to-flat-config generator', () => {
         "const baseConfig = require('../../eslint.config.cjs');
 
         module.exports = [
-          {
-            ignores: ['**/dist', '**/out-tsc'],
-          },
           ...baseConfig,
           {
             files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -434,9 +428,6 @@ describe('convert-to-flat-config generator', () => {
         "const nx = require('@nx/eslint-plugin');
 
         module.exports = [
-          {
-            ignores: ['**/dist', '**/out-tsc'],
-          },
           ...nx.configs['flat/base'],
           {
             linterOptions: {
@@ -611,9 +602,6 @@ describe('convert-to-flat-config generator', () => {
         "const baseConfig = require('../../eslint.config.cjs');
 
         module.exports = [
-          {
-            ignores: ['**/dist', '**/out-tsc'],
-          },
           ...baseConfig,
           {
             files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -793,9 +781,6 @@ describe('convert-to-flat-config generator', () => {
         });
 
         export default [
-          {
-            ignores: ['**/dist', '**/out-tsc'],
-          },
           ...compat.extends('plugin:storybook/recommended'),
           ...nx.configs['flat/base'],
           {
@@ -826,9 +811,6 @@ describe('convert-to-flat-config generator', () => {
         "import baseConfig from '../../eslint.config.mjs';
 
         export default [
-          {
-            ignores: ['**/dist', '**/out-tsc'],
-          },
           ...baseConfig,
           {
             files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -1036,9 +1018,6 @@ describe('convert-to-flat-config generator', () => {
         "import nx from '@nx/eslint-plugin';
 
         export default [
-          {
-            ignores: ['**/dist', '**/out-tsc'],
-          },
           ...nx.configs['flat/base'],
           {
             linterOptions: {
@@ -1180,9 +1159,6 @@ describe('convert-to-flat-config generator', () => {
         "import baseConfig from '../../eslint.config.mjs';
 
         export default [
-          {
-            ignores: ['**/dist', '**/out-tsc'],
-          },
           ...baseConfig,
           {
             files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],

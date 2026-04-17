@@ -88,12 +88,6 @@ describe('convertEslintJsonToFlatConfig', () => {
 
 
         export default [
-            {
-                ignores: [
-                    "**/dist",
-                    "**/out-tsc"
-                ]
-            },
             ...nx.configs["flat/base"],
             {
                 files: [
@@ -217,6 +211,7 @@ describe('convertEslintJsonToFlatConfig', () => {
         import baseConfig from "../../eslint.config.mjs";
         import nx from "@nx/eslint-plugin";
         import globals from "globals";
+        import jsoncEslintParser from "jsonc-eslint-parser";
 
         const compat = new FlatCompat({
           baseDirectory: dirname(fileURLToPath(import.meta.url)),
@@ -225,12 +220,6 @@ describe('convertEslintJsonToFlatConfig', () => {
 
 
         export default [
-            {
-                ignores: [
-                    "**/dist",
-                    "**/out-tsc"
-                ]
-            },
             ...baseConfig,
             ...nx.configs["flat/react-typescript"],
             ...compat.extends("next", "next/core-web-vitals"),
@@ -278,7 +267,7 @@ describe('convertEslintJsonToFlatConfig', () => {
                     "@nx/dependency-checks": "error"
                 },
                 languageOptions: {
-                    parser: await import("jsonc-eslint-parser")
+                    parser: jsoncEslintParser
                 }
             },
             {
@@ -327,12 +316,6 @@ describe('convertEslintJsonToFlatConfig', () => {
         "import nx from "@nx/eslint-plugin";
 
         export default [
-            {
-                ignores: [
-                    "**/dist",
-                    "**/out-tsc"
-                ]
-            },
             ...nx.configs["flat/base"],
             ...nx.configs["flat/typescript"],
             {
@@ -394,12 +377,6 @@ describe('convertEslintJsonToFlatConfig', () => {
 
 
         export default [
-            {
-                ignores: [
-                    "**/dist",
-                    "**/out-tsc"
-                ]
-            },
             ...nx.configs["flat/base"],
             ...nx.configs["flat/typescript"],
             ...compat.config({
@@ -498,12 +475,6 @@ describe('convertEslintJsonToFlatConfig', () => {
         });
 
         module.exports = [
-            {
-                ignores: [
-                    "**/dist",
-                    "**/out-tsc"
-                ]
-            },
             ...nx.configs["flat/base"],
             {
                 files: [
@@ -632,12 +603,6 @@ describe('convertEslintJsonToFlatConfig', () => {
         });
 
         module.exports = [
-            {
-                ignores: [
-                    "**/dist",
-                    "**/out-tsc"
-                ]
-            },
             ...baseConfig,
             ...nx.configs["flat/react-typescript"],
             ...compat.extends("next", "next/core-web-vitals"),
