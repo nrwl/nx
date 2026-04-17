@@ -2,6 +2,7 @@ import type { Serializable } from 'child_process';
 import type { Socket } from 'net';
 import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
+import { serialize } from '../../../daemon/socket-utils';
 import { MESSAGE_END_SEQ } from '../../../utils/consume-messages-from-socket';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import type {
@@ -265,5 +266,6 @@ export function sendMessageOverSocket(
   socket: Socket,
   message: PluginWorkerMessage | PluginWorkerResult
 ): void {
-  socket.write(JSON.stringify(message) + MESSAGE_END_SEQ);
+  socket.write(serialize(message));
+  socket.write(MESSAGE_END_SEQ);
 }
