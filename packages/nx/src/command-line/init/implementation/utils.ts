@@ -230,7 +230,7 @@ export function runInstall(
   pmc: PackageManagerCommands = getPackageManagerCommand()
 ) {
   execSync(pmc.install, {
-    stdio: [0, 1, 2],
+    stdio: ['ignore', 'ignore', 'inherit'],
     cwd: repoRoot,
     windowsHide: true,
   });
@@ -249,6 +249,13 @@ export async function initCloud(
     installationSource,
   });
   await printSuccessMessage(token, installationSource);
+}
+
+export function setNeverConnectToCloud(repoRoot: string): void {
+  const nxJsonPath = join(repoRoot, 'nx.json');
+  const nxJson = readJsonFile(nxJsonPath);
+  nxJson.neverConnectToCloud = true;
+  writeJsonFile(nxJsonPath, nxJson);
 }
 
 export function addVsCodeRecommendedExtensions(

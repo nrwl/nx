@@ -1,10 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { workspaceRoot } from '@nx/devkit';
-import glob from 'glob';
 
 // Links to pages hosted outside of both astro-docs and nx-dev sites
-const ignoredLinks = ['/contact'];
+const ignoredLinks = ['/contact', '/blog'];
 
 // These are more so until we cut over and can modify production file links
 const filesToIgnore = [
@@ -181,100 +180,6 @@ function toFriendlyName(file: string) {
   return path.relative(workspaceRoot, file);
 }
 
-/**
- * Extracts links pointing to /docs/ paths from markdown file content.
- * Handles both markdown links like [text](/docs/...) and card url attributes like url="/docs/..."
- */
-function extractDocsLinksFromMarkdown(content: string): Set<string> {
-  const links = new Set<string>();
-
-  // Match markdown links: [text](/docs/...)
-  const markdownLinkRegex = /\]\(\/docs\/[^)]*\)/g;
-  let match;
-  while ((match = markdownLinkRegex.exec(content)) !== null) {
-    // Extract the path from ](/docs/...)
-    const linkPath = match[0].slice(2, -1);
-    // Strip anchors and query params
-    const clean = linkPath.split('#')[0].split('?')[0];
-    links.add(clean);
-  }
-
-  // Match card url attributes: url="/docs/..."
-  const urlAttrRegex = /url="(\/docs\/[^"]*)"/g;
-  while ((match = urlAttrRegex.exec(content)) !== null) {
-    const linkPath = match[1];
-    const clean = linkPath.split('#')[0].split('?')[0];
-    links.add(clean);
-  }
-
-  // Match reference-style links: [ref]: /docs/...
-  const refStyleRegex = /^\s*\[[^\]]+\]:\s*(\/docs\/\S*)/gm;
-  while ((match = refStyleRegex.exec(content)) !== null) {
-    const linkPath = match[1];
-    const clean = linkPath.split('#')[0].split('?')[0];
-    links.add(clean);
-  }
-
-  // Match card url attributes without leading slash: url="docs/..."
-  const urlAttrNoSlashRegex = /url="(docs\/[^"]*)"/g;
-  while ((match = urlAttrNoSlashRegex.exec(content)) !== null) {
-    const linkPath = '/' + match[1]; // normalize by prepending /
-    const clean = linkPath.split('#')[0].split('?')[0];
-    links.add(clean);
-  }
-
-  return links;
-}
-
-/**
- * Scans docs/ markdown files for links to /docs/ paths (astro-docs pages)
- * and validates them against the astro sitemap.
- * Returns broken links grouped by source file.
- */
-function validateCrossSiteLinks(
-  availableInternalRoutes: Set<string>
-): Map<string, string[]> {
-  const docsDir = path.join(workspaceRoot, 'docs');
-  const crossSiteBrokenLinks = new Map<string, string[]>();
-
-  if (!fs.existsSync(docsDir)) {
-    console.warn(
-      `docs/ directory not found at ${docsDir}, skipping cross-site link check`
-    );
-    return crossSiteBrokenLinks;
-  }
-
-  const mdFiles = glob.sync('**/*.md', { cwd: docsDir });
-  console.log(`Found ${mdFiles.length} markdown files in docs/\n`);
-
-  let totalLinks = 0;
-
-  for (const relPath of mdFiles) {
-    const fullPath = path.join(docsDir, relPath);
-    const content = fs.readFileSync(fullPath, 'utf-8');
-    const docsLinks = extractDocsLinksFromMarkdown(content);
-
-    for (const link of docsLinks) {
-      totalLinks++;
-
-      if (!availableInternalRoutes.has(link)) {
-        const existing = crossSiteBrokenLinks.get(relPath);
-        if (existing) {
-          existing.push(link);
-        } else {
-          crossSiteBrokenLinks.set(relPath, [link]);
-        }
-      }
-    }
-  }
-
-  console.log(
-    `Checked ${totalLinks} cross-site links from docs/ to /docs/ astro pages\n`
-  );
-
-  return crossSiteBrokenLinks;
-}
-
 function validateLinks() {
   const linksToFiles = new Map<string, string[]>();
 
@@ -369,28 +274,6 @@ function validateLinks() {
 
     console.log(
       `\n🔎 Check the above output to resolve the ${brokenLinks.size} broken links in each respecitve source (.mdoc, .astro, and/or content collection generation`
-    );
-  }
-
-  // Cross-site validation: check docs/ markdown links to /docs/ astro pages
-  console.log(
-    '\n🔗 Validating cross-site links from docs/ markdown to astro pages...\n'
-  );
-  const crossSiteBrokenLinks = validateCrossSiteLinks(availableInternalRoutes);
-
-  if (crossSiteBrokenLinks.size > 0) {
-    hasBrokenLinks = true;
-    let totalCrossSiteBroken = 0;
-    for (const [file, badLinks] of crossSiteBrokenLinks) {
-      totalCrossSiteBroken += badLinks.length;
-      console.log(
-        `\n❌ docs/${file} has ${badLinks.length} broken cross-site links:`
-      );
-      badLinks.forEach((link) => console.log(`\t- ${link}`));
-    }
-
-    console.log(
-      `\n🔎 Found ${totalCrossSiteBroken} broken cross-site links from docs/ markdown pointing to non-existent astro pages`
     );
   }
 

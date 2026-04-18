@@ -79,6 +79,27 @@ impl HelpPopup {
         }
     }
 
+    pub fn page_up(&mut self) {
+        let page = self.viewport_height.saturating_sub(2).max(1);
+        self.scroll_offset = self.scroll_offset.saturating_sub(page);
+        self.scrollbar_state = self
+            .scrollbar_state
+            .content_length(self.content_height)
+            .viewport_content_length(self.viewport_height)
+            .position(self.scroll_offset);
+    }
+
+    pub fn page_down(&mut self) {
+        let page = self.viewport_height.saturating_sub(2).max(1);
+        let max_scroll = self.content_height.saturating_sub(self.viewport_height);
+        self.scroll_offset = (self.scroll_offset + page).min(max_scroll);
+        self.scrollbar_state = self
+            .scrollbar_state
+            .content_length(self.content_height)
+            .viewport_content_length(self.viewport_height)
+            .position(self.scroll_offset);
+    }
+
     pub fn render(&mut self, f: &mut Frame<'_>, area: Rect) {
         // Add a safety check to prevent rendering outside buffer bounds (this can happen if the user resizes the window a lot before it stabilizes it seems)
         if area.height == 0
@@ -128,6 +149,7 @@ impl HelpPopup {
             ("↓ or j", "Navigate/scroll task output down"),
             ("<ctrl>+u", "Scroll task output up"),
             ("<ctrl>+d", "Scroll task output down"),
+            ("PgUp or PgDn", "Scroll task output by page"),
             ("", ""),
             // Task List Controls
             ("/", "Filter tasks based on search term"),

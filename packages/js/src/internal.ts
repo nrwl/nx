@@ -1,4 +1,8 @@
 export { resolveModuleByImport } from './utils/typescript/ast-utils';
+export {
+  walkTsconfigExtendsChain,
+  type RawTsconfigJsonCache,
+} from './utils/typescript/raw-tsconfig';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 export {
   registerTsProject,

@@ -57,6 +57,7 @@ import { ConfigurationSourceMaps } from '../../project-graph/utils/project-confi
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 
 import { createTaskHasher } from '../../hasher/create-task-hasher';
+import { getTaskSpecificEnv } from '../../tasks-runner/task-env';
 import { ProjectGraphError } from '../../project-graph/error-types';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 
@@ -1489,7 +1490,13 @@ async function createJsonOutput(
 
     const hasher = createTaskHasher(rawGraph, readNxJson());
     let tasks = Object.values(taskGraph.tasks);
-    const hashes = await hasher.hashTasks(tasks, taskGraph);
+    // Match the runtime path: each task is hashed against its own env so
+    // the graph-view hash matches the hash used when the task actually runs.
+    const perTaskEnvs: Record<string, NodeJS.ProcessEnv> = {};
+    for (const task of tasks) {
+      perTaskEnvs[task.id] = getTaskSpecificEnv(task, rawGraph);
+    }
+    const hashes = await hasher.hashTasks(tasks, taskGraph, perTaskEnvs);
     response.tasks = taskGraph;
     response.taskPlans = tasks.reduce((acc, task, index) => {
       acc[task.id] = Object.keys(hashes[index].details.nodes).sort();

@@ -130,6 +130,70 @@ describe('@nx/vitest', () => {
     });
   });
 
+  describe('typecheck enabled', () => {
+    beforeEach(async () => {
+      context = {
+        nxJsonConfiguration: {
+          targetDefaults: {},
+          namedInputs: {
+            default: ['{projectRoot}/**/*'],
+            production: ['!{projectRoot}/**/*.spec.ts'],
+          },
+        },
+        workspaceRoot: '',
+      };
+    });
+
+    afterEach(() => {
+      jest.resetModules();
+    });
+
+    it('should include d.ts in dependentTasksOutputFiles when typecheck is enabled', async () => {
+      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
+        resolveConfig: jest.fn().mockResolvedValue({
+          path: 'vitest.config.ts',
+          config: {},
+          dependencies: [],
+          test: {
+            typecheck: {
+              enabled: true,
+            },
+          },
+        }),
+      });
+
+      const nodes = await createNodesFunction(
+        ['vitest.config.ts'],
+        {
+          testTargetName: 'test',
+        },
+        context
+      );
+
+      const testTarget = nodes[0][1].projects['.'].targets['test'];
+      expect(testTarget.inputs).toContainEqual({
+        dependentTasksOutputFiles: '**/*.{js,d.ts}',
+        transitive: true,
+      });
+    });
+
+    it('should only include js in dependentTasksOutputFiles when typecheck is not enabled', async () => {
+      const nodes = await createNodesFunction(
+        ['vitest.config.ts'],
+        {
+          testTargetName: 'test',
+        },
+        context
+      );
+
+      const testTarget = nodes[0][1].projects['.'].targets['test'];
+      expect(testTarget.inputs).toContainEqual({
+        dependentTasksOutputFiles: '**/*.js',
+        transitive: true,
+      });
+    });
+  });
+
   describe('workspace config with projects', () => {
     beforeEach(async () => {
       context = {

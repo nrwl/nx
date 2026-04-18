@@ -88,7 +88,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.
       # # Change from build to build-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-tests
@@ -187,7 +187,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.
       # # Change from build to build-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-tests

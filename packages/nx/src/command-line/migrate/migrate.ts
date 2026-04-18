@@ -78,7 +78,7 @@ import {
 import { readNxJson } from '../../config/configuration';
 import { runNxSync } from '../../utils/child-process';
 import { daemonClient } from '../../daemon/client/client';
-import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import { isNxCloudUsed, isNxCloudDisabled } from '../../utils/nx-cloud-utils';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
@@ -1248,7 +1248,51 @@ async function downloadPackageMigrationsFromRegistry(
   return result;
 }
 
+function createConcurrencyLimiter(concurrency: number) {
+  const queue: (() => void)[] = [];
+  let active = 0;
+
+  function next() {
+    while (queue.length > 0 && active < concurrency) {
+      active++;
+      queue.shift()();
+    }
+  }
+
+  return function limit<T>(fn: () => Promise<T>): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      queue.push(() => {
+        fn()
+          .then(resolve, reject)
+          .finally(() => {
+            active--;
+            next();
+          });
+      });
+      next();
+    });
+  };
+}
+
+const installConcurrencyLimit = process.env.NX_MIGRATE_INSTALL_CONCURRENCY
+  ? createConcurrencyLimiter(
+      Math.max(
+        1,
+        Math.floor(Number(process.env.NX_MIGRATE_INSTALL_CONCURRENCY)) || 1
+      )
+    )
+  : null;
+
 async function getPackageMigrationsUsingInstall(
+  packageName: string,
+  packageVersion: string
+): Promise<ResolvedMigrationConfiguration> {
+  const run = () =>
+    getPackageMigrationsUsingInstallImpl(packageName, packageVersion);
+  return installConcurrencyLimit ? installConcurrencyLimit(run) : run();
+}
+
+async function getPackageMigrationsUsingInstallImpl(
   packageName: string,
   packageVersion: string
 ): Promise<ResolvedMigrationConfiguration> {
@@ -1551,6 +1595,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
         ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
         (await isMigratingToNewMajor(from, opts.targetVersion)) &&
         !isCI() &&
+        !isNxCloudDisabled(originalNxJson) &&
         !isNxCloudUsed(originalNxJson)
       ) {
         output.success({

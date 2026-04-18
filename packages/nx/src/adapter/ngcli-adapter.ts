@@ -87,6 +87,16 @@ function getProjectGraph(): Promise<ProjectGraph> {
   }
 }
 
+function getUndefinedDefaultsTransform(isAngularBuild: boolean) {
+  // `addUndefinedObjectDefaults` was introduced in @angular-devkit/core v20.
+  // `@nx/angular` supports Angular >=19, so fall back to `addUndefinedDefaults`
+  // when the object-specific transform is unavailable.
+  if (isAngularBuild && schema.transforms.addUndefinedObjectDefaults) {
+    return schema.transforms.addUndefinedObjectDefaults;
+  }
+  return schema.transforms.addUndefinedDefaults;
+}
+
 export async function createBuilderContext(
   builderInfo: {
     builderName: string;
@@ -119,11 +129,7 @@ export async function createBuilderContext(
     ['@nx/angular:application', '@nx/angular:unit-test'].includes(
       builderInfo.builderName
     );
-  if (isAngularBuild) {
-    registry.addPostTransform(schema.transforms.addUndefinedObjectDefaults);
-  } else {
-    registry.addPostTransform(schema.transforms.addUndefinedDefaults);
-  }
+  registry.addPostTransform(getUndefinedDefaultsTransform(isAngularBuild));
   registry.addSmartDefaultProvider('unparsed', () => {
     // This happens when context.scheduleTarget is used to run a target using nx:run-commands
     return [];
@@ -265,11 +271,7 @@ export async function scheduleTarget(
     ['@nx/angular:application', '@nx/angular:unit-test'].includes(builderName);
 
   const registry = new schema.CoreSchemaRegistry();
-  if (isAngularBuild) {
-    registry.addPostTransform(schema.transforms.addUndefinedObjectDefaults);
-  } else {
-    registry.addPostTransform(schema.transforms.addUndefinedDefaults);
-  }
+  registry.addPostTransform(getUndefinedDefaultsTransform(isAngularBuild));
   registry.addSmartDefaultProvider('unparsed', () => {
     // This happens when context.scheduleTarget is used to run a target using nx:run-commands
     return [];
