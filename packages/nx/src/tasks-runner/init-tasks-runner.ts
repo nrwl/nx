@@ -179,7 +179,7 @@ export async function runDiscreteTasks(
 
   let groupId = 0;
   let nextBatch = orchestrator.nextBatch();
-  let batchResults: Array<Promise<TaskResult[]>> = [];
+  const batchResults: Array<Promise<TaskResult[]>> = [];
   /**
    * Set of task ids that were part of batches
    */
@@ -196,14 +196,25 @@ export async function runDiscreteTasks(
     nextBatch = orchestrator.nextBatch();
   }
 
-  const taskResults = tasks
-    // Filter out tasks which were not part of batches
-    .filter((task) => !batchTasks.has(task.id))
-    .map((task) =>
-      orchestrator
-        .applyFromCacheOrRunTask(true, task, groupId++)
-        .then((r) => [r])
-    );
+  const discreteTasks = tasks.filter((task) => !batchTasks.has(task.id));
+
+  // Bulk-resolve every discrete task's cache state in one shot —
+  // single SQL call plus parallel remote retrievals. Batches kicked
+  // off above continue running concurrently while we await this.
+  const cacheHits = await orchestrator.resolveCachedTasks(
+    true,
+    discreteTasks,
+    groupId++
+  );
+  const cacheHitsById = new Map(cacheHits.map((h) => [h.task.id, h]));
+
+  const taskResults: Array<Promise<TaskResult[]>> = discreteTasks.map(
+    async (task) => {
+      const hit = cacheHitsById.get(task.id);
+      if (hit) return [hit];
+      return [await orchestrator.runTaskDirectly(true, task, groupId++)];
+    }
+  );
 
   return [...batchResults, ...taskResults];
 }

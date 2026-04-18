@@ -190,14 +190,42 @@ impl TaskHasher {
         }
     }
 
+    /// Hash each task's instructions using the env map keyed by `task.id`.
+    /// Every task in `hash_plans` must have an entry in `per_task_envs` —
+    /// a missing id surfaces as an error rather than silently hashing
+    /// against an empty env. Callers that want to hash all tasks against
+    /// the same env should build `per_task_envs` by keying that env under
+    /// every task id.
     #[napi]
     pub fn hash_plans(
         &self,
         hash_plans: &External<HashMap<String, Vec<HashInstruction>>>,
-        js_env: HashMap<String, String>,
+        per_task_envs: HashMap<String, HashMap<String, String>>,
         cwd: String,
         collect_task_inputs: Option<bool>,
     ) -> anyhow::Result<NapiDashMap<String, HashDetails>> {
+        for task_id in hash_plans.keys() {
+            if !per_task_envs.contains_key(task_id) {
+                anyhow::bail!("hash_plans: missing env entry for task {}", task_id);
+            }
+        }
+        self.hash_plans_impl(hash_plans, cwd, collect_task_inputs, |task_id| {
+            per_task_envs
+                .get(task_id)
+                .expect("per-task env presence verified above")
+        })
+    }
+
+    fn hash_plans_impl<'a, F>(
+        &self,
+        hash_plans: &External<HashMap<String, Vec<HashInstruction>>>,
+        cwd: String,
+        collect_task_inputs: Option<bool>,
+        resolve_env: F,
+    ) -> anyhow::Result<NapiDashMap<String, HashDetails>>
+    where
+        F: Fn(&str) -> &'a HashMap<String, String> + Sync,
+    {
         // Create fresh caches for this invocation.
         // This ensures no stale caches across multiple CLI commands when the daemon holds
         // the TaskHasher instance.
@@ -255,7 +283,7 @@ impl TaskHasher {
                     task_id,
                     instruction,
                     HashInstructionArgs {
-                        js_env: &js_env,
+                        js_env: resolve_env(task_id),
                         ts_config_hash: &ts_config_hash,
                         project_root_mappings: &project_root_mappings,
                         sorted_externals: &sorted_externals,

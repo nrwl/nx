@@ -2,7 +2,10 @@ import { performance } from 'node:perf_hooks';
 
 performance.mark(`plugin worker ${process.pid} code loading -- start`);
 
-import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
+import {
+  consumeMessagesFromSocket,
+  parseMessage,
+} from '../../../utils/consume-messages-from-socket';
 import { logger } from '../../../utils/logger';
 import { createSerializableError } from '../../../utils/serializable-error';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
@@ -63,7 +66,7 @@ const server = createServer((socket) => {
   socket.on(
     'data',
     consumeMessagesFromSocket((raw) => {
-      const message = JSON.parse(raw.toString());
+      const message = parseMessage<any>(raw);
       if (!isPluginWorkerMessage(message)) {
         return;
       }

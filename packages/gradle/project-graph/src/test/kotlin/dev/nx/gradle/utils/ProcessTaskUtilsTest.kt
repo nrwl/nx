@@ -514,6 +514,38 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
+    fun `kotlin compile task alone infers class via primary branch`() {
+      val kotlinProject = ProjectBuilder.builder().withName("kotlinPrimaryBranch").build()
+      kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
+
+      val compileKotlin = kotlinProject.tasks.getByName("compileKotlin")
+
+      val extensions = inferExtensionsFromInputProperties(compileKotlin, emptySet())
+
+      assertTrue(
+          extensions.contains("class"),
+          "Expected 'class' extension from primary branch for KotlinCompile task, got $extensions")
+      assertFalse(
+          extensions.contains("jar"),
+          "Expected no 'jar' extension with empty dependents, got $extensions")
+    }
+
+    @Test
+    fun `kotlin compile dependent contributes class extension`() {
+      val kotlinProject = ProjectBuilder.builder().withName("kotlinDepBranch").build()
+      kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
+
+      val compileKotlin = kotlinProject.tasks.getByName("compileKotlin")
+      val plain = kotlinProject.tasks.register("plain").get()
+
+      val extensions = inferExtensionsFromInputProperties(plain, setOf(compileKotlin))
+
+      assertTrue(
+          extensions.contains("class"),
+          "Expected 'class' from KotlinCompile dependent, got $extensions")
+    }
+
+    @Test
     fun `compile task without archive dependents does not infer jar`() {
       val project = ProjectBuilder.builder().withName("compileOnly").build()
       project.plugins.apply("java")

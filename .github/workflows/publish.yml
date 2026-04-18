@@ -427,11 +427,12 @@ jobs:
           PLAYWRIGHT_BROWSERS_PATH: 0
           NODE_VERSION: 22.16.0
           NX_GRADLE_DISABLE: 'true'
+          NODE_OPTIONS: '--max-old-space-size=4096'
         with:
           operating_system: freebsd
           version: '14.0'
           architecture: x86-64
-          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE
+          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE NODE_OPTIONS
           shell: bash
           run: |
             env
@@ -504,6 +505,9 @@ jobs:
             echo "Checking disk space after cleanup"
             df -h
             
+            # Disable core dumps - OOM'd Node processes write multi-GB core files that fill the disk
+            ulimit -c 0
+
             echo "Building FreeBSD bindings"
             BUILD_EXIT=0
             pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd || BUILD_EXIT=$?
@@ -513,6 +517,18 @@ jobs:
 
             if [ "$BUILD_EXIT" -ne 0 ]; then
               echo "Build failed with exit code $BUILD_EXIT"
+              echo "=== Disk usage by top-level directories ==="
+              du -sh /* 2>/dev/null | sort -rh | head -20
+              echo "=== Disk usage in home directory ==="
+              du -sh ~/* 2>/dev/null | sort -rh | head -20
+              echo "=== Disk usage in workspace ==="
+              du -sh /home/runner/work/nx/nx/* 2>/dev/null | sort -rh | head -20
+              echo "=== Disk usage in .nx ==="
+              du -sh /home/runner/work/nx/nx/.nx/* 2>/dev/null | sort -rh | head -20
+              echo "=== Disk usage in cargo/rustup ==="
+              du -sh ~/.cargo/* ~/.rustup/* 2>/dev/null | sort -rh | head -20
+              echo "=== Core dumps ==="
+              find / -name "*.core" -o -name "core.*" -o -name "core" 2>/dev/null | head -10
               exit $BUILD_EXIT
             fi
 

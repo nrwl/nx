@@ -8,7 +8,6 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs';
-import { deserialize } from 'node:v8';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { readNxJson } from '../../config/configuration';
@@ -27,7 +26,7 @@ import {
 } from '../../project-graph/plugins/public-api';
 import { preventRecursionInGraphConstruction } from '../../project-graph/project-graph';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
-import { isJsonMessage } from '../../utils/consume-messages-from-socket';
+import { parseMessage } from '../../utils/consume-messages-from-socket';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import { handleImport } from '../../utils/handle-import';
 import { isCI } from '../../utils/is-ci';
@@ -291,12 +290,6 @@ export class DaemonClient {
     }
   }
 
-  private parseMessage(message: string): any {
-    return isJsonMessage(message)
-      ? JSON.parse(message)
-      : deserialize(Buffer.from(message, 'binary'));
-  }
-
   async requestShutdown(): Promise<void> {
     return this.sendToDaemonViaQueue({ type: 'REQUEST_SHUTDOWN' });
   }
@@ -341,17 +334,14 @@ export class DaemonClient {
     runnerOptions: any,
     tasks: Task[],
     taskGraph: TaskGraph,
-    env: NodeJS.ProcessEnv,
+    perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
     collectInputs?: boolean
   ): Promise<Hash[]> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
       runnerOptions,
-      env:
-        process.env.NX_USE_V8_SERIALIZER !== 'false'
-          ? structuredClone(process.env)
-          : env,
+      perTaskEnvs,
       tasks,
       taskGraph,
       cwd,
@@ -410,7 +400,7 @@ export class DaemonClient {
       ).listen(
         (message) => {
           try {
-            const parsedMessage = this.parseMessage(message);
+            const parsedMessage = parseMessage<any>(message);
             // Notify all callbacks
             for (const cb of this.fileWatcherCallbacks.values()) {
               cb(null, parsedMessage);
@@ -516,7 +506,7 @@ export class DaemonClient {
       ).listen(
         (message) => {
           try {
-            const parsedMessage = this.parseMessage(message);
+            const parsedMessage = parseMessage<any>(message);
             for (const cb of this.fileWatcherCallbacks.values()) {
               cb(null, parsedMessage);
             }
@@ -605,7 +595,7 @@ export class DaemonClient {
       ).listen(
         (message) => {
           try {
-            const parsedMessage = this.parseMessage(message);
+            const parsedMessage = parseMessage<any>(message);
             // Notify all callbacks
             for (const cb of this.projectGraphListenerCallbacks.values()) {
               cb(null, parsedMessage);
@@ -710,7 +700,7 @@ export class DaemonClient {
       ).listen(
         (message) => {
           try {
-            const parsedMessage = this.parseMessage(message);
+            const parsedMessage = parseMessage<any>(message);
             for (const cb of this.projectGraphListenerCallbacks.values()) {
               cb(null, parsedMessage);
             }
@@ -777,23 +767,21 @@ export class DaemonClient {
     );
   }
 
-  recordOutputsHash(outputs: string[], hash: string): Promise<any> {
+  recordOutputsHashBatch(
+    entries: { outputs: string[]; hash: string }[]
+  ): Promise<any> {
     return this.sendToDaemonViaQueue({
-      type: 'RECORD_OUTPUTS_HASH',
-      data: {
-        outputs,
-        hash,
-      },
+      type: 'RECORD_OUTPUTS_HASH_BATCH',
+      data: entries,
     });
   }
 
-  outputsHashesMatch(outputs: string[], hash: string): Promise<any> {
+  outputsHashesMatchBatch(
+    entries: { outputs: string[]; hash: string }[]
+  ): Promise<boolean[]> {
     return this.sendToDaemonViaQueue({
-      type: 'OUTPUTS_HASHES_MATCH',
-      data: {
-        outputs,
-        hash,
-      },
+      type: 'OUTPUTS_HASHES_MATCH_BATCH',
+      data: entries,
     });
   }
 
@@ -1264,9 +1252,7 @@ export class DaemonClient {
   private handleMessage(serializedResult: string) {
     try {
       performance.mark('result-parse-start-' + this.currentMessage.type);
-      const parsedResult = isJsonMessage(serializedResult)
-        ? JSON.parse(serializedResult)
-        : deserialize(Buffer.from(serializedResult, 'binary'));
+      const parsedResult = parseMessage<any>(serializedResult);
       performance.mark('result-parse-end-' + this.currentMessage.type);
       performance.measure(
         'deserialize daemon response - ' + this.currentMessage.type,

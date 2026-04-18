@@ -4,6 +4,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { IS_WASM, TaskDetails } from '../native';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
+import { getTaskSpecificEnv } from '../tasks-runner/task-env';
 import { getCustomHasher } from '../tasks-runner/utils';
 import { getDbConnection } from '../utils/db-connection';
 import { getInputs, TaskHasher } from './task-hasher';
@@ -30,10 +31,12 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
 ) {
   performance.mark('hashMultipleTasks:start');
 
+  const projects =
+    readProjectsConfigurationFromProjectGraph(projectGraph).projects;
   const tasks = Object.values(taskGraph.tasks);
   const tasksWithHashers = await Promise.all(
     tasks.map(async (task) => {
-      const customHasher = getCustomHasher(task, projectGraph);
+      const customHasher = getCustomHasher(task, projects);
       return { task, customHasher };
     })
   );
@@ -52,7 +55,11 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     })
     .map((t) => t.task);
 
-  const hashes = await hasher.hashTasks(tasksToHash, taskGraph, process.env);
+  const perTaskEnvs: Record<string, NodeJS.ProcessEnv> = {};
+  for (const task of tasksToHash) {
+    perTaskEnvs[task.id] = getTaskSpecificEnv(task, projectGraph);
+  }
+  const hashes = await hasher.hashTasks(tasksToHash, taskGraph, perTaskEnvs);
   const ioService = getTaskIOService();
   const hasInputSubscribers = ioService.hasTaskInputSubscribers();
   for (let i = 0; i < tasksToHash.length; i++) {
@@ -93,9 +100,9 @@ export async function hashTask(
 ) {
   performance.mark('hashSingleTask:start');
 
-  const customHasher = getCustomHasher(task, projectGraph);
   const projectsConfigurations =
     readProjectsConfigurationFromProjectGraph(projectGraph);
+  const customHasher = getCustomHasher(task, projectsConfigurations.projects);
 
   const { value, details, inputs } = await (customHasher
     ? customHasher(task, {
@@ -136,11 +143,19 @@ export async function hashTask(
   );
 }
 
+/**
+ * Batch-hash `tasks`. `perTaskEnvs` must contain an entry keyed by
+ * `task.id` for every task — the per-task env is what each task's
+ * custom hasher sees and what the built-in hasher reads
+ * `HashInstruction::Environment` inputs against. Callers that
+ * genuinely want to hash against a single shared env should build
+ * `{ [task.id]: env }` for every task.
+ */
 export async function hashTasks(
   hasher: TaskHasher,
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
-  env: NodeJS.ProcessEnv,
+  perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
   taskDetails: TaskDetails | null,
   tasksToHashOverride?: Task[]
 ) {
@@ -159,7 +174,7 @@ export async function hashTasks(
   const tasksWithoutCustomHashers: Task[] = [];
 
   for (const task of tasks) {
-    const customHasher = getCustomHasher(task, projectGraph);
+    const customHasher = getCustomHasher(task, projectsConfigurations.projects);
     if (customHasher) {
       tasksWithCustomHashers.push(task);
     } else {
@@ -171,7 +186,7 @@ export async function hashTasks(
   const ioService = getTaskIOService();
   const hasInputSubscribers = ioService.hasTaskInputSubscribers();
   const customHasherPromises = tasksWithCustomHashers.map(async (task) => {
-    const customHasher = getCustomHasher(task, projectGraph);
+    const customHasher = getCustomHasher(task, projectsConfigurations.projects);
     const { value, details, inputs } = await customHasher(task, {
       hasher,
       projectGraph,
@@ -179,7 +194,7 @@ export async function hashTasks(
       workspaceConfig: projectsConfigurations,
       projectsConfigurations,
       nxJsonConfiguration: nxJson,
-      env,
+      env: perTaskEnvs[task.id],
     } as any);
     task.hash = value;
     task.hashDetails = details;
@@ -194,7 +209,7 @@ export async function hashTasks(
   let batchHashPromise: Promise<void> = Promise.resolve();
   if (tasksWithoutCustomHashers.length > 0) {
     batchHashPromise = hasher
-      .hashTasks(tasksWithoutCustomHashers, taskGraph, env)
+      .hashTasks(tasksWithoutCustomHashers, taskGraph, perTaskEnvs)
       .then((hashes) => {
         for (let i = 0; i < tasksWithoutCustomHashers.length; i++) {
           tasksWithoutCustomHashers[i].hash = hashes[i].value;
@@ -214,14 +229,26 @@ export async function hashTasks(
   await Promise.all([...customHasherPromises, batchHashPromise]);
 
   if (taskDetails?.recordTaskDetails) {
-    taskDetails.recordTaskDetails(
-      tasks.map((task) => ({
-        hash: task.hash,
-        project: task.target.project,
-        target: task.target.target,
-        configuration: task.target.configuration,
-      }))
-    );
+    // Guard against a custom hasher resolving with a falsy value —
+    // the built-in batch hasher always produces a hash, but user-written
+    // custom hashers are untrusted and an empty/undefined hash would
+    // violate the task_details schema downstream.
+    const hashedTasks = [];
+    for (const t of tasks) {
+      if (!t.hash) {
+        continue;
+      }
+
+      hashedTasks.push({
+        hash: t.hash,
+        project: t.target.project,
+        target: t.target.target,
+        configuration: t.target.configuration,
+      });
+    }
+    if (hashedTasks.length > 0) {
+      taskDetails.recordTaskDetails(hashedTasks);
+    }
   }
 
   performance.mark('hashMultipleTasks:end');

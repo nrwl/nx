@@ -143,41 +143,48 @@ export const createNodes: CreateNodesV2<JestPluginOptions> = [
 
     const lockFilePattern = getLockFileName(packageManager);
 
+    // Load configs in parallel. `loadConfigFile` calls `registerTsProject`,
+    // whose transpiler dedup is refcounted: serial register/unregister cycles
+    // drop refCount to 0 between iterations and recreate a fresh ts-node
+    // service each time (ts-node has no cleanup — see
+    // packages/nx/src/plugins/js/utils/register.js), stacking N services in
+    // `require.extensions` and OOM'ing under NX_PREFER_TS_NODE. Parallel
+    // loads keep all registrations alive concurrently so the dedup holds and
+    // a single transpiler instance is shared.
     let requireCacheCleared = false;
-    const loadedConfigs: Array<{
-      rawConfig: any;
-      externalFiles: string[];
-      needsDtsInputs: boolean;
-    }> = [];
-    for (let i = 0; i < validConfigFiles.length; i++) {
-      const configFilePath = validConfigFiles[i];
-      const projectRoot = projectRoots[i];
-      const absConfigFilePath = resolve(context.workspaceRoot, configFilePath);
-      if (!requireCacheCleared && require.cache[absConfigFilePath]) {
-        clearRequireCache();
-        requireCacheCleared = true;
-      }
-      const rawConfig = await loadConfigFile(absConfigFilePath, [
-        'tsconfig.spec.json',
-        'tsconfig.test.json',
-        'tsconfig.jest.json',
-        'tsconfig.json',
-      ]);
-      const { externalFiles, needsDtsInputs } =
-        await collectExternalFileReferences(
-          rawConfig,
-          absConfigFilePath,
-          projectRoot,
+    const loadedConfigs = await Promise.all(
+      validConfigFiles.map(async (configFilePath, i) => {
+        const projectRoot = projectRoots[i];
+        const absConfigFilePath = resolve(
           context.workspaceRoot,
-          {
-            presetCache,
-            tsconfigJsonCache,
-            tsconfigExistsCache,
-            isolatedModulesCache,
-          }
+          configFilePath
         );
-      loadedConfigs.push({ rawConfig, externalFiles, needsDtsInputs });
-    }
+        if (!requireCacheCleared && require.cache[absConfigFilePath]) {
+          clearRequireCache();
+          requireCacheCleared = true;
+        }
+        const rawConfig = await loadConfigFile(absConfigFilePath, [
+          'tsconfig.spec.json',
+          'tsconfig.test.json',
+          'tsconfig.jest.json',
+          'tsconfig.json',
+        ]);
+        const { externalFiles, needsDtsInputs } =
+          await collectExternalFileReferences(
+            rawConfig,
+            absConfigFilePath,
+            projectRoot,
+            context.workspaceRoot,
+            {
+              presetCache,
+              tsconfigJsonCache,
+              tsconfigExistsCache,
+              isolatedModulesCache,
+            }
+          );
+        return { rawConfig, externalFiles, needsDtsInputs };
+      })
+    );
 
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
