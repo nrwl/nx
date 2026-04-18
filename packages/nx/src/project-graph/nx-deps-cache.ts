@@ -11,7 +11,6 @@ import type {
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import { serverLogger } from '../daemon/logger';
-import { emitLogToClient } from '../daemon/server/client-socket-context';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import {
   directoryExists,
@@ -276,15 +275,9 @@ export function writeCache(
     }
   } while (!done && retry < 5);
   if (!done) {
-    const failureMessage = `Failed to write project graph cache to ${nxProjectGraph} and ${nxFileMap} after 5 attempts. Continuing without cache.`;
-    if (isOnDaemon()) {
-      // On the daemon a logger.warn would just land in the daemon's
-      // log file. Route through the emit-log channel so the user sees
-      // it in their terminal.
-      emitLogToClient('warn', failureMessage);
-    } else {
-      logger.warn(failureMessage);
-    }
+    logger.warn(
+      `Failed to write project graph cache to ${nxProjectGraph} and ${nxFileMap} after 5 attempts. Continuing without cache.`
+    );
     tryRemoveFile(nxProjectGraph);
     tryRemoveFile(nxFileMap);
     tryRemoveFile(nxSourceMaps);

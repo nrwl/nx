@@ -12,6 +12,7 @@ import { minimatch } from 'minimatch';
 import { performance } from 'perf_hooks';
 
 import { DelayedSpinner } from '../../utils/delayed-spinner';
+import { isOnDaemon } from '../../daemon/is-on-daemon';
 import { sendProgressMessageToClient } from '../../daemon/server/client-socket-context';
 import {
   AggregateCreateNodesError,
@@ -89,7 +90,9 @@ export async function createProjectConfigurationsWithPlugins(
     // When running inside the daemon the local spinner is a no-op
     // (daemon has no TTY), so forward the message to the connected
     // client so their spinner reflects which plugin is still running.
-    sendProgressMessageToClient(message);
+    if (isOnDaemon()) {
+      sendProgressMessageToClient(message);
+    }
   }
 
   function updateSpinner() {
@@ -122,7 +125,9 @@ export async function createProjectConfigurationsWithPlugins(
   );
   const initialMessage = `Creating project graph nodes with ${createNodesPlugins.length} plugins`;
   spinner = new DelayedSpinner(initialMessage);
-  sendProgressMessageToClient(initialMessage);
+  if (isOnDaemon()) {
+    sendProgressMessageToClient(initialMessage);
+  }
 
   const results: Promise<
     (readonly [
