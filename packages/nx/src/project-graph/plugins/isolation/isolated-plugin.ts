@@ -29,9 +29,18 @@ import type {
   MessageResult,
   PluginWorkerLoadResult,
   PluginWorkerMessage,
+  PluginWorkerNotification,
   PluginWorkerResult,
 } from './messaging';
-import { isPluginWorkerResult, sendMessageOverSocket } from './messaging';
+import {
+  isPluginWorkerNotification,
+  isPluginWorkerResult,
+  sendMessageOverSocket,
+} from './messaging';
+import {
+  emitLogToClient,
+  sendProgressMessageToClient,
+} from '../../../daemon/server/client-socket-context';
 import {
   Hook,
   Phase,
@@ -213,6 +222,10 @@ export class IsolatedPlugin implements LoadedNxPlugin {
 
   private handleSocketData = (raw: string) => {
     const message = parseMessage<any>(raw);
+    if (isPluginWorkerNotification(message)) {
+      handlePluginWorkerNotification(message);
+      return;
+    }
     if (!isPluginWorkerResult(message)) {
       return;
     }
@@ -695,4 +708,29 @@ type Falsy = false | 0 | '' | null | undefined | 0n;
 
 function hooks(...array: Array<Hook | Falsy>): Array<Hook> {
   return array.filter((v): v is Hook => !!v);
+}
+
+// When the host process is the daemon, forward notifications to the
+// currently-connected client so log lines surface in the user's
+// terminal and progress updates reach the client-side spinner. When the
+// host is the direct CLI there is no client socket, so log lines go
+// straight to stdout/stderr; progress updates from workers have no
+// destination in that case and are dropped (the CLI's own in-process
+// plugin-loading loop is responsible for spinner updates there).
+function handlePluginWorkerNotification(
+  notification: PluginWorkerNotification
+): void {
+  if ((global as any).NX_DAEMON) {
+    if (notification.type === 'emitLog') {
+      emitLogToClient(notification.level, notification.message);
+    } else if (notification.type === 'updateProgress') {
+      sendProgressMessageToClient(notification.message);
+    }
+    return;
+  }
+  if (notification.type === 'emitLog') {
+    const stream =
+      notification.level === 'error' ? process.stderr : process.stdout;
+    stream.write(notification.message + '\n');
+  }
 }
