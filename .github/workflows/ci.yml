@@ -55,14 +55,6 @@ jobs:
       - name: Start CI Run
         run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev
-
-      - name: Install Chrome
-        uses: browser-actions/setup-chrome@2dbff04819ebbfd5c974947148805a825b8a07fd # v2.1.0
-
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
 
@@ -88,9 +80,6 @@ jobs:
 
       - name: Install project dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Install Playwright
-        run: pnpm playwright install --with-deps
 
       - name: Nx Report
         run:

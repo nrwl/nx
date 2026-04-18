@@ -6,7 +6,10 @@ import path = require('path');
 import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
-import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
+import {
+  consumeMessagesFromSocket,
+  parseMessage,
+} from '../../../utils/consume-messages-from-socket';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { logger } from '../../../utils/logger';
 import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
@@ -209,7 +212,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   }
 
   private handleSocketData = (raw: string) => {
-    const message = JSON.parse(raw);
+    const message = parseMessage<any>(raw);
     if (!isPluginWorkerResult(message)) {
       return;
     }
