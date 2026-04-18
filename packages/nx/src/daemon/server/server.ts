@@ -93,6 +93,7 @@ import {
   isWindows,
   killSocketOrPath,
 } from '../socket-utils';
+import { runWithClientSocket } from './client-socket-context';
 import { registerFileChangeListener } from './file-watching/file-change-events';
 import {
   hasRegisteredFileWatcherSockets,
@@ -494,7 +495,11 @@ export async function handleResult(
   let hr: HandlerResult;
   const startMark = new Date();
   try {
-    hr = await hrFn();
+    // Run the handler inside an AsyncLocalStorage context keyed on the
+    // requesting client socket. Any code path reached from here can call
+    // sendProgressMessageToClient / emitLogToClient to stream messages
+    // back to this specific client while the request is in flight.
+    hr = await runWithClientSocket(socket, () => hrFn());
   } catch (error) {
     hr = { description: `[${type}]`, error };
   }

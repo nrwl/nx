@@ -28,6 +28,11 @@ import { preventRecursionInGraphConstruction } from '../../project-graph/project
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
 import { parseMessage } from '../../utils/consume-messages-from-socket';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
+import { globalSpinner } from '../../utils/spinner';
+import {
+  isEmitLogMessage,
+  isUpdateProgressMessage,
+} from '../message-types/streaming-messages';
 import { handleImport } from '../../utils/handle-import';
 import { isCI } from '../../utils/is-ci';
 import { isSandbox } from '../../utils/is-sandbox';
@@ -1259,6 +1264,20 @@ export class DaemonClient {
         'result-parse-start-' + this.currentMessage.type,
         'result-parse-end-' + this.currentMessage.type
       );
+      // Streaming messages fire side-effects on the client but do not
+      // resolve the pending request promise — the daemon can push several
+      // of these before finally sending the real response.
+      if (isUpdateProgressMessage(parsedResult)) {
+        if (globalSpinner.isSpinning()) {
+          globalSpinner.updateText(parsedResult.message);
+        }
+        return;
+      }
+      if (isEmitLogMessage(parsedResult)) {
+        // eslint-disable-next-line no-console
+        console[parsedResult.level](parsedResult.message);
+        return;
+      }
       if (parsedResult.error) {
         this.currentReject(parsedResult.error);
       } else {
