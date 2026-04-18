@@ -17,7 +17,7 @@ export default function AuthorDetail({ author }: AuthorDetailProps) {
           width="40"
           height="40"
           decoding="async"
-          src={`/documentation/blog/images/authors/${author.name}.jpeg`}
+          src={`/images/authors/${author.name}.jpeg`}
           className="rounded-full ring-1 ring-white grayscale dark:ring-zinc-900"
         />
       </span>

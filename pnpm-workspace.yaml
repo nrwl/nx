@@ -18,6 +18,8 @@ onlyBuiltDependencies:
   - 'nx'
 patchedDependencies:
   '@astrojs/starlight': 'patches/@astrojs__starlight.patch'
+  '@nx/jest@22.7.0-beta.12': 'patches/@nx__jest@22.7.0-beta.12.patch'
+allowUnusedPatches: true
 catalog:
   '@zkochan/js-yaml': '0.0.7'
   chalk: '^4.1.0'
