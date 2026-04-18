@@ -27,7 +27,8 @@ export function mergeProjectConfigurationIntoRootMap(
   sourceInformation?: SourceInformation,
   // This function is used when reading project configuration
   // in generators, where we don't want to do this.
-  skipTargetNormalization?: boolean
+  skipTargetNormalization?: boolean,
+  deferSpreadsWithoutBase?: boolean
 ): {
   nameChanged: boolean;
 } {
@@ -197,7 +198,8 @@ export function mergeProjectConfigurationIntoRootMap(
             matchingProject.targets?.[matchingTargetName],
             sourceMap,
             sourceInformation,
-            `targets.${matchingTargetName}`
+            `targets.${matchingTargetName}`,
+            deferSpreadsWithoutBase
           );
       }
     }
@@ -284,8 +286,8 @@ export class ProjectNodesManager {
   private nameSubstitutionManager: ProjectNameInNodePropsManager;
 
   constructor() {
-    // Pass a lazy accessor so the substitution manager always sees
-    // the current nameMap without manual synchronization.
+    // Pass a lazy accessor so the substitution manager always sees the
+    // current nameMap without manual synchronization.
     this.nameSubstitutionManager = new ProjectNameInNodePropsManager(
       () => this.nameMap
     );
@@ -335,18 +337,30 @@ export class ProjectNodesManager {
   }
 
   /**
-   * Registers substitutors for a plugin result's project references
-   * in `inputs` and `dependsOn`.
+   * Inserts project-name sentinels into `inputs` and `dependsOn` on the
+   * merged objects from `mergedRootMap` (defaulting to this manager's
+   * rootMap). Walking the merged entries matters because a spread-produced
+   * array is a fresh instance.
+   *
+   * Pass a different `mergedRootMap` for the default-plugin intermediate
+   * pass, then call again with `this.rootMap` after it's applied so
+   * sentinel parents rebind onto the final arrays.
    */
-  registerSubstitutors(
+  registerNameRefs(
     pluginResultProjects?: Record<
       string,
       Omit<ProjectConfiguration, 'root'> & Partial<ProjectConfiguration>
-    >
+    >,
+    mergedRootMap: Record<string, ProjectConfiguration> = this.rootMap
   ): void {
-    this.nameSubstitutionManager.registerSubstitutorsForNodeResults(
-      pluginResultProjects
-    );
+    if (!pluginResultProjects) return;
+    const scoped: Record<string, ProjectConfiguration> = {};
+    for (const root in pluginResultProjects) {
+      if (mergedRootMap[root]) {
+        scoped[root] = mergedRootMap[root];
+      }
+    }
+    this.nameSubstitutionManager.registerNameRefs(scoped);
   }
 
   /**

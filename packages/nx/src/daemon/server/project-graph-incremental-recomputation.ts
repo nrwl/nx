@@ -24,7 +24,11 @@ import {
   writeCache,
   writeCacheIfStale,
 } from '../../project-graph/nx-deps-cache';
-import { getPlugins } from '../../project-graph/plugins/get-plugins';
+import {
+  getPlugins,
+  getPluginsSeparated,
+  SeparatedPlugins,
+} from '../../project-graph/plugins/get-plugins';
 import type { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
 import { ConfigurationResult } from '../../project-graph/utils/project-configuration-utils';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
@@ -109,12 +113,12 @@ export async function getCachedSerializedProjectGraphPromise(
     // reset the wait time
     waitPeriod = 100;
     await resetInternalStateIfNxDepsMissing();
-    const plugins = await getPlugins();
+    const separatedPlugins = await getPluginsSeparated();
     const previousPromise = cachedSerializedProjectGraphPromise;
     if (collectedUpdatedFiles.size == 0 && collectedDeletedFiles.size == 0) {
       if (!cachedSerializedProjectGraphPromise) {
         cachedSerializedProjectGraphPromise =
-          processFilesAndCreateAndSerializeProjectGraph(plugins);
+          processFilesAndCreateAndSerializeProjectGraph(separatedPlugins);
         serverLogger.log(
           'No files changed, but no in-memory cached project graph found. Recomputing it...'
         );
@@ -128,7 +132,7 @@ export async function getCachedSerializedProjectGraphPromise(
         `Recomputing project graph because of ${collectedUpdatedFiles.size} updated and ${collectedDeletedFiles.size} deleted files.`
       );
       cachedSerializedProjectGraphPromise =
-        processFilesAndCreateAndSerializeProjectGraph(plugins);
+        processFilesAndCreateAndSerializeProjectGraph(separatedPlugins);
     }
     const graphWasRecomputed =
       cachedSerializedProjectGraphPromise !== previousPromise;
@@ -238,7 +242,9 @@ export function addUpdatedAndDeletedFiles(
       }
 
       cachedSerializedProjectGraphPromise =
-        processFilesAndCreateAndSerializeProjectGraph(await getPlugins());
+        processFilesAndCreateAndSerializeProjectGraph(
+          await getPluginsSeparated()
+        );
       const { projectGraph, sourceMaps, error } =
         await cachedSerializedProjectGraphPromise;
 
@@ -334,8 +340,12 @@ export function invalidateGraphCache() {
 }
 
 async function processFilesAndCreateAndSerializeProjectGraph(
-  plugins: LoadedNxPlugin[]
+  separatedPlugins: SeparatedPlugins
 ): Promise<SerializedProjectGraph> {
+  const plugins = [
+    ...separatedPlugins.specifiedPlugins,
+    ...separatedPlugins.defaultPlugins,
+  ];
   const myGeneration = ++recomputationGeneration;
 
   // Helper to check if this recomputation is stale (a newer one has started)
@@ -371,7 +381,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
 
     try {
       projectConfigurationsResult = await retrieveProjectConfigurations(
-        plugins,
+        separatedPlugins,
         workspaceRoot,
         nxJson
       );
