@@ -70,6 +70,8 @@ export function removeDbConnections() {
   dbConnectionMap.clear();
 }
 
+process.on('exit', removeDbConnections);
+
 function getEntryOrSet<TKey, TVal>(
   map: Map<TKey, TVal>,
   key: TKey,

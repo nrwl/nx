@@ -233,6 +233,7 @@ function isNxCloudCommand(command: string): boolean {
   return nxCloudCommands.includes(command);
 }
 
+let analyticsStarted = false;
 async function initAnalytics() {
   const {
     ensureAnalyticsPreferenceSet,
@@ -242,6 +243,7 @@ async function initAnalytics() {
     await ensureAnalyticsPreferenceSet();
   } catch {}
   await startAnalytics();
+  analyticsStarted = true;
 }
 
 function handleMissingLocalInstallation(detectedWorkspaceRoot: string | null) {
@@ -356,19 +358,10 @@ const getLatestVersionOfNx = ((fn: () => string) => {
   return () => cache || (cache = fn());
 })(_getLatestVersionOfNx);
 
-process.on('exit', () => {
-  // Only clean up if db-connection was actually loaded during this run.
-  const cached = require.cache[require.resolve('../src/utils/db-connection')];
-  if (cached) {
-    cached.exports.removeDbConnections();
-  }
-});
-
 main().catch((error) => {
   console.error(error);
-  const cached = require.cache[require.resolve('../src/analytics')];
-  if (cached) {
-    cached.exports.flushAnalytics();
+  if (analyticsStarted) {
+    require('../src/analytics').flushAnalytics();
   }
   process.exit(1);
 });
