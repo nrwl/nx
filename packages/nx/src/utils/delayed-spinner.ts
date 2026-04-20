@@ -1,3 +1,5 @@
+import { isOnDaemon } from '../daemon/is-on-daemon';
+import { sendProgressMessageToClient } from '../daemon/server/client-socket-context';
 import { isCI } from './is-ci';
 import { globalSpinner, SHOULD_SHOW_SPINNERS } from './spinner';
 
@@ -28,6 +30,13 @@ export class DelayedSpinner {
     opts = normalizeDelayedSpinnerOpts(opts);
     const delay = SHOULD_SHOW_SPINNERS ? opts.delay : opts.ciDelay;
 
+    // When running inside the daemon there is no local TTY, so forward
+    // the initial message to the connected client immediately — its own
+    // spinner (also a DelayedSpinner) decides whether to render it.
+    if (isOnDaemon()) {
+      sendProgressMessageToClient(message);
+    }
+
     this.timeouts.push(
       setTimeout(() => {
         this.ready = true;
@@ -54,6 +63,9 @@ export class DelayedSpinner {
       }
     } else if (this.ready && this.lastMessage && this.lastMessage !== message) {
       console.warn(message);
+    }
+    if (isOnDaemon()) {
+      sendProgressMessageToClient(message);
     }
     this.lastMessage = message;
     return this;

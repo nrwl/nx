@@ -1274,7 +1274,6 @@ export class DaemonClient {
         return;
       }
       if (isEmitLogMessage(parsedResult)) {
-        // eslint-disable-next-line no-console
         console[parsedResult.level](parsedResult.message);
         return;
       }

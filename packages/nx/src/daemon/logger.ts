@@ -16,6 +16,12 @@ import {
   DAEMON_OUTPUT_LOG_FILE,
 } from './tmp-dir';
 import { nxVersion } from '../utils/versions';
+import { EMIT_LOG, EmitLogLevel } from './message-types/streaming-messages';
+import {
+  assertOnDaemon,
+  getActiveClientSocket,
+  writeStreamingMessage,
+} from './server/client-socket-context';
 
 type LogSource = 'Server' | 'Client';
 
@@ -49,6 +55,30 @@ class DaemonLogger {
 
   watcherLog(...s: unknown[]) {
     this.log(`[WATCHER]: ${s.join(' ')}`);
+  }
+
+  /**
+   * Emits a log line to the currently-connected client. Useful for
+   * warnings raised inside daemon-executed code that we want the user
+   * to see in their terminal rather than lose to the daemon log file.
+   *
+   * Falls back to writing into the daemon log when there is no active
+   * client socket (e.g. background daemon work with no subscriber).
+   *
+   * Must only be invoked from inside the Nx daemon process.
+   */
+  emitToClient(level: EmitLogLevel, message: string) {
+    assertOnDaemon('DaemonLogger#emitToClient');
+    const socket = getActiveClientSocket();
+    if (!socket) {
+      this.log(`[emit-log:${level}] ${message}`);
+      return;
+    }
+    writeStreamingMessage(socket, {
+      type: EMIT_LOG,
+      level,
+      message,
+    });
   }
 
   private writeToFile(message: string) {

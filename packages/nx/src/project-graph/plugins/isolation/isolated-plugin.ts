@@ -37,10 +37,7 @@ import {
   isPluginWorkerResult,
   sendMessageOverSocket,
 } from './messaging';
-import {
-  emitLogToClient,
-  sendProgressMessageToClient,
-} from '../../../daemon/server/client-socket-context';
+import { serverLogger } from '../../../daemon/logger';
 import {
   Hook,
   Phase,
@@ -710,27 +707,18 @@ function hooks(...array: Array<Hook | Falsy>): Array<Hook> {
   return array.filter((v): v is Hook => !!v);
 }
 
-// When the host process is the daemon, forward notifications to the
-// currently-connected client so log lines surface in the user's
-// terminal and progress updates reach the client-side spinner. When the
-// host is the direct CLI there is no client socket, so log lines go
-// straight to stdout/stderr; progress updates from workers have no
-// destination in that case and are dropped (the CLI's own in-process
-// plugin-loading loop is responsible for spinner updates there).
+// When the host process is the daemon, forward the notification to the
+// currently-connected client so the log line surfaces in the user's
+// terminal. When the host is the direct CLI there is no client socket,
+// so the log line goes straight to stdout/stderr.
 function handlePluginWorkerNotification(
   notification: PluginWorkerNotification
 ): void {
   if ((global as any).NX_DAEMON) {
-    if (notification.type === 'emitLog') {
-      emitLogToClient(notification.level, notification.message);
-    } else if (notification.type === 'updateProgress') {
-      sendProgressMessageToClient(notification.message);
-    }
+    serverLogger.emitToClient(notification.level, notification.message);
     return;
   }
-  if (notification.type === 'emitLog') {
-    const stream =
-      notification.level === 'error' ? process.stderr : process.stdout;
-    stream.write(notification.message + '\n');
-  }
+  const stream =
+    notification.level === 'error' ? process.stderr : process.stdout;
+  stream.write(notification.message + '\n');
 }

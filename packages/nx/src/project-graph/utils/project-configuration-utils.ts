@@ -12,8 +12,6 @@ import { minimatch } from 'minimatch';
 import { performance } from 'perf_hooks';
 
 import { DelayedSpinner } from '../../utils/delayed-spinner';
-import { isOnDaemon } from '../../daemon/is-on-daemon';
-import { sendProgressMessageToClient } from '../../daemon/server/client-socket-context';
 import {
   AggregateCreateNodesError,
   formatAggregateCreateNodesError,
@@ -85,36 +83,26 @@ export async function createProjectConfigurationsWithPlugins(
   let spinner: DelayedSpinner;
   const inProgressPlugins = new Set<string>();
 
-  function setProgressMessage(message: string) {
-    spinner.setMessage(message);
-    // When running inside the daemon the local spinner is a no-op
-    // (daemon has no TTY), so forward the message to the connected
-    // client so their spinner reflects which plugin is still running.
-    if (isOnDaemon()) {
-      sendProgressMessageToClient(message);
-    }
-  }
-
   function updateSpinner() {
     if (!spinner || inProgressPlugins.size === 0) {
       return;
     }
 
     if (inProgressPlugins.size === 1) {
-      setProgressMessage(
+      spinner.setMessage(
         `Creating project graph nodes with ${
           inProgressPlugins.values().next().value
         }`
       );
     } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      setProgressMessage(
+      spinner.setMessage(
         [
           `Creating project graph nodes with ${inProgressPlugins.size} plugins`,
           ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
         ].join('\n')
       );
     } else {
-      setProgressMessage(
+      spinner.setMessage(
         `Creating project graph nodes with ${inProgressPlugins.size} plugins`
       );
     }
@@ -123,11 +111,9 @@ export async function createProjectConfigurationsWithPlugins(
   const createNodesPlugins = plugins.filter(
     (plugin) => plugin.createNodes?.[0]
   );
-  const initialMessage = `Creating project graph nodes with ${createNodesPlugins.length} plugins`;
-  spinner = new DelayedSpinner(initialMessage);
-  if (isOnDaemon()) {
-    sendProgressMessageToClient(initialMessage);
-  }
+  spinner = new DelayedSpinner(
+    `Creating project graph nodes with ${createNodesPlugins.length} plugins`
+  );
 
   const results: Promise<
     (readonly [

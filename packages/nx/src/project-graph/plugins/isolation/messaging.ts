@@ -183,18 +183,10 @@ export type PluginWorkerEmitLogNotification = {
   message: string;
 };
 
-export type PluginWorkerUpdateProgressNotification = {
-  type: 'updateProgress';
-  message: string;
-};
-
-export type PluginWorkerNotification =
-  | PluginWorkerEmitLogNotification
-  | PluginWorkerUpdateProgressNotification;
+export type PluginWorkerNotification = PluginWorkerEmitLogNotification;
 
 const NOTIFICATION_TYPES: ReadonlyArray<PluginWorkerNotification['type']> = [
   'emitLog',
-  'updateProgress',
 ];
 
 export function isPluginWorkerNotification(
