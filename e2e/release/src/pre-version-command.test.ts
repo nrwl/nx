@@ -122,6 +122,7 @@ describe('nx release pre-version command', () => {
     // command should fail because the pre-version command will fail
     const result5 = runCLI('release patch -d --first-release', {
       silenceError: true,
+      redirectStderr: true,
     });
     expect(result5).toContain(
       'NX   The pre-version command failed. Retry with --verbose to see the full output of the pre-version command.'
@@ -130,6 +131,7 @@ describe('nx release pre-version command', () => {
 
     const result6 = runCLI('release patch -d --first-release --verbose', {
       silenceError: true,
+      redirectStderr: true,
     });
     expect(result6).toContain(
       'NX   The pre-version command failed. See the full output above.'
