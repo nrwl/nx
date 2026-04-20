@@ -41,9 +41,9 @@ async function main() {
     process.argv[2] !== '--help' &&
     process.argv[2] !== 'reset'
   ) {
-    const {
-      assertSupportedPlatform,
-    } = require('../src/native/assert-supported-platform');
+    const { assertSupportedPlatform } = await import(
+      '../src/native/assert-supported-platform.js'
+    );
     assertSupportedPlatform();
   }
 
@@ -52,7 +52,7 @@ async function main() {
   // --version doesn't need any env / daemon / analytics state — skip dotenv
   // loading (and the heavy modules it would pull in).
   if (workspace && process.argv[2] !== '--version') {
-    const { loadRootEnvFiles } = require('../src/utils/dotenv');
+    const { loadRootEnvFiles } = await import('../src/utils/dotenv.js');
     performance.mark('loading dotenv files:start');
     loadRootEnvFiles(workspace.dir);
     performance.mark('loading dotenv files:end');
@@ -72,7 +72,7 @@ async function main() {
     (process.argv[2] === 'graph' && !workspace)
   ) {
     process.env.NX_DAEMON = 'false';
-    require('nx/src/command-line/nx-commands').commandsObject.argv;
+    (await import('nx/src/command-line/nx-commands')).commandsObject.argv;
   } else {
     // polyfill rxjs observable to avoid issues with multiple version of Observable installed in node_modules
     // https://twitter.com/BenLesh/status/1192478226385428483?s=20
@@ -109,29 +109,27 @@ async function main() {
 
     // this file is already in the local workspace
     if (isNxCloudCommand(process.argv[2])) {
-      const { daemonClient } =
-        require('../src/daemon/client/client') as typeof import('../src/daemon/client/client');
+      const { daemonClient } = await import('../src/daemon/client/client.js');
       if (!daemonClient.enabled() && workspace !== null) {
-        const {
-          setupWorkspaceContext,
-        } = require('../src/utils/workspace-context');
+        const { setupWorkspaceContext } = await import(
+          '../src/utils/workspace-context.js'
+        );
         setupWorkspaceContext(workspace.dir);
       }
       await initAnalytics();
       // nx-cloud commands can run without local Nx installation
       process.env.NX_DAEMON = 'false';
-      require('nx/src/command-line/nx-commands').commandsObject.argv;
+      (await import('nx/src/command-line/nx-commands')).commandsObject.argv;
     } else if (isLocalInstall) {
-      const { daemonClient } =
-        require('../src/daemon/client/client') as typeof import('../src/daemon/client/client');
+      const { daemonClient } = await import('../src/daemon/client/client.js');
       if (!daemonClient.enabled() && workspace !== null) {
-        const {
-          setupWorkspaceContext,
-        } = require('../src/utils/workspace-context');
+        const { setupWorkspaceContext } = await import(
+          '../src/utils/workspace-context.js'
+        );
         setupWorkspaceContext(workspace.dir);
       }
       await initAnalytics();
-      const { initLocal } = require('./init-local');
+      const { initLocal } = await import('./init-local.js');
       await initLocal(workspace);
     } else if (localNx) {
       // Nx is being run from globally installed CLI - hand off to the local
@@ -140,9 +138,9 @@ async function main() {
       warnIfUsingOutdatedGlobalInstall(GLOBAL_NX_VERSION, LOCAL_NX_VERSION);
       if (localNx.includes('.nx')) {
         const nxWrapperPath = localNx.replace(/\.nx.*/, '.nx/') + 'nxw.js';
-        require(nxWrapperPath);
+        await import(nxWrapperPath);
       } else {
-        require(localNx);
+        await import(localNx);
       }
     }
   }
@@ -235,10 +233,10 @@ function isNxCloudCommand(command: string): boolean {
 
 let analyticsStarted = false;
 async function initAnalytics() {
-  const {
-    ensureAnalyticsPreferenceSet,
-  } = require('../src/utils/analytics-prompt');
-  const { startAnalytics } = require('../src/analytics');
+  const { ensureAnalyticsPreferenceSet } = await import(
+    '../src/utils/analytics-prompt.js'
+  );
+  const { startAnalytics } = await import('../src/analytics/index.js');
   try {
     await ensureAnalyticsPreferenceSet();
   } catch {}
@@ -358,10 +356,13 @@ const getLatestVersionOfNx = ((fn: () => string) => {
   return () => cache || (cache = fn());
 })(_getLatestVersionOfNx);
 
-main().catch((error) => {
+main().catch(async (error) => {
   console.error(error);
   if (analyticsStarted) {
-    require('../src/analytics').flushAnalytics();
+    // analyticsStarted implies '../src/analytics' is already in the module
+    // cache, so this resolves from cache without any disk work.
+    const { flushAnalytics } = await import('../src/analytics/index.js');
+    flushAnalytics();
   }
   process.exit(1);
 });
