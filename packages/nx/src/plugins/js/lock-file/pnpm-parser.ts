@@ -28,7 +28,7 @@ import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getCatalogManager } from '../../../utils/catalog';
 import { findNodeMatchingVersion } from './project-graph-pruning';
-import { join } from 'path';
+import { join, relative, sep } from 'path';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 import { satisfies, validRange } from 'semver';
 let currentLockFileHash: string;
@@ -589,12 +589,77 @@ export function stringifyPnpmLockfile(
     +lockfileVersion
   );
 
+  const workspaceModules = getWorkspacePackagesFromGraph(graph);
+
+  // Collect ALL workspace modules needed — direct deps from requiredImporters plus
+  // their transitive workspace deps — so every copied package has an importer block.
+  const allRequiredImporters: Record<string, string> = { ...requiredImporters };
+  function collectTransitiveWorkspaceDeps(importerPath: string): void {
+    const imp = importers[importerPath];
+    if (!imp) return;
+    for (const depType of [
+      'dependencies',
+      'optionalDependencies',
+    ] as const) {
+      const deps = imp[depType];
+      if (!deps) continue;
+      for (const [depName, depVersion] of Object.entries(deps)) {
+        if (
+          workspaceModules.has(depName) &&
+          !allRequiredImporters[depName]
+        ) {
+          // Find the importer path for this transitive workspace dep
+          const wsMod = workspaceModules.get(depName);
+          if (wsMod) {
+            const transitivePath = wsMod.data.root;
+            allRequiredImporters[depName] = transitivePath;
+            collectTransitiveWorkspaceDeps(transitivePath);
+          }
+        }
+      }
+    }
+  }
+  for (const importerPath of Object.values(requiredImporters)) {
+    collectTransitiveWorkspaceDeps(importerPath);
+  }
+
   const workspaceDependencyImporters: Record<string, ProjectSnapshot> = {};
-  for (const [packageName, importerPath] of Object.entries(requiredImporters)) {
+  for (const [packageName, importerPath] of Object.entries(
+    allRequiredImporters
+  )) {
     const baseImporter = importers[importerPath];
     if (baseImporter) {
+      // Deep-clone to avoid mutating the parsed lockfile data.
+      const importer: ProjectSnapshot = JSON.parse(
+        JSON.stringify(baseImporter)
+      );
+
+      // Rewrite workspace:* specifiers to file: relative paths so they match
+      // what @nx/js:copy-workspace-modules writes to package.json files.
+      // Without this, `pnpm install --frozen-lockfile` fails with
+      // ERR_PNPM_OUTDATED_LOCKFILE because the specifier in the lockfile
+      // ("workspace:*") doesn't match the package.json dep ("file:../lib-b").
+      for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+        const deps = importer[depType] as Record<string, string> | undefined;
+        if (!deps) continue;
+        for (const depName of Object.keys(deps)) {
+          if (workspaceModules.has(depName)) {
+            // All modules are flattened under workspace_modules/. The relative
+            // path from workspace_modules/<packageName> to
+            // workspace_modules/<depName> equals relative(packageName, depName).
+            const rel = relative(packageName, depName)
+              .split(sep)
+              .join('/');
+            // specifier must match what copy-workspace-modules writes to package.json (file:)
+            importer.specifiers[depName] = `file:${rel}`;
+            // version stays as link: (pnpm's internal representation for local deps)
+            (deps as Record<string, string>)[depName] = `link:${rel}`;
+          }
+        }
+      }
+
       workspaceDependencyImporters[`workspace_modules/${packageName}`] =
-        baseImporter;
+        importer;
     }
   }
 
