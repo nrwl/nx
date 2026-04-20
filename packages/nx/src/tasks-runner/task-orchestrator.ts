@@ -265,7 +265,7 @@ export class TaskOrchestrator {
                 this.completedTasks.has(depId)
               )
           );
-        if (unhashed.length > 1) {
+        if (unhashed.length > 0) {
           const perTaskEnvs: Record<string, NodeJS.ProcessEnv> = {};
           for (const task of unhashed) {
             perTaskEnvs[task.id] = getTaskSpecificEnv(task, this.projectGraph);
@@ -850,6 +850,10 @@ export class TaskOrchestrator {
       isCacheableTask(t, this.options)
     );
     if (cacheableTasks.length === 0) return [];
+
+    // Wait for any queued processTask promises to settle so task.hash is
+    // populated before cache.getBatch maps it into a Rust String.
+    await Promise.all(cacheableTasks.map((t) => this.processedTasks.get(t.id)));
 
     const cacheHits = await this.fetchCacheHits(cacheableTasks);
     if (cacheHits.length === 0) return [];

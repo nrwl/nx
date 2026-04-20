@@ -325,31 +325,44 @@ The Framer page should render JSON inside a `<pre>` tag:
 
 ## Versioned Docs
 
-When a new major Nx version is released (or about to be released), create a versioned snapshot of the docs site so the previous version remains accessible at `v{major}.nx.dev` (e.g. `v22.nx.dev`).
+When a new major Nx version is released (or about to be released), create a versioned snapshot of the docs site so the previous version remains accessible at `{major}.nx.dev` (e.g. `22.nx.dev`).
 
 ### Creating a Version Snapshot
 
 ```bash
-node ./scripts/create-versioned-docs.mts v22
+node ./scripts/create-versioned-docs.mts 22
 ```
 
 This will:
 
 1. Fetch tags from origin, find the latest stable release for that major (e.g. `22.6.4`)
-2. Checkout that tag, install deps, and build astro-docs
-3. Create an orphan git branch `v22` containing only the pre-built static site
+2. Checkout that tag, install deps, and build the docs site
+3. Create an orphan git branch `22` containing only the pre-built static site plus minimal scaffolding (root `package.json`, `nx.json`, `pnpm-lock.yaml`, `netlify.toml`, and a no-op `nx-dev` project) so Netlify's configured build command succeeds instantly
 4. Return to your original branch
 
 If no stable tags exist for that major version, it builds from the current branch.
 
-The branch contains a no-op `project.json` build target so Netlify's existing build command (`pnpm nx build astro-docs --force`) succeeds instantly without rebuilding.
+For Nx 21+, the script builds `astro-docs` (Astro/Starlight). For legacy Nx 18–20, it builds `nx-dev` (Next.js with static export) — this path will be removed once those versions are no longer maintained.
+
+#### Flags
+
+- `--force` — overwrite an existing local/remote `{major}` branch
+- `--redirect-to-prod` — skip the build and produce a branch that 301s every path to `https://nx.dev/docs`. Used to retire an old versioned subdomain (e.g. `16.nx.dev`) without maintaining its docs
+
+```bash
+# Retire an old versioned site
+node ./scripts/create-versioned-docs.mts 16 --redirect-to-prod
+```
 
 ### Pushing the Branch
 
 ```bash
-git push -f origin v22
+git push -f origin 22
 ```
 
-### Netlify Setup
+### Deployment Setup
 
-Each versioned branch is deployed as a [Netlify branch deploy](https://docs.netlify.com/site-deploys/overview/#branch-deploy-controls). Configure the branch subdomain in Netlify to point `v22.nx.dev` to the `v22` branch deploy.
+Versioned sites are served via Netlify branch deploys of the main `nx-dev` Netlify site, with custom domains managed in Squarespace.
+
+- **Netlify** — each `{major}` branch is deployed as a [branch deploy](https://docs.netlify.com/site-deploys/overview/#branch-deploy-controls) of the `nx-dev` site. The branch's root `netlify.toml` overrides the UI build settings so Netlify serves the pre-built static files (no rebuild, no `@netlify/plugin-nextjs`). Add the branch to the site's branch deploy allowlist, then add `{major}.nx.dev` as a domain alias pointing at the branch deploy
+- **Squarespace** — DNS for `nx.dev` is managed in Squarespace. Add a CNAME for `{major}` pointing at the Netlify branch deploy hostname

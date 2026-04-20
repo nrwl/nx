@@ -28,22 +28,13 @@ if (
 }
 
 module.exports = withNx({
-  // Disable the type checking for now, we need to resolve the issues first.
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Limit static generation workers to reduce memory usage on CI (Netlify 8GB limit)
   experimental: {
     cpus: 1,
-    // Exclude large, unnecessary packages from the server function trace.
-    // We have to say under 250MB for Neltify
-    // Include changelog content in the function bundle so on-demand rendering works
-    outputFileTracingIncludes: {
-      '/changelog': ['./public/documentation/changelog/**'],
-    },
     outputFileTracingExcludes: {
       '*': [
-        // Native binaries - not needed at runtime for the website
         'node_modules/@swc/core-linux-x64-musl/**',
         'node_modules/@swc/core-linux-x64-gnu/**',
         'node_modules/@swc/core-linux-arm64-musl/**',
@@ -66,7 +57,6 @@ module.exports = withNx({
         'node_modules/@nx/nx-linux-x64-musl/**',
         'node_modules/@nx/nx-win32-arm64-msvc/**',
         'node_modules/@nx/nx-win32-x64-msvc/**',
-        // Build tools not needed at runtime
         'node_modules/typescript/**',
         'node_modules/webpack/**',
         'node_modules/sass/**',
@@ -77,18 +67,15 @@ module.exports = withNx({
     return [
       {
         source: '/',
-        destination: '/blog',
+        destination: '/ai-chat',
         permanent: false,
       },
     ];
   },
   async rewrites() {
-    // Only configure rewrites if NEXT_PUBLIC_ASTRO_URL is set
-    // Remove trailing slash to prevent double slashes in rewrite destinations
     const astroDocsUrl = process.env.NEXT_PUBLIC_ASTRO_URL?.replace(/\/$/, '');
 
     if (!astroDocsUrl) {
-      // Skip rewrites if env var is not set
       return [];
     }
 
@@ -115,7 +102,6 @@ module.exports = withNx({
       },
     ];
 
-    // For Vite assets only in development mode
     if (process.env.NODE_ENV !== 'production') {
       entries.push({
         source: '/@fs/:path*',
@@ -125,29 +111,25 @@ module.exports = withNx({
 
     return entries;
   },
-  // Transpile nx-dev packages
   transpilePackages: [
-    '@nx/nx-dev-data-access-documents',
     '@nx/nx-dev-data-access-courses',
-    '@nx/nx-dev-models-document',
-    '@nx/nx-dev-models-package',
-    '@nx/nx-dev-models-menu',
-    '@nx/nx-dev-ui-markdoc',
-    '@nx/nx-dev-ui-common',
-    '@nx/nx-dev-ui-fence',
-    '@nx/nx-dev-ui-primitives',
-    '@nx/nx-dev-ui-icons',
-    '@nx/nx-dev-ui-theme',
-    '@nx/nx-dev-ui-references',
-    '@nx/nx-dev-feature-search',
-    '@nx/nx-dev-feature-analytics',
-    '@nx/nx-dev-feature-feedback',
+    '@nx/nx-dev-data-access-documents',
     '@nx/nx-dev-feature-ai',
+    '@nx/nx-dev-feature-analytics',
+    '@nx/nx-dev-feature-search',
+    '@nx/nx-dev-models-document',
+    '@nx/nx-dev-models-menu',
+    '@nx/nx-dev-models-package',
     '@nx/nx-dev-ui-animations',
     '@nx/nx-dev-ui-blog',
+    '@nx/nx-dev-ui-common',
     '@nx/nx-dev-ui-courses',
-    '@nx/nx-dev-ui-podcast',
-    '@nx/nx-dev-ui-pricing',
+    '@nx/nx-dev-ui-fence',
+    '@nx/nx-dev-ui-icons',
+    '@nx/nx-dev-ui-markdoc',
+    '@nx/nx-dev-ui-primitives',
+    '@nx/nx-dev-ui-references',
+    '@nx/nx-dev-ui-theme',
     '@nx/nx-dev-ui-video-courses',
     '@nx/nx-dev-util-ai',
   ],
@@ -171,7 +153,6 @@ module.exports = withNx({
   },
   webpack: (config, { dev }) => {
     if (!dev) {
-      // Disable source maps for smaller memory footprint
       config.devtool = false;
     }
     return config;

@@ -4,6 +4,12 @@
  * Usage:
  *   node ./scripts/create-versioned-docs.mts v22
  *   node ./scripts/create-versioned-docs.mts 22
+ *   node ./scripts/create-versioned-docs.mts v16 --redirect-to-prod
+ *
+ * --redirect-to-prod: skip the build and produce a branch that 301s every
+ *   path to https://nx.dev/docs. Used to retire an old versioned subdomain
+ *   (e.g. 16.nx.dev) without maintaining its docs — old paths won't map
+ *   cleanly anymore, so everything goes to the /docs root.
  *
  * What it does:
  *   1. Fetches tags from origin, finds the latest stable release for that major
@@ -177,6 +183,59 @@ ${headersAndRedirects}`
 }
 
 // ---------------------------------------------------------------------------
+// Stage: redirect-to-prod (no build)
+// Produces a dummy publish dir + netlify.toml that 301s everything to nx.dev/docs.
+// Used to retire an old versioned subdomain without maintaining its docs.
+// ---------------------------------------------------------------------------
+function stageRedirectToProd(tmpDir: string): void {
+  // Publish dir must match the Netlify UI setting (nx-dev/nx-dev/.next) —
+  // the UI value is authoritative; a toml `publish` override isn't honored.
+  const publishDir = resolve(tmpDir, PUBLISH_DIR);
+  mkdirSync(publishDir, { recursive: true });
+
+  writeFileSync(
+    resolve(publishDir, 'index.html'),
+    `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Redirecting to nx.dev/docs</title>
+    <meta http-equiv="refresh" content="0; url=https://nx.dev/docs">
+    <link rel="canonical" href="https://nx.dev/docs">
+    <script>window.location.replace("https://nx.dev/docs");</script>
+  </head>
+  <body>
+    Redirecting to <a href="https://nx.dev/docs">https://nx.dev/docs</a>.
+  </body>
+</html>
+`
+  );
+
+  // netlify.toml: overrides the UI build command to a no-op and force-301s
+  // every path to nx.dev/docs. Publish dir stays as the UI-configured
+  // ${PUBLISH_DIR}. No package.json / lockfile / nx scaffolding needed.
+  writeFileSync(
+    resolve(tmpDir, 'netlify.toml'),
+    `# Auto-generated for redirect-to-prod versioned branch.
+# Overrides Netlify UI build command so no install/build runs.
+# Publish dir stays as the UI-configured ${PUBLISH_DIR}.
+
+[build]
+  command = "echo 'redirect-only branch — no build'"
+
+[build.environment]
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+
+[[redirects]]
+  from = "/*"
+  to = "https://nx.dev/docs"
+  status = 301
+  force = true
+`
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Build + stage: Astro (v21+)
 // ---------------------------------------------------------------------------
 function buildAndStageAstro(tmpDir: string): void {
@@ -284,12 +343,16 @@ function buildAndStageNextjs(tmpDir: string): void {
 const positionalArgs = process.argv.slice(2).filter((a) => !a.startsWith('-'));
 const flags = new Set(process.argv.slice(2).filter((a) => a.startsWith('-')));
 const force = flags.has('--force');
+const redirectToProd = flags.has('--redirect-to-prod');
 
 if (positionalArgs.length === 0) {
   console.error(
-    'Usage: node ./scripts/create-versioned-docs.mts <version> [--force]'
+    'Usage: node ./scripts/create-versioned-docs.mts <version> [--force] [--redirect-to-prod]'
   );
   console.error('  e.g. node ./scripts/create-versioned-docs.mts v22');
+  console.error(
+    '       node ./scripts/create-versioned-docs.mts v16 --redirect-to-prod'
+  );
   process.exit(1);
 }
 
@@ -329,7 +392,13 @@ if (branchExists && !force) {
 
 console.log(`\nCreating versioned docs branch: ${branchName}`);
 console.log(
-  `Site type: ${isAstro ? 'Astro (v21+)' : 'Next.js (legacy v18-v20)'}\n`
+  `Site type: ${
+    redirectToProd
+      ? 'redirect-to-prod (no build)'
+      : isAstro
+        ? 'Astro (v21+)'
+        : 'Next.js (legacy v18-v20)'
+  }\n`
 );
 
 // Save current ref to return to later
@@ -338,25 +407,34 @@ const currentRef = execSync('git rev-parse --abbrev-ref HEAD', { cwd: ROOT })
   .trim();
 
 // --- Step 0: Find and checkout the latest stable tag ---
-console.log('=== Step 0: Finding latest stable release tag ===\n');
-run('git fetch --tags --force origin');
-
-const latestTag = findLatestStableTag(majorVersion);
+// Skipped in --redirect-to-prod mode: there's nothing to build, so the source
+// ref doesn't matter — stay on the current branch for commit provenance.
 let sourceRef: string;
-
-if (latestTag) {
-  sourceRef = latestTag;
-  console.log(`Found latest stable tag: ${sourceRef}`);
-  run(`git checkout ${sourceRef}`);
-} else {
+if (redirectToProd) {
   sourceRef = currentRef;
   console.log(
-    `No stable tags found for major version ${majorVersion}. Using current branch: ${currentRef}`
+    '=== Step 0: Skipped (redirect-to-prod) ===\n' +
+      `Using current ref: ${sourceRef}\n`
   );
+} else {
+  console.log('=== Step 0: Finding latest stable release tag ===\n');
+  run('git fetch --tags --force origin');
+
+  const latestTag = findLatestStableTag(majorVersion);
+  if (latestTag) {
+    sourceRef = latestTag;
+    console.log(`Found latest stable tag: ${sourceRef}`);
+    run(`git checkout ${sourceRef}`);
+  } else {
+    sourceRef = currentRef;
+    console.log(
+      `No stable tags found for major version ${majorVersion}. Using current branch: ${currentRef}`
+    );
+  }
 }
 
 // --- Resolve GITHUB_TOKEN (needed for GitHub stars in docs build) ---
-if (!process.env.GITHUB_TOKEN) {
+if (!redirectToProd && !process.env.GITHUB_TOKEN) {
   try {
     const token = execSync(
       "op read --account tuskteam 'op://Employee/API Keys/github_token'",
@@ -381,21 +459,23 @@ if (!process.env.GITHUB_TOKEN) {
 // --- Step 1: Install + build ---
 console.log('\n=== Step 1: Building docs site ===\n');
 
-// Legacy Next.js builds need Node 20 — pin via mise so child processes use it
-if (!isAstro) {
-  console.log('Pinning Node 20 via mise for legacy build...');
-  run('mise use node@20');
-  useMise = true;
-}
+if (!redirectToProd) {
+  // Legacy Next.js builds need Node 20 — pin via mise so child processes use it
+  if (!isAstro) {
+    console.log('Pinning Node 20 via mise for legacy build...');
+    run('mise use node@20');
+    useMise = true;
+  }
 
-// Remove node_modules to avoid stale deps from a different version/branch
-const nodeModulesDir = resolve(ROOT, 'node_modules');
-if (existsSync(nodeModulesDir)) {
-  console.log('Removing node_modules for clean install...');
-  rmSync(nodeModulesDir, { recursive: true });
-}
+  // Remove node_modules to avoid stale deps from a different version/branch
+  const nodeModulesDir = resolve(ROOT, 'node_modules');
+  if (existsSync(nodeModulesDir)) {
+    console.log('Removing node_modules for clean install...');
+    rmSync(nodeModulesDir, { recursive: true });
+  }
 
-run('pnpm install --frozen-lockfile');
+  run('pnpm install --frozen-lockfile');
+}
 
 const tmpDir = resolve(ROOT, 'tmp/versioned-docs');
 if (existsSync(tmpDir)) {
@@ -403,7 +483,9 @@ if (existsSync(tmpDir)) {
 }
 mkdirSync(tmpDir, { recursive: true });
 
-if (isAstro) {
+if (redirectToProd) {
+  stageRedirectToProd(tmpDir);
+} else if (isAstro) {
   buildAndStageAstro(tmpDir);
 } else {
   buildAndStageNextjs(tmpDir);
@@ -417,15 +499,23 @@ try {
   run('git rm -rf .');
 
   // Copy staged files into the working tree
-  cpSync(resolve(tmpDir, 'package.json'), resolve(ROOT, 'package.json'));
-  cpSync(resolve(tmpDir, 'nx.json'), resolve(ROOT, 'nx.json'));
-  cpSync(resolve(tmpDir, 'pnpm-lock.yaml'), resolve(ROOT, 'pnpm-lock.yaml'));
-  cpSync(resolve(tmpDir, 'netlify.toml'), resolve(ROOT, 'netlify.toml'));
-  cpSync(resolve(tmpDir, 'nx-dev'), resolve(ROOT, 'nx-dev'), {
-    recursive: true,
-  });
-
-  run('git add package.json nx.json pnpm-lock.yaml netlify.toml nx-dev/');
+  if (redirectToProd) {
+    cpSync(resolve(tmpDir, 'netlify.toml'), resolve(ROOT, 'netlify.toml'));
+    // Publish dir tree lives at nx-dev/nx-dev/.next/ — matches Netlify UI.
+    cpSync(resolve(tmpDir, 'nx-dev'), resolve(ROOT, 'nx-dev'), {
+      recursive: true,
+    });
+    run('git add netlify.toml nx-dev/');
+  } else {
+    cpSync(resolve(tmpDir, 'package.json'), resolve(ROOT, 'package.json'));
+    cpSync(resolve(tmpDir, 'nx.json'), resolve(ROOT, 'nx.json'));
+    cpSync(resolve(tmpDir, 'pnpm-lock.yaml'), resolve(ROOT, 'pnpm-lock.yaml'));
+    cpSync(resolve(tmpDir, 'netlify.toml'), resolve(ROOT, 'netlify.toml'));
+    cpSync(resolve(tmpDir, 'nx-dev'), resolve(ROOT, 'nx-dev'), {
+      recursive: true,
+    });
+    run('git add package.json nx.json pnpm-lock.yaml netlify.toml nx-dev/');
+  }
   run(
     `git commit -m "docs: versioned docs snapshot for ${branchName} (from ${sourceRef})"`
   );
