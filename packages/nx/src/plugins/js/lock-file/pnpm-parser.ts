@@ -634,11 +634,57 @@ export function stringifyPnpmLockfile(
         JSON.stringify(baseImporter)
       );
 
+      // Add any peerDependency specifiers from the package.json that are absent
+      // from the original lockfile importer. Some packages declare peer deps
+      // that pnpm doesn't record in the workspace lockfile (e.g. if they were
+      // never installed), but the package.json still expects them — pnpm will
+      // report them as "added" without this reconciliation.
+      const wsMod = workspaceModules.get(packageName);
+      if (wsMod) {
+        const pkgJsonPath = join(workspaceRoot, wsMod.data.root, 'package.json');
+        const { existsSync: fsExists, readFileSync: fsRead } = require('fs');
+        if (fsExists(pkgJsonPath)) {
+          const srcPkgJson = JSON.parse(fsRead(pkgJsonPath, 'utf-8'));
+          for (const [depName, depVersion] of Object.entries(
+            srcPkgJson.peerDependencies ?? {}
+          ) as [string, string][]) {
+            if (!(importer.specifiers ?? {})[depName]) {
+              let specifier = depVersion;
+              const mgr = getCatalogManager(workspaceRoot);
+              if (mgr?.isCatalogReference(specifier)) {
+                specifier =
+                  mgr.resolveCatalogReference(workspaceRoot, depName, specifier) ??
+                  specifier;
+              }
+              importer.specifiers = importer.specifiers ?? {};
+              importer.specifiers[depName] = specifier;
+            }
+          }
+        }
+      }
+
+      // Strip devDependencies — copy-workspace-modules removes them from
+      // package.json files, so the lockfile must match.
+      delete importer.devDependencies;
+      if (importer.specifiers) {
+        const keepDepNames = new Set([
+          ...Object.keys(importer.dependencies ?? {}),
+          ...Object.keys(importer.optionalDependencies ?? {}),
+          ...Object.keys(importer.peerDependencies ?? {}),
+        ]);
+        for (const key of Object.keys(importer.specifiers)) {
+          if (!keepDepNames.has(key)) {
+            delete importer.specifiers[key];
+          }
+        }
+      }
+
       // Rewrite workspace:* specifiers to file: relative paths so they match
       // what @nx/js:copy-workspace-modules writes to package.json files.
       // Without this, `pnpm install --frozen-lockfile` fails with
       // ERR_PNPM_OUTDATED_LOCKFILE because the specifier in the lockfile
       // ("workspace:*") doesn't match the package.json dep ("file:../lib-b").
+      const catalogMgr = getCatalogManager(workspaceRoot);
       for (const depType of ['dependencies', 'optionalDependencies'] as const) {
         const deps = importer[depType] as Record<string, string> | undefined;
         if (!deps) continue;
@@ -654,6 +700,17 @@ export function stringifyPnpmLockfile(
             importer.specifiers[depName] = `file:${rel}`;
             // version stays as link: (pnpm's internal representation for local deps)
             (deps as Record<string, string>)[depName] = `link:${rel}`;
+          } else if (catalogMgr?.isCatalogReference(importer.specifiers[depName])) {
+            // Resolve catalog: specifiers so they match the resolved versions
+            // that copy-workspace-modules writes to package.json.
+            const resolved = catalogMgr.resolveCatalogReference(
+              workspaceRoot,
+              depName,
+              importer.specifiers[depName]
+            );
+            if (resolved) {
+              importer.specifiers[depName] = resolved;
+            }
           }
         }
       }

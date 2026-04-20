@@ -19,6 +19,8 @@ import { dirname, join, relative, sep } from 'path';
 import { lstatSync } from 'fs';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+import { getCatalogManager } from 'nx/src/utils/catalog';
 
 export default async function copyWorkspaceModules(
   schema: CopyWorkspaceModulesOptions,
@@ -47,6 +49,7 @@ function handleWorkspaceModules(
   const workspaceModules = getWorkspacePackagesFromGraph(projectGraph);
   const processedModules = new Set<string>();
   const workspaceModulesDir = join(outputDirectory, 'workspace_modules');
+  const catalogManager = getCatalogManager(workspaceRoot);
 
   function calculateRelativePath(
     fromPkgName: string,
@@ -89,7 +92,11 @@ function handleWorkspaceModules(
 
     // Read the copied module's package.json to process its dependencies
     const copiedPackageJsonPath = join(newWorkspaceModulePath, 'package.json');
-    let copiedPackageJson: { dependencies?: Record<string, string> };
+    let copiedPackageJson: {
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+      [key: string]: unknown;
+    };
     try {
       copiedPackageJson = JSON.parse(
         readFileSync(copiedPackageJsonPath, 'utf-8')
@@ -99,30 +106,51 @@ function handleWorkspaceModules(
       return;
     }
 
+    // Strip devDependencies — they are not needed at deployment runtime and
+    // their specifiers (especially catalog: references) can cause
+    // ERR_PNPM_OUTDATED_LOCKFILE mismatches against the pruned lockfile.
+    let packageJsonModified = 'devDependencies' in copiedPackageJson;
+    delete copiedPackageJson.devDependencies;
+
     // Process and update dependencies
     if (copiedPackageJson.dependencies) {
-      let packageJsonModified = false;
-
       for (const [depName, depVersion] of Object.entries(
         copiedPackageJson.dependencies
       )) {
-        if (workspaceModules.has(depName)) {
+        if (
+          workspaceModules.has(depName) &&
+          depVersion.startsWith('workspace:')
+        ) {
           const relativePath = calculateRelativePath(pkgName, depName);
           copiedPackageJson.dependencies[depName] = `file:${relativePath}`;
           packageJsonModified = true;
           processModule(depName);
+        } else if (
+          catalogManager?.isCatalogReference(depVersion)
+        ) {
+          // Resolve catalog: references so the deployed workspace_modules packages
+          // are self-contained and don't require catalog resolution at install time.
+          const resolved = catalogManager.resolveCatalogReference(
+            workspaceRoot,
+            depName,
+            depVersion
+          );
+          if (resolved) {
+            copiedPackageJson.dependencies[depName] = resolved;
+            packageJsonModified = true;
+          }
         }
       }
+    }
 
-      if (packageJsonModified) {
-        writeFileSync(
-          copiedPackageJsonPath,
-          JSON.stringify(copiedPackageJson, null, 2)
-        );
-        logger.verbose(
-          `Updated package.json for ${pkgName} with relative workspace module paths.`
-        );
-      }
+    if (packageJsonModified) {
+      writeFileSync(
+        copiedPackageJsonPath,
+        JSON.stringify(copiedPackageJson, null, 2)
+      );
+      logger.verbose(
+        `Updated package.json for ${pkgName} with relative workspace module paths.`
+      );
     }
   }
 

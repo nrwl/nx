@@ -42,9 +42,15 @@ export default async function pruneLockfileExecutor(
     );
     const lockfileOutputPath = join(outputDirectory, lockfileName);
     writeFileSync(lockfileOutputPath, lockFile);
+    // Strip devDependencies and peerDependencies from the deployed package.json —
+    // workspace: references in those fields cause ERR_PNPM_WORKSPACE_PKG_NOT_FOUND
+    // if those packages are not present in the pruned workspace.
+    const deployPackageJson = { ...packageJson };
+    delete deployPackageJson.devDependencies;
+    delete deployPackageJson.peerDependencies;
     writeFileSync(
       join(outputDirectory, 'package.json'),
-      JSON.stringify(packageJson, null, 2)
+      JSON.stringify(deployPackageJson, null, 2)
     );
     logger.log(`Lockfile pruned: ${lockfileOutputPath}`);
   }
