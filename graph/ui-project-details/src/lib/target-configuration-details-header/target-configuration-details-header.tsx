@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { TargetConfiguration } from '@nx/devkit';
 import { CopyToClipboardButton, Tooltip } from '@nx/graph-ui-common';
