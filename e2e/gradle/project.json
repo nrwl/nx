@@ -11,6 +11,13 @@
   "// targets": "to see all targets run: nx show project e2e-gradle --web",
   "targets": {
     "e2e-local": {
+      "inputs": [
+        "e2eInputs",
+        "^production",
+        "{workspaceRoot}/gradle/wrapper/gradle-wrapper.jar",
+        "{workspaceRoot}/gradle/wrapper/gradle-wrapper.properties",
+        "{workspaceRoot}/gradle.properties"
+      ],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:local-registry",
@@ -18,6 +25,13 @@
       ]
     },
     "e2e-ci--**/**": {
+      "inputs": [
+        "e2eInputs",
+        "^production",
+        "{workspaceRoot}/gradle/wrapper/gradle-wrapper.jar",
+        "{workspaceRoot}/gradle/wrapper/gradle-wrapper.properties",
+        "{workspaceRoot}/gradle.properties"
+      ],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:local-registry",
