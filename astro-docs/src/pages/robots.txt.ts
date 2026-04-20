@@ -15,7 +15,7 @@ Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Host: https://nx.dev
 
 # Sitemaps
-Sitemap: https://nx.dev/sitemap-index.xml
+Sitemap: https://nx.dev/sitemap.xml
 `;
 
 // Block all crawling on non-production domains (canary, versioned, etc.)

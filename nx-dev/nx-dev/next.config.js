@@ -93,6 +93,10 @@ module.exports = withNx({
         destination: `${astroDocsUrl}/.netlify/:path*`,
       },
       {
+        source: '/robots.txt',
+        destination: `${astroDocsUrl}/docs/robots.txt`,
+      },
+      {
         source: '/llms.txt',
         destination: `${astroDocsUrl}/docs/llms.txt`,
       },
