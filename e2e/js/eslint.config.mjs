@@ -1,5 +1,3 @@
-import { baseConfig } from '../../eslint.config.mjs';
+import { baseConfig, e2eTestOnlyIgnores } from '../../eslint.config.mjs';
 
-export default [
-  ...baseConfig,
-];
+export default [...baseConfig, e2eTestOnlyIgnores];

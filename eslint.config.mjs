@@ -24,7 +24,9 @@ const testFiles = [
 const storybookConfigs = storybook.configs['flat/recommended'].map((config) => {
   if (!config.rules) return config;
   const ownRules = Object.fromEntries(
-    Object.entries(config.rules).filter(([name]) => name.startsWith('storybook/'))
+    Object.entries(config.rules).filter(([name]) =>
+      name.startsWith('storybook/')
+    )
   );
   return { ...config, rules: ownRules };
 });
@@ -155,12 +157,50 @@ export const baseConfig = [
   },
 ];
 
+// eslint-plugin-react-hooks@7 introduced stricter rules (set-state-in-effect,
+// purity, immutability, etc.) that flag pre-existing patterns across the
+// nx-dev / graph React apps. These are pulled in by `nx.configs['flat/react']`
+// so spreading them here in baseConfig would be overridden by leaves that
+// spread flat/react later. Leaves that use flat/react should spread this after
+// it. Drop this override once the violations are fixed in a follow-up PR.
+export const reactHooksV7Off = [
+  {
+    rules: {
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/purity': 'off',
+      'react-hooks/immutability': 'off',
+      'react-hooks/refs': 'off',
+      'react-hooks/preserve-manual-memoization': 'off',
+      'react-hooks/unsupported-syntax': 'off',
+      'react-hooks/static-components': 'off',
+      'react-hooks/config': 'off',
+      'react-hooks/incompatible-library': 'off',
+      'react-hooks/gating': 'off',
+      'react-hooks/error-boundaries': 'off',
+      'react-hooks/globals': 'off',
+    },
+  },
+];
+
+// e2e/* subprojects legacy-only linted test files (via ignorePatterns with
+// `!**/*.test.ts` negation). Replicate the scope in flat config so each e2e
+// leaf just spreads this.
+export const e2eTestOnlyIgnores = {
+  ignores: [
+    '**/*.ts',
+    '**/*.tsx',
+    '**/*.js',
+    '**/*.jsx',
+    '!**/*.test.ts',
+    '!**/*.test.tsx',
+    '!**/*.spec.ts',
+    '!**/*.spec.tsx',
+  ],
+};
+
 // Default export: for workspace-root lint invocations only. Subprojects have
 // their own eslint.config.mjs (nearest-ancestor resolution) and never see this.
 // Ignore everything except root-scoped files that should be linted at workspace
 // level (currently just pnpm-lock.yaml via the @nx/workspace-ensure-pnpm-lock
 // rule); the root isn't meant to lint subprojects directly.
-export default [
-  ...baseConfig,
-  { ignores: ['**/*', '!pnpm-lock.yaml'] },
-];
+export default [...baseConfig, { ignores: ['**/*', '!pnpm-lock.yaml'] }];
