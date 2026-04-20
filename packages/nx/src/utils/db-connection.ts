@@ -63,7 +63,7 @@ export function getLocalDbConnection(
   return connection;
 }
 
-export function removeDbConnections() {
+function removeDbConnections() {
   for (const connection of dbConnectionMap.values()) {
     closeDbConnection(connection);
   }
