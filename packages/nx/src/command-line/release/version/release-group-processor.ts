@@ -406,7 +406,7 @@ export class ReleaseGroupProcessor {
           if (!this.bumpedProjects.has(project)) {
             await this.bumpVersionForProject(
               project,
-              'patch',
+              this.options.preid ? 'prepatch' : 'patch',
               'OTHER_PROJECT_IN_FIXED_GROUP_WAS_BUMPED_DUE_TO_DEPENDENCY',
               {}
             );
@@ -894,7 +894,7 @@ export class ReleaseGroupProcessor {
         if (!this.bumpedProjects.has(dependent)) {
           await this.bumpVersionForProject(
             dependent,
-            'patch',
+            this.options.preid ? 'prepatch' : 'patch',
             'DEPENDENCY_WAS_BUMPED',
             {}
           );
@@ -955,12 +955,11 @@ export class ReleaseGroupProcessor {
       .newVersionInput;
   }
 
-  // TODO: Support influencing the side effect bump in a future version, always patch for now like in legacy versioning
   private determineSideEffectBump(
     releaseGroup: ReleaseGroupWithName,
     dependencyBumpType: SemverBumpType
   ): SemverBumpType {
-    const sideEffectBump = 'patch';
+    const sideEffectBump = this.options.preid ? 'prepatch' : 'patch';
     return sideEffectBump as SemverBumpType;
   }
 
