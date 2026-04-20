@@ -102,6 +102,7 @@
       "cache": true,
       "inputs": [
         "{projectRoot}/validate-links.ts",
+        { "dependentTasksOutputFiles": "**/*.html" },
         { "dependentTasksOutputFiles": "**/sitemap*.xml" },
         "{projectRoot}/src/**/*",
         "{projectRoot}/astro.config.mjs",
