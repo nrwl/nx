@@ -1,24 +1,40 @@
-import { FlatCompat } from '@eslint/eslintrc';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-import js from '@eslint/js';
 import nx from '@nx/eslint-plugin';
 import typescriptEslintEslintPlugin from '@typescript-eslint/eslint-plugin';
 import typescriptEslintParser from '@typescript-eslint/parser';
 import globals from 'globals';
-import jsoncEslintParser from 'jsonc-eslint-parser';
+import jest from 'eslint-plugin-jest';
+import * as jsoncEslintParser from 'jsonc-eslint-parser';
+import storybook from 'eslint-plugin-storybook';
 import toolsEslintRulesRawFileParserJs from './tools/eslint-rules/raw-file-parser.js';
 
-const compat = new FlatCompat({
-  baseDirectory: dirname(fileURLToPath(import.meta.url)),
-  recommendedConfig: js.configs.recommended,
+const testFiles = [
+  '**/*.spec.ts',
+  '**/*.spec.tsx',
+  '**/*.spec.js',
+  '**/*.spec.jsx',
+  '**/*.test.ts',
+  '**/*.test.tsx',
+  '**/*.test.js',
+  '**/*.test.jsx',
+];
+
+// eslint-plugin-storybook's flat/recommended references rules from react-hooks
+// and import-x (not registered in this repo). Keep only storybook-owned rules
+// to avoid "plugin not found" validation errors.
+const storybookConfigs = storybook.configs['flat/recommended'].map((config) => {
+  if (!config.rules) return config;
+  const ownRules = Object.fromEntries(
+    Object.entries(config.rules).filter(([name]) => name.startsWith('storybook/'))
+  );
+  return { ...config, rules: ownRules };
 });
 
-export default [
-  {
-    ignores: ['**/dist', '**/out-tsc', '**/test-output'],
-  },
-  ...compat.extends('plugin:storybook/recommended'),
+// Shared base consumed by every subproject via the named export below.
+// IMPORTANT: subprojects import `{ baseConfig }`, not the default, so they
+// don't inherit the root's "ignore everything" safety net.
+export const baseConfig = [
+  { ignores: ['**/dist', '**/out-tsc', '**/test-output'] },
+  ...storybookConfigs,
   ...nx.configs['flat/base'],
   { plugins: { '@typescript-eslint': typescriptEslintEslintPlugin } },
   {
@@ -63,6 +79,11 @@ export default [
           ],
         },
       ],
+    },
+  },
+  {
+    files: ['.storybook/**/main.@(js|cjs|mjs|ts)'],
+    rules: {
       'storybook/no-uninstalled-addons': [
         'error',
         {
@@ -74,8 +95,6 @@ export default [
   },
   {
     files: ['**/*.json'],
-    // Override or add rules here
-    rules: {},
     languageOptions: {
       parser: jsoncEslintParser,
     },
@@ -127,25 +146,21 @@ export default [
       '@angular-eslint/prefer-standalone': 'off',
     },
   },
-  ...compat
-    .config({
-      plugins: ['jest'],
-    })
-    .map((config) => ({
-      ...config,
-      files: [
-        '**/*.spec.ts',
-        '**/*.spec.tsx',
-        '**/*.spec.js',
-        '**/*.spec.jsx',
-        '**/*.test.ts',
-        '**/*.test.tsx',
-        '**/*.test.js',
-        '**/*.test.jsx',
-      ],
-      rules: {
-        ...config.rules,
-        'jest/no-disabled-tests': 'warn',
-      },
-    })),
+  {
+    files: testFiles,
+    plugins: { jest },
+    rules: {
+      'jest/no-disabled-tests': 'warn',
+    },
+  },
+];
+
+// Default export: for workspace-root lint invocations only. Subprojects have
+// their own eslint.config.mjs (nearest-ancestor resolution) and never see this.
+// Ignore everything except root-scoped files that should be linted at workspace
+// level (currently just pnpm-lock.yaml via the @nx/workspace-ensure-pnpm-lock
+// rule); the root isn't meant to lint subprojects directly.
+export default [
+  ...baseConfig,
+  { ignores: ['**/*', '!pnpm-lock.yaml'] },
 ];
