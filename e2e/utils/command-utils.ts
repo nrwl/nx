@@ -422,7 +422,7 @@ export function runCLI(
     const pm = getPackageManagerCommand();
     const commandToRun = `${pm.runNxSilent} ${command} ${
       (opts.verbose ?? isVerboseE2ERun()) ? ' --verbose' : ''
-    }`;
+    }${opts.redirectStderr ? ' 2>&1' : ''}`;
     logInfo(`Run Command: ${command}`);
     const startTime = performance.now();
     const result = execSync(commandToRun, {
@@ -435,7 +435,7 @@ export function runCLI(
         ...opts.env,
       },
       encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', opts.redirectStderr ? 'pipe' : 'inherit'],
+      stdio: 'pipe',
       maxBuffer: 50 * 1024 * 1024,
       timeout: timeoutMs,
     });

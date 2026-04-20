@@ -175,6 +175,7 @@ describe('nx release source tag selection', () => {
         expect(
           runCLI(`release version -d`, {
             silenceError: true,
+            redirectStderr: true,
           })
         ).toContain(
           `No git tags matching pattern "v{version}" for project "${pkg1}" were found`

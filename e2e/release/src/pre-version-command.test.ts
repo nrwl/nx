@@ -59,6 +59,7 @@ describe('nx release pre-version command', () => {
     });
     const result1 = runCLI('release patch -d --first-release', {
       silenceError: true,
+      redirectStderr: true,
     });
 
     // command should fail because @nx/js:library configures the manifestRootsToUpdate to be ['dist/{project-name}'], which doesn't exist yet
