@@ -88,15 +88,6 @@ export function createGradleProject(
   addSpringBootPlugin(
     join(cwd, `app/build.gradle${type === 'kotlin' ? '.kts' : ''}`)
   );
-
-  e2eConsoleLogger(
-    execSync(
-      `${gradleCommand} :gradle-project-graph:publishToMavenLocal -PskipSign=true`,
-      {
-        cwd: `${__dirname}/../../../..`,
-      }
-    ).toString()
-  );
 }
 
 function addLocalPluginManagement(filePath: string) {
