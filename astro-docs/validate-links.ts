@@ -16,6 +16,13 @@ const filesToIgnore = [
 const distDir = path.join(workspaceRoot, 'astro-docs', 'dist');
 const sitemapIndexPath = path.join(distDir, 'sitemap-index.xml');
 const sitemapFallbackPath = path.join(distDir, 'sitemap-0.xml');
+const nxDevSitemapPath = path.join(
+  workspaceRoot,
+  'nx-dev',
+  'nx-dev',
+  'public',
+  'sitemap-0.xml'
+);
 
 if (!fs.existsSync(distDir)) {
   console.error(
@@ -147,6 +154,22 @@ function loadAllSitemapRoutes(): Set<string> {
     for (const route of parseSitemap(sitemapContent)) {
       allRoutes.add(route);
     }
+  }
+
+  // Load nx-dev (Next.js) sitemap routes for cross-site validation
+  if (fs.existsSync(nxDevSitemapPath)) {
+    const nxDevSitemapContent = fs.readFileSync(nxDevSitemapPath, 'utf-8');
+    const nxDevRoutes = parseSitemap(nxDevSitemapContent);
+    console.log(
+      `Found ${nxDevRoutes.size} routes in nx-dev sitemap (${nxDevSitemapPath})`
+    );
+    for (const route of nxDevRoutes) {
+      allRoutes.add(route);
+    }
+  } else {
+    console.warn(
+      `nx-dev sitemap not found at ${nxDevSitemapPath}. Run "nx build nx-dev" to enable cross-site link validation against nx-dev routes.`
+    );
   }
 
   return allRoutes;
