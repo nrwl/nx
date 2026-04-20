@@ -92,6 +92,13 @@ let knownExternalNodes: Record<string, ProjectGraphExternalNode> = {};
 let fileChangeCounter = 0;
 let recomputationGeneration = 0;
 
+// Buffered file-change events awaiting socket notification. Events from the
+// native watcher arrive one-at-a-time but clients expect them batched so that
+// rapid bursts of writes produce a single `nx watch` command invocation.
+const pendingCreatedFiles = new Set<string>();
+const pendingUpdatedFiles = new Set<string>();
+const pendingDeletedFiles = new Set<string>();
+
 export async function getCachedSerializedProjectGraphPromise(
   socket?: Socket
 ): Promise<SerializedProjectGraph> {
@@ -109,6 +116,9 @@ export async function getCachedSerializedProjectGraphPromise(
       wasScheduled = true;
       clearTimeout(scheduledTimeoutId);
       scheduledTimeoutId = undefined;
+      // Flush any buffered socket notifications now — taking over the timer
+      // would otherwise leave those events pending until the next file change.
+      flushPendingFileWatcherNotifications();
     }
 
     // reset the wait time
@@ -218,14 +228,34 @@ export function scheduleProjectGraphRecomputation(
     collectedDeletedFiles.set(f, fileChangeCounter);
   }
 
-  // Notify file change listeners immediately when files change
+  // Sync-generator cache invalidation must happen eagerly — a subsequent
+  // `handleGetSyncGeneratorChanges` call could otherwise serve stale data.
   if (
     createdFiles.length > 0 ||
     updatedFiles.length > 0 ||
     deletedFiles.length > 0
   ) {
     notifyFileChangeListeners({ createdFiles, updatedFiles, deletedFiles });
-    notifyFileWatcherSockets(createdFiles, updatedFiles, deletedFiles);
+  }
+
+  // Buffer socket-notification events so rapid bursts coalesce into a single
+  // notification per batch. A file can only be in one of the three sets at a
+  // time; dedupe across sets so a create-then-update still reads as a create
+  // and an update-then-delete reads as a delete.
+  for (const f of createdFiles) {
+    pendingDeletedFiles.delete(f);
+    pendingUpdatedFiles.delete(f);
+    pendingCreatedFiles.add(f);
+  }
+  for (const f of updatedFiles) {
+    if (pendingCreatedFiles.has(f)) continue;
+    pendingDeletedFiles.delete(f);
+    pendingUpdatedFiles.add(f);
+  }
+  for (const f of deletedFiles) {
+    pendingCreatedFiles.delete(f);
+    pendingUpdatedFiles.delete(f);
+    pendingDeletedFiles.add(f);
   }
 
   if (createdFiles.length > 0) {
@@ -239,6 +269,8 @@ export function scheduleProjectGraphRecomputation(
         waitPeriod = waitPeriod * 2;
       }
 
+      flushPendingFileWatcherNotifications();
+
       cachedSerializedProjectGraphPromise =
         processFilesAndCreateAndSerializeProjectGraph(
           await getPluginsSeparated()
@@ -249,6 +281,23 @@ export function scheduleProjectGraphRecomputation(
       notifyProjectGraphRecomputationListeners(projectGraph, sourceMaps, error);
     }, waitPeriod);
   }
+}
+
+function flushPendingFileWatcherNotifications() {
+  if (
+    pendingCreatedFiles.size === 0 &&
+    pendingUpdatedFiles.size === 0 &&
+    pendingDeletedFiles.size === 0
+  ) {
+    return;
+  }
+  const created = [...pendingCreatedFiles];
+  const updated = [...pendingUpdatedFiles];
+  const deleted = [...pendingDeletedFiles];
+  pendingCreatedFiles.clear();
+  pendingUpdatedFiles.clear();
+  pendingDeletedFiles.clear();
+  notifyFileWatcherSockets(created, updated, deleted);
 }
 
 export function registerProjectGraphRecomputationListener(
