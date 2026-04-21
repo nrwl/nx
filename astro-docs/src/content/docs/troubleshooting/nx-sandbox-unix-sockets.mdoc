@@ -64,10 +64,10 @@ Both environment variables work around the symptom rather than fixing the root c
 
 For advanced use cases, Nx provides environment variables to override where socket files are created:
 
-| Variable                         | Description                                                        |
-| -------------------------------- | ------------------------------------------------------------------ |
-| `NX_SOCKET_DIR`                  | Overrides the directory for both daemon and forked process sockets |
-| `NX_DAEMON_SOCKET_DIR`           | Overrides the daemon socket directory specifically                 |
-| `NX_NATIVE_FILE_CACHE_DIRECTORY` | Overrides the native file cache path                               |
+| Variable                         | Description                                                                                         |
+| -------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `NX_SOCKET_DIR`                  | Overrides the directory for all Nx sockets (daemon, forked process, and plugin)                     |
+| `NX_DAEMON_SOCKET_DIR`           | Legacy alias of `NX_SOCKET_DIR`. Used only when `NX_SOCKET_DIR` is not set. Prefer `NX_SOCKET_DIR`. |
+| `NX_NATIVE_FILE_CACHE_DIRECTORY` | Overrides the native file cache path                                                                |
 
 These are primarily useful for environments with restricted temp directory access (e.g., certain Docker or CI setups). For Claude Code's sandbox, `allowAllUnixSockets: true` is simpler and more reliable.
