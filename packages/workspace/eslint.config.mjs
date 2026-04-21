@@ -3,6 +3,7 @@ import * as jsoncEslintParser from 'jsonc-eslint-parser';
 
 export default [
   ...baseConfig,
+  { ignores: ['**/__fixtures__/**'] },
   {
     files: ['**/*.ts'],
     rules: {
