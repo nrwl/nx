@@ -28,7 +28,6 @@ import { preventRecursionInGraphConstruction } from '../../project-graph/project
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
 import { parseMessage } from '../../utils/consume-messages-from-socket';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
-import { globalSpinner } from '../../utils/spinner';
 import {
   isEmitLogMessage,
   isUpdateProgressMessage,
@@ -164,6 +163,11 @@ export class DaemonClient {
   private currentMessage;
   private currentResolve;
   private currentReject;
+  // Tracks the spinner owned by the in-flight request so streamed
+  // progress updates are routed to the caller's spinner instead of
+  // mutating the process-wide globalSpinner (which may belong to an
+  // unrelated command).
+  private currentSpinner: DelayedSpinner | null = null;
 
   private _enabled: boolean | undefined;
   private _daemonStatus: DaemonStatus = DaemonStatus.DISCONNECTED;
@@ -313,9 +317,10 @@ export class DaemonClient {
       { ciDelay: 60_000, delay: 30_000 }
     );
     try {
-      const response = await this.sendToDaemonViaQueue({
-        type: 'REQUEST_PROJECT_GRAPH',
-      });
+      const response = await this.sendToDaemonViaQueue(
+        { type: 'REQUEST_PROJECT_GRAPH' },
+        { spinner }
+      );
       return {
         projectGraph: response.projectGraph,
         sourceMaps: response.sourceMaps,
@@ -765,10 +770,10 @@ export class DaemonClient {
         type: 'PROCESS_IN_BACKGROUND',
         requirePath,
         data,
-        // This method is sometimes passed data that cannot be serialized with v8
-        // so we force JSON serialization here
       },
-      'json'
+      // This method is sometimes passed data that cannot be serialized with v8
+      // so we force JSON serialization here
+      { force: 'json' }
     );
   }
 
@@ -1037,11 +1042,20 @@ export class DaemonClient {
 
   private async sendToDaemonViaQueue<T extends DaemonMessage>(
     messageToDaemon: T,
-    force?: 'v8' | 'json'
+    options?: { force?: 'v8' | 'json'; spinner?: DelayedSpinner }
   ): Promise<any> {
-    return this.queue.sendToQueue(() =>
-      this.sendMessageToDaemon(messageToDaemon, force)
-    );
+    return this.queue.sendToQueue(async () => {
+      // Set currentSpinner inside the queued function so it's only
+      // active while this specific message is in flight — preventing
+      // concurrent callers from overwriting each other's spinner
+      // reference before their turn arrives.
+      if (options?.spinner) this.currentSpinner = options.spinner;
+      try {
+        return await this.sendMessageToDaemon(messageToDaemon, options?.force);
+      } finally {
+        if (options?.spinner) this.currentSpinner = null;
+      }
+    });
   }
 
   private setUpConnection() {
@@ -1266,11 +1280,11 @@ export class DaemonClient {
       );
       // Streaming messages fire side-effects on the client but do not
       // resolve the pending request promise — the daemon can push several
-      // of these before finally sending the real response.
+      // of these before finally sending the real response. Progress
+      // updates route through the in-flight request's own spinner so
+      // we don't stomp on unrelated commands' spinner text.
       if (isUpdateProgressMessage(parsedResult)) {
-        if (globalSpinner.isSpinning()) {
-          globalSpinner.updateText(parsedResult.message);
-        }
+        this.currentSpinner?.setMessage(parsedResult.message);
         return;
       }
       if (isEmitLogMessage(parsedResult)) {
