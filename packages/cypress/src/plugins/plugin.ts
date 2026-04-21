@@ -89,15 +89,10 @@ async function createNodesInternal(
     return {};
   }
 
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [
+  const hash =
+    (await calculateHashForCreateNodes(projectRoot, options, context, [
       getLockFileName(detectPackageManager(context.workspaceRoot)),
-      configFilePath,
-    ]
-  );
+    ])) + configFilePath;
 
   if (!pluginCache.has(hash)) {
     pluginCache.set(
