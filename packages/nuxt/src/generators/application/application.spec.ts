@@ -369,7 +369,7 @@ describe('app', () => {
 
       const nuxtConfig = tree.read('my-app/nuxt.config.ts', 'utf-8');
       // Should have srcDir when using src/ directory
-      expect(nuxtConfig).toContain("srcDir: 'src'");
+      expect(nuxtConfig).toContain('srcDir: "src"');
     });
 
     it('should place styles in src/assets/css/ when useAppDir is false', async () => {

@@ -1,10 +1,10 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`MF Remote App Generator --ssr should generate the correct files 1`] = `
-"import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { RouterModule } from '@angular/router';
-import { App } from './app';
+"import { NgModule } from "@angular/core";
+import { BrowserModule } from "@angular/platform-browser";
+import { RouterModule } from "@angular/router";
+import { App } from "./app";
 
 @NgModule({
   declarations: [App],
@@ -13,14 +13,12 @@ import { App } from './app';
     RouterModule.forRoot(
       [
         {
-          path: '',
+          path: "",
           loadChildren: () =>
-            import('./remote-entry/entry-module').then(
-              (m) => m.RemoteEntryModule,
-            ),
+            import("./remote-entry/entry-module").then((m) => m.RemoteEntryModule),
         },
       ],
-      { initialNavigation: 'enabledBlocking' },
+      { initialNavigation: "enabledBlocking" },
     ),
   ],
   providers: [],
@@ -31,8 +29,8 @@ export class AppModule {}
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 2`] = `
-"import { platformBrowser } from '@angular/platform-browser';
-import { AppModule } from './app/app-module';
+"import { platformBrowser } from "@angular/platform-browser";
+import { AppModule } from "./app/app-module";
 
 platformBrowser()
   .bootstrapModule(AppModule)
@@ -41,44 +39,44 @@ platformBrowser()
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 3`] = `
-"export { AppServerModule as default } from './app/app.server.module';
+"export { AppServerModule as default } from "./app/app.server.module";
 "
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 4`] = `
-"import { APP_BASE_HREF } from '@angular/common';
-import { CommonEngine } from '@angular/ssr/node';
-import express from 'express';
-import cors from 'cors';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { AppServerModule } from './bootstrap.server';
+"import { APP_BASE_HREF } from "@angular/common";
+import { CommonEngine } from "@angular/ssr/node";
+import express from "express";
+import cors from "cors";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { AppServerModule } from "./bootstrap.server";
 
 // The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
   const server = express();
-  const browserBundles = join(process.cwd(), 'dist/test/browser');
-  const serverBundles = join(process.cwd(), 'dist/test/server');
-  const indexHtml = existsSync(join(browserBundles, 'index.original.html'))
-    ? join(browserBundles, 'index.original.html')
-    : join(browserBundles, 'index.html');
+  const browserBundles = join(process.cwd(), "dist/test/browser");
+  const serverBundles = join(process.cwd(), "dist/test/server");
+  const indexHtml = existsSync(join(browserBundles, "index.original.html"))
+    ? join(browserBundles, "index.original.html")
+    : join(browserBundles, "index.html");
 
   server.use(cors());
 
   const commonEngine = new CommonEngine();
 
-  server.set('view engine', 'html');
-  server.set('views', browserBundles);
+  server.set("view engine", "html");
+  server.set("views", browserBundles);
 
   // Example Express Rest API endpoints
   // server.get('/api/**', (req, res) => { });
   // Serve static files from /browser
-  server.get('*.*', express.static(browserBundles, { maxAge: '1y' }));
+  server.get("*.*", express.static(browserBundles, { maxAge: "1y" }));
   // Serve static files from /server
-  server.use('/server', express.static(serverBundles, { maxAge: '1y' }));
+  server.use("/server", express.static(serverBundles, { maxAge: "1y" }));
 
   // All regular routes use the Angular engine
-  server.get('*', (req, res, next) => {
+  server.get("*", (req, res, next) => {
     const { protocol, originalUrl, baseUrl, headers } = req;
 
     commonEngine
@@ -97,7 +95,7 @@ export function app(): express.Express {
 }
 
 function run(): void {
-  const port = process.env['PORT'] || 4000;
+  const port = process.env["PORT"] || 4000;
 
   // Start up the Node server
   const server = app();
@@ -110,7 +108,7 @@ function run(): void {
      * This message allows Nx to determine when the Remote is ready to be
      * consumed by the Host.
      */
-    process.send && process.send('nx.server.ready');
+    process.send && process.send("nx.server.ready");
   });
 }
 
@@ -121,7 +119,7 @@ export default AppServerModule;
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 5`] = `
-"import('./main.server');
+"import("./main.server");
 "
 `;
 
@@ -130,17 +128,17 @@ exports[`MF Remote App Generator --ssr should generate the correct files 6`] = `
  * Nx requires a default export of the config to allow correct resolution of the module federation graph.
  **/
 module.exports = {
-  name: 'test',
+  name: "test",
   exposes: {
-    './Module': 'test/src/app/remote-entry/entry-module.ts',
+    "./Module": "test/src/app/remote-entry/entry-module.ts",
   },
 };
 "
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 7`] = `
-"const { withModuleFederationForSSR } = require('@nx/module-federation/angular');
-const config = require('./module-federation.config');
+"const { withModuleFederationForSSR } = require("@nx/module-federation/angular");
+const config = require("./module-federation.config");
 
 /**
  * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
@@ -152,10 +150,10 @@ module.exports = withModuleFederationForSSR(config, { dts: false });
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 8`] = `
-"import { Component } from '@angular/core';
+"import { Component } from "@angular/core";
 
 @Component({
-  selector: 'app-test-entry',
+  selector: "app-test-entry",
   standalone: false,
   template: \`<app-nx-welcome></app-nx-welcome>\`,
 })
@@ -164,23 +162,22 @@ export class RemoteEntry {}
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 9`] = `
-"import { Route } from '@angular/router';
+"import { Route } from "@angular/router";
 
 export const appRoutes: Route[] = [
   {
-    path: '',
-    loadChildren: () =>
-      import('./remote-entry/entry-module').then((m) => m.RemoteEntryModule),
+    path: "",
+    loadChildren: () => import("./remote-entry/entry-module").then((m) => m.RemoteEntryModule),
   },
 ];
 "
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 10`] = `
-"import { Route } from '@angular/router';
-import { RemoteEntry } from './entry';
+"import { Route } from "@angular/router";
+import { RemoteEntry } from "./entry";
 
-export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntry }];
+export const remoteRoutes: Route[] = [{ path: "", component: RemoteEntry }];
 "
 `;
 
@@ -214,10 +211,10 @@ exports[`MF Remote App Generator --ssr should generate the correct files 11`] = 
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 12`] = `
-"import { Route } from '@angular/router';
-import { RemoteEntry } from './entry';
+"import { Route } from "@angular/router";
+import { RemoteEntry } from "./entry";
 
-export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntry }];
+export const remoteRoutes: Route[] = [{ path: "", component: RemoteEntry }];
 "
 `;
 
@@ -256,8 +253,8 @@ export class AppModule {}"
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 2`] = `
-"import { platformBrowser } from '@angular/platform-browser';
-import { AppModule } from './app/app-module';
+"import { platformBrowser } from "@angular/platform-browser";
+import { AppModule } from "./app/app-module";
 
 platformBrowser()
   .bootstrapModule(AppModule)
@@ -266,7 +263,7 @@ platformBrowser()
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 3`] = `
-"export { AppServerModule as default } from './app/app.server.module';
+"export { AppServerModule as default } from "./app/app.server.module";
 "
 `;
 
@@ -390,7 +387,7 @@ export class RemoteEntry {}
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 9`] = `
-"import { Route } from '@angular/router';
+"import { Route } from "@angular/router";
 
 export const appRoutes: Route[] = [
     { path: '', loadChildren: () => import('./remote-entry/entry-module').then(m => m.RemoteEntryModule) },];
@@ -532,9 +529,9 @@ export default withModuleFederation(config, { dts: false });
 `;
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components 1`] = `
-"import { bootstrapApplication } from '@angular/platform-browser';
-import { appConfig } from './app/app.config';
-import { RemoteEntry } from './app/remote-entry/entry';
+"import { bootstrapApplication } from "@angular/platform-browser";
+import { appConfig } from "./app/app.config";
+import { RemoteEntry } from "./app/remote-entry/entry";
 
 bootstrapApplication(RemoteEntry, appConfig).catch((err) => console.error(err));
 "
@@ -545,21 +542,21 @@ exports[`MF Remote App Generator should generate the a remote setup for standalo
  * Nx requires a default export of the config to allow correct resolution of the module federation graph.
  **/
 module.exports = {
-  name: 'test',
+  name: "test",
   exposes: {
-    './Routes': 'test/src/app/remote-entry/entry.routes.ts',
+    "./Routes": "test/src/app/remote-entry/entry.routes.ts",
   },
 };
 "
 `;
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components 3`] = `
-"import { Component } from '@angular/core';
-import { NxWelcome } from './nx-welcome';
+"import { Component } from "@angular/core";
+import { NxWelcome } from "./nx-welcome";
 
 @Component({
   imports: [NxWelcome],
-  selector: 'app-test-entry',
+  selector: "app-test-entry",
   template: \`<app-nx-welcome></app-nx-welcome>\`,
 })
 export class RemoteEntry {}
@@ -567,23 +564,22 @@ export class RemoteEntry {}
 `;
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components 4`] = `
-"import { Route } from '@angular/router';
+"import { Route } from "@angular/router";
 
 export const appRoutes: Route[] = [
   {
-    path: '',
-    loadChildren: () =>
-      import('./remote-entry/entry.routes').then((m) => m.remoteRoutes),
+    path: "",
+    loadChildren: () => import("./remote-entry/entry.routes").then((m) => m.remoteRoutes),
   },
 ];
 "
 `;
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components 5`] = `
-"import { Route } from '@angular/router';
-import { RemoteEntry } from './entry';
+"import { Route } from "@angular/router";
+import { RemoteEntry } from "./entry";
 
-export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntry }];
+export const remoteRoutes: Route[] = [{ path: "", component: RemoteEntry }];
 "
 `;
 

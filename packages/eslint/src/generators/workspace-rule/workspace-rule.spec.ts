@@ -56,7 +56,7 @@ describe('@nx/eslint:workspace-rule', () => {
     // NOTE: formatFiles() will have been run so the real formatting will look better than this snapshot
     expect(tree.read('tools/eslint-rules/index.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { RULE_NAME as myRuleName, rule as myRule } from './rules/my-rule';
+      "import { RULE_NAME as myRuleName, rule as myRule } from "./rules/my-rule";
       /**
        * Import your custom workspace rules at the top of this file.
        *
@@ -108,11 +108,11 @@ describe('@nx/eslint:workspace-rule', () => {
     // NOTE: formatFiles() will have been run so the real formatting will look better than this snapshot
     expect(tree.read('tools/eslint-rules/index.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { RULE_NAME as myRuleName, rule as myRule } from './rules/my-rule';
+      "import { RULE_NAME as myRuleName, rule as myRule } from "./rules/my-rule";
 
       module.exports = {
         rules: {
-          'existing-rule-no-comma': 'error',
+          "existing-rule-no-comma": "error",
           [myRuleName]: myRule,
         },
       };
@@ -140,11 +140,11 @@ describe('@nx/eslint:workspace-rule', () => {
     // NOTE: formatFiles() will have been run so the real formatting will look better than this snapshot
     expect(tree.read('tools/eslint-rules/index.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { RULE_NAME as myRuleName, rule as myRule } from './rules/my-rule';
+      "import { RULE_NAME as myRuleName, rule as myRule } from "./rules/my-rule";
 
       module.exports = {
         rules: {
-          'existing-rule-with-comma': 'error',
+          "existing-rule-with-comma": "error",
           [myRuleName]: myRule,
         },
       };

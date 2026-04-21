@@ -16,7 +16,6 @@ import {
   initGenerator as jsInitGenerator,
 } from '@nx/js';
 import { deduceDefaultBase } from 'nx/src/utils/default-base';
-import { prettierVersion } from '@nx/js/src/utils/versions';
 import { toNewFormat } from 'nx/src/adapter/angular-json';
 import { angularDevkitVersion, nxVersion } from '../../../utils/versions';
 import type { ProjectMigrator } from '../migrators';
@@ -177,10 +176,6 @@ export function updatePackageJson(tree: Tree): void {
     if (!packageJson.devDependencies['nx']) {
       packageJson.devDependencies['nx'] = nxVersion;
     }
-    if (!packageJson.devDependencies['prettier']) {
-      packageJson.devDependencies['prettier'] = prettierVersion;
-    }
-
     return packageJson;
   });
 }

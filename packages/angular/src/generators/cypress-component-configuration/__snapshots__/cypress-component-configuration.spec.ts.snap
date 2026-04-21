@@ -95,8 +95,8 @@ describe(SomethingThree.name, () => {
 `;
 
 exports[`Cypress Component Testing Configuration should work with complex standalone component 1`] = `
-"import { TestBed } from '@angular/core/testing';
-import { SomethingOne } from './something-one';
+"import { TestBed } from "@angular/core/testing";
+import { SomethingOne } from "./something-one";
 
 describe(SomethingOne.name, () => {
   beforeEach(() => {
@@ -108,7 +108,7 @@ describe(SomethingOne.name, () => {
     });
   });
 
-  it('renders', () => {
+  it("renders", () => {
     cy.mount(SomethingOne);
   });
 });
@@ -116,8 +116,8 @@ describe(SomethingOne.name, () => {
 `;
 
 exports[`Cypress Component Testing Configuration should work with complex standalone component 2`] = `
-"import { TestBed } from '@angular/core/testing';
-import { SomethingTwo } from './something-two';
+"import { TestBed } from "@angular/core/testing";
+import { SomethingTwo } from "./something-two";
 
 describe(SomethingTwo.name, () => {
   beforeEach(() => {
@@ -129,7 +129,7 @@ describe(SomethingTwo.name, () => {
     });
   });
 
-  it('renders', () => {
+  it("renders", () => {
     cy.mount(SomethingTwo);
   });
 });
@@ -137,8 +137,8 @@ describe(SomethingTwo.name, () => {
 `;
 
 exports[`Cypress Component Testing Configuration should work with complex standalone component 3`] = `
-"import { TestBed } from '@angular/core/testing';
-import { SomethingThree } from './something-three';
+"import { TestBed } from "@angular/core/testing";
+import { SomethingThree } from "./something-three";
 
 describe(SomethingThree.name, () => {
   beforeEach(() => {
@@ -150,7 +150,7 @@ describe(SomethingThree.name, () => {
     });
   });
 
-  it('renders', () => {
+  it("renders", () => {
     cy.mount(SomethingThree);
   });
 });
@@ -263,8 +263,8 @@ describe(SomethingThree.name, () => {
 `;
 
 exports[`Cypress Component Testing Configuration should work with standalone component 1`] = `
-"import { TestBed } from '@angular/core/testing';
-import { SomethingOne } from './something-one';
+"import { TestBed } from "@angular/core/testing";
+import { SomethingOne } from "./something-one";
 
 describe(SomethingOne.name, () => {
   beforeEach(() => {
@@ -276,7 +276,7 @@ describe(SomethingOne.name, () => {
     });
   });
 
-  it('renders', () => {
+  it("renders", () => {
     cy.mount(SomethingOne);
   });
 });
@@ -284,8 +284,8 @@ describe(SomethingOne.name, () => {
 `;
 
 exports[`Cypress Component Testing Configuration should work with standalone component 2`] = `
-"import { TestBed } from '@angular/core/testing';
-import { SomethingTwo } from './something-two';
+"import { TestBed } from "@angular/core/testing";
+import { SomethingTwo } from "./something-two";
 
 describe(SomethingTwo.name, () => {
   beforeEach(() => {
@@ -297,7 +297,7 @@ describe(SomethingTwo.name, () => {
     });
   });
 
-  it('renders', () => {
+  it("renders", () => {
     cy.mount(SomethingTwo);
   });
 });
@@ -305,8 +305,8 @@ describe(SomethingTwo.name, () => {
 `;
 
 exports[`Cypress Component Testing Configuration should work with standalone component 3`] = `
-"import { TestBed } from '@angular/core/testing';
-import { SomethingThree } from './something-three';
+"import { TestBed } from "@angular/core/testing";
+import { SomethingThree } from "./something-three";
 
 describe(SomethingThree.name, () => {
   beforeEach(() => {
@@ -318,7 +318,7 @@ describe(SomethingThree.name, () => {
     });
   });
 
-  it('renders', () => {
+  it("renders", () => {
     cy.mount(SomethingThree);
   });
 });

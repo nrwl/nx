@@ -865,22 +865,16 @@ describe('lib', () => {
         ]);
 
         expect(moduleContents2).toMatchInlineSnapshot(`
-          "import { NgModule } from '@angular/core';
-          import { BrowserModule } from '@angular/platform-browser';
-          import { RouterModule } from '@angular/router';
-          import { App } from './app';
+          "import { NgModule } from "@angular/core";
+          import { BrowserModule } from "@angular/platform-browser";
+          import { RouterModule } from "@angular/router";
+          import { App } from "./app";
           @NgModule({
             imports: [
               BrowserModule,
               RouterModule.forRoot([
-                {
-                  path: 'my-lib',
-                  loadChildren: () => import('@proj/my-lib').then((m) => m.MyLibModule),
-                },
-                {
-                  path: 'my-lib2',
-                  loadChildren: () => import('@proj/my-lib2').then((m) => m.MyLib2Module),
-                },
+                { path: "my-lib", loadChildren: () => import("@proj/my-lib").then((m) => m.MyLibModule) },
+                { path: "my-lib2", loadChildren: () => import("@proj/my-lib2").then((m) => m.MyLib2Module) },
               ]),
             ],
             declarations: [App],

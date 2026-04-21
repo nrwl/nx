@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`angularStories generator: applications should generate stories file for inline scam component 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
@@ -29,13 +29,13 @@ export const Heading: Story = {
 `;
 
 exports[`angularStories generator: applications should generate stories file with interaction tests 1`] = `
-"import type { Meta, StoryObj } from '@storybook/angular';
-import { App } from './app';
-import { expect } from 'storybook/test';
+"import type { Meta, StoryObj } from "@storybook/angular";
+import { App } from "./app";
+import { expect } from "storybook/test";
 
 const meta: Meta<App> = {
   component: App,
-  title: 'App',
+  title: "App",
 };
 export default meta;
 

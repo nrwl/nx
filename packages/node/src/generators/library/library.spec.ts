@@ -443,14 +443,14 @@ describe('lib', () => {
       expect(tree.read(`my-lib/jest.config.cts`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
-          displayName: 'my-lib',
-          preset: '../jest.preset.js',
-          testEnvironment: 'node',
+          displayName: "my-lib",
+          preset: "../jest.preset.js",
+          testEnvironment: "node",
           transform: {
-            '^.+\\\\.[tj]s$': 'babel-jest',
+            "^.+\\\\.[tj]s$": "babel-jest",
           },
-          moduleFileExtensions: ['ts', 'js', 'html'],
-          coverageDirectory: '../coverage/my-lib',
+          moduleFileExtensions: ["ts", "js", "html"],
+          coverageDirectory: "../coverage/my-lib",
         };
         "
       `);

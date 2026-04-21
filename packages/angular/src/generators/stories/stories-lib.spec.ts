@@ -113,13 +113,13 @@ describe('angularStories generator: libraries', () => {
           'utf-8'
         )
       ).toMatchInlineSnapshot(`
-        "import type { Meta, StoryObj } from '@storybook/angular';
-        import { SecondaryButtonComponent } from './secondary-button.component';
-        import { expect } from 'storybook/test';
+        "import type { Meta, StoryObj } from "@storybook/angular";
+        import { SecondaryButtonComponent } from "./secondary-button.component";
+        import { expect } from "storybook/test";
 
         const meta: Meta<SecondaryButtonComponent> = {
           component: SecondaryButtonComponent,
-          title: 'SecondaryButtonComponent',
+          title: "SecondaryButtonComponent",
         };
         export default meta;
 

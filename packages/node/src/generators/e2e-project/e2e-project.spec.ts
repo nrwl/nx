@@ -61,22 +61,22 @@ describe('e2eProjectGenerator', () => {
     expect(tree.read('api-e2e/jest.config.cts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "export default {
-        displayName: 'api-e2e',
-        preset: '../jest.preset.js',
-        globalSetup: '<rootDir>/src/support/global-setup.ts',
-        globalTeardown: '<rootDir>/src/support/global-teardown.ts',
-        setupFiles: ['<rootDir>/src/support/test-setup.ts'],
-        testEnvironment: 'node',
+        displayName: "api-e2e",
+        preset: "../jest.preset.js",
+        globalSetup: "<rootDir>/src/support/global-setup.ts",
+        globalTeardown: "<rootDir>/src/support/global-teardown.ts",
+        setupFiles: ["<rootDir>/src/support/test-setup.ts"],
+        testEnvironment: "node",
         transform: {
-          '^.+\\\\.[tj]s$': [
-            'ts-jest',
+          "^.+\\\\.[tj]s$": [
+            "ts-jest",
             {
-              tsconfig: '<rootDir>/tsconfig.spec.json',
+              tsconfig: "<rootDir>/tsconfig.spec.json",
             },
           ],
         },
-        moduleFileExtensions: ['ts', 'js', 'html'],
-        coverageDirectory: '../coverage/api-e2e',
+        moduleFileExtensions: ["ts", "js", "html"],
+        coverageDirectory: "../coverage/api-e2e",
       };
       "
     `);
@@ -97,12 +97,12 @@ describe('e2eProjectGenerator', () => {
     });
     expect(tree.read('api-e2e/src/api/api.spec.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { execSync } from 'child_process';
-      import { join } from 'path';
+      "import { execSync } from "child_process";
+      import { join } from "path";
 
-      describe('CLI tests', () => {
-        it('should print a message', () => {
-          const cliPath = join(process.cwd(), 'dist/api');
+      describe("CLI tests", () => {
+        it("should print a message", () => {
+          const cliPath = join(process.cwd(), "dist/api");
 
           const output = execSync(\`node \${cliPath}\`).toString();
 
@@ -129,20 +129,20 @@ describe('e2eProjectGenerator', () => {
     expect(tree.read('cli-e2e/jest.config.cts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "export default {
-        displayName: 'cli-e2e',
-        preset: '../jest.preset.js',
-        setupFiles: ['<rootDir>/src/test-setup.ts'],
-        testEnvironment: 'node',
+        displayName: "cli-e2e",
+        preset: "../jest.preset.js",
+        setupFiles: ["<rootDir>/src/test-setup.ts"],
+        testEnvironment: "node",
         transform: {
-          '^.+\\\\.[tj]s$': [
-            'ts-jest',
+          "^.+\\\\.[tj]s$": [
+            "ts-jest",
             {
-              tsconfig: '<rootDir>/tsconfig.spec.json',
+              tsconfig: "<rootDir>/tsconfig.spec.json",
             },
           ],
         },
-        moduleFileExtensions: ['ts', 'js', 'html'],
-        coverageDirectory: '../coverage/cli-e2e',
+        moduleFileExtensions: ["ts", "js", "html"],
+        coverageDirectory: "../coverage/cli-e2e",
       };
       "
     `);

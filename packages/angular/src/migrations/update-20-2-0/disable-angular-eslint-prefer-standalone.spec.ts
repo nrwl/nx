@@ -63,9 +63,13 @@ describe('disable-angular-eslint-prefer-standalone', () => {
         "{
           "overrides": [
             {
-              "files": ["*.ts"],
+              "files": [
+                "*.ts"
+              ],
               "rules": {
-                "@angular-eslint/prefer-standalone": ["error"]
+                "@angular-eslint/prefer-standalone": [
+                  "error"
+                ]
               }
             }
           ]
@@ -100,7 +104,9 @@ describe('disable-angular-eslint-prefer-standalone', () => {
         "{
           "overrides": [
             {
-              "files": ["*.ts"],
+              "files": [
+                "*.ts"
+              ],
               "rules": {
                 "@angular-eslint/directive-selector": [
                   "error",
@@ -113,9 +119,13 @@ describe('disable-angular-eslint-prefer-standalone', () => {
               }
             },
             {
-              "files": ["*.ts"],
+              "files": [
+                "*.ts"
+              ],
               "rules": {
-                "@angular-eslint/prefer-standalone": ["error"]
+                "@angular-eslint/prefer-standalone": [
+                  "error"
+                ]
               }
             }
           ]
@@ -150,13 +160,17 @@ describe('disable-angular-eslint-prefer-standalone', () => {
         "{
           "overrides": [
             {
-              "files": ["*.ts"],
+              "files": [
+                "*.ts"
+              ],
               "rules": {
                 "no-unused-vars": "error"
               }
             },
             {
-              "files": ["*.ts"],
+              "files": [
+                "*.ts"
+              ],
               "rules": {
                 "@angular-eslint/directive-selector": [
                   "error",
@@ -192,7 +206,9 @@ describe('disable-angular-eslint-prefer-standalone', () => {
         "{
           "overrides": [
             {
-              "files": ["*.ts"],
+              "files": [
+                "*.ts"
+              ],
               "rules": {
                 "no-unused-vars": "error",
                 "@angular-eslint/prefer-standalone": "off"
@@ -221,13 +237,17 @@ describe('disable-angular-eslint-prefer-standalone', () => {
         "{
           "overrides": [
             {
-              "files": ["*.html"],
+              "files": [
+                "*.html"
+              ],
               "rules": {
                 "some-rule-for-html": "error"
               }
             },
             {
-              "files": ["*.ts"],
+              "files": [
+                "*.ts"
+              ],
               "rules": {
                 "@angular-eslint/prefer-standalone": "off"
               }
@@ -258,12 +278,12 @@ describe('disable-angular-eslint-prefer-standalone', () => {
       expect(tree.read('apps/app1/eslint.config.js', 'utf8'))
         .toMatchInlineSnapshot(`
         "module.exports = [
-          {
-            files: ['*.ts'],
-            rules: { '@angular-eslint/prefer-standalone': ['error'] },
-          },
-        ];
-        "
+                  {
+                    files: ['*.ts'],
+                    rules: { '@angular-eslint/prefer-standalone': ['error'] },
+                  },
+                ];
+                "
       `);
     });
 
@@ -294,21 +314,21 @@ describe('disable-angular-eslint-prefer-standalone', () => {
       expect(tree.read('apps/app1/eslint.config.js', 'utf8'))
         .toMatchInlineSnapshot(`
         "module.exports = [
-          {
-            files: ['*.ts'],
-            rules: {
-              '@angular-eslint/directive-selector': [
-                'error',
-                { type: 'attribute', prefix: 'app', style: 'camelCase' },
-              ],
-            },
-          },
-          {
-            files: ['*.ts'],
-            rules: { '@angular-eslint/prefer-standalone': ['error'] },
-          },
-        ];
-        "
+                  {
+                    files: ['*.ts'],
+                    rules: {
+                      '@angular-eslint/directive-selector': [
+                        'error',
+                        { type: 'attribute', prefix: 'app', style: 'camelCase' },
+                      ],
+                    },
+                  },
+                  {
+                    files: ['*.ts'],
+                    rules: { '@angular-eslint/prefer-standalone': ['error'] },
+                  },
+                ];
+                "
       `);
     });
 
@@ -339,26 +359,28 @@ describe('disable-angular-eslint-prefer-standalone', () => {
       expect(tree.read('apps/app1/eslint.config.js', 'utf8'))
         .toMatchInlineSnapshot(`
         "module.exports = [
-          {
-            files: ['*.ts'],
-            rules: { 'no-unused-vars': 'error' },
-          },
-          {
-            files: ['**/*.ts'],
-            rules: {
-              '@angular-eslint/directive-selector': [
-                'error',
+                  {
+                    files: ['*.ts'],
+                    rules: { 'no-unused-vars': 'error' },
+                  },
+                  {
+                    files: [
+              "**/*.ts"
+            ],
+                    rules: {
+              "@angular-eslint/directive-selector": [
+                "error",
                 {
-                  type: 'attribute',
-                  prefix: 'app',
-                  style: 'camelCase',
-                },
+                  "type": "attribute",
+                  "prefix": "app",
+                  "style": "camelCase"
+                }
               ],
-              '@angular-eslint/prefer-standalone': 'off',
+              "@angular-eslint/prefer-standalone": "off"
             },
-          },
-        ];
-        "
+                  },
+                ];
+                "
       `);
     });
 
@@ -380,15 +402,17 @@ describe('disable-angular-eslint-prefer-standalone', () => {
       expect(tree.read('apps/app1/eslint.config.js', 'utf8'))
         .toMatchInlineSnapshot(`
         "module.exports = [
-          {
-            files: ['**/*.ts'],
-            rules: {
-              'no-unused-vars': 'error',
-              '@angular-eslint/prefer-standalone': 'off',
+                  {
+                    files: [
+              "**/*.ts"
+            ],
+                    rules: {
+              "no-unused-vars": "error",
+              "@angular-eslint/prefer-standalone": "off"
             },
-          },
-        ];
-        "
+                  },
+                ];
+                "
       `);
     });
 
@@ -410,18 +434,20 @@ describe('disable-angular-eslint-prefer-standalone', () => {
       expect(tree.read('apps/app1/eslint.config.js', 'utf8'))
         .toMatchInlineSnapshot(`
         "module.exports = [
-          {
-            files: ['*.html'],
-            rules: { 'some-rule-for-html': 'error' },
-          },
-          {
-            files: ['**/*.ts'],
-            rules: {
-              '@angular-eslint/prefer-standalone': 'off',
+                  {
+                    files: ['*.html'],
+                    rules: { 'some-rule-for-html': 'error' },
+                  },
+            {
+                files: [
+                    "**/*.ts"
+                ],
+                rules: {
+                    "@angular-eslint/prefer-standalone": "off"
+                }
             },
-          },
-        ];
-        "
+                ];
+                "
       `);
     });
   });

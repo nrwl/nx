@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`component --style @emotion/styled should use @emotion/styled as the styled API library 1`] = `
-"import styled from '@emotion/styled';
+"import styled from "@emotion/styled";
 
 const StyledHello = styled.div\`
   color: pink;
@@ -32,7 +32,7 @@ export default Hello;
 `;
 
 exports[`component --style styled-components should use styled-components as the styled API library 1`] = `
-"import styled from 'styled-components';
+"import styled from "styled-components";
 
 const StyledHello = styled.div\`
   color: pink;
@@ -57,7 +57,7 @@ exports[`component --style styled-jsx should use styled-jsx as the styled API li
         div {
           color: pink;
         }
-      \`}</style>{' '}
+      \`}</style>{" "}
       <h1>Welcome to Hello!</h1>
     </div>
   );

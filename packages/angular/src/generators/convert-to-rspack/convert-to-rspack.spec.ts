@@ -64,28 +64,28 @@ describe('convert-to-rspack', () => {
     const nxJson = readNxJson(tree);
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { createConfig } from '@nx/angular-rspack';
+      "import { createConfig } from "@nx/angular-rspack";
 
       export default createConfig({
         options: {
           root: __dirname,
 
           outputPath: {
-            base: '../../dist/apps/app',
+            base: "../../dist/apps/app",
           },
-          index: './src/index.html',
-          browser: './src/main.ts',
-          polyfills: ['tslib'],
-          tsConfig: './tsconfig.app.json',
+          index: "./src/index.html",
+          browser: "./src/main.ts",
+          polyfills: ["tslib"],
+          tsConfig: "./tsconfig.app.json",
           assets: [
-            './src/favicon.ico',
-            './src/assets',
+            "./src/favicon.ico",
+            "./src/assets",
             {
-              input: './public',
-              glob: '**/*',
+              input: "./public",
+              glob: "**/*",
             },
           ],
-          styles: ['./src/styles.scss'],
+          styles: ["./src/styles.scss"],
           scripts: [],
         },
       });
@@ -153,33 +153,33 @@ describe('convert-to-rspack', () => {
     const nxJson = readNxJson(tree);
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { createConfig } from '@nx/angular-rspack';
+      "import { createConfig } from "@nx/angular-rspack";
 
       export default createConfig({
         options: {
           root: __dirname,
 
           outputPath: {
-            base: '../../dist/apps/app',
+            base: "../../dist/apps/app",
           },
-          index: './src/index.html',
-          browser: './src/main.ts',
-          polyfills: ['tslib'],
-          tsConfig: './tsconfig.app.json',
+          index: "./src/index.html",
+          browser: "./src/main.ts",
+          polyfills: ["tslib"],
+          tsConfig: "./tsconfig.app.json",
           assets: [
-            './src/favicon.ico',
-            './src/assets',
+            "./src/favicon.ico",
+            "./src/assets",
             {
-              input: './public',
-              glob: '**/*',
+              input: "./public",
+              glob: "**/*",
             },
           ],
-          styles: ['./src/styles.scss'],
+          styles: ["./src/styles.scss"],
           scripts: [],
           ssr: {
-            entry: './src/server.ts',
+            entry: "./src/server.ts",
           },
-          server: './src/main.server.ts',
+          server: "./src/main.server.ts",
         },
       });
       "
@@ -236,21 +236,21 @@ describe('convert-to-rspack', () => {
     const nxJson = readNxJson(tree);
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { createConfig } from '@nx/angular-rspack';
+      "import { createConfig } from "@nx/angular-rspack";
 
       export default createConfig({
         options: {
           root: __dirname,
 
           outputPath: {
-            base: '../../dist/apps/app',
+            base: "../../dist/apps/app",
           },
-          index: './src/index.html',
-          browser: './src/main.ts',
-          polyfills: ['tslib', './src/polyfills.ts'],
-          tsConfig: './tsconfig.app.json',
-          assets: ['../../libs/mylib/src/favicon.ico'],
-          styles: ['./src/styles.scss'],
+          index: "./src/index.html",
+          browser: "./src/main.ts",
+          polyfills: ["tslib", "./src/polyfills.ts"],
+          tsConfig: "./tsconfig.app.json",
+          assets: ["../../libs/mylib/src/favicon.ico"],
+          styles: ["./src/styles.scss"],
           scripts: [],
         },
       });
@@ -314,7 +314,7 @@ describe('convert-to-rspack', () => {
     const nxJson = readNxJson(tree);
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { createConfig } from '@nx/angular-rspack';
+      "import { createConfig } from "@nx/angular-rspack";
 
       export default createConfig(
         {
@@ -322,21 +322,21 @@ describe('convert-to-rspack', () => {
             root: __dirname,
 
             outputPath: {
-              base: '../../dist/apps/app',
+              base: "../../dist/apps/app",
             },
-            index: './src/index.html',
-            browser: './src/main.ts',
-            polyfills: ['tslib'],
-            tsConfig: './tsconfig.app.json',
+            index: "./src/index.html",
+            browser: "./src/main.ts",
+            polyfills: ["tslib"],
+            tsConfig: "./tsconfig.app.json",
             assets: [
-              './src/favicon.ico',
-              './src/assets',
+              "./src/favicon.ico",
+              "./src/assets",
               {
-                input: './public',
-                glob: '**/*',
+                input: "./public",
+                glob: "**/*",
               },
             ],
-            styles: ['./src/styles.scss'],
+            styles: ["./src/styles.scss"],
             scripts: [],
           },
         },
@@ -344,11 +344,11 @@ describe('convert-to-rspack', () => {
           production: {
             options: {
               outputPath: {
-                base: '../../dist/apps/app-prod',
+                base: "../../dist/apps/app-prod",
               },
-              index: './src/index.prod.html',
-              browser: './src/main.prod.ts',
-              tsConfig: './tsconfig.prod.json',
+              index: "./src/index.prod.html",
+              browser: "./src/main.prod.ts",
+              tsConfig: "./tsconfig.prod.json",
             },
           },
         },
@@ -425,9 +425,9 @@ describe('convert-to-rspack', () => {
     const updatedProject = readProjectConfiguration(tree, 'app');
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { createConfig } from '@nx/angular-rspack';
-      import baseWebpackConfig from './webpack.config';
-      import webpackMerge from 'webpack-merge';
+      "import { createConfig } from "@nx/angular-rspack";
+      import baseWebpackConfig from "./webpack.config";
+      import webpackMerge from "webpack-merge";
 
       export default async () => {
         const baseConfig = await createConfig({
@@ -435,21 +435,21 @@ describe('convert-to-rspack', () => {
             root: __dirname,
 
             outputPath: {
-              base: '../../dist/apps/app',
+              base: "../../dist/apps/app",
             },
-            index: './src/index.html',
-            browser: './src/main.ts',
-            polyfills: ['tslib'],
-            tsConfig: './tsconfig.app.json',
+            index: "./src/index.html",
+            browser: "./src/main.ts",
+            polyfills: ["tslib"],
+            tsConfig: "./tsconfig.app.json",
             assets: [
-              './src/favicon.ico',
-              './src/assets',
+              "./src/favicon.ico",
+              "./src/assets",
               {
-                input: './public',
-                glob: '**/*',
+                input: "./public",
+                glob: "**/*",
               },
             ],
-            styles: ['./src/styles.scss'],
+            styles: ["./src/styles.scss"],
             scripts: [],
           },
         });
@@ -462,8 +462,8 @@ describe('convert-to-rspack', () => {
       "const {
         NxModuleFederationPlugin,
         NxModuleFederationDevServerPlugin,
-      } = require('@nx/module-federation/rspack');
-      const config = require('./module-federation.config');
+      } = require("@nx/module-federation/rspack");
+      const config = require("./module-federation.config");
 
       module.exports = {
         plugins: [
@@ -550,9 +550,9 @@ describe('convert-to-rspack', () => {
     const updatedProject = readProjectConfiguration(tree, 'app');
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { createConfig } from '@nx/angular-rspack';
-      import baseWebpackConfig from './webpack.config';
-      import webpackMerge from 'webpack-merge';
+      "import { createConfig } from "@nx/angular-rspack";
+      import baseWebpackConfig from "./webpack.config";
+      import webpackMerge from "webpack-merge";
 
       export default async () => {
         const baseConfig = await createConfig({
@@ -560,21 +560,21 @@ describe('convert-to-rspack', () => {
             root: __dirname,
 
             outputPath: {
-              base: '../../dist/apps/app',
+              base: "../../dist/apps/app",
             },
-            index: './src/index.html',
-            browser: './src/main.ts',
-            polyfills: ['tslib'],
-            tsConfig: './tsconfig.app.json',
+            index: "./src/index.html",
+            browser: "./src/main.ts",
+            polyfills: ["tslib"],
+            tsConfig: "./tsconfig.app.json",
             assets: [
-              './src/favicon.ico',
-              './src/assets',
+              "./src/favicon.ico",
+              "./src/assets",
               {
-                input: './public',
-                glob: '**/*',
+                input: "./public",
+                glob: "**/*",
               },
             ],
-            styles: ['./src/styles.scss'],
+            styles: ["./src/styles.scss"],
             scripts: [],
           },
         });

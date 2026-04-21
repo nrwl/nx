@@ -22,7 +22,7 @@ describe('app', () => {
     } as Schema);
 
     const mainFile = appTree.read('my-node-app/src/main.ts').toString();
-    expect(mainFile).toContain(`import express from 'express';`);
+    expect(mainFile).toContain(`import express from "express";`);
 
     const tsconfig = readJson(appTree, 'my-node-app/tsconfig.json');
     expect(tsconfig).toMatchInlineSnapshot(`
@@ -121,7 +121,7 @@ describe('app', () => {
 
       expect(appTree.exists('my-node-app/src/main.js')).toBeTruthy();
       expect(appTree.read('my-node-app/src/main.js').toString()).toContain(
-        `import express from 'express';`
+        `import express from "express";`
       );
 
       const tsConfig = readJson(appTree, 'my-node-app/tsconfig.json');

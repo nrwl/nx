@@ -454,18 +454,15 @@ export class MyLib2Module {}
 `;
 
 exports[`lib router lazy should update the parent module 1`] = `
-"import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { RouterModule } from '@angular/router';
-import { App } from './app';
+"import { NgModule } from "@angular/core";
+import { BrowserModule } from "@angular/platform-browser";
+import { RouterModule } from "@angular/router";
+import { App } from "./app";
 @NgModule({
   imports: [
     BrowserModule,
     RouterModule.forRoot([
-      {
-        path: 'my-lib',
-        loadChildren: () => import('@proj/my-lib').then((m) => m.MyLibModule),
-      },
+      { path: "my-lib", loadChildren: () => import("@proj/my-lib").then((m) => m.MyLibModule) },
     ]),
   ],
   declarations: [App],
@@ -476,26 +473,17 @@ export class AppModule {}
 `;
 
 exports[`lib router lazy should update the parent module 3`] = `
-"import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { RouterModule } from '@angular/router';
-import { App } from './app';
+"import { NgModule } from "@angular/core";
+import { BrowserModule } from "@angular/platform-browser";
+import { RouterModule } from "@angular/router";
+import { App } from "./app";
 @NgModule({
   imports: [
     BrowserModule,
     RouterModule.forRoot([
-      {
-        path: 'my-lib',
-        loadChildren: () => import('@proj/my-lib').then((m) => m.MyLibModule),
-      },
-      {
-        path: 'my-lib2',
-        loadChildren: () => import('@proj/my-lib2').then((m) => m.MyLib2Module),
-      },
-      {
-        path: 'my-lib3',
-        loadChildren: () => import('@proj/my-lib3').then((m) => m.MyLib3Module),
-      },
+      { path: "my-lib", loadChildren: () => import("@proj/my-lib").then((m) => m.MyLibModule) },
+      { path: "my-lib2", loadChildren: () => import("@proj/my-lib2").then((m) => m.MyLib2Module) },
+      { path: "my-lib3", loadChildren: () => import("@proj/my-lib3").then((m) => m.MyLib3Module) },
     ]),
   ],
   declarations: [App],

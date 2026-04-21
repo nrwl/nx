@@ -723,23 +723,19 @@ describe('Init MF', () => {
 
     expect(tree.read('app1/src/app/app.spec.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { TestBed } from '@angular/core/testing';
-      import { App } from './app';
-      import { NxWelcome } from './nx-welcome';
-      import { Router, RouterModule } from '@angular/router';
+      "import { TestBed } from "@angular/core/testing";
+      import { App } from "./app";
+      import { NxWelcome } from "./nx-welcome";
+      import { Router, RouterModule } from "@angular/router";
 
-      describe('App', () => {
+      describe("App", () => {
         beforeEach(async () => {
           await TestBed.configureTestingModule({
-            imports: [
-              RouterModule.forRoot([{ path: '', component: NxWelcome }]),
-              App,
-              NxWelcome,
-            ],
+            imports: [RouterModule.forRoot([{ path: "", component: NxWelcome }]), App, NxWelcome],
           }).compileComponents();
         });
 
-        it('should create the app', () => {
+        it("should create the app", () => {
           const fixture = TestBed.createComponent(App);
           const app = fixture.componentInstance;
           expect(app).toBeTruthy();
@@ -748,16 +744,16 @@ describe('Init MF', () => {
         it(\`should have as title 'app1'\`, () => {
           const fixture = TestBed.createComponent(App);
           const app = fixture.componentInstance;
-          expect(app.title).toEqual('app1');
+          expect(app.title).toEqual("app1");
         });
 
-        it('should render title', async () => {
+        it("should render title", async () => {
           const fixture = TestBed.createComponent(App);
           const router = TestBed.inject(Router);
-          await router.navigate(['']);
+          await router.navigate([""]);
           await fixture.whenStable();
           const compiled = fixture.nativeElement as HTMLElement;
-          expect(compiled.querySelector('h1')?.textContent).toContain('Welcome app1');
+          expect(compiled.querySelector("h1")?.textContent).toContain("Welcome app1");
         });
       });
       "

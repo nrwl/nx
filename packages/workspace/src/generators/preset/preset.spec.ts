@@ -71,34 +71,34 @@ describe('preset', () => {
     expect(tree.exists(`/apps/${name}/src/main.tsx`)).toBe(true);
     expect(tree.read(`apps/${name}/webpack.config.js`, 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
-      const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
-      const { join } = require('path');
+      "const { NxAppWebpackPlugin } = require("@nx/webpack/app-plugin");
+      const { NxReactWebpackPlugin } = require("@nx/react/webpack-plugin");
+      const { join } = require("path");
 
       module.exports = {
         output: {
-          path: join(__dirname, '../../dist/apps/react-preset-monorepo'),
+          path: join(__dirname, "../../dist/apps/react-preset-monorepo"),
           clean: true,
         },
         devServer: {
           port: 4200,
           historyApiFallback: {
-            index: '/index.html',
+            index: "/index.html",
             disableDotRule: true,
-            htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+            htmlAcceptHeaders: ["text/html", "application/xhtml+xml"],
           },
         },
         plugins: [
           new NxAppWebpackPlugin({
-            tsConfig: './tsconfig.app.json',
-            compiler: 'babel',
-            main: './src/main.tsx',
-            index: './src/index.html',
-            baseHref: '/',
-            assets: ['./src/favicon.ico', './src/assets'],
-            styles: ['./src/styles.css'],
-            outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
-            optimization: process.env['NODE_ENV'] === 'production',
+            tsConfig: "./tsconfig.app.json",
+            compiler: "babel",
+            main: "./src/main.tsx",
+            index: "./src/index.html",
+            baseHref: "/",
+            assets: ["./src/favicon.ico", "./src/assets"],
+            styles: ["./src/styles.css"],
+            outputHashing: process.env["NODE_ENV"] === "production" ? "all" : "none",
+            optimization: process.env["NODE_ENV"] === "production",
           }),
           new NxReactWebpackPlugin({
             // Uncomment this line if you don't want to use SVGR
@@ -123,29 +123,29 @@ describe('preset', () => {
     expect(tree.read(`apps/${name}/vite.config.mts`, 'utf-8'))
       .toMatchInlineSnapshot(`
       "/// <reference types='vitest' />
-      import { defineConfig } from 'vite';
-      import vue from '@vitejs/plugin-vue';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+      import { defineConfig } from "vite";
+      import vue from "@vitejs/plugin-vue";
+      import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+      import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 
       export default defineConfig(() => ({
         root: import.meta.dirname,
-        cacheDir: '../../node_modules/.vite/apps/vue-preset-monorepo',
-        server:{
+        cacheDir: "../../node_modules/.vite/apps/vue-preset-monorepo",
+        server: {
           port: 4200,
-          host: 'localhost',
+          host: "localhost",
         },
-        preview:{
+        preview: {
           port: 4300,
-          host: 'localhost',
+          host: "localhost",
         },
-        plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+        plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(["*.md"])],
         // Uncomment this if you are using workers.
         // worker: {
         //   plugins: () => [ nxViteTsPaths() ],
         // },
         build: {
-          outDir: '../../dist/apps/vue-preset-monorepo',
+          outDir: "../../dist/apps/vue-preset-monorepo",
           emptyOutDir: true,
           reportCompressedSize: true,
           commonjsOptions: {
@@ -153,16 +153,16 @@ describe('preset', () => {
           },
         },
         test: {
-          name: 'vue-preset-monorepo',
+          name: "vue-preset-monorepo",
           watch: false,
           globals: true,
-          environment: 'jsdom',
-          include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-          reporters: ['default'],
+          environment: "jsdom",
+          include: ["{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+          reporters: ["default"],
           coverage: {
-            reportsDirectory: '../../coverage/apps/vue-preset-monorepo',
-            provider: 'v8' as const,
-          }
+            reportsDirectory: "../../coverage/apps/vue-preset-monorepo",
+            provider: "v8" as const,
+          },
         },
       }));
       "
@@ -227,34 +227,34 @@ describe('preset', () => {
     });
     expect(tree.exists('webpack.config.js')).toBe(true);
     expect(tree.read('webpack.config.js', 'utf-8')).toMatchInlineSnapshot(`
-      "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
-      const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
-      const { join } = require('path');
+      "const { NxAppWebpackPlugin } = require("@nx/webpack/app-plugin");
+      const { NxReactWebpackPlugin } = require("@nx/react/webpack-plugin");
+      const { join } = require("path");
 
       module.exports = {
         output: {
-          path: join(__dirname, 'dist/react-standalone-preset-webpack'),
+          path: join(__dirname, "dist/react-standalone-preset-webpack"),
           clean: true,
         },
         devServer: {
           port: 4200,
           historyApiFallback: {
-            index: '/index.html',
+            index: "/index.html",
             disableDotRule: true,
-            htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+            htmlAcceptHeaders: ["text/html", "application/xhtml+xml"],
           },
         },
         plugins: [
           new NxAppWebpackPlugin({
-            tsConfig: './tsconfig.app.json',
-            compiler: 'babel',
-            main: './src/main.tsx',
-            index: './src/index.html',
-            baseHref: '/',
-            assets: ['./src/favicon.ico', './src/assets'],
-            styles: ['./src/styles.css'],
-            outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
-            optimization: process.env['NODE_ENV'] === 'production',
+            tsConfig: "./tsconfig.app.json",
+            compiler: "babel",
+            main: "./src/main.tsx",
+            index: "./src/index.html",
+            baseHref: "/",
+            assets: ["./src/favicon.ico", "./src/assets"],
+            styles: ["./src/styles.css"],
+            outputHashing: process.env["NODE_ENV"] === "production" ? "all" : "none",
+            optimization: process.env["NODE_ENV"] === "production",
           }),
           new NxReactWebpackPlugin({
             // Uncomment this line if you don't want to use SVGR
@@ -279,29 +279,29 @@ describe('preset', () => {
     expect(tree.exists('vite.config.mts')).toBe(true);
     expect(tree.read('vite.config.mts', 'utf-8')).toMatchInlineSnapshot(`
       "/// <reference types='vitest' />
-      import { defineConfig } from 'vite';
-      import react from '@vitejs/plugin-react';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+      import { defineConfig } from "vite";
+      import react from "@vitejs/plugin-react";
+      import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+      import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 
       export default defineConfig(() => ({
         root: import.meta.dirname,
-        cacheDir: './node_modules/.vite/react-standalone-preset-vite',
-        server:{
+        cacheDir: "./node_modules/.vite/react-standalone-preset-vite",
+        server: {
           port: 4200,
-          host: 'localhost',
+          host: "localhost",
         },
-        preview:{
+        preview: {
           port: 4300,
-          host: 'localhost',
+          host: "localhost",
         },
-        plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+        plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(["*.md"])],
         // Uncomment this if you are using workers.
         // worker: {
         //   plugins: () => [ nxViteTsPaths() ],
         // },
         build: {
-          outDir: './dist/react-standalone-preset-vite',
+          outDir: "./dist/react-standalone-preset-vite",
           emptyOutDir: true,
           reportCompressedSize: true,
           commonjsOptions: {
@@ -309,16 +309,16 @@ describe('preset', () => {
           },
         },
         test: {
-          name: 'react-standalone-preset-vite',
+          name: "react-standalone-preset-vite",
           watch: false,
           globals: true,
-          environment: 'jsdom',
-          include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-          reporters: ['default'],
+          environment: "jsdom",
+          include: ["{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+          reporters: ["default"],
           coverage: {
-            reportsDirectory: './coverage/react-standalone-preset-vite',
-            provider: 'v8' as const,
-          }
+            reportsDirectory: "./coverage/react-standalone-preset-vite",
+            provider: "v8" as const,
+          },
         },
       }));
       "
@@ -336,29 +336,29 @@ describe('preset', () => {
     expect(tree.exists('vite.config.mts')).toBe(true);
     expect(tree.read('vite.config.mts', 'utf-8')).toMatchInlineSnapshot(`
       "/// <reference types='vitest' />
-      import { defineConfig } from 'vite';
-      import vue from '@vitejs/plugin-vue';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+      import { defineConfig } from "vite";
+      import vue from "@vitejs/plugin-vue";
+      import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+      import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 
       export default defineConfig(() => ({
         root: import.meta.dirname,
-        cacheDir: './node_modules/.vite/vue-standalone-preset',
-        server:{
+        cacheDir: "./node_modules/.vite/vue-standalone-preset",
+        server: {
           port: 4200,
-          host: 'localhost',
+          host: "localhost",
         },
-        preview:{
+        preview: {
           port: 4300,
-          host: 'localhost',
+          host: "localhost",
         },
-        plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+        plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(["*.md"])],
         // Uncomment this if you are using workers.
         // worker: {
         //   plugins: () => [ nxViteTsPaths() ],
         // },
         build: {
-          outDir: './dist/vue-standalone-preset',
+          outDir: "./dist/vue-standalone-preset",
           emptyOutDir: true,
           reportCompressedSize: true,
           commonjsOptions: {
@@ -366,16 +366,16 @@ describe('preset', () => {
           },
         },
         test: {
-          name: 'vue-standalone-preset',
+          name: "vue-standalone-preset",
           watch: false,
           globals: true,
-          environment: 'jsdom',
-          include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-          reporters: ['default'],
+          environment: "jsdom",
+          include: ["{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+          reporters: ["default"],
           coverage: {
-            reportsDirectory: './coverage/vue-standalone-preset',
-            provider: 'v8' as const,
-          }
+            reportsDirectory: "./coverage/vue-standalone-preset",
+            provider: "v8" as const,
+          },
         },
       }));
       "

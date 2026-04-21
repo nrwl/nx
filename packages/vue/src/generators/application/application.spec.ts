@@ -76,28 +76,28 @@ describe('application generator', () => {
 
     expect(tree.read('test/vitest.config.mts', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/rsbuild.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { pluginVue } from '@rsbuild/plugin-vue';
-      import { defineConfig } from '@rsbuild/core';
+      "import { pluginVue } from "@rsbuild/plugin-vue";
+      import { defineConfig } from "@rsbuild/core";
 
       export default defineConfig({
         html: {
-          template: './index.html',
+          template: "./index.html",
         },
         plugins: [pluginVue()],
 
         source: {
           entry: {
-            index: './src/main.ts',
+            index: "./src/main.ts",
           },
-          tsconfigPath: './tsconfig.app.json',
+          tsconfigPath: "./tsconfig.app.json",
         },
         server: {
           port: 4200,
         },
         output: {
-          target: 'web',
+          target: "web",
           distPath: {
-            root: 'dist',
+            root: "dist",
           },
         },
       });

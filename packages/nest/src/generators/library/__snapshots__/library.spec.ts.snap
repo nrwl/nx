@@ -2,27 +2,27 @@
 
 exports[`lib --testEnvironment should set target jest testEnvironment to jsdom 1`] = `
 "module.exports = {
-  displayName: 'my-lib',
-  preset: '../jest.preset.js',
+  displayName: "my-lib",
+  preset: "../jest.preset.js",
   transform: {
-    '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    "^.+\\\\.[tj]s$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.spec.json" }],
   },
-  moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../coverage/my-lib',
+  moduleFileExtensions: ["ts", "js", "html"],
+  coverageDirectory: "../coverage/my-lib",
 };
 "
 `;
 
 exports[`lib --testEnvironment should set target jest testEnvironment to node by default 1`] = `
 "module.exports = {
-  displayName: 'my-lib',
-  preset: '../jest.preset.js',
-  testEnvironment: 'node',
+  displayName: "my-lib",
+  preset: "../jest.preset.js",
+  testEnvironment: "node",
   transform: {
-    '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    "^.+\\\\.[tj]s$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.spec.json" }],
   },
-  moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../coverage/my-lib',
+  moduleFileExtensions: ["ts", "js", "html"],
+  coverageDirectory: "../coverage/my-lib",
 };
 "
 `;
@@ -77,7 +77,7 @@ exports[`lib nested should create a local tsconfig.json 1`] = `
 `;
 
 exports[`lib not nested should add the @Global decorator 1`] = `
-"import { Module, Global } from '@nestjs/common';
+"import { Module, Global } from "@nestjs/common";
 
 @Global()
 @Module({
@@ -152,9 +152,9 @@ exports[`lib not nested should generate files 1`] = `
 `;
 
 exports[`lib not nested should provide the controller and service 1`] = `
-"import { Module } from '@nestjs/common';
-import { MyLibController } from './my-lib.controller';
-import { MyLibService } from './my-lib.service';
+"import { Module } from "@nestjs/common";
+import { MyLibController } from "./my-lib.controller";
+import { MyLibService } from "./my-lib.service";
 
 @Module({
   controllers: [MyLibController],
@@ -166,10 +166,10 @@ export class MyLibModule {}
 `;
 
 exports[`lib not nested should provide the controller and service 2`] = `
-"import { Controller } from '@nestjs/common';
-import { MyLibService } from './my-lib.service';
+"import { Controller } from "@nestjs/common";
+import { MyLibService } from "./my-lib.service";
 
-@Controller('my-lib')
+@Controller("my-lib")
 export class MyLibController {
   constructor(private myLibService: MyLibService) {}
 }
@@ -177,8 +177,8 @@ export class MyLibController {
 `;
 
 exports[`lib not nested should provide the controller and service 3`] = `
-"export * from './lib/my-lib.controller';
-export * from './lib/my-lib.service';
-export * from './lib/my-lib.module';
+"export * from "./lib/my-lib.controller";
+export * from "./lib/my-lib.service";
+export * from "./lib/my-lib.module";
 "
 `;

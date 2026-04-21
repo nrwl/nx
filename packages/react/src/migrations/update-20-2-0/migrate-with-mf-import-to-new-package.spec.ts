@@ -35,11 +35,11 @@ describe('migrate-with-mf-import-to-new-package', () => {
     await migrateWithMfImport(tree);
 
     // ASSERT
-    expect(tree.read('apps/shell/webpack.config.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "import { withModuleFederation } from '@nx/module-federation/webpack';
-      "
-    `);
+    expect(
+      tree.read('apps/shell/webpack.config.ts', 'utf-8')
+    ).toMatchInlineSnapshot(
+      `"import { withModuleFederation } from '@nx/module-federation/webpack';"`
+    );
   });
 
   it('should migrate the require correctly for withMf', async () => {
@@ -53,11 +53,11 @@ describe('migrate-with-mf-import-to-new-package', () => {
     await migrateWithMfImport(tree);
 
     // ASSERT
-    expect(tree.read('apps/shell/webpack.config.js', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "const { withModuleFederation } = require('@nx/module-federation/webpack');
-      "
-    `);
+    expect(
+      tree.read('apps/shell/webpack.config.js', 'utf-8')
+    ).toMatchInlineSnapshot(
+      `"const { withModuleFederation } = require('@nx/module-federation/webpack');"`
+    );
   });
 
   it('should migrate the import correctly for withMfSSR', async () => {
@@ -71,11 +71,11 @@ describe('migrate-with-mf-import-to-new-package', () => {
     await migrateWithMfImport(tree);
 
     // ASSERT
-    expect(tree.read('apps/shell/webpack.config.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "import { withModuleFederationForSSR } from '@nx/module-federation/webpack';
-      "
-    `);
+    expect(
+      tree.read('apps/shell/webpack.config.ts', 'utf-8')
+    ).toMatchInlineSnapshot(
+      `"import { withModuleFederationForSSR } from '@nx/module-federation/webpack';"`
+    );
   });
 
   it('should migrate the require correctly for withMfSSR', async () => {
@@ -89,11 +89,11 @@ describe('migrate-with-mf-import-to-new-package', () => {
     await migrateWithMfImport(tree);
 
     // ASSERT
-    expect(tree.read('apps/shell/webpack.config.js', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "const { withModuleFederationForSSR } = require('@nx/module-federation/webpack');
-      "
-    `);
+    expect(
+      tree.read('apps/shell/webpack.config.js', 'utf-8')
+    ).toMatchInlineSnapshot(
+      `"const { withModuleFederationForSSR } = require('@nx/module-federation/webpack');"`
+    );
   });
 
   describe('idempotent', () => {
@@ -109,11 +109,11 @@ describe('migrate-with-mf-import-to-new-package', () => {
       await migrateWithMfImport(tree);
 
       // ASSERT
-      expect(tree.read('apps/shell/webpack.config.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { withModuleFederation } from '@nx/module-federation/webpack';
-        "
-      `);
+      expect(
+        tree.read('apps/shell/webpack.config.ts', 'utf-8')
+      ).toMatchInlineSnapshot(
+        `"import { withModuleFederation } from '@nx/module-federation/webpack';"`
+      );
     });
 
     it('should migrate the require correctly for withMfSSR even when run twice', async () => {
@@ -128,11 +128,11 @@ describe('migrate-with-mf-import-to-new-package', () => {
       await migrateWithMfImport(tree);
 
       // ASSERT
-      expect(tree.read('apps/shell/webpack.config.js', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "const { withModuleFederationForSSR } = require('@nx/module-federation/webpack');
-        "
-      `);
+      expect(
+        tree.read('apps/shell/webpack.config.js', 'utf-8')
+      ).toMatchInlineSnapshot(
+        `"const { withModuleFederationForSSR } = require('@nx/module-federation/webpack');"`
+      );
     });
   });
 });

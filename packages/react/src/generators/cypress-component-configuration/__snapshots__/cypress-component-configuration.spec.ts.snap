@@ -1,26 +1,26 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`React:CypressComponentTestConfiguration should generate cypress component test config with --build-target 1`] = `
-"import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
-import { defineConfig } from 'cypress';
+"import { nxComponentTestingPreset } from "@nx/react/plugins/component-testing";
+import { defineConfig } from "cypress";
 export default defineConfig({
-  component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
+  component: nxComponentTestingPreset(__filename, { bundler: "vite" }),
 });
 "
 `;
 
 exports[`React:CypressComponentTestConfiguration should generate cypress component test config with project graph 1`] = `
-"import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
-import { defineConfig } from 'cypress';
+"import { nxComponentTestingPreset } from "@nx/react/plugins/component-testing";
+import { defineConfig } from "cypress";
 export default defineConfig({
-  component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
+  component: nxComponentTestingPreset(__filename, { bundler: "vite" }),
 });
 "
 `;
 
 exports[`React:CypressComponentTestConfiguration should generate cypress component test config with webpack 1`] = `
-"import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
-import { defineConfig } from 'cypress';
+"import { nxComponentTestingPreset } from "@nx/react/plugins/component-testing";
+import { defineConfig } from "cypress";
 export default defineConfig({
   component: nxComponentTestingPreset(__filename),
 });
@@ -28,20 +28,20 @@ export default defineConfig({
 `;
 
 exports[`React:CypressComponentTestConfiguration should generate cypress config with vite 1`] = `
-"import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
-import { defineConfig } from 'cypress';
+"import { nxComponentTestingPreset } from "@nx/react/plugins/component-testing";
+import { defineConfig } from "cypress";
 export default defineConfig({
-  component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
+  component: nxComponentTestingPreset(__filename, { bundler: "vite" }),
 });
 "
 `;
 
 exports[`React:CypressComponentTestConfiguration should generate tests for existing js components 1`] = `
-"import * as React from 'react';
-import SomeCmp from './some-cmp';
+"import * as React from "react";
+import SomeCmp from "./some-cmp";
 
 describe(SomeCmp.name, () => {
-  it('renders', () => {
+  it("renders", () => {
     cy.mount(<SomeCmp />);
   });
 });
@@ -49,11 +49,11 @@ describe(SomeCmp.name, () => {
 `;
 
 exports[`React:CypressComponentTestConfiguration should generate tests for existing js components 2`] = `
-"import * as React from 'react';
-import AnotherCmp from './another-cmp';
+"import * as React from "react";
+import AnotherCmp from "./another-cmp";
 
 describe(AnotherCmp.name, () => {
-  it('renders', () => {
+  it("renders", () => {
     cy.mount(<AnotherCmp />);
   });
 });
@@ -61,11 +61,11 @@ describe(AnotherCmp.name, () => {
 `;
 
 exports[`React:CypressComponentTestConfiguration should generate tests for existing tsx components 1`] = `
-"import * as React from 'react';
-import SomeLib from './some-lib';
+"import * as React from "react";
+import SomeLib from "./some-lib";
 
 describe(SomeLib.name, () => {
-  it('renders', () => {
+  it("renders", () => {
     cy.mount(<SomeLib />);
   });
 });
@@ -73,11 +73,11 @@ describe(SomeLib.name, () => {
 `;
 
 exports[`React:CypressComponentTestConfiguration should generate tests for existing tsx components 2`] = `
-"import * as React from 'react';
-import AnotherCmp from './another-cmp';
+"import * as React from "react";
+import AnotherCmp from "./another-cmp";
 
 describe(AnotherCmp.name, () => {
-  it('renders', () => {
+  it("renders", () => {
     cy.mount(<AnotherCmp />);
   });
 });

@@ -43,7 +43,7 @@ describe('directive generator', () => {
       "import { Directive } from '@angular/core';
 
       @Directive({
-        selector: '[test]',
+        selector: '[test]'
       })
       export class TestDirective {
         constructor() {}
@@ -287,7 +287,7 @@ describe('directive generator', () => {
         "import { Directive } from '@angular/core';
 
         @Directive({
-          selector: '[test]',
+          selector: '[test]'
         })
         export class TestDirective {
           constructor() {}

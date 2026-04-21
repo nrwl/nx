@@ -42,18 +42,20 @@ describe('eslint-ignore-vite-temp-files migration', () => {
     await migration(tree);
 
     expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
-      "export default [
-        {
-          ignores: ['**/vite.config.*.timestamp*', '**/vitest.config.*.timestamp*'],
-        },
+      "
+      export default [
+          {
+              ignores: [
+                  "**/vite.config.*.timestamp*",
+                  "**/vitest.config.*.timestamp*"
+              ]
+          }
       ];
       "
     `);
-    expect(tree.read('apps/app1/eslint.config.mjs', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "export default [];
-      "
-    `);
+    expect(
+      tree.read('apps/app1/eslint.config.mjs', 'utf-8')
+    ).toMatchInlineSnapshot(`"export default [];"`);
   });
 
   it('should update the project eslint config when using eslintrc config and it is using vite', async () => {

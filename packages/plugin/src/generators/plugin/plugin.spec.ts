@@ -212,14 +212,14 @@ describe('NxPlugin Plugin Generator', () => {
         expect(tree.read('my-plugin/jest.config.cts', 'utf-8'))
           .toMatchInlineSnapshot(`
           "module.exports = {
-            displayName: 'my-plugin',
-            preset: '../jest.preset.js',
-            testEnvironment: 'node',
+            displayName: "my-plugin",
+            preset: "../jest.preset.js",
+            testEnvironment: "node",
             transform: {
-              '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+              "^.+\\\\.[tj]s$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.spec.json" }],
             },
-            moduleFileExtensions: ['ts', 'js', 'html'],
-            coverageDirectory: '../coverage/my-plugin',
+            moduleFileExtensions: ["ts", "js", "html"],
+            coverageDirectory: "../coverage/my-plugin",
           };
           "
         `);

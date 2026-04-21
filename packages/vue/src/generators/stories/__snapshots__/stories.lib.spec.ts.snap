@@ -1,14 +1,14 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`vue:stories for libraries should create the stories with interaction tests 1`] = `
-"import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import testUiLib from './test-ui-lib.vue';
+"import type { Meta, StoryObj } from "@storybook/vue3-vite";
+import testUiLib from "./test-ui-lib.vue";
 
-import { expect } from 'storybook/test';
+import { expect } from "storybook/test";
 
 const meta = {
   component: testUiLib,
-  title: 'testUiLib',
+  title: "testUiLib",
 } satisfies Meta<typeof testUiLib>;
 export default meta;
 
@@ -28,14 +28,14 @@ export const Heading = {
 `;
 
 exports[`vue:stories for libraries should create the stories with interaction tests 2`] = `
-"import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import anotherCmp from './another-cmp.vue';
+"import type { Meta, StoryObj } from "@storybook/vue3-vite";
+import anotherCmp from "./another-cmp.vue";
 
-import { expect } from 'storybook/test';
+import { expect } from "storybook/test";
 
 const meta = {
   component: anotherCmp,
-  title: 'anotherCmp',
+  title: "anotherCmp",
 } satisfies Meta<typeof anotherCmp>;
 export default meta;
 
@@ -43,7 +43,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Primary = {
   args: {
-    name: 'name',
+    name: "name",
     displayAge: false,
     age: 0,
   },
@@ -51,7 +51,7 @@ export const Primary = {
 
 export const Heading = {
   args: {
-    name: 'name',
+    name: "name",
     displayAge: false,
     age: 0,
   },
@@ -63,12 +63,12 @@ export const Heading = {
 `;
 
 exports[`vue:stories for libraries should create the stories without interaction tests 1`] = `
-"import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import testUiLib from './test-ui-lib.vue';
+"import type { Meta, StoryObj } from "@storybook/vue3-vite";
+import testUiLib from "./test-ui-lib.vue";
 
 const meta = {
   component: testUiLib,
-  title: 'testUiLib',
+  title: "testUiLib",
 } satisfies Meta<typeof testUiLib>;
 export default meta;
 
@@ -81,12 +81,12 @@ export const Primary = {
 `;
 
 exports[`vue:stories for libraries should create the stories without interaction tests 2`] = `
-"import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import anotherCmp from './another-cmp.vue';
+"import type { Meta, StoryObj } from "@storybook/vue3-vite";
+import anotherCmp from "./another-cmp.vue";
 
 const meta = {
   component: anotherCmp,
-  title: 'anotherCmp',
+  title: "anotherCmp",
 } satisfies Meta<typeof anotherCmp>;
 export default meta;
 
@@ -94,7 +94,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Primary = {
   args: {
-    name: 'name',
+    name: "name",
     displayAge: false,
     age: 0,
   },

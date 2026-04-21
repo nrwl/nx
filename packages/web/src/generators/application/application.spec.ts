@@ -174,21 +174,21 @@ describe('app', () => {
       });
       expect(tree.read('cool-app-e2e/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-        import { defineConfig } from 'cypress';
+        "import { nxE2EPreset } from "@nx/cypress/plugins/cypress-preset";
+        import { defineConfig } from "cypress";
         export default defineConfig({
           e2e: {
             ...nxE2EPreset(__filename, {
-              cypressDir: 'src',
-              bundler: 'vite',
+              cypressDir: "src",
+              bundler: "vite",
               webServerCommands: {
-                default: 'npx nx run cool-app:dev',
-                production: 'npx nx run cool-app:preview',
+                default: "npx nx run cool-app:dev",
+                production: "npx nx run cool-app:preview",
               },
-              ciWebServerCommand: 'npx nx run cool-app:preview',
-              ciBaseUrl: 'http://localhost:4300',
+              ciWebServerCommand: "npx nx run cool-app:preview",
+              ciBaseUrl: "http://localhost:4300",
             }),
-            baseUrl: 'http://localhost:4200',
+            baseUrl: "http://localhost:4200",
           },
         });
         "
@@ -205,20 +205,20 @@ describe('app', () => {
       });
       expect(tree.read('cool-app-e2e/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-        import { defineConfig } from 'cypress';
+        "import { nxE2EPreset } from "@nx/cypress/plugins/cypress-preset";
+        import { defineConfig } from "cypress";
         export default defineConfig({
           e2e: {
             ...nxE2EPreset(__filename, {
-              cypressDir: 'src',
+              cypressDir: "src",
               webServerCommands: {
-                default: 'npx nx run cool-app:serve',
-                production: 'npx nx run cool-app:serve-static',
+                default: "npx nx run cool-app:serve",
+                production: "npx nx run cool-app:serve-static",
               },
-              ciWebServerCommand: 'npx nx run cool-app:serve-static',
-              ciBaseUrl: 'http://localhost:4200',
+              ciWebServerCommand: "npx nx run cool-app:serve-static",
+              ciBaseUrl: "http://localhost:4200",
             }),
-            baseUrl: 'http://localhost:4200',
+            baseUrl: "http://localhost:4200",
           },
         });
         "
@@ -612,14 +612,14 @@ describe('app', () => {
       expect(tree.read(`my-app/jest.config.cts`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
-          displayName: 'my-app',
-          preset: '../jest.preset.js',
-          setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+          displayName: "my-app",
+          preset: "../jest.preset.js",
+          setupFilesAfterEnv: ["<rootDir>/src/test-setup.ts"],
           transform: {
-            '^.+\\\\.[tj]s$': 'babel-jest',
+            "^.+\\\\.[tj]s$": "babel-jest",
           },
-          moduleFileExtensions: ['ts', 'js', 'html'],
-          coverageDirectory: '../coverage/my-app',
+          moduleFileExtensions: ["ts", "js", "html"],
+          coverageDirectory: "../coverage/my-app",
         };
         "
       `);
@@ -638,14 +638,14 @@ describe('app', () => {
       expect(tree.read(`my-app/jest.config.cts`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
-          displayName: 'my-app',
-          preset: '../jest.preset.js',
-          setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+          displayName: "my-app",
+          preset: "../jest.preset.js",
+          setupFilesAfterEnv: ["<rootDir>/src/test-setup.ts"],
           transform: {
-            '^.+\\\\.[tj]s$': '@swc/jest',
+            "^.+\\\\.[tj]s$": "@swc/jest",
           },
-          moduleFileExtensions: ['ts', 'js', 'html'],
-          coverageDirectory: '../coverage/my-app',
+          moduleFileExtensions: ["ts", "js", "html"],
+          coverageDirectory: "../coverage/my-app",
         };
         "
       `);

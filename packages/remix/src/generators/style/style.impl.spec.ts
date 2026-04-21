@@ -104,7 +104,7 @@ describe('style', () => {
     );
 
     expect(content).toMatch(
-      "import stylesUrl from '../../styles/example/$withParam.css';"
+      'import stylesUrl from "../../styles/example/$withParam.css";'
     );
   });
 
@@ -126,7 +126,7 @@ describe('style', () => {
     const content = tree.read('app/routes/example/$withParam.tsx', 'utf-8');
 
     expect(content).toMatch(
-      "import stylesUrl from '~/styles/example/$withParam.css';"
+      'import stylesUrl from "~/styles/example/$withParam.css";'
     );
   });
 });

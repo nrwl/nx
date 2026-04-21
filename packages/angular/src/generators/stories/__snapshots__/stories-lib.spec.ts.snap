@@ -1,13 +1,13 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories file for standalone components 1`] = `
-"import type { Meta, StoryObj } from '@storybook/angular';
-import { Standalone } from './standalone';
-import { expect } from 'storybook/test';
+"import type { Meta, StoryObj } from "@storybook/angular";
+import { Standalone } from "./standalone";
+import { expect } from "storybook/test";
 
 const meta: Meta<Standalone> = {
   component: Standalone,
-  title: 'Standalone',
+  title: "Standalone",
 };
 export default meta;
 
@@ -27,13 +27,13 @@ export const Heading: Story = {
 `;
 
 exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories file for standalone components 2`] = `
-"import type { Meta, StoryObj } from '@storybook/angular';
-import { SecondaryStandalone } from './secondary-standalone';
-import { expect } from 'storybook/test';
+"import type { Meta, StoryObj } from "@storybook/angular";
+import { SecondaryStandalone } from "./secondary-standalone";
+import { expect } from "storybook/test";
 
 const meta: Meta<SecondaryStandalone> = {
   component: SecondaryStandalone,
-  title: 'SecondaryStandalone',
+  title: "SecondaryStandalone",
 };
 export default meta;
 
@@ -53,13 +53,13 @@ export const Heading: Story = {
 `;
 
 exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories.ts files 1`] = `
-"import type { Meta, StoryObj } from '@storybook/angular';
-import { TestButton } from './test-button';
-import { expect } from 'storybook/test';
+"import type { Meta, StoryObj } from "@storybook/angular";
+import { TestButton } from "./test-button";
+import { expect } from "storybook/test";
 
 const meta: Meta<TestButton> = {
   component: TestButton,
-  title: 'TestButton',
+  title: "TestButton",
 };
 export default meta;
 
@@ -67,8 +67,8 @@ type Story = StoryObj<TestButton>;
 
 export const Primary: Story = {
   args: {
-    buttonType: 'button',
-    style: 'default',
+    buttonType: "button",
+    style: "default",
     age: 0,
     isOn: false,
   },
@@ -76,8 +76,8 @@ export const Primary: Story = {
 
 export const Heading: Story = {
   args: {
-    buttonType: 'button',
-    style: 'default',
+    buttonType: "button",
+    style: "default",
     age: 0,
     isOn: false,
   },

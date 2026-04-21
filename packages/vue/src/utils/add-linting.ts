@@ -24,7 +24,6 @@ import { joinPathFragments } from 'nx/src/utils/path';
 import {
   eslint9__VueEslintConfigTypescriptVersion,
   eslintPluginVueVersion,
-  vueEslintConfigPrettierVersion,
   vueEslintConfigTypescriptVersion,
 } from './versions';
 import { lt } from 'semver';
@@ -69,7 +68,6 @@ export async function addLinting(
           'plugin:vue/vue3-essential',
           'eslint:recommended',
           '@vue/eslint-config-typescript',
-          '@vue/eslint-config-prettier/skip-formatting',
         ].filter(Boolean)
       );
       tasks.push(addExtendsTask);
@@ -79,7 +77,6 @@ export async function addLinting(
 
     const eslintVersion = getInstalledEslintVersion(host);
     const devDependencies = {
-      '@vue/eslint-config-prettier': vueEslintConfigPrettierVersion,
       '@vue/eslint-config-typescript':
         eslintVersion && lt(eslintVersion, '9.0.0')
           ? vueEslintConfigTypescriptVersion

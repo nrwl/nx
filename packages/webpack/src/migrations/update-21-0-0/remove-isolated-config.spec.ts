@@ -32,7 +32,8 @@ describe('21.0.0 - remove isolatedConfig option', () => {
     const project = readProjectConfiguration(tree, 'myapp');
     expect(tree.read('apps/myapp/webpack.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const { composePlugins, withNx } = require('@nx/webpack');
+      "
+      const { composePlugins, withNx } = require('@nx/webpack');
 
       // Nx plugins for webpack.
       module.exports = composePlugins(withNx(), (config) => {
@@ -40,7 +41,7 @@ describe('21.0.0 - remove isolatedConfig option', () => {
         // See: https://nx.dev/recipes/webpack/webpack-config-setup
         return config;
       });
-      "
+              "
     `);
     expect(project.targets.build.options).toEqual({
       webpackConfig: 'apps/myapp/webpack.config.js',
@@ -67,7 +68,8 @@ describe('21.0.0 - remove isolatedConfig option', () => {
     const project = readProjectConfiguration(tree, 'myapp');
     expect(tree.read('apps/myapp/webpack.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const { composePlugins, withNx, withWeb } = require('@nx/webpack');
+      "
+      const { composePlugins, withNx, withWeb } = require('@nx/webpack');
 
       // Nx plugins for webpack.
       module.exports = composePlugins(withNx(), withWeb(), (config) => {

@@ -127,7 +127,7 @@ describe('web app generator (legacy)', () => {
 
     const webpackConfig = tree.read('my-app/webpack.config.js', 'utf-8');
     expect(webpackConfig).toMatchInlineSnapshot(`
-      "const { composePlugins, withNx, withWeb } = require('@nx/webpack');
+      "const { composePlugins, withNx, withWeb } = require("@nx/webpack");
 
       // Nx plugins for webpack.
       module.exports = composePlugins(withNx(), withWeb(), (config) => {

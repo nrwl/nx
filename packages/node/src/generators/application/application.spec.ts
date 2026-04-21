@@ -112,26 +112,26 @@ describe('app', () => {
       `);
       expect(tree.read(`my-node-app/webpack.config.js`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
-        const { join } = require('path');
+        "const { NxAppWebpackPlugin } = require("@nx/webpack/app-plugin");
+        const { join } = require("path");
 
         module.exports = {
           output: {
-            path: join(__dirname, '../dist/my-node-app'),
+            path: join(__dirname, "../dist/my-node-app"),
             clean: true,
-            ...(process.env.NODE_ENV !== 'production' && {
-              devtoolModuleFilenameTemplate: '[absolute-resource-path]',
+            ...(process.env.NODE_ENV !== "production" && {
+              devtoolModuleFilenameTemplate: "[absolute-resource-path]",
             }),
           },
           plugins: [
             new NxAppWebpackPlugin({
-              target: 'node',
-              compiler: 'tsc',
-              main: './src/main.ts',
-              tsConfig: './tsconfig.app.json',
-              assets: ['./src/assets'],
+              target: "node",
+              compiler: "tsc",
+              main: "./src/main.ts",
+              tsConfig: "./tsconfig.app.json",
+              assets: ["./src/assets"],
               optimization: false,
-              outputHashing: 'none',
+              outputHashing: "none",
               generatePackageJson: true,
               sourceMap: true,
             }),
@@ -506,14 +506,14 @@ describe('app', () => {
       expect(tree.read(`my-node-app/jest.config.cts`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
-          displayName: 'my-node-app',
-          preset: '../jest.preset.js',
-          testEnvironment: 'node',
+          displayName: "my-node-app",
+          preset: "../jest.preset.js",
+          testEnvironment: "node",
           transform: {
-            '^.+\\\\.[tj]s$': '@swc/jest',
+            "^.+\\\\.[tj]s$": "@swc/jest",
           },
-          moduleFileExtensions: ['ts', 'js', 'html'],
-          coverageDirectory: '../coverage/my-node-app',
+          moduleFileExtensions: ["ts", "js", "html"],
+          coverageDirectory: "../coverage/my-node-app",
         };
         "
       `);
@@ -532,14 +532,14 @@ describe('app', () => {
       expect(tree.read(`my-node-app/jest.config.cts`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
-          displayName: 'my-node-app',
-          preset: '../jest.preset.js',
-          testEnvironment: 'node',
+          displayName: "my-node-app",
+          preset: "../jest.preset.js",
+          testEnvironment: "node",
           transform: {
-            '^.+\\\\.[tj]s$': 'babel-jest',
+            "^.+\\\\.[tj]s$": "babel-jest",
           },
-          moduleFileExtensions: ['ts', 'js', 'html'],
-          coverageDirectory: '../coverage/my-node-app',
+          moduleFileExtensions: ["ts", "js", "html"],
+          coverageDirectory: "../coverage/my-node-app",
         };
         "
       `);

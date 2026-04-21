@@ -21,6 +21,6 @@ export interface Schema {
   rootProject?: boolean;
   addPlugin?: boolean;
   useTsSolution?: boolean;
-  formatter?: 'prettier' | 'none';
+  formatter?: 'prettier' | 'oxfmt' | 'none';
   useProjectJson?: boolean;
 }

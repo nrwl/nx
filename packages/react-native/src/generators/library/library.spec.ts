@@ -286,29 +286,28 @@ describe('lib', () => {
         "/// <reference types="jest" />
         /// <reference types="node" />
         module.exports = {
-          displayName: 'my-lib',
-          preset: 'react-native',
-          resolver: '@nx/jest/plugins/resolver',
-          moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
-          setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+          displayName: "my-lib",
+          preset: "react-native",
+          resolver: "@nx/jest/plugins/resolver",
+          moduleFileExtensions: ["ts", "js", "html", "tsx", "jsx"],
+          setupFilesAfterEnv: ["<rootDir>/src/test-setup.ts"],
           moduleNameMapper: {
-            '[.]svg$': '@nx/react-native/plugins/jest/svg-mock',
+            "[.]svg$": "@nx/react-native/plugins/jest/svg-mock",
           },
           transform: {
-            '^.+[.](js|ts|tsx)$': [
-              'babel-jest',
+            "^.+[.](js|ts|tsx)$": [
+              "babel-jest",
               {
-                configFile: __dirname + '/.babelrc.js',
+                configFile: __dirname + "/.babelrc.js",
               },
             ],
-            '^.+[.](bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$': require.resolve(
-              'react-native/jest/assetFileTransformer.js',
-            ),
+            "^.+[.](bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$":
+              require.resolve("react-native/jest/assetFileTransformer.js"),
           },
           transformIgnorePatterns: [
-            'node_modules/(?!(.pnpm/.+/node_modules/)?(react-native|@react-native(-community)?)/)',
+            "node_modules/(?!(.pnpm/.+/node_modules/)?(react-native|@react-native(-community)?)/)",
           ],
-          coverageDirectory: '../coverage/my-lib',
+          coverageDirectory: "../coverage/my-lib",
         };
         "
       `);

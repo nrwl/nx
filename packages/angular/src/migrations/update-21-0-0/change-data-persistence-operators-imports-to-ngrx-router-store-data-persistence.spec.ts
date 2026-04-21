@@ -206,8 +206,7 @@ class UsersEffects {}
 
     expect(tree.read(file, 'utf-8')).toMatchInlineSnapshot(`
       "import { Actions, createEffect, ofType } from '@ngrx/effects';
-      import { fetch, navigation } from '@ngrx/router-store/data-persistence';
-      import { foo } from '@nx/angular';
+      import { fetch, navigation } from '@ngrx/router-store/data-persistence';import {  foo,  } from '@nx/angular';
 
       @Injectable()
       class UsersEffects {}
@@ -278,10 +277,7 @@ class UsersEffects {}
 
     expect(tree.read(file, 'utf-8')).toMatchInlineSnapshot(`
       "import { Actions, createEffect, ofType } from '@ngrx/effects';
-      import {
-        fetch as customFetch,
-        navigation,
-      } from '@ngrx/router-store/data-persistence';
+      import { fetch as customFetch, navigation } from '@ngrx/router-store/data-persistence';
 
       @Injectable()
       class UsersEffects {}
@@ -304,11 +300,7 @@ class UsersEffects {}
 
     expect(tree.read(file, 'utf-8')).toMatchInlineSnapshot(`
       "import { Actions, createEffect, ofType } from '@ngrx/effects';
-      import {
-        fetch as customFetch,
-        navigation,
-      } from '@ngrx/router-store/data-persistence';
-      import { foo } from '@nx/angular';
+      import { fetch as customFetch, navigation } from '@ngrx/router-store/data-persistence';import {  foo,  } from '@nx/angular';
 
       @Injectable()
       class UsersEffects {}

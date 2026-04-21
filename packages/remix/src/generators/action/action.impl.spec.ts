@@ -46,12 +46,12 @@ describe('action', () => {
       });
       it('should add imports', async () => {
         const content = tree.read('apps/demo/app/routes/example.tsx', 'utf-8');
-        expect(content).toMatch(`import { json } from '@remix-run/node';`);
+        expect(content).toMatch(`import { json } from "@remix-run/node";`);
         expect(content).toMatch(
-          `import type { ActionFunctionArgs } from '@remix-run/node';`
+          `import type { ActionFunctionArgs } from "@remix-run/node";`
         );
         expect(content).toMatch(
-          `import { useActionData } from '@remix-run/react';`
+          `import { useActionData } from "@remix-run/react";`
         );
       });
 

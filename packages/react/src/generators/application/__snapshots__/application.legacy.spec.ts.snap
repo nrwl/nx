@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`react app generator (legacy) --style tailwind should not generate any styles files 1`] = `
-"import NxWelcome from './nx-welcome';
+"import NxWelcome from "./nx-welcome";
 
 export function App() {
   return (

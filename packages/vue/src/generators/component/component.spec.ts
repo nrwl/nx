@@ -42,13 +42,13 @@ describe('component', () => {
     `);
     expect(appTree.read(`${libName}/src/lib/hello/hello.spec.ts`, 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { mount } from '@vue/test-utils';
-      import Hello from './hello.vue';
+      "import { mount } from "@vue/test-utils";
+      import Hello from "./hello.vue";
 
-      describe('Hello', () => {
-        it('renders properly', () => {
+      describe("Hello", () => {
+        it("renders properly", () => {
           const wrapper = mount(Hello, {});
-          expect(wrapper.text()).toContain('Welcome to Hello');
+          expect(wrapper.text()).toContain("Welcome to Hello");
         });
       });
       "
@@ -75,13 +75,13 @@ describe('component', () => {
     `);
     expect(appTree.read(`${libName}/src/lib/hello/hello.spec.ts`, 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { mount } from '@vue/test-utils';
-      import Hello from './hello.vue';
+      "import { mount } from "@vue/test-utils";
+      import Hello from "./hello.vue";
 
-      describe('Hello', () => {
-        it('renders properly', () => {
+      describe("Hello", () => {
+        it("renders properly", () => {
           const wrapper = mount(Hello, {});
-          expect(wrapper.text()).toContain('Welcome to Hello');
+          expect(wrapper.text()).toContain("Welcome to Hello");
         });
       });
       "
@@ -122,7 +122,7 @@ describe('component', () => {
       });
       expect(appTree.read(`${libName}/src/index.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
-        "export { default as Hello } from './lib/hello/hello.vue';
+        "export { default as Hello } from "./lib/hello/hello.vue";
         "
       `);
     });

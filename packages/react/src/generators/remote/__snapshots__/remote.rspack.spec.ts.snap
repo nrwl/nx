@@ -125,42 +125,42 @@ module.exports = {
 `;
 
 exports[`remote generator bundler=rspack should create the remote with the correct config files when --typescriptConfiguration=true 1`] = `
-"import { NxAppRspackPlugin } from '@nx/rspack/app-plugin.js';
-import { NxReactRspackPlugin } from '@nx/rspack/react-plugin.js';
+"import { NxAppRspackPlugin } from "@nx/rspack/app-plugin.js";
+import { NxReactRspackPlugin } from "@nx/rspack/react-plugin.js";
 import {
   NxModuleFederationPlugin,
   NxModuleFederationDevServerPlugin,
-} from '@nx/module-federation/rspack.js';
-import { join } from 'path';
+} from "@nx/module-federation/rspack.js";
+import { join } from "path";
 
-import config from './module-federation.config';
+import config from "./module-federation.config";
 
 export default {
   output: {
-    path: join(__dirname, '../dist/test'),
-    publicPath: 'auto',
+    path: join(__dirname, "../dist/test"),
+    publicPath: "auto",
   },
   devServer: {
     port: 4201,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      "Access-Control-Allow-Origin": "*",
     },
     historyApiFallback: {
-      index: '/index.html',
+      index: "/index.html",
       disableDotRule: true,
-      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+      htmlAcceptHeaders: ["text/html", "application/xhtml+xml"],
     },
   },
   plugins: [
     new NxAppRspackPlugin({
-      tsConfig: './tsconfig.app.json',
-      main: './src/main.ts',
-      index: './src/index.html',
-      baseHref: '/',
-      assets: ['./src/favicon.ico', './src/assets'],
-      styles: ['./src/styles.css'],
-      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
-      optimization: process.env['NODE_ENV'] === 'production',
+      tsConfig: "./tsconfig.app.json",
+      main: "./src/main.ts",
+      index: "./src/index.html",
+      baseHref: "/",
+      assets: ["./src/favicon.ico", "./src/assets"],
+      styles: ["./src/styles.css"],
+      outputHashing: process.env["NODE_ENV"] === "production" ? "all" : "none",
+      optimization: process.env["NODE_ENV"] === "production",
     }),
     new NxReactRspackPlugin({
       // Uncomment this line if you don't want to use SVGR
@@ -175,17 +175,17 @@ export default {
 `;
 
 exports[`remote generator bundler=rspack should create the remote with the correct config files when --typescriptConfiguration=true 2`] = `
-"export default require('./rspack.config');
+"export default require("./rspack.config");
 "
 `;
 
 exports[`remote generator bundler=rspack should create the remote with the correct config files when --typescriptConfiguration=true 3`] = `
-"import { ModuleFederationConfig } from '@nx/module-federation';
+"import { ModuleFederationConfig } from "@nx/module-federation";
 
 const config: ModuleFederationConfig = {
-  name: 'test',
+  name: "test",
   exposes: {
-    './Module': './src/remote-entry.ts',
+    "./Module": "./src/remote-entry.ts",
   },
 };
 
@@ -216,12 +216,12 @@ module.exports = {
 `;
 
 exports[`remote generator bundler=rspack should generate correct remote with config files when using --ssr and --typescriptConfiguration=true 1`] = `
-"import { ModuleFederationConfig } from '@nx/module-federation';
+"import { ModuleFederationConfig } from "@nx/module-federation";
 
 const config: ModuleFederationConfig = {
-  name: 'test',
+  name: "test",
   exposes: {
-    './Module': './src/remote-entry.ts',
+    "./Module": "./src/remote-entry.ts",
   },
   shared: (libraryName, libraryConfig) => {
     return {

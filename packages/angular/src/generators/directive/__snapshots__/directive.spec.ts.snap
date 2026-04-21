@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`directive generator --no-standalone should export the directive correctly when directory is nested deeper 1`] = `
 "import { NgModule } from '@angular/core';
@@ -17,7 +17,7 @@ exports[`directive generator --no-standalone should generate a directive with te
 
 @Directive({
   selector: '[test]',
-  standalone: false,
+  standalone: false
 })
 export class Test {
   constructor() {}
@@ -106,7 +106,7 @@ exports[`directive generator should generate correctly 1`] = `
 "import { Directive } from '@angular/core';
 
 @Directive({
-  selector: '[test]',
+  selector: '[test]'
 })
 export class Test {
   constructor() {}
@@ -130,7 +130,7 @@ exports[`directive generator should handle path with file extension 1`] = `
 "import { Directive } from '@angular/core';
 
 @Directive({
-  selector: '[test]',
+  selector: '[test]'
 })
 export class Test {
   constructor() {}

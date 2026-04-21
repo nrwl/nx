@@ -1,21 +1,21 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`app Nuxt v4 with app directory structure should configure nuxt.config.ts without srcDir for app directory 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { defineNuxtConfig } from "nuxt/config";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  workspaceDir: '../',
+  workspaceDir: "../",
   devtools: { enabled: true },
   devServer: {
-    host: 'localhost',
+    host: "localhost",
     port: 4200,
   },
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: "../../tsconfig.base.json", // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {
@@ -34,7 +34,7 @@ exports[`app Nuxt v4 with app directory structure should create all files in cor
   "package.json",
   "nx.json",
   "tsconfig.base.json",
-  ".prettierignore",
+  ".oxfmtrc.json",
   "my-app/project.json",
   "my-app/.npmrc",
   "my-app/app/app.vue",
@@ -95,8 +95,8 @@ exports[`app generated files content - as-provided - my-app general application 
 `;
 
 exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (flat config CJS) 1`] = `
-"const { createConfigForNuxt } = require('@nuxt/eslint-config/flat');
-const baseConfig = require('../eslint.config.cjs');
+"const { createConfigForNuxt } = require("@nuxt/eslint-config/flat");
+const baseConfig = require("../eslint.config.cjs");
 
 module.exports = createConfigForNuxt({
   features: {
@@ -106,27 +106,21 @@ module.exports = createConfigForNuxt({
   .prepend(...baseConfig)
   .append(
     {
-      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+      files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.vue"],
       rules: {
-        'vue/multi-word-component-names': 'off',
+        "vue/multi-word-component-names": "off",
       },
     },
     {
-      ignores: [
-        '.nuxt/**',
-        '.output/**',
-        'node_modules',
-        '**/*.d.ts',
-        '**/*.vue.js',
-      ],
+      ignores: [".nuxt/**", ".output/**", "node_modules", "**/*.d.ts", "**/*.vue.js"],
     },
   );
 "
 `;
 
 exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (flat config ESM) 1`] = `
-"import { createConfigForNuxt } from '@nuxt/eslint-config/flat';
-import baseConfig from '../eslint.config.mjs';
+"import { createConfigForNuxt } from "@nuxt/eslint-config/flat";
+import baseConfig from "../eslint.config.mjs";
 
 export default createConfigForNuxt({
   features: {
@@ -136,41 +130,35 @@ export default createConfigForNuxt({
   .prepend(...baseConfig)
   .append(
     {
-      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+      files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.vue"],
       rules: {
-        'vue/multi-word-component-names': 'off',
+        "vue/multi-word-component-names": "off",
       },
     },
     {
-      ignores: [
-        '.nuxt/**',
-        '.output/**',
-        'node_modules',
-        '**/*.d.ts',
-        '**/*.vue.js',
-      ],
+      ignores: [".nuxt/**", ".output/**", "node_modules", "**/*.d.ts", "**/*.vue.js"],
     },
   );
 "
 `;
 
 exports[`app generated files content - as-provided - my-app general application should configure nuxt correctly 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { defineNuxtConfig } from "nuxt/config";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  workspaceDir: '../',
-  srcDir: 'src',
+  workspaceDir: "../",
+  srcDir: "src",
   devtools: { enabled: true },
   devServer: {
-    host: 'localhost',
+    host: "localhost",
     port: 4200,
   },
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: "../../tsconfig.base.json", // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {
@@ -214,29 +202,29 @@ exports[`app generated files content - as-provided - my-app general application 
 
 exports[`app generated files content - as-provided - my-app general application should configure vitest correctly 1`] = `
 "/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
-  cacheDir: '../node_modules/.vite/my-app',
-  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  cacheDir: "../node_modules/.vite/my-app",
+  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(["*.md"])],
   // Uncomment this if you are using workers.
   // worker: {
   //   plugins: () => [ nxViteTsPaths() ],
   // },
   test: {
-    name: 'my-app',
+    name: "my-app",
     watch: false,
     globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
+    environment: "jsdom",
+    include: ["{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    reporters: ["default"],
     coverage: {
-      reportsDirectory: '../coverage/my-app',
-      provider: 'v8' as const,
+      reportsDirectory: "../coverage/my-app",
+      provider: "v8" as const,
     },
   },
 }));
@@ -248,13 +236,7 @@ exports[`app generated files content - as-provided - my-app general application 
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../dist/out-tsc",
-    "types": [
-      "vitest/globals",
-      "vitest/importMeta",
-      "vite/client",
-      "node",
-      "vitest"
-    ],
+    "types": ["vitest/globals", "vitest/importMeta", "vite/client", "node", "vitest"],
     "composite": true
   },
   "include": [
@@ -300,7 +282,7 @@ exports[`app generated files content - as-provided - my-app general application 
   "package.json",
   "nx.json",
   "tsconfig.base.json",
-  ".prettierignore",
+  ".oxfmtrc.json",
   "my-app/project.json",
   "my-app/.npmrc",
   "my-app/nuxt.config.ts",
@@ -331,28 +313,28 @@ exports[`app generated files content - as-provided - my-app general application 
 `;
 
 exports[`app generated files content - as-provided - my-app styles setup should configure css 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { defineNuxtConfig } from "nuxt/config";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  workspaceDir: '../',
-  srcDir: 'src',
+  workspaceDir: "../",
+  srcDir: "src",
   devtools: { enabled: true },
   devServer: {
-    host: 'localhost',
+    host: "localhost",
     port: 4200,
   },
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: "../../tsconfig.base.json", // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {
     autoImport: true,
   },
-  css: ['~/assets/css/styles.css'],
+  css: ["~/assets/css/styles.css"],
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -361,28 +343,28 @@ export default defineNuxtConfig({
 `;
 
 exports[`app generated files content - as-provided - my-app styles setup should configure less 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { defineNuxtConfig } from "nuxt/config";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  workspaceDir: '../',
-  srcDir: 'src',
+  workspaceDir: "../",
+  srcDir: "src",
   devtools: { enabled: true },
   devServer: {
-    host: 'localhost',
+    host: "localhost",
     port: 4200,
   },
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: "../../tsconfig.base.json", // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {
     autoImport: true,
   },
-  css: ['~/assets/css/styles.less'],
+  css: ["~/assets/css/styles.less"],
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -391,28 +373,28 @@ export default defineNuxtConfig({
 `;
 
 exports[`app generated files content - as-provided - my-app styles setup should configure scss 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { defineNuxtConfig } from "nuxt/config";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  workspaceDir: '../',
-  srcDir: 'src',
+  workspaceDir: "../",
+  srcDir: "src",
   devtools: { enabled: true },
   devServer: {
-    host: 'localhost',
+    host: "localhost",
     port: 4200,
   },
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: "../../tsconfig.base.json", // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {
     autoImport: true,
   },
-  css: ['~/assets/css/styles.scss'],
+  css: ["~/assets/css/styles.scss"],
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -421,22 +403,22 @@ export default defineNuxtConfig({
 `;
 
 exports[`app generated files content - as-provided - my-app styles setup should not configure styles 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { defineNuxtConfig } from "nuxt/config";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  workspaceDir: '../',
-  srcDir: 'src',
+  workspaceDir: "../",
+  srcDir: "src",
   devtools: { enabled: true },
   devServer: {
-    host: 'localhost',
+    host: "localhost",
     port: 4200,
   },
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: "../../tsconfig.base.json", // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {
@@ -480,8 +462,8 @@ exports[`app generated files content - as-provided - myApp general application s
 `;
 
 exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (flat config CJS) 1`] = `
-"const { createConfigForNuxt } = require('@nuxt/eslint-config/flat');
-const baseConfig = require('../eslint.config.cjs');
+"const { createConfigForNuxt } = require("@nuxt/eslint-config/flat");
+const baseConfig = require("../eslint.config.cjs");
 
 module.exports = createConfigForNuxt({
   features: {
@@ -491,27 +473,21 @@ module.exports = createConfigForNuxt({
   .prepend(...baseConfig)
   .append(
     {
-      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+      files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.vue"],
       rules: {
-        'vue/multi-word-component-names': 'off',
+        "vue/multi-word-component-names": "off",
       },
     },
     {
-      ignores: [
-        '.nuxt/**',
-        '.output/**',
-        'node_modules',
-        '**/*.d.ts',
-        '**/*.vue.js',
-      ],
+      ignores: [".nuxt/**", ".output/**", "node_modules", "**/*.d.ts", "**/*.vue.js"],
     },
   );
 "
 `;
 
 exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (flat config ESM) 1`] = `
-"import { createConfigForNuxt } from '@nuxt/eslint-config/flat';
-import baseConfig from '../eslint.config.mjs';
+"import { createConfigForNuxt } from "@nuxt/eslint-config/flat";
+import baseConfig from "../eslint.config.mjs";
 
 export default createConfigForNuxt({
   features: {
@@ -521,41 +497,35 @@ export default createConfigForNuxt({
   .prepend(...baseConfig)
   .append(
     {
-      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+      files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.vue"],
       rules: {
-        'vue/multi-word-component-names': 'off',
+        "vue/multi-word-component-names": "off",
       },
     },
     {
-      ignores: [
-        '.nuxt/**',
-        '.output/**',
-        'node_modules',
-        '**/*.d.ts',
-        '**/*.vue.js',
-      ],
+      ignores: [".nuxt/**", ".output/**", "node_modules", "**/*.d.ts", "**/*.vue.js"],
     },
   );
 "
 `;
 
 exports[`app generated files content - as-provided - myApp general application should configure nuxt correctly 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { defineNuxtConfig } from "nuxt/config";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  workspaceDir: '../',
-  srcDir: 'src',
+  workspaceDir: "../",
+  srcDir: "src",
   devtools: { enabled: true },
   devServer: {
-    host: 'localhost',
+    host: "localhost",
     port: 4200,
   },
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: "../../tsconfig.base.json", // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {
@@ -599,29 +569,29 @@ exports[`app generated files content - as-provided - myApp general application s
 
 exports[`app generated files content - as-provided - myApp general application should configure vitest correctly 1`] = `
 "/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
-  cacheDir: '../node_modules/.vite/myApp',
-  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  cacheDir: "../node_modules/.vite/myApp",
+  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(["*.md"])],
   // Uncomment this if you are using workers.
   // worker: {
   //   plugins: () => [ nxViteTsPaths() ],
   // },
   test: {
-    name: 'myApp',
+    name: "myApp",
     watch: false,
     globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
+    environment: "jsdom",
+    include: ["{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    reporters: ["default"],
     coverage: {
-      reportsDirectory: '../coverage/myApp',
-      provider: 'v8' as const,
+      reportsDirectory: "../coverage/myApp",
+      provider: "v8" as const,
     },
   },
 }));
@@ -633,13 +603,7 @@ exports[`app generated files content - as-provided - myApp general application s
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../dist/out-tsc",
-    "types": [
-      "vitest/globals",
-      "vitest/importMeta",
-      "vite/client",
-      "node",
-      "vitest"
-    ],
+    "types": ["vitest/globals", "vitest/importMeta", "vite/client", "node", "vitest"],
     "composite": true
   },
   "include": [
@@ -685,7 +649,7 @@ exports[`app generated files content - as-provided - myApp general application s
   "package.json",
   "nx.json",
   "tsconfig.base.json",
-  ".prettierignore",
+  ".oxfmtrc.json",
   "myApp/project.json",
   "myApp/.npmrc",
   "myApp/nuxt.config.ts",
@@ -716,28 +680,28 @@ exports[`app generated files content - as-provided - myApp general application s
 `;
 
 exports[`app generated files content - as-provided - myApp styles setup should configure css 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { defineNuxtConfig } from "nuxt/config";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  workspaceDir: '../',
-  srcDir: 'src',
+  workspaceDir: "../",
+  srcDir: "src",
   devtools: { enabled: true },
   devServer: {
-    host: 'localhost',
+    host: "localhost",
     port: 4200,
   },
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: "../../tsconfig.base.json", // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {
     autoImport: true,
   },
-  css: ['~/assets/css/styles.css'],
+  css: ["~/assets/css/styles.css"],
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -746,28 +710,28 @@ export default defineNuxtConfig({
 `;
 
 exports[`app generated files content - as-provided - myApp styles setup should configure less 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { defineNuxtConfig } from "nuxt/config";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  workspaceDir: '../',
-  srcDir: 'src',
+  workspaceDir: "../",
+  srcDir: "src",
   devtools: { enabled: true },
   devServer: {
-    host: 'localhost',
+    host: "localhost",
     port: 4200,
   },
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: "../../tsconfig.base.json", // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {
     autoImport: true,
   },
-  css: ['~/assets/css/styles.less'],
+  css: ["~/assets/css/styles.less"],
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -776,28 +740,28 @@ export default defineNuxtConfig({
 `;
 
 exports[`app generated files content - as-provided - myApp styles setup should configure scss 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { defineNuxtConfig } from "nuxt/config";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  workspaceDir: '../',
-  srcDir: 'src',
+  workspaceDir: "../",
+  srcDir: "src",
   devtools: { enabled: true },
   devServer: {
-    host: 'localhost',
+    host: "localhost",
     port: 4200,
   },
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: "../../tsconfig.base.json", // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {
     autoImport: true,
   },
-  css: ['~/assets/css/styles.scss'],
+  css: ["~/assets/css/styles.scss"],
   vite: {
     plugins: [nxViteTsPaths()],
   },
@@ -806,22 +770,22 @@ export default defineNuxtConfig({
 `;
 
 exports[`app generated files content - as-provided - myApp styles setup should not configure styles 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { defineNuxtConfig } from "nuxt/config";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  workspaceDir: '../',
-  srcDir: 'src',
+  workspaceDir: "../",
+  srcDir: "src",
   devtools: { enabled: true },
   devServer: {
-    host: 'localhost',
+    host: "localhost",
     port: 4200,
   },
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '../../tsconfig.base.json', // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
+      extends: "../../tsconfig.base.json", // Nuxt copies this string as-is to the \`./.nuxt/tsconfig.json\`, therefore it needs to be relative to that directory
     },
   },
   imports: {

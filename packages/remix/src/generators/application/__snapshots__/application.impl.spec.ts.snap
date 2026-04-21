@@ -1,31 +1,25 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Remix Application Integrated Repo --directory should create the application correctly 1`] = `
-"import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from '@remix-run/react';
-import type { MetaFunction, LinksFunction } from '@remix-run/node';
+"import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "@remix-run/react";
+import type { MetaFunction, LinksFunction } from "@remix-run/node";
 
 export const meta: MetaFunction = () => [
   {
-    title: 'New Remix App',
+    title: "New Remix App",
   },
 ];
 
 export const links: LinksFunction = () => [
-  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+  { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
-    rel: 'preconnect',
-    href: 'https://fonts.gstatic.com',
-    crossOrigin: 'anonymous',
+    rel: "preconnect",
+    href: "https://fonts.gstatic.com",
+    crossOrigin: "anonymous",
   },
   {
-    rel: 'stylesheet',
-    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+    rel: "stylesheet",
+    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
 ];
 
@@ -54,12 +48,12 @@ export default function App() {
 `;
 
 exports[`Remix Application Integrated Repo --directory should create the application correctly 2`] = `
-"import NxWelcome from '../nx-welcome';
+"import NxWelcome from "../nx-welcome";
 
 export default function Index() {
   return (
     <div>
-      <NxWelcome title={'test'} />
+      <NxWelcome title={"test"} />
     </div>
   );
 }
@@ -67,31 +61,25 @@ export default function Index() {
 `;
 
 exports[`Remix Application Integrated Repo --directory should extract the layout directory from the directory options if it exists 1`] = `
-"import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from '@remix-run/react';
-import type { MetaFunction, LinksFunction } from '@remix-run/node';
+"import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "@remix-run/react";
+import type { MetaFunction, LinksFunction } from "@remix-run/node";
 
 export const meta: MetaFunction = () => [
   {
-    title: 'New Remix App',
+    title: "New Remix App",
   },
 ];
 
 export const links: LinksFunction = () => [
-  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+  { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
-    rel: 'preconnect',
-    href: 'https://fonts.gstatic.com',
-    crossOrigin: 'anonymous',
+    rel: "preconnect",
+    href: "https://fonts.gstatic.com",
+    crossOrigin: "anonymous",
   },
   {
-    rel: 'stylesheet',
-    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+    rel: "stylesheet",
+    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
 ];
 
@@ -120,12 +108,12 @@ export default function App() {
 `;
 
 exports[`Remix Application Integrated Repo --directory should extract the layout directory from the directory options if it exists 2`] = `
-"import NxWelcome from '../nx-welcome';
+"import NxWelcome from "../nx-welcome";
 
 export default function Index() {
   return (
     <div>
-      <NxWelcome title={'test'} />
+      <NxWelcome title={"test"} />
     </div>
   );
 }
@@ -133,32 +121,32 @@ export default function Index() {
 `;
 
 exports[`Remix Application Integrated Repo --e2eTestRunner should generate a cypress e2e application for the app 1`] = `
-"import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-import { defineConfig } from 'cypress';
+"import { nxE2EPreset } from "@nx/cypress/plugins/cypress-preset";
+import { defineConfig } from "cypress";
 export default defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
-      cypressDir: 'src',
+      cypressDir: "src",
       webServerCommands: {
-        default: 'npx nx run test:dev',
-        production: 'npx nx run test:serve-static',
+        default: "npx nx run test:dev",
+        production: "npx nx run test:serve-static",
       },
-      ciWebServerCommand: 'npx nx run test:serve-static',
-      ciBaseUrl: 'http://localhost:3000',
+      ciWebServerCommand: "npx nx run test:serve-static",
+      ciBaseUrl: "http://localhost:3000",
     }),
-    baseUrl: 'http://localhost:3000',
+    baseUrl: "http://localhost:3000",
   },
 });
 "
 `;
 
 exports[`Remix Application Integrated Repo --e2eTestRunner should generate a playwright e2e application for the app 1`] = `
-"import { defineConfig, devices } from '@playwright/test';
-import { nxE2EPreset } from '@nx/playwright/preset';
-import { workspaceRoot } from '@nx/devkit';
+"import { defineConfig, devices } from "@playwright/test";
+import { nxE2EPreset } from "@nx/playwright/preset";
+import { workspaceRoot } from "@nx/devkit";
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';
+const baseURL = process.env["BASE_URL"] || "http://localhost:3000";
 
 /**
  * Read environment variables from file.
@@ -170,34 +158,34 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  ...nxE2EPreset(__filename, { testDir: './src' }),
+  ...nxE2EPreset(__filename, { testDir: "./src" }),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    trace: "on-first-retry",
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx nx run test:serve-static',
-    url: 'http://localhost:3000',
+    command: "npx nx run test:serve-static",
+    url: "http://localhost:3000",
     reuseExistingServer: true,
     cwd: workspaceRoot,
   },
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
     },
 
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
     },
 
     {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
     },
 
     // Uncomment for mobile browsers support
@@ -226,50 +214,50 @@ export default defineConfig({
 
 exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using jest 1`] = `
 "module.exports = {
-  displayName: 'test',
-  preset: '../jest.preset.js',
+  displayName: "test",
+  preset: "../jest.preset.js",
   transform: {
-    '^.+\\\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    "^.+\\\\.[tj]sx?$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.spec.json" }],
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../coverage/test',
+  moduleFileExtensions: ["ts", "tsx", "js", "jsx"],
+  coverageDirectory: "../coverage/test",
 };
 "
 `;
 
 exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using jest 2`] = `
-"import { installGlobals } from '@remix-run/node';
-import '@testing-library/jest-dom/matchers';
+"import { installGlobals } from "@remix-run/node";
+import "@testing-library/jest-dom/matchers";
 installGlobals();
 "
 `;
 
 exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using vitest 1`] = `
 "/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
-  cacheDir: '../node_modules/.vite/test',
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  cacheDir: "../node_modules/.vite/test",
+  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(["*.md"])],
   // Uncomment this if you are using workers.
   // worker: {
   //   plugins: () => [ nxViteTsPaths() ],
   // },
   test: {
-    setupFiles: ['test-setup.ts'],
-    name: 'test',
+    setupFiles: ["test-setup.ts"],
+    name: "test",
     watch: false,
     globals: true,
-    environment: 'jsdom',
-    include: ['./tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
+    environment: "jsdom",
+    include: ["./tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    reporters: ["default"],
     coverage: {
-      reportsDirectory: '../coverage/test',
-      provider: 'v8' as const,
+      reportsDirectory: "../coverage/test",
+      provider: "v8" as const,
     },
   },
 }));
@@ -277,8 +265,8 @@ export default defineConfig(() => ({
 `;
 
 exports[`Remix Application Integrated Repo --unitTestRunner should generate the correct files for testing using vitest 2`] = `
-"import { installGlobals } from '@remix-run/node';
-import '@testing-library/jest-dom/matchers';
+"import { installGlobals } from "@remix-run/node";
+import "@testing-library/jest-dom/matchers";
 installGlobals();
 "
 `;
@@ -288,13 +276,7 @@ exports[`Remix Application Integrated Repo --unitTestRunner should generate the 
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../dist/out-tsc",
-    "types": [
-      "vitest/globals",
-      "vitest/importMeta",
-      "vite/client",
-      "node",
-      "vitest"
-    ]
+    "types": ["vitest/globals", "vitest/importMeta", "vite/client", "node", "vitest"]
   },
   "include": [
     "vite.config.ts",
@@ -319,31 +301,25 @@ exports[`Remix Application Integrated Repo --unitTestRunner should generate the 
 `;
 
 exports[`Remix Application Integrated Repo should create the application correctly 1`] = `
-"import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from '@remix-run/react';
-import type { MetaFunction, LinksFunction } from '@remix-run/node';
+"import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "@remix-run/react";
+import type { MetaFunction, LinksFunction } from "@remix-run/node";
 
 export const meta: MetaFunction = () => [
   {
-    title: 'New Remix App',
+    title: "New Remix App",
   },
 ];
 
 export const links: LinksFunction = () => [
-  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+  { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
-    rel: 'preconnect',
-    href: 'https://fonts.gstatic.com',
-    crossOrigin: 'anonymous',
+    rel: "preconnect",
+    href: "https://fonts.gstatic.com",
+    crossOrigin: "anonymous",
   },
   {
-    rel: 'stylesheet',
-    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+    rel: "stylesheet",
+    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
 ];
 
@@ -372,12 +348,12 @@ export default function App() {
 `;
 
 exports[`Remix Application Integrated Repo should create the application correctly 2`] = `
-"import NxWelcome from '../nx-welcome';
+"import NxWelcome from "../nx-welcome";
 
 export default function Index() {
   return (
     <div>
-      <NxWelcome title={'test'} />
+      <NxWelcome title={"test"} />
     </div>
   );
 }
@@ -385,20 +361,20 @@ export default function Index() {
 `;
 
 exports[`Remix Application Standalone Project Repo --e2eTestRunner should generate a cypress e2e application for the app 1`] = `
-"import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-import { defineConfig } from 'cypress';
+"import { nxE2EPreset } from "@nx/cypress/plugins/cypress-preset";
+import { defineConfig } from "cypress";
 export default defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
-      cypressDir: 'src',
+      cypressDir: "src",
       webServerCommands: {
-        default: 'npx nx run test:dev',
-        production: 'npx nx run test:serve-static',
+        default: "npx nx run test:dev",
+        production: "npx nx run test:serve-static",
       },
-      ciWebServerCommand: 'npx nx run test:serve-static',
-      ciBaseUrl: 'http://localhost:3000',
+      ciWebServerCommand: "npx nx run test:serve-static",
+      ciBaseUrl: "http://localhost:3000",
     }),
-    baseUrl: 'http://localhost:3000',
+    baseUrl: "http://localhost:3000",
   },
 });
 "
@@ -406,75 +382,73 @@ export default defineConfig({
 
 exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using jest 1`] = `
 "module.exports = {
-  setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
-  displayName: 'test',
-  preset: './jest.preset.cjs',
+  setupFilesAfterEnv: ["<rootDir>/test-setup.ts"],
+  displayName: "test",
+  preset: "./jest.preset.cjs",
   transform: {
-    '^.+\\\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    "^.+\\\\.[tj]sx?$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.spec.json" }],
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: './coverage/test',
-  testMatch: [
-    '<rootDir>/tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-  ],
+  moduleFileExtensions: ["ts", "tsx", "js", "jsx"],
+  coverageDirectory: "./coverage/test",
+  testMatch: ["<rootDir>/tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
 };
 "
 `;
 
 exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using jest 2`] = `
-"import { installGlobals } from '@remix-run/node';
-import '@testing-library/jest-dom/matchers';
+"import { installGlobals } from "@remix-run/node";
+import "@testing-library/jest-dom/matchers";
 installGlobals();
 "
 `;
 
 exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using jest 3`] = `
-"import { createRemixStub } from '@remix-run/testing';
-import { render } from '@testing-library/react';
-import { screen } from '@testing-library/dom';
-import Index from '../../app/routes/_index';
+"import { createRemixStub } from "@remix-run/testing";
+import { render } from "@testing-library/react";
+import { screen } from "@testing-library/dom";
+import Index from "../../app/routes/_index";
 
-test('renders loader data', async () => {
+test("renders loader data", async () => {
   const RemixStub = createRemixStub([
     {
-      path: '/',
+      path: "/",
       Component: Index,
     },
   ]);
 
   render(<RemixStub />);
 
-  await screen.findByText('Hello there,');
+  await screen.findByText("Hello there,");
 });
 "
 `;
 
 exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 1`] = `
 "/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
-  cacheDir: './node_modules/.vite/test',
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  cacheDir: "./node_modules/.vite/test",
+  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(["*.md"])],
   // Uncomment this if you are using workers.
   // worker: {
   //   plugins: () => [ nxViteTsPaths() ],
   // },
   test: {
-    setupFiles: ['test-setup.ts'],
-    name: 'test',
+    setupFiles: ["test-setup.ts"],
+    name: "test",
     watch: false,
     globals: true,
-    environment: 'jsdom',
-    include: ['./tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
+    environment: "jsdom",
+    include: ["./tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    reporters: ["default"],
     coverage: {
-      reportsDirectory: './coverage/test',
-      provider: 'v8' as const,
+      reportsDirectory: "./coverage/test",
+      provider: "v8" as const,
     },
   },
 }));
@@ -482,22 +456,22 @@ export default defineConfig(() => ({
 `;
 
 exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 2`] = `
-"import { createRemixStub } from '@remix-run/testing';
-import { render } from '@testing-library/react';
-import { screen } from '@testing-library/dom';
-import Index from '../../app/routes/_index';
+"import { createRemixStub } from "@remix-run/testing";
+import { render } from "@testing-library/react";
+import { screen } from "@testing-library/dom";
+import Index from "../../app/routes/_index";
 
-test('renders loader data', async () => {
+test("renders loader data", async () => {
   const RemixStub = createRemixStub([
     {
-      path: '/',
+      path: "/",
       Component: Index,
     },
   ]);
 
   render(<RemixStub />);
 
-  await screen.findByText('Hello there,');
+  await screen.findByText("Hello there,");
 });
 "
 `;
@@ -507,13 +481,7 @@ exports[`Remix Application Standalone Project Repo --unitTestRunner should gener
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist/out-tsc",
-    "types": [
-      "vitest/globals",
-      "vitest/importMeta",
-      "vite/client",
-      "node",
-      "vitest"
-    ]
+    "types": ["vitest/globals", "vitest/importMeta", "vite/client", "node", "vitest"]
   },
   "include": [
     "vite.config.ts",
@@ -538,38 +506,32 @@ exports[`Remix Application Standalone Project Repo --unitTestRunner should gener
 `;
 
 exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 4`] = `
-"import { installGlobals } from '@remix-run/node';
-import '@testing-library/jest-dom/matchers';
+"import { installGlobals } from "@remix-run/node";
+import "@testing-library/jest-dom/matchers";
 installGlobals();
 "
 `;
 
 exports[`Remix Application Standalone Project Repo should create the application correctly 1`] = `
-"import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from '@remix-run/react';
-import type { MetaFunction, LinksFunction } from '@remix-run/node';
+"import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "@remix-run/react";
+import type { MetaFunction, LinksFunction } from "@remix-run/node";
 
 export const meta: MetaFunction = () => [
   {
-    title: 'New Remix App',
+    title: "New Remix App",
   },
 ];
 
 export const links: LinksFunction = () => [
-  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+  { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
-    rel: 'preconnect',
-    href: 'https://fonts.gstatic.com',
-    crossOrigin: 'anonymous',
+    rel: "preconnect",
+    href: "https://fonts.gstatic.com",
+    crossOrigin: "anonymous",
   },
   {
-    rel: 'stylesheet',
-    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+    rel: "stylesheet",
+    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
 ];
 
@@ -598,12 +560,12 @@ export default function App() {
 `;
 
 exports[`Remix Application Standalone Project Repo should create the application correctly 2`] = `
-"import NxWelcome from '../nx-welcome';
+"import NxWelcome from "../nx-welcome";
 
 export default function Index() {
   return (
     <div>
-      <NxWelcome title={'test'} />
+      <NxWelcome title={"test"} />
     </div>
   );
 }
@@ -611,32 +573,32 @@ export default function Index() {
 `;
 
 exports[`Remix Application Standalone Project Repo should create the application correctly 3`] = `
-"import { createRemixStub } from '@remix-run/testing';
-import { render } from '@testing-library/react';
-import { screen } from '@testing-library/dom';
-import Index from '../../app/routes/_index';
+"import { createRemixStub } from "@remix-run/testing";
+import { render } from "@testing-library/react";
+import { screen } from "@testing-library/dom";
+import Index from "../../app/routes/_index";
 
-test('renders loader data', async () => {
+test("renders loader data", async () => {
   const RemixStub = createRemixStub([
     {
-      path: '/',
+      path: "/",
       Component: Index,
     },
   ]);
 
   render(<RemixStub />);
 
-  await screen.findByText('Hello there,');
+  await screen.findByText("Hello there,");
 });
 "
 `;
 
 exports[`Remix Application Standalone Project Repo should create the application correctly 4`] = `
-"import { vitePlugin as remix } from '@remix-run/dev';
-import { defineConfig } from 'vite';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+"import { vitePlugin as remix } from "@remix-run/dev";
+import { defineConfig } from "vite";
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
 
-declare module '@remix-run/node' {
+declare module "@remix-run/node" {
   interface Future {
     v3_singleFetch: true;
   }
@@ -688,12 +650,12 @@ exports[`Remix Application Standalone Project Repo should create the application
 `;
 
 exports[`Remix Application Standalone Project Repo should generate a playwright e2e application for the app 1`] = `
-"import { defineConfig, devices } from '@playwright/test';
-import { nxE2EPreset } from '@nx/playwright/preset';
-import { workspaceRoot } from '@nx/devkit';
+"import { defineConfig, devices } from "@playwright/test";
+import { nxE2EPreset } from "@nx/playwright/preset";
+import { workspaceRoot } from "@nx/devkit";
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';
+const baseURL = process.env["BASE_URL"] || "http://localhost:3000";
 
 /**
  * Read environment variables from file.
@@ -705,34 +667,34 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  ...nxE2EPreset(__filename, { testDir: './src' }),
+  ...nxE2EPreset(__filename, { testDir: "./src" }),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    trace: "on-first-retry",
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx nx run test:serve-static',
-    url: 'http://localhost:3000',
+    command: "npx nx run test:serve-static",
+    url: "http://localhost:3000",
     reuseExistingServer: true,
     cwd: workspaceRoot,
   },
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
     },
 
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
     },
 
     {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
     },
 
     // Uncomment for mobile browsers support

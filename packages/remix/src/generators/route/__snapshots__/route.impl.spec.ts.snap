@@ -1,19 +1,19 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`route should add route component 1`] = `
-"import { useLoaderData, useActionData } from '@remix-run/react';
-import { json } from '@remix-run/node';
+"import { useLoaderData, useActionData } from "@remix-run/react";
+import { json } from "@remix-run/node";
 import type {
   LoaderFunctionArgs,
   MetaFunction,
   ActionFunctionArgs,
   LinksFunction,
-} from '@remix-run/node';
+} from "@remix-run/node";
 
-import stylesUrl from '../../../styles/path/to/example.css';
+import stylesUrl from "../../../styles/path/to/example.css";
 
 export const links: LinksFunction = () => {
-  return [{ rel: 'stylesheet', href: stylesUrl }];
+  return [{ rel: "stylesheet", href: stylesUrl }];
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -23,12 +23,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export const meta: MetaFunction = () => {
-  return [{ title: 'Example Route' }];
+  return [{ title: "Example Route" }];
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   return json({
-    message: 'Hello, world!',
+    message: "Hello, world!",
   });
 };
 

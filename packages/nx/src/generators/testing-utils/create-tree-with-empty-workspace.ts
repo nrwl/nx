@@ -28,7 +28,6 @@ export function createTreeWithEmptyV1Workspace(): Tree {
 }
 
 function addCommonFiles(tree: Tree, addAppsAndLibsFolders: boolean): Tree {
-  tree.write('./.prettierrc', JSON.stringify({ singleQuote: true }));
   tree.write(
     '/package.json',
     JSON.stringify({

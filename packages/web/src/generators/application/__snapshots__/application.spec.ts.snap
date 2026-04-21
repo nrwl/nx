@@ -1,12 +1,12 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`app not nested should generate files if bundler is vite 1`] = `
-"import { defineConfig, devices } from '@playwright/test';
-import { nxE2EPreset } from '@nx/playwright/preset';
-import { workspaceRoot } from '@nx/devkit';
+"import { defineConfig, devices } from "@playwright/test";
+import { nxE2EPreset } from "@nx/playwright/preset";
+import { workspaceRoot } from "@nx/devkit";
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
+const baseURL = process.env["BASE_URL"] || "http://localhost:4300";
 
 /**
  * Read environment variables from file.
@@ -18,34 +18,34 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  ...nxE2EPreset(__filename, { testDir: './src' }),
+  ...nxE2EPreset(__filename, { testDir: "./src" }),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    trace: "on-first-retry",
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx nx run my-app:preview',
-    url: 'http://localhost:4300',
+    command: "npx nx run my-app:preview",
+    url: "http://localhost:4300",
     reuseExistingServer: true,
     cwd: workspaceRoot,
   },
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
     },
 
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
     },
 
     {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
     },
 
     // Uncomment for mobile browsers support
@@ -73,12 +73,12 @@ export default defineConfig({
 `;
 
 exports[`app not nested should setup playwright e2e project correctly for webpack 1`] = `
-"import { defineConfig, devices } from '@playwright/test';
-import { nxE2EPreset } from '@nx/playwright/preset';
-import { workspaceRoot } from '@nx/devkit';
+"import { defineConfig, devices } from "@playwright/test";
+import { nxE2EPreset } from "@nx/playwright/preset";
+import { workspaceRoot } from "@nx/devkit";
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+const baseURL = process.env["BASE_URL"] || "http://localhost:4200";
 
 /**
  * Read environment variables from file.
@@ -90,34 +90,34 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  ...nxE2EPreset(__filename, { testDir: './src' }),
+  ...nxE2EPreset(__filename, { testDir: "./src" }),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    trace: "on-first-retry",
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx nx run cool-app:serve-static',
-    url: 'http://localhost:4200',
+    command: "npx nx run cool-app:serve-static",
+    url: "http://localhost:4200",
     reuseExistingServer: true,
     cwd: workspaceRoot,
   },
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
     },
 
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
     },
 
     {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
     },
 
     // Uncomment for mobile browsers support
@@ -145,12 +145,12 @@ export default defineConfig({
 `;
 
 exports[`app not nested should use serve target and port if bundler=vite, e2eTestRunner=playwright, addPlugin=false 1`] = `
-"import { defineConfig, devices } from '@playwright/test';
-import { nxE2EPreset } from '@nx/playwright/preset';
-import { workspaceRoot } from '@nx/devkit';
+"import { defineConfig, devices } from "@playwright/test";
+import { nxE2EPreset } from "@nx/playwright/preset";
+import { workspaceRoot } from "@nx/devkit";
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
+const baseURL = process.env["BASE_URL"] || "http://localhost:4300";
 
 /**
  * Read environment variables from file.
@@ -162,34 +162,34 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  ...nxE2EPreset(__filename, { testDir: './src' }),
+  ...nxE2EPreset(__filename, { testDir: "./src" }),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    trace: "on-first-retry",
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx nx run my-app:preview',
-    url: 'http://localhost:4300',
+    command: "npx nx run my-app:preview",
+    url: "http://localhost:4300",
     reuseExistingServer: true,
     cwd: workspaceRoot,
   },
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
     },
 
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
     },
 
     {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
     },
 
     // Uncomment for mobile browsers support
@@ -241,12 +241,12 @@ exports[`app should setup eslint 1`] = `
 `;
 
 exports[`app should setup the web build builder 1`] = `
-"const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
-const { join } = require('path');
+"const { NxAppWebpackPlugin } = require("@nx/webpack/app-plugin");
+const { join } = require("path");
 
 module.exports = {
   output: {
-    path: join(__dirname, '../dist/my-app'),
+    path: join(__dirname, "../dist/my-app"),
     clean: true,
   },
   devServer: {
@@ -254,15 +254,15 @@ module.exports = {
   },
   plugins: [
     new NxAppWebpackPlugin({
-      tsConfig: './tsconfig.app.json',
-      compiler: 'babel',
-      main: './src/main.ts',
-      index: './src/index.html',
-      baseHref: '/',
-      assets: ['./src/favicon.ico', './src/assets'],
-      styles: ['./src/styles.css'],
-      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
-      optimization: process.env['NODE_ENV'] === 'production',
+      tsConfig: "./tsconfig.app.json",
+      compiler: "babel",
+      main: "./src/main.ts",
+      index: "./src/index.html",
+      baseHref: "/",
+      assets: ["./src/favicon.ico", "./src/assets"],
+      styles: ["./src/styles.css"],
+      outputHashing: process.env["NODE_ENV"] === "production" ? "all" : "none",
+      optimization: process.env["NODE_ENV"] === "production",
     }),
   ],
 };
@@ -270,12 +270,12 @@ module.exports = {
 `;
 
 exports[`app should setup the web dev server 1`] = `
-"const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
-const { join } = require('path');
+"const { NxAppWebpackPlugin } = require("@nx/webpack/app-plugin");
+const { join } = require("path");
 
 module.exports = {
   output: {
-    path: join(__dirname, '../dist/my-app'),
+    path: join(__dirname, "../dist/my-app"),
     clean: true,
   },
   devServer: {
@@ -283,15 +283,15 @@ module.exports = {
   },
   plugins: [
     new NxAppWebpackPlugin({
-      tsConfig: './tsconfig.app.json',
-      compiler: 'babel',
-      main: './src/main.ts',
-      index: './src/index.html',
-      baseHref: '/',
-      assets: ['./src/favicon.ico', './src/assets'],
-      styles: ['./src/styles.css'],
-      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
-      optimization: process.env['NODE_ENV'] === 'production',
+      tsConfig: "./tsconfig.app.json",
+      compiler: "babel",
+      main: "./src/main.ts",
+      index: "./src/index.html",
+      baseHref: "/",
+      assets: ["./src/favicon.ico", "./src/assets"],
+      styles: ["./src/styles.css"],
+      outputHashing: process.env["NODE_ENV"] === "production" ? "all" : "none",
+      optimization: process.env["NODE_ENV"] === "production",
     }),
   ],
 };

@@ -866,13 +866,13 @@ describe('lib', () => {
         expect(tree.read('my-lib/jest.config.cts', 'utf-8'))
           .toMatchInlineSnapshot(`
                   "module.exports = {
-                    displayName: 'my-lib',
-                    preset: '../jest.preset.js',
+                    displayName: "my-lib",
+                    preset: "../jest.preset.js",
                     transform: {
-                      '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+                      "^.+\\\\.[tj]s$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.spec.json" }],
                     },
-                    moduleFileExtensions: ['ts', 'js', 'html'],
-                    coverageDirectory: '../coverage/my-lib',
+                    moduleFileExtensions: ["ts", "js", "html"],
+                    coverageDirectory: "../coverage/my-lib",
                   };
                   "
               `);
@@ -901,13 +901,11 @@ describe('lib', () => {
         expect(tree.read('my-lib/jest.config.cts', 'utf-8'))
           .toMatchInlineSnapshot(`
                   "/* eslint-disable */
-                  const { readFileSync } = require('fs');
+                  const { readFileSync } = require("fs");
 
                   // Reading the SWC compilation config and remove the "exclude"
                   // for the test files to be compiled by SWC
-                  const { exclude: _, ...swcJestConfig } = JSON.parse(
-                    readFileSync(\`\${__dirname}/.swcrc\`, 'utf-8'),
-                  );
+                  const { exclude: _, ...swcJestConfig } = JSON.parse(readFileSync(\`\${__dirname}/.swcrc\`, "utf-8"));
 
                   // disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves.
                   // If we do not disable this, SWC Core will read .swcrc and won't transform our test files due to "exclude"
@@ -921,14 +919,14 @@ describe('lib', () => {
                   // swcJestConfig.module.noInterop = false;
 
                   module.exports = {
-                    displayName: 'my-lib',
-                    preset: '../jest.preset.js',
+                    displayName: "my-lib",
+                    preset: "../jest.preset.js",
                     transform: {
-                      '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
+                      "^.+\\\\.[tj]s$": ["@swc/jest", swcJestConfig],
                     },
-                    moduleFileExtensions: ['ts', 'js', 'html'],
-                    testEnvironment: 'jsdom',
-                    coverageDirectory: '../coverage/my-lib',
+                    moduleFileExtensions: ["ts", "js", "html"],
+                    testEnvironment: "jsdom",
+                    coverageDirectory: "../coverage/my-lib",
                   };
                   "
               `);
@@ -1805,7 +1803,7 @@ describe('lib', () => {
       expect(tree.exists('my-node-lib/vite.config.ts')).toBe(false);
       const content = tree.read('my-node-lib/vitest.config.mts', 'utf-8');
 
-      expect(content).toContain(`environment: 'node'`);
+      expect(content).toContain(`environment: "node"`);
     });
 
     it('should generate a vitest config with testEnvironment set to jsdom by default', async () => {
@@ -1819,7 +1817,7 @@ describe('lib', () => {
       expect(tree.exists('my-jsdom-lib/vite.config.ts')).toBe(false);
       const content = tree.read('my-jsdom-lib/vitest.config.mts', 'utf-8');
 
-      expect(content).toContain(`environment: 'jsdom'`);
+      expect(content).toContain(`environment: "jsdom"`);
     });
   });
 
@@ -1924,7 +1922,7 @@ describe('lib', () => {
         expect(tree.read('pnpm-workspace.yaml', 'utf-8'))
           .toMatchInlineSnapshot(`
           "packages:
-            - '${expected}'
+            - "${expected}"
           "
         `);
       }
@@ -2115,14 +2113,7 @@ describe('lib', () => {
             "type": "es6"
           },
           "sourceMaps": true,
-          "exclude": [
-            "jest.config.[ct]s",
-            ".*\\\\.spec.tsx?$",
-            ".*\\\\.test.tsx?$",
-            "./src/jest-setup.ts$",
-            "./**/jest-setup.ts$",
-            ".*.js$"
-          ]
+          "exclude": ["jest.config.[ct]s",".*\\\\.spec.tsx?$",".*\\\\.test.tsx?$","./src/jest-setup.ts$","./**/jest-setup.ts$",".*.js$"]
         }
         "
       `);
@@ -2217,11 +2208,11 @@ describe('lib', () => {
         expect(tree.read('my-lib/jest.config.cts', 'utf-8'))
           .toMatchInlineSnapshot(`
                   "/* eslint-disable */
-                  const { readFileSync } = require('fs');
+                  const { readFileSync } = require('fs')
 
                   // Reading the SWC compilation config for the spec files
                   const swcJestConfig = JSON.parse(
-                    readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
+                    readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
                   );
 
                   // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
@@ -2231,10 +2222,10 @@ describe('lib', () => {
                     displayName: '@proj/my-lib',
                     preset: '../jest.preset.js',
                     transform: {
-                      '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
+                      '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig]
                     },
                     moduleFileExtensions: ['ts', 'js', 'html'],
-                    coverageDirectory: 'test-output/jest/coverage',
+                    coverageDirectory: 'test-output/jest/coverage'
                   };
                   "
               `);

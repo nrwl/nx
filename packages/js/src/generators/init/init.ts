@@ -1,7 +1,6 @@
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
-  ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -17,6 +16,7 @@ import { readModulePackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { satisfies, valid } from 'semver';
 import { createNodesV2 } from '../../plugins/typescript/plugin';
+import { generateOxfmtSetup } from '../../utils/oxfmt';
 import { generatePrettierSetup } from '../../utils/prettier';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
 import {
@@ -25,7 +25,6 @@ import {
 } from '../../utils/typescript/ts-solution-setup';
 import {
   nxVersion,
-  prettierVersion,
   supportedTypescriptVersions,
   swcCoreVersion,
   swcHelpersVersion,
@@ -79,7 +78,7 @@ export async function initGenerator(
 ): Promise<GeneratorCallback> {
   schema.addTsPlugin ??= false;
   const isUsingNewTsSetup = schema.addTsPlugin || isUsingTsSolutionSetup(tree);
-  schema.formatter ??= isUsingNewTsSetup ? 'none' : 'prettier';
+  schema.formatter ??= isUsingNewTsSetup ? 'none' : 'oxfmt';
 
   return initGeneratorInternal(tree, {
     addTsConfigBase: true,
@@ -179,6 +178,11 @@ export async function initGeneratorInternal(
       skipPackageJson: schema.skipPackageJson,
     });
     tasks.push(prettierTask);
+  } else if (schema.formatter === 'oxfmt') {
+    const oxfmtTask = generateOxfmtSetup(tree, {
+      skipPackageJson: schema.skipPackageJson,
+    });
+    tasks.push(oxfmtTask);
   }
 
   const rootTsConfigFileName = getRootTsConfigFileName(tree);
@@ -201,15 +205,6 @@ export async function initGeneratorInternal(
       )
     : () => {};
   tasks.push(installTask);
-
-  if (
-    !schema.skipPackageJson &&
-    // For `create-nx-workspace` or `nx g @nx/js:init`, we want to make sure users didn't set formatter to none.
-    // For programmatic usage, the formatter is normally undefined, and we want prettier to continue to be ensured, even if not ultimately installed.
-    schema.formatter !== 'none'
-  ) {
-    ensurePackage('prettier', prettierVersion);
-  }
 
   if (!schema.skipFormat) {
     // even if skipPackageJson === true, we can safely run formatFiles, prettier might

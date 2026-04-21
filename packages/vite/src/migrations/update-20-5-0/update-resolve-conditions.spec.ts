@@ -18,12 +18,14 @@ describe('update-resolve-conditions', () => {
     await updateResolveConditions(tree);
 
     expect(tree.read('vite.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { defineConfig } from 'vite';
-
-      export default defineConfig({
-        plugins: [viteTsConfigPaths()],
-      });
-      "
+      "import {defineConfig} from 'vite';
+          
+          export default defineConfig({
+            plugins: [
+              viteTsConfigPaths(),
+            ],
+          });
+          "
     `);
   });
 
@@ -48,17 +50,19 @@ describe('update-resolve-conditions', () => {
     await updateResolveConditions(tree);
 
     expect(tree.read('vite.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { defineConfig } from 'vite';
-
-      export default defineConfig({
-        resolve: {
-          alias: {
-            '@app': 'src/app',
-          },
-        },
-        plugins: [viteTsConfigPaths()],
-      });
-      "
+      "import {defineConfig} from 'vite';
+          
+          export default defineConfig({
+            resolve: {
+              alias: {
+                '@app': 'src/app',
+              },
+            },
+            plugins: [
+              viteTsConfigPaths(),
+            ],
+          });
+          "
     `);
   });
 
@@ -84,18 +88,20 @@ describe('update-resolve-conditions', () => {
     await updateResolveConditions(tree);
 
     expect(tree.read('vite.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { defineConfig } from 'vite';
-
-      export default defineConfig({
-        resolve: {
-          alias: {
-            '@app': 'src/app',
-          },
-          conditions: ['browser', 'import', 'module', 'development|production'],
-        },
-        plugins: [viteTsConfigPaths()],
-      });
-      "
+      "import {defineConfig} from 'vite';
+          
+          export default defineConfig({
+            resolve: {
+              alias: {
+                '@app': 'src/app',
+              },
+              conditions: ["browser","import","module","development|production"],
+            },
+            plugins: [
+              viteTsConfigPaths(),
+            ],
+          });
+          "
     `);
   });
 
@@ -121,18 +127,20 @@ describe('update-resolve-conditions', () => {
     await updateResolveConditions(tree);
 
     expect(tree.read('vite.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { defineConfig } from 'vite';
-
-      export default defineConfig({
-        resolve: {
-          alias: {
-            '@app': 'src/app',
-          },
-          conditions: ['browser', 'import', 'module', 'development|production'],
-        },
-        plugins: [viteTsConfigPaths()],
-      });
-      "
+      "import {defineConfig} from 'vite';
+          
+          export default defineConfig({
+            resolve: {
+              alias: {
+                '@app': 'src/app',
+              },
+              conditions: ["browser","import","module","development|production"],
+            },
+            plugins: [
+              viteTsConfigPaths(),
+            ],
+          });
+          "
     `);
   });
 
@@ -158,18 +166,20 @@ describe('update-resolve-conditions', () => {
     await updateResolveConditions(tree);
 
     expect(tree.read('vite.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { defineConfig } from 'vite';
-
-      export default defineConfig({
-        resolve: {
-          alias: {
-            '@app': 'src/app',
-          },
-          conditions: ['module', 'browser', 'development|production'],
-        },
-        plugins: [viteTsConfigPaths()],
-      });
-      "
+      "import {defineConfig} from 'vite';
+          
+          export default defineConfig({
+            resolve: {
+              alias: {
+                '@app': 'src/app',
+              },
+              conditions: ["module","browser","development|production"],
+            },
+            plugins: [
+              viteTsConfigPaths(),
+            ],
+          });
+          "
     `);
   });
 
@@ -196,18 +206,20 @@ describe('update-resolve-conditions', () => {
     await updateResolveConditions(tree);
 
     expect(tree.read('vite.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { defineConfig } from 'vite';
-
-      export default defineConfig({
-        resolve: {
-          alias: {
-            '@app': 'src/app',
-          },
-          conditions: ['module', 'browser', 'development|production'],
-        },
-        plugins: [viteTsConfigPaths()],
-      });
-      "
+      "import {defineConfig} from 'vite';
+          
+          export default defineConfig({
+            resolve: {
+              alias: {
+                '@app': 'src/app',
+              },
+              conditions: ["module","browser","development|production"],
+            },
+            plugins: [
+              viteTsConfigPaths(),
+            ],
+          });
+          "
     `);
   });
   it('should ignore remix', async () => {
@@ -234,19 +246,22 @@ describe('update-resolve-conditions', () => {
     await updateResolveConditions(tree);
 
     expect(tree.read('vite.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { defineConfig } from 'vite';
-      import { vitePlugin as remix } from '@remix-run/dev';
-
-      export default defineConfig({
-        resolve: {
-          alias: {
-            '@app': 'src/app',
-          },
-          conditions: ['module', 'browser', 'development|production'],
-        },
-        plugins: [viteTsConfigPaths(), remix()],
-      });
-      "
+      "import {defineConfig} from 'vite';
+            import {vitePlugin as remix} from '@remix-run/dev';
+          
+          export default defineConfig({
+            resolve: {
+              alias: {
+                '@app': 'src/app',
+              },
+              conditions: ['module', 'browser', 'development|production'],
+            },
+            plugins: [
+              viteTsConfigPaths(),
+              remix()
+            ],
+          });
+          "
     `);
   });
 });

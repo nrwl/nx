@@ -129,7 +129,7 @@ exports[`Init MF should add a remote application and add it to a specified host 
  * Nx requires a default export of the config to allow correct resolution of the module federation graph.
  **/
 module.exports = {
-  name: 'app1',
+  name: "app1",
   /**
    * To use a remote that does not exist in your current Nx Workspace
    * You can use the tuple-syntax to define your remote
@@ -142,7 +142,7 @@ module.exports = {
    * declare module 'my-external-remote';
    *
    */
-  remotes: ['remote1'],
+  remotes: ["remote1"],
 };
 "
 `;
@@ -353,10 +353,10 @@ export class RemoteEntry {}
 `;
 
 exports[`Init MF should generate the remote entry module and component correctly 1`] = `
-"import { Component } from '@angular/core';
+"import { Component } from "@angular/core";
 
 @Component({
-  selector: 'my-org-remote1-entry',
+  selector: "my-org-remote1-entry",
   standalone: false,
   template: \`<my-org-nx-welcome></my-org-nx-welcome>\`,
 })
@@ -365,11 +365,11 @@ export class RemoteEntry {}
 `;
 
 exports[`Init MF should generate the remote entry module and component correctly 2`] = `
-"import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+"import { NgModule } from "@angular/core";
+import { CommonModule } from "@angular/common";
 
-import { RemoteEntry } from './entry';
-import { NxWelcome } from './nx-welcome';
+import { RemoteEntry } from "./entry";
+import { NxWelcome } from "./nx-welcome";
 
 @NgModule({
   declarations: [RemoteEntry, NxWelcome],

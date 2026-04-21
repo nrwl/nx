@@ -204,9 +204,8 @@ describe('@nx/vite:init', () => {
       import react from '@vitejs/plugin-react';
       import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
       export default defineConfig({
-        plugins: [react(), nxViteTsPaths()],
-      });
-      "
+          plugins: [react(), nxViteTsPaths(),],
+      });"
     `);
   });
 
@@ -246,10 +245,13 @@ vite.config.*.timestamp*`
     await initGenerator(tree, {});
 
     expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
-      "export default [
-        {
-          ignores: ['**/vite.config.*.timestamp*'],
-        },
+      "
+      export default [
+          {
+              ignores: [
+                  "**/vite.config.*.timestamp*"
+              ]
+          }
       ];
       "
     `);
@@ -273,11 +275,13 @@ vite.config.*.timestamp*`
 
     expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
       "export default [
-        {
-          ignores: ['dist', '**/vite.config.*.timestamp*'],
-        },
-      ];
-      "
+            {
+            "ignores": [
+              "dist",
+              "**/vite.config.*.timestamp*"
+            ]
+            },
+          ];"
     `);
   });
 
@@ -299,11 +303,13 @@ vite.config.*.timestamp*`
 
     expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
       "export default [
-        {
-          ignores: ['**/vitest.config.*.timestamp*', '**/vite.config.*.timestamp*'],
-        },
-      ];
-      "
+            {
+            "ignores": [
+              "**/vitest.config.*.timestamp*",
+              "**/vite.config.*.timestamp*"
+            ]
+            },
+          ];"
     `);
   });
 

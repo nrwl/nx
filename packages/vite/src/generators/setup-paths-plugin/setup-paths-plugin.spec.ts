@@ -53,17 +53,15 @@ describe('@nx/vite:init', () => {
     expect(tree.read('proj1/vite.config.ts').toString()).toMatchInlineSnapshot(`
       "import { defineConfig } from 'vite';
       import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      export default defineConfig({ plugins: [nxViteTsPaths()] });
-      "
+      export default defineConfig({plugins: [nxViteTsPaths()],});"
     `);
     expect(tree.read('proj2/vite.config.ts').toString()).toMatchInlineSnapshot(`
       "import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
       import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
       export default defineConfig({
-        plugins: [react(), nxViteTsPaths()],
-      });
-      "
+          plugins: [react(), nxViteTsPaths(),],
+      });"
     `);
     expect(tree.read('proj3/vite.config.cts').toString())
       .toMatchInlineSnapshot(`
@@ -71,9 +69,8 @@ describe('@nx/vite:init', () => {
       const { defineConfig } = require('vite');
       const react = require('@vitejs/plugin-react');
       module.exports = defineConfig({
-        plugins: [react(), nxViteTsPaths()],
-      });
-      "
+          plugins: [react(), nxViteTsPaths(),],
+      });"
     `);
   });
 
@@ -111,17 +108,15 @@ describe('@nx/vite:init', () => {
     expect(tree.read('proj1/vite.config.ts').toString()).toMatchInlineSnapshot(`
       "import { defineConfig } from 'vite';
       import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      export default defineConfig({ plugins: [nxViteTsPaths()] });
-      "
+      export default defineConfig({plugins: [nxViteTsPaths()],});"
     `);
     expect(tree.read('proj2/vite.config.ts').toString()).toMatchInlineSnapshot(`
       "import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
       import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
       export default defineConfig({
-        plugins: [react(), nxViteTsPaths()],
-      });
-      "
+          plugins: [react(), nxViteTsPaths(),],
+      });"
     `);
     expect(tree.read('proj3/vite.config.cts').toString())
       .toMatchInlineSnapshot(`
@@ -129,9 +124,8 @@ describe('@nx/vite:init', () => {
       const react = require('@vitejs/plugin-react');
       const { nxViteTsPaths } = require('@nx/vite/plugins/nx-tsconfig-paths.plugin');
       module.exports = defineConfig({
-        plugins: [react(), nxViteTsPaths()],
-      });
-      "
+          plugins: [react(), nxViteTsPaths(),],
+      });"
     `);
   });
 });

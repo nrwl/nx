@@ -40,12 +40,12 @@ describe('setupSSR', () => {
       expect(tree.read('app1/src/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "export { AppServerModule as default } from './app/app.server.module';
+        "export { AppServerModule as default } from "./app/app.server.module";
         "
       `);
       expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
-        "import { platformBrowser } from '@angular/platform-browser';
-        import { AppModule } from './app/app-module';
+        "import { platformBrowser } from "@angular/platform-browser";
+        import { AppModule } from "./app/app-module";
 
         platformBrowser()
           .bootstrapModule(AppModule)
@@ -68,11 +68,11 @@ describe('setupSSR', () => {
       `);
       expect(tree.read('app1/src/app/app.server.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { NgModule } from '@angular/core';
-        import { provideServerRendering, withRoutes } from '@angular/ssr';
-        import { App } from './app';
-        import { AppModule } from './app-module';
-        import { serverRoutes } from './app.routes.server';
+        "import { NgModule } from "@angular/core";
+        import { provideServerRendering, withRoutes } from "@angular/ssr";
+        import { App } from "./app";
+        import { AppModule } from "./app-module";
+        import { serverRoutes } from "./app.routes.server";
 
         @NgModule({
           imports: [AppModule],
@@ -84,11 +84,11 @@ describe('setupSSR', () => {
       `);
       expect(tree.read('app1/src/app/app.routes.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { RenderMode, ServerRoute } from '@angular/ssr';
+        "import { RenderMode, ServerRoute } from "@angular/ssr";
 
         export const serverRoutes: ServerRoute[] = [
           {
-            path: '**',
+            path: "**",
             renderMode: RenderMode.Prerender,
           },
         ];
@@ -96,24 +96,17 @@ describe('setupSSR', () => {
       `);
       expect(tree.read('app1/src/app/app-module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
-        import {
-          BrowserModule,
-          provideClientHydration,
-          withEventReplay,
-        } from '@angular/platform-browser';
-        import { RouterModule } from '@angular/router';
-        import { App } from './app';
-        import { appRoutes } from './app.routes';
-        import { NxWelcome } from './nx-welcome';
+        "import { NgModule, provideBrowserGlobalErrorListeners } from "@angular/core";
+        import { BrowserModule, provideClientHydration, withEventReplay } from "@angular/platform-browser";
+        import { RouterModule } from "@angular/router";
+        import { App } from "./app";
+        import { appRoutes } from "./app.routes";
+        import { NxWelcome } from "./nx-welcome";
 
         @NgModule({
           declarations: [App, NxWelcome],
           imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
-          providers: [
-            provideBrowserGlobalErrorListeners(),
-            provideClientHydration(withEventReplay()),
-          ],
+          providers: [provideBrowserGlobalErrorListeners(), provideClientHydration(withEventReplay())],
           bootstrap: [App],
         })
         export class AppModule {}
@@ -141,15 +134,11 @@ describe('setupSSR', () => {
       expect(tree.read('app1/src/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import {
-          BootstrapContext,
-          bootstrapApplication,
-        } from '@angular/platform-browser';
-        import { App } from './app/app';
-        import { config } from './app/app.config.server';
+        "import { BootstrapContext, bootstrapApplication } from "@angular/platform-browser";
+        import { App } from "./app/app";
+        import { config } from "./app/app.config.server";
 
-        const bootstrap = (context: BootstrapContext) =>
-          bootstrapApplication(App, config, context);
+        const bootstrap = (context: BootstrapContext) => bootstrapApplication(App, config, context);
 
         export default bootstrap;
         "
@@ -170,10 +159,10 @@ describe('setupSSR', () => {
       `);
       expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
-        import { provideServerRendering, withRoutes } from '@angular/ssr';
-        import { appConfig } from './app.config';
-        import { serverRoutes } from './app.routes.server';
+        "import { mergeApplicationConfig, ApplicationConfig } from "@angular/core";
+        import { provideServerRendering, withRoutes } from "@angular/ssr";
+        import { appConfig } from "./app.config";
+        import { serverRoutes } from "./app.routes.server";
 
         const serverConfig: ApplicationConfig = {
           providers: [provideServerRendering(withRoutes(serverRoutes))],
@@ -184,11 +173,11 @@ describe('setupSSR', () => {
       `);
       expect(tree.read('app1/src/app/app.routes.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { RenderMode, ServerRoute } from '@angular/ssr';
+        "import { RenderMode, ServerRoute } from "@angular/ssr";
 
         export const serverRoutes: ServerRoute[] = [
           {
-            path: '**',
+            path: "**",
             renderMode: RenderMode.Prerender,
           },
         ];
@@ -216,7 +205,7 @@ describe('setupSSR', () => {
 
       const serverFileContent = tree.read('app1/src/server.ts', 'utf-8');
       expect(serverFileContent).toContain(
-        `resolve(serverDistFolder, '../public')`
+        `resolve(serverDistFolder, "../public")`
       );
     });
 
@@ -771,12 +760,12 @@ describe('setupSSR', () => {
 
       expect(tree.read('app1/src/app/app.server.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { NgModule } from '@angular/core';
-        import { ServerModule } from '@angular/platform-server';
-        import { provideServerRoutesConfig } from '@angular/ssr';
-        import { AppComponent } from './app.component';
-        import { AppModule } from './app.module';
-        import { serverRoutes } from './app.routes.server';
+        "import { NgModule } from "@angular/core";
+        import { ServerModule } from "@angular/platform-server";
+        import { provideServerRoutesConfig } from "@angular/ssr";
+        import { AppComponent } from "./app.component";
+        import { AppModule } from "./app.module";
+        import { serverRoutes } from "./app.routes.server";
 
         @NgModule({
           imports: [AppModule, ServerModule],
@@ -788,11 +777,11 @@ describe('setupSSR', () => {
       `);
       expect(tree.read('app1/src/app/app.routes.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { RenderMode, ServerRoute } from '@angular/ssr';
+        "import { RenderMode, ServerRoute } from "@angular/ssr";
 
         export const serverRoutes: ServerRoute[] = [
           {
-            path: '**',
+            path: "**",
             renderMode: RenderMode.Prerender,
           },
         ];
@@ -817,12 +806,12 @@ describe('setupSSR', () => {
 
       expect(tree.read('app1/src/app/app.server.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { NgModule } from '@angular/core';
-        import { ServerModule } from '@angular/platform-server';
-        import { provideServerRouting } from '@angular/ssr';
-        import { AppComponent } from './app.component';
-        import { AppModule } from './app.module';
-        import { serverRoutes } from './app.routes.server';
+        "import { NgModule } from "@angular/core";
+        import { ServerModule } from "@angular/platform-server";
+        import { provideServerRouting } from "@angular/ssr";
+        import { AppComponent } from "./app.component";
+        import { AppModule } from "./app.module";
+        import { serverRoutes } from "./app.routes.server";
 
         @NgModule({
           imports: [AppModule, ServerModule],
@@ -834,11 +823,11 @@ describe('setupSSR', () => {
       `);
       expect(tree.read('app1/src/app/app.routes.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { RenderMode, ServerRoute } from '@angular/ssr';
+        "import { RenderMode, ServerRoute } from "@angular/ssr";
 
         export const serverRoutes: ServerRoute[] = [
           {
-            path: '**',
+            path: "**",
             renderMode: RenderMode.Prerender,
           },
         ];
@@ -863,17 +852,14 @@ describe('setupSSR', () => {
 
       expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
-        import { provideServerRendering } from '@angular/platform-server';
-        import { provideServerRoutesConfig } from '@angular/ssr';
-        import { appConfig } from './app.config';
-        import { serverRoutes } from './app.routes.server';
+        "import { mergeApplicationConfig, ApplicationConfig } from "@angular/core";
+        import { provideServerRendering } from "@angular/platform-server";
+        import { provideServerRoutesConfig } from "@angular/ssr";
+        import { appConfig } from "./app.config";
+        import { serverRoutes } from "./app.routes.server";
 
         const serverConfig: ApplicationConfig = {
-          providers: [
-            provideServerRendering(),
-            provideServerRoutesConfig(serverRoutes),
-          ],
+          providers: [provideServerRendering(), provideServerRoutesConfig(serverRoutes)],
         };
 
         export const config = mergeApplicationConfig(appConfig, serverConfig);
@@ -881,11 +867,11 @@ describe('setupSSR', () => {
       `);
       expect(tree.read('app1/src/app/app.routes.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { RenderMode, ServerRoute } from '@angular/ssr';
+        "import { RenderMode, ServerRoute } from "@angular/ssr";
 
         export const serverRoutes: ServerRoute[] = [
           {
-            path: '**',
+            path: "**",
             renderMode: RenderMode.Prerender,
           },
         ];
@@ -910,11 +896,11 @@ describe('setupSSR', () => {
 
       expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
-        import { provideServerRendering } from '@angular/platform-server';
-        import { provideServerRouting } from '@angular/ssr';
-        import { appConfig } from './app.config';
-        import { serverRoutes } from './app.routes.server';
+        "import { mergeApplicationConfig, ApplicationConfig } from "@angular/core";
+        import { provideServerRendering } from "@angular/platform-server";
+        import { provideServerRouting } from "@angular/ssr";
+        import { appConfig } from "./app.config";
+        import { serverRoutes } from "./app.routes.server";
 
         const serverConfig: ApplicationConfig = {
           providers: [provideServerRendering(), provideServerRouting(serverRoutes)],
@@ -925,11 +911,11 @@ describe('setupSSR', () => {
       `);
       expect(tree.read('app1/src/app/app.routes.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { RenderMode, ServerRoute } from '@angular/ssr';
+        "import { RenderMode, ServerRoute } from "@angular/ssr";
 
         export const serverRoutes: ServerRoute[] = [
           {
-            path: '**',
+            path: "**",
             renderMode: RenderMode.Prerender,
           },
         ];

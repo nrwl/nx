@@ -7,7 +7,7 @@ exports[`hostGenerator bundler=rspack should generate host files and configs for
  * @type {import('@nx/module-federation').ModuleFederationConfig}
  **/
 const moduleFederationConfig = {
-  name: 'test',
+  name: "test",
   remotes: [],
   shared: (libraryName, libraryConfig) => {
     return {
@@ -25,10 +25,10 @@ module.exports = moduleFederationConfig;
 `;
 
 exports[`hostGenerator bundler=rspack should generate host files and configs for SSR when --typescriptConfiguration=true 1`] = `
-"import { ModuleFederationConfig } from '@nx/module-federation';
+"import { ModuleFederationConfig } from "@nx/module-federation";
 
 const config: ModuleFederationConfig = {
-  name: 'test',
+  name: "test",
   remotes: [],
   shared: (libraryName, libraryConfig) => {
     return {
@@ -46,39 +46,39 @@ export default config;
 `;
 
 exports[`hostGenerator bundler=rspack should generate host files and configs when --typescriptConfiguration=false 1`] = `
-"const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
-const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+"const { NxAppRspackPlugin } = require("@nx/rspack/app-plugin");
+const { NxReactRspackPlugin } = require("@nx/rspack/react-plugin");
 const {
   NxModuleFederationPlugin,
   NxModuleFederationDevServerPlugin,
-} = require('@nx/module-federation/rspack');
-const { join } = require('path');
+} = require("@nx/module-federation/rspack");
+const { join } = require("path");
 
-const config = require('./module-federation.config');
+const config = require("./module-federation.config");
 
 module.exports = {
   output: {
-    path: join(__dirname, '../dist/test'),
-    publicPath: 'auto',
+    path: join(__dirname, "../dist/test"),
+    publicPath: "auto",
   },
   devServer: {
     port: 4200,
     historyApiFallback: {
-      index: '/index.html',
+      index: "/index.html",
       disableDotRule: true,
-      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+      htmlAcceptHeaders: ["text/html", "application/xhtml+xml"],
     },
   },
   plugins: [
     new NxAppRspackPlugin({
-      tsConfig: './tsconfig.app.json',
-      main: './src/main.ts',
-      index: './src/index.html',
-      baseHref: '/',
-      assets: ['./src/favicon.ico', './src/assets'],
-      styles: ['./src/styles.css'],
-      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
-      optimization: process.env['NODE_ENV'] === 'production',
+      tsConfig: "./tsconfig.app.json",
+      main: "./src/main.ts",
+      index: "./src/index.html",
+      baseHref: "/",
+      assets: ["./src/favicon.ico", "./src/assets"],
+      styles: ["./src/styles.css"],
+      outputHashing: process.env["NODE_ENV"] === "production" ? "all" : "none",
+      optimization: process.env["NODE_ENV"] === "production",
     }),
     new NxReactRspackPlugin({
       // Uncomment this line if you don't want to use SVGR
@@ -97,7 +97,7 @@ exports[`hostGenerator bundler=rspack should generate host files and configs whe
  * Nx requires a default export of the config to allow correct resolution of the module federation graph.
  **/
 module.exports = {
-  name: 'test',
+  name: "test",
   /**
    * To use a remote that does not exist in your current Nx Workspace
    * You can use the tuple-syntax to define your remote

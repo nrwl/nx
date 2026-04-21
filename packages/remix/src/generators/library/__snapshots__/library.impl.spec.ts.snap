@@ -2,22 +2,22 @@
 
 exports[`Remix Library Generator --unitTestRunner should create the correct config files for testing with jest 1`] = `
 "module.exports = {
-  setupFilesAfterEnv: ['./src/test-setup.ts'],
-  displayName: 'test',
-  preset: '../jest.preset.js',
+  setupFilesAfterEnv: ["./src/test-setup.ts"],
+  displayName: "test",
+  preset: "../jest.preset.js",
   transform: {
-    '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',
-    '^.+\\\\.[tj]sx?$': ['babel-jest', { presets: ['@nx/react/babel'] }],
+    "^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)": "@nx/react/plugins/jest",
+    "^.+\\\\.[tj]sx?$": ["babel-jest", { presets: ["@nx/react/babel"] }],
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../coverage/test',
+  moduleFileExtensions: ["ts", "tsx", "js", "jsx"],
+  coverageDirectory: "../coverage/test",
 };
 "
 `;
 
 exports[`Remix Library Generator --unitTestRunner should create the correct config files for testing with jest 2`] = `
-"import { installGlobals } from '@remix-run/node';
-import '@testing-library/jest-dom/matchers';
+"import { installGlobals } from "@remix-run/node";
+import "@testing-library/jest-dom/matchers";
 installGlobals();
 "
 `;
@@ -25,8 +25,8 @@ installGlobals();
 exports[`Remix Library Generator --unitTestRunner should create the correct config files for testing with vitest 1`] = `null`;
 
 exports[`Remix Library Generator --unitTestRunner should create the correct config files for testing with vitest 2`] = `
-"import { installGlobals } from '@remix-run/node';
-import '@testing-library/jest-dom/matchers';
+"import { installGlobals } from "@remix-run/node";
+import "@testing-library/jest-dom/matchers";
 installGlobals();
 "
 `;
