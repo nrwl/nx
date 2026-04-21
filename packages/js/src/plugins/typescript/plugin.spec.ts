@@ -98,12 +98,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -156,12 +156,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -217,12 +217,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -280,12 +280,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -341,12 +341,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -405,12 +405,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -467,12 +467,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -530,12 +530,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -595,12 +595,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -657,12 +657,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -723,12 +723,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -766,12 +766,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -869,12 +869,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -933,12 +933,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -999,12 +999,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -1084,12 +1084,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -1153,12 +1153,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/foo.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -1179,7 +1179,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist/**/*.d.ts",
+                      "{projectRoot}/dist/**/*.{d.ts,d.cts,d.mts}",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
                     ],
                     "syncGenerators": [
@@ -1221,12 +1221,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/foo.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -1247,7 +1247,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist/**/*.d.ts",
+                      "{projectRoot}/dist/**/*.{d.ts,d.cts,d.mts}",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
                     ],
                     "syncGenerators": [
@@ -1294,12 +1294,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.mts",
                       "{projectRoot}/src/**/*.d.mts",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -1320,7 +1320,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist/**/*.d.ts",
+                      "{projectRoot}/dist/**/*.{d.ts,d.cts,d.mts}",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
                     ],
                     "syncGenerators": [
@@ -1371,12 +1371,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.mjs",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -1397,7 +1397,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist/**/*.d.ts",
+                      "{projectRoot}/dist/**/*.{d.ts,d.cts,d.mts}",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
                     ],
                     "syncGenerators": [
@@ -1448,12 +1448,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.json",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -1474,7 +1474,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist/**/*.d.ts",
+                      "{projectRoot}/dist/**/*.{d.ts,d.cts,d.mts}",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
                     ],
                     "syncGenerators": [
@@ -1530,12 +1530,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.mjs",
                       "{projectRoot}/src/**/*.json",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -1556,7 +1556,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist/**/*.d.ts",
+                      "{projectRoot}/dist/**/*.{d.ts,d.cts,d.mts}",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
                     ],
                     "syncGenerators": [
@@ -1607,12 +1607,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/tmp",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -1633,7 +1633,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist/**/*.d.ts",
+                      "{projectRoot}/dist/**/*.{d.ts,d.cts,d.mts}",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
                     ],
                     "syncGenerators": [
@@ -1687,12 +1687,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/dist",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -1713,7 +1713,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist/**/*.d.ts",
+                      "{projectRoot}/dist/**/*.{d.ts,d.cts,d.mts}",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
                     ],
                     "syncGenerators": [
@@ -1780,12 +1780,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/tmp",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -1806,7 +1806,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist/**/*.d.ts",
+                      "{projectRoot}/dist/**/*.{d.ts,d.cts,d.mts}",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
                     ],
                     "syncGenerators": [
@@ -1888,12 +1888,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/cypress.config.ts",
                       "{projectRoot}/**/*.cy.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                       "^{projectRoot}/tsconfig.json",
                     ],
@@ -1915,11 +1915,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist/**/*.d.ts",
+                      "{projectRoot}/dist/**/*.{d.ts,d.cts,d.mts}",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
                       "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                       "{projectRoot}/dist/tsconfig.spec.tsbuildinfo",
-                      "{projectRoot}/cypress/dist/**/*.d.ts",
+                      "{projectRoot}/cypress/dist/**/*.{d.ts,d.cts,d.mts}",
                       "{projectRoot}/cypress/dist/tsconfig.tsbuildinfo",
                     ],
                     "syncGenerators": [
@@ -1941,12 +1941,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/lib/**/*.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -1967,7 +1967,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib/nested-project",
                     },
                     "outputs": [
-                      "{projectRoot}/dist/**/*.d.ts",
+                      "{projectRoot}/dist/**/*.{d.ts,d.cts,d.mts}",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
                     ],
                     "syncGenerators": [
@@ -2147,12 +2147,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tests/**/*.d.mts",
                       "{projectRoot}/tests/**/*.mjs",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -2173,7 +2173,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist/**/*.d.ts",
+                      "{projectRoot}/dist/**/*.{d.ts,d.cts,d.mts}",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
                       "{projectRoot}/dist/tsconfig.lib.tsbuildinfo",
                       "{projectRoot}/dist/tsconfig.spec.tsbuildinfo",
@@ -2224,12 +2224,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/src/**/*.spec.ts",
             {
-              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
               "transitive": true,
             },
             {
               "dependencies": true,
-              "fileset": "{projectRoot}/**/*.d.ts",
+              "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
             },
           ]
         `);
@@ -2267,12 +2267,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/**/*.ts",
             "{projectRoot}/src/**/*.spec.ts",
             {
-              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
               "transitive": true,
             },
             {
               "dependencies": true,
-              "fileset": "{projectRoot}/**/*.d.ts",
+              "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
             },
           ]
         `);
@@ -2310,12 +2310,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/**/*.spec.ts",
             {
-              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
               "transitive": true,
             },
             {
               "dependencies": true,
-              "fileset": "{projectRoot}/**/*.d.ts",
+              "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
             },
           ]
         `);
@@ -2353,12 +2353,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/src/**/*.ts",
             "{projectRoot}/**/*.spec.ts",
             {
-              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
               "transitive": true,
             },
             {
               "dependencies": true,
-              "fileset": "{projectRoot}/**/*.d.ts",
+              "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
             },
           ]
         `);
@@ -2400,12 +2400,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/**/*.spec.ts",
             "!{projectRoot}/src/**/foo.ts",
             {
-              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
               "transitive": true,
             },
             {
               "dependencies": true,
-              "fileset": "{projectRoot}/**/*.d.ts",
+              "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
             },
           ]
         `);
@@ -2431,12 +2431,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -2507,12 +2507,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -2573,12 +2573,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -2599,7 +2599,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{workspaceRoot}/dist/libs/my-lib/**/*.d.ts",
+                      "{workspaceRoot}/dist/libs/my-lib/**/*.{d.ts,d.cts,d.mts}",
                       "{workspaceRoot}/dist/libs/my-lib/tsconfig.tsbuildinfo",
                     ],
                     "syncGenerators": [
@@ -2646,12 +2646,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -2689,12 +2689,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -2716,7 +2716,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     "outputs": [
                       "{projectRoot}/tsconfig.tsbuildinfo",
-                      "{projectRoot}/out-tsc/my-lib/**/*.d.ts",
+                      "{projectRoot}/out-tsc/my-lib/**/*.{d.ts,d.cts,d.mts}",
                       "{projectRoot}/out-tsc/my-lib/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
@@ -2752,12 +2752,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -2863,12 +2863,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/cypress/tsconfig.json",
                       "{projectRoot}/src/**/*.spec.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                       "^{projectRoot}/tsconfig.json",
                     ],
@@ -2896,9 +2896,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/dist/libs/my-lib/lib.d.ts",
                       "{workspaceRoot}/dist/libs/my-lib/lib.d.ts.map",
                       "{workspaceRoot}/dist/libs/my-lib/lib.tsbuildinfo",
-                      "{workspaceRoot}/dist/out-tsc/libs/my-lib/specs/**/*.d.ts",
+                      "{workspaceRoot}/dist/out-tsc/libs/my-lib/specs/**/*.{d.ts,d.cts,d.mts}",
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/specs/tsconfig.spec.tsbuildinfo",
-                      "{workspaceRoot}/dist/out-tsc/libs/my-lib/cypress/**/*.d.ts",
+                      "{workspaceRoot}/dist/out-tsc/libs/my-lib/cypress/**/*.{d.ts,d.cts,d.mts}",
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/cypress/tsconfig.tsbuildinfo",
                     ],
                     "syncGenerators": [
@@ -2918,12 +2918,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -2944,7 +2944,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib/nested-project",
                     },
                     "outputs": [
-                      "{workspaceRoot}/dist/out-tsc/libs/my-lib/nested-project/**/*.d.ts",
+                      "{workspaceRoot}/dist/out-tsc/libs/my-lib/nested-project/**/*.{d.ts,d.cts,d.mts}",
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/nested-project/tsconfig.tsbuildinfo",
                     ],
                     "syncGenerators": [
@@ -2985,12 +2985,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -3052,12 +3052,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -3130,12 +3130,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -3156,7 +3156,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist/**/*.d.ts",
+                      "{projectRoot}/dist/**/*.{d.ts,d.cts,d.mts}",
                       "{projectRoot}/my-lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
@@ -3197,12 +3197,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -3223,7 +3223,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist/**/*.d.ts",
+                      "{projectRoot}/dist/**/*.{d.ts,d.cts,d.mts}",
                       "{projectRoot}/dist/my-lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
@@ -3260,12 +3260,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -3286,7 +3286,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/dist/**/*.d.ts",
+                      "{projectRoot}/dist/**/*.{d.ts,d.cts,d.mts}",
                       "{projectRoot}/dist/tsconfig.tsbuildinfo",
                     ],
                     "syncGenerators": [
@@ -3463,12 +3463,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -3543,12 +3543,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -3621,12 +3621,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -3714,12 +3714,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -3793,12 +3793,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -3875,12 +3875,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -3943,12 +3943,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -4013,12 +4013,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -4105,12 +4105,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/*.spec.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -4179,12 +4179,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/*.spec.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -4256,12 +4256,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.mts",
                       "{projectRoot}/src/**/*.d.mts",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -4337,12 +4337,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.mjs",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -4415,12 +4415,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.d.mts",
                       "{projectRoot}/src/**/*.json",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -4501,12 +4501,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/src/**/*.mjs",
                       "{projectRoot}/src/**/*.json",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -4584,12 +4584,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/tmp",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -4668,12 +4668,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/dist",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -4767,12 +4767,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "!{workspaceRoot}/node_modules",
                       "!{workspaceRoot}/tmp",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -4853,12 +4853,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/other/**/*.ts",
                       "{projectRoot}/src/**/foo.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                       "^{projectRoot}/tsconfig.json",
                     ],
@@ -4987,12 +4987,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/other/**/*.json",
                       "{projectRoot}/src/**/foo.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -5063,12 +5063,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/src/**/foo.ts",
             {
-              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
               "transitive": true,
             },
             {
               "dependencies": true,
-              "fileset": "{projectRoot}/**/*.d.ts",
+              "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
             },
           ]
         `);
@@ -5101,12 +5101,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/src/**/foo.ts",
             {
-              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
               "transitive": true,
             },
             {
               "dependencies": true,
-              "fileset": "{projectRoot}/**/*.d.ts",
+              "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
             },
           ]
         `);
@@ -5139,12 +5139,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/**/foo.ts",
             {
-              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
               "transitive": true,
             },
             {
               "dependencies": true,
-              "fileset": "{projectRoot}/**/*.d.ts",
+              "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
             },
           ]
         `);
@@ -5177,12 +5177,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/other/**/*.ts",
             "{projectRoot}/**/foo.ts",
             {
-              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
               "transitive": true,
             },
             {
               "dependencies": true,
-              "fileset": "{projectRoot}/**/*.d.ts",
+              "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
             },
           ]
         `);
@@ -5219,12 +5219,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/src/**/foo.ts",
             "!{projectRoot}/src/**/bar.ts",
             {
-              "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+              "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
               "transitive": true,
             },
             {
               "dependencies": true,
-              "fileset": "{projectRoot}/**/*.d.ts",
+              "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
             },
           ]
         `);
@@ -5258,12 +5258,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -5330,12 +5330,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -5403,12 +5403,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -5470,12 +5470,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -5561,12 +5561,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tsconfig.other.json",
                       "{projectRoot}/other/**/*.ts",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -5638,12 +5638,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -5710,12 +5710,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -5793,12 +5793,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -5865,12 +5865,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -5935,12 +5935,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "inputs": [
                       "production",
                       {
-                        "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                        "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                         "transitive": true,
                       },
                       {
                         "dependencies": true,
-                        "fileset": "{projectRoot}/**/*.d.ts",
+                        "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                       },
                     ],
                     "metadata": {
@@ -6012,12 +6012,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/typescript/**/*.ts",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -6086,12 +6086,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -6191,12 +6191,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -6265,12 +6265,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -6339,12 +6339,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/source/**/*.ts",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -6444,12 +6444,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/**/src/**/*.ts",
                     "{projectRoot}/utils/*.ts",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -6518,12 +6518,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -6592,12 +6592,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/src/**/*.ts",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -6693,12 +6693,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -6793,12 +6793,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "inputs": [
                     "production",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
@@ -6897,12 +6897,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "{projectRoot}/tsconfig.lib.json",
                     "{projectRoot}/lib/**/*.ts",
                     {
-                      "dependentTasksOutputFiles": "**/*.{d.ts,tsbuildinfo}",
+                      "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
                       "transitive": true,
                     },
                     {
                       "dependencies": true,
-                      "fileset": "{projectRoot}/**/*.d.ts",
+                      "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
                     },
                   ],
                   "metadata": {
