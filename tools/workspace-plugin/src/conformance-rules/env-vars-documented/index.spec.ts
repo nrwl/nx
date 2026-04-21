@@ -77,11 +77,9 @@ describe('env-vars-documented', () => {
       ]);
     });
 
-    it('finds NX_* vars in Rust via the env! macro', () => {
+    it('does not flag Rust env! macro usage (compile-time)', () => {
       const source = `let build_tag = env!("NX_BUILD_TAG");`;
-      expect(extractUsedVarsFromContent(source, 'foo.rs')).toEqual([
-        'NX_BUILD_TAG',
-      ]);
+      expect(extractUsedVarsFromContent(source, 'foo.rs')).toEqual([]);
     });
 
     it('finds NX_* vars in Rust via EnvFilter::(try_)?from_env', () => {

@@ -19,7 +19,6 @@ const EXCLUDED_SEGMENT = /(__fixtures__|__snapshots__|\/files\/|\/dist\/)/;
 
 const TS_JS_USAGE = /process\.env(?:\.|\[['"`])(NX_[A-Z0-9_]+)/g;
 const RUST_ENV_VAR = /(?:std::)?env::var(?:_os)?\s*\(\s*"(NX_[A-Z0-9_]+)"/g;
-const RUST_ENV_MACRO = /env!\s*\(\s*"(NX_[A-Z0-9_]+)"/g;
 const RUST_FROM_ENV = /(?:try_)?from_env\s*\(\s*"(NX_[A-Z0-9_]+)"/g;
 const DOCS_TABLE_ROW = /^\|\s*`(NX_[A-Z0-9_]+)`/gm;
 
@@ -107,7 +106,7 @@ export function extractUsedVarsFromContent(
   file: string
 ): string[] {
   const patterns = file.endsWith('.rs')
-    ? [RUST_ENV_VAR, RUST_ENV_MACRO, RUST_FROM_ENV]
+    ? [RUST_ENV_VAR, RUST_FROM_ENV]
     : [TS_JS_USAGE];
   const found: string[] = [];
   for (const pattern of patterns) {
