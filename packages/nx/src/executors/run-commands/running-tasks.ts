@@ -404,6 +404,8 @@ class RunningNodeProcess implements RunningTask {
       cwd,
       windowsHide: true,
     });
+    this.childProcess.stdout?.setEncoding('utf8');
+    this.childProcess.stderr?.setEncoding('utf8');
 
     // Register process for metrics collection
     // Skip registration if we're in a forked executor - the fork wrapper already registered
