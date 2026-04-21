@@ -11,18 +11,14 @@
  */
 
 import { appendFileSync, existsSync, mkdirSync } from 'fs';
+import { ProgressTopic } from '../utils/progress-topics';
+import { nxVersion } from '../utils/versions';
+import { EmitLogLevel } from './message-types/streaming-messages';
+import { sendEmitLogMessageToTopic } from './server/client-socket-context';
 import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   DAEMON_OUTPUT_LOG_FILE,
 } from './tmp-dir';
-import { nxVersion } from '../utils/versions';
-import { ProgressTopic } from '../utils/progress-topics';
-import { EMIT_LOG, EmitLogLevel } from './message-types/streaming-messages';
-import {
-  assertOnDaemon,
-  getTopicSubscribers,
-  writeStreamingMessage,
-} from './server/client-socket-context';
 
 type LogSource = 'Server' | 'Client';
 
@@ -69,17 +65,12 @@ class DaemonLogger {
    *
    * Must only be invoked from inside the Nx daemon process.
    */
-  logToClient(topic: ProgressTopic, level: EmitLogLevel, message: string) {
-    assertOnDaemon('DaemonLogger#logToClient');
-    const subscribers = getTopicSubscribers(topic);
-    if (!subscribers?.size) {
-      this.log(`[emit-log:${level}] ${message}`);
-      return;
-    }
-    const payload = { type: EMIT_LOG, level, message };
-    for (const socket of subscribers) {
-      writeStreamingMessage(socket, payload);
-    }
+  logToClient(
+    topic: ProgressTopic,
+    message: string,
+    level: EmitLogLevel = 'log'
+  ) {
+    sendEmitLogMessageToTopic(topic, message, level);
   }
 
   private writeToFile(message: string) {

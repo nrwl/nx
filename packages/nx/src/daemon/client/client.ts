@@ -28,10 +28,6 @@ import { preventRecursionInGraphConstruction } from '../../project-graph/project
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
 import { parseMessage } from '../../utils/consume-messages-from-socket';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
-import {
-  isEmitLogMessage,
-  isUpdateProgressMessage,
-} from '../message-types/streaming-messages';
 import { handleImport } from '../../utils/handle-import';
 import { isCI } from '../../utils/is-ci';
 import { isSandbox } from '../../utils/is-sandbox';
@@ -103,6 +99,10 @@ import {
   POST_TASKS_EXECUTION,
   PRE_TASKS_EXECUTION,
 } from '../message-types/run-tasks-execution-hooks';
+import {
+  isEmitLogMessage,
+  isUpdateProgressMessage,
+} from '../message-types/streaming-messages';
 import {
   GET_ESTIMATED_TASK_TIMINGS,
   GET_FLAKY_TASKS,
@@ -316,11 +316,11 @@ export class DaemonClient {
       'Calculating the project graph on the Nx Daemon is taking longer than expected. Re-run with NX_DAEMON=false to see more details.',
       { ciDelay: 60_000, delay: 30_000 }
     );
+    this.currentSpinner = spinner;
     try {
-      const response = await this.sendToDaemonViaQueue(
-        { type: 'REQUEST_PROJECT_GRAPH' },
-        { spinner }
-      );
+      const response = await this.sendToDaemonViaQueue({
+        type: 'REQUEST_PROJECT_GRAPH',
+      });
       return {
         projectGraph: response.projectGraph,
         sourceMaps: response.sourceMaps,
@@ -333,6 +333,7 @@ export class DaemonClient {
       }
     } finally {
       spinner?.cleanup();
+      this.currentSpinner = null;
     }
   }
 
@@ -773,7 +774,7 @@ export class DaemonClient {
       },
       // This method is sometimes passed data that cannot be serialized with v8
       // so we force JSON serialization here
-      { force: 'json' }
+      'json'
     );
   }
 
@@ -1042,19 +1043,14 @@ export class DaemonClient {
 
   private async sendToDaemonViaQueue<T extends DaemonMessage>(
     messageToDaemon: T,
-    options?: { force?: 'v8' | 'json'; spinner?: DelayedSpinner }
+    parser?: 'v8' | 'json'
   ): Promise<any> {
     return this.queue.sendToQueue(async () => {
       // Set currentSpinner inside the queued function so it's only
       // active while this specific message is in flight — preventing
       // concurrent callers from overwriting each other's spinner
       // reference before their turn arrives.
-      if (options?.spinner) this.currentSpinner = options.spinner;
-      try {
-        return await this.sendMessageToDaemon(messageToDaemon, options?.force);
-      } finally {
-        if (options?.spinner) this.currentSpinner = null;
-      }
+      return await this.sendMessageToDaemon(messageToDaemon, parser);
     });
   }
 

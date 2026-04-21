@@ -33,8 +33,7 @@ export function emitPluginWorkerLog(
   message: string
 ): void {
   if (!hostSocket) {
-    const stream = level === 'error' ? process.stderr : process.stdout;
-    stream.write(message + '\n');
+    console[level](message);
     return;
   }
   sendMessageOverSocket(hostSocket, {

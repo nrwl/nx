@@ -5,6 +5,7 @@ import path = require('path');
 
 import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
+import { serverLogger } from '../../../daemon/logger';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import {
   consumeMessagesFromSocket,
@@ -12,6 +13,7 @@ import {
 } from '../../../utils/consume-messages-from-socket';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { logger } from '../../../utils/logger';
+import { ProgressTopics } from '../../../utils/progress-topics';
 import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
 import type { RawProjectGraphDependency } from '../../project-graph-builder';
 import { LoadedNxPlugin } from '../loaded-nx-plugin';
@@ -37,8 +39,6 @@ import {
   isPluginWorkerResult,
   sendMessageOverSocket,
 } from './messaging';
-import { serverLogger } from '../../../daemon/logger';
-import { ProgressTopics } from '../../../utils/progress-topics';
 import {
   Hook,
   Phase,
@@ -719,12 +719,10 @@ function handlePluginWorkerNotification(
   if ((global as any).NX_DAEMON) {
     serverLogger.logToClient(
       ProgressTopics.GraphConstruction,
-      notification.level,
-      notification.message
+      notification.message,
+      notification.level
     );
     return;
   }
-  const stream =
-    notification.level === 'error' ? process.stderr : process.stdout;
-  stream.write(notification.message + '\n');
+  console[notification.level](notification.message);
 }
