@@ -152,7 +152,8 @@
       "inputs": [
         "{projectRoot}/**/*.mdoc",
         "{workspaceRoot}/.prettierrc",
-        "{workspaceRoot}/.prettierignore"
+        "{workspaceRoot}/.prettierignore",
+        "{workspaceRoot}/.editorconfig"
       ]
     },
     "format:write": {
