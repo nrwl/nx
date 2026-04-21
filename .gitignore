@@ -98,7 +98,6 @@ dev-debug.log
 # Dependency directories
 node_modules/
 # Environment variables
-.env
 !e2e/dotnet/.env
 # Editor directories and files
 .idea
