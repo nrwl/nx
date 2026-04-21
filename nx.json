@@ -376,6 +376,47 @@
       },
       {
         "rule": "./dist/workspace-plugin/src/conformance-rules/types-versions-exports-sync"
+      },
+      {
+        "rule": "./dist/workspace-plugin/src/conformance-rules/env-vars-documented",
+        "options": {
+          "scope": "nx",
+          "ignore": [
+            "NX_ANALYTICS_SESSION_ID",
+            "NX_FORKED_TASK_EXECUTOR",
+            "NX_RUN_COMMANDS_DIRECTLY",
+            "NX_NATIVE_COMMAND_RUNNER",
+            "NX_DAEMON_PROCESS",
+            "NX_IPC_CHANNEL_ID",
+            "NX_PSEUDO_TERMINAL_EXEC_ARGV",
+            "NX_GENERATE_DOCS_PROCESS",
+            "NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG",
+            "NX_WORKSPACE_ROOT_PATH",
+            "NX_IMPORT_SOURCE",
+            "NX_IMPORT_DESTINATION",
+            "NX_PROJECT_GRAPH_CACHE_DIRECTORY",
+            "NX_DAEMON_SOCKET_DIR",
+            "NX_CONSOLE",
+            "NX_WRAPPER_SKIP_INSTALL",
+            "NX_DEBUG_TELEMETRY",
+            "NX_TUI_INLINE_MODE",
+            "NX_TUI_SKIP_CAPABILITY_CHECK",
+            "NX_SKIP_NATIVE_FILE_CACHE",
+            "NX_SKIP_CHECK_REMOTE",
+            "NX_CLI_SET",
+            "NX_WORKSPACE_ROOT",
+            "NX_TERMINAL_OUTPUT_PATH",
+            "NX_TERMINAL_CAPTURE_STDERR",
+            "NX_VERSION",
+            "NX_STREAM_OUTPUT",
+            "NX_PREFIX_OUTPUT",
+            "NX_CACHE_FAILURES",
+            "NX_INFER_ALL_PACKAGE_JSONS",
+            "NX_AI_FILES_USE_LOCAL",
+            "NX_WINDOWS_PTY_SUPPORT",
+            "NX_SOCKET_DIR"
+          ]
+        }
       }
     ]
   },
