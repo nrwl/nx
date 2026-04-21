@@ -393,7 +393,6 @@
             "NX_IMPORT_SOURCE",
             "NX_IMPORT_DESTINATION",
             "NX_PROJECT_GRAPH_CACHE_DIRECTORY",
-            "NX_DAEMON_SOCKET_DIR",
             "NX_CONSOLE",
             "NX_DEBUG_TELEMETRY",
             "NX_TUI_INLINE_MODE",
