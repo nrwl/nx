@@ -24,6 +24,7 @@ const EXCLUDED_SEGMENT = /(__fixtures__|__snapshots__|\/files\/|\/dist\/)/;
 const TS_JS_USAGE = /process\.env(?:\.|\[['"`])(NX_[A-Z0-9_]+)/g;
 const RUST_ENV_VAR = /(?:std::)?env::var(?:_os)?\s*\(\s*"(NX_[A-Z0-9_]+)"/g;
 const RUST_ENV_MACRO = /env!\s*\(\s*"(NX_[A-Z0-9_]+)"/g;
+const RUST_FROM_ENV = /(?:try_)?from_env\s*\(\s*"(NX_[A-Z0-9_]+)"/g;
 const DOCS_TABLE_ROW = /^\|\s*`(NX_[A-Z0-9_]+)`/gm;
 
 export default createConformanceRule<Options>({
@@ -114,7 +115,9 @@ export function extractUsedVarsFromContent(
   content: string,
   isRust: boolean
 ): string[] {
-  const patterns = isRust ? [RUST_ENV_VAR, RUST_ENV_MACRO] : [TS_JS_USAGE];
+  const patterns = isRust
+    ? [RUST_ENV_VAR, RUST_ENV_MACRO, RUST_FROM_ENV]
+    : [TS_JS_USAGE];
   const found: string[] = [];
   for (const pattern of patterns) {
     for (const m of content.matchAll(pattern)) {

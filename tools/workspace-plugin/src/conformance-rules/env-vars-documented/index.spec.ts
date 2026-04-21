@@ -84,6 +84,17 @@ describe('env-vars-documented', () => {
       ]);
     });
 
+    it('finds NX_* vars in Rust via EnvFilter::(try_)?from_env', () => {
+      const source = `
+        EnvFilter::try_from_env("NX_TRY_FROM_ENV");
+        EnvFilter::from_env("NX_FROM_ENV");
+      `;
+      expect(extractUsedVarsFromContent(source, true).sort()).toEqual([
+        'NX_FROM_ENV',
+        'NX_TRY_FROM_ENV',
+      ]);
+    });
+
     it('returns duplicates when the same var is read more than once', () => {
       const source = `
         process.env.NX_VERBOSE_LOGGING;
