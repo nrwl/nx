@@ -4,10 +4,7 @@ import {
 } from '@nx/conformance';
 import type { Tree } from '@nx/devkit';
 
-type Scope = 'nx' | 'all';
-
 type Options = {
-  scope?: Scope;
   ignore?: string[];
 };
 
@@ -32,25 +29,29 @@ export default createConformanceRule<Options>({
   description:
     'Ensures every NX_* environment variable in source code is covered by docs',
   implementation: async ({ tree, fileMapCache, ruleOptions }) => {
-    const scope: Scope = ruleOptions?.scope ?? 'nx';
     const ignore = new Set(ruleOptions?.ignore ?? []);
 
     const docsContent = tree.read(DOCS_PATH, 'utf-8');
     if (!docsContent) {
-      return failure(
-        `Could not read ${DOCS_PATH}. The conformance rule expects to run from the workspace root.`
-      );
+      return {
+        severity: 'high',
+        details: {
+          violations: [
+            {
+              message: `Could not read ${DOCS_PATH}. The conformance rule expects to run from the workspace root.`,
+              file: DOCS_PATH,
+            },
+          ],
+        },
+      };
     }
     const documented = extractDocumentedVars(docsContent);
 
-    const projectFileMap = fileMapCache.fileMap.projectFileMap ?? {};
-    const filesToScan: string[] = [];
-    for (const [projectName, projectFiles] of Object.entries(projectFileMap)) {
-      if (scope === 'nx' && projectName !== NX_CORE_PROJECT) continue;
-      for (const { file } of projectFiles) {
-        if (isScannableSourceFile(file)) filesToScan.push(file);
-      }
-    }
+    const nxFiles =
+      fileMapCache.fileMap.projectFileMap?.[NX_CORE_PROJECT] ?? [];
+    const filesToScan = nxFiles
+      .map(({ file }) => file)
+      .filter(isScannableSourceFile);
     const usages = extractUsagesFromFiles(tree, filesToScan);
 
     const violations: ConformanceViolation[] = [];
@@ -69,13 +70,6 @@ export default createConformanceRule<Options>({
     };
   },
 });
-
-function failure(message: string) {
-  return {
-    severity: 'high' as const,
-    details: { violations: [{ message, file: DOCS_PATH }] },
-  };
-}
 
 function isScannableSourceFile(file: string): boolean {
   if (!SCANNABLE_EXT.test(file)) return false;

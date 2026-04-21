@@ -380,7 +380,6 @@
       {
         "rule": "./dist/workspace-plugin/src/conformance-rules/env-vars-documented",
         "options": {
-          "scope": "nx",
           "ignore": [
             "NX_ANALYTICS_SESSION_ID",
             "NX_FORKED_TASK_EXECUTOR",
