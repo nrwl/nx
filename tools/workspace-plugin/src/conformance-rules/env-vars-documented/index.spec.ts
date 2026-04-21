@@ -37,7 +37,7 @@ describe('env-vars-documented', () => {
         if (process.env.NX_BAIL === 'true') return;
         const token = process.env.NX_CLOUD_ACCESS_TOKEN;
       `;
-      expect(extractUsedVarsFromContent(source, false).sort()).toEqual([
+      expect(extractUsedVarsFromContent(source, 'foo.ts').sort()).toEqual([
         'NX_BAIL',
         'NX_CLOUD_ACCESS_TOKEN',
       ]);
@@ -49,7 +49,7 @@ describe('env-vars-documented', () => {
         process.env['NX_SINGLE_QUOTED'];
         process.env[\`NX_TEMPLATE_LITERAL\`];
       `;
-      expect(extractUsedVarsFromContent(source, false).sort()).toEqual([
+      expect(extractUsedVarsFromContent(source, 'foo.ts').sort()).toEqual([
         'NX_DOUBLE_QUOTED',
         'NX_SINGLE_QUOTED',
         'NX_TEMPLATE_LITERAL',
@@ -61,7 +61,7 @@ describe('env-vars-documented', () => {
         const msg = "set NX_FAKE to true";
         const other = 'NX_ALSO_FAKE';
       `;
-      expect(extractUsedVarsFromContent(source, false)).toEqual([]);
+      expect(extractUsedVarsFromContent(source, 'foo.ts')).toEqual([]);
     });
 
     it('finds NX_* vars in Rust via env::var and std::env::var', () => {
@@ -70,7 +70,7 @@ describe('env-vars-documented', () => {
         let b = std::env::var("NX_SECOND").unwrap_or_default();
         let c = env::var_os("NX_THIRD");
       `;
-      expect(extractUsedVarsFromContent(source, true).sort()).toEqual([
+      expect(extractUsedVarsFromContent(source, 'foo.rs').sort()).toEqual([
         'NX_FIRST',
         'NX_SECOND',
         'NX_THIRD',
@@ -79,7 +79,7 @@ describe('env-vars-documented', () => {
 
     it('finds NX_* vars in Rust via the env! macro', () => {
       const source = `let build_tag = env!("NX_BUILD_TAG");`;
-      expect(extractUsedVarsFromContent(source, true)).toEqual([
+      expect(extractUsedVarsFromContent(source, 'foo.rs')).toEqual([
         'NX_BUILD_TAG',
       ]);
     });
@@ -89,7 +89,7 @@ describe('env-vars-documented', () => {
         EnvFilter::try_from_env("NX_TRY_FROM_ENV");
         EnvFilter::from_env("NX_FROM_ENV");
       `;
-      expect(extractUsedVarsFromContent(source, true).sort()).toEqual([
+      expect(extractUsedVarsFromContent(source, 'foo.rs').sort()).toEqual([
         'NX_FROM_ENV',
         'NX_TRY_FROM_ENV',
       ]);
@@ -100,7 +100,7 @@ describe('env-vars-documented', () => {
         process.env.NX_VERBOSE_LOGGING;
         if (process.env.NX_VERBOSE_LOGGING === 'true') {}
       `;
-      expect(extractUsedVarsFromContent(source, false)).toEqual([
+      expect(extractUsedVarsFromContent(source, 'foo.ts')).toEqual([
         'NX_VERBOSE_LOGGING',
         'NX_VERBOSE_LOGGING',
       ]);
