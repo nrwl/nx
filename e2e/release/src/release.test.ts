@@ -1095,7 +1095,6 @@ describe('nx release', () => {
 
     const releaseOutput4a = runCLI(`release patch --skip-publish`, {
       silenceError: true,
-      redirectStderr: true,
     });
 
     expect(releaseOutput4a).toMatchInlineSnapshot(`
@@ -1163,7 +1162,6 @@ describe('nx release', () => {
 
     const releaseOutput6a = runCLI(`release patch --skip-publish`, {
       silenceError: true,
-      redirectStderr: true,
     });
 
     expect(

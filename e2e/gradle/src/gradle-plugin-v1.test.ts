@@ -37,9 +37,7 @@ describe('Gradle Plugin V1', () => {
       afterAll(() => cleanupProject());
 
       it('should build without batch mode', () => {
-        const projects = runCLI(`show projects`, {
-          redirectStderr: true,
-        });
+        const projects = runCLI(`show projects`, {});
         expect(projects).toContain('app');
         expect(projects).toContain('list');
         expect(projects).toContain('utilities');
@@ -47,7 +45,6 @@ describe('Gradle Plugin V1', () => {
 
         const buildOutput = runCLI('build app --no-batch', {
           verbose: true,
-          redirectStderr: true,
         });
         expect(buildOutput).toContain('nx run list:build');
         expect(buildOutput).toContain(':list:classes');
@@ -101,7 +98,6 @@ dependencies {
 
         let buildOutput = runCLI('build app2 --no-batch', {
           verbose: true,
-          redirectStderr: true,
         });
         // app2 depends on app
         expect(buildOutput).toContain('nx run app:build');
@@ -130,11 +126,9 @@ dependencies {
         expect(() => {
           runCLI('run app:test-ci--MessageUtilsTest', {
             verbose: true,
-            redirectStderr: true,
           });
           runCLI('run list:test-ci--LinkedListTest', {
             verbose: true,
-            redirectStderr: true,
           });
         }).not.toThrow();
       });

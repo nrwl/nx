@@ -755,7 +755,6 @@ describe('Workspace Tests', () => {
 
       const output = runCLI(`generate @nx/workspace:remove --project ${lib1}`, {
         silenceError: true,
-        redirectStderr: true,
       });
 
       expect(output).toContain(

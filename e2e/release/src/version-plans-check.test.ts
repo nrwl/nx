@@ -84,9 +84,8 @@ describe('nx release version plans check command', () => {
 
   it('should work as expected when there are no version plan files on disk', async () => {
     // it should error if version plans are not yet enabled
-    expect(
-      runCLI('release plan:check', { silenceError: true, redirectStderr: true })
-    ).toMatchInlineSnapshot(`
+    expect(runCLI('release plan:check', { silenceError: true }))
+      .toMatchInlineSnapshot(`
 
       NX   Version plans are not enabled
 
@@ -206,8 +205,7 @@ describe('nx release version plans check command', () => {
 
     `);
     const verboseResult = runCLI(
-      'release plan:check --base=HEAD~1 --head=HEAD~1 --verbose',
-      { redirectStderr: true }
+      'release plan:check --base=HEAD~1 --head=HEAD~1 --verbose'
     );
     expect(verboseResult).toContain(
       'No changed files found based on resolved "base" and "head"'
@@ -248,7 +246,6 @@ describe('nx release version plans check command', () => {
     `);
     const verboseEnvResult = runCLI('release plan:check --verbose', {
       env: { NX_BASE: 'HEAD~1', NX_HEAD: 'HEAD~1' },
-      redirectStderr: true,
     });
     expect(verboseEnvResult).toContain(
       'No changed files found based on resolved "base" and "head"'
@@ -429,9 +426,8 @@ describe('nx release version plans check command', () => {
     patchVersionPlanFile((currentContents) =>
       currentContents.replaceAll(pkg1, 'independent-group')
     );
-    expect(
-      runCLI('release plan:check', { silenceError: true, redirectStderr: true })
-    ).toMatchInlineSnapshot(`
+    expect(runCLI('release plan:check', { silenceError: true }))
+      .toMatchInlineSnapshot(`
 
       NX   Found a version bump for group 'independent-group' in 'version-plan-{RANDOM_NUMBER}.md' but the group's projects are independently versioned. Individual projects of 'independent-group' should be bumped instead.
 
@@ -506,9 +502,8 @@ describe('nx release version plans check command', () => {
     writeFileSync(join(pkg1Dir, 'file.ts'), 'const a = 1;');
 
     // it should show information about the missing version plan and show an error message
-    expect(
-      runCLI('release plan:check', { silenceError: true, redirectStderr: true })
-    ).toMatchInlineSnapshot(`
+    expect(runCLI('release plan:check', { silenceError: true }))
+      .toMatchInlineSnapshot(`
 
       NX   Touched projects based on changed files
 
@@ -531,7 +526,6 @@ describe('nx release version plans check command', () => {
     expect(
       runCLI('release plan:check --verbose', {
         silenceError: true,
-        redirectStderr: true,
       })
     ).toMatchInlineSnapshot(`
 
@@ -637,7 +631,6 @@ describe('nx release version plans check command', () => {
     // it should show information about the missing version plans and show an error message
     const planCheckResult = runCLI('release plan:check', {
       silenceError: true,
-      redirectStderr: true,
     });
     expect(planCheckResult).toContain('Touched projects missing version plans');
     expect(planCheckResult).toContain(
@@ -685,7 +678,6 @@ describe('nx release version plans check command', () => {
     `);
     const verbosePlanCheckResult = runCLI('release plan:check --verbose', {
       silenceError: true,
-      redirectStderr: true,
     });
     expect(verbosePlanCheckResult).toContain(
       'Touched projects missing version plans'

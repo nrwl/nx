@@ -312,7 +312,7 @@ describe('Extra Nx Misc Tests', () => {
         runCLI(`run ${mylib}:error`);
         fail('Should error if process errors');
       } catch (e) {
-        expect(e.stderr.toString()).toContain(
+        expect(e.stdout.toString()).toContain(
           'command "exit 1" exited with non-zero status code'
         );
       }

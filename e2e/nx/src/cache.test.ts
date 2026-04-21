@@ -702,7 +702,6 @@ console.log('Build complete');
           NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3000',
         },
         silenceError: true,
-        redirectStderr: true,
       });
 
       expect(output).toContain(
@@ -732,7 +731,6 @@ console.log('Build complete');
           NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN: 'test-token',
         },
         silenceError: true,
-        redirectStderr: true,
       });
 
       expect(output).toContain('http://localhost:3001');

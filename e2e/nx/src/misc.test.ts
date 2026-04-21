@@ -225,7 +225,6 @@ describe('Nx Commands', () => {
       it('should error when target not found', () => {
         const output = runCLI(`show target ${app}:nonexistent`, {
           silenceError: true,
-          redirectStderr: true,
         });
         expect(output).toContain('nonexistent');
         expect(output).toContain('not found');
@@ -234,7 +233,6 @@ describe('Nx Commands', () => {
       it('should error when --check is used without a value', () => {
         const output = runCLI(`show target inputs ${app}:build --check`, {
           silenceError: true,
-          redirectStderr: true,
         });
         expect(output).toContain('Not enough arguments following: check');
       });
@@ -268,7 +266,7 @@ describe('Nx Commands', () => {
         it('should render non-matching --check input', () => {
           const result = runCLI(
             `show target inputs ${app}:build --check definitely/not/an/input.xyz`,
-            { silenceError: true, redirectStderr: true }
+            { silenceError: true }
           );
           expect(normalizeOutput(result)).toMatchSnapshot();
         });
@@ -283,7 +281,7 @@ describe('Nx Commands', () => {
         it('should render non-matching --check output', () => {
           const result = runCLI(
             `show target outputs ${app}:build --check definitely/not/an/output`,
-            { silenceError: true, redirectStderr: true }
+            { silenceError: true }
           );
           expect(normalizeOutput(result)).toMatchSnapshot();
         });
@@ -299,7 +297,7 @@ describe('Nx Commands', () => {
         it('should render grouped output when checking multiple inputs', () => {
           const result = runCLI(
             `show target inputs ${app}:build --check apps/${app}/src/main.ts apps/${app}/src/app/app.element.ts definitely/not/an/input.xyz`,
-            { silenceError: true, redirectStderr: true }
+            { silenceError: true }
           );
           expect(normalizeOutput(result)).toMatchSnapshot();
         });
@@ -307,7 +305,7 @@ describe('Nx Commands', () => {
         it('should render grouped output when checking multiple outputs', () => {
           const result = runCLI(
             `show target outputs ${app}:build --check dist/apps/${app}/main.js definitely/not/an/output`,
-            { silenceError: true, redirectStderr: true }
+            { silenceError: true }
           );
           expect(normalizeOutput(result)).toMatchSnapshot();
         });
@@ -751,7 +749,7 @@ describe('Nx Commands', () => {
   });
 
   it('should show help if no command provided', () => {
-    const output = runCLI('', { silenceError: true, redirectStderr: true });
+    const output = runCLI('', { silenceError: true });
     expect(output).toContain('Smart Monorepos · Fast Builds');
     expect(output).toContain('Commands:');
   });
@@ -1038,7 +1036,6 @@ describe('migrate', () => {
           NX_MIGRATE_USE_LOCAL: 'true',
         },
         silenceError: true,
-        redirectStderr: true,
       }
     );
 
@@ -1057,7 +1054,6 @@ describe('migrate', () => {
         NX_MIGRATE_USE_LOCAL: 'true',
       },
       silenceError: true,
-      redirectStderr: true,
     });
 
     expect(output).toContain(
@@ -1556,7 +1552,6 @@ describe('cross-workspace implicit dependencies', () => {
     expect(
       runCLI(`test ${npmPackage}`, {
         silenceError: true,
-        redirectStderr: true,
       })
     ).toContain('Failed to process project graph');
 
