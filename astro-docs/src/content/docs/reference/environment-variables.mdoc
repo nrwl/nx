@@ -1,5 +1,5 @@
 ---
-title: Environment Variables
+title: Nx Environment Variables
 description: Reference for all environment variables that configure and control Nx behavior in different environments.
 sidebar:
   order: 6
@@ -119,6 +119,7 @@ Similar to the Nx CLI, Nx Cloud also uses the `NX_VERBOSE_LOGGING` environment v
 | `NX_CLOUD_AGENT_TIMEOUT_MS`           | number  | Timeout in milliseconds an agent waits to hear from Nx Cloud before erroring. Defaults to `3600000` (60 minutes).                                                                                                          |
 | `NX_CLOUD_ORCHESTRATOR_TIMEOUT_MS`    | number  | Timeout in milliseconds the orchestrator (main job) waits for a completed task response from Nx Cloud. Defaults to `3600000` (60 minutes).                                                                                 |
 | `NX_CLOUD_NUMBER_OF_RETRIES`          | number  | How many times Nx Cloud retries HTTP requests that fail with a transient error. Defaults to `10` on CI and `0` locally.                                                                                                    |
+| `NX_CLOUD_DISTRIBUTED_EXECUTION`      | boolean | Typically not needed. When set to `false`, disables distributed task execution. Prefer the `--no-dte` or `--no-agents` flags.                                                                                              |
 
 ### Deprecated Nx Cloud environment variables
 
@@ -126,6 +127,5 @@ Similar to the Nx CLI, Nx Cloud also uses the `NX_VERBOSE_LOGGING` environment v
 | ------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | `NX_RUN_GROUP`                                          | string  | Older versions of `nx-cloud` used this instead of `NX_CI_EXECUTION_ID` and `NX_CI_EXECUTION_ENV`. Served the same purpose.             |
 | `NX_CLOUD_DISTRIBUTED_EXECUTION_STOP_AGENTS_ON_FAILURE` | boolean | When set to `true`, tells Nx Cloud to stop agents if a command fails. Use `npx nx start-ci-run --stop-agents-on-failure=true` instead. |
-| `NX_CLOUD_DISTRIBUTED_EXECUTION`                        | boolean | When set to `false`, disables distributed task execution. Use `--no-dte` or `--no-agents` flags instead.                               |
 | `NX_CLOUD_AUTH_TOKEN`                                   | string  | No longer needed. Use `NX_CLOUD_ACCESS_TOKEN` instead. Still read for backwards compatibility.                                         |
 | `NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT`            | number  | No longer needed. Nx Cloud now derives the agent count from the launch template and workspace configuration automatically.             |
