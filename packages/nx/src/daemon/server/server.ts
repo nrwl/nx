@@ -289,7 +289,7 @@ async function handleMessage(socket: Socket, data: string) {
     await handleResult(
       socket,
       'HASH_TASKS',
-      () => handleHashTasks(payload, socket),
+      () => handleHashTasks(payload),
       mode
     );
   } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
