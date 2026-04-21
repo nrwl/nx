@@ -1,3 +1,4 @@
+import { Socket } from 'net';
 import { Task, TaskGraph } from '../../config/task-graph';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
@@ -10,16 +11,19 @@ import { readNxJson } from '../../config/configuration';
 let storedProjectGraph: any = null;
 let storedHasher: InProcessTaskHasher | null = null;
 
-export async function handleHashTasks(payload: {
-  runnerOptions: any;
-  tasks: Task[];
-  taskGraph: TaskGraph;
-  perTaskEnvs: Record<string, NodeJS.ProcessEnv>;
-  cwd: string;
-  collectInputs?: boolean;
-}) {
+export async function handleHashTasks(
+  payload: {
+    runnerOptions: any;
+    tasks: Task[];
+    taskGraph: TaskGraph;
+    perTaskEnvs: Record<string, NodeJS.ProcessEnv>;
+    cwd: string;
+    collectInputs?: boolean;
+  },
+  socket: Socket
+) {
   const { error, projectGraph, allWorkspaceFiles, fileMap, rustReferences } =
-    await getCachedSerializedProjectGraphPromise();
+    await getCachedSerializedProjectGraphPromise(socket);
 
   if (error) {
     throw error;

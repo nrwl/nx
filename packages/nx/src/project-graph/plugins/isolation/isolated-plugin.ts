@@ -38,6 +38,7 @@ import {
   sendMessageOverSocket,
 } from './messaging';
 import { serverLogger } from '../../../daemon/logger';
+import { ProgressTopics } from '../../../daemon/server/client-socket-context';
 import {
   Hook,
   Phase,
@@ -707,15 +708,20 @@ function hooks(...array: Array<Hook | Falsy>): Array<Hook> {
   return array.filter((v): v is Hook => !!v);
 }
 
-// When the host process is the daemon, forward the notification to the
-// currently-connected client so the log line surfaces in the user's
-// terminal. When the host is the direct CLI there is no client socket,
-// so the log line goes straight to stdout/stderr.
+// When the host process is the daemon, broadcast the log notification
+// to every client subscribed to the graph-construction topic so the
+// line surfaces in their terminal. When the host is the direct CLI
+// there is no client to notify, so the log line goes straight to
+// stdout/stderr.
 function handlePluginWorkerNotification(
   notification: PluginWorkerNotification
 ): void {
   if ((global as any).NX_DAEMON) {
-    serverLogger.emitToClient(notification.level, notification.message);
+    serverLogger.logToClient(
+      ProgressTopics.GraphConstruction,
+      notification.level,
+      notification.message
+    );
     return;
   }
   const stream =

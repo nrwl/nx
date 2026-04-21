@@ -93,7 +93,6 @@ import {
   isWindows,
   killSocketOrPath,
 } from '../socket-utils';
-import { runWithClientSocket } from './client-socket-context';
 import { registerFileChangeListener } from './file-watching/file-change-events';
 import {
   hasRegisteredFileWatcherSockets,
@@ -283,14 +282,14 @@ async function handleMessage(socket: Socket, data: string) {
     await handleResult(
       socket,
       'REQUEST_PROJECT_GRAPH',
-      () => handleRequestProjectGraph(),
+      () => handleRequestProjectGraph(socket),
       mode
     );
   } else if (payload.type === 'HASH_TASKS') {
     await handleResult(
       socket,
       'HASH_TASKS',
-      () => handleHashTasks(payload),
+      () => handleHashTasks(payload, socket),
       mode
     );
   } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
@@ -495,11 +494,7 @@ export async function handleResult(
   let hr: HandlerResult;
   const startMark = new Date();
   try {
-    // Run the handler inside an AsyncLocalStorage context keyed on the
-    // requesting client socket. Any code path reached from here can call
-    // sendProgressMessageToClient / emitLogToClient to stream messages
-    // back to this specific client while the request is in flight.
-    hr = await runWithClientSocket(socket, () => hrFn());
+    hr = await hrFn();
   } catch (error) {
     hr = { description: `[${type}]`, error };
   }

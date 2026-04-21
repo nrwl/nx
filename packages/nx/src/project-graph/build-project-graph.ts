@@ -42,6 +42,7 @@ import {
 } from './error-types';
 import { mergeMetadata } from './utils/project-configuration/target-merging';
 import type { ConfigurationSourceMaps } from './utils/project-configuration/source-maps';
+import { ProgressTopics } from '../daemon/server/client-socket-context';
 import { DelayedSpinner } from '../utils/delayed-spinner';
 import { hashObject } from '../hasher/file-hasher';
 
@@ -346,7 +347,8 @@ async function updateProjectGraphWithPlugins(
   }
 
   spinner = new DelayedSpinner(
-    `Creating project graph dependencies with ${createDependencyPlugins.length} plugins`
+    `Creating project graph dependencies with ${createDependencyPlugins.length} plugins`,
+    { progressTopic: ProgressTopics.GraphConstruction }
   );
 
   await Promise.all(
@@ -470,7 +472,8 @@ export async function applyProjectMetadata(
     (plugin) => plugin.createMetadata
   );
   spinner = new DelayedSpinner(
-    `Creating project metadata with ${createMetadataPlugins.length} plugins`
+    `Creating project metadata with ${createMetadataPlugins.length} plugins`,
+    { progressTopic: ProgressTopics.GraphConstruction }
   );
 
   const promises = createMetadataPlugins.map(async (plugin) => {

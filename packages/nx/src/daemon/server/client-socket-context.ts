@@ -1,26 +1,53 @@
-import { AsyncLocalStorage } from 'async_hooks';
 import type { Socket } from 'net';
 import { MESSAGE_END_SEQ } from '../../utils/consume-messages-from-socket';
 import { UPDATE_PROGRESS_MESSAGE } from '../message-types/streaming-messages';
 import { isOnDaemon } from '../is-on-daemon';
 import { serialize } from '../socket-utils';
 
-// Messages that stream back to the client while a request is in flight
-// (progress updates, log forwarding) need to know which socket belongs
-// to the currently-handled request. Threading a socket through every
-// layer of the handler call tree would be invasive, so we stash it in
-// AsyncLocalStorage.
-const clientSocketStorage = new AsyncLocalStorage<Socket>();
+/**
+ * Named channels that clients can subscribe to in order to receive
+ * streaming progress/log output produced by a long-running daemon
+ * operation. A handler subscribes the requesting socket to the topics
+ * it will produce output for; the broadcast helpers fan out to every
+ * currently-subscribed socket for that topic.
+ *
+ * Add new topics here as other long-running daemon operations grow
+ * their own streaming surfaces.
+ */
+export const ProgressTopics = {
+  GraphConstruction: 'graph-construction',
+} as const;
+export type ProgressTopic =
+  (typeof ProgressTopics)[keyof typeof ProgressTopics];
 
-export function runWithClientSocket<T>(
+const topicSubscribers = new Map<ProgressTopic, Set<Socket>>();
+
+export function subscribeClientToTopic(
   socket: Socket,
-  fn: () => Promise<T> | T
-): Promise<T> | T {
-  return clientSocketStorage.run(socket, fn);
+  topic: ProgressTopic
+): void {
+  let subscribers = topicSubscribers.get(topic);
+  if (!subscribers) {
+    subscribers = new Set();
+    topicSubscribers.set(topic, subscribers);
+  }
+  subscribers.add(socket);
 }
 
-export function getActiveClientSocket(): Socket | undefined {
-  return clientSocketStorage.getStore();
+export function unsubscribeClientFromTopic(
+  socket: Socket,
+  topic: ProgressTopic
+): void {
+  const subscribers = topicSubscribers.get(topic);
+  if (!subscribers) return;
+  subscribers.delete(socket);
+  if (subscribers.size === 0) topicSubscribers.delete(topic);
+}
+
+export function getTopicSubscribers(
+  topic: ProgressTopic
+): ReadonlySet<Socket> | undefined {
+  return topicSubscribers.get(topic);
 }
 
 export function assertOnDaemon(helperName: string) {
@@ -36,7 +63,7 @@ export function assertOnDaemon(helperName: string) {
  * configured serialization format and terminated with MESSAGE_END_SEQ.
  * Errors are logged to the daemon's stdout (redirected to the daemon
  * log) rather than propagated — a disconnected client shouldn't tear
- * down the current request handler.
+ * down the current request handler or other subscribers.
  */
 export function writeStreamingMessage(socket: Socket, payload: unknown) {
   try {
@@ -57,19 +84,20 @@ export function writeStreamingMessage(socket: Socket, payload: unknown) {
 }
 
 /**
- * Sends a progress message to the currently-connected client, which
- * will update the in-flight spinner on the client side. No-op when
- * called outside of a request-handling async context (no active client
- * socket).
+ * Broadcasts a progress message to every client currently subscribed to
+ * the given topic. No-op when there are no subscribers.
  *
  * Must only be invoked from inside the Nx daemon process.
  */
-export function sendProgressMessageToClient(message: string): void {
-  assertOnDaemon('sendProgressMessageToClient');
-  const socket = clientSocketStorage.getStore();
-  if (!socket) return;
-  writeStreamingMessage(socket, {
-    type: UPDATE_PROGRESS_MESSAGE,
-    message,
-  });
+export function sendProgressMessageToTopic(
+  topic: ProgressTopic,
+  message: string
+): void {
+  assertOnDaemon('sendProgressMessageToTopic');
+  const subscribers = topicSubscribers.get(topic);
+  if (!subscribers?.size) return;
+  const payload = { type: UPDATE_PROGRESS_MESSAGE, message };
+  for (const socket of subscribers) {
+    writeStreamingMessage(socket, payload);
+  }
 }

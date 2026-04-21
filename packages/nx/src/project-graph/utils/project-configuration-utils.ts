@@ -11,6 +11,7 @@ import { validateAndNormalizeProjectRootMap } from './project-configuration/targ
 import { minimatch } from 'minimatch';
 import { performance } from 'perf_hooks';
 
+import { ProgressTopics } from '../../daemon/server/client-socket-context';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import {
   AggregateCreateNodesError,
@@ -112,7 +113,8 @@ export async function createProjectConfigurationsWithPlugins(
     (plugin) => plugin.createNodes?.[0]
   );
   spinner = new DelayedSpinner(
-    `Creating project graph nodes with ${createNodesPlugins.length} plugins`
+    `Creating project graph nodes with ${createNodesPlugins.length} plugins`,
+    { progressTopic: ProgressTopics.GraphConstruction }
   );
 
   const results: Promise<

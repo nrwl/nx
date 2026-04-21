@@ -19,7 +19,8 @@ import { nxVersion } from '../utils/versions';
 import { EMIT_LOG, EmitLogLevel } from './message-types/streaming-messages';
 import {
   assertOnDaemon,
-  getActiveClientSocket,
+  getTopicSubscribers,
+  ProgressTopic,
   writeStreamingMessage,
 } from './server/client-socket-context';
 
@@ -58,27 +59,27 @@ class DaemonLogger {
   }
 
   /**
-   * Emits a log line to the currently-connected client. Useful for
-   * warnings raised inside daemon-executed code that we want the user
-   * to see in their terminal rather than lose to the daemon log file.
+   * Broadcasts a log line to every client currently subscribed to the
+   * given topic. Useful for warnings raised inside daemon-executed code
+   * that we want the user to see in their terminal rather than lose to
+   * the daemon log file.
    *
-   * Falls back to writing into the daemon log when there is no active
-   * client socket (e.g. background daemon work with no subscriber).
+   * Falls back to writing into the daemon log when no clients are
+   * subscribed to the topic.
    *
    * Must only be invoked from inside the Nx daemon process.
    */
-  emitToClient(level: EmitLogLevel, message: string) {
-    assertOnDaemon('DaemonLogger#emitToClient');
-    const socket = getActiveClientSocket();
-    if (!socket) {
+  logToClient(topic: ProgressTopic, level: EmitLogLevel, message: string) {
+    assertOnDaemon('DaemonLogger#logToClient');
+    const subscribers = getTopicSubscribers(topic);
+    if (!subscribers?.size) {
       this.log(`[emit-log:${level}] ${message}`);
       return;
     }
-    writeStreamingMessage(socket, {
-      type: EMIT_LOG,
-      level,
-      message,
-    });
+    const payload = { type: EMIT_LOG, level, message };
+    for (const socket of subscribers) {
+      writeStreamingMessage(socket, payload);
+    }
   }
 
   private writeToFile(message: string) {
