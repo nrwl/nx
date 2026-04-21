@@ -6,9 +6,9 @@
   "executors": "./executors.json",
   "dependencies": {
     "@nx/conformance": "4.0.0",
-    "@nx/devkit": "22.7.0-beta.15",
-    "@nx/js": "22.7.0-beta.15",
-    "@nx/plugin": "22.7.0-beta.15",
+    "@nx/devkit": "22.7.0-beta.16",
+    "@nx/js": "22.7.0-beta.16",
+    "@nx/plugin": "22.7.0-beta.16",
     "@xmldom/xmldom": "^0.8.10",
     "glob": "7.1.4",
     "semver": "catalog:",
