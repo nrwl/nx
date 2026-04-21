@@ -59,6 +59,7 @@ export async function formatFiles(
 
   const changedPrettierInTree = getChangedPrettierConfigInTree(tree);
 
+  const formatStart = performance.now();
   await Promise.all(
     Array.from(files).map(async (file) => {
       try {
@@ -92,6 +93,7 @@ export async function formatFiles(
       }
     })
   );
+  performance.measure('format-files', { start: formatStart });
 }
 
 function sortTsConfig(tree: Tree) {

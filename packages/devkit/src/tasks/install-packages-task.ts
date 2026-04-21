@@ -58,8 +58,12 @@ export function installPackagesTask(
       delete process.env.npm_config_registry;
     }
     const startTime = Date.now();
+    const installStart = performance.now();
     execSync(pmc.install, execSyncOptions);
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     logger.info(`Package installation completed in ${elapsed}s`);
+    performance.measure(`install-packages-task:${packageManager}`, {
+      start: installStart,
+    });
   }
 }

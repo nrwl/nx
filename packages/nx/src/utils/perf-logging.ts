@@ -1,4 +1,4 @@
-import { PerformanceObserver } from 'perf_hooks';
+import { PerformanceEntry, PerformanceObserver } from 'perf_hooks';
 
 import type { TrackedDetail } from './perf-hooks';
 
@@ -10,8 +10,7 @@ function isTrackedDetail(detail: unknown): detail is TrackedDetail {
   );
 }
 
-new PerformanceObserver((list) => {
-  const entries = list.getEntries();
+function handleEntries(entries: PerformanceEntry[]) {
   const logEnabled = process.env.NX_PERF_LOGGING === 'true';
   const tracked = entries.filter((e) => isTrackedDetail(e.detail));
 
@@ -49,4 +48,17 @@ new PerformanceObserver((list) => {
     }
     reportEvent(entry.name, params);
   }
-}).observe({ entryTypes: ['measure'] });
+}
+
+const observer = new PerformanceObserver((list) =>
+  handleEntries(list.getEntries())
+);
+observer.observe({ entryTypes: ['measure'] });
+
+// `process.exit()` skips pending microtasks, so measures emitted just before
+// exit (e.g. at the tail of a generator) never reach the observer callback.
+// Drain synchronously on exit.
+process.on('exit', () => {
+  const pending = observer.takeRecords();
+  if (pending.length > 0) handleEntries(pending);
+});

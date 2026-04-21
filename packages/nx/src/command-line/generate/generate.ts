@@ -312,6 +312,7 @@ export async function generate(args: { [k: string]: any }) {
     let projectGraph: ProjectGraph | undefined;
     let projectsConfigurations: ProjectsConfigurations;
 
+    const projectGraphStart = performance.now();
     if (args.skipProjectGraph) {
       const projects =
         await retrieveProjectConfigurationsWithoutPluginInference(
@@ -323,6 +324,9 @@ export async function generate(args: { [k: string]: any }) {
       projectsConfigurations =
         readProjectsConfigurationFromProjectGraph(projectGraph);
     }
+    performance.measure('generate:project-graph', {
+      start: projectGraphStart,
+    });
 
     const opts = await convertToGenerateOptions(
       args,
@@ -411,7 +415,9 @@ export async function generate(args: { [k: string]: any }) {
         host.write('libs/.gitkeep', '');
       }
 
+      const generatorStart = performance.now();
       const task = await implementation(host, combinedOpts);
+      performance.measure('generate:run-generator', { start: generatorStart });
       host.lock();
 
       const changes = host.listChanges();
@@ -420,9 +426,13 @@ export async function generate(args: { [k: string]: any }) {
         printChanges(changes);
       }
       if (!opts.dryRun) {
+        const flushStart = performance.now();
         flushChanges(workspaceRoot, changes);
+        performance.measure('generate:flush-changes', { start: flushStart });
         if (task) {
+          const taskStart = performance.now();
           await task();
+          performance.measure('generate:post-task', { start: taskStart });
         }
       } else {
         logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);

@@ -153,6 +153,7 @@ export function getStrippedEnvironmentVariables() {
         'NX_VERBOSE_LOGGING',
         'NX_NATIVE_LOGGING',
         'NX_USE_LOCAL',
+        'NX_PERF_LOGGING',
       ];
 
       if (key.startsWith('NX_') && !allowedKeys.includes(key)) {
