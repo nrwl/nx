@@ -16,11 +16,11 @@ import {
   DAEMON_OUTPUT_LOG_FILE,
 } from './tmp-dir';
 import { nxVersion } from '../utils/versions';
+import { ProgressTopic } from '../utils/progress-topics';
 import { EMIT_LOG, EmitLogLevel } from './message-types/streaming-messages';
 import {
   assertOnDaemon,
   getTopicSubscribers,
-  ProgressTopic,
   writeStreamingMessage,
 } from './server/client-socket-context';
 

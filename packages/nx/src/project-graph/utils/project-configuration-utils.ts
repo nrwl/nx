@@ -11,8 +11,8 @@ import { validateAndNormalizeProjectRootMap } from './project-configuration/targ
 import { minimatch } from 'minimatch';
 import { performance } from 'perf_hooks';
 
-import { ProgressTopics } from '../../daemon/server/client-socket-context';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
+import { ProgressTopics } from '../../utils/progress-topics';
 import {
   AggregateCreateNodesError,
   formatAggregateCreateNodesError,

@@ -1,24 +1,9 @@
 import type { Socket } from 'net';
 import { MESSAGE_END_SEQ } from '../../utils/consume-messages-from-socket';
+import { ProgressTopic } from '../../utils/progress-topics';
 import { UPDATE_PROGRESS_MESSAGE } from '../message-types/streaming-messages';
 import { isOnDaemon } from '../is-on-daemon';
 import { serialize } from '../socket-utils';
-
-/**
- * Named channels that clients can subscribe to in order to receive
- * streaming progress/log output produced by a long-running daemon
- * operation. A handler subscribes the requesting socket to the topics
- * it will produce output for; the broadcast helpers fan out to every
- * currently-subscribed socket for that topic.
- *
- * Add new topics here as other long-running daemon operations grow
- * their own streaming surfaces.
- */
-export const ProgressTopics = {
-  GraphConstruction: 'graph-construction',
-} as const;
-export type ProgressTopic =
-  (typeof ProgressTopics)[keyof typeof ProgressTopics];
 
 const topicSubscribers = new Map<ProgressTopic, Set<Socket>>();
 

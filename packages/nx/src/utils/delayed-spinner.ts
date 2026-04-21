@@ -1,9 +1,7 @@
 import { isOnDaemon } from '../daemon/is-on-daemon';
-import {
-  ProgressTopic,
-  sendProgressMessageToTopic,
-} from '../daemon/server/client-socket-context';
+import { sendProgressMessageToTopic } from '../daemon/server/client-socket-context';
 import { isCI } from './is-ci';
+import { ProgressTopic } from './progress-topics';
 import { globalSpinner, SHOULD_SHOW_SPINNERS } from './spinner';
 
 export type DelayedSpinnerOptions = {

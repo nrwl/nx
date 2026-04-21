@@ -42,8 +42,8 @@ import {
 } from './error-types';
 import { mergeMetadata } from './utils/project-configuration/target-merging';
 import type { ConfigurationSourceMaps } from './utils/project-configuration/source-maps';
-import { ProgressTopics } from '../daemon/server/client-socket-context';
 import { DelayedSpinner } from '../utils/delayed-spinner';
+import { ProgressTopics } from '../utils/progress-topics';
 import { hashObject } from '../hasher/file-hasher';
 
 let storedFileMap: FileMap | null = null;

@@ -39,8 +39,8 @@ import {
 } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { serverLogger } from '../logger';
+import { ProgressTopics } from '../../utils/progress-topics';
 import {
-  ProgressTopics,
   subscribeClientToTopic,
   unsubscribeClientFromTopic,
 } from './client-socket-context';

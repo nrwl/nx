@@ -38,7 +38,7 @@ import {
   sendMessageOverSocket,
 } from './messaging';
 import { serverLogger } from '../../../daemon/logger';
-import { ProgressTopics } from '../../../daemon/server/client-socket-context';
+import { ProgressTopics } from '../../../utils/progress-topics';
 import {
   Hook,
   Phase,
