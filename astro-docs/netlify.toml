@@ -5,6 +5,11 @@
     Content-Security-Policy = "frame-ancestors 'none'"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    # Agent discovery via RFC 8288 Link headers (see https://isitagentready.com/.well-known/agent-skills/link-headers/SKILL.md)
+    # Points AI agents/crawlers at machine-readable entry points hosted on nx.dev.
+
+    Link = '''</llms.txt>; rel="describedby"; type="text/plain", </llms-full.txt>; rel="service-doc"; type="text/plain", </sitemap.xml>; rel="sitemap"; type="application/xml"'''
+
 
 # Disable gradle and maven plugins on Netlify
 # (Netlify only supports Java 8 but these plugins require Java 17)

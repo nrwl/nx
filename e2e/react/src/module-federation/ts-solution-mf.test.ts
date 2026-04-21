@@ -33,7 +33,10 @@ function runCLI(cmd: string, opts?: { env?: Record<string, string> }) {
 
 describe('React Rspack Module Federation - TS Solution + PM Workspaces', () => {
   beforeAll(() => {
-    newProject({ packages: ['@nx/react'], preset: 'ts' });
+    newProject({
+      packages: ['@nx/react', '@nx/rspack', '@nx/cypress', '@nx/jest'],
+      preset: 'ts',
+    });
   });
 
   afterAll(() => cleanupProject());

@@ -223,6 +223,11 @@ export default async function handler(
 
   const newHeaders = new Headers(response.headers);
   newHeaders.set('x-nx-edge-function', 'framer-proxy');
+  // Agent discovery (RFC 8288) — point AI agents at nx.dev's machine-readable entry points.
+  newHeaders.set(
+    'Link',
+    '</llms.txt>; rel="describedby"; type="text/plain", </llms-full.txt>; rel="service-doc"; type="text/plain", </sitemap.xml>; rel="sitemap"; type="application/xml"'
+  );
   newHeaders.set('Cache-Control', 'public, max-age=3600, must-revalidate');
   // Edge CDN cache — stale-while-revalidate serves instantly while revalidating in background
   newHeaders.set(
