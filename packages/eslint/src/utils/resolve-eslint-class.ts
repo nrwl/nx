@@ -15,9 +15,7 @@ export async function resolveESLintClass(opts?: {
       // In v9 this returns `typeof ESLint | typeof LegacyESLint`. The runtime
       // classes are interchangeable here; cast at the return to keep the
       // simpler single-class public type.
-      loadESLint?: (opts: {
-        useFlatConfig: boolean;
-      }) => Promise<typeof ESLint>;
+      loadESLint?: (opts: { useFlatConfig: boolean }) => Promise<typeof ESLint>;
     };
 
     if (typeof eslintModule.loadESLint === 'function') {
@@ -35,7 +33,9 @@ export async function resolveESLintClass(opts?: {
     // LegacyESLint's type no longer structurally matches the flat ESLint class
     // in v9 type defs (new static members like defaultConfig, fromOptionsModule),
     // but at runtime either class is an appropriate return value here.
-    return (shouldESLintUseFlatConfig ? FlatESLint : LegacyESLint) as typeof ESLint;
+    return (
+      shouldESLintUseFlatConfig ? FlatESLint : LegacyESLint
+    ) as typeof ESLint;
   } catch {
     throw new Error(
       'Unable to find `eslint`. Ensure a valid `eslint` version is installed.'
