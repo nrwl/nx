@@ -36,6 +36,7 @@ export default [
             'nx',
             'typescript',
             '@nx/angular',
+            '@nx/cypress',
             '@nx/module-federation',
             '@nx/nest',
             '@nx/playwright',

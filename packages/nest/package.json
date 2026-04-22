@@ -39,6 +39,29 @@
     "@nx/node": "workspace:*",
     "tslib": "catalog:typescript"
   },
+  "devDependencies": {
+    "nx": "workspace:*"
+  },
+  "peerDependencies": {
+    "@nx/cypress": "workspace:*",
+    "@nx/docker": "workspace:*",
+    "@nx/module-federation": "workspace:*",
+    "@nx/webpack": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@nx/cypress": {
+      "optional": true
+    },
+    "@nx/docker": {
+      "optional": true
+    },
+    "@nx/module-federation": {
+      "optional": true
+    },
+    "@nx/webpack": {
+      "optional": true
+    }
+  },
   "publishConfig": {
     "access": "public"
   }

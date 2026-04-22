@@ -41,7 +41,19 @@
       "path": "../playwright/tsconfig.lib.json"
     },
     {
+      "path": "../node/tsconfig.lib.json"
+    },
+    {
+      "path": "../nest/tsconfig.lib.json"
+    },
+    {
+      "path": "../module-federation/tsconfig.lib.json"
+    },
+    {
       "path": "../jest/tsconfig.lib.json"
+    },
+    {
+      "path": "../docker/tsconfig.lib.json"
     },
     {
       "path": "../cypress/tsconfig.lib.json"

@@ -24,6 +24,7 @@ export default [
             'eslint',
             'typescript',
             '@nx/cypress',
+            '@nx/eslint',
             '@nx/playwright',
             '@nx/vite',
             '@module-federation/node',

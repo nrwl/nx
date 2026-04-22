@@ -34,7 +34,11 @@
   },
   "peerDependencies": {
     "@nx/cypress": "workspace:*",
+    "@nx/docker": "workspace:*",
     "@nx/jest": "workspace:*",
+    "@nx/module-federation": "workspace:*",
+    "@nx/nest": "workspace:*",
+    "@nx/node": "workspace:*",
     "@nx/playwright": "workspace:*",
     "next": ">=14.0.0 <17.0.0"
   },
@@ -42,7 +46,19 @@
     "@nx/cypress": {
       "optional": true
     },
+    "@nx/docker": {
+      "optional": true
+    },
     "@nx/jest": {
+      "optional": true
+    },
+    "@nx/module-federation": {
+      "optional": true
+    },
+    "@nx/nest": {
+      "optional": true
+    },
+    "@nx/node": {
       "optional": true
     },
     "@nx/playwright": {
