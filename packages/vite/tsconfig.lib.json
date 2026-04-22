@@ -24,6 +24,9 @@
     },
     {
       "path": "../nx/tsconfig.lib.json"
+    },
+    {
+      "path": "../eslint/tsconfig.lib.json"
     }
   ]
 }

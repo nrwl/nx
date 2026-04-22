@@ -69,21 +69,51 @@
     "typescript": "catalog:typescript"
   },
   "peerDependenciesMeta": {
-    "@nx/angular": { "optional": true },
-    "@nx/eslint": { "optional": true },
-    "@nx/expo": { "optional": true },
-    "@nx/express": { "optional": true },
-    "@nx/jest": { "optional": true },
-    "@nx/js": { "optional": true },
-    "@nx/nest": { "optional": true },
-    "@nx/next": { "optional": true },
-    "@nx/node": { "optional": true },
-    "@nx/nuxt": { "optional": true },
-    "@nx/react": { "optional": true },
-    "@nx/react-native": { "optional": true },
-    "@nx/vue": { "optional": true },
-    "@nx/web": { "optional": true },
-    "typescript": { "optional": true }
+    "@nx/angular": {
+      "optional": true
+    },
+    "@nx/eslint": {
+      "optional": true
+    },
+    "@nx/expo": {
+      "optional": true
+    },
+    "@nx/express": {
+      "optional": true
+    },
+    "@nx/jest": {
+      "optional": true
+    },
+    "@nx/js": {
+      "optional": true
+    },
+    "@nx/nest": {
+      "optional": true
+    },
+    "@nx/next": {
+      "optional": true
+    },
+    "@nx/node": {
+      "optional": true
+    },
+    "@nx/nuxt": {
+      "optional": true
+    },
+    "@nx/react": {
+      "optional": true
+    },
+    "@nx/react-native": {
+      "optional": true
+    },
+    "@nx/vue": {
+      "optional": true
+    },
+    "@nx/web": {
+      "optional": true
+    },
+    "typescript": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"

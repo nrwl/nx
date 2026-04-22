@@ -79,6 +79,9 @@
     "@angular-devkit/build-angular": "catalog:angular-supported-versions",
     "@angular-devkit/core": "catalog:angular-supported-versions",
     "@angular-devkit/schematics": "catalog:angular-supported-versions",
+    "@nx/jest": "workspace:*",
+    "@nx/playwright": "workspace:*",
+    "@nx/storybook": "workspace:*",
     "@schematics/angular": "catalog:angular-supported-versions",
     "ng-packagr": "catalog:angular-supported-versions",
     "rxjs": "catalog:angular-supported-versions"
@@ -88,6 +91,18 @@
       "optional": true
     },
     "@angular-devkit/build-angular": {
+      "optional": true
+    },
+    "@angular-devkit/core": {
+      "optional": true
+    },
+    "@nx/jest": {
+      "optional": true
+    },
+    "@nx/playwright": {
+      "optional": true
+    },
+    "@nx/storybook": {
       "optional": true
     },
     "ng-packagr": {
