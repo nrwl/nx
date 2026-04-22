@@ -10,5 +10,6 @@
       "inputs": ["copyReadme"]
     }
   },
+  "implicitDependencies": ["!eslint", "!jest", "!rollup", "!vite", "!vitest"],
   "tags": []
 }
