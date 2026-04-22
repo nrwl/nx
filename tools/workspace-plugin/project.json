@@ -6,6 +6,5 @@
   "targets": {
     "build": {}
   },
-  "tags": [],
-  "implicitDependencies": ["devkit", "eslint", "js", "nx", "plugin"]
+  "tags": []
 }
