@@ -42,7 +42,10 @@
   "peerDependencies": {
     "@nx/cypress": "workspace:*",
     "@nx/detox": "workspace:*",
+    "@nx/docker": "workspace:*",
     "@nx/jest": "workspace:*",
+    "@nx/module-federation": "workspace:*",
+    "@nx/nest": "workspace:*",
     "@nx/playwright": "workspace:*",
     "@nx/rollup": "workspace:*",
     "@nx/web": "workspace:*",
@@ -56,7 +59,16 @@
     "@nx/detox": {
       "optional": true
     },
+    "@nx/docker": {
+      "optional": true
+    },
     "@nx/jest": {
+      "optional": true
+    },
+    "@nx/module-federation": {
+      "optional": true
+    },
+    "@nx/nest": {
       "optional": true
     },
     "@nx/playwright": {

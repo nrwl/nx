@@ -40,7 +40,29 @@
     "nx": "workspace:*"
   },
   "peerDependencies": {
+    "@nx/cypress": "workspace:*",
+    "@nx/docker": "workspace:*",
+    "@nx/module-federation": "workspace:*",
+    "@nx/nest": "workspace:*",
+    "@nx/node": "workspace:*",
     "detox": "^20.9.0"
+  },
+  "peerDependenciesMeta": {
+    "@nx/cypress": {
+      "optional": true
+    },
+    "@nx/docker": {
+      "optional": true
+    },
+    "@nx/module-federation": {
+      "optional": true
+    },
+    "@nx/nest": {
+      "optional": true
+    },
+    "@nx/node": {
+      "optional": true
+    }
   },
   "executors": "./executors.json",
   "ng-update": {

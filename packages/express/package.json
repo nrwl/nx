@@ -37,10 +37,33 @@
     "@nx/node": "workspace:*",
     "tslib": "catalog:typescript"
   },
+  "devDependencies": {
+    "nx": "workspace:*"
+  },
   "peerDependencies": {
+    "@nx/cypress": "workspace:*",
+    "@nx/docker": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@nx/module-federation": "workspace:*",
+    "@nx/webpack": "workspace:*",
     "express": "^4.21.2"
   },
   "peerDependenciesMeta": {
+    "@nx/cypress": {
+      "optional": true
+    },
+    "@nx/docker": {
+      "optional": true
+    },
+    "@nx/eslint": {
+      "optional": true
+    },
+    "@nx/module-federation": {
+      "optional": true
+    },
+    "@nx/webpack": {
+      "optional": true
+    },
     "express": {
       "optional": true
     }

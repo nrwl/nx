@@ -16,6 +16,12 @@
   "include": ["**/*.ts"],
   "references": [
     {
+      "path": "../nx/tsconfig.lib.json"
+    },
+    {
+      "path": "../angular/tsconfig.lib.json"
+    },
+    {
       "path": "../create-nx-workspace/tsconfig.lib.json"
     }
   ]

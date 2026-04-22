@@ -59,6 +59,15 @@
       "path": "../rspack/tsconfig.lib.json"
     },
     {
+      "path": "../node/tsconfig.lib.json"
+    },
+    {
+      "path": "../nest/tsconfig.lib.json"
+    },
+    {
+      "path": "../docker/tsconfig.lib.json"
+    },
+    {
       "path": "../vite/tsconfig.lib.json"
     }
   ]

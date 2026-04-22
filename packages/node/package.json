@@ -46,6 +46,7 @@
   },
   "peerDependencies": {
     "@nx/angular": "workspace:*",
+    "@nx/cypress": "workspace:*",
     "@nx/module-federation": "workspace:*",
     "@nx/nest": "workspace:*",
     "@nx/playwright": "workspace:*",
@@ -53,6 +54,9 @@
   },
   "peerDependenciesMeta": {
     "@nx/angular": {
+      "optional": true
+    },
+    "@nx/cypress": {
       "optional": true
     },
     "@nx/module-federation": {
