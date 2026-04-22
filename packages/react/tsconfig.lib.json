@@ -56,6 +56,9 @@
       "path": "../cypress/tsconfig.lib.json"
     },
     {
+      "path": "../rspack/tsconfig.lib.json"
+    },
+    {
       "path": "../vite/tsconfig.lib.json"
     }
   ]

@@ -57,6 +57,7 @@ export default [
             'typescript',
             'react',
             '@nx/cypress',
+            '@nx/next',
             '@nx/playwright',
             '@nx/jest',
             '@nx/rollup',
