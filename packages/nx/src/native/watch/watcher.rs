@@ -4,7 +4,8 @@ use std::collections::hash_map::Entry;
 use std::path::MAIN_SEPARATOR;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::Duration;
+use std::sync::mpsc::RecvTimeoutError;
+use std::time::{Duration, Instant};
 
 #[cfg(not(target_os = "macos"))]
 use crate::native::glob::{NxGlobSet, build_glob_set};
@@ -25,81 +26,87 @@ use std::path::PathBuf;
 use tracing::trace;
 use tracing_subscriber::EnvFilter;
 
+/// Trailing-edge debounce window. The processing thread flushes accumulated
+/// events after this much silence on the event channel. Resets on every event
+/// so a burst of writes with gaps shorter than this coalesces into one flush.
+const IDLE_WINDOW: Duration = Duration::from_millis(100);
+
+/// Starvation cap. If events keep arriving faster than `IDLE_WINDOW`, the
+/// debounce would never fire. This is the hardest the flush can be deferred
+/// from the start of a burst, after which we flush anyway.
+const MAX_WAIT: Duration = Duration::from_millis(500);
+
 /// Build the hardcoded ignore GlobSet used to check if new directories should be watched.
 #[cfg(not(target_os = "macos"))]
 fn build_ignore_glob_set() -> Arc<NxGlobSet> {
     build_glob_set(HARDCODED_IGNORE_PATTERNS).expect("These static ignores always build")
 }
 
-/// Extract new, non-ignored directory paths from notify events.
+/// Return the new, non-ignored directory paths from a single notify event,
+/// if it is a directory-creation event. Used on Linux/Windows to register
+/// watches synchronously when a directory appears.
 #[cfg(not(target_os = "macos"))]
-fn extract_new_directories(events: &[notify::Event], ignore_globs: &NxGlobSet) -> Vec<PathBuf> {
+fn new_directories_from_event(event: &notify::Event, ignore_globs: &NxGlobSet) -> Vec<PathBuf> {
     use notify::EventKind;
     use notify::event::CreateKind;
 
-    events
+    if !matches!(
+        event.kind,
+        EventKind::Create(CreateKind::Folder) | EventKind::Create(CreateKind::Any)
+    ) {
+        return Vec::new();
+    }
+
+    event
+        .paths
         .iter()
-        .filter(|event| {
-            matches!(
-                event.kind,
-                EventKind::Create(CreateKind::Folder) | EventKind::Create(CreateKind::Any)
-            )
-        })
-        .flat_map(|event| &event.paths)
         .filter(|path| path.is_dir() && !ignore_globs.is_match(path))
         .cloned()
         .collect()
 }
 
-/// Re-walk newly created directories to collect files that were written
-/// before inotify was watching. Since we register watches synchronously
-/// via notify, the gap is very small, but files can still slip through
-/// between the mkdir event and our watch() call.
-///
-/// Deduplicates against events already seen (via `recent_events`)
-/// so that files caught by both inotify and the re-walk are only reported once.
-///
-/// Also discovers nested subdirectories and registers them with the watcher.
+/// Walk newly created directories to collect files that were written before
+/// inotify started watching them. Also discovers nested subdirectories and
+/// registers them with the watcher. Results are merged into the accumulator;
+/// the next tick will emit them alongside any inotify-reported events.
 #[cfg(not(target_os = "macos"))]
-fn collect_files_in_new_dirs(
+fn walk_new_dirs_into_accumulator(
     dirs: &[PathBuf],
     origin: &str,
     watcher: &Arc<Mutex<notify::RecommendedWatcher>>,
-    recent_events: &[WatchEventInternal],
-) -> Vec<WatchEventInternal> {
+    accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
+) {
     use crate::native::walker::nx_walker_sync;
 
-    let already_reported: HashSet<&PathBuf> = recent_events.iter().map(|e| &e.path).collect();
-    let mut seen_dirs: HashSet<PathBuf> = HashSet::new();
-    let mut results = Vec::new();
+    let mut nested_dirs: HashSet<PathBuf> = HashSet::new();
 
     for dir in dirs {
         for rel_path in nx_walker_sync(dir, None) {
             let full_path = dir.join(&rel_path);
             if full_path.is_dir() {
-                seen_dirs.insert(full_path);
-            } else if full_path.is_file() && !already_reported.contains(&full_path) {
-                trace!(?full_path, "re-walk found file in new directory");
-                results.push(WatchEventInternal {
-                    path: full_path,
-                    r#type: EventType::create,
-                    origin: origin.to_owned(),
-                });
+                nested_dirs.insert(full_path);
+            } else if full_path.is_file() {
+                merge_event(
+                    accumulator,
+                    WatchEventInternal {
+                        path: full_path,
+                        r#type: EventType::create,
+                        origin: origin.to_owned(),
+                    },
+                );
             }
         }
     }
 
     // Register nested subdirectories so inotify watches them going forward.
-    if !seen_dirs.is_empty() {
+    if !nested_dirs.is_empty() {
         let mut w = watcher.lock();
-        for dir in &seen_dirs {
+        for dir in &nested_dirs {
             if let Err(e) = w.watch(dir, RecursiveMode::NonRecursive) {
                 trace!(?e, ?dir, "failed to watch nested directory");
             }
         }
     }
-
-    results
 }
 
 /// Enumerate all non-ignored directories to watch individually (non-recursively).
@@ -124,35 +131,33 @@ fn enumerate_watch_paths<P: AsRef<Path>>(directory: P, use_ignores: bool) -> Has
     path_set
 }
 
-type NotifyResult = std::result::Result<notify::Event, notify::Error>;
-
-/// Collect a batch of events from the channel, waiting up to `timeout` for the
-/// first event, then draining any additional events that have already arrived.
-fn collect_batch(
-    rx: &std::sync::mpsc::Receiver<NotifyResult>,
-    timeout: Duration,
-) -> Vec<notify::Event> {
-    let mut batch = Vec::new();
-
-    // Block until the first event or timeout
-    match rx.recv_timeout(timeout) {
-        Ok(Ok(event)) => batch.push(event),
-        Ok(Err(e)) => {
-            trace!("notify error: {:?}", e);
-            return batch;
+/// Merge one event into the accumulator, keeping the stronger-priority event
+/// for any given path. Priority is Delete > Create > Update.
+fn merge_event(
+    accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
+    incoming: WatchEventInternal,
+) {
+    match accumulator.entry(incoming.path.clone()) {
+        Entry::Vacant(e) => {
+            e.insert(incoming);
         }
-        Err(_) => return batch, // timeout or disconnected
-    }
-
-    // Drain any additional events that arrived during the first event's processing
-    while let Ok(result) = rx.try_recv() {
-        if let Ok(event) = result {
-            batch.push(event);
+        Entry::Occupied(mut e) => {
+            let existing_type = e.get().r#type;
+            let replace = match (existing_type, incoming.r#type) {
+                // Delete always wins.
+                (_, EventType::delete) => true,
+                // Create wins over Update (file that looked updated was really created).
+                (EventType::update, EventType::create) => true,
+                _ => false,
+            };
+            if replace {
+                e.insert(incoming);
+            }
         }
     }
-
-    batch
 }
+
+type NotifyResult = std::result::Result<notify::Event, notify::Error>;
 
 #[napi]
 pub struct Watcher {
@@ -231,7 +236,7 @@ impl Watcher {
         let filterer = Arc::new(filterer);
 
         // Channel for notify to send events to our processing thread.
-        let (tx, rx) = std::sync::mpsc::channel();
+        let (tx, rx) = std::sync::mpsc::channel::<NotifyResult>();
 
         // Create the notify watcher. Events are sent through the channel.
         let mut watcher = notify::recommended_watcher(tx).map_err(|e| {
@@ -274,16 +279,18 @@ impl Watcher {
             #[cfg(not(target_os = "macos"))]
             let ignore_globs = build_ignore_glob_set();
 
-            // Track recently emitted event paths for cross-batch deduplication.
-            // notify can fire multiple events for a single file write (e.g. Create
-            // then Modify). Within a batch, group_events deduplicates by path, but
-            // across batches the same path could be reported again. This set
-            // suppresses duplicates for non-delete events — deletes always pass
-            // through since they represent a meaningful state change.
-            let mut recent_paths: HashSet<PathBuf> = HashSet::new();
+            let mut origin_path = origin.clone();
+            if !origin_path.ends_with(MAIN_SEPARATOR) {
+                origin_path.push(MAIN_SEPARATOR);
+            }
 
-            #[cfg(not(target_os = "macos"))]
-            let mut recent_events: Vec<WatchEventInternal> = Vec::new();
+            // Accumulator: events received since the last flush, merged by path.
+            // `burst_start` is the timestamp of the first event in the current
+            // burst; `flush_deadline` is the next wake-up (min of the idle
+            // deadline and the max-wait cap). Both reset together on flush.
+            let mut accumulator: HashMap<PathBuf, WatchEventInternal> = HashMap::new();
+            let mut burst_start: Option<Instant> = None;
+            let mut flush_deadline: Option<Instant> = None;
 
             loop {
                 if stop_flag.load(Ordering::Relaxed) {
@@ -291,148 +298,92 @@ impl Watcher {
                     break;
                 }
 
-                let batch = collect_batch(&rx, Duration::from_millis(100));
-                if batch.is_empty() {
-                    continue;
-                }
+                // If no burst is in flight, block indefinitely for the first
+                // event. Otherwise wait until the computed flush deadline.
+                let wait = flush_deadline
+                    .map(|d| d.saturating_duration_since(Instant::now()))
+                    .unwrap_or(Duration::from_secs(3600));
 
-                trace!(event_count = batch.len(), "received event batch");
+                match rx.recv_timeout(wait) {
+                    Ok(Ok(event)) => {
+                        trace!(?event, "raw event");
 
-                // Filter events through gitignore/nxignore.
-                let filtered: Vec<notify::Event> = batch
-                    .into_iter()
-                    .filter(|ev| filterer.check_event(ev))
-                    .collect();
+                        // Filter through gitignore/nxignore.
+                        if !filterer.check_event(&event) {
+                            continue;
+                        }
 
-                if filtered.is_empty() {
-                    continue;
-                }
-
-                // On Linux/Windows: check for new directory creation and register
-                // watches synchronously — no gap between registration and watching.
-                #[cfg(not(target_os = "macos"))]
-                {
-                    let new_dirs = extract_new_directories(&filtered, &ignore_globs);
-                    if !new_dirs.is_empty() {
-                        trace!(count = new_dirs.len(), "registering new directory watches");
-
-                        // Register watches SYNCHRONOUSLY. When watch() returns,
-                        // inotify is guaranteed to be active on the directory.
+                        // FAST PATH: on Linux/Windows, directory creation needs
+                        // synchronous watch registration. Waiting for the flush
+                        // would re-introduce the watchexec race.
+                        #[cfg(not(target_os = "macos"))]
                         {
-                            let mut w = watcher_for_thread.lock();
-                            for dir in &new_dirs {
-                                if let Err(e) = w.watch(dir, RecursiveMode::NonRecursive) {
-                                    trace!(?e, ?dir, "failed to watch new directory");
+                            let new_dirs = new_directories_from_event(&event, &ignore_globs);
+                            if !new_dirs.is_empty() {
+                                trace!(
+                                    count = new_dirs.len(),
+                                    "registering new directory watches synchronously"
+                                );
+                                {
+                                    let mut w = watcher_for_thread.lock();
+                                    for dir in &new_dirs {
+                                        if let Err(e) = w.watch(dir, RecursiveMode::NonRecursive) {
+                                            trace!(?e, ?dir, "failed to watch new directory");
+                                        }
+                                    }
                                 }
+                                // Walk now — inotify is active, so any files the walk
+                                // finds were written before our watch() call. Merge
+                                // into the accumulator; emitted on next flush.
+                                walk_new_dirs_into_accumulator(
+                                    &new_dirs,
+                                    &origin,
+                                    &watcher_for_thread,
+                                    &mut accumulator,
+                                );
                             }
                         }
 
-                        // Re-walk immediately. Since watch() is synchronous, inotify is
-                        // already watching. Any files found were written before inotify
-                        // registered — this is the only gap we need to cover.
-                        let rewalk_files = collect_files_in_new_dirs(
-                            &new_dirs,
-                            &origin,
-                            &watcher_for_thread,
-                            &recent_events,
-                        );
-                        // Filter re-walk results through recent_paths and register
-                        // them so later inotify events for the same files are deduped.
-                        let new_rewalk: Vec<_> = rewalk_files
-                            .into_iter()
-                            .filter(|e| recent_paths.insert(e.path.clone()))
-                            .collect();
-                        if !new_rewalk.is_empty() {
-                            trace!(count = new_rewalk.len(), "re-walk found unreported files");
+                        // Transform and merge into the accumulator.
+                        match transform_event_to_watch_events(&event, &origin_path) {
+                            Ok(events) => {
+                                for e in events {
+                                    merge_event(&mut accumulator, e);
+                                }
+                            }
+                            Err(e) => {
+                                trace!(?e, "transform failed");
+                            }
+                        }
+
+                        // Stamp burst_start on the burst's first event; then push
+                        // flush_deadline forward, but never past the max-wait cap.
+                        let now = Instant::now();
+                        let bs = *burst_start.get_or_insert(now);
+                        flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
+                    }
+                    Ok(Err(notify_err)) => {
+                        trace!("notify error: {:?}", notify_err);
+                    }
+                    Err(RecvTimeoutError::Timeout) => {
+                        // Either the idle window elapsed or the max-wait cap
+                        // hit — flush whatever we accumulated and reset.
+                        if !accumulator.is_empty() {
                             let watch_events: Vec<WatchEvent> =
-                                new_rewalk.iter().map(|e| e.into()).collect();
+                                accumulator.values().map(|e| e.into()).collect();
+                            trace!(count = watch_events.len(), "flushing accumulated events");
                             callback_tsfn
                                 .call(Ok(watch_events), ThreadsafeFunctionCallMode::NonBlocking);
+                            accumulator.clear();
                         }
+                        burst_start = None;
+                        flush_deadline = None;
+                    }
+                    Err(RecvTimeoutError::Disconnected) => {
+                        trace!("notify channel disconnected, exiting");
+                        break;
                     }
                 }
-
-                // Transform notify events into our internal format.
-                let mut origin_path = origin.clone();
-                if !origin_path.ends_with(MAIN_SEPARATOR) {
-                    origin_path.push(MAIN_SEPARATOR);
-                }
-
-                let events: Vec<WatchEventInternal> = filtered
-                    .iter()
-                    .filter_map(|ev| {
-                        trace!(?ev, "raw event");
-                        let result = transform_event_to_watch_events(ev, &origin_path);
-                        trace!(?result, "transform result");
-                        result.ok()
-                    })
-                    .flatten()
-                    .collect();
-
-                // Group events: Delete > Create > Modify (dedup within batch).
-                let mut group_events: HashMap<String, WatchEventInternal> = HashMap::new();
-                for g in events.into_iter() {
-                    let path = g.path.display().to_string();
-                    match group_events.entry(path) {
-                        Entry::Occupied(mut e) if matches!(g.r#type, EventType::delete) => {
-                            e.insert(g);
-                        }
-                        Entry::Occupied(mut e)
-                            if matches!(g.r#type, EventType::create)
-                                && matches!(e.get().r#type, EventType::update) =>
-                        {
-                            e.insert(g);
-                        }
-                        Entry::Occupied(_) => {}
-                        Entry::Vacant(e) => {
-                            e.insert(g);
-                        }
-                    }
-                }
-
-                // Cross-batch dedup: remove events for paths already emitted recently.
-                // Delete events always pass through (they reset the path's state).
-                group_events.retain(|_path_str, event| {
-                    if matches!(event.r#type, EventType::delete) {
-                        // Deletes clear the path from recent set so future
-                        // creates for the same path are reported.
-                        recent_paths.remove(&event.path);
-                        true
-                    } else {
-                        // Create/Update: only emit if not recently seen.
-                        recent_paths.insert(event.path.clone())
-                    }
-                });
-
-                // Keep recent_paths bounded.
-                if recent_paths.len() > 1000 {
-                    recent_paths.clear();
-                }
-
-                if group_events.is_empty() {
-                    continue;
-                }
-
-                trace!(
-                    event_count = group_events.len(),
-                    "sending events to callback"
-                );
-
-                // Record for dedup against future re-walk results.
-                #[cfg(not(target_os = "macos"))]
-                {
-                    recent_events.extend(group_events.values().cloned());
-                    // Keep recent_events bounded — only need events from the last few batches.
-                    if recent_events.len() > 1000 {
-                        recent_events.drain(..recent_events.len() - 500);
-                    }
-                }
-
-                let watch_events: Vec<WatchEvent> =
-                    group_events.values().map(|e| e.into()).collect();
-                trace!(?watch_events, "sending to node");
-
-                callback_tsfn.call(Ok(watch_events), ThreadsafeFunctionCallMode::NonBlocking);
             }
 
             trace!("event processing thread exited");
