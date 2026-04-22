@@ -591,6 +591,12 @@ Some important changes in Nx 22:
 - `releaseTag.strictPreid` now defaults to `true`
 - Fixed Release Group Release Tag Pattern now defaults to `{releaseGroupName}-v{version}`
 
+#### Propagating `--preid` to dependent bumps
+
+When versioning with `--preid`, the implicit patch bumps given to dependents (and to other projects in a fixed release group) are stable patches by default. That means `project-b` being bumped to `2.0.1-rc.0` still bumps its dependent `project-a` to `1.0.1`, not `1.0.1-rc.0`.
+
+Set `version.applyPreidToDependents` to `true` if you want the `--preid` value to flow through to those side-effectful bumps instead. It can also be set per release group under `release.groups.<group>.version.applyPreidToDependents`. See [Update Dependents](/docs/guides/nx-release/update-dependents#propagating-preid-to-dependent-bumps) for the full walkthrough and guidance on when to enable it.
+
 ### Changelog
 
 The `changelog` property configures the changelog phase of the release process. It is used to generate a changelog for your projects, and commit it to your repository.
