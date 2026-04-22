@@ -1,4 +1,3 @@
-/* eslint-disable */
 module.exports = {
   displayName: 'nx-dev-ui-icons',
   preset: '../../jest.preset.js',

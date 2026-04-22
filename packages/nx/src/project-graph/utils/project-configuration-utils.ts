@@ -12,6 +12,7 @@ import { minimatch } from 'minimatch';
 import { performance } from 'perf_hooks';
 
 import { DelayedSpinner } from '../../utils/delayed-spinner';
+import { ProgressTopics } from '../../utils/progress-topics';
 import {
   AggregateCreateNodesError,
   formatAggregateCreateNodesError,
@@ -83,37 +84,29 @@ export async function createProjectConfigurationsWithPlugins(
   let spinner: DelayedSpinner;
   const inProgressPlugins = new Set<string>();
 
-  function updateSpinner() {
+  function getSpinnerText() {
     if (!spinner || inProgressPlugins.size === 0) {
-      return;
+      return '';
     }
 
     if (inProgressPlugins.size === 1) {
-      spinner.setMessage(
-        `Creating project graph nodes with ${
-          inProgressPlugins.values().next().value
-        }`
-      );
-    } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      spinner.setMessage(
-        [
-          `Creating project graph nodes with ${inProgressPlugins.size} plugins`,
-          ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
-        ].join('\n')
-      );
+      return `Creating project graph nodes with ${
+        inProgressPlugins.values().next().value
+      }`;
     } else {
-      spinner.setMessage(
-        `Creating project graph nodes with ${inProgressPlugins.size} plugins`
-      );
+      return [
+        `Creating project graph nodes with ${inProgressPlugins.size} plugins`,
+        ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
+      ].join('\n');
     }
   }
 
   const createNodesPlugins = plugins.filter(
     (plugin) => plugin.createNodes?.[0]
   );
-  spinner = new DelayedSpinner(
-    `Creating project graph nodes with ${createNodesPlugins.length} plugins`
-  );
+  spinner = new DelayedSpinner(getSpinnerText(), {
+    progressTopic: ProgressTopics.GraphConstruction,
+  });
 
   const results: Promise<
     (readonly [
@@ -175,7 +168,7 @@ export async function createProjectConfigurationsWithPlugins(
       })
       .finally(() => {
         inProgressPlugins.delete(pluginName);
-        updateSpinner();
+        spinner.setMessage(getSpinnerText());
       });
 
     results.push(r);

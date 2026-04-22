@@ -3,9 +3,9 @@ import {
   HandThumbUpIcon,
 } from '@heroicons/react/24/outline';
 import { cx } from '@nx/nx-dev-ui-primitives';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { ChatGptLogo } from './chat-gpt-logo';
-import { renderMarkdown } from '@nx/nx-dev-ui-markdoc';
+import { renderAiMarkdown } from '../render-markdown';
 
 // Exported for tests
 export function normalizeContent(content: string): string {
@@ -28,14 +28,6 @@ export function FeedAnswer({
   feedbackButtonCallback: (value: 'bad' | 'good') => void;
   isFirst: boolean;
 }) {
-  const callout = useMemo(
-    () =>
-      renderMarkdown(
-        `{% callout type="warning" title="Always double-check!" %}The results may not be accurate, so please always double check with our documentation.{% /callout %}\n`,
-        { filePath: '' }
-      ).node,
-    []
-  );
   const [feedbackStatement, setFeedbackStatement] = useState<
     'bad' | 'good' | null
   >(null);
@@ -74,8 +66,16 @@ export function FeedAnswer({
           </p>
         </div>
         <div className="prose prose-zinc dark:prose-invert mt-2 w-full max-w-none 2xl:max-w-4xl">
-          {!isFirst && callout}
-          {renderMarkdown(normalizedContent, { filePath: '' }).node}
+          {!isFirst && (
+            <div className="not-prose mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100">
+              <strong className="block font-semibold">
+                Always double-check!
+              </strong>
+              The results may not be accurate, so please always double check
+              with our documentation.
+            </div>
+          )}
+          {renderAiMarkdown(normalizedContent)}
         </div>
         {!isFirst && (
           <div className="text-md group flex-1 gap-4 text-zinc-400 transition hover:text-zinc-500 md:flex md:items-center md:justify-end">

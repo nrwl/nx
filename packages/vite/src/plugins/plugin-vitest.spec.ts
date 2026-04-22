@@ -59,6 +59,15 @@ jest.mock('vite', () => ({
   }),
 }));
 
+// This spec simulates a non-TS-solution workspace via the `node:fs` mock above
+// (`existsSync` returns false for `tsconfig.base.json`). The global mock in
+// `scripts/unit-test-setup.js` short-circuits `isUsingTsSolutionSetup()` before
+// any fs read, so we override it here to explicitly express the intent.
+jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
+  ...jest.requireActual('@nx/js/src/utils/typescript/ts-solution-setup'),
+  isUsingTsSolutionSetup: jest.fn(() => false),
+}));
+
 jest.mock('../utils/executor-utils', () => ({
   loadViteDynamicImport: jest.fn().mockResolvedValue({
     resolveConfig: jest.fn().mockResolvedValue({

@@ -4,13 +4,9 @@ import {
   consumeMessagesFromSocket,
   MESSAGE_END_SEQ,
 } from '../../utils/consume-messages-from-socket';
-import { serialize } from '../socket-utils';
 import { clientLogger } from '../logger';
-
-export interface Message extends Record<string, any> {
-  type: string;
-  data?: any;
-}
+import { DaemonMessage } from '../message-types/daemon-message';
+import { serialize } from '../socket-utils';
 
 export class VersionMismatchError extends Error {
   constructor() {
@@ -23,7 +19,10 @@ export class VersionMismatchError extends Error {
 export class DaemonSocketMessenger {
   constructor(private socket: Socket) {}
 
-  sendMessage(messageToDaemon: Message, force?: 'v8' | 'json') {
+  sendMessage<T extends DaemonMessage>(
+    messageToDaemon: T,
+    force?: 'v8' | 'json'
+  ) {
     if (!this.socket) {
       throw new Error('Socket not initialized.');
     }

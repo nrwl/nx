@@ -40,7 +40,6 @@ export async function withModuleFederationForSSR(
     };
 
     config.plugins.push(
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       new (require('@module-federation/enhanced/rspack').ModuleFederationPlugin)(
         {
           name: normalizeProjectName(options.name),

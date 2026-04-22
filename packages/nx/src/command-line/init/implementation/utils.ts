@@ -31,7 +31,6 @@ export function createNxJsonFile(
   let nxJson = {} as Partial<NxJsonConfiguration> & { $schema: string };
   try {
     nxJson = readJsonFile(nxJsonPath);
-    // eslint-disable-next-line no-empty
   } catch {}
 
   nxJson.$schema = './node_modules/nx/schemas/nx-schema.json';
@@ -45,7 +44,6 @@ export function createNxJsonFile(
   }
   for (const [scriptName, output] of Object.entries(scriptOutputs)) {
     if (!output) {
-      // eslint-disable-next-line no-continue
       continue;
     }
     nxJson.targetDefaults[scriptName] ??= {};
