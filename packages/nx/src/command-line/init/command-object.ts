@@ -12,6 +12,11 @@ import { recordStat } from '../../utils/ab-testing';
 import { nxVersion } from '../../utils/versions';
 import { isCI } from '../../utils/is-ci';
 import { detectPackageManager } from '../../utils/package-manager';
+import {
+  extractErrorName,
+  readErrorStderr,
+  toErrorString,
+} from './implementation/utils';
 
 export const yargsInitCommand: CommandModule = {
   command: 'init',
@@ -81,9 +86,18 @@ export const yargsInitCommand: CommandModule = {
       }
       process.exit(0);
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const errorMessage = toErrorString(error);
       const errorCode = determineErrorCode(error);
+      // Append stderr tail (present when child-process errors ran with
+      // `stdio: 'pipe'`) so telemetry gets the real cause.
+      const stderr = readErrorStderr(error).trim();
+      const telemetryMessage = (
+        stderr ? `${errorMessage} | stderr: ${stderr.slice(-250)}` : errorMessage
+      ).slice(0, 500);
+      // Structured code for bucketing. Prefer Node's `e.code` (set on
+      // syscall failures); fall back to E-codes/ERR_* extracted from full
+      // stderr (npm/pnpm/yarn); then `error.name`.
+      const errorName = extractErrorName(error, stderr);
 
       await recordStat({
         command: 'init',
@@ -92,8 +106,13 @@ export const yargsInitCommand: CommandModule = {
         meta: {
           type: 'error',
           errorCode,
-          errorMessage: errorMessage.substring(0, 250),
+          errorName,
+          errorMessage: telemetryMessage,
           aiAgent,
+          isCI: isCI(),
+          nodeVersion: process.versions.node,
+          os: process.platform,
+          packageManager: detectPackageManager(),
         },
       });
 
