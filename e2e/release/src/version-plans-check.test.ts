@@ -204,8 +204,12 @@ describe('nx release version plans check command', () => {
 
 
     `);
+    // Verbose output is tested via toContain to avoid coupling snapshots to
+    // every verbose log the CLI may emit. `redirectStderr: true` so the
+    // "No changed files found" warning (stderr) is part of the returned string.
     const verboseResult = runCLI(
-      'release plan:check --base=HEAD~1 --head=HEAD~1 --verbose'
+      'release plan:check --base=HEAD~1 --head=HEAD~1 --verbose',
+      { redirectStderr: true }
     );
     expect(verboseResult).toContain(
       'No changed files found based on resolved "base" and "head"'
@@ -246,6 +250,7 @@ describe('nx release version plans check command', () => {
     `);
     const verboseEnvResult = runCLI('release plan:check --verbose', {
       env: { NX_BASE: 'HEAD~1', NX_HEAD: 'HEAD~1' },
+      redirectStderr: true,
     });
     expect(verboseEnvResult).toContain(
       'No changed files found based on resolved "base" and "head"'
