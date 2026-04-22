@@ -27,6 +27,9 @@
         "production",
         "{projectRoot}/next-sitemap.config.js",
         "{projectRoot}/scripts/patch-sitemap-index.mjs",
+        {
+          "dependentTasksOutputFiles": "**/.next/{build-manifest,export-marker,prerender-manifest,routes-manifest}.json"
+        },
         { "env": "NX_DEV_URL" },
         { "env": "NEXT_PUBLIC_NO_INDEX" }
       ],
