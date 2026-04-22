@@ -353,8 +353,6 @@
     "@docsearch/react": "^3.3.0",
     "@docusaurus/core": "3.8.1",
     "@docusaurus/preset-classic": "3.8.1",
-    "@grafana/faro-web-sdk": "^1.13.3",
-    "@grafana/faro-web-tracing": "^1.13.3",
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.1.4",
     "@markdoc/markdoc": "0.2.2",
