@@ -67,76 +67,44 @@ export async function initHandler(
   options: InitArgs,
   inner = false
 ): Promise<void> {
-  // Only the outermost CLI invocation records start/error telemetry. When
-  // the downloaded-latest nx re-invokes us with `inner=true` its own outer
-  // wrapper already recorded these events.
-  const selfRecord = !inner;
-  const aiAgent = isAiAgent();
-  const baseMeta = {
-    nodeVersion: process.versions.node,
-    os: process.platform,
-    packageManager: detectPackageManager(),
-    aiAgent,
-    isCI: isCI(),
-  };
-  if (selfRecord) {
-    recordStat({
-      command: 'init',
-      nxVersion,
-      useCloud: false,
-      meta: { type: 'start', ...baseMeta },
-    });
+  // Use environment variable to force local execution
+  if (process.env.NX_USE_LOCAL === 'true' || inner) {
+    return await initHandlerImpl(options);
   }
 
+  let cleanup: () => void | undefined;
   try {
-    if (process.env.NX_USE_LOCAL === 'true' || inner) {
-      return await initHandlerImpl(options);
-    }
+    await ensurePackageHasProvenance('nx', 'latest');
+    const packageInstallResults = installPackageToTmp('nx', 'latest');
+    cleanup = packageInstallResults.cleanup;
 
-    let cleanup: () => void | undefined;
-    try {
-      await ensurePackageHasProvenance('nx', 'latest');
-      const packageInstallResults = installPackageToTmp('nx', 'latest');
-      cleanup = packageInstallResults.cleanup;
+    let modulePath = require.resolve('nx/src/command-line/init/init-v2.js', {
+      paths: [packageInstallResults.tempDir],
+    });
 
-      let modulePath = require.resolve('nx/src/command-line/init/init-v2.js', {
-        paths: [packageInstallResults.tempDir],
-      });
-
-      const module = await handleImport(modulePath);
-      const result = await module.initHandler(options, true);
-      cleanup();
-      return result;
-    } catch {
-      if (cleanup) cleanup();
-      // Fall back to local implementation
-      return await initHandlerImpl(options);
-    }
+    const module = await handleImport(modulePath);
+    const result = await module.initHandler(options, true);
+    cleanup();
+    return result;
   } catch (error) {
-    if (selfRecord) {
-      await recordInitError(error, aiAgent, baseMeta);
-      // recordInitError terminates the process on the CLI path; the throw
-      // below is unreachable in practice but kept for type-level safety.
+    if (cleanup) {
+      cleanup();
     }
-    throw error;
+    // Fall back to local implementation
+    return initHandlerImpl(options);
   }
 }
 
 async function recordInitError(
   error: unknown,
-  aiAgent: boolean,
   baseMeta: Record<string, string | boolean>
 ): Promise<void> {
   const errorMessage = toErrorString(error);
   const errorCode = determineErrorCode(error);
-  // Append stderr tail (attached when child-process errors ran with
-  // `stdio: 'pipe'`) so telemetry carries the real cause.
   const stderr = readErrorStderr(error).trim();
   const telemetryMessage = (
     stderr ? `${errorMessage} | stderr: ${stderr.slice(-250)}` : errorMessage
   ).slice(0, 500);
-  // Structured code for bucketing. Prefer Node's `e.code`; fall back to
-  // E-code/ERR_* tokens extracted from stderr; then `error.name`.
   const errorName = extractErrorName(error, stderr);
 
   await recordStat({
@@ -152,7 +120,7 @@ async function recordInitError(
     },
   });
 
-  if (aiAgent) {
+  if (baseMeta.aiAgent) {
     const errorLogPath = writeErrorLog(error);
     writeAiOutput(buildErrorResult(errorMessage, errorCode, errorLogPath));
   } else {
@@ -165,6 +133,31 @@ async function recordInitError(
 
 async function initHandlerImpl(options: InitArgs): Promise<void> {
   process.env.NX_RUNNING_NX_INIT = 'true';
+  const baseMeta = {
+    nodeVersion: process.versions.node,
+    os: process.platform,
+    packageManager: detectPackageManager(),
+    aiAgent: isAiAgent(),
+    isCI: isCI(),
+  };
+  recordStat({
+    command: 'init',
+    nxVersion,
+    useCloud: false,
+    meta: { type: 'start', ...baseMeta },
+  });
+
+  try {
+    return await runInit(options, baseMeta);
+  } catch (error) {
+    await recordInitError(error, baseMeta);
+  }
+}
+
+async function runInit(
+  options: InitArgs,
+  baseMeta: Record<string, string | boolean>
+): Promise<void> {
   const version =
     process.env.NX_VERSION ?? (prerelease(nxVersion) ? nxVersion : 'latest');
   if (process.env.NX_VERSION) {

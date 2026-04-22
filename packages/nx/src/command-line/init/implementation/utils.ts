@@ -230,7 +230,6 @@ export function runInstall(
   pmc: PackageManagerCommands = getPackageManagerCommand()
 ) {
   try {
-    // stderr piped so the error carries it for telemetry.
     execSync(pmc.install, {
       stdio: ['ignore', 'ignore', 'pipe'],
       encoding: 'utf8',
@@ -266,7 +265,6 @@ export function toErrorString(error: unknown): string {
   return String(error);
 }
 
-/** Read `.stderr` off a thrown child-process error; supports string or Buffer. */
 export function readErrorStderr(error: unknown): string {
   const raw = (error as any)?.stderr;
   if (typeof raw === 'string') return raw;
@@ -276,11 +274,6 @@ export function readErrorStderr(error: unknown): string {
   return '';
 }
 
-/**
- * Pick a structured name for telemetry bucketing: Node `e.code`,
- * else an `E…`/`ERR_…` token from stderr (E404, ERESOLVE, EINTEGRITY,
- * ERR_PNPM_*, ...), else `error.name`.
- */
 export function extractErrorName(error: unknown, stderr: string): string {
   const nodeCode = (error as any)?.code;
   if (typeof nodeCode === 'string') return nodeCode;

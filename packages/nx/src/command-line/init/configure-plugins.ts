@@ -41,7 +41,6 @@ export function installPluginPackages(
       nxJson.installation.plugins[plugin] = nxVersion;
     }
     writeJsonFile(join(repoRoot, 'nx.json'), nxJson);
-    // Invoke the nx wrapper to install plugins; pipe stderr for telemetry.
     try {
       runNxSync('--version', { stdio: 'pipe' });
     } catch (e) {

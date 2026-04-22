@@ -83,9 +83,7 @@ export async function connectToNxCloudCommand(
   options: { generateToken?: boolean; checkRemote?: boolean },
   command?: string
 ): Promise<boolean> {
-  // Prompt-based callers (init, generate-driven flows) record their own
-  // telemetry via `connectExistingRepoToNxCloudPrompt` / `connectToNxCloudWithPrompt`.
-  // Only self-record when invoked directly from the `nx connect` CLI.
+  // `connectToNxCloudWithPrompt` (called from `migrate`) records its own stat; skip here to avoid double-counting.
   const selfRecord = !command;
   const baseMeta = {
     nodeVersion: process.versions.node,
