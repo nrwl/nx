@@ -61,6 +61,18 @@
   "optionalDependencies": {
     "@nx/vite": "workspace:*"
   },
+  "peerDependencies": {
+    "@nx/next": "workspace:*",
+    "@nx/rspack": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@nx/next": {
+      "optional": true
+    },
+    "@nx/rspack": {
+      "optional": true
+    }
+  },
   "publishConfig": {
     "access": "public"
   },
