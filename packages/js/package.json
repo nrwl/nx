@@ -64,9 +64,33 @@
     "nx": "workspace:*"
   },
   "peerDependencies": {
+    "@nx/eslint": "workspace:*",
+    "@nx/jest": "workspace:*",
+    "@nx/rollup": "workspace:*",
+    "@nx/vite": "workspace:*",
+    "@nx/vitest": "workspace:*",
+    "prettier": "~3.6.2",
     "verdaccio": "^6.0.5"
   },
   "peerDependenciesMeta": {
+    "@nx/eslint": {
+      "optional": true
+    },
+    "@nx/jest": {
+      "optional": true
+    },
+    "@nx/rollup": {
+      "optional": true
+    },
+    "@nx/vite": {
+      "optional": true
+    },
+    "@nx/vitest": {
+      "optional": true
+    },
+    "prettier": {
+      "optional": true
+    },
     "verdaccio": {
       "optional": true
     }
