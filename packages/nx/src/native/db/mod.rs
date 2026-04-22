@@ -1,5 +1,5 @@
 pub mod connection;
-mod initialize;
+pub(crate) mod initialize;
 
 use crate::native::logger::enable_logger;
 use crate::native::machine_id::get_machine_id;

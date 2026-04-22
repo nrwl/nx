@@ -15,12 +15,16 @@
       "outputs": ["{workspaceRoot}/dist/packages/gradle/README.md"],
       "command": "node ./scripts/copy-readme.js gradle",
       "inputs": ["copyReadme"],
-      "dependsOn": ["^build", "build-native", "build-base", "copy-assets"]
+      "dependsOn": ["^build", "build-base"]
+    },
+    "copy-assets": {
+      "dependsOn": [":gradle-batch-runner:gradle:assemble"]
     },
     "build-base": {
       "dependsOn": [
         "^build-base",
         "build-native",
+        "copy-assets",
         ":gradle-batch-runner:gradle:assemble"
       ]
     }

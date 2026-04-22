@@ -37,7 +37,7 @@ Next, check the [Nx Cloud workspace settings](https://cloud.nx.app/go/workspace/
 
 ### Configure your CI pipeline
 
-Add a step to your CI configuration's "main" job that runs the `fix-ci` command. It doesn't matter exactly what this job is called, it is whichever job in your config where you invoke `nx-cloud start-ci-run` and kick off your `nx run-many` or `nx affected` commands.
+Add a step to your CI configuration's "main" job that runs the `fix-ci` command. It doesn't matter exactly what this job is called, it is whichever job in your config where you invoke `nx start-ci-run` and kick off your `nx run-many` or `nx affected` commands.
 
 By default, your CI provider will only run the step if the previous steps succeeded, but by definition we want to run Self-Healing CI even when previous steps fail. Therefore make sure you are using a condition of `if: always()` or equivalent to ensure it runs even when previous steps fail:
 
@@ -58,7 +58,7 @@ jobs:
       # These are just illustrative examples...
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
-      - run: npx nx-cloud start-ci-run
+      - run: npx nx start-ci-run
       - run: npm ci
       - run: npx nx affected -t lint test build
 
@@ -81,7 +81,7 @@ main:
   script:
     # Your existing steps which check out the repo, start-ci-run, install
     # dependencies, etc.
-    - npx nx-cloud start-ci-run
+    - npx nx start-ci-run
     - npm ci
     - npx nx affected -t lint test build
   # NEW: Add this section at the end of your job if you don't
@@ -111,7 +111,7 @@ steps:
   - task: NodeTool@0
     inputs:
       versionSpec: '22.x'
-  - script: npx nx-cloud start-ci-run
+  - script: npx nx start-ci-run
   - script: npm ci
   - script: npx nx affected -t lint test build
 
@@ -137,7 +137,7 @@ pipelines:
             # Your existing steps which start-ci-run, install
             # dependencies, etc.
             # These are just illustrative examples...
-            - npx nx-cloud start-ci-run
+            - npx nx start-ci-run
             - npm ci
             - npx nx affected -t lint test build
           after-script:
@@ -177,7 +177,7 @@ Self-Healing CI configuration is primarily managed through your [Nx Cloud worksp
 Control which failing tasks Nx Cloud will actively try and fix for pull request CI pipeline executions.
 
 {% aside type="note" title="CLI Override Available" %}
-This is analogous to the `--fix-tasks` flag on `nx-cloud start-ci-run`. Anything set on the CLI will take precedence over the settings here.
+This is analogous to the `--fix-tasks` flag on `nx start-ci-run`. Anything set on the CLI will take precedence over the settings here.
 {% /aside %}
 
 You can choose between two modes:
@@ -203,7 +203,7 @@ Automatically commit code change suggestions to the PR branch **when ALL of thes
 3. The suggestion has been **explicitly verified** to fix the failing task
 
 {% aside type="note" title="CLI Override Available" %}
-This is analogous to the `--auto-apply-fixes` flag on `nx-cloud start-ci-run`. Anything set on the CLI will take precedence over the settings here.
+This is analogous to the `--auto-apply-fixes` flag on `nx start-ci-run`. Anything set on the CLI will take precedence over the settings here.
 {% /aside %}
 
 #### Deterministic Nx checks
@@ -338,7 +338,7 @@ We recommend configuring Self-Healing CI through **[workspace settings](https://
 
 ### Available flags
 
-Pass these flags to `nx-cloud start-ci-run`:
+Pass these flags to `nx start-ci-run`:
 
 | Flag                 | Description                                 | Example                       |
 | -------------------- | ------------------------------------------- | ----------------------------- |
@@ -351,10 +351,10 @@ Use an empty string to **disable** a feature for a specific CI run:
 
 ```shell
 # Disable fix generation entirely for this run
-npx nx-cloud start-ci-run --fix-tasks=""
+npx nx start-ci-run --fix-tasks=""
 
 # Disable auto-apply entirely for this run
-npx nx-cloud start-ci-run --auto-apply-fixes=""
+npx nx start-ci-run --auto-apply-fixes=""
 ```
 
 Both flags treat empty string consistently as an explicit "disable" override.
@@ -365,13 +365,13 @@ Patterns use glob syntax to match task names:
 
 ```shell
 # Only fix lint and test tasks
-npx nx-cloud start-ci-run --fix-tasks="*lint*,*test*"
+npx nx start-ci-run --fix-tasks="*lint*,*test*"
 
 # Fix everything except e2e tasks
-npx nx-cloud start-ci-run --fix-tasks="!*e2e*"
+npx nx start-ci-run --fix-tasks="!*e2e*"
 
 # Auto-apply only lint fixes
-npx nx-cloud start-ci-run --auto-apply-fixes="lint"
+npx nx start-ci-run --auto-apply-fixes="lint"
 ```
 
 ### Precedence rules

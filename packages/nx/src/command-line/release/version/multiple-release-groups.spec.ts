@@ -699,17 +699,15 @@ describe('Multiple Release Groups', () => {
           "
         `);
         expect(tree.read('pkg-b/Cargo.toml', 'utf-8')).toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'pkg-b'
-          version = '1.1.0'
+          "[package]
+          name = "pkg-b"
+          version = "1.1.0"
           "
         `);
         expect(tree.read('pkg-c/Cargo.toml', 'utf-8')).toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'pkg-c'
-          version = '2.0.1'
+          "[package]
+          name = "pkg-c"
+          version = "2.0.1"
           "
         `);
         expect(tree.read('pkg-d/package.json', 'utf-8')).toMatchInlineSnapshot(`
@@ -772,17 +770,15 @@ describe('Multiple Release Groups', () => {
           "
         `);
         expect(tree.read('pkg-b/Cargo.toml', 'utf-8')).toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'pkg-b'
-          version = '1.1.1'
+          "[package]
+          name = "pkg-b"
+          version = "1.1.1"
           "
         `);
         expect(tree.read('pkg-c/Cargo.toml', 'utf-8')).toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'pkg-c'
-          version = '3.0.0'
+          "[package]
+          name = "pkg-c"
+          version = "3.0.0"
           "
         `);
         expect(tree.read('pkg-d/package.json', 'utf-8')).toMatchInlineSnapshot(`
@@ -850,20 +846,18 @@ describe('Multiple Release Groups', () => {
           "
         `);
         expect(tree.read('pkg-b/Cargo.toml', 'utf-8')).toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'pkg-b'
-          version = '1.0.1'
+          "[package]
+          name = "pkg-b"
+          version = "1.0.1"
 
           [dependencies]
-          pkg-c = '2.0.1'
+          pkg-c = "2.0.1"
           "
         `);
         expect(tree.read('pkg-c/Cargo.toml', 'utf-8')).toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'pkg-c'
-          version = '2.0.1'
+          "[package]
+          name = "pkg-c"
+          version = "2.0.1"
           "
         `);
         expect(tree.read('pkg-d/package.json', 'utf-8')).toMatchInlineSnapshot(`

@@ -11,7 +11,6 @@ export function assertTextOnPage(
   title: string,
   selector: string = 'h1'
 ): void {
-  // eslint-disable-next-line playwright/valid-title
   test.describe(path, () => {
     test(`should display "${title}"`, async ({ page }) => {
       await page.goto(path);

@@ -4,8 +4,11 @@ import {
   readJsonFile,
   TargetConfiguration,
 } from '@nx/devkit';
+import {
+  getAssetOutputPath,
+  normalizeAssets,
+} from '@nx/js/src/utils/assets/copy-assets-handler';
 import { dirname, join, relative } from 'node:path';
-import { getAssetOutputPath, normalizeAssets } from './normalize-assets';
 
 interface AssetEntry {
   glob: string;
@@ -132,7 +135,6 @@ export const createNodesV2: CreateNodesV2 = [
 
         const target: TargetConfiguration = {
           executor: '@nx/workspace-plugin:copy-assets',
-          dependsOn: ['build-base'],
           cache: true,
           inputs,
           outputs,

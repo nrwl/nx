@@ -31,7 +31,6 @@ export function createNxJsonFile(
   let nxJson = {} as Partial<NxJsonConfiguration> & { $schema: string };
   try {
     nxJson = readJsonFile(nxJsonPath);
-    // eslint-disable-next-line no-empty
   } catch {}
 
   nxJson.$schema = './node_modules/nx/schemas/nx-schema.json';
@@ -45,7 +44,6 @@ export function createNxJsonFile(
   }
   for (const [scriptName, output] of Object.entries(scriptOutputs)) {
     if (!output) {
-      // eslint-disable-next-line no-continue
       continue;
     }
     nxJson.targetDefaults[scriptName] ??= {};
@@ -230,7 +228,7 @@ export function runInstall(
   pmc: PackageManagerCommands = getPackageManagerCommand()
 ) {
   execSync(pmc.install, {
-    stdio: [0, 1, 2],
+    stdio: ['ignore', 'ignore', 'inherit'],
     cwd: repoRoot,
     windowsHide: true,
   });
@@ -249,6 +247,13 @@ export async function initCloud(
     installationSource,
   });
   await printSuccessMessage(token, installationSource);
+}
+
+export function setNeverConnectToCloud(repoRoot: string): void {
+  const nxJsonPath = join(repoRoot, 'nx.json');
+  const nxJson = readJsonFile(nxJsonPath);
+  nxJson.neverConnectToCloud = true;
+  writeJsonFile(nxJsonPath, nxJson);
 }
 
 export function addVsCodeRecommendedExtensions(

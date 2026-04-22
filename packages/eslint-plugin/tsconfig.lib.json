@@ -15,7 +15,7 @@
     "**/*_test.ts",
     "jest.config.ts"
   ],
-  "include": ["**/*.ts", "**/*.json"],
+  "include": ["**/*.ts"],
   "references": [
     {
       "path": "../js/tsconfig.lib.json"

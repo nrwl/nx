@@ -18,17 +18,34 @@ Tutorial: {pageUrl}
 
 Connect your workspace to Nx Cloud, generate a CI workflow, and enable remote caching, affected commands, distributed task execution, and self-healing to keep your pipeline fast and reliable.
 
-{% aside type="note" title="Prerequisites" %}
+{% aside type="note" title="Tutorial Series" %}
 
-- An existing Nx workspace (see [Crafting Your Workspace](/docs/getting-started/tutorials/crafting-your-workspace) or the [Gradle tutorial](/docs/getting-started/tutorials/gradle-tutorial))
-- A [GitHub account](https://github.com) with a repository for your workspace
-- [Node.js](https://nodejs.org) (v20.19 or later)
+1. [Crafting your workspace](/docs/getting-started/tutorials/crafting-your-workspace)
+2. [Managing dependencies](/docs/getting-started/tutorials/managing-dependencies)
+3. [Configuring tasks](/docs/getting-started/tutorials/configuring-tasks)
+4. [Running tasks](/docs/getting-started/tutorials/running-tasks)
+5. [Caching](/docs/getting-started/tutorials/caching)
+6. [Understanding your workspace](/docs/getting-started/tutorials/understanding-your-workspace)
+7. [Reducing boilerplate](/docs/getting-started/tutorials/reducing-configuration-boilerplate)
+8. **Setting up CI** (you are here)
 
 {% /aside %}
 
+This tutorial assumes you have a [GitHub account](https://github.com) and [Node.js](https://nodejs.org) v20.19 or later.
+
 ## Connect to Nx Cloud
 
-Connect your workspace to Nx Cloud to enable remote caching and CI features:
+### Don't have a workspace yet?
+
+Create a workspace, GitHub repository, and Nx Cloud connection in one step:
+
+{% call_to_action variant="default" title="Create a new Nx workspace" url="https://cloud.nx.app/create-nx-workspace?utm_source=nx-dev&utm_medium=ci-tutorial&utm_campaign=try-nx-cloud" description="Setup takes less than 2 minutes" /%}
+
+This also generates a CI workflow, so you can skip ahead to [Remote caching](#remote-caching).
+
+### Connect an existing workspace
+
+If you already have an Nx workspace, connect it to Nx Cloud:
 
 {% aside type="note" title="Prerequisites for nx connect" %}
 Your workspace must be pushed to a Git provider (GitHub, GitLab, Bitbucket, or Azure DevOps) before running `nx connect`. After connecting, Nx Cloud opens a PR that adds `nxCloudId` to `nx.json`. Merge this PR before proceeding so CI runs appear on the Nx Cloud dashboard.
@@ -44,7 +61,9 @@ The access token is stored in `nx.json` and should be committed to your reposito
 
 ## Generate a CI workflow
 
-Generate a CI workflow configuration for GitHub Actions:
+If your workspace already has a CI workflow (e.g., `.github/workflows/ci.yml`), skip to [Remote caching](#remote-caching).
+
+Generate a CI workflow for GitHub Actions:
 
 ```shell
 nx add @nx/workspace
@@ -127,7 +146,7 @@ For larger workspaces, you can distribute task execution across multiple machine
 
 ```yaml
 # Add to your CI workflow
-- run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
+- run: npx nx start-ci-run --distribute-on="3 linux-medium-js"
 ```
 
 Nx Agents automatically split tasks across the available agents, respecting task dependencies and maximizing parallelism. No configuration changes to your tasks are needed.

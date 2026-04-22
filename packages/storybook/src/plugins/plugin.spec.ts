@@ -21,6 +21,7 @@ describe('@nx/storybook/plugin', () => {
       workspaceRoot: tempFs.tempDir,
     };
     tempFs.createFileSync('package.json', JSON.stringify({ name: 'repo' }));
+    tempFs.createFileSync('package-lock.json', '{}');
     tempFs.createFileSync(
       'my-app/project.json',
       JSON.stringify({ name: 'my-app' })

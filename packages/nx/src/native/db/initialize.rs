@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use tracing::{debug, trace};
 
 /// Bump this ONLY when the database schema changes.
-pub const DB_VERSION: &str = "1";
+pub const DB_VERSION: &str = "2";
 
 // Error reporting constants - static strings to avoid allocations in error paths
 const REPORTING_INSTRUCTIONS_PERSISTENT: &str = "If the issue persists, please help us improve Nx by capturing logs and reporting this issue:\n\
@@ -143,7 +143,7 @@ pub(super) fn create_lock_file(db_path: &Path) -> anyhow::Result<File> {
     Ok(lock_file)
 }
 
-pub(super) fn initialize_db(db_path: &Path) -> anyhow::Result<NxDbConnection> {
+pub(crate) fn initialize_db(db_path: &Path) -> anyhow::Result<NxDbConnection> {
     // Track if DB existed before we opened it for safety check on new DB creation
     let db_existed_before_open = db_path.exists();
     let mut database_recreated = false;
@@ -197,6 +197,11 @@ fn create_all_tables(c: &mut NxDbConnection) -> anyhow::Result<()> {
         // Order matters: tables with no FK dependencies first
         conn.execute_batch(TASK_DETAILS_SCHEMA)?;
         conn.execute_batch(RUNNING_TASKS_SCHEMA)?;
+
+        // Metadata table (used by telemetry for session tracking)
+        conn.execute_batch(
+            "CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT)",
+        )?;
 
         // Tables with FK dependencies
         conn.execute_batch(TASK_HISTORY_SCHEMA)?;
@@ -460,22 +465,26 @@ fn diagnose_filesystem_issue(
 mod tests {
     use super::*;
 
+    fn has_table(conn: &NxDbConnection, table_name: &str) -> bool {
+        conn.query_row(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?1",
+            [table_name],
+            |_| Ok(true),
+        )
+        .unwrap()
+        .unwrap_or(false)
+    }
+
     #[test]
     fn initialize_db_creates_new_db() -> anyhow::Result<()> {
         let temp_dir = tempfile::tempdir()?;
         let db_path = temp_dir.path().join("test.db");
 
-        let _ = initialize_db(&db_path)?;
+        let conn = initialize_db(&db_path)?;
 
-        // Verify tables were created
-        let conn = Connection::open(&db_path)?;
-        let has_table: bool = conn.query_row(
-            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='task_details'",
-            [],
-            |_| Ok(true),
-        )?;
+        assert!(has_table(&conn, "task_details"));
+        assert!(has_table(&conn, "metadata"));
 
-        assert!(has_table);
         Ok(())
     }
 
@@ -488,16 +497,9 @@ mod tests {
         let _ = initialize_db(&db_path)?;
 
         // Try to initialize again — should reuse existing db
-        let _ = initialize_db(&db_path)?;
+        let conn = initialize_db(&db_path)?;
 
-        let conn = Connection::open(&db_path)?;
-        let has_table: bool = conn.query_row(
-            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='task_details'",
-            [],
-            |_| Ok(true),
-        )?;
-
-        assert!(has_table);
+        assert!(has_table(&conn, "task_details"));
         Ok(())
     }
 }

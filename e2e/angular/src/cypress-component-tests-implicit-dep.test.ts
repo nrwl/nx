@@ -63,7 +63,8 @@ describe('Angular Cypress Component Tests - Implicit Dep', () => {
 
   afterAll(() => cleanupCypressComponentTests());
 
-  it('should test lib with implicit dep on buildTarget', () => {
+  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
+  it.skip('should test lib with implicit dep on buildTarget', () => {
     const { projectName, appName, buildableLibName, usedInAppLibName } = setup;
 
     // creates graph like buildableLib -> lib -> app
@@ -80,7 +81,8 @@ describe('Angular Cypress Component Tests - Implicit Dep', () => {
     }
   });
 
-  it('should use root level tailwinds config', () => {
+  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
+  it.skip('should use root level tailwinds config', () => {
     const { buildableLibName } = setup;
 
     useRootLevelTailwindConfig(join(buildableLibName, 'tailwind.config.js'));

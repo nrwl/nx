@@ -210,7 +210,7 @@ describe('updateTsconfig', () => {
 
     const tsConfig = readJson(tree, '/tsconfig.base.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
-      '@proj/nested/whatever-name': ['libs/my-lib/nested-lib/src/index.ts'],
+      '@proj/nested/whatever-name': ['./libs/my-lib/nested-lib/src/index.ts'],
     });
   });
 

@@ -5,6 +5,15 @@ jest.mock('@nx/js', () => ({
   createEntryPoints: (x: string) => x,
 }));
 
+// This spec simulates a non-TS-solution workspace via `workspaceRoot: '/tmp'`
+// (where tsconfig.base.json doesn't exist). The global mock in
+// `scripts/unit-test-setup.js` short-circuits `isUsingTsSolutionSetup()` before
+// any fs read, so we override it here to explicitly express the intent.
+jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
+  ...jest.requireActual('@nx/js/src/utils/typescript/ts-solution-setup'),
+  isUsingTsSolutionSetup: jest.fn(() => false),
+}));
+
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
   workspaceRoot: '/tmp',

@@ -1,10 +1,13 @@
 import {
   cleanupProject,
+  createFile,
+  fileExists,
   listFiles,
   newProject,
   readFile,
   removeFile,
   runCLI,
+  tmpProjPath,
   updateFile,
 } from '@nx/e2e-utils';
 
@@ -246,6 +249,42 @@ describe('configure-ai-agents', () => {
 
       const configToml = readFile('.codex/config.toml');
       expect(configToml).toMatch(/multi_agent\s*=\s*false/);
+    });
+  });
+
+  describe('gemini legacy .gemini/skills cleanup', () => {
+    it('should remove .gemini/skills that also exist in .agents/skills', () => {
+      // Ensure gemini is configured so .agents/skills exists
+      runCLI('configure-ai-agents --agents gemini --no-interactive');
+      expect(listFiles('.agents/skills').length).toBeGreaterThan(0);
+
+      // Simulate legacy .gemini/skills with a skill that matches one in .agents/skills
+      const sharedSkill = listFiles('.agents/skills')[0];
+      createFile(`.gemini/skills/${sharedSkill}/skill.md`, '# Legacy skill');
+
+      // Also create a user-owned custom skill
+      createFile(
+        '.gemini/skills/my-custom-skill/skill.md',
+        '# My Custom Skill'
+      );
+
+      // Make gemini outdated so re-running triggers the generator
+      updateFile('AGENTS.md', (content: string) =>
+        content.replace('nx_docs', 'nx_docs_outdated')
+      );
+
+      // Re-run configure to trigger cleanup
+      runCLI('configure-ai-agents --agents gemini --no-interactive');
+
+      // The shared skill should be removed from .gemini/skills
+      expect(
+        fileExists(tmpProjPath(`.gemini/skills/${sharedSkill}/skill.md`))
+      ).toBeFalsy();
+
+      // The user's custom skill should be preserved
+      expect(
+        fileExists(tmpProjPath('.gemini/skills/my-custom-skill/skill.md'))
+      ).toBeTruthy();
     });
   });
 

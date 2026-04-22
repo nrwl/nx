@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   NxJsonConfiguration,
+  output,
   ProjectGraph,
   readJson,
   readNxJson,
@@ -52,6 +53,29 @@ describe('@nx/vite:init', () => {
       await initGenerator(tree, { addPlugin: true });
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.devDependencies['vite']).toEqual('^8.0.0');
+    });
+
+    it('should default to vite 7 when an older esbuild is already installed', async () => {
+      const warnSpy = jest.spyOn(output, 'warn').mockImplementation(() => {
+        // no-op
+      });
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = { esbuild: '^0.19.2' };
+        return json;
+      });
+
+      await initGenerator(tree, { addPlugin: true });
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['vite']).toEqual('^7.0.0');
+      expect(packageJson.devDependencies['esbuild']).toEqual('^0.19.2');
+      expect(warnSpy).toHaveBeenCalledWith({
+        title: 'Installed esbuild is incompatible with Vite 8. Using Vite 7.',
+        bodyLines: [
+          'Found esbuild version "^0.19.2" in the workspace root package.json.',
+          'Update esbuild to a range compatible with ^0.27.0 if you want newly generated Vite projects to use Vite 8 by default.',
+        ],
+      });
+      warnSpy.mockRestore();
     });
 
     it('should preserve vite 7 when already installed', async () => {
