@@ -92,6 +92,10 @@ export class TaskOrchestrator {
         Number(process.env.NX_INVOCATION_ROOT_PID ?? process.pid)
       )
     : null;
+  // Tracks tasks registered by THIS process so that recursive code paths
+  // (e.g. applyFromCacheOrRunBatch looping on incomplete batches) don't
+  // re-register and trip the DB uniqueness constraint.
+  private registeredInvocations = new Set<string>();
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
     this.projects,
@@ -415,8 +419,10 @@ export class TaskOrchestrator {
    */
   private detectTaskInvocationLoop(task: Task): void {
     if (!this.taskInvocationTracker) return;
+    if (this.registeredInvocations.has(task.id)) return;
     try {
       this.taskInvocationTracker.registerTask(process.pid, task.id);
+      this.registeredInvocations.add(task.id);
     } catch {
       // Unique constraint violation — task already invoked by an ancestor Nx process
       const chain = this.taskInvocationTracker.getInvocationChain();
@@ -1527,6 +1533,7 @@ export class TaskOrchestrator {
 
       this.completedTasks.set(task.id, status);
       this.taskInvocationTracker?.unregisterTask(task.id);
+      this.registeredInvocations.delete(task.id);
 
       if (this.tuiEnabled) {
         this.options.lifeCycle.setTaskStatus(

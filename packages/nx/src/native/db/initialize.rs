@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use tracing::{debug, trace};
 
 /// Bump this ONLY when the database schema changes.
-pub const DB_VERSION: &str = "2";
+pub const DB_VERSION: &str = "3";
 
 // Error reporting constants - static strings to avoid allocations in error paths
 const REPORTING_INSTRUCTIONS_PERSISTENT: &str = "If the issue persists, please help us improve Nx by capturing logs and reporting this issue:\n\
