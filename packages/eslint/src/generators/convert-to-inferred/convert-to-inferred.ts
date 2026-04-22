@@ -12,7 +12,7 @@ import {
 } from '@nx/devkit';
 import { basename, dirname, relative } from 'node:path/posix';
 import { interpolate } from 'nx/src/tasks-runner/utils';
-import { createNodesV2, type EslintPluginOptions } from '../../plugins/plugin';
+import { createNodes, type EslintPluginOptions } from '../../plugins/plugin';
 import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
 import { ESLINT_CONFIG_FILENAMES } from '../../utils/config-file';
 import { targetOptionsToCliMap } from './lib/target-options-map';
@@ -32,7 +32,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       tree,
       projectGraph,
       '@nx/eslint/plugin',
-      createNodesV2,
+      createNodes,
       { targetName: 'lint' },
       [
         {

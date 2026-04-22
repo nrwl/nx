@@ -1,4 +1,4 @@
-import { detectPackageManager, type CreateNodesContextV2 } from '@nx/devkit';
+import { detectPackageManager, type CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import picomatch = require('picomatch');
 import { mkdirSync, rmSync } from 'node:fs';
@@ -13,7 +13,7 @@ jest.mock('nx/src/utils/cache-directory', () => ({
 }));
 
 describe(`Plugin: ${PLUGIN_NAME}`, () => {
-  let context: CreateNodesContextV2;
+  let context: CreateNodesContext;
   let cwd = process.cwd();
   let tempFs: TempFs;
   let originalCacheProjectGraph: string | undefined;
@@ -7024,7 +7024,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
 async function applyFilesToTempFsAndContext(
   tempFs: TempFs,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   fileSys: Record<string, string>
 ): Promise<string[]> {
   await tempFs.createFiles(fileSys);
@@ -7037,7 +7037,7 @@ async function applyFilesToTempFsAndContext(
 
 async function invokeCreateNodesOnMatchingFiles(
   configFiles: string[],
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   pluginOptions: TscPluginOptions
 ) {
   const aggregateProjects: Record<string, any> = {};

@@ -5,9 +5,9 @@ import {
 } from '@nx/devkit/internal';
 import {
   CreateDependencies,
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesV2,
+  CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
@@ -59,7 +59,7 @@ export const createDependencies: CreateDependencies = () => {
 
 const vitestConfigGlob = '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}';
 
-export const createNodes: CreateNodesV2<VitestPluginOptions> = [
+export const createNodes: CreateNodes<VitestPluginOptions> = [
   vitestConfigGlob,
   async (configFilePaths, options, context) => {
     const pmc = getPackageManagerCommand(
@@ -163,7 +163,7 @@ async function buildVitestTargets(
   configFilePath: string,
   projectRoot: string,
   options: VitestPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   tsconfigInputs: string[]
 ): Promise<VitestTargets> {
@@ -556,7 +556,7 @@ function collectTsconfigInputsByProjectRoot(
 
 function checkIfConfigFileShouldBeProject(
   projectRoot: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): boolean {
   // Do not create a project if package.json and project.json isn't there.
   const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));

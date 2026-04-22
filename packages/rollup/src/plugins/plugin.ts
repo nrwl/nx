@@ -9,10 +9,10 @@ import { readdirSync } from 'fs';
 import {
   AggregateCreateNodesError,
   type CreateDependencies,
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResultV2,
-  CreateNodesV2,
+  CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
@@ -43,7 +43,7 @@ type RollupTargets = Record<string, TargetConfiguration>;
 
 const rollupConfigGlob = '**/rollup.config.{js,cjs,mjs,ts,cts,mts}';
 
-export const createNodes: CreateNodesV2<RollupPluginOptions> = [
+export const createNodes: CreateNodes<RollupPluginOptions> = [
   rollupConfigGlob,
   async (configFilePaths, options, context) => {
     const normalizedOptions = normalizeOptions(options);
@@ -114,7 +114,7 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFilePath: string,
   options: Required<RollupPluginOptions>,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   targetsCache: PluginCache<RollupTargets>,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
@@ -150,7 +150,7 @@ async function buildRollupTarget(
   configFilePath: string,
   projectRoot: string,
   options: RollupPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<Record<string, TargetConfiguration>> {
@@ -281,7 +281,7 @@ interface RollupEntry {
 
 async function filterRollupConfigs(
   configFiles: readonly string[],
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<{
   entries: RollupEntry[];
   preErrors: Array<[string, Error]>;

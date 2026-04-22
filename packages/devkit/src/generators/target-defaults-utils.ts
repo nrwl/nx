@@ -1,5 +1,5 @@
 import {
-  type CreateNodesV2,
+  type CreateNodes,
   type NxJsonConfiguration,
   type PluginConfiguration,
   type ProjectConfiguration,
@@ -289,11 +289,11 @@ export async function addE2eCiTargetDefaults(
   }
 
   const resolvedE2ePlugin: {
-    createNodes?: CreateNodesV2;
-    createNodesV2?: CreateNodesV2;
+    createNodes?: CreateNodes;
+    createNodesV2?: CreateNodes;
   } = await import(e2ePlugin);
   const e2ePluginGlob =
-    resolvedE2ePlugin.createNodesV2?.[0] ?? resolvedE2ePlugin.createNodes?.[0];
+    resolvedE2ePlugin.createNodes?.[0] ?? resolvedE2ePlugin.createNodesV2?.[0];
   // The e2e config file must be one this plugin actually processes (its path
   // matches the plugin's createNodes glob) before the registration's
   // include/exclude filters are applied.

@@ -20,7 +20,7 @@ import { LoadedNxPlugin } from '../loaded-nx-plugin';
 import type {
   CreateDependenciesContext,
   CreateMetadataContext,
-  CreateNodesContextV2,
+  CreateNodesContext,
   CreateNodesResult,
   PostTasksExecutionContext,
   PreTasksExecutionContext,
@@ -74,7 +74,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     filePattern: string,
     fn: (
       matchedFiles: string[],
-      context: CreateNodesContextV2
+      context: CreateNodesContext
     ) => Promise<
       Array<readonly [plugin: string, file: string, result: CreateNodesResult]>
     >,

@@ -7,10 +7,10 @@ import {
 import {
   AggregateCreateNodesError,
   CreateDependencies,
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResultV2,
-  CreateNodesV2,
+  CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
@@ -46,7 +46,7 @@ export const createDependencies: CreateDependencies = () => {
 
 const storybookConfigGlob = '**/.storybook/main.{js,ts,mjs,mts,cjs,cts}';
 
-export const createNodes: CreateNodesV2<StorybookPluginOptions> = [
+export const createNodes: CreateNodes<StorybookPluginOptions> = [
   storybookConfigGlob,
   async (configFilePaths, options, context) => {
     const normalizedOptions = normalizeOptions(options);
@@ -129,7 +129,7 @@ function getProjectRootFromConfigPath(configFilePath: string): string {
 async function createNodesInternal(
   configFilePath: string,
   options: Required<StorybookPluginOptions>,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   targetsCache: PluginCache<StorybookTargets>,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   projectRoot: string,
@@ -167,7 +167,7 @@ async function buildStorybookTargets(
   configFilePath: string,
   projectRoot: string,
   options: StorybookPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   projectName: string,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
@@ -348,7 +348,7 @@ function serveStaticTarget(
 
 async function getStorybookFramework(
   configFilePath: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<string | undefined> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
   const mainTsJs = readFileSync(resolvedPath, 'utf-8');
@@ -405,7 +405,7 @@ function parseFrameworkName(mainTsJs: string) {
 
 async function getStorybookFullyResolvedFramework(
   configFilePath: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<string> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
   const { framework } = await loadConfigFile<StorybookConfig>(resolvedPath);
@@ -431,7 +431,7 @@ interface StorybookEntry {
 
 async function filterStorybookConfigs(
   configFiles: readonly string[],
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<{
   entries: StorybookEntry[];
   preErrors: Array<[string, Error]>;

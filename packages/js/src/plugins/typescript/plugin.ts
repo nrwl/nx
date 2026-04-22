@@ -8,8 +8,8 @@ import {
   readJsonFile,
   writeJsonFile,
   type CreateDependencies,
-  type CreateNodesContextV2,
-  type CreateNodesV2,
+  type CreateNodesContext,
+  type CreateNodes,
   type NxJsonConfiguration,
   type ProjectConfiguration,
   type TargetConfiguration,
@@ -257,7 +257,7 @@ export const PLUGIN_NAME = '@nx/js/typescript';
 
 const tsConfigGlob = '**/tsconfig*.json';
 
-export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
+export const createNodesV2: CreateNodes<TscPluginOptions> = [
   tsConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
@@ -360,7 +360,7 @@ async function resolveValidConfigFilesAndHashes(
   configFilePaths: readonly string[],
   options: NormalizedPluginOptions,
   optionsHash: string,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   cache: InvocationCache,
   lockFileName: string
 ): Promise<{
@@ -526,7 +526,7 @@ function checkIfConfigFileShouldBeProject(
 function buildTscTargets(
   config: ConfigContext,
   options: NormalizedPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   configFiles: readonly string[],
   cache: InvocationCache,
   pmc: ReturnType<typeof getPackageManagerCommand>

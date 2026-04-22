@@ -1,8 +1,8 @@
+import { ProjectGraph } from '../config/project-graph';
+import { ProjectConfiguration } from '../config/workspace-json-project-json';
+import { CreateNodesFunction } from './plugins/public-api';
 import { ConfigurationResult } from './utils/project-configuration-utils';
 import type { ConfigurationSourceMaps } from './utils/project-configuration/source-maps';
-import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { ProjectGraph } from '../config/project-graph';
-import { CreateNodesFunctionV2 } from './plugins/public-api';
 
 export type ProjectGraphErrorTypes =
   | AggregateCreateNodesError
@@ -291,7 +291,7 @@ export class AggregateCreateNodesError extends Error {
    */
   constructor(
     public readonly errors: Array<[file: string | null, error: Error]>,
-    public readonly partialResults: Awaited<ReturnType<CreateNodesFunctionV2>>
+    public readonly partialResults: Awaited<ReturnType<CreateNodesFunction>>
   ) {
     super('Failed to create nodes');
     this.name = this.constructor.name;

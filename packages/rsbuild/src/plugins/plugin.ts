@@ -8,8 +8,8 @@ import {
   CreateNodesResultV2,
   type ProjectConfiguration,
   type TargetConfiguration,
-  CreateNodesV2,
-  CreateNodesContextV2,
+  CreateNodes,
+  CreateNodesContext,
   createNodesFromFiles,
   joinPathFragments,
   getPackageManagerCommand,
@@ -40,7 +40,7 @@ type RsbuildTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 const rsbuildConfigGlob = '**/rsbuild.config.{js,ts,mjs,mts,cjs,cts}';
 
-export const createNodesV2: CreateNodesV2<RsbuildPluginOptions> = [
+export const createNodes: CreateNodes<RsbuildPluginOptions> = [
   rsbuildConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
@@ -107,10 +107,15 @@ export const createNodesV2: CreateNodesV2<RsbuildPluginOptions> = [
   },
 ];
 
+/**
+ * @deprecated Use {@link createNodes} instead. This will be removed in Nx 24.
+ */
+export const createNodesV2 = createNodes;
+
 async function createNodesInternal(
   configFilePath: string,
   normalizedOptions: RsbuildPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   targetsCache: PluginCache<RsbuildTargets>,
   isUsingTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
@@ -153,7 +158,7 @@ async function createRsbuildTargets(
   options: RsbuildPluginOptions,
   tsConfigFiles: string[],
   isUsingTsSolutionSetup: boolean,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<RsbuildTargets> {
   const absoluteConfigFilePath = joinPathFragments(
@@ -341,7 +346,7 @@ interface RsbuildEntry {
 
 async function filterRsbuildConfigs(
   configFiles: readonly string[],
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<{
   entries: RsbuildEntry[];
   preErrors: Array<[string, Error]>;

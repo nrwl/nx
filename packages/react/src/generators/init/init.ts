@@ -12,7 +12,7 @@ import {
 import { nxVersion } from '../../utils/versions';
 import { InitSchema } from './schema';
 import { getReactDependenciesVersionsToInstall } from '../../utils/version-utils';
-import { createNodesV2 } from '../../plugins/router-plugin';
+import { createNodes } from '../../plugins/router-plugin';
 
 export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -46,7 +46,7 @@ export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
       tree,
       await createProjectGraphAsync(),
       '@nx/react/router-plugin',
-      createNodesV2,
+      createNodes,
       {
         buildTargetName: ['build', 'react-router:build', 'react-router-build'],
         devTargetName: ['dev', 'react-router:dev', 'react-router-dev'],
