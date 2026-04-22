@@ -10,6 +10,7 @@ import { logger } from '../../../utils/logger';
 import { createSerializableError } from '../../../utils/serializable-error';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { consumeMessage, isPluginWorkerMessage } from './messaging';
+import { setPluginWorkerHostSocket } from './worker-streaming';
 
 import { unlinkSync } from 'fs';
 import { createServer } from 'net';
@@ -50,6 +51,11 @@ let connectErrorTimeout = setErrorTimeout(
 
 const server = createServer((socket) => {
   connectErrorTimeout?.clear();
+
+  // Make the host-facing socket available to plugin code running in this
+  // worker so it can emit log / progress notifications without having
+  // the socket threaded through every call site.
+  setPluginWorkerHostSocket(socket);
 
   logger.verbose(
     `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) connected`

@@ -833,6 +833,11 @@ export function validateWorkspaceName(name: string): void {
   }
 }
 
+/** Returns `true` when the folder name refers to the current directory. */
+function isCurrentDirReference(folderName: string): boolean {
+  return folderName === '.' || folderName === './';
+}
+
 /**
  * Resolves special folder name patterns (`.`, `./`, absolute paths) into a
  * workspace name and a `workingDir` override so that downstream functions
@@ -846,8 +851,8 @@ export function validateWorkspaceName(name: string): void {
 export function resolveSpecialFolderName(
   folderName: string
 ): { name: string; workingDir: string } | null {
-  // Handle "." and "./" — user wants to init in the current directory
-  if (folderName === '.' || folderName === './') {
+  // User wants to init in the current directory
+  if (isCurrentDirReference(folderName)) {
     const cwd = resolve(process.cwd());
     if (readdirSync(cwd).length > 0) {
       throw new CnwError(
@@ -876,7 +881,12 @@ export function resolveSpecialFolderName(
   return null;
 }
 
-async function determineFolder(
+/**
+ * Determines the folder name for the new workspace.
+ *
+ * @visibleForTesting
+ */
+export async function determineFolder(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<string> {
   const rawFolderName: string = parsedArgs._[0]
@@ -893,8 +903,15 @@ async function determineFolder(
 
     validateWorkspaceName(folderName);
 
+    // When input is "." or "./", resolveSpecialFolderName already validated
+    // the directory is empty. The target always "exists" because it IS the
+    // current working directory, so skip the existsSync check and default
+    // the workspace name to the directory name.
+    if (isCurrentDirReference(rawFolderName)) {
+      return folderName;
+    }
+
     // If directory exists, either re-prompt (interactive) or error (non-interactive)
-    // Check relative to workingDir when set (e.g. absolute path resolved to a different parent)
     const targetDir = resolved?.workingDir
       ? join(resolved.workingDir, folderName)
       : folderName;
@@ -911,6 +928,15 @@ async function determineFolder(
         `The directory '${folderName}' already exists. Choose a different name or remove the existing directory.`
       );
     }
+    return folderName;
+  }
+
+  // When non-interactive and no name is provided, default to the current
+  // directory name instead of prompting.
+  if (!parsedArgs.interactive || isCI()) {
+    const cwd = resolve(process.cwd());
+    const folderName = basename(cwd);
+    validateWorkspaceName(folderName);
     return folderName;
   }
 
