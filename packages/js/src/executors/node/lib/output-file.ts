@@ -1,19 +1,21 @@
-import * as path from 'path';
+import { dirname, parse } from 'path';
+import { joinPathFragments, normalizePath } from 'nx/src/utils/path';
+import { getRelativeDirectoryToProjectRoot } from '../../../utils/get-main-file-dir';
 
 interface OutputFileNameOptions {
   buildTargetExecutor: string;
   main: string;
   outputPath: string;
-  projectRoot: string;
+  rootDir: string;
 }
 
 export function getOutputFileName({
   buildTargetExecutor,
   main,
   outputPath,
-  projectRoot,
+  rootDir,
 }: OutputFileNameOptions): string {
-  const fileName = `${path.parse(main).name}.js`;
+  const fileName = `${parse(main).name}.js`;
 
   if (
     buildTargetExecutor !== '@nx/js:tsc' &&
@@ -22,52 +24,15 @@ export function getOutputFileName({
     return fileName;
   }
 
-  const relativeDirectory = getRelativeDirectoryForOutputFile(
-    main,
-    outputPath,
-    projectRoot
-  );
-
-  return path.join(relativeDirectory, fileName);
-}
-
-function getRelativeDirectoryForOutputFile(
-  main: string,
-  outputPath: string,
-  projectRoot: string
-): string {
-  const mainDirectory = normalizePath(path.dirname(main));
+  const mainDirectory = normalizePath(dirname(main));
   const normalizedOutputPath = normalizePath(outputPath);
-
-  if (
+  const isMainInsideOutputPath =
     mainDirectory === normalizedOutputPath ||
-    mainDirectory.startsWith(`${normalizedOutputPath}/`)
-  ) {
-    const relativeToOutputPath = normalizePath(
-      path.relative(normalizedOutputPath, mainDirectory)
-    );
+    mainDirectory.startsWith(`${normalizedOutputPath}/`);
+  const base = isMainInsideOutputPath ? normalizedOutputPath : rootDir;
 
-    return relativeToOutputPath === '' ? './' : `./${relativeToOutputPath}/`;
-  }
-
-  return getRelativeDirectoryToProjectRoot(main, projectRoot);
-}
-
-function getRelativeDirectoryToProjectRoot(
-  file: string,
-  projectRoot: string
-): string {
-  const directory = path.dirname(file);
-  const relativeDirectory = normalizePath(
-    path.relative(projectRoot, directory)
+  return joinPathFragments(
+    getRelativeDirectoryToProjectRoot(main, base),
+    fileName
   );
-
-  return relativeDirectory === '' ? './' : `./${relativeDirectory}/`;
-}
-
-function normalizePath(osSpecificPath: string): string {
-  return osSpecificPath
-    .replace(/^[a-zA-Z]:/, '')
-    .split('\\')
-    .join('/');
 }

@@ -472,7 +472,7 @@ function getFileToRun(
       buildTargetExecutor,
       main: buildOptions.main,
       outputPath: buildOptions.outputPath,
-      projectRoot: project.data.root,
+      rootDir: buildOptions.rootDir ?? project.data.root,
     });
   }
 

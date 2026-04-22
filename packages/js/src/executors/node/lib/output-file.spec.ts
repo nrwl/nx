@@ -1,4 +1,3 @@
-import * as path from 'path';
 import { getOutputFileName } from './output-file';
 
 describe('getOutputFileName', () => {
@@ -8,7 +7,7 @@ describe('getOutputFileName', () => {
         buildTargetExecutor: '@nx/js:tsc',
         main: 'packages/failing-project/dist/main.js',
         outputPath: 'packages/failing-project/dist',
-        projectRoot: 'packages/failing-project',
+        rootDir: 'packages/failing-project',
       })
     ).toBe('main.js');
   });
@@ -19,9 +18,9 @@ describe('getOutputFileName', () => {
         buildTargetExecutor: '@nx/js:tsc',
         main: 'packages/failing-project/src/main.ts',
         outputPath: 'dist/packages/failing-project',
-        projectRoot: 'packages/failing-project',
+        rootDir: 'packages/failing-project',
       })
-    ).toBe(path.join('src', 'main.js'));
+    ).toBe('src/main.js');
   });
 
   it('preserves nested subdirectories that already live under outputPath', () => {
@@ -30,8 +29,19 @@ describe('getOutputFileName', () => {
         buildTargetExecutor: '@nx/js:swc',
         main: 'packages/failing-project/dist/server/main.js',
         outputPath: 'packages/failing-project/dist',
-        projectRoot: 'packages/failing-project',
+        rootDir: 'packages/failing-project',
       })
-    ).toBe(path.join('server', 'main.js'));
+    ).toBe('server/main.js');
+  });
+
+  it('resolves main relative to rootDir when tsc strips the rootDir prefix from the output', () => {
+    expect(
+      getOutputFileName({
+        buildTargetExecutor: '@nx/js:tsc',
+        main: 'apps/project_a/src/main.ts',
+        outputPath: 'dist/apps/project_a',
+        rootDir: 'apps/project_a/src',
+      })
+    ).toBe('main.js');
   });
 });
