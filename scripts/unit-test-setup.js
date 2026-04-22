@@ -37,6 +37,12 @@ module.exports = () => {
      * `jest.requireActual` routes through Jest's module resolver which
      * respects tsconfig paths, so it picks up the source code instead.
      */
-    ensurePackage: jest.fn((pkg) => jest.requireActual(pkg)),
+    ensurePackage: jest.fn((pkg) => {
+      if (typeof pkg === 'string') {
+        return jest.requireActual(pkg);
+      }
+      // batch form: pkg is Record<string, string>, returns void
+      return undefined;
+    }),
   }));
 };

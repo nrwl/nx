@@ -144,6 +144,7 @@ export async function libraryGeneratorInternal(
     // `@nx/rollup` isn't on the type-resolution path for `@nx/js`, so it's
     // required untyped here. The preceding batch `ensurePackage` call
     // guarantees the module is resolvable at runtime.
+    // nx-ignore-next-line
     const { configurationGenerator } = require('@nx/rollup');
     await configurationGenerator(tree, {
       project: options.name,
@@ -154,6 +155,7 @@ export async function libraryGeneratorInternal(
   }
 
   if (options.bundler === 'vite') {
+    // nx-ignore-next-line
     const { viteConfigurationGenerator, createOrEditViteConfig } =
       require('@nx/vite') as typeof import('@nx/vite');
     const viteTask = await viteConfigurationGenerator(tree, {
@@ -739,6 +741,7 @@ async function addJest(
   tree: Tree,
   options: NormalizedLibraryGeneratorOptions
 ): Promise<GeneratorCallback> {
+  // nx-ignore-next-line
   const { configurationGenerator } =
     require('@nx/jest') as typeof import('@nx/jest');
   return await configurationGenerator(tree, {
