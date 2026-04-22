@@ -1232,6 +1232,56 @@ describe('TargetProjectLocator', () => {
     });
   });
 
+  describe('findProjectFromImport workspace fallback', () => {
+    it('should fall back to findImportInWorkspaceProjects when require resolves into node_modules', () => {
+      // Scenario: workspace package `@org/pkg1` is imported from a file in
+      // another workspace project that does NOT declare `@org/pkg1` as a
+      // dependency. In pnpm layouts, Node's resolver can walk up and find a
+      // hoisted copy of the package in `node_modules/.pnpm/...`, causing
+      // `resolveImportWithRequire` to return a path under `node_modules/`.
+      // The edge to `pkg1` would previously be dropped; it should now be
+      // recovered via the workspace-metadata fallback.
+      const projects: Record<string, ProjectGraphProjectNode> = {
+        pkg1: {
+          name: 'pkg1',
+          type: 'lib',
+          data: {
+            root: 'pkg1',
+            metadata: {
+              js: {
+                packageName: '@org/pkg1',
+                packageExports: 'dist/index.js',
+                isInPackageManagerWorkspaces: true,
+              },
+            },
+          },
+        },
+        consumer: {
+          name: 'consumer',
+          type: 'lib',
+          data: { root: 'consumer' },
+        },
+      };
+
+      const locator = new TargetProjectLocator(projects, {}, new Map());
+
+      // Force the require-resolution step to return a node_modules path,
+      // emulating a hoisted pnpm copy.
+      jest
+        .spyOn(locator as any, 'resolveImportWithRequire')
+        .mockReturnValue(
+          'node_modules/.pnpm/@org+pkg1@1.0.0/node_modules/@org/pkg1/dist/index.js'
+        );
+
+      const result = locator.findProjectFromImport(
+        '@org/pkg1',
+        'consumer/src/index.ts'
+      );
+
+      expect(result).toEqual('pkg1');
+    });
+  });
+
   describe('findImportInWorkspaceProjects', () => {
     it.each`
       exports                                                      | importPath

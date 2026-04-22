@@ -165,11 +165,15 @@ export class TargetProjectLocator {
         filePath
       );
 
-      return this.findProjectOfResolvedModule(resolvedModule);
+      const resolvedProject = this.findProjectOfResolvedModule(resolvedModule);
+      if (resolvedProject) {
+        return resolvedProject;
+      }
     } catch {}
 
     // fall back to see if it's a locally linked workspace project where the
-    // output might not exist yet
+    // output might not exist yet (e.g. the import resolved into node_modules
+    // via a hoisted copy instead of the workspace symlink)
     const localProject = this.findImportInWorkspaceProjects(importExpr);
     if (localProject) {
       return localProject;
