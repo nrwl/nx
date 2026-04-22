@@ -28,6 +28,18 @@
     },
     {
       "path": "../nx/tsconfig.lib.json"
+    },
+    {
+      "path": "../storybook/tsconfig.lib.json"
+    },
+    {
+      "path": "../rsbuild/tsconfig.lib.json"
+    },
+    {
+      "path": "../playwright/tsconfig.lib.json"
+    },
+    {
+      "path": "../cypress/tsconfig.lib.json"
     }
   ]
 }

@@ -3835,6 +3835,9 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
+      '@nx/web':
+        specifier: workspace:*
+        version: link:../web
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
         version: 6.1.4(typescript@5.9.2)
@@ -3900,6 +3903,9 @@ importers:
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
+      '@nx/eslint':
+        specifier: workspace:*
+        version: link:../eslint
       '@nx/js':
         specifier: workspace:*
         version: link:../js
@@ -3925,6 +3931,9 @@ importers:
 
   packages/vue:
     dependencies:
+      '@nx/cypress':
+        specifier: workspace:*
+        version: link:../cypress
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
@@ -3934,6 +3943,15 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
+      '@nx/playwright':
+        specifier: workspace:*
+        version: link:../playwright
+      '@nx/rsbuild':
+        specifier: workspace:*
+        version: link:../rsbuild
+      '@nx/storybook':
+        specifier: workspace:*
+        version: link:../storybook
       '@nx/vite':
         specifier: workspace:*
         version: link:../vite
@@ -3959,12 +3977,30 @@ importers:
 
   packages/web:
     dependencies:
+      '@nx/cypress':
+        specifier: workspace:*
+        version: link:../cypress
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
+      '@nx/eslint':
+        specifier: workspace:*
+        version: link:../eslint
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../jest
       '@nx/js':
         specifier: workspace:*
         version: link:../js
+      '@nx/playwright':
+        specifier: workspace:*
+        version: link:../playwright
+      '@nx/vite':
+        specifier: workspace:*
+        version: link:../vite
+      '@nx/webpack':
+        specifier: workspace:*
+        version: link:../webpack
       detect-port:
         specifier: ^1.5.1
         version: 1.6.1
