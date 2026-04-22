@@ -40,6 +40,18 @@
   "devDependencies": {
     "nx": "workspace:*"
   },
+  "peerDependencies": {
+    "@nx/cypress": "workspace:*",
+    "@nx/eslint": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@nx/cypress": {
+      "optional": true
+    },
+    "@nx/eslint": {
+      "optional": true
+    }
+  },
   "nx-migrations": {
     "migrations": "./migrations.json"
   },

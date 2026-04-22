@@ -42,7 +42,33 @@
     "@nx/vitest": "workspace:*"
   },
   "peerDependencies": {
+    "@nx/cypress": "workspace:*",
+    "@nx/docker": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@nx/module-federation": "workspace:*",
+    "@nx/nest": "workspace:*",
+    "@nx/node": "workspace:*",
     "@remix-run/dev": "^2.17.3"
+  },
+  "peerDependenciesMeta": {
+    "@nx/cypress": {
+      "optional": true
+    },
+    "@nx/docker": {
+      "optional": true
+    },
+    "@nx/eslint": {
+      "optional": true
+    },
+    "@nx/module-federation": {
+      "optional": true
+    },
+    "@nx/nest": {
+      "optional": true
+    },
+    "@nx/node": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"

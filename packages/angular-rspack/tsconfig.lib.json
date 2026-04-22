@@ -27,6 +27,9 @@
     },
     {
       "path": "../angular-rspack-compiler/tsconfig.lib.json"
+    },
+    {
+      "path": "../nx/tsconfig.lib.json"
     }
   ]
 }

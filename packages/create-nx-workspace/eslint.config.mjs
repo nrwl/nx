@@ -23,7 +23,7 @@ export default [
         'error',
         {
           buildTargets: ['build-base'],
-          ignoredDependencies: ['nx'],
+          ignoredDependencies: ['nx', '@nx/angular'],
         },
       ],
     },

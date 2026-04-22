@@ -14,5 +14,12 @@
     "jest.config.ts"
   ],
   "include": ["**/*.ts", "*.json", "migrations.json"],
-  "references": []
+  "references": [
+    {
+      "path": "../nx/tsconfig.lib.json"
+    },
+    {
+      "path": "../angular/tsconfig.lib.json"
+    }
+  ]
 }

@@ -42,6 +42,9 @@
     },
     {
       "path": "../module-federation/tsconfig.lib.json"
+    },
+    {
+      "path": "../cypress/tsconfig.lib.json"
     }
   ]
 }

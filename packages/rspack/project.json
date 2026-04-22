@@ -10,5 +10,6 @@
       "inputs": ["copyReadme"]
     }
   },
-  "tags": []
+  "tags": [],
+  "implicitDependencies": ["!node"]
 }
