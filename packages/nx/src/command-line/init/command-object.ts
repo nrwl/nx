@@ -92,7 +92,9 @@ export const yargsInitCommand: CommandModule = {
       // `stdio: 'pipe'`) so telemetry gets the real cause.
       const stderr = readErrorStderr(error).trim();
       const telemetryMessage = (
-        stderr ? `${errorMessage} | stderr: ${stderr.slice(-250)}` : errorMessage
+        stderr
+          ? `${errorMessage} | stderr: ${stderr.slice(-250)}`
+          : errorMessage
       ).slice(0, 500);
       // Structured code for bucketing. Prefer Node's `e.code` (set on
       // syscall failures); fall back to E-codes/ERR_* extracted from full

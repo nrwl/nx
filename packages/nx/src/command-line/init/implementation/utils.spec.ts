@@ -328,7 +328,9 @@ describe('utils', () => {
 
   describe('extractErrorName', () => {
     it('prefers Node e.code when set', () => {
-      expect(extractErrorName({ code: 'EACCES' }, 'stderr E404')).toBe('EACCES');
+      expect(extractErrorName({ code: 'EACCES' }, 'stderr E404')).toBe(
+        'EACCES'
+      );
     });
 
     it.each([
