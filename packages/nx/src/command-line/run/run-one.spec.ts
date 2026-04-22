@@ -195,6 +195,28 @@ describe('parseRunOneOptions', () => {
     });
   });
 
+  describe('when project:target:configuration is not a string', () => {
+    // yargs may coerce the positional to `true` when the user passes only
+    // flag-based options like `nx run -p my-project -t test:unit`.
+    it('should not crash when the positional is a boolean', () => {
+      const parsedArgs = {
+        'project:target:configuration': true,
+        project: 'my-app',
+        target: 'test:unit',
+      };
+
+      const result = parseRunOneOptions(
+        testCwd,
+        parsedArgs,
+        projectGraph,
+        nxJson
+      );
+
+      expect(result.project).toBe('my-app');
+      expect(result.target).toBe('test:unit');
+    });
+  });
+
   describe('error handling', () => {
     it('should throw error when target is missing', () => {
       const parsedArgs = {
