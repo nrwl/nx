@@ -320,7 +320,7 @@ async function updateProjectGraphWithPlugins(
 
   let spinner: DelayedSpinner;
   const inProgressPlugins = new Set<string>(
-    ...createDependencyPlugins.map((plugin) => plugin.name)
+    createDependencyPlugins.map((plugin) => plugin.name)
   );
 
   function getSpinnerText() {
@@ -438,7 +438,7 @@ export async function applyProjectMetadata(
   );
 
   const inProgressPlugins = new Set<string>(
-    ...createMetadataPlugins.map((p) => p.name)
+    createMetadataPlugins.map((p) => p.name)
   );
 
   function getSpinnerText() {
