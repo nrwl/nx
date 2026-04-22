@@ -9,5 +9,6 @@
       "inputs": ["copyReadme"],
       "outputs": ["{workspaceRoot}/dist/packages/react/README.md"]
     }
-  }
+  },
+  "implicitDependencies": ["!next"]
 }
