@@ -33,7 +33,21 @@
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
+    "@nx/cypress": "workspace:*",
+    "@nx/jest": "workspace:*",
+    "@nx/playwright": "workspace:*",
     "next": ">=14.0.0 <17.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@nx/cypress": {
+      "optional": true
+    },
+    "@nx/jest": {
+      "optional": true
+    },
+    "@nx/playwright": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",

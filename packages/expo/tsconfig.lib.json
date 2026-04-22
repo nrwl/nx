@@ -11,9 +11,6 @@
   "include": ["**/*.ts"],
   "references": [
     {
-      "path": "../rollup/tsconfig.lib.json"
-    },
-    {
       "path": "../react/tsconfig.lib.json"
     },
     {
@@ -26,10 +23,25 @@
       "path": "../devkit/tsconfig.lib.json"
     },
     {
+      "path": "../nx/tsconfig.lib.json"
+    },
+    {
+      "path": "../web/tsconfig.lib.json"
+    },
+    {
+      "path": "../rollup/tsconfig.lib.json"
+    },
+    {
+      "path": "../playwright/tsconfig.lib.json"
+    },
+    {
+      "path": "../jest/tsconfig.lib.json"
+    },
+    {
       "path": "../detox/tsconfig.lib.json"
     },
     {
-      "path": "../nx/tsconfig.lib.json"
+      "path": "../cypress/tsconfig.lib.json"
     }
   ]
 }

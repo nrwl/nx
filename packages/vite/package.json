@@ -47,7 +47,13 @@
   },
   "peerDependencies": {
     "vite": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0",
-    "vitest": "^1.3.1 || ^2.0.0 || ^3.0.0 || ^4.0.0"
+    "vitest": "^1.3.1 || ^2.0.0 || ^3.0.0 || ^4.0.0",
+    "@nx/eslint": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@nx/eslint": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"

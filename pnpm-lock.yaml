@@ -2308,15 +2308,24 @@ importers:
       '@nx/eslint':
         specifier: workspace:*
         version: link:../eslint
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../jest
       '@nx/js':
         specifier: workspace:*
         version: link:../js
       '@nx/module-federation':
         specifier: workspace:*
         version: link:../module-federation
+      '@nx/playwright':
+        specifier: workspace:*
+        version: link:../playwright
       '@nx/rspack':
         specifier: workspace:*
         version: link:../rspack
+      '@nx/storybook':
+        specifier: workspace:*
+        version: link:../storybook
       '@nx/web':
         specifier: workspace:*
         version: link:../web
@@ -2820,18 +2829,36 @@ importers:
 
   packages/expo:
     dependencies:
+      '@nx/cypress':
+        specifier: workspace:*
+        version: link:../cypress
+      '@nx/detox':
+        specifier: workspace:*
+        version: link:../detox
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
       '@nx/eslint':
         specifier: workspace:*
         version: link:../eslint
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../jest
       '@nx/js':
         specifier: workspace:*
         version: link:../js
+      '@nx/playwright':
+        specifier: workspace:*
+        version: link:../playwright
       '@nx/react':
         specifier: workspace:*
         version: link:../react
+      '@nx/rollup':
+        specifier: workspace:*
+        version: link:../rollup
+      '@nx/web':
+        specifier: workspace:*
+        version: link:../web
       enhanced-resolve:
         specifier: ^5.8.3
         version: 5.18.2
@@ -2857,13 +2884,6 @@ importers:
       nx:
         specifier: workspace:*
         version: link:../nx
-    optionalDependencies:
-      '@nx/detox':
-        specifier: workspace:*
-        version: link:../detox
-      '@nx/rollup':
-        specifier: workspace:*
-        version: link:../rollup
 
   packages/express:
     dependencies:
@@ -2980,6 +3000,21 @@ importers:
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
+      '@nx/eslint':
+        specifier: workspace:*
+        version: link:../eslint
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../jest
+      '@nx/rollup':
+        specifier: workspace:*
+        version: link:../rollup
+      '@nx/vite':
+        specifier: workspace:*
+        version: link:../vite
+      '@nx/vitest':
+        specifier: workspace:*
+        version: link:../vitest
       '@nx/workspace':
         specifier: workspace:*
         version: link:../workspace
@@ -3022,6 +3057,9 @@ importers:
       picomatch:
         specifier: 'catalog:'
         version: 4.0.4
+      prettier:
+        specifier: ~3.6.2
+        version: 3.6.2
       semver:
         specifier: 'catalog:'
         version: 7.7.4
@@ -3157,6 +3195,9 @@ importers:
       '@nx/eslint':
         specifier: workspace:*
         version: link:../eslint
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../jest
       '@nx/js':
         specifier: workspace:*
         version: link:../js
@@ -3243,6 +3284,9 @@ importers:
       '@nuxt/schema':
         specifier: ^3.10.0 || ^4.0.0
         version: 3.17.6
+      '@nx/cypress':
+        specifier: workspace:*
+        version: link:../cypress
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
@@ -3252,6 +3296,9 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
+      '@nx/playwright':
+        specifier: workspace:*
+        version: link:../playwright
       '@nx/vite':
         specifier: workspace:*
         version: link:../vite
@@ -3551,18 +3598,33 @@ importers:
 
   packages/react-native:
     dependencies:
+      '@nx/detox':
+        specifier: workspace:*
+        version: link:../detox
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
       '@nx/eslint':
         specifier: workspace:*
         version: link:../eslint
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../jest
       '@nx/js':
         specifier: workspace:*
         version: link:../js
       '@nx/react':
         specifier: workspace:*
         version: link:../react
+      '@nx/rollup':
+        specifier: workspace:*
+        version: link:../rollup
+      '@nx/vite':
+        specifier: workspace:*
+        version: link:../vite
+      '@nx/webpack':
+        specifier: workspace:*
+        version: link:../webpack
       ajv:
         specifier: ^8.12.0
         version: 8.17.1
@@ -3594,13 +3656,6 @@ importers:
       nx:
         specifier: workspace:*
         version: link:../nx
-    optionalDependencies:
-      '@nx/detox':
-        specifier: workspace:*
-        version: link:../detox
-      '@nx/rollup':
-        specifier: workspace:*
-        version: link:../rollup
 
   packages/remix:
     dependencies:
@@ -3867,6 +3922,9 @@ importers:
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
+      '@nx/eslint':
+        specifier: workspace:*
+        version: link:../eslint
       '@nx/js':
         specifier: workspace:*
         version: link:../js
@@ -4020,6 +4078,9 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+      typescript:
+        specifier: catalog:typescript
+        version: 5.9.2
     devDependencies:
       '@nx/vitest':
         specifier: workspace:*
@@ -4145,9 +4206,51 @@ importers:
 
   packages/workspace:
     dependencies:
+      '@nx/angular':
+        specifier: workspace:*
+        version: link:../angular
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
+      '@nx/eslint':
+        specifier: workspace:*
+        version: link:../eslint
+      '@nx/expo':
+        specifier: workspace:*
+        version: link:../expo
+      '@nx/express':
+        specifier: workspace:*
+        version: link:../express
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../jest
+      '@nx/js':
+        specifier: workspace:*
+        version: link:../js
+      '@nx/nest':
+        specifier: workspace:*
+        version: link:../nest
+      '@nx/next':
+        specifier: workspace:*
+        version: link:../next
+      '@nx/node':
+        specifier: workspace:*
+        version: link:../node
+      '@nx/nuxt':
+        specifier: workspace:*
+        version: link:../nuxt
+      '@nx/react':
+        specifier: workspace:*
+        version: link:../react
+      '@nx/react-native':
+        specifier: workspace:*
+        version: link:../react-native
+      '@nx/vue':
+        specifier: workspace:*
+        version: link:../vue
+      '@nx/web':
+        specifier: workspace:*
+        version: link:../web
       '@zkochan/js-yaml':
         specifier: 'catalog:'
         version: 0.0.7
@@ -4166,6 +4269,9 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+      typescript:
+        specifier: catalog:typescript
+        version: 5.9.2
       yargs-parser:
         specifier: 'catalog:'
         version: 21.1.1

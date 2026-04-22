@@ -40,15 +40,37 @@
     "tslib": "catalog:typescript"
   },
   "peerDependencies": {
+    "@nx/cypress": "workspace:*",
+    "@nx/detox": "workspace:*",
+    "@nx/jest": "workspace:*",
+    "@nx/playwright": "workspace:*",
+    "@nx/rollup": "workspace:*",
+    "@nx/web": "workspace:*",
     "metro-config": ">= 0.82.0",
     "metro-resolver": ">= 0.82.0"
   },
+  "peerDependenciesMeta": {
+    "@nx/cypress": {
+      "optional": true
+    },
+    "@nx/detox": {
+      "optional": true
+    },
+    "@nx/jest": {
+      "optional": true
+    },
+    "@nx/playwright": {
+      "optional": true
+    },
+    "@nx/rollup": {
+      "optional": true
+    },
+    "@nx/web": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "nx": "workspace:*"
-  },
-  "optionalDependencies": {
-    "@nx/detox": "workspace:*",
-    "@nx/rollup": "workspace:*"
   },
   "executors": "./executors.json",
   "ng-update": {
