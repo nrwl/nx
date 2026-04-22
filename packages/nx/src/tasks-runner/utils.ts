@@ -436,6 +436,48 @@ export function getExecutorNameForTask(task: Task, projectGraph: ProjectGraph) {
   return getTargetConfigurationForTask(task, projectGraph)?.executor;
 }
 
+/**
+ * Expand a set of initiating task IDs by walking through any `nx:noop` tasks
+ * and replacing them with their direct dependencies + continuous dependencies.
+ * Non-noop tasks are kept as-is; cycles are safe.
+ *
+ * An `nx:noop` executor returns immediately, so if it is the only thing
+ * anchoring a continuous child, the child gets killed by
+ * `cleanUpUnneededContinuousTasks` the moment the noop completes. Treating the
+ * noop's dependencies as the real anchors preserves the intended orchestration.
+ */
+export function expandInitiatingTasksThroughNoop(
+  initiatingTasks: Task[],
+  taskGraph: TaskGraph,
+  projectGraph: ProjectGraph
+): Set<string> {
+  const expanded = new Set<string>();
+  const visited = new Set<string>();
+  const queue: string[] = initiatingTasks.map((t) => t.id);
+
+  while (queue.length > 0) {
+    const taskId = queue.shift()!;
+    if (visited.has(taskId)) continue;
+    visited.add(taskId);
+
+    const task = taskGraph.tasks[taskId];
+    if (!task) continue;
+
+    if (getExecutorNameForTask(task, projectGraph) === 'nx:noop') {
+      for (const dep of taskGraph.dependencies[taskId] ?? []) {
+        queue.push(dep);
+      }
+      for (const dep of taskGraph.continuousDependencies[taskId] ?? []) {
+        queue.push(dep);
+      }
+    } else {
+      expanded.add(taskId);
+    }
+  }
+
+  return expanded;
+}
+
 export function getExecutorForTask(
   task: Task,
   projects: Record<string, ProjectConfiguration>
