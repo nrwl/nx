@@ -16,6 +16,7 @@ import { assertWorkspaceValidity } from '../utils/assert-workspace-validity';
 import { DelayedSpinner } from '../utils/delayed-spinner';
 import { readJsonFile } from '../utils/fileutils';
 import { PackageJson } from '../utils/package-json';
+import { formatPluginProgressText } from '../utils/plugin-progress-text';
 import { ProgressTopics } from '../utils/progress-topics';
 import { workspaceRoot } from '../utils/workspace-root';
 import {
@@ -323,22 +324,13 @@ async function updateProjectGraphWithPlugins(
     createDependencyPlugins.map((plugin) => plugin.name)
   );
 
-  function getSpinnerText() {
-    if (!spinner || inProgressPlugins.size === 0) {
-      return '';
-    }
-
-    if (inProgressPlugins.size === 1) {
-      return `Creating project graph dependencies with ${
-        inProgressPlugins.values().next().value
-      }`;
-    } else {
-      return [
-        `Creating project graph dependencies with ${inProgressPlugins.size} plugins`,
-        ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
-      ].join('\n');
-    }
-  }
+  const getSpinnerText = () =>
+    spinner
+      ? formatPluginProgressText(
+          'Creating project graph dependencies',
+          inProgressPlugins
+        )
+      : '';
 
   spinner = new DelayedSpinner(getSpinnerText(), {
     progressTopic: ProgressTopics.GraphConstruction,
@@ -441,22 +433,10 @@ export async function applyProjectMetadata(
     createMetadataPlugins.map((p) => p.name)
   );
 
-  function getSpinnerText() {
-    if (!spinner || inProgressPlugins.size === 0) {
-      return '';
-    }
-
-    if (inProgressPlugins.size === 1) {
-      return `Creating project metadata with ${
-        inProgressPlugins.values().next().value
-      }`;
-    } else {
-      return [
-        `Creating project metadata with ${inProgressPlugins.size} plugins`,
-        ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
-      ].join('\n');
-    }
-  }
+  const getSpinnerText = () =>
+    spinner
+      ? formatPluginProgressText('Creating project metadata', inProgressPlugins)
+      : '';
 
   spinner = createMetadataPlugins.length
     ? new DelayedSpinner(getSpinnerText(), {
