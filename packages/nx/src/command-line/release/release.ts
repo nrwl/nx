@@ -217,6 +217,34 @@ export function createAPI(
       });
     }
 
+    // Check if any changelog generation is actually enabled before calling releaseChangelog,
+    // to avoid expensive operations (project graph recreation, git log, etc.) when changelogs are disabled
+    const changelogGenerationEnabled =
+      isChangelogEffectivelyEnabled(
+        nxReleaseConfig.changelog.workspaceChangelog
+      ) ||
+      releaseGraph.releaseGroups.some((g) =>
+        isChangelogEffectivelyEnabled(g.changelog)
+      );
+
+    // Run changelog generation before git commit/tag so that changelog files are
+    // included in the same commit as the version bump
+    const changelogResult = changelogGenerationEnabled
+      ? await releaseChangelog({
+          ...args,
+          // Re-use existing release graph
+          releaseGraph,
+          versionData: projectsVersionData,
+          version: workspaceVersion,
+          stageChanges: shouldStage,
+          gitCommit: false,
+          gitTag: false,
+          gitPush: false,
+          createRelease: false,
+          deleteVersionPlans: false,
+        })
+      : undefined;
+
     if (shouldCommit) {
       output.logSingleLine(`Committing changes with git`);
 
@@ -278,31 +306,7 @@ export function createAPI(
       hasPushedChanges = true;
     }
 
-    // Check if any changelog generation is actually enabled before calling releaseChangelog,
-    // to avoid expensive operations (project graph recreation, git log, etc.) when changelogs are disabled
-    const changelogGenerationEnabled =
-      isChangelogEffectivelyEnabled(
-        nxReleaseConfig.changelog.workspaceChangelog
-      ) ||
-      releaseGraph.releaseGroups.some((g) =>
-        isChangelogEffectivelyEnabled(g.changelog)
-      );
-
-    if (changelogGenerationEnabled) {
-      const changelogResult = await releaseChangelog({
-        ...args,
-        // Re-use existing release graph
-        releaseGraph,
-        versionData: projectsVersionData,
-        version: workspaceVersion,
-        stageChanges: shouldStage,
-        gitCommit: false,
-        gitTag: false,
-        gitPush: false,
-        createRelease: false,
-        deleteVersionPlans: false,
-      });
-
+    if (changelogResult) {
       let latestCommit: string | undefined;
 
       if (
