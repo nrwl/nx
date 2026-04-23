@@ -146,7 +146,6 @@ function* compileTS(
     {}
   );
 
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     project = solutionBuilder.getNextInvalidatedProject();
     if (!project) {

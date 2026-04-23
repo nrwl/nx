@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { readNxJson, updateNxJson } from '../../generators/utils/nx-json';
 import { Tree } from '../../generators/tree';
 import { NxJsonConfiguration } from '../../config/nx-json';

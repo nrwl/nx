@@ -163,9 +163,16 @@ impl TuiState {
 
     // === Task Status Methods ===
 
-    /// Update the status of a task
-    pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
-        self.task_status_map.insert(task_id, status);
+    /// Update the status of a task. If the task is not yet registered (e.g. a
+    /// status event arrived before task registration), the entry is created so
+    /// the status is never silently dropped.
+    pub fn update_task_status(&mut self, task_id: &str, status: TaskStatus) {
+        match self.task_status_map.get_mut(task_id) {
+            Some(s) => *s = status,
+            None => {
+                self.task_status_map.insert(task_id.to_owned(), status);
+            }
+        }
     }
 
     /// Get the status of a task
@@ -266,15 +273,15 @@ impl TuiState {
     // === Task Timing Methods ===
 
     /// Record the start time of a task (in milliseconds since epoch)
-    pub fn record_task_start(&mut self, task_id: String) {
+    pub fn record_task_start(&mut self, task_id: &str) {
         self.task_start_times
-            .insert(task_id, current_timestamp_millis());
+            .insert(task_id.to_owned(), current_timestamp_millis());
     }
 
     /// Record the end time of a task (in milliseconds since epoch)
-    pub fn record_task_end(&mut self, task_id: String) {
+    pub fn record_task_end(&mut self, task_id: &str) {
         self.task_end_times
-            .insert(task_id, current_timestamp_millis());
+            .insert(task_id.to_owned(), current_timestamp_millis());
     }
 
     /// Get the start and end times of a task (in milliseconds since epoch)
@@ -400,7 +407,7 @@ impl TuiState {
     // === Read-Only Accessors ===
 
     /// Get a reference to all tasks
-    pub fn tasks(&self) -> &Vec<Task> {
+    pub fn tasks(&self) -> &[Task] {
         &self.tasks
     }
 
@@ -420,7 +427,7 @@ impl TuiState {
     }
 
     /// Get a reference to pinned tasks
-    pub fn pinned_tasks(&self) -> &Vec<String> {
+    pub fn pinned_tasks(&self) -> &[String] {
         &self.pinned_tasks
     }
 
@@ -665,7 +672,7 @@ mod tests {
         assert_eq!(state.get_task_status("app1"), Some(TaskStatus::NotStarted));
 
         // Update status
-        state.update_task_status(String::from("app1"), TaskStatus::InProgress);
+        state.update_task_status("app1", TaskStatus::InProgress);
 
         // Verify status updated
         assert_eq!(state.get_task_status("app1"), Some(TaskStatus::InProgress));
@@ -680,8 +687,8 @@ mod tests {
     #[test]
     fn test_get_task_status_map() {
         let mut state = create_test_state();
-        state.update_task_status(String::from("app1"), TaskStatus::Success);
-        state.update_task_status(String::from("app2"), TaskStatus::InProgress);
+        state.update_task_status("app1", TaskStatus::Success);
+        state.update_task_status("app2", TaskStatus::InProgress);
 
         let map = state.get_task_status_map();
         assert_eq!(map.get("app1"), Some(&TaskStatus::Success));
@@ -810,7 +817,7 @@ mod tests {
 
         // Record start
         let before_start = current_timestamp_millis();
-        state.record_task_start(String::from("app1"));
+        state.record_task_start("app1");
         let after_start = current_timestamp_millis();
 
         // Small delay
@@ -818,7 +825,7 @@ mod tests {
 
         // Record end
         let before_end = current_timestamp_millis();
-        state.record_task_end(String::from("app1"));
+        state.record_task_end("app1");
         let after_end = current_timestamp_millis();
 
         // Verify timings
@@ -851,8 +858,8 @@ mod tests {
     fn test_get_task_start_and_end_times() {
         let mut state = create_test_state();
 
-        state.record_task_start(String::from("app1"));
-        state.record_task_end(String::from("app1"));
+        state.record_task_start("app1");
+        state.record_task_end("app1");
 
         let start_times = state.get_task_start_times();
         let end_times = state.get_task_end_times();
@@ -929,7 +936,7 @@ mod integration_tests {
         let state_clone = state.clone();
         let handle = std::thread::spawn(move || {
             let mut s = state_clone.lock();
-            s.update_task_status(String::from("app1"), TaskStatus::Success);
+            s.update_task_status("app1", TaskStatus::Success);
         });
 
         handle.join().unwrap();

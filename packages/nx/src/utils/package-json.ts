@@ -85,6 +85,15 @@ export interface PackageJson {
   resolutions?: Record<string, string>;
   pnpm?: {
     overrides?: PackageOverride;
+    onlyBuiltDependencies?: string[];
+    neverBuiltDependencies?: string[];
+    allowBuilds?: Record<string, boolean>;
+    supportedArchitectures?: {
+      os?: string[];
+      cpu?: string[];
+      libc?: string[];
+    };
+    ignoredOptionalDependencies?: string[];
   };
   overrides?: PackageOverride;
   bin?: Record<string, string> | string;
@@ -226,10 +235,15 @@ export function readTargetsFromPackageJson(
     res[script] = buildTargetFromScript(script, scripts, packageManagerCommand);
   }
   for (const targetName in nx?.targets) {
-    res[targetName] = mergeTargetConfigurations(
-      nx?.targets[targetName],
-      res[targetName]
-    );
+    const nxTarget = nx.targets[targetName];
+    // If the nx target specifies how to run (via executor or command shorthand),
+    // it's incompatible with the inferred nx:run-script target from scripts,
+    // so overwrite instead of merge.
+    if (res[targetName] && (nxTarget.executor || nxTarget.command)) {
+      res[targetName] = nxTarget;
+    } else {
+      res[targetName] = mergeTargetConfigurations(nxTarget, res[targetName]);
+    }
   }
 
   /**
@@ -388,6 +402,12 @@ function preparePackageInstallation(pkg: string, requiredVersion: string) {
     cwd: tempDir,
     stdio: isVerbose ? 'inherit' : 'ignore',
     windowsHide: true,
+    // Yarn Berry requires an environment variable (not a CLI flag) to disable lifecycle scripts.
+    // Apply this defensively for all package managers when pulling nx@latest to tmp.
+    env: {
+      ...process.env,
+      YARN_ENABLE_SCRIPTS: 'false',
+    },
   } as const;
 
   return {

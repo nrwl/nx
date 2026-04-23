@@ -3440,15 +3440,17 @@ function createFile(f: string, deps?: FileDataDependency[]): FileData {
   return { file: f, hash: '', deps };
 }
 
-const linter = new Linter();
+const linter = new Linter({ cwd: '/root' });
+const prefixedRuleName = `@nx/${dependencyChecksRuleName}`;
 const baseConfig = {
-  parser: 'jsonc-eslint-parser',
-  rules: {
-    [dependencyChecksRuleName]: 'error',
+  files: ['**'],
+  languageOptions: { parser: jsoncParser },
+  plugins: {
+    '@nx': {
+      rules: { [dependencyChecksRuleName]: dependencyChecks as any },
+    },
   },
 };
-linter.defineParser('jsonc-eslint-parser', jsoncParser as any);
-linter.defineRule(dependencyChecksRuleName, dependencyChecks as any);
 
 function runRule(
   ruleArguments: Options[0],
@@ -3466,9 +3468,9 @@ function runRule(
   const config = {
     ...baseConfig,
     rules: {
-      [dependencyChecksRuleName]: ['error', ruleArguments],
+      [prefixedRuleName]: ['error', ruleArguments],
     },
   };
 
-  return linter.verify(content, config as any, filePath);
+  return linter.verify(content, [config] as any, filePath);
 }

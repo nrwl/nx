@@ -43,6 +43,34 @@
     "nx": "workspace:*",
     "@nx/vitest": "workspace:*"
   },
+  "peerDependencies": {
+    "@nx/cypress": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@nx/jest": "workspace:*",
+    "@nx/playwright": "workspace:*",
+    "@nx/vite": "workspace:*",
+    "@nx/webpack": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@nx/cypress": {
+      "optional": true
+    },
+    "@nx/eslint": {
+      "optional": true
+    },
+    "@nx/jest": {
+      "optional": true
+    },
+    "@nx/playwright": {
+      "optional": true
+    },
+    "@nx/vite": {
+      "optional": true
+    },
+    "@nx/webpack": {
+      "optional": true
+    }
+  },
   "publishConfig": {
     "access": "public"
   }

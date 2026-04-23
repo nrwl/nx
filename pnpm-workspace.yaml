@@ -1,4 +1,5 @@
 packages:
+  - 'benchmarks'
   - 'packages/*'
   - 'e2e/*'
   - 'graph/*'
@@ -22,7 +23,7 @@ catalog:
   chalk: '^4.1.0'
   enquirer: '~2.3.6'
   minimatch: '10.2.4'
-  picomatch: '4.0.2'
+  picomatch: '4.0.4'
   picocolors: '^1.1.0'
   semver: '^7.6.3'
   tinyglobby: '^0.2.12'
@@ -62,10 +63,10 @@ catalogs:
     rxjs: '^6.5.3 || ^7.5.0'
     zone.js: '~0.15.0 || ~0.16.0'
   eslint:
-    '@angular-eslint/eslint-plugin': '21.2.0'
-    '@angular-eslint/eslint-plugin-template': '21.2.0'
-    '@angular-eslint/template-parser': '21.2.0'
-    angular-eslint: '21.2.0'
+    '@angular-eslint/eslint-plugin': '^21.3.1'
+    '@angular-eslint/eslint-plugin-template': '^21.3.1'
+    '@angular-eslint/template-parser': '^21.3.1'
+    angular-eslint: '^21.3.1'
   jest:
     '@jest/reporters': '^30.0.2'
     '@jest/test-result': '^30.0.2'

@@ -11,9 +11,11 @@ import {
   markPackageJsonAsNxProject,
   markRootPackageJsonAsNxProjectLegacy,
   runInstall,
+  setNeverConnectToCloud,
   updateGitIgnore,
 } from './utils';
 import { connectExistingRepoToNxCloudPrompt } from '../../nx-cloud/connect/connect-to-nx-cloud';
+import { MessageOptionKey } from '../../../utils/ab-testing';
 
 type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'> & {
   legacy?: boolean;
@@ -26,7 +28,7 @@ export async function addNxToNpmRepo(options: Options, guided: boolean = true) {
 
   let cacheableOperations: string[];
   let scriptOutputs = {};
-  let useNxCloud: boolean;
+  let nxCloudChoice: MessageOptionKey;
 
   const packageJson = readJsonFile('package.json');
   const scripts = Object.keys(packageJson.scripts ?? {}).filter(
@@ -56,7 +58,6 @@ export async function addNxToNpmRepo(options: Options, guided: boolean = true) {
     ).cacheableOperations;
 
     for (const scriptName of cacheableOperations) {
-      // eslint-disable-next-line no-await-in-loop
       scriptOutputs[scriptName] = (
         await enquirer.prompt([
           {
@@ -68,15 +69,22 @@ export async function addNxToNpmRepo(options: Options, guided: boolean = true) {
       )[scriptName];
     }
 
-    useNxCloud =
-      options.nxCloud ?? (await connectExistingRepoToNxCloudPrompt());
+    nxCloudChoice =
+      options.nxCloud === true
+        ? 'yes'
+        : options.nxCloud === false
+          ? 'skip'
+          : await connectExistingRepoToNxCloudPrompt();
   } else {
     cacheableOperations = options.cacheable ?? [];
-    useNxCloud =
-      options.nxCloud ??
-      (options.interactive
-        ? await connectExistingRepoToNxCloudPrompt()
-        : false);
+    nxCloudChoice =
+      options.nxCloud === true
+        ? 'yes'
+        : options.nxCloud === false
+          ? 'skip'
+          : options.interactive
+            ? await connectExistingRepoToNxCloudPrompt()
+            : 'skip';
   }
 
   createNxJsonFile(repoRoot, [], cacheableOperations, scriptOutputs);
@@ -95,8 +103,10 @@ export async function addNxToNpmRepo(options: Options, guided: boolean = true) {
 
   runInstall(repoRoot, pmc);
 
-  if (useNxCloud) {
+  if (nxCloudChoice === 'yes') {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
     await initCloud('nx-init-npm-repo');
+  } else if (nxCloudChoice === 'never') {
+    setNeverConnectToCloud(repoRoot);
   }
 }

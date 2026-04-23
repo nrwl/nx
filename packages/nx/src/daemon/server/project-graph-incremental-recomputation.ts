@@ -1,3 +1,4 @@
+import { Socket } from 'net';
 import { performance } from 'perf_hooks';
 import { readNxJson } from '../../config/nx-json';
 import {
@@ -8,7 +9,13 @@ import {
 } from '../../config/project-graph';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { hashArray } from '../../hasher/file-hasher';
+import { NxWorkspaceFilesExternals } from '../../native';
 import { buildProjectGraphUsingProjectFileMap as buildProjectGraphUsingFileMap } from '../../project-graph/build-project-graph';
+import {
+  DaemonProjectGraphError,
+  ProjectConfigurationsError,
+  isAggregateProjectGraphError,
+} from '../../project-graph/error-types';
 import { updateFileMap } from '../../project-graph/file-map-utils';
 import {
   FileMapCache,
@@ -17,6 +24,10 @@ import {
   writeCache,
   writeCacheIfStale,
 } from '../../project-graph/nx-deps-cache';
+import { getPlugins } from '../../project-graph/plugins/get-plugins';
+import type { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
+import { ConfigurationResult } from '../../project-graph/utils/project-configuration-utils';
+import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
 import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
@@ -27,20 +38,15 @@ import {
   updateFilesInContext,
 } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
-import { notifyFileChangeListeners } from './file-watching/file-change-events';
-import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
 import { serverLogger } from '../logger';
-import { NxWorkspaceFilesExternals } from '../../native';
-import { ConfigurationResult } from '../../project-graph/utils/project-configuration-utils';
-import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
-import type { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
+import { ProgressTopics } from '../../utils/progress-topics';
 import {
-  DaemonProjectGraphError,
-  ProjectConfigurationsError,
-  isAggregateProjectGraphError,
-} from '../../project-graph/error-types';
-import { getPlugins } from '../../project-graph/plugins/get-plugins';
+  subscribeClientToTopic,
+  unsubscribeClientFromTopic,
+} from './client-socket-context';
+import { notifyFileChangeListeners } from './file-watching/file-change-events';
+import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
+import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
 
 interface SerializedProjectGraph {
   error: Error | null;
@@ -84,7 +90,16 @@ let knownExternalNodes: Record<string, ProjectGraphExternalNode> = {};
 let fileChangeCounter = 0;
 let recomputationGeneration = 0;
 
-export async function getCachedSerializedProjectGraphPromise(): Promise<SerializedProjectGraph> {
+export async function getCachedSerializedProjectGraphPromise(
+  socket?: Socket
+): Promise<SerializedProjectGraph> {
+  // Subscribe the requesting client to the graph-construction topic
+  // for the duration of the await, so in-flight progress/log messages
+  // — including those produced by a recomputation that was already
+  // started before this caller arrived — are broadcast to them.
+  if (socket) {
+    subscribeClientToTopic(socket, ProgressTopics.GraphConstruction);
+  }
   try {
     let wasScheduled = false;
     // recomputing it now on demand. we can ignore the scheduled timeout
@@ -159,8 +174,16 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
       );
     }
 
+    if (errors?.length) {
+      cachedSerializedProjectGraphPromise = null;
+    }
+
     return result;
   } catch (e) {
+    // We return the project graph, but we don't want to persist the cache to
+    // serve the same state, as it could cause issues if the error is caused by something
+    // transient
+    cachedSerializedProjectGraphPromise = null;
     return {
       error: e,
       serializedProjectGraph: null,
@@ -172,6 +195,10 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
       allWorkspaceFiles: null,
       rustReferences: null,
     };
+  } finally {
+    if (socket) {
+      unsubscribeClientFromTopic(socket, ProgressTopics.GraphConstruction);
+    }
   }
 }
 
@@ -300,6 +327,15 @@ async function processCollectedUpdatedAndDeletedFiles(
     resetInternalState();
     throw e;
   }
+}
+
+export function invalidateGraphCache() {
+  // Clear the cached promise so the next request triggers a fresh computation.
+  // We intentionally do NOT call getCachedSerializedProjectGraphPromise() here
+  // because assigning its return Promise to the module-level variable causes a
+  // deadlock: the async function resumes, sees the variable is non-null (pointing
+  // at its own Promise), takes the "reuse" branch, and awaits itself forever.
+  cachedSerializedProjectGraphPromise = null;
 }
 
 async function processFilesAndCreateAndSerializeProjectGraph(

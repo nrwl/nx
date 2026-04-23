@@ -5,7 +5,7 @@
     "types": ["node"],
     "tsBuildInfoFile": "../../dist/packages/vue/tsconfig.tsbuildinfo"
   },
-  "include": ["**/*.ts", "**/*.json"],
+  "include": ["**/*.ts"],
   "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
   "references": [
     {
@@ -28,6 +28,18 @@
     },
     {
       "path": "../nx/tsconfig.lib.json"
+    },
+    {
+      "path": "../storybook/tsconfig.lib.json"
+    },
+    {
+      "path": "../rsbuild/tsconfig.lib.json"
+    },
+    {
+      "path": "../playwright/tsconfig.lib.json"
+    },
+    {
+      "path": "../cypress/tsconfig.lib.json"
     }
   ]
 }

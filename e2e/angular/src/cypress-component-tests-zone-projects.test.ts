@@ -30,7 +30,8 @@ describe('Angular Cypress Component Tests - Zone.js projects', () => {
 
   afterAll(() => cleanupCypressComponentTests());
 
-  it('should successfully run for an app', () => {
+  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
+  it.skip('should successfully run for an app', () => {
     const { appName } = setup;
 
     runCLI(
@@ -43,7 +44,8 @@ describe('Angular Cypress Component Tests - Zone.js projects', () => {
     }
   }, 300_000);
 
-  it('should successfully run for a lib', () => {
+  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
+  it.skip('should successfully run for a lib', () => {
     const { usedInAppLibName } = setup;
 
     runCLI(

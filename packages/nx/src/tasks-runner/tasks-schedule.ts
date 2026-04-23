@@ -7,6 +7,7 @@ import {
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph } from '../config/project-graph';
+import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
 import { reverse } from '../project-graph/operators';
 import { TaskHistory, getTaskHistory } from '../utils/task-history';
@@ -34,6 +35,7 @@ export class TasksSchedule {
 
   constructor(
     private readonly projectGraph: ProjectGraph,
+    private readonly projects: Record<string, ProjectConfiguration>,
     private readonly taskGraph: TaskGraph,
     private readonly options: DefaultTasksRunnerOptions
   ) {}
@@ -78,6 +80,9 @@ export class TasksSchedule {
       delete this.reverseTaskDeps[taskId];
     }
     const removedSet = new Set(taskIds);
+    this.scheduledTasks = this.scheduledTasks.filter(
+      (id) => !removedSet.has(id)
+    );
     for (const [key, deps] of Object.entries(this.reverseTaskDeps)) {
       this.reverseTaskDeps[key] = deps.filter((d) => !removedSet.has(d));
     }
@@ -134,61 +139,72 @@ export class TasksSchedule {
     if (this.options.batch !== false && process.env.NX_BATCH_MODE !== 'false') {
       await this.scheduleBatches();
     }
+    const toSchedule: string[] = [];
     for (let root of this.notScheduledTaskGraph.roots) {
       if (this.canBeScheduled(root)) {
-        await this.scheduleTask(root);
+        toSchedule.push(root);
+        // Mark as running so canBeScheduled gates on parallelism for
+        // subsequent roots in this same scheduling pass.
+        this.runningTasks.add(root);
       }
+    }
+    if (toSchedule.length > 0) {
+      this.scheduleTaskBatch(toSchedule);
     }
   }
 
-  private async scheduleTask(taskId: string) {
+  private scheduleTaskBatch(taskIds: string[]) {
     this.notScheduledTaskGraph = removeTasksFromTaskGraph(
       this.notScheduledTaskGraph,
-      [taskId]
+      taskIds
     );
-    this.scheduledTasks = this.scheduledTasks
-      .concat(taskId)
-      // NOTE: sort task by most dependent on first
-      .sort((taskId1, taskId2) => {
-        // First compare the length of task dependencies.
-        const taskDifference =
-          this.reverseTaskDeps[taskId2].length -
-          this.reverseTaskDeps[taskId1].length;
+    for (const taskId of taskIds) {
+      this.scheduledTasks.push(taskId);
+      this.runningTasks.add(taskId);
+    }
+    this.sortScheduledTasks();
+  }
 
-        if (taskDifference !== 0) {
-          return taskDifference;
-        }
+  private sortScheduledTasks() {
+    // NOTE: sort task by most dependent on first
+    this.scheduledTasks.sort((taskId1, taskId2) => {
+      // First compare the length of task dependencies.
+      const taskDifference =
+        this.reverseTaskDeps[taskId2].length -
+        this.reverseTaskDeps[taskId1].length;
 
-        // Tie-breaker for tasks with equal number of task dependencies.
-        // Most likely tasks with no dependencies such as test
-        const project1 = this.taskGraph.tasks[taskId1].target.project;
-        const project2 = this.taskGraph.tasks[taskId2].target.project;
+      if (taskDifference !== 0) {
+        return taskDifference;
+      }
 
-        const project1NodeDependencies = this.projectDependencies[project1];
-        const project2NodeDependencies = this.projectDependencies[project2];
+      // Tie-breaker for tasks with equal number of task dependencies.
+      // Most likely tasks with no dependencies such as test
+      const project1 = this.taskGraph.tasks[taskId1].target.project;
+      const project2 = this.taskGraph.tasks[taskId2].target.project;
 
-        const dependenciesDiff =
-          project2NodeDependencies - project1NodeDependencies;
+      const project1NodeDependencies = this.projectDependencies[project1];
+      const project2NodeDependencies = this.projectDependencies[project2];
 
-        if (dependenciesDiff !== 0) {
-          return dependenciesDiff;
-        }
+      const dependenciesDiff =
+        project2NodeDependencies - project1NodeDependencies;
 
-        const task1Timing: number | undefined =
-          this.estimatedTaskTimings[taskId1];
-        if (!task1Timing) {
-          // if no timing or 0, put task1 at beginning
-          return -1;
-        }
-        const task2Timing: number | undefined =
-          this.estimatedTaskTimings[taskId2];
-        if (!task2Timing) {
-          // if no timing or 0, put task2 at beginning
-          return 1;
-        }
-        return task2Timing - task1Timing;
-      });
-    this.runningTasks.add(taskId);
+      if (dependenciesDiff !== 0) {
+        return dependenciesDiff;
+      }
+
+      const task1Timing: number | undefined =
+        this.estimatedTaskTimings[taskId1];
+      const task2Timing: number | undefined =
+        this.estimatedTaskTimings[taskId2];
+
+      // Tasks with no historical timing run first (unknown duration = assume long)
+      const has1 = task1Timing != null && task1Timing !== 0;
+      const has2 = task2Timing != null && task2Timing !== 0;
+      if (!has1 && !has2) return 0;
+      if (!has1) return -1;
+      if (!has2) return 1;
+      return task2Timing - task1Timing;
+    });
   }
 
   private async scheduleBatches() {
@@ -244,7 +260,7 @@ export class TasksSchedule {
 
     const { batchImplementationFactory, preferBatch } = getExecutorForTask(
       task,
-      this.projectGraph
+      this.projects
     );
     const executorName = getExecutorNameForTask(task, this.projectGraph);
     if (rootExecutorName !== executorName) {

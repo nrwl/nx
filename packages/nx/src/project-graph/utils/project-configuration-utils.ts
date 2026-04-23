@@ -12,6 +12,8 @@ import { minimatch } from 'minimatch';
 import { performance } from 'perf_hooks';
 
 import { DelayedSpinner } from '../../utils/delayed-spinner';
+import { formatPluginProgressText } from '../../utils/plugin-progress-text';
+import { ProgressTopics } from '../../utils/progress-topics';
 import {
   AggregateCreateNodesError,
   formatAggregateCreateNodesError,
@@ -83,37 +85,20 @@ export async function createProjectConfigurationsWithPlugins(
   let spinner: DelayedSpinner;
   const inProgressPlugins = new Set<string>();
 
-  function updateSpinner() {
-    if (!spinner || inProgressPlugins.size === 0) {
-      return;
-    }
-
-    if (inProgressPlugins.size === 1) {
-      spinner.setMessage(
-        `Creating project graph nodes with ${
-          inProgressPlugins.values().next().value
-        }`
-      );
-    } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      spinner.setMessage(
-        [
-          `Creating project graph nodes with ${inProgressPlugins.size} plugins`,
-          ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
-        ].join('\n')
-      );
-    } else {
-      spinner.setMessage(
-        `Creating project graph nodes with ${inProgressPlugins.size} plugins`
-      );
-    }
-  }
+  const getSpinnerText = () =>
+    spinner
+      ? formatPluginProgressText(
+          'Creating project graph nodes',
+          inProgressPlugins
+        )
+      : '';
 
   const createNodesPlugins = plugins.filter(
     (plugin) => plugin.createNodes?.[0]
   );
-  spinner = new DelayedSpinner(
-    `Creating project graph nodes with ${createNodesPlugins.length} plugins`
-  );
+  spinner = new DelayedSpinner(getSpinnerText(), {
+    progressTopic: ProgressTopics.GraphConstruction,
+  });
 
   const results: Promise<
     (readonly [
@@ -175,7 +160,7 @@ export async function createProjectConfigurationsWithPlugins(
       })
       .finally(() => {
         inProgressPlugins.delete(pluginName);
-        updateSpinner();
+        spinner.setMessage(getSpinnerText());
       });
 
     results.push(r);

@@ -136,7 +136,7 @@ describe('lib', () => {
         });
         const tsconfigJson = readJson(tree, '/tsconfig.base.json');
         expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-          'my-lib/src/index.ts',
+          './my-lib/src/index.ts',
         ]);
       });
 
@@ -150,7 +150,7 @@ describe('lib', () => {
 
         const tsconfigJson = readJson(tree, 'tsconfig.json');
         expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-          'my-lib/src/index.ts',
+          './my-lib/src/index.ts',
         ]);
       });
 
@@ -166,7 +166,7 @@ describe('lib', () => {
         });
         const tsconfigJson = readJson(tree, '/tsconfig.base.json');
         expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-          'my-lib/src/index.ts',
+          './my-lib/src/index.ts',
         ]);
       });
 
@@ -286,7 +286,7 @@ describe('lib', () => {
         });
         const tsconfigJson = readJson(tree, '/tsconfig.base.json');
         expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-          'my-dir/my-lib/src/index.ts',
+          './my-dir/my-lib/src/index.ts',
         ]);
         expect(tsconfigJson.compilerOptions.paths['my-lib/*']).toBeUndefined();
       });
@@ -302,7 +302,7 @@ describe('lib', () => {
 
         const tsconfigJson = readJson(tree, '/tsconfig.json');
         expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-          'my-dir/my-lib/src/index.ts',
+          './my-dir/my-lib/src/index.ts',
         ]);
         expect(tsconfigJson.compilerOptions.paths['my-lib/*']).toBeUndefined();
       });
@@ -730,7 +730,7 @@ describe('lib', () => {
         });
         const tsconfigJson = readJson(tree, '/tsconfig.base.json');
         expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-          'my-lib/src/index.js',
+          './my-lib/src/index.js',
         ]);
       });
 
@@ -1636,6 +1636,27 @@ describe('lib', () => {
           ],
         },
       });
+    });
+
+    it('should keep esbuild aligned with vite when generating mixed bundler libraries', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'esbuild-lib',
+        bundler: 'esbuild',
+        unitTestRunner: 'none',
+      });
+      const esbuildVersion = readJson(tree, 'package.json').devDependencies
+        .esbuild;
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'vite-lib',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies.esbuild).toBe(esbuildVersion);
     });
   });
 

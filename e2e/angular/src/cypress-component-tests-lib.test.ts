@@ -30,7 +30,8 @@ describe('Angular Cypress Component Tests - Lib', () => {
 
   afterAll(() => cleanupCypressComponentTests());
 
-  it('should successfully component test lib being used in app', () => {
+  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
+  it.skip('should successfully component test lib being used in app', () => {
     const { usedInAppLibName } = setup;
 
     runCLI(

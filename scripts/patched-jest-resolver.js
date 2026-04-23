@@ -51,6 +51,7 @@ module.exports = function (modulePath, options) {
     '@nx/vite',
     '@nx/jest',
     '@nx/docker',
+    '@nx/dotnet',
     '@nx/js',
     '@nx/next',
     '@nx/storybook',

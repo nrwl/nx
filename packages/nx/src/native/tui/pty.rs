@@ -6,7 +6,7 @@ use std::{
     io::{self, Write},
     sync::{
         Arc,
-        atomic::{AtomicU64, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
     },
 };
 use tracing::debug;
@@ -68,6 +68,9 @@ pub struct PtyInstance {
     /// Generation counter for async resize. Incremented on each resize request
     /// so that stale background resize threads can detect they've been superseded.
     resize_generation: Arc<AtomicU64>,
+    /// Cached result of cursor-movement detection. Flips true on first hit and
+    /// stays true — so subsequent arrow key events skip the O(n) buffer scan.
+    handles_cursor_movement: Arc<AtomicBool>,
     /// Shared state for background scrollback processing in inline mode
     scrollback_state: Arc<Mutex<ScrollbackState>>,
 }
@@ -371,6 +374,7 @@ impl PtyInstance {
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
+            handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
                 scrollback_count: 0,
@@ -396,6 +400,7 @@ impl PtyInstance {
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
+            handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
                 scrollback_count: 0,
@@ -418,6 +423,7 @@ impl PtyInstance {
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
+            handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
                 scrollback_count: 0,
@@ -723,14 +729,19 @@ impl PtyInstance {
     }
 
     /// Simple check: does the recent output contain cursor movement escape sequences?
-    /// This catches enquirer-style programs that move cursor but don't use alternate screen
+    /// This catches enquirer-style programs that move cursor but don't use alternate screen.
+    /// Result is cached — once true it never reverts, so subsequent calls skip the O(n) scan.
     fn has_cursor_movement_in_output(&self) -> bool {
+        if self.handles_cursor_movement.load(Ordering::Relaxed) {
+            return true;
+        }
+
         let parser = self.parser.read();
         let raw_output = parser.get_raw_output();
         let output_str = std::str::from_utf8(raw_output).unwrap_or("");
 
         // Check for any cursor control sequences in one pass
-        [
+        let found = [
             "\x1b[?25l",
             "\x1b[?25h",
             "\x1b[H",
@@ -740,7 +751,12 @@ impl PtyInstance {
             "\x1b[D",
         ]
         .iter()
-        .any(|seq| output_str.contains(seq))
+        .any(|seq| output_str.contains(seq));
+
+        if found {
+            self.handles_cursor_movement.store(true, Ordering::Relaxed);
+        }
+        found
     }
 
     /// Maximum raw output bytes to retain. The raw output buffer stores every
@@ -791,6 +807,7 @@ mod tests {
             dimensions: Arc::new(RwLock::new((24, 80))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
+            handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
                 scrollback_count: 0,
