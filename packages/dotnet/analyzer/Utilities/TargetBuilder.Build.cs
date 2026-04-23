@@ -49,7 +49,7 @@ public static partial class TargetBuilder
                     Args = [.. defaultFlags, "--configuration", "Release"]
                 }
             },
-            DependsOn = [$"^{targetName}", options.RestoreTargetName],
+            DependsOn = [$"^{targetName}"],
             Cache = true,
             Inputs =
             [

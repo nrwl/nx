@@ -6,9 +6,9 @@ namespace MsbuildAnalyzer.Models;
 public class PluginOptions
 {
     /// <summary>
-    /// The name of the build target. Defaults to "build:dotnet".
+    /// The name of the build target. Defaults to "build".
     /// </summary>
-    public string BuildTargetName { get; set; } = "build:dotnet";
+    public string BuildTargetName { get; set; } = "build";
 
     /// <summary>
     /// The name of the test target. Defaults to "test".

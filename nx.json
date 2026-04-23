@@ -257,6 +257,7 @@
         "packages/dotnet/analyzer.Tests/**"
       ],
       "options": {
+        "build": { "targetName": "build:dotnet" },
         "test": { "targetName": "test-native" }
       }
     },

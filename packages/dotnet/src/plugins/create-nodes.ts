@@ -109,7 +109,7 @@ function mergeUserTargetConfigurations(
     targetOption: TargetConfigurationWithName | false | undefined;
     defaultTargetName: string;
   }> = [
-    { targetOption: options.build, defaultTargetName: 'build:dotnet' },
+    { targetOption: options.build, defaultTargetName: 'build' },
     { targetOption: options.test, defaultTargetName: 'test' },
     { targetOption: options.clean, defaultTargetName: 'clean' },
     { targetOption: options.restore, defaultTargetName: 'restore' },
@@ -178,7 +178,7 @@ export const createNodesV2: CreateNodesV2<DotNetPluginOptions> = [
       const analyzerOptions = {
         buildTargetName:
           (normalizedOptions.build && normalizedOptions.build.targetName) ||
-          'build:dotnet',
+          'build',
         testTargetName:
           (normalizedOptions.test && normalizedOptions.test.targetName) ||
           'test',
