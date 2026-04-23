@@ -86,8 +86,10 @@ const projectGraphRecomputationListeners = new Set<
   ) => void
 >();
 let storedWorkspaceConfigHash: string | undefined;
-let waitPeriod = 100;
-let scheduledTimeoutId;
+// Set while an auto-triggered graph recomputation is in flight. Rapid
+// subsequent `scheduleProjectGraphRecomputation` calls don't start new runs;
+// the running loop picks up accumulated files on its next iteration.
+let autoRecomputePromise: Promise<void> | undefined;
 let knownExternalNodes: Record<string, ProjectGraphExternalNode> = {};
 let fileChangeCounter = 0;
 let recomputationGeneration = 0;
@@ -103,16 +105,13 @@ export async function getCachedSerializedProjectGraphPromise(
     subscribeClientToTopic(socket, ProgressTopics.GraphConstruction);
   }
   try {
-    let wasScheduled = false;
-    // recomputing it now on demand. we can ignore the scheduled timeout
-    if (scheduledTimeoutId) {
-      wasScheduled = true;
-      clearTimeout(scheduledTimeoutId);
-      scheduledTimeoutId = undefined;
+    // If an auto-recompute is in flight, let it finish. It already writes
+    // `cachedSerializedProjectGraphPromise` and notifies listeners, so after
+    // awaiting we just fall through to serve its result.
+    if (autoRecomputePromise) {
+      await autoRecomputePromise;
     }
 
-    // reset the wait time
-    waitPeriod = 100;
     await resetInternalStateIfNxDepsMissing();
     const separatedPlugins = await getPluginsSeparated();
     const previousPromise = cachedSerializedProjectGraphPromise;
@@ -138,14 +137,6 @@ export async function getCachedSerializedProjectGraphPromise(
     const graphWasRecomputed =
       cachedSerializedProjectGraphPromise !== previousPromise;
     const result = await cachedSerializedProjectGraphPromise;
-
-    if (wasScheduled) {
-      notifyProjectGraphRecomputationListeners(
-        result.projectGraph,
-        result.sourceMaps,
-        result.error
-      );
-    }
 
     const errors = result.error
       ? result.error instanceof DaemonProjectGraphError
@@ -218,10 +209,8 @@ export function scheduleProjectGraphRecomputation(
     collectedDeletedFiles.set(f, fileChangeCounter);
   }
 
-  // The native watcher already coalesces a burst of events into one batch per
-  // tick, so we can dispatch socket + listener notifications immediately. The
-  // `setTimeout` below only exists to batch the (much heavier) graph
-  // recomputation — it is not a coalescing window for notifications.
+  // The native watcher already coalesces a burst of events into one batch,
+  // so socket + listener notifications dispatch immediately.
   if (
     createdFiles.length > 0 ||
     updatedFiles.length > 0 ||
@@ -231,27 +220,42 @@ export function scheduleProjectGraphRecomputation(
     notifyFileWatcherSockets(createdFiles, updatedFiles, deletedFiles);
   }
 
-  if (createdFiles.length > 0) {
-    waitPeriod = 100; // reset it to process the graph faster
-  }
+  startAutoRecompute();
+}
 
-  if (!scheduledTimeoutId) {
-    scheduledTimeoutId = setTimeout(async () => {
-      scheduledTimeoutId = undefined;
-      if (waitPeriod < 4000) {
-        waitPeriod = waitPeriod * 2;
-      }
-
-      cachedSerializedProjectGraphPromise =
-        processFilesAndCreateAndSerializeProjectGraph(
-          await getPluginsSeparated()
+/**
+ * Start the auto-recompute loop. If one is already running, no-op — the
+ * running loop's next iteration will pick up newly-accumulated files via
+ * the collected* maps.
+ *
+ * Listeners are notified once per completed iteration. The loop runs at
+ * least once unconditionally so initial startup (called with empty file
+ * lists) still produces an initial graph.
+ */
+function startAutoRecompute() {
+  if (autoRecomputePromise) return;
+  autoRecomputePromise = (async () => {
+    try {
+      do {
+        cachedSerializedProjectGraphPromise =
+          processFilesAndCreateAndSerializeProjectGraph(
+            await getPluginsSeparated()
+          );
+        const { projectGraph, sourceMaps, error } =
+          await cachedSerializedProjectGraphPromise;
+        notifyProjectGraphRecomputationListeners(
+          projectGraph,
+          sourceMaps,
+          error
         );
-      const { projectGraph, sourceMaps, error } =
-        await cachedSerializedProjectGraphPromise;
-
-      notifyProjectGraphRecomputationListeners(projectGraph, sourceMaps, error);
-    }, waitPeriod);
-  }
+      } while (
+        collectedUpdatedFiles.size > 0 ||
+        collectedDeletedFiles.size > 0
+      );
+    } finally {
+      autoRecomputePromise = undefined;
+    }
+  })();
 }
 
 export function registerProjectGraphRecomputationListener(
@@ -562,7 +566,6 @@ async function resetInternalState() {
   collectedUpdatedFiles.clear();
   collectedDeletedFiles.clear();
   resetWorkspaceContext();
-  waitPeriod = 100;
 }
 
 async function resetInternalStateIfNxDepsMissing() {

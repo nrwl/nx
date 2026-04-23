@@ -2044,9 +2044,9 @@ dependencies = [
 
 [[package]]
 name = "notify"
-version = "9.0.0-rc.2"
+version = "9.0.0-rc.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8b6510a5042c64929d0278a8d24f5f90aa3a9b5be52e08e4f8bf7403adb01dc"
+checksum = "783683ce6e1059e3747190a6c05688db21e07a846bf90babb351365f9133fe3e"
 dependencies = [
  "bitflags 2.10.0",
  "inotify",
