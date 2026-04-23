@@ -41,6 +41,7 @@ public static partial class TargetBuilder
                 "default",
                 $"^{productionInput}",
                 new { workingDirectory = "absolute" },
+                new { dependentTasksOutputFiles = "**/*.{dll,props,targets}" },
                 // new { externalDependencies = externalDeps }
             ],
             Outputs = [testResultsDir],

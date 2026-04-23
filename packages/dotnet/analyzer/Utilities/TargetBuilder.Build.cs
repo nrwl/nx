@@ -51,7 +51,13 @@ public static partial class TargetBuilder
             },
             DependsOn = [$"^{targetName}"],
             Cache = true,
-            Inputs = [productionInput, $"^{productionInput}", new { workingDirectory = "absolute" }],
+            Inputs =
+            [
+                productionInput,
+                $"^{productionInput}",
+                new { workingDirectory = "absolute" },
+                new { dependentTasksOutputFiles = "**/*.{dll,props,targets}" },
+            ],
             Outputs =
             [
                 outputPath,

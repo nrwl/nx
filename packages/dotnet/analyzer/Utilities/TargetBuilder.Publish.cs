@@ -50,7 +50,13 @@ public static partial class TargetBuilder
             },
             DependsOn = [buildReleaseTarget],
             Cache = true,
-            Inputs = ["default", $"^{productionInput}", new { workingDirectory = "absolute" }],
+            Inputs =
+            [
+                "default",
+                $"^{productionInput}",
+                new { workingDirectory = "absolute" },
+                new { dependentTasksOutputFiles = "**/*.{dll,props,targets}" },
+            ],
             Outputs = [publishDir],
             Metadata = new TargetMetadata
             {
