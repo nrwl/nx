@@ -5,11 +5,35 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "dependsOn": ["build-base"],
       "outputs": ["{workspaceRoot}/dist/packages/rspack/README.md"],
       "command": "node ./scripts/copy-readme.js rspack",
       "inputs": ["copyReadme"]
+    },
+    "build-base": {
+      "dependsOn": [
+        {
+          "projects": [
+            "nx",
+            "devkit",
+            "workspace",
+            "js",
+            "cypress",
+            "docker",
+            "eslint",
+            "module-federation",
+            "nest",
+            "web"
+          ],
+          "target": "build-base"
+        },
+        "build-native",
+        "copy-assets"
+      ]
+    },
+    "nx-release-publish": {
+      "dependsOn": []
     }
   },
-  "tags": [],
-  "implicitDependencies": ["!node"]
+  "tags": []
 }

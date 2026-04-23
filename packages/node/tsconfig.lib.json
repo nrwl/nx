@@ -46,5 +46,10 @@
     {
       "path": "../cypress/tsconfig.lib.json"
     }
-  ]
+  ],
+  "nx": {
+    "sync": {
+      "ignoredDependencies": ["angular", "nest"]
+    }
+  }
 }

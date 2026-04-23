@@ -15,5 +15,25 @@
     {
       "path": "../devkit/tsconfig.lib.json"
     }
-  ]
+  ],
+  "nx": {
+    "sync": {
+      "ignoredDependencies": [
+        "angular",
+        "eslint",
+        "expo",
+        "express",
+        "jest",
+        "js",
+        "nest",
+        "next",
+        "node",
+        "nuxt",
+        "react",
+        "react-native",
+        "vue",
+        "web"
+      ]
+    }
+  }
 }
