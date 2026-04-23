@@ -539,6 +539,55 @@ describe('utils', () => {
       ]);
     });
 
+    it('should keep both dependencies: true and the raw projects patterns when combined', () => {
+      const result = getDependencyConfigs(
+        { project: 'app', target: 'build' },
+        {},
+        {
+          dependencies: {},
+          nodes: {
+            app: {
+              name: 'app',
+              type: 'app',
+              data: {
+                root: 'apps/app',
+                targets: {
+                  build: {
+                    dependsOn: [
+                      {
+                        target: 'build',
+                        dependencies: true,
+                        projects: '!lib1',
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            lib1: {
+              name: 'lib1',
+              type: 'lib',
+              data: { root: 'libs/lib1', targets: { build: {} } },
+            },
+            lib2: {
+              name: 'lib2',
+              type: 'lib',
+              data: { root: 'libs/lib2', targets: { build: {} } },
+            },
+          },
+        },
+        ['build']
+      );
+      // Patterns stay raw — they are applied to traced deps at task-graph build time.
+      expect(result).toEqual([
+        {
+          target: 'build',
+          dependencies: true,
+          projects: ['!lib1'],
+        },
+      ]);
+    });
+
     it('should support wildcards with dependencies', () => {
       const result = getDependencyConfigs(
         { project: 'project', target: 'build' },

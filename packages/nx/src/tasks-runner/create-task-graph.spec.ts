@@ -2950,6 +2950,165 @@ describe('createTaskGraph', () => {
     ]);
   });
 
+  it('should filter dependencies when dependsOn combines dependencies: true with a projects filter', () => {
+    const graph: ProjectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                dependsOn: [
+                  { target: 'build', dependencies: true, projects: '!lib1' },
+                ],
+              },
+            },
+          },
+        },
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1-root',
+            targets: {
+              build: { executor: 'nx:run-commands' },
+            },
+          },
+        },
+        lib2: {
+          name: 'lib2',
+          type: 'lib',
+          data: {
+            root: 'lib2-root',
+            targets: {
+              build: { executor: 'nx:run-commands' },
+            },
+          },
+        },
+        lib3: {
+          name: 'lib3',
+          type: 'lib',
+          data: {
+            root: 'lib3-root',
+            targets: {
+              build: { executor: 'nx:run-commands' },
+            },
+          },
+        },
+        otherApp: {
+          name: 'otherApp',
+          type: 'app',
+          data: {
+            root: 'other-root',
+            targets: {
+              build: { executor: 'nx:run-commands' },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [
+          { source: 'app1', target: 'lib1', type: 'static' },
+          { source: 'app1', target: 'lib2', type: 'static' },
+          { source: 'app1', target: 'lib3', type: 'static' },
+        ],
+        lib1: [],
+        lib2: [],
+        lib3: [],
+        otherApp: [],
+      },
+    };
+    const taskGraph = createTaskGraph(graph, {}, ['app1'], ['build'], null, {});
+    expect(taskGraph.tasks).toHaveProperty('app1:build');
+    expect(taskGraph.tasks).toHaveProperty('lib2:build');
+    expect(taskGraph.tasks).toHaveProperty('lib3:build');
+    // lib1 is filtered out even though it is a dependency
+    expect(taskGraph.tasks).not.toHaveProperty('lib1:build');
+    // otherApp is not a dependency so it is not included
+    expect(taskGraph.tasks).not.toHaveProperty('otherApp:build');
+    expect(taskGraph.dependencies['app1:build'].sort()).toEqual([
+      'lib2:build',
+      'lib3:build',
+    ]);
+  });
+
+  it('should add non-dependency projects when dependsOn combines dependencies: true with a positive projects pattern', () => {
+    const graph: ProjectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                dependsOn: [
+                  {
+                    target: 'build',
+                    dependencies: true,
+                    projects: ['shared-util'],
+                  },
+                ],
+              },
+            },
+          },
+        },
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1-root',
+            targets: {
+              build: { executor: 'nx:run-commands' },
+            },
+          },
+        },
+        'shared-util': {
+          name: 'shared-util',
+          type: 'lib',
+          data: {
+            root: 'shared-util-root',
+            targets: {
+              build: { executor: 'nx:run-commands' },
+            },
+          },
+        },
+        unrelated: {
+          name: 'unrelated',
+          type: 'lib',
+          data: {
+            root: 'unrelated-root',
+            targets: {
+              build: { executor: 'nx:run-commands' },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [{ source: 'app1', target: 'lib1', type: 'static' }],
+        lib1: [],
+        'shared-util': [],
+        unrelated: [],
+      },
+    };
+    const taskGraph = createTaskGraph(graph, {}, ['app1'], ['build'], null, {});
+    expect(taskGraph.tasks).toHaveProperty('app1:build');
+    // Actual dep — still present.
+    expect(taskGraph.tasks).toHaveProperty('lib1:build');
+    // Added via the `projects` pattern even though it is not a dep of app1.
+    expect(taskGraph.tasks).toHaveProperty('shared-util:build');
+    // Not listed and not a dep — skipped.
+    expect(taskGraph.tasks).not.toHaveProperty('unrelated:build');
+    expect(taskGraph.dependencies['app1:build'].sort()).toEqual([
+      'lib1:build',
+      'shared-util:build',
+    ]);
+  });
+
   it('should handle multiple dependsOn task groups', () => {
     const taskGraph = createTaskGraph(
       {

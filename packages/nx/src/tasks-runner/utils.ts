@@ -76,11 +76,15 @@ export function normalizeDependencyConfigProjects(
   const noStringConfig =
     normalizeTargetDependencyWithStringProjects(dependencyConfig);
 
-  if (noStringConfig.projects) {
+  if (noStringConfig.projects && !noStringConfig.dependencies) {
     dependencyConfig.projects = findMatchingProjects(
       noStringConfig.projects,
       graph.nodes
     );
+  } else if (noStringConfig.projects) {
+    // `dependencies: true` + `projects` is a filter applied against the traced
+    // dependencies at task-graph build time, so keep the raw patterns here.
+    dependencyConfig.projects = noStringConfig.projects;
   } else if (!noStringConfig.dependencies) {
     dependencyConfig.projects = [currentProject];
   }

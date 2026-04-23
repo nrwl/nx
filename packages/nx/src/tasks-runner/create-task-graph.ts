@@ -14,6 +14,7 @@ import { TargetDefaults, TargetDependencies } from '../config/nx-json';
 import { output } from '../utils/output';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { findCycles } from './task-graph-utils';
+import { findMatchingProjects } from '../utils/find-matching-projects';
 
 const DUMMY_TASK_TARGET = '__nx_dummy_task__';
 
@@ -153,17 +154,17 @@ export class ProcessTasks {
         task,
         this.projectGraph
       );
-      if (dependencyConfig.projects) {
-        this.processTasksForMultipleProjects(
+      if (dependencyConfig.dependencies) {
+        this.processTasksForDependencies(
+          projectUsedToDeriveDependencies,
           dependencyConfig,
           configuration,
           task,
           taskOverrides,
           overrides
         );
-      } else if (dependencyConfig.dependencies) {
-        this.processTasksForDependencies(
-          projectUsedToDeriveDependencies,
+      } else if (dependencyConfig.projects) {
+        this.processTasksForMultipleProjects(
           dependencyConfig,
           configuration,
           task,
@@ -277,14 +278,30 @@ export class ProcessTasks {
       return;
     }
 
+    const actualDepNames: string[] = [];
     for (const dep of this.projectGraph.dependencies[
       projectUsedToDeriveDependencies
     ]) {
+      // Skip external dependencies — they have no project graph node.
+      if (this.projectGraph.nodes[dep.target]) {
+        actualDepNames.push(dep.target);
+      }
+    }
+
+    const actualDeps = new Set(actualDepNames);
+    const targetProjectNames =
+      dependencyConfig.projects && dependencyConfig.projects.length
+        ? findMatchingProjects(
+            [...actualDepNames, ...dependencyConfig.projects],
+            this.projectGraph.nodes
+          )
+        : actualDepNames;
+
+    for (const projectName of targetProjectNames) {
       const depProject = this.projectGraph.nodes[
-        dep.target
+        projectName
       ] as ProjectGraphProjectNode;
 
-      // this is to handle external dependencies
       if (!depProject) continue;
 
       if (projectHasTarget(depProject, dependencyConfig.target)) {
@@ -330,8 +347,10 @@ export class ProcessTasks {
             overrides
           );
         }
-      } else {
-        // Create a dummy task for task.target.project... which simulates if depProject had dependencyConfig.target
+      } else if (actualDeps.has(projectName)) {
+        // Create a dummy task for task.target.project... which simulates if depProject had dependencyConfig.target.
+        // Only emitted for actual graph dependencies, so we can walk further to find the target transitively.
+        // Projects pulled in solely by a `projects` filter don't get a dummy — no transitive walk is expected.
         const dummyId = createTaskId(
           depProject.name,
           task.target.project +

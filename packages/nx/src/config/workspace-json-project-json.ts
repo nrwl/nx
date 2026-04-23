@@ -176,14 +176,18 @@ export interface TargetMetadata {
 
 export interface TargetDependencyConfig {
   /**
-   * A list of projects that have `target`.
-   * Should not be specified together with `dependencies`.
+   * A list of projects (or glob patterns / negations like `"!my-app"`) that have `target`.
+   * When specified together with `dependencies: true`, these patterns are layered on top
+   * of the current project's traced dependencies — positive patterns add extra projects
+   * and negative patterns remove traced dependencies from the resulting set.
    */
   projects?: string[] | string;
 
   /**
    * If true, the target will be executed for each project that this project depends on.
-   * Should not be specified together with `projects`.
+   * May be combined with `projects` to adjust the resulting set. For example,
+   * `{ dependencies: true, projects: "!my-app", target: "build" }` runs `build` on every
+   * dependency except `my-app`.
    */
   dependencies?: boolean;
 
