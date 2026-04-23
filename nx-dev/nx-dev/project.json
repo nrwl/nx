@@ -16,10 +16,7 @@
         { "externalDependencies": ["next"] },
         { "dependentTasksOutputFiles": "**/*.d.ts", "transitive": true }
       ],
-      "outputs": [
-        "{workspaceRoot}/nx-dev/nx-dev/.next",
-        "{workspaceRoot}/nx-dev/nx-dev/public/sitemap*.xml"
-      ]
+      "outputs": ["{workspaceRoot}/nx-dev/nx-dev/.next"]
     },
     "sitemap": {
       "dependsOn": ["nx-dev:next:build"],
@@ -44,11 +41,11 @@
     },
     "build": {
       "dependsOn": ["sitemap", "copy-redirects"],
-      "outputs": ["{projectRoot}/.next"]
+      "outputs": ["{projectRoot}/.next", "{projectRoot}/public/sitemap*.xml"]
     },
     "deploy-build": {
       "dependsOn": ["build"],
-      "outputs": ["{projectRoot}/.next"]
+      "outputs": ["{projectRoot}/.next", "{projectRoot}/public/sitemap*.xml"]
     },
     "serve": {
       "command": "nx dev nx-dev"
