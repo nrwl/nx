@@ -29,7 +29,7 @@ function mergeUserTargetConfigurations(
     targetOption: TargetConfigurationWithName | false | undefined;
     defaultTargetName: string;
   }> = [
-    { targetOption: options.build, defaultTargetName: 'build' },
+    { targetOption: options.build, defaultTargetName: 'build:dotnet' },
     { targetOption: options.test, defaultTargetName: 'test' },
     { targetOption: options.clean, defaultTargetName: 'clean' },
     { targetOption: options.restore, defaultTargetName: 'restore' },
@@ -123,7 +123,7 @@ describe('@nx/dotnet - createNodes', () => {
         root: 'apps/my-app',
         name: 'my-app',
         targets: {
-          build: {
+          'build:dotnet': {
             executor: 'nx:run-commands',
             options: {
               command: 'dotnet build',
@@ -143,7 +143,7 @@ describe('@nx/dotnet - createNodes', () => {
 
       const result = mergeUserTargetConfigurations(node, options);
 
-      expect(result.targets?.build).toEqual({
+      expect(result.targets?.['build:dotnet']).toEqual({
         executor: 'nx:run-commands',
         options: {
           command: 'dotnet build',
@@ -158,7 +158,7 @@ describe('@nx/dotnet - createNodes', () => {
         root: 'apps/my-app',
         name: 'my-app',
         targets: {
-          build: {
+          'build:dotnet': {
             executor: 'nx:run-commands',
             options: {
               command: 'dotnet build',
@@ -187,7 +187,7 @@ describe('@nx/dotnet - createNodes', () => {
 
       const result = mergeUserTargetConfigurations(node, options);
 
-      expect(result.targets?.build?.configurations).toEqual({
+      expect(result.targets?.['build:dotnet']?.configurations).toEqual({
         debug: {
           configuration: 'Debug',
         },
@@ -205,7 +205,7 @@ describe('@nx/dotnet - createNodes', () => {
         root: 'apps/my-app',
         name: 'my-app',
         targets: {
-          build: {
+          'build:dotnet': {
             executor: 'nx:run-commands',
             options: {
               command: 'dotnet build',
@@ -226,7 +226,7 @@ describe('@nx/dotnet - createNodes', () => {
       const result = mergeUserTargetConfigurations(node, options);
 
       expect(result.targets?.compile).toBeDefined();
-      expect(result.targets?.build).toBeUndefined();
+      expect(result.targets?.['build:dotnet']).toBeUndefined();
       expect(result.targets?.compile?.options).toEqual({
         command: 'dotnet build',
         additionalOption: 'value',
@@ -238,7 +238,7 @@ describe('@nx/dotnet - createNodes', () => {
         root: 'apps/my-app',
         name: 'my-app',
         targets: {
-          build: {
+          'build:dotnet': {
             executor: 'nx:run-commands',
             options: {
               command: 'dotnet build',
@@ -268,7 +268,7 @@ describe('@nx/dotnet - createNodes', () => {
       const result = mergeUserTargetConfigurations(node, options);
 
       expect(result.targets?.compile).toBeDefined();
-      expect(result.targets?.build).toBeUndefined();
+      expect(result.targets?.['build:dotnet']).toBeUndefined();
       expect(result.targets?.['unit-test']).toBeDefined();
       expect(result.targets?.test).toBeUndefined();
       expect(result.targets?.['unit-test']?.options).toEqual({
@@ -307,7 +307,7 @@ describe('@nx/dotnet - createNodes', () => {
         root: 'apps/my-app',
         name: 'my-app',
         targets: {
-          build: {
+          'build:dotnet': {
             executor: 'nx:run-commands',
             options: {
               command: 'dotnet build',
@@ -326,12 +326,14 @@ describe('@nx/dotnet - createNodes', () => {
 
       const result = mergeUserTargetConfigurations(node, options);
 
-      expect(result.targets?.build?.cache).toBe(true);
-      expect(result.targets?.build?.inputs).toEqual([
+      expect(result.targets?.['build:dotnet']?.cache).toBe(true);
+      expect(result.targets?.['build:dotnet']?.inputs).toEqual([
         '{projectRoot}/**/*.cs',
         '^production',
       ]);
-      expect(result.targets?.build?.outputs).toEqual(['{projectRoot}/bin']);
+      expect(result.targets?.['build:dotnet']?.outputs).toEqual([
+        '{projectRoot}/bin',
+      ]);
     });
 
     it('should rename target even when no other config is provided', () => {
@@ -339,7 +341,7 @@ describe('@nx/dotnet - createNodes', () => {
         root: 'apps/my-app',
         name: 'my-app',
         targets: {
-          build: {
+          'build:dotnet': {
             executor: 'nx:run-commands',
             options: {
               command: 'dotnet build',
@@ -359,7 +361,7 @@ describe('@nx/dotnet - createNodes', () => {
 
       // Target should be renamed even with no other config
       expect(result.targets?.compile).toBeDefined();
-      expect(result.targets?.build).toBeUndefined();
+      expect(result.targets?.['build:dotnet']).toBeUndefined();
       expect(result.targets?.compile).toEqual({
         executor: 'nx:run-commands',
         options: {
@@ -373,7 +375,7 @@ describe('@nx/dotnet - createNodes', () => {
         root: 'apps/my-app',
         name: 'my-app',
         targets: {
-          build: {
+          'build:dotnet': {
             executor: 'nx:run-commands',
             options: { command: 'dotnet build' },
           },
@@ -411,7 +413,7 @@ describe('@nx/dotnet - createNodes', () => {
 
       const result = mergeUserTargetConfigurations(node, options);
 
-      expect(result.targets?.build?.options).toEqual({
+      expect(result.targets?.['build:dotnet']?.options).toEqual({
         command: 'dotnet build',
         b: 1,
       });
@@ -442,7 +444,7 @@ describe('@nx/dotnet - createNodes', () => {
         root: 'apps/my-app',
         name: 'my-app',
         targets: {
-          build: {
+          'build:dotnet': {
             executor: 'nx:run-commands',
             options: {
               command: 'dotnet build',
@@ -462,7 +464,9 @@ describe('@nx/dotnet - createNodes', () => {
 
       const result = mergeUserTargetConfigurations(node, options);
 
-      expect(result.targets?.build?.options?.cwd).toBe('different/path');
+      expect(result.targets?.['build:dotnet']?.options?.cwd).toBe(
+        'different/path'
+      );
     });
 
     it('should handle complex nested configurations', () => {
@@ -470,7 +474,7 @@ describe('@nx/dotnet - createNodes', () => {
         root: 'libs/my-lib',
         name: 'my-lib',
         targets: {
-          build: {
+          'build:dotnet': {
             executor: 'nx:run-commands',
             options: {
               command: 'dotnet build',
@@ -506,7 +510,7 @@ describe('@nx/dotnet - createNodes', () => {
       const result = mergeUserTargetConfigurations(node, options);
 
       expect(result.targets?.compile).toBeDefined();
-      expect(result.targets?.build).toBeUndefined();
+      expect(result.targets?.['build:dotnet']).toBeUndefined();
       expect(result.targets?.compile).toMatchObject({
         executor: 'nx:run-commands',
         options: {

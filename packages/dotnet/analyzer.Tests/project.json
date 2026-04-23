@@ -3,7 +3,8 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "build": {
-      "dependsOn": ["^build", "restore"]
+      "executor": "nx:noop",
+      "dependsOn": ["build:dotnet"]
     },
     "test": {
       "executor": "nx:noop"
