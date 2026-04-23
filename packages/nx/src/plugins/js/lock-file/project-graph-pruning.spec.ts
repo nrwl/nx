@@ -271,6 +271,145 @@ describe('project-graph-pruning', () => {
       expect(result.externalNodes?.['npm:blurhash@2.0.5']).toBeDefined();
     });
 
+    it('should traverse real package node behind npm alias', () => {
+      // Setup: auth0@5.5.0 depends on auth0-legacy (alias for auth0@4.37.0)
+      // auth0@4.37.0 depends on jose. The pruned graph must include all three.
+      const aliasGraph: ProjectGraph = {
+        nodes: {},
+        dependencies: {
+          'npm:auth0': [
+            {
+              source: 'npm:auth0',
+              target: 'npm:auth0-legacy',
+              type: 'static',
+            },
+          ],
+          'npm:auth0-legacy': [],
+          'npm:auth0@4.37.0': [
+            {
+              source: 'npm:auth0@4.37.0',
+              target: 'npm:jose',
+              type: 'static',
+            },
+          ],
+          'npm:jose': [],
+        },
+        externalNodes: {
+          'npm:auth0': {
+            type: 'npm',
+            name: 'npm:auth0',
+            data: {
+              packageName: 'auth0',
+              version: '5.5.0',
+            },
+          },
+          'npm:auth0-legacy': {
+            type: 'npm',
+            name: 'npm:auth0-legacy',
+            data: {
+              packageName: 'auth0-legacy',
+              version: 'npm:auth0@4.37.0',
+            },
+          },
+          'npm:auth0@4.37.0': {
+            type: 'npm',
+            name: 'npm:auth0@4.37.0',
+            data: {
+              packageName: 'auth0',
+              version: '4.37.0',
+            },
+          },
+          'npm:jose': {
+            type: 'npm',
+            name: 'npm:jose',
+            data: {
+              packageName: 'jose',
+              version: '4.15.9',
+            },
+          },
+        },
+      };
+
+      const aliasBuilder = new ProjectGraphBuilder();
+      addNodesAndDependencies(
+        aliasGraph,
+        { auth0: '5.5.0' },
+        new Map(),
+        aliasBuilder
+      );
+
+      const result = aliasBuilder.getUpdatedProjectGraph();
+      // The alias node itself should be included
+      expect(result.externalNodes?.['npm:auth0-legacy']).toBeDefined();
+      // The real package behind the alias must also be included
+      expect(result.externalNodes?.['npm:auth0@4.37.0']).toBeDefined();
+      // Transitive deps of the real package must be included
+      expect(result.externalNodes?.['npm:jose']).toBeDefined();
+    });
+
+    it('should traverse real scoped package node behind npm alias', () => {
+      // Setup: pkg depends on my-alias (alias for @scope/real@1.0.0)
+      // @scope/real@1.0.0 depends on some-dep
+      const aliasGraph: ProjectGraph = {
+        nodes: {},
+        dependencies: {
+          'npm:pkg': [
+            {
+              source: 'npm:pkg',
+              target: 'npm:my-alias',
+              type: 'static',
+            },
+          ],
+          'npm:my-alias': [],
+          'npm:@scope/real@1.0.0': [
+            {
+              source: 'npm:@scope/real@1.0.0',
+              target: 'npm:some-dep',
+              type: 'static',
+            },
+          ],
+          'npm:some-dep': [],
+        },
+        externalNodes: {
+          'npm:pkg': {
+            type: 'npm',
+            name: 'npm:pkg',
+            data: { packageName: 'pkg', version: '2.0.0' },
+          },
+          'npm:my-alias': {
+            type: 'npm',
+            name: 'npm:my-alias',
+            data: {
+              packageName: 'my-alias',
+              version: 'npm:@scope/real@1.0.0',
+            },
+          },
+          'npm:@scope/real@1.0.0': {
+            type: 'npm',
+            name: 'npm:@scope/real@1.0.0',
+            data: { packageName: '@scope/real', version: '1.0.0' },
+          },
+          'npm:some-dep': {
+            type: 'npm',
+            name: 'npm:some-dep',
+            data: { packageName: 'some-dep', version: '3.0.0' },
+          },
+        },
+      };
+
+      const aliasBuilder = new ProjectGraphBuilder();
+      addNodesAndDependencies(
+        aliasGraph,
+        { pkg: '2.0.0' },
+        new Map(),
+        aliasBuilder
+      );
+
+      const result = aliasBuilder.getUpdatedProjectGraph();
+      expect(result.externalNodes?.['npm:@scope/real@1.0.0']).toBeDefined();
+      expect(result.externalNodes?.['npm:some-dep']).toBeDefined();
+    });
+
     it('should handle versioned external nodes', () => {
       const packageJsonDeps = {
         lodash: '4.17.20',
