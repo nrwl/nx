@@ -224,9 +224,7 @@ describe('getExcludeTasks', () => {
     const targets = new Set<Target>([createTarget('api', 'test')]);
     const runningTasks = new Set<Target>([createTarget('api', 'test')]);
     const excludes = getExcludeTasks(targets, gradleNodes, runningTasks);
-    expect(excludes).toEqual(
-      new Set([':lib1:jar', ':lib2:jar', ':lib3:jar'])
-    );
+    expect(excludes).toEqual(new Set([':lib1:jar', ':lib2:jar', ':lib3:jar']));
   });
 
   it('should handle project and target names containing colons', () => {
