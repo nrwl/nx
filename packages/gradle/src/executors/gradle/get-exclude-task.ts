@@ -37,8 +37,13 @@ function resolveDepToTarget(
  * Returns Gradle CLI arguments to exclude dependent tasks
  * that are not part of the current execution set.
  *
- * For example, if a project defines `dependsOn: ['lint']` for the `test` target,
- * and only `test` is running, this will return: ['lint']
+ * Walks the full transitive dependsOn graph for each task so that
+ * indirect dependencies (e.g. the deps of a direct dep's `jar`)
+ * are also excluded, matching Gradle's own transitive task graph.
+ *
+ * For example, if `:app:test` depends on `:lib:jar`, and `:lib:jar`
+ * depends on `:shared:jar`, and only `:app:test` is running, this
+ * will return both `:lib:jar` and `:shared:jar` as excludes.
  *
  * @param tasks - Set of Target to process
  * @param nodes - Project graph nodes
@@ -58,16 +63,14 @@ export function getExcludeTasks(
   );
 
   for (const task of tasks) {
-    const taskDeps =
-      nodes[task.project]?.data?.targets?.[task.target]?.dependsOn ?? [];
-
-    for (const dep of taskDeps) {
-      const depPt = resolveDepToTarget(dep, task.project);
-      if (depPt && !runningKeys.has(targetToTargetString(depPt))) {
-        const gradleTaskName = getGradleTaskName(depPt, nodes);
-        if (gradleTaskName && !includeDependsOnTasks.has(gradleTaskName)) {
-          excludes.add(gradleTaskName);
-        }
+    const transitiveDeps = getAllDependsOn(nodes, task.project, task.target);
+    for (const depPt of transitiveDeps) {
+      if (runningKeys.has(targetToTargetString(depPt))) {
+        continue;
+      }
+      const gradleTaskName = getGradleTaskName(depPt, nodes);
+      if (gradleTaskName && !includeDependsOnTasks.has(gradleTaskName)) {
+        excludes.add(gradleTaskName);
       }
     }
   }

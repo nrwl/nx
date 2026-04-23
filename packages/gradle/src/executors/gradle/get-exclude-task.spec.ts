@@ -94,11 +94,11 @@ describe('getExcludeTasks', () => {
     expect(excludes).toEqual(new Set(['buildApp2']));
   });
 
-  it('should handle recursive dependencies', () => {
+  it('should transitively exclude dependencies of dependencies', () => {
     const targets = new Set<Target>([createTarget('app3', 'deploy')]);
     const runningTasks = new Set<Target>([createTarget('app3', 'deploy')]);
     const excludes = getExcludeTasks(targets, nodes, runningTasks);
-    expect(excludes).toEqual(new Set(['testApp1']));
+    expect(excludes).toEqual(new Set(['testApp1', 'lintApp1', 'buildApp2']));
   });
 
   it('should not exclude tasks that are in includeDependsOnTasks', () => {
@@ -161,6 +161,72 @@ describe('getExcludeTasks', () => {
     const runningTasks = new Set<Target>([createTarget('app1', 'build')]);
     const excludes = getExcludeTasks(targets, objectNodes, runningTasks);
     expect(excludes).toEqual(new Set([':app1:compileJava', ':app2:build']));
+  });
+
+  it('should exclude transitive jar dependencies', () => {
+    const gradleNodes: any = {
+      api: {
+        name: 'api',
+        type: 'app',
+        data: {
+          root: 'api',
+          targets: {
+            test: {
+              dependsOn: [{ target: 'jar', projects: ['lib1'] }],
+              options: { taskName: ':api:test' },
+            },
+          },
+        },
+      },
+      lib1: {
+        name: 'lib1',
+        type: 'lib',
+        data: {
+          root: 'lib1',
+          targets: {
+            jar: {
+              dependsOn: [
+                { target: 'jar', projects: ['lib2'] },
+                { target: 'jar', projects: ['lib3'] },
+              ],
+              options: { taskName: ':lib1:jar' },
+            },
+          },
+        },
+      },
+      lib2: {
+        name: 'lib2',
+        type: 'lib',
+        data: {
+          root: 'lib2',
+          targets: {
+            jar: {
+              dependsOn: [],
+              options: { taskName: ':lib2:jar' },
+            },
+          },
+        },
+      },
+      lib3: {
+        name: 'lib3',
+        type: 'lib',
+        data: {
+          root: 'lib3',
+          targets: {
+            jar: {
+              dependsOn: [{ target: 'jar', projects: ['lib2'] }],
+              options: { taskName: ':lib3:jar' },
+            },
+          },
+        },
+      },
+    };
+    const targets = new Set<Target>([createTarget('api', 'test')]);
+    const runningTasks = new Set<Target>([createTarget('api', 'test')]);
+    const excludes = getExcludeTasks(targets, gradleNodes, runningTasks);
+    expect(excludes).toEqual(
+      new Set([':lib1:jar', ':lib2:jar', ':lib3:jar'])
+    );
   });
 
   it('should handle project and target names containing colons', () => {
