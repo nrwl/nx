@@ -89,6 +89,7 @@
     "@nx/conformance": "5.0.4",
     "@nx/cypress": "23.0.0-beta.7",
     "@nx/devkit": "23.0.0-beta.7",
+    "@nx/dotnet": "23.0.0-beta.7",
     "@nx/esbuild": "23.0.0-beta.7",
     "@nx/eslint": "23.0.0-beta.7",
     "@nx/eslint-plugin": "23.0.0-beta.7",

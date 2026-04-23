@@ -1,11 +1,11 @@
 {
-  "name": "MsbuildAnalyzer.Tests",
+  "name": "MsbuildAnalyzer",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "build": {
       "dependsOn": ["^build", "restore"]
     },
-    "test": {
+    "run": {
       "executor": "nx:noop"
     }
   }

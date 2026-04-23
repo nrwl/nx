@@ -251,6 +251,16 @@
       "exclude": ["packages/react-native/src/generators/application/files/**/*"]
     },
     {
+      "plugin": "@nx/dotnet",
+      "include": [
+        "packages/dotnet/analyzer/**",
+        "packages/dotnet/analyzer.Tests/**"
+      ],
+      "options": {
+        "test": { "targetName": "test-native" }
+      }
+    },
+    {
       "plugin": "@nx/storybook/plugin",
       "options": {
         "serveStorybookTargetName": "serve:storybook",

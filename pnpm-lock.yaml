@@ -608,6 +608,9 @@ importers:
       '@nx/devkit':
         specifier: 23.0.0-beta.7
         version: 23.0.0-beta.7(nx@23.0.0-beta.7(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))
+      '@nx/dotnet':
+        specifier: 23.0.0-beta.7
+        version: 23.0.0-beta.7(nx@23.0.0-beta.7(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))
       '@nx/esbuild':
         specifier: 23.0.0-beta.7
         version: 23.0.0-beta.7(@babel/traverse@7.29.0)(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(nx@23.0.0-beta.7(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))(verdaccio@6.3.2(encoding@0.1.13)(typanion@3.14.0))
@@ -9796,6 +9799,9 @@ packages:
     resolution: {integrity: sha512-CCrW8tEOtWjXVhqobFS6Wp0gzY/vDqJUepbS7S/fQSTzOz8Gr15WL7CCqp9mMntCWBheBPr344fu8bkPgDJEwA==}
     peerDependencies:
       nx: '>= 22 <= 24 || ^23.0.0-0'
+
+  '@nx/dotnet@23.0.0-beta.7':
+    resolution: {integrity: sha512-DqtqY9PC/y4BchHlNJvqcNRjcTnfivT6DmNMafQL57HzR1+Cq8sYJfngAG3dmw+nZT+MTiJzzzRovKhNQ7uAsA==}
 
   '@nx/esbuild@23.0.0-beta.7':
     resolution: {integrity: sha512-X743jrMuspT2mDFZ99IyvsBs+w7yweuXnPClg8F5Q9+qmIyEkZd0x74VMhpzgXlaQmp7SDXQEta0lyk6yvoYrw==}
@@ -36250,6 +36256,14 @@ snapshots:
       semver: 7.7.4
       tslib: 2.8.1
       yargs-parser: 21.1.1
+
+  '@nx/dotnet@23.0.0-beta.7(nx@23.0.0-beta.7(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))':
+    dependencies:
+      '@nx/devkit': 23.0.0-beta.7(nx@23.0.0-beta.7(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))
+      ignore: 7.0.5
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - nx
 
   '@nx/esbuild@23.0.0-beta.7(@babel/traverse@7.29.0)(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(nx@23.0.0-beta.7(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))(verdaccio@6.3.2(encoding@0.1.13)(typanion@3.14.0))':
     dependencies:
