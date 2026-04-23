@@ -70,5 +70,10 @@
     {
       "path": "../vite/tsconfig.lib.json"
     }
-  ]
+  ],
+  "nx": {
+    "sync": {
+      "ignoredDependencies": ["next"]
+    }
+  }
 }

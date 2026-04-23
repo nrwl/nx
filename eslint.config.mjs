@@ -116,6 +116,19 @@ export const baseConfig = [
           enforceBuildableLibDependency: true,
           checkDynamicDependenciesExceptions: ['.*'],
           allow: [],
+          // These cycles are intentional: plugin packages declare their
+          // lazy-loaded peers (e.g. @nx/workspace -> @nx/js -> @nx/workspace)
+          // as optional peers in package.json. The project graph is cyclic
+          // by design; the task graph is kept acyclic via explicit
+          // `dependsOn` overrides on @nx/workspace and @nx/js, and the TS
+          // project reference graph via `nx.sync.ignoredDependencies`.
+          ignoredCircularDependencies: [
+            ['js', 'workspace'],
+            ['angular', 'workspace'],
+            ['express', 'node'],
+            ['nest', 'node'],
+            ['nuxt', 'vue'],
+          ],
           depConstraints: [
             {
               sourceTag: '*',
