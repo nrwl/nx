@@ -103,6 +103,23 @@ export type { ChangelogChange } from './changelog/version-plan-utils';
 
 export type PostGitTask = (latestCommit: string) => Promise<void>;
 
+/**
+ * Determines whether a changelog configuration will actually produce any output.
+ * A changelog config is effectively enabled when it would produce a changelog file
+ * or create a remote release.
+ */
+export function isChangelogEffectivelyEnabled(
+  config?:
+    | NxReleaseConfig['changelog']['workspaceChangelog']
+    | NxReleaseConfig['groups'][string]['changelog']
+): boolean | undefined {
+  if (!config) {
+    return false;
+  }
+
+  return config.file !== false || config.createRelease !== false;
+}
+
 export const releaseChangelogCLIHandler = (args: ChangelogOptions) =>
   handleErrors(args.verbose, () => createAPI({}, false)(args));
 
@@ -189,16 +206,14 @@ export function createAPI(
       output.note(releaseGraph.filterLog);
     }
 
-    let rawVersionPlans = await readRawVersionPlans();
-
-    if (args.deleteVersionPlans === undefined) {
-      // default to deleting version plans in this command instead of after versioning
-      args.deleteVersionPlans = true;
-    }
-
     const changelogGenerationEnabled =
-      !!nxReleaseConfig.changelog.workspaceChangelog ||
-      Object.values(nxReleaseConfig.groups).some((g) => g.changelog);
+      isChangelogEffectivelyEnabled(
+        nxReleaseConfig.changelog.workspaceChangelog
+      ) ||
+      Object.values(nxReleaseConfig.groups).some((g) =>
+        isChangelogEffectivelyEnabled(g.changelog)
+      );
+
     if (!changelogGenerationEnabled) {
       output.warn({
         title: `Changelogs are disabled. No changelog entries will be generated`,
@@ -207,6 +222,13 @@ export function createAPI(
         ],
       });
       return {};
+    }
+
+    let rawVersionPlans = await readRawVersionPlans();
+
+    if (args.deleteVersionPlans === undefined) {
+      // default to deleting version plans in this command instead of after versioning
+      args.deleteVersionPlans = true;
     }
 
     const useAutomaticFromRef =
