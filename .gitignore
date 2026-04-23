@@ -144,6 +144,8 @@ test-results
 # .NET build output
 /packages/dotnet/analyzer/bin
 /packages/dotnet/analyzer/obj
+/packages/dotnet/analyzer.Tests/bin
+/packages/dotnet/analyzer.Tests/obj
 /*.deb
 .nx/polygraph
 .claude/worktrees

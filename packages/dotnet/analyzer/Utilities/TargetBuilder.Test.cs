@@ -13,6 +13,7 @@ public static partial class TargetBuilder
         string fileName,
         List<PackageReference> packageRefs,
         Dictionary<string, string> properties,
+        string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
         string productionInput)
@@ -21,10 +22,7 @@ public static partial class TargetBuilder
         // support is fleshed out.
         //
         // var externalDeps = packageRefs.Select(p => p.Include).ToArray();
-        var testResultsDir = GetTestResultsDirectory(properties, projectName, workspaceRoot);
-
-        var useWorkspaceRoot = UsesArtifactsOutput(properties);
-        var outputPrefix = useWorkspaceRoot ? "{workspaceRoot}" : "{projectRoot}";
+        var testResultsDir = GetTestResultsDirectory(properties, projectName, projectDirectory, workspaceRoot);
 
         string[] defaultFlags = ["--no-build", "--no-restore"];
 
@@ -45,7 +43,7 @@ public static partial class TargetBuilder
                 new { workingDirectory = "absolute" },
                 // new { externalDependencies = externalDeps }
             ],
-            Outputs = [$"{outputPrefix}/{testResultsDir}"],
+            Outputs = [testResultsDir],
             Metadata = new TargetMetadata
             {
                 Description = "Run .NET tests",
