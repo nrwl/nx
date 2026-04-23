@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
-use std::collections::hash_map::Entry;
 use std::path::MAIN_SEPARATOR;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -36,6 +35,11 @@ const IDLE_WINDOW: Duration = Duration::from_millis(100);
 /// from the start of a burst, after which we flush anyway.
 const MAX_WAIT: Duration = Duration::from_millis(500);
 
+/// How often the processing thread wakes up while idle, so that a pending
+/// `stop_flag` is observed promptly. The watcher's tx is owned by this thread,
+/// so `rx.recv()` would never unblock on its own.
+const SHUTDOWN_POLL: Duration = Duration::from_secs(1);
+
 /// Build the hardcoded ignore GlobSet used to check if new directories should be watched.
 #[cfg(not(target_os = "macos"))]
 fn build_ignore_glob_set() -> Arc<NxGlobSet> {
@@ -65,17 +69,34 @@ fn new_directories_from_event(event: &notify::Event, ignore_globs: &NxGlobSet) -
         .collect()
 }
 
+/// Register each path with the watcher under a single lock acquisition.
+/// Non-recursive mode; failure is logged but not propagated since a single
+/// failing path shouldn't prevent others from being watched.
+#[cfg(not(target_os = "macos"))]
+fn register_watches<I, P>(watcher: &Arc<Mutex<notify::RecommendedWatcher>>, paths: I)
+where
+    I: IntoIterator<Item = P>,
+    P: AsRef<Path>,
+{
+    let mut w = watcher.lock();
+    for path in paths {
+        let path = path.as_ref();
+        if let Err(e) = w.watch(path, RecursiveMode::NonRecursive) {
+            tracing::warn!(?e, ?path, "failed to watch directory");
+        }
+    }
+}
+
 /// Walk newly created directories to collect files that were written before
-/// inotify started watching them. Also discovers nested subdirectories and
-/// registers them with the watcher. Results are merged into the accumulator;
-/// the next tick will emit them alongside any inotify-reported events.
+/// inotify started watching them. Returns nested subdirectories encountered
+/// so the caller can register watches for them. Collected files are merged
+/// into the accumulator and emitted on the next flush.
 #[cfg(not(target_os = "macos"))]
 fn walk_new_dirs_into_accumulator(
     dirs: &[PathBuf],
     origin: &str,
-    watcher: &Arc<Mutex<notify::RecommendedWatcher>>,
     accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
-) {
+) -> HashSet<PathBuf> {
     use crate::native::walker::nx_walker_sync;
 
     let mut nested_dirs: HashSet<PathBuf> = HashSet::new();
@@ -98,15 +119,7 @@ fn walk_new_dirs_into_accumulator(
         }
     }
 
-    // Register nested subdirectories so inotify watches them going forward.
-    if !nested_dirs.is_empty() {
-        let mut w = watcher.lock();
-        for dir in &nested_dirs {
-            if let Err(e) = w.watch(dir, RecursiveMode::NonRecursive) {
-                trace!(?e, ?dir, "failed to watch nested directory");
-            }
-        }
-    }
+    nested_dirs
 }
 
 /// Enumerate all non-ignored directories to watch individually (non-recursively).
@@ -137,23 +150,19 @@ fn merge_event(
     accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
     incoming: WatchEventInternal,
 ) {
-    match accumulator.entry(incoming.path.clone()) {
-        Entry::Vacant(e) => {
-            e.insert(incoming);
+    if let Some(existing) = accumulator.get_mut(&incoming.path) {
+        let replace = match (existing.r#type, incoming.r#type) {
+            // Delete always wins.
+            (_, EventType::delete) => true,
+            // Create wins over Update (file that looked updated was really created).
+            (EventType::update, EventType::create) => true,
+            _ => false,
+        };
+        if replace {
+            *existing = incoming;
         }
-        Entry::Occupied(mut e) => {
-            let existing_type = e.get().r#type;
-            let replace = match (existing_type, incoming.r#type) {
-                // Delete always wins.
-                (_, EventType::delete) => true,
-                // Create wins over Update (file that looked updated was really created).
-                (EventType::update, EventType::create) => true,
-                _ => false,
-            };
-            if replace {
-                e.insert(incoming);
-            }
-        }
+    } else {
+        accumulator.insert(incoming.path.clone(), incoming);
     }
 }
 
@@ -264,7 +273,7 @@ impl Watcher {
             trace!(count = path_set.len(), "registering initial watch paths");
             for path in &path_set {
                 if let Err(e) = watcher.watch(path, RecursiveMode::NonRecursive) {
-                    trace!(?e, ?path, "failed to watch path");
+                    tracing::warn!(?e, ?path, "failed to watch path");
                 }
             }
         }
@@ -298,11 +307,14 @@ impl Watcher {
                     break;
                 }
 
-                // If no burst is in flight, block indefinitely for the first
-                // event. Otherwise wait until the computed flush deadline.
-                let wait = flush_deadline
-                    .map(|d| d.saturating_duration_since(Instant::now()))
-                    .unwrap_or(Duration::from_secs(3600));
+                // When a burst is in flight, wait until its flush deadline.
+                // When idle, poll briefly so stop_flag is observed promptly —
+                // blocking forever on rx.recv() would prevent shutdown since
+                // the watcher (and its tx) is owned by this thread.
+                let wait = match flush_deadline {
+                    Some(d) => d.saturating_duration_since(Instant::now()),
+                    None => SHUTDOWN_POLL,
+                };
 
                 match rx.recv_timeout(wait) {
                     Ok(Ok(event)) => {
@@ -313,9 +325,11 @@ impl Watcher {
                             continue;
                         }
 
-                        // FAST PATH: on Linux/Windows, directory creation needs
-                        // synchronous watch registration. Waiting for the flush
-                        // would re-introduce the watchexec race.
+                        // On Linux/Windows, register watches for newly-created
+                        // directories *synchronously* before doing anything else.
+                        // The watch() call must return before any files land in
+                        // the new directory, otherwise inotify misses them and
+                        // the re-walk below would be racing a moving target.
                         #[cfg(not(target_os = "macos"))]
                         {
                             let new_dirs = new_directories_from_event(&event, &ignore_globs);
@@ -324,23 +338,16 @@ impl Watcher {
                                     count = new_dirs.len(),
                                     "registering new directory watches synchronously"
                                 );
-                                {
-                                    let mut w = watcher_for_thread.lock();
-                                    for dir in &new_dirs {
-                                        if let Err(e) = w.watch(dir, RecursiveMode::NonRecursive) {
-                                            trace!(?e, ?dir, "failed to watch new directory");
-                                        }
-                                    }
-                                }
-                                // Walk now — inotify is active, so any files the walk
-                                // finds were written before our watch() call. Merge
-                                // into the accumulator; emitted on next flush.
-                                walk_new_dirs_into_accumulator(
+                                register_watches(&watcher_for_thread, &new_dirs);
+                                // Walk now that inotify is watching. Files found
+                                // here were written before our watch() call; any
+                                // nested subdirs discovered are registered next.
+                                let nested = walk_new_dirs_into_accumulator(
                                     &new_dirs,
                                     &origin,
-                                    &watcher_for_thread,
                                     &mut accumulator,
                                 );
+                                register_watches(&watcher_for_thread, &nested);
                             }
                         }
 
@@ -352,7 +359,7 @@ impl Watcher {
                                 }
                             }
                             Err(e) => {
-                                trace!(?e, "transform failed");
+                                tracing::warn!(?e, "event transform failed");
                             }
                         }
 
@@ -363,7 +370,7 @@ impl Watcher {
                         flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
                     }
                     Ok(Err(notify_err)) => {
-                        trace!("notify error: {:?}", notify_err);
+                        tracing::warn!("notify error: {:?}", notify_err);
                     }
                     Err(RecvTimeoutError::Timeout) => {
                         // Either the idle window elapsed or the max-wait cap
