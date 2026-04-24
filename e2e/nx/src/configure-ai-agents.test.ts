@@ -1,10 +1,13 @@
 import {
   cleanupProject,
+  createFile,
+  fileExists,
   listFiles,
   newProject,
   readFile,
   removeFile,
   runCLI,
+  tmpProjPath,
   updateFile,
 } from '@nx/e2e-utils';
 
@@ -188,6 +191,100 @@ describe('configure-ai-agents', () => {
       // Verify .opencode/skills is a directory with content
       const skillsContents = listFiles('.opencode/skills');
       expect(skillsContents.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('codex agent', () => {
+    it('should create config.toml with MCP config, features, and agents', () => {
+      runCLI(`configure-ai-agents --agents codex --no-interactive`);
+
+      const configToml = readFile('.codex/config.toml');
+      // MCP server configured
+      expect(configToml).toContain('nx-mcp');
+      expect(configToml).toContain('npx');
+      // Multi-agent feature enabled
+      expect(configToml).toContain('multi_agent');
+      // Agent definitions present
+      expect(configToml).toContain('ci-monitor-subagent');
+    });
+
+    it('should copy agent TOML files and skills', () => {
+      // Agent TOML files
+      const agentFiles = listFiles('.codex/agents');
+      expect(agentFiles.length).toBeGreaterThan(0);
+      expect(agentFiles.some((f) => f.includes('ci-monitor-subagent'))).toBe(
+        true
+      );
+
+      // Skills
+      const skillsContents = listFiles('.agents/skills');
+      expect(skillsContents.length).toBeGreaterThan(0);
+    });
+
+    it('should preserve existing user config on re-run', () => {
+      // Add custom user content to config.toml
+      updateFile('.codex/config.toml', (content: string) => {
+        return (
+          content +
+          '\n[mcp_servers.my-custom-server]\ncommand = "my-server"\nargs = []\n'
+        );
+      });
+
+      runCLI(`configure-ai-agents --agents codex --no-interactive`);
+
+      const configToml = readFile('.codex/config.toml');
+      // Nx config still present
+      expect(configToml).toContain('nx-mcp');
+      // User's custom config preserved
+      expect(configToml).toContain('my-custom-server');
+    });
+
+    it('should respect multi_agent = false set by user', () => {
+      // User explicitly disables multi-agent
+      updateFile('.codex/config.toml', (content: string) =>
+        content.replace(/multi_agent\s*=\s*true/, 'multi_agent = false')
+      );
+
+      runCLI(`configure-ai-agents --agents codex --no-interactive`);
+
+      const configToml = readFile('.codex/config.toml');
+      expect(configToml).toMatch(/multi_agent\s*=\s*false/);
+    });
+  });
+
+  describe('gemini legacy .gemini/skills cleanup', () => {
+    it('should remove .gemini/skills that also exist in .agents/skills', () => {
+      // Ensure gemini is configured so .agents/skills exists
+      runCLI('configure-ai-agents --agents gemini --no-interactive');
+      expect(listFiles('.agents/skills').length).toBeGreaterThan(0);
+
+      // Simulate legacy .gemini/skills with a skill that matches one in .agents/skills
+      const sharedSkill = listFiles('.agents/skills')[0];
+      createFile(`.gemini/skills/${sharedSkill}/skill.md`, '# Legacy skill');
+
+      // Also create a user-owned custom skill
+      createFile(
+        '.gemini/skills/my-custom-skill/skill.md',
+        '# My Custom Skill'
+      );
+
+      // Make gemini outdated so re-running triggers the generator
+      updateFile('AGENTS.md', (content: string) =>
+        content.replace('nx_docs', 'nx_docs_outdated')
+      );
+
+      // Re-run configure to trigger cleanup
+      runCLI('configure-ai-agents --agents gemini --no-interactive');
+
+      // The shared skill should be removed from .gemini/skills
+      expect(
+        fileExists(tmpProjPath(`.gemini/skills/${sharedSkill}/skill.md`))
+      ).toBeFalsy();
+
+      // The user's custom skill should be preserved
+      expect(
+        fileExists(tmpProjPath('.gemini/skills/my-custom-skill/skill.md'))
+      ).toBeTruthy();
     });
   });
 

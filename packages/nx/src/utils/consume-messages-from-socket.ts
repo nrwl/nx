@@ -1,4 +1,5 @@
 import { StringDecoder } from 'string_decoder';
+import { deserialize } from 'v8';
 
 const VERY_END_CODE = 4;
 export const MESSAGE_END_SEQ =
@@ -49,4 +50,15 @@ export function isJsonMessage(message: string): boolean {
     // numbers
     /^[0-9]+(\.?[0-9]+)?$/.test(message)
   );
+}
+
+/**
+ * Parse a message that was produced by `serialize()` in
+ * `daemon/socket-utils.ts`. Auto-detects JSON vs. v8-serialized payloads using
+ * `isJsonMessage()` and decodes the binary path via `v8.deserialize`.
+ */
+export function parseMessage<T = unknown>(message: string): T {
+  return isJsonMessage(message)
+    ? JSON.parse(message)
+    : deserialize(Buffer.from(message, 'binary'));
 }

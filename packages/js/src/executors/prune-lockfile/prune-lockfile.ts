@@ -16,6 +16,8 @@ import {
   getLockFileName,
   createLockFile,
 } from 'nx/src/plugins/js/lock-file/lock-file';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+import { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
 import { type PruneLockfileOptions } from './schema';
 
 export default async function pruneLockfileExecutor(
@@ -59,13 +61,16 @@ function createPrunedLockfile(packageJson: PackageJson, graph: ProjectGraph) {
   const lockfileName = getLockFileName(packageManager);
   const lockFile = createLockFile(packageJson, graph, packageManager);
 
+  const workspacePackages = getWorkspacePackagesFromGraph(graph);
+
   for (const [pkgName, pkgVersion] of Object.entries(
     packageJson.dependencies ?? {}
   )) {
     if (
       pkgVersion.startsWith('workspace:') ||
       pkgVersion.startsWith('file:') ||
-      pkgVersion.startsWith('link:')
+      pkgVersion.startsWith('link:') ||
+      workspacePackages.has(pkgName)
     ) {
       packageJson.dependencies[pkgName] = `file:./workspace_modules/${pkgName}`;
     }

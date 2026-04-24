@@ -175,7 +175,7 @@ export function readBunLockFile(lockFilePath: string): string {
   return execSync(`bun ${lockFilePath}`, {
     encoding: 'utf-8',
     maxBuffer: 1024 * 1024 * 10,
-    windowsHide: false,
+    windowsHide: true,
   });
 }
 

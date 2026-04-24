@@ -6,7 +6,7 @@ filter: 'type:Guides'
 
 Nx Plugins can be used to easily integrate a tool or framework into an Nx repository. If there is no plugin available for your favorite tool or framework, you can write your own.
 
-In this tutorial, we'll create a plugin that helps to integrate the _Astro_ framework. `Astro` is a JavaScript web framework optimized for building fast, content-driven websites. We'll call our plugin `nx-astro`.
+We'll create a plugin that helps to integrate the _Astro_ framework. `Astro` is a JavaScript web framework optimized for building fast, content-driven websites. We'll call our plugin `nx-astro`.
 
 To create a plugin in a brand new repository, use the `create-nx-plugin` command:
 
@@ -16,7 +16,7 @@ npx create-nx-plugin nx-astro
 
 Skip the `create-*` package prompt, since we won't be creating a preset.
 
-## Understand Tooling Configuration Files
+## Understand tooling configuration files
 
 When integrating your tool into an Nx repository, you first need to have a clear understanding of how your tool works. Pay special attention to all the possible formats for configuration files, so that your plugin can process any valid configuration options.
 
@@ -34,7 +34,7 @@ export default defineConfig({
 });
 ```
 
-## Create an Inferred Task
+## Create an inferred task
 
 The easiest way for people integrate your tool into their repository is for them to use inferred tasks. When leveraging inferred tasks, all your users need to do is install your plugin and the tool configuration file to their projects. Your plugin will take care of registering tasks with Nx and setting up the correct caching settings.
 
@@ -189,7 +189,7 @@ We'll test out this inferred task a little later in the tutorial.
 
 Inferred tasks work well for getting users started using your tool quickly, but you can also provide users with [executors](/docs/extending-nx/local-executors), which are another way of encapsulating a task script for easy use in an Nx workspace. Without inferred tasks, executors must be explicitly configured for each task.
 
-## Create an Init Generator
+## Create an init generator
 
 You'll want to create generators to automate the common coding tasks for developers that use your tool. The most obvious coding task is the initial setup of the plugin. We'll create an `init` generator to automatically register the `nx-astro` plugin and start inferring tasks.
 
@@ -265,7 +265,7 @@ export interface InitGeneratorSchema {}
 {% /tabitem %}
 {% /tabs %}
 
-## Create an Application Generator
+## Create an application generator
 
 Let's make one more generator to automatically create a simple Astro application. First we'll create the generator:
 
@@ -368,7 +368,7 @@ Allow: /
 
 The generator options in the schema files can be left unchanged.
 
-## Test Your Plugin
+## Test your plugin
 
 The plugin is generated with a default e2e test (`e2e/src/nx-astro.spec.ts`) that:
 
@@ -444,7 +444,7 @@ it('should infer tasks', () => {
 });
 ```
 
-## Next Steps
+## Next steps
 
 Now that you have a working plugin, here are a few other topics you may want to investigate:
 

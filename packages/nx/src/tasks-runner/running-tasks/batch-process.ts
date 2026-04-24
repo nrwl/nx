@@ -1,4 +1,5 @@
 import type { ChildProcess, Serializable } from 'child_process';
+import treeKill from 'tree-kill';
 import type { TaskResult } from '../../config/misc-interfaces';
 import { signalToCode } from '../../utils/exit-codes';
 import {
@@ -14,8 +15,6 @@ export class BatchProcess {
     (task: string, result: TaskResult) => void
   > = [];
   private outputCallbacks: Array<(output: string) => void> = [];
-  private terminalOutputChunks: string[] = [];
-  private joinedTerminalOutput: string | undefined;
 
   constructor(
     private childProcess: ChildProcess,
@@ -59,7 +58,6 @@ export class BatchProcess {
     if (this.childProcess.stdout) {
       this.childProcess.stdout.on('data', (chunk) => {
         const output = chunk.toString();
-        this.terminalOutputChunks.push(output);
 
         // Maintain current terminal output behavior
         process.stdout.write(chunk);
@@ -75,7 +73,6 @@ export class BatchProcess {
     if (this.childProcess.stderr) {
       this.childProcess.stderr.on('data', (chunk) => {
         const output = chunk.toString();
-        this.terminalOutputChunks.push(output);
 
         // Maintain current terminal output behavior
         process.stderr.write(chunk);
@@ -130,13 +127,10 @@ export class BatchProcess {
   }
 
   kill(signal?: NodeJS.Signals): void {
-    if (this.childProcess.connected) {
-      this.childProcess.kill(signal);
+    if (this.childProcess?.pid) {
+      treeKill(this.childProcess.pid, signal, () => {
+        // Ignore errors - process may have already exited
+      });
     }
-  }
-
-  getTerminalOutput(): string {
-    this.joinedTerminalOutput ??= this.terminalOutputChunks.join('');
-    return this.joinedTerminalOutput;
   }
 }

@@ -10,7 +10,7 @@ data class Parameter(val name: String, val glob: String?)
 data class MojoConfig(
     val inputProperties: Set<String>? = null,
     val inputParameters: Set<Parameter>? = null,
-    val outputParameters: Set<Parameter>? = null
+    val outputParameters: Set<Parameter>? = null,
 )
 
 /**
@@ -81,7 +81,7 @@ data class CacheConfig(
                 ),
                 "maven-compiler-plugin:testCompile" to MojoConfig(
                     inputParameters = setOf(
-                        Parameter("testCompileSourceRoots", "**/*.java"),
+                        Parameter("compileSourceRoots", "**/*.java"),
                     ),
                     outputParameters = setOf(
                         Parameter("outputDirectory", null),

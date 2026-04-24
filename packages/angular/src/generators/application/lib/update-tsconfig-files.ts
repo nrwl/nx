@@ -72,11 +72,16 @@ export function updateTsconfigFiles(tree: Tree, options: NormalizedSchema) {
       ...json.compilerOptions,
       ...compilerOptions,
     };
-    json.compilerOptions = getNeededCompilerOptionOverrides(
-      tree,
-      json.compilerOptions,
-      rootTsConfigPath
-    );
+    // For standalone projects, rootTsConfigPath and tsconfigPath are the same
+    // file. Calling getNeededCompilerOptionOverrides would compare the file
+    // against itself and strip options like skipLibCheck that are already set.
+    if (tsconfigPath !== rootTsConfigPath) {
+      json.compilerOptions = getNeededCompilerOptionOverrides(
+        tree,
+        json.compilerOptions,
+        rootTsConfigPath
+      );
+    }
     return json;
   });
 

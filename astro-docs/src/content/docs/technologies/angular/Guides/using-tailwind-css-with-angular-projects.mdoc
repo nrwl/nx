@@ -19,7 +19,7 @@ For the most up-to-date installation instructions, refer to the official Tailwin
 
 ### Tailwind CSS v4
 
-Tailwind CSS v4 [automatically detects classes from source files](https://tailwindcss.com/docs/detecting-classes-in-source-files). However, with Angular's PostCSS plugin, scanning starts from the workspace root by default. This means classes from all libraries end up in your production CSS, even unused ones.
+Tailwind CSS v4 [automatically detects classes from source files](https://tailwindcss.com/docs/detecting-classes-in-source-files). However, with Angular PostCSS plugin, scanning starts from the workspace root by default. This means classes from all libraries end up in your production CSS, even unused ones.
 
 To avoid bloated CSS, restrict scanning to your app folder and explicitly add your library dependencies:
 

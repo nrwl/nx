@@ -2,7 +2,7 @@
 
 This document defines the standards for Nx documentation on nx.dev, including voice, grammar, formatting, and terminology.
 
-For automated enforcement, see the [Vale configuration](#vale-configuration) section.
+For automated enforcement, see the [Vale configuration](#vale-configuration) section below.
 
 ## Information architecture
 
@@ -189,7 +189,6 @@ Feature names are lowercase unless they are a proper product name:
 | Correct        | Incorrect      |
 | -------------- | -------------- |
 | remote caching | Remote Caching |
-| task pipeline  | Task Pipeline  |
 | project graph  | Project Graph  |
 | Nx Cloud       | nx cloud       |
 | Nx Console     | nx console     |
@@ -366,23 +365,60 @@ Use tables for structured data that benefits from a matrix layout. For simple li
 
 Use these terms consistently. When writing about Nx concepts, use the exact term from this list.
 
-| Term           | Usage notes                                                                                       |
-| -------------- | ------------------------------------------------------------------------------------------------- |
-| workspace      | The root directory managed by Nx. Not "repo" or "monorepo" when referring to Nx's context.        |
-| project        | An app or library within the workspace.                                                           |
-| target         | A task that can be run for a project (e.g., `build`, `test`, `lint`).                             |
-| executor       | The implementation behind a target. Not "builder."                                                |
-| generator      | Code scaffolding tool. Not "schematic."                                                           |
-| plugin         | An Nx plugin that provides executors, generators, or graph inference.                             |
-| task           | A specific invocation of a target for a project (e.g., `myapp:build`).                            |
-| task pipeline  | The dependency graph between tasks. Not "task orchestration" or "task graph" in user-facing docs. |
-| project graph  | The dependency graph between projects.                                                            |
-| affected       | Projects impacted by a code change.                                                               |
-| cache / cached | Not "memoized" or "stored results."                                                               |
-| remote caching | Sharing cached results across machines. Specific product: "Nx Replay."                            |
-| Nx Cloud       | The hosted CI/CD product. Always capitalized.                                                     |
-| Nx Console     | The IDE extension. Always capitalized.                                                            |
-| Nx Agents      | Distributed task execution product. Always capitalized.                                           |
-| Nx Replay      | Remote caching product. Always capitalized.                                                       |
-| `nx.json`      | Always in code style.                                                                             |
-| `project.json` | Always in code style.                                                                             |
+| Term           | Usage notes                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------ |
+| workspace      | The root directory managed by Nx. Not "repo" or "monorepo" when referring to Nx's context. |
+| project        | An app or library within the workspace.                                                    |
+| target         | A task that can be run for a project (e.g., `build`, `test`, `lint`).                      |
+| executor       | The implementation behind a target. Not "builder."                                         |
+| generator      | Code scaffolding tool. Not "schematic."                                                    |
+| plugin         | An Nx plugin that provides executors, generators, or graph inference.                      |
+| task           | A specific invocation of a target for a project (e.g., `myapp:build`).                     |
+| project graph  | The dependency graph between projects.                                                     |
+| affected       | Projects impacted by a code change.                                                        |
+| cache / cached | Not "memoized" or "stored results."                                                        |
+| remote caching | Sharing cached results across machines. Specific product: "Nx Replay."                     |
+| Nx Cloud       | The hosted CI/CD product. Always capitalized.                                              |
+| Nx Console     | The IDE extension. Always capitalized.                                                     |
+| Nx Agents      | Distributed task execution product. Always capitalized.                                    |
+| Nx Replay      | Remote caching product. Always capitalized.                                                |
+| `nx.json`      | Always in code style.                                                                      |
+| `project.json` | Always in code style.                                                                      |
+
+## Vale configuration
+
+[Vale](https://vale.sh) enforces many of the rules in this style guide automatically.
+Configuration lives in `astro-docs/`:
+
+- `.vale.ini` — Main config. Scopes rules to `src/content/docs/**/*.{mdoc,mdx,md}`.
+- `.vale/styles/Nx/` — Custom rules for Nx documentation.
+
+### Running Vale
+
+```shell
+# Via Nx target (recommended)
+nx vale astro-docs
+
+# Directly (from astro-docs/ directory)
+vale src/content/docs/
+```
+
+### Installing Vale
+
+Vale is managed via [mise](https://mise.jdx.dev/). Run `mise install` from the repo root to install it.
+You can also install directly via `brew install vale` (macOS) or `apt-get install vale` (Linux).
+
+### Rule tiers
+
+| Tier           | Severity     | Rules                                                                                       |
+| -------------- | ------------ | ------------------------------------------------------------------------------------------- |
+| 1 - Mechanical | `error`      | Banned phrases, product capitalization                                                      |
+| 2 - Structural | `warning`    | Heading case, terminology, product possessives, self-referential writing, sentence patterns |
+| 3 - Voice      | `suggestion` | Trust-undermining words, marketing language, passive voice, serial commas                   |
+
+### Adding new rules
+
+Create a new `.yml` file in `.vale/styles/Nx/`.
+Vale supports several [extension points](https://vale.sh/docs/styles): `existence`, `substitution`, `occurrence`, `repetition`, `consistency`, `conditional`, `capitalization`, and `metric`.
+
+Set `level` to match the tier: `error` for mechanical rules, `warning` for structural, `suggestion` for voice/judgment.

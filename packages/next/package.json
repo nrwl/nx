@@ -18,7 +18,8 @@
     "Front-end"
   ],
   "main": "./index.js",
-  "typings": "./index.d.ts",
+  "type": "commonjs",
+  "types": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -38,7 +39,7 @@
     "@nx/devkit": "workspace:*",
     "@babel/plugin-proposal-decorators": "^7.22.7",
     "@svgr/webpack": "^8.1.0",
-    "copy-webpack-plugin": "^10.2.4",
+    "copy-webpack-plugin": "^14.0.0",
     "ignore": "^5.0.4",
     "semver": "catalog:",
     "tslib": "catalog:typescript",

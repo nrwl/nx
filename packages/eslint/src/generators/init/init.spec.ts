@@ -116,9 +116,11 @@ describe('@nx/eslint:init', () => {
           cache: true,
           inputs: [
             'default',
+            '^default',
             '{workspaceRoot}/.eslintrc.json',
             '{workspaceRoot}/.eslintignore',
             '{workspaceRoot}/eslint.config.cjs',
+            '{workspaceRoot}/tools/eslint-rules/**/*',
           ],
         });
       });
@@ -144,9 +146,11 @@ describe('@nx/eslint:init', () => {
           cache: true,
           inputs: [
             'default',
+            '^default',
             '{workspaceRoot}/.eslintrc.json',
             '{workspaceRoot}/.eslintignore',
             '{workspaceRoot}/eslint.config.cjs',
+            '{workspaceRoot}/tools/eslint-rules/**/*',
           ],
         });
       });
@@ -166,9 +170,11 @@ describe('@nx/eslint:init', () => {
           cache: true,
           inputs: [
             'default',
+            '^default',
             '{workspaceRoot}/.eslintrc.json',
             '{workspaceRoot}/.eslintignore',
             '{workspaceRoot}/eslint.config.mjs',
+            '{workspaceRoot}/tools/eslint-rules/**/*',
           ],
         });
       });
@@ -194,9 +200,11 @@ describe('@nx/eslint:init', () => {
           cache: true,
           inputs: [
             'default',
+            '^default',
             '{workspaceRoot}/.eslintrc.json',
             '{workspaceRoot}/.eslintignore',
             '{workspaceRoot}/eslint.config.mjs',
+            '{workspaceRoot}/tools/eslint-rules/**/*',
           ],
         });
       });

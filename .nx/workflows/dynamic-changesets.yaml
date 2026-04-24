@@ -7,6 +7,12 @@ distribute-on:
 assignment-rules:
   - projects:
       - e2e-gradle
+    targets:
+      - e2e-ci**
+    run-on:
+      - agent: linux-extra-large
+        parallelism: 1
+  - projects:
       - e2e-next
       - e2e-plugin
     targets:
@@ -69,9 +75,16 @@ assignment-rules:
       - agent: linux-extra-large
         parallelism: 3
 
+  - targets:
+      - bench:*
+    run-on:
+      - agent: linux-large
+        parallelism: 1
+
   # These projects should not need to be isolated.
   - projects:
       - nx-dev
+      - astro-docs
     targets:
       - build*
     run-on:

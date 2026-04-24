@@ -20,7 +20,8 @@
     "CLI"
   ],
   "main": "./index.js",
-  "typings": "./index.d.ts",
+  "type": "commonjs",
+  "types": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -29,7 +30,7 @@
   "homepage": "https://nx.dev",
   "dependencies": {
     "@zkochan/js-yaml": "catalog:",
-    "ejs": "^3.1.7",
+    "ejs": "5.0.1",
     "tslib": "catalog:typescript",
     "semver": "catalog:",
     "yargs-parser": "catalog:",

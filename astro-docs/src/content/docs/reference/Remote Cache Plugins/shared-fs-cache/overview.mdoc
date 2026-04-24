@@ -25,9 +25,9 @@ CREEP (CVE-2025-36852) is a critical vulnerability in bucket-based self-hosted r
 
 {% /aside %}
 
-## Set Up @nx/shared-fs-cache
+## Set up @nx/shared-fs-cache
 
-### 1. Install the Package
+### 1. Install the package
 
 Run the following command:
 
@@ -46,10 +46,10 @@ NX_KEY=YOUR_ACTIVATION_KEY
 
 > Why require an activation key? It simply helps us know and support our users. If you prefer not to provide this information, you can also build your own cache server. [Learn more.](/docs/guides/tasks--caching/self-hosted-caching)
 
-### 2. Configure the Cache Directory
+### 2. configure the cache directory
 
 The `@nx/shared-fs-cache` plugin treats your local cache directory as if it is also a remote cache directory. The local cache directory can be set using `cacheDirectory` in the `nx.json` file or the `NX_CACHE_DIRECTORY` environment variable. The default local cache directory is `.nx/cache`.
 
-### 3. Share the Cache Directory
+### 3. share the cache directory
 
 The `@nx/shared-fs-cache` plugin does not actually share the cache directory across your organization. You are responsible for enabling the actual sharing mechanism. If you want Nx to handle the sharing, use [Nx Replay](/docs/features/ci-features/remote-cache) instead. Your shared file system directory might be a directory that is saved and restored by a CI provider or it could be a shared network drive.

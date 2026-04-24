@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { execSync } = require('child_process');
 
 const p = process.argv[2];
 const possibleInputPath = process.argv[3];
@@ -32,3 +33,9 @@ const outputPath = possibleOutputPath ?? `dist/packages/${p}/README.md`;
 console.log('WRITING', outputPath);
 
 fs.writeFileSync(outputPath, r);
+
+try {
+  execSync(`npx prettier --write "${outputPath}"`, { stdio: 'ignore' });
+} catch {
+  // Ignore prettier errors — formatting is best-effort
+}

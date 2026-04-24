@@ -1,8 +1,8 @@
 import * as pc from 'picocolors';
-import { ChildProcess, exec, Serializable } from 'child_process';
+import { ChildProcess, spawn, Serializable } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { isAbsolute, join } from 'path';
-import * as treeKill from 'tree-kill';
+import treeKill from 'tree-kill';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import {
   createPseudoTerminal,
@@ -17,7 +17,6 @@ import {
 import { registerTaskProcessStart } from '../../tasks-runner/task-io-service';
 import { signalToCode } from '../../utils/exit-codes';
 import {
-  LARGE_BUFFER,
   NormalizedRunCommandsOptions,
   RunCommandsCommandOptions,
 } from './run-commands.impl';
@@ -399,12 +398,14 @@ class RunningNodeProcess implements RunningTask {
     if (streamOutput) {
       process.stdout.write(header);
     }
-    this.childProcess = exec(commandConfig.command, {
-      maxBuffer: LARGE_BUFFER,
+    this.childProcess = spawn(commandConfig.command, [], {
+      shell: true,
       env,
       cwd,
-      windowsHide: false,
+      windowsHide: true,
     });
+    this.childProcess.stdout?.setEncoding('utf8');
+    this.childProcess.stderr?.setEncoding('utf8');
 
     // Register process for metrics collection
     // Skip registration if we're in a forked executor - the fork wrapper already registered
@@ -503,14 +504,41 @@ class RunningNodeProcess implements RunningTask {
       }
       const terminalOutput = this.terminalOutputChunks.join('');
       this.terminalOutputChunks = [];
+      removeProcessListeners();
       for (const cb of this.exitCallbacks) {
         cb(1, terminalOutput);
       }
     });
+
+    // Store signal/exit handlers so they can be removed when the child exits.
+    // Without cleanup, each RunningNodeProcess leaks 4 process listeners.
+    // In a large monorepo (2600+ run-commands tasks), these accumulate and
+    // cause a multi-minute synchronous hang at process.exit() as each handler
+    // calls treeKill on an already-dead PID.
+    const onExit = () => {
+      this.kill();
+    };
+    const onSigInt = () => {
+      this.kill('SIGTERM');
+    };
+    const onSigTerm = () => {
+      this.kill('SIGTERM');
+    };
+    const onSigHup = () => {
+      this.kill('SIGTERM');
+    };
+    const removeProcessListeners = () => {
+      process.removeListener('exit', onExit);
+      process.removeListener('SIGINT', onSigInt);
+      process.removeListener('SIGTERM', onSigTerm);
+      process.removeListener('SIGHUP', onSigHup);
+    };
+
     this.childProcess.on('exit', (code, signal) => {
       if (code === null) {
         code = signalToCode(signal);
       }
+      removeProcessListeners();
       if (!this.readyWhenStatus.length || isReady(this.readyWhenStatus)) {
         const terminalOutput = this.terminalOutputChunks.join('');
         this.terminalOutputChunks = [];
@@ -519,25 +547,12 @@ class RunningNodeProcess implements RunningTask {
         }
       }
     });
+
     // Terminate any task processes on exit
-    process.on('exit', () => {
-      this.kill();
-    });
-    process.on('SIGINT', () => {
-      this.kill('SIGTERM');
-      // we exit here because we don't need to write anything to cache.
-      process.exit(signalToCode('SIGINT'));
-    });
-    process.on('SIGTERM', () => {
-      this.kill('SIGTERM');
-      // no exit here because we expect child processes to terminate which
-      // will store results to the cache and will terminate this process
-    });
-    process.on('SIGHUP', () => {
-      this.kill('SIGTERM');
-      // no exit here because we expect child processes to terminate which
-      // will store results to the cache and will terminate this process
-    });
+    process.on('exit', onExit);
+    process.on('SIGINT', onSigInt);
+    process.on('SIGTERM', onSigTerm);
+    process.on('SIGHUP', onSigHup);
   }
 }
 
@@ -651,6 +666,9 @@ function processEnv(
   if (color) {
     res.FORCE_COLOR = `${color}`;
   }
+  // Don't leak NX_PREFIX_OUTPUT to child processes — the parent
+  // task-orchestrator handles prefixing, not the spawned commands.
+  delete res.NX_PREFIX_OUTPUT;
   return res;
 }
 
@@ -707,8 +725,6 @@ function registerProcessListener(
   });
   process.on('SIGINT', () => {
     runningTask.kill('SIGTERM');
-    // we exit here because we don't need to write anything to cache.
-    process.exit(signalToCode('SIGINT'));
   });
   process.on('SIGTERM', () => {
     runningTask.kill('SIGTERM');

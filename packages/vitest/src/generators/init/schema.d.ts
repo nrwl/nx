@@ -7,5 +7,5 @@ export interface InitGeneratorSchema {
   skipFormat?: boolean;
   skipPackageJson?: boolean;
   // Internal only
-  viteVersion?: 5 | 6 | 7;
+  viteVersion?: 5 | 6 | 7 | 8;
 }

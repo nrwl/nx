@@ -1,9 +1,9 @@
 import { spawn } from 'child_process';
-import { machineId } from 'node-machine-id';
 import { existsSync, mkdirSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
+import { getCurrentMachineId } from '../utils/machine-id-cache';
 import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
 import { Task } from '../config/task-graph';
 import {
@@ -31,6 +31,7 @@ import {
   RemoteCacheV2,
 } from './default-tasks-runner';
 import { getTaskIOService } from './task-io-service';
+import { handleImport } from '../utils/handle-import';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -135,6 +136,64 @@ export class DbCache {
     } else {
       return null;
     }
+  }
+
+  async getBatch(
+    tasks: Task[]
+  ): Promise<Map<string, CachedResult & { remote: boolean }>> {
+    const results = new Map<string, CachedResult & { remote: boolean }>();
+    if (tasks.length === 0) return results;
+
+    // Single-task fast path: direct primary-key lookup beats rarray
+    // vtable overhead when there's nothing to amortize over.
+    if (tasks.length === 1) {
+      const res = await this.get(tasks[0]);
+      if (res) results.set(tasks[0].hash, res);
+      return results;
+    }
+
+    const hashes = tasks.map((t) => t.hash);
+
+    // 1. Local: one rarray SQL query + parallel terminal output reads.
+    //    batchResults is index-aligned with tasks, so we walk in lockstep.
+    const batchResults = this.cache.getBatch(hashes);
+    const remoteMisses: Task[] = [];
+    for (const [i, task] of tasks.entries()) {
+      const res = batchResults[i];
+      if (res) {
+        results.set(task.hash, {
+          ...res,
+          terminalOutput: res.terminalOutput ?? '',
+          remote: false,
+        });
+      } else if (this.remoteCache) {
+        remoteMisses.push(task);
+      }
+    }
+
+    // 2. Remote: parallel HTTP retrievals for anything the local SQL missed.
+    //    The RemoteCache interface has no batch endpoint, so this is just
+    //    Promise.all over individual retrieve() calls.
+    if (remoteMisses.length > 0) {
+      await Promise.all(
+        remoteMisses.map(async (task) => {
+          const res = await this.remoteCache.retrieve(
+            task.hash,
+            this.cache.cacheDirectory
+          );
+          if (res) {
+            this.applyRemoteCacheResults(task.hash, res, task.outputs);
+            results.set(task.hash, {
+              ...res,
+              terminalOutput: res.terminalOutput ?? '',
+              remote: true,
+            });
+          }
+        })
+      );
+    }
+
+    return results;
   }
 
   getUsedCacheSpace() {
@@ -289,7 +348,8 @@ export class DbCache {
   private async resolveRemoteCache(pkg: string): Promise<RemoteCacheV2 | null> {
     let getRemoteCache = null;
     try {
-      getRemoteCache = (await import(this.resolvePackage(pkg))).getRemoteCache;
+      getRemoteCache = (await handleImport(this.resolvePackage(pkg)))
+        .getRemoteCache;
     } catch {
       return null;
     }
@@ -332,8 +392,6 @@ export class Cache {
   cachePath = this.createCacheDir();
   terminalOutputsDir = this.createTerminalOutputsDir();
 
-  private _currentMachineId: string = null;
-
   constructor(private readonly options: DefaultTasksRunnerOptions) {
     if (this.options.skipRemoteCache) {
       output.warn({
@@ -358,7 +416,7 @@ export class Cache {
           stdio: 'ignore',
           detached: true,
           shell: false,
-          windowsHide: false,
+          windowsHide: true,
         });
         p.unref();
       } catch (e) {
@@ -366,20 +424,6 @@ export class Cache {
         console.log(e.message);
       }
     }
-  }
-
-  async currentMachineId() {
-    if (!this._currentMachineId) {
-      try {
-        this._currentMachineId = await machineId();
-      } catch (e) {
-        if (process.env.NX_VERBOSE_LOGGING === 'true') {
-          console.log(`Unable to get machineId. Error: ${e.message}`);
-        }
-        this._currentMachineId = '';
-      }
-    }
-    return this._currentMachineId;
   }
 
   async get(task: Task): Promise<CachedResult | null> {
@@ -398,6 +442,20 @@ export class Cache {
     } else {
       return null;
     }
+  }
+
+  async getBatch(
+    tasks: Task[]
+  ): Promise<Map<string, CachedResult & { remote: boolean }>> {
+    // Legacy file-based cache has no native batch support — loop in parallel.
+    const results = new Map<string, CachedResult & { remote: boolean }>();
+    const entries = await Promise.all(
+      tasks.map(async (t) => ({ task: t, res: await this.get(t) }))
+    );
+    for (const { task, res } of entries) {
+      if (res) results.set(task.hash, res);
+    }
+    return results;
   }
 
   async put(
@@ -440,7 +498,7 @@ export class Cache {
       // so if the process gets terminated while we are copying stuff into cache,
       // the cache entry won't be used.
       await writeFile(join(td, 'code'), code.toString());
-      await writeFile(join(td, 'source'), await this.currentMachineId());
+      await writeFile(join(td, 'source'), await getCurrentMachineId());
       await writeFile(tdCommit, 'true');
 
       if (this.options.remoteCache && !this.options.skipRemoteCache) {
@@ -569,7 +627,7 @@ export class Cache {
       sourceMachineId = await readFile(join(td, 'source'), 'utf-8');
     } catch {}
 
-    if (sourceMachineId && sourceMachineId != (await this.currentMachineId())) {
+    if (sourceMachineId && sourceMachineId != (await getCurrentMachineId())) {
       if (
         process.env.NX_REJECT_UNKNOWN_LOCAL_CACHE != '0' &&
         process.env.NX_REJECT_UNKNOWN_LOCAL_CACHE != 'false'

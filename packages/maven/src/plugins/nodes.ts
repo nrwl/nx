@@ -54,16 +54,27 @@ export const createNodes: CreateNodesV2<MavenPluginOptions> = [
 
     try {
       // Try to get cached data first (skip cache if in verbose mode)
-      let mavenData = isVerbose ? null : mavenCache[hash];
+      let mavenData = isVerbose ? null : mavenCache.get(hash);
 
       // If no cached data or cache is stale, run fresh Maven analysis
       if (!mavenData) {
-        mavenData = await runMavenAnalysis(context.workspaceRoot, {
-          ...opts,
-          verbose: isVerbose,
-        });
+        try {
+          mavenData = await runMavenAnalysis(context.workspaceRoot, {
+            ...opts,
+            verbose: isVerbose,
+          });
+        } catch (e) {
+          if (
+            e instanceof Error &&
+            e.message === 'Maven analysis was cancelled'
+          ) {
+            // Cancelled by a newer createNodes call — silently return empty
+            return [];
+          }
+          throw e;
+        }
         // Cache the results with the hash
-        mavenCache[hash] = mavenData;
+        mavenCache.set(hash, mavenData);
       }
 
       // Store in module-level variable for createDependencies to use

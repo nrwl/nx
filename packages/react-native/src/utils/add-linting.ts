@@ -54,7 +54,9 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       options.projectRoot,
       (override) => Boolean(override.rules?.['@nx/dependency-checks']),
       (override) => {
-        const rule = override.rules['@nx/dependency-checks'];
+        const rule = override.rules['@nx/dependency-checks'] as
+          | string
+          | [string, { ignoredDependencies?: string[] }];
         if (Array.isArray(rule) && rule.length > 1) {
           // Ensure ignoredDependencies array exists
           if (!rule[1].ignoredDependencies) {
@@ -84,7 +86,8 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       addPredefinedConfigToFlatLintConfig(
         host,
         options.projectRoot,
-        'flat/react'
+        'flat/react',
+        { checkBaseConfig: true }
       );
       // Add an empty rules object to users know how to add/override rules
       addOverrideToLintConfig(host, options.projectRoot, {

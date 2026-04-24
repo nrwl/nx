@@ -1,5 +1,4 @@
 use color_eyre::eyre::Result;
-use napi::bindgen_prelude::External;
 use parking_lot::Mutex;
 use ratatui::layout::Size;
 use std::collections::HashMap;
@@ -182,8 +181,13 @@ pub trait TuiApp: Send {
     ///
     /// * `task_id` - The task identifier
     /// * `status` - The new status for the task
-    fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
+    fn update_task_status(&mut self, task_id: &str, status: TaskStatus) {
         self.core().update_task_status(task_id, status);
+    }
+
+    /// Set the start and end time for a task (in milliseconds since epoch)
+    fn set_task_timing(&mut self, _task_id: String, _start_time: i64, _end_time: i64) {
+        // Default: no-op. Full TUI overrides to update display items.
     }
 
     /// Called when tasks finish execution
@@ -243,11 +247,11 @@ pub trait TuiApp: Send {
     /// # Arguments
     ///
     /// * `task_id` - The task identifier
-    /// * `parser_and_writer` - External reference to PTY parser and writer
+    /// * `parser_and_writer` - Reference to PTY parser and writer
     fn register_running_interactive_task(
         &mut self,
         task_id: String,
-        parser_and_writer: External<(ParserArc, WriterArc)>,
+        parser_and_writer: &(ParserArc, WriterArc),
     ) {
         // Interactive PTYs don't need dimension calculation - they use parser/writer dimensions
         let pty =

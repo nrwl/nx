@@ -7,6 +7,7 @@ import { CreateWorkspaceOptions } from './create-workspace-options';
 import { setupCI } from './utils/ci/setup-ci';
 import { mapErrorToBodyLines } from './utils/error-utils';
 import {
+  GitHubPushError,
   initializeGitRepo,
   pushToGitHub,
   VcsPushStatus,
@@ -16,7 +17,9 @@ import {
   createNxCloudOnboardingUrl,
   getNxCloudInfo,
   getSkippedNxCloudInfo,
+  openCloudSetupUrl,
   readNxCloudToken,
+  setNeverConnectToCloud,
 } from './utils/nx/nx-cloud';
 import { output } from './utils/output';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
@@ -69,12 +72,18 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   let directory: string;
 
   if (options.template) {
+    // Resolve shorthand template names to full GitHub org/repo format
+    options.template = resolveTemplateShorthand(options.template);
+
     if (!options.template.startsWith('nrwl/'))
       throw new Error(
         `Invalid template. Only templates from the 'nrwl' GitHub org are supported.`
       );
     const templateUrl = `https://github.com/${options.template}`;
-    const workingDir = process.cwd().replace(/\\/g, '/');
+    const workingDir = (options.workingDir ?? process.cwd()).replace(
+      /\\/g,
+      '/'
+    );
     directory = join(workingDir, name);
 
     const aiMode = isAiAgent();
@@ -89,7 +98,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     }
 
     try {
-      await cloneTemplate(templateUrl, name);
+      await cloneTemplate(templateUrl, name, workingDir);
 
       // Remove npm lockfile from template since we'll generate the correct one
       const npmLockPath = join(directory, 'package-lock.json');
@@ -135,8 +144,11 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     }
 
     // Connect to Nx Cloud for template flow
-    // For variant 1 (NXC-3628): Skip connection, use GitHub flow for URL generation
-    if (nxCloud !== 'skip' && !options.skipCloudConnect) {
+    if (
+      nxCloud !== 'skip' &&
+      nxCloud !== 'never' &&
+      !options.skipCloudConnect
+    ) {
       await connectToNxCloudForTemplate(
         directory,
         'create-nx-workspace',
@@ -182,14 +194,26 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
   const isTemplate = !!options.template;
 
+  // Handle "Never" opt-out: set neverConnectToCloud in nx.json
+  if (options.neverConnectToCloud) {
+    setNeverConnectToCloud(directory);
+  }
+
+  // For template flow, save analytics preference directly to nx.json.
+  // For preset flow, this is handled by the workspace generator via createNxJson.
+  if (isTemplate && typeof options.analytics === 'boolean') {
+    setAnalyticsPreference(directory, options.analytics);
+  }
+
   // Generate CI for preset flow (not template)
   // When nxCloud === 'yes' (from simplified prompt), use GitHub as the CI provider
-  if (nxCloud !== 'skip' && !isTemplate) {
+  if (nxCloud !== 'skip' && nxCloud !== 'never' && !isTemplate) {
     const ciProvider = nxCloud === 'yes' ? 'github' : nxCloud;
     await setupCI(directory, ciProvider, packageManager);
   }
 
   let pushedToVcs = VcsPushStatus.SkippedGit;
+  let pushFailReason: string | undefined;
 
   if (!skipGit) {
     const aiMode = isAiAgent();
@@ -216,14 +240,29 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
         });
       }
     } catch (e) {
-      if (e instanceof Error) {
+      if (e instanceof GitHubPushError) {
+        // GitHub push issues are never fatal — CNW always succeeds.
+        // All reasons are logged in telemetry via pushFailReason.
+        pushedToVcs = VcsPushStatus.FailedToPushToVcs;
+        pushFailReason = e.reason;
+
+        // Only show the push hint when the user actually attempted a push
+        // and it failed. Pre-push issues (gh not installed, auth failed,
+        // timed out during auth) are silent — no point telling the user
+        // about a push they never asked for.
+        if (e.reason === 'push-failed' || e.reason === 'push-timeout') {
+          const githubNewUrl = `https://github.com/new?name=${encodeURIComponent(name)}`;
+          output.log({
+            title: `Push your repo to GitHub: ${githubNewUrl}`,
+          });
+        }
+      } else if (e instanceof Error) {
         if (!aiMode) {
           output.error({
             title: 'Could not initialize git repository',
             bodyLines: mapErrorToBodyLines(e),
           });
         }
-        // In AI mode, error will be handled by the caller
       } else {
         console.error(e);
       }
@@ -234,17 +273,14 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   let connectUrl: string | undefined;
   let nxCloudInfo: string | undefined;
 
-  if (nxCloud !== 'skip') {
+  if (nxCloud !== 'skip' && nxCloud !== 'never') {
+    // "Yes" or "Maybe later" — generate URL, update README, show banner
     const aiModeForCloud = isAiAgent();
     if (aiModeForCloud) {
       logProgress('configuring', 'Configuring Nx Cloud...');
     }
-    // For variant 1 (skipCloudConnect=true): Skip readNxCloudToken() entirely
-    // - We didn't call connectToNxCloudForTemplate(), so no token exists
-    // - The spinner message "Checking Nx Cloud setup" would be misleading
-    // - createNxCloudOnboardingUrl() uses GitHub flow which sends accessToken: null
-    //
-    // For variant 0: Read the token as before (cloud was connected)
+    // skipCloudConnect=true (Maybe later): Skip readNxCloudToken() since no token exists
+    // skipCloudConnect=false (Yes): Read the token as before (cloud was connected)
     const token = options.skipCloudConnect
       ? undefined
       : readNxCloudToken(directory);
@@ -275,31 +311,57 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       options.completionMessageKey,
       name
     );
-  } else if (isTemplate && nxCloud === 'skip') {
-    // Strip marker comments from README even when cloud is skipped
-    // so users don't see raw <!-- BEGIN/END: nx-cloud --> markers
+
+    // Auto-open the Cloud setup URL in the browser when user selected 'yes'
+    if (!options.skipCloudConnect) {
+      await openCloudSetupUrl(connectUrl);
+    }
+  } else if (isTemplate && (nxCloud === 'skip' || nxCloud === 'never')) {
+    // Strip marker comments from README
     const readmeUpdated = addConnectUrlToReadme(directory, undefined);
     if (readmeUpdated && !skipGit && commit) {
       const alreadyPushed = pushedToVcs === VcsPushStatus.PushedToVcs;
       await amendOrCommitReadme(directory, alreadyPushed);
     }
 
-    // Show nx connect message when user skips cloud in template flow
-    nxCloudInfo = getSkippedNxCloudInfo();
+    // Only show "nx connect" message for 'skip', not 'never'
+    if (nxCloud === 'skip') {
+      nxCloudInfo = getSkippedNxCloudInfo();
+    }
   }
 
   return {
     nxCloudInfo,
     directory,
     pushedToVcs,
+    pushFailReason,
     connectUrl,
   };
+}
+
+function setAnalyticsPreference(directory: string, enabled: boolean): void {
+  const { readFileSync, writeFileSync } = require('fs');
+  const nxJsonPath = join(directory, 'nx.json');
+  const nxJson = JSON.parse(readFileSync(nxJsonPath, 'utf-8'));
+  nxJson.analytics = enabled;
+  writeFileSync(nxJsonPath, JSON.stringify(nxJson, null, 2) + '\n');
 }
 
 export function extractConnectUrl(text: string): string | null {
   const urlPattern = /(https:\/\/[^\s]+\/connect\/[^\s]+)/g;
   const match = text.match(urlPattern);
   return match ? match[0] : null;
+}
+
+const templateShorthands: Record<string, string> = {
+  angular: 'nrwl/angular-template',
+  react: 'nrwl/react-template',
+  typescript: 'nrwl/typescript-template',
+  empty: 'nrwl/empty-template',
+};
+
+export function resolveTemplateShorthand(template: string): string {
+  return templateShorthands[template] ?? template;
 }
 
 function getWorkspaceGlobsFromPreset(preset: string): string[] {

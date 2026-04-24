@@ -161,7 +161,6 @@ describe('lib', () => {
       expect(packageJson.devDependencies['ng-packagr']).toBeUndefined();
       expect(packageJson.devDependencies['postcss']).toBeUndefined();
       expect(packageJson.devDependencies['autoprefixer']).toBeUndefined();
-      expect(packageJson.devDependencies['postcss-url']).toBeUndefined();
     });
 
     it('should update package.json when publishable', async () => {
@@ -176,7 +175,6 @@ describe('lib', () => {
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
       expect(packageJson.devDependencies['postcss']).toBeDefined();
       expect(packageJson.devDependencies['autoprefixer']).toBeDefined();
-      expect(packageJson.devDependencies['postcss-url']).toBeDefined();
     });
 
     it('should update package.json when buildable', async () => {
@@ -188,7 +186,6 @@ describe('lib', () => {
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
       expect(packageJson.devDependencies['postcss']).toBeDefined();
       expect(packageJson.devDependencies['autoprefixer']).toBeDefined();
-      expect(packageJson.devDependencies['postcss-url']).toBeDefined();
 
       const libPackageJson = readJson(tree, 'my-lib/package.json');
       expect(libPackageJson.dependencies?.['tslib']).toBeFalsy();
@@ -295,7 +292,7 @@ describe('lib', () => {
       // ASSERT
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-lib/src/index.ts',
+        './my-lib/src/index.ts',
       ]);
     });
 
@@ -591,7 +588,7 @@ describe('lib', () => {
       // ASSERT
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-dir/my-lib/src/index.ts',
+        './my-dir/my-lib/src/index.ts',
       ]);
       expect(tsconfigJson.compilerOptions.paths['my-lib/*']).toBeUndefined();
     });
@@ -610,7 +607,7 @@ describe('lib', () => {
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
 
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-dir/my-lib/src/index.ts',
+        './my-dir/my-lib/src/index.ts',
       ]);
       expect(tsconfigJson.compilerOptions.paths['my-lib/*']).toBeUndefined();
     });
@@ -738,7 +735,7 @@ describe('lib', () => {
         {
           path: 'tsconfig.base.json',
           lookupFn: (json) => json.compilerOptions.paths['@myorg/lib'],
-          expectedValue: ['my-dir/my-lib/src/index.ts'],
+          expectedValue: ['./my-dir/my-lib/src/index.ts'],
         },
         {
           path: 'my-dir/my-lib/ng-package.json',
@@ -1222,9 +1219,9 @@ describe('lib', () => {
           const baseConfig = require("../eslint.config.cjs");
 
           module.exports = [
-              ...baseConfig,
               ...nx.configs["flat/angular"],
               ...nx.configs["flat/angular-template"],
+              ...baseConfig,
               {
                   files: [
                       "**/*.ts"
@@ -1274,6 +1271,8 @@ describe('lib', () => {
           const baseConfig = require("../eslint.config.cjs");
 
           module.exports = [
+              ...nx.configs["flat/angular"],
+              ...nx.configs["flat/angular-template"],
               ...baseConfig,
               {
                   files: [
@@ -1290,8 +1289,6 @@ describe('lib', () => {
                       }
                   }
               },
-              ...nx.configs["flat/angular"],
-              ...nx.configs["flat/angular-template"],
               {
                   files: [
                       "**/*.ts"
@@ -2176,7 +2173,7 @@ describe('lib', () => {
       // ASSERT
       const tsconfigJson = readJson(tree, 'tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-lib/src/index.ts',
+        './my-lib/src/index.ts',
       ]);
     });
 
@@ -2187,7 +2184,7 @@ describe('lib', () => {
       // ASSERT
       const tsconfigJson = readJson(tree, 'tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-lib/src/index.ts',
+        './my-lib/src/index.ts',
       ]);
     });
   });

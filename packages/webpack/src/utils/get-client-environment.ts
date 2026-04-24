@@ -26,7 +26,12 @@ export function getClientEnvironment(mode?: string) {
     },
     // Provide a fallback for process.env itself to handle cases where code
     // accesses process.env directly (e.g., in Cypress component testing)
-    { 'process.env': '({})' } as Record<string, string>
+    {
+      'process.env': Object.keys(raw).reduce((env, key) => {
+        env[key] = JSON.stringify(raw[key]);
+        return env;
+      }, {}),
+    }
   );
 
   return { stringified };

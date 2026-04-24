@@ -247,7 +247,9 @@ export function rehoistNodes(
           closest = node;
         }
       });
-      switchNodeToHoisted(closest, builder, invBuilder);
+      if (closest) {
+        switchNodeToHoisted(closest, builder, invBuilder);
+      }
     }
   });
 }

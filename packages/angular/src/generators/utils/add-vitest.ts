@@ -15,7 +15,7 @@ import {
 } from '@nx/devkit';
 import { readModulePackageJson } from 'nx/src/devkit-internals';
 import { intersects, satisfies, valid, validRange } from 'semver';
-import { nxVersion } from '../../utils/versions';
+import { nxVersion, oxcProjectRuntimeVersion } from '../../utils/versions';
 import {
   getInstalledAngularDevkitVersion,
   getInstalledAngularVersionInfo,
@@ -78,6 +78,9 @@ export async function addVitestAngular(
       {},
       {
         '@angular/build': angularDevkitVersion,
+        // @angular/build uses rolldown which injects @oxc-project/runtime
+        // helpers at transform time but doesn't declare it as a dependency
+        '@oxc-project/runtime': oxcProjectRuntimeVersion,
         jsdom: pkgVersions.jsdomVersion,
         vitest: pkgVersions.vitestVersion,
       },
@@ -99,6 +102,9 @@ export async function addVitestAnalog(
       versions(tree).angularDevkitVersion;
     const devDependencies: Record<string, string> = {
       '@angular/build': angularDevkitVersion,
+      // @angular/build uses rolldown which injects @oxc-project/runtime
+      // helpers at transform time but doesn't declare it as a dependency
+      '@oxc-project/runtime': oxcProjectRuntimeVersion,
     };
 
     // Add compatible vitest/jsdom versions BEFORE calling configurationGenerator
@@ -123,9 +129,8 @@ export async function addVitestAnalog(
     addPlugin: options.addPlugin ?? false,
     skipFormat: options.skipFormat,
     skipPackageJson: options.skipPackageJson,
+    zoneless: options.zoneless,
   });
-
-  createAnalogSetupFile(tree, options, angularMajorVersion);
 }
 
 function validateVitestVersion(tree: Tree): void {
@@ -225,53 +230,4 @@ function addVitestScreenshotsToGitIgnore(tree: Tree): void {
   } else {
     logger.warn(`Couldn't find .gitignore file to update`);
   }
-}
-
-function createAnalogSetupFile(
-  tree: Tree,
-  options: AddVitestAnalogOptions,
-  angularMajorVersion: number
-): void {
-  let setupFile: string;
-
-  if (angularMajorVersion >= 21) {
-    setupFile = `import '@angular/compiler';
-import '@analogjs/vitest-angular/setup-snapshots';
-import { setupTestBed } from '@analogjs/vitest-angular/setup-testbed';
-
-setupTestBed(${options.zoneless ? '' : '{ zoneless: false }'});
-`;
-  } else if (angularMajorVersion === 20) {
-    setupFile = `import '@angular/compiler';
-import '@analogjs/vitest-angular/setup-zone';
-import {
-  BrowserTestingModule,
-  platformBrowserTesting,
-} from '@angular/platform-browser/testing';
-import { getTestBed } from '@angular/core/testing';
-
-getTestBed().initTestEnvironment(
-  BrowserTestingModule,
-  platformBrowserTesting(),
-);
-`;
-  } else {
-    setupFile = `import '@analogjs/vitest-angular/setup-zone';
-import {
-  BrowserDynamicTestingModule,
-  platformBrowserDynamicTesting,
-} from '@angular/platform-browser-dynamic/testing';
-import { getTestBed } from '@angular/core/testing';
-
-getTestBed().initTestEnvironment(
-  BrowserDynamicTestingModule,
-  platformBrowserDynamicTesting(),
-);
-`;
-  }
-
-  tree.write(
-    joinPathFragments(options.projectRoot, 'src/test-setup.ts'),
-    setupFile
-  );
 }

@@ -17,7 +17,9 @@ We attempted to configure a custom path via `edge_functions = "nx-dev/nx-dev/net
 
 ### `rewrite-framer-urls.ts`
 
-Proxies requests to Framer-hosted pages and rewrites URLs in the HTML response to use `nx.dev` instead of the Framer domain. This ensures:
+Proxies all requests to Framer by default and rewrites URLs in the HTML response to use `nx.dev` instead of the Framer domain. Only paths explicitly kept in Next.js (defined in the `nextjsPaths` set and `excludedPath` config) bypass the proxy.
+
+This ensures:
 
 - Canonical URLs point to nx.dev
 - No duplicate indexing by search engines
@@ -26,7 +28,17 @@ Proxies requests to Framer-hosted pages and rewrites URLs in the HTML response t
 **Environment variables** (configured in Netlify):
 
 - `NEXT_PUBLIC_FRAMER_URL`: The Framer site URL (e.g., `https://ready-knowledge-238309.framer.app`)
-- `NEXT_PUBLIC_FRAMER_REWRITES`: Comma-separated list of paths to proxy (e.g., `/enterprise,/powerpack`)
+
+### `additional-sitemaps.ts`
+
+Proxies the per-source sitemaps referenced by the root sitemap index and rewrites URLs to use `nx.dev`. Separate from the main Framer/blog proxy so that proxy can keep `accept: ['text/html']` for compute cost savings.
+
+| Path             | Upstream                               | Env var                  |
+| ---------------- | -------------------------------------- | ------------------------ |
+| `/sitemap-1.xml` | `<NEXT_PUBLIC_FRAMER_URL>/sitemap.xml` | `NEXT_PUBLIC_FRAMER_URL` |
+| `/sitemap-2.xml` | `<BLOG_URL>/blog/sitemap.xml`          | `BLOG_URL`               |
+
+The root sitemap index references these via `scripts/patch-sitemap-index.mjs` (`additionalSitemaps` list).
 
 ## Future
 

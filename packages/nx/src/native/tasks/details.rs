@@ -1,6 +1,7 @@
 use crate::native::db::connection::NxDbConnection;
-use napi::bindgen_prelude::*;
+use napi::bindgen_prelude::External;
 use rusqlite::params;
+use std::sync::{Arc, Mutex};
 use tracing::trace;
 
 pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS task_details (
@@ -21,21 +22,28 @@ pub struct HashedTask {
 
 #[napi]
 pub struct TaskDetails {
-    db: External<NxDbConnection>,
+    db: Arc<Mutex<NxDbConnection>>,
 }
 
 #[napi]
 impl TaskDetails {
     #[napi(constructor)]
-    pub fn new(db: External<NxDbConnection>) -> anyhow::Result<Self> {
-        Ok(Self { db })
+    pub fn new(
+        #[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] db: &External<
+            Arc<Mutex<NxDbConnection>>,
+        >,
+    ) -> anyhow::Result<Self> {
+        Ok(Self { db: Arc::clone(db) })
     }
 
     #[napi]
     pub fn record_task_details(&mut self, tasks: Vec<HashedTask>) -> anyhow::Result<()> {
         trace!("Recording task details");
-        self.db.transaction(|conn| {
-            let mut stmt = conn.prepare("INSERT OR REPLACE INTO task_details (hash, project, target, configuration) VALUES (?1, ?2, ?3, ?4)")?;
+        self.db.lock().unwrap().transaction(|conn| {
+            let mut stmt = conn.prepare(
+                "INSERT INTO task_details (hash, project, target, configuration) VALUES (?1, ?2, ?3, ?4)
+                 ON CONFLICT(hash) DO UPDATE SET project = excluded.project, target = excluded.target, configuration = excluded.configuration"
+            )?;
             for task in tasks.iter() {
                 stmt.execute(
                     params![task.hash, task.project, task.target, task.configuration],

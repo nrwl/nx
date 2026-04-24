@@ -596,8 +596,8 @@ describe('app', () => {
 
           export default [
             { plugins: { '@next/next': nextEslintPluginNext } },
-            ...baseConfig,
             ...nx.configs['flat/react-typescript'],
+            ...baseConfig,
             {
               ignores: ['.next/**/*'],
             },
@@ -624,8 +624,8 @@ describe('app', () => {
           module.exports = [
             { plugins: { '@next/next': nextEslintPluginNext } },
 
-            ...baseConfig,
             ...nx.configs['flat/react-typescript'],
+            ...baseConfig,
             {
               ignores: ['.next/**/*'],
             },
@@ -644,8 +644,8 @@ describe('app', () => {
         const packageJson = readJson(tree, '/package.json');
         expect(packageJson).toMatchObject({
           devDependencies: {
-            'eslint-config-next': '^16.0.1',
-            '@next/eslint-plugin-next': '^16.0.1',
+            'eslint-config-next': '^16.1.6',
+            '@next/eslint-plugin-next': '^16.1.6',
           },
         });
       });
@@ -1272,7 +1272,18 @@ describe('app', () => {
           testEnvironment: 'jsdom',
         };
 
-        module.exports = createJestConfig(config);
+        const jestConfig = createJestConfig(config);
+
+        module.exports = async () => {
+          const resolved = await jestConfig();
+          // Disable SWC path alias resolution — handled by Nx jest resolver.
+          for (const value of Object.values(resolved.transform)) {
+            if (Array.isArray(value) && value[1]?.resolvedBaseUrl) {
+              value[1] = { ...value[1], resolvedBaseUrl: undefined };
+            }
+          }
+          return resolved;
+        };
         "
       `);
     });
@@ -1305,7 +1316,18 @@ describe('app', () => {
           testEnvironment: 'jsdom',
         };
 
-        module.exports = createJestConfig(config);
+        const jestConfig = createJestConfig(config);
+
+        module.exports = async () => {
+          const resolved = await jestConfig();
+          // Disable SWC path alias resolution — handled by Nx jest resolver.
+          for (const value of Object.values(resolved.transform)) {
+            if (Array.isArray(value) && value[1]?.resolvedBaseUrl) {
+              value[1] = { ...value[1], resolvedBaseUrl: undefined };
+            }
+          }
+          return resolved;
+        };
         "
       `);
     });
@@ -1379,7 +1401,18 @@ describe('app (legacy)', () => {
           testEnvironment: 'jsdom',
         };
 
-        module.exports = createJestConfig(config);
+        const jestConfig = createJestConfig(config);
+
+        module.exports = async () => {
+          const resolved = await jestConfig();
+          // Disable SWC path alias resolution — handled by Nx jest resolver.
+          for (const value of Object.values(resolved.transform)) {
+            if (Array.isArray(value) && value[1]?.resolvedBaseUrl) {
+              value[1] = { ...value[1], resolvedBaseUrl: undefined };
+            }
+          }
+          return resolved;
+        };
         "
       `);
     });
@@ -1412,7 +1445,18 @@ describe('app (legacy)', () => {
           testEnvironment: 'jsdom',
         };
 
-        module.exports = createJestConfig(config);
+        const jestConfig = createJestConfig(config);
+
+        module.exports = async () => {
+          const resolved = await jestConfig();
+          // Disable SWC path alias resolution — handled by Nx jest resolver.
+          for (const value of Object.values(resolved.transform)) {
+            if (Array.isArray(value) && value[1]?.resolvedBaseUrl) {
+              value[1] = { ...value[1], resolvedBaseUrl: undefined };
+            }
+          }
+          return resolved;
+        };
         "
       `);
     });

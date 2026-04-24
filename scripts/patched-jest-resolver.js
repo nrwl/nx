@@ -49,9 +49,12 @@ module.exports = function (modulePath, options) {
     '@nx/rollup',
     '@nx/eslint',
     '@nx/vite',
+    '@nx/vitest',
     '@nx/jest',
     '@nx/docker',
+    '@nx/dotnet',
     '@nx/js',
+    '@nx/maven',
     '@nx/next',
     '@nx/storybook',
     '@nx/rsbuild',
@@ -66,6 +69,7 @@ module.exports = function (modulePath, options) {
     '@nx/angular',
     '@nx/create-nx-plugin',
     '@nx/create-nx-workspace',
+    '@nx/cypress',
     '@nx/detox',
     '@nx/devkit',
     '@nx/esbuild',
@@ -75,6 +79,7 @@ module.exports = function (modulePath, options) {
     '@nx/node',
     '@nx/nuxt',
     '@nx/playwright',
+    '@nx/plugin',
     '@nx/react',
     '@nx/remix',
     '@nx/webpack',
@@ -101,12 +106,13 @@ module.exports = function (modulePath, options) {
   }
 
   try {
-    // Detect if we're running from e2e directory
-    const isE2E = options.rootDir.includes('/e2e/');
-
-    // For e2e tests, skip workspace resolution and use default resolver
-    if (isE2E) {
-      return options.defaultResolver(modulePath, options);
+    // For nx/* imports, use @nx/nx-source condition to resolve to .ts
+    // source files instead of dist/*.js files.
+    if (modulePath.startsWith('nx/') || modulePath === 'nx') {
+      return options.defaultResolver(modulePath, {
+        ...options,
+        conditions: ['@nx/nx-source', 'require', 'node', 'default'],
+      });
     }
 
     // Find workspace root - avoid filesystem lookups inside node_modules
@@ -196,36 +202,6 @@ module.exports = function (modulePath, options) {
         ) {
           return possiblePath;
         }
-      }
-    }
-
-    // Handle nx/src/* imports (direct nx package imports)
-    const nxSrcMatch = modulePath.match(/^nx\/src\/(.+)$/);
-    if (nxSrcMatch) {
-      const subpath = nxSrcMatch[1];
-      const resolvedPath = path.join(
-        packagesPath,
-        'nx',
-        'src',
-        subpath + '.ts'
-      );
-      if (fs.existsSync(resolvedPath) && fs.lstatSync(resolvedPath).isFile()) {
-        return resolvedPath;
-      }
-    }
-
-    // Handle nx/package.json specifically
-    if (modulePath === 'nx/package.json') {
-      return path.join(packagesPath, 'nx', 'package.json');
-    }
-
-    // Handle other nx/* patterns
-    const nxOtherPatternMatch = modulePath.match(/^nx\/(.+)$/);
-    if (nxOtherPatternMatch) {
-      const subpath = nxOtherPatternMatch[1];
-      const resolvedPath = path.join(packagesPath, 'nx', subpath + '.ts');
-      if (fs.existsSync(resolvedPath)) {
-        return resolvedPath;
       }
     }
 

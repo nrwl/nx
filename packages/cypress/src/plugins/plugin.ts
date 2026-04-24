@@ -8,9 +8,7 @@ import {
   normalizePath,
   type NxJsonConfiguration,
   type ProjectConfiguration,
-  readJsonFile,
   type TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
@@ -19,6 +17,7 @@ import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
 import { hashObject } from 'nx/src/devkit-internals';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { dirname, join, relative } from 'path';
 import { NX_PLUGIN_OPTIONS } from '../utils/constants';
@@ -29,20 +28,6 @@ export interface CypressPluginOptions {
   openTargetName?: string;
   componentTestingTargetName?: string;
   ciComponentTestingTargetName?: string;
-}
-
-function readTargetsCache(cachePath: string): Record<string, CypressTargets> {
-  try {
-    return process.env.NX_CACHE_PROJECT_GRAPH !== 'false'
-      ? readJsonFile(cachePath)
-      : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeTargetsToCache(cachePath: string, results: CypressTargets) {
-  writeJsonFile(cachePath, results);
 }
 
 const cypressConfigGlob = '**/cypress.config.{js,ts,mjs,cjs}';
@@ -57,8 +42,6 @@ const defaultPatterns = {
   },
 };
 
-const pmc = getPackageManagerCommand();
-
 export const createNodes: CreateNodesV2<CypressPluginOptions> = [
   cypressConfigGlob,
   async (configFiles, options, context) => {
@@ -67,17 +50,20 @@ export const createNodes: CreateNodesV2<CypressPluginOptions> = [
       workspaceDataDirectory,
       `cypress-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const pluginCache = new PluginCache<CypressTargets>(cachePath);
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+          createNodesInternal(configFile, options, context, pluginCache, pmc),
         configFiles,
         options,
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      pluginCache.writeToDisk(cachePath);
     }
   },
 ];
@@ -88,7 +74,8 @@ async function createNodesInternal(
   configFilePath: string,
   options: CypressPluginOptions,
   context: CreateNodesContextV2,
-  targetsCache: CypressTargets
+  pluginCache: PluginCache<CypressTargets>,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   options = normalizeOptions(options);
   const projectRoot = dirname(configFilePath);
@@ -102,20 +89,24 @@ async function createNodesInternal(
     return {};
   }
 
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
-  );
+  const hash =
+    (await calculateHashForCreateNodes(projectRoot, options, context, [
+      getLockFileName(detectPackageManager(context.workspaceRoot)),
+    ])) + configFilePath;
 
-  targetsCache[hash] ??= await buildCypressTargets(
-    configFilePath,
-    projectRoot,
-    options,
-    context
-  );
-  const { targets, metadata } = targetsCache[hash];
+  if (!pluginCache.has(hash)) {
+    pluginCache.set(
+      hash,
+      await buildCypressTargets(
+        configFilePath,
+        projectRoot,
+        options,
+        context,
+        pmc
+      )
+    );
+  }
+  const { targets, metadata } = pluginCache.get(hash);
 
   const project: Omit<ProjectConfiguration, 'root'> = {
     projectType: 'application',
@@ -243,7 +234,8 @@ async function buildCypressTargets(
   configFilePath: string,
   projectRoot: string,
   options: CypressPluginOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<CypressTargets> {
   const cypressConfig = await loadConfigFile(
     join(context.workspaceRoot, configFilePath)

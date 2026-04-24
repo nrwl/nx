@@ -33,7 +33,7 @@ export const emotionBabelPlugin = '11.13.5';
 export const styledJsxVersion = '5.1.2';
 
 export const reactRouterDomVersion = '6.30.3';
-export const reactRouterVersion = '^7.12.0';
+export const reactRouterVersion = '^7.14.2';
 export const reactRouterIsBotVersion = '^4.4.0';
 
 export const testingLibraryReactVersion = '16.3.0';
@@ -62,7 +62,7 @@ export const isbotVersion = '^3.6.5';
 export const corsVersion = '~2.8.5';
 export const typesCorsVersion = '~2.8.12';
 export const moduleFederationNodeVersion = '^2.7.21';
-export const moduleFederationEnhancedVersion = '^0.21.2';
+export const moduleFederationEnhancedVersion = '^2.1.0';
 
 // style preprocessors
 export const lessVersion = '3.12.2';

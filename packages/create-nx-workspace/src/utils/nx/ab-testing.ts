@@ -8,6 +8,7 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import chalk from 'chalk';
 import { isCI } from '../ci/is-ci';
 import type { BannerVariant, CompletionMessageKey } from './messages';
 
@@ -98,12 +99,6 @@ export function getCompletionMessageKeyForVariant(): CompletionMessageKey {
   return 'platform-setup';
 }
 
-export function shouldShowCloudPrompt(): boolean {
-  // CLOUD-4255: Lock to variant 2 behavior (no prompt)
-  // To re-enable A/B testing: return getFlowVariant() !== '2';
-  return false;
-}
-
 // ============================================================================
 // Banner Variant A/B Testing (CLOUD-4235)
 // ============================================================================
@@ -163,6 +158,7 @@ export const NxCloudChoices = [
   'bitbucket-pipelines',
   'circleci',
   'skip',
+  'never',
   'yes', // Deprecated but still handled
 ];
 
@@ -209,58 +205,20 @@ const messageOptions: Record<string, MessageData[]> = {
     },
   ],
   /**
-   * Simplified Cloud prompt for template flow
+   * Simplified Cloud prompt for template flow.
    */
   setupNxCloudV2: [
-    //{
-    //  code: 'cloud-v2-remote-cache-visit',
-    //  message: 'Enable remote caching with Nx Cloud?',
-    //  initial: 0,
-    //  choices: [
-    //    { value: 'yes', name: 'Yes' },
-    //    { value: 'skip', name: 'Skip' },
-    //  ],
-    //  footer:
-    //    '\nRemote caching makes your builds faster for development and in CI: https://nx.dev/ci/features/remote-cache',
-    //  fallback: undefined,
-    //  completionMessage: 'cache-setup',
-    //},
-    //{
-    //  code: 'cloud-v2-fast-ci-visit',
-    //  message: 'Speed up CI and reduce compute costs with Nx Cloud?',
-    //  initial: 0,
-    //  choices: [
-    //    { value: 'yes', name: 'Yes' },
-    //    { value: 'skip', name: 'Skip' },
-    //  ],
-    //  footer:
-    //    '\n70% faster CI, 60% less compute, Automatically fix broken PRs: https://nx.dev/nx-cloud',
-    //  fallback: undefined,
-    //  completionMessage: 'ci-setup',
-    //},
-    //{
-    //  code: 'cloud-v2-green-prs-visit',
-    //  message: 'Get to green PRs faster with Nx Cloud?',
-    //  initial: 0,
-    //  choices: [
-    //    { value: 'yes', name: 'Yes' },
-    //    { value: 'skip', name: 'Skip' },
-    //  ],
-    //  footer:
-    //    '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
-    //  fallback: undefined,
-    //  completionMessage: 'ci-setup',
-    //},
     {
-      code: 'cloud-v2-full-platform-visit',
-      message: 'Try the full Nx platform?',
+      code: 'cloud-ci-providers-speed',
+      message: 'Speed up GitHub Actions, GitLab CI, and more with Nx Cloud?',
       initial: 0,
       choices: [
         { value: 'yes', name: 'Yes' },
-        { value: 'skip', name: 'Skip' },
+        { value: 'skip', name: 'Skip for now' },
+        { value: 'never', name: chalk.dim("No, don't ask again") },
       ],
       footer:
-        '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
+        '\nFree for small teams. Remote caching and task distribution. 2-minute setup: https://nx.dev/nx-cloud',
       fallback: undefined,
       completionMessage: 'platform-setup',
     },
@@ -287,9 +245,9 @@ export class PromptMessages {
       if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
         this.selectedMessages[key] = 0;
       } else {
-        this.selectedMessages[key] = Math.floor(
-          Math.random() * messageOptions[key].length
-        );
+        const variant = Number(getFlowVariant());
+        this.selectedMessages[key] =
+          variant < messageOptions[key].length ? variant : 0;
       }
     }
     return messageOptions[key][this.selectedMessages[key]!];
@@ -407,7 +365,7 @@ function shouldRecordStats(): boolean {
     // Use npm to check registry - this works regardless of which package manager invoked us
     const stdout = execSync('npm config get registry', {
       encoding: 'utf-8',
-      windowsHide: false,
+      windowsHide: true,
     });
     const url = new URL(stdout.trim());
 

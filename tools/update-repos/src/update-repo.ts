@@ -53,10 +53,13 @@ async function execWithOutput(
   if (description) {
     log(`🔄 ${description}`);
   }
-  log(`📝 Running: ${command}`);
+  const finalCommand = command.startsWith('mise ')
+    ? command
+    : `mise exec -- ${command}`;
+  log(`📝 Running: ${finalCommand}`);
 
   return new Promise((resolve, reject) => {
-    const child = spawn('bash', ['-c', command], {
+    const child = spawn('bash', ['-c', finalCommand], {
       cwd,
       stdio: ['inherit', 'pipe', 'pipe'],
     });
@@ -416,6 +419,22 @@ async function updateRepository(repoName: string): Promise<void> {
       repoDir,
       `Creating update branch '${updateBranch}' from origin/${mainBranch}`
     );
+
+    // Trust mise config if present so correct tool versions are used
+    const miseToml = path.join(repoDir, 'mise.toml');
+    const dotMiseToml = path.join(repoDir, '.mise.toml');
+    if (fs.existsSync(miseToml) || fs.existsSync(dotMiseToml)) {
+      await execWithOutput(
+        'mise trust',
+        repoDir,
+        'Trusting mise configuration'
+      );
+      await execWithOutput(
+        'mise install',
+        repoDir,
+        'Installing mise-managed tools'
+      );
+    }
 
     // Detect package manager
     const detectedPm = detectPackageManager(repoDir);

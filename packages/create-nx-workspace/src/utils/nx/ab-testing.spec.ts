@@ -1,8 +1,8 @@
 import {
   isEnterpriseCloudUrl,
   getBannerVariant,
-  shouldShowCloudPrompt,
   getFlowVariant,
+  PromptMessages,
 } from './ab-testing';
 
 describe('ab-testing', () => {
@@ -99,14 +99,45 @@ describe('ab-testing', () => {
       ).toBe('0');
     });
 
-    it('should return 2 for standard URLs (locked in CLOUD-4255)', () => {
+    it('should return 2 for standard URLs', () => {
       expect(getBannerVariant('https://cloud.nx.app/connect/abc')).toBe('2');
     });
   });
 
-  describe('shouldShowCloudPrompt', () => {
-    it('should always return false (variant 2 locked in CLOUD-4255)', () => {
-      expect(shouldShowCloudPrompt()).toBe(false);
+  describe('setupNxCloudV2 prompt', () => {
+    const originalEnv = process.env;
+
+    beforeEach(() => {
+      jest.resetModules();
+      process.env = { ...originalEnv };
+    });
+
+    afterEach(() => {
+      process.env = originalEnv;
+    });
+
+    it.each(['0', '1', '2'])(
+      'should return the same prompt for flow variant %s',
+      (flowVariant) => {
+        jest.resetModules();
+        process.env.NX_CNW_FLOW_VARIANT = flowVariant;
+        const { PromptMessages: FreshPromptMessages } = require('./ab-testing');
+        const pm = new FreshPromptMessages();
+        expect(pm.getPrompt('setupNxCloudV2').code).toBe(
+          'cloud-ci-providers-speed'
+        );
+      }
+    );
+
+    it('should return the same prompt for docs generation', () => {
+      process.env.NX_GENERATE_DOCS_PROCESS = 'true';
+      const { PromptMessages: FreshPromptMessages } = jest.requireActual(
+        './ab-testing'
+      ) as typeof import('./ab-testing');
+      const pm = new FreshPromptMessages();
+      expect(pm.getPrompt('setupNxCloudV2').code).toBe(
+        'cloud-ci-providers-speed'
+      );
     });
   });
 });

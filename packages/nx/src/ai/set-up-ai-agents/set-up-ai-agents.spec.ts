@@ -6,7 +6,21 @@ import { SetupAiAgentsGeneratorSchema } from './schema';
 import { readJson } from '../../generators/utils/json';
 import { getAgentRulesWrapped } from '../constants';
 import * as packageJsonUtils from '../../utils/package-json';
+import * as cloneModule from '../clone-ai-config-repo';
 import * as fs from 'fs';
+
+jest.mock('fs', () => {
+  const actual = jest.requireActual('fs');
+  return {
+    ...actual,
+    existsSync: jest
+      .fn()
+      .mockImplementation((...args: any[]) => actual.existsSync(...args)),
+    readFileSync: jest
+      .fn()
+      .mockImplementation((...args: any[]) => actual.readFileSync(...args)),
+  };
+});
 
 describe('setup-ai-agents generator', () => {
   let tree: Tree;
@@ -612,6 +626,88 @@ describe('setup-ai-agents generator', () => {
         expect(content).toContain('Custom Gemini configuration');
         expect(content).toContain('Nx');
       });
+
+      it('should delete .gemini/skills that also exist in .agents/skills', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['gemini'],
+        };
+
+        // Simulate shared .agents/skills (the new location)
+        tree.write(
+          '.agents/skills/nx-workspace/SKILL.md',
+          '# Nx Workspace Skill'
+        );
+        tree.write(
+          '.agents/skills/nx-generate/SKILL.md',
+          '# Nx Generate Skill'
+        );
+
+        // Simulate legacy .gemini/skills with matching + user-created skills
+        tree.write(
+          '.gemini/skills/nx-workspace/skill.md',
+          '# Legacy Nx Workspace'
+        );
+        tree.write(
+          '.gemini/skills/nx-generate/skill.md',
+          '# Legacy Nx Generate'
+        );
+        tree.write(
+          '.gemini/skills/my-custom-skill/skill.md',
+          '# My Custom Skill'
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        // Migrated skills should be deleted
+        expect(tree.exists('.gemini/skills/nx-workspace')).toBe(false);
+        expect(tree.exists('.gemini/skills/nx-generate')).toBe(false);
+        // User-created skill should be preserved
+        expect(tree.exists('.gemini/skills/my-custom-skill/skill.md')).toBe(
+          true
+        );
+        // Other .gemini files should still exist
+        expect(tree.exists('.gemini/settings.json')).toBe(true);
+      });
+
+      it('should not delete .gemini/skills when .agents/skills does not exist', async () => {
+        // Mock getAiConfigRepoPath to fail so .agents/skills is not created
+        const spy = jest
+          .spyOn(cloneModule, 'getAiConfigRepoPath')
+          .mockImplementation(() => {
+            throw new Error('no network');
+          });
+
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['gemini'],
+        };
+
+        // Only legacy skills, no shared .agents/skills
+        tree.write(
+          '.gemini/skills/nx-workspace/skill.md',
+          '# Legacy Nx Workspace'
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        // Should be preserved since there's no .agents/skills to compare against
+        expect(tree.exists('.gemini/skills/nx-workspace/skill.md')).toBe(true);
+
+        spy.mockRestore();
+      });
+
+      it('should not error when .gemini/skills does not exist', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['gemini'],
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        expect(tree.exists('.gemini/skills')).toBe(false);
+        expect(tree.exists('.gemini/settings.json')).toBe(true);
+      });
     });
 
     describe('multiple agents', () => {
@@ -629,6 +725,150 @@ describe('setup-ai-agents generator', () => {
         expect(tree.exists('AGENTS.md')).toBe(true);
         // .mcp.json should NOT be created - Claude uses plugin, Gemini uses .gemini/settings.json
         expect(tree.exists('.mcp.json')).toBe(false);
+      });
+    });
+
+    describe('gitignore', () => {
+      it('should add .nx/polygraph to .gitignore when it does not exist', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const gitignore = tree.read('.gitignore')?.toString();
+        expect(gitignore).toContain('.nx/polygraph');
+      });
+
+      it('should add .nx/polygraph to existing .gitignore', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        tree.write('.gitignore', 'node_modules\ndist\n');
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const gitignore = tree.read('.gitignore')?.toString();
+        expect(gitignore).toContain('node_modules');
+        expect(gitignore).toContain('.nx/polygraph');
+      });
+
+      it('should not duplicate if .nx/polygraph is already present', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        tree.write('.gitignore', 'node_modules\n.nx/polygraph\n');
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const gitignore = tree.read('.gitignore')?.toString();
+        const matches = gitignore.match(/\.nx\/polygraph/g);
+        expect(matches).toHaveLength(1);
+      });
+
+      it('should not add if a broader pattern already covers it', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        tree.write('.gitignore', '.nx/\n');
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const gitignore = tree.read('.gitignore')?.toString();
+        expect(gitignore).not.toContain('.nx/polygraph');
+      });
+
+      it('should add .claude/worktrees to .gitignore', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        tree.write('.gitignore', 'node_modules\ndist\n');
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const gitignore = tree.read('.gitignore')?.toString();
+        expect(gitignore).toContain('.claude/worktrees');
+      });
+
+      it('should not duplicate if .claude/worktrees is already present', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        tree.write('.gitignore', 'node_modules\n.claude/worktrees\n');
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const gitignore = tree.read('.gitignore')?.toString();
+        const matches = gitignore.match(/\.claude\/worktrees/g);
+        expect(matches).toHaveLength(1);
+      });
+
+      it('should not add .claude/worktrees if a broader pattern already covers it', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        tree.write('.gitignore', '.claude/\n');
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const gitignore = tree.read('.gitignore')?.toString();
+        expect(gitignore).not.toContain('.claude/worktrees');
+      });
+
+      it('should add .claude/settings.local.json to .gitignore', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        tree.write('.gitignore', 'node_modules\ndist\n');
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const gitignore = tree.read('.gitignore')?.toString();
+        expect(gitignore).toContain('.claude/settings.local.json');
+      });
+
+      it('should not duplicate if .claude/settings.local.json is already present', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        tree.write('.gitignore', 'node_modules\n.claude/settings.local.json\n');
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const gitignore = tree.read('.gitignore')?.toString();
+        const matches = gitignore.match(/\.claude\/settings\.local\.json/g);
+        expect(matches).toHaveLength(1);
+      });
+
+      it('should not add .claude/settings.local.json if a broader pattern already covers it', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        tree.write('.gitignore', '.claude/\n');
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const gitignore = tree.read('.gitignore')?.toString();
+        expect(gitignore).not.toContain('.claude/settings.local.json');
       });
     });
 
@@ -857,6 +1097,231 @@ describe('setup-ai-agents generator', () => {
           tree.read('.gemini/settings.json')?.toString() ?? '{}'
         );
         expect(config.mcpServers['nx-mcp'].args).toEqual(['nx', 'mcp']);
+      });
+    });
+
+    describe('codex config from generated template', () => {
+      let getAiConfigRepoPathSpy: jest.SpyInstance;
+      let existsSyncSpy: jest.SpyInstance;
+      let readFileSyncSpy: jest.SpyInstance;
+
+      const generatedConfig = `[mcp_servers."nx-mcp"]
+command = "npx"
+args = ["nx-mcp@latest", "--minimal"]
+
+[features]
+multi_agent = true
+
+[agents.ci-monitor-subagent]
+description = "Polls Nx Cloud CI pipeline."
+config_file = ".codex/agents/ci-monitor-subagent.toml"
+`;
+
+      beforeEach(() => {
+        getAiConfigRepoPathSpy = jest
+          .spyOn(cloneModule, 'getAiConfigRepoPath')
+          .mockReturnValue('/fake/repo');
+
+        const originalExistsSync = fs.existsSync;
+        existsSyncSpy = jest
+          .spyOn(fs, 'existsSync')
+          .mockImplementation((path: any) => {
+            if (
+              typeof path === 'string' &&
+              path.includes('/fake/repo/generated/.codex/config.toml')
+            ) {
+              return true;
+            }
+            if (
+              typeof path === 'string' &&
+              path.includes('/fake/repo/generated/.codex/agents')
+            ) {
+              return false; // No agent files to copy for simplicity
+            }
+            if (
+              typeof path === 'string' &&
+              path.includes('/fake/repo/generated/')
+            ) {
+              return false; // No other generated dirs
+            }
+            return originalExistsSync(path);
+          });
+
+        const originalReadFileSync = fs.readFileSync;
+        readFileSyncSpy = jest
+          .spyOn(fs, 'readFileSync')
+          .mockImplementation((path: any, ...args: any[]) => {
+            if (
+              typeof path === 'string' &&
+              path.includes('/fake/repo/generated/.codex/config.toml')
+            ) {
+              return generatedConfig;
+            }
+            return originalReadFileSync(path, ...args);
+          });
+      });
+
+      afterEach(() => {
+        getAiConfigRepoPathSpy.mockRestore();
+        existsSyncSpy.mockRestore();
+        readFileSyncSpy.mockRestore();
+      });
+
+      it('should write generated config.toml with adjusted MCP args for Nx 22+', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['codex'],
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const content = tree.read('.codex/config.toml')?.toString();
+        expect(content).toContain('[agents.ci-monitor-subagent]');
+        expect(content).toContain('multi_agent = true');
+        // MCP args should be adjusted to Nx 22+ format
+        expect(content).toMatch(/"nx"/);
+        expect(content).toMatch(/"mcp"/);
+        // Should NOT contain the original nx-mcp@latest args
+        expect(content).not.toContain('nx-mcp@latest');
+      });
+
+      it('should write generated config.toml with adjusted MCP args for Nx < 22', async () => {
+        readModulePackageJsonSpy.mockReturnValue({
+          packageJson: { name: 'nx', version: '21.0.0' },
+          path: '/fake/path/package.json',
+        });
+
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['codex'],
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const content = tree.read('.codex/config.toml')?.toString();
+        expect(content).toMatch(/"nx-mcp"/);
+        expect(content).toContain('[agents.ci-monitor-subagent]');
+      });
+
+      it('should update existing sections and preserve user content', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['codex'],
+        };
+
+        // Pre-existing config with user content and old MCP config
+        tree.write(
+          '.codex/config.toml',
+          `sandbox_mode = "read-only"
+
+[mcp_servers."nx-mcp"]
+command = "npx"
+args = ["nx-mcp"]
+`
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const content = tree.read('.codex/config.toml')?.toString();
+        // User content preserved
+        expect(content).toContain('sandbox_mode');
+        expect(content).toContain('read-only');
+        // MCP args updated to Nx 22+ format
+        expect(content).toMatch(/"nx"/);
+        expect(content).toMatch(/"mcp"/);
+        // New sections added
+        expect(content).toContain('[agents.ci-monitor-subagent]');
+        expect(content).toContain('multi_agent = true');
+      });
+
+      it('should preserve extra MCP args from existing config', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['codex'],
+        };
+
+        tree.write(
+          '.codex/config.toml',
+          `[mcp_servers."nx-mcp"]
+command = "npx"
+args = ["nx", "mcp", "--experimental-polygraph", "--transport", "http"]
+`
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const content = tree.read('.codex/config.toml')?.toString();
+        expect(content).toContain('--experimental-polygraph');
+        expect(content).toContain('--transport');
+        expect(content).toContain('http');
+      });
+
+      it('should not set multi_agent when user explicitly set it to false', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['codex'],
+        };
+
+        tree.write(
+          '.codex/config.toml',
+          `[features]
+multi_agent = false
+`
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const content = tree.read('.codex/config.toml')?.toString();
+        // User's explicit false should be preserved
+        expect(content).toContain('multi_agent = false');
+        expect(content).not.toContain('multi_agent = true');
+        // Agent definitions should still be added
+        expect(content).toContain('[agents.ci-monitor-subagent]');
+      });
+
+      it('should append config to file with unrelated user content', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['codex'],
+        };
+
+        // User config with no nx content
+        tree.write(
+          '.codex/config.toml',
+          `model = "gpt-5-codex"
+sandbox_mode = "read-only"
+`
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const content = tree.read('.codex/config.toml')?.toString();
+        // User content preserved
+        expect(content).toContain('gpt-5-codex');
+        expect(content).toContain('read-only');
+        // Nx config added
+        expect(content).toContain('[agents.ci-monitor-subagent]');
+        expect(content).toContain('nx-mcp');
+      });
+
+      it('should fall back to hardcoded config when repo is unavailable', async () => {
+        getAiConfigRepoPathSpy.mockImplementation(() => {
+          throw new Error('Network error');
+        });
+
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['codex'],
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const content = tree.read('.codex/config.toml')?.toString();
+        // Should have basic MCP config (hardcoded fallback uses double quotes)
+        expect(content).toContain('[mcp_servers."nx-mcp"]');
+        expect(content).toContain('args = ["nx", "mcp"]');
+        // Should NOT have agents (fallback doesn't include them)
+        expect(content).not.toContain('[agents');
       });
     });
 

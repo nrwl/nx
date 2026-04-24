@@ -10,24 +10,24 @@ Integrate Nx Cloud with your source control platform to access run results, logs
 
 The [Nx Cloud GitHub App](https://github.com/marketplace/official-nx-cloud-app) lets you access the result of every run—with all its logs and build insights—straight from your PR. It will comment on your PR with the results of the latest CI run, with a summary of the results and links to detailed, structured logs. If you’re using Self-Healing CI, Nx Cloud will comment with proposed fixes for CI failures.
 
-## Install the App
+## Install the app
 
 For the best experience, install the [Nx Cloud GitHub App](https://github.com/marketplace/official-nx-cloud-app). Using the app provides the most seamless authentication experience. This is not required if you wish to authenticate with a personal access token that you generate yourself.
 
-For a detailed breakdown of each permission the GitHub App requires and why, see the [GitHub App Permissions](/docs/enterprise/single-tenant/custom-github-app#configure-permissions-for-the-github-app) reference.
+For a detailed breakdown of each permission the GitHub App requires and why, see the [GitHub App Permissions](/docs/guides/nx-cloud/source-control-integration/github-app-permissions) reference.
 
-## Connecting Your Workspace
+## Connecting your workspace
 
 Once you have installed the Nx Cloud GitHub App, you must link your workspace to the installation. To do this, sign in to Nx Cloud and navigate to the VCS Integrations setup page. This page can be found in your workspace settings, you need to be admin of the organization in order to access it.
 Once on the VCS Integrations setup page, you can choose what VCS you want to connect to your workspace.
 
 ![Access VCS Setup](../../../../../assets/nx-cloud/set-up/access-vcs-setup.webp)
 
-### Choosing an Authentication Method
+### Choosing an authentication method
 
 The easiest way to configure the Nx Cloud GitHub Integration is through the Nx Cloud GitHub App, and this method should be preferred for users on [https://cloud.nx.app](https://cloud.nx.app). Users with strict privacy considerations may wish to generate a personal access token (PAT) instead.
 
-#### Using the GitHub App
+#### Using the GitHub app
 
 To use the Nx Cloud GitHub App for authentication, select the **Use GitHub application** radio button and then click **Connect**.
 This will verify that Nx Cloud can connect to your repo. Upon a successful test, your configuration is saved.
@@ -35,7 +35,7 @@ Check if there's any [additional setup required for your CI platform](/docs/guid
 
 ![Use GitHub App for Authentication](../../../../../assets/nx-cloud/set-up/use-github-app-auth.webp)
 
-#### Using a Personal Access Token
+#### Using a personal access token
 
 Note that users who authenticate with a PAT will not receive Nx Cloud comments with command results and self-healing CI fixes.
 
@@ -59,21 +59,21 @@ To use a personal access token for authentication, one must be generated with pr
 
 Once this token is created, select the radio button for providing a personal access token, paste the value, and then click "Connect". This will verify that Nx Cloud can connect to your repo. Upon a successful test, your configuration is saved. Check the "_CI Platform Considerations_" section below, and if there are no additional instructions for your platform of choice, setup is complete.
 
-### Advanced Configuration
+### Advanced configuration
 
 If your company runs a self-hosted GitHub installation, you may need to override the default URL that Nx Cloud uses to connect to the GitHub API. To do so, check the box labeled "Override GitHub API URL" and enter the correct URL for your organization.
 
-### Connect to GitHub For More Features
+### Connect to GitHub for more features
 
 Get access to [easy workspace setup](/docs/features/ci-features/github-integration#easy-workspace-setup) and [access control through GitHub organizations](/docs/features/ci-features/github-integration#access-control) when you [connect your GitHub account to Nx Cloud](/docs/features/ci-features/github-integration#connect-to-github).
 
-## CI Platform Considerations
+## CI platform considerations
 
 If you are using CircleCI, TravisCI, GitHub Actions or GitHub, there is nothing else you need to do. If you are using other CI providers, you need to set the `NX_BRANCH` environment variable in your CI configuration. The variable has to be set to a PR number.
 
 For instance, this is an example of doing it in Azure pipelines.
 
-### Azure Pipelines
+### Azure pipelines
 
 ```yml
 // azure-pipelines.yml
@@ -93,7 +93,7 @@ Ensure this step from the plugin instructions is followed:
 
     Prerequisite: only GitHub App with proper permissions can publish checks, this guide helps you authenticate your Jenkins as a GitHub App.
 
-## GitHub Status Checks
+## GitHub status checks
 
 The Nx Cloud GitHub Integration updates your PR with commit statuses that reflect the real-time progress of your runs. These statuses are generated dynamically based on your running commands. Enforcing these dynamically-named checks within your branch protection rules is not recommended, as it can result in stuck checks displaying `Waiting for status to be reported`.
 

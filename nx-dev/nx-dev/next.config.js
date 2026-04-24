@@ -1,6 +1,5 @@
 // nx-ignore-next-line
 const { withNx } = require('@nx/next/plugins/with-nx');
-const redirectRules = require('./redirect-rules');
 
 // For deploy previews, always point to the matching astro-docs preview
 // (overrides any site-level env var that would otherwise point to production).
@@ -29,18 +28,13 @@ if (
 }
 
 module.exports = withNx({
-  // Disable the type checking for now, we need to resolve the issues first.
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Limit static generation workers to reduce memory usage on CI (Netlify 8GB limit)
   experimental: {
     cpus: 1,
-    // Exclude large, unnecessary packages from the server function trace.
-    // We have to say under 250MB for Neltify
     outputFileTracingExcludes: {
       '*': [
-        // Native binaries - not needed at runtime for the website
         'node_modules/@swc/core-linux-x64-musl/**',
         'node_modules/@swc/core-linux-x64-gnu/**',
         'node_modules/@swc/core-linux-arm64-musl/**',
@@ -63,20 +57,25 @@ module.exports = withNx({
         'node_modules/@nx/nx-linux-x64-musl/**',
         'node_modules/@nx/nx-win32-arm64-msvc/**',
         'node_modules/@nx/nx-win32-x64-msvc/**',
-        // Build tools not needed at runtime
         'node_modules/typescript/**',
         'node_modules/webpack/**',
         'node_modules/sass/**',
       ],
     },
   },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/ai-chat',
+        permanent: false,
+      },
+    ];
+  },
   async rewrites() {
-    // Only configure rewrites if NEXT_PUBLIC_ASTRO_URL is set
-    // Remove trailing slash to prevent double slashes in rewrite destinations
     const astroDocsUrl = process.env.NEXT_PUBLIC_ASTRO_URL?.replace(/\/$/, '');
 
     if (!astroDocsUrl) {
-      // Skip rewrites if env var is not set
       return [];
     }
 
@@ -103,7 +102,6 @@ module.exports = withNx({
       },
     ];
 
-    // For Vite assets only in development mode
     if (process.env.NODE_ENV !== 'production') {
       entries.push({
         source: '/@fs/:path*',
@@ -111,62 +109,41 @@ module.exports = withNx({
       });
     }
 
-    return entries;
+    return {
+      // beforeFiles runs before Next.js checks public/ — needed so this rewrite
+      // wins over the generated public/robots.txt (gitignored, built from Framer).
+      beforeFiles: [
+        {
+          source: '/robots.txt',
+          destination: `${astroDocsUrl}/docs/robots.txt`,
+        },
+      ],
+      afterFiles: entries,
+      fallback: [],
+    };
   },
-  // Transpile nx-dev packages
   transpilePackages: [
-    '@nx/nx-dev-data-access-documents',
-    '@nx/nx-dev-data-access-packages',
-    '@nx/nx-dev-data-access-menu',
     '@nx/nx-dev-data-access-courses',
-    '@nx/nx-dev-data-access-careers',
-    '@nx/nx-dev-models-document',
-    '@nx/nx-dev-models-package',
-    '@nx/nx-dev-models-menu',
-    '@nx/nx-dev-ui-markdoc',
-    '@nx/nx-dev-ui-common',
-    '@nx/nx-dev-ui-fence',
-    '@nx/nx-dev-ui-primitives',
-    '@nx/nx-dev-ui-icons',
-    '@nx/nx-dev-ui-theme',
-    '@nx/nx-dev-ui-references',
-    '@nx/nx-dev-feature-search',
-    '@nx/nx-dev-feature-analytics',
-    '@nx/nx-dev-feature-feedback',
-    '@nx/nx-dev-feature-doc-viewer',
-    '@nx/nx-dev-feature-package-schema-viewer',
+    '@nx/nx-dev-data-access-documents',
     '@nx/nx-dev-feature-ai',
+    '@nx/nx-dev-feature-analytics',
+    '@nx/nx-dev-feature-search',
+    '@nx/nx-dev-models-document',
+    '@nx/nx-dev-models-menu',
+    '@nx/nx-dev-models-package',
     '@nx/nx-dev-ui-animations',
     '@nx/nx-dev-ui-blog',
-    '@nx/nx-dev-ui-brands',
-    '@nx/nx-dev-ui-careers',
-    '@nx/nx-dev-ui-cloud',
-    '@nx/nx-dev-ui-commands',
-    '@nx/nx-dev-ui-community',
-    '@nx/nx-dev-ui-company',
-    '@nx/nx-dev-ui-contact',
+    '@nx/nx-dev-ui-common',
     '@nx/nx-dev-ui-courses',
-    '@nx/nx-dev-ui-customers',
-    '@nx/nx-dev-ui-enterprise',
-    '@nx/nx-dev-ui-gradle',
-    '@nx/nx-dev-ui-home',
-    '@nx/nx-dev-ui-member-card',
-    '@nx/nx-dev-ui-partners',
-    '@nx/nx-dev-ui-podcast',
-    '@nx/nx-dev-ui-powerpack',
-    '@nx/nx-dev-ui-pricing',
-    '@nx/nx-dev-ui-react',
-    '@nx/nx-dev-ui-remote-cache',
-    '@nx/nx-dev-ui-scrollable-content',
-    '@nx/nx-dev-ui-sponsor-card',
+    '@nx/nx-dev-ui-fence',
+    '@nx/nx-dev-ui-icons',
+    '@nx/nx-dev-ui-markdoc',
+    '@nx/nx-dev-ui-primitives',
+    '@nx/nx-dev-ui-references',
+    '@nx/nx-dev-ui-theme',
     '@nx/nx-dev-ui-video-courses',
-    '@nx/nx-dev-ui-webinar',
     '@nx/nx-dev-util-ai',
   ],
-  // For both client and server
-  env: {
-    VERCEL: process.env.VERCEL,
-  },
   async headers() {
     return [
       {
@@ -185,25 +162,8 @@ module.exports = withNx({
       },
     ];
   },
-  async redirects() {
-    const rules = [];
-
-    // Apply all the redirects from the redirect-rules.js file
-    for (const section of Object.keys(redirectRules)) {
-      for (const source of Object.keys(redirectRules[section])) {
-        rules.push({
-          source: source,
-          destination: redirectRules[section][source],
-          permanent: true,
-        });
-      }
-    }
-
-    return rules;
-  },
   webpack: (config, { dev }) => {
     if (!dev) {
-      // Disable source maps for smaller memory footprint
       config.devtool = false;
     }
     return config;

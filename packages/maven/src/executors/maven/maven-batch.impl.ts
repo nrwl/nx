@@ -197,7 +197,12 @@ export default async function* mavenBatchExecutor(
           console.error(output);
         }
       }
-      resolve();
+      // Reject promise if batch runner exited with non-zero code
+      if (code !== 0) {
+        reject(new Error(`Maven batch runner exited with code ${code}`));
+      } else {
+        resolve();
+      }
     });
     child.on('error', reject);
   });

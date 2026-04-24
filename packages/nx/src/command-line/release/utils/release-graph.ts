@@ -45,6 +45,7 @@ export interface FinalConfigForProject {
   preserveLocalDependencyProtocols: NxReleaseVersionConfiguration['preserveLocalDependencyProtocols'];
   preserveMatchingDependencyRanges: NxReleaseVersionConfiguration['preserveMatchingDependencyRanges'];
   adjustSemverBumpsForZeroMajorVersion: NxReleaseVersionConfiguration['adjustSemverBumpsForZeroMajorVersion'];
+  applyPreidToDependents: NxReleaseVersionConfiguration['applyPreidToDependents'];
   versionActionsOptions: NxReleaseVersionConfiguration['versionActionsOptions'];
   manifestRootsToUpdate: Array<
     Exclude<
@@ -919,6 +920,17 @@ Valid values are: ${validReleaseVersionPrefixes
       false;
 
     /**
+     * applyPreidToDependents
+     *
+     * Defaults to false to preserve the long-standing behavior where dependents
+     * of a prerelease-bumped project get a stable patch bump unless opted in.
+     */
+    const applyPreidToDependents =
+      projectVersionConfig?.applyPreidToDependents ??
+      releaseGroupVersionConfig?.applyPreidToDependents ??
+      false;
+
+    /**
      * fallbackCurrentVersionResolver, defaults to disk when performing a first release, otherwise undefined
      */
     const fallbackCurrentVersionResolver =
@@ -963,6 +975,7 @@ Valid values are: ${validReleaseVersionPrefixes
       preserveLocalDependencyProtocols,
       preserveMatchingDependencyRanges,
       adjustSemverBumpsForZeroMajorVersion,
+      applyPreidToDependents,
       versionActionsOptions,
       manifestRootsToUpdate,
       dockerOptions,

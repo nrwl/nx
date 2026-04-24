@@ -1,9 +1,18 @@
+import { isOnDaemon } from '../daemon/is-on-daemon';
+import { sendProgressMessageToTopic } from '../daemon/server/client-socket-context';
 import { isCI } from './is-ci';
+import { ProgressTopic } from './progress-topics';
 import { globalSpinner, SHOULD_SHOW_SPINNERS } from './spinner';
 
 export type DelayedSpinnerOptions = {
   delay?: number;
   ciDelay?: number;
+  /**
+   * When set and running inside the Nx daemon, spinner messages are
+   * broadcast to every client currently subscribed to this topic so
+   * their own spinners stay in sync with daemon-side progress.
+   */
+  progressTopic?: ProgressTopic;
 };
 
 /**
@@ -18,6 +27,7 @@ export class DelayedSpinner {
 
   private lastMessage: string;
   private ready: boolean;
+  private readonly progressTopic: ProgressTopic | undefined;
 
   /**
    * Constructs a new {@link DelayedSpinner} instance.
@@ -26,7 +36,10 @@ export class DelayedSpinner {
    */
   constructor(message: string, opts?: DelayedSpinnerOptions) {
     opts = normalizeDelayedSpinnerOpts(opts);
+    this.progressTopic = opts.progressTopic;
     const delay = SHOULD_SHOW_SPINNERS ? opts.delay : opts.ciDelay;
+
+    this.broadcastProgress(message);
 
     this.timeouts.push(
       setTimeout(() => {
@@ -55,6 +68,7 @@ export class DelayedSpinner {
     } else if (this.ready && this.lastMessage && this.lastMessage !== message) {
       console.warn(message);
     }
+    this.broadcastProgress(message);
     this.lastMessage = message;
     return this;
   }
@@ -85,6 +99,12 @@ export class DelayedSpinner {
   cleanup() {
     this.spinner?.stop();
     this.timeouts.forEach((t) => clearTimeout(t));
+  }
+
+  private broadcastProgress(message: string) {
+    if (this.progressTopic && isOnDaemon()) {
+      sendProgressMessageToTopic(this.progressTopic, message);
+    }
   }
 }
 

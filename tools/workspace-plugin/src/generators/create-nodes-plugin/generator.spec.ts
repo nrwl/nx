@@ -1,8 +1,13 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { addProjectConfiguration, Tree, writeJson } from '@nx/devkit';
+import {
+  addProjectConfiguration,
+  Tree,
+  workspaceRoot,
+  writeJson,
+} from '@nx/devkit';
+import { join } from 'node:path';
 
 import { generatorGenerator } from './generator';
-import { setCwd } from '@nx/devkit/internal-testing-utils';
 
 describe('create-nodes-plugin/generator generator', () => {
   let tree: Tree;
@@ -19,7 +24,7 @@ describe('create-nodes-plugin/generator generator', () => {
 
     jest.spyOn(process, 'cwd').mockReturnValue('/virtual/packages/eslint');
 
-    setCwd('packages/eslint');
+    process.env.INIT_CWD = join(workspaceRoot, 'packages/eslint');
   });
 
   it('should run successfully', async () => {

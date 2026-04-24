@@ -165,7 +165,6 @@ export class I18nInlinePlugin implements RspackPluginInstance {
   ) {
     await this.#loadLocalizeTools();
     const { Diagnostics, makeEs2015TranslatePlugin } =
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this.#localizeToolsModule!;
 
     const plugins: PluginObj[] = [];

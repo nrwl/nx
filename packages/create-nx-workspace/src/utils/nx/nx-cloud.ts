@@ -1,4 +1,5 @@
 import { VcsPushStatus } from '../git/git';
+import { isCI } from '../ci/is-ci';
 import { CLIOutput } from '../output';
 import {
   getCompletionMessage,
@@ -7,7 +8,7 @@ import {
 } from './messages';
 import { getBannerVariant, getFlowVariant } from './ab-testing';
 import { nxVersion } from './nx-version';
-import * as ora from 'ora';
+import ora from 'ora';
 
 export type NxCloud =
   | 'yes'
@@ -16,7 +17,8 @@ export type NxCloud =
   | 'azure'
   | 'bitbucket-pipelines'
   | 'circleci'
-  | 'skip';
+  | 'skip'
+  | 'never';
 
 export async function connectToNxCloudForTemplate(
   directory: string,
@@ -145,4 +147,26 @@ export function getSkippedNxCloudInfo() {
   const out = new CLIOutput(false);
   out.success(getSkippedCloudMessage());
   return out.getOutput();
+}
+
+export async function openCloudSetupUrl(connectUrl: string): Promise<void> {
+  if (isCI()) {
+    return;
+  }
+
+  try {
+    const open = require('open');
+    await open(connectUrl);
+  } catch {
+    // Fail gracefully — the URL is already displayed in the terminal banner
+  }
+}
+
+export function setNeverConnectToCloud(directory: string): void {
+  const { readFileSync, writeFileSync } = require('fs');
+  const { join } = require('path');
+  const nxJsonPath = join(directory, 'nx.json');
+  const nxJson = JSON.parse(readFileSync(nxJsonPath, 'utf-8'));
+  nxJson.neverConnectToCloud = true;
+  writeFileSync(nxJsonPath, JSON.stringify(nxJson, null, 2) + '\n');
 }

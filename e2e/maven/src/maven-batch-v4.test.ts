@@ -66,8 +66,6 @@ wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-w
   });
 
   it('should fail when unit test fails', () => {
-    // TODO: remove once batch mode dependentTaskOutputs is fixed
-    runCLI('reset');
     // Add a failing unit test
     updateFile(
       'app/src/test/java/com/example/app/AppApplicationTests.java',
@@ -99,5 +97,13 @@ class AppApplicationTests {
     }
     expect(error).toBeDefined();
     expect(error.stdout || error.stderr).toContain('thisTestShouldFail');
+  });
+
+  it('should clean multiple projects with run-many in batch mode', () => {
+    // Regression test for https://github.com/nrwl/nx/issues/34757
+    // clean targets are fast and run in parallel, which previously caused
+    // workers to exit prematurely when the task queue was momentarily empty.
+    const output = runBatchCLI('run-many -t clean', { verbose: true });
+    expect(output).toContain('BUILD SUCCESS');
   });
 });

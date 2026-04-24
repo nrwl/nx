@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { relative } from 'node:path';
+import { handleImport } from '../../../utils/handle-import';
 import { joinPathFragments } from '../../../utils/path';
 import { workspaceRoot } from '../../../utils/workspace-root';
 
@@ -28,7 +29,7 @@ async function getJsonConfigLinesForErrorMessage(
   jsonPath: string[]
 ): Promise<{ startLine: number; endLine: number } | null> {
   try {
-    const jsonParser = await import('jsonc-parser');
+    const jsonParser = await handleImport('jsonc-parser');
     const rootNode = jsonParser.parseTree(rawConfig);
     const node = jsonParser.findNodeAtLocation(rootNode, jsonPath);
     return computeJsonLineNumbers(rawConfig, node?.offset, node?.length);

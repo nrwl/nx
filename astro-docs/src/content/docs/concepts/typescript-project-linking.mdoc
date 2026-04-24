@@ -28,7 +28,7 @@ const result = someFunction();
 
 There are two different methods that Nx supports for linking TypeScript projects: package manager workspaces and TypeScript path aliases. Project linking with TS path aliases was available with Nx before package managers offered a workspaces project linking approach. The Nx Team has since added full support for workspaces because (1) it has become more common across the TypeScript ecosystem and (2) packages will be resolved using native node module resolution instead of relying on TypeScript. Nx provides a cohesive experience for repositories using TypeScript path aliases without project references or repositories using package manager workspaces with TypeScript project references enabled.
 
-## Project Linking with Workspaces
+## Project linking with workspaces
 
 Create a new Nx workspace that links projects with package manager workspaces:
 
@@ -40,7 +40,7 @@ npx create-nx-workspace
 You can opt-out of workspaces by running `npx create-nx-workspace --no-workspaces`.
 {% /aside %}
 
-### Set Up Package Manager Workspaces
+### Set up package manager workspaces
 
 The configuration for package manager workspaces varies based on which package manager you're using.
 
@@ -131,7 +131,7 @@ If you want to reference a local library project from an application, you need t
 {% /tabitem %}
 {% /tabs %}
 
-### Set Up TypeScript Project References
+### Set up TypeScript project references
 
 With workspaces enabled, you can also configure TypeScript project references to speed up your build and typecheck tasks.
 
@@ -162,7 +162,7 @@ The root `tsconfig.json` file should extend `tsconfig.base.json` and not include
 }
 ```
 
-#### Individual Project TypeScript Configuration
+#### Individual project TypeScript configuration
 
 Each project's `tsconfig.json` file should extend the `tsconfig.base.json` file and list `references` to the project's dependencies.
 
@@ -187,7 +187,7 @@ Each project's `tsconfig.json` file should extend the `tsconfig.base.json` file 
 }
 ```
 
-Each project's `tsconfig.lib.json` file extends the project's `tsconfig.json` file and adds `references` to the `tsconfig.lib.json` files of project dependencies.
+Each project's `tsconfig.lib.json` file extends the `tsconfig.base.json` file and adds `references` to the `tsconfig.lib.json` files of project dependencies.
 
 ```jsonc title="packages/cart/tsconfig.lib.json"
 {
@@ -229,7 +229,7 @@ The project's `tsconfig.spec.json` does not need to reference project dependenci
 }
 ```
 
-### TypeScript Project References Performance Benefits
+### TypeScript project references performance benefits
 
 {% youtube src="https://youtu.be/O2xBQJMTs9E" title="Why TypeScript Project References Make Your CI Faster!" /%}
 
@@ -255,7 +255,7 @@ Once the `.tsbuildinfo` files have been created, subsequent runs will be much fa
 Typecheck with all `.tsbuildinfo` files created: 25 seconds, max memory 429 MB
 ```
 
-Even if some projects have been updated and individual projects need to be type checked again, the TypeScript compiler can still use the cached `.tsbuildinfo` files for any projects that were not affected. This is very similar to the way Nx's caching and affected features work.
+Even if some projects have been updated and individual projects need to be type checked again, the TypeScript compiler can still use the cached `.tsbuildinfo` files for any projects that were not affected. This is very similar to the way Nx caching and affected features work.
 
 ```text
 Typecheck (1 pkg updated): 36.33 seconds, max memory 655.14 MB
@@ -269,7 +269,7 @@ Typecheck (1 nested root pkg updated): 26.67 seconds, max memory 393.78 MB
 
 These performance benefits will be more noticeable for larger repositories, but even small code bases will see some benefits.
 
-### Local TypeScript Path Aliases
+### Local TypeScript path aliases
 
 If you define TS path aliases in an individual project's tsconfig files, you should not define them also in the root `tsconfig.base.json` file because TypeScript does not merge the paths. The paths defined in the root file would be completely overwritten by the ones defined in the project tsconfig. For instance, you could define paths like this in an application's tsconfig file.
 
@@ -288,7 +288,7 @@ If you define TS path aliases in an individual project's tsconfig files, you sho
 }
 ```
 
-## Project Linking with TypeScript Path Aliases
+## Project linking with TypeScript path aliases
 
 {% aside type="caution" title="Path Aliases Overwrite Extended Configuration Files" %}
 If you define path aliases in a project's specific `tsconfig.*.json` file, those path aliases will overwrite the path aliases defined in the root `tsconfig.base.json`. You can't use both project-level path aliases and root path aliases.

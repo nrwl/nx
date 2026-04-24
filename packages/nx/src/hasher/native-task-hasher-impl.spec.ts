@@ -4,6 +4,7 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
+import { getTaskIOService } from '../tasks-runner/task-io-service';
 
 // Helper to normalize hash results for deterministic snapshot comparison
 // (parallel processing may produce inputs in arbitrary order)
@@ -55,6 +56,10 @@ describe('native task hasher', () => {
   };
 
   beforeEach(async () => {
+    // Register a subscriber so that hasTaskInputSubscribers() returns true,
+    // enabling input collection in the hasher during tests.
+    getTaskIOService().subscribeToTaskInputs(() => {});
+
     tempFs = new TempFs('NativeTaskHasher');
     await tempFs.createFiles({
       'libs/parent/src/index.ts': 'parent-content',
@@ -162,9 +167,13 @@ describe('native task hasher', () => {
       projectGraph,
       workspaceFiles.rustReferences,
       { selectivelyHashTsConfig: false }
-    ).hashTasks(Object.values(taskGraph.tasks), taskGraph, {
-      TESTENV: 'test',
-    });
+    ).hashTasks(
+      Object.values(taskGraph.tasks),
+      taskGraph,
+      Object.fromEntries(
+        Object.values(taskGraph.tasks).map((t) => [t.id, { TESTENV: 'test' }])
+      )
+    );
 
     expect(sortHashInputs(hash)).toMatchInlineSnapshot(`
       [
@@ -176,14 +185,14 @@ describe('native task hasher', () => {
             "env:TESTENV": "11441948532827618368",
             "parent:ProjectConfiguration": "3608670998275221195",
             "parent:TsConfig": "2264969541778889434",
-            "parent:{projectRoot}/**/*": "17059468255294227635",
+            "parent:libs/parent/**/*": "17059468255294227635",
             "runtime:echo runtime123": "29846575039086708",
             "tagged:ProjectConfiguration": "8596726088057301092",
             "tagged:TsConfig": "2264969541778889434",
-            "tagged:{projectRoot}/**/*": "14666997081331501901",
+            "tagged:libs/tagged/**/*": "14666997081331501901",
             "unrelated:ProjectConfiguration": "11133337791644294114",
             "unrelated:TsConfig": "2264969541778889434",
-            "unrelated:{projectRoot}/**/*": "4127219831408253695",
+            "unrelated:libs/unrelated/**/*": "4127219831408253695",
             "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
           },
           "inputs": {
@@ -270,11 +279,11 @@ describe('native task hasher', () => {
           "AllExternalDependencies": "3244421341483603138",
           "child:ProjectConfiguration": "710102491746666394",
           "child:TsConfig": "2264969541778889434",
-          "child:{projectRoot}/**/*": "3347149359534435991",
+          "child:libs/child/**/*": "3347149359534435991",
           "env:NX_CLOUD_ENCRYPTION_KEY": "3244421341483603138",
           "parent:ProjectConfiguration": "8031122597231773116",
           "parent:TsConfig": "2264969541778889434",
-          "parent:{projectRoot}/**/*": "17059468255294227635",
+          "parent:libs/parent/**/*": "17059468255294227635",
           "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
         },
         "inputs": {
@@ -372,9 +381,9 @@ describe('native task hasher', () => {
           "AllExternalDependencies": "3244421341483603138",
           "child:ProjectConfiguration": "13051054958929525761",
           "child:TsConfig": "2264969541778889434",
-          "child:{projectRoot}/**/*": "3347149359534435991",
+          "child:libs/child/**/*": "3347149359534435991",
           "env:NX_CLOUD_ENCRYPTION_KEY": "3244421341483603138",
-          "parent:!{projectRoot}/**/*.spec.ts": "8911122541468969799",
+          "parent:!libs/parent/**/*.spec.ts": "8911122541468969799",
           "parent:ProjectConfiguration": "3608670998275221195",
           "parent:TsConfig": "2264969541778889434",
           "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "9567402949680805009",
@@ -403,6 +412,263 @@ describe('native task hasher', () => {
         "value": "14320402761058545796",
       }
     `);
+  });
+
+  it.each([
+    [
+      'before production',
+      ['default', '^{projectRoot}/tsconfig*.json', '^prod'],
+    ],
+    ['after production', ['default', '^prod', '^{projectRoot}/tsconfig*.json']],
+  ])(
+    'should apply multiple dependency inputs to the same dependency when tsconfig inputs are listed %s',
+    async (_, targetInputs) => {
+      await tempFs.createFiles({
+        'libs/child/tsconfig.spec.json': JSON.stringify({
+          extends: '../../tsconfig.base.json',
+        }),
+        'libs/child/src/runtime.ts': 'export const runtime = true;',
+        'libs/child/src/runtime.spec.ts': 'export {};',
+      });
+
+      const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+        'libs/parent': 'parent',
+        'libs/child': 'child',
+      });
+      const builder = new ProjectGraphBuilder(
+        undefined,
+        workspaceFiles.fileMap.projectFileMap
+      );
+
+      builder.addNode({
+        name: 'parent',
+        type: 'e2e',
+        data: {
+          root: 'libs/parent',
+          targets: {
+            e2e: {
+              executor: 'nx:run-commands',
+              inputs: targetInputs,
+            },
+          },
+        },
+      });
+      builder.addNode({
+        name: 'child',
+        type: 'lib',
+        data: {
+          root: 'libs/child',
+          targets: {},
+        },
+      });
+      builder.addStaticDependency(
+        'parent',
+        'child',
+        'libs/parent/src/index.ts'
+      );
+
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['parent'],
+        ['e2e'],
+        undefined,
+        {}
+      );
+
+      const localNxJson: NxJsonConfiguration = {
+        namedInputs: {
+          default: ['{projectRoot}/**/*'],
+          prod: [
+            '!{projectRoot}/**/*.spec.ts',
+            '!{projectRoot}/tsconfig.spec.json',
+          ],
+        },
+      };
+
+      const hash = await new NativeTaskHasherImpl(
+        tempFs.tempDir,
+        localNxJson,
+        projectGraph,
+        workspaceFiles.rustReferences,
+        { selectivelyHashTsConfig: false }
+      ).hashTask(taskGraph.tasks['parent:e2e'], taskGraph, {});
+
+      expect(hash.inputs.files).toEqual(
+        expect.arrayContaining([
+          'libs/child/src/runtime.ts',
+          'libs/child/tsconfig.spec.json',
+        ])
+      );
+      expect(hash.inputs.files).not.toContain('libs/child/src/runtime.spec.ts');
+    }
+  );
+
+  it('should apply multiple dependency inputs to shared transitive dependencies', async () => {
+    await tempFs.createFiles({
+      'libs/left/src/index.ts': 'export const left = true;',
+      'libs/right/src/index.ts': 'export const right = true;',
+      'libs/shared/tsconfig.spec.json': JSON.stringify({
+        extends: '../../tsconfig.base.json',
+      }),
+      'libs/shared/src/runtime.ts': 'export const runtime = true;',
+      'libs/shared/src/runtime.spec.ts': 'export {};',
+    });
+
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/left': 'left',
+      'libs/right': 'right',
+      'libs/shared': 'shared',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+
+    builder.addNode({
+      name: 'parent',
+      type: 'e2e',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          e2e: {
+            executor: 'nx:run-commands',
+            inputs: ['default', '^{projectRoot}/tsconfig*.json', '^prod'],
+          },
+        },
+      },
+    });
+    for (const name of ['left', 'right', 'shared']) {
+      builder.addNode({
+        name,
+        type: 'lib',
+        data: {
+          root: `libs/${name}`,
+          targets: {},
+        },
+      });
+    }
+    builder.addStaticDependency('parent', 'left', 'libs/parent/src/index.ts');
+    builder.addStaticDependency('parent', 'right', 'libs/parent/src/index.ts');
+    builder.addStaticDependency('left', 'shared', 'libs/left/src/index.ts');
+    builder.addStaticDependency('right', 'shared', 'libs/right/src/index.ts');
+
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['parent'],
+      ['e2e'],
+      undefined,
+      {}
+    );
+
+    const localNxJson: NxJsonConfiguration = {
+      namedInputs: {
+        default: ['{projectRoot}/**/*'],
+        prod: [
+          '!{projectRoot}/**/*.spec.ts',
+          '!{projectRoot}/tsconfig.spec.json',
+        ],
+      },
+    };
+
+    const hash = await new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      localNxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    ).hashTask(taskGraph.tasks['parent:e2e'], taskGraph, {});
+
+    expect(hash.inputs.files).toEqual(
+      expect.arrayContaining([
+        'libs/shared/src/runtime.ts',
+        'libs/shared/tsconfig.spec.json',
+      ])
+    );
+    expect(hash.inputs.files).not.toContain('libs/shared/src/runtime.spec.ts');
+  });
+
+  it('should apply multiple dependency inputs in circular dependencies', async () => {
+    await tempFs.createFiles({
+      'libs/child/tsconfig.spec.json': JSON.stringify({
+        extends: '../../tsconfig.base.json',
+      }),
+      'libs/child/src/runtime.ts': 'export const runtime = true;',
+      'libs/child/src/runtime.spec.ts': 'export {};',
+    });
+
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+
+    builder.addNode({
+      name: 'parent',
+      type: 'e2e',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          e2e: {
+            executor: 'nx:run-commands',
+            inputs: ['default', '^{projectRoot}/tsconfig*.json', '^prod'],
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'libs/child',
+        targets: {},
+      },
+    });
+    builder.addStaticDependency('parent', 'child', 'libs/parent/src/index.ts');
+    builder.addStaticDependency('child', 'parent', 'libs/child/src/index.ts');
+
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['parent'],
+      ['e2e'],
+      undefined,
+      {}
+    );
+
+    const localNxJson: NxJsonConfiguration = {
+      namedInputs: {
+        default: ['{projectRoot}/**/*'],
+        prod: [
+          '!{projectRoot}/**/*.spec.ts',
+          '!{projectRoot}/tsconfig.spec.json',
+        ],
+      },
+    };
+
+    const hash = await new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      localNxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    ).hashTask(taskGraph.tasks['parent:e2e'], taskGraph, {});
+
+    expect(hash.inputs.files).toEqual(
+      expect.arrayContaining([
+        'libs/child/src/runtime.ts',
+        'libs/child/tsconfig.spec.json',
+      ])
+    );
+    expect(hash.inputs.files).not.toContain('libs/child/src/runtime.spec.ts');
   });
 
   it('should make a plan with multiple filesets of a project', async () => {
@@ -454,7 +720,11 @@ describe('native task hasher', () => {
       projectGraph,
       workspaceFiles.rustReferences,
       { selectivelyHashTsConfig: false }
-    ).hashTasks(Object.values(taskGraph.tasks), taskGraph, {});
+    ).hashTasks(
+      Object.values(taskGraph.tasks),
+      taskGraph,
+      Object.fromEntries(Object.values(taskGraph.tasks).map((t) => [t.id, {}]))
+    );
 
     expect(sortHashInputs(hash)).toMatchInlineSnapshot(`
       [
@@ -462,7 +732,7 @@ describe('native task hasher', () => {
           "details": {
             "AllExternalDependencies": "3244421341483603138",
             "env:NX_CLOUD_ENCRYPTION_KEY": "3244421341483603138",
-            "parent:!{projectRoot}/**/*.spec.ts": "8911122541468969799",
+            "parent:!libs/parent/**/*.spec.ts": "8911122541468969799",
             "parent:ProjectConfiguration": "16402137858974842465",
             "parent:TsConfig": "2264969541778889434",
             "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "9567402949680805009",
@@ -492,7 +762,7 @@ describe('native task hasher', () => {
             "env:NX_CLOUD_ENCRYPTION_KEY": "3244421341483603138",
             "parent:ProjectConfiguration": "16402137858974842465",
             "parent:TsConfig": "2264969541778889434",
-            "parent:{projectRoot}/**/*": "17059468255294227635",
+            "parent:libs/parent/**/*": "17059468255294227635",
             "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "9567402949680805009",
           },
           "inputs": {
@@ -584,23 +854,30 @@ describe('native task hasher', () => {
       projectGraph,
       workspaceFiles.rustReferences,
       { selectivelyHashTsConfig: false }
-    ).hashTasks(Object.values(taskGraph.tasks), taskGraph, {
-      MY_TEST_HASH_ENV: 'MY_TEST_HASH_ENV_VALUE',
-    });
+    ).hashTasks(
+      Object.values(taskGraph.tasks),
+      taskGraph,
+      Object.fromEntries(
+        Object.values(taskGraph.tasks).map((t) => [
+          t.id,
+          { MY_TEST_HASH_ENV: 'MY_TEST_HASH_ENV_VALUE' },
+        ])
+      )
+    );
 
     expect(sortHashInputs(hash)).toMatchInlineSnapshot(`
       [
         {
           "details": {
             "AllExternalDependencies": "3244421341483603138",
-            "child:!{projectRoot}/**/*.spec.ts": "6212660753359890679",
+            "child:!libs/child/**/*.spec.ts": "6212660753359890679",
             "child:ProjectConfiguration": "10085593111011845427",
             "child:TsConfig": "2264969541778889434",
             "env:MY_TEST_HASH_ENV": "17357374746554314488",
             "env:NX_CLOUD_ENCRYPTION_KEY": "3244421341483603138",
             "parent:ProjectConfiguration": "14398811678394411425",
             "parent:TsConfig": "2264969541778889434",
-            "parent:{projectRoot}/**/*": "17059468255294227635",
+            "parent:libs/parent/**/*": "17059468255294227635",
             "workspace:[{workspaceRoot}/global1]": "11580065831422255455",
             "workspace:[{workspaceRoot}/global2]": "6389465682922235219",
             "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "1359893257201181462",
@@ -681,7 +958,7 @@ describe('native task hasher', () => {
           "env:NX_CLOUD_ENCRYPTION_KEY": "3244421341483603138",
           "parent:ProjectConfiguration": "3608670998275221195",
           "parent:TsConfig": "8661678577354855152",
-          "parent:{projectRoot}/**/*": "17059468255294227635",
+          "parent:libs/parent/**/*": "17059468255294227635",
           "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
         },
         "inputs": {
@@ -774,11 +1051,11 @@ describe('native task hasher', () => {
           "AllExternalDependencies": "3244421341483603138",
           "child:ProjectConfiguration": "13748859057138736105",
           "child:TsConfig": "2264969541778889434",
-          "child:{projectRoot}/**/*": "3347149359534435991",
+          "child:libs/child/**/*": "3347149359534435991",
           "env:NX_CLOUD_ENCRYPTION_KEY": "3244421341483603138",
           "parent:ProjectConfiguration": "3608670998275221195",
           "parent:TsConfig": "2264969541778889434",
-          "parent:{projectRoot}/**/*": "17059468255294227635",
+          "parent:libs/parent/**/*": "17059468255294227635",
           "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
         },
         "inputs": {
@@ -819,11 +1096,11 @@ describe('native task hasher', () => {
           "AllExternalDependencies": "3244421341483603138",
           "child:ProjectConfiguration": "13748859057138736105",
           "child:TsConfig": "2264969541778889434",
-          "child:{projectRoot}/**/*": "3347149359534435991",
+          "child:libs/child/**/*": "3347149359534435991",
           "env:NX_CLOUD_ENCRYPTION_KEY": "3244421341483603138",
           "parent:ProjectConfiguration": "3608670998275221195",
           "parent:TsConfig": "2264969541778889434",
-          "parent:{projectRoot}/**/*": "17059468255294227635",
+          "parent:libs/parent/**/*": "17059468255294227635",
           "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
         },
         "inputs": {

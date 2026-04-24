@@ -2,15 +2,6 @@ import { exec, execSync } from 'node:child_process';
 import * as path from 'node:path';
 import { major } from 'semver';
 import * as yargs from 'yargs';
-import { calculateFileChanges, FileData } from '../../project-graph/file-utils';
-import {
-  getProjectRoots,
-  NxArgs,
-  parseFiles,
-  splitArgsIntoNxArgsAndOverrides,
-} from '../../utils/command-line-utils';
-import { fileExists, readJsonFile, writeJsonFile } from '../../utils/fileutils';
-import { getIgnoreObject } from '../../utils/ignore';
 import { readNxJson } from '../../config/configuration';
 import { ProjectGraph } from '../../config/project-graph';
 import {
@@ -18,9 +9,18 @@ import {
   getRootTsConfigPath,
 } from '../../plugins/js/utils/typescript';
 import { filterAffected } from '../../project-graph/affected/affected-project-graph';
+import { calculateFileChanges } from '../../project-graph/file-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { allFileData } from '../../utils/all-file-data';
 import { chunkify } from '../../utils/chunkify';
+import {
+  getProjectRoots,
+  NxArgs,
+  parseFiles,
+  splitArgsIntoNxArgsAndOverrides,
+} from '../../utils/command-line-utils';
+import { fileExists, readJsonFile, writeJsonFile } from '../../utils/fileutils';
+import { handleImport } from '../../utils/handle-import';
+import { getIgnoreObject } from '../../utils/ignore';
 import { sortObjectByKeys } from '../../utils/object-sort';
 import { output } from '../../utils/output';
 import { readModulePackageJson } from '../../utils/package-json';
@@ -32,7 +32,7 @@ export async function format(
 ): Promise<void> {
   let prettier: typeof import('prettier');
   try {
-    prettier = await import('prettier');
+    prettier = await handleImport('prettier');
   } catch {
     output.error({
       title: 'Prettier is not installed.',
@@ -100,7 +100,6 @@ async function getPatterns(
   prettier: typeof import('prettier'),
   args: NxArgs & { libsAndApps: boolean; _: string[] }
 ): Promise<string[]> {
-  const graph = await createProjectGraphAsync({ exitOnError: true });
   const allFilesPattern = ['.'];
 
   if (args.all) {
@@ -109,6 +108,7 @@ async function getPatterns(
 
   try {
     if (args.projects && args.projects.length > 0) {
+      const graph = await createProjectGraphAsync({ exitOnError: true });
       return getPatternsFromProjects(args.projects, graph);
     }
 
@@ -131,13 +131,10 @@ async function getPatterns(
     // exclude patterns in .nxignore or .gitignore
     const nonIgnoredPatterns = getIgnoreObject().filter(patterns);
 
-    return args.libsAndApps
-      ? await getPatternsFromApps(
-          nonIgnoredPatterns,
-          await allFileData(),
-          graph
-        )
-      : nonIgnoredPatterns;
+    if (args.libsAndApps) {
+      return getPatternsFromApps(nonIgnoredPatterns);
+    }
+    return nonIgnoredPatterns;
   } catch (err) {
     output.error({
       title:
@@ -149,11 +146,7 @@ async function getPatterns(
   }
 }
 
-async function getPatternsFromApps(
-  affectedFiles: string[],
-  allWorkspaceFiles: FileData[],
-  projectGraph: ProjectGraph
-): Promise<string[]> {
+async function getPatternsFromApps(affectedFiles: string[]): Promise<string[]> {
   const graph = await createProjectGraphAsync({
     exitOnError: true,
   });
@@ -163,7 +156,7 @@ async function getPatternsFromApps(
   );
   return getPatternsFromProjects(
     Object.keys(affectedGraph.nodes),
-    projectGraph
+    affectedGraph
   );
 }
 
@@ -216,7 +209,7 @@ function write(prettier: typeof import('prettier'), patterns: string[]) {
       )}`,
       {
         stdio: [0, 1, 2],
-        windowsHide: false,
+        windowsHide: true,
       }
     );
 
@@ -227,7 +220,7 @@ function write(prettier: typeof import('prettier'), patterns: string[]) {
         )} --parser json`,
         {
           stdio: [0, 1, 2],
-          windowsHide: false,
+          windowsHide: true,
         }
       );
     }
@@ -244,7 +237,7 @@ async function check(patterns: string[]): Promise<string[]> {
   return new Promise((resolve, reject) => {
     exec(
       `node "${prettierPath}" --list-different ${patterns.join(' ')}`,
-      { encoding: 'utf-8', windowsHide: false },
+      { encoding: 'utf-8', windowsHide: true },
       (error, stdout) => {
         if (error) {
           // The command failed because Prettier threw an error.

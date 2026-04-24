@@ -242,7 +242,9 @@ export function getLockFilePath(packageManager: PackageManager): string {
         return BUN_LOCK_PATH;
       }
 
-      const bunVersion = execSync('bun --version').toString().trim();
+      const bunVersion = execSync('bun --version', { windowsHide: true })
+        .toString()
+        .trim();
       // Version-based fallback
       if (gte(bunVersion, '1.2.0')) {
         return BUN_TEXT_LOCK_PATH;

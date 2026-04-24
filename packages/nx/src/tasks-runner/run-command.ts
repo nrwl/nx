@@ -1,6 +1,7 @@
 import { prompt } from 'enquirer';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
+
 const ora = require('ora');
 import type { Observable } from 'rxjs';
 import {
@@ -26,7 +27,7 @@ import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { NxArgs } from '../utils/command-line-utils';
 import { handleErrors } from '../utils/handle-errors';
 import { isCI } from '../utils/is-ci';
-import { isNxCloudUsed } from '../utils/nx-cloud-utils';
+import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { printNxKey } from '../utils/nx-key';
 import { output } from '../utils/output';
 import {
@@ -55,6 +56,7 @@ import { StoreRunInformationLifeCycle } from './life-cycles/store-run-informatio
 import { getTasksHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
 import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
+import { TaskTelemetryLifeCycle } from './life-cycles/task-telemetry-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
 import { getTuiTerminalSummaryLifeCycle } from './life-cycles/tui-summary-life-cycle';
 import {
@@ -66,6 +68,7 @@ import {
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
 import { signalToCode } from '../utils/exit-codes';
+import { handleImport } from '../utils/handle-import';
 import * as pc from 'picocolors';
 
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
@@ -130,7 +133,10 @@ async function getTerminalOutputLifeCycle(
     process.stdout.write = patchedWrite as any;
     process.stderr.write = patchedWrite as any;
 
-    const { AppLifeCycle, restoreTerminal } = await import('../native');
+    const { AppLifeCycle, restoreTerminal } = await handleImport(
+      '../native/index.js',
+      __dirname
+    );
     let appLifeCycle;
 
     const isRunOne = initiatingProject != null;
@@ -1013,9 +1019,11 @@ export async function invokeTasksRunner({
           return hasher.hashTask(task, taskGraph_, env);
         },
         hashTasks(
-          task: Task[],
+          tasks: Task[],
           taskGraph_?: TaskGraph,
-          env?: NodeJS.ProcessEnv
+          envOrPerTaskEnvs?:
+            | NodeJS.ProcessEnv
+            | Record<string, NodeJS.ProcessEnv>
         ) {
           if (!taskGraph_) {
             output.warn({
@@ -1027,7 +1035,7 @@ export async function invokeTasksRunner({
             });
             taskGraph_ = taskGraph;
           }
-          if (!env) {
+          if (!envOrPerTaskEnvs) {
             output.warn({
               title: `The environment variables are now required as an argument to hashTasks`,
               bodyLines: [
@@ -1035,10 +1043,15 @@ export async function invokeTasksRunner({
                 'This will result in an error in Nx 20',
               ],
             });
-            env = process.env;
+            envOrPerTaskEnvs = process.env;
           }
-
-          return hasher.hashTasks(task, taskGraph_, env);
+          // hasher.hashTasks accepts either legacy single-env or the new
+          // per-task-env shape and normalizes internally.
+          return hasher.hashTasks(
+            tasks,
+            taskGraph_,
+            envOrPerTaskEnvs as NodeJS.ProcessEnv
+          );
         },
       },
       daemon: daemonClient,
@@ -1066,6 +1079,7 @@ export function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {
   if (process.env.NX_PROFILE) {
     lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
   }
+  lifeCycles.push(new TaskTelemetryLifeCycle());
   const historyLifeCycle = getTasksHistoryLifeCycle();
   lifeCycles.push(historyLifeCycle);
   return lifeCycles;
@@ -1204,7 +1218,13 @@ function getTasksRunnerPath(
     // Nx Cloud ID specified in nxJson
     nxJson.nxCloudId;
 
-  return isCloudRunner ? 'nx-cloud' : defaultTasksRunnerPath;
+  // NX_NO_CLOUD / neverConnectToCloud wins over any ambient token — otherwise
+  // a surrounding CI env variable would still route through the cloud shell,
+  // which resolves the default tasks runner via its own require bridge and
+  // can pull in a different Nx version than the workspace's own.
+  return isCloudRunner && !isNxCloudDisabled(nxJson)
+    ? 'nx-cloud'
+    : defaultTasksRunnerPath;
 }
 
 export function getRunnerOptions(

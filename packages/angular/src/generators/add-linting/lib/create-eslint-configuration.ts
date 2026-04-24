@@ -12,10 +12,10 @@ type EslintExtensionSchema = {
  * @deprecated Use tools from `@nx/eslint/src/generators/utils/eslint-file` instead. It will be removed in Nx v22.
  */
 export const extendAngularEslintJson = (
-  json: Linter.Config,
+  json: Linter.LegacyConfig,
   options: EslintExtensionSchema
-) => {
-  const overrides = [
+): Linter.LegacyConfig => {
+  const overrides: Linter.ConfigOverride[] = [
     {
       ...json.overrides[0],
       files: ['*.ts'],

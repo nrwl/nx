@@ -1,4 +1,5 @@
 use hashbrown::HashMap;
+use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 use tracing::{debug, trace};
 
@@ -123,17 +124,13 @@ fn partition_globs_into_map(globs: Vec<String>) -> anyhow::Result<HashMap<String
         )
 }
 
-#[napi]
 /// Expands the given outputs into a list of existing files.
-/// This is used when hashing outputs
+/// This is used when hashing outputs. Takes a borrowed directory so batch
+/// callers don't pay a String clone per task.
 pub fn get_files_for_outputs(
-    directory: String,
+    directory: &Path,
     entries: Vec<String>,
 ) -> anyhow::Result<Vec<String>> {
-    enable_logger();
-
-    let directory: PathBuf = directory.into();
-
     let mut globs: Vec<String> = vec![];
     let mut files: Vec<String> = vec![];
     let mut directories: Vec<String> = vec![];
@@ -198,6 +195,22 @@ pub fn get_files_for_outputs(
     files.sort();
 
     Ok(files)
+}
+
+#[napi]
+/// Batch version of get_files_for_outputs that processes multiple output
+/// entries in parallel using Rayon. Each entry is a list of output paths
+/// for a single task.
+pub fn get_files_for_outputs_batch(
+    directory: String,
+    entries_batch: Vec<Vec<String>>,
+) -> anyhow::Result<Vec<Vec<String>>> {
+    enable_logger();
+    let directory = Path::new(&directory);
+    entries_batch
+        .into_par_iter()
+        .map(|entries| get_files_for_outputs(directory, entries))
+        .collect()
 }
 
 #[cfg(test)]
@@ -300,7 +313,7 @@ mod test {
             "folder/nested-folder".to_string(),
             "test.txt".to_string(),
         ];
-        let mut result = get_files_for_outputs(temp.display().to_string(), entries).unwrap();
+        let mut result = get_files_for_outputs(temp.path(), entries).unwrap();
         result.sort();
         assert_eq!(
             result,
@@ -469,7 +482,7 @@ mod test {
         temp.child("out/visible.txt").write_str("content").unwrap();
 
         let entries = vec!["out".to_string()];
-        let mut result = get_files_for_outputs(temp.display().to_string(), entries).unwrap();
+        let mut result = get_files_for_outputs(temp.path(), entries).unwrap();
         result.sort();
 
         assert!(result.contains(&"out/visible.txt".to_string()));
@@ -536,7 +549,7 @@ mod test {
 
             // Test both functions
             let _result1 = expand_outputs(temp.display().to_string(), entries.clone());
-            let _result2 = get_files_for_outputs(temp.display().to_string(), entries);
+            let _result2 = get_files_for_outputs(temp.path(), entries);
 
             drop(temp);
         }

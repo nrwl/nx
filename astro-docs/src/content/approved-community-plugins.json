@@ -548,5 +548,15 @@
     "name": "@berenddeboer/nx-biome",
     "description": "A self-inferring Nx plugin for using biome to format and lint projects. Supports --batch",
     "url": "https://github.com/berenddeboer/nx-plugins/tree/main/packages/nx-biome"
+  },
+  {
+    "name": "@berenddeboer/nx-knip",
+    "description": "A self-inferring Nx plugin for using knip to find and fix unused dependencies, exports and files",
+    "url": "https://github.com/berenddeboer/nx-plugins/tree/main/packages/nx-knip"
+  },
+  {
+    "name": "@frontenderz/backstage-insights",
+    "description": "An Nx plugin to generate a Backstage software catalog from your monorepo, including components, dependencies, and ownership.",
+    "url": "https://github.com/frontenderz/frontenderz-nx-plugins/tree/main/packages/backstage-insights"
   }
 ]

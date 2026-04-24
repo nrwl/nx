@@ -12,7 +12,7 @@ filter: 'type:Guides'
 
 Vitest functionality has been split from `@nx/vite` into a standalone `@nx/vitest` package. This provides better separation of concerns and allows vitest to be used independently of vite.
 
-## What Changed
+## What changed
 
 ### Generators
 
@@ -26,7 +26,7 @@ Vitest functionality has been split from `@nx/vite` into a standalone `@nx/vites
 
 - `@nx/vite/plugin` (for vitest) → `@nx/vitest`
 
-## Migration Steps
+## Migration steps
 
 ### 1. Install @nx/vitest
 
@@ -114,7 +114,7 @@ nx g @nx/vite:vitest my-project
 nx g @nx/vitest:configuration my-project
 ```
 
-## Backward Compatibility
+## Backward compatibility
 
 The old `@nx/vite:vitest` generator and `@nx/vite:test` executor still work but are deprecated. They will be removed in Nx 23. Please migrate before upgrading to Nx 23.
 
@@ -125,7 +125,7 @@ The '@nx/vite:vitest' generator is deprecated. Please use '@nx/vitest:configurat
 This generator will be removed in Nx 23.
 ```
 
-## No Changes Required for These Files
+## No changes required for these files
 
 - **vite.config.ts / vitest.config.ts**: No changes needed
 - **Test files**: No changes needed

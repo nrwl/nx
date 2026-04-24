@@ -14,13 +14,25 @@ export function warnNotConnectedToCloud(): void {
   });
 }
 
+function tryGetCloudOptions(): {
+  url?: string;
+  customProxyConfigPath?: string;
+} {
+  try {
+    return getCloudOptions();
+  } catch {
+    return {};
+  }
+}
+
 export async function executeNxCloudCommand(
   commandName: string,
   verbose?: boolean
 ): Promise<number> {
   return handleErrors(verbose, async () => {
-    const nxCloudClient = (await verifyOrUpdateNxCloudClient(getCloudOptions()))
-      .nxCloudClient;
+    const nxCloudClient = (
+      await verifyOrUpdateNxCloudClient(tryGetCloudOptions())
+    ).nxCloudClient;
 
     const paths = findAncestorNodeModules(__dirname, []);
     nxCloudClient.configureLightClientRequire()(paths);
