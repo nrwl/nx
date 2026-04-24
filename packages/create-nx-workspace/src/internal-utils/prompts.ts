@@ -263,7 +263,7 @@ export async function determinePackageManager(
           choices: [
             { name: 'npm', message: 'NPM' },
             { name: 'yarn', message: 'Yarn' },
-            { name: 'pnpm', message: 'PNPM' },
+            { name: 'pnpm', message: 'pnpm' },
             { name: 'bun', message: 'Bun' },
           ],
         },

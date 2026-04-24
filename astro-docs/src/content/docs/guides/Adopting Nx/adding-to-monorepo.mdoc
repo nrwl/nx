@@ -1,10 +1,10 @@
 ---
-title: Adding Nx to NPM/Yarn/PNPM Workspace
-description: Learn how to integrate Nx into an existing NPM, Yarn, or PNPM workspace monorepo to gain task scheduling, caching, and improved CI performance.
+title: Adding Nx to NPM/Yarn/pnpm Workspace
+description: Learn how to integrate Nx into an existing NPM, Yarn, or pnpm workspace monorepo to gain task scheduling, caching, and improved CI performance.
 filter: 'type:Guides'
 weight: 2
 sidebar:
-  label: NPM/Yarn/PNPM workspaces
+  label: NPM/Yarn/pnpm workspaces
 ---
 
 {% aside type="note" title="Migrating from Lerna?" %}
@@ -14,7 +14,7 @@ on [https://lerna.js.org/upgrade](https://lerna.js.org/upgrade).
 {% /aside %}
 
 Nx has first-class support for [monorepos](/docs/getting-started/tutorials/crafting-your-workspace). If you have
-an existing NPM/Yarn or PNPM-based monorepo setup, you can easily add Nx to get
+an existing NPM/Yarn or pnpm-based monorepo setup, you can easily add Nx to get
 
 - fast [task scheduling](/docs/features/run-tasks)
 - high-performance task [caching](/docs/features/cache-task-results)
@@ -23,7 +23,7 @@ an existing NPM/Yarn or PNPM-based monorepo setup, you can easily add Nx to get
 This is a low-impact operation because all that needs to be done is to install the `nx` package at the root level and
 add an `nx.json` for configuring caching and task pipelines.
 
-{% course_video src="https://youtu.be/3hW53b1IJ84" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="https://nx.dev/courses/pnpm-nx-next/lessons-01-nx-init" /%}
+{% course_video src="https://youtu.be/3hW53b1IJ84" courseTitle="From pnpm Workspaces to Distributed CI" courseUrl="https://nx.dev/courses/pnpm-nx-next/lessons-01-nx-init" /%}
 
 ## Installing Nx
 
@@ -305,8 +305,8 @@ For example, use Nx to run your builds:
 npx nx run-many -t build
 ```
 
-But instead keep using NPM/Yarn/PNPM workspace commands for your tests and other scripts. Here's an example of using
-PNPM commands to run tests across packages
+But instead keep using NPM/Yarn/pnpm workspace commands for your tests and other scripts. Here's an example of using
+pnpm commands to run tests across packages
 
 ```shell
 pnpm run -r test

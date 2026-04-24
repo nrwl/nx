@@ -493,7 +493,7 @@ async function runInit(
       learnMoreLink: 'https://nx.dev/getting-started/adding-to-existing',
       appendLines: _isMonorepo
         ? [
-            `- Read a detailed guide about adding Nx to NPM/YARN/PNPM workspaces: https://nx.dev/recipes/adopting-nx/adding-to-monorepos`,
+            `- Read a detailed guide about adding Nx to npm/yarn/pnpm workspaces: https://nx.dev/recipes/adopting-nx/adding-to-monorepos`,
             `- Learn how Nx helps manage your TypeScript monorepo: https://nx.dev/features/maintain-ts-monorepos`,
           ]
         : [],

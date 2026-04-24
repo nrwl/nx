@@ -163,7 +163,7 @@ function pnpmResolver(
     if (debug)
       console.log(
         pc.cyan(
-          `[Nx] Unable to resolve with default PNPM resolver: ${realModuleName}`
+          `[Nx] Unable to resolve with default pnpm resolver: ${realModuleName}`
         )
       );
   }

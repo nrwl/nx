@@ -11,7 +11,7 @@ jobs:
       - checkout
       <% if(packageManager == 'pnpm'){ %>
       - run:
-          name: Install PNPM
+          name: Install pnpm
           command: npm install --prefix=$HOME/.local -g pnpm@8
       <% } %>
       <% if(packageManager == 'bun'){ %>

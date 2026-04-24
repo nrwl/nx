@@ -116,7 +116,7 @@ module.exports = function (modulePath, options) {
     }
 
     // Find workspace root - avoid filesystem lookups inside node_modules
-    // For PNPM workspaces, we know the structure: workspace/packages/packageName
+    // For pnpm workspaces, we know the structure: workspace/packages/packageName
     let workspaceRoot = options.rootDir;
 
     // If we're in a packages subdirectory, go up two levels to workspace root

@@ -191,7 +191,7 @@ jobs:
                 echo Node: \$(node -v)
                 echo NPM: \$(npm -v)
 
-                # Install PNPM
+                # Install pnpm
                 npm i -g pnpm@${PNPM_VERSION} --force
                 pnpm --version
 
@@ -288,7 +288,7 @@ jobs:
                 echo Node: \$(node -v)
                 echo NPM: \$(npm -v)
 
-                # Install PNPM
+                # Install pnpm
                 npm i -g pnpm@${PNPM_VERSION} --force
                 pnpm --version
 

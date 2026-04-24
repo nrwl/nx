@@ -44,7 +44,7 @@ jobs:
 
       <% if(packageManager == 'pnpm'){ %>
       - script: npm install --prefix=$HOME/.local -g pnpm@8
-        displayName: Install PNPM
+        displayName: Install pnpm
 
       <% } %>
       <% if(packageManager == 'bun'){ %>

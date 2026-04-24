@@ -26,14 +26,14 @@ eval "$(mise activate bash)"
 echo "⚙️ Configuring mise activation in shell..."
 echo 'eval "$(~/.local/bin/mise activate bash)"' >> ~/.bashrc
 
-# Prevent corepack from prompting user before downloading PNPM 
+# Prevent corepack from prompting user before downloading pnpm
 export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 
-# Enable corepack 
-corepack enable 
+# Enable corepack
+corepack enable
 
-# Install the PNPM version defined in the root package.json
-echo "⚙️ Installing required PNPM version..."
+# Install the pnpm version defined in the root package.json
+echo "⚙️ Installing required pnpm version..."
 corepack prepare --activate
 
 # Install NPM dependencies

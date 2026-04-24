@@ -14,7 +14,7 @@ import type {
 const PNPM_WORKSPACE_FILENAME = 'pnpm-workspace.yaml';
 
 /**
- * PNPM-specific catalog manager implementation
+ * pnpm-specific catalog manager implementation
  */
 export class PnpmCatalogManager implements CatalogManager {
   readonly name = 'pnpm';

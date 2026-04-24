@@ -4,7 +4,7 @@ videoUrl: 'https://youtu.be/CJLRkzRrcjg'
 duration: '1:56'
 ---
 
-In this lesson, you'll learn how to use Nx to run your PNPM workspace's `package.json` scripts. So rather than running:
+In this lesson, you'll learn how to use Nx to run your pnpm workspace's `package.json` scripts. So rather than running:
 
 ```shell
 pnpm --filter @tasker/web build

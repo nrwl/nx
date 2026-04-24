@@ -2340,7 +2340,7 @@ snapshots:
         'test-lockfile-hash-exact-over-range'
       );
 
-      // Should prioritize exact version patch over range patch per PNPM's priority order
+      // Should prioritize exact version patch over range patch per pnpm's priority order
       expect(externalNodes['npm:vitest']).toMatchObject({
         type: 'npm',
         name: 'npm:vitest',

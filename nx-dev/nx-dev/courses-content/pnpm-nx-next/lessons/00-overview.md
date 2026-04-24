@@ -4,7 +4,7 @@ videoUrl: 'https://youtu.be/VJ1v5dktwwI'
 duration: '1:01'
 ---
 
-In this course, we'll walk through a step-by-step guide using the Tasker application as our example. Tasker is a task management app built with Next.js, structured as a PNPM workspace monorepo. The monorepo contains the Next.js application which is modularized into packages that handle data access via Prisma to a local DB, UI components, and more.
+In this course, we'll walk through a step-by-step guide using the Tasker application as our example. Tasker is a task management app built with Next.js, structured as a pnpm workspace monorepo. The monorepo contains the Next.js application which is modularized into packages that handle data access via Prisma to a local DB, UI components, and more.
 
 Throughout the course, we'll take incremental steps to enhance the monorepo:
 
