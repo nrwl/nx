@@ -87,6 +87,18 @@
       "inputs": ["production", "^production"],
       "cache": true
     },
+    "@nx/esbuild:esbuild": {
+      "cache": true,
+      "dependsOn": ["^build", "typecheck", "build-base"],
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "json": "{workspaceRoot}/tsconfig.json",
+          "fields": ["extends", "files", "include"]
+        }
+      ]
+    },
     "build-native": { "inputs": ["native"], "cache": true },
     "build-base": {
       "dependsOn": ["^build-base", "build-native", "copy-assets"],
