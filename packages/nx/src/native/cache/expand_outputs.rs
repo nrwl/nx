@@ -113,8 +113,9 @@ where
                     return true;
                 }
                 let path_with_slash = format!("{}/", path);
-                let is_ancestor_of_negated =
-                    negated_globs.iter().any(|neg| neg.starts_with(&path_with_slash));
+                let is_ancestor_of_negated = negated_globs
+                    .iter()
+                    .any(|neg| neg.starts_with(&path_with_slash));
                 if is_ancestor_of_negated {
                     trace!(
                         "Filtering out directory '{}' that is an ancestor of a negated path",
@@ -534,10 +535,7 @@ mod test {
             .write_str("{}")
             .unwrap();
 
-        let outputs = vec![
-            "dist/app".to_string(),
-            "!dist/app/.next/cache".to_string(),
-        ];
+        let outputs = vec!["dist/app".to_string(), "!dist/app/.next/cache".to_string()];
 
         let expanded = _expand_outputs(workspace.path(), outputs).unwrap();
 
@@ -586,7 +584,9 @@ mod test {
 
         // The cache SHOULD contain non-negated outputs
         assert!(
-            cache_hash_dir.child("dist/app/.next/static/chunks/main.js").exists(),
+            cache_hash_dir
+                .child("dist/app/.next/static/chunks/main.js")
+                .exists(),
             ".next/static should be in the cache"
         );
         assert!(
