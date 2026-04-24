@@ -16,18 +16,19 @@ const enhancedResolver = require('enhanced-resolve').create.sync({
   extensions: ['.js', '.json', '.node', '.ts', '.tsx'],
 });
 
-if (
-  process.argv[1].indexOf('jest-worker') > -1 ||
-  (process.argv.length >= 4 && process.argv[3].split(':')[1] === 'test')
-) {
-  const root = path.join(__dirname, '..', 'tmp', 'unit');
-  try {
-    if (!fs.existsSync(root)) {
-      fs.mkdirSync(root);
-    }
-  } catch (_err) {}
-  process.env.NX_WORKSPACE_ROOT_PATH = root;
-}
+// Point Nx at a throwaway workspace root so any code path that reads
+// `workspaceRoot` (e.g. `new FsTree`, `WorkspaceContext`, plugin isolation)
+// cannot walk the real monorepo. `workspace-root.ts` freezes its value on
+// first import, so this must run before any `require('nx/...')`. The
+// resolver's top-level code runs before any test module is resolved, which
+// makes this the earliest reliable place to set it.
+const root = path.join(__dirname, '..', 'tmp', 'unit');
+try {
+  if (!fs.existsSync(root)) {
+    fs.mkdirSync(root);
+  }
+} catch (_err) {}
+process.env.NX_WORKSPACE_ROOT_PATH = root;
 
 const excludedPackages = [
   '@nx/conformance',

@@ -10,6 +10,23 @@ type FileTree = {
 const rootMarkers = ['nx.json', 'nx', 'nx.bat'];
 
 describe('workspaceRootInner', () => {
+  // The global unit-test setup sets NX_WORKSPACE_ROOT_PATH to point Nx at a
+  // throwaway dir so tests never walk the real repo. `workspaceRootInner`
+  // short-circuits on that env var, so clear it here to exercise the actual
+  // root-detection logic this suite is testing.
+  let originalWorkspaceRootPath: string | undefined;
+  beforeAll(() => {
+    originalWorkspaceRootPath = process.env.NX_WORKSPACE_ROOT_PATH;
+    delete process.env.NX_WORKSPACE_ROOT_PATH;
+  });
+  afterAll(() => {
+    if (originalWorkspaceRootPath === undefined) {
+      delete process.env.NX_WORKSPACE_ROOT_PATH;
+    } else {
+      process.env.NX_WORKSPACE_ROOT_PATH = originalWorkspaceRootPath;
+    }
+  });
+
   it.each(rootMarkers)('should find workspace root from %s', (marker) => {
     jest
       .spyOn(fileUtils, 'fileExists')
