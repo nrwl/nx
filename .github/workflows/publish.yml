@@ -238,6 +238,10 @@ jobs:
               # Help clang find GCC runtime (crtbeginS.o, libgcc) and use lld for jemalloc build
               export CFLAGS="${CFLAGS} -fuse-ld=lld --gcc-toolchain=/usr/aarch64-unknown-linux-gnu"
 
+              # Build jemalloc with 64 KiB allocator page so the binary works on aarch64
+              # Linux kernels with 4K/16K/64K pages (Asahi, Ampere, Graviton, etc.).
+              export JEMALLOC_SYS_WITH_LG_PAGE=16
+
               npm i -g pnpm@${PNPM_VERSION} --force
               pnpm --version
 
@@ -291,6 +295,10 @@ jobs:
                 # Help clang find GCC runtime (crtbeginS.o, libgcc) and use lld for jemalloc build
                 GCC_DIR=\$(dirname \$(find /aarch64-linux-musl-cross/lib/gcc -name crtbeginS.o | head -1))
                 export CFLAGS=\"\${CFLAGS} -fuse-ld=lld --gcc-install-dir=\${GCC_DIR}\"
+
+                # Build jemalloc with 64 KiB allocator page so the binary works on aarch64
+                # Linux kernels with 4K/16K/64K pages (Asahi, Ampere, Graviton, etc.).
+                export JEMALLOC_SYS_WITH_LG_PAGE=16
 
                 # Install deps and run native build
                 pnpm install --frozen-lockfile

@@ -14,9 +14,8 @@
  * and can be copied from the published @yarnpkg/parsers package directly.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { load, FAILSAFE_SCHEMA } = require('@zkochan/js-yaml');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const { parse: parsePeg } = require('./syml-grammar');
 
 const simpleStringPattern =

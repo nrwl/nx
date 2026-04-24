@@ -1,3 +1,4 @@
+import { Socket } from 'net';
 import { performance } from 'perf_hooks';
 import { readNxJson } from '../../config/nx-json';
 import {
@@ -38,6 +39,11 @@ import {
 } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { serverLogger } from '../logger';
+import { ProgressTopics } from '../../utils/progress-topics';
+import {
+  subscribeClientToTopic,
+  unsubscribeClientFromTopic,
+} from './client-socket-context';
 import { notifyFileChangeListeners } from './file-watching/file-change-events';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
@@ -84,7 +90,16 @@ let knownExternalNodes: Record<string, ProjectGraphExternalNode> = {};
 let fileChangeCounter = 0;
 let recomputationGeneration = 0;
 
-export async function getCachedSerializedProjectGraphPromise(): Promise<SerializedProjectGraph> {
+export async function getCachedSerializedProjectGraphPromise(
+  socket?: Socket
+): Promise<SerializedProjectGraph> {
+  // Subscribe the requesting client to the graph-construction topic
+  // for the duration of the await, so in-flight progress/log messages
+  // — including those produced by a recomputation that was already
+  // started before this caller arrived — are broadcast to them.
+  if (socket) {
+    subscribeClientToTopic(socket, ProgressTopics.GraphConstruction);
+  }
   try {
     let wasScheduled = false;
     // recomputing it now on demand. we can ignore the scheduled timeout
@@ -180,6 +195,10 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
       allWorkspaceFiles: null,
       rustReferences: null,
     };
+  } finally {
+    if (socket) {
+      unsubscribeClientFromTopic(socket, ProgressTopics.GraphConstruction);
+    }
   }
 }
 

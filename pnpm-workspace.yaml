@@ -18,8 +18,6 @@ onlyBuiltDependencies:
   - 'nx'
 patchedDependencies:
   '@astrojs/starlight': 'patches/@astrojs__starlight.patch'
-  '@nx/jest@22.7.0-beta.12': 'patches/@nx__jest@22.7.0-beta.12.patch'
-allowUnusedPatches: true
 catalog:
   '@zkochan/js-yaml': '0.0.7'
   chalk: '^4.1.0'
@@ -65,10 +63,10 @@ catalogs:
     rxjs: '^6.5.3 || ^7.5.0'
     zone.js: '~0.15.0 || ~0.16.0'
   eslint:
-    '@angular-eslint/eslint-plugin': '21.2.0'
-    '@angular-eslint/eslint-plugin-template': '21.2.0'
-    '@angular-eslint/template-parser': '21.2.0'
-    angular-eslint: '21.2.0'
+    '@angular-eslint/eslint-plugin': '^21.3.1'
+    '@angular-eslint/eslint-plugin-template': '^21.3.1'
+    '@angular-eslint/template-parser': '^21.3.1'
+    angular-eslint: '^21.3.1'
   jest:
     '@jest/reporters': '^30.0.2'
     '@jest/test-result': '^30.0.2'

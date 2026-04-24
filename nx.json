@@ -7,7 +7,7 @@
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json",
       "!{projectRoot}/jest.config.[jt]s",
-      "!{projectRoot}/.eslintrc.json",
+      "!{projectRoot}/eslint.config.@(js|cjs|mjs|ts|cts|mts)",
       "!{projectRoot}/.storybook/**/*",
       "!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
       "!{projectRoot}/tsconfig.storybook.json",
@@ -49,7 +49,11 @@
       { "env": "NX_E2E_CI_CACHE_KEY" },
       { "env": "CI" },
       { "env": "NX_E2E_RUN_E2E" },
-      { "dependentTasksOutputFiles": "**/*.d.ts", "transitive": true }
+      { "dependentTasksOutputFiles": "**/*.d.ts", "transitive": true },
+      {
+        "json": "{workspaceRoot}/tsconfig.json",
+        "fields": ["compilerOptions", "extends", "files", "include"]
+      }
     ]
   },
   "release": {
@@ -372,6 +376,40 @@
       },
       {
         "rule": "./dist/workspace-plugin/src/conformance-rules/types-versions-exports-sync"
+      },
+      {
+        "rule": "./dist/workspace-plugin/src/conformance-rules/env-vars-documented",
+        "options": {
+          "ignore": [
+            "NX_ANALYTICS_SESSION_ID",
+            "NX_FORKED_TASK_EXECUTOR",
+            "NX_RUN_COMMANDS_DIRECTLY",
+            "NX_DAEMON_PROCESS",
+            "NX_IPC_CHANNEL_ID",
+            "NX_PSEUDO_TERMINAL_EXEC_ARGV",
+            "NX_GENERATE_DOCS_PROCESS",
+            "NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG",
+            "NX_WORKSPACE_ROOT_PATH",
+            "NX_IMPORT_SOURCE",
+            "NX_IMPORT_DESTINATION",
+            "NX_PROJECT_GRAPH_CACHE_DIRECTORY",
+            "NX_CONSOLE",
+            "NX_DEBUG_TELEMETRY",
+            "NX_TUI_INLINE_MODE",
+            "NX_TUI_SKIP_CAPABILITY_CHECK",
+            "NX_SKIP_CHECK_REMOTE",
+            "NX_CLI_SET",
+            "NX_WORKSPACE_ROOT",
+            "NX_TERMINAL_OUTPUT_PATH",
+            "NX_TERMINAL_CAPTURE_STDERR",
+            "NX_VERSION",
+            "NX_STREAM_OUTPUT",
+            "NX_PREFIX_OUTPUT",
+            "NX_INFER_ALL_PACKAGE_JSONS",
+            "NX_AI_FILES_USE_LOCAL",
+            "NX_WINDOWS_PTY_SUPPORT"
+          ]
+        }
       }
     ]
   },

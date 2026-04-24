@@ -127,6 +127,34 @@ launch-templates:
       MY_ENV_VAR: 'my-var-value'
 ```
 
+### `launch-templates.<template-name>.no-output-timeout`
+
+A launch template's `no-output-timeout` defines how long a step can run without producing any output before it's considered stalled and terminated. This prevents hung commands from tying up an agent for the full workflow duration.
+
+The value is a duration string (e.g., `10m`, `30m`, `1h`). Set to `"0"` to disable the timeout entirely. If not specified, the default is **10 minutes**.
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  template-one:
+    no-output-timeout: '30m'
+```
+
+You can also override this value at runtime via the `NX_NO_OUTPUT_TIMEOUT` environment variable (set on the template or on an individual step). The environment variable takes precedence over the `no-output-timeout` template field.
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  template-one:
+    no-output-timeout: '30m'
+    init-steps:
+      - name: 'Long-running step with custom timeout'
+        env:
+          NX_NO_OUTPUT_TIMEOUT: '1h'
+        script: |
+          ./scripts/slow-build.sh
+```
+
 ### `launch-templates.<template-name>.init-steps`
 
 A launch template's `init-steps` defines the series of steps to perform before an Nx Agent runs. Without a defined `init-steps` the Nx Agent is unable to process any tasks.

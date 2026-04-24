@@ -282,7 +282,7 @@ async function handleMessage(socket: Socket, data: string) {
     await handleResult(
       socket,
       'REQUEST_PROJECT_GRAPH',
-      () => handleRequestProjectGraph(),
+      () => handleRequestProjectGraph(socket),
       mode
     );
   } else if (payload.type === 'HASH_TASKS') {

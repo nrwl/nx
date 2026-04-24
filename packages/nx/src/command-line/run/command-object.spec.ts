@@ -10,6 +10,24 @@ describe('run-one command setup', () => {
     compareArgs(infixOptions, runOptions);
   });
 
+  describe('flag-based invocation', () => {
+    it.each([
+      ['short form: -p / -t', ['run', '-p', 'myapp', '-t', 'test:unit']],
+      [
+        'long form: --project / --target',
+        ['run', '--project', 'myapp', '--target', 'test:unit'],
+      ],
+      [
+        'equals form: --project= / --target=',
+        ['run', '--project=myapp', '--target=test:unit'],
+      ],
+    ])('parses %s when target contains a colon', (_label, argv) => {
+      const parsed = getParsedRunArgs(argv);
+      expect(parsed.project).toEqual('myapp');
+      expect(parsed.target).toEqual('test:unit');
+    });
+  });
+
   it.each(['--array=1,2,3', '--array=1 2 3', '--array=1 --array=2 --array=3'])(
     'should read arrays (%s)',
     (args) => {
@@ -71,8 +89,12 @@ describe('run-one command setup', () => {
 function compareArgs(a: any, b: any) {
   delete a['_'];
   delete b['_'];
-  // delete a['__overrides_unparsed__'];
-  // delete b['__overrides_unparsed__'];
+  // `project`/`target` have `p`/`t` yargs aliases; strip the alias keys
+  // before comparing so the two invocation forms match structurally.
+  delete a['p'];
+  delete b['p'];
+  delete a['t'];
+  delete b['t'];
   if (a['target'] && a['project']) {
     a['project:target:configuration'] = `${a['project']}:${a['target']}`;
     delete a['project'];
