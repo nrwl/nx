@@ -16,6 +16,12 @@ module.exports = () => {
    */
   process.env.NX_DAEMON = 'false';
 
+  const emptyProjectGraph = { nodes: {}, dependencies: {} };
+  const emptyProjectGraphAndMaps = {
+    projectGraph: emptyProjectGraph,
+    sourceMaps: {},
+  };
+
   /**
    * When `createProjectGraphAsync` is called during tests,
    * if its not mocked, it will return the Nx repo's project
@@ -25,12 +31,7 @@ module.exports = () => {
   jest.doMock('@nx/devkit', () => ({
     __esModule: true,
     ...jest.requireActual('@nx/devkit'),
-    createProjectGraphAsync: jest.fn().mockImplementation(async () => {
-      return {
-        nodes: {},
-        dependencies: {},
-      };
-    }),
+    createProjectGraphAsync: jest.fn(async () => emptyProjectGraph),
     /**
      * `ensurePackage` calls `require(pkg)` which resolves from node_modules
      * (the installed version) instead of the local source code. Using
@@ -39,6 +40,54 @@ module.exports = () => {
      */
     ensurePackage: jest.fn((pkg) => jest.requireActual(pkg)),
   }));
+
+  /**
+   * Code inside `packages/nx` imports graph builders via relative paths
+   * (`../../project-graph/project-graph`), which skip the `@nx/devkit` mock
+   * above. Mock the source file directly so those callers also get an empty
+   * graph. Jest keys mocks by the resolved absolute path, so the relative
+   * imports resolve to the same module id as `nx/src/project-graph/project-graph`
+   * and pick up this mock.
+   */
+  jest.doMock('nx/src/project-graph/project-graph', () => {
+    const actual = jest.requireActual('nx/src/project-graph/project-graph');
+    return {
+      __esModule: true,
+      ...actual,
+      createProjectGraphAsync: jest.fn(async () => emptyProjectGraph),
+      createProjectGraphAndSourceMapsAsync: jest.fn(
+        async () => emptyProjectGraphAndMaps
+      ),
+      buildProjectGraphAndSourceMapsWithoutDaemon: jest.fn(
+        async () => emptyProjectGraphAndMaps
+      ),
+    };
+  });
+
+  /**
+   * Guard: if any unit test reaches plugin isolation, it means a code path
+   * slipped past the graph mocks above and is about to spawn a real
+   * `plugin-worker.ts` subprocess that scans the whole monorepo. Fail loudly
+   * with an actionable message instead of silently producing sandbox
+   * violations.
+   */
+  jest.doMock(
+    'nx/src/project-graph/plugins/isolation/load-isolated-plugin',
+    () => ({
+      __esModule: true,
+      loadIsolatedNxPlugin: jest.fn(() => {
+        throw new Error(
+          '[unit-test-setup] loadIsolatedNxPlugin was called during a unit test. ' +
+            'This spawns a real plugin worker that scans the entire workspace and ' +
+            'causes sandbox violations. Something reached real project-graph ' +
+            'computation without hitting the @nx/devkit or nx/src/project-graph mocks. ' +
+            'Check the stack trace for the unmocked caller (likely a direct import ' +
+            'of an internal nx path) and either mock it in the test or extend ' +
+            'scripts/unit-test-setup.js.'
+        );
+      }),
+    })
+  );
 
   /**
    * `isUsingTsSolutionSetup()` falls back to `new FsTree(workspaceRoot, false)`
