@@ -174,6 +174,11 @@ pub struct Watcher {
     stop_flag: Arc<AtomicBool>,
     additional_globs: Vec<String>,
     use_ignore: bool,
+    // Held so the FsEventWatcher's channel sender survives past watch().
+    // On macOS the spawned thread has no cfg-active references to the Arc,
+    // so without this field the closure wouldn't capture it and the watcher
+    // would drop the moment watch() returned, severing the notify channel.
+    notify_watcher: Option<Arc<Mutex<notify::RecommendedWatcher>>>,
 }
 
 #[napi]
@@ -216,6 +221,7 @@ impl Watcher {
             stop_flag: Arc::new(AtomicBool::new(false)),
             additional_globs: globs,
             use_ignore: use_ignore.unwrap_or(true),
+            notify_watcher: None,
         }
     }
 
@@ -279,6 +285,7 @@ impl Watcher {
         }
 
         let watcher = Arc::new(Mutex::new(watcher));
+        self.notify_watcher = Some(watcher.clone());
 
         // Spawn the event processing thread.
         let watcher_for_thread = watcher.clone();
