@@ -40,42 +40,18 @@
     "tslib": "catalog:typescript"
   },
   "peerDependencies": {
-    "@nx/cypress": "workspace:*",
     "@nx/detox": "workspace:*",
-    "@nx/docker": "workspace:*",
     "@nx/jest": "workspace:*",
-    "@nx/module-federation": "workspace:*",
-    "@nx/nest": "workspace:*",
-    "@nx/node": "workspace:*",
-    "@nx/rollup": "workspace:*",
     "@nx/vite": "workspace:*",
     "@nx/webpack": "workspace:*",
     "metro-config": ">= 0.82.0",
     "metro-resolver": ">= 0.82.0"
   },
   "peerDependenciesMeta": {
-    "@nx/cypress": {
-      "optional": true
-    },
     "@nx/detox": {
       "optional": true
     },
-    "@nx/docker": {
-      "optional": true
-    },
     "@nx/jest": {
-      "optional": true
-    },
-    "@nx/module-federation": {
-      "optional": true
-    },
-    "@nx/nest": {
-      "optional": true
-    },
-    "@nx/node": {
-      "optional": true
-    },
-    "@nx/rollup": {
       "optional": true
     },
     "@nx/vite": {

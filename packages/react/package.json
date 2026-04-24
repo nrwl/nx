@@ -62,25 +62,9 @@
     "@nx/vite": "workspace:*"
   },
   "peerDependencies": {
-    "@nx/docker": "workspace:*",
-    "@nx/nest": "workspace:*",
-    "@nx/next": "workspace:*",
-    "@nx/node": "workspace:*",
     "@nx/rspack": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "@nx/docker": {
-      "optional": true
-    },
-    "@nx/nest": {
-      "optional": true
-    },
-    "@nx/next": {
-      "optional": true
-    },
-    "@nx/node": {
-      "optional": true
-    },
     "@nx/rspack": {
       "optional": true
     }
