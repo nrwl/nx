@@ -66,6 +66,14 @@ describe('getGradlewTasksToRun', () => {
           projectRoot: 'app1',
           parallelism: false,
         },
+        'app1:lint': {
+          id: 'app1:lint',
+          target: { project: 'app1', target: 'lint' },
+          outputs: [],
+          overrides: {},
+          projectRoot: 'app1',
+          parallelism: false,
+        },
         'app2:build': {
           id: 'app2:build',
           target: { project: 'app2', target: 'build' },
@@ -75,9 +83,13 @@ describe('getGradlewTasksToRun', () => {
           parallelism: false,
         },
       },
-      dependencies: {},
+      dependencies: {
+        'app1:test': ['app1:lint', 'app2:build'],
+        'app1:lint': [],
+        'app2:build': [],
+      },
       continuousDependencies: {},
-      roots: ['app1:test', 'app2:build'],
+      roots: ['app1:lint', 'app2:build'],
     };
 
     inputs = {
@@ -151,7 +163,7 @@ describe('getGradlewTasksToRun', () => {
       projectRoot: 'app3',
       parallelism: false,
     };
-    taskGraph.roots.push('app3:deploy');
+    taskGraph.dependencies['app3:deploy'] = ['app1:test'];
     inputs['app3:deploy'] = {
       taskName: 'deploy',
       excludeDependsOn: true,
