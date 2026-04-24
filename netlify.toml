@@ -8,8 +8,42 @@
 [build.environment]
   NETLIFY_NEXT_PLUGIN_SKIP = "true"
 
+# Proxy /docs/* to master's nx-docs deploy so canary.nx.dev/docs/*
+# serves the latest master docs (mirrors nx-dev/nx-dev/next.config.js
+# rewrites, hardcoded since this branch has no Next.js server).
+[[redirects]]
+  from = "/docs"
+  to = "https://master--nx-docs.netlify.app/docs"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/docs/*"
+  to = "https://master--nx-docs.netlify.app/docs/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/.netlify/*"
+  to = "https://master--nx-docs.netlify.app/.netlify/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/llms.txt"
+  to = "https://master--nx-docs.netlify.app/docs/llms.txt"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/llms-full.txt"
+  to = "https://master--nx-docs.netlify.app/docs/llms-full.txt"
+  status = 200
+  force = true
+
+# Non-docs paths land on docs root.
 [[redirects]]
   from = "/*"
-  to = "https://master.nx.dev/docs"
+  to = "/docs/getting-started/intro"
   status = 301
   force = true
