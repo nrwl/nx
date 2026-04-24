@@ -98,7 +98,7 @@ reqwest = { version = "0.12.22", default-features = false, features = [
     "rustls-tls-native-roots",
 ] }
 rusqlite = { version = "0.32.1", features = ["bundled", "array", "vtab"] }
-notify = "9.0.0-rc.2"
+notify = "8"
 machine-uid = "0.5.2"
 interprocess = { version = "=2.2.3", features = ["tokio"] }
 jsonrpsee = { version = "0.25.1", features = [
