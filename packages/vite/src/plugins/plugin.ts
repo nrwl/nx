@@ -41,6 +41,11 @@ export interface VitePluginOptions {
   previewTargetName?: string;
   serveStaticTargetName?: string;
   typecheckTargetName?: string;
+  /**
+   * The compiler to use for type-checking. Defaults to `tsc`.
+   * Set to `tsgo` to use the TypeScript Go compiler (`@typescript/native-preview`).
+   */
+  compiler?: string;
   watchDepsTargetName?: string;
   buildDepsTargetName?: string;
 
@@ -418,7 +423,7 @@ async function buildViteTargets(
     const hasVuePlugin = viteBuildConfig.plugins?.some(
       (p) => p.name === 'vite:vue'
     );
-    const typeCheckCommand = hasVuePlugin ? 'vue-tsc' : 'tsc';
+    const typeCheckCommand = hasVuePlugin ? 'vue-tsc' : (options.compiler ?? 'tsc');
 
     targets[options.typecheckTargetName] = {
       cache: true,
@@ -732,6 +737,7 @@ function normalizeOptions(options: VitePluginOptions): VitePluginOptions {
   options.testTargetName ??= 'test';
   options.serveStaticTargetName ??= 'serve-static';
   options.typecheckTargetName ??= 'typecheck';
+  options.compiler ??= 'tsc';
   return options;
 }
 
