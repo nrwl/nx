@@ -1,3 +1,9 @@
+// The global jest setup (`scripts/unit-test-setup.js`) mocks
+// `nx/src/project-graph/project-graph` to return an empty graph for every
+// test, but this suite is the one place that exercises the real
+// `buildProjectGraphAndSourceMapsWithoutDaemon` implementation, so opt out.
+jest.unmock('./project-graph');
+
 import { buildProjectGraphAndSourceMapsWithoutDaemon } from './project-graph';
 import * as plugins from './plugins/get-plugins';
 

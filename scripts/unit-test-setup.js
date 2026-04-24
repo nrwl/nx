@@ -65,28 +65,39 @@ module.exports = () => {
   });
 
   /**
-   * Guard: if any unit test reaches plugin isolation, it means a code path
-   * slipped past the graph mocks above and is about to spawn a real
-   * `plugin-worker.ts` subprocess that scans the whole monorepo. Fail loudly
-   * with an actionable message instead of silently producing sandbox
-   * violations.
+   * Guard: if a unit test reaches plugin isolation pointed at the real
+   * workspace, it spawns a `plugin-worker.ts` subprocess that scans the
+   * whole monorepo and produces ~thousands of sandbox violations. Tests
+   * that legitimately exercise plugin isolation against a `TempFs` root
+   * (e.g. `getOnlyDefaultPlugins(tempFs.tempDir)`) pass through unchanged.
    */
+  const realWorkspaceRoot = require('path').resolve(__dirname, '..');
   jest.doMock(
     'nx/src/project-graph/plugins/isolation/load-isolated-plugin',
-    () => ({
-      __esModule: true,
-      loadIsolatedNxPlugin: jest.fn(() => {
-        throw new Error(
-          '[unit-test-setup] loadIsolatedNxPlugin was called during a unit test. ' +
-            'This spawns a real plugin worker that scans the entire workspace and ' +
-            'causes sandbox violations. Something reached real project-graph ' +
-            'computation without hitting the @nx/devkit or nx/src/project-graph mocks. ' +
-            'Check the stack trace for the unmocked caller (likely a direct import ' +
-            'of an internal nx path) and either mock it in the test or extend ' +
-            'scripts/unit-test-setup.js.'
-        );
-      }),
-    })
+    () => {
+      const actual = jest.requireActual(
+        'nx/src/project-graph/plugins/isolation/load-isolated-plugin'
+      );
+      return {
+        __esModule: true,
+        ...actual,
+        loadIsolatedNxPlugin: jest.fn((plugin, root, index) => {
+          if (root === realWorkspaceRoot) {
+            throw new Error(
+              '[unit-test-setup] loadIsolatedNxPlugin was called with the real ' +
+                'workspace root during a unit test. This spawns a real plugin ' +
+                'worker that scans the entire monorepo and causes sandbox ' +
+                'violations. Something reached real project-graph computation ' +
+                'without hitting the @nx/devkit or nx/src/project-graph mocks. ' +
+                'Check the stack trace for the unmocked caller and either mock ' +
+                'it in the test, point the call at a TempFs root, or extend ' +
+                'scripts/unit-test-setup.js.'
+            );
+          }
+          return actual.loadIsolatedNxPlugin(plugin, root, index);
+        }),
+      };
+    }
   );
 
   /**
