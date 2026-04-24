@@ -116,6 +116,18 @@ export interface PackageJson {
   'nx-migrations'?: string | NxMigrationsConfiguration;
   'ng-update'?: string | NxMigrationsConfiguration;
   packageManager?: string;
+  // https://docs.npmjs.com/cli/v11/configuring-npm/package-json#devengines
+  devEngines?: {
+    packageManager?: {
+      name?: string;
+      version?: string;
+      onFail?: 'ignore' | 'warn' | 'error' | 'download';
+    };
+    runtime?: Record<string, unknown>;
+    cpu?: Record<string, unknown>;
+    libc?: Record<string, unknown>;
+    os?: Record<string, unknown>;
+  };
   description?: string;
   keywords?: string[];
 }

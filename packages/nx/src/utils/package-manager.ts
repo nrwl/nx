@@ -285,14 +285,25 @@ export function getPackageManagerVersion(
   cwd = process.cwd()
 ): string {
   let version: string;
+  // Resolve the version from package.json fields first to skip the ~170ms
+  // `execSync('<pm> --version')` spawn on every cold Nx invocation. Match
+  // Corepack's resolution order: top-level `packageManager` then
+  // `devEngines.packageManager` (npm 11+).
   if (existsSync(join(cwd, 'package.json'))) {
-    const packageManagerEntry = readJsonFile<PackageJson>(
-      join(cwd, 'package.json')
-    )?.packageManager;
+    const pkgJson = readJsonFile<PackageJson>(join(cwd, 'package.json'));
     version = parseVersionFromPackageManagerField(
       packageManager,
-      packageManagerEntry
+      pkgJson?.packageManager
     );
+    if (!version) {
+      const dev = pkgJson?.devEngines?.packageManager;
+      if (dev?.name && dev?.version) {
+        version = parseVersionFromPackageManagerField(
+          packageManager,
+          `${dev.name}@${dev.version}`
+        );
+      }
+    }
   }
   if (!version) {
     try {

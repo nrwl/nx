@@ -329,6 +329,46 @@ describe('package-manager', () => {
         .mockReturnValueOnce({ packageManager: 'npm@6.32.4' });
       expect(() => getPackageManagerVersion('yarn')).toThrow();
     });
+
+    it('should prefer packageManager field over execSync to avoid spawn cost', () => {
+      jest.spyOn(fs, 'existsSync').mockReturnValueOnce(true);
+      const execSyncSpy = jest
+        .spyOn(childProcess, 'execSync')
+        .mockImplementation(() => '99.99.99');
+      jest
+        .spyOn(fileUtils, 'readJsonFile')
+        .mockReturnValueOnce({ packageManager: 'pnpm@10.33.0' });
+      expect(getPackageManagerVersion('pnpm')).toEqual('10.33.0');
+      expect(execSyncSpy).not.toHaveBeenCalled();
+    });
+
+    it('should fall back to devEngines.packageManager when packageManager field is missing', () => {
+      jest.spyOn(fs, 'existsSync').mockReturnValueOnce(true);
+      const execSyncSpy = jest
+        .spyOn(childProcess, 'execSync')
+        .mockImplementation(() => '99.99.99');
+      jest.spyOn(fileUtils, 'readJsonFile').mockReturnValueOnce({
+        devEngines: {
+          packageManager: { name: 'pnpm', version: '10.33.0' },
+        },
+      });
+      expect(getPackageManagerVersion('pnpm')).toEqual('10.33.0');
+      expect(execSyncSpy).not.toHaveBeenCalled();
+    });
+
+    it('should fall through to execSync when devEngines.packageManager version is a range', () => {
+      jest.spyOn(fs, 'existsSync').mockReturnValueOnce(true);
+      const execSyncSpy = jest
+        .spyOn(childProcess, 'execSync')
+        .mockImplementation(() => '10.33.0');
+      jest.spyOn(fileUtils, 'readJsonFile').mockReturnValueOnce({
+        devEngines: {
+          packageManager: { name: 'pnpm', version: '^10.0.0' },
+        },
+      });
+      expect(getPackageManagerVersion('pnpm')).toEqual('10.33.0');
+      expect(execSyncSpy).toHaveBeenCalled();
+    });
   });
 
   describe('isWorkspacesEnabled', () => {
