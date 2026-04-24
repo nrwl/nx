@@ -154,6 +154,31 @@ describe('getGradlewTasksToRun', () => {
     expect(result.excludeTestTasks).toEqual(new Set());
   });
 
+  it('should resolve transitive deps via fullTaskGraph when batch graph omits them', () => {
+    const batchTaskGraph: TaskGraph = {
+      tasks: {
+        'app1:test': taskGraph.tasks['app1:test'],
+      },
+      dependencies: {
+        'app1:test': [],
+      },
+      continuousDependencies: {},
+      roots: ['app1:test'],
+    };
+
+    const taskIds = ['app1:test'];
+    const result = getGradlewTasksToRun(
+      taskIds,
+      batchTaskGraph,
+      inputs,
+      nodes,
+      taskGraph
+    );
+
+    expect(result.excludeTasks).toEqual(new Set(['lintApp1', 'buildApp2']));
+    expect(result.excludeTestTasks).toEqual(new Set());
+  });
+
   it('should correctly handle a mix of excludeDependsOn true and false', () => {
     taskGraph.tasks['app3:deploy'] = {
       id: 'app3:deploy',

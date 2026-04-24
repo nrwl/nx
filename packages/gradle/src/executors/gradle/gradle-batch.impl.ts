@@ -69,7 +69,8 @@ export default async function gradleBatch(
         taskIds,
         taskGraph,
         inputs,
-        context.projectGraph.nodes
+        context.projectGraph.nodes,
+        context.taskGraph ?? taskGraph
       );
 
     const batchResults = await runTasksInBatch(
@@ -103,13 +104,20 @@ export default async function gradleBatch(
 }
 
 /**
- * Get the gradlew task ids to run
+ * Get the gradlew task ids to run.
+ *
+ * `taskGraph` is the batch's task graph (only tasks running in this batch
+ * invocation). `fullTaskGraph` is the full task graph for the whole `nx`
+ * command (defaults to `taskGraph`); transitive dependency walks use it so
+ * that deps filtered out of the batch — cached tasks, tasks scheduled in
+ * other batches — are still resolved when computing excludes.
  */
 export function getGradlewTasksToRun(
   taskIds: string[],
   taskGraph: TaskGraph,
   inputs: Record<string, GradleExecutorSchema>,
-  nodes: Record<string, ProjectGraphProjectNode>
+  nodes: Record<string, ProjectGraphProjectNode>,
+  fullTaskGraph: TaskGraph = taskGraph
 ) {
   const tasksWithExcludeIds = new Set<string>();
   const testTasksWithExcludeIds = new Set<string>();
@@ -140,18 +148,21 @@ export function getGradlewTasksToRun(
   }
 
   const runningTaskIds = new Set<string>(taskIds);
+  const batchTaskIds = new Set<string>(taskIds);
   const nonExcludeDeps = getAllDependsOnFromTaskGraph(
     tasksWithoutExcludeIds,
-    taskGraph
+    fullTaskGraph
   );
   for (const depId of nonExcludeDeps) {
-    runningTaskIds.add(depId);
+    if (batchTaskIds.has(depId)) {
+      runningTaskIds.add(depId);
+    }
   }
 
   const excludeTasks = getExcludeTasksFromTaskGraph(
     tasksWithExcludeIds,
     runningTaskIds,
-    taskGraph,
+    fullTaskGraph,
     nodes,
     includeDependsOnTasks
   );
@@ -159,10 +170,10 @@ export function getGradlewTasksToRun(
   const excludeTestTasks = new Set<string>();
   const testDepIds = getAllDependsOnFromTaskGraph(
     testTasksWithExcludeIds,
-    taskGraph
+    fullTaskGraph
   );
   for (const depTaskId of testDepIds) {
-    const task = taskGraph.tasks[depTaskId];
+    const task = fullTaskGraph.tasks[depTaskId];
     if (!task) {
       continue;
     }
