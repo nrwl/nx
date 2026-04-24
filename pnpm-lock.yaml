@@ -3274,9 +3274,6 @@ importers:
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
-      '@nx/docker':
-        specifier: workspace:*
-        version: link:../docker
       '@nx/eslint':
         specifier: workspace:*
         version: link:../eslint
@@ -3286,15 +3283,6 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@nx/module-federation':
-        specifier: workspace:*
-        version: link:../module-federation
-      '@nx/nest':
-        specifier: workspace:*
-        version: link:../nest
-      '@nx/node':
-        specifier: workspace:*
-        version: link:../node
       '@nx/react':
         specifier: workspace:*
         version: link:../react
