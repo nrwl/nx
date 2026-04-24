@@ -423,7 +423,9 @@ async function buildViteTargets(
     const hasVuePlugin = viteBuildConfig.plugins?.some(
       (p) => p.name === 'vite:vue'
     );
-    const typeCheckCommand = hasVuePlugin ? 'vue-tsc' : (options.compiler ?? 'tsc');
+    const typeCheckCommand = hasVuePlugin
+      ? 'vue-tsc'
+      : (options.compiler ?? 'tsc');
 
     targets[options.typecheckTargetName] = {
       cache: true,
