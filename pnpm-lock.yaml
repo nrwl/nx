@@ -2629,15 +2629,9 @@ importers:
 
   packages/detox:
     dependencies:
-      '@nx/cypress':
-        specifier: workspace:*
-        version: link:../cypress
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
-      '@nx/docker':
-        specifier: workspace:*
-        version: link:../docker
       '@nx/eslint':
         specifier: workspace:*
         version: link:../eslint
@@ -2647,15 +2641,6 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@nx/module-federation':
-        specifier: workspace:*
-        version: link:../module-federation
-      '@nx/nest':
-        specifier: workspace:*
-        version: link:../nest
-      '@nx/node':
-        specifier: workspace:*
-        version: link:../node
       '@nx/react':
         specifier: workspace:*
         version: link:../react
@@ -2870,9 +2855,6 @@ importers:
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
-      '@nx/docker':
-        specifier: workspace:*
-        version: link:../docker
       '@nx/eslint':
         specifier: workspace:*
         version: link:../eslint
@@ -2882,21 +2864,12 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@nx/module-federation':
-        specifier: workspace:*
-        version: link:../module-federation
-      '@nx/nest':
-        specifier: workspace:*
-        version: link:../nest
       '@nx/playwright':
         specifier: workspace:*
         version: link:../playwright
       '@nx/react':
         specifier: workspace:*
         version: link:../react
-      '@nx/rollup':
-        specifier: workspace:*
-        version: link:../rollup
       '@nx/web':
         specifier: workspace:*
         version: link:../web
@@ -2928,30 +2901,18 @@ importers:
 
   packages/express:
     dependencies:
-      '@nx/cypress':
-        specifier: workspace:*
-        version: link:../cypress
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
-      '@nx/docker':
-        specifier: workspace:*
-        version: link:../docker
       '@nx/eslint':
         specifier: workspace:*
         version: link:../eslint
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@nx/module-federation':
-        specifier: workspace:*
-        version: link:../module-federation
       '@nx/node':
         specifier: workspace:*
         version: link:../node
-      '@nx/webpack':
-        specifier: workspace:*
-        version: link:../webpack
       express:
         specifier: ^4.21.2
         version: 4.21.2
@@ -3234,30 +3195,18 @@ importers:
       '@nestjs/schematics':
         specifier: ^11.0.0
         version: 11.0.5(chokidar@4.0.3)(typescript@5.9.2)
-      '@nx/cypress':
-        specifier: workspace:*
-        version: link:../cypress
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
-      '@nx/docker':
-        specifier: workspace:*
-        version: link:../docker
       '@nx/eslint':
         specifier: workspace:*
         version: link:../eslint
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@nx/module-federation':
-        specifier: workspace:*
-        version: link:../module-federation
       '@nx/node':
         specifier: workspace:*
         version: link:../node
-      '@nx/webpack':
-        specifier: workspace:*
-        version: link:../webpack
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
@@ -3636,9 +3585,6 @@ importers:
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
-      '@nx/docker':
-        specifier: workspace:*
-        version: link:../docker
       '@nx/eslint':
         specifier: workspace:*
         version: link:../eslint
@@ -3648,15 +3594,6 @@ importers:
       '@nx/module-federation':
         specifier: workspace:*
         version: link:../module-federation
-      '@nx/nest':
-        specifier: workspace:*
-        version: link:../nest
-      '@nx/next':
-        specifier: workspace:*
-        version: link:../next
-      '@nx/node':
-        specifier: workspace:*
-        version: link:../node
       '@nx/rollup':
         specifier: workspace:*
         version: link:../rollup
@@ -3716,18 +3653,12 @@ importers:
 
   packages/react-native:
     dependencies:
-      '@nx/cypress':
-        specifier: workspace:*
-        version: link:../cypress
       '@nx/detox':
         specifier: workspace:*
         version: link:../detox
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
-      '@nx/docker':
-        specifier: workspace:*
-        version: link:../docker
       '@nx/eslint':
         specifier: workspace:*
         version: link:../eslint
@@ -3737,21 +3668,9 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@nx/module-federation':
-        specifier: workspace:*
-        version: link:../module-federation
-      '@nx/nest':
-        specifier: workspace:*
-        version: link:../nest
-      '@nx/node':
-        specifier: workspace:*
-        version: link:../node
       '@nx/react':
         specifier: workspace:*
         version: link:../react
-      '@nx/rollup':
-        specifier: workspace:*
-        version: link:../rollup
       '@nx/vite':
         specifier: workspace:*
         version: link:../vite
@@ -3798,24 +3717,12 @@ importers:
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
-      '@nx/docker':
-        specifier: workspace:*
-        version: link:../docker
       '@nx/eslint':
         specifier: workspace:*
         version: link:../eslint
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@nx/module-federation':
-        specifier: workspace:*
-        version: link:../module-federation
-      '@nx/nest':
-        specifier: workspace:*
-        version: link:../nest
-      '@nx/node':
-        specifier: workspace:*
-        version: link:../node
       '@nx/react':
         specifier: workspace:*
         version: link:../react

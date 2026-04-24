@@ -24,16 +24,7 @@ export default [
         'error',
         {
           buildTargets: ['build-base'],
-          ignoredDependencies: [
-            'nx',
-            'typescript',
-            'detox',
-            '@nx/cypress',
-            '@nx/docker',
-            '@nx/module-federation',
-            '@nx/nest',
-            '@nx/node',
-          ],
+          ignoredDependencies: ['nx', 'typescript', 'detox'],
         },
       ],
     },
