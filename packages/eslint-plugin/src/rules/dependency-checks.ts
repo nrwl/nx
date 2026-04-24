@@ -170,6 +170,16 @@ export default ESLintUtils.RuleCreator(
     );
     const expectedDependencyNames = Object.keys(npmDependencies);
 
+    // Package names published by workspace projects. Used to decide whether
+    // `peerDepsVersionStrategy: 'workspace'` should rewrite a peer dep range
+    // to `workspace:*` — only workspace packages should get that treatment;
+    // external npm packages (react, axios, …) must keep their real ranges.
+    const workspacePackageNames = new Set<string>();
+    for (const node of Object.values(projectGraph.nodes)) {
+      const name = node.data?.metadata?.js?.packageName;
+      if (name) workspacePackageNames.add(name);
+    }
+
     const packageJson = JSON.parse(context.sourceCode.getText());
     const projPackageJsonDeps = getProductionDependencies(packageJson);
 
@@ -296,7 +306,8 @@ export default ESLintUtils.RuleCreator(
             missingDeps.forEach((d) => {
               if (
                 dependencySection === 'peerDependencies' &&
-                peerDepsVersionStrategy === 'workspace'
+                peerDepsVersionStrategy === 'workspace' &&
+                workspacePackageNames.has(d)
               ) {
                 projPackageJsonDeps[d] = WORKSPACE_VERSION_WILDCARD;
               } else {
@@ -368,7 +379,8 @@ export default ESLintUtils.RuleCreator(
       if (
         dependencySection === 'peerDependencies' &&
         peerDepsVersionStrategy === 'workspace' &&
-        !packageRange.startsWith('workspace:')
+        !packageRange.startsWith('workspace:') &&
+        workspacePackageNames.has(packageName)
       ) {
         context.report({
           node: node as any,

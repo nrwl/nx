@@ -2893,7 +2893,7 @@ describe('Dependency checks (eslint)', () => {
       `);
     });
 
-    it('should use workspace:* for peer dependencies when peerDepsVersionStrategy is workspace', () => {
+    it('should preserve installed version for external peer dependencies when peerDepsVersionStrategy is workspace', () => {
       const packageJson = {
         name: '@mycompany/liba',
         peerDependencies: {},
@@ -2946,13 +2946,84 @@ describe('Dependency checks (eslint)', () => {
         "{
           "name": "@mycompany/liba",
           "peerDependencies": {
-            "external1": "workspace:*"
+            "external1": "~16.1.2"
           }
         }"
       `);
     });
 
-    it('should report version mismatch for peer dependencies when peerDepsVersionStrategy is workspace', () => {
+    it('should use workspace:* for workspace-package peer dependencies when peerDepsVersionStrategy is workspace', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        peerDependencies: {},
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './libs/libb/package.json': JSON.stringify(
+          { name: '@mycompany/libb', version: '0.0.1' },
+          null,
+          2
+        ),
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        { peerDepsVersionStrategy: 'workspace' },
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: { build: {} },
+              },
+            },
+            libb: {
+              name: 'libb',
+              type: 'lib',
+              data: {
+                root: 'libs/libb',
+                metadata: { js: { packageName: '@mycompany/libb' } },
+                targets: { build: {} },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [{ source: 'liba', target: 'libb', type: 'static' }],
+          },
+        },
+        {
+          liba: [createFile(`libs/liba/src/main.ts`, ['libb'])],
+          libb: [createFile(`libs/libb/src/index.ts`)],
+        }
+      );
+
+      expect(failures.length).toEqual(1);
+
+      const content = JSON.stringify(packageJson, null, 2);
+      const result =
+        content.slice(0, failures[0].fix.range[0]) +
+        failures[0].fix.text +
+        content.slice(failures[0].fix.range[1]);
+
+      expect(result).toMatchInlineSnapshot(`
+        "{
+          "name": "@mycompany/liba",
+          "peerDependencies": {
+            "@mycompany/libb": "workspace:*"
+          }
+        }"
+      `);
+    });
+
+    it('should NOT rewrite external peer dependency ranges to workspace:* when peerDepsVersionStrategy is workspace', () => {
       const packageJson = {
         name: '@mycompany/liba',
         peerDependencies: {
@@ -2994,12 +3065,71 @@ describe('Dependency checks (eslint)', () => {
         }
       );
 
-      expect(failures.length).toEqual(1);
-      expect(failures[0].message).toMatchInlineSnapshot(
-        `"The version specifier does not contain the installed version of "external1" package: workspace:*."`
+      // external1 is already pinned to the installed version, so no failure
+      // — and crucially, the rule must not try to rewrite it to workspace:*
+      expect(failures.length).toEqual(0);
+    });
+
+    it('should rewrite workspace-package peer dependency ranges to workspace:* when peerDepsVersionStrategy is workspace', () => {
+      const packageJson = {
+        name: '@mycompany/liba',
+        peerDependencies: {
+          '@mycompany/libb': '^1.0.0',
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './libs/libb/package.json': JSON.stringify(
+          { name: '@mycompany/libb', version: '0.0.1' },
+          null,
+          2
+        ),
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        { peerDepsVersionStrategy: 'workspace' },
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: { build: {} },
+              },
+            },
+            libb: {
+              name: 'libb',
+              type: 'lib',
+              data: {
+                root: 'libs/libb',
+                metadata: { js: { packageName: '@mycompany/libb' } },
+                targets: { build: {} },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [{ source: 'liba', target: 'libb', type: 'static' }],
+          },
+        },
+        {
+          liba: [createFile(`libs/liba/src/main.ts`, ['libb'])],
+          libb: [createFile(`libs/libb/src/index.ts`)],
+        }
       );
 
-      // Apply fix
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toMatchInlineSnapshot(
+        `"The version specifier does not contain the installed version of "@mycompany/libb" package: workspace:*."`
+      );
+
       const content = JSON.stringify(packageJson, null, 2);
       const result =
         content.slice(0, failures[0].fix.range[0]) +
@@ -3010,7 +3140,7 @@ describe('Dependency checks (eslint)', () => {
         "{
           "name": "@mycompany/liba",
           "peerDependencies": {
-            "external1": "workspace:*"
+            "@mycompany/libb": "workspace:*"
           }
         }"
       `);
@@ -3280,7 +3410,7 @@ describe('Dependency checks (eslint)', () => {
       `);
     });
 
-    it('should use workspace:* for all peer dependencies when peerDepsVersionStrategy is workspace', () => {
+    it('should use workspace:* for workspace-package peer dependencies but keep installed ranges for external packages when peerDepsVersionStrategy is workspace', () => {
       const packageJson = {
         name: '@mycompany/liba',
         peerDependencies: {},
@@ -3319,6 +3449,7 @@ describe('Dependency checks (eslint)', () => {
               type: 'lib',
               data: {
                 root: 'libs/libb',
+                metadata: { js: { packageName: '@mycompany/libb' } },
                 targets: {
                   build: {},
                 },
@@ -3349,11 +3480,12 @@ describe('Dependency checks (eslint)', () => {
         failures[0].fix.text +
         content.slice(failures[0].fix.range[1]);
 
-      // Both workspace packages and external packages should use workspace:*
-      // for version synchronization in integrated monorepos
+      // Only the workspace package gets workspace:*; the external npm package
+      // keeps its installed range so pnpm install doesn't fail with
+      // ERR_PNPM_WORKSPACE_PKG_NOT_FOUND (#35318).
       const resultObj = JSON.parse(result);
       expect(resultObj.peerDependencies['@mycompany/libb']).toBe('workspace:*');
-      expect(resultObj.peerDependencies.external1).toBe('workspace:*');
+      expect(resultObj.peerDependencies.external1).toBe('~16.1.2');
     });
 
     it('should report version mismatch for workspace packages when peerDepsVersionStrategy is workspace', () => {
@@ -3397,6 +3529,7 @@ describe('Dependency checks (eslint)', () => {
               type: 'lib',
               data: {
                 root: 'libs/libb',
+                metadata: { js: { packageName: '@mycompany/libb' } },
                 targets: {
                   build: {},
                 },
