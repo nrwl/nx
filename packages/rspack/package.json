@@ -58,29 +58,15 @@
   },
   "devDependencies": {
     "nx": "workspace:*",
-    "@nx/nest": "workspace:*"
-  },
-  "peerDependencies": {
-    "@module-federation/enhanced": "^2.3.3",
-    "@module-federation/node": "^2.7.21",
     "@nx/cypress": "workspace:*",
     "@nx/docker": "workspace:*",
     "@nx/eslint": "workspace:*",
+    "@nx/nest": "workspace:*",
     "@nx/node": "workspace:*"
   },
-  "peerDependenciesMeta": {
-    "@nx/cypress": {
-      "optional": true
-    },
-    "@nx/docker": {
-      "optional": true
-    },
-    "@nx/eslint": {
-      "optional": true
-    },
-    "@nx/node": {
-      "optional": true
-    }
+  "peerDependencies": {
+    "@module-federation/enhanced": "^2.3.3",
+    "@module-federation/node": "^2.7.21"
   },
   "nx-migrations": {
     "migrations": "./migrations.json"

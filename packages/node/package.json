@@ -46,19 +46,9 @@
     "@nx/angular": "workspace:*",
     "@nx/cypress": "workspace:*",
     "@nx/module-federation": "workspace:*",
-    "@nx/playwright": "workspace:*"
-  },
-  "peerDependencies": {
     "@nx/nest": "workspace:*",
+    "@nx/playwright": "workspace:*",
     "@nx/webpack": "workspace:*"
-  },
-  "peerDependenciesMeta": {
-    "@nx/nest": {
-      "optional": true
-    },
-    "@nx/webpack": {
-      "optional": true
-    }
   },
   "publishConfig": {
     "access": "public"

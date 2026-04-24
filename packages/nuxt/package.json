@@ -54,20 +54,12 @@
     "semver": "^7.5.3"
   },
   "devDependencies": {
-    "nx": "workspace:*"
-  },
-  "peerDependencies": {
-    "@nuxt/schema": "^3.10.0 || ^4.0.0",
+    "nx": "workspace:*",
     "@nx/cypress": "workspace:*",
     "@nx/playwright": "workspace:*"
   },
-  "peerDependenciesMeta": {
-    "@nx/cypress": {
-      "optional": true
-    },
-    "@nx/playwright": {
-      "optional": true
-    }
+  "peerDependencies": {
+    "@nuxt/schema": "^3.10.0 || ^4.0.0"
   },
   "publishConfig": {
     "access": "public"

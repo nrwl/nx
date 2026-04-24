@@ -42,7 +42,6 @@
   "devDependencies": {
     "nx": "workspace:*"
   },
-  "peerDependencies": {},
   "publishConfig": {
     "access": "public"
   }

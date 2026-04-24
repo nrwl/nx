@@ -49,9 +49,7 @@
     "yargs-parser": "catalog:"
   },
   "devDependencies": {
-    "nx": "workspace:*"
-  },
-  "peerDependencies": {
+    "nx": "workspace:*",
     "@nx/angular": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/expo": "workspace:*",
@@ -65,52 +63,12 @@
     "@nx/react": "workspace:*",
     "@nx/react-native": "workspace:*",
     "@nx/vue": "workspace:*",
-    "@nx/web": "workspace:*",
+    "@nx/web": "workspace:*"
+  },
+  "peerDependencies": {
     "typescript": "catalog:typescript"
   },
   "peerDependenciesMeta": {
-    "@nx/angular": {
-      "optional": true
-    },
-    "@nx/eslint": {
-      "optional": true
-    },
-    "@nx/expo": {
-      "optional": true
-    },
-    "@nx/express": {
-      "optional": true
-    },
-    "@nx/jest": {
-      "optional": true
-    },
-    "@nx/js": {
-      "optional": true
-    },
-    "@nx/nest": {
-      "optional": true
-    },
-    "@nx/next": {
-      "optional": true
-    },
-    "@nx/node": {
-      "optional": true
-    },
-    "@nx/nuxt": {
-      "optional": true
-    },
-    "@nx/react": {
-      "optional": true
-    },
-    "@nx/react-native": {
-      "optional": true
-    },
-    "@nx/vue": {
-      "optional": true
-    },
-    "@nx/web": {
-      "optional": true
-    },
     "typescript": {
       "optional": true
     }

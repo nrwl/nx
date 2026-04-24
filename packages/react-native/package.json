@@ -40,29 +40,15 @@
     "tslib": "catalog:typescript"
   },
   "peerDependencies": {
-    "@nx/detox": "workspace:*",
-    "@nx/jest": "workspace:*",
-    "@nx/vite": "workspace:*",
-    "@nx/webpack": "workspace:*",
     "metro-config": ">= 0.82.0",
     "metro-resolver": ">= 0.82.0"
   },
-  "peerDependenciesMeta": {
-    "@nx/detox": {
-      "optional": true
-    },
-    "@nx/jest": {
-      "optional": true
-    },
-    "@nx/vite": {
-      "optional": true
-    },
-    "@nx/webpack": {
-      "optional": true
-    }
-  },
   "devDependencies": {
-    "nx": "workspace:*"
+    "nx": "workspace:*",
+    "@nx/detox": "workspace:*",
+    "@nx/jest": "workspace:*",
+    "@nx/vite": "workspace:*",
+    "@nx/webpack": "workspace:*"
   },
   "executors": "./executors.json",
   "ng-update": {
