@@ -4112,12 +4112,30 @@ importers:
 
   packages/web:
     dependencies:
+      '@nx/cypress':
+        specifier: workspace:*
+        version: link:../cypress
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
+      '@nx/eslint':
+        specifier: workspace:*
+        version: link:../eslint
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../jest
       '@nx/js':
         specifier: workspace:*
         version: link:../js
+      '@nx/playwright':
+        specifier: workspace:*
+        version: link:../playwright
+      '@nx/vite':
+        specifier: workspace:*
+        version: link:../vite
+      '@nx/webpack':
+        specifier: workspace:*
+        version: link:../webpack
       detect-port:
         specifier: ^1.5.1
         version: 1.6.1
@@ -4134,27 +4152,9 @@ importers:
         specifier: catalog:typescript
         version: 5.9.2
     devDependencies:
-      '@nx/cypress':
-        specifier: workspace:*
-        version: link:../cypress
-      '@nx/eslint':
-        specifier: workspace:*
-        version: link:../eslint
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../jest
-      '@nx/playwright':
-        specifier: workspace:*
-        version: link:../playwright
-      '@nx/vite':
-        specifier: workspace:*
-        version: link:../vite
       '@nx/vitest':
         specifier: workspace:*
         version: link:../vitest
-      '@nx/webpack':
-        specifier: workspace:*
-        version: link:../webpack
       nx:
         specifier: workspace:*
         version: link:../nx
