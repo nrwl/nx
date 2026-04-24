@@ -42,10 +42,12 @@ export interface VitePluginOptions {
   serveStaticTargetName?: string;
   typecheckTargetName?: string;
   /**
-   * The compiler to use for type-checking. Defaults to `tsc`.
-   * Set to `tsgo` to use the TypeScript Go compiler (`@typescript/native-preview`).
+   * The compiler to use for type-checking. When unset, defaults to `vue-tsc`
+   * for Vue projects (detected via the `vite:vue` plugin) and `tsc` otherwise.
+   * Set to `tsgo` to use the TypeScript Go compiler (`@typescript/native-preview`),
+   * or `vue-tsc` to force Vue-aware type-checking when auto-detection misses your setup.
    */
-  compiler?: string;
+  compiler?: 'tsc' | 'tsgo' | 'vue-tsc';
   watchDepsTargetName?: string;
   buildDepsTargetName?: string;
 
@@ -423,9 +425,17 @@ async function buildViteTargets(
     const hasVuePlugin = viteBuildConfig.plugins?.some(
       (p) => p.name === 'vite:vue'
     );
-    const typeCheckCommand = hasVuePlugin
-      ? 'vue-tsc'
-      : (options.compiler ?? 'tsc');
+    // Explicit `compiler` option wins over inference so users can override
+    // when their setup isn't detected (e.g. custom/non-standard Vue plugin).
+    const resolvedCompiler =
+      options.compiler ?? (hasVuePlugin ? 'vue-tsc' : 'tsc');
+    const typeCheckCommand = resolvedCompiler;
+    const typeCheckExternalDeps =
+      resolvedCompiler === 'tsgo'
+        ? ['@typescript/native-preview']
+        : resolvedCompiler === 'vue-tsc'
+          ? ['vue-tsc', 'typescript']
+          : ['typescript'];
 
     targets[options.typecheckTargetName] = {
       cache: true,
@@ -433,11 +443,7 @@ async function buildViteTargets(
         ...('production' in namedInputs
           ? ['production', '^production']
           : ['default', '^default']),
-        {
-          externalDependencies: hasVuePlugin
-            ? ['vue-tsc', 'typescript']
-            : ['typescript'],
-        },
+        { externalDependencies: typeCheckExternalDeps },
       ],
       command: isUsingTsSolutionSetup
         ? `${typeCheckCommand} --build --emitDeclarationOnly`
@@ -739,7 +745,6 @@ function normalizeOptions(options: VitePluginOptions): VitePluginOptions {
   options.testTargetName ??= 'test';
   options.serveStaticTargetName ??= 'serve-static';
   options.typecheckTargetName ??= 'typecheck';
-  options.compiler ??= 'tsc';
   return options;
 }
 
