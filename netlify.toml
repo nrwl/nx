@@ -36,6 +36,12 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "/robots.txt"
+  to = "https://master--nx-docs.netlify.app/docs/robots.txt"
+  status = 200
+  force = true
+
 # Non-docs paths land on docs root.
 [[redirects]]
   from = "/*"
