@@ -30,6 +30,11 @@ use tracing_subscriber::EnvFilter;
 /// so `rx.recv()` would never unblock on its own.
 const SHUTDOWN_POLL: Duration = Duration::from_secs(1);
 
+/// Upper bound on events drained per flush. Prevents a sustained event flood
+/// from holding the processing thread inside the drain loop indefinitely,
+/// which would delay shutdown.
+const MAX_DRAIN_PER_FLUSH: usize = 1024;
+
 /// Build the hardcoded ignore GlobSet used to check if new directories should be watched.
 #[cfg(not(target_os = "macos"))]
 fn build_ignore_glob_set() -> Arc<NxGlobSet> {
@@ -298,8 +303,6 @@ impl Watcher {
             // any wall-clock latency here.
             let mut accumulator: HashMap<PathBuf, WatchEventInternal> = HashMap::new();
 
-            // Helper to handle a single raw event: filter, register new dirs
-            // on Linux/Windows, transform, and merge into the accumulator.
             let mut ingest =
                 |event: notify::Event, accumulator: &mut HashMap<PathBuf, WatchEventInternal>| {
                     trace!(?event, "raw event");
@@ -350,13 +353,19 @@ impl Watcher {
                         // Drain anything else notify delivered in the same
                         // tick before flushing, so a burst of back-to-back
                         // events for the same file coalesces into one batch.
-                        while let Ok(next) = rx.try_recv() {
-                            match next {
-                                Ok(event) => ingest(event, &mut accumulator),
-                                Err(notify_err) => {
+                        // Cap the drain so a sustained event firestorm can't
+                        // hold this thread inside the inner loop and starve
+                        // the stop_flag check at the top of the outer loop.
+                        let mut drained = 0usize;
+                        while drained < MAX_DRAIN_PER_FLUSH {
+                            match rx.try_recv() {
+                                Ok(Ok(event)) => ingest(event, &mut accumulator),
+                                Ok(Err(notify_err)) => {
                                     tracing::warn!("notify error: {:?}", notify_err);
                                 }
+                                Err(_) => break,
                             }
+                            drained += 1;
                         }
 
                         if !accumulator.is_empty() {

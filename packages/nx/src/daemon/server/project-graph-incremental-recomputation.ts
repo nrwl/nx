@@ -140,28 +140,9 @@ export async function getCachedSerializedProjectGraphPromise(
 
     const errors = extractErrors(result.error);
 
-    // Write the daemon's current graph to disk to ensure disk cache stays
-    // in sync with the daemon's in-memory cache. This prevents issues where
-    // a non-daemon process writes a stale/errored cache that never gets
-    // overwritten by the daemon's valid graph.
-    //
-    // When the graph was just recomputed, always write so the new graph is
-    // persisted. When serving the same graph from memory, use
-    // writeCacheIfStale to skip the write unless an external process has
-    // modified the file since this process last wrote it.
-    if (
-      result.projectGraph &&
-      result.projectFileMapCache &&
-      result.sourceMaps
-    ) {
-      const writeFn = graphWasRecomputed ? writeCache : writeCacheIfStale;
-      writeFn(
-        result.projectFileMapCache,
-        result.projectGraph,
-        result.sourceMaps,
-        errors
-      );
-    }
+    // Keep disk in sync with our in-memory cache so non-daemon processes
+    // (and the daemon on next start) don't read stale or errored data.
+    persistProjectGraph(result, graphWasRecomputed);
 
     if (errors?.length) {
       cachedSerializedProjectGraphPromise = null;
@@ -246,20 +227,8 @@ function startAutoRecompute() {
 
         // Subprocesses that read the cache directly (e.g. eslint rules
         // calling readCachedProjectGraph) bypass the daemon socket, so
-        // they only see updates that hit disk. Persist now instead of
-        // waiting for the next client request to trigger a write.
-        if (
-          result.projectGraph &&
-          result.projectFileMapCache &&
-          result.sourceMaps
-        ) {
-          writeCache(
-            result.projectFileMapCache,
-            result.projectGraph,
-            result.sourceMaps,
-            extractErrors(result.error)
-          );
-        }
+        // they only see updates that hit disk.
+        persistProjectGraph(result, true);
       } while (
         collectedUpdatedFiles.size > 0 ||
         collectedDeletedFiles.size > 0
@@ -492,6 +461,29 @@ async function processFilesAndCreateAndSerializeProjectGraph(
 function extractErrors(error: SerializedProjectGraph['error']) {
   if (!error) return [];
   return error instanceof DaemonProjectGraphError ? error.errors : [error];
+}
+
+function persistProjectGraph(
+  result: SerializedProjectGraph,
+  freshlyRecomputed: boolean
+) {
+  if (
+    !result.projectGraph ||
+    !result.projectFileMapCache ||
+    !result.sourceMaps
+  ) {
+    return;
+  }
+  // Just-recomputed → always write so disk reflects new state. Serving
+  // cached → use writeCacheIfStale to skip the write when disk hasn't
+  // drifted since our last write.
+  const writeFn = freshlyRecomputed ? writeCache : writeCacheIfStale;
+  writeFn(
+    result.projectFileMapCache,
+    result.projectGraph,
+    result.sourceMaps,
+    extractErrors(result.error)
+  );
 }
 
 function copyFileData<T extends FileData>(d: T[]) {
