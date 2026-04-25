@@ -32,12 +32,13 @@
   },
   "dependencies": {
     "@babel/core": "^7.23.2",
+    "@nx/devkit": "workspace:*",
+    "@nx/js": "workspace:*",
     "@phenomnomnominal/tsquery": "catalog:typescript",
     "ajv": "^8.12.0",
     "autoprefixer": "^10.4.9",
     "babel-loader": "^9.1.2",
     "browserslist": "^4.26.0",
-    "picocolors": "catalog:",
     "copy-webpack-plugin": "^14.0.0",
     "css-loader": "^6.4.0",
     "css-minimizer-webpack-plugin": "^8.0.0",
@@ -48,6 +49,7 @@
     "loader-utils": "^2.0.3",
     "mini-css-extract-plugin": "~2.4.7",
     "parse5": "4.0.0",
+    "picocolors": "catalog:",
     "postcss": "^8.4.38",
     "postcss-import": "~14.1.0",
     "postcss-loader": "^8.2.1",
@@ -58,15 +60,13 @@
     "source-map-loader": "^5.0.0",
     "style-loader": "^3.3.0",
     "terser-webpack-plugin": "^5.3.3",
-    "ts-loader": "^9.3.1",
+    "ts-loader": "^9.5.7",
     "tsconfig-paths-webpack-plugin": "4.2.0",
     "tslib": "catalog:typescript",
     "webpack": "^5.101.3",
     "webpack-dev-server": "^5.2.1",
     "webpack-node-externals": "^3.0.0",
-    "webpack-subresource-integrity": "^5.1.0",
-    "@nx/devkit": "workspace:*",
-    "@nx/js": "workspace:*"
+    "webpack-subresource-integrity": "^5.1.0"
   },
   "devDependencies": {
     "nx": "workspace:*"
