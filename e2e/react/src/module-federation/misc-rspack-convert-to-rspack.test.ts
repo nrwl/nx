@@ -11,10 +11,7 @@ import {
 import { readPort, runCLI } from './utils';
 import { stripIndents } from 'nx/src/utils/strip-indents';
 
-// TODO: re-enable when @module-federation/enhanced supports webpack 5.106.0+
-// webpack 5.106.0 removed lib/util/create-schema-validation.js which @module-federation/enhanced@2.3.1 depends on
-// eslint-disable-next-line jest/no-disabled-tests
-describe.skip('React Rspack Module Federation Misc - Convert To Rspack', () => {
+describe('React Rspack Module Federation Misc - Convert To Rspack', () => {
   beforeAll(() => {
     process.env.NX_ADD_PLUGINS = 'false';
     newProject({ packages: ['@nx/react', '@nx/rspack'] });
