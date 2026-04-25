@@ -140,12 +140,28 @@ export async function getCachedSerializedProjectGraphPromise(
 
     const errors = extractErrors(result.error);
 
-    // Keep disk in sync with our in-memory cache so non-daemon processes
-    // (and the daemon on next start) don't read stale or errored data.
-    persistProjectGraph(
-      result,
-      graphWasRecomputed ? 'freshly-recomputed' : 'serving-cached'
-    );
+    // Write the daemon's current graph to disk to ensure disk cache stays
+    // in sync with the daemon's in-memory cache. This prevents issues where
+    // a non-daemon process writes a stale/errored cache that never gets
+    // overwritten by the daemon's valid graph.
+    //
+    // When the graph was just recomputed, always write so the new graph is
+    // persisted. When serving the same graph from memory, use
+    // writeCacheIfStale to skip the write unless an external process has
+    // modified the file since this process last wrote it.
+    if (
+      result.projectGraph &&
+      result.projectFileMapCache &&
+      result.sourceMaps
+    ) {
+      const writeFn = graphWasRecomputed ? writeCache : writeCacheIfStale;
+      writeFn(
+        result.projectFileMapCache,
+        result.projectGraph,
+        result.sourceMaps,
+        errors
+      );
+    }
 
     if (errors?.length) {
       cachedSerializedProjectGraphPromise = null;
@@ -231,7 +247,7 @@ function startAutoRecompute() {
         // Subprocesses that read the cache directly (e.g. eslint rules
         // calling readCachedProjectGraph) bypass the daemon socket, so
         // they only see updates that hit disk.
-        persistProjectGraph(result, 'freshly-recomputed');
+        persistProjectGraphToDisk(result);
       } while (
         collectedUpdatedFiles.size > 0 ||
         collectedDeletedFiles.size > 0
@@ -466,10 +482,7 @@ function extractErrors(error: SerializedProjectGraph['error']) {
   return error instanceof DaemonProjectGraphError ? error.errors : [error];
 }
 
-function persistProjectGraph(
-  result: SerializedProjectGraph,
-  mode: 'freshly-recomputed' | 'serving-cached'
-) {
+function persistProjectGraphToDisk(result: SerializedProjectGraph) {
   if (
     !result.projectGraph ||
     !result.projectFileMapCache ||
@@ -477,11 +490,7 @@ function persistProjectGraph(
   ) {
     return;
   }
-  // Just-recomputed → always write so disk reflects the new state.
-  // Serving cached → only write if disk has drifted since our last write.
-  const writeFn =
-    mode === 'freshly-recomputed' ? writeCache : writeCacheIfStale;
-  writeFn(
+  writeCache(
     result.projectFileMapCache,
     result.projectGraph,
     result.sourceMaps,
