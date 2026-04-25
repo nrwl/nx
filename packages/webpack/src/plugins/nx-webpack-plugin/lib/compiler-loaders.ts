@@ -44,6 +44,7 @@ export function createLoaderFromCompiler(
           transpileOnly: !hasPlugin,
           // https://github.com/TypeStrong/ts-loader/pull/685
           experimentalWatchApi: true,
+          projectReferences: true,
           getCustomTransformers: (program) => ({
             before: compilerPluginHooks.beforeHooks.map((hook) =>
               hook(program)
