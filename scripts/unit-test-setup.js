@@ -1,3 +1,15 @@
+const path = require('path');
+
+// Absolute paths to the physical source files inside `packages/nx`. Mocking
+// by the `nx/src/...` specifier instead routes through the pnpm
+// `node_modules/nx` symlink, which jest keys as a *different* module id
+// from the relative imports inside `packages/nx` — so the mock is never
+// applied on CI. Using the absolute physical path here guarantees both
+// resolution chains hit the same registry entry.
+const nxSrcPath = (relative) =>
+  path.resolve(__dirname, '..', 'packages/nx/src', relative);
+const realWorkspaceRoot = path.resolve(__dirname, '..');
+
 module.exports = () => {
   /**
    * When the daemon is enabled during unit tests,
@@ -43,14 +55,13 @@ module.exports = () => {
 
   /**
    * Code inside `packages/nx` imports graph builders via relative paths
-   * (`../../project-graph/project-graph`), which skip the `@nx/devkit` mock
-   * above. Mock the source file directly so those callers also get an empty
-   * graph. Jest keys mocks by the resolved absolute path, so the relative
-   * imports resolve to the same module id as `nx/src/project-graph/project-graph`
-   * and pick up this mock.
+   * (`../../project-graph/project-graph`), which skip the `@nx/devkit`
+   * mock above. Mock the source file at its absolute physical path so
+   * those callers also get an empty graph.
    */
-  jest.doMock('nx/src/project-graph/project-graph', () => {
-    const actual = jest.requireActual('nx/src/project-graph/project-graph');
+  const projectGraphPath = nxSrcPath('project-graph/project-graph');
+  jest.doMock(projectGraphPath, () => {
+    const actual = jest.requireActual(projectGraphPath);
     return {
       __esModule: true,
       ...actual,
@@ -71,34 +82,31 @@ module.exports = () => {
    * that legitimately exercise plugin isolation against a `TempFs` root
    * (e.g. `getOnlyDefaultPlugins(tempFs.tempDir)`) pass through unchanged.
    */
-  const realWorkspaceRoot = require('path').resolve(__dirname, '..');
-  jest.doMock(
-    'nx/src/project-graph/plugins/isolation/load-isolated-plugin',
-    () => {
-      const actual = jest.requireActual(
-        'nx/src/project-graph/plugins/isolation/load-isolated-plugin'
-      );
-      return {
-        __esModule: true,
-        ...actual,
-        loadIsolatedNxPlugin: jest.fn((plugin, root, index) => {
-          if (root === realWorkspaceRoot) {
-            throw new Error(
-              '[unit-test-setup] loadIsolatedNxPlugin was called with the real ' +
-                'workspace root during a unit test. This spawns a real plugin ' +
-                'worker that scans the entire monorepo and causes sandbox ' +
-                'violations. Something reached real project-graph computation ' +
-                'without hitting the @nx/devkit or nx/src/project-graph mocks. ' +
-                'Check the stack trace for the unmocked caller and either mock ' +
-                'it in the test, point the call at a TempFs root, or extend ' +
-                'scripts/unit-test-setup.js.'
-            );
-          }
-          return actual.loadIsolatedNxPlugin(plugin, root, index);
-        }),
-      };
-    }
+  const loadIsolatedPath = nxSrcPath(
+    'project-graph/plugins/isolation/load-isolated-plugin'
   );
+  jest.doMock(loadIsolatedPath, () => {
+    const actual = jest.requireActual(loadIsolatedPath);
+    return {
+      __esModule: true,
+      ...actual,
+      loadIsolatedNxPlugin: jest.fn((plugin, root, index) => {
+        if (root === realWorkspaceRoot) {
+          throw new Error(
+            '[unit-test-setup] loadIsolatedNxPlugin was called with the real ' +
+              'workspace root during a unit test. This spawns a real plugin ' +
+              'worker that scans the entire monorepo and causes sandbox ' +
+              'violations. Something reached real project-graph computation ' +
+              'without hitting the @nx/devkit or project-graph mocks. Check ' +
+              'the stack trace for the unmocked caller and either mock it in ' +
+              'the test, point the call at a TempFs root, or extend ' +
+              'scripts/unit-test-setup.js.'
+          );
+        }
+        return actual.loadIsolatedNxPlugin(plugin, root, index);
+      }),
+    };
+  });
 
   /**
    * `isUsingTsSolutionSetup()` falls back to `new FsTree(workspaceRoot, false)`
