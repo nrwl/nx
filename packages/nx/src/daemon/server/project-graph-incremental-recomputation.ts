@@ -241,13 +241,38 @@ function startAutoRecompute() {
           processFilesAndCreateAndSerializeProjectGraph(
             await getPluginsSeparated()
           );
-        const { projectGraph, sourceMaps, error } =
-          await cachedSerializedProjectGraphPromise;
+        const result = await cachedSerializedProjectGraphPromise;
         notifyProjectGraphRecomputationListeners(
-          projectGraph,
-          sourceMaps,
-          error
+          result.projectGraph,
+          result.sourceMaps,
+          result.error
         );
+
+        // Persist to disk now. Subprocesses that read the cache directly
+        // (e.g. eslint rules calling readCachedProjectGraph) bypass the
+        // daemon socket entirely, so they only see updates that hit disk.
+        // Without this write the in-memory recompute completes silently
+        // and disk stays stale until the next client request triggers a
+        // writeCache from getCachedSerializedProjectGraphPromise.
+        if (
+          result.projectGraph &&
+          result.projectFileMapCache &&
+          result.sourceMaps
+        ) {
+          const errors = result.error
+            ? result.error instanceof DaemonProjectGraphError
+              ? result.error.errors
+              : [result.error]
+            : [];
+          if (errors.length === 0) {
+            writeCache(
+              result.projectFileMapCache,
+              result.projectGraph,
+              result.sourceMaps,
+              errors
+            );
+          }
+        }
       } while (
         collectedUpdatedFiles.size > 0 ||
         collectedDeletedFiles.size > 0
