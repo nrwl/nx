@@ -142,7 +142,10 @@ export async function getCachedSerializedProjectGraphPromise(
 
     // Keep disk in sync with our in-memory cache so non-daemon processes
     // (and the daemon on next start) don't read stale or errored data.
-    persistProjectGraph(result, graphWasRecomputed);
+    persistProjectGraph(
+      result,
+      graphWasRecomputed ? 'freshly-recomputed' : 'serving-cached'
+    );
 
     if (errors?.length) {
       cachedSerializedProjectGraphPromise = null;
@@ -228,7 +231,7 @@ function startAutoRecompute() {
         // Subprocesses that read the cache directly (e.g. eslint rules
         // calling readCachedProjectGraph) bypass the daemon socket, so
         // they only see updates that hit disk.
-        persistProjectGraph(result, true);
+        persistProjectGraph(result, 'freshly-recomputed');
       } while (
         collectedUpdatedFiles.size > 0 ||
         collectedDeletedFiles.size > 0
@@ -465,7 +468,7 @@ function extractErrors(error: SerializedProjectGraph['error']) {
 
 function persistProjectGraph(
   result: SerializedProjectGraph,
-  freshlyRecomputed: boolean
+  mode: 'freshly-recomputed' | 'serving-cached'
 ) {
   if (
     !result.projectGraph ||
@@ -474,10 +477,10 @@ function persistProjectGraph(
   ) {
     return;
   }
-  // Just-recomputed → always write so disk reflects new state. Serving
-  // cached → use writeCacheIfStale to skip the write when disk hasn't
-  // drifted since our last write.
-  const writeFn = freshlyRecomputed ? writeCache : writeCacheIfStale;
+  // Just-recomputed → always write so disk reflects the new state.
+  // Serving cached → only write if disk has drifted since our last write.
+  const writeFn =
+    mode === 'freshly-recomputed' ? writeCache : writeCacheIfStale;
   writeFn(
     result.projectFileMapCache,
     result.projectGraph,
