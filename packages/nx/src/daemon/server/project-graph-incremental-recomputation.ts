@@ -138,11 +138,7 @@ export async function getCachedSerializedProjectGraphPromise(
       cachedSerializedProjectGraphPromise !== previousPromise;
     const result = await cachedSerializedProjectGraphPromise;
 
-    const errors = result.error
-      ? result.error instanceof DaemonProjectGraphError
-        ? result.error.errors
-        : [result.error]
-      : [];
+    const errors = extractErrors(result.error);
 
     // Write the daemon's current graph to disk to ensure disk cache stays
     // in sync with the daemon's in-memory cache. This prevents issues where
@@ -248,30 +244,21 @@ function startAutoRecompute() {
           result.error
         );
 
-        // Persist to disk now. Subprocesses that read the cache directly
-        // (e.g. eslint rules calling readCachedProjectGraph) bypass the
-        // daemon socket entirely, so they only see updates that hit disk.
-        // Without this write the in-memory recompute completes silently
-        // and disk stays stale until the next client request triggers a
-        // writeCache from getCachedSerializedProjectGraphPromise.
+        // Subprocesses that read the cache directly (e.g. eslint rules
+        // calling readCachedProjectGraph) bypass the daemon socket, so
+        // they only see updates that hit disk. Persist now instead of
+        // waiting for the next client request to trigger a write.
         if (
           result.projectGraph &&
           result.projectFileMapCache &&
           result.sourceMaps
         ) {
-          const errors = result.error
-            ? result.error instanceof DaemonProjectGraphError
-              ? result.error.errors
-              : [result.error]
-            : [];
-          if (errors.length === 0) {
-            writeCache(
-              result.projectFileMapCache,
-              result.projectGraph,
-              result.sourceMaps,
-              errors
-            );
-          }
+          writeCache(
+            result.projectFileMapCache,
+            result.projectGraph,
+            result.sourceMaps,
+            extractErrors(result.error)
+          );
         }
       } while (
         collectedUpdatedFiles.size > 0 ||
@@ -500,6 +487,11 @@ async function processFilesAndCreateAndSerializeProjectGraph(
       sourceMaps: null,
     };
   }
+}
+
+function extractErrors(error: SerializedProjectGraph['error']) {
+  if (!error) return [];
+  return error instanceof DaemonProjectGraphError ? error.errors : [error];
 }
 
 function copyFileData<T extends FileData>(d: T[]) {
