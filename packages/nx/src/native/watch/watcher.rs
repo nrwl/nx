@@ -25,15 +25,20 @@ use std::path::PathBuf;
 use tracing::trace;
 use tracing_subscriber::EnvFilter;
 
+/// Trailing-edge debounce window. The processing thread flushes accumulated
+/// events after this much silence on the event channel. Resets on every event
+/// so a burst of writes with gaps shorter than this coalesces into one flush.
+const IDLE_WINDOW: Duration = Duration::from_millis(100);
+
+/// Starvation cap. If events keep arriving faster than `IDLE_WINDOW`, the
+/// debounce would never fire. This is the hardest the flush can be deferred
+/// from the start of a burst, after which we flush anyway.
+const MAX_WAIT: Duration = Duration::from_millis(500);
+
 /// How often the processing thread wakes up while idle, so that a pending
 /// `stop_flag` is observed promptly. The watcher's tx is owned by this thread,
 /// so `rx.recv()` would never unblock on its own.
 const SHUTDOWN_POLL: Duration = Duration::from_secs(1);
-
-/// Upper bound on events drained per flush. Prevents a sustained event flood
-/// from holding the processing thread inside the drain loop indefinitely,
-/// which would delay shutdown.
-const MAX_DRAIN_PER_FLUSH: usize = 1024;
 
 /// Build the hardcoded ignore GlobSet used to check if new directories should be watched.
 #[cfg(not(target_os = "macos"))]
@@ -295,47 +300,13 @@ impl Watcher {
                 origin_path.push(MAIN_SEPARATOR);
             }
 
-            // Per-flush accumulator: merges same-path events picked up in a
-            // single drain (e.g. notify's Modify(Metadata) + Modify(Data) for
-            // one write) so we don't emit duplicates, but is flushed as soon
-            // as the channel is drained. The JS daemon is responsible for
-            // batching heavier work — the Rust side has no business adding
-            // any wall-clock latency here.
+            // Accumulator: events received since the last flush, merged by path.
+            // `burst_start` is the timestamp of the first event in the current
+            // burst; `flush_deadline` is the next wake-up (min of the idle
+            // deadline and the max-wait cap). Both reset together on flush.
             let mut accumulator: HashMap<PathBuf, WatchEventInternal> = HashMap::new();
-
-            let mut ingest =
-                |event: notify::Event, accumulator: &mut HashMap<PathBuf, WatchEventInternal>| {
-                    trace!(?event, "raw event");
-                    if !filterer.check_event(&event) {
-                        return;
-                    }
-
-                    #[cfg(not(target_os = "macos"))]
-                    {
-                        let new_dirs = new_directories_from_event(&event, &ignore_globs);
-                        if !new_dirs.is_empty() {
-                            trace!(
-                                count = new_dirs.len(),
-                                "registering new directory watches synchronously"
-                            );
-                            register_watches(&watcher_for_thread, &new_dirs);
-                            let nested =
-                                walk_new_dirs_into_accumulator(&new_dirs, &origin, accumulator);
-                            register_watches(&watcher_for_thread, &nested);
-                        }
-                    }
-
-                    match transform_event_to_watch_events(&event, &origin_path) {
-                        Ok(events) => {
-                            for e in events {
-                                merge_event(accumulator, e);
-                            }
-                        }
-                        Err(e) => {
-                            tracing::warn!(?e, "event transform failed");
-                        }
-                    }
-                };
+            let mut burst_start: Option<Instant> = None;
+            let mut flush_deadline: Option<Instant> = None;
 
             loop {
                 if stop_flag.load(Ordering::Relaxed) {
@@ -343,46 +314,84 @@ impl Watcher {
                     break;
                 }
 
-                // Block for the next event, polling periodically so stop_flag
-                // is observed — we own the tx, so a bare recv() would never
-                // unblock on its own.
-                match rx.recv_timeout(SHUTDOWN_POLL) {
+                // When a burst is in flight, wait until its flush deadline.
+                // When idle, poll briefly so stop_flag is observed promptly —
+                // blocking forever on rx.recv() would prevent shutdown since
+                // the watcher (and its tx) is owned by this thread.
+                let wait = match flush_deadline {
+                    Some(d) => d.saturating_duration_since(Instant::now()),
+                    None => SHUTDOWN_POLL,
+                };
+
+                match rx.recv_timeout(wait) {
                     Ok(Ok(event)) => {
-                        ingest(event, &mut accumulator);
+                        trace!(?event, "raw event");
 
-                        // Drain anything else notify delivered in the same
-                        // tick before flushing, so a burst of back-to-back
-                        // events for the same file coalesces into one batch.
-                        // Cap the drain so a sustained event firestorm can't
-                        // hold this thread inside the inner loop and starve
-                        // the stop_flag check at the top of the outer loop.
-                        let mut drained = 0usize;
-                        while drained < MAX_DRAIN_PER_FLUSH {
-                            match rx.try_recv() {
-                                Ok(Ok(event)) => ingest(event, &mut accumulator),
-                                Ok(Err(notify_err)) => {
-                                    tracing::warn!("notify error: {:?}", notify_err);
-                                }
-                                Err(_) => break,
+                        // Filter through gitignore/nxignore.
+                        if !filterer.check_event(&event) {
+                            continue;
+                        }
+
+                        // On Linux/Windows, register watches for newly-created
+                        // directories *synchronously* before doing anything else.
+                        // The watch() call must return before any files land in
+                        // the new directory, otherwise inotify misses them and
+                        // the re-walk below would be racing a moving target.
+                        #[cfg(not(target_os = "macos"))]
+                        {
+                            let new_dirs = new_directories_from_event(&event, &ignore_globs);
+                            if !new_dirs.is_empty() {
+                                trace!(
+                                    count = new_dirs.len(),
+                                    "registering new directory watches synchronously"
+                                );
+                                register_watches(&watcher_for_thread, &new_dirs);
+                                // Walk now that inotify is watching. Files found
+                                // here were written before our watch() call; any
+                                // nested subdirs discovered are registered next.
+                                let nested = walk_new_dirs_into_accumulator(
+                                    &new_dirs,
+                                    &origin,
+                                    &mut accumulator,
+                                );
+                                register_watches(&watcher_for_thread, &nested);
                             }
-                            drained += 1;
                         }
 
-                        if !accumulator.is_empty() {
-                            let watch_events: Vec<WatchEvent> =
-                                accumulator.values().map(|e| e.into()).collect();
-                            trace!(count = watch_events.len(), "flushing events");
-                            callback_tsfn
-                                .call(Ok(watch_events), ThreadsafeFunctionCallMode::NonBlocking);
-                            accumulator.clear();
+                        // Transform and merge into the accumulator.
+                        match transform_event_to_watch_events(&event, &origin_path) {
+                            Ok(events) => {
+                                for e in events {
+                                    merge_event(&mut accumulator, e);
+                                }
+                            }
+                            Err(e) => {
+                                tracing::warn!(?e, "event transform failed");
+                            }
                         }
+
+                        // Stamp burst_start on the burst's first event; then push
+                        // flush_deadline forward, but never past the max-wait cap.
+                        let now = Instant::now();
+                        let bs = *burst_start.get_or_insert(now);
+                        flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
                     }
                     Ok(Err(notify_err)) => {
                         tracing::warn!("notify error: {:?}", notify_err);
                     }
                     Err(RecvTimeoutError::Timeout) => {
-                        // No events in the shutdown-poll window; loop back
-                        // around so stop_flag is re-checked.
+                        // Either the idle window elapsed or the max-wait cap
+                        // hit — flush whatever we accumulated and reset.
+                        if !accumulator.is_empty() {
+                            let watch_events: Vec<WatchEvent> =
+                                accumulator.values().map(|e| e.into()).collect();
+                            trace!(count = watch_events.len(), "flushing accumulated events");
+                            callback_tsfn
+                                .call(Ok(watch_events), ThreadsafeFunctionCallMode::NonBlocking);
+                            accumulator.clear();
+                        }
+                        burst_start = None;
+                        flush_deadline = None;
                     }
                     Err(RecvTimeoutError::Disconnected) => {
                         trace!("notify channel disconnected, exiting");
