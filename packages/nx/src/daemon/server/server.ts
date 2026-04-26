@@ -24,6 +24,7 @@ import {
   isHandleResetConfigureAiAgentsStatusMessage,
   RESET_CONFIGURE_AI_AGENTS_STATUS,
 } from '../message-types/configure-ai-agents';
+import { applyDaemonEnvFromClient } from '../client/daemon-environment';
 import { isDaemonMessage } from '../message-types/daemon-message';
 import {
   FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
@@ -253,20 +254,14 @@ async function handleMessage(socket: Socket, data: string) {
   }
   serverLogger.log(`Received ${mode} message of type ${payload.type}`);
 
-  if (isDaemonMessage(payload) && payload.env) {
-    let shouldRecomputeGraph = false;
-    for (const key in payload.env) {
-      if (process.env[key] !== payload.env[key]) {
-        serverLogger.log(`Refreshing env var ${key} from client connection.`);
-        process.env[key] = payload.env[key];
-        shouldRecomputeGraph = true;
-      }
-    }
-    if (shouldRecomputeGraph) {
-      serverLogger.log('Graph recompute necessary due to env variable refresh');
-      forwardEnvToPluginWorkers(payload.env);
-      invalidateGraphCache();
-    }
+  if (
+    isDaemonMessage(payload) &&
+    payload.env &&
+    applyDaemonEnvFromClient(payload.env)
+  ) {
+    serverLogger.log('Graph recompute necessary due to env variable refresh');
+    forwardEnvToPluginWorkers(payload.env);
+    invalidateGraphCache();
   }
 
   if (payload.type === 'PING') {

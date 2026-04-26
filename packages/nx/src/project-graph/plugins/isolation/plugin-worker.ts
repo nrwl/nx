@@ -15,6 +15,7 @@ import { setPluginWorkerHostSocket } from './worker-streaming';
 import { unlinkSync } from 'fs';
 import { createServer } from 'net';
 import { startAnalytics } from '../../../analytics';
+import { applyDaemonEnvFromClient } from '../../../daemon/client/daemon-environment';
 import '../../../utils/perf-logging';
 
 type Environment = Pick<
@@ -149,9 +150,7 @@ const server = createServer((socket) => {
           withErrorHandling(() => plugin.postTasksExecution?.(context)),
         setWorkerEnv: (env) =>
           withErrorHandling(() => {
-            for (const envKey in env) {
-              process.env[envKey] = env[envKey];
-            }
+            applyDaemonEnvFromClient(env);
           }),
       });
     })
