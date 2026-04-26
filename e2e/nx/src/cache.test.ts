@@ -215,9 +215,7 @@ describe('cache', () => {
     // outputs-hash check fails and nx restores from cache → "[local cache]"
     // rather than the "existing outputs match" no-op path.
     const rerunWithNewUnrelatedFile = runCLI(`build ${mylib}`);
-    expect(rerunWithNewUnrelatedFile).toContain(
-      'existing outputs match the cache'
-    );
+    expect(rerunWithNewUnrelatedFile).toContain('local cache');
     const outputsAfterAddingUntouchedFileAndRerunning = [
       ...listFiles('dist/apps'),
       ...listFiles('dist/.next').map((f) => `.next/${f}`),
