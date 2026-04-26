@@ -32,7 +32,7 @@ describe('Maven Batch Mode', () => {
 
   it('should build multiple projects with run-many in batch mode', () => {
     const output = runBatchCLI('run-many -t verify', { verbose: true });
-    expect(output).toContain('BUILD SUCCESS');
+    expect(output).toContain('Successfully ran target verify');
     checkFilesExist(
       'app/target/app-1.0.0-SNAPSHOT.jar',
       'lib/target/lib-1.0.0-SNAPSHOT.jar',
@@ -79,6 +79,6 @@ class AppApplicationTests {
     // clean targets are fast and run in parallel, which previously caused
     // workers to exit prematurely when the task queue was momentarily empty.
     const output = runBatchCLI('run-many -t clean', { verbose: true });
-    expect(output).toContain('BUILD SUCCESS');
+    expect(output).toContain('Successfully ran target clean');
   });
 });
