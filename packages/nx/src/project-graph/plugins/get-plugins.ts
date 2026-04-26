@@ -68,6 +68,13 @@ export async function getPluginsSeparated(
     return cachedSeparatedPlugins;
   }
 
+  // Plugins config changed (e.g. `nx add @nx/maven` updated nx.json). The
+  // cached SeparatedPlugins is invalidated by the early-return above, but
+  // pendingPluginsPromise — the in-flight load — would otherwise be reused
+  // by the `??=` below and serve the previous plugin set forever. Tear
+  // down the old workers and force a fresh load.
+  cleanupSpecifiedPlugins?.();
+  pendingPluginsPromise = undefined;
   currentPluginsConfigurationHash = pluginsConfigurationHash;
   const results = await Promise.allSettled([
     getOnlyDefaultPlugins(root),

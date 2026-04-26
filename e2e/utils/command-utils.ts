@@ -249,6 +249,8 @@ export function runCommandAsync(
         cwd: opts.cwd || tmpProjPath(),
         env: {
           CI: 'true',
+          // Force daemon on under CI (matches runCLI's default).
+          NX_DAEMON: 'true',
           // Use new versioning by default in e2e tests
           NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
           ...(opts.env || getStrippedEnvironmentVariables()),
@@ -429,6 +431,10 @@ export function runCLI(
       cwd: opts.cwd || tmpProjPath(),
       env: {
         CI: 'true',
+        // Daemon is normally disabled under CI; force it on so e2e tests
+        // exercise the same daemon-driven graph + watcher path that real
+        // users hit, without each test having to opt in via env override.
+        NX_DAEMON: 'true',
         // Use new versioning by default in e2e tests
         NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
         ...getStrippedEnvironmentVariables(),

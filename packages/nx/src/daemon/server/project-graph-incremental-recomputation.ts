@@ -50,6 +50,7 @@ import {
 import { notifyFileChangeListeners } from './file-watching/file-change-events';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
+import { flushPendingWorkspaceChanges } from './watcher';
 import { serverLogger } from '../logger';
 
 interface SerializedProjectGraph {
@@ -105,6 +106,13 @@ export async function getCachedSerializedProjectGraphPromise(
     subscribeClientToTopic(socket, ProgressTopics.GraphConstruction);
   }
   try {
+    // Drain anything the native watcher has buffered before deciding
+    // whether the cached graph is fresh. Without this, a file change
+    // that already arrived in the watcher's accumulator but hasn't
+    // flushed past IDLE_WINDOW yet would be invisible to the staleness
+    // check below — the daemon would return a stale graph.
+    await flushPendingWorkspaceChanges();
+
     // If an auto-recompute is in flight, let it finish. It already writes
     // `cachedSerializedProjectGraphPromise` and notifies listeners, so after
     // awaiting we just fall through to serve its result.

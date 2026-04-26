@@ -216,6 +216,17 @@ export declare class Watcher {
   constructor(origin: string, additionalGlobs?: Array<string> | undefined | null, useIgnore?: boolean | undefined | null)
   watch(callbackTsfn: (err: string | null, events: WatchEvent[]) => void): void
   stop(): Promise<void>
+  /**
+   * Synchronously drain any events the watcher has accumulated and
+   * return them. Used by the daemon before serving a cached project
+   * graph so it can absorb everything the watcher has seen since the
+   * last flush — closing the IDLE_WINDOW debounce race where the
+   * daemon would otherwise serve a stale graph.
+   *
+   * Returns an empty vec if the watcher hasn't started yet, the
+   * processing thread has exited, or no events are buffered.
+   */
+  forceFlushPending(): Array<WatchEvent>
 }
 
 export declare class WorkspaceContext {

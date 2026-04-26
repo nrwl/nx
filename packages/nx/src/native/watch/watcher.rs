@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use std::path::MAIN_SEPARATOR;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::mpsc::RecvTimeoutError;
+use std::sync::mpsc::{RecvTimeoutError, Sender, SyncSender};
 use std::time::{Duration, Instant};
 
 #[cfg(not(target_os = "macos"))]
@@ -168,6 +168,26 @@ fn merge_event(
 
 type NotifyResult = std::result::Result<notify::Event, notify::Error>;
 
+/// Messages the processing thread receives. Notify events flow in via the
+/// adapter below; ForceFlush is sent from JS to drain the accumulator
+/// synchronously and bypass the idle-window debounce.
+enum ProcMsg {
+    Notify(NotifyResult),
+    ForceFlush(SyncSender<Vec<WatchEvent>>),
+}
+
+/// Adapter implementing `notify::EventHandler` so notify events land in our
+/// combined ProcMsg channel alongside ForceFlush requests.
+struct NotifyForwarder {
+    tx: Sender<ProcMsg>,
+}
+
+impl notify::EventHandler for NotifyForwarder {
+    fn handle_event(&mut self, event: NotifyResult) {
+        let _ = self.tx.send(ProcMsg::Notify(event));
+    }
+}
+
 #[napi]
 pub struct Watcher {
     pub origin: String,
@@ -179,6 +199,9 @@ pub struct Watcher {
     // so without this field the closure wouldn't capture it and the watcher
     // would drop the moment watch() returned, severing the notify channel.
     notify_watcher: Option<Arc<Mutex<notify::RecommendedWatcher>>>,
+    // Sender to the processing thread. Used by force_flush_pending() to
+    // request a synchronous drain.
+    proc_tx: Option<Sender<ProcMsg>>,
 }
 
 #[napi]
@@ -222,6 +245,7 @@ impl Watcher {
             additional_globs: globs,
             use_ignore: use_ignore.unwrap_or(true),
             notify_watcher: None,
+            proc_tx: None,
         }
     }
 
@@ -250,11 +274,13 @@ impl Watcher {
             })?;
         let filterer = Arc::new(filterer);
 
-        // Channel for notify to send events to our processing thread.
-        let (tx, rx) = std::sync::mpsc::channel::<NotifyResult>();
+        // Combined channel: notify events flow in via NotifyForwarder,
+        // ForceFlush requests come from JS via force_flush_pending().
+        let (tx, rx) = std::sync::mpsc::channel::<ProcMsg>();
+        self.proc_tx = Some(tx.clone());
 
         // Create the notify watcher. Events are sent through the channel.
-        let mut watcher = notify::recommended_watcher(tx).map_err(|e| {
+        let mut watcher = notify::recommended_watcher(NotifyForwarder { tx }).map_err(|e| {
             Error::new(
                 Status::GenericFailure,
                 format!("Failed to create file watcher: {e}"),
@@ -323,20 +349,24 @@ impl Watcher {
                     None => SHUTDOWN_POLL,
                 };
 
-                match rx.recv_timeout(wait) {
-                    Ok(Ok(event)) => {
+                let mut ingest =
+                    |event: NotifyResult,
+                     accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
+                     burst_start: &mut Option<Instant>,
+                     flush_deadline: &mut Option<Instant>| {
+                        let event = match event {
+                            Ok(e) => e,
+                            Err(notify_err) => {
+                                tracing::warn!("notify error: {:?}", notify_err);
+                                return;
+                            }
+                        };
                         trace!(?event, "raw event");
 
-                        // Filter through gitignore/nxignore.
                         if !filterer.check_event(&event) {
-                            continue;
+                            return;
                         }
 
-                        // On Linux/Windows, register watches for newly-created
-                        // directories *synchronously* before doing anything else.
-                        // The watch() call must return before any files land in
-                        // the new directory, otherwise inotify misses them and
-                        // the re-walk below would be racing a moving target.
                         #[cfg(not(target_os = "macos"))]
                         {
                             let new_dirs = new_directories_from_event(&event, &ignore_globs);
@@ -346,23 +376,16 @@ impl Watcher {
                                     "registering new directory watches synchronously"
                                 );
                                 register_watches(&watcher_for_thread, &new_dirs);
-                                // Walk now that inotify is watching. Files found
-                                // here were written before our watch() call; any
-                                // nested subdirs discovered are registered next.
-                                let nested = walk_new_dirs_into_accumulator(
-                                    &new_dirs,
-                                    &origin,
-                                    &mut accumulator,
-                                );
+                                let nested =
+                                    walk_new_dirs_into_accumulator(&new_dirs, &origin, accumulator);
                                 register_watches(&watcher_for_thread, &nested);
                             }
                         }
 
-                        // Transform and merge into the accumulator.
                         match transform_event_to_watch_events(&event, &origin_path) {
                             Ok(events) => {
                                 for e in events {
-                                    merge_event(&mut accumulator, e);
+                                    merge_event(accumulator, e);
                                 }
                             }
                             Err(e) => {
@@ -370,14 +393,47 @@ impl Watcher {
                             }
                         }
 
-                        // Stamp burst_start on the burst's first event; then push
-                        // flush_deadline forward, but never past the max-wait cap.
                         let now = Instant::now();
                         let bs = *burst_start.get_or_insert(now);
-                        flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
+                        *flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
+                    };
+
+                match rx.recv_timeout(wait) {
+                    Ok(ProcMsg::Notify(event)) => {
+                        ingest(
+                            event,
+                            &mut accumulator,
+                            &mut burst_start,
+                            &mut flush_deadline,
+                        );
                     }
-                    Ok(Err(notify_err)) => {
-                        tracing::warn!("notify error: {:?}", notify_err);
+                    Ok(ProcMsg::ForceFlush(reply)) => {
+                        // Drain any notify events the channel has buffered so
+                        // the reply reflects everything submitted up to this
+                        // request, then take the accumulator and respond.
+                        while let Ok(msg) = rx.try_recv() {
+                            match msg {
+                                ProcMsg::Notify(event) => ingest(
+                                    event,
+                                    &mut accumulator,
+                                    &mut burst_start,
+                                    &mut flush_deadline,
+                                ),
+                                ProcMsg::ForceFlush(_) => {
+                                    // Another flush request snuck in; one
+                                    // synchronous reply will satisfy us all
+                                    // since the accumulator is the source of
+                                    // truth — drop the extras.
+                                }
+                            }
+                        }
+                        let watch_events: Vec<WatchEvent> =
+                            accumulator.values().map(|e| e.into()).collect();
+                        trace!(count = watch_events.len(), "force-flushing events");
+                        accumulator.clear();
+                        burst_start = None;
+                        flush_deadline = None;
+                        let _ = reply.send(watch_events);
                     }
                     Err(RecvTimeoutError::Timeout) => {
                         // Either the idle window elapsed or the max-wait cap
@@ -412,5 +468,29 @@ impl Watcher {
         trace!("stopping the watch process");
         self.stop_flag.store(true, Ordering::Release);
         Ok(())
+    }
+
+    /// Synchronously drain any events the watcher has accumulated and
+    /// return them. Used by the daemon before serving a cached project
+    /// graph so it can absorb everything the watcher has seen since the
+    /// last flush — closing the IDLE_WINDOW debounce race where the
+    /// daemon would otherwise serve a stale graph.
+    ///
+    /// Returns an empty vec if the watcher hasn't started yet, the
+    /// processing thread has exited, or no events are buffered.
+    #[napi]
+    pub fn force_flush_pending(&self) -> Vec<WatchEvent> {
+        let Some(tx) = self.proc_tx.as_ref() else {
+            return Vec::new();
+        };
+        let (reply_tx, reply_rx) = std::sync::mpsc::sync_channel::<Vec<WatchEvent>>(1);
+        if tx.send(ProcMsg::ForceFlush(reply_tx)).is_err() {
+            return Vec::new();
+        }
+        // Bound the wait so a wedged processing thread can't hang the
+        // daemon. The round-trip is normally sub-millisecond.
+        reply_rx
+            .recv_timeout(Duration::from_millis(500))
+            .unwrap_or_default()
     }
 }
