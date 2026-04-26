@@ -190,7 +190,9 @@ describe('cache', () => {
 
     // Rerun without touching anything
     const rerunWithUntouchedOutputs = runCLI(`build ${mylib}`);
-    expect(rerunWithUntouchedOutputs).toContain('local cache');
+    expect(rerunWithUntouchedOutputs).toContain(
+      'existing outputs match the cache'
+    );
     const outputsWithUntouchedOutputs = [
       ...listFiles('dist/apps'),
       ...listFiles('dist/.next').map((f) => `.next/${f}`),
@@ -211,7 +213,9 @@ describe('cache', () => {
 
     // Rerun
     const rerunWithNewUnrelatedFile = runCLI(`build ${mylib}`);
-    expect(rerunWithNewUnrelatedFile).toContain('local cache');
+    expect(rerunWithNewUnrelatedFile).toContain(
+      'existing outputs match the cache'
+    );
     const outputsAfterAddingUntouchedFileAndRerunning = [
       ...listFiles('dist/apps'),
       ...listFiles('dist/.next').map((f) => `.next/${f}`),
@@ -334,7 +338,7 @@ console.log('Build complete');
 
     // Second run - should hit cache and restore without EEXIST error
     const secondRun = runCLI(`build ${projectName}`);
-    expect(secondRun).toContain('local cache');
+    expect(secondRun).toContain('existing outputs match the cache');
   });
 
   it('should use consider filesets when hashing', async () => {
