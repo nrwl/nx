@@ -7,6 +7,7 @@ import {
   runE2ETests,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 
