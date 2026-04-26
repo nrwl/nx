@@ -34,9 +34,8 @@ describe('React Module Federation - Webpack Basic - Host Remote Generation', () 
       const remote1 = uniq('remote1');
       const remote2 = uniq('remote2');
       const remote3 = uniq('remote3');
-      const [shellPort, remote1Port, remote2Port, remote3Port] = reservePorts(
-        4
-      );
+      const [shellPort, remote1Port, remote2Port, remote3Port] =
+        reservePorts(4);
 
       runCLI(
         `generate @nx/react:host ${shell} --remotes=${remote1},${remote2},${remote3} --devServerPort=${shellPort} --bundler=webpack --e2eTestRunner=cypress --style=css --no-interactive --skipFormat --js=${js}`
