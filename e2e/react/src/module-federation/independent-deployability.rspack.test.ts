@@ -1,6 +1,6 @@
 import {
   cleanupProject,
-  reservePort,
+  reservePorts,
   killProcessAndPorts,
   newProject,
   runCommandUntil,
@@ -26,13 +26,16 @@ describe('Independent Deployability', () => {
   it('should support promised based remotes', async () => {
     const remote = uniq('remote');
     const host = uniq('host');
-    const shellPort = reservePort();
+    const [shellPort, remotePort] = reservePorts(2);
 
     runCLI(
       `generate @nx/react:host ${host} --remotes=${remote} --devServerPort=${shellPort} --bundler=rspack --e2eTestRunner=cypress --no-interactive --typescriptConfiguration=false --skipFormat`
     );
 
-    const remotePort = readPort(remote);
+    updateJson(`${remote}/project.json`, (project) => {
+      project.targets.serve.options.port = remotePort;
+      return project;
+    });
     // Update remote to be loaded via script
     updateFile(
       `${remote}/module-federation.config.js`,
@@ -143,17 +146,20 @@ describe('Independent Deployability', () => {
     const remote = uniq('remote');
     const lib = uniq('lib');
 
-    const shellPort = reservePort();
+    const [shellPort, remotePort] = reservePorts(2);
 
     runCLI(
       `generate @nx/react:host ${shell} --remotes=${remote} --devServerPort=${shellPort} --bundler=rspack --e2eTestRunner=cypress --no-interactive --skipFormat`
     );
 
+    updateJson(`${remote}/project.json`, (project) => {
+      project.targets.serve.options.port = remotePort;
+      return project;
+    });
+
     runCLI(
       `generate @nx/js:lib ${lib} --importPath=@acme/${lib} --publishable=true --no-interactive --skipFormat`
     );
-
-    const remotePort = readPort(remote);
 
     updateFile(
       `${lib}/src/lib/${lib}.ts`,
@@ -292,13 +298,16 @@ describe('Independent Deployability', () => {
     const shell = uniq('shell');
     const remote = uniq('remote');
 
-    const shellPort = reservePort();
+    const [shellPort, remotePort] = reservePorts(2);
 
     runCLI(
       `generate @nx/react:host ${shell} --remotes=${remote} --bundler=rspack --devServerPort=${shellPort} --e2eTestRunner=cypress --no-interactive --skipFormat`
     );
 
-    const remotePort = readPort(remote);
+    updateJson(`${remote}/project.json`, (project) => {
+      project.targets.serve.options.port = remotePort;
+      return project;
+    });
 
     // update host and remote to use library type var
     updateFile(

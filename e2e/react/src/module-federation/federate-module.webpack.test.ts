@@ -1,6 +1,6 @@
 import {
   cleanupProject,
-  reservePort,
+  reservePorts,
   killProcessAndPorts,
   newProject,
   runCommandUntil,
@@ -24,11 +24,16 @@ describe('Federate Module', () => {
     const module = uniq('module');
     const host = uniq('host');
 
-    const shellPort = reservePort();
+    const [shellPort, remotePort] = reservePorts(2);
 
     runCLI(
       `generate @nx/react:host ${host} --bundler=webpack --remotes=${remote} --devServerPort=${shellPort} --e2eTestRunner=cypress --no-interactive --skipFormat`
     );
+
+    updateJson(`${remote}/project.json`, (project) => {
+      project.targets.serve.options.port = remotePort;
+      return project;
+    });
 
     runCLI(`generate @nx/js:lib ${lib} --no-interactive --skipFormat`);
 
@@ -95,7 +100,6 @@ describe('Federate Module', () => {
     );
 
     const hostPort = readPort(host);
-    const remotePort = readPort(remote);
 
     // Build host and remote
     const buildOutput = runCLI(`build ${host}`);
@@ -125,11 +129,16 @@ describe('Federate Module', () => {
     const module = uniq('module');
     const host = uniq('host');
 
-    const shellPort = reservePort();
+    const [shellPort, remotePort, childRemotePort] = reservePorts(3);
 
     runCLI(
       `generate @nx/react:host ${host} --remotes=${remote} --devServerPort=${shellPort} --bundler=webpack --e2eTestRunner=cypress --no-interactive --skipFormat`
     );
+
+    updateJson(`${remote}/project.json`, (project) => {
+      project.targets.serve.options.port = remotePort;
+      return project;
+    });
 
     runCLI(`generate @nx/js:lib ${lib} --no-interactive --skipFormat`);
 
@@ -137,6 +146,11 @@ describe('Federate Module', () => {
     runCLI(
       `generate @nx/react:federate-module ${lib}/src/index.ts --bundler=webpack --name=${module} --remote=${childRemote} --remoteDirectory=${childRemote} --no-interactive --skipFormat`
     );
+
+    updateJson(`${childRemote}/project.json`, (project) => {
+      project.targets.serve.options.port = childRemotePort;
+      return project;
+    });
 
     updateFile(
       `${lib}/src/index.ts`,
@@ -188,8 +202,6 @@ describe('Federate Module', () => {
     );
 
     const hostPort = readPort(host);
-    const remotePort = readPort(remote);
-    const childRemotePort = readPort(childRemote);
 
     // Build host and remote
     const buildOutput = runCLI(`build ${host}`);

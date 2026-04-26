@@ -6,7 +6,8 @@ import {
   runE2ETests,
   uniq,
   updateFile,
-  reservePort,
+  updateJson,
+  reservePorts,
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 import { stripIndents } from 'nx/src/utils/strip-indents';
@@ -25,15 +26,25 @@ describe('React Rspack Module Federation Misc - Interoperability', () => {
     const shell = uniq('shell');
     const remote1 = uniq('remote1');
     const remote2 = uniq('remote2');
-    const shellPort = reservePort();
+    const [shellPort, remote1Port, remote2Port] = reservePorts(3);
 
     runCLI(
       `generate @nx/react:host apps/${shell} --name=${shell} --remotes=${remote1} --bundler=webpack --devServerPort=${shellPort} --e2eTestRunner=cypress --style=css --no-interactive --skipFormat`
     );
 
+    updateJson(`apps/${remote1}/project.json`, (project) => {
+      project.targets.serve.options.port = remote1Port;
+      return project;
+    });
+
     runCLI(
       `generate @nx/react:remote apps/${remote2} --name=${remote2} --host=${shell} --bundler=rspack --style=css --no-interactive --skipFormat`
     );
+
+    updateJson(`apps/${remote2}/project.json`, (project) => {
+      project.targets.serve.options.port = remote2Port;
+      return project;
+    });
 
     updateFile(
       `apps/${shell}-e2e/src/integration/app.spec.ts`,
@@ -86,15 +97,25 @@ describe('React Rspack Module Federation Misc - Interoperability', () => {
     const shell = uniq('shell');
     const remote1 = uniq('remote1');
     const remote2 = uniq('remote2');
-    const shellPort = reservePort();
+    const [shellPort, remote1Port, remote2Port] = reservePorts(3);
 
     runCLI(
       `generate @nx/react:host apps/${shell} --name=${shell} --remotes=${remote1} --bundler=rspack --devServerPort=${shellPort} --e2eTestRunner=cypress --style=css --no-interactive --skipFormat`
     );
 
+    updateJson(`apps/${remote1}/project.json`, (project) => {
+      project.targets.serve.options.port = remote1Port;
+      return project;
+    });
+
     runCLI(
       `generate @nx/react:remote apps/${remote2} --name=${remote2} --host=${shell} --bundler=webpack --style=css --no-interactive --skipFormat`
     );
+
+    updateJson(`apps/${remote2}/project.json`, (project) => {
+      project.targets.serve.options.port = remote2Port;
+      return project;
+    });
 
     updateFile(
       `apps/${shell}-e2e/src/integration/app.cy.ts`,
