@@ -146,6 +146,18 @@ export async function getCachedSerializedProjectGraphPromise(
       cachedSerializedProjectGraphPromise !== previousPromise;
     const result = await cachedSerializedProjectGraphPromise;
 
+    // Auto-recompute notifies listeners after each iteration; the on-demand
+    // path also has to do it for the narrow case where it triggered a fresh
+    // recompute itself (events arrived between the auto-recompute loop's
+    // exit check and its promise being cleared).
+    if (graphWasRecomputed) {
+      notifyProjectGraphRecomputationListeners(
+        result.projectGraph,
+        result.sourceMaps,
+        result.error
+      );
+    }
+
     const errors = extractErrors(result.error);
 
     // Write the daemon's current graph to disk to ensure disk cache stays
