@@ -244,6 +244,9 @@
       "src/utils/catalog": [
         "dist/src/utils/catalog/index.d.ts"
       ],
+      "src/internal-testing-utils/*": [
+        "src/internal-testing-utils/*.ts"
+      ],
       "src/*.js": [
         "dist/src/*.d.ts"
       ],
@@ -411,6 +414,10 @@
     "./src/native/*.mjs": {
       "@nx/nx-source": "./src/native/*.mjs",
       "default": "./dist/src/native/*.mjs"
+    },
+    "./src/internal-testing-utils/*": {
+      "types": "./src/internal-testing-utils/*.ts",
+      "default": "./src/internal-testing-utils/*.ts"
     },
     "./src/*.js": {
       "@nx/nx-source": "./src/*.ts",
