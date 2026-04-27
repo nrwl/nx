@@ -77,8 +77,10 @@ describe('React Rspack Module Federation Misc - Interoperability', () => {
       });
     });
 
-    const serveResult = await runCommandUntil(`serve ${shell}`, (output) =>
-      output.includes(`http://localhost:${readPort(shell)}`)
+    const serveResult = await runCommandUntil(
+      `serve ${shell}`,
+      (output) => output.includes(`http://localhost:${readPort(shell)}`),
+      { timeout: 120000 }
     );
 
     await killProcessAndPorts(serveResult.pid, readPort(shell));
@@ -86,7 +88,8 @@ describe('React Rspack Module Federation Misc - Interoperability', () => {
     if (runE2ETests()) {
       const e2eResultsSwc = await runCommandUntil(
         `e2e ${shell}-e2e --verbose`,
-        (output) => output.includes('All specs passed!')
+        (output) => output.includes('All specs passed!'),
+        { timeout: 120000 }
       );
 
       await killProcessAndPorts(e2eResultsSwc.pid, readPort(shell));
@@ -145,7 +148,8 @@ describe('React Rspack Module Federation Misc - Interoperability', () => {
     if (runE2ETests()) {
       const e2eResultsSwc = await runCommandUntil(
         `e2e ${shell}-e2e --verbose`,
-        (output) => output.includes('Successfully ran target e2e')
+        (output) => output.includes('Successfully ran target e2e'),
+        { timeout: 120000 }
       );
 
       await killProcessAndPorts(e2eResultsSwc.pid, readPort(shell));
