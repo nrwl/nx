@@ -66,7 +66,7 @@ where
     // `get_files_for_outputs`, which partitions globs by their anchored root
     // and walks only those subtrees (instead of the entire workspace). On
     // workspaces with many tracked files this avoids a costly full-tree walk
-    // per `NxCache.put` / `copyFilesFromCache` call (see #<issue>).
+    // per `NxCache.put` / `copyFilesFromCache` call (see https://github.com/nrwl/nx/pull/35464).
     //
     // Negated globs still take the slower workspace-rooted walk so that
     // ignore semantics (`!path/to/exclude`) are preserved exactly.
