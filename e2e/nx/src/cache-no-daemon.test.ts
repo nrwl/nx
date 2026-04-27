@@ -7,7 +7,8 @@ import {
   readFile,
   removeFile,
   rmDist,
-  runCLI,
+  runCLI as _runCLI,
+  RunCmdOpts,
   tmpProjPath,
   uniq,
   updateFile,
@@ -19,25 +20,12 @@ import { readdir, stat } from 'fs/promises';
 
 import { join } from 'path';
 
+// Wrap runCLI so every call in this file runs with the daemon disabled,
+// without each call site having to repeat `daemon: false`.
+const runCLI = (cmd: string, opts: RunCmdOpts = {}) =>
+  _runCLI(cmd, { ...opts, daemon: false });
+
 describe('cache (no daemon)', () => {
-  let originalDaemon: string | undefined;
-
-  beforeAll(() => {
-    // command-utils' runCLI / runCommandAsync default NX_DAEMON to 'true' but
-    // honour process.env.NX_E2E_DAEMON when present. Force it to 'false' for
-    // every command in this file.
-    originalDaemon = process.env.NX_E2E_DAEMON;
-    process.env.NX_E2E_DAEMON = 'false';
-  });
-
-  afterAll(() => {
-    if (originalDaemon === undefined) {
-      delete process.env.NX_E2E_DAEMON;
-    } else {
-      process.env.NX_E2E_DAEMON = originalDaemon;
-    }
-  });
-
   beforeEach(() => newProject({ packages: ['@nx/web', '@nx/js'] }));
 
   afterEach(() => cleanupProject());

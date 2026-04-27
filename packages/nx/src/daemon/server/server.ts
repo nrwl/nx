@@ -254,14 +254,13 @@ async function handleMessage(socket: Socket, data: string) {
   }
   serverLogger.log(`Received ${mode} message of type ${payload.type}`);
 
-  if (
-    isDaemonMessage(payload) &&
-    payload.env &&
-    applyDaemonEnvFromClient(payload.env)
-  ) {
-    serverLogger.log('Graph recompute necessary due to env variable refresh');
-    forwardEnvToPluginWorkers(payload.env);
-    invalidateGraphCache();
+  if (isDaemonMessage(payload) && payload.env) {
+    const envChanged = applyDaemonEnvFromClient(payload.env);
+    if (envChanged) {
+      serverLogger.log('Graph recompute necessary due to env variable refresh');
+      forwardEnvToPluginWorkers(payload.env);
+      invalidateGraphCache();
+    }
   }
 
   if (payload.type === 'PING') {

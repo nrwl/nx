@@ -35,6 +35,12 @@ export interface RunCmdOpts {
   verbose?: boolean;
   redirectStderr?: boolean;
   timeout?: number;
+  /**
+   * Override the daemon mode for this call. Defaults to `true` (matching
+   * runCLI / runCommandAsync's CI default). Set to `false` to exercise the
+   * non-daemon path without setting a process-wide env var.
+   */
+  daemon?: boolean;
 }
 
 /**
@@ -249,9 +255,9 @@ export function runCommandAsync(
         cwd: opts.cwd || tmpProjPath(),
         env: {
           CI: 'true',
-          // Force daemon on under CI (matches runCLI's default). Tests can
-          // opt out by setting NX_E2E_DAEMON=false on process.env.
-          NX_DAEMON: process.env.NX_E2E_DAEMON ?? 'true',
+          // Force daemon on under CI (matches runCLI's default). Callers can
+          // override via opts.daemon = false.
+          NX_DAEMON: opts.daemon === false ? 'false' : 'true',
           // Use new versioning by default in e2e tests
           NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
           ...(opts.env || getStrippedEnvironmentVariables()),
@@ -435,8 +441,8 @@ export function runCLI(
         // Daemon is normally disabled under CI; force it on so e2e tests
         // exercise the same daemon-driven graph + watcher path that real
         // users hit, without each test having to opt in via env override.
-        // Tests can opt out by setting NX_E2E_DAEMON=false on process.env.
-        NX_DAEMON: process.env.NX_E2E_DAEMON ?? 'true',
+        // Callers can override via opts.daemon = false.
+        NX_DAEMON: opts.daemon === false ? 'false' : 'true',
         // Use new versioning by default in e2e tests
         NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
         ...getStrippedEnvironmentVariables(),

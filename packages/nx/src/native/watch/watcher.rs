@@ -3,8 +3,9 @@ use std::collections::HashSet;
 use std::path::MAIN_SEPARATOR;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::mpsc::{RecvTimeoutError, Sender, SyncSender};
 use std::time::{Duration, Instant};
+
+use crossbeam_channel::{RecvTimeoutError, Sender};
 
 #[cfg(not(target_os = "macos"))]
 use crate::native::glob::{NxGlobSet, build_glob_set};
@@ -243,7 +244,7 @@ type NotifyResult = std::result::Result<notify::Event, notify::Error>;
 /// synchronously and bypass the idle-window debounce.
 enum ProcMsg {
     Notify(NotifyResult),
-    ForceFlush(SyncSender<Vec<WatchEvent>>),
+    ForceFlush(Sender<Vec<WatchEvent>>),
 }
 
 /// Adapter implementing `notify::EventHandler` so notify events land in our
@@ -346,7 +347,7 @@ impl Watcher {
 
         // Combined channel: notify events flow in via NotifyForwarder,
         // ForceFlush requests come from JS via force_flush_pending().
-        let (tx, rx) = std::sync::mpsc::channel::<ProcMsg>();
+        let (tx, rx) = crossbeam_channel::unbounded::<ProcMsg>();
         self.proc_tx = Some(tx.clone());
 
         // Create the notify watcher. Events are sent through the channel.
@@ -514,7 +515,7 @@ impl Watcher {
         let Some(tx) = self.proc_tx.as_ref() else {
             return Vec::new();
         };
-        let (reply_tx, reply_rx) = std::sync::mpsc::sync_channel::<Vec<WatchEvent>>(1);
+        let (reply_tx, reply_rx) = crossbeam_channel::bounded::<Vec<WatchEvent>>(1);
         if tx.send(ProcMsg::ForceFlush(reply_tx)).is_err() {
             return Vec::new();
         }
