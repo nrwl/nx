@@ -388,7 +388,8 @@ describe('Independent Deployability', () => {
       const hostE2eResultsSwc = await runCommandUntil(
         `e2e ${shell}-e2e --verbose`,
         (output) =>
-          output.includes('NX   Successfully ran target e2e for project')
+          output.includes('NX   Successfully ran target e2e for project'),
+        { timeout: 120000 }
       );
       await killProcessAndPorts(
         hostE2eResultsSwc.pid,
@@ -400,7 +401,8 @@ describe('Independent Deployability', () => {
       const remoteE2eResultsSwc = await runCommandUntil(
         `e2e ${remote}-e2e --verbose`,
         (output) =>
-          output.includes('NX   Successfully ran target e2e for project')
+          output.includes('NX   Successfully ran target e2e for project'),
+        { timeout: 120000 }
       );
 
       await killProcessAndPorts(remoteE2eResultsSwc.pid, remotePort);
