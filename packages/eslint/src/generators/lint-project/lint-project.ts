@@ -6,7 +6,6 @@ import {
   NxJsonConfiguration,
   offsetFromRoot,
   ProjectConfiguration,
-  ProjectGraph,
   readJson,
   readNxJson,
   readProjectConfiguration,
@@ -141,13 +140,11 @@ export async function lintProjectGeneratorInternal(
   // companion e2e app so we should check if migration to
   // monorepo style is needed
   if (!options.rootProject) {
-    const projects = {} as any;
-    getProjects(tree).forEach((v, k) => (projects[k] = v));
-    const graph = await createProjectGraphAsync();
-    if (isMigrationToMonorepoNeeded(tree, graph)) {
+    const projectsFromTree = getProjects(tree);
+    if (await isMigrationToMonorepoNeeded(tree, projectsFromTree)) {
       // we only migrate project configurations that have been created
-      const filteredProjects = [];
-      Object.entries(projects).forEach(([name, project]) => {
+      const filteredProjects: ProjectConfiguration[] = [];
+      projectsFromTree.forEach((project, name) => {
         if (name !== options.project) {
           filteredProjects.push(project);
         }
@@ -372,9 +369,17 @@ function isBuildableLibraryProject(
 
 /**
  * Detect based on the state of lint target configuration of the root project
- * if we should migrate eslint configs to monorepo style
+ * if we should migrate eslint configs to monorepo style.
+ *
+ * Checks the tree first so explicit root lint targets written earlier in the
+ * same generator run are visible; the project graph is only consulted to
+ * surface targets inferred by `@nx/eslint/plugin`, which don't appear on the
+ * tree.
  */
-function isMigrationToMonorepoNeeded(tree: Tree, graph: ProjectGraph): boolean {
+async function isMigrationToMonorepoNeeded(
+  tree: Tree,
+  projectsFromTree: Map<string, ProjectConfiguration>
+): Promise<boolean> {
   // the base config is already created, migration has been done
   if (
     [baseEsLintConfigFile, ...BASE_ESLINT_CONFIG_FILENAMES].some((f) =>
@@ -384,15 +389,35 @@ function isMigrationToMonorepoNeeded(tree: Tree, graph: ProjectGraph): boolean {
     return false;
   }
 
-  const nodes = Object.values(graph.nodes);
+  for (const project of projectsFromTree.values()) {
+    if (project.root === '.') {
+      if (rootHasEslintLintTarget(project.targets)) {
+        return true;
+      }
+      break;
+    }
+  }
 
-  // get root project
-  const rootProject = nodes.find((p) => p.data.root === '.');
-  if (!rootProject || !rootProject.data.targets) {
+  if (!hasEslintPlugin(tree)) {
     return false;
   }
 
-  for (const targetConfig of Object.values(rootProject.data.targets ?? {})) {
+  const graph = await createProjectGraphAsync();
+  for (const node of Object.values(graph.nodes)) {
+    if (node.data.root === '.') {
+      return rootHasEslintLintTarget(node.data.targets);
+    }
+  }
+  return false;
+}
+
+function rootHasEslintLintTarget(
+  targets: ProjectConfiguration['targets'] | undefined
+): boolean {
+  if (!targets) {
+    return false;
+  }
+  for (const targetConfig of Object.values(targets)) {
     if (
       ['@nx/eslint:lint', '@nx/linter:eslint'].includes(
         targetConfig.executor
@@ -404,6 +429,5 @@ function isMigrationToMonorepoNeeded(tree: Tree, graph: ProjectGraph): boolean {
       return true;
     }
   }
-
   return false;
 }
