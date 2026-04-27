@@ -105,7 +105,9 @@ describe('Angular Module Federation - Federated Libraries', () => {
       const e2eProcess = await runCommandUntil(
         `e2e ${host}-e2e`,
         (output) => output.includes('All specs passed!'),
-        { timeout: 120000 }
+        // Force NX_DAEMON=false so the e2e child reads the updated project.json
+        // (with our pinned ports) instead of a stale cached graph.
+        { timeout: 120000, env: { NX_DAEMON: 'false' } }
       );
       await killProcessAndPorts(e2eProcess.pid, hostPort, staticRemotesPort);
     }
@@ -207,7 +209,9 @@ describe('Angular Module Federation - Federated Libraries', () => {
       const e2eProcess = await runCommandUntil(
         `e2e ${host}-e2e`,
         (output) => output.includes('All specs passed!'),
-        { timeout: 120000 }
+        // Force NX_DAEMON=false so the e2e child reads the updated project.json
+        // (with our pinned ports) instead of a stale cached graph.
+        { timeout: 120000, env: { NX_DAEMON: 'false' } }
       );
       await killProcessAndPorts(e2eProcess.pid, hostPort, staticRemotesPort);
     }
