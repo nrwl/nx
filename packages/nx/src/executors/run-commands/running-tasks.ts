@@ -504,14 +504,41 @@ class RunningNodeProcess implements RunningTask {
       }
       const terminalOutput = this.terminalOutputChunks.join('');
       this.terminalOutputChunks = [];
+      removeProcessListeners();
       for (const cb of this.exitCallbacks) {
         cb(1, terminalOutput);
       }
     });
+
+    // Store signal/exit handlers so they can be removed when the child exits.
+    // Without cleanup, each RunningNodeProcess leaks 4 process listeners.
+    // In a large monorepo (2600+ run-commands tasks), these accumulate and
+    // cause a multi-minute synchronous hang at process.exit() as each handler
+    // calls treeKill on an already-dead PID.
+    const onExit = () => {
+      this.kill();
+    };
+    const onSigInt = () => {
+      this.kill('SIGTERM');
+    };
+    const onSigTerm = () => {
+      this.kill('SIGTERM');
+    };
+    const onSigHup = () => {
+      this.kill('SIGTERM');
+    };
+    const removeProcessListeners = () => {
+      process.removeListener('exit', onExit);
+      process.removeListener('SIGINT', onSigInt);
+      process.removeListener('SIGTERM', onSigTerm);
+      process.removeListener('SIGHUP', onSigHup);
+    };
+
     this.childProcess.on('exit', (code, signal) => {
       if (code === null) {
         code = signalToCode(signal);
       }
+      removeProcessListeners();
       if (!this.readyWhenStatus.length || isReady(this.readyWhenStatus)) {
         const terminalOutput = this.terminalOutputChunks.join('');
         this.terminalOutputChunks = [];
@@ -520,23 +547,12 @@ class RunningNodeProcess implements RunningTask {
         }
       }
     });
+
     // Terminate any task processes on exit
-    process.on('exit', () => {
-      this.kill();
-    });
-    process.on('SIGINT', () => {
-      this.kill('SIGTERM');
-    });
-    process.on('SIGTERM', () => {
-      this.kill('SIGTERM');
-      // no exit here because we expect child processes to terminate which
-      // will store results to the cache and will terminate this process
-    });
-    process.on('SIGHUP', () => {
-      this.kill('SIGTERM');
-      // no exit here because we expect child processes to terminate which
-      // will store results to the cache and will terminate this process
-    });
+    process.on('exit', onExit);
+    process.on('SIGINT', onSigInt);
+    process.on('SIGTERM', onSigTerm);
+    process.on('SIGHUP', onSigHup);
   }
 }
 

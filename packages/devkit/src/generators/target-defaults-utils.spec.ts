@@ -12,8 +12,90 @@ jest.mock(
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import { readNxJson, updateNxJson, type Tree } from 'nx/src/devkit-exports';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { addE2eCiTargetDefaults } from './target-defaults-utils';
+import {
+  addBuildTargetDefaults,
+  addE2eCiTargetDefaults,
+} from './target-defaults-utils';
 describe('target-defaults-utils', () => {
+  describe('addBuildTargetDefaults', () => {
+    let tree: Tree;
+
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+    });
+
+    it('should set executor-keyed target defaults with default inputs', () => {
+      addBuildTargetDefaults(tree, '@nx/example:build');
+
+      const nxJson = readNxJson(tree);
+      expect(nxJson.targetDefaults['@nx/example:build']).toEqual({
+        cache: true,
+        dependsOn: ['^build'],
+        inputs: ['default', '^default'],
+      });
+    });
+
+    it('should use production named inputs when available', () => {
+      const nxJson = readNxJson(tree);
+      nxJson.namedInputs = {
+        default: ['{projectRoot}/**/*'],
+        production: ['default'],
+      };
+      updateNxJson(tree, nxJson);
+
+      addBuildTargetDefaults(tree, '@nx/example:build');
+
+      expect(
+        readNxJson(tree).targetDefaults['@nx/example:build'].inputs
+      ).toEqual(['production', '^production']);
+    });
+
+    it('should honor a custom build target name in dependsOn', () => {
+      addBuildTargetDefaults(tree, '@nx/example:build', 'compile');
+
+      expect(
+        readNxJson(tree).targetDefaults['@nx/example:build'].dependsOn
+      ).toEqual(['^compile']);
+    });
+
+    it('should append extra inputs after the default/production inputs', () => {
+      addBuildTargetDefaults(tree, '@nx/example:build', 'build', [
+        {
+          json: '{workspaceRoot}/tsconfig.json',
+          fields: ['extends', 'files', 'include'],
+        },
+      ]);
+
+      expect(
+        readNxJson(tree).targetDefaults['@nx/example:build'].inputs
+      ).toEqual([
+        'default',
+        '^default',
+        {
+          json: '{workspaceRoot}/tsconfig.json',
+          fields: ['extends', 'files', 'include'],
+        },
+      ]);
+    });
+
+    it('should not overwrite existing target defaults for the executor', () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        '@nx/example:build': { cache: true, inputs: ['custom'] },
+      };
+      updateNxJson(tree, nxJson);
+
+      addBuildTargetDefaults(tree, '@nx/example:build', 'build', [
+        { json: '{workspaceRoot}/tsconfig.json', fields: ['extends'] },
+      ]);
+
+      expect(readNxJson(tree).targetDefaults['@nx/example:build']).toEqual({
+        cache: true,
+        inputs: ['custom'],
+      });
+    });
+  });
+
   describe('addE2eCiTargetDefaults', () => {
     let tree: Tree;
     let tempFs: TempFs;

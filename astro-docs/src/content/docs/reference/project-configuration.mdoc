@@ -631,6 +631,63 @@ In the case of an explicit target using an executor, you can specify the executo
 }
 ```
 
+### Spread token
+
+By default, each configuration source overwrites the previous one for every property it defines. The spread token (`"..."`) lets you control merge priority rather than always replacing.
+
+**In arrays**, `"..."` is substituted with the items from the base array at that position:
+
+```json
+// project.json
+{
+  "targets": {
+    "build": {
+      "inputs": ["my-project-input", "..."]
+    }
+  }
+}
+```
+
+If the inferred target has `inputs: ["default", "^production"]`, the result is `["my-project-input", "default", "^production"]`.
+
+**In objects**, a key of `"..."` set to `true` spreads base properties at that position. Keys defined after `"..."` override base values; keys defined before `"..."` can be overridden by base values.
+
+```json
+// project.json
+{
+  "targets": {
+    "build": {
+      "options": {
+        "env": {
+          "MY_VAR": "my-value",
+          "...": true
+        }
+      }
+    }
+  }
+}
+```
+
+Nx processes target configuration down to `options[x]` and `configurations[x][y]`; values below that are opaque to the merge pipeline. Spread is therefore resolved at these levels:
+
+| Level                                              | Example                                                                     |
+| -------------------------------------------------- | --------------------------------------------------------------------------- |
+| Target root                                        | `"build": { "dependsOn": ["lint"], "...": true }`                           |
+| `inputs`, `outputs`, `dependsOn`, `syncGenerators` | `"inputs": ["my-input", "..."]`                                             |
+| `options`                                          | `"options": { "...": true, "outputPath": "dist/custom" }`                   |
+| `options[x]`                                       | `"options": { "env": { "MY_VAR": "val", "...": true } }`                    |
+| `configurations`                                   | `"configurations": { "my-config": { ... }, "...": true }`                   |
+| `configurations[x]`                                | `"configurations": { "prod": { "...": true, "sourceMap": false } }`         |
+| `configurations[x][y]`                             | `"configurations": { "prod": { "env": { "MY_VAR": "val", "...": true } } }` |
+
+{% aside type="caution" title="Spread does not apply to deeply nested options" %}
+Because `options[x]` and `configurations[x][y]` are the innermost levels Nx inspects, a spread token nested any deeper has no effect. For example, `options.webpack = { "...": true }` works (the spread is at `options[x]`), but `options.webpack.plugins = { "...": true }` is ignored because the spread sits inside the opaque value Nx assigns to `options.webpack`.
+{% /aside %}
+
+{% aside type="note" title="Spread does not apply to `tags` and `implicitDependencies`" %}
+`tags` and `implicitDependencies` always merge across configuration sources — later sources contribute additional entries rather than replacing earlier ones. The spread token is neither needed nor supported for these properties.
+{% /aside %}
+
 ### Target metadata
 
 You can add additional metadata to be attached to a target. For example, you can provide a description stating what the

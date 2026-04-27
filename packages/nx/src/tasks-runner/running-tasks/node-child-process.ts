@@ -45,7 +45,8 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
       }
     }
 
-    this.childProcess.on('exit', (code, signal) => {
+    // 'close' (not 'exit') ensures stdio has drained before we join chunks (#35302).
+    this.childProcess.on('close', (code, signal) => {
       if (code === null) code = signalToCode(signal);
       this.exitCode = code;
       // Join once and cache before notifying exit callbacks

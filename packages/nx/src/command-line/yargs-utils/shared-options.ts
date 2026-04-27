@@ -387,6 +387,14 @@ export function withRunOneOptions(yargs: Argv) {
     .option('project', {
       describe: 'Target project.',
       type: 'string',
+      alias: 'p',
+    })
+    .option('target', {
+      describe:
+        'Target to run. Useful when the target name contains a colon, which conflicts with the positional `project:target:configuration` form.',
+      type: 'string',
+      alias: 't',
+      requiresArg: true,
     })
     .option('help', {
       describe: 'Show Help.',

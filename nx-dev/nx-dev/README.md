@@ -2,6 +2,10 @@
 
 This folder contains the app and libs to power [nx.dev](https://nx.dev).
 
+## Canary Docs
+
+`canary.nx.dev` is a Netlify branch deploy of the `canary` orphan branch. Its `netlify.toml` proxies `/docs/*` to `https://master--nx-docs.netlify.app/docs/:splat` so content comes live from master's astro-docs deploy; non-docs paths 301 to `/docs/getting-started/intro`. No build runs, and the branch doesn't need updating — master's deploy updates, canary follows.
+
 ## Versioned Docs
 
 The previous major's docs are preserved at `{major}.nx.dev` (e.g. `22.nx.dev`) using pre-built static snapshots on orphan branches, deployed via Netlify branch deploys.

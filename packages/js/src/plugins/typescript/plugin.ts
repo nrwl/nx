@@ -1222,9 +1222,9 @@ function resolveShallowExternalProjectReferences(
 
 /**
  * Collects unique tsconfig paths (relative to their project root) from the
- * project reference chain and returns them as `^{projectRoot}/...` input
- * patterns. We only need to discover the full set of distinct relative paths
- * from the reference chain.
+ * project reference chain — including any `extends` chains within those refs —
+ * and returns them as `^{projectRoot}/...` input patterns. We only need to
+ * discover the full set of distinct relative paths.
  */
 function getExternalProjectReferenceTsconfigPatterns(
   tsConfig: ParsedTsconfigData,
@@ -1282,7 +1282,47 @@ function getExternalProjectReferenceTsconfigPatterns(
 
     const wsRelPath = posixRelative(workspaceRoot, configPath);
     const tsConfigData = tsConfigCacheData[wsRelPath]?.data;
-    if (!tsConfigData?.projectReferences?.length) {
+    if (!tsConfigData) {
+      continue;
+    }
+
+    // Walk `extends` chains for the visited tsconfig. tsc reads extended
+    // configs while resolving project references, so the rel paths must be
+    // emitted as inputs. Workspace-root files (no owning project) are skipped
+    // — those are covered by the local project's own extends walk.
+    if (tsConfigData.extendedConfigFiles?.length) {
+      for (const extended of tsConfigData.extendedConfigFiles) {
+        if (!extended.filePath || visited.has(extended.filePath)) {
+          continue;
+        }
+        const extendedWsRelPath = posixRelative(
+          workspaceRoot,
+          extended.filePath
+        );
+        if (!tsConfigCacheData[extendedWsRelPath]) {
+          continue;
+        }
+        const extendedContext = getConfigContext(
+          extended.filePath,
+          workspaceRoot,
+          cache
+        );
+        if (
+          extendedContext.project.root &&
+          extendedContext.project.root !== '.'
+        ) {
+          uniqueRelPaths.add(
+            posixRelative(extendedContext.project.absolute, extended.filePath)
+          );
+          worklist.push({
+            configPath: extended.filePath,
+            ownerProject: extendedContext.project,
+          });
+        }
+      }
+    }
+
+    if (!tsConfigData.projectReferences?.length) {
       continue;
     }
 
