@@ -1,17 +1,11 @@
 {
   "outDir": "packages/dotnet/dist",
   "assets": [
-    { "glob": "*.md" },
     {
-      "glob": "**/*.{d.ts,json}",
-      "input": "packages/dotnet/src",
-      "ignore": [
-        ".eslintrc.json",
-        "generators.json",
-        "executors.json",
-        "migrations.json"
-      ]
+      "glob": "*.md"
     },
+    { "glob": "**/schema.json", "input": "packages/dotnet/src" },
+    { "glob": "**/schema.d.ts", "input": "packages/dotnet/src" },
     {
       "glob": "**/*",
       "input": "dist/msbuild-analyzer",

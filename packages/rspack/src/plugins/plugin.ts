@@ -32,8 +32,6 @@ export interface RspackPluginOptions {
 
 type RspackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
-const pmc = getPackageManagerCommand();
-
 function readTargetsCache(cachePath: string): Record<string, RspackTargets> {
   try {
     return process.env.NX_CACHE_PROJECT_GRAPH !== 'false'
@@ -67,6 +65,9 @@ export const createNodesV2: CreateNodesV2<RspackPluginOptions> = [
     );
     const targetsCache = readTargetsCache(cachePath);
     const isTsSolutionSetup = isUsingTsSolutionSetup();
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -75,7 +76,8 @@ export const createNodesV2: CreateNodesV2<RspackPluginOptions> = [
             options,
             context,
             targetsCache,
-            isTsSolutionSetup
+            isTsSolutionSetup,
+            pmc
           ),
         configFilePaths,
         options,
@@ -92,7 +94,8 @@ async function createNodesInternal(
   options: RspackPluginOptions,
   context: CreateNodesContextV2,
   targetsCache: Record<string, RspackTargets>,
-  isTsSolutionSetup: boolean
+  isTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const projectRoot = dirname(configFilePath);
   // Do not create a project if package.json and project.json isn't there.
@@ -136,7 +139,8 @@ async function createNodesInternal(
     projectRoot,
     normalizedOptions,
     context,
-    isTsSolutionSetup
+    isTsSolutionSetup,
+    pmc
   );
 
   const { targets, metadata } = targetsCache[hash];
@@ -157,7 +161,8 @@ async function createRspackTargets(
   projectRoot: string,
   options: RspackPluginOptions,
   context: CreateNodesContextV2,
-  isTsSolutionSetup: boolean
+  isTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<RspackTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
 

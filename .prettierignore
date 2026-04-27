@@ -56,3 +56,6 @@ _solution
 tools/documentation/create-embeddings/src/main.mts
 
 .nx/self-healing
+
+# Inlined from `@yarnpkg/parser` keep as is
+packages/nx/src/utils/yarn-syml/syml-grammar.js

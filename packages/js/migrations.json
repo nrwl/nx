@@ -107,6 +107,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "22.6.4": {
+      "version": "22.6.4",
+      "packages": {
+        "verdaccio": {
+          "version": "^6.3.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

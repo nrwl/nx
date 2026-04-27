@@ -58,7 +58,7 @@ export function generateFiles(
   options ??= {};
   options.overwriteStrategy ??= OverwriteStrategy.Overwrite;
 
-  const ejs: typeof import('ejs') = require('ejs');
+  const ejs = require('ejs');
 
   const files = allFilesInDir(srcFolder);
   if (files.length === 0) {

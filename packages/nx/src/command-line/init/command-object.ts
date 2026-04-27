@@ -1,13 +1,6 @@
 import { Argv, CommandModule } from 'yargs';
 import { handleImport } from '../../utils/handle-import';
 import { parseCSV } from '../yargs-utils/shared-options';
-import { isAiAgent } from '../../native';
-import {
-  writeAiOutput,
-  buildErrorResult,
-  writeErrorLog,
-  determineErrorCode,
-} from './utils/ai-output';
 
 export const yargsInitCommand: CommandModule = {
   command: 'init',
@@ -38,29 +31,14 @@ export const yargsInitCommand: CommandModule = {
       throw error;
     });
 
-    try {
-      const useV2 = await isInitV2();
-      if (useV2) {
-        await require('./init-v2').initHandler(args);
-      } else {
-        await require('./init-v1').initHandler(args);
-      }
-      process.exit(0);
-    } catch (error) {
-      // Output structured error for AI agents
-      if (isAiAgent()) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        const errorCode = determineErrorCode(error);
-        const errorLogPath = writeErrorLog(error);
-        writeAiOutput(buildErrorResult(errorMessage, errorCode, errorLogPath));
-      } else {
-        // Ensure the cursor is always restored just in case the user has bailed during interactive prompts
-        // Skip for AI agents to avoid corrupting NDJSON output
-        process.stdout.write('\x1b[?25h');
-      }
-      process.exit(1);
+    const useV2 = await isInitV2();
+    if (useV2) {
+      await require('./init-v2').initHandler(args);
+    } else {
+      // v1 path retained for `NX_ADD_PLUGINS=false`; slated for removal.
+      await require('./init-v1').initHandler(args);
     }
+    process.exit(0);
   },
 };
 

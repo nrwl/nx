@@ -1,4 +1,4 @@
-import TOML from '@ltd/j-toml';
+import TOML from 'smol-toml';
 import { join } from 'node:path';
 import type {
   NxJsonConfiguration,
@@ -129,16 +129,11 @@ export class ExampleRustVersionActions extends VersionActions {
   validManifestFilenames = ['Cargo.toml'];
 
   private parseCargoToml(cargoString: string): CargoToml {
-    return TOML.parse(cargoString, {
-      x: { comment: true },
-    }) as CargoToml;
+    return TOML.parse(cargoString) as CargoToml;
   }
 
   static stringifyCargoToml(cargoToml: CargoToml): string {
-    const tomlString = TOML.stringify(cargoToml, {
-      newlineAround: 'section',
-    });
-    return Array.isArray(tomlString) ? tomlString.join('\n') : tomlString;
+    return TOML.stringify(cargoToml);
   }
 
   static modifyCargoTable(
@@ -147,13 +142,8 @@ export class ExampleRustVersionActions extends VersionActions {
     key: string,
     value: string | object | Array<any> | (() => any)
   ) {
-    toml[section] ??= TOML.Section({});
-    toml[section][key] =
-      typeof value === 'object' && !Array.isArray(value)
-        ? TOML.inline(value as any)
-        : typeof value === 'function'
-          ? value()
-          : value;
+    toml[section] ??= {};
+    toml[section][key] = typeof value === 'function' ? value() : value;
   }
 
   async readCurrentVersionFromSourceManifest(tree: Tree): Promise<{

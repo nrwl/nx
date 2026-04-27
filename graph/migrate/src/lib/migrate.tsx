@@ -1,11 +1,10 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 // nx-ignore-next-line
 import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
 // nx-ignore-next-line
 import { type FileChange } from 'nx/src/devkit-exports';
-/* eslint-enable @nx/enforce-module-boundaries */
+
 import { useEffect, useState } from 'react';
 import { CheckIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { Popover } from '@nx/graph-ui-common';

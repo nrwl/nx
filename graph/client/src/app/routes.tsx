@@ -1,5 +1,5 @@
 import { redirect, RouteObject, json, LoaderFunction } from 'react-router-dom';
-/* eslint-disable @nx/enforce-module-boundaries */
+
 // nx-ignore-next-line
 import type {
   GraphError,

@@ -155,5 +155,5 @@ function ensureUpToDateInstallation() {
 if (!process.env.NX_WRAPPER_SKIP_INSTALL) {
   ensureUpToDateInstallation();
 }
-// eslint-disable-next-line no-restricted-modules
+
 require('./installation/node_modules/nx/dist/bin/nx');

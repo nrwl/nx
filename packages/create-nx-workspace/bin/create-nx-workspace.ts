@@ -47,7 +47,8 @@ import {
   CnwErrorCode,
   mapErrorToBodyLines,
 } from '../src/utils/error-utils';
-import { existsSync } from 'fs';
+import { existsSync, readdirSync } from 'fs';
+import { basename, dirname, isAbsolute, join, resolve } from 'path';
 import { isCI } from '../src/utils/ci/is-ci';
 import { isGhCliAvailable } from '../src/utils/git/git';
 import {
@@ -183,7 +184,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           })
           .option('preset', {
             // This describe is hard to auto-fix because of the loop in the code.
-            // eslint-disable-next-line @nx/workspace/valid-command-object
+
             describe: chalk.dim`Customizes the initial content of your workspace. Default presets include: [${Object.values(
               Preset
             )
@@ -832,18 +833,89 @@ export function validateWorkspaceName(name: string): void {
   }
 }
 
-async function determineFolder(
+/** Returns `true` when the folder name refers to the current directory. */
+function isCurrentDirReference(folderName: string): boolean {
+  return folderName === '.' || folderName === './';
+}
+
+/**
+ * Resolves special folder name patterns (`.`, `./`, absolute paths) into a
+ * workspace name and a `workingDir` override so that downstream functions
+ * create the workspace at the intended location.
+ *
+ * @visibleForTesting
+ *
+ * Returns `{ name, workingDir }` for special inputs, or `null` if the
+ * input is a regular name that needs no special handling.
+ */
+export function resolveSpecialFolderName(
+  folderName: string
+): { name: string; workingDir: string } | null {
+  // User wants to init in the current directory
+  if (isCurrentDirReference(folderName)) {
+    const cwd = resolve(process.cwd());
+    if (readdirSync(cwd).length > 0) {
+      throw new CnwError(
+        'DIRECTORY_EXISTS',
+        `The current directory is not empty. Use "nx init" to add Nx to an existing project.`
+      );
+    }
+    return { name: basename(cwd), workingDir: dirname(cwd) };
+  }
+
+  // Handle absolute paths like /tmp/acme
+  if (isAbsolute(folderName)) {
+    const parentDir = dirname(folderName);
+    const name = basename(folderName);
+
+    if (!existsSync(parentDir)) {
+      throw new CnwError(
+        'INVALID_PATH',
+        `The parent directory "${parentDir}" does not exist.`
+      );
+    }
+
+    return { name, workingDir: parentDir };
+  }
+
+  return null;
+}
+
+/**
+ * Determines the folder name for the new workspace.
+ *
+ * @visibleForTesting
+ */
+export async function determineFolder(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<string> {
-  const folderName: string = parsedArgs._[0]
+  const rawFolderName: string = parsedArgs._[0]
     ? parsedArgs._[0].toString()
     : parsedArgs.name;
 
-  if (folderName) {
+  if (rawFolderName) {
+    // Resolve ".", "./", and absolute paths before validation
+    const resolved = resolveSpecialFolderName(rawFolderName);
+    const folderName = resolved?.name ?? rawFolderName;
+    if (resolved?.workingDir) {
+      parsedArgs.workingDir = resolved.workingDir;
+    }
+
     validateWorkspaceName(folderName);
 
+    // When input is "." or "./", resolveSpecialFolderName already validated
+    // the directory is empty. The target always "exists" because it IS the
+    // current working directory, so skip the existsSync check and default
+    // the workspace name to the directory name.
+    if (isCurrentDirReference(rawFolderName)) {
+      return folderName;
+    }
+
     // If directory exists, either re-prompt (interactive) or error (non-interactive)
-    if (existsSync(folderName)) {
+    const targetDir = resolved?.workingDir
+      ? join(resolved.workingDir, folderName)
+      : folderName;
+    if (existsSync(targetDir)) {
       if (parsedArgs.interactive && !isCI()) {
         output.warn({
           title: `Directory ${folderName} already exists.`,
@@ -856,6 +928,15 @@ async function determineFolder(
         `The directory '${folderName}' already exists. Choose a different name or remove the existing directory.`
       );
     }
+    return folderName;
+  }
+
+  // When non-interactive and no name is provided, default to the current
+  // directory name instead of prompting.
+  if (!parsedArgs.interactive || isCI()) {
+    const cwd = resolve(process.cwd());
+    const folderName = basename(cwd);
+    validateWorkspaceName(folderName);
     return folderName;
   }
 
@@ -1440,7 +1521,18 @@ async function determineAngularOptions(
     }
   }
 
+  const validAngularBundlers = ['esbuild', 'rspack', 'webpack'] as const;
   if (parsedArgs.bundler) {
+    if (
+      !validAngularBundlers.includes(
+        parsedArgs.bundler as (typeof validAngularBundlers)[number]
+      )
+    ) {
+      throw new CnwError(
+        'INVALID_BUNDLER',
+        `Invalid bundler "${parsedArgs.bundler}" for Angular. Valid options are: ${validAngularBundlers.join(', ')}`
+      );
+    }
     bundler = parsedArgs.bundler;
   } else {
     const reply = await enquirer.prompt<{ bundler: 'esbuild' | 'webpack' }>([

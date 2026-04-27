@@ -39,9 +39,10 @@ describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
       ],
     } as any;
 
-    jest
-      .spyOn(plugins, 'getPlugins')
-      .mockImplementation(async () => [testPlugin]);
+    jest.spyOn(plugins, 'getPluginsSeparated').mockImplementation(async () => ({
+      specifiedPlugins: [testPlugin],
+      defaultPlugins: [],
+    }));
 
     try {
       const p = await buildProjectGraphAndSourceMapsWithoutDaemon();
@@ -50,8 +51,8 @@ describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
       const messageWithoutCallStack = stack.split('Call stack:')[0];
       expect(messageWithoutCallStack).toMatchInlineSnapshot(`
         "     - Error: Project graph construction cannot be performed due to a loop detected in the call stack. This can happen if 'createProjectGraphAsync' is called directly or indirectly during project graph construction.
-          To avoid this, you can add a check against "global.NX_GRAPH_CREATION" before calling "createProjectGraphAsync".
-          "
+             To avoid this, you can add a check against "global.NX_GRAPH_CREATION" before calling "createProjectGraphAsync".
+             "
       `);
     } finally {
       expect(testPlugin.createNodes[1]).toHaveBeenCalled();
@@ -72,9 +73,10 @@ describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
         }),
       ],
     } as any;
-    jest
-      .spyOn(plugins, 'getPlugins')
-      .mockImplementation(async () => [testPlugin]);
+    jest.spyOn(plugins, 'getPluginsSeparated').mockImplementation(async () => ({
+      specifiedPlugins: [testPlugin],
+      defaultPlugins: [],
+    }));
 
     const p = await buildProjectGraphAndSourceMapsWithoutDaemon();
     expect(testPlugin.createNodes[1]).toHaveBeenCalled();
@@ -90,9 +92,10 @@ describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
         }),
       ],
     } as any;
-    jest
-      .spyOn(plugins, 'getPlugins')
-      .mockImplementation(async () => [testPlugin]);
+    jest.spyOn(plugins, 'getPluginsSeparated').mockImplementation(async () => ({
+      specifiedPlugins: [testPlugin],
+      defaultPlugins: [],
+    }));
 
     return Promise.all([
       buildProjectGraphAndSourceMapsWithoutDaemon(),

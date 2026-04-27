@@ -15,10 +15,10 @@ jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
   readJsonFile: jest.fn(),
 }));
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const fs = require('fs');
 import * as tsUtils from './typescript';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const nxFileutils = require('@nx/devkit');
 import {
   getNpmPackageSharedConfig,

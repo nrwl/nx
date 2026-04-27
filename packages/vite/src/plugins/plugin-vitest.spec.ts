@@ -1,6 +1,7 @@
 import * as devkit from '@nx/devkit';
 import { CreateNodesContextV2 } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
+import { loadViteDynamicImport } from '../utils/executor-utils';
 
 // Mock fs to provide stable test environment
 jest.mock('node:fs', () => ({
@@ -33,9 +34,10 @@ jest.mock('vitest/node', () => ({
   }),
 }));
 
-// Mock readJsonFile from @nx/devkit to return stable project name
+// Mock readJsonFile and detectPackageManager from @nx/devkit for stable test environment
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
+  detectPackageManager: jest.fn().mockReturnValue('npm'),
   readJsonFile: jest.fn((path) => {
     if (path.endsWith('package.json')) {
       return { name: 'vite' };
@@ -55,6 +57,15 @@ jest.mock('vite', () => ({
       dependencies: [],
     });
   }),
+}));
+
+// This spec simulates a non-TS-solution workspace via the `node:fs` mock above
+// (`existsSync` returns false for `tsconfig.base.json`). The global mock in
+// `scripts/unit-test-setup.js` short-circuits `isUsingTsSolutionSetup()` before
+// any fs read, so we override it here to explicitly express the intent.
+jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
+  ...jest.requireActual('@nx/js/src/utils/typescript/ts-solution-setup'),
+  isUsingTsSolutionSetup: jest.fn(() => false),
 }));
 
 jest.mock('../utils/executor-utils', () => ({
@@ -126,6 +137,70 @@ describe('@nx/vite/plugin', () => {
       );
 
       expect(nodes).toMatchSnapshot();
+    });
+  });
+
+  describe('typecheck enabled', () => {
+    beforeEach(async () => {
+      context = {
+        nxJsonConfiguration: {
+          targetDefaults: {},
+          namedInputs: {
+            default: ['{projectRoot}/**/*'],
+            production: ['!{projectRoot}/**/*.spec.ts'],
+          },
+        },
+        workspaceRoot: '',
+      };
+    });
+
+    afterEach(() => {
+      jest.resetModules();
+    });
+
+    it('should include d.ts in dependentTasksOutputFiles when typecheck is enabled', async () => {
+      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
+        resolveConfig: jest.fn().mockResolvedValue({
+          path: 'vitest.config.ts',
+          config: {},
+          dependencies: [],
+          test: {
+            typecheck: {
+              enabled: true,
+            },
+          },
+        }),
+      });
+
+      const nodes = await createNodesFunction(
+        ['vitest.config.ts'],
+        {
+          testTargetName: 'test',
+        },
+        context
+      );
+
+      const testTarget = nodes[0][1].projects['.'].targets['test'];
+      expect(testTarget.inputs).toContainEqual({
+        dependentTasksOutputFiles: '**/*.{js,d.ts}',
+        transitive: true,
+      });
+    });
+
+    it('should only include js in dependentTasksOutputFiles when typecheck is not enabled', async () => {
+      const nodes = await createNodesFunction(
+        ['vitest.config.ts'],
+        {
+          testTargetName: 'test',
+        },
+        context
+      );
+
+      const testTarget = nodes[0][1].projects['.'].targets['test'];
+      expect(testTarget.inputs).toContainEqual({
+        dependentTasksOutputFiles: '**/*.js',
+        transitive: true,
+      });
     });
   });
 });

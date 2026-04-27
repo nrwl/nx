@@ -495,73 +495,125 @@ class ProcessTaskUtilsTest {
   }
 
   @Nested
+  inner class InferExtensionsFromInputPropertiesTests {
+
+    @Test
+    fun `compile task infers class and jar with archive dependents`() {
+      val kotlinProject = ProjectBuilder.builder().withName("kotlinInferTest").build()
+      kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
+
+      val compileTestKotlin = kotlinProject.tasks.getByName("compileTestKotlin")
+      val dependsOnTasks = getDependsOnTask(compileTestKotlin)
+
+      val extensions = inferExtensionsFromInputProperties(compileTestKotlin, dependsOnTasks)
+
+      assertTrue(extensions.contains("class"), "Expected 'class' extension, got $extensions")
+      assertTrue(
+          extensions.contains("jar"),
+          "Expected 'jar' extension from archive dependents, got $extensions")
+    }
+
+    @Test
+    fun `kotlin compile task alone infers class via primary branch`() {
+      val kotlinProject = ProjectBuilder.builder().withName("kotlinPrimaryBranch").build()
+      kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
+
+      val compileKotlin = kotlinProject.tasks.getByName("compileKotlin")
+
+      val extensions = inferExtensionsFromInputProperties(compileKotlin, emptySet())
+
+      assertTrue(
+          extensions.contains("class"),
+          "Expected 'class' extension from primary branch for KotlinCompile task, got $extensions")
+      assertFalse(
+          extensions.contains("jar"),
+          "Expected no 'jar' extension with empty dependents, got $extensions")
+    }
+
+    @Test
+    fun `kotlin compile dependent contributes class extension`() {
+      val kotlinProject = ProjectBuilder.builder().withName("kotlinDepBranch").build()
+      kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
+
+      val compileKotlin = kotlinProject.tasks.getByName("compileKotlin")
+      val plain = kotlinProject.tasks.register("plain").get()
+
+      val extensions = inferExtensionsFromInputProperties(plain, setOf(compileKotlin))
+
+      assertTrue(
+          extensions.contains("class"),
+          "Expected 'class' from KotlinCompile dependent, got $extensions")
+    }
+
+    @Test
+    fun `compile task without archive dependents does not infer jar`() {
+      val project = ProjectBuilder.builder().withName("compileOnly").build()
+      project.plugins.apply("java")
+
+      val compileJava = project.tasks.getByName("compileJava")
+
+      val extensions = inferExtensionsFromInputProperties(compileJava, emptySet())
+
+      assertTrue(extensions.contains("class"), "Expected 'class' extension, got $extensions")
+      assertFalse(
+          extensions.contains("jar"), "Compile task alone should not infer 'jar', got $extensions")
+    }
+
+    @Test
+    fun `archive dependent tasks infer their archive extension`() {
+      val kotlinProject = ProjectBuilder.builder().withName("kotlinJarTest").build()
+      kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
+
+      val jarTask = kotlinProject.tasks.getByName("jar")
+      val dependentTasks = setOf(jarTask)
+
+      val extensions =
+          inferExtensionsFromInputProperties(kotlinProject.tasks.getByName("build"), dependentTasks)
+
+      assertTrue(
+          extensions.contains("jar"),
+          "Expected 'jar' extension from archive task dependency, got $extensions")
+    }
+
+    @Test
+    fun `test task infers class and jar regardless of dependents`() {
+      val kotlinProject = ProjectBuilder.builder().withName("kotlinTestTask").build()
+      kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
+
+      val testTask = kotlinProject.tasks.getByName("test")
+      val extensions = inferExtensionsFromInputProperties(testTask, emptySet())
+
+      assertTrue(
+          extensions.contains("class"), "Expected 'class' extension for Test task, got $extensions")
+      assertTrue(
+          extensions.contains("jar"), "Expected 'jar' extension for Test task, got $extensions")
+    }
+
+    @Test
+    fun `plain tasks infer no extensions`() {
+      val project = ProjectBuilder.builder().build()
+      val task = project.tasks.register("plainTask").get()
+
+      val extensions = inferExtensionsFromInputProperties(task, emptySet())
+
+      assertTrue(extensions.isEmpty(), "Expected empty extensions for plain task, got $extensions")
+    }
+  }
+
+  @Nested
   inner class ProviderBasedDependenciesTests {
-
     @Test
-    fun `returns empty set when task has no dependencies`() {
-      val task = project.tasks.register("standalone").get()
-      assertTrue(findProviderBasedDependencies(task).isEmpty())
-    }
+    fun `compileTestKotlin from kotlin plugin has correct provider dependencies`() {
+      val kotlinProject = ProjectBuilder.builder().withName("kotlinProject").build()
+      kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
 
-    @Test
-    fun `identifies TaskProvider dependencies`() {
-      val producerProvider = project.tasks.register("producer")
-      val consumerProvider = project.tasks.register("consumer")
-      consumerProvider.configure { it.dependsOn(producerProvider) }
+      val compileTestKotlin = kotlinProject.tasks.getByName("compileTestKotlin")
+      val result = findProviderBasedDependencies(compileTestKotlin)
 
-      val result = findProviderBasedDependencies(consumerProvider.get())
-
-      assertTrue(result.any { it.contains("producer") }, "Found: $result")
-    }
-
-    @Test
-    fun `identifies ProviderInternal from task output files`() {
-      val producerProvider =
-          project.tasks.register("producer") { task ->
-            task.outputs.file(
-                java.io.File(project.layout.buildDirectory.asFile.get(), "output.jar"))
-          }
-      val consumerProvider = project.tasks.register("consumer")
-      consumerProvider.configure { it.dependsOn(producerProvider.map { p -> p.outputs.files }) }
-
-      val result = findProviderBasedDependencies(consumerProvider.get())
-
-      assertTrue(result.any { it.contains("producer") }, "Found: $result")
-    }
-
-    @Test
-    fun `identifies ProviderInternal from task output directory`() {
-      val compileProvider =
-          project.tasks.register("compile") { task ->
-            task.outputs.dir(java.io.File(project.layout.buildDirectory.asFile.get(), "classes"))
-          }
-      val jarProvider = project.tasks.register("jar")
-      jarProvider.configure { it.dependsOn(compileProvider.map { p -> p.outputs.files }) }
-
-      val result = findProviderBasedDependencies(jarProvider.get())
-
-      assertTrue(result.any { it.contains("compile") }, "Found: $result")
-    }
-
-    @Test
-    fun `identifies multiple TaskProvider dependencies`() {
-      val provider1 = project.tasks.register("task1")
-      val provider2 = project.tasks.register("task2")
-      val provider3 = project.tasks.register("task3")
-
-      val consumerProvider = project.tasks.register("consumer")
-      consumerProvider.configure { task ->
-        task.dependsOn(provider1)
-        task.dependsOn(provider2)
-        task.dependsOn(provider3)
-      }
-
-      val result = findProviderBasedDependencies(consumerProvider.get())
-
-      assertEquals(3, result.size)
-      assertTrue(result.any { it.contains("task1") }, "Found: $result")
-      assertTrue(result.any { it.contains("task2") }, "Found: $result")
-      assertTrue(result.any { it.contains("task3") }, "Found: $result")
+      assertTrue { result.contains(":compileKotlin") }
+      assertTrue { result.contains(":jar") }
+      assertTrue { result.contains(":compileJava") }
+      assertTrue { result.contains(":checkKotlinGradlePluginConfigurationErrors") }
     }
   }
 

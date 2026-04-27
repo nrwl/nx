@@ -4,6 +4,12 @@ import { PackageManager } from './utils/package-manager';
 
 export interface CreateWorkspaceOptions {
   name: string; // Workspace name (e.g. org name)
+  /**
+   * @description Override the working directory for workspace creation.
+   * When set, the workspace is created under this directory instead of process.cwd().
+   * Used when the user provides "." or an absolute path as the workspace name.
+   */
+  workingDir?: string;
   packageManager: PackageManager; // Package manager to use
   nxCloud: NxCloud; // Enable Nx Cloud
   useGitHub?: boolean; // Will you be using GitHub as your git hosting provider?

@@ -41,6 +41,10 @@ class ResidentMavenExecutor(
 
     private fun configureSystemProperties() {
         System.setProperty("maven.home", mavenHome.absolutePath)
+        // Align with the mvn launcher so ${maven.conf}/settings.xml resolves (global settings.xml).
+        if (System.getProperty("maven.conf") == null) {
+            System.setProperty("maven.conf", File(mavenHome, "conf").absolutePath)
+        }
         System.setProperty("maven.multiModuleProjectDirectory", workspaceRoot.absolutePath)
 
         if (mavenMajorVersion == "4") {

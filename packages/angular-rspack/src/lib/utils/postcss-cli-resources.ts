@@ -154,7 +154,6 @@ export default function (options?: PostcssCliResourcesOptions): Plugin {
 
         loader.addDependency(result);
         if (emitFile) {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           loader.emitFile(outputPath, content!, undefined, {
             sourceFilename: result,
           });

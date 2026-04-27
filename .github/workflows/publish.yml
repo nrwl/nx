@@ -23,6 +23,7 @@ env:
   CYPRESS_INSTALL_BINARY: 0
   NODE_VERSION: 22.16.0
   PNPM_VERSION: 10.28.2 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
+  NX_GRADLE_PROJECT_GRAPH_TIMEOUT: 600
 
 jobs:
   # We first need to determine the version we are releasing, and if we need a custom repo or ref to use for the git checkout in subsequent steps.
@@ -237,6 +238,10 @@ jobs:
               # Help clang find GCC runtime (crtbeginS.o, libgcc) and use lld for jemalloc build
               export CFLAGS="${CFLAGS} -fuse-ld=lld --gcc-toolchain=/usr/aarch64-unknown-linux-gnu"
 
+              # Build jemalloc with 64 KiB allocator page so the binary works on aarch64
+              # Linux kernels with 4K/16K/64K pages (Asahi, Ampere, Graviton, etc.).
+              export JEMALLOC_SYS_WITH_LG_PAGE=16
+
               npm i -g pnpm@${PNPM_VERSION} --force
               pnpm --version
 
@@ -291,6 +296,10 @@ jobs:
                 GCC_DIR=\$(dirname \$(find /aarch64-linux-musl-cross/lib/gcc -name crtbeginS.o | head -1))
                 export CFLAGS=\"\${CFLAGS} -fuse-ld=lld --gcc-install-dir=\${GCC_DIR}\"
 
+                # Build jemalloc with 64 KiB allocator page so the binary works on aarch64
+                # Linux kernels with 4K/16K/64K pages (Asahi, Ampere, Graviton, etc.).
+                export JEMALLOC_SYS_WITH_LG_PAGE=16
+
                 # Install deps and run native build
                 pnpm install --frozen-lockfile
                 rustup target add aarch64-unknown-linux-musl
@@ -313,6 +322,10 @@ jobs:
         with:
           repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
           ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
+
+      - name: Set verbose logging from debug mode
+        if: runner.debug == '1'
+        run: echo "NX_VERBOSE_LOGGING=true" >> "$GITHUB_ENV"
 
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
@@ -375,6 +388,8 @@ jobs:
           docker run --rm \
             --user 0:0 \
             -e PNPM_VERSION \
+            -e NX_GRADLE_PROJECT_GRAPH_TIMEOUT \
+            -e NX_VERBOSE_LOGGING \
             -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db \
             -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache \
             -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index \
@@ -420,11 +435,12 @@ jobs:
           PLAYWRIGHT_BROWSERS_PATH: 0
           NODE_VERSION: 22.16.0
           NX_GRADLE_DISABLE: 'true'
+          NODE_OPTIONS: '--max-old-space-size=4096'
         with:
           operating_system: freebsd
           version: '14.0'
           architecture: x86-64
-          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE
+          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE NODE_OPTIONS
           shell: bash
           run: |
             env
@@ -497,6 +513,9 @@ jobs:
             echo "Checking disk space after cleanup"
             df -h
             
+            # Disable core dumps - OOM'd Node processes write multi-GB core files that fill the disk
+            ulimit -c 0
+
             echo "Building FreeBSD bindings"
             BUILD_EXIT=0
             pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd || BUILD_EXIT=$?
@@ -506,6 +525,18 @@ jobs:
 
             if [ "$BUILD_EXIT" -ne 0 ]; then
               echo "Build failed with exit code $BUILD_EXIT"
+              echo "=== Disk usage by top-level directories ==="
+              du -sh /* 2>/dev/null | sort -rh | head -20
+              echo "=== Disk usage in home directory ==="
+              du -sh ~/* 2>/dev/null | sort -rh | head -20
+              echo "=== Disk usage in workspace ==="
+              du -sh /home/runner/work/nx/nx/* 2>/dev/null | sort -rh | head -20
+              echo "=== Disk usage in .nx ==="
+              du -sh /home/runner/work/nx/nx/.nx/* 2>/dev/null | sort -rh | head -20
+              echo "=== Disk usage in cargo/rustup ==="
+              du -sh ~/.cargo/* ~/.rustup/* 2>/dev/null | sort -rh | head -20
+              echo "=== Core dumps ==="
+              find / -name "*.core" -o -name "core.*" -o -name "core" 2>/dev/null | head -10
               exit $BUILD_EXIT
             fi
 
@@ -548,6 +579,10 @@ jobs:
           repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
           ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
 
+      - name: Set verbose logging from debug mode
+        if: runner.debug == '1'
+        run: echo "NX_VERBOSE_LOGGING=true" >> "$GITHUB_ENV"
+
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
 
@@ -582,7 +617,6 @@ jobs:
           VERSION: ${{ needs.resolve-required-data.outputs.version }}
           DRY_RUN: ${{ needs.resolve-required-data.outputs.dry_run_flag }}
           PUBLISH_BRANCH: ${{ needs.resolve-required-data.outputs.publish_branch }}
-          NX_VERBOSE_LOGGING: true
         run: |
           echo ""
           # Create and check out the publish branch

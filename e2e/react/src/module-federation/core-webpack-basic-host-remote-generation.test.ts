@@ -15,8 +15,7 @@ import {
   cleanupCoreWebpackTest,
 } from './core-webpack-setup';
 
-// TODO: unskip once Cypress HMR issue is resolved
-describe.skip('React Module Federation - Webpack Basic - Host Remote Generation', () => {
+describe('React Module Federation - Webpack Basic - Host Remote Generation', () => {
   beforeAll(() => {
     setupCoreWebpackTest();
   });

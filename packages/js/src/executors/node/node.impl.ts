@@ -22,9 +22,9 @@ import { killTree } from './lib/kill-tree';
 import { LineAwareWriter } from './lib/line-aware-writer';
 import { createCoalescingDebounce } from './lib/coalescing-debounce';
 import { fileExists } from 'nx/src/utils/fileutils';
-import { getRelativeDirectoryToProjectRoot } from '../../utils/get-main-file-dir';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import { detectModuleFormat } from './lib/detect-module-format';
+import { getOutputFileName } from './lib/output-file';
 
 interface ActiveTask {
   id: string;
@@ -405,7 +405,11 @@ function calculateResolveMappings(
   );
   return dependencies.reduce((m, c) => {
     if (c.node.type !== 'npm' && c.outputs[0] != null) {
-      m[c.name] = joinPathFragments(context.root, c.outputs[0]);
+      // `outputs` are cache patterns and may contain globs (e.g. from the
+      // inferred `@nx/js/typescript` build target). Strip the glob portion
+      // so the runtime require overrides resolve to the actual output dir.
+      const outputDir = stripGlobToBaseDir(c.outputs[0]);
+      m[c.name] = joinPathFragments(context.root, outputDir);
     }
     return m;
   }, {});
@@ -453,7 +457,13 @@ function getFileToRun(
         projectRoot: project.data.root,
         workspaceRoot: context.root,
       });
-      return path.join(outputFilePath, 'main.js');
+      // `outputs` are cache patterns and may contain globs (e.g. the inferred
+      // `@nx/js/typescript` build target scopes its output to
+      // `{projectRoot}/dist/**/*.{js,...}` to avoid caching non-tsc files).
+      // Strip the glob portion back to the last path separator before it to
+      // recover the base output directory.
+      const outputDir = stripGlobToBaseDir(outputFilePath);
+      return path.join(outputDir, 'main.js');
     }
     const fallbackFile = path.join('dist', project.data.root, 'main.js');
 
@@ -468,21 +478,25 @@ function getFileToRun(
   let outputFileName = buildOptions.outputFileName;
 
   if (!outputFileName) {
-    const fileName = `${path.parse(buildOptions.main).name}.js`;
-    if (
-      buildTargetExecutor === '@nx/js:tsc' ||
-      buildTargetExecutor === '@nx/js:swc'
-    ) {
-      outputFileName = path.join(
-        getRelativeDirectoryToProjectRoot(buildOptions.main, project.data.root),
-        fileName
-      );
-    } else {
-      outputFileName = fileName;
-    }
+    outputFileName = getOutputFileName({
+      buildTargetExecutor,
+      main: buildOptions.main,
+      outputPath: buildOptions.outputPath,
+      rootDir: buildOptions.rootDir ?? project.data.root,
+    });
   }
 
   return join(context.root, buildOptions.outputPath, outputFileName);
+}
+
+function stripGlobToBaseDir(pathWithGlob: string): string {
+  const globIdx = pathWithGlob.search(/[*?[{(]/);
+  if (globIdx === -1) {
+    return pathWithGlob.replace(/[\\/]+$/, '');
+  }
+  const prefix = pathWithGlob.slice(0, globIdx);
+  const lastSep = Math.max(prefix.lastIndexOf('/'), prefix.lastIndexOf('\\'));
+  return lastSep === -1 ? '' : prefix.slice(0, lastSep);
 }
 
 function fileToRunCorrectPath(fileToRun: string): string {
