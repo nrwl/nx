@@ -16,16 +16,34 @@
   "include": ["**/*.ts"],
   "references": [
     {
-      "path": "../vitest/tsconfig.lib.json"
-    },
-    {
       "path": "../js/tsconfig.lib.json"
     },
     {
       "path": "../devkit/tsconfig.lib.json"
     },
     {
+      "path": "../vitest/tsconfig.lib.json"
+    },
+    {
       "path": "../nx/tsconfig.lib.json"
+    },
+    {
+      "path": "../webpack/tsconfig.lib.json"
+    },
+    {
+      "path": "../vite/tsconfig.lib.json"
+    },
+    {
+      "path": "../playwright/tsconfig.lib.json"
+    },
+    {
+      "path": "../jest/tsconfig.lib.json"
+    },
+    {
+      "path": "../eslint/tsconfig.lib.json"
+    },
+    {
+      "path": "../cypress/tsconfig.lib.json"
     }
   ]
 }

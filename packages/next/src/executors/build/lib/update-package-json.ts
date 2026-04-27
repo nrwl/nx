@@ -17,6 +17,7 @@ export function updatePackageJson(
   // These are always required for a production Next.js app to run.
   // sharp is for next/image https://nextjs.org/docs/messages/sharp-missing-in-production
   // critters is required for experimental optimizing CSS
+  // semver is required by .nx-helpers/with-nx.js at runtime
   const requiredPackages = [
     'react',
     'react-dom',
@@ -24,6 +25,7 @@ export function updatePackageJson(
     'typescript',
     'sharp',
     'critters',
+    'semver',
   ];
   for (const pkg of requiredPackages) {
     const externalNode = context.projectGraph.externalNodes[`npm:${pkg}`];

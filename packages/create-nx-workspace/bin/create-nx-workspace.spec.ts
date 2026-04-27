@@ -1,6 +1,7 @@
 import {
   validateWorkspaceName,
   resolveSpecialFolderName,
+  determineFolder,
 } from './create-nx-workspace';
 import { CnwError } from '../src/utils/error-utils';
 import { mkdtempSync, mkdirSync, rmSync, realpathSync } from 'fs';
@@ -40,6 +41,110 @@ describe('validateWorkspaceName', () => {
         'Workspace names must start with a letter'
       );
     }
+  });
+});
+
+describe('determineFolder', () => {
+  let originalCwd: string;
+
+  beforeEach(() => {
+    originalCwd = process.cwd();
+  });
+
+  afterEach(() => {
+    process.chdir(originalCwd);
+  });
+
+  function makeParsedArgs(
+    overrides: Partial<{
+      name: string;
+      positional: string;
+      interactive: boolean;
+    }> = {}
+  ) {
+    return {
+      _: overrides.positional ? [overrides.positional] : [],
+      $0: 'create-nx-workspace',
+      name: overrides.name ?? '',
+      interactive: overrides.interactive ?? false,
+    } as any;
+  }
+
+  it('should return directory basename for "." in non-interactive mode', async () => {
+    const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
+    process.chdir(tmpDir);
+
+    const parsedArgs = makeParsedArgs({ positional: '.', interactive: false });
+    const result = await determineFolder(parsedArgs);
+
+    expect(result).toBe(basename(tmpDir));
+    expect(parsedArgs.workingDir).toBe(dirname(tmpDir));
+
+    rmSync(tmpDir, { recursive: true });
+  });
+
+  it('should return directory basename for "./" in non-interactive mode', async () => {
+    const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
+    process.chdir(tmpDir);
+
+    const parsedArgs = makeParsedArgs({ positional: './', interactive: false });
+    const result = await determineFolder(parsedArgs);
+
+    expect(result).toBe(basename(tmpDir));
+    expect(parsedArgs.workingDir).toBe(dirname(tmpDir));
+
+    rmSync(tmpDir, { recursive: true });
+  });
+
+  it('should return directory basename for "." in interactive mode', async () => {
+    const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
+    process.chdir(tmpDir);
+
+    const parsedArgs = makeParsedArgs({ positional: '.', interactive: true });
+    const result = await determineFolder(parsedArgs);
+
+    expect(result).toBe(basename(tmpDir));
+
+    rmSync(tmpDir, { recursive: true });
+  });
+
+  it('should default to directory basename when no name given in non-interactive mode', async () => {
+    const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
+    process.chdir(tmpDir);
+
+    const parsedArgs = makeParsedArgs({ interactive: false });
+    const result = await determineFolder(parsedArgs);
+
+    expect(result).toBe(basename(tmpDir));
+
+    rmSync(tmpDir, { recursive: true });
+  });
+
+  it('should return the name directly when it does not exist as a directory', async () => {
+    const parsedArgs = makeParsedArgs({
+      positional: 'nonexistent-workspace-name',
+      interactive: false,
+    });
+    const result = await determineFolder(parsedArgs);
+
+    expect(result).toBe('nonexistent-workspace-name');
+  });
+
+  it('should throw DIRECTORY_EXISTS for an existing directory name in non-interactive mode', async () => {
+    const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
+    const existing = join(tmpDir, 'existing');
+    mkdirSync(existing);
+    process.chdir(tmpDir);
+
+    const parsedArgs = makeParsedArgs({
+      positional: 'existing',
+      interactive: false,
+    });
+
+    await expect(determineFolder(parsedArgs)).rejects.toThrow(CnwError);
+    await expect(determineFolder(parsedArgs)).rejects.toThrow(/already exists/);
+
+    rmSync(tmpDir, { recursive: true });
   });
 });
 

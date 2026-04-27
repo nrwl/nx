@@ -303,7 +303,10 @@ impl TasksList {
     }
 
     pub fn set_max_parallel(&mut self, max_parallel: Option<u32>) {
-        self.max_parallel = max_parallel.unwrap_or(DEFAULT_MAX_PARALLEL as u32) as usize;
+        let requested = max_parallel.unwrap_or(DEFAULT_MAX_PARALLEL as u32) as usize;
+        // Cap to the number of tasks in the graph so we don't reserve placeholder
+        // rows for slots that can never be filled (e.g. --parallel=8 with 5 tasks).
+        self.max_parallel = requested.min(self.task_lookup.len());
     }
 
     /// Returns the display items visible to the renderer: the filtered subset when a
@@ -3072,6 +3075,40 @@ mod tests {
         let mut terminal = create_test_terminal(120, 15);
 
         // No tasks have been started yet
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_set_max_parallel_caps_to_task_count() {
+        // When --parallel exceeds the number of tasks in the graph, the parallel
+        // section should only reserve as many slots as there are tasks — otherwise
+        // empty placeholder rows would be rendered for slots that can never fill.
+        let (mut tasks_list, _) = create_test_tasks_list(); // 3 tasks
+
+        tasks_list.update(Action::StartCommand(Some(8))).unwrap();
+        assert_eq!(tasks_list.max_parallel, 3);
+
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+        assert_eq!(tasks_list.max_parallel, 2);
+
+        tasks_list.update(Action::StartCommand(Some(3))).unwrap();
+        assert_eq!(tasks_list.max_parallel, 3);
+    }
+
+    #[test]
+    fn test_max_parallel_exceeds_task_count_does_not_reserve_extra_slots() {
+        // Regression: with --parallel=8 and only 3 tasks in the graph, the
+        // parallel section must not reserve empty placeholder rows for the
+        // 5 slots that can never be filled.
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        tasks_list.update(Action::StartCommand(Some(8))).unwrap();
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .ok();
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(terminal.backend());

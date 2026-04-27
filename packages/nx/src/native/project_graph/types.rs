@@ -12,6 +12,9 @@ pub struct ExternalNode {
 #[derive(Default)]
 pub struct Target {
     pub executor: Option<String>,
+    #[napi(
+        ts_type = "Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput>"
+    )]
     pub inputs: Option<Vec<JsInputs>>,
     pub outputs: Option<Vec<String>>,
     pub options: Option<String>,
@@ -23,6 +26,9 @@ pub struct Target {
 #[derive(Default)]
 pub struct Project {
     pub root: String,
+    #[napi(
+        ts_type = "Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput>>"
+    )]
     pub named_inputs: Option<HashMap<String, Vec<JsInputs>>>,
     pub tags: Option<Vec<String>>,
     pub targets: HashMap<String, Target>,

@@ -5,10 +5,15 @@ import path = require('path');
 
 import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
+import { serverLogger } from '../../../daemon/logger';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
-import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
+import {
+  consumeMessagesFromSocket,
+  parseMessage,
+} from '../../../utils/consume-messages-from-socket';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { logger } from '../../../utils/logger';
+import { ProgressTopics } from '../../../utils/progress-topics';
 import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
 import type { RawProjectGraphDependency } from '../../project-graph-builder';
 import { LoadedNxPlugin } from '../loaded-nx-plugin';
@@ -26,9 +31,14 @@ import type {
   MessageResult,
   PluginWorkerLoadResult,
   PluginWorkerMessage,
+  PluginWorkerNotification,
   PluginWorkerResult,
 } from './messaging';
-import { isPluginWorkerResult, sendMessageOverSocket } from './messaging';
+import {
+  isPluginWorkerNotification,
+  isPluginWorkerResult,
+  sendMessageOverSocket,
+} from './messaging';
 import {
   Hook,
   Phase,
@@ -209,7 +219,11 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   }
 
   private handleSocketData = (raw: string) => {
-    const message = JSON.parse(raw);
+    const message = parseMessage<any>(raw);
+    if (isPluginWorkerNotification(message)) {
+      handlePluginWorkerNotification(message);
+      return;
+    }
     if (!isPluginWorkerResult(message)) {
       return;
     }
@@ -442,6 +456,16 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       `[isolated-plugin] shutting down worker for "${this.name}" after ${hookName}`
     );
     this.shutdown();
+  }
+
+  async setWorkerEnv(env: Record<string, string>): Promise<void> {
+    if (!this._alive) {
+      return;
+    }
+    const result = await this.sendRequest('setWorkerEnv', env);
+    if (result.success === false) {
+      throw result.error;
+    }
   }
 
   notifyPhaseAborted(phase: Phase, lastCompletedHook: Hook): void {
@@ -682,4 +706,23 @@ type Falsy = false | 0 | '' | null | undefined | 0n;
 
 function hooks(...array: Array<Hook | Falsy>): Array<Hook> {
   return array.filter((v): v is Hook => !!v);
+}
+
+// When the host process is the daemon, broadcast the log notification
+// to every client subscribed to the graph-construction topic so the
+// line surfaces in their terminal. When the host is the direct CLI
+// there is no client to notify, so the log line goes straight to
+// stdout/stderr.
+function handlePluginWorkerNotification(
+  notification: PluginWorkerNotification
+): void {
+  if ((global as any).NX_DAEMON) {
+    serverLogger.logToClient(
+      ProgressTopics.GraphConstruction,
+      notification.message,
+      notification.level
+    );
+    return;
+  }
+  console[notification.level](notification.message);
 }

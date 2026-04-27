@@ -3,6 +3,21 @@ import * as utils from 'nx/src/utils/fileutils';
 import { PackageJson } from 'nx/src/utils/package-json';
 
 describe('updatePackageJson', () => {
+  let writeFileSyncSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    // Use require to get the real fs module object (esModuleInterop's __importStar
+    // would create a copy, and spies on the copy wouldn't affect the callsite).
+    const fs = require('fs');
+    writeFileSyncSpy = jest
+      .spyOn(fs, 'writeFileSync')
+      .mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    writeFileSyncSpy.mockRestore();
+  });
+
   const commonOptions = {
     outputPath: 'dist/index.js',
     tsConfig: './tsconfig.json',
@@ -16,7 +31,9 @@ describe('updatePackageJson', () => {
 
   describe('generateExportsField: true', () => {
     it('should support ESM', () => {
-      const spy = jest.spyOn(utils, 'writeJsonFile');
+      const spy = jest
+        .spyOn(utils, 'writeJsonFile')
+        .mockImplementation(() => undefined);
 
       updatePackageJson(
         {
@@ -45,7 +62,9 @@ describe('updatePackageJson', () => {
     });
 
     it('should support CJS', () => {
-      const spy = jest.spyOn(utils, 'writeJsonFile');
+      const spy = jest
+        .spyOn(utils, 'writeJsonFile')
+        .mockImplementation(() => undefined);
 
       updatePackageJson(
         {
@@ -70,7 +89,9 @@ describe('updatePackageJson', () => {
     });
 
     it('should support ESM + CJS', () => {
-      const spy = jest.spyOn(utils, 'writeJsonFile');
+      const spy = jest
+        .spyOn(utils, 'writeJsonFile')
+        .mockImplementation(() => undefined);
 
       updatePackageJson(
         {
@@ -100,7 +121,9 @@ describe('updatePackageJson', () => {
     });
 
     it('should support custom exports field', () => {
-      const spy = jest.spyOn(utils, 'writeJsonFile');
+      const spy = jest
+        .spyOn(utils, 'writeJsonFile')
+        .mockImplementation(() => undefined);
 
       updatePackageJson(
         {
@@ -142,7 +165,9 @@ describe('updatePackageJson', () => {
 
   describe('generateExportsField: false', () => {
     it('should support ESM', () => {
-      const spy = jest.spyOn(utils, 'writeJsonFile');
+      const spy = jest
+        .spyOn(utils, 'writeJsonFile')
+        .mockImplementation(() => undefined);
 
       updatePackageJson(
         {
@@ -163,7 +188,9 @@ describe('updatePackageJson', () => {
     });
 
     it('should support CJS', () => {
-      const spy = jest.spyOn(utils, 'writeJsonFile');
+      const spy = jest
+        .spyOn(utils, 'writeJsonFile')
+        .mockImplementation(() => undefined);
 
       updatePackageJson(
         {
@@ -183,7 +210,9 @@ describe('updatePackageJson', () => {
     });
 
     it('should support ESM + CJS', () => {
-      const spy = jest.spyOn(utils, 'writeJsonFile');
+      const spy = jest
+        .spyOn(utils, 'writeJsonFile')
+        .mockImplementation(() => undefined);
 
       updatePackageJson(
         {
@@ -203,7 +232,9 @@ describe('updatePackageJson', () => {
     });
 
     it('should support custom exports field', () => {
-      const spy = jest.spyOn(utils, 'writeJsonFile');
+      const spy = jest
+        .spyOn(utils, 'writeJsonFile')
+        .mockImplementation(() => undefined);
 
       updatePackageJson(
         {
@@ -233,7 +264,9 @@ describe('updatePackageJson', () => {
 
   describe('skipTypeField', () => {
     it('should not include type field if skipTypeField is true', () => {
-      const spy = jest.spyOn(utils, 'writeJsonFile');
+      const spy = jest
+        .spyOn(utils, 'writeJsonFile')
+        .mockImplementation(() => undefined);
 
       updatePackageJson(
         {
@@ -261,7 +294,9 @@ describe('updatePackageJson', () => {
     });
 
     it('should include type field if skipTypeField is undefined', () => {
-      const spy = jest.spyOn(utils, 'writeJsonFile');
+      const spy = jest
+        .spyOn(utils, 'writeJsonFile')
+        .mockImplementation(() => undefined);
 
       updatePackageJson(
         {
@@ -289,7 +324,9 @@ describe('updatePackageJson', () => {
     });
 
     it('should include type field if skipTypeField is false', () => {
-      const spy = jest.spyOn(utils, 'writeJsonFile');
+      const spy = jest
+        .spyOn(utils, 'writeJsonFile')
+        .mockImplementation(() => undefined);
 
       updatePackageJson(
         {

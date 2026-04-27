@@ -68,7 +68,7 @@ describe('Angular Module Federation - Host and Remote', () => {
     updateJson('tsconfig.base.json', (json) => {
       delete json.compilerOptions.paths[`@${proj}/${wildcardLib}`];
       json.compilerOptions.paths[`@${proj}/${wildcardLib}/*`] = [
-        `${wildcardLib}/src/lib/*`,
+        `./${wildcardLib}/src/lib/*`,
       ];
       return json;
     });

@@ -1,4 +1,3 @@
-/* eslint-disable */
 // Ignore @nx/jest dependency since it is the installed version not the one in the workspace
 // nx-ignore-next-line
 const { default: nxPreset } = require('@nx/jest/preset');
@@ -6,6 +5,7 @@ const { default: nxPreset } = require('@nx/jest/preset');
 module.exports = {
   ...nxPreset,
   displayName: 'nx-dev',
+  modulePathIgnorePatterns: ['<rootDir>/.next'],
   transform: {
     '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',
     '^.+\\.[tj]sx?$': ['babel-jest', { presets: ['@nx/next/babel'] }],

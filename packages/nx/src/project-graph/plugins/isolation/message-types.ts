@@ -75,6 +75,6 @@ export type Handlers<TDefs extends MessageDefs> = {
   [K in keyof TDefs & string]: (
     payload: TDefs[K]['payload']
   ) => TDefs[K] extends { result: unknown }
-    ? MaybePromise<TDefs[K]['result'] | void>
+    ? MaybePromise<TDefs[K]['result']>
     : MaybePromise<void>;
 };

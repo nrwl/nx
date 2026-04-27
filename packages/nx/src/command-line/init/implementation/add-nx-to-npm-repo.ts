@@ -58,7 +58,6 @@ export async function addNxToNpmRepo(options: Options, guided: boolean = true) {
     ).cacheableOperations;
 
     for (const scriptName of cacheableOperations) {
-      // eslint-disable-next-line no-await-in-loop
       scriptOutputs[scriptName] = (
         await enquirer.prompt([
           {

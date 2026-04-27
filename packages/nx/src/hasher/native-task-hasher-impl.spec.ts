@@ -167,9 +167,13 @@ describe('native task hasher', () => {
       projectGraph,
       workspaceFiles.rustReferences,
       { selectivelyHashTsConfig: false }
-    ).hashTasks(Object.values(taskGraph.tasks), taskGraph, {
-      TESTENV: 'test',
-    });
+    ).hashTasks(
+      Object.values(taskGraph.tasks),
+      taskGraph,
+      Object.fromEntries(
+        Object.values(taskGraph.tasks).map((t) => [t.id, { TESTENV: 'test' }])
+      )
+    );
 
     expect(sortHashInputs(hash)).toMatchInlineSnapshot(`
       [
@@ -716,7 +720,11 @@ describe('native task hasher', () => {
       projectGraph,
       workspaceFiles.rustReferences,
       { selectivelyHashTsConfig: false }
-    ).hashTasks(Object.values(taskGraph.tasks), taskGraph, {});
+    ).hashTasks(
+      Object.values(taskGraph.tasks),
+      taskGraph,
+      Object.fromEntries(Object.values(taskGraph.tasks).map((t) => [t.id, {}]))
+    );
 
     expect(sortHashInputs(hash)).toMatchInlineSnapshot(`
       [
@@ -846,9 +854,16 @@ describe('native task hasher', () => {
       projectGraph,
       workspaceFiles.rustReferences,
       { selectivelyHashTsConfig: false }
-    ).hashTasks(Object.values(taskGraph.tasks), taskGraph, {
-      MY_TEST_HASH_ENV: 'MY_TEST_HASH_ENV_VALUE',
-    });
+    ).hashTasks(
+      Object.values(taskGraph.tasks),
+      taskGraph,
+      Object.fromEntries(
+        Object.values(taskGraph.tasks).map((t) => [
+          t.id,
+          { MY_TEST_HASH_ENV: 'MY_TEST_HASH_ENV_VALUE' },
+        ])
+      )
+    );
 
     expect(sortHashInputs(hash)).toMatchInlineSnapshot(`
       [

@@ -1,5 +1,6 @@
 import { type Tree, ensurePackage, joinPathFragments } from '@nx/devkit';
 import { nxVersion } from '../../../../utils/versions';
+import { reactRouterSupportsVite8 } from '../../../../utils/version-utils';
 import { NormalizedSchema, Schema } from '../../schema';
 
 export async function setupViteConfiguration(
@@ -32,6 +33,10 @@ export async function setupViteConfiguration(
     plugins: ['react()'],
   };
 
+  // @react-router/dev < 7.14.0 caps its Vite peer dep at ^7, so fall back to
+  // Vite 7 when an older version is already installed in the workspace.
+  const forceViteV7 = options.useReactRouter && !reactRouterSupportsVite8(tree);
+
   const viteTask = await viteConfigurationGenerator(tree, {
     uiFramework: 'react',
     project: options.projectName,
@@ -43,8 +48,7 @@ export async function setupViteConfiguration(
     addPlugin: options.addPlugin,
     projectType: 'application',
     port: options.port,
-    // React Router does not yet support Vite 8, so force Vite 7.
-    ...(options.useReactRouter ? { useViteV7: true } : {}),
+    ...(forceViteV7 ? { useViteV7: true } : {}),
   });
   tasks.push(viteTask);
   createOrEditViteConfig(

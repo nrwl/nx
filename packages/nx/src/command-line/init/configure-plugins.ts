@@ -41,8 +41,12 @@ export function installPluginPackages(
       nxJson.installation.plugins[plugin] = nxVersion;
     }
     writeJsonFile(join(repoRoot, 'nx.json'), nxJson);
-    // Invoking nx wrapper to install plugins.
-    runNxSync('--version', { stdio: 'ignore' });
+    try {
+      runNxSync('--version', { stdio: 'pipe' });
+    } catch (e) {
+      if ((e as any)?.stderr) process.stderr.write((e as any).stderr);
+      throw e;
+    }
   }
 }
 

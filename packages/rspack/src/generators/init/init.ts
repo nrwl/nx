@@ -100,7 +100,6 @@ export async function rspackInitGenerator(
       : {}),
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const version = require('../../../package.json').version;
   if (version !== '0.0.1') {
     // Ignored for local dev / e2e tests.

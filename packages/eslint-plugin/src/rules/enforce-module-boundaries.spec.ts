@@ -2906,18 +2906,22 @@ Circular file chain:
 });
 
 const linter = new TSESLint.Linter();
+const prefixedRuleName = `@nx/${enforceModuleBoundariesRuleName}`;
 const baseConfig = {
-  parser: '@typescript-eslint/parser',
-  parserOptions: {
-    ecmaVersion: 2018 as const,
-    sourceType: 'module' as const,
+  files: ['**/*.{ts,tsx,js,jsx}'],
+  languageOptions: {
+    parser,
+    parserOptions: {
+      ecmaVersion: 2018 as const,
+      sourceType: 'module' as const,
+    },
   },
-  rules: {
-    [enforceModuleBoundariesRuleName]: 'error',
+  plugins: {
+    '@nx': {
+      rules: { [enforceModuleBoundariesRuleName]: enforceModuleBoundaries },
+    },
   },
 };
-linter.defineParser('@typescript-eslint/parser', parser);
-linter.defineRule(enforceModuleBoundariesRuleName, enforceModuleBoundaries);
 
 function createFile(f: string, deps?: FileDataDependency[]): FileData {
   return { file: f, hash: '', deps };
@@ -2944,9 +2948,9 @@ function runRule(
   const config = {
     ...baseConfig,
     rules: {
-      [enforceModuleBoundariesRuleName]: ['error', ruleArguments],
+      [prefixedRuleName]: ['error', ruleArguments],
     },
   };
 
-  return linter.verify(content, config as any, contentPath);
+  return linter.verify(content, [config] as any, contentPath);
 }

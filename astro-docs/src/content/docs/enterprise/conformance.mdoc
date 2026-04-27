@@ -98,27 +98,27 @@ Use `npx nx record --` to capture the logs for `nx conformance:check` in the Nx 
 
 ```yaml
 - name: Enforce all conformance rules
-  run: npx nx record -- npx nx conformance:check
+  run: npx nx record -- npx nx-cloud conformance:check
 ```
 
-Here we are using the `nx` CLI to run the `conformance:check` command so that we can hook into the power of Conformance rules configured in your Nx Cloud Enterprise organization. Learn more about [conformance rules in Nx Cloud](/docs/enterprise/configure-conformance-rules-in-nx-cloud).
+Here we are using the `nx-cloud` CLI to run the `conformance:check` command so that we can hook into the power of Conformance rules configured in your Nx Cloud Enterprise organization. Learn more about [conformance rules in Nx Cloud](/docs/enterprise/configure-conformance-rules-in-nx-cloud).
 
 {% /tabitem %}
 {% /tabs %}
 
-If a valid license is not available to the workspace (either locally or via Nx Cloud), the `nx conformance` and `nx conformance:check` commands will fail without checking any rules.
+If a valid license is not available to the workspace (either locally or via Nx Cloud), the `conformance` and `conformance:check` commands will fail without checking any rules.
 
 ## Taking things further with Nx Cloud Enterprise
 
-Organizations on the Nx Cloud Enterprise plan can [publish custom conformance rules](/docs/enterprise/publish-conformance-rules-to-nx-cloud) to their Nx Cloud organization without the friction of a custom registry, and then [configure the rules](/docs/enterprise/configure-conformance-rules-in-nx-cloud) to apply to the workspaces in their organization automatically when `nx conformance` or `nx conformance:check` is run (note that the `nx-cloud` CLI is used in this case in order to handle the authentication with Nx Cloud).
+Organizations on the Nx Cloud Enterprise plan can [publish custom conformance rules](/docs/enterprise/publish-conformance-rules-to-nx-cloud) to their Nx Cloud organization without the friction of a custom registry, and then [configure the rules](/docs/enterprise/configure-conformance-rules-in-nx-cloud) to apply to the workspaces in their organization automatically when `nx-cloud conformance` or `nx-cloud conformance:check` is run (note that the `nx-cloud` CLI is used in this case in order to handle the authentication with Nx Cloud).
 
 The license will be applied automatically via Nx Cloud in all contexts, and so there is zero setup required for the end developer.
 
-Simply add an appropriate invocation of the `nx conformance:check` command to your CI process and all cloud configured rules will be applied and merged with any local rules:
+Simply add an appropriate invocation of the `nx-cloud conformance:check` command to your CI process and all cloud configured rules will be applied and merged with any local rules:
 
 ```yaml
 - name: Enforce all conformance rules
-  run: npx nx record -- npx nx conformance:check
+  run: npx nx record -- npx nx-cloud conformance:check
 ```
 
 Learn more about [publishing](/docs/enterprise/publish-conformance-rules-to-nx-cloud) and [configuring conformance rules in Nx Cloud](/docs/enterprise/configure-conformance-rules-in-nx-cloud).

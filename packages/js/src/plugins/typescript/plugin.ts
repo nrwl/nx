@@ -873,18 +873,19 @@ function getInputs(
     );
   }
 
-  // tsc --build reads .d.ts and .tsbuildinfo files from dependent tasks, not
-  // the source files of dependencies. This correctly tracks build outputs from
-  // both external project references and same-project task dependencies (e.g.
-  // build-native producing .d.ts files that may be excluded from file watching
-  // via .nxignore. "*.d.ts" are also read from the deps projects sources.
+  // tsc --build reads .d.ts/.d.cts/.d.mts and .tsbuildinfo files from dependent
+  // tasks, not the source files of dependencies. This correctly tracks build
+  // outputs from both external project references and same-project task
+  // dependencies (e.g. build-native producing .d.ts files that may be excluded
+  // from file watching via .nxignore). Declaration files are also read from
+  // the deps projects sources.
 
   inputs.push({
-    dependentTasksOutputFiles: '**/*.{d.ts,tsbuildinfo}',
+    dependentTasksOutputFiles: '**/*.{d.ts,d.cts,d.mts,tsbuildinfo}',
     transitive: true,
   });
   inputs.push({
-    fileset: '{projectRoot}/**/*.d.ts',
+    fileset: '{projectRoot}/**/*.{d.ts,d.cts,d.mts}',
     dependencies: true,
   });
 
@@ -961,7 +962,10 @@ function getOutputs(
       if (emitDeclarationOnly) {
         outputs.add(
           pathToInputOrOutput(
-            joinPathFragments(tsConfig.options.outDir, '**/*.d.ts'),
+            joinPathFragments(
+              tsConfig.options.outDir,
+              '**/*.{d.ts,d.cts,d.mts}'
+            ),
             workspaceRoot,
             config.project
           )
@@ -969,7 +973,10 @@ function getOutputs(
         if (tsConfig.options.declarationMap) {
           outputs.add(
             pathToInputOrOutput(
-              joinPathFragments(tsConfig.options.outDir, '**/*.d.ts.map'),
+              joinPathFragments(
+                tsConfig.options.outDir,
+                '**/*.{d.ts,d.cts,d.mts}.map'
+              ),
               workspaceRoot,
               config.project
             )

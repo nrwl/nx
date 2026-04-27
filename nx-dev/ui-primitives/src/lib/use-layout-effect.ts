@@ -1,5 +1,5 @@
 'use client';
-/* eslint-disable @typescript-eslint/no-restricted-imports */
+
 import { useLayoutEffect as ReactUseLayoutEffect } from 'react';
 
 /**
