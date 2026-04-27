@@ -53,12 +53,7 @@ export function createGradleProject(
 
   try {
     e2eConsoleLogger(
-      runCommand(`${gradleCommand} --stop`, {
-        cwd,
-      })
-    );
-    e2eConsoleLogger(
-      runCommand(`${gradleCommand} clean`, {
+      runCommand(`${gradleCommand} clean --no-daemon`, {
         cwd,
       })
     );
