@@ -6,6 +6,7 @@ import {
   runE2ETests,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e-utils';
 import {
   setupModuleFederationTest,
@@ -33,6 +34,14 @@ describe('Angular Module Federation - Federated Libraries', () => {
     runCLI(
       `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`
     );
+
+    // Pin the host's serve port to the reserved one so parallel tests don't
+    // collide on the default 4200. The cypress devServerTarget=${host}:serve
+    // will pick this up automatically.
+    updateJson(`${host}/project.json`, (project) => {
+      project.targets.serve.options.port = hostPort;
+      return project;
+    });
 
     runCLI(`generate @nx/js:lib ${lib} --no-interactive`);
 
@@ -107,6 +116,14 @@ describe('Angular Module Federation - Federated Libraries', () => {
     runCLI(
       `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`
     );
+
+    // Pin the host's serve port to the reserved one so parallel tests don't
+    // collide on the default 4200. The cypress devServerTarget=${host}:serve
+    // will pick this up automatically.
+    updateJson(`${host}/project.json`, (project) => {
+      project.targets.serve.options.port = hostPort;
+      return project;
+    });
 
     runCLI(`generate @nx/js:lib ${lib} --no-interactive`);
 
