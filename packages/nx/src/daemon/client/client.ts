@@ -1331,8 +1331,10 @@ export class DaemonClient {
     // socket close handler fires reset() while we're awaiting these opens,
     // it would null out this._out/this._err and the spawn below would hit
     // `Cannot read properties of null (reading 'fd')`.
-    const out = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
-    const err = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
+    const [out, err] = await Promise.all([
+      open(DAEMON_OUTPUT_LOG_FILE, 'a'),
+      open(DAEMON_OUTPUT_LOG_FILE, 'a'),
+    ]);
     this._out = out;
     this._err = err;
 

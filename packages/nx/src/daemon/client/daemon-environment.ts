@@ -142,16 +142,18 @@ export function getDaemonEnv() {
  */
 export function applyDaemonEnvFromClient(newEnv: NodeJS.ProcessEnv): boolean {
   let changed = false;
-  for (const key in newEnv) {
-    if (process.env[key] !== newEnv[key]) {
-      process.env[key] = newEnv[key];
-      changed = true;
-    }
-  }
-  for (const key of Object.keys(process.env)) {
-    if (
+  const allKeys = new Set([
+    ...Object.keys(process.env),
+    ...Object.keys(newEnv),
+  ]);
+  for (const key of allKeys) {
+    if (key in newEnv) {
+      if (process.env[key] !== newEnv[key]) {
+        process.env[key] = newEnv[key];
+        changed = true;
+      }
+    } else if (
       key.startsWith('NX_') &&
-      !(key in newEnv) &&
       !isExcludedEnvVar(key) &&
       !Object.hasOwn(DAEMON_ENV_REQUIRED_SETTINGS, key)
     ) {
