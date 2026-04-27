@@ -6,8 +6,20 @@ const path = require('path');
 // from the relative imports inside `packages/nx` — so the mock is never
 // applied on CI. Using the absolute physical path here guarantees both
 // resolution chains hit the same registry entry.
-const nxSrcPath = (relative) =>
-  path.resolve(__dirname, '..', 'packages/nx/src', relative);
+const nxSrcPath = (relative) => {
+  const base = path.resolve(__dirname, '..', 'packages/nx/src', relative);
+  // Resolve to the actual source file. `jest.doMock` keys mocks by the path
+  // that callers' module resolution produces — `.ts` for our source, or
+  // `index.js` for the napi binding entry — so passing a bare directory or
+  // extension-less path leaves callers' imports unmocked.
+  for (const candidate of [base, `${base}.ts`, path.join(base, 'index.js')]) {
+    try {
+      const stat = require('fs').statSync(candidate);
+      if (stat.isFile()) return candidate;
+    } catch (_) {}
+  }
+  return base;
+};
 const realWorkspaceRoot = path.resolve(__dirname, '..');
 
 module.exports = () => {
@@ -126,22 +138,31 @@ module.exports = () => {
   // undefined`, which would surface as "is not iterable" downstream.
   const workspaceContextPath = nxSrcPath('utils/workspace-context');
   jest.doMock(workspaceContextPath, () => {
-    const actual = jest.requireActual(workspaceContextPath);
+    // Lazily resolve the real module on each call. Capturing it in the
+    // factory closure produces an empty object on the first invocation
+    // (jest's internal loader returns the in-progress `module.exports`
+    // when `requireActual` re-enters the same module from inside the
+    // mock factory).
+    const realFn =
+      (name) =>
+      (...args) =>
+        jest.requireActual(workspaceContextPath)[name](...args);
     const guarded =
-      (fn, fallback) =>
+      (name, fallback) =>
       (root, ...rest) => {
         if (root === realWorkspaceRoot) return fallback();
-        return fn(root, ...rest);
+        return jest.requireActual(workspaceContextPath)[name](root, ...rest);
       };
     return {
       __esModule: true,
-      ...actual,
       setupWorkspaceContext: (root) => {
         if (root === realWorkspaceRoot) return;
-        return actual.setupWorkspaceContext(root);
+        return jest
+          .requireActual(workspaceContextPath)
+          .setupWorkspaceContext(root);
       },
       getNxWorkspaceFilesFromContext: guarded(
-        actual.getNxWorkspaceFilesFromContext,
+        'getNxWorkspaceFilesFromContext',
         () =>
           Promise.resolve({
             projectFileMap: {},
@@ -149,31 +170,36 @@ module.exports = () => {
             externalReferences: {},
           })
       ),
-      globWithWorkspaceContext: guarded(actual.globWithWorkspaceContext, () =>
+      globWithWorkspaceContext: guarded('globWithWorkspaceContext', () =>
         Promise.resolve([])
       ),
       globWithWorkspaceContextSync: guarded(
-        actual.globWithWorkspaceContextSync,
+        'globWithWorkspaceContextSync',
         () => []
       ),
       multiGlobWithWorkspaceContext: guarded(
-        actual.multiGlobWithWorkspaceContext,
+        'multiGlobWithWorkspaceContext',
         () => Promise.resolve([])
       ),
-      hashWithWorkspaceContext: guarded(actual.hashWithWorkspaceContext, () =>
+      hashWithWorkspaceContext: guarded('hashWithWorkspaceContext', () =>
         Promise.resolve('0')
       ),
       hashMultiGlobWithWorkspaceContext: guarded(
-        actual.hashMultiGlobWithWorkspaceContext,
+        'hashMultiGlobWithWorkspaceContext',
         () => Promise.resolve([])
       ),
-      getAllFileDataInContext: guarded(actual.getAllFileDataInContext, () =>
+      getAllFileDataInContext: guarded('getAllFileDataInContext', () =>
         Promise.resolve([])
       ),
       getFilesInDirectoryUsingContext: guarded(
-        actual.getFilesInDirectoryUsingContext,
+        'getFilesInDirectoryUsingContext',
         () => Promise.resolve([])
       ),
+      // Pass-through helpers that don't take a workspace root.
+      updateContextWithChangedFiles: realFn('updateContextWithChangedFiles'),
+      updateFilesInContext: realFn('updateFilesInContext'),
+      updateProjectFiles: realFn('updateProjectFiles'),
+      resetWorkspaceContext: realFn('resetWorkspaceContext'),
     };
   });
 
