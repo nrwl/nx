@@ -134,11 +134,11 @@ export function getDaemonEnv() {
 }
 
 /**
- * Without the deletion step, an `NX_` var set by one client (e.g.
- * `NX_PREFER_NODE_STRIP_TYPES=true` for a single command) would persist in
- * the daemon and leak into every subsequent client's project-graph
- * computation. Deletion is scoped to `NX_` so unrelated environment the
- * daemon process needs to operate (PATH, HOME, etc.) is left alone.
+ * Without the deletion step, a var set by one client (e.g.
+ * `NX_PREFER_NODE_STRIP_TYPES=true` or `JAVA_TOOL_OPTIONS=...` for a single
+ * command) would persist in the daemon and leak into every subsequent
+ * client's project-graph computation. Deletion skips excluded vars and
+ * required settings, which the daemon owns and clients should not control.
  */
 export function applyDaemonEnvFromClient(newEnv: NodeJS.ProcessEnv): boolean {
   let changed = false;
@@ -153,7 +153,6 @@ export function applyDaemonEnvFromClient(newEnv: NodeJS.ProcessEnv): boolean {
         changed = true;
       }
     } else if (
-      key.startsWith('NX_') &&
       !isExcludedEnvVar(key) &&
       !Object.hasOwn(DAEMON_ENV_REQUIRED_SETTINGS, key)
     ) {

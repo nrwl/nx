@@ -12,7 +12,7 @@ use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
 #[cfg(not(target_os = "macos"))]
 use crate::native::walker::create_walker;
 use crate::native::watch::types::{
-    EventType, WatchEvent, WatchEventInternal, transform_event_to_watch_events,
+    EventType, RawWatchEvent, WatchEvent, WatchEventInternal, transform_event_to_watch_events,
 };
 use crate::native::watch::watch_filterer;
 use napi::bindgen_prelude::*;
@@ -50,22 +50,22 @@ fn build_ignore_glob_set() -> Arc<NxGlobSet> {
 /// if it is a directory-creation event. Used on Linux/Windows to register
 /// watches synchronously when a directory appears.
 #[cfg(not(target_os = "macos"))]
-fn new_directories_from_event(event: &notify::Event, ignore_globs: &NxGlobSet) -> Vec<PathBuf> {
+fn new_directories_from_event(event: &RawWatchEvent, ignore_globs: &NxGlobSet) -> Vec<PathBuf> {
+    use crate::native::watch::types::meta_is_dir;
     use notify::EventKind;
     use notify::event::CreateKind;
 
     if !matches!(
-        event.kind,
+        event.kind(),
         EventKind::Create(CreateKind::Folder) | EventKind::Create(CreateKind::Any)
     ) {
         return Vec::new();
     }
 
     event
-        .paths
-        .iter()
-        .filter(|path| path.is_dir() && !ignore_globs.is_match(path))
-        .cloned()
+        .paths()
+        .filter(|(path, metadata)| meta_is_dir(metadata) && !ignore_globs.is_match(path))
+        .map(|(path, _)| path.to_path_buf())
         .collect()
 }
 
@@ -87,20 +87,22 @@ where
     }
 }
 
-/// Walk newly created directories to collect files that were written before
-/// inotify started watching them. Returns nested subdirectories encountered
-/// so the caller can register watches for them. Collected files are merged
-/// into the accumulator and emitted on the next flush.
+/// Register watches for newly created directories, walk them to backfill
+/// files written before our watch became active, and register watches for
+/// any nested subdirectories encountered. The walk's create events are
+/// merged into the accumulator so they emit on the next flush.
 #[cfg(not(target_os = "macos"))]
-fn walk_new_dirs_into_accumulator(
+fn register_and_backfill_new_dirs(
+    watcher: &Arc<Mutex<notify::RecommendedWatcher>>,
     dirs: &[PathBuf],
     origin: &str,
     accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
-) -> HashSet<PathBuf> {
+) {
     use crate::native::walker::nx_walker_sync;
 
-    let mut nested_dirs: HashSet<PathBuf> = HashSet::new();
+    register_watches(watcher, dirs);
 
+    let mut nested_dirs: HashSet<PathBuf> = HashSet::new();
     for dir in dirs {
         for rel_path in nx_walker_sync(dir, None) {
             let full_path = dir.join(&rel_path);
@@ -119,7 +121,7 @@ fn walk_new_dirs_into_accumulator(
         }
     }
 
-    nested_dirs
+    register_watches(watcher, &nested_dirs);
 }
 
 /// Enumerate all non-ignored directories to watch individually (non-recursively).
@@ -163,6 +165,74 @@ fn merge_event(
         }
     } else {
         accumulator.insert(incoming.path.clone(), incoming);
+    }
+}
+
+/// Per-event ingest pipeline: filter → new-directory backfill → transform →
+/// merge into the accumulator → bump the flush deadline. Holds references
+/// to the session-level state (filterer, watcher handle, ignores, origin)
+/// so the per-event call site stays small.
+struct EventIngestor<'a> {
+    filterer: &'a watch_filterer::WatchFilterer,
+    origin: &'a str,
+    origin_path: &'a str,
+    #[cfg(not(target_os = "macos"))]
+    watcher: &'a Arc<Mutex<notify::RecommendedWatcher>>,
+    #[cfg(not(target_os = "macos"))]
+    ignore_globs: &'a NxGlobSet,
+}
+
+impl EventIngestor<'_> {
+    fn ingest(
+        &self,
+        event: NotifyResult,
+        accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
+        burst_start: &mut Option<Instant>,
+        flush_deadline: &mut Option<Instant>,
+    ) {
+        let event = match event {
+            Ok(e) => e,
+            Err(notify_err) => {
+                tracing::warn!("notify error: {:?}", notify_err);
+                return;
+            }
+        };
+        trace!(?event, "raw event");
+
+        // Canonicalize and stat each path once; reuse the metadata across
+        // filter, new-directory detection, and transform.
+        let raw = RawWatchEvent::new(event);
+
+        if !self.filterer.check_event(&raw) {
+            return;
+        }
+
+        #[cfg(not(target_os = "macos"))]
+        {
+            let new_dirs = new_directories_from_event(&raw, self.ignore_globs);
+            if !new_dirs.is_empty() {
+                trace!(
+                    count = new_dirs.len(),
+                    "registering new directory watches synchronously"
+                );
+                register_and_backfill_new_dirs(self.watcher, &new_dirs, self.origin, accumulator);
+            }
+        }
+
+        match transform_event_to_watch_events(&raw, self.origin_path) {
+            Ok(events) => {
+                for e in events {
+                    merge_event(accumulator, e);
+                }
+            }
+            Err(e) => {
+                tracing::warn!(?e, "event transform failed");
+            }
+        }
+
+        let now = Instant::now();
+        let bs = *burst_start.get_or_insert(now);
+        *flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
     }
 }
 
@@ -334,6 +404,16 @@ impl Watcher {
             let mut burst_start: Option<Instant> = None;
             let mut flush_deadline: Option<Instant> = None;
 
+            let ingestor = EventIngestor {
+                filterer: &filterer,
+                origin: &origin,
+                origin_path: &origin_path,
+                #[cfg(not(target_os = "macos"))]
+                watcher: &watcher_for_thread,
+                #[cfg(not(target_os = "macos"))]
+                ignore_globs: &ignore_globs,
+            };
+
             loop {
                 if stop_flag.load(Ordering::Relaxed) {
                     trace!("stop flag set, exiting processing thread");
@@ -349,58 +429,9 @@ impl Watcher {
                     None => SHUTDOWN_POLL,
                 };
 
-                let mut ingest =
-                    |event: NotifyResult,
-                     accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
-                     burst_start: &mut Option<Instant>,
-                     flush_deadline: &mut Option<Instant>| {
-                        let event = match event {
-                            Ok(e) => e,
-                            Err(notify_err) => {
-                                tracing::warn!("notify error: {:?}", notify_err);
-                                return;
-                            }
-                        };
-                        trace!(?event, "raw event");
-
-                        if !filterer.check_event(&event) {
-                            return;
-                        }
-
-                        #[cfg(not(target_os = "macos"))]
-                        {
-                            let new_dirs = new_directories_from_event(&event, &ignore_globs);
-                            if !new_dirs.is_empty() {
-                                trace!(
-                                    count = new_dirs.len(),
-                                    "registering new directory watches synchronously"
-                                );
-                                register_watches(&watcher_for_thread, &new_dirs);
-                                let nested =
-                                    walk_new_dirs_into_accumulator(&new_dirs, &origin, accumulator);
-                                register_watches(&watcher_for_thread, &nested);
-                            }
-                        }
-
-                        match transform_event_to_watch_events(&event, &origin_path) {
-                            Ok(events) => {
-                                for e in events {
-                                    merge_event(accumulator, e);
-                                }
-                            }
-                            Err(e) => {
-                                tracing::warn!(?e, "event transform failed");
-                            }
-                        }
-
-                        let now = Instant::now();
-                        let bs = *burst_start.get_or_insert(now);
-                        *flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
-                    };
-
                 match rx.recv_timeout(wait) {
                     Ok(ProcMsg::Notify(event)) => {
-                        ingest(
+                        ingestor.ingest(
                             event,
                             &mut accumulator,
                             &mut burst_start,
@@ -413,7 +444,7 @@ impl Watcher {
                         // request, then take the accumulator and respond.
                         while let Ok(msg) = rx.try_recv() {
                             match msg {
-                                ProcMsg::Notify(event) => ingest(
+                                ProcMsg::Notify(event) => ingestor.ingest(
                                     event,
                                     &mut accumulator,
                                     &mut burst_start,

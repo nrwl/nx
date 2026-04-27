@@ -1,10 +1,53 @@
+use std::fs::{self, Metadata};
+use std::io;
 use std::path::{Path, PathBuf};
 
-use notify::EventKind;
 use notify::event::{CreateKind, ModifyKind, RenameMode};
+use notify::{Event, EventKind};
 use tracing::trace;
 
 use crate::native::watch::utils::canonicalize_event_paths;
+
+/// A notify event enriched with a per-path metadata stat. The metadata is
+/// computed once when the event arrives and reused everywhere downstream
+/// (filter, new-directory detection, transform) instead of re-statting.
+pub(super) struct RawWatchEvent {
+    pub event: Event,
+    /// Parallel to `event.paths` — one stat result per path.
+    pub metadata: Vec<io::Result<Metadata>>,
+}
+
+impl RawWatchEvent {
+    pub fn new(event: Event) -> Self {
+        let event = canonicalize_event_paths(&event);
+        let metadata = event.paths.iter().map(fs::metadata).collect();
+        Self { event, metadata }
+    }
+
+    pub fn paths(&self) -> impl Iterator<Item = (&Path, &io::Result<Metadata>)> {
+        self.event
+            .paths
+            .iter()
+            .zip(self.metadata.iter())
+            .map(|(p, m)| (p.as_path(), m))
+    }
+
+    pub fn first(&self) -> Option<(&Path, &io::Result<Metadata>)> {
+        self.paths().next()
+    }
+
+    pub fn kind(&self) -> &EventKind {
+        &self.event.kind
+    }
+}
+
+pub(super) fn meta_is_dir(metadata: &io::Result<Metadata>) -> bool {
+    metadata.as_ref().map(|m| m.is_dir()).unwrap_or(false)
+}
+
+pub(super) fn meta_exists(metadata: &io::Result<Metadata>) -> bool {
+    metadata.is_ok()
+}
 
 #[napi(string_enum)]
 #[derive(Debug, Clone, Copy)]
@@ -50,32 +93,23 @@ pub(super) struct WatchEventInternal {
     pub origin: String,
 }
 
-pub fn transform_event_to_watch_events(
-    value: &notify::Event,
+pub(super) fn transform_event_to_watch_events(
+    value: &RawWatchEvent,
     origin: &str,
 ) -> anyhow::Result<Vec<WatchEventInternal>> {
-    let value = canonicalize_event_paths(value);
-
-    let Some(path_ref) = value.paths.first() else {
+    let Some((path_ref, metadata)) = value.first() else {
         let error_msg = "unable to get path from the event";
-        trace!(?value, error_msg);
+        trace!(event = ?value.event, error_msg);
         anyhow::bail!(error_msg)
     };
 
-    let event_kind = &value.kind;
+    let event_kind = value.kind();
 
-    if !path_ref.exists() && matches!(event_kind, EventKind::Remove(_)) {
+    if !meta_exists(metadata) {
+        // Treat any non-existent path as a delete (covers both explicit
+        // Remove events and create-then-delete races).
         return Ok(vec![WatchEventInternal {
-            path: path_ref.clone(),
-            r#type: EventType::delete,
-            origin: origin.to_owned(),
-        }]);
-    }
-
-    // If the path doesn't exist and it's not an explicit remove, treat as delete.
-    if !path_ref.exists() {
-        return Ok(vec![WatchEventInternal {
-            path: path_ref.clone(),
+            path: path_ref.to_path_buf(),
             r#type: EventType::delete,
             origin: origin.to_owned(),
         }]);
@@ -83,16 +117,14 @@ pub fn transform_event_to_watch_events(
 
     #[cfg(target_os = "macos")]
     {
-        use std::fs;
         use std::os::macos::fs::MetadataExt;
 
         // Skip directory events
-        if path_ref.is_dir() {
+        if meta_is_dir(metadata) {
             return Ok(vec![]);
         }
 
-        let t = fs::metadata(path_ref);
-        let event_type = match t {
+        let event_type = match metadata {
             Err(_) => EventType::delete,
             Ok(t) => {
                 let modified_time = t.st_mtime();
@@ -109,7 +141,7 @@ pub fn transform_event_to_watch_events(
         };
 
         Ok(vec![WatchEventInternal {
-            path: path_ref.clone(),
+            path: path_ref.to_path_buf(),
             r#type: event_type,
             origin: origin.to_owned(),
         }])
@@ -118,7 +150,7 @@ pub fn transform_event_to_watch_events(
     #[cfg(target_os = "windows")]
     {
         // Skip directory events
-        if path_ref.is_dir() {
+        if meta_is_dir(metadata) {
             return Ok(vec![]);
         }
         Ok(create_watch_event_internal(origin, event_kind, path_ref))

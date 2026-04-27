@@ -18,13 +18,14 @@ export type FileWatcherCallback = (
 
 // Captured by watchWorkspace so flushPendingWorkspaceChanges can route
 // force-flushed events through the same handling as the async callback.
-let activeServer: Server | undefined;
-let workspaceChangesCallback: FileWatcherCallback | undefined;
+// Definite-assignment: dispatchWorkspaceChanges only runs after
+// watchWorkspace has set both, so reading them as non-nullable is safe.
+let activeServer!: Server;
+let workspaceChangesCallback!: FileWatcherCallback;
 
 function dispatchWorkspaceChanges(
   events: WatchEvent[]
 ): Promise<void> | undefined {
-  if (!activeServer) return;
   for (const event of events) {
     if (event.path.endsWith('.gitignore') || event.path === '.nxignore') {
       // If the ignore files themselves have changed we need to dynamically
@@ -36,7 +37,7 @@ function dispatchWorkspaceChanges(
       });
     }
   }
-  return workspaceChangesCallback?.(null, events);
+  return workspaceChangesCallback(null, events);
 }
 
 export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {

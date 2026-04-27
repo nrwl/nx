@@ -6,7 +6,8 @@ use std::path::PathBuf;
 use tracing::trace;
 
 use crate::native::watch::git_utils::get_gitignore_files;
-use crate::native::watch::utils::{canonicalize_event_paths, get_nx_ignore};
+use crate::native::watch::types::{RawWatchEvent, meta_is_dir};
+use crate::native::watch::utils::get_nx_ignore;
 
 #[derive(Debug)]
 pub struct WatchFilterer {
@@ -20,35 +21,36 @@ pub struct WatchFilterer {
 impl WatchFilterer {
     fn filter_path(&self, path: &std::path::Path, is_dir: bool) -> bool {
         let path = dunce::simplified(path);
-        let nx_ignore_match_type = if let Some(nx_ignore) = &self.nx_ignore {
-            if path.starts_with(&self.origin) {
-                nx_ignore.matched_path_or_any_parents(path, is_dir)
-            } else {
-                Match::None
-            }
-        } else {
-            Match::None
-        };
 
-        // if the nxignore file contains this file as a whitelist,
-        // we do not want gitignore to filter it out, so it will always pass as true
-        if matches!(nx_ignore_match_type, Match::Whitelist(_)) {
-            trace!(?path, "nxignore whitelist match, ignoring gitignore");
-            return true;
-        // If the nxignore file contains this file as an ignore,
-        // then there's no point in checking the gitignore file
-        } else if matches!(nx_ignore_match_type, Match::Ignore(_)) {
-            trace!(?path, "nxignore ignore match, ignoring gitignore");
-            return false;
+        // .nxignore takes precedence over .gitignore. Only consult it for
+        // paths under the origin — references outside the workspace are
+        // ignored.
+        let nx_match = self
+            .nx_ignore
+            .as_ref()
+            .filter(|_| path.starts_with(&self.origin))
+            .map(|ig| ig.matched_path_or_any_parents(path, is_dir))
+            .unwrap_or(Match::None);
+
+        match nx_match {
+            Match::Whitelist(_) => {
+                trace!(?path, "nxignore whitelist match, ignoring gitignore");
+                return true;
+            }
+            Match::Ignore(_) => {
+                trace!(?path, "nxignore ignore match, ignoring gitignore");
+                return false;
+            }
+            Match::None => {}
         }
 
-        // Check gitignores deepest-first; first match wins
+        // Check gitignores deepest-first; first match wins.
         let git_match = self
             .git_ignores
             .iter()
             .filter(|(dir, _)| path.starts_with(dir))
             .find_map(
-                |(_, gitignore)| match gitignore.matched_path_or_any_parents(path, is_dir) {
+                |(_, ig)| match ig.matched_path_or_any_parents(path, is_dir) {
                     Match::None => None,
                     m => Some(m),
                 },
@@ -63,20 +65,16 @@ impl WatchFilterer {
                 trace!(?path, "gitignore whitelist match - allowed");
                 true
             }
-            _ => {
-                // No gitignore matched — allow through
-                true
-            }
+            _ => true,
         }
     }
 
-    /// Check whether a notify event should be passed through.
-    pub fn check_event(&self, event: &notify::Event) -> bool {
-        let event = canonicalize_event_paths(event);
-        trace!(?event, "checking if event is valid");
+    /// Check whether a watch event should be passed through.
+    pub fn check_event(&self, event: &RawWatchEvent) -> bool {
+        trace!(event = ?event.event, "checking if event is valid");
 
         // Check event kind — only allow file-relevant event types.
-        match &event.kind {
+        match event.kind() {
             EventKind::Modify(ModifyKind::Name(_)) => {}
             EventKind::Modify(ModifyKind::Data(_)) => {}
             EventKind::Create(CreateKind::File) => {}
@@ -103,21 +101,19 @@ impl WatchFilterer {
         }
 
         // Check each path against ignore rules.
-        for path in &event.paths {
-            let is_dir = path.is_dir();
-
+        for (path, metadata) in event.paths() {
             // Reject paths ending with ~ (editor backup files)
             if path.display().to_string().ends_with('~') {
                 trace!(?path, "path ends with ~ - rejected");
                 return false;
             }
 
-            if !self.filter_path(path, is_dir) {
+            if !self.filter_path(path, meta_is_dir(metadata)) {
                 return false;
             }
         }
 
-        trace!(?event, "event passed all checks");
+        trace!(event = ?event.event, "event passed all checks");
         true
     }
 }

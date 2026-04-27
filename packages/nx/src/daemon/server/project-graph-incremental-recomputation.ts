@@ -238,32 +238,29 @@ export function scheduleProjectGraphRecomputation(
  */
 function startAutoRecompute() {
   if (autoRecomputePromise) return;
-  autoRecomputePromise = (async () => {
-    try {
-      do {
-        cachedSerializedProjectGraphPromise =
-          processFilesAndCreateAndSerializeProjectGraph(
-            await getPluginsSeparated()
-          );
-        const result = await cachedSerializedProjectGraphPromise;
-        notifyProjectGraphRecomputationListeners(
-          result.projectGraph,
-          result.sourceMaps,
-          result.error
-        );
+  autoRecomputePromise = runAutoRecomputeLoop().finally(() => {
+    autoRecomputePromise = undefined;
+  });
+}
 
-        // Subprocesses that read the cache directly (e.g. eslint rules
-        // calling readCachedProjectGraph) bypass the daemon socket, so
-        // they only see updates that hit disk.
-        persistProjectGraphToDisk(result);
-      } while (
-        collectedUpdatedFiles.size > 0 ||
-        collectedDeletedFiles.size > 0
+async function runAutoRecomputeLoop() {
+  do {
+    cachedSerializedProjectGraphPromise =
+      processFilesAndCreateAndSerializeProjectGraph(
+        await getPluginsSeparated()
       );
-    } finally {
-      autoRecomputePromise = undefined;
-    }
-  })();
+    const result = await cachedSerializedProjectGraphPromise;
+    notifyProjectGraphRecomputationListeners(
+      result.projectGraph,
+      result.sourceMaps,
+      result.error
+    );
+
+    // Subprocesses that read the cache directly (e.g. eslint rules
+    // calling readCachedProjectGraph) bypass the daemon socket, so
+    // they only see updates that hit disk.
+    persistProjectGraphToDisk(result);
+  } while (collectedUpdatedFiles.size > 0 || collectedDeletedFiles.size > 0);
 }
 
 export function registerProjectGraphRecomputationListener(
