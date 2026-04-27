@@ -61,21 +61,12 @@
     "tslib": "catalog:typescript"
   },
   "devDependencies": {
-    "nx": "workspace:*",
-    "@nx/eslint": "workspace:*",
-    "@nx/jest": "workspace:*",
-    "@nx/rollup": "workspace:*",
-    "@nx/vite": "workspace:*",
-    "@nx/vitest": "workspace:*"
+    "nx": "workspace:*"
   },
   "peerDependencies": {
-    "prettier": "~3.6.2",
     "verdaccio": "^6.0.5"
   },
   "peerDependenciesMeta": {
-    "prettier": {
-      "optional": true
-    },
     "verdaccio": {
       "optional": true
     }

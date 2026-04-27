@@ -58,11 +58,7 @@
   },
   "devDependencies": {
     "nx": "workspace:*",
-    "@nx/cypress": "workspace:*",
-    "@nx/docker": "workspace:*",
-    "@nx/eslint": "workspace:*",
-    "@nx/nest": "workspace:*",
-    "@nx/node": "workspace:*"
+    "@nx/nest": "workspace:*"
   },
   "peerDependencies": {
     "@module-federation/enhanced": "^2.3.3",

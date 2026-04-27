@@ -28,12 +28,6 @@
     },
     {
       "path": "../nx/tsconfig.lib.json"
-    },
-    {
-      "path": "../playwright/tsconfig.lib.json"
-    },
-    {
-      "path": "../cypress/tsconfig.lib.json"
     }
   ]
 }

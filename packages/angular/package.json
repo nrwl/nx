@@ -71,9 +71,6 @@
   },
   "devDependencies": {
     "@nx/cypress": "workspace:*",
-    "@nx/jest": "workspace:*",
-    "@nx/playwright": "workspace:*",
-    "@nx/storybook": "workspace:*",
     "@nx/vitest": "workspace:*",
     "nx": "workspace:*"
   },
@@ -91,9 +88,6 @@
       "optional": true
     },
     "@angular-devkit/build-angular": {
-      "optional": true
-    },
-    "@angular-devkit/core": {
       "optional": true
     },
     "ng-packagr": {

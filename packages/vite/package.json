@@ -43,8 +43,7 @@
     "ajv": "^8.0.0"
   },
   "devDependencies": {
-    "nx": "workspace:*",
-    "@nx/eslint": "workspace:*"
+    "nx": "workspace:*"
   },
   "peerDependencies": {
     "vite": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0",

@@ -40,10 +40,6 @@
     "tslib": "catalog:typescript",
     "yargs": "catalog:"
   },
-  "devDependencies": {
-    "nx": "workspace:*",
-    "@nx/angular": "workspace:*"
-  },
   "publishConfig": {
     "access": "public"
   }

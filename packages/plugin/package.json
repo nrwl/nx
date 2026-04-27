@@ -35,8 +35,7 @@
     "@nx/eslint": "workspace:*"
   },
   "devDependencies": {
-    "nx": "workspace:*",
-    "@nx/vitest": "workspace:*"
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

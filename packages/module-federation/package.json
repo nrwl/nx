@@ -38,9 +38,7 @@
     "webpack": "^5.101.3"
   },
   "devDependencies": {
-    "nx": "workspace:*",
-    "@nx/cypress": "workspace:*",
-    "@nx/eslint": "workspace:*"
+    "nx": "workspace:*"
   },
   "nx-migrations": {
     "migrations": "./migrations.json"

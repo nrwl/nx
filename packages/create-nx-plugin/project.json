@@ -32,5 +32,5 @@
       ]
     }
   },
-  "implicitDependencies": ["plugin"]
+  "implicitDependencies": ["plugin", "nx", "angular"]
 }

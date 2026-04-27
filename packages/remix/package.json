@@ -39,8 +39,6 @@
   },
   "devDependencies": {
     "nx": "workspace:*",
-    "@nx/cypress": "workspace:*",
-    "@nx/eslint": "workspace:*",
     "@nx/vitest": "workspace:*"
   },
   "peerDependencies": {

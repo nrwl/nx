@@ -42,13 +42,7 @@
     "kill-port": "^1.6.1"
   },
   "devDependencies": {
-    "nx": "workspace:*",
-    "@nx/angular": "workspace:*",
-    "@nx/cypress": "workspace:*",
-    "@nx/module-federation": "workspace:*",
-    "@nx/nest": "workspace:*",
-    "@nx/playwright": "workspace:*",
-    "@nx/webpack": "workspace:*"
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

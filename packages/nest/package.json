@@ -39,9 +39,6 @@
     "@nx/node": "workspace:*",
     "tslib": "catalog:typescript"
   },
-  "devDependencies": {
-    "nx": "workspace:*"
-  },
   "publishConfig": {
     "access": "public"
   }

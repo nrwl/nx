@@ -24,10 +24,5 @@
     {
       "path": "../devkit/tsconfig.lib.json"
     }
-  ],
-  "nx": {
-    "sync": {
-      "ignoredDependencies": ["eslint", "jest", "rollup", "vite", "vitest"]
-    }
-  }
+  ]
 }

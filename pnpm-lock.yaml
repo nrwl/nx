@@ -2366,15 +2366,6 @@ importers:
       '@nx/cypress':
         specifier: workspace:*
         version: link:../cypress
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../jest
-      '@nx/playwright':
-        specifier: workspace:*
-        version: link:../playwright
-      '@nx/storybook':
-        specifier: workspace:*
-        version: link:../storybook
       '@nx/vitest':
         specifier: workspace:*
         version: link:../vitest
@@ -2490,9 +2481,6 @@ importers:
       jsonc-eslint-parser:
         specifier: ^2.4.0
         version: 2.4.0
-      nx:
-        specifier: workspace:*
-        version: link:../nx
 
   packages/angular-rspack-compiler:
     dependencies:
@@ -2548,13 +2536,6 @@ importers:
       yargs:
         specifier: 'catalog:'
         version: 17.7.2
-    devDependencies:
-      '@nx/angular':
-        specifier: workspace:*
-        version: link:../angular
-      nx:
-        specifier: workspace:*
-        version: link:../nx
 
   packages/create-nx-workspace:
     dependencies:
@@ -2585,13 +2566,6 @@ importers:
       yargs:
         specifier: 'catalog:'
         version: 17.7.2
-    devDependencies:
-      '@nx/angular':
-        specifier: workspace:*
-        version: link:../angular
-      nx:
-        specifier: workspace:*
-        version: link:../nx
 
   packages/cypress:
     dependencies:
@@ -2880,33 +2854,22 @@ importers:
         specifier: catalog:typescript
         version: 2.8.1
     devDependencies:
-      '@nx/cypress':
-        specifier: workspace:*
-        version: link:../cypress
-      '@nx/detox':
-        specifier: workspace:*
-        version: link:../detox
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../jest
-      '@nx/playwright':
-        specifier: workspace:*
-        version: link:../playwright
-      '@nx/web':
-        specifier: workspace:*
-        version: link:../web
       nx:
         specifier: workspace:*
         version: link:../nx
+    optionalDependencies:
+      '@nx/detox':
+        specifier: workspace:*
+        version: link:../detox
+      '@nx/rollup':
+        specifier: workspace:*
+        version: link:../rollup
 
   packages/express:
     dependencies:
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
-      '@nx/eslint':
-        specifier: workspace:*
-        version: link:../eslint
       '@nx/js':
         specifier: workspace:*
         version: link:../js
@@ -2919,10 +2882,6 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
-    devDependencies:
-      nx:
-        specifier: workspace:*
-        version: link:../nx
 
   packages/gradle:
     dependencies:
@@ -3063,9 +3022,6 @@ importers:
       picomatch:
         specifier: 'catalog:'
         version: 4.0.4
-      prettier:
-        specifier: ~3.6.2
-        version: 3.6.2
       semver:
         specifier: 'catalog:'
         version: 7.7.4
@@ -3082,21 +3038,6 @@ importers:
         specifier: ^6.0.5
         version: 6.0.5(encoding@0.1.13)(typanion@3.14.0)
     devDependencies:
-      '@nx/eslint':
-        specifier: workspace:*
-        version: link:../eslint
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../jest
-      '@nx/rollup':
-        specifier: workspace:*
-        version: link:../rollup
-      '@nx/vite':
-        specifier: workspace:*
-        version: link:../vite
-      '@nx/vitest':
-        specifier: workspace:*
-        version: link:../vitest
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -3180,12 +3121,6 @@ importers:
         specifier: ^5.101.3
         version: 5.101.3(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))
     devDependencies:
-      '@nx/cypress':
-        specifier: workspace:*
-        version: link:../cypress
-      '@nx/eslint':
-        specifier: workspace:*
-        version: link:../eslint
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -3210,10 +3145,6 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
-    devDependencies:
-      nx:
-        specifier: workspace:*
-        version: link:../nx
 
   packages/next:
     dependencies:
@@ -3266,9 +3197,6 @@ importers:
       '@nx/cypress':
         specifier: workspace:*
         version: link:../cypress
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../jest
       '@nx/playwright':
         specifier: workspace:*
         version: link:../playwright
@@ -3303,24 +3231,6 @@ importers:
         specifier: catalog:typescript
         version: 2.8.1
     devDependencies:
-      '@nx/angular':
-        specifier: workspace:*
-        version: link:../angular
-      '@nx/cypress':
-        specifier: workspace:*
-        version: link:../cypress
-      '@nx/module-federation':
-        specifier: workspace:*
-        version: link:../module-federation
-      '@nx/nest':
-        specifier: workspace:*
-        version: link:../nest
-      '@nx/playwright':
-        specifier: workspace:*
-        version: link:../playwright
-      '@nx/webpack':
-        specifier: workspace:*
-        version: link:../webpack
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -3358,12 +3268,6 @@ importers:
         specifier: catalog:typescript
         version: 2.8.1
     devDependencies:
-      '@nx/cypress':
-        specifier: workspace:*
-        version: link:../cypress
-      '@nx/playwright':
-        specifier: workspace:*
-        version: link:../playwright
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -3573,9 +3477,6 @@ importers:
         specifier: catalog:typescript
         version: 2.8.1
     devDependencies:
-      '@nx/vitest':
-        specifier: workspace:*
-        version: link:../vitest
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -3631,9 +3532,6 @@ importers:
       '@nx/rsbuild':
         specifier: workspace:*
         version: link:../rsbuild
-      '@nx/rspack':
-        specifier: workspace:*
-        version: link:../rspack
       '@nx/storybook':
         specifier: workspace:*
         version: link:../storybook
@@ -3693,21 +3591,16 @@ importers:
         specifier: catalog:typescript
         version: 2.8.1
     devDependencies:
-      '@nx/detox':
-        specifier: workspace:*
-        version: link:../detox
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../jest
-      '@nx/vite':
-        specifier: workspace:*
-        version: link:../vite
-      '@nx/webpack':
-        specifier: workspace:*
-        version: link:../webpack
       nx:
         specifier: workspace:*
         version: link:../nx
+    optionalDependencies:
+      '@nx/detox':
+        specifier: workspace:*
+        version: link:../detox
+      '@nx/rollup':
+        specifier: workspace:*
+        version: link:../rollup
 
   packages/remix:
     dependencies:
@@ -3733,12 +3626,6 @@ importers:
         specifier: catalog:typescript
         version: 2.8.1
     devDependencies:
-      '@nx/cypress':
-        specifier: workspace:*
-        version: link:../cypress
-      '@nx/eslint':
-        specifier: workspace:*
-        version: link:../eslint
       '@nx/vitest':
         specifier: workspace:*
         version: link:../vitest
@@ -3934,21 +3821,9 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
     devDependencies:
-      '@nx/cypress':
-        specifier: workspace:*
-        version: link:../cypress
-      '@nx/docker':
-        specifier: workspace:*
-        version: link:../docker
-      '@nx/eslint':
-        specifier: workspace:*
-        version: link:../eslint
       '@nx/nest':
         specifier: workspace:*
         version: link:../nest
-      '@nx/node':
-        specifier: workspace:*
-        version: link:../node
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -4026,9 +3901,6 @@ importers:
         specifier: ^1.3.1 || ^2.0.0 || ^3.0.0 || ^4.0.0
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.2.0)(jiti@2.6.1)(jsdom@26.1.0)(less@4.5.1)(lightningcss@1.32.0)(sass-embedded@1.85.1)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(yaml@2.8.2)
     devDependencies:
-      '@nx/eslint':
-        specifier: workspace:*
-        version: link:../eslint
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -4148,9 +4020,6 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
-      typescript:
-        specifier: catalog:typescript
-        version: 5.9.2
     devDependencies:
       '@nx/vitest':
         specifier: workspace:*
@@ -4297,55 +4166,10 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
-      typescript:
-        specifier: catalog:typescript
-        version: 5.9.2
       yargs-parser:
         specifier: 'catalog:'
         version: 21.1.1
     devDependencies:
-      '@nx/angular':
-        specifier: workspace:*
-        version: link:../angular
-      '@nx/eslint':
-        specifier: workspace:*
-        version: link:../eslint
-      '@nx/expo':
-        specifier: workspace:*
-        version: link:../expo
-      '@nx/express':
-        specifier: workspace:*
-        version: link:../express
-      '@nx/jest':
-        specifier: workspace:*
-        version: link:../jest
-      '@nx/js':
-        specifier: workspace:*
-        version: link:../js
-      '@nx/nest':
-        specifier: workspace:*
-        version: link:../nest
-      '@nx/next':
-        specifier: workspace:*
-        version: link:../next
-      '@nx/node':
-        specifier: workspace:*
-        version: link:../node
-      '@nx/nuxt':
-        specifier: workspace:*
-        version: link:../nuxt
-      '@nx/react':
-        specifier: workspace:*
-        version: link:../react
-      '@nx/react-native':
-        specifier: workspace:*
-        version: link:../react-native
-      '@nx/vue':
-        specifier: workspace:*
-        version: link:../vue
-      '@nx/web':
-        specifier: workspace:*
-        version: link:../web
       nx:
         specifier: workspace:*
         version: link:../nx

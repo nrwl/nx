@@ -32,7 +32,13 @@ export default [
         'error',
         {
           buildTargets: ['build-base'],
-          ignoredDependencies: ['nx', 'typescript', 'eslint', 'express'],
+          ignoredDependencies: [
+            'nx',
+            '@nx/eslint',
+            'typescript',
+            'eslint',
+            'express',
+          ],
         },
       ],
     },

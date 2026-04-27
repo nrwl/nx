@@ -54,9 +54,7 @@
     "semver": "^7.5.3"
   },
   "devDependencies": {
-    "nx": "workspace:*",
-    "@nx/cypress": "workspace:*",
-    "@nx/playwright": "workspace:*"
+    "nx": "workspace:*"
   },
   "peerDependencies": {
     "@nuxt/schema": "^3.10.0 || ^4.0.0"

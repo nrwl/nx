@@ -49,8 +49,7 @@
     "@nx/jest": "workspace:*",
     "@nx/playwright": "workspace:*",
     "@nx/vite": "workspace:*",
-    "@nx/webpack": "workspace:*",
-    "typescript": "catalog:typescript"
+    "@nx/webpack": "workspace:*"
   },
   "peerDependenciesMeta": {
     "@nx/cypress": {
@@ -69,9 +68,6 @@
       "optional": true
     },
     "@nx/webpack": {
-      "optional": true
-    },
-    "typescript": {
       "optional": true
     }
   },

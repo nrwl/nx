@@ -35,5 +35,13 @@
     "nx-release-publish": {
       "dependsOn": []
     }
-  }
+  },
+  "implicitDependencies": [
+    "angular",
+    "cypress",
+    "module-federation",
+    "nest",
+    "playwright",
+    "webpack"
+  ]
 }

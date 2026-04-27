@@ -27,6 +27,7 @@ export default [
           ignoredDependencies: [
             'nx',
             '@nx/jest',
+            '@nx/rollup',
             '@nx/web',
             '@nx/webpack',
             '@nx/cypress',

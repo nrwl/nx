@@ -33,23 +33,6 @@
     },
     {
       "path": "../nx/tsconfig.lib.json"
-    },
-    {
-      "path": "../webpack/tsconfig.lib.json"
-    },
-    {
-      "path": "../playwright/tsconfig.lib.json"
-    },
-    {
-      "path": "../module-federation/tsconfig.lib.json"
-    },
-    {
-      "path": "../cypress/tsconfig.lib.json"
     }
-  ],
-  "nx": {
-    "sync": {
-      "ignoredDependencies": ["angular", "nest"]
-    }
-  }
+  ]
 }

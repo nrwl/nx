@@ -44,11 +44,11 @@
     "metro-resolver": ">= 0.82.0"
   },
   "devDependencies": {
-    "nx": "workspace:*",
+    "nx": "workspace:*"
+  },
+  "optionalDependencies": {
     "@nx/detox": "workspace:*",
-    "@nx/jest": "workspace:*",
-    "@nx/vite": "workspace:*",
-    "@nx/webpack": "workspace:*"
+    "@nx/rollup": "workspace:*"
   },
   "executors": "./executors.json",
   "ng-update": {

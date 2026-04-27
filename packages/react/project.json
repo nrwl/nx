@@ -43,5 +43,6 @@
     "nx-release-publish": {
       "dependsOn": []
     }
-  }
+  },
+  "implicitDependencies": ["rspack"]
 }

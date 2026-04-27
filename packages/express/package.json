@@ -33,13 +33,9 @@
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/node": "workspace:*",
     "tslib": "catalog:typescript"
-  },
-  "devDependencies": {
-    "nx": "workspace:*"
   },
   "peerDependencies": {
     "express": "^4.21.2"

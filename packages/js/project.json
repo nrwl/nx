@@ -18,5 +18,13 @@
       ]
     }
   },
+  "implicitDependencies": [
+    "eslint",
+    "jest",
+    "rollup",
+    "vite",
+    "vitest",
+    "esbuild"
+  ],
   "tags": []
 }

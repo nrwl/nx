@@ -49,29 +49,7 @@
     "yargs-parser": "catalog:"
   },
   "devDependencies": {
-    "nx": "workspace:*",
-    "@nx/angular": "workspace:*",
-    "@nx/eslint": "workspace:*",
-    "@nx/expo": "workspace:*",
-    "@nx/express": "workspace:*",
-    "@nx/jest": "workspace:*",
-    "@nx/js": "workspace:*",
-    "@nx/nest": "workspace:*",
-    "@nx/next": "workspace:*",
-    "@nx/node": "workspace:*",
-    "@nx/nuxt": "workspace:*",
-    "@nx/react": "workspace:*",
-    "@nx/react-native": "workspace:*",
-    "@nx/vue": "workspace:*",
-    "@nx/web": "workspace:*"
-  },
-  "peerDependencies": {
-    "typescript": "catalog:typescript"
-  },
-  "peerDependenciesMeta": {
-    "typescript": {
-      "optional": true
-    }
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

@@ -75,8 +75,7 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "jsonc-eslint-parser": "^2.4.0",
-    "nx": "workspace:*"
+    "jsonc-eslint-parser": "^2.4.0"
   },
   "peerDependencies": {
     "@angular/build": "catalog:angular-supported-versions",
@@ -144,6 +143,9 @@
           "^nx-release-publish"
         ]
       }
-    }
+    },
+    "implicitDependencies": [
+      "nx"
+    ]
   }
 }

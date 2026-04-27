@@ -20,6 +20,9 @@
   "include": ["**/*.ts"],
   "references": [
     {
+      "path": "../vitest/tsconfig.lib.json"
+    },
+    {
       "path": "../workspace/tsconfig.lib.json"
     },
     {
@@ -47,19 +50,7 @@
       "path": "../nx/tsconfig.lib.json"
     },
     {
-      "path": "../vitest/tsconfig.lib.json"
-    },
-    {
       "path": "../cypress/tsconfig.lib.json"
-    },
-    {
-      "path": "../storybook/tsconfig.lib.json"
-    },
-    {
-      "path": "../playwright/tsconfig.lib.json"
-    },
-    {
-      "path": "../jest/tsconfig.lib.json"
     }
   ]
 }

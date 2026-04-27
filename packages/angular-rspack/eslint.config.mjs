@@ -29,7 +29,6 @@ export default [
             '{projectRoot}/vite.config.{js,ts,mjs,mts}',
           ],
           ignoredDependencies: [
-            'nx',
             '@rspack/core',
             '@angular/core',
             'jsonc-eslint-parser',
