@@ -9,19 +9,13 @@ enum class ParsingMethod {
   REGEX
 }
 
-data class ParseResult(
-    val classes: MutableMap<String, String>,
-    val method: ParsingMethod
-)
+data class ParseResult(val classes: MutableMap<String, String>, val method: ParsingMethod)
 
 /**
  * Main entry point for parsing test files to extract test classes. Uses AST parsing for Java and
  * Kotlin files, falls back to regex parsing.
  */
-fun getAllVisibleClassesWithNestedAnnotation(
-    file: File,
-    testTask: Task? = null
-): ParseResult? {
+fun getAllVisibleClassesWithNestedAnnotation(file: File, testTask: Task? = null): ParseResult? {
   val logger = testTask?.logger
   logger?.info("=== Processing test file: ${file.name} at ${Instant.now()} ===")
 
@@ -80,6 +74,7 @@ fun getAllVisibleClassesWithNestedAnnotation(
         }
       }
 
-  logger?.info("Final result for ${file.name}: ${result?.classes?.keys} (${result?.method}) at ${Instant.now()}")
+  logger?.info(
+      "Final result for ${file.name}: ${result?.classes?.keys} (${result?.method}) at ${Instant.now()}")
   return result
 }

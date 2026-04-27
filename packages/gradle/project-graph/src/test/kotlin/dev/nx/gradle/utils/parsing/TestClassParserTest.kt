@@ -233,7 +233,8 @@ class TestClassParserTest {
         result.classes.containsKey("AssertFileChannelDataBlocksClosed"),
         "Annotation class should not be a test target")
     assertFalse(
-        result.classes.containsKey("TestAnnotation"), "Annotation class should not be a test target")
+        result.classes.containsKey("TestAnnotation"),
+        "Annotation class should not be a test target")
   }
 
   @Test
