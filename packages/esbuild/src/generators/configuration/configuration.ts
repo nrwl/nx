@@ -56,7 +56,12 @@ function addBuildTarget(
   options: EsBuildProjectSchema,
   isTsSolutionSetup: boolean
 ) {
-  addBuildTargetDefaults(tree, '@nx/esbuild:esbuild', options.buildTarget);
+  addBuildTargetDefaults(tree, '@nx/esbuild:esbuild', options.buildTarget, [
+    {
+      json: '{workspaceRoot}/tsconfig.json',
+      fields: ['extends', 'files', 'include'],
+    },
+  ]);
   const project = readProjectConfiguration(tree, options.project);
 
   const prevBuildOptions = project.targets?.[options.buildTarget]?.options;

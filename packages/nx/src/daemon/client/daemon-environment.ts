@@ -111,6 +111,9 @@ const DAEMON_ENV_PREFIX_EXCLUSIONS = [
   'ALACRITTY_',
   'KONSOLE_',
   'TMUX',
+
+  // Benchmarking / profiling tools
+  'HYPERFINE_', // hyperfine sets HYPERFINE_RANDOMIZED_ENVIRONMENT_OFFSET for each iteration
 ];
 
 function isExcludedEnvVar(key: string): boolean {
