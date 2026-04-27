@@ -19,6 +19,19 @@ assignment-rules:
       - agent: linux-extra-large
         parallelism: 1
 
+  # e2e-angular's module-federation tests bind hard-coded port 4200 for the
+  # generated host (https://nx.dev/recipes/module-federation/setup-mf), which
+  # collides when multiple of them run on the same agent. Keep them serial
+  # until we can pin the dev-server port per test reliably.
+  - projects:
+      - e2e-angular
+    targets:
+      - e2e-ci**
+    run-on:
+      - agent: linux-large
+        parallelism: 1
+      - agent: linux-extra-large
+        parallelism: 1
   - targets:
       - e2e-ci**
     run-on:
