@@ -1,6 +1,6 @@
 import {
   killProcessAndPorts,
-  reservePort,
+  reservePorts,
   runCLI,
   runCommandUntil,
   runE2ETests,
@@ -29,17 +29,20 @@ describe('Angular Module Federation - Federated Libraries', () => {
     const module = uniq('module');
     const host = uniq('host');
 
-    const hostPort = await reservePort();
+    // Reserve two ports — one for the host's dev-server, one for the
+    // static-remotes file-server (it would otherwise auto-pick maxPort+1
+    // and collide with a parallel test).
+    const [hostPort, staticRemotesPort] = await reservePorts(2);
 
     runCLI(
       `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`
     );
 
-    // Pin the host's serve port to the reserved one so parallel tests don't
-    // collide on the default 4200. The cypress devServerTarget=${host}:serve
-    // will pick this up automatically.
+    // Pin both ports on the host's serve target so parallel tests don't
+    // collide on the default 4200 / auto-picked staticRemotesPort.
     updateJson(`${host}/project.json`, (project) => {
       project.targets.serve.options.port = hostPort;
+      project.targets.serve.options.staticRemotesPort = staticRemotesPort;
       return project;
     });
 
@@ -101,7 +104,7 @@ describe('Angular Module Federation - Federated Libraries', () => {
         (output) => output.includes('All specs passed!'),
         { timeout: 120000 }
       );
-      await killProcessAndPorts(e2eProcess.pid, hostPort, hostPort + 1);
+      await killProcessAndPorts(e2eProcess.pid, hostPort, staticRemotesPort);
     }
   }, 500_000);
 
@@ -111,17 +114,17 @@ describe('Angular Module Federation - Federated Libraries', () => {
     const childRemote = uniq('childremote');
     const module = uniq('module');
     const host = uniq('host');
-    const hostPort = await reservePort();
+    const [hostPort, staticRemotesPort] = await reservePorts(2);
 
     runCLI(
       `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`
     );
 
-    // Pin the host's serve port to the reserved one so parallel tests don't
-    // collide on the default 4200. The cypress devServerTarget=${host}:serve
-    // will pick this up automatically.
+    // Pin both ports on the host's serve target so parallel tests don't
+    // collide on the default 4200 / auto-picked staticRemotesPort.
     updateJson(`${host}/project.json`, (project) => {
       project.targets.serve.options.port = hostPort;
+      project.targets.serve.options.staticRemotesPort = staticRemotesPort;
       return project;
     });
 
@@ -200,7 +203,7 @@ describe('Angular Module Federation - Federated Libraries', () => {
         (output) => output.includes('All specs passed!'),
         { timeout: 120000 }
       );
-      await killProcessAndPorts(e2eProcess.pid, hostPort, hostPort + 1);
+      await killProcessAndPorts(e2eProcess.pid, hostPort, staticRemotesPort);
     }
   }, 500_000);
 });
