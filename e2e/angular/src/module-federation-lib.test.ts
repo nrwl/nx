@@ -103,11 +103,12 @@ describe('Angular Module Federation - Federated Libraries', () => {
 
     if (runE2ETests('cypress')) {
       const e2eProcess = await runCommandUntil(
-        `e2e ${host}-e2e`,
+        // Pass --baseUrl so the cypress preset's webServerCommand wait
+        // targets our reserved hostPort instead of the cypress.config.ts
+        // default 4200.
+        `e2e ${host}-e2e --baseUrl=http://localhost:${hostPort}`,
         (output) => output.includes('All specs passed!'),
-        // Force NX_DAEMON=false so the e2e child reads the updated project.json
-        // (with our pinned ports) instead of a stale cached graph.
-        { timeout: 120000, env: { NX_DAEMON: 'false' } }
+        { timeout: 120000 }
       );
       await killProcessAndPorts(e2eProcess.pid, hostPort, staticRemotesPort);
     }
@@ -207,11 +208,12 @@ describe('Angular Module Federation - Federated Libraries', () => {
 
     if (runE2ETests('cypress')) {
       const e2eProcess = await runCommandUntil(
-        `e2e ${host}-e2e`,
+        // Pass --baseUrl so the cypress preset's webServerCommand wait
+        // targets our reserved hostPort instead of the cypress.config.ts
+        // default 4200.
+        `e2e ${host}-e2e --baseUrl=http://localhost:${hostPort}`,
         (output) => output.includes('All specs passed!'),
-        // Force NX_DAEMON=false so the e2e child reads the updated project.json
-        // (with our pinned ports) instead of a stale cached graph.
-        { timeout: 120000, env: { NX_DAEMON: 'false' } }
+        { timeout: 120000 }
       );
       await killProcessAndPorts(e2eProcess.pid, hostPort, staticRemotesPort);
     }
