@@ -109,6 +109,105 @@ module.exports = () => {
   });
 
   /**
+   * Guard: short-circuit `workspace-context` helpers when they're handed the
+   * real workspace root. The native rust `WorkspaceContext` recursively walks
+   * the workspace on construction, so any test that reaches these with the
+   * real root scans the full monorepo and produces thousands of sandbox
+   * violations. Tests that pass a `TempFs` root continue to hit the real
+   * implementation.
+   *
+   * The actual culprit observed: `createFileMapUsingProjectGraph` reads the
+   * imported `workspaceRoot` constant and calls `getAllFileDataInContext` on
+   * it. Returning empty results for the real root gives every caller a safe
+   * no-op without breaking tests that have synthetic file maps.
+   */
+  // Use plain functions (not `jest.fn`) so `jest.resetAllMocks()` in test
+  // suites can't wipe these implementations and turn them into `() =>
+  // undefined`, which would surface as "is not iterable" downstream.
+  const workspaceContextPath = nxSrcPath('utils/workspace-context');
+  jest.doMock(workspaceContextPath, () => {
+    const actual = jest.requireActual(workspaceContextPath);
+    const guarded =
+      (fn, fallback) =>
+      (root, ...rest) => {
+        if (root === realWorkspaceRoot) return fallback();
+        return fn(root, ...rest);
+      };
+    return {
+      __esModule: true,
+      ...actual,
+      setupWorkspaceContext: (root) => {
+        if (root === realWorkspaceRoot) return;
+        return actual.setupWorkspaceContext(root);
+      },
+      getNxWorkspaceFilesFromContext: guarded(
+        actual.getNxWorkspaceFilesFromContext,
+        () =>
+          Promise.resolve({
+            projectFileMap: {},
+            globalFiles: [],
+            externalReferences: {},
+          })
+      ),
+      globWithWorkspaceContext: guarded(actual.globWithWorkspaceContext, () =>
+        Promise.resolve([])
+      ),
+      globWithWorkspaceContextSync: guarded(
+        actual.globWithWorkspaceContextSync,
+        () => []
+      ),
+      multiGlobWithWorkspaceContext: guarded(
+        actual.multiGlobWithWorkspaceContext,
+        () => Promise.resolve([])
+      ),
+      hashWithWorkspaceContext: guarded(actual.hashWithWorkspaceContext, () =>
+        Promise.resolve('0')
+      ),
+      hashMultiGlobWithWorkspaceContext: guarded(
+        actual.hashMultiGlobWithWorkspaceContext,
+        () => Promise.resolve([])
+      ),
+      getAllFileDataInContext: guarded(actual.getAllFileDataInContext, () =>
+        Promise.resolve([])
+      ),
+      getFilesInDirectoryUsingContext: guarded(
+        actual.getFilesInDirectoryUsingContext,
+        () => Promise.resolve([])
+      ),
+    };
+  });
+
+  /**
+   * Final backstop: if anything bypasses the workspace-context mock and
+   * reaches the rust constructor with the real workspace root, fail loudly
+   * rather than silently scanning the monorepo.
+   */
+  const nativePath = nxSrcPath('native');
+  jest.doMock(nativePath, () => {
+    const actual = jest.requireActual(nativePath);
+    const RealWorkspaceContext = actual.WorkspaceContext;
+    function GuardedWorkspaceContext(root, cacheDir) {
+      if (root === realWorkspaceRoot) {
+        throw new Error(
+          '[unit-test-setup] WorkspaceContext was constructed with the real ' +
+            'workspace root during a unit test. This triggers a recursive ' +
+            'walk of the entire monorepo and causes sandbox violations. ' +
+            'Check the stack trace for the caller and either mock it in the ' +
+            'test, point the call at a TempFs root, or extend ' +
+            'scripts/unit-test-setup.js.'
+        );
+      }
+      return new RealWorkspaceContext(root, cacheDir);
+    }
+    GuardedWorkspaceContext.prototype = RealWorkspaceContext.prototype;
+    return {
+      __esModule: true,
+      ...actual,
+      WorkspaceContext: GuardedWorkspaceContext,
+    };
+  });
+
+  /**
    * `isUsingTsSolutionSetup()` falls back to `new FsTree(workspaceRoot, false)`
    * when called without a tree, which reads the real repo's `tsconfig.json` /
    * `tsconfig.base.json`. That surfaces as a sandbox violation for tests that
