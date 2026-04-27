@@ -31,7 +31,7 @@ describe('React Rspack Module Federation Misc - Convert To Rspack', () => {
       `generate @nx/react:host ${shell} --remotes=${remote1} --bundler=webpack --devServerPort=${shellPort} --e2eTestRunner=playwright --style=css --no-interactive --skipFormat`
     );
 
-    updateJson(`apps/${remote1}/project.json`, (project) => {
+    updateJson(`${remote1}/project.json`, (project) => {
       project.targets.serve.options.port = remote1Port;
       return project;
     });
