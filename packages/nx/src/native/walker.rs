@@ -453,7 +453,7 @@ nested/child-two/
         assert!(files.is_empty());
     }
 
-    // FIFOs only exist on unix-like systems. This is the actual hazard the
+    // FIFOs only exist on unix-like systems. This is the primary hazard the
     // `is_hashable_file` filter has to guard against: opening a FIFO and
     // calling `std::fs::read` on it blocks the reader indefinitely waiting
     // for a writer.
@@ -475,6 +475,30 @@ nested/child-two/
         assert!(
             !files.iter().any(|f| f == "a-named-pipe"),
             "FIFO should be skipped, got: {:?}",
+            files
+        );
+    }
+
+    // Unix sockets are another non-regular file type the walker should
+    // skip. Reading from one wouldn't block the way a FIFO does, but the
+    // contents aren't meaningful for hashing either.
+    #[cfg(all(unix, not(target_arch = "wasm32")))]
+    #[test]
+    fn skips_unix_sockets() {
+        use std::os::unix::net::UnixListener;
+
+        let temp_dir = setup_fs();
+        let socket_path = temp_dir.path().join("a-unix-socket");
+        let _listener = UnixListener::bind(&socket_path).expect("bind unix socket");
+
+        let mut files: Vec<_> = nx_walker(temp_dir.path(), true)
+            .map(|f| f.normalized_path)
+            .collect();
+        files.sort();
+
+        assert!(
+            !files.iter().any(|f| f == "a-unix-socket"),
+            "unix socket should be skipped, got: {:?}",
             files
         );
     }
