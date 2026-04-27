@@ -507,7 +507,7 @@ describe('lib', () => {
       }
     );
 
-    it('should ignore rollup and vite config files when bundler=rollup and unitTestRunner=vitest', async () => {
+    it('should ignore rollup and vitest config files when bundler=rollup and unitTestRunner=vitest', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
         directory: 'my-lib',
@@ -526,7 +526,7 @@ describe('lib', () => {
               ignoredFiles: [
                 '{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}',
                 '{projectRoot}/rollup.config.{js,ts,mjs,mts,cjs,cts}',
-                '{projectRoot}/vite.config.{js,ts,mjs,mts}',
+                '{projectRoot}/vitest.config.{js,ts,mjs,mts}',
               ],
             },
           ],
@@ -534,7 +534,7 @@ describe('lib', () => {
       });
     });
 
-    it('should ignore esbuild and vite config files when bundler=esbuild and unitTestRunner=vitest', async () => {
+    it('should ignore esbuild and vitest config files when bundler=esbuild and unitTestRunner=vitest', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
         directory: 'my-lib',
@@ -553,7 +553,7 @@ describe('lib', () => {
               ignoredFiles: [
                 '{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}',
                 '{projectRoot}/esbuild.config.{js,ts,mjs,mts}',
-                '{projectRoot}/vite.config.{js,ts,mjs,mts}',
+                '{projectRoot}/vitest.config.{js,ts,mjs,mts}',
               ],
             },
           ],
