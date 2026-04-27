@@ -484,10 +484,31 @@ Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
       ? commit.scope.split(',').map((s) => s.trim())
       : [];
 
-    const scopedProjects =
-      scopePatterns.length > 0
-        ? new Set(findMatchingProjects(scopePatterns, projectGraph.nodes))
-        : null;
+    let scopedProjects: Set<string> | null = null;
+
+    if (scopePatterns.length > 0) {
+      const matches = findMatchingProjects(
+        scopePatterns,
+        projectGraph.nodes
+      );
+
+      // detect ambiguity
+      for (const pattern of scopePatterns) {
+        const perPatternMatches = findMatchingProjects(
+          [pattern],
+          projectGraph.nodes
+        );
+
+        if (perPatternMatches.length > 1) {
+          throw new Error(
+            `Ambiguous scope "${pattern}" in commit "${commit.message}". ` +
+              `Matches: ${perPatternMatches.join(', ')}`
+          );
+        }
+      }
+
+      scopedProjects = new Set(matches);
+    }
 
     for (const projectName of Object.keys(affectedGraph.nodes)) {
       if (projectSet.has(projectName)) {
