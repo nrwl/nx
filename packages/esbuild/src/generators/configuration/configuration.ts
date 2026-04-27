@@ -15,6 +15,7 @@ import {
   getDefinedCustomConditionName,
   getProjectSourceRoot,
   isUsingTsSolutionSetup,
+  TS_SOLUTION_SETUP_TSCONFIG_INPUT,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { basename, dirname, join } from 'node:path/posix';
 import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
@@ -57,10 +58,7 @@ function addBuildTarget(
   isTsSolutionSetup: boolean
 ) {
   addBuildTargetDefaults(tree, '@nx/esbuild:esbuild', options.buildTarget, [
-    {
-      json: '{workspaceRoot}/tsconfig.json',
-      fields: ['extends', 'files', 'include'],
-    },
+    TS_SOLUTION_SETUP_TSCONFIG_INPUT,
   ]);
   const project = readProjectConfiguration(tree, options.project);
 
