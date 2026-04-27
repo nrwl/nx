@@ -507,6 +507,27 @@ impl Watcher {
                         reset_burst(&mut accumulator, &mut burst_start, &mut flush_deadline);
                     }
                     Err(RecvTimeoutError::Disconnected) => {
+                        // The notify watcher's tx was dropped — the watcher
+                        // is gone and no further events will arrive. Flush
+                        // anything still buffered, then surface the
+                        // disconnect to the JS callback so consumers can
+                        // react instead of waiting forever.
+                        if !accumulator.is_empty() {
+                            let watch_events = snapshot_events(&accumulator);
+                            trace!(
+                                count = watch_events.len(),
+                                "flushing accumulated events before disconnect"
+                            );
+                            callback_tsfn
+                                .call(Ok(watch_events), ThreadsafeFunctionCallMode::NonBlocking);
+                        }
+                        callback_tsfn.call(
+                            Err(Error::new(
+                                Status::GenericFailure,
+                                "watcher channel disconnected".to_string(),
+                            )),
+                            ThreadsafeFunctionCallMode::NonBlocking,
+                        );
                         trace!("notify channel disconnected, exiting");
                         break;
                     }
