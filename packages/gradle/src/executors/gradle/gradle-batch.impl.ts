@@ -45,11 +45,10 @@ export default async function gradleBatch(
       join(projectRoot, 'project.json'),
       workspaceRoot,
       customGradleExecutableDirectory
-    ); // find gradlew near project root
+    );
     gradlewPath = join(context.root, gradlewPath);
     const root = dirname(gradlewPath);
 
-    // set args with passed in args and overrides in command line
     const input = inputs[taskGraph.roots[0]];
 
     let args =
@@ -103,15 +102,6 @@ export default async function gradleBatch(
   }
 }
 
-/**
- * Get the gradlew task ids to run.
- *
- * `taskGraph` is the batch's task graph (only tasks running in this batch
- * invocation). `fullTaskGraph` is the full task graph for the whole `nx`
- * command (defaults to `taskGraph`); transitive dependency walks use it so
- * that deps filtered out of the batch — cached tasks, tasks scheduled in
- * other batches — are still resolved when computing excludes.
- */
 export function getGradlewTasksToRun(
   taskIds: string[],
   taskGraph: TaskGraph,

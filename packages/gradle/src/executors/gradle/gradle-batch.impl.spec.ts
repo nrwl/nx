@@ -145,11 +145,6 @@ describe('getGradlewTasksToRun', () => {
     const taskIds = ['app1:test'];
     const result = getGradlewTasksToRun(taskIds, taskGraph, inputs, nodes);
 
-    // Since excludeDependsOn is false, no tasks should be excluded via excludeTasks
-    // This part of the logic is used for `allDependsOn` to correctly calculate runningTaskIds
-    // for `getExcludeTasks` later.
-    // In this specific test, we're not checking `allDependsOn` directly, but the outcome
-    // on `excludeTasks` confirms its effect (or lack thereof due to `excludeDependsOn: false`).
     expect(result.excludeTasks).toEqual(new Set());
     expect(result.excludeTestTasks).toEqual(new Set());
   });
