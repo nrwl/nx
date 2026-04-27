@@ -169,6 +169,23 @@ fn merge_event(
     }
 }
 
+/// Build the napi-facing event list from the accumulator without mutating
+/// it. Pair with `reset_burst` after the events are successfully delivered.
+fn snapshot_events(accumulator: &HashMap<PathBuf, WatchEventInternal>) -> Vec<WatchEvent> {
+    accumulator.values().map(|e| e.into()).collect()
+}
+
+/// Clear the accumulator and burst tracking after a successful flush.
+fn reset_burst(
+    accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
+    burst_start: &mut Option<Instant>,
+    flush_deadline: &mut Option<Instant>,
+) {
+    accumulator.clear();
+    *burst_start = None;
+    *flush_deadline = None;
+}
+
 /// Per-event ingest pipeline: filter → new-directory backfill → transform →
 /// merge into the accumulator → bump the flush deadline. Holds references
 /// to the session-level state (filterer, watcher handle, ignores, origin)
@@ -459,27 +476,35 @@ impl Watcher {
                                 }
                             }
                         }
-                        let watch_events: Vec<WatchEvent> =
-                            accumulator.values().map(|e| e.into()).collect();
+                        let watch_events = snapshot_events(&accumulator);
                         trace!(count = watch_events.len(), "force-flushing events");
-                        accumulator.clear();
-                        burst_start = None;
-                        flush_deadline = None;
-                        let _ = reply.send(watch_events);
+                        match reply.send(watch_events) {
+                            Ok(()) => {
+                                reset_burst(&mut accumulator, &mut burst_start, &mut flush_deadline)
+                            }
+                            Err(e) => {
+                                // The JS caller gave up before we replied
+                                // (e.g. force_flush_pending hit its 500ms
+                                // recv_timeout). Keep the accumulator intact
+                                // so the next flush — regular or forced —
+                                // still surfaces these events.
+                                tracing::warn!(
+                                    ?e,
+                                    "force-flush reply failed; events retained in accumulator"
+                                );
+                            }
+                        }
                     }
                     Err(RecvTimeoutError::Timeout) => {
                         // Either the idle window elapsed or the max-wait cap
                         // hit — flush whatever we accumulated and reset.
                         if !accumulator.is_empty() {
-                            let watch_events: Vec<WatchEvent> =
-                                accumulator.values().map(|e| e.into()).collect();
+                            let watch_events = snapshot_events(&accumulator);
                             trace!(count = watch_events.len(), "flushing accumulated events");
                             callback_tsfn
                                 .call(Ok(watch_events), ThreadsafeFunctionCallMode::NonBlocking);
-                            accumulator.clear();
                         }
-                        burst_start = None;
-                        flush_deadline = None;
+                        reset_burst(&mut accumulator, &mut burst_start, &mut flush_deadline);
                     }
                     Err(RecvTimeoutError::Disconnected) => {
                         trace!("notify channel disconnected, exiting");
