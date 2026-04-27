@@ -103,12 +103,17 @@ describe('Angular Module Federation - Federated Libraries', () => {
 
     if (runE2ETests('cypress')) {
       const e2eProcess = await runCommandUntil(
-        // Pass --baseUrl so the cypress preset's webServerCommand wait
-        // targets our reserved hostPort instead of the cypress.config.ts
-        // default 4200.
-        `e2e ${host}-e2e --baseUrl=http://localhost:${hostPort}`,
+        // host-e2e uses an inferred `cypress run` target, so flags are
+        // forwarded to the cypress CLI directly. CYPRESS_BASE_URL is the
+        // documented way to override baseUrl for the cypress process; the
+        // preset's setupNodeEvents will use this baseUrl to wait on the
+        // reserved hostPort instead of the cypress.config.ts default 4200.
+        `e2e ${host}-e2e`,
         (output) => output.includes('All specs passed!'),
-        { timeout: 120000 }
+        {
+          timeout: 120000,
+          env: { CYPRESS_BASE_URL: `http://localhost:${hostPort}` },
+        }
       );
       await killProcessAndPorts(e2eProcess.pid, hostPort, staticRemotesPort);
     }
@@ -208,12 +213,17 @@ describe('Angular Module Federation - Federated Libraries', () => {
 
     if (runE2ETests('cypress')) {
       const e2eProcess = await runCommandUntil(
-        // Pass --baseUrl so the cypress preset's webServerCommand wait
-        // targets our reserved hostPort instead of the cypress.config.ts
-        // default 4200.
-        `e2e ${host}-e2e --baseUrl=http://localhost:${hostPort}`,
+        // host-e2e uses an inferred `cypress run` target, so flags are
+        // forwarded to the cypress CLI directly. CYPRESS_BASE_URL is the
+        // documented way to override baseUrl for the cypress process; the
+        // preset's setupNodeEvents will use this baseUrl to wait on the
+        // reserved hostPort instead of the cypress.config.ts default 4200.
+        `e2e ${host}-e2e`,
         (output) => output.includes('All specs passed!'),
-        { timeout: 120000 }
+        {
+          timeout: 120000,
+          env: { CYPRESS_BASE_URL: `http://localhost:${hostPort}` },
+        }
       );
       await killProcessAndPorts(e2eProcess.pid, hostPort, staticRemotesPort);
     }
