@@ -1,12 +1,11 @@
 import {
   killProcessAndPorts,
-  reservePorts,
+  reservePort,
   runCLI,
   runCommandUntil,
   runE2ETests,
   uniq,
   updateFile,
-  updateJson,
 } from '@nx/e2e-utils';
 import {
   setupModuleFederationTest,
@@ -29,25 +28,11 @@ describe('Angular Module Federation - Federated Libraries', () => {
     const module = uniq('module');
     const host = uniq('host');
 
-    // Reserve two ports — one for the host's dev-server, one for the
-    // static-remotes file-server (it would otherwise auto-pick maxPort+1
-    // and collide with a parallel test).
-    const [hostPort, staticRemotesPort] = await reservePorts(2);
+    const hostPort = await reservePort();
 
     runCLI(
       `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`
     );
-
-    // Pin both ports on the host's serve target so parallel tests don't
-    // collide on the default 4200 / auto-picked staticRemotesPort.
-    updateJson(`${host}/project.json`, (project) => {
-      project.targets.serve.options.port = hostPort;
-      project.targets.serve.options.staticRemotesPort = staticRemotesPort;
-      return project;
-    });
-    // Reset the daemon so subsequent runCLI calls re-read the updated
-    // project.json instead of serving a cached graph with the default port.
-    runCLI('reset');
 
     runCLI(`generate @nx/js:lib ${lib} --no-interactive`);
 
@@ -85,13 +70,13 @@ describe('Angular Module Federation - Federated Libraries', () => {
       `
       describe('${host}', () => {
         beforeEach(() => cy.visit('/'));
-      
+
         it('should display contain the remote library', () => {
           expect(cy.get('div.host')).to.exist;
           expect(cy.get('div.host').contains('shell is even'));
         });
       });
-      
+
       `
     );
 
@@ -105,11 +90,9 @@ describe('Angular Module Federation - Federated Libraries', () => {
       const e2eProcess = await runCommandUntil(
         `e2e ${host}-e2e`,
         (output) => output.includes('All specs passed!'),
-        // Force NX_DAEMON=false so the e2e child reads the updated project.json
-        // (with our pinned ports) instead of a stale cached graph.
-        { timeout: 120000, env: { NX_DAEMON: 'false' } }
+        { timeout: 120000 }
       );
-      await killProcessAndPorts(e2eProcess.pid, hostPort, staticRemotesPort);
+      await killProcessAndPorts(e2eProcess.pid, hostPort, hostPort + 1);
     }
   }, 500_000);
 
@@ -119,22 +102,11 @@ describe('Angular Module Federation - Federated Libraries', () => {
     const childRemote = uniq('childremote');
     const module = uniq('module');
     const host = uniq('host');
-    const [hostPort, staticRemotesPort] = await reservePorts(2);
+    const hostPort = await reservePort();
 
     runCLI(
       `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`
     );
-
-    // Pin both ports on the host's serve target so parallel tests don't
-    // collide on the default 4200 / auto-picked staticRemotesPort.
-    updateJson(`${host}/project.json`, (project) => {
-      project.targets.serve.options.port = hostPort;
-      project.targets.serve.options.staticRemotesPort = staticRemotesPort;
-      return project;
-    });
-    // Reset the daemon so subsequent runCLI calls re-read the updated
-    // project.json instead of serving a cached graph with the default port.
-    runCLI('reset');
 
     runCLI(`generate @nx/js:lib ${lib} --no-interactive`);
 
@@ -189,13 +161,13 @@ describe('Angular Module Federation - Federated Libraries', () => {
       `
       describe('${host}', () => {
         beforeEach(() => cy.visit('/${remote}'));
-      
+
         it('should display contain the remote library', () => {
           expect(cy.get('div.childremote')).to.exist;
           expect(cy.get('div.childremote').contains('shell is even'));
         });
       });
-      
+
       `
     );
 
@@ -209,11 +181,9 @@ describe('Angular Module Federation - Federated Libraries', () => {
       const e2eProcess = await runCommandUntil(
         `e2e ${host}-e2e`,
         (output) => output.includes('All specs passed!'),
-        // Force NX_DAEMON=false so the e2e child reads the updated project.json
-        // (with our pinned ports) instead of a stale cached graph.
-        { timeout: 120000, env: { NX_DAEMON: 'false' } }
+        { timeout: 120000 }
       );
-      await killProcessAndPorts(e2eProcess.pid, hostPort, staticRemotesPort);
+      await killProcessAndPorts(e2eProcess.pid, hostPort, hostPort + 1);
     }
   }, 500_000);
 });
