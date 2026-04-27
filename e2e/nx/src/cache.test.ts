@@ -641,10 +641,10 @@ console.log('Build complete');
     let cacheServer: any;
     let cachePort: number;
     let unusedPort: number;
-    beforeAll(() => {
-      cachePort = reservePort();
+    beforeAll(async () => {
+      cachePort = await reservePort();
       // Reserved but never bound — used to simulate a server-not-running error.
-      unusedPort = reservePort();
+      unusedPort = await reservePort();
       cacheServer = fork(join(__dirname, '__fixtures__', 'remote-cache.js'), {
         stdio: 'inherit',
         env: { ...process.env, PORT: String(cachePort) },

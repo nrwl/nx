@@ -11,20 +11,31 @@ import * as path from 'path';
 const LOCK_DIR = process.env.NX_E2E_PORT_LOCK_DIR ?? '/tmp/nx-e2e-port-locks';
 fs.mkdirSync(LOCK_DIR, { recursive: true });
 
-export function reservePort(start = 4200): number {
+export async function reservePort(start = 4200): Promise<number> {
   for (let port = start; port < 65000; port++) {
     const lock = path.join(LOCK_DIR, `${port}.lock`);
     try {
       fs.writeFileSync(lock, '', { flag: 'wx' });
-      process.on('exit', () => {
-        try {
-          fs.unlinkSync(lock);
-        } catch {}
-      });
-      return port;
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err;
+      continue;
     }
+    // Lock claimed; now verify the OS port is actually free. Another e2e test
+    // on the same agent may be using the OS port via the generator's default
+    // (i.e. without participating in the lock-file scheme), so an exclusive
+    // lock is not enough.
+    if (!(await isPortAvailable(port))) {
+      try {
+        fs.unlinkSync(lock);
+      } catch {}
+      continue;
+    }
+    process.on('exit', () => {
+      try {
+        fs.unlinkSync(lock);
+      } catch {}
+    });
+    return port;
   }
   throw new Error('No available ports');
 }
@@ -32,10 +43,10 @@ export function reservePort(start = 4200): number {
 /**
  * Reserves `count` ports.
  */
-export function reservePorts(count: number): number[] {
+export async function reservePorts(count: number): Promise<number[]> {
   const ports: number[] = [];
   for (let i = 0; i < count; i++) {
-    ports.push(reservePort());
+    ports.push(await reservePort());
   }
   return ports;
 }

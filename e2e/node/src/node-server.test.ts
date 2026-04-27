@@ -80,11 +80,11 @@ describe('Node Applications + webpack', () => {
     let koaPort: number;
     let nestPort: number;
 
-    beforeAll(() => {
-      expressPort = reservePort();
-      fastifyPort = reservePort();
-      koaPort = reservePort();
-      nestPort = reservePort();
+    beforeAll(async () => {
+      expressPort = await reservePort();
+      fastifyPort = await reservePort();
+      koaPort = await reservePort();
+      nestPort = await reservePort();
       runCLI(
         `generate @nx/node:lib libs/${testLib1} --linter=eslint --unitTestRunner=jest --buildable=false`
       );
@@ -183,8 +183,8 @@ describe('Node Applications + webpack', () => {
   it('should support waitUntilTargets for serve target', async () => {
     const nodeApp1 = uniq('nodeapp1');
     const nodeApp2 = uniq('nodeapp2');
-    const nodeApp1Port = reservePort();
-    const nodeApp2Port = reservePort();
+    const nodeApp1Port = await reservePort();
+    const nodeApp2Port = await reservePort();
 
     // Set ports to avoid conflicts with other tests that might run in parallel
     runCLI(

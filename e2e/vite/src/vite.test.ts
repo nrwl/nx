@@ -136,7 +136,7 @@ describe('@nx/vite/plugin', () => {
 
     it('should run serve-static', async () => {
       let process: ChildProcess;
-      const port = reservePort();
+      const port = await reservePort();
 
       try {
         process = await runCommandUntil(

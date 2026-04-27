@@ -29,10 +29,10 @@ describe('Playwright E2E Test runner', () => {
   it(
     'should test and lint example app',
 
-    () => {
+    async () => {
       ensurePlaywrightBrowsersInstallation();
 
-      const port = reservePort();
+      const port = await reservePort();
       runCLI(
         `g @nx/web:app demo-e2e --unitTestRunner=none --bundler=vite --e2eTestRunner=none --style=css --no-interactive`
       );
@@ -51,10 +51,10 @@ describe('Playwright E2E Test runner', () => {
 
   it(
     'should test and lint example app with js',
-    () => {
+    async () => {
       ensurePlaywrightBrowsersInstallation();
 
-      const port = reservePort();
+      const port = await reservePort();
       runCLI(
         `g @nx/web:app demo-js-e2e --unitTestRunner=none --bundler=vite --e2eTestRunner=none --style=css --no-interactive`
       );
@@ -94,11 +94,11 @@ describe('Playwright E2E Test Runner - legacy', () => {
   it(
     'should test and lint example app',
 
-    () => {
+    async () => {
       ensurePlaywrightBrowsersInstallation();
 
       const pmc = getPackageManagerCommand();
-      const port = reservePort();
+      const port = await reservePort();
 
       runCLI(
         `g @nx/web:app demo-e2e --directory apps/demo-e2e --unitTestRunner=none --bundler=vite --e2eTestRunner=none --style=css --no-interactive`
@@ -118,11 +118,11 @@ describe('Playwright E2E Test Runner - legacy', () => {
 
   it(
     'should test and lint example app with js',
-    () => {
+    async () => {
       ensurePlaywrightBrowsersInstallation();
 
       const pmc = getPackageManagerCommand();
-      const port = reservePort();
+      const port = await reservePort();
 
       runCLI(
         `g @nx/web:app demo-js-e2e --directory apps/demo-js-e2e --unitTestRunner=none --bundler=vite --e2eTestRunner=none --style=css --no-interactive`

@@ -28,7 +28,7 @@ describe('Independent Deployability', () => {
     const remote = uniq('remote');
     const host = uniq('host');
 
-    const [shellPort, remotePort] = reservePorts(2);
+    const [shellPort, remotePort] = await reservePorts(2);
 
     runCLI(
       `generate @nx/react:host ${host} --remotes=${remote} --devServerPort=${shellPort} --bundler=webpack --e2eTestRunner=cypress --no-interactive --typescriptConfiguration=false --skipFormat`
@@ -168,7 +168,7 @@ describe('Independent Deployability', () => {
     const remote = uniq('remote');
     const lib = uniq('lib');
 
-    const [shellPort, remotePort] = reservePorts(2);
+    const [shellPort, remotePort] = await reservePorts(2);
 
     runCLI(
       `generate @nx/react:host ${shell} --remotes=${remote} --devServerPort=${shellPort} --bundler=webpack --e2eTestRunner=cypress --no-interactive --skipFormat`
@@ -321,7 +321,7 @@ describe('Independent Deployability', () => {
   it('should support host and remote with library type var', async () => {
     const shell = uniq('shell');
     const remote = uniq('remote');
-    const [shellPort, remotePort] = reservePorts(2);
+    const [shellPort, remotePort] = await reservePorts(2);
 
     runCLI(
       `generate @nx/react:host ${shell} --devServerPort=${shellPort} --remotes=${remote} --bundler=webpack --e2eTestRunner=cypress --no-interactive --skipFormat`

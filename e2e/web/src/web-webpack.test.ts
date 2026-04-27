@@ -23,7 +23,7 @@ describe('Web Components Applications with bundler set as webpack', () => {
       }
     );
 
-    const port = reservePort();
+    const port = await reservePort();
     const childProcess = await runCommandUntil(
       `serve ${appName} --port=${port} --ssl`,
       (output) => {

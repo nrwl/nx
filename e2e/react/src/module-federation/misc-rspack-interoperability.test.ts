@@ -26,7 +26,7 @@ describe('React Rspack Module Federation Misc - Interoperability', () => {
     const shell = uniq('shell');
     const remote1 = uniq('remote1');
     const remote2 = uniq('remote2');
-    const [shellPort, remote1Port, remote2Port] = reservePorts(3);
+    const [shellPort, remote1Port, remote2Port] = await reservePorts(3);
 
     runCLI(
       `generate @nx/react:host apps/${shell} --name=${shell} --remotes=${remote1} --bundler=webpack --devServerPort=${shellPort} --e2eTestRunner=cypress --style=css --no-interactive --skipFormat`
@@ -97,7 +97,7 @@ describe('React Rspack Module Federation Misc - Interoperability', () => {
     const shell = uniq('shell');
     const remote1 = uniq('remote1');
     const remote2 = uniq('remote2');
-    const [shellPort, remote1Port, remote2Port] = reservePorts(3);
+    const [shellPort, remote1Port, remote2Port] = await reservePorts(3);
 
     runCLI(
       `generate @nx/react:host apps/${shell} --name=${shell} --remotes=${remote1} --bundler=rspack --devServerPort=${shellPort} --e2eTestRunner=cypress --style=css --no-interactive --skipFormat`

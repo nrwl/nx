@@ -31,7 +31,7 @@ describe('Storybook executors for Angular', () => {
 
     // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
     it.skip('should serve an Angular based Storybook setup', async () => {
-      storybookPort = reservePort();
+      storybookPort = await reservePort();
       const p = await runCommandUntil(
         `run ${angularStorybookLib}:storybook --port ${storybookPort}`,
         (output) => {

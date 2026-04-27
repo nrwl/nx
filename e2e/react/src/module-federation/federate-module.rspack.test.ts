@@ -25,7 +25,7 @@ describe('Federate Module', () => {
     const module = uniq('module');
     const host = uniq('host');
 
-    const [shellPort, remotePort] = reservePorts(2);
+    const [shellPort, remotePort] = await reservePorts(2);
 
     runCLI(
       `generate @nx/react:host ${host} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --devServerPort=${shellPort} --no-interactive --skipFormat`
@@ -130,7 +130,7 @@ describe('Federate Module', () => {
     const module = uniq('module');
     const host = uniq('host');
 
-    const [shellPort, remotePort, childRemotePort] = reservePorts(3);
+    const [shellPort, remotePort, childRemotePort] = await reservePorts(3);
 
     runCLI(
       `generate @nx/react:host ${host} --remotes=${remote} --bundler=rspack --e2eTestRunner=cypress --devServerPort=${shellPort} --no-interactive --skipFormat`

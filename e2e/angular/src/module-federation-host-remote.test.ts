@@ -31,8 +31,8 @@ describe('Angular Module Federation - Host and Remote', () => {
     const sharedLib = uniq('shared-lib');
     const wildcardLib = uniq('wildcard-lib');
     const secondaryEntry = uniq('secondary');
-    const hostPort = reservePort();
-    const remotePort = reservePort();
+    const hostPort = await reservePort();
+    const remotePort = await reservePort();
 
     // generate host app
     runCLI(
@@ -171,8 +171,8 @@ describe('Angular Module Federation - Host and Remote', () => {
   it('should convert apps to MF successfully', async () => {
     const app1 = uniq('app1');
     const app2 = uniq('app2');
-    const app1Port = reservePort();
-    const app2Port = reservePort();
+    const app1Port = await reservePort();
+    const app2Port = await reservePort();
 
     // generate apps
     runCLI(

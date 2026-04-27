@@ -28,7 +28,7 @@ describe('Angular Module Federation - Federated Libraries', () => {
     const module = uniq('module');
     const host = uniq('host');
 
-    const hostPort = reservePort();
+    const hostPort = await reservePort();
 
     runCLI(
       `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`
@@ -102,7 +102,7 @@ describe('Angular Module Federation - Federated Libraries', () => {
     const childRemote = uniq('childremote');
     const module = uniq('module');
     const host = uniq('host');
-    const hostPort = reservePort();
+    const hostPort = await reservePort();
 
     runCLI(
       `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`

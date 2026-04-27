@@ -35,7 +35,7 @@ describe('Vue Plugin', () => {
     );
 
     if (runE2ETests('playwright')) {
-      const availablePort = reservePort();
+      const availablePort = await reservePort();
 
       updateFile(`${app}-e2e/playwright.config.ts`, (content) => {
         return content
@@ -77,7 +77,7 @@ describe('Vue Plugin', () => {
     );
 
     if (runE2ETests('playwright')) {
-      const availablePort = reservePort();
+      const availablePort = await reservePort();
 
       updateFile(`${app}-e2e/playwright.config.ts`, (content) => {
         return content

@@ -54,7 +54,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
     afterEach(() => storybookPort && killPorts(storybookPort));
 
     it('should serve a React based Storybook setup that uses Vite', async () => {
-      storybookPort = reservePort();
+      storybookPort = await reservePort();
       const p = await runCommandUntil(
         `run ${appName}:storybook --port ${storybookPort}`,
         (output) => {

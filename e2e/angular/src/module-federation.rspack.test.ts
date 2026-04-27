@@ -35,8 +35,8 @@ describe('Angular Module Federation', () => {
     const sharedLib = uniq('shared-lib');
     const wildcardLib = uniq('wildcard-lib');
     const secondaryEntry = uniq('secondary');
-    const hostPort = reservePort();
-    const remotePort = reservePort();
+    const hostPort = await reservePort();
+    const remotePort = await reservePort();
 
     // generate host app
     runCLI(
@@ -180,8 +180,8 @@ describe('Angular Module Federation', () => {
   it('should load remote app in the browser via ESM module federation', async () => {
     const hostApp = uniq('host');
     const remoteApp = uniq('remote');
-    const hostPort = reservePort();
-    const remotePort = reservePort();
+    const hostPort = await reservePort();
+    const remotePort = await reservePort();
 
     // generate host with playwright e2e runner
     runCLI(

@@ -47,7 +47,7 @@ describe('Angular Module Federation - SSR', () => {
     );
 
     // ports
-    const hostPort = reservePort();
+    const hostPort = await reservePort();
     const remote1Port = readJson(join(remote1, 'project.json')).targets.serve
       .options.port;
     const remote2Port = readJson(join(remote2, 'project.json')).targets.serve

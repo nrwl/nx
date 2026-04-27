@@ -96,7 +96,7 @@ describe('Angular Projects - Build and Test', () => {
       expect(await killPort(4200)).toBeTruthy();
     }
 
-    const appPort = reservePort();
+    const appPort = await reservePort();
     const process = await runCommandUntil(
       `serve ${app1} -- --port=${appPort}`,
       (output) => output.includes(`listening on localhost:${appPort}`)
