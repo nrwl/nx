@@ -1,12 +1,10 @@
 import {
   killProcessAndPorts,
-  reservePorts,
   runCLI,
   runCommandUntil,
   runE2ETests,
   uniq,
   updateFile,
-  updateJson,
 } from '@nx/e2e-utils';
 import {
   setupModuleFederationTest,
@@ -29,25 +27,11 @@ describe('Angular Module Federation - Federated Libraries', () => {
     const module = uniq('module');
     const host = uniq('host');
 
-    // Reserve two ports — one for the host's dev-server, one for the
-    // static-remotes file-server (it would otherwise auto-pick maxPort+1
-    // and collide with a parallel test).
-    const [hostPort, staticRemotesPort] = await reservePorts(2);
+    const hostPort = 4200;
 
     runCLI(
       `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`
     );
-
-    // Pin both ports on the host's serve target so parallel tests don't
-    // collide on the default 4200 / auto-picked staticRemotesPort.
-    updateJson(`${host}/project.json`, (project) => {
-      project.targets.serve.options.port = hostPort;
-      project.targets.serve.options.staticRemotesPort = staticRemotesPort;
-      return project;
-    });
-    // Reset the daemon so subsequent runCLI calls re-read the updated
-    // project.json instead of serving a cached graph with the default port.
-    runCLI('reset');
 
     runCLI(`generate @nx/js:lib ${lib} --no-interactive`);
 
@@ -103,19 +87,11 @@ describe('Angular Module Federation - Federated Libraries', () => {
 
     if (runE2ETests('cypress')) {
       const e2eProcess = await runCommandUntil(
-        // host-e2e uses an inferred `cypress run` target, so flags are
-        // forwarded to the cypress CLI directly. CYPRESS_BASE_URL is the
-        // documented way to override baseUrl for the cypress process; the
-        // preset's setupNodeEvents will use this baseUrl to wait on the
-        // reserved hostPort instead of the cypress.config.ts default 4200.
         `e2e ${host}-e2e`,
         (output) => output.includes('All specs passed!'),
-        {
-          timeout: 120000,
-          env: { CYPRESS_BASE_URL: `http://localhost:${hostPort}` },
-        }
+        { timeout: 120000 }
       );
-      await killProcessAndPorts(e2eProcess.pid, hostPort, staticRemotesPort);
+      await killProcessAndPorts(e2eProcess.pid, hostPort, hostPort + 1);
     }
   }, 500_000);
 
@@ -125,22 +101,11 @@ describe('Angular Module Federation - Federated Libraries', () => {
     const childRemote = uniq('childremote');
     const module = uniq('module');
     const host = uniq('host');
-    const [hostPort, staticRemotesPort] = await reservePorts(2);
+    const hostPort = 4200;
 
     runCLI(
       `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`
     );
-
-    // Pin both ports on the host's serve target so parallel tests don't
-    // collide on the default 4200 / auto-picked staticRemotesPort.
-    updateJson(`${host}/project.json`, (project) => {
-      project.targets.serve.options.port = hostPort;
-      project.targets.serve.options.staticRemotesPort = staticRemotesPort;
-      return project;
-    });
-    // Reset the daemon so subsequent runCLI calls re-read the updated
-    // project.json instead of serving a cached graph with the default port.
-    runCLI('reset');
 
     runCLI(`generate @nx/js:lib ${lib} --no-interactive`);
 
@@ -213,19 +178,11 @@ describe('Angular Module Federation - Federated Libraries', () => {
 
     if (runE2ETests('cypress')) {
       const e2eProcess = await runCommandUntil(
-        // host-e2e uses an inferred `cypress run` target, so flags are
-        // forwarded to the cypress CLI directly. CYPRESS_BASE_URL is the
-        // documented way to override baseUrl for the cypress process; the
-        // preset's setupNodeEvents will use this baseUrl to wait on the
-        // reserved hostPort instead of the cypress.config.ts default 4200.
         `e2e ${host}-e2e`,
         (output) => output.includes('All specs passed!'),
-        {
-          timeout: 120000,
-          env: { CYPRESS_BASE_URL: `http://localhost:${hostPort}` },
-        }
+        { timeout: 120000 }
       );
-      await killProcessAndPorts(e2eProcess.pid, hostPort, staticRemotesPort);
+      await killProcessAndPorts(e2eProcess.pid, hostPort, hostPort + 1);
     }
   }, 500_000);
 });
