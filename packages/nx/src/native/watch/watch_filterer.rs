@@ -23,14 +23,16 @@ impl WatchFilterer {
         let path = dunce::simplified(path);
 
         // .nxignore takes precedence over .gitignore. Only consult it for
-        // paths under the origin — references outside the workspace are
-        // ignored.
-        let nx_match = self
-            .nx_ignore
-            .as_ref()
-            .filter(|_| path.starts_with(&self.origin))
-            .map(|ig| ig.matched_path_or_any_parents(path, is_dir))
-            .unwrap_or(Match::None);
+        // paths under the origin — gitignore-style matchers are scoped to
+        // the directory the ignore file lives in, so external symlink
+        // targets shouldn't be matched against workspace rules.
+        let nx_match = if let Some(ig) = &self.nx_ignore
+            && path.starts_with(&self.origin)
+        {
+            ig.matched_path_or_any_parents(path, is_dir)
+        } else {
+            Match::None
+        };
 
         match nx_match {
             Match::Whitelist(_) => {
@@ -44,17 +46,13 @@ impl WatchFilterer {
             Match::None => {}
         }
 
-        // Check gitignores deepest-first; first match wins.
+        // Check gitignores deepest-first; first non-None match wins.
         let git_match = self
             .git_ignores
             .iter()
             .filter(|(dir, _)| path.starts_with(dir))
-            .find_map(
-                |(_, ig)| match ig.matched_path_or_any_parents(path, is_dir) {
-                    Match::None => None,
-                    m => Some(m),
-                },
-            );
+            .map(|(_, ig)| ig.matched_path_or_any_parents(path, is_dir))
+            .find(|m| !matches!(m, Match::None));
 
         match git_match {
             Some(Match::Ignore(_)) => {
