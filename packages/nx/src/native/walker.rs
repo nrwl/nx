@@ -453,29 +453,28 @@ nested/child-two/
         assert!(files.is_empty());
     }
 
-    // Non-regular files (sockets, FIFOs, devices) only exist on unix-like
-    // systems. A unix socket exercises the same `is_hashable_file` filter as
-    // a FIFO and can be created with just `std`.
+    // FIFOs only exist on unix-like systems. This is the actual hazard the
+    // `is_hashable_file` filter has to guard against: opening a FIFO and
+    // calling `std::fs::read` on it blocks the reader indefinitely waiting
+    // for a writer.
     #[cfg(all(unix, not(target_arch = "wasm32")))]
     #[test]
-    fn skips_non_regular_files() {
-        use std::os::unix::net::UnixListener;
+    fn skips_named_pipes() {
+        use nix::sys::stat::Mode;
+        use nix::unistd::mkfifo;
 
         let temp_dir = setup_fs();
-        let socket_path = temp_dir.path().join("a-unix-socket");
-        let _listener = UnixListener::bind(&socket_path).expect("bind unix socket");
+        let fifo_path = temp_dir.path().join("a-named-pipe");
+        mkfifo(&fifo_path, Mode::S_IRUSR | Mode::S_IWUSR).expect("mkfifo");
 
         let mut files: Vec<_> = nx_walker(temp_dir.path(), true)
             .map(|f| f.normalized_path)
             .collect();
         files.sort();
 
-        // Non-regular files must be filtered out here, otherwise downstream
-        // hashing (`std::fs::read`) could block indefinitely (e.g. FIFOs wait
-        // for a writer) or fail in surprising ways.
         assert!(
-            !files.iter().any(|f| f == "a-unix-socket"),
-            "unix socket should be skipped, got: {:?}",
+            !files.iter().any(|f| f == "a-named-pipe"),
+            "FIFO should be skipped, got: {:?}",
             files
         );
     }
