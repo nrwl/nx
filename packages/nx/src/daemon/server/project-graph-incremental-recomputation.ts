@@ -87,10 +87,6 @@ const projectGraphRecomputationListeners = new Set<
   ) => void
 >();
 let storedWorkspaceConfigHash: string | undefined;
-// Set while an auto-triggered graph recomputation is in flight. Rapid
-// subsequent `scheduleProjectGraphRecomputation` calls don't start new runs;
-// the running loop picks up accumulated files on its next iteration.
-let autoRecomputePromise: Promise<void> | undefined;
 let knownExternalNodes: Record<string, ProjectGraphExternalNode> = {};
 let fileChangeCounter = 0;
 let recomputationGeneration = 0;
@@ -98,11 +94,38 @@ let recomputationGeneration = 0;
 /**
  * Bump the recomputation generation counter so any in-flight
  * `processFilesAndCreateAndSerializeProjectGraph` will fail its next
- * `isStale()` checkpoint and bail. The auto-recompute loop's `do…while`
- * picks up the new files on the next iteration.
+ * `isStale()` checkpoint and bail. Always paired with a fresh
+ * `kickOffRecompute` so the latest inputs are picked up immediately.
  */
 function markRecomputeStale() {
   ++recomputationGeneration;
+}
+
+/**
+ * Start a fresh project graph computation, in parallel with any in-flight
+ * one. The new promise becomes `cachedSerializedProjectGraphPromise`; any
+ * older compute will detect itself as stale at its next `isStale()` check
+ * and bail to `ABORTED_GRAPH`, so consumers awaiting the cached pointer
+ * always end up on the latest compute.
+ *
+ * Notify + persist happen here (only for non-aborted real results) so
+ * those side effects fire for the latest finished compute regardless of
+ * who triggered it.
+ */
+function kickOffRecompute() {
+  cachedSerializedProjectGraphPromise = (async () => {
+    const plugins = await getPluginsSeparated();
+    const result = await processFilesAndCreateAndSerializeProjectGraph(plugins);
+    if (result !== ABORTED_GRAPH && result.projectGraph) {
+      notifyProjectGraphRecomputationListeners(
+        result.projectGraph,
+        result.sourceMaps,
+        result.error
+      );
+      persistProjectGraphToDisk(result);
+    }
+    return result;
+  })();
 }
 
 /**
@@ -140,10 +163,8 @@ export async function getCachedSerializedProjectGraphPromise(
 
     await resetInternalStateIfNxDepsMissing();
 
-    // Channel all compute requests through startAutoRecompute so the loop
-    // is the single source of truth: it drains the collected* maps via its
-    // do…while, retries past any ABORTED_GRAPH from a stale iteration,
-    // and notifies listeners + persists once the final real result lands.
+    // If no compute exists or events are still in collected*, kick one off.
+    // Otherwise reuse whatever is already in flight or cached.
     const needsRecompute =
       !cachedSerializedProjectGraphPromise ||
       collectedUpdatedFiles.size > 0 ||
@@ -154,18 +175,20 @@ export async function getCachedSerializedProjectGraphPromise(
           ? `Recomputing project graph because of ${collectedUpdatedFiles.size} updated and ${collectedDeletedFiles.size} deleted files.`
           : 'No in-memory cached project graph found. Recomputing it...'
       );
-      startAutoRecompute();
+      kickOffRecompute();
     } else {
       serverLogger.log(
         'Reusing in-memory cached project graph because no files changed.'
       );
     }
 
-    if (autoRecomputePromise) {
-      await autoRecomputePromise;
+    // ABORTED_GRAPH means the compute we awaited bailed because newer
+    // file events triggered a fresh kick-off. Re-read the cached promise
+    // — it now points at the newer compute — and await that instead.
+    let result = await cachedSerializedProjectGraphPromise;
+    while (result === ABORTED_GRAPH) {
+      result = await cachedSerializedProjectGraphPromise;
     }
-
-    const result = await cachedSerializedProjectGraphPromise;
 
     // Even when the loop didn't recompute, write the cache if it's stale on
     // disk relative to the in-memory result. This protects against
@@ -238,54 +261,17 @@ export function scheduleProjectGraphRecomputation(
   ) {
     notifyFileChangeListeners({ createdFiles, updatedFiles, deletedFiles });
     notifyFileWatcherSockets(createdFiles, updatedFiles, deletedFiles);
-    // Any in-flight compute is now operating on stale inputs — let it
-    // bail at its next checkpoint so the loop can pick up these files.
+    // Mark any in-flight compute as stale so its next checkpoint bails,
+    // and start a fresh compute in parallel with the bailing one. The
+    // newer one wins via cachedSerializedProjectGraphPromise.
     markRecomputeStale();
-  }
-
-  startAutoRecompute();
-}
-
-/**
- * Start the auto-recompute loop. If one is already running, no-op — the
- * running loop's next iteration will pick up newly-accumulated files via
- * the collected* maps.
- *
- * Listeners are notified once per completed iteration. The loop runs at
- * least once unconditionally so initial startup (called with empty file
- * lists) still produces an initial graph.
- */
-function startAutoRecompute() {
-  if (autoRecomputePromise) return;
-  autoRecomputePromise = runAutoRecomputeLoop().finally(() => {
-    autoRecomputePromise = undefined;
-  });
-}
-
-async function runAutoRecomputeLoop() {
-  do {
-    cachedSerializedProjectGraphPromise =
-      processFilesAndCreateAndSerializeProjectGraph(
-        await getPluginsSeparated()
-      );
-    const result = await cachedSerializedProjectGraphPromise;
-
-    // Stale iterations return ABORTED_GRAPH — skip notify + persist so
-    // listeners only see real results. The next iteration will produce
-    // a fresh graph from the now-current collected* maps.
-    if (result !== ABORTED_GRAPH) {
-      notifyProjectGraphRecomputationListeners(
-        result.projectGraph,
-        result.sourceMaps,
-        result.error
-      );
-
-      // Subprocesses that read the cache directly (e.g. eslint rules
-      // calling readCachedProjectGraph) bypass the daemon socket, so
-      // they only see updates that hit disk.
-      persistProjectGraphToDisk(result);
+    kickOffRecompute();
+  } else {
+    // First call (initial startup) — no events but we still need a graph.
+    if (!cachedSerializedProjectGraphPromise) {
+      kickOffRecompute();
     }
-  } while (collectedUpdatedFiles.size > 0 || collectedDeletedFiles.size > 0);
+  }
 }
 
 export function registerProjectGraphRecomputationListener(
