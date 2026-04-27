@@ -45,6 +45,9 @@ describe('Angular Module Federation - Federated Libraries', () => {
       project.targets.serve.options.staticRemotesPort = staticRemotesPort;
       return project;
     });
+    // Reset the daemon so subsequent runCLI calls re-read the updated
+    // project.json instead of serving a cached graph with the default port.
+    runCLI('reset');
 
     runCLI(`generate @nx/js:lib ${lib} --no-interactive`);
 
@@ -127,6 +130,9 @@ describe('Angular Module Federation - Federated Libraries', () => {
       project.targets.serve.options.staticRemotesPort = staticRemotesPort;
       return project;
     });
+    // Reset the daemon so subsequent runCLI calls re-read the updated
+    // project.json instead of serving a cached graph with the default port.
+    runCLI('reset');
 
     runCLI(`generate @nx/js:lib ${lib} --no-interactive`);
 
