@@ -105,18 +105,22 @@ function markRecomputeStale() {
  * Start a fresh project graph computation, in parallel with any in-flight
  * one. The new promise becomes `cachedSerializedProjectGraphPromise`; any
  * older compute will detect itself as stale at its next `isStale()` check
- * and bail to `ABORTED_GRAPH`, so consumers awaiting the cached pointer
+ * and chain to the cached pointer, so consumers awaiting the cached pointer
  * always end up on the latest compute.
  *
- * Notify + persist happen here (only for non-aborted real results) so
- * those side effects fire for the latest finished compute regardless of
- * who triggered it.
+ * Notify + persist fire only when this IIFE is still the latest — older
+ * IIFEs that chained their result through us have already had their side
+ * effects fired by the IIFE that actually produced the result.
  */
 function kickOffRecompute() {
-  cachedSerializedProjectGraphPromise = (async () => {
+  let myPromise: Promise<SerializedProjectGraph>;
+  myPromise = (async () => {
     const plugins = await getPluginsSeparated();
     const result = await processFilesAndCreateAndSerializeProjectGraph(plugins);
-    if (result !== ABORTED_GRAPH && result.projectGraph) {
+    if (
+      cachedSerializedProjectGraphPromise === myPromise &&
+      result.projectGraph
+    ) {
       notifyProjectGraphRecomputationListeners(
         result.projectGraph,
         result.sourceMaps,
@@ -126,22 +130,8 @@ function kickOffRecompute() {
     }
     return result;
   })();
+  cachedSerializedProjectGraphPromise = myPromise;
 }
-
-/**
- * Sentinel returned from a stale recomputation. The auto-recompute loop
- * uses reference equality to skip notifying listeners and persisting the
- * empty result — the next iteration will produce a real graph.
- */
-const ABORTED_GRAPH: SerializedProjectGraph = Object.freeze({
-  error: null,
-  projectGraph: null,
-  projectFileMapCache: null,
-  serializedProjectGraph: null,
-  serializedSourceMaps: null,
-  sourceMaps: null,
-  rustReferences: null,
-}) as SerializedProjectGraph;
 
 export async function getCachedSerializedProjectGraphPromise(
   socket?: Socket
@@ -182,13 +172,10 @@ export async function getCachedSerializedProjectGraphPromise(
       );
     }
 
-    // ABORTED_GRAPH means the compute we awaited bailed because newer
-    // file events triggered a fresh kick-off. Re-read the cached promise
-    // — it now points at the newer compute — and await that instead.
-    let result = await cachedSerializedProjectGraphPromise;
-    while (result === ABORTED_GRAPH) {
-      result = await cachedSerializedProjectGraphPromise;
-    }
+    // A stale compute returns cachedSerializedProjectGraphPromise (the
+    // newer compute that replaced it); promise unwrapping flattens the
+    // chain so we always end up with the latest real result.
+    const result = await cachedSerializedProjectGraphPromise;
 
     // Even when the loop didn't recompute, write the cache if it's stale on
     // disk relative to the in-memory result. This protects against
@@ -411,12 +398,13 @@ async function processFilesAndCreateAndSerializeProjectGraph(
       }
     }
 
-    // Early exit if the inputs went stale (newer recompute kicked off, or
-    // new file events arrived). Returning ABORTED_GRAPH lets the
-    // auto-recompute loop's next iteration produce a fresh, real graph.
+    // Stale: a newer kickOffRecompute already replaced
+    // cachedSerializedProjectGraphPromise. Chain to it via the cached
+    // pointer; the async unwrap means our caller just sees the newer
+    // compute's result.
     if (isStale()) {
       notifyPluginsGraphAborted(plugins);
-      return ABORTED_GRAPH;
+      return cachedSerializedProjectGraphPromise;
     }
 
     await processCollectedUpdatedAndDeletedFiles(
@@ -438,12 +426,10 @@ async function processFilesAndCreateAndSerializeProjectGraph(
       }
     }
 
-    // Early exit if the inputs went stale (newer recompute kicked off, or
-    // new file events arrived). Returning ABORTED_GRAPH lets the
-    // auto-recompute loop's next iteration produce a fresh, real graph.
+    // Stale: chain to the newer compute via cachedSerializedProjectGraphPromise.
     if (isStale()) {
       notifyPluginsGraphAborted(plugins);
-      return ABORTED_GRAPH;
+      return cachedSerializedProjectGraphPromise;
     }
 
     const g = await createAndSerializeProjectGraph(projectConfigurationsResult);
