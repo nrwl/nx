@@ -1,5 +1,5 @@
 import * as pc from 'picocolors';
-import { exec, execSync, type StdioOptions } from 'child_process';
+import { exec, execSync, spawn, type StdioOptions } from 'child_process';
 import { prompt } from 'enquirer';
 import { handleImport } from '../../utils/handle-import';
 import { dirname, join } from 'path';
@@ -56,8 +56,6 @@ import {
   createTempNpmDirectory,
   detectPackageManager,
   getPackageManagerCommand,
-  PackageManager,
-  PackageManagerCommands,
   packageRegistryPack,
   packageRegistryView,
   resolvePackageVersionUsingRegistry,
@@ -1694,15 +1692,13 @@ function showConnectToCloudMessage() {
   }
 }
 
-function runInstall(nxWorkspaceRoot?: string) {
-  let packageManager: PackageManager;
-  let pmCommands: PackageManagerCommands;
-  if (nxWorkspaceRoot) {
-    packageManager = detectPackageManager(nxWorkspaceRoot);
-    pmCommands = getPackageManagerCommand(packageManager, nxWorkspaceRoot);
-  } else {
-    pmCommands = getPackageManagerCommand();
-  }
+function runInstall(
+  nxWorkspaceRoot?: string,
+  phase: MigrationInstallPhase = 'pre-migration'
+): Promise<void> {
+  const cwd = nxWorkspaceRoot ?? process.cwd();
+  const packageManager = detectPackageManager(cwd);
+  const pmCommands = getPackageManagerCommand(packageManager, cwd);
 
   const installCommand = `${pmCommands.install} ${
     pmCommands.ignoreScriptsFlag ?? ''
@@ -1710,11 +1706,124 @@ function runInstall(nxWorkspaceRoot?: string) {
   output.log({
     title: `Running '${installCommand}' to make sure necessary packages are installed`,
   });
-  execSync(installCommand, {
-    stdio: [0, 1, 2],
-    windowsHide: true,
-    cwd: nxWorkspaceRoot ?? process.cwd(),
+
+  return new Promise<void>((resolve, reject) => {
+    // For npm, pipe stderr so we can detect peer dependency errors while still
+    // mirroring it live to the user's terminal. Other package managers inherit
+    // stderr directly since we don't need to inspect their output.
+    const shouldCaptureStderr = packageManager === 'npm';
+    const child = spawn(installCommand, {
+      shell: true,
+      stdio: ['inherit', 'inherit', shouldCaptureStderr ? 'pipe' : 'inherit'],
+      windowsHide: true,
+      cwd,
+    });
+
+    const stderrChunks: Buffer[] = [];
+    child.stderr?.on('data', (chunk: Buffer) => {
+      process.stderr.write(chunk);
+      stderrChunks.push(chunk);
+    });
+
+    child.on('error', reject);
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+        return;
+      }
+
+      if (shouldCaptureStderr) {
+        const stderr = Buffer.concat(stderrChunks).toString().trim();
+        if (isNpmPeerDepsError(stderr)) {
+          // Log the remediation guidance here so every caller of `runInstall`
+          // (CLI migrate, `nx repair`, single-migration runner, etc.) surfaces
+          // it consistently. Top-level callers catch `NpmPeerDepsInstallError`
+          // and return a non-zero exit code without re-logging.
+          logNpmPeerDepsError(phase);
+          reject(new NpmPeerDepsInstallError());
+          return;
+        }
+      }
+
+      reject(new Error(`Command failed: ${installCommand}`));
+    });
   });
+}
+
+type MigrationInstallPhase = 'pre-migration' | 'post-migration';
+
+class NpmPeerDepsInstallError extends Error {
+  constructor() {
+    super('npm install failed due to peer dependency conflicts.');
+    this.name = 'NpmPeerDepsInstallError';
+  }
+}
+
+/**
+ * Detects npm peer-dependency resolution failures. Keyed on the `ERESOLVE`
+ * error code, which npm consistently emits for this class of failure across
+ * v7+ (`npm ERR! code ERESOLVE` / `npm error code ERESOLVE`). Falls back to a
+ * small set of stable phrases in case the code line is missing from the
+ * captured output.
+ */
+export function isNpmPeerDepsError(stderr: string): boolean {
+  if (/\bERESOLVE\b/.test(stderr)) {
+    return true;
+  }
+  const lowerStderr = stderr.toLowerCase();
+  return (
+    lowerStderr.includes('unable to resolve dependency tree') ||
+    lowerStderr.includes('could not resolve dependency') ||
+    lowerStderr.includes('conflicting peer dependency')
+  );
+}
+
+function logNpmPeerDepsError(phase: MigrationInstallPhase): void {
+  const peerDepsResolutionSteps = [
+    'Recommended approaches (in order of preference):',
+    '',
+    '1. Use "overrides" in package.json to force compatible versions across the dependency tree.',
+    '   See https://docs.npmjs.com/cli/configuring-npm/package-json#overrides',
+    '2. Persist legacy peer deps resolution in the project ".npmrc":',
+    '   npm config set legacy-peer-deps=true --location=project',
+    '   (bypasses peer dependency resolution; use with caution)',
+    '3. As a last resort, force the installation by running "npm install --force".',
+    '   (does not persist and may produce broken installs)',
+  ];
+  const manualInstallHint = [
+    'If you installed the dependencies manually, pass "--skip-install" to avoid re-installing them:',
+    '   nx migrate --run-migrations --skip-install',
+  ];
+
+  if (phase === 'pre-migration') {
+    output.error({
+      title:
+        'You need to resolve the peer dependency conflicts before the migration can continue',
+      bodyLines: [
+        ...peerDepsResolutionSteps,
+        '',
+        'Once the conflicts are resolved, re-run the migrations:',
+        '   nx migrate --run-migrations',
+        '',
+        ...manualInstallHint,
+      ],
+    });
+  } else {
+    output.error({
+      title:
+        'Some migrations have been applied, but installing the updated dependencies failed',
+      bodyLines: [
+        ...peerDepsResolutionSteps,
+        '',
+        'Once the conflicts are resolved, run "npm install" to install the updated dependencies.',
+        'If the migration was interrupted before completing, re-run the remaining migrations:',
+        '   nx migrate --run-migrations',
+        '',
+        ...manualInstallHint,
+      ],
+    });
+  }
 }
 
 export async function executeMigrations(
@@ -1727,9 +1836,10 @@ export async function executeMigrations(
   }[],
   isVerbose: boolean,
   shouldCreateCommits: boolean,
-  commitPrefix: string
+  commitPrefix: string,
+  shouldSkipInstall = false
 ) {
-  const changedDepInstaller = new ChangedDepInstaller(root);
+  const changedDepInstaller = new ChangedDepInstaller(root, shouldSkipInstall);
 
   const migrationsWithNoChanges: typeof migrations = [];
   const sortedMigrations = migrations.sort((a, b) => {
@@ -1769,15 +1879,21 @@ export async function executeMigrations(
       }
       logger.info(`---------------------------------------------------------`);
     } catch (e) {
-      output.error({
-        title: `Failed to run ${m.name} from ${m.package}. This workspace is NOT up to date!`,
-      });
+      if (!(e instanceof NpmPeerDepsInstallError)) {
+        output.error({
+          title: `Failed to run ${m.name} from ${m.package}. This workspace is NOT up to date!`,
+        });
+      }
       throw e;
     }
   }
 
   if (!shouldCreateCommits) {
-    changedDepInstaller.installDepsIfChanged();
+    await changedDepInstaller.installDepsIfChanged();
+  }
+
+  if (changedDepInstaller.skippedInstall) {
+    logSkippedPostMigrationInstall(root);
   }
 
   return { migrationsWithNoChanges, nextSteps: allNextSteps };
@@ -1785,18 +1901,39 @@ export async function executeMigrations(
 
 class ChangedDepInstaller {
   private initialDeps: string;
+  private _skippedInstall = false;
 
-  constructor(private readonly root: string) {
+  constructor(
+    private readonly root: string,
+    private readonly shouldSkipInstall = false
+  ) {
     this.initialDeps = getStringifiedPackageJsonDeps(root);
   }
 
-  public installDepsIfChanged() {
+  public get skippedInstall(): boolean {
+    return this._skippedInstall;
+  }
+
+  public async installDepsIfChanged(): Promise<void> {
     const currentDeps = getStringifiedPackageJsonDeps(this.root);
     if (this.initialDeps !== currentDeps) {
-      runInstall(this.root);
+      if (this.shouldSkipInstall) {
+        this._skippedInstall = true;
+      } else {
+        await runInstall(this.root, 'post-migration');
+      }
     }
     this.initialDeps = currentDeps;
   }
+}
+
+function logSkippedPostMigrationInstall(root: string): void {
+  const packageManager = detectPackageManager(root);
+  const installCommand = getPackageManagerCommand(packageManager, root).install;
+  output.warn({
+    title: 'Migrations updated your dependencies, but the install was skipped',
+    bodyLines: [`Run "${installCommand}" to install the updated dependencies.`],
+  });
 }
 
 export async function runNxOrAngularMigration(
@@ -1810,7 +1947,7 @@ export async function runNxOrAngularMigration(
   isVerbose: boolean,
   shouldCreateCommits: boolean,
   commitPrefix: string,
-  installDepsIfChanged?: () => void,
+  installDepsIfChanged?: () => Promise<void>,
   handleInstallDeps = false
 ): Promise<{ changes: FileChange[]; nextSteps: string[] }> {
   if (!installDepsIfChanged) {
@@ -1867,7 +2004,7 @@ export async function runNxOrAngularMigration(
   }
 
   if (shouldCreateCommits) {
-    installDepsIfChanged();
+    await installDepsIfChanged();
 
     const commitMessage = `${commitPrefix}${migration.name}`;
     try {
@@ -1887,7 +2024,7 @@ export async function runNxOrAngularMigration(
     }
     // if we are running this function alone, we need to install deps internally
   } else if (handleInstallDeps) {
-    installDepsIfChanged();
+    await installDepsIfChanged();
   }
 
   return { changes, nextSteps };
@@ -1899,10 +2036,11 @@ async function runMigrations(
   args: string[],
   isVerbose: boolean,
   shouldCreateCommits = false,
-  commitPrefix: string
+  commitPrefix: string,
+  shouldSkipInstall = false
 ) {
-  if (!process.env.NX_MIGRATE_SKIP_INSTALL) {
-    runInstall();
+  if (!shouldSkipInstall && !process.env.NX_MIGRATE_SKIP_INSTALL) {
+    await runInstall();
   }
 
   if (!__dirname.startsWith(workspaceRoot)) {
@@ -1954,7 +2092,8 @@ async function runMigrations(
     migrations,
     isVerbose,
     shouldCreateCommits,
-    commitPrefix
+    commitPrefix,
+    shouldSkipInstall
   );
 
   if (migrationsWithNoChanges.length < migrations.length) {
@@ -2033,14 +2172,25 @@ export async function migrate(
     if (opts.type === 'generateMigrations') {
       await generateMigrationsJsonAndUpdatePackageJson(root, opts);
     } else {
-      return runMigrations(
-        root,
-        opts,
-        rawArgs,
-        args['verbose'],
-        args['createCommits'],
-        args['commitPrefix']
-      );
+      try {
+        return await runMigrations(
+          root,
+          opts,
+          rawArgs,
+          args['verbose'],
+          args['createCommits'],
+          args['commitPrefix'],
+          args['skipInstall']
+        );
+      } catch (e) {
+        // The remediation guidance is already logged by `runInstall`; swallow
+        // the error here so `handleErrors` doesn't print a noisy stack after
+        // the friendly output.
+        if (e instanceof NpmPeerDepsInstallError) {
+          return 1;
+        }
+        throw e;
+      }
     }
   });
 }

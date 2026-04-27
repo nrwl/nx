@@ -1,21 +1,20 @@
 import { NX_PREFIX } from '../../../utils/logger';
-import { isGlobPattern } from '../../../utils/globs';
 import {
   ProjectConfiguration,
   ProjectMetadata,
   TargetConfiguration,
   TargetMetadata,
 } from '../../../config/workspace-json-project-json';
-import { TargetDefaults } from '../../../config/nx-json';
-import {
-  recordSourceMapKeysByIndex,
-  targetConfigurationsSourceMapKey,
-  targetOptionSourceMapKey,
-} from './source-maps';
+import { recordSourceMapKeysByIndex } from './source-maps';
 
 import type { SourceInformation } from './source-maps';
-
-import { minimatch } from 'minimatch';
+import {
+  getMergeValueResult,
+  INTEGER_LIKE_KEY_PATTERN,
+  IntegerLikeSpreadKeyError,
+  NX_SPREAD_TOKEN,
+  uniqueKeysInObjects,
+} from './utils';
 
 export function deepClone<T>(obj: T): T {
   return structuredClone(obj);
@@ -137,22 +136,95 @@ function mergeOptions(
   baseOptions: Record<string, any> | undefined,
   projectConfigSourceMap?: Record<string, SourceInformation>,
   sourceInformation?: SourceInformation,
-  targetIdentifier?: string
+  targetIdentifier?: string,
+  deferSpreadsWithoutBase?: boolean
 ): Record<string, any> | undefined {
-  const mergedOptions = {
-    ...(baseOptions ?? {}),
-    ...(newOptions ?? {}),
-  };
+  // `'...'` at the options level uses object-spread semantics.
+  if (newOptions?.[NX_SPREAD_TOKEN] === true) {
+    return getMergeValueResult(
+      baseOptions,
+      newOptions,
+      projectConfigSourceMap
+        ? {
+            sourceMap: projectConfigSourceMap,
+            key: `${targetIdentifier}.options`,
+            sourceInformation,
+          }
+        : undefined,
+      deferSpreadsWithoutBase
+    ) as Record<string, any>;
+  }
 
-  // record new options & option properties in source map
-  if (projectConfigSourceMap) {
-    for (const newOption in newOptions) {
-      projectConfigSourceMap[`${targetIdentifier}.options.${newOption}`] =
-        sourceInformation;
-    }
+  const mergedOptionKeys = uniqueKeysInObjects(
+    baseOptions ?? {},
+    newOptions ?? {}
+  );
+  const mergedOptions = {};
+
+  for (const optionKey of mergedOptionKeys) {
+    mergedOptions[optionKey] = getMergeValueResult(
+      baseOptions ? baseOptions[optionKey] : undefined,
+      newOptions ? newOptions[optionKey] : undefined,
+      projectConfigSourceMap
+        ? {
+            sourceMap: projectConfigSourceMap,
+            key: `${targetIdentifier}.options.${optionKey}`,
+            sourceInformation,
+          }
+        : undefined,
+      deferSpreadsWithoutBase
+    );
   }
 
   return mergedOptions;
+}
+
+// Merges a single named configuration, keyed under its own identifier
+// (e.g. `targets.build.configurations.prod`) rather than under `.options`.
+// Source-map correctness for the spread case is handled inside
+// `getMergeValueResult`'s object-spread path — no post-merge fix-up needed.
+function mergeConfigurationValue(
+  newConfig: Record<string, any> | undefined,
+  baseConfig: Record<string, any> | undefined,
+  projectConfigSourceMap?: Record<string, SourceInformation>,
+  sourceInformation?: SourceInformation,
+  configIdentifier?: string,
+  deferSpreadsWithoutBase?: boolean
+): Record<string, any> | undefined {
+  if (newConfig?.[NX_SPREAD_TOKEN] === true) {
+    return getMergeValueResult(
+      baseConfig,
+      newConfig,
+      projectConfigSourceMap && configIdentifier
+        ? {
+            sourceMap: projectConfigSourceMap,
+            key: configIdentifier,
+            sourceInformation,
+          }
+        : undefined,
+      deferSpreadsWithoutBase
+    ) as Record<string, any>;
+  }
+
+  const mergedKeys = uniqueKeysInObjects(baseConfig ?? {}, newConfig ?? {});
+  const merged: Record<string, any> = {};
+
+  for (const key of mergedKeys) {
+    merged[key] = getMergeValueResult(
+      baseConfig ? baseConfig[key] : undefined,
+      newConfig ? newConfig[key] : undefined,
+      projectConfigSourceMap && configIdentifier
+        ? {
+            sourceMap: projectConfigSourceMap,
+            key: `${configIdentifier}.${key}`,
+            sourceInformation,
+          }
+        : undefined,
+      deferSpreadsWithoutBase
+    );
+  }
+
+  return merged;
 }
 
 function mergeConfigurations<T extends Object>(
@@ -160,32 +232,126 @@ function mergeConfigurations<T extends Object>(
   baseConfigurations: Record<string, T> | undefined,
   projectConfigSourceMap?: Record<string, SourceInformation>,
   sourceInformation?: SourceInformation,
-  targetIdentifier?: string
+  targetIdentifier?: string,
+  deferSpreadsWithoutBase?: boolean
 ): Record<string, T> | undefined {
-  const mergedConfigurations = {};
+  const mergedConfigurations: Record<string, T> = {};
 
-  const configurations = new Set([
-    ...Object.keys(baseConfigurations ?? {}),
-    ...Object.keys(newConfigurations ?? {}),
-  ]);
-  for (const configuration of configurations) {
-    mergedConfigurations[configuration] = {
-      ...(baseConfigurations?.[configuration] ?? {}),
-      ...(newConfigurations?.[configuration] ?? {}),
-    };
+  // Keys before '...' let base win for shared names; keys after '...'
+  // (or when there's no spread) merge normally with new winning.
+  const newKeys = Object.keys(newConfigurations ?? {});
+  const spreadPosInNew = newKeys.indexOf(NX_SPREAD_TOKEN);
+  const hasSpread = spreadPosInNew >= 0;
+  const keysBeforeSpread = hasSpread
+    ? new Set(newKeys.slice(0, spreadPosInNew))
+    : new Set<string>();
+
+  // Integer-like keys get hoisted to newKeys[0], making their position
+  // relative to '...' unrecoverable.
+  if (hasSpread && newKeys[0] && INTEGER_LIKE_KEY_PATTERN.test(newKeys[0])) {
+    throw new IntegerLikeSpreadKeyError(
+      newKeys[0],
+      targetIdentifier
+        ? `Configurations at "${targetIdentifier}.configurations"`
+        : 'Configurations'
+    );
   }
 
-  // record new configurations & configuration properties in source map
-  if (projectConfigSourceMap) {
-    for (const newConfiguration in newConfigurations) {
-      projectConfigSourceMap[
-        `${targetIdentifier}.configurations.${newConfiguration}`
-      ] = sourceInformation;
-      for (const configurationProperty in newConfigurations[newConfiguration]) {
-        projectConfigSourceMap[
-          `${targetIdentifier}.configurations.${newConfiguration}.${configurationProperty}`
-        ] = sourceInformation;
+  // Preserving the unresolved `'...'` sentinel in authored position lets
+  // a later merge layer (which actually has a base) classify the keys as
+  // pre/post-spread correctly.
+  const preserveSpreadSentinel =
+    hasSpread && deferSpreadsWithoutBase && baseConfigurations === undefined;
+
+  const processConfigName = (configName: string): void => {
+    const configIdentifier = targetIdentifier
+      ? `${targetIdentifier}.configurations.${configName}`
+      : undefined;
+    const baseHasConfig = configName in (baseConfigurations ?? {});
+    const newHasConfig = !!newConfigurations && configName in newConfigurations;
+
+    if (hasSpread && keysBeforeSpread.has(configName)) {
+      // Before '...': base wins for shared names. Keep base's source-map
+      // entries when it owns the config.
+      if (baseHasConfig) {
+        mergedConfigurations[configName] = baseConfigurations[configName];
+      } else {
+        mergedConfigurations[configName] = mergeConfigurationValue(
+          newConfigurations?.[configName],
+          undefined,
+          projectConfigSourceMap,
+          sourceInformation,
+          configIdentifier,
+          deferSpreadsWithoutBase
+        ) as T;
+        if (projectConfigSourceMap && configIdentifier) {
+          projectConfigSourceMap[configIdentifier] = sourceInformation;
+        }
       }
+      return;
+    }
+
+    mergedConfigurations[configName] = mergeConfigurationValue(
+      newConfigurations?.[configName],
+      baseConfigurations?.[configName],
+      projectConfigSourceMap,
+      sourceInformation,
+      configIdentifier,
+      deferSpreadsWithoutBase
+    ) as T;
+    // Only reattribute the config name when the new plugin introduced it.
+    if (
+      projectConfigSourceMap &&
+      configIdentifier &&
+      newHasConfig &&
+      !baseHasConfig
+    ) {
+      projectConfigSourceMap[configIdentifier] = sourceInformation;
+    }
+  };
+
+  if (hasSpread) {
+    // Authored positions of new's own keys relative to `'...'` drive
+    // pre/post-spread classification, so those keys go in authored order.
+    // Base-only keys land right before `'...'` — they weren't authored by
+    // the new layer, so default semantics places them with the pre-spread
+    // keys (the "base layer" slot).
+    const baseOnlyKeys = baseConfigurations
+      ? Object.keys(baseConfigurations).filter(
+          (k) => k !== NX_SPREAD_TOKEN && !(k in (newConfigurations ?? {}))
+        )
+      : [];
+    let baseOnlyInserted = false;
+    const insertBaseOnlyKeys = () => {
+      if (baseOnlyInserted) return;
+      baseOnlyInserted = true;
+      for (const configName of baseOnlyKeys) processConfigName(configName);
+    };
+    for (const configName of newKeys) {
+      if (configName === NX_SPREAD_TOKEN) {
+        insertBaseOnlyKeys();
+        if (preserveSpreadSentinel) {
+          (mergedConfigurations as Record<string, unknown>)[NX_SPREAD_TOKEN] =
+            true;
+        }
+        continue;
+      }
+      processConfigName(configName);
+    }
+    insertBaseOnlyKeys();
+  } else {
+    // No spread — classic `{ ...base, ...new }` ordering: base keys
+    // first, new-only keys after. Shared configs stay at base's position.
+    if (baseConfigurations) {
+      for (const configName of Object.keys(baseConfigurations)) {
+        if (configName === NX_SPREAD_TOKEN) continue;
+        processConfigName(configName);
+      }
+    }
+    for (const configName of newKeys) {
+      if (configName === NX_SPREAD_TOKEN) continue;
+      if (configName in mergedConfigurations) continue;
+      processConfigName(configName);
     }
   }
 
@@ -210,7 +376,8 @@ export function mergeTargetConfigurations(
   baseTarget?: TargetConfiguration,
   projectConfigSourceMap?: Record<string, SourceInformation>,
   sourceInformation?: SourceInformation,
-  targetIdentifier?: string
+  targetIdentifier?: string,
+  deferSpreadsWithoutBase?: boolean
 ): TargetConfiguration {
   const {
     configurations: defaultConfigurations,
@@ -233,20 +400,136 @@ export function mergeTargetConfigurations(
   }
 
   // merge top level properties if they're compatible
-  const result = {
-    ...(isCompatible ? baseTargetProperties : {}),
-    ...target,
+  const result: Partial<TargetConfiguration> = {};
+  const mergeBase = isCompatible ? baseTargetProperties : {};
+
+  // Keys before '...' let base win; keys after '...' (or when there's no
+  // spread) merge normally with target winning.
+  const targetKeys = Object.keys(target);
+  const spreadPosInTarget = targetKeys.indexOf(NX_SPREAD_TOKEN);
+  const hasSpread = isCompatible && spreadPosInTarget >= 0;
+  const keysBeforeSpread = hasSpread
+    ? new Set(targetKeys.slice(0, spreadPosInTarget))
+    : new Set<string>();
+
+  // Integer-like keys get hoisted to targetKeys[0], making their position
+  // relative to '...' unrecoverable.
+  if (
+    hasSpread &&
+    targetKeys[0] &&
+    INTEGER_LIKE_KEY_PATTERN.test(targetKeys[0])
+  ) {
+    throw new IntegerLikeSpreadKeyError(
+      targetKeys[0],
+      targetIdentifier ? `Target at "${targetIdentifier}"` : 'Target'
+    );
+  }
+
+  // Preserving the unresolved `'...'` sentinel in authored position lets a
+  // later merge layer (which actually has a base) classify sibling keys as
+  // pre/post-spread correctly.
+  const preserveSpreadSentinel =
+    spreadPosInTarget >= 0 &&
+    deferSpreadsWithoutBase &&
+    baseTarget === undefined;
+
+  const skipForOwnMerge = new Set<string>([
+    'options',
+    'configurations',
+    NX_SPREAD_TOKEN,
+  ]);
+
+  const processKey = (key: string): void => {
+    if (skipForOwnMerge.has(key)) return;
+
+    if (hasSpread && keysBeforeSpread.has(key)) {
+      // Before '...': base wins; fall through to target only if base lacks it.
+      result[key] =
+        key in mergeBase
+          ? mergeBase[key]
+          : getMergeValueResult(
+              undefined,
+              target[key],
+              projectConfigSourceMap
+                ? {
+                    sourceMap: projectConfigSourceMap,
+                    key: `${targetIdentifier}.${key}`,
+                    sourceInformation,
+                  }
+                : undefined,
+              deferSpreadsWithoutBase
+            );
+      return;
+    }
+    if (key in target) {
+      result[key] = getMergeValueResult(
+        mergeBase[key],
+        target[key],
+        projectConfigSourceMap
+          ? {
+              sourceMap: projectConfigSourceMap,
+              key: `${targetIdentifier}.${key}`,
+              sourceInformation,
+            }
+          : undefined,
+        deferSpreadsWithoutBase
+      );
+    } else {
+      result[key] = mergeBase[key];
+    }
   };
 
-  // record top level properties in source map
+  if (isCompatible) {
+    if (hasSpread) {
+      // Authored positions of the target's own keys relative to `'...'`
+      // drive pre/post-spread classification, so those keys go in
+      // authored order. Base-only keys land right before `'...'` — they
+      // weren't authored, so default semantics ("base layer that yields
+      // to a higher-priority layer") places them with the rest of the
+      // pre-spread keys.
+      const baseOnlyKeys = Object.keys(baseTargetProperties).filter(
+        (k) => !skipForOwnMerge.has(k) && !(k in target)
+      );
+      let baseOnlyInserted = false;
+      const insertBaseOnlyKeys = () => {
+        if (baseOnlyInserted) return;
+        baseOnlyInserted = true;
+        for (const key of baseOnlyKeys) processKey(key);
+      };
+      for (const key of targetKeys) {
+        if (key === NX_SPREAD_TOKEN) {
+          insertBaseOnlyKeys();
+          if (preserveSpreadSentinel) {
+            (result as Record<string, unknown>)[NX_SPREAD_TOKEN] = true;
+          }
+          continue;
+        }
+        if (skipForOwnMerge.has(key)) continue;
+        processKey(key);
+      }
+      // Safety for a sentinel-less iteration (shouldn't happen when
+      // hasSpread is true, but keeps the base-only keys emitted).
+      insertBaseOnlyKeys();
+    } else {
+      // No spread — classic `{ ...base, ...target }` ordering: base keys
+      // first (preserving their own-key order), target-only keys after.
+      // Shared keys stay at base's position with per-key merged value.
+      const mergedKeys = uniqueKeysInObjects(baseTargetProperties, target);
+      for (const key of mergedKeys) {
+        if (skipForOwnMerge.has(key)) continue;
+        processKey(key);
+      }
+    }
+  } else {
+    for (const key of targetKeys) {
+      if (skipForOwnMerge.has(key)) continue;
+      processKey(key);
+    }
+  }
+
+  // Update source map once after loop
   if (projectConfigSourceMap) {
     projectConfigSourceMap[targetIdentifier] = sourceInformation;
-
-    // record root level target properties to source map
-    for (const targetProperty in target) {
-      const targetPropertyId = `${targetIdentifier}.${targetProperty}`;
-      projectConfigSourceMap[targetPropertyId] = sourceInformation;
-    }
   }
 
   // merge options if there are any
@@ -257,8 +540,12 @@ export function mergeTargetConfigurations(
       isCompatible ? defaultOptions : undefined,
       projectConfigSourceMap,
       sourceInformation,
-      targetIdentifier
+      targetIdentifier,
+      deferSpreadsWithoutBase
     );
+    if (projectConfigSourceMap && target.options) {
+      projectConfigSourceMap[`${targetIdentifier}.options`] = sourceInformation;
+    }
   }
 
   // merge configurations if there are any
@@ -269,8 +556,13 @@ export function mergeTargetConfigurations(
       isCompatible ? defaultConfigurations : undefined,
       projectConfigSourceMap,
       sourceInformation,
-      targetIdentifier
+      targetIdentifier,
+      deferSpreadsWithoutBase
     );
+    if (projectConfigSourceMap && target.configurations) {
+      projectConfigSourceMap[`${targetIdentifier}.configurations`] =
+        sourceInformation;
+    }
   }
 
   if (target.metadata) {
@@ -328,106 +620,6 @@ export function isCompatibleTarget(
   return true;
 }
 
-function targetDefaultShouldBeApplied(
-  key: string,
-  sourceMap: Record<string, SourceInformation>
-) {
-  const sourceInfo = sourceMap[key];
-  if (!sourceInfo) {
-    return true;
-  }
-  // The defined value of the target is from a plugin that
-  // isn't part of Nx's core plugins, so target defaults are
-  // applied on top of it.
-  const [, plugin] = sourceInfo;
-  return !plugin?.startsWith('nx/');
-}
-
-export function mergeTargetDefaultWithTargetDefinition(
-  targetName: string,
-  project: ProjectConfiguration,
-  targetDefault: Partial<TargetConfiguration>,
-  sourceMap: Record<string, SourceInformation>
-): TargetConfiguration {
-  const targetDefinition = project.targets[targetName] ?? {};
-  const result = deepClone(targetDefinition);
-
-  for (const key in targetDefault) {
-    switch (key) {
-      case 'options': {
-        const normalizedDefaults = resolveNxTokensInOptions(
-          targetDefault.options,
-          project,
-          targetName
-        );
-        for (const optionKey in normalizedDefaults) {
-          const sourceMapKey = targetOptionSourceMapKey(targetName, optionKey);
-          if (
-            targetDefinition.options[optionKey] === undefined ||
-            targetDefaultShouldBeApplied(sourceMapKey, sourceMap)
-          ) {
-            result.options[optionKey] = targetDefault.options[optionKey];
-            sourceMap[sourceMapKey] = ['nx.json', 'nx/target-defaults'];
-          }
-        }
-        break;
-      }
-      case 'configurations': {
-        if (!result.configurations) {
-          result.configurations = {};
-          sourceMap[targetConfigurationsSourceMapKey(targetName)] = [
-            'nx.json',
-            'nx/target-defaults',
-          ];
-        }
-        for (const configuration in targetDefault.configurations) {
-          if (!result.configurations[configuration]) {
-            result.configurations[configuration] = {};
-            sourceMap[
-              targetConfigurationsSourceMapKey(targetName, configuration)
-            ] = ['nx.json', 'nx/target-defaults'];
-          }
-          const normalizedConfigurationDefaults = resolveNxTokensInOptions(
-            targetDefault.configurations[configuration],
-            project,
-            targetName
-          );
-          for (const configurationKey in normalizedConfigurationDefaults) {
-            const sourceMapKey = targetConfigurationsSourceMapKey(
-              targetName,
-              configuration,
-              configurationKey
-            );
-            if (
-              targetDefinition.configurations?.[configuration]?.[
-                configurationKey
-              ] === undefined ||
-              targetDefaultShouldBeApplied(sourceMapKey, sourceMap)
-            ) {
-              result.configurations[configuration][configurationKey] =
-                targetDefault.configurations[configuration][configurationKey];
-              sourceMap[sourceMapKey] = ['nx.json', 'nx/target-defaults'];
-            }
-          }
-        }
-        break;
-      }
-      default: {
-        const sourceMapKey = `targets.${targetName}.${key}`;
-        if (
-          targetDefinition[key] === undefined ||
-          targetDefaultShouldBeApplied(sourceMapKey, sourceMap)
-        ) {
-          result[key] = targetDefault[key];
-          sourceMap[sourceMapKey] = ['nx.json', 'nx/target-defaults'];
-        }
-        break;
-      }
-    }
-  }
-  return result;
-}
-
 export function resolveNxTokensInOptions<T extends Object | Array<unknown>>(
   object: T,
   project: ProjectConfiguration,
@@ -456,39 +648,4 @@ export function resolveNxTokensInOptions<T extends Object | Array<unknown>>(
     }
   }
   return result;
-}
-
-export function readTargetDefaultsForTarget(
-  targetName: string,
-  targetDefaults: TargetDefaults,
-  executor?: string
-): TargetDefaults[string] {
-  if (executor && targetDefaults?.[executor]) {
-    // If an executor is defined in project.json, defaults should be read
-    // from the most specific key that matches that executor.
-    // e.g. If executor === run-commands, and the target is named build:
-    // Use, use nx:run-commands if it is present
-    // If not, use build if it is present.
-    return targetDefaults?.[executor];
-  } else if (targetDefaults?.[targetName]) {
-    // If the executor is not defined, the only key we have is the target name.
-    return targetDefaults?.[targetName];
-  }
-
-  let matchingTargetDefaultKey: string | null = null;
-  for (const key in targetDefaults ?? {}) {
-    if (isGlobPattern(key) && minimatch(targetName, key)) {
-      if (
-        !matchingTargetDefaultKey ||
-        matchingTargetDefaultKey.length < key.length
-      ) {
-        matchingTargetDefaultKey = key;
-      }
-    }
-  }
-  if (matchingTargetDefaultKey) {
-    return targetDefaults[matchingTargetDefaultKey];
-  }
-
-  return null;
 }

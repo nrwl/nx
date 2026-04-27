@@ -2,7 +2,6 @@ import { prompt } from 'enquirer';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
-const ora = require('ora');
 import type { Observable } from 'rxjs';
 import {
   NxJsonConfiguration,
@@ -13,6 +12,7 @@ import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
+import { globalSpinner } from '../utils/spinner';
 import { createTaskHasher } from '../hasher/create-task-hasher';
 import {
   getTaskDetails,
@@ -755,8 +755,7 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     (await promptForApplyingSyncGeneratorChanges());
 
   if (applyChanges) {
-    const spinner = ora('Syncing the workspace...');
-    spinner.start();
+    const spinner = globalSpinner.start('Syncing the workspace...');
 
     // Flush sync generator changes to disk
     const flushResult = await flushSyncGeneratorChanges(results);

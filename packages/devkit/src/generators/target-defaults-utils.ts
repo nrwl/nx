@@ -1,6 +1,7 @@
 import {
   type CreateNodesV2,
   type PluginConfiguration,
+  type TargetConfiguration,
   type Tree,
   readNxJson,
   updateNxJson,
@@ -10,17 +11,20 @@ import { findMatchingConfigFiles } from 'nx/src/devkit-internals';
 export function addBuildTargetDefaults(
   tree: Tree,
   executorName: string,
-  buildTargetName = 'build'
+  buildTargetName = 'build',
+  extraInputs: TargetConfiguration['inputs'] = []
 ): void {
   const nxJson = readNxJson(tree);
   nxJson.targetDefaults ??= {};
   nxJson.targetDefaults[executorName] ??= {
     cache: true,
     dependsOn: [`^${buildTargetName}`],
-    inputs:
-      nxJson.namedInputs && 'production' in nxJson.namedInputs
+    inputs: [
+      ...(nxJson.namedInputs && 'production' in nxJson.namedInputs
         ? ['production', '^production']
-        : ['default', '^default'],
+        : ['default', '^default']),
+      ...extraInputs,
+    ],
   };
   updateNxJson(tree, nxJson);
 }

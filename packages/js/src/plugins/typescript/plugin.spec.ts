@@ -2088,6 +2088,51 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         );
       });
 
+      it('should collect tsconfig paths from `extends` chains in external project references', async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+          'libs/my-lib/tsconfig.json': JSON.stringify({
+            include: ['src/**/*.ts'],
+            references: [
+              { path: './tsconfig.lib.json' },
+              { path: '../other-lib/tsconfig.lib.json' },
+            ],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+            include: ['src/**/*.ts'],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/package.json': `{}`,
+          'libs/other-lib/tsconfig.json': JSON.stringify({
+            references: [{ path: './tsconfig.lib.json' }],
+          }),
+          // tsconfig.lib.json in the external dep extends a same-project
+          // tsconfig.shared.json — tsc reads it via the extends chain, so it
+          // must be emitted as an input pattern.
+          'libs/other-lib/tsconfig.lib.json': JSON.stringify({
+            extends: './tsconfig.shared.json',
+            include: ['src/**/*.ts'],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/other-lib/tsconfig.shared.json': JSON.stringify({
+            compilerOptions: { strict: true },
+          }),
+          'libs/other-lib/package.json': `{}`,
+        });
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          {}
+        );
+        const myLibTargets = result.projects['libs/my-lib']?.targets;
+        expect(myLibTargets.typecheck.inputs).toContain(
+          '^{projectRoot}/tsconfig.lib.json'
+        );
+        expect(myLibTargets.typecheck.inputs).toContain(
+          '^{projectRoot}/tsconfig.shared.json'
+        );
+      });
+
       it('should normalize and add directories in `include` from internal project references', async () => {
         configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
