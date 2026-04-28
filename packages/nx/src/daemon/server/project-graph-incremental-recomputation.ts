@@ -665,12 +665,6 @@ async function resetInternalState() {
   collectedDeletedFiles.clear();
   cacheHasBeenPersisted = false;
   resetWorkspaceContext();
-  // Immediately kick off a successor so any in-flight stale computes that
-  // hit chainToLatest find a real promise to chain to. Without this, a
-  // stale compute reads cachedSerializedProjectGraphPromise as undefined,
-  // its `if (stale) return stale` falls through (undefined is falsy), and
-  // it ends up committing partial/stale data to module state.
-  kickOffRecompute();
 }
 
 async function resetInternalStateIfNxDepsMissing() {
