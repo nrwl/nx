@@ -17,7 +17,10 @@ import {
 } from '../../utils/exec-gradle';
 import { dirname, join } from 'path';
 import { spawn } from 'child_process';
-import { getExcludeTasksFromTaskGraph } from './get-exclude-task';
+import {
+  getAllDependsOnFromTaskGraph,
+  getExcludeTasksFromTaskGraph,
+} from './get-exclude-task';
 import { GradlePluginOptions } from '../../plugin/utils/gradle-plugin-options';
 
 export const batchRunnerPath = join(
@@ -107,6 +110,7 @@ export function getGradlewTasksToRun(
 ) {
   const tasksWithExcludeIds = new Set<string>();
   const testTasksWithExcludeIds = new Set<string>();
+  const tasksWithoutExcludeIds = new Set<string>();
   const gradlewTasksToRun: Record<string, GradleExecutorSchema> = {};
   const includeDependsOnTasks = new Set<string>();
 
@@ -127,10 +131,18 @@ export function getGradlewTasksToRun(
       } else {
         tasksWithExcludeIds.add(taskId);
       }
+    } else {
+      tasksWithoutExcludeIds.add(taskId);
     }
   }
 
   const runningTaskIds = new Set<string>(taskIds);
+  for (const depId of getAllDependsOnFromTaskGraph(
+    tasksWithoutExcludeIds,
+    fullTaskGraph
+  )) {
+    runningTaskIds.add(depId);
+  }
 
   const excludeTasks = getExcludeTasksFromTaskGraph(
     tasksWithExcludeIds,

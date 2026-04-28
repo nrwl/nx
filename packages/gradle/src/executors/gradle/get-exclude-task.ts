@@ -38,7 +38,7 @@ export function getExcludeTasksFromTaskGraph(
   return excludes;
 }
 
-function getAllDependsOnFromTaskGraph(
+export function getAllDependsOnFromTaskGraph(
   startTaskIds: Iterable<string>,
   taskGraph: TaskGraph
 ): Set<string> {

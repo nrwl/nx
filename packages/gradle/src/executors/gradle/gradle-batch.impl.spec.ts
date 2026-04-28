@@ -205,4 +205,39 @@ describe('getGradlewTasksToRun', () => {
     expect(result.excludeTasks).toEqual(new Set(['lintApp1']));
     expect(result.excludeTestTasks).toEqual(new Set());
   });
+
+  it('does not exclude transitive deps shared with an excludeDependsOn:false task', () => {
+    nodes['lib1'] = {
+      name: 'lib1',
+      type: 'lib',
+      data: {
+        root: 'lib1',
+        targets: {
+          jar: { options: { taskName: 'jarLib1' } },
+        },
+      },
+    };
+    taskGraph.tasks['lib1:jar'] = {
+      id: 'lib1:jar',
+      target: { project: 'lib1', target: 'jar' },
+      outputs: [],
+      overrides: {},
+      projectRoot: 'lib1',
+      parallelism: false,
+    };
+    taskGraph.dependencies['lib1:jar'] = [];
+    taskGraph.dependencies['app1:test'] = ['app1:lint', 'lib1:jar'];
+    taskGraph.dependencies['app2:build'] = ['lib1:jar'];
+
+    const taskIds = ['app1:test', 'app2:build'];
+    const result = getGradlewTasksToRun(taskIds, taskGraph, inputs, nodes);
+
+    // app1:test has excludeDependsOn:true → would exclude its deps (app1:lint, lib1:jar).
+    // app2:build has excludeDependsOn:false → its deps must run, including lib1:jar.
+    // Because lib1:jar is required by app2:build, it must NOT appear in excludeTasks
+    // even though app1:test's exclude pass would otherwise drop it.
+    expect(result.excludeTasks).toEqual(new Set(['lintApp1']));
+    expect(result.excludeTasks.has('jarLib1')).toBe(false);
+    expect(result.excludeTestTasks).toEqual(new Set());
+  });
 });
