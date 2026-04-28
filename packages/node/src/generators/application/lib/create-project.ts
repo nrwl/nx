@@ -6,6 +6,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { TS_SOLUTION_SETUP_TSCONFIG_INPUT } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { NormalizedSchema } from './normalized-schema';
@@ -31,7 +32,9 @@ export function addProject(
   };
 
   if (options.bundler === 'esbuild') {
-    addBuildTargetDefaults(tree, '@nx/esbuild:esbuild');
+    addBuildTargetDefaults(tree, '@nx/esbuild:esbuild', 'build', [
+      TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+    ]);
     project.targets.build = getEsBuildConfig(tree, project, options);
   } else if (options.bundler === 'webpack') {
     if (!hasWebpackPlugin(tree) && options.addPlugin === false) {

@@ -1,5 +1,9 @@
 import { ast, query } from '@phenomnomnominal/tsquery';
-import { readJson, joinPathFragments, type Tree } from '@nx/devkit';
+import {
+  getDependencyVersionFromPackageJson,
+  joinPathFragments,
+  type Tree,
+} from '@nx/devkit';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 import { toProjectRelativePath } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
 import { dirname } from 'path/posix';
@@ -173,14 +177,13 @@ export function getInstalledPackageVersion(
   tree: Tree,
   pkgName: string
 ): string | null {
-  const { dependencies, devDependencies } = readJson(tree, 'package.json');
-  const version = dependencies?.[pkgName] ?? devDependencies?.[pkgName];
-
-  return version;
+  // resolves pnpm catalog: refs (and yarn catalog refs)
+  return getDependencyVersionFromPackageJson(tree, pkgName);
 }
 
 export function getInstalledPackageVersionInfo(tree: Tree, pkgName: string) {
   const version = getInstalledPackageVersion(tree, pkgName);
+  const coerced = version ? coerce(version) : null;
 
-  return version ? { major: major(coerce(version)), version } : null;
+  return coerced ? { major: major(coerced), version } : null;
 }
