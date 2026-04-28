@@ -477,11 +477,10 @@ impl AppLifeCycle {
         let mut tui_mode = initial_mode;
 
         // Spawn unified async task (identical for both modes!)
+        // The TUI event reader is already running — enter() called start()
+        // synchronously so EventStream::new() ran before any stdin bytes had
+        // a chance to leak into the read buffer.
         spawn(async move {
-            // Start the TUI event loop. This must happen inside the async block
-            // because start() uses tokio::spawn() which requires a runtime context.
-            tui.start();
-
             // Set up console messenger (identical for both modes)
             {
                 let connection = NxConsoleMessageConnection::new(&workspace_root).await;

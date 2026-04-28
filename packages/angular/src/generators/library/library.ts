@@ -13,7 +13,6 @@ import { releaseTasks } from '@nx/js/src/generators/library/utils/add-release-co
 import init from '../../generators/init/init';
 import { UnitTestRunner } from '../../utils/test-runners';
 import addLintingGenerator from '../add-linting/add-linting';
-import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
 import { addJest } from '../utils/add-jest';
 import { addVitestAnalog, addVitestAngular } from '../utils/add-vitest';
 import { addBuildableLibrariesPostCssDependencies } from '../utils/dependencies';
@@ -72,14 +71,6 @@ export async function libraryGenerator(
   }
 
   await addLinting(tree, libraryOptions);
-
-  if (libraryOptions.addTailwind) {
-    await setupTailwindGenerator(tree, {
-      project: libraryOptions.name,
-      skipFormat: true,
-      skipPackageJson: libraryOptions.skipPackageJson,
-    });
-  }
 
   if (
     (libraryOptions.buildable || libraryOptions.publishable) &&

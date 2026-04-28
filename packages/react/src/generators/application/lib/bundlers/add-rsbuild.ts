@@ -34,7 +34,6 @@ export async function setupRsbuildConfiguration(
     addBuildPlugin,
     addCopyAssets,
     addHtmlTemplatePath,
-    addExperimentalSwcPlugin,
     addSourceDefine,
     versions,
   } = await import('@nx/rsbuild/config-utils');
@@ -68,10 +67,7 @@ export async function setupRsbuildConfiguration(
     tree,
     pathToConfigFile,
     '@rsbuild/plugin-react',
-    'pluginReact',
-    options.style === '@emotion/styled'
-      ? `swcReactOptions: {\n\timportSource: '@emotion/react',\n}`
-      : undefined
+    'pluginReact'
   );
 
   if (options.style === 'scss') {
@@ -82,29 +78,6 @@ export async function setupRsbuildConfiguration(
       'pluginSass'
     );
     deps['@rsbuild/plugin-sass'] = versions.rsbuildPluginSassVersion;
-  } else if (options.style === 'less') {
-    addBuildPlugin(
-      tree,
-      pathToConfigFile,
-      '@rsbuild/plugin-less',
-      'pluginLess'
-    );
-    deps['@rsbuild/plugin-less'] = versions.rsbuildPluginLessVersion;
-  } else if (options.style === '@emotion/styled') {
-    deps['@swc/plugin-emotion'] = versions.rsbuildSwcPluginEmotionVersion;
-    addExperimentalSwcPlugin(tree, pathToConfigFile, '@swc/plugin-emotion');
-  } else if (options.style === 'styled-jsx') {
-    deps['@swc/plugin-styled-jsx'] = versions.rsbuildSwcPluginStyledJsxVersion;
-    addExperimentalSwcPlugin(tree, pathToConfigFile, '@swc/plugin-styled-jsx');
-  } else if (options.style === 'styled-components') {
-    deps['@rsbuild/plugin-styled-components'] =
-      versions.rsbuildPluginStyledComponentsVersion;
-    addBuildPlugin(
-      tree,
-      pathToConfigFile,
-      '@rsbuild/plugin-styled-components',
-      'pluginStyledComponents'
-    );
   }
 
   addHtmlTemplatePath(tree, pathToConfigFile, './src/index.html');

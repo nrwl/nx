@@ -52,11 +52,7 @@ export async function addRollupBuildTarget(
     );
   }
 
-  if (options.style === '@emotion/styled') {
-    external.add('@emotion/react/jsx-runtime');
-  } else {
-    external.add('react/jsx-runtime');
-  }
+  external.add('react/jsx-runtime');
 
   const nxJson = readNxJson(host);
   const hasRollupPlugin = !!nxJson.plugins?.some((p) =>
