@@ -7,8 +7,7 @@
       "dependsOn": ["build:dotnet"]
     },
     "test": {
-      "executor": "nx:noop",
-      "dependsOn": ["test:dotnet"]
+      "executor": "nx:noop"
     }
   }
 }
