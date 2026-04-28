@@ -1,3 +1,4 @@
+import Module, { createRequire } from 'node:module';
 import { readJsonFile } from './fileutils';
 import type { PackageJson } from './package-json';
 import { workspaceRoot } from './workspace-root';
@@ -52,11 +53,10 @@ function resolvePackageJsonWithoutCachePollution(
   packageName: string,
   requirePaths: string[]
 ): string | null {
-  const Module = require('module');
-  const realCache = Module._pathCache;
-  Module._pathCache = Object.create(null);
+  // `_pathCache` is an internal Node API not exposed in @types/node.
+  const realCache = (Module as any)._pathCache;
+  (Module as any)._pathCache = Object.create(null);
   try {
-    const { createRequire } = Module;
     const detachedRequire = createRequire('/__nx_detached_resolver__/x.js');
     return detachedRequire.resolve(`${packageName}/package.json`, {
       paths: requirePaths,
@@ -64,6 +64,6 @@ function resolvePackageJsonWithoutCachePollution(
   } catch {
     return null;
   } finally {
-    Module._pathCache = realCache;
+    (Module as any)._pathCache = realCache;
   }
 }
