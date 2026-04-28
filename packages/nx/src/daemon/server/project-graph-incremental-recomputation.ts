@@ -276,39 +276,45 @@ function computeWorkspaceConfigHash(
   return hashArray(projectConfigurationStrings);
 }
 
+type FileMapUpdate = {
+  fileMap: NonNullable<typeof fileMapWithFiles>;
+  configHash: string;
+  knownExternalNodes?: Record<string, ProjectGraphExternalNode>;
+};
+
 async function processCollectedUpdatedAndDeletedFiles(
   { projects, externalNodes, projectRootMap }: ConfigurationResult,
   updatedFileHashes: Record<string, string>,
   deletedFiles: string[]
-) {
+): Promise<FileMapUpdate> {
   try {
-    const workspaceConfigHash = computeWorkspaceConfigHash(projects);
+    const configHash = computeWorkspaceConfigHash(projects);
 
-    // when workspace config changes we cannot incrementally update project file map
-    if (workspaceConfigHash !== storedWorkspaceConfigHash) {
-      storedWorkspaceConfigHash = workspaceConfigHash;
+    // Config changed → can't incrementally update; refetch the file map
+    // from disk. Returning instead of mutating module state lets the caller
+    // gate the commit on its staleness check, so a slower stale compute
+    // can't clobber a faster newer one's already-committed state.
+    if (configHash !== storedWorkspaceConfigHash) {
+      const fresh = await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
+      return { fileMap: fresh, configHash, knownExternalNodes: externalNodes };
+    }
 
-      ({ ...fileMapWithFiles } = await retrieveWorkspaceFiles(
-        workspaceRoot,
-        projectRootMap
-      ));
-
-      knownExternalNodes = externalNodes;
-    } else {
-      if (fileMapWithFiles) {
-        fileMapWithFiles = updateFileMap(
+    // Config unchanged → patch the existing file map in place.
+    if (fileMapWithFiles) {
+      return {
+        fileMap: updateFileMap(
           projects,
           fileMapWithFiles.rustReferences,
           updatedFileHashes,
           deletedFiles
-        );
-      } else {
-        fileMapWithFiles = await retrieveWorkspaceFiles(
-          workspaceRoot,
-          projectRootMap
-        );
-      }
+        ),
+        configHash,
+      };
     }
+
+    // No prior map (first compute on this daemon).
+    const fresh = await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
+    return { fileMap: fresh, configHash };
   } catch (e) {
     // this is expected
     // for instance, project.json can be incorrect or a file we are trying to has
@@ -399,7 +405,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     const stalePostCreateNodes = chainToLatest(true);
     if (stalePostCreateNodes) return stalePostCreateNodes;
 
-    await processCollectedUpdatedAndDeletedFiles(
+    const fileMapUpdate = await processCollectedUpdatedAndDeletedFiles(
       projectConfigurationsResult,
       updatedFileHashes,
       deletedFiles
@@ -420,6 +426,15 @@ async function processFilesAndCreateAndSerializeProjectGraph(
 
     const stalePreCreateDependencies = chainToLatest(true);
     if (stalePreCreateDependencies) return stalePreCreateDependencies;
+
+    // Latest writer commits to module state. Stale computes returned via
+    // chainToLatest above without touching `fileMapWithFiles`, so they
+    // can't clobber a newer compute's write.
+    fileMapWithFiles = fileMapUpdate.fileMap;
+    storedWorkspaceConfigHash = fileMapUpdate.configHash;
+    if (fileMapUpdate.knownExternalNodes) {
+      knownExternalNodes = fileMapUpdate.knownExternalNodes;
+    }
 
     const g = await createAndSerializeProjectGraph(projectConfigurationsResult);
 
