@@ -436,6 +436,14 @@ async function processFilesAndCreateAndSerializeProjectGraph(
 
     delete global.NX_GRAPH_CREATION;
 
+    // Stale: createDependencies/createMetadata already ran (so their
+    // lifecycle counters are balanced) — no notifyPluginsGraphAborted
+    // needed. Chain to the newer compute instead of surfacing this
+    // compute's now-outdated result/errors.
+    if (isStale()) {
+      return cachedSerializedProjectGraphPromise;
+    }
+
     const errors = [...(projectConfigurationsError?.errors ?? [])];
 
     if (g.error) {
