@@ -92,16 +92,6 @@ let fileChangeCounter = 0;
 let recomputationGeneration = 0;
 
 /**
- * Bump the recomputation generation counter so any in-flight
- * `processFilesAndCreateAndSerializeProjectGraph` will fail its next
- * `isStale()` checkpoint and bail. Always paired with a fresh
- * `kickOffRecompute` so the latest inputs are picked up immediately.
- */
-function markRecomputeStale() {
-  ++recomputationGeneration;
-}
-
-/**
  * Start a fresh project graph computation, in parallel with any in-flight
  * one. The new promise becomes `cachedSerializedProjectGraphPromise`; any
  * older compute will detect itself as stale at its next `isStale()` check
@@ -248,10 +238,11 @@ export function scheduleProjectGraphRecomputation(
   ) {
     notifyFileChangeListeners({ createdFiles, updatedFiles, deletedFiles });
     notifyFileWatcherSockets(createdFiles, updatedFiles, deletedFiles);
-    // Mark any in-flight compute as stale so its next checkpoint bails,
-    // and start a fresh compute in parallel with the bailing one. The
-    // newer one wins via cachedSerializedProjectGraphPromise.
-    markRecomputeStale();
+    // Bump generation synchronously so any in-flight compute fails its
+    // next isStale() check and chains to the newer one. kickOffRecompute
+    // would also bump on first resume, but only after its first await —
+    // a window during which the old compute could falsely pass.
+    ++recomputationGeneration;
     kickOffRecompute();
   } else {
     // First call (initial startup) — no events but we still need a graph.
