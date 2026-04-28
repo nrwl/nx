@@ -16,8 +16,11 @@ import {
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { existsSync, readdirSync } from 'fs';
+import {
+  isUsingTsSolutionSetup,
+  TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { readdirSync } from 'fs';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
@@ -37,7 +40,13 @@ export interface WebpackPluginOptions {
 type WebpackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 function readTargetsCache(cachePath: string): Record<string, WebpackTargets> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
+  try {
+    return process.env.NX_CACHE_PROJECT_GRAPH !== 'false'
+      ? readJsonFile(cachePath)
+      : {};
+  } catch {
+    return {};
+  }
 }
 
 function writeTargetsToCache(
@@ -181,6 +190,7 @@ async function createWebpackTargets(
             {
               externalDependencies: ['webpack-cli'],
             },
+            TS_SOLUTION_SETUP_TSCONFIG_INPUT,
           ]
         : [
             'default',
@@ -188,6 +198,7 @@ async function createWebpackTargets(
             {
               externalDependencies: ['webpack-cli'],
             },
+            TS_SOLUTION_SETUP_TSCONFIG_INPUT,
           ],
     outputs,
     metadata: {
