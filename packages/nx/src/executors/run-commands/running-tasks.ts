@@ -441,6 +441,33 @@ class RunningNodeProcess implements RunningTask {
     commandConfig: RunCommandsCommandOptions,
     streamOutput: boolean
   ) {
+    // Named handlers so they can be removed when the child exits.
+    // Otherwise each RunningNodeProcess leaks process listeners; with
+    // many run-commands tasks this triggers MaxListenersExceededWarning.
+    const isForked = !!process.env.NX_FORKED_TASK_EXECUTOR;
+    const onProcessExit = () => {
+      if (this.childProcess.pid && !this.killPromise) {
+        killProcessTree(this.childProcess.pid);
+      }
+    };
+    const onSigInt = () => {
+      this.kill('SIGTERM');
+    };
+    const onSigTerm = () => {
+      this.kill('SIGTERM');
+    };
+    const onSigHup = () => {
+      this.kill('SIGTERM');
+    };
+    const removeProcessListeners = () => {
+      process.removeListener('exit', onProcessExit);
+      if (isForked) {
+        process.removeListener('SIGINT', onSigInt);
+        process.removeListener('SIGTERM', onSigTerm);
+        process.removeListener('SIGHUP', onSigHup);
+      }
+    };
+
     this.childProcess.stdout.setEncoding('utf8');
     this.childProcess.stderr.setEncoding('utf8');
     this.childProcess.stdout.on('data', (data) => {
@@ -481,6 +508,7 @@ class RunningNodeProcess implements RunningTask {
       }
       const terminalOutput = this.terminalOutputChunks.join('');
       this.terminalOutputChunks = [];
+      removeProcessListeners();
       for (const cb of this.exitCallbacks) {
         cb(1, terminalOutput);
       }
@@ -489,6 +517,7 @@ class RunningNodeProcess implements RunningTask {
       if (code === null) {
         code = signalToCode(signal);
       }
+      removeProcessListeners();
       if (!this.readyWhenStatus.length || isReady(this.readyWhenStatus)) {
         const terminalOutput = this.terminalOutputChunks.join('');
         this.terminalOutputChunks = [];
@@ -500,25 +529,15 @@ class RunningNodeProcess implements RunningTask {
     // Terminate any task processes on exit (sync, last resort).
     // Skip if graceful kill is already in progress — it tracks cleanup
     // subprocesses and we must not interfere with them.
-    process.on('exit', () => {
-      if (this.childProcess.pid && !this.killPromise) {
-        killProcessTree(this.childProcess.pid);
-      }
-    });
+    process.on('exit', onProcessExit);
     // In the direct path, detached children don't get OS SIGINT (own process
     // group via setsid); the orchestrator's cleanup() sends SIGTERM via
     // killProcessTreeGraceful. Signal handlers here are only needed in the
     // forked path where there's no orchestrator to dispatch signals.
-    if (process.env.NX_FORKED_TASK_EXECUTOR) {
-      process.on('SIGINT', () => {
-        this.kill('SIGTERM');
-      });
-      process.on('SIGTERM', () => {
-        this.kill('SIGTERM');
-      });
-      process.on('SIGHUP', () => {
-        this.kill('SIGTERM');
-      });
+    if (isForked) {
+      process.on('SIGINT', onSigInt);
+      process.on('SIGTERM', onSigTerm);
+      process.on('SIGHUP', onSigHup);
     }
   }
 }
