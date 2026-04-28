@@ -258,7 +258,7 @@
       ],
       "options": {
         "build": { "targetName": "build:dotnet" },
-        "test": { "targetName": "test-native" }
+        "test": { "targetName": "test:dotnet" }
       }
     },
     {
