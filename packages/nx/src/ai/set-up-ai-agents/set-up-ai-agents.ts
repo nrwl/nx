@@ -16,7 +16,10 @@ import {
   CLIErrorMessageConfig,
   CLINoteMessageConfig,
 } from '../../utils/output';
-import { installPackageToTmp } from '../../utils/package-json';
+import {
+  installPackageToTmp,
+  readModulePackageJson,
+} from '../../utils/package-json';
 import { addEntryToGitIgnore } from '../../utils/ignore';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -50,15 +53,17 @@ export type ModificationResults = {
 /**
  * Get the installed Nx version, with fallback to workspace package.json or default version.
  *
- * Reads `node_modules/nx/package.json` directly via the filesystem instead of
+ * Prefers a direct filesystem read of `node_modules/nx/package.json` over
  * `require.resolve('nx/package.json', { paths })`. The latter populates Node's
- * process-wide `Module._pathCache` with the *self-referenced* result (this file
- * lives inside an `nx` package, so the resolver returns this package's own
- * `package.json` regardless of the `paths` argument). When this module is
- * loaded into a daemon process from a temp `nx@latest` install — as happens
- * for `handleGetConfigureAiAgentsStatus` — that pollution makes the daemon's
- * own `getInstalledNxVersion()` return the temp path, triggering a spurious
- * `NX_VERSION_CHANGED` shutdown. See nrwl/nx#35444.
+ * process-wide `Module._pathCache` with the *self-referenced* result (this
+ * file lives inside an `nx` package, so the resolver returns this package's
+ * own `package.json` regardless of the `paths` argument). When this module
+ * is loaded into a daemon process from a temp `nx@latest` install — as
+ * happens for `handleGetConfigureAiAgentsStatus` — that pollution makes the
+ * daemon's own `getInstalledNxVersion()` return the temp path, triggering a
+ * spurious `NX_VERSION_CHANGED` shutdown. See nrwl/nx#35444. Falls back to
+ * `readModulePackageJson` for PnP-style layouts where `node_modules` doesn't
+ * exist on disk.
  */
 function getNxVersion(): string {
   try {
@@ -69,7 +74,12 @@ function getNxVersion(): string {
         if (version) return version;
       }
     }
-    throw new Error('nx not found in node_modules');
+    // Fallback for non-node_modules layouts (e.g. Yarn PnP).
+    const {
+      packageJson: { version },
+    } = readModulePackageJson('nx');
+    if (version) return version;
+    throw new Error('nx not found');
   } catch {
     try {
       // Fallback: try to read from workspace package.json
