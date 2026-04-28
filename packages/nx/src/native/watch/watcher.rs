@@ -191,11 +191,9 @@ fn reset_burst(
 /// to the session-level state (filterer, watcher handle, ignores, origin)
 /// so the per-event call site stays small.
 struct EventIngestor<'a> {
-    filterer: &'a mut watch_filterer::WatchFilterer,
+    filterer: &'a watch_filterer::WatchFilterer,
     origin: &'a str,
     origin_path: &'a str,
-    additional_globs: &'a [String],
-    use_ignore: bool,
     #[cfg(not(target_os = "macos"))]
     watcher: &'a Arc<Mutex<notify::RecommendedWatcher>>,
     #[cfg(not(target_os = "macos"))]
@@ -204,7 +202,7 @@ struct EventIngestor<'a> {
 
 impl EventIngestor<'_> {
     fn ingest(
-        &mut self,
+        &self,
         event: NotifyResult,
         accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
         burst_start: &mut Option<Instant>,
@@ -222,28 +220,6 @@ impl EventIngestor<'_> {
         // Canonicalize and stat each path once; reuse the metadata across
         // filter, new-directory detection, and transform.
         let raw = RawWatchEvent::new(event);
-
-        // .gitignore / .nxignore are loaded once at watcher startup. If one
-        // of those files just changed, rebuild the filterer so future events
-        // are filtered against the updated rules. Cheap: rebuilds happen
-        // only when the user actually modifies an ignore file.
-        if raw.paths().any(|(p, _)| {
-            matches!(
-                p.file_name().and_then(|n| n.to_str()),
-                Some(".gitignore" | ".nxignore")
-            )
-        }) {
-            match watch_filterer::create_filter(self.origin, self.additional_globs, self.use_ignore)
-            {
-                Ok(new_filterer) => {
-                    *self.filterer = new_filterer;
-                    trace!("reloaded ignore filter after .gitignore/.nxignore change");
-                }
-                Err(e) => {
-                    tracing::warn!(?e, "failed to reload ignore filter");
-                }
-            }
-        }
 
         if !self.filterer.check_event(&raw) {
             return;
@@ -376,9 +352,7 @@ impl Watcher {
         let use_ignore = self.use_ignore;
         let stop_flag = self.stop_flag.clone();
 
-        // Create the filterer for path-based ignore matching. Held mutably
-        // so the processing thread can rebuild it when a .gitignore /
-        // .nxignore file changes.
+        // Create the filterer for path-based ignore matching.
         let filterer = watch_filterer::create_filter(&origin, &additional_globs, use_ignore)
             .map_err(|e| {
                 Error::new(
@@ -386,6 +360,7 @@ impl Watcher {
                     format!("Failed to create watch filter: {e}"),
                 )
             })?;
+        let filterer = Arc::new(filterer);
 
         // Combined channel: notify events flow in via NotifyForwarder,
         // ForceFlush requests come from JS via force_flush_pending().
@@ -447,13 +422,10 @@ impl Watcher {
             let mut burst_start: Option<Instant> = None;
             let mut flush_deadline: Option<Instant> = None;
 
-            let mut filterer = filterer;
-            let mut ingestor = EventIngestor {
-                filterer: &mut filterer,
+            let ingestor = EventIngestor {
+                filterer: &filterer,
                 origin: &origin,
                 origin_path: &origin_path,
-                additional_globs: &additional_globs,
-                use_ignore,
                 #[cfg(not(target_os = "macos"))]
                 watcher: &watcher_for_thread,
                 #[cfg(not(target_os = "macos"))]
