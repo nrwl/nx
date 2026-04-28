@@ -352,8 +352,15 @@ async function processFilesAndCreateAndSerializeProjectGraph(
   ];
   const myGeneration = ++recomputationGeneration;
 
-  // Helper to check if this recomputation is stale (a newer one has started)
-  const isStale = () => myGeneration !== recomputationGeneration;
+  // A newer kickOffRecompute has already replaced
+  // cachedSerializedProjectGraphPromise. Returning it lets the async
+  // unwrap chain our caller onto the newer compute's result; pass
+  // notifyAbort=true when the graph-phase counters still need balancing.
+  const chainToLatest = (notifyAbort: boolean) => {
+    if (myGeneration === recomputationGeneration) return null;
+    if (notifyAbort) notifyPluginsGraphAborted(plugins);
+    return cachedSerializedProjectGraphPromise;
+  };
 
   try {
     performance.mark('hash-watched-changes-start');
@@ -398,14 +405,8 @@ async function processFilesAndCreateAndSerializeProjectGraph(
       }
     }
 
-    // Stale: a newer kickOffRecompute already replaced
-    // cachedSerializedProjectGraphPromise. Chain to it via the cached
-    // pointer; the async unwrap means our caller just sees the newer
-    // compute's result.
-    if (isStale()) {
-      notifyPluginsGraphAborted(plugins);
-      return cachedSerializedProjectGraphPromise;
-    }
+    const stalePostCreateNodes = chainToLatest(true);
+    if (stalePostCreateNodes) return stalePostCreateNodes;
 
     await processCollectedUpdatedAndDeletedFiles(
       projectConfigurationsResult,
@@ -426,69 +427,50 @@ async function processFilesAndCreateAndSerializeProjectGraph(
       }
     }
 
-    // Stale: chain to the newer compute via cachedSerializedProjectGraphPromise.
-    if (isStale()) {
-      notifyPluginsGraphAborted(plugins);
-      return cachedSerializedProjectGraphPromise;
-    }
+    const stalePreCreateDependencies = chainToLatest(true);
+    if (stalePreCreateDependencies) return stalePreCreateDependencies;
 
     const g = await createAndSerializeProjectGraph(projectConfigurationsResult);
 
     delete global.NX_GRAPH_CREATION;
 
-    // Stale: createDependencies/createMetadata already ran (so their
-    // lifecycle counters are balanced) — no notifyPluginsGraphAborted
-    // needed. Chain to the newer compute instead of surfacing this
-    // compute's now-outdated result/errors.
-    if (isStale()) {
-      return cachedSerializedProjectGraphPromise;
-    }
+    // createDependencies/createMetadata already ran via wrapped hooks, so
+    // graph-phase counters are balanced — no notifyAbort needed.
+    const stalePostBuild = chainToLatest(false);
+    if (stalePostBuild) return stalePostBuild;
 
     const errors = [...(projectConfigurationsError?.errors ?? [])];
-
-    if (g.error) {
-      if (isAggregateProjectGraphError(g.error) && g.error.errors?.length) {
-        errors.push(...g.error.errors);
-      } else {
-        return {
-          error: g.error,
-          projectGraph: null,
-          projectFileMapCache: null,
-          rustReferences: null,
-          serializedProjectGraph: null,
-          serializedSourceMaps: null,
-          sourceMaps: null,
-        };
-      }
-    }
-    if (errors.length > 0) {
-      return {
-        error: new DaemonProjectGraphError(
-          errors,
-          g.projectGraph,
-          projectConfigurationsResult.sourceMaps
-        ),
-        projectGraph: null,
-        projectFileMapCache: null,
-        rustReferences: null,
-        serializedProjectGraph: null,
-        serializedSourceMaps: null,
-        sourceMaps: null,
-      };
-    } else {
-      return g;
-    }
+    const aggregate =
+      g.error && isAggregateProjectGraphError(g.error) && g.error.errors?.length
+        ? g.error
+        : null;
+    if (g.error && !aggregate) return errorResult(g.error);
+    if (aggregate) errors.push(...aggregate.errors);
+    if (errors.length === 0) return g;
+    return errorResult(
+      new DaemonProjectGraphError(
+        errors,
+        g.projectGraph,
+        projectConfigurationsResult.sourceMaps
+      )
+    );
   } catch (err) {
-    return {
-      error: err,
-      projectGraph: null,
-      projectFileMapCache: null,
-      rustReferences: null,
-      serializedProjectGraph: null,
-      serializedSourceMaps: null,
-      sourceMaps: null,
-    };
+    return errorResult(err);
   }
+}
+
+function errorResult(
+  error: SerializedProjectGraph['error']
+): SerializedProjectGraph {
+  return {
+    error,
+    projectGraph: null,
+    projectFileMapCache: null,
+    rustReferences: null,
+    serializedProjectGraph: null,
+    serializedSourceMaps: null,
+    sourceMaps: null,
+  };
 }
 
 function extractErrors(error: SerializedProjectGraph['error']) {
