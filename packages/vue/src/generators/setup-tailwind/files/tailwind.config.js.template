@@ -7,7 +7,7 @@ module.exports = {
     join(__dirname, 'index.html'),
     join(
       __dirname,
-      'src/**/*!(*.stories|*.spec).{vue,ts,tsx,js,jsx}'
+      'src/**/!(*.stories|*.spec).{vue,ts,tsx,js,jsx}'
     ),
     ...createGlobPatternsForDependencies(__dirname),
   ],
