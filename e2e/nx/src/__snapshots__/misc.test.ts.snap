@@ -79,6 +79,7 @@ Inputs:
   - default
   - ^production
   - {"externalDependencies":["webpack-cli"]}
+  - {"json":"{workspaceRoot}/tsconfig.json","fields":["extends","files","include"]}
 Outputs:
   - {workspaceRoot}/dist/apps/<APP>
 Options:
