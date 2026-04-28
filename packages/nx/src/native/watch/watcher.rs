@@ -147,30 +147,49 @@ fn enumerate_watch_paths<P: AsRef<Path>>(directory: P, use_ignores: bool) -> Has
     path_set
 }
 
-/// Merge one event into the accumulator, keeping only the most recent
-/// observation for any given path.
+/// Merge one event into the accumulator, keeping the most informative
+/// classification for the file's final state.
 ///
-/// Earlier behavior was "Delete > Create > Update" priority, which silently
-/// dropped a Create that arrived after a Delete in the same burst. That's
-/// exactly what `git checkout` triggers when it does unlink-then-create on
-/// a tracked file: inotify fires IN_DELETE then IN_CREATE for the same
-/// path, both land in the accumulator, the Delete wins, and downstream
-/// `updateFilesInContext` removes the (still-existing) file from the
+/// The previous "Delete > Create > Update" priority handled most cases but
+/// silently dropped a Create that arrived after a Delete in the same
+/// burst. That's exactly what `git checkout` triggers when it does
+/// unlink-then-create on a tracked file: inotify fires IN_DELETE then
+/// IN_CREATE for the same path, the Delete won, and downstream
+/// `updateFilesInContext` removed the (still-existing) file from the
 /// workspace context — silently dropping the project from the graph.
 ///
-/// The later event represents the file's most recently observed state, so
-/// it should always win. Cases:
-///   - Delete then Create (unlink + create): file exists → keep Create.
-///   - Delete then Update: file exists → keep Update.
-///   - Create then Delete: file is gone → keep Delete.
-///   - Update then Delete: file is gone → keep Delete.
-///   - Update then Create: re-classify as Create (was a real create).
-///   - Create then Update / Update then Update: keep latest, both mean exists.
+/// Rules (the table is exhaustive over (existing, incoming) pairs):
+///   - (_, Delete)       → Delete    (file is gone, final state wins)
+///   - (_, Create)       → Create    (file is in its initial state from
+///                                    our perspective; overrides an earlier
+///                                    Update or Delete)
+///   - (Delete, Update)  → Update    (file came back with new content)
+///   - (Update, Update)  → keep existing (idempotent)
+///   - (Create, Update)  → keep existing (file is new, the Update is the
+///                                       OS reporting its content; treat
+///                                       it as a single Create)
 fn merge_event(
     accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
     incoming: WatchEventInternal,
 ) {
-    accumulator.insert(incoming.path.clone(), incoming);
+    if let Some(existing) = accumulator.get_mut(&incoming.path) {
+        let replace = match (existing.r#type, incoming.r#type) {
+            // Delete final state always wins.
+            (_, EventType::delete) => true,
+            // Create overrides earlier Update or Delete.
+            (_, EventType::create) => true,
+            // Update overrides earlier Delete (file came back).
+            (EventType::delete, EventType::update) => true,
+            // Otherwise keep existing — Create→Update and Update→Update
+            // both mean "file exists" and re-classifying loses info.
+            _ => false,
+        };
+        if replace {
+            *existing = incoming;
+        }
+    } else {
+        accumulator.insert(incoming.path.clone(), incoming);
+    }
 }
 
 /// Build the napi-facing event list from the accumulator without mutating
@@ -667,14 +686,15 @@ mod tests {
     }
 
     #[test]
-    fn unlink_then_create_does_not_emit_delete() {
+    fn git_style_unlink_then_write_yields_create() {
         // Regression: `git checkout` does unlink + create on some
         // tracked files. Pre-fix, the accumulator merged Delete + Create
         // and kept Delete because "Delete always wins". Downstream
         // updateFilesInContext then removed the (still-existing) file
         // from the workspace context — silently dropping the project
-        // from the project graph. The fix made merge_event keep the
-        // most recent event per path.
+        // from the project graph. With the (Delete, Create) → Create
+        // rule the file shows up as a fresh Create, which downstream
+        // treats correctly as "exists".
         let dir = tempdir().expect("tempdir");
         let target = dir.path().join("foo.txt");
         fs::write(&target, "v1").expect("initial write");
@@ -688,8 +708,43 @@ mod tests {
         let evt = find_event(&events, "foo.txt")
             .unwrap_or_else(|| panic!("expected event for foo.txt; got {events:?}"));
         assert!(
-            !matches!(evt.r#type, EventType::delete),
-            "unlink+create should not yield Delete; got {:?}",
+            matches!(evt.r#type, EventType::create),
+            "unlink+create (git-style update) should yield Create; got {:?}",
+            evt.r#type
+        );
+    }
+
+    #[test]
+    fn vim_style_atomic_rename_yields_create() {
+        // Vim and many editors save atomically: write content to a
+        // temp file in the same directory, then rename it over the
+        // target. inotify on the target sees IN_MOVED_TO, which
+        // notify-rs translates to Modify(Name(RenameMode::To)) →
+        // EventType::create. We assert that classification survives:
+        // an atomic rename over an existing file should land as
+        // Create, not Delete (which would erroneously remove the file
+        // from the workspace context's index).
+        let dir = tempdir().expect("tempdir");
+        let target = dir.path().join("foo.txt");
+        let staging = dir.path().join("foo.txt.swp");
+        fs::write(&target, "v1").expect("initial write");
+
+        let (_watcher, captured) = start_watcher(dir.path());
+
+        // Atomic update: write to a sibling tmp, then rename over.
+        fs::write(&staging, "v2-via-rename").expect("staging write");
+        fs::rename(&staging, &target).expect("atomic rename");
+
+        let events = collect(&captured);
+        // Match on exact name to avoid the staging file ("foo.txt.swp")
+        // accidentally satisfying an ends_with("foo.txt") check.
+        let evt = events
+            .iter()
+            .find(|e| e.path == "foo.txt")
+            .unwrap_or_else(|| panic!("expected event for foo.txt; got {events:?}"));
+        assert!(
+            matches!(evt.r#type, EventType::create),
+            "atomic rename over existing file should yield Create; got {:?}",
             evt.r#type
         );
     }
@@ -763,9 +818,12 @@ mod tests {
     }
 
     #[test]
-    fn fresh_create_does_not_emit_delete() {
-        // Sanity: a brand-new file should land as Create or Update,
-        // never Delete.
+    fn fresh_create_yields_create() {
+        // A brand-new file should land in the accumulator as Create.
+        // On Linux fs::write fires both IN_CREATE and IN_MODIFY; the
+        // merge logic's (Create, Update) → keep Create rule preserves
+        // the more informative classification (file is new, not just
+        // updated).
         let dir = tempdir().expect("tempdir");
         let target = dir.path().join("new.txt");
 
@@ -777,8 +835,8 @@ mod tests {
         let evt = find_event(&events, "new.txt")
             .unwrap_or_else(|| panic!("expected event for new.txt; got {events:?}"));
         assert!(
-            !matches!(evt.r#type, EventType::delete),
-            "fresh write should not classify as Delete; got {:?}",
+            matches!(evt.r#type, EventType::create),
+            "fresh write should classify as Create; got {:?}",
             evt.r#type
         );
     }
