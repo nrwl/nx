@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'fs';
+import { readFileSync } from 'fs';
 import { join } from 'path';
 import { major } from 'semver';
 import TOML from 'smol-toml';
@@ -16,14 +16,11 @@ import {
   CLIErrorMessageConfig,
   CLINoteMessageConfig,
 } from '../../utils/output';
-import {
-  installPackageToTmp,
-  readModulePackageJson,
-} from '../../utils/package-json';
+import { installPackageToTmp } from '../../utils/package-json';
 import { addEntryToGitIgnore } from '../../utils/ignore';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { getNxRequirePaths } from '../../utils/installation-directory';
+import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import {
   agentsMdPath,
   claudeMcpJsonPath,
@@ -51,56 +48,26 @@ export type ModificationResults = {
 };
 
 /**
- * Get the installed Nx version, with fallback to workspace package.json or default version.
- *
- * Prefers a direct filesystem read of `node_modules/nx/package.json` over
- * `require.resolve('nx/package.json', { paths })`. The latter populates Node's
- * process-wide `Module._pathCache` with the *self-referenced* result (this
- * file lives inside an `nx` package, so the resolver returns this package's
- * own `package.json` regardless of the `paths` argument). When this module
- * is loaded into a daemon process from a temp `nx@latest` install — as
- * happens for `handleGetConfigureAiAgentsStatus` — that pollution makes the
- * daemon's own `getInstalledNxVersion()` return the temp path, triggering a
- * spurious `NX_VERSION_CHANGED` shutdown. See nrwl/nx#35444. Falls back to
- * `readModulePackageJson` for PnP-style layouts where `node_modules` doesn't
- * exist on disk.
+ * Best-effort fallback when `getInstalledNxVersion()` can't find an
+ * installed nx — read the version declared in the workspace's
+ * `package.json` (devDependencies/dependencies), stripping any semver
+ * range prefix, and finally a sane default.
  */
-function getNxVersion(): string {
+function getDeclaredNxVersionOrDefault(): string {
   try {
-    for (const requirePath of getNxRequirePaths(workspaceRoot)) {
-      const candidate = join(requirePath, 'node_modules', 'nx', 'package.json');
-      if (existsSync(candidate)) {
-        const { version } = JSON.parse(readFileSync(candidate, 'utf-8'));
-        if (version) return version;
-      }
+    const workspacePackageJson = JSON.parse(
+      readFileSync(join(workspaceRoot, 'package.json'), 'utf-8')
+    );
+    const declared =
+      workspacePackageJson.devDependencies?.nx ||
+      workspacePackageJson.dependencies?.nx;
+    if (declared) {
+      return declared.replace(/^[\^~>=<]+/, '');
     }
-    // Fallback for non-node_modules layouts (e.g. Yarn PnP).
-    const {
-      packageJson: { version },
-    } = readModulePackageJson('nx');
-    if (version) return version;
-    throw new Error('nx not found');
   } catch {
-    try {
-      // Fallback: try to read from workspace package.json
-      const workspacePackageJson = JSON.parse(
-        readFileSync(join(workspaceRoot, 'package.json'), 'utf-8')
-      );
-      // Check devDependencies first, then dependencies
-      const nxVersion =
-        workspacePackageJson.devDependencies?.nx ||
-        workspacePackageJson.dependencies?.nx;
-      if (nxVersion) {
-        // Remove any semver range characters (^, ~, >=, etc.)
-        return nxVersion.replace(/^[\^~>=<]+/, '');
-      }
-      throw new Error('Nx not found in package.json');
-    } catch {
-      // If we can't determine the version, default to the newer format
-      // This handles cases where nx might not be installed or is globally installed
-      return '22.0.0';
-    }
+    // fall through to default
   }
+  return '22.0.0';
 }
 
 export async function setupAiAgentsGenerator(
@@ -160,7 +127,7 @@ export async function setupAiAgentsGeneratorImpl(
   options: NormalizedSetupAiAgentsGeneratorSchema
 ): Promise<() => Promise<ModificationResults>> {
   const hasAgent = (agent: Agent) => options.agents.includes(agent);
-  const nxVersion = getNxVersion();
+  const nxVersion = getInstalledNxVersion() ?? getDeclaredNxVersionOrDefault();
 
   const agentsMd = agentsMdPath(options.directory);
 

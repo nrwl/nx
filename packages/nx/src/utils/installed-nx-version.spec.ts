@@ -2,8 +2,8 @@ import { mkdirSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
-import { setWorkspaceRoot } from '../utils/workspace-root';
-import { getInstalledNxVersion } from './is-nx-version-mismatch';
+import { setWorkspaceRoot } from './workspace-root';
+import { getInstalledNxVersion } from './installed-nx-version';
 
 describe('getInstalledNxVersion', () => {
   let workspaceFixture: string;
@@ -39,12 +39,12 @@ describe('getInstalledNxVersion', () => {
   it('is immune to Module._pathCache pollution (regression for #35444)', () => {
     // Simulate a polluted cache entry — the kind that gets written when a
     // second `nx` package is loaded into the same process (e.g. the
-    // daemon's auto-pull of nx@latest into a tmp dir) and its
-    // `set-up-ai-agents:getNxVersion` triggers a self-reference resolve.
-    // The polluted value points at a non-existent path with a different
-    // version; if `getInstalledNxVersion` were going through
-    // `require.resolve`, it would read this stale pointer and return the
-    // wrong version.
+    // daemon's auto-pull of nx@latest into a tmp dir) and code inside that
+    // second package issues a `require.resolve('nx/package.json', { paths })`
+    // that triggers self-reference. The polluted value points at a
+    // non-existent path with a different version; if `getInstalledNxVersion`
+    // were going through `require.resolve` without the cache shield, it
+    // would read this stale pointer and return the wrong version.
     const Module = require('module');
     const pollutedPath = '/nonexistent/tmp/nx/package.json';
     // Brute-force pollution: write the bogus value under every cache key
