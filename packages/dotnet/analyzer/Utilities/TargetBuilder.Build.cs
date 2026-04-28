@@ -55,8 +55,9 @@ public static partial class TargetBuilder
             [
                 productionInput,
                 $"^{productionInput}",
+                "{workspaceRoot}/.editorconfig",
                 new { workingDirectory = "absolute" },
-                new { dependentTasksOutputFiles = "**/*.{dll,props,targets}" },
+                new { dependentTasksOutputFiles = "**/*" },
             ],
             Outputs =
             [

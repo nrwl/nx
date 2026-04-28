@@ -51,8 +51,9 @@ public static partial class TargetBuilder
             [
                 "default",
                 $"^{productionInput}",
+                "{workspaceRoot}/.editorconfig",
                 new { workingDirectory = "absolute" },
-                new { dependentTasksOutputFiles = "**/*.{dll,props,targets}" },
+                new { dependentTasksOutputFiles = "**/*" },
             ],
             Outputs = [$"{packageOutputPath.TrimEnd('/')}/*.nupkg"],
             Metadata = new TargetMetadata
