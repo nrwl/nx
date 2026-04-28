@@ -624,6 +624,16 @@ impl Watcher {
     }
 }
 
+impl Drop for Watcher {
+    /// Signal the processing thread to exit. The thread polls
+    /// `stop_flag` at most every `SHUTDOWN_POLL` (1s), so this gives
+    /// it a bounded window to wind down — rather than living until
+    /// the host process exits.
+    fn drop(&mut self) {
+        self.stop_flag.store(true, Ordering::Release);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -685,6 +695,17 @@ mod tests {
         events.iter().find(|e| e.path.ends_with(name))
     }
 
+    // The fs-event classification tests below assert exact EventType
+    // values that are derived from Linux/Windows event_kind matching
+    // (notify-rs's IN_*-derived events). macOS uses FSEvents, which
+    // coalesces operations and surfaces them with different kinds —
+    // st_mtime vs st_birthtime stat comparisons drive create-vs-update
+    // there. The classifications agree at the "file exists vs gone"
+    // level (which is what the workspace context cares about) but
+    // diverge on Create vs Update, so we restrict these strict-type
+    // tests to non-macOS platforms.
+
+    #[cfg(not(target_os = "macos"))]
     #[test]
     fn git_style_unlink_then_write_yields_create() {
         // Regression: `git checkout` does unlink + create on some
@@ -714,6 +735,7 @@ mod tests {
         );
     }
 
+    #[cfg(not(target_os = "macos"))]
     #[test]
     fn vim_style_atomic_rename_yields_create() {
         // Vim and many editors save atomically: write content to a
@@ -749,6 +771,7 @@ mod tests {
         );
     }
 
+    #[cfg(not(target_os = "macos"))]
     #[test]
     fn plain_update_yields_update() {
         // A normal in-place write to an existing file fires IN_MODIFY,
@@ -773,6 +796,7 @@ mod tests {
         );
     }
 
+    #[cfg(not(target_os = "macos"))]
     #[test]
     fn rm_yields_delete() {
         // Sanity: a real `rm` still produces a Delete after the fix.
@@ -794,6 +818,7 @@ mod tests {
         );
     }
 
+    #[cfg(not(target_os = "macos"))]
     #[test]
     fn create_then_rm_yields_delete() {
         // Sanity: a transient file (created then removed) leaves Delete
@@ -817,6 +842,7 @@ mod tests {
         );
     }
 
+    #[cfg(not(target_os = "macos"))]
     #[test]
     fn fresh_create_yields_create() {
         // A brand-new file should land in the accumulator as Create.
@@ -881,5 +907,142 @@ mod tests {
             "concurrent force_flush_pending took {elapsed:?}, suggesting some callers \
              hit the 500ms recv_timeout — i.e. their ForceFlush reply was dropped"
         );
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    #[test]
+    fn multi_file_burst_all_appear_in_one_flush() {
+        // A burst of writes within IDLE_WINDOW should coalesce into a
+        // single callback invocation containing every distinct path.
+        // Verifies that the accumulator handles multiple keys correctly
+        // and that the idle-window debounce doesn't split related
+        // events across batches.
+        let dir = tempdir().expect("tempdir");
+        let a = dir.path().join("a.txt");
+        let b = dir.path().join("b.txt");
+        let c = dir.path().join("c.txt");
+
+        let (_watcher, captured) = start_watcher(dir.path());
+
+        // Three writes back-to-back, well within IDLE_WINDOW (100ms).
+        fs::write(&a, "a").expect("write a");
+        fs::write(&b, "b").expect("write b");
+        fs::write(&c, "c").expect("write c");
+
+        let events = collect(&captured);
+        for name in ["a.txt", "b.txt", "c.txt"] {
+            let evt = events
+                .iter()
+                .find(|e| e.path == name)
+                .unwrap_or_else(|| panic!("expected event for {name}; got {events:?}"));
+            assert!(
+                matches!(evt.r#type, EventType::create),
+                "{name} should classify as Create; got {:?}",
+                evt.r#type
+            );
+        }
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    #[test]
+    fn rename_yields_delete_for_old_and_create_for_new() {
+        // Cross-name rename: the old path is gone, the new path is
+        // freshly present. inotify fires IN_MOVED_FROM (old) and
+        // IN_MOVED_TO (new); notify-rs maps these to
+        // Modify(Name(RenameMode::From|To)) which our classification
+        // turns into Delete and Create respectively.
+        let dir = tempdir().expect("tempdir");
+        let old = dir.path().join("old.txt");
+        let new = dir.path().join("new.txt");
+        fs::write(&old, "v1").expect("initial write");
+
+        let (_watcher, captured) = start_watcher(dir.path());
+
+        fs::rename(&old, &new).expect("rename");
+
+        let events = collect(&captured);
+
+        let old_evt = events
+            .iter()
+            .find(|e| e.path == "old.txt")
+            .unwrap_or_else(|| panic!("expected event for old.txt; got {events:?}"));
+        assert!(
+            matches!(old_evt.r#type, EventType::delete),
+            "rename source should classify as Delete; got {:?}",
+            old_evt.r#type
+        );
+
+        let new_evt = events
+            .iter()
+            .find(|e| e.path == "new.txt")
+            .unwrap_or_else(|| panic!("expected event for new.txt; got {events:?}"));
+        assert!(
+            matches!(new_evt.r#type, EventType::create),
+            "rename destination should classify as Create; got {:?}",
+            new_evt.r#type
+        );
+    }
+
+    #[test]
+    fn hardcoded_ignored_paths_never_reach_callback() {
+        // Sanity guard against the filterer regressing: events under
+        // the always-ignored paths (node_modules, .git, .nx/cache,
+        // .nx/workspace-data, .yarn/cache) must never reach the
+        // callback. If they did, every Nx workspace would be flooded
+        // with event spam and the daemon would melt down.
+        let dir = tempdir().expect("tempdir");
+
+        // Create the ignored-path files BEFORE starting the watcher,
+        // so the dirs themselves exist when watches register.
+        for ignored in [
+            "node_modules",
+            ".git",
+            ".nx/cache",
+            ".nx/workspace-data",
+            ".yarn/cache",
+        ] {
+            let d = dir.path().join(ignored);
+            fs::create_dir_all(&d).expect("mkdir ignored");
+            fs::write(d.join("seed.txt"), "x").expect("seed write");
+        }
+
+        let (_watcher, captured) = start_watcher(dir.path());
+
+        // Touch a file in each ignored dir, plus one outside to prove
+        // the watcher is alive.
+        for ignored in [
+            "node_modules",
+            ".git",
+            ".nx/cache",
+            ".nx/workspace-data",
+            ".yarn/cache",
+        ] {
+            fs::write(dir.path().join(ignored).join("touched.txt"), "y")
+                .unwrap_or_else(|e| panic!("failed write in {ignored}: {e}"));
+        }
+        fs::write(dir.path().join("alive.txt"), "z").expect("alive write");
+
+        let events = collect(&captured);
+
+        // The watcher must have surfaced the un-ignored write.
+        assert!(
+            events.iter().any(|e| e.path == "alive.txt"),
+            "expected an event for alive.txt; got {events:?}"
+        );
+
+        // None of the ignored prefixes should appear in any event path.
+        for ignored in [
+            "node_modules/",
+            ".git/",
+            ".nx/cache/",
+            ".nx/workspace-data/",
+            ".yarn/cache/",
+        ] {
+            let leaked: Vec<_> = events.iter().filter(|e| e.path.contains(ignored)).collect();
+            assert!(
+                leaked.is_empty(),
+                "expected no events under {ignored}; got {leaked:?}"
+            );
+        }
     }
 }

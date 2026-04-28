@@ -131,11 +131,15 @@ pub(super) fn transform_event_to_watch_events(
         }
 
         let event_type = match metadata {
-            // Stat failed for a non-Remove event (real removals are
-            // handled by the early-return above). The file likely exists
-            // but a concurrent write/rename briefly hid it — treat as
-            // update to avoid dropping it from the workspace context.
-            Err(_) => EventType::update,
+            // FSEvents on macOS coalesces operations and doesn't always
+            // emit `EventKind::Remove(_)` for an `rm` (so the cross-
+            // platform early-return that catches Linux removals can
+            // miss them here). When stat fails we infer the file is
+            // gone — risking a false Delete during a transient
+            // atomic-rename window, but matching the behavior the
+            // pre-fix watcher had on macOS so real removals classify
+            // correctly.
+            Err(_) => EventType::delete,
             Ok(t) => {
                 let modified_time = t.st_mtime();
                 let birth_time = t.st_birthtime();
@@ -219,6 +223,14 @@ fn create_watch_event_internal(
         EventKind::Create(CreateKind::Any) => EventType::create,
         EventKind::Modify(ModifyKind::Name(RenameMode::To)) => EventType::create,
         EventKind::Modify(ModifyKind::Name(RenameMode::From)) => EventType::delete,
+        // notify-rs emits a coalesced rename event with both old and new
+        // paths in addition to the per-side From/To events. Skip it: the
+        // From/To pair already classifies correctly, and treating the
+        // coalesced event as a generic Modify would override the From's
+        // Delete on the source path with an erroneous Update.
+        EventKind::Modify(ModifyKind::Name(RenameMode::Both | RenameMode::Any)) => {
+            return Vec::new();
+        }
         EventKind::Modify(_) => EventType::update,
         _ => EventType::update,
     };
