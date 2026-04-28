@@ -660,8 +660,17 @@ mod tests {
     /// every emitted batch into `captured`. Returns the watcher (kept
     /// alive for the test's lifetime) and the shared collector.
     fn start_watcher(dir: &std::path::Path) -> (Watcher, Captured) {
+        // Canonicalize: on macOS `/tmp` is a symlink to `/private/tmp`,
+        // so `tempdir()` hands back `/tmp/.tmpXXX` while events arrive
+        // canonicalized as `/private/tmp/.tmpXXX`. The filterer uses
+        // `path.starts_with(origin)` to scope the synthetic gitignore
+        // built from the hardcoded ignore patterns, and that check
+        // would fail on macOS unless origin is also canonicalized —
+        // so events under `node_modules` etc. would slip past the
+        // filter. Canonicalizing here keeps both sides aligned.
+        let canonical = dir.canonicalize().expect("canonicalize tempdir");
         let mut w = Watcher::new(
-            dir.to_str().expect("utf-8 path").to_string(),
+            canonical.to_str().expect("utf-8 path").to_string(),
             None,
             // Disable gitignore filtering so the test isn't sensitive to
             // any patterns that might be inherited from the platform's
@@ -695,17 +704,6 @@ mod tests {
         events.iter().find(|e| e.path.ends_with(name))
     }
 
-    // The fs-event classification tests below assert exact EventType
-    // values that are derived from Linux/Windows event_kind matching
-    // (notify-rs's IN_*-derived events). macOS uses FSEvents, which
-    // coalesces operations and surfaces them with different kinds —
-    // st_mtime vs st_birthtime stat comparisons drive create-vs-update
-    // there. The classifications agree at the "file exists vs gone"
-    // level (which is what the workspace context cares about) but
-    // diverge on Create vs Update, so we restrict these strict-type
-    // tests to non-macOS platforms.
-
-    #[cfg(not(target_os = "macos"))]
     #[test]
     fn git_style_unlink_then_write_yields_create() {
         // Regression: `git checkout` does unlink + create on some
@@ -735,7 +733,6 @@ mod tests {
         );
     }
 
-    #[cfg(not(target_os = "macos"))]
     #[test]
     fn vim_style_atomic_rename_yields_create() {
         // Vim and many editors save atomically: write content to a
@@ -771,7 +768,6 @@ mod tests {
         );
     }
 
-    #[cfg(not(target_os = "macos"))]
     #[test]
     fn plain_update_yields_update() {
         // A normal in-place write to an existing file fires IN_MODIFY,
@@ -796,7 +792,6 @@ mod tests {
         );
     }
 
-    #[cfg(not(target_os = "macos"))]
     #[test]
     fn rm_yields_delete() {
         // Sanity: a real `rm` still produces a Delete after the fix.
@@ -818,7 +813,6 @@ mod tests {
         );
     }
 
-    #[cfg(not(target_os = "macos"))]
     #[test]
     fn create_then_rm_yields_delete() {
         // Sanity: a transient file (created then removed) leaves Delete
@@ -842,7 +836,6 @@ mod tests {
         );
     }
 
-    #[cfg(not(target_os = "macos"))]
     #[test]
     fn fresh_create_yields_create() {
         // A brand-new file should land in the accumulator as Create.
@@ -909,7 +902,6 @@ mod tests {
         );
     }
 
-    #[cfg(not(target_os = "macos"))]
     #[test]
     fn multi_file_burst_all_appear_in_one_flush() {
         // A burst of writes within IDLE_WINDOW should coalesce into a
@@ -943,7 +935,6 @@ mod tests {
         }
     }
 
-    #[cfg(not(target_os = "macos"))]
     #[test]
     fn rename_yields_delete_for_old_and_create_for_new() {
         // Cross-name rename: the old path is gone, the new path is
