@@ -411,19 +411,6 @@ async function processFilesAndCreateAndSerializeProjectGraph(
       deletedFiles
     );
 
-    // Only remove files whose version matches the snapshot — if the version
-    // is higher, the file was modified again mid-flight and needs reprocessing.
-    for (const [f, version] of updatedFilesSnapshot) {
-      if (collectedUpdatedFiles.get(f) === version) {
-        collectedUpdatedFiles.delete(f);
-      }
-    }
-    for (const [f, version] of deletedFilesSnapshot) {
-      if (collectedDeletedFiles.get(f) === version) {
-        collectedDeletedFiles.delete(f);
-      }
-    }
-
     const stalePreCreateDependencies = chainToLatest(true);
     if (stalePreCreateDependencies) return stalePreCreateDependencies;
 
@@ -434,6 +421,24 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     storedWorkspaceConfigHash = fileMapUpdate.configHash;
     if (fileMapUpdate.knownExternalNodes) {
       knownExternalNodes = fileMapUpdate.knownExternalNodes;
+    }
+
+    // Drain only after committing — a stale compute that returns at the
+    // staleness check above must leave its snapshot in `collected*` so the
+    // newer compute still sees those files. Removing them earlier would
+    // make the next compute snapshot empty and the file changes vanish
+    // from the daemon's view (project graph misses recently added files).
+    // Match version-stamps so a file modified mid-flight (higher version)
+    // stays in the queue for reprocessing.
+    for (const [f, version] of updatedFilesSnapshot) {
+      if (collectedUpdatedFiles.get(f) === version) {
+        collectedUpdatedFiles.delete(f);
+      }
+    }
+    for (const [f, version] of deletedFilesSnapshot) {
+      if (collectedDeletedFiles.get(f) === version) {
+        collectedDeletedFiles.delete(f);
+      }
     }
 
     const g = await createAndSerializeProjectGraph(projectConfigurationsResult);
