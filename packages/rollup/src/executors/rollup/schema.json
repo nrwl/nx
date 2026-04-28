@@ -155,11 +155,6 @@
     "sourceMap": {
       "description": "Output sourcemaps.",
       "type": "boolean"
-    },
-    "useLegacyTypescriptPlugin": {
-      "type": "boolean",
-      "description": "Use rollup-plugin-typescript2 instead of @rollup/plugin-typescript.",
-      "default": false
     }
   },
   "required": ["tsConfig", "main", "outputPath"],
