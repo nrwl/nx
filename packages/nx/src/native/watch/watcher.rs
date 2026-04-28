@@ -260,6 +260,12 @@ impl EventIngestor<'_> {
 
 type NotifyResult = std::result::Result<notify::Event, notify::Error>;
 
+/// Generic event callback invoked from the processing thread. The napi
+/// `watch` entry point wraps a `ThreadsafeFunction` in one of these so the
+/// inner watch loop is testable without a JS runtime.
+pub(crate) type WatchEventCallback =
+    Box<dyn Fn(std::result::Result<Vec<WatchEvent>, String>) + Send + Sync + 'static>;
+
 /// Messages the processing thread receives. Notify events flow in via the
 /// adapter below; ForceFlush is sent from JS to drain the accumulator
 /// synchronously and bypass the idle-window debounce.
@@ -347,6 +353,24 @@ impl Watcher {
         #[napi(ts_arg_type = "(err: string | null, events: WatchEvent[]) => void")]
         callback_tsfn: ThreadsafeFunction<Vec<WatchEvent>>,
     ) -> Result<()> {
+        // Bridge the napi ThreadsafeFunction into the generic callback the
+        // inner watch loop expects, so the loop has no compile-time
+        // dependency on napi types and can be exercised from Rust tests.
+        let callback: WatchEventCallback = Box::new(move |res| match res {
+            Ok(events) => {
+                callback_tsfn.call(Ok(events), ThreadsafeFunctionCallMode::NonBlocking);
+            }
+            Err(msg) => {
+                callback_tsfn.call(
+                    Err(Error::new(Status::GenericFailure, msg)),
+                    ThreadsafeFunctionCallMode::NonBlocking,
+                );
+            }
+        });
+        self.watch_inner(callback)
+    }
+
+    pub(crate) fn watch_inner(&mut self, callback: WatchEventCallback) -> Result<()> {
         _ = tracing_subscriber::fmt()
             .with_env_filter(EnvFilter::from_env("NX_NATIVE_LOGGING"))
             .try_init();
@@ -505,8 +529,7 @@ impl Watcher {
                         if !accumulator.is_empty() {
                             let watch_events = snapshot_events(&accumulator);
                             trace!(count = watch_events.len(), "flushing accumulated events");
-                            callback_tsfn
-                                .call(Ok(watch_events), ThreadsafeFunctionCallMode::NonBlocking);
+                            callback(Ok(watch_events));
                         }
                         reset_burst(&mut accumulator, &mut burst_start, &mut flush_deadline);
                     }
@@ -514,24 +537,17 @@ impl Watcher {
                         // The notify watcher's tx was dropped — the watcher
                         // is gone and no further events will arrive. Flush
                         // anything still buffered, then surface the
-                        // disconnect to the JS callback so consumers can
-                        // react instead of waiting forever.
+                        // disconnect to the callback so consumers can react
+                        // instead of waiting forever.
                         if !accumulator.is_empty() {
                             let watch_events = snapshot_events(&accumulator);
                             trace!(
                                 count = watch_events.len(),
                                 "flushing accumulated events before disconnect"
                             );
-                            callback_tsfn
-                                .call(Ok(watch_events), ThreadsafeFunctionCallMode::NonBlocking);
+                            callback(Ok(watch_events));
                         }
-                        callback_tsfn.call(
-                            Err(Error::new(
-                                Status::GenericFailure,
-                                "watcher channel disconnected".to_string(),
-                            )),
-                            ThreadsafeFunctionCallMode::NonBlocking,
-                        );
+                        callback(Err("watcher channel disconnected".to_string()));
                         trace!("notify channel disconnected, exiting");
                         break;
                     }
@@ -580,244 +596,178 @@ impl Watcher {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::native::watch::types::{
-        EventType, RawWatchEvent, WatchEventInternal, transform_event_to_watch_events,
-    };
+    use crate::native::watch::types::EventType;
     use std::fs;
-    use std::sync::mpsc;
+    use std::sync::Mutex;
     use std::time::Duration;
     use tempfile::tempdir;
 
-    // --- Pure unit tests for merge_event ---
+    // All tests below drive the public Watcher API end-to-end:
+    //   inotify -> notify-rs -> ProcMsg channel -> EventIngestor
+    //   (filter + transform + merge) -> accumulator -> idle-window
+    //   flush -> callback
     //
-    // The accumulator is keyed by path; each test verifies what survives a
-    // sequence of merges for a single path. The bug we fixed was "Delete
-    // always wins" — a Create after a Delete was being silently dropped.
+    // We use `watch_inner` (a non-napi wrapper around the same loop the
+    // napi `watch` entry point uses) so tests don't need a JS runtime.
+    // The callback appends every emitted batch to a shared Vec, which
+    // each test inspects after waiting for the IDLE_WINDOW debounce.
 
-    fn ev(t: EventType) -> WatchEventInternal {
-        WatchEventInternal {
-            path: PathBuf::from("/tmp/file.txt"),
-            r#type: t,
-            origin: "/tmp".to_owned(),
-        }
-    }
+    /// Shared collector for events surfaced by the watcher callback.
+    type Captured = Arc<Mutex<Vec<WatchEvent>>>;
 
-    fn merged_type(seq: &[EventType]) -> EventType {
-        let mut acc: HashMap<PathBuf, WatchEventInternal> = HashMap::new();
-        for &t in seq {
-            merge_event(&mut acc, ev(t));
-        }
-        acc.into_iter().next().expect("expected one entry").1.r#type
-    }
-
-    #[test]
-    fn merge_event_inserts_new_path() {
-        let mut acc: HashMap<PathBuf, WatchEventInternal> = HashMap::new();
-        merge_event(&mut acc, ev(EventType::create));
-        assert_eq!(acc.len(), 1);
-    }
-
-    #[test]
-    fn merge_event_delete_then_create_keeps_create() {
-        // Regression: git checkout's unlink+create sequence used to land
-        // as Delete because "Delete always wins" — the workspace context
-        // would then drop the still-existing file from its index.
-        assert!(matches!(
-            merged_type(&[EventType::delete, EventType::create]),
-            EventType::create
-        ));
-    }
-
-    #[test]
-    fn merge_event_delete_then_update_keeps_update() {
-        assert!(matches!(
-            merged_type(&[EventType::delete, EventType::update]),
-            EventType::update
-        ));
-    }
-
-    #[test]
-    fn merge_event_create_then_delete_keeps_delete() {
-        // Create-then-delete still resolves to delete: file is gone.
-        assert!(matches!(
-            merged_type(&[EventType::create, EventType::delete]),
-            EventType::delete
-        ));
-    }
-
-    #[test]
-    fn merge_event_update_then_delete_keeps_delete() {
-        assert!(matches!(
-            merged_type(&[EventType::update, EventType::delete]),
-            EventType::delete
-        ));
-    }
-
-    #[test]
-    fn merge_event_update_then_create_keeps_create() {
-        assert!(matches!(
-            merged_type(&[EventType::update, EventType::create]),
-            EventType::create
-        ));
-    }
-
-    #[test]
-    fn merge_event_create_then_update_keeps_update() {
-        // Either is fine for downstream (both mean "exists"), but the
-        // last-wins rule is consistent.
-        assert!(matches!(
-            merged_type(&[EventType::create, EventType::update]),
-            EventType::update
-        ));
-    }
-
-    #[test]
-    fn merge_event_update_then_update_keeps_update() {
-        assert!(matches!(
-            merged_type(&[EventType::update, EventType::update]),
-            EventType::update
-        ));
-    }
-
-    #[test]
-    fn merge_event_delete_then_create_then_delete_keeps_delete() {
-        assert!(matches!(
-            merged_type(&[EventType::delete, EventType::create, EventType::delete]),
-            EventType::delete
-        ));
-    }
-
-    #[test]
-    fn merge_event_delete_then_create_then_update_keeps_update() {
-        assert!(matches!(
-            merged_type(&[EventType::delete, EventType::create, EventType::update]),
-            EventType::update
-        ));
-    }
-
-    // --- Real-fs integration tests ---
-    //
-    // These spin up a notify watcher on a tempdir, perform real fs ops,
-    // run each captured notify event through the same pipeline as the
-    // production code (RawWatchEvent → transform → merge), and assert on
-    // the accumulator. They cover the exact event-shape scenarios the
-    // daemon will see in CI.
-
-    fn drain_and_merge(
-        rx: &mpsc::Receiver<NotifyResult>,
-        origin: &str,
-    ) -> HashMap<PathBuf, WatchEventInternal> {
-        let mut acc: HashMap<PathBuf, WatchEventInternal> = HashMap::new();
-        // Pull events for a short window after the last fs op. notify's
-        // backend may deliver events asynchronously.
-        std::thread::sleep(Duration::from_millis(150));
-        while let Ok(res) = rx.try_recv() {
-            let event = match res {
-                Ok(e) => e,
-                Err(_) => continue,
-            };
-            let raw = RawWatchEvent::new(event);
-            if let Ok(events) = transform_event_to_watch_events(&raw, origin) {
-                for e in events {
-                    merge_event(&mut acc, e);
-                }
+    /// Spin up a real `Watcher` on `dir` with a callback that stores
+    /// every emitted batch into `captured`. Returns the watcher (kept
+    /// alive for the test's lifetime) and the shared collector.
+    fn start_watcher(dir: &std::path::Path) -> (Watcher, Captured) {
+        let mut w = Watcher::new(
+            dir.to_str().expect("utf-8 path").to_string(),
+            None,
+            // Disable gitignore filtering so the test isn't sensitive to
+            // any patterns that might be inherited from the platform's
+            // tmp tree.
+            Some(false),
+        );
+        let captured: Captured = Arc::new(Mutex::new(Vec::new()));
+        let captured_for_cb = captured.clone();
+        let callback: WatchEventCallback = Box::new(move |res| {
+            if let Ok(events) = res {
+                captured_for_cb.lock().unwrap().extend(events);
             }
-        }
-        acc
+        });
+        w.watch_inner(callback).expect("start watch");
+        // Wait for the processing thread to register inotify watches.
+        // Without this the first fs op can fire before the watch is in
+        // place and we'd miss the event.
+        std::thread::sleep(Duration::from_millis(150));
+        (w, captured)
     }
 
-    fn setup_notify(
-        path: &std::path::Path,
-    ) -> (notify::RecommendedWatcher, mpsc::Receiver<NotifyResult>) {
-        let (tx, rx) = mpsc::channel::<NotifyResult>();
-        let mut w = notify::recommended_watcher(move |res| {
-            let _ = tx.send(res);
-        })
-        .expect("create notify watcher");
-        w.watch(path, RecursiveMode::Recursive)
-            .expect("notify watch");
-        // Give notify a moment to register. inotify watch registration is
-        // sync but FSEvents on macOS coalesces an initial burst.
-        std::thread::sleep(Duration::from_millis(50));
-        (w, rx)
+    /// Sleep long enough for IDLE_WINDOW (100ms) to elapse plus a small
+    /// margin for the inotify -> channel hop, then return whatever the
+    /// callback collected so far.
+    fn collect(captured: &Captured) -> Vec<WatchEvent> {
+        std::thread::sleep(Duration::from_millis(250));
+        captured.lock().unwrap().clone()
+    }
+
+    fn find_event<'a>(events: &'a [WatchEvent], name: &str) -> Option<&'a WatchEvent> {
+        events.iter().find(|e| e.path.ends_with(name))
     }
 
     #[test]
-    fn unlink_then_create_does_not_leave_a_delete_in_accumulator() {
-        // This is the exact regression reproduced by `git checkout` on a
-        // tracked file when git uses unlink + create rather than rename.
-        // Pre-fix: accumulator kept the Delete and the file silently
-        // dropped from the workspace context.
+    fn unlink_then_create_does_not_emit_delete() {
+        // Regression: `git checkout` does unlink + create on some
+        // tracked files. Pre-fix, the accumulator merged Delete + Create
+        // and kept Delete because "Delete always wins". Downstream
+        // updateFilesInContext then removed the (still-existing) file
+        // from the workspace context — silently dropping the project
+        // from the project graph. The fix made merge_event keep the
+        // most recent event per path.
         let dir = tempdir().expect("tempdir");
         let target = dir.path().join("foo.txt");
         fs::write(&target, "v1").expect("initial write");
 
-        let (_w, rx) = setup_notify(dir.path());
+        let (_watcher, captured) = start_watcher(dir.path());
 
-        fs::remove_file(&target).expect("remove");
+        fs::remove_file(&target).expect("rm");
         fs::write(&target, "v2").expect("recreate");
 
-        let acc = drain_and_merge(&rx, dir.path().to_str().unwrap());
-        let canonical = target.canonicalize().expect("canonicalize");
-        let entry = acc.get(&canonical).unwrap_or_else(|| {
-            panic!(
-                "expected accumulator entry for {:?}, had {:?}",
-                canonical,
-                acc.keys().collect::<Vec<_>>()
-            )
-        });
+        let events = collect(&captured);
+        let evt = find_event(&events, "foo.txt")
+            .unwrap_or_else(|| panic!("expected event for foo.txt; got {events:?}"));
         assert!(
-            !matches!(entry.r#type, EventType::delete),
-            "unlink+create produced a Delete in the accumulator (was {:?}) — \
-             this drops the file from the workspace context's index even \
-             though it exists on disk",
-            entry.r#type
+            !matches!(evt.r#type, EventType::delete),
+            "unlink+create should not yield Delete; got {:?}",
+            evt.r#type
         );
     }
 
     #[test]
-    fn plain_update_stays_an_update() {
+    fn plain_update_does_not_emit_delete() {
+        // Sanity: a normal in-place write to an existing file is
+        // classified as something that means "exists" (Update or
+        // Create depending on the platform's notify backend), never
+        // Delete.
         let dir = tempdir().expect("tempdir");
         let target = dir.path().join("foo.txt");
         fs::write(&target, "v1").expect("initial write");
 
-        let (_w, rx) = setup_notify(dir.path());
+        let (_watcher, captured) = start_watcher(dir.path());
 
         fs::write(&target, "v2-updated").expect("update");
 
-        let acc = drain_and_merge(&rx, dir.path().to_str().unwrap());
-        let canonical = target.canonicalize().expect("canonicalize");
-        let entry = acc
-            .get(&canonical)
-            .expect("expected accumulator entry for updated file");
+        let events = collect(&captured);
+        let evt = find_event(&events, "foo.txt")
+            .unwrap_or_else(|| panic!("expected event for foo.txt; got {events:?}"));
         assert!(
-            !matches!(entry.r#type, EventType::delete),
-            "plain in-place update should never be classified as Delete"
+            !matches!(evt.r#type, EventType::delete),
+            "plain update should never classify as Delete; got {:?}",
+            evt.r#type
         );
     }
 
     #[test]
-    fn real_delete_is_a_delete() {
-        // Sanity: a real `rm` should still produce a Delete.
+    fn rm_yields_delete() {
+        // Sanity: a real `rm` still produces a Delete after the fix.
         let dir = tempdir().expect("tempdir");
         let target = dir.path().join("foo.txt");
         fs::write(&target, "v1").expect("initial write");
 
-        let (_w, rx) = setup_notify(dir.path());
+        let (_watcher, captured) = start_watcher(dir.path());
 
-        fs::remove_file(&target).expect("remove");
+        fs::remove_file(&target).expect("rm");
 
-        let acc = drain_and_merge(&rx, dir.path().to_str().unwrap());
-        // After `rm`, canonicalize fails — fall back to the original path.
-        let entry = acc
-            .iter()
-            .find(|(p, _)| p.file_name() == Some("foo.txt".as_ref()))
-            .map(|(_, e)| e)
-            .expect("expected accumulator entry for removed file");
+        let events = collect(&captured);
+        let evt = find_event(&events, "foo.txt")
+            .unwrap_or_else(|| panic!("expected event for foo.txt; got {events:?}"));
         assert!(
-            matches!(entry.r#type, EventType::delete),
-            "real rm should classify as Delete; got {:?}",
-            entry.r#type
+            matches!(evt.r#type, EventType::delete),
+            "rm should classify as Delete; got {:?}",
+            evt.r#type
+        );
+    }
+
+    #[test]
+    fn create_then_rm_yields_delete() {
+        // Sanity: a transient file (created then removed) leaves Delete
+        // in the accumulator since the file is gone. Without this, we'd
+        // be falsely reporting a phantom file as still present.
+        let dir = tempdir().expect("tempdir");
+        let target = dir.path().join("ephemeral.txt");
+
+        let (_watcher, captured) = start_watcher(dir.path());
+
+        fs::write(&target, "hi").expect("create");
+        fs::remove_file(&target).expect("rm");
+
+        let events = collect(&captured);
+        let evt = find_event(&events, "ephemeral.txt")
+            .unwrap_or_else(|| panic!("expected event for ephemeral.txt; got {events:?}"));
+        assert!(
+            matches!(evt.r#type, EventType::delete),
+            "create+rm should classify as Delete; got {:?}",
+            evt.r#type
+        );
+    }
+
+    #[test]
+    fn fresh_create_does_not_emit_delete() {
+        // Sanity: a brand-new file should land as Create or Update,
+        // never Delete.
+        let dir = tempdir().expect("tempdir");
+        let target = dir.path().join("new.txt");
+
+        let (_watcher, captured) = start_watcher(dir.path());
+
+        fs::write(&target, "new").expect("create");
+
+        let events = collect(&captured);
+        let evt = find_event(&events, "new.txt")
+            .unwrap_or_else(|| panic!("expected event for new.txt; got {events:?}"));
+        assert!(
+            !matches!(evt.r#type, EventType::delete),
+            "fresh write should not classify as Delete; got {:?}",
+            evt.r#type
         );
     }
 }
