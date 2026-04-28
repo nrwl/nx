@@ -17,11 +17,7 @@ import {
 } from '../../utils/exec-gradle';
 import { dirname, join } from 'path';
 import { spawn } from 'child_process';
-import {
-  getAllDependsOnFromTaskGraph,
-  getExcludeTasksFromTaskGraph,
-  getGradleTaskName,
-} from './get-exclude-task';
+import { getExcludeTasksFromTaskGraph } from './get-exclude-task';
 import { GradlePluginOptions } from '../../plugin/utils/gradle-plugin-options';
 
 export const batchRunnerPath = join(
@@ -111,7 +107,6 @@ export function getGradlewTasksToRun(
 ) {
   const tasksWithExcludeIds = new Set<string>();
   const testTasksWithExcludeIds = new Set<string>();
-  const tasksWithoutExcludeIds = new Set<string>();
   const gradlewTasksToRun: Record<string, GradleExecutorSchema> = {};
   const includeDependsOnTasks = new Set<string>();
 
@@ -132,22 +127,10 @@ export function getGradlewTasksToRun(
       } else {
         tasksWithExcludeIds.add(taskId);
       }
-    } else {
-      tasksWithoutExcludeIds.add(taskId);
     }
   }
 
   const runningTaskIds = new Set<string>(taskIds);
-  const batchTaskIds = new Set<string>(taskIds);
-  const nonExcludeDeps = getAllDependsOnFromTaskGraph(
-    tasksWithoutExcludeIds,
-    fullTaskGraph
-  );
-  for (const depId of nonExcludeDeps) {
-    if (batchTaskIds.has(depId)) {
-      runningTaskIds.add(depId);
-    }
-  }
 
   const excludeTasks = getExcludeTasksFromTaskGraph(
     tasksWithExcludeIds,
@@ -157,21 +140,12 @@ export function getGradlewTasksToRun(
     includeDependsOnTasks
   );
 
-  const excludeTestTasks = new Set<string>();
-  const testDepIds = getAllDependsOnFromTaskGraph(
+  const excludeTestTasks = getExcludeTasksFromTaskGraph(
     testTasksWithExcludeIds,
-    fullTaskGraph
+    new Set(),
+    fullTaskGraph,
+    nodes
   );
-  for (const depTaskId of testDepIds) {
-    const task = fullTaskGraph.tasks[depTaskId];
-    if (!task) {
-      continue;
-    }
-    const gradleTaskName = getGradleTaskName(task.target, nodes);
-    if (gradleTaskName) {
-      excludeTestTasks.add(gradleTaskName);
-    }
-  }
 
   return {
     gradlewTasksToRun,

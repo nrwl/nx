@@ -1,7 +1,4 @@
-import {
-  getExcludeTasksFromTaskGraph,
-  getAllDependsOnFromTaskGraph,
-} from './get-exclude-task';
+import { getExcludeTasksFromTaskGraph } from './get-exclude-task';
 import { ProjectGraphProjectNode, Target, TaskGraph } from '@nx/devkit';
 
 function makeTaskGraph(
@@ -186,136 +183,74 @@ describe('getExcludeTasksFromTaskGraph', () => {
     );
     expect(excludes).toEqual(new Set());
   });
-});
 
-describe('getAllDependsOnFromTaskGraph', () => {
-  it('returns transitive deps excluding starting ids', () => {
+  it('excludes deps reachable only via continuousDependencies', () => {
     const taskGraph = makeTaskGraph(
       {
-        'a:build': { project: 'a', target: 'build' },
-        'b:build': { project: 'b', target: 'build' },
-        'c:build': { project: 'c', target: 'build' },
-        'd:build': { project: 'd', target: 'build' },
+        'app1:test': { project: 'app1', target: 'test' },
+        'app2:build': { project: 'app2', target: 'build' },
       },
       {
-        'a:build': ['b:build', 'c:build'],
-        'b:build': ['d:build'],
+        'app1:test': [],
+      },
+      {
+        'app1:test': ['app2:build'],
       }
     );
-    const deps = getAllDependsOnFromTaskGraph(['a:build'], taskGraph);
-    expect(deps).toEqual(new Set(['b:build', 'c:build', 'd:build']));
-  });
-
-  it('handles cycles safely', () => {
-    const taskGraph = makeTaskGraph(
-      {
-        'e:build': { project: 'e', target: 'build' },
-        'f:build': { project: 'f', target: 'build' },
-      },
-      {
-        'e:build': ['f:build'],
-        'f:build': ['e:build'],
-      }
+    const excludes = getExcludeTasksFromTaskGraph(
+      ['app1:test'],
+      new Set(['app1:test']),
+      taskGraph,
+      nodes
     );
-    const deps = getAllDependsOnFromTaskGraph(['e:build'], taskGraph);
-    expect(deps).toEqual(new Set(['f:build']));
-  });
-
-  it('returns empty when task has no dependencies entry', () => {
-    const taskGraph = makeTaskGraph(
-      {
-        'a:build': { project: 'a', target: 'build' },
-      },
-      {}
-    );
-    const deps = getAllDependsOnFromTaskGraph(['a:build'], taskGraph);
-    expect(deps).toEqual(new Set());
-  });
-
-  it('does not include starting ids even if reachable via a cycle', () => {
-    const taskGraph = makeTaskGraph(
-      {
-        'a:build': { project: 'a', target: 'build' },
-        'b:build': { project: 'b', target: 'build' },
-      },
-      {
-        'a:build': ['b:build'],
-        'b:build': ['a:build'],
-      }
-    );
-    const deps = getAllDependsOnFromTaskGraph(['a:build'], taskGraph);
-    expect(deps).toEqual(new Set(['b:build']));
-  });
-
-  it('dedupes across multiple starting ids', () => {
-    const taskGraph = makeTaskGraph(
-      {
-        'a:build': { project: 'a', target: 'build' },
-        'b:build': { project: 'b', target: 'build' },
-        'shared:build': { project: 'shared', target: 'build' },
-      },
-      {
-        'a:build': ['shared:build'],
-        'b:build': ['shared:build'],
-      }
-    );
-    const deps = getAllDependsOnFromTaskGraph(
-      ['a:build', 'b:build'],
-      taskGraph
-    );
-    expect(deps).toEqual(new Set(['shared:build']));
-  });
-
-  it('includes deps reachable only via continuousDependencies', () => {
-    const taskGraph = makeTaskGraph(
-      {
-        'a:build': { project: 'a', target: 'build' },
-        'b:serve': { project: 'b', target: 'serve' },
-      },
-      {
-        'a:build': [],
-      },
-      {
-        'a:build': ['b:serve'],
-      }
-    );
-    const deps = getAllDependsOnFromTaskGraph(['a:build'], taskGraph);
-    expect(deps).toEqual(new Set(['b:serve']));
+    expect(excludes).toEqual(new Set([':app2:build']));
   });
 
   it('walks transitive continuousDependencies through regular deps', () => {
     const taskGraph = makeTaskGraph(
       {
-        'a:build': { project: 'a', target: 'build' },
-        'b:build': { project: 'b', target: 'build' },
-        'c:serve': { project: 'c', target: 'serve' },
-        'd:build': { project: 'd', target: 'build' },
+        'app1:test': { project: 'app1', target: 'test' },
+        'app1:lint': { project: 'app1', target: 'lint' },
+        'app2:build': { project: 'app2', target: 'build' },
+        'lib1:jar': { project: 'lib1', target: 'jar' },
       },
       {
-        'a:build': ['b:build'],
-        'c:serve': ['d:build'],
+        'app1:test': ['app1:lint'],
+        'app2:build': ['lib1:jar'],
       },
       {
-        'b:build': ['c:serve'],
+        'app1:lint': ['app2:build'],
       }
     );
-    const deps = getAllDependsOnFromTaskGraph(['a:build'], taskGraph);
-    expect(deps).toEqual(new Set(['b:build', 'c:serve', 'd:build']));
+    const excludes = getExcludeTasksFromTaskGraph(
+      ['app1:test'],
+      new Set(['app1:test']),
+      taskGraph,
+      nodes
+    );
+    expect(excludes).toEqual(
+      new Set([':app1:lint', ':app2:build', ':lib1:jar'])
+    );
   });
 
   it('handles cycles via continuousDependencies safely', () => {
     const taskGraph = makeTaskGraph(
       {
-        'a:serve': { project: 'a', target: 'serve' },
-        'b:serve': { project: 'b', target: 'serve' },
+        'app1:test': { project: 'app1', target: 'test' },
+        'app2:build': { project: 'app2', target: 'build' },
       },
       {},
       {
-        'a:serve': ['b:serve'],
-        'b:serve': ['a:serve'],
+        'app1:test': ['app2:build'],
+        'app2:build': ['app1:test'],
       }
     );
-    const deps = getAllDependsOnFromTaskGraph(['a:serve'], taskGraph);
-    expect(deps).toEqual(new Set(['b:serve']));
+    const excludes = getExcludeTasksFromTaskGraph(
+      ['app1:test'],
+      new Set(['app1:test']),
+      taskGraph,
+      nodes
+    );
+    expect(excludes).toEqual(new Set([':app2:build']));
   });
 });

@@ -1,6 +1,6 @@
 import { ProjectGraphProjectNode, Target, TaskGraph } from '@nx/devkit';
 
-export function getGradleTaskName(
+function getGradleTaskName(
   target: Target,
   nodes: Record<string, ProjectGraphProjectNode>
 ): string | null {
@@ -38,7 +38,7 @@ export function getExcludeTasksFromTaskGraph(
   return excludes;
 }
 
-export function getAllDependsOnFromTaskGraph(
+function getAllDependsOnFromTaskGraph(
   startTaskIds: Iterable<string>,
   taskGraph: TaskGraph
 ): Set<string> {
