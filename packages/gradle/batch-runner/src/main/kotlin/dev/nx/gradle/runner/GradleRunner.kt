@@ -6,6 +6,7 @@ import dev.nx.gradle.runner.OutputProcessor.buildTerminalOutput
 import dev.nx.gradle.runner.OutputProcessor.finalizeTaskResults
 import dev.nx.gradle.util.logger
 import java.io.ByteArrayOutputStream
+import java.util.concurrent.ConcurrentHashMap
 import org.gradle.tooling.BuildCancelledException
 import org.gradle.tooling.ProjectConnection
 import org.gradle.tooling.events.OperationType
@@ -92,12 +93,30 @@ fun runBuildLauncher(
   logger.info("📋 Collected ${taskNames.size} unique task names: ${taskNames.joinToString(", ")}")
 
   val taskStartTimes = mutableMapOf<String, Long>()
-  val taskResults = mutableMapOf<String, TaskResult>()
+  val taskResults = ConcurrentHashMap<String, TaskResult>()
+  // Tasks whose TaskFinishEvent fired but whose stdout hasn't been emitted yet.
+  // Keyed by Gradle task path, value is the Nx task id. The capture's
+  // onPrevTaskComplete callback drains entries as the next task's header arrives;
+  // anything still pending after the build is flushed below.
+  val pendingEmit = ConcurrentHashMap<String, String>()
 
   val globalStart = System.currentTimeMillis()
   var globalOutput: String
 
   val excludeArgs = excludeTasks.map { "--exclude-task=$it" }
+
+  fun emitForTaskPath(taskPath: String, capturedOutput: String) {
+    val nxTaskId = pendingEmit.remove(taskPath) ?: return
+    val existing = taskResults[nxTaskId] ?: return
+    val updated = existing.copy(terminalOutput = capturedOutput)
+    taskResults[nxTaskId] = updated
+    ResultEmitter.emit(nxTaskId, updated)
+  }
+
+  val capture =
+      TaskOutputCapture(System.err) { prevTaskPath, capturedOutput ->
+        emitForTaskPath(prevTaskPath, capturedOutput)
+      }
 
   try {
     connection
@@ -105,10 +124,11 @@ fun runBuildLauncher(
         .apply {
           forTasks(*taskNames)
           addArguments(*(args + excludeArgs).toTypedArray())
-          setStandardOutput(TeeOutputStream(outputStream, System.err))
+          setStandardOutput(TeeOutputStream(outputStream, capture))
           setStandardError(TeeOutputStream(errorStream, System.err))
           withDetailedFailure()
-          addProgressListener(buildListener(tasks, taskStartTimes, taskResults), OperationType.TASK)
+          addProgressListener(
+              buildListener(tasks, taskStartTimes, taskResults, pendingEmit), OperationType.TASK)
         }
         .run()
     globalOutput = buildTerminalOutput(outputStream, errorStream)
@@ -119,6 +139,12 @@ fun runBuildLauncher(
   } finally {
     outputStream.close()
     errorStream.close()
+  }
+
+  // Flush any tasks whose finish event raced past the next-header trigger
+  // (including the very last task in the build, which has no next header).
+  pendingEmit.keys.toList().forEach { taskPath ->
+    emitForTaskPath(taskPath, capture.getOutput(taskPath))
   }
 
   val globalEnd = System.currentTimeMillis()

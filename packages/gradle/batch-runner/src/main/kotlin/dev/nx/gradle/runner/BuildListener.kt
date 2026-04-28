@@ -18,7 +18,8 @@ fun normalizeTaskPath(taskPath: String): String = taskPath.trimStart(':')
 fun buildListener(
     tasks: Map<String, GradleTask>,
     taskStartTimes: MutableMap<String, Long>,
-    taskResults: MutableMap<String, TaskResult>
+    taskResults: MutableMap<String, TaskResult>,
+    pendingEmit: MutableMap<String, String>
 ): (ProgressEvent) -> Unit = { event ->
   when (event) {
     is TaskStartEvent -> {
@@ -41,7 +42,12 @@ fun buildListener(
           ?.let { nxTaskId ->
             val endTime = event.result.endTime
             val startTime = taskStartTimes[nxTaskId] ?: event.result.startTime
+            // Record the result without terminalOutput. Per-task stdout is filled in by
+            // TaskOutputCapture's onPrevTaskComplete callback (when the next task's header
+            // arrives) or by the end-of-build flush. That deferred trigger is what gives us
+            // mid-build streaming with full per-task output.
             taskResults[nxTaskId] = TaskResult(success, startTime, endTime, "")
+            pendingEmit[taskPath] = nxTaskId
           }
     }
   }
