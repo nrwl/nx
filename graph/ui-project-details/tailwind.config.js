@@ -5,19 +5,17 @@ const path = require('node:path');
 // Ignore these nx related dependencies since they are the installed versions not the ones in the workspace
 // nx-ignore-next-line
 const { workspaceRoot } = require('@nx/devkit');
-// nx-ignore-next-line
-const { createGlobPatternsForDependencies } = require('@nx/react/tailwind');
+
+const glob = '**/*.{js,ts,jsx,tsx,html}';
 
 module.exports = {
   content: [
-    path.join(__dirname, 'src/**/*.{js,ts,jsx,tsx,html}'),
-    ...createGlobPatternsForDependencies(__dirname),
+    path.join(__dirname, 'src', glob),
+    path.join(__dirname, '..', 'ui-*/src', glob),
+    path.join(__dirname, '..', 'shared/src', glob),
     // Resolve the classes used in @nx/graph components
     // TODO: make a decision on whether this is really the best approach, or if precompiling and deduplicating the classes would be better
-    path.join(
-      workspaceRoot,
-      'node_modules/@nx/graph/**/*.{js,ts,jsx,tsx,html}'
-    ),
+    path.join(workspaceRoot, 'node_modules/@nx/graph', glob),
   ],
   darkMode: 'class', // or 'media' or 'class'
   theme: {

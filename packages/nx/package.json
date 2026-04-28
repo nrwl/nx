@@ -14,9 +14,9 @@
     "dist/plugins",
     "dist/presets",
     "dist/release",
-    "dist/schemas",
     "dist/src",
     "dist/tasks-runners",
+    "schemas",
     "migrations.json",
     "executors.json",
     "generators.json"
@@ -284,8 +284,8 @@
     "./generators": "./generators.json",
     "./executors.json": "./executors.json",
     "./executors": "./executors.json",
-    "./schemas/*": "./dist/schemas/*.json",
-    "./schemas/*.json": "./dist/schemas/*.json",
+    "./schemas/*": "./schemas/*.json",
+    "./schemas/*.json": "./schemas/*.json",
     "./presets/*": {
       "@nx/nx-source": "./presets/*.json",
       "default": "./dist/presets/*.json"

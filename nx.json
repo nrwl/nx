@@ -28,6 +28,7 @@
     "native": [
       "{projectRoot}/**/*.rs",
       "{projectRoot}/**/Cargo.*",
+      "{projectRoot}/src/native/dts-header.d.ts",
       "{workspaceRoot}/Cargo.toml",
       "{workspaceRoot}/Cargo.lock",
       "{workspaceRoot}/clippy.toml",
@@ -86,6 +87,18 @@
       "dependsOn": ["^build", "typecheck", "build-base"],
       "inputs": ["production", "^production"],
       "cache": true
+    },
+    "@nx/esbuild:esbuild": {
+      "cache": true,
+      "dependsOn": ["^build", "typecheck", "build-base"],
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "json": "{workspaceRoot}/tsconfig.json",
+          "fields": ["extends", "files", "include"]
+        }
+      ]
     },
     "build-native": { "inputs": ["native"], "cache": true },
     "build-base": {
@@ -178,7 +191,7 @@
     },
     {
       "plugin": "@nx/js/typescript",
-      "include": ["e2e/**/*"],
+      "include": ["e2e/**/*", "nx-dev/ui-fence/**/*"],
       "options": { "typecheck": true, "build": false }
     },
     {

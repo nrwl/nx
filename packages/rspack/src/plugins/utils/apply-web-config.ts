@@ -181,7 +181,7 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForCssModules(options, includePaths),
         {
-          loader: require.resolve('less-loader'),
+          loader: join(__dirname, 'loaders/deprecated-less-loader.js'),
           options: {
             lessOptions: {
               paths: includePaths,
@@ -227,7 +227,7 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForGlobalCss(options, includePaths),
         {
-          loader: require.resolve('less-loader'),
+          loader: join(__dirname, 'loaders/deprecated-less-loader.js'),
           options: {
             sourceMap: !!options.sourceMap,
             lessOptions: {
@@ -275,7 +275,7 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForGlobalStyle(options, includePaths),
         {
-          loader: require.resolve('less-loader'),
+          loader: join(__dirname, 'loaders/deprecated-less-loader.js'),
           options: {
             sourceMap: !!options.sourceMap,
             lessOptions: {

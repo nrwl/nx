@@ -15,10 +15,8 @@ import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getPlugins } from '../../project-graph/plugins/get-plugins';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
-import {
-  getInstalledNxVersion,
-  isNxVersionMismatch,
-} from '../is-nx-version-mismatch';
+import { isNxVersionMismatch } from '../is-nx-version-mismatch';
+import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import { serverLogger } from '../logger';
 import {
   GET_CONFIGURE_AI_AGENTS_STATUS,

@@ -69,7 +69,7 @@ export async function multiGlobWithWorkspaceContext(
   globs: string[],
   exclude?: string[]
 ) {
-  if (isOnDaemon() || !daemonClient.enabled()) {
+  if (workspaceRoot === '/virtual' || isOnDaemon() || !daemonClient.enabled()) {
     ensureContextAvailable(workspaceRoot);
     return workspaceContext.multiGlob(globs, exclude);
   }

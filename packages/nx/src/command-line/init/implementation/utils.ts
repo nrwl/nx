@@ -227,11 +227,66 @@ export function runInstall(
   repoRoot: string,
   pmc: PackageManagerCommands = getPackageManagerCommand()
 ) {
-  execSync(pmc.install, {
-    stdio: ['ignore', 'ignore', 'inherit'],
-    cwd: repoRoot,
-    windowsHide: true,
-  });
+  try {
+    execSync(pmc.install, {
+      stdio: ['ignore', 'ignore', 'pipe'],
+      encoding: 'utf8',
+      cwd: repoRoot,
+      windowsHide: true,
+    });
+  } catch (e) {
+    if ((e as any)?.stderr) process.stderr.write((e as any).stderr);
+    throw e;
+  }
+}
+
+/**
+ * Coerce any thrown value into a non-empty telemetry string. The naive
+ * `error.message || String(error)` yields "" for bare `new Error()`.
+ */
+export function toErrorString(error: unknown): string {
+  if (error == null) return 'Unknown error';
+  if (error instanceof Error) {
+    if (error.message) return error.message;
+    if (error.name && error.name !== 'Error') return error.name;
+    // Drop `stack` — large and contains absolute paths (PII).
+    const keys = Object.getOwnPropertyNames(error).filter((k) => k !== 'stack');
+    const serialized = safeJsonStringify(error, keys);
+    if (serialized && serialized !== '{}') return serialized;
+    return error.name || 'Error';
+  }
+  if (typeof error === 'object') {
+    const serialized = safeJsonStringify(error);
+    if (serialized && serialized !== '{}') return serialized;
+    return Object.prototype.toString.call(error);
+  }
+  return String(error);
+}
+
+export function readErrorStderr(error: unknown): string {
+  const raw = (error as any)?.stderr;
+  if (typeof raw === 'string') return raw;
+  if (raw && typeof (raw as Buffer).toString === 'function') {
+    return (raw as Buffer).toString('utf8');
+  }
+  return '';
+}
+
+export function extractErrorName(error: unknown, stderr: string): string {
+  const nodeCode = (error as any)?.code;
+  if (typeof nodeCode === 'string') return nodeCode;
+  const m = stderr.match(/\b(E[A-Z0-9_]{2,}|ERR_[A-Z0-9_]+)\b/);
+  if (m) return m[1];
+  if (error instanceof Error) return error.name;
+  return typeof error;
+}
+
+function safeJsonStringify(value: unknown, replacer?: string[]): string {
+  try {
+    return JSON.stringify(value, replacer);
+  } catch {
+    return '';
+  }
 }
 
 export async function initCloud(
