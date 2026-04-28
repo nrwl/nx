@@ -10,7 +10,6 @@ import { getDaemonProcessIdSync, serverProcessJsonPath } from '../cache';
 import type { WatchEvent } from '../../native';
 import { openSockets } from './server';
 import { handleImport } from '../../utils/handle-import';
-import { serverLogger } from '../logger';
 
 export type FileWatcherCallback = (
   err: Error | string | null,
@@ -27,17 +26,8 @@ let workspaceChangesCallback!: FileWatcherCallback;
 function dispatchWorkspaceChanges(
   events: WatchEvent[]
 ): Promise<void> | undefined {
-  // [CI-DEBUG] Log every event's path and type so we can see in CI logs
-  // whether files are being misclassified (e.g. modify → delete) and
-  // whether the daemon is being terminated by .gitignore events.
-  for (const e of events) {
-    serverLogger.watcherLog(`event type=${e.type} path=${e.path}`);
-  }
   for (const event of events) {
     if (event.path.endsWith('.gitignore') || event.path === '.nxignore') {
-      serverLogger.watcherLog(
-        `[CI-DEBUG] terminating daemon because of ignore-file event: type=${event.type} path=${event.path}`
-      );
       // If the ignore files themselves have changed we need to dynamically
       // update our cached ignoreGlobs
       handleServerProcessTermination({

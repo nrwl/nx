@@ -487,7 +487,12 @@ impl Watcher {
                     Ok(ProcMsg::ForceFlush(reply)) => {
                         // Drain any notify events the channel has buffered so
                         // the reply reflects everything submitted up to this
-                        // request, then take the accumulator and respond.
+                        // request, then take the accumulator and respond. If
+                        // additional ForceFlush requests are queued, collect
+                        // their reply channels and answer all of them with the
+                        // same snapshot — otherwise their callers would time
+                        // out waiting for a reply that never comes.
+                        let mut replies = vec![reply];
                         while let Ok(msg) = rx.try_recv() {
                             match msg {
                                 ProcMsg::Notify(event) => ingestor.ingest(
@@ -496,31 +501,38 @@ impl Watcher {
                                     &mut burst_start,
                                     &mut flush_deadline,
                                 ),
-                                ProcMsg::ForceFlush(_) => {
-                                    // Another flush request snuck in; one
-                                    // synchronous reply will satisfy us all
-                                    // since the accumulator is the source of
-                                    // truth — drop the extras.
+                                ProcMsg::ForceFlush(extra_reply) => {
+                                    replies.push(extra_reply);
                                 }
                             }
                         }
                         let watch_events = snapshot_events(&accumulator);
-                        trace!(count = watch_events.len(), "force-flushing events");
-                        match reply.send(watch_events) {
-                            Ok(()) => {
-                                reset_burst(&mut accumulator, &mut burst_start, &mut flush_deadline)
+                        trace!(
+                            count = watch_events.len(),
+                            replies = replies.len(),
+                            "force-flushing events"
+                        );
+                        // Send the same snapshot to every caller. If at least
+                        // one reply succeeds, we know some caller will consume
+                        // these events, so we reset the accumulator. If all
+                        // sends fail (every caller gave up), keep the
+                        // accumulator intact so a future flush still surfaces
+                        // them.
+                        let mut any_delivered = false;
+                        for reply in replies {
+                            match reply.send(watch_events.clone()) {
+                                Ok(()) => any_delivered = true,
+                                Err(e) => {
+                                    tracing::warn!(?e, "force-flush reply failed; caller gave up")
+                                }
                             }
-                            Err(e) => {
-                                // The JS caller gave up before we replied
-                                // (e.g. force_flush_pending hit its 500ms
-                                // recv_timeout). Keep the accumulator intact
-                                // so the next flush — regular or forced —
-                                // still surfaces these events.
-                                tracing::warn!(
-                                    ?e,
-                                    "force-flush reply failed; events retained in accumulator"
-                                );
-                            }
+                        }
+                        if any_delivered {
+                            reset_burst(&mut accumulator, &mut burst_start, &mut flush_deadline);
+                        } else {
+                            tracing::warn!(
+                                "all force-flush replies failed; events retained in accumulator"
+                            );
                         }
                     }
                     Err(RecvTimeoutError::Timeout) => {
@@ -768,6 +780,48 @@ mod tests {
             !matches!(evt.r#type, EventType::delete),
             "fresh write should not classify as Delete; got {:?}",
             evt.r#type
+        );
+    }
+
+    #[test]
+    fn concurrent_force_flush_pending_callers_do_not_time_out() {
+        // Regression: the processing thread used to drop "extra"
+        // ForceFlush requests it found while draining the channel, so
+        // any caller whose request landed in that drained batch would
+        // wait the full 500ms recv_timeout before returning an empty
+        // Vec. Multiple concurrent CLIs hitting the daemon would each
+        // see that latency hit. The fix collects every queued reply
+        // channel and sends the same snapshot to all of them, so every
+        // caller returns immediately.
+        let dir = tempdir().expect("tempdir");
+        let (watcher, _captured) = start_watcher(dir.path());
+        let watcher = Arc::new(watcher);
+
+        // Fire several concurrent force_flush_pending calls. Pre-fix,
+        // 1 would return immediately and the rest would each wait 500ms
+        // for a reply that never arrived, yielding an empty Vec. Post-
+        // fix, all of them collect into the same drained snapshot.
+        let start = std::time::Instant::now();
+        let mut handles = Vec::new();
+        for _ in 0..8 {
+            let w = watcher.clone();
+            handles.push(std::thread::spawn(move || w.force_flush_pending()));
+        }
+        let results: Vec<Vec<WatchEvent>> =
+            handles.into_iter().map(|h| h.join().unwrap()).collect();
+        let elapsed = start.elapsed();
+
+        assert_eq!(results.len(), 8);
+
+        // Pre-fix this would be ~500ms because 7 of 8 callers timed
+        // out. Post-fix every caller is answered as soon as the
+        // processing thread services the first ForceFlush, which is
+        // sub-millisecond. Allow generous slack for slow CI boxes but
+        // well under the 500ms timeout.
+        assert!(
+            elapsed < Duration::from_millis(250),
+            "concurrent force_flush_pending took {elapsed:?}, suggesting some callers \
+             hit the 500ms recv_timeout — i.e. their ForceFlush reply was dropped"
         );
     }
 }
