@@ -18,32 +18,20 @@ export type FileWatcherCallback = (
 
 // Captured by watchWorkspace so flushPendingWorkspaceChanges can route
 // force-flushed events through the same handling as the async callback.
-// Definite-assignment: dispatchWorkspaceChanges only runs after
-// watchWorkspace has set both, so reading them as non-nullable is safe.
-let activeServer!: Server;
 let workspaceChangesCallback!: FileWatcherCallback;
 
 function dispatchWorkspaceChanges(
   events: WatchEvent[]
 ): Promise<void> | undefined {
-  for (const event of events) {
-    if (event.path.endsWith('.gitignore') || event.path === '.nxignore') {
-      // If the ignore files themselves have changed we need to dynamically
-      // update our cached ignoreGlobs
-      handleServerProcessTermination({
-        server: activeServer,
-        reason: 'Stopping the daemon the set of ignored files changed (native)',
-        sockets: openSockets,
-      });
-    }
-  }
+  // The native watcher reloads its own .gitignore / .nxignore matchers when
+  // those files change, so JS no longer needs to bounce the daemon to refresh
+  // the ignore set.
   return workspaceChangesCallback(null, events);
 }
 
 export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
   const { Watcher } = await handleImport('../../native/index.js', __dirname);
 
-  activeServer = server;
   workspaceChangesCallback = cb;
   const watcher = new Watcher(workspaceRoot);
   watcher.watch((err, events) => {
