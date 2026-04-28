@@ -121,15 +121,14 @@ function createRspackBuildTarget(
         options.appProjectRoot,
         'rspack.config.js'
       ),
-      styles:
-        options.styledModule || !options.hasStyles
-          ? []
-          : [
-              joinPathFragments(
-                options.appProjectRoot,
-                `src/styles.${options.style}`
-              ),
-            ],
+      styles: !options.hasStyles
+        ? []
+        : [
+            joinPathFragments(
+              options.appProjectRoot,
+              `src/styles.${options.style}`
+            ),
+          ],
       scripts: [],
       configurations: {
         development: {
@@ -197,15 +196,14 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
         joinPathFragments(options.appProjectRoot, 'src/favicon.ico'),
         joinPathFragments(options.appProjectRoot, 'src/assets'),
       ],
-      styles:
-        options.styledModule || !options.hasStyles
-          ? []
-          : [
-              joinPathFragments(
-                options.appProjectRoot,
-                `src/styles.${options.style}`
-              ),
-            ],
+      styles: !options.hasStyles
+        ? []
+        : [
+            joinPathFragments(
+              options.appProjectRoot,
+              `src/styles.${options.style}`
+            ),
+          ],
       scripts: [],
       webpackConfig: joinPathFragments(
         options.appProjectRoot,

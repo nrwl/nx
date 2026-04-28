@@ -5,6 +5,7 @@
     { "glob": "src/**/schema.json" },
     { "glob": "src/**/schema.d.ts" },
     { "glob": "src/**/*.md" },
+    { "glob": "src/plugins/utils/loaders/deprecated-less-loader.js" },
     "LICENSE",
     "packages/rspack/*.md"
   ]

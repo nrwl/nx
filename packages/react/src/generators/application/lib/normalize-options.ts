@@ -50,10 +50,6 @@ export async function normalizeOptions<T extends Schema = Schema>(
 
   const fileName = 'app';
 
-  const styledModule = /^(css|scss|less|none)$/.test(options.style)
-    ? null
-    : options.style;
-
   assertValidStyle(options.style);
   assertValidReactRouter(options.useReactRouter, options.bundler);
 
@@ -71,7 +67,6 @@ export async function normalizeOptions<T extends Schema = Schema>(
     e2eProjectRoot,
     parsedTags,
     fileName,
-    styledModule,
     hasStyles: options.style !== 'none',
     names: names(projectNames.projectSimpleName),
     isUsingTsSolutionConfig,

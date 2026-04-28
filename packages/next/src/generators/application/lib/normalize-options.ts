@@ -18,7 +18,6 @@ export interface NormalizedSchema
   e2eProjectRoot: string;
   parsedTags: string[];
   fileName: string;
-  styledModule: null | string;
   isTsSolutionSetup: boolean;
   js?: boolean;
 }
@@ -71,10 +70,6 @@ export async function normalizeOptions(
   const appDir = options.appDir ?? true;
   const src = options.src ?? true;
 
-  const styledModule = /^(css|scss|less)$/.test(options.style)
-    ? null
-    : options.style;
-
   assertValidStyle(options.style);
 
   return {
@@ -93,7 +88,6 @@ export async function normalizeOptions(
     projectSimpleName: projectNames.projectSimpleName,
     style: options.style || 'css',
     swc: options.swc ?? true,
-    styledModule,
     unitTestRunner: options.unitTestRunner || 'jest',
     importPath,
     isTsSolutionSetup,

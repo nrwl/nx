@@ -1,14 +1,6 @@
 import { type Schema } from '../generators/application/schema';
 
-const VALID_STYLES = [
-  'css',
-  'scss',
-  'less',
-  'styled-components',
-  '@emotion/styled',
-  'styled-jsx',
-  'none',
-];
+const VALID_STYLES = ['css', 'scss', 'none'];
 
 export function assertValidStyle(style: string): void {
   if (VALID_STYLES.indexOf(style) === -1) {

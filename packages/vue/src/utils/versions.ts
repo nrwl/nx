@@ -20,4 +20,3 @@ export const autoprefixerVersion = '10.4.13';
 
 // other deps
 export const sassVersion = '^1.70.0';
-export const lessVersion = '3.12.2';

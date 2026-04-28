@@ -7,7 +7,6 @@ export {
   extraEslintDependencies,
   extendReactEslintJson,
 } from './src/utils/lint';
-export { cssInJsDependenciesBabel } from './src/utils/styled';
 export { assertValidStyle } from './src/utils/assertion';
 export { reactDomVersion, reactVersion } from './src/utils/versions';
 export { applicationGenerator } from './src/generators/application/application';

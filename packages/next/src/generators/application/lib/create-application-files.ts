@@ -61,7 +61,7 @@ export async function createApplicationFiles(
     appContent: createAppJsx(options.projectName),
     styleContent: createStyleRules(),
     pageStyleContent: `.page {}`,
-    stylesExt: options.style === 'less' ? options.style : 'css',
+    stylesExt: 'css',
     isUsingTsSolutionSetup: isUsingTsSolutionSetup(host),
     isNext16: await isNext16(host),
   };
@@ -95,28 +95,12 @@ export async function createApplicationFiles(
       );
     }
 
-    if (options.style === 'styled-components') {
-      generateFiles(
-        host,
-        join(__dirname, '../files/app-styled-components'),
-        join(generatedAppFilePath, 'app'),
-        templateVariables
-      );
-    } else if (options.style === 'styled-jsx') {
-      generateFiles(
-        host,
-        join(__dirname, '../files/app-styled-jsx'),
-        join(generatedAppFilePath, 'app'),
-        templateVariables
-      );
-    } else {
-      generateFiles(
-        host,
-        join(__dirname, '../files/app-default-layout'),
-        join(generatedAppFilePath, 'app'),
-        templateVariables
-      );
-    }
+    generateFiles(
+      host,
+      join(__dirname, '../files/app-default-layout'),
+      join(generatedAppFilePath, 'app'),
+      templateVariables
+    );
   } else {
     generateFiles(
       host,
@@ -170,20 +154,6 @@ export async function createApplicationFiles(
   // Check for `!== false` because `create-nx-workspace` is not passing default values.
   if (options.swc !== false) {
     host.delete(`${options.appProjectRoot}/.babelrc`);
-  }
-
-  if (options.styledModule) {
-    if (options.appDir) {
-      host.delete(`${generatedAppFilePath}/app/page.module.${options.style}`);
-    } else {
-      host.delete(
-        `${generatedAppFilePath}/pages/${options.fileName}.module.${options.style}`
-      );
-    }
-  }
-
-  if (options.style !== 'styled-components') {
-    host.delete(`${generatedAppFilePath}/pages/_document.tsx`);
   }
 
   if (options.js) {

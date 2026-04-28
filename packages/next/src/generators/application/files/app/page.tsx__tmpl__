@@ -1,17 +1,6 @@
-<%_ if (style !== 'none') { _%>
-  <%_ if (styledModule && (styledModule === 'styled-jsx' || styledModule === 'styled-components'))  { _%>
-'use client';
-  <%_ } _%> 
-  <%_ if (styledModule && styledModule !== 'styled-jsx') { var wrapper = 'StyledPage'; _%>
-import styled from '<%= styledModule %>';
-<%_ } else { var wrapper = 'div'; _%>
-<%- style !== 'styled-jsx' ? `import styles from './page.module.${style}';` : '' %>
-  <%_ } _%>
-
-  <%_ if (styledModule && styledModule !== 'styled-jsx') { _%>
-const StyledPage = styled.div`<%- pageStyleContent %>`;
-  <%_ } _%>
-<% } %>
+<%_ if (style !== 'none') { var wrapper = 'div'; _%>
+import styles from './page.module.<%= style %>';
+<% } else { var wrapper = 'div'; } %>
 export default function Index() {
   /*
    * Replace the elements below with your own.
@@ -19,8 +8,7 @@ export default function Index() {
    * Note: The corresponding styles are in the ./<%= fileName %>.<%= style %> file.
    */
   return (
-    <<%= wrapper %><% if (!styledModule) {%> className={styles.page}<% } %>>
-      <%- styledModule === 'styled-jsx' && style !== 'none' ? `<style jsx>{\`${pageStyleContent}\`}</style>` : `` %>
+    <<%= wrapper %><% if (style !== 'none') {%> className={styles.page}<% } %>>
       <%- appContent %>
     </<%= wrapper %>>
   );
