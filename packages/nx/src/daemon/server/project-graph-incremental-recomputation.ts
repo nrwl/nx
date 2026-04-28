@@ -91,6 +91,11 @@ let knownExternalNodes: Record<string, ProjectGraphExternalNode> = {};
 let fileChangeCounter = 0;
 let recomputationGeneration = 0;
 
+// True after the first successful persistProjectGraphToDisk call. Until
+// that happens, "project-graph.json missing on disk" is the expected
+// state (we just haven't written it yet) and must not trigger a reset.
+let cacheHasBeenPersisted = false;
+
 /**
  * Start a fresh project graph computation, in parallel with any in-flight
  * one. The new promise becomes `cachedSerializedProjectGraphPromise`; any
@@ -563,6 +568,7 @@ function persistProjectGraphToDisk(result: SerializedProjectGraph) {
     result.sourceMaps,
     extractErrors(result.error)
   );
+  cacheHasBeenPersisted = true;
 }
 
 function copyFileData<T extends FileData>(d: T[]) {
@@ -657,6 +663,7 @@ async function resetInternalState() {
   currentSourceMaps = undefined;
   collectedUpdatedFiles.clear();
   collectedDeletedFiles.clear();
+  cacheHasBeenPersisted = false;
   resetWorkspaceContext();
   // Immediately kick off a successor so any in-flight stale computes that
   // hit chainToLatest find a real promise to chain to. Without this, a
@@ -667,19 +674,27 @@ async function resetInternalState() {
 }
 
 async function resetInternalStateIfNxDepsMissing() {
+  // Only meaningful AFTER we've persisted the cache at least once.
+  // Before then, "file missing" is the expected state — an in-flight
+  // first compute hasn't written yet, and resetting would tear down its
+  // promise mid-await and force a redundant recompute.
+  if (!cacheHasBeenPersisted) {
+    return;
+  }
   try {
     const exists = fileExists(nxProjectGraph);
     if (!exists && cachedSerializedProjectGraphPromise) {
       serverLogger.log(
-        `[CI-DEBUG] resetInternalStateIfNxDepsMissing: ${nxProjectGraph} MISSING but cachedPromise exists -> reset`
+        `[CI-DEBUG] resetInternalStateIfNxDepsMissing: ${nxProjectGraph} was wiped externally -> reset`
       );
       await resetInternalState();
     }
   } catch (e) {
+    // A transient stat error shouldn't nuke state. Log and proceed —
+    // the next request will retry.
     serverLogger.log(
-      `[CI-DEBUG] resetInternalStateIfNxDepsMissing: fileExists threw ${e?.message ?? e} -> reset`
+      `[CI-DEBUG] resetInternalStateIfNxDepsMissing: fileExists threw ${e?.message ?? e} (ignored)`
     );
-    await resetInternalState();
   }
 }
 
