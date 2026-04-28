@@ -322,11 +322,43 @@ export default async function addSvgrToWebpackConfig(tree: Tree) {
             ) as ts.PropertyAssignment | undefined;
 
             if (svgrProp) {
-              changes.push({
-                type: ChangeType.Delete,
-                start: arg.getStart(),
-                length: arg.getEnd() - arg.getStart(),
-              });
+              const hasOnlySvgrProperty = arg.properties.length === 1;
+
+              if (hasOnlySvgrProperty) {
+                changes.push({
+                  type: ChangeType.Delete,
+                  start: arg.getStart(),
+                  length: arg.getEnd() - arg.getStart(),
+                });
+              } else {
+                const propIndex = arg.properties.indexOf(svgrProp);
+                const isLastProp = propIndex === arg.properties.length - 1;
+                const isFirstProp = propIndex === 0;
+
+                let removeStart = svgrProp.getFullStart();
+                let removeEnd = svgrProp.getEnd();
+
+                if (!isLastProp) {
+                  const nextProp = arg.properties[propIndex + 1];
+                  removeEnd = nextProp.getFullStart();
+                } else if (!isFirstProp) {
+                  const prevProp = arg.properties[propIndex - 1];
+                  const textBetween = content.substring(
+                    prevProp.getEnd(),
+                    svgrProp.getFullStart()
+                  );
+                  const commaIndex = textBetween.indexOf(',');
+                  if (commaIndex !== -1) {
+                    removeStart = prevProp.getEnd() + commaIndex;
+                  }
+                }
+
+                changes.push({
+                  type: ChangeType.Delete,
+                  start: removeStart,
+                  length: removeEnd - removeStart,
+                });
+              }
 
               if (config.svgrOptions) {
                 const composePluginsCalls = query(
