@@ -147,26 +147,30 @@ fn enumerate_watch_paths<P: AsRef<Path>>(directory: P, use_ignores: bool) -> Has
     path_set
 }
 
-/// Merge one event into the accumulator, keeping the stronger-priority event
-/// for any given path. Priority is Delete > Create > Update.
+/// Merge one event into the accumulator, keeping only the most recent
+/// observation for any given path.
+///
+/// Earlier behavior was "Delete > Create > Update" priority, which silently
+/// dropped a Create that arrived after a Delete in the same burst. That's
+/// exactly what `git checkout` triggers when it does unlink-then-create on
+/// a tracked file: inotify fires IN_DELETE then IN_CREATE for the same
+/// path, both land in the accumulator, the Delete wins, and downstream
+/// `updateFilesInContext` removes the (still-existing) file from the
+/// workspace context — silently dropping the project from the graph.
+///
+/// The later event represents the file's most recently observed state, so
+/// it should always win. Cases:
+///   - Delete then Create (unlink + create): file exists → keep Create.
+///   - Delete then Update: file exists → keep Update.
+///   - Create then Delete: file is gone → keep Delete.
+///   - Update then Delete: file is gone → keep Delete.
+///   - Update then Create: re-classify as Create (was a real create).
+///   - Create then Update / Update then Update: keep latest, both mean exists.
 fn merge_event(
     accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
     incoming: WatchEventInternal,
 ) {
-    if let Some(existing) = accumulator.get_mut(&incoming.path) {
-        let replace = match (existing.r#type, incoming.r#type) {
-            // Delete always wins.
-            (_, EventType::delete) => true,
-            // Create wins over Update (file that looked updated was really created).
-            (EventType::update, EventType::create) => true,
-            _ => false,
-        };
-        if replace {
-            *existing = incoming;
-        }
-    } else {
-        accumulator.insert(incoming.path.clone(), incoming);
-    }
+    accumulator.insert(incoming.path.clone(), incoming);
 }
 
 /// Build the napi-facing event list from the accumulator without mutating
@@ -570,5 +574,250 @@ impl Watcher {
         reply_rx
             .recv_timeout(Duration::from_millis(500))
             .unwrap_or_default()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::native::watch::types::{
+        EventType, RawWatchEvent, WatchEventInternal, transform_event_to_watch_events,
+    };
+    use std::fs;
+    use std::sync::mpsc;
+    use std::time::Duration;
+    use tempfile::tempdir;
+
+    // --- Pure unit tests for merge_event ---
+    //
+    // The accumulator is keyed by path; each test verifies what survives a
+    // sequence of merges for a single path. The bug we fixed was "Delete
+    // always wins" — a Create after a Delete was being silently dropped.
+
+    fn ev(t: EventType) -> WatchEventInternal {
+        WatchEventInternal {
+            path: PathBuf::from("/tmp/file.txt"),
+            r#type: t,
+            origin: "/tmp".to_owned(),
+        }
+    }
+
+    fn merged_type(seq: &[EventType]) -> EventType {
+        let mut acc: HashMap<PathBuf, WatchEventInternal> = HashMap::new();
+        for &t in seq {
+            merge_event(&mut acc, ev(t));
+        }
+        acc.into_iter().next().expect("expected one entry").1.r#type
+    }
+
+    #[test]
+    fn merge_event_inserts_new_path() {
+        let mut acc: HashMap<PathBuf, WatchEventInternal> = HashMap::new();
+        merge_event(&mut acc, ev(EventType::create));
+        assert_eq!(acc.len(), 1);
+    }
+
+    #[test]
+    fn merge_event_delete_then_create_keeps_create() {
+        // Regression: git checkout's unlink+create sequence used to land
+        // as Delete because "Delete always wins" — the workspace context
+        // would then drop the still-existing file from its index.
+        assert!(matches!(
+            merged_type(&[EventType::delete, EventType::create]),
+            EventType::create
+        ));
+    }
+
+    #[test]
+    fn merge_event_delete_then_update_keeps_update() {
+        assert!(matches!(
+            merged_type(&[EventType::delete, EventType::update]),
+            EventType::update
+        ));
+    }
+
+    #[test]
+    fn merge_event_create_then_delete_keeps_delete() {
+        // Create-then-delete still resolves to delete: file is gone.
+        assert!(matches!(
+            merged_type(&[EventType::create, EventType::delete]),
+            EventType::delete
+        ));
+    }
+
+    #[test]
+    fn merge_event_update_then_delete_keeps_delete() {
+        assert!(matches!(
+            merged_type(&[EventType::update, EventType::delete]),
+            EventType::delete
+        ));
+    }
+
+    #[test]
+    fn merge_event_update_then_create_keeps_create() {
+        assert!(matches!(
+            merged_type(&[EventType::update, EventType::create]),
+            EventType::create
+        ));
+    }
+
+    #[test]
+    fn merge_event_create_then_update_keeps_update() {
+        // Either is fine for downstream (both mean "exists"), but the
+        // last-wins rule is consistent.
+        assert!(matches!(
+            merged_type(&[EventType::create, EventType::update]),
+            EventType::update
+        ));
+    }
+
+    #[test]
+    fn merge_event_update_then_update_keeps_update() {
+        assert!(matches!(
+            merged_type(&[EventType::update, EventType::update]),
+            EventType::update
+        ));
+    }
+
+    #[test]
+    fn merge_event_delete_then_create_then_delete_keeps_delete() {
+        assert!(matches!(
+            merged_type(&[EventType::delete, EventType::create, EventType::delete]),
+            EventType::delete
+        ));
+    }
+
+    #[test]
+    fn merge_event_delete_then_create_then_update_keeps_update() {
+        assert!(matches!(
+            merged_type(&[EventType::delete, EventType::create, EventType::update]),
+            EventType::update
+        ));
+    }
+
+    // --- Real-fs integration tests ---
+    //
+    // These spin up a notify watcher on a tempdir, perform real fs ops,
+    // run each captured notify event through the same pipeline as the
+    // production code (RawWatchEvent → transform → merge), and assert on
+    // the accumulator. They cover the exact event-shape scenarios the
+    // daemon will see in CI.
+
+    fn drain_and_merge(
+        rx: &mpsc::Receiver<NotifyResult>,
+        origin: &str,
+    ) -> HashMap<PathBuf, WatchEventInternal> {
+        let mut acc: HashMap<PathBuf, WatchEventInternal> = HashMap::new();
+        // Pull events for a short window after the last fs op. notify's
+        // backend may deliver events asynchronously.
+        std::thread::sleep(Duration::from_millis(150));
+        while let Ok(res) = rx.try_recv() {
+            let event = match res {
+                Ok(e) => e,
+                Err(_) => continue,
+            };
+            let raw = RawWatchEvent::new(event);
+            if let Ok(events) = transform_event_to_watch_events(&raw, origin) {
+                for e in events {
+                    merge_event(&mut acc, e);
+                }
+            }
+        }
+        acc
+    }
+
+    fn setup_notify(
+        path: &std::path::Path,
+    ) -> (notify::RecommendedWatcher, mpsc::Receiver<NotifyResult>) {
+        let (tx, rx) = mpsc::channel::<NotifyResult>();
+        let mut w = notify::recommended_watcher(move |res| {
+            let _ = tx.send(res);
+        })
+        .expect("create notify watcher");
+        w.watch(path, RecursiveMode::Recursive)
+            .expect("notify watch");
+        // Give notify a moment to register. inotify watch registration is
+        // sync but FSEvents on macOS coalesces an initial burst.
+        std::thread::sleep(Duration::from_millis(50));
+        (w, rx)
+    }
+
+    #[test]
+    fn unlink_then_create_does_not_leave_a_delete_in_accumulator() {
+        // This is the exact regression reproduced by `git checkout` on a
+        // tracked file when git uses unlink + create rather than rename.
+        // Pre-fix: accumulator kept the Delete and the file silently
+        // dropped from the workspace context.
+        let dir = tempdir().expect("tempdir");
+        let target = dir.path().join("foo.txt");
+        fs::write(&target, "v1").expect("initial write");
+
+        let (_w, rx) = setup_notify(dir.path());
+
+        fs::remove_file(&target).expect("remove");
+        fs::write(&target, "v2").expect("recreate");
+
+        let acc = drain_and_merge(&rx, dir.path().to_str().unwrap());
+        let canonical = target.canonicalize().expect("canonicalize");
+        let entry = acc.get(&canonical).unwrap_or_else(|| {
+            panic!(
+                "expected accumulator entry for {:?}, had {:?}",
+                canonical,
+                acc.keys().collect::<Vec<_>>()
+            )
+        });
+        assert!(
+            !matches!(entry.r#type, EventType::delete),
+            "unlink+create produced a Delete in the accumulator (was {:?}) — \
+             this drops the file from the workspace context's index even \
+             though it exists on disk",
+            entry.r#type
+        );
+    }
+
+    #[test]
+    fn plain_update_stays_an_update() {
+        let dir = tempdir().expect("tempdir");
+        let target = dir.path().join("foo.txt");
+        fs::write(&target, "v1").expect("initial write");
+
+        let (_w, rx) = setup_notify(dir.path());
+
+        fs::write(&target, "v2-updated").expect("update");
+
+        let acc = drain_and_merge(&rx, dir.path().to_str().unwrap());
+        let canonical = target.canonicalize().expect("canonicalize");
+        let entry = acc
+            .get(&canonical)
+            .expect("expected accumulator entry for updated file");
+        assert!(
+            !matches!(entry.r#type, EventType::delete),
+            "plain in-place update should never be classified as Delete"
+        );
+    }
+
+    #[test]
+    fn real_delete_is_a_delete() {
+        // Sanity: a real `rm` should still produce a Delete.
+        let dir = tempdir().expect("tempdir");
+        let target = dir.path().join("foo.txt");
+        fs::write(&target, "v1").expect("initial write");
+
+        let (_w, rx) = setup_notify(dir.path());
+
+        fs::remove_file(&target).expect("remove");
+
+        let acc = drain_and_merge(&rx, dir.path().to_str().unwrap());
+        // After `rm`, canonicalize fails — fall back to the original path.
+        let entry = acc
+            .iter()
+            .find(|(p, _)| p.file_name() == Some("foo.txt".as_ref()))
+            .map(|(_, e)| e)
+            .expect("expected accumulator entry for removed file");
+        assert!(
+            matches!(entry.r#type, EventType::delete),
+            "real rm should classify as Delete; got {:?}",
+            entry.r#type
+        );
     }
 }

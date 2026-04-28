@@ -105,9 +105,15 @@ pub(super) fn transform_event_to_watch_events(
 
     let event_kind = value.kind();
 
-    if !meta_exists(metadata) {
-        // Treat any non-existent path as a delete (covers both explicit
-        // Remove events and create-then-delete races).
+    // Only treat a stat-fail as delete when notify actually says the file
+    // was removed. A transient stat failure during an atomic rename (the
+    // file briefly doesn't exist between unlink and rename) would
+    // otherwise misclassify a Modify/Create event as Delete — which then
+    // makes updateFilesInContext remove the still-existing file from the
+    // workspace context, silently dropping projects from the project
+    // graph. For non-Remove kinds, fall through to the platform-specific
+    // handling which derives the type from event_kind without re-statting.
+    if !meta_exists(metadata) && matches!(event_kind, EventKind::Remove(_)) {
         return Ok(vec![WatchEventInternal {
             path: path_ref.to_path_buf(),
             r#type: EventType::delete,
@@ -125,7 +131,11 @@ pub(super) fn transform_event_to_watch_events(
         }
 
         let event_type = match metadata {
-            Err(_) => EventType::delete,
+            // Stat failed for a non-Remove event (real removals are
+            // handled by the early-return above). The file likely exists
+            // but a concurrent write/rename briefly hid it — treat as
+            // update to avoid dropping it from the workspace context.
+            Err(_) => EventType::update,
             Ok(t) => {
                 let modified_time = t.st_mtime();
                 let birth_time = t.st_birthtime();
