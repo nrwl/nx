@@ -149,6 +149,19 @@ export async function getCachedSerializedProjectGraphPromise(
       !cachedSerializedProjectGraphPromise ||
       collectedUpdatedFiles.size > 0 ||
       collectedDeletedFiles.size > 0;
+    serverLogger.log(
+      `[CI-DEBUG] getCachedSerializedProjectGraphPromise: needsRecompute=${needsRecompute} cached=${!!cachedSerializedProjectGraphPromise} collectedUpdated=${collectedUpdatedFiles.size} collectedDeleted=${collectedDeletedFiles.size} currentProjectCount=${currentProjectGraph ? Object.keys(currentProjectGraph.nodes).length : 'n/a'}`
+    );
+    if (collectedUpdatedFiles.size > 0) {
+      serverLogger.log(
+        `[CI-DEBUG] collectedUpdatedFiles: ${[...collectedUpdatedFiles.keys()].join(', ')}`
+      );
+    }
+    if (collectedDeletedFiles.size > 0) {
+      serverLogger.log(
+        `[CI-DEBUG] collectedDeletedFiles: ${[...collectedDeletedFiles.keys()].join(', ')}`
+      );
+    }
     if (needsRecompute) {
       serverLogger.log(
         cachedSerializedProjectGraphPromise
@@ -166,6 +179,13 @@ export async function getCachedSerializedProjectGraphPromise(
     // newer compute that replaced it); promise unwrapping flattens the
     // chain so we always end up with the latest real result.
     const result = await cachedSerializedProjectGraphPromise;
+    serverLogger.log(
+      `[CI-DEBUG] getCachedSerializedProjectGraphPromise: result.projectGraph nodes=${
+        result.projectGraph
+          ? Object.keys(result.projectGraph.nodes).length
+          : 'null'
+      } error=${result.error ? result.error.message : 'none'}`
+    );
 
     // Even when the loop didn't recompute, write the cache if it's stale on
     // disk relative to the in-memory result. This protects against
@@ -218,6 +238,9 @@ export function scheduleProjectGraphRecomputation(
   updatedFiles: string[],
   deletedFiles: string[]
 ) {
+  serverLogger.log(
+    `[CI-DEBUG] scheduleProjectGraphRecomputation: created=[${createdFiles.join(',')}] updated=[${updatedFiles.join(',')}] deleted=[${deletedFiles.join(',')}] gen=${recomputationGeneration}`
+  );
   ++fileChangeCounter;
   for (let f of [...createdFiles, ...updatedFiles]) {
     collectedDeletedFiles.delete(f);
@@ -295,12 +318,18 @@ async function processCollectedUpdatedAndDeletedFiles(
     // gate the commit on its staleness check, so a slower stale compute
     // can't clobber a faster newer one's already-committed state.
     if (configHash !== storedWorkspaceConfigHash) {
+      serverLogger.log(
+        `[CI-DEBUG] processCollectedUpdatedAndDeletedFiles: configHash CHANGED, refetching workspace files (projects=${Object.keys(projects).length})`
+      );
       const fresh = await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
       return { fileMap: fresh, configHash, knownExternalNodes: externalNodes };
     }
 
     // Config unchanged → patch the existing file map in place.
     if (fileMapWithFiles) {
+      serverLogger.log(
+        `[CI-DEBUG] processCollectedUpdatedAndDeletedFiles: configHash UNCHANGED, patching existing file map (projects=${Object.keys(projects).length} updatedHashes=${Object.keys(updatedFileHashes).length} deleted=${deletedFiles.length})`
+      );
       return {
         fileMap: updateFileMap(
           projects,
@@ -313,6 +342,9 @@ async function processCollectedUpdatedAndDeletedFiles(
     }
 
     // No prior map (first compute on this daemon).
+    serverLogger.log(
+      `[CI-DEBUG] processCollectedUpdatedAndDeletedFiles: NO PRIOR MAP, fetching fresh (projects=${Object.keys(projects).length})`
+    );
     const fresh = await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
     return { fileMap: fresh, configHash };
   } catch (e) {
@@ -348,6 +380,9 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     ...separatedPlugins.defaultPlugins,
   ];
   const myGeneration = ++recomputationGeneration;
+  serverLogger.log(
+    `[CI-DEBUG] processFilesAndCreate START gen=${myGeneration} collectedUpdated=${collectedUpdatedFiles.size} collectedDeleted=${collectedDeletedFiles.size}`
+  );
 
   // A newer kickOffRecompute has already replaced
   // cachedSerializedProjectGraphPromise. Returning it lets the async
@@ -355,6 +390,9 @@ async function processFilesAndCreateAndSerializeProjectGraph(
   // notifyAbort=true when the graph-phase counters still need balancing.
   const chainToLatest = (notifyAbort: boolean) => {
     if (myGeneration === recomputationGeneration) return null;
+    serverLogger.log(
+      `[CI-DEBUG] chainToLatest TRIGGERED gen=${myGeneration} latest=${recomputationGeneration} notifyAbort=${notifyAbort}`
+    );
     if (notifyAbort) notifyPluginsGraphAborted(plugins);
     return cachedSerializedProjectGraphPromise;
   };
@@ -393,11 +431,20 @@ async function processFilesAndCreateAndSerializeProjectGraph(
         workspaceRoot,
         nxJson
       );
+      serverLogger.log(
+        `[CI-DEBUG] retrieveProjectConfigurations OK gen=${myGeneration} projectCount=${Object.keys(projectConfigurationsResult.projects).length} projects=${Object.keys(projectConfigurationsResult.projects).sort().join(',')}`
+      );
     } catch (e) {
       if (e instanceof ProjectConfigurationsError) {
         projectConfigurationsResult = e.partialProjectConfigurationsResult;
         projectConfigurationsError = e;
+        serverLogger.log(
+          `[CI-DEBUG] retrieveProjectConfigurations PARTIAL gen=${myGeneration} projectCount=${Object.keys(projectConfigurationsResult.projects).length} errorCount=${e.errors?.length ?? 0} projects=${Object.keys(projectConfigurationsResult.projects).sort().join(',')}`
+        );
       } else {
+        serverLogger.log(
+          `[CI-DEBUG] retrieveProjectConfigurations THREW gen=${myGeneration} err=${e?.message ?? e}`
+        );
         throw e;
       }
     }
@@ -442,6 +489,9 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     }
 
     const g = await createAndSerializeProjectGraph(projectConfigurationsResult);
+    serverLogger.log(
+      `[CI-DEBUG] createAndSerializeProjectGraph DONE gen=${myGeneration} nodes=${g.projectGraph ? Object.keys(g.projectGraph.nodes).length : 'null'} error=${g.error ? g.error.message : 'none'}`
+    );
 
     delete global.NX_GRAPH_CREATION;
 
@@ -586,6 +636,10 @@ async function createAndSerializeProjectGraph({
 }
 
 async function resetInternalState() {
+  serverLogger.log(
+    `[CI-DEBUG] resetInternalState CALLED (clearing collectedUpdated=${collectedUpdatedFiles.size}, collectedDeleted=${collectedDeletedFiles.size}, prevProjectCount=${currentProjectGraph ? Object.keys(currentProjectGraph.nodes).length : 'n/a'})`
+  );
+  serverLogger.log(`[CI-DEBUG] resetInternalState stack: ${new Error().stack}`);
   cachedSerializedProjectGraphPromise = undefined;
   fileMapWithFiles = undefined;
   currentProjectFileMapCache = undefined;

@@ -9,6 +9,29 @@ import {
   uniq,
   updateJson,
 } from '@nx/e2e-utils';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+// Temporary CI diagnostic: when a test in this file fails, dump the daemon
+// log so we can inspect the graph-recompute history that led to the partial
+// graph being served. Remove once the underlying daemon race is fixed.
+function dumpDaemonLogOnFailure() {
+  const daemonDir = join(tmpProjPath(), '.nx', 'workspace-data', 'd');
+  for (const name of ['daemon.log', 'daemon-error.log']) {
+    const file = join(daemonDir, name);
+    if (!existsSync(file)) {
+      console.log(`[daemon-log] ${file} does not exist`);
+      continue;
+    }
+    try {
+      console.log(`\n========== ${file} START ==========`);
+      console.log(readFileSync(file, 'utf8'));
+      console.log(`========== ${file} END ==========\n`);
+    } catch (e) {
+      console.log(`[daemon-log] failed to read ${file}:`, (e as Error).message);
+    }
+  }
+}
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -76,50 +99,51 @@ describe('nx release multiple release branches', () => {
   afterEach(() => cleanupProject());
 
   it('git-tag version resolver should not detect tags in other branches', async () => {
-    updateJson<NxJsonConfiguration>('nx.json', (json) => {
-      json.release = {
-        version: {
-          git: {
-            commit: true,
-            tag: true,
+    try {
+      updateJson<NxJsonConfiguration>('nx.json', (json) => {
+        json.release = {
+          version: {
+            git: {
+              commit: true,
+              tag: true,
+            },
+            currentVersionResolver: 'git-tag',
           },
-          currentVersionResolver: 'git-tag',
-        },
-      };
+        };
 
-      return json;
-    });
+        return json;
+      });
 
-    runCommand(`git checkout -b release/0.x`);
-    runCommand(`git add .`);
-    runCommand(`git commit -m "chore: initial commit"`);
-    const initialVersionResult = runCLI(
-      `release version 0.0.7 --first-release`
-    );
+      runCommand(`git checkout -b release/0.x`);
+      runCommand(`git add .`);
+      runCommand(`git commit -m "chore: initial commit"`);
+      const initialVersionResult = runCLI(
+        `release version 0.0.7 --first-release`
+      );
 
-    runCommand(`git checkout -b release/1.x`);
+      runCommand(`git checkout -b release/1.x`);
 
-    // update my-pkg-1 with a feature commit
-    updateJson(`${pkg1}/package.json`, (json) => ({
-      ...json,
-      license: 'MIT',
-    }));
-    runCommand(`git add ${pkg1}/package.json`);
-    runCommand(`git commit -m "feat(${pkg1}): new feature 1"`);
+      // update my-pkg-1 with a feature commit
+      updateJson(`${pkg1}/package.json`, (json) => ({
+        ...json,
+        license: 'MIT',
+      }));
+      runCommand(`git add ${pkg1}/package.json`);
+      runCommand(`git commit -m "feat(${pkg1}): new feature 1"`);
 
-    const versionResult1x = runCLI(`release version minor`);
+      const versionResult1x = runCLI(`release version minor`);
 
-    // update my-pkg-2 with a fix commit
-    updateJson(`${pkg2}/package.json`, (json) => ({
-      ...json,
-      license: 'MIT',
-    }));
-    runCommand(`git add ${pkg2}/package.json`);
-    runCommand(`git commit -m "fix(${pkg2}): new fix 1"`);
-    runCommand(`git checkout release/0.x`);
-    const versionResult0x = runCLI(`release version patch`);
+      // update my-pkg-2 with a fix commit
+      updateJson(`${pkg2}/package.json`, (json) => ({
+        ...json,
+        license: 'MIT',
+      }));
+      runCommand(`git add ${pkg2}/package.json`);
+      runCommand(`git commit -m "fix(${pkg2}): new fix 1"`);
+      runCommand(`git checkout release/0.x`);
+      const versionResult0x = runCLI(`release version patch`);
 
-    expect(initialVersionResult).toMatchInlineSnapshot(`
+      expect(initialVersionResult).toMatchInlineSnapshot(`
 
       NX   Running release version for project: {project-name}
 
@@ -165,7 +189,7 @@ describe('nx release multiple release branches', () => {
 
 
     `);
-    expect(versionResult1x).toMatchInlineSnapshot(`
+      expect(versionResult1x).toMatchInlineSnapshot(`
 
       NX   Running release version for project: {project-name}
 
@@ -214,7 +238,7 @@ describe('nx release multiple release branches', () => {
 
 
     `);
-    expect(versionResult0x).toMatchInlineSnapshot(`
+      expect(versionResult0x).toMatchInlineSnapshot(`
 
       NX   Running release version for project: {project-name}
 
@@ -260,51 +284,56 @@ describe('nx release multiple release branches', () => {
 
 
     `);
+    } catch (e) {
+      dumpDaemonLogOnFailure();
+      throw e;
+    }
   });
 
   it('git-tag version resolver should detect tags in other branches if none are reachable from the current commit', async () => {
-    updateJson<NxJsonConfiguration>('nx.json', (json) => {
-      json.release = {
-        version: {
-          git: {
-            commit: true,
-            tag: true,
+    try {
+      updateJson<NxJsonConfiguration>('nx.json', (json) => {
+        json.release = {
+          version: {
+            git: {
+              commit: true,
+              tag: true,
+            },
+            currentVersionResolver: 'git-tag',
           },
-          currentVersionResolver: 'git-tag',
-        },
-      };
+        };
 
-      return json;
-    });
+        return json;
+      });
 
-    runCommand(`git checkout -b test-main`);
-    runCommand(`git add .`);
-    runCommand(`git commit -m "chore: initial commit"`);
+      runCommand(`git checkout -b test-main`);
+      runCommand(`git add .`);
+      runCommand(`git commit -m "chore: initial commit"`);
 
-    runCommand(`git checkout -b release/1.x`);
+      runCommand(`git checkout -b release/1.x`);
 
-    // update my-pkg-1 with a feature commit
-    updateJson(`${pkg1}/package.json`, (json) => ({
-      ...json,
-      license: 'MIT',
-    }));
-    runCommand(`git add ${pkg1}/package.json`);
-    runCommand(`git commit -m "feat(${pkg1}): new feature 1"`);
+      // update my-pkg-1 with a feature commit
+      updateJson(`${pkg1}/package.json`, (json) => ({
+        ...json,
+        license: 'MIT',
+      }));
+      runCommand(`git add ${pkg1}/package.json`);
+      runCommand(`git commit -m "feat(${pkg1}): new feature 1"`);
 
-    const versionResult1x = runCLI(`release version minor --first-release`);
+      const versionResult1x = runCLI(`release version minor --first-release`);
 
-    runCommand(`git checkout test-main`);
-    // update my-pkg-2 with a fix commit
-    updateJson(`${pkg2}/package.json`, (json) => ({
-      ...json,
-      license: 'MIT',
-    }));
-    runCommand(`git add ${pkg2}/package.json`);
-    runCommand(`git commit -m "fix(${pkg2}): new fix 1"`);
-    runCommand(`git checkout -b release/2.x`);
-    const versionResult2x = runCLI(`release version major`);
+      runCommand(`git checkout test-main`);
+      // update my-pkg-2 with a fix commit
+      updateJson(`${pkg2}/package.json`, (json) => ({
+        ...json,
+        license: 'MIT',
+      }));
+      runCommand(`git add ${pkg2}/package.json`);
+      runCommand(`git commit -m "fix(${pkg2}): new fix 1"`);
+      runCommand(`git checkout -b release/2.x`);
+      const versionResult2x = runCLI(`release version major`);
 
-    expect(versionResult1x).toMatchInlineSnapshot(`
+      expect(versionResult1x).toMatchInlineSnapshot(`
 
       NX   Running release version for project: {project-name}
 
@@ -353,7 +382,7 @@ describe('nx release multiple release branches', () => {
 
 
     `);
-    expect(versionResult2x).toMatchInlineSnapshot(`
+      expect(versionResult2x).toMatchInlineSnapshot(`
 
       NX   Running release version for project: {project-name}
 
@@ -402,5 +431,9 @@ describe('nx release multiple release branches', () => {
 
 
     `);
+    } catch (e) {
+      dumpDaemonLogOnFailure();
+      throw e;
+    }
   });
 });
