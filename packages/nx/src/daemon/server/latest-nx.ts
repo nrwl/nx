@@ -1,4 +1,5 @@
 import { installPackageToTmpAsync } from '../../devkit-internals';
+import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { serverLogger } from '../logger';
 
 // Module-level state - persists across invocations within daemon lifecycle
@@ -27,6 +28,7 @@ export async function getLatestNxTmpPath(): Promise<string> {
   installPromise = (async () => {
     try {
       serverLogger.log('[LATEST-NX]: Pulling latest Nx...');
+      await ensurePackageHasProvenance('nx', 'latest');
       const result = await installPackageToTmpAsync('nx', 'latest');
       latestNxTmpPath = result.tempDir;
       cleanupFn = result.cleanup;
