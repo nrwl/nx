@@ -143,9 +143,6 @@
           "^nx-release-publish"
         ]
       }
-    },
-    "implicitDependencies": [
-      "nx"
-    ]
+    }
   }
 }

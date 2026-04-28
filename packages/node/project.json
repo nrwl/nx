@@ -36,12 +36,5 @@
       "dependsOn": []
     }
   },
-  "implicitDependencies": [
-    "angular",
-    "cypress",
-    "module-federation",
-    "nest",
-    "playwright",
-    "webpack"
-  ]
+  "implicitDependencies": ["angular", "nest", "webpack"]
 }

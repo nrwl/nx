@@ -35,6 +35,5 @@
       "dependsOn": []
     }
   },
-  "implicitDependencies": ["cypress", "docker", "eslint", "node"],
   "tags": []
 }

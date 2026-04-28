@@ -41,7 +41,6 @@
     "angular",
     "nest",
     "express",
-    "vue",
-    "nx"
+    "vue"
   ]
 }

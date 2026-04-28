@@ -10,5 +10,5 @@
       "inputs": ["copyReadme"]
     }
   },
-  "implicitDependencies": ["node", "eslint", "nx"]
+  "implicitDependencies": ["node", "eslint"]
 }
