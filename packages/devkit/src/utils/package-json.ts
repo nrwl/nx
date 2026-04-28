@@ -9,7 +9,11 @@ import {
   updateJson,
   workspaceRoot,
 } from 'nx/src/devkit-exports';
-import { installPackageToTmp } from 'nx/src/devkit-internals';
+import {
+  installPackageToTmp,
+  installPackagesToTmp,
+} from 'nx/src/devkit-internals';
+import type { PackageToInstall } from 'nx/src/utils/package-json';
 import type {
   PackageJson,
   PackageJsonDependencySection,
@@ -869,16 +873,40 @@ export function ensurePackage<T extends any = any>(
   pkg: string,
   version: string
 ): T;
+/**
+ * Ensure that multiple packages are installed at the required versions in a
+ * single intermediate installation step. Prefer this form when a generator may
+ * need several packages in the same run. It avoids spinning up a fresh tmp
+ * project per package.
+ *
+ * For example:
+ * ```typescript
+ * ensurePackage({
+ *   '@nx/eslint': nxVersion,
+ *   '@nx/vite': nxVersion,
+ *   '@nx/vitest': nxVersion,
+ * });
+ * ```
+ *
+ * Individual packages can still be read afterwards with the single-package
+ * form, which will hit the module cache warmed by this call.
+ */
+export function ensurePackage(packages: Record<string, string>): void;
 export function ensurePackage<T extends any = any>(
-  pkgOrTree: string | Tree,
-  requiredVersionOrPackage: string,
+  pkgOrTreeOrPackages: string | Tree | Record<string, string>,
+  requiredVersionOrPackage?: string,
   maybeRequiredVersion?: string,
   _?: never
-): T {
+): T | void {
+  if (isPackageMap(pkgOrTreeOrPackages)) {
+    ensurePackages(pkgOrTreeOrPackages);
+    return;
+  }
+
   let pkg: string;
   let requiredVersion: string;
-  if (typeof pkgOrTree === 'string') {
-    pkg = pkgOrTree;
+  if (typeof pkgOrTreeOrPackages === 'string') {
+    pkg = pkgOrTreeOrPackages;
     requiredVersion = requiredVersionOrPackage;
   } else {
     // Old Signature
@@ -886,8 +914,26 @@ export function ensurePackage<T extends any = any>(
     requiredVersion = maybeRequiredVersion;
   }
 
+  return ensureSinglePackage(pkg, requiredVersion) as T;
+}
+
+function isPackageMap(
+  value: string | Tree | Record<string, string>
+): value is Record<string, string> {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  // A Tree has a `root` string and filesystem methods like `read`/`write`.
+  // A package map is a plain object whose values are all strings.
+  if (typeof (value as Tree).read === 'function') {
+    return false;
+  }
+  return Object.values(value).every((v) => typeof v === 'string');
+}
+
+function ensureSinglePackage(pkg: string, requiredVersion: string): unknown {
   if (packageMapCache.has(pkg)) {
-    return packageMapCache.get(pkg) as T;
+    return packageMapCache.get(pkg);
   }
 
   try {
@@ -909,31 +955,85 @@ export function ensurePackage<T extends any = any>(
   }
 
   const { tempDir } = installPackageToTmp(pkg, requiredVersion);
+  loadInstalledPackagesFromTmp(tempDir, [pkg]);
+  return packageMapCache.get(pkg);
+}
 
+function ensurePackages(packages: Record<string, string>): void {
+  const toInstall: PackageToInstall[] = [];
+  for (const [pkg, requiredVersion] of Object.entries(packages)) {
+    if (packageMapCache.has(pkg)) {
+      continue;
+    }
+    try {
+      const mod = require(pkg);
+      packageMapCache.set(pkg, mod);
+      continue;
+    } catch (e) {
+      if (e.code === 'ERR_REQUIRE_ESM') {
+        // Already installed; consumer must dynamic import it.
+        packageMapCache.set(pkg, null);
+        continue;
+      } else if (e.code !== 'MODULE_NOT_FOUND') {
+        throw e;
+      }
+    }
+    toInstall.push({ pkg, requiredVersion });
+  }
+
+  if (toInstall.length === 0) {
+    return;
+  }
+
+  if (process.env.NX_DRY_RUN && process.env.NX_DRY_RUN !== 'false') {
+    throw new Error(
+      'NOTE: This generator does not support --dry-run. If you are running this in Nx Console, it should execute fine once you hit the "Generate" button.\n'
+    );
+  }
+
+  // `installPackagesToTmp` was added alongside the batch `ensurePackage`
+  // overload. Older nx cores (within the +/- 1 major compat window) don't
+  // export it. Degrade gracefully to sequential single-package installs so
+  // that the call still succeeds, just without the batching win.
+  if (typeof installPackagesToTmp === 'function') {
+    const { tempDir } = installPackagesToTmp(toInstall);
+    loadInstalledPackagesFromTmp(
+      tempDir,
+      toInstall.map(({ pkg }) => pkg)
+    );
+    return;
+  }
+
+  for (const { pkg, requiredVersion } of toInstall) {
+    const { tempDir } = installPackageToTmp(pkg, requiredVersion);
+    loadInstalledPackagesFromTmp(tempDir, [pkg]);
+  }
+}
+
+function loadInstalledPackagesFromTmp(tempDir: string, pkgs: string[]): void {
   addToNodePath(join(workspaceRoot, 'node_modules'));
   addToNodePath(join(tempDir, 'node_modules'));
 
   // Re-initialize the added paths into require
   (Module as any)._initPaths();
 
-  try {
-    const result = require(
-      require.resolve(pkg, {
-        paths: [tempDir],
-      })
-    );
-
-    packageMapCache.set(pkg, result);
-
-    return result;
-  } catch (e) {
-    if (e.code === 'ERR_REQUIRE_ESM') {
-      // The package is installed, but is an ESM package.
-      // The consumer of this function can import it as needed.
-      packageMapCache.set(pkg, null);
-      return null;
+  for (const pkg of pkgs) {
+    try {
+      const result = require(
+        require.resolve(pkg, {
+          paths: [tempDir],
+        })
+      );
+      packageMapCache.set(pkg, result);
+    } catch (e) {
+      if (e.code === 'ERR_REQUIRE_ESM') {
+        // The package is installed, but is an ESM package.
+        // The consumer of this function can import it as needed.
+        packageMapCache.set(pkg, null);
+        continue;
+      }
+      throw e;
     }
-    throw e;
   }
 }
 

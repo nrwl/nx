@@ -67,6 +67,21 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
 
   const options = await normalizeOptions(host, schema);
 
+  const packagesToEnsure: Record<string, string> = {};
+  if (options.buildable && options.bundler === 'vite') {
+    packagesToEnsure['@nx/vite'] = nxVersion;
+  } else if (options.buildable && options.bundler === 'rollup') {
+    packagesToEnsure['@nx/rollup'] = nxVersion;
+  }
+  if (options.unitTestRunner === 'vitest' && options.bundler !== 'vite') {
+    packagesToEnsure['@nx/vite'] = nxVersion;
+    packagesToEnsure['@nx/vitest'] = nxVersion;
+  }
+  if (options.unitTestRunner === 'jest') {
+    packagesToEnsure['@nx/jest'] = nxVersion;
+  }
+  ensurePackage(packagesToEnsure);
+
   if (
     options.publishable === true &&
     !options.isUsingTsSolutionConfig &&
@@ -129,7 +144,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   // Set up build target
   if (options.buildable && options.bundler === 'vite') {
     const { viteConfigurationGenerator, createOrEditViteConfig } =
-      ensurePackage<typeof import('@nx/vite')>('@nx/vite', nxVersion);
+      require('@nx/vite') as typeof import('@nx/vite');
     const viteTask = await viteConfigurationGenerator(host, {
       uiFramework: 'react',
       project: options.name,
@@ -172,10 +187,8 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
 
   // Set up test target
   if (options.unitTestRunner === 'jest') {
-    const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
-      '@nx/jest',
-      nxVersion
-    );
+    const { configurationGenerator } =
+      require('@nx/jest') as typeof import('@nx/jest');
 
     const jestTask = await configurationGenerator(host, {
       ...options,
@@ -201,11 +214,8 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // tests are already configured if bundler is vite
   ) {
-    const { createOrEditViteConfig } = ensurePackage<typeof import('@nx/vite')>(
-      '@nx/vite',
-      nxVersion
-    );
-    ensurePackage('@nx/vitest', nxVersion);
+    const { createOrEditViteConfig } =
+      require('@nx/vite') as typeof import('@nx/vite');
     const { configurationGenerator } = await import('@nx/vitest/generators');
     const vitestTask = await configurationGenerator(host, {
       uiFramework: 'react',

@@ -18,11 +18,30 @@ export async function addE2e(
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
   const hasPlugin = hasExpoPlugin(tree);
+
+  // Batch the optional @nx/web install with whichever e2e runner was
+  // chosen so a typical "no expo plugin + cypress" run only provisions one
+  // tmp project instead of two.
+  const packagesToEnsure: Record<string, string> = {};
   if (!hasPlugin) {
-    const { webStaticServeGenerator } = ensurePackage<typeof import('@nx/web')>(
-      '@nx/web',
-      nxVersion
-    );
+    packagesToEnsure['@nx/web'] = nxVersion;
+  }
+  switch (options.e2eTestRunner) {
+    case 'cypress':
+      packagesToEnsure['@nx/cypress'] = nxVersion;
+      break;
+    case 'playwright':
+      packagesToEnsure['@nx/playwright'] = nxVersion;
+      break;
+    case 'detox':
+      packagesToEnsure['@nx/detox'] = nxVersion;
+      break;
+  }
+  ensurePackage(packagesToEnsure);
+
+  if (!hasPlugin) {
+    const { webStaticServeGenerator } =
+      require('@nx/web') as typeof import('@nx/web');
 
     await webStaticServeGenerator(tree, {
       buildTarget: `${options.projectName}:export`,
@@ -39,9 +58,8 @@ export async function addE2e(
 
   switch (options.e2eTestRunner) {
     case 'cypress': {
-      const { configurationGenerator } = ensurePackage<
-        typeof import('@nx/cypress')
-      >('@nx/cypress', nxVersion);
+      const { configurationGenerator } =
+        require('@nx/cypress') as typeof import('@nx/cypress');
 
       const packageJson: PackageJson = {
         name: options.e2eProjectName,
@@ -94,9 +112,8 @@ export async function addE2e(
       return e2eTask;
     }
     case 'playwright': {
-      const { configurationGenerator } = ensurePackage<
-        typeof import('@nx/playwright')
-      >('@nx/playwright', nxVersion);
+      const { configurationGenerator } =
+        require('@nx/playwright') as typeof import('@nx/playwright');
       const packageJson: PackageJson = {
         name: options.e2eProjectName,
         version: '0.0.1',
@@ -143,9 +160,8 @@ export async function addE2e(
       return e2eTask;
     }
     case 'detox':
-      const { detoxApplicationGenerator } = ensurePackage<
-        typeof import('@nx/detox')
-      >('@nx/detox', nxVersion);
+      const { detoxApplicationGenerator } =
+        require('@nx/detox') as typeof import('@nx/detox');
       return detoxApplicationGenerator(tree, {
         ...options,
         e2eName: options.e2eProjectName,

@@ -27,11 +27,26 @@ export async function addE2e(
             ? p === '@nx/vite/plugin'
             : p.plugin === '@nx/vite/plugin'
         );
+
+  // Batch the bundler helper + e2e runner tmp installs so we provision a
+  // single tmp project instead of back-to-back ones.
+  const packagesToEnsure: Record<string, string> = {};
+  if (options.bundler === 'vite') {
+    packagesToEnsure['@nx/vite'] = nxVersion;
+  } else if (options.bundler === 'rsbuild') {
+    packagesToEnsure['@nx/rsbuild'] = nxVersion;
+  }
+  if (options.e2eTestRunner === 'cypress') {
+    packagesToEnsure['@nx/cypress'] = nxVersion;
+  } else if (options.e2eTestRunner === 'playwright') {
+    packagesToEnsure['@nx/playwright'] = nxVersion;
+  }
+  ensurePackage(packagesToEnsure);
+
   let e2eWebServerInfo: E2EWebServerDetails;
   if (options.bundler === 'vite') {
-    const { getViteE2EWebServerInfo } = ensurePackage<
-      typeof import('@nx/vite')
-    >('@nx/vite', nxVersion);
+    const { getViteE2EWebServerInfo } =
+      require('@nx/vite') as typeof import('@nx/vite');
     e2eWebServerInfo = await getViteE2EWebServerInfo(
       tree,
       options.projectName,
@@ -43,7 +58,6 @@ export async function addE2e(
       options.devServerPort ?? 4200
     );
   } else if (options.bundler === 'rsbuild') {
-    ensurePackage('@nx/rsbuild', nxVersion);
     const { getRsbuildE2EWebServerInfo } = await import(
       '@nx/rsbuild/config-utils'
     );
@@ -69,9 +83,8 @@ export async function addE2e(
         });
       }
 
-      const { configurationGenerator } = ensurePackage<
-        typeof import('@nx/cypress')
-      >('@nx/cypress', nxVersion);
+      const { configurationGenerator } =
+        require('@nx/cypress') as typeof import('@nx/cypress');
 
       const packageJson: PackageJson = {
         name: options.e2eProjectName,
@@ -122,9 +135,8 @@ export async function addE2e(
       return e2eTask;
     }
     case 'playwright': {
-      const { configurationGenerator } = ensurePackage<
-        typeof import('@nx/playwright')
-      >('@nx/playwright', nxVersion);
+      const { configurationGenerator } =
+        require('@nx/playwright') as typeof import('@nx/playwright');
 
       const packageJson: PackageJson = {
         name: options.e2eProjectName,

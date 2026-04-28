@@ -83,6 +83,21 @@ export async function remixApplicationGeneratorInternal(
   ];
 
   const options = await normalizeOptions(tree, _options);
+
+  // Batch the Nx plugins this generator may need so the unit test, lint and
+  // bundler helpers share a single intermediate tmp install.
+  const packagesToEnsure: Record<string, string> = {};
+  if (options.unitTestRunner === 'vitest') {
+    packagesToEnsure['@nx/vite'] = nxVersion;
+    packagesToEnsure['@nx/vitest'] = nxVersion;
+  } else if (options.unitTestRunner === 'jest') {
+    packagesToEnsure['@nx/jest'] = nxVersion;
+  }
+  if (options.linter !== 'none') {
+    packagesToEnsure['@nx/eslint'] = nxVersion;
+  }
+  ensurePackage(packagesToEnsure);
+
   if (!options.addPlugin) {
     throw new Error(
       `To generate a new Remix Vite application, you must use Inference Plugins. Check you do not have NX_ADD_PLUGINS=false or useInferencePlugins: false in your nx.json.`
@@ -189,10 +204,8 @@ export async function remixApplicationGeneratorInternal(
 
   if (options.unitTestRunner !== 'none') {
     if (options.unitTestRunner === 'vitest') {
-      const { createOrEditViteConfig } = ensurePackage<
-        typeof import('@nx/vite')
-      >('@nx/vite', nxVersion);
-      ensurePackage('@nx/vitest', nxVersion);
+      const { createOrEditViteConfig } =
+        require('@nx/vite') as typeof import('@nx/vite');
       const { configurationGenerator } = await import('@nx/vitest/generators');
       const vitestTask = await configurationGenerator(tree, {
         uiFramework: 'react',
@@ -223,7 +236,7 @@ export async function remixApplicationGeneratorInternal(
       tasks.push(vitestTask);
     } else {
       const { configurationGenerator: jestConfigurationGenerator } =
-        ensurePackage<typeof import('@nx/jest')>('@nx/jest', nxVersion);
+        require('@nx/jest') as typeof import('@nx/jest');
       const jestTask = await jestConfigurationGenerator(tree, {
         project: options.projectName,
         setupFile: 'none',
@@ -257,10 +270,8 @@ export async function remixApplicationGeneratorInternal(
   }
 
   if (options.linter !== 'none') {
-    const { lintProjectGenerator } = ensurePackage<typeof import('@nx/eslint')>(
-      '@nx/eslint',
-      nxVersion
-    );
+    const { lintProjectGenerator } =
+      require('@nx/eslint') as typeof import('@nx/eslint');
     const { addIgnoresToLintConfig } = await import(
       '@nx/eslint/src/generators/utils/eslint-file'
     );

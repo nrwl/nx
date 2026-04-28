@@ -23,6 +23,8 @@ export {
   readModulePackageJson,
   installPackageToTmp,
   installPackageToTmpAsync,
+  installPackagesToTmp,
+  installPackagesToTmpAsync,
 } from './utils/package-json';
 export { splitByColons } from './utils/split-target';
 export { hashObject } from './hasher/file-hasher';

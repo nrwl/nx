@@ -12,10 +12,26 @@ export async function addVite(
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
+
+  // Batch vite/vitest tmp installs up front. When both are needed for a
+  // non-vite bundler with vitest, this collapses two tmp installs into one.
+  const needsVite =
+    options.bundler === 'vite' || options.unitTestRunner === 'vitest';
+  const needsVitest =
+    options.unitTestRunner === 'vitest' && options.bundler !== 'vite';
+  const packagesToEnsure: Record<string, string> = {};
+  if (needsVite) {
+    packagesToEnsure['@nx/vite'] = nxVersion;
+  }
+  if (needsVitest) {
+    packagesToEnsure['@nx/vitest'] = nxVersion;
+  }
+  ensurePackage(packagesToEnsure);
+
   // Set up build target
   if (options.bundler === 'vite') {
     const { viteConfigurationGenerator, createOrEditViteConfig } =
-      ensurePackage<typeof import('@nx/vite')>('@nx/vite', nxVersion);
+      require('@nx/vite') as typeof import('@nx/vite');
     const viteTask = await viteConfigurationGenerator(tree, {
       uiFramework: 'none',
       project: options.projectName,
@@ -49,11 +65,8 @@ export async function addVite(
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // tests are already configured if bundler is vite
   ) {
-    const { createOrEditViteConfig } = ensurePackage<typeof import('@nx/vite')>(
-      '@nx/vite',
-      nxVersion
-    );
-    ensurePackage('@nx/vitest', nxVersion);
+    const { createOrEditViteConfig } =
+      require('@nx/vite') as typeof import('@nx/vite');
     const { configurationGenerator } = await import('@nx/vitest/generators');
     const vitestTask = await configurationGenerator(tree, {
       uiFramework: 'vue',
