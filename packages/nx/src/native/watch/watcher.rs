@@ -750,11 +750,11 @@ mod tests {
     }
 
     #[test]
-    fn plain_update_does_not_emit_delete() {
-        // Sanity: a normal in-place write to an existing file is
-        // classified as something that means "exists" (Update or
-        // Create depending on the platform's notify backend), never
-        // Delete.
+    fn plain_update_yields_update() {
+        // A normal in-place write to an existing file fires IN_MODIFY,
+        // which classifies as EventType::update. The accumulator
+        // should reflect that — not Create (file is not new) and not
+        // Delete (file is not gone).
         let dir = tempdir().expect("tempdir");
         let target = dir.path().join("foo.txt");
         fs::write(&target, "v1").expect("initial write");
@@ -767,8 +767,8 @@ mod tests {
         let evt = find_event(&events, "foo.txt")
             .unwrap_or_else(|| panic!("expected event for foo.txt; got {events:?}"));
         assert!(
-            !matches!(evt.r#type, EventType::delete),
-            "plain update should never classify as Delete; got {:?}",
+            matches!(evt.r#type, EventType::update),
+            "in-place update should classify as Update; got {:?}",
             evt.r#type
         );
     }
