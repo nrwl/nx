@@ -6,7 +6,8 @@ import { ProjectGraphProjectNode, Target, TaskGraph } from '@nx/devkit';
 
 function makeTaskGraph(
   tasks: Record<string, Target>,
-  dependencies: Record<string, string[]> = {}
+  dependencies: Record<string, string[]> = {},
+  continuousDependencies: Record<string, string[]> = {}
 ): TaskGraph {
   return {
     roots: Object.keys(tasks),
@@ -24,7 +25,7 @@ function makeTaskGraph(
       ])
     ),
     dependencies,
-    continuousDependencies: {},
+    continuousDependencies,
   };
 }
 
@@ -263,5 +264,58 @@ describe('getAllDependsOnFromTaskGraph', () => {
       taskGraph
     );
     expect(deps).toEqual(new Set(['shared:build']));
+  });
+
+  it('includes deps reachable only via continuousDependencies', () => {
+    const taskGraph = makeTaskGraph(
+      {
+        'a:build': { project: 'a', target: 'build' },
+        'b:serve': { project: 'b', target: 'serve' },
+      },
+      {
+        'a:build': [],
+      },
+      {
+        'a:build': ['b:serve'],
+      }
+    );
+    const deps = getAllDependsOnFromTaskGraph(['a:build'], taskGraph);
+    expect(deps).toEqual(new Set(['b:serve']));
+  });
+
+  it('walks transitive continuousDependencies through regular deps', () => {
+    const taskGraph = makeTaskGraph(
+      {
+        'a:build': { project: 'a', target: 'build' },
+        'b:build': { project: 'b', target: 'build' },
+        'c:serve': { project: 'c', target: 'serve' },
+        'd:build': { project: 'd', target: 'build' },
+      },
+      {
+        'a:build': ['b:build'],
+        'c:serve': ['d:build'],
+      },
+      {
+        'b:build': ['c:serve'],
+      }
+    );
+    const deps = getAllDependsOnFromTaskGraph(['a:build'], taskGraph);
+    expect(deps).toEqual(new Set(['b:build', 'c:serve', 'd:build']));
+  });
+
+  it('handles cycles via continuousDependencies safely', () => {
+    const taskGraph = makeTaskGraph(
+      {
+        'a:serve': { project: 'a', target: 'serve' },
+        'b:serve': { project: 'b', target: 'serve' },
+      },
+      {},
+      {
+        'a:serve': ['b:serve'],
+        'b:serve': ['a:serve'],
+      }
+    );
+    const deps = getAllDependsOnFromTaskGraph(['a:serve'], taskGraph);
+    expect(deps).toEqual(new Set(['b:serve']));
   });
 });

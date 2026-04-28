@@ -46,9 +46,14 @@ export function getAllDependsOnFromTaskGraph(
   const seen = new Set<string>();
   const stack: string[] = [];
 
+  const edges = (id: string): string[] => [
+    ...(taskGraph.dependencies[id] ?? []),
+    ...(taskGraph.continuousDependencies?.[id] ?? []),
+  ];
+
   for (const id of startTaskIds) {
     seen.add(id);
-    for (const dep of taskGraph.dependencies[id] ?? []) {
+    for (const dep of edges(id)) {
       stack.push(dep);
     }
   }
@@ -61,7 +66,7 @@ export function getAllDependsOnFromTaskGraph(
     seen.add(current);
     result.add(current);
 
-    for (const dep of taskGraph.dependencies[current] ?? []) {
+    for (const dep of edges(current)) {
       if (!seen.has(dep)) {
         stack.push(dep);
       }
