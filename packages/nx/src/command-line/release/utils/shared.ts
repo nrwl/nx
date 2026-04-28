@@ -487,10 +487,7 @@ Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
     let scopedProjects: Set<string> | null = null;
 
     if (scopePatterns.length > 0) {
-      const matches = findMatchingProjects(
-        scopePatterns,
-        projectGraph.nodes
-      );
+      const matches = findMatchingProjects(scopePatterns, projectGraph.nodes);
 
       // detect ambiguity
       for (const pattern of scopePatterns) {
