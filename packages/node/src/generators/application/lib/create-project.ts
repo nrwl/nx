@@ -38,7 +38,9 @@ export function addProject(
     project.targets.build = getEsBuildConfig(tree, project, options);
   } else if (options.bundler === 'webpack') {
     if (!hasWebpackPlugin(tree) && options.addPlugin === false) {
-      addBuildTargetDefaults(tree, `@nx/webpack:webpack`);
+      addBuildTargetDefaults(tree, `@nx/webpack:webpack`, 'build', [
+        TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+      ]);
       project.targets.build = getWebpackBuildConfig(tree, project, options);
     } else if (options.isNest) {
       // If we are using Nest that has the webpack plugin we need to override the

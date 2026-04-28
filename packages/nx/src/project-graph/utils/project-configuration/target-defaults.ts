@@ -96,15 +96,26 @@ function buildSyntheticTargetForRoot(
     ? resolveCommandSyntacticSugar(defaultTarget, root)
     : undefined;
 
-  // Specified-only: layer defaults on top; the downstream merge handles
-  // executor mismatches by replacing.
+  // Specified-only: layer defaults on top, but only when the resulting
+  // synthetic is compatible with the specified target. An incompatible
+  // synthetic (e.g. `targetDefaults['test-native'] = { executor:
+  // '@monodon/rust:test' }` while a polyglot plugin infers `test-native`
+  // with `nx:run-commands`) would otherwise replace the specified target
+  // wholesale during the downstream merge.
   if (resolvedSpecified && !resolvedDefault) {
-    return readAndPrepareTargetDefaults(
+    const targetDefaults = readAndPrepareTargetDefaults(
       targetName,
       resolvedSpecified.executor,
       root,
       targetDefaultsConfig
     );
+    if (
+      targetDefaults &&
+      !isCompatibleTarget(resolvedSpecified, targetDefaults)
+    ) {
+      return undefined;
+    }
+    return targetDefaults;
   }
 
   // Default-only.
@@ -120,13 +131,24 @@ function buildSyntheticTargetForRoot(
   if (!resolvedSpecified || !resolvedDefault) return undefined;
 
   // Both compatible: use the default plugin's executor for the lookup.
+  // The same incompatibility check applies — a project.json `{}` entry
+  // asks defaults to fill in the target, but the lookup can still fall
+  // back to a target-name keyed default with a foreign executor that
+  // would replace the inferred target. Skip the synthetic in that case.
   if (isCompatibleTarget(resolvedSpecified, resolvedDefault)) {
-    return readAndPrepareTargetDefaults(
+    const targetDefaults = readAndPrepareTargetDefaults(
       targetName,
       resolvedDefault.executor || resolvedSpecified.executor,
       root,
       targetDefaultsConfig
     );
+    if (
+      targetDefaults &&
+      !isCompatibleTarget(resolvedSpecified, targetDefaults)
+    ) {
+      return undefined;
+    }
+    return targetDefaults;
   }
 
   // Incompatible: default plugin will replace specified; only defaults
