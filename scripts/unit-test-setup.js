@@ -204,9 +204,14 @@ module.exports = () => {
   });
 
   /**
-   * Final backstop: if anything bypasses the workspace-context mock and
-   * reaches the rust constructor with the real workspace root, fail loudly
-   * rather than silently scanning the monorepo.
+   * Backstop: short-circuit native rust functions that recursively walk a
+   * directory when they're handed the real workspace root. The
+   * `workspace-context` mock above catches the high-level callers, but
+   * `expandOutputs` / `getFilesForOutputsBatch` are called directly from
+   * `tasks-runner/cache.ts` (`_expandOutputs(outputs, workspaceRoot)`) and
+   * miss that net — they construct nothing, but `expand_outputs` drives
+   * `nx_walker(realWorkspaceRoot)` and surfaces as the same cross-project
+   * violation set.
    */
   const nativePath = nxSrcPath('native');
   jest.doMock(nativePath, () => {
@@ -226,10 +231,17 @@ module.exports = () => {
       return new RealWorkspaceContext(root, cacheDir);
     }
     GuardedWorkspaceContext.prototype = RealWorkspaceContext.prototype;
+    const guardDirArg = (fn, fallback) =>
+      function (directory, ...rest) {
+        if (directory === realWorkspaceRoot) return fallback;
+        return fn(directory, ...rest);
+      };
     return {
       __esModule: true,
       ...actual,
       WorkspaceContext: GuardedWorkspaceContext,
+      expandOutputs: guardDirArg(actual.expandOutputs, []),
+      getFilesForOutputsBatch: guardDirArg(actual.getFilesForOutputsBatch, []),
     };
   });
 
