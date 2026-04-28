@@ -15,22 +15,39 @@ import { join } from 'node:path';
 // Temporary CI diagnostic: when a test in this file fails, dump the daemon
 // log so we can inspect the graph-recompute history that led to the partial
 // graph being served. Remove once the underlying daemon race is fixed.
+//
+// Use process.stderr.write directly because Jest captures/buffers console.*
+// per test and may not surface it when the test fails inside an expect.
 function dumpDaemonLogOnFailure() {
-  const daemonDir = join(tmpProjPath(), '.nx', 'workspace-data', 'd');
+  const out = (line: string) => process.stderr.write(line + '\n');
+  out('===== DAEMON LOG DIAGNOSTIC START =====');
+  let projPath: string;
+  try {
+    projPath = tmpProjPath();
+  } catch (e) {
+    out(`[daemon-log] tmpProjPath threw: ${(e as Error).message}`);
+    out('===== DAEMON LOG DIAGNOSTIC END =====');
+    return;
+  }
+  out(`[daemon-log] tmpProjPath=${projPath}`);
+  const daemonDir = join(projPath, '.nx', 'workspace-data', 'd');
+  out(`[daemon-log] looking under ${daemonDir}`);
   for (const name of ['daemon.log', 'daemon-error.log']) {
     const file = join(daemonDir, name);
     if (!existsSync(file)) {
-      console.log(`[daemon-log] ${file} does not exist`);
+      out(`[daemon-log] ${file} DOES NOT EXIST`);
       continue;
     }
     try {
-      console.log(`\n========== ${file} START ==========`);
-      console.log(readFileSync(file, 'utf8'));
-      console.log(`========== ${file} END ==========\n`);
+      const content = readFileSync(file, 'utf8');
+      out(`===== ${file} (${content.length} bytes) START =====`);
+      out(content);
+      out(`===== ${file} END =====`);
     } catch (e) {
-      console.log(`[daemon-log] failed to read ${file}:`, (e as Error).message);
+      out(`[daemon-log] failed to read ${file}: ${(e as Error).message}`);
     }
   }
+  out('===== DAEMON LOG DIAGNOSTIC END =====');
 }
 
 expect.addSnapshotSerializer({
