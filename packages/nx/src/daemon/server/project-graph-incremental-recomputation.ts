@@ -391,9 +391,19 @@ async function processFilesAndCreateAndSerializeProjectGraph(
   const chainToLatest = (notifyAbort: boolean) => {
     if (myGeneration === recomputationGeneration) return null;
     serverLogger.log(
-      `[CI-DEBUG] chainToLatest TRIGGERED gen=${myGeneration} latest=${recomputationGeneration} notifyAbort=${notifyAbort}`
+      `[CI-DEBUG] chainToLatest TRIGGERED gen=${myGeneration} latest=${recomputationGeneration} notifyAbort=${notifyAbort} cachedDefined=${!!cachedSerializedProjectGraphPromise}`
     );
     if (notifyAbort) notifyPluginsGraphAborted(plugins);
+    // Defensive: if the cache was cleared (e.g. resetInternalState ran)
+    // there is nothing to chain to. Returning undefined lets `if (stale)
+    // return stale` fall through and the compute commits stale data.
+    // Kick off a successor so we always have a real promise to chain to.
+    if (!cachedSerializedProjectGraphPromise) {
+      serverLogger.log(
+        `[CI-DEBUG] chainToLatest: cache cleared, kicking off successor gen=${myGeneration}`
+      );
+      kickOffRecompute();
+    }
     return cachedSerializedProjectGraphPromise;
   };
 
@@ -648,14 +658,27 @@ async function resetInternalState() {
   collectedUpdatedFiles.clear();
   collectedDeletedFiles.clear();
   resetWorkspaceContext();
+  // Immediately kick off a successor so any in-flight stale computes that
+  // hit chainToLatest find a real promise to chain to. Without this, a
+  // stale compute reads cachedSerializedProjectGraphPromise as undefined,
+  // its `if (stale) return stale` falls through (undefined is falsy), and
+  // it ends up committing partial/stale data to module state.
+  kickOffRecompute();
 }
 
 async function resetInternalStateIfNxDepsMissing() {
   try {
-    if (!fileExists(nxProjectGraph) && cachedSerializedProjectGraphPromise) {
+    const exists = fileExists(nxProjectGraph);
+    if (!exists && cachedSerializedProjectGraphPromise) {
+      serverLogger.log(
+        `[CI-DEBUG] resetInternalStateIfNxDepsMissing: ${nxProjectGraph} MISSING but cachedPromise exists -> reset`
+      );
       await resetInternalState();
     }
   } catch (e) {
+    serverLogger.log(
+      `[CI-DEBUG] resetInternalStateIfNxDepsMissing: fileExists threw ${e?.message ?? e} -> reset`
+    );
     await resetInternalState();
   }
 }
