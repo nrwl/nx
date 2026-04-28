@@ -1,7 +1,7 @@
 package dev.nx.gradle
 
-import com.google.gson.Gson
 import dev.nx.gradle.cli.parseArgs
+import dev.nx.gradle.runner.ResultEmitter
 import dev.nx.gradle.runner.runTasksInParallel
 import dev.nx.gradle.util.configureSingleLineLogger
 import dev.nx.gradle.util.logger
@@ -41,8 +41,9 @@ fun main(args: Array<String>) {
             options.excludeTasks,
             options.excludeTestTasks)
 
-    val reportJson = Gson().toJson(results)
-    println(reportJson)
+    // Emit per-task results so the Nx batch executor can stream them as an async iterator.
+    // ResultEmitter dedupes, so any results already emitted during the build are skipped here.
+    results.forEach { (taskId, result) -> ResultEmitter.emit(taskId, result) }
 
     val summary = results.values.groupBy { it.success }
     logger.info(
