@@ -307,17 +307,7 @@ impl WatchPipeline {
 
     /// Drives the pipeline: reads notify events and force-flush requests
     /// until force_flush_rx disconnects (the shutdown signal).
-    fn run(self, force_flush_rx: Receiver<ForceFlushReply>, callback: WatchEventCallback) {
-        let WatchPipeline {
-            filterer,
-            notify_rx,
-            mut watcher,
-            origin,
-            origin_path,
-            #[cfg(not(target_os = "macos"))]
-            ignore_globs,
-        } = self;
-
+    fn run(mut self, force_flush_rx: Receiver<ForceFlushReply>, callback: WatchEventCallback) {
         let mut accumulator: HashMap<PathBuf, WatchEventInternal> = HashMap::new();
         let mut burst_start: Option<Instant> = None;
         let mut flush_deadline: Option<Instant> = None;
@@ -328,17 +318,17 @@ impl WatchPipeline {
                 .unwrap_or_else(|| Duration::from_secs(60 * 60));
 
             select! {
-                recv(notify_rx) -> res => match res {
+                recv(self.notify_rx) -> res => match res {
                     Ok(event) => ingest_event(
                         event,
                         &mut accumulator,
                         &mut burst_start,
                         &mut flush_deadline,
-                        &filterer,
-                        &origin,
-                        &origin_path,
-                        #[cfg(not(target_os = "macos"))] &ignore_globs,
-                        #[cfg(not(target_os = "macos"))] &mut watcher,
+                        &self.filterer,
+                        &self.origin,
+                        &self.origin_path,
+                        #[cfg(not(target_os = "macos"))] &self.ignore_globs,
+                        #[cfg(not(target_os = "macos"))] &mut self.watcher,
                     ),
                     Err(_) => {
                         // Notify channel closed (watcher panicked / stopped).
@@ -356,17 +346,17 @@ impl WatchPipeline {
                         while let Ok(extra) = force_flush_rx.try_recv() {
                             replies.push(extra);
                         }
-                        while let Ok(event) = notify_rx.try_recv() {
+                        while let Ok(event) = self.notify_rx.try_recv() {
                             ingest_event(
                                 event,
                                 &mut accumulator,
                                 &mut burst_start,
                                 &mut flush_deadline,
-                                &filterer,
-                                &origin,
-                                &origin_path,
-                                #[cfg(not(target_os = "macos"))] &ignore_globs,
-                                #[cfg(not(target_os = "macos"))] &mut watcher,
+                                &self.filterer,
+                                &self.origin,
+                                &self.origin_path,
+                                #[cfg(not(target_os = "macos"))] &self.ignore_globs,
+                                #[cfg(not(target_os = "macos"))] &mut self.watcher,
                             );
                         }
                         let watch_events = snapshot_events(&accumulator);
