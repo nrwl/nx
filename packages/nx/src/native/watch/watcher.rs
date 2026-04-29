@@ -243,19 +243,6 @@ pub(crate) type WatchEventCallback =
 /// synchronously.
 type ForceFlushReply = Sender<Vec<WatchEvent>>;
 
-/// Adapter implementing `notify::EventHandler`. Lives inside the flush
-/// loop alongside the receiver, so notify events never cross a thread
-/// boundary except through the channel.
-struct NotifyForwarder {
-    tx: Sender<NotifyResult>,
-}
-
-impl notify::EventHandler for NotifyForwarder {
-    fn handle_event(&mut self, event: NotifyResult) {
-        let _ = self.tx.send(event);
-    }
-}
-
 /// Owns the entire watcher session: creates the filterer and notify
 /// watcher on its stack, registers initial watches, signals readiness,
 /// and runs the select loop until force_flush_rx disconnects.
@@ -275,9 +262,12 @@ fn run_flush_loop(
         }
     };
 
-    // notify_rx never leaves this function; NotifyForwarder owns the tx.
+    // notify_rx never leaves this function. The watcher captures notify_tx
+    // via the closure (notify-rs blanket-impls EventHandler for FnMut).
     let (notify_tx, notify_rx) = unbounded::<NotifyResult>();
-    let mut watcher = match notify::recommended_watcher(NotifyForwarder { tx: notify_tx }) {
+    let mut watcher = match notify::recommended_watcher(move |event| {
+        let _ = notify_tx.send(event);
+    }) {
         Ok(w) => w,
         Err(e) => {
             let _ = ready_tx.send(Err(format!("failed to create file watcher: {e}")));
