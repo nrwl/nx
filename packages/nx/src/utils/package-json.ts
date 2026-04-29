@@ -207,6 +207,7 @@ export function getMetadataFromPackageJson(
       packageMain: main,
       isInPackageManagerWorkspaces,
     },
+    ...nx?.metadata,
   };
 }
 

@@ -11,6 +11,7 @@ import { readJsonFile } from './fileutils';
 import {
   buildTargetFromScript,
   getDependencyVersionFromPackageJson,
+  getMetadataFromPackageJson,
   installPackageToTmp,
   PackageJson,
   readModulePackageJson,
@@ -807,5 +808,61 @@ catalogs:
       expect(reactVersion).toBe('^18.2.0');
       expect(lodashVersion).toBe('^4.17.21');
     });
+  });
+});
+
+describe('getMetadataFromPackageJson', () => {
+  it('should derive description and targetGroups from the package.json', () => {
+    const result = getMetadataFromPackageJson(
+      {
+        name: 'my-app',
+        version: '0.0.0',
+        description: 'Hello',
+        scripts: { build: 'echo 1' },
+      },
+      false
+    );
+    expect(result).toMatchObject({
+      description: 'Hello',
+      targetGroups: { 'NPM Scripts': ['build'] },
+    });
+  });
+
+  it('should preserve user-supplied keys on nx.metadata', () => {
+    const result = getMetadataFromPackageJson(
+      {
+        name: 'my-app',
+        version: '0.0.0',
+        scripts: { build: 'echo 1' },
+        nx: {
+          metadata: {
+            // arbitrary user-defined key consumed by external tooling
+            foo: 'bar',
+          } as any,
+        },
+      },
+      false
+    );
+    expect(result).toMatchObject({
+      targetGroups: { 'NPM Scripts': ['build'] },
+      foo: 'bar',
+    });
+  });
+
+  it('should let user-supplied metadata override auto-generated keys', () => {
+    const result = getMetadataFromPackageJson(
+      {
+        name: 'my-app',
+        version: '0.0.0',
+        description: 'Auto description',
+        nx: {
+          metadata: {
+            description: 'User description',
+          },
+        },
+      },
+      false
+    );
+    expect(result.description).toEqual('User description');
   });
 });

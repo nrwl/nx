@@ -1035,4 +1035,31 @@ describe('nx package.json workspaces plugin', () => {
       ]
     `);
   });
+
+  it('should preserve user-supplied nx.metadata keys alongside auto-generated metadata', () => {
+    vol.fromJSON(
+      {
+        'package.json': JSON.stringify({
+          name: 'lib-a',
+          nx: {
+            metadata: {
+              foo: 'bar',
+            },
+          },
+        }),
+      },
+      '/root'
+    );
+
+    const result = createNodeFromPackageJson(
+      'package.json',
+      '/root',
+      new PluginCache(),
+      false
+    );
+
+    expect(result.projects['.'].metadata).toMatchObject({
+      foo: 'bar',
+    });
+  });
 });
