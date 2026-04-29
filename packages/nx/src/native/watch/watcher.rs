@@ -9,7 +9,6 @@ use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use notify::{RecursiveMode, Watcher as NotifyWatcher};
 use parking_lot::Mutex;
 use tracing::trace;
-use tracing_subscriber::EnvFilter;
 
 #[cfg(not(target_os = "macos"))]
 use std::path::Path;
@@ -138,41 +137,21 @@ fn enumerate_watch_paths<P: AsRef<Path>>(directory: P, use_ignores: bool) -> Has
     path_set
 }
 
-/// Merge one event into the accumulator, keeping the most informative
-/// classification for the file's final state.
-///
-/// The previous "Delete > Create > Update" priority handled most cases but
-/// silently dropped a Create that arrived after a Delete in the same
-/// burst. That's exactly what `git checkout` triggers when it does
-/// unlink-then-create on a tracked file: inotify fires IN_DELETE then
-/// IN_CREATE for the same path, the Delete won, and downstream
-/// `updateFilesInContext` removed the (still-existing) file from the
-/// workspace context — silently dropping the project from the graph.
-///
-/// Rules (the table is exhaustive over (existing, incoming) pairs):
-///   - (_, Delete)       → Delete    (file is gone, final state wins)
-///   - (_, Create)       → Create    (file is in its initial state from
-///                                    our perspective; overrides an earlier
-///                                    Update or Delete)
-///   - (Delete, Update)  → Update    (file came back with new content)
-///   - (Update, Update)  → keep existing (idempotent)
-///   - (Create, Update)  → keep existing (file is new, the Update is the
-///                                       OS reporting its content; treat
-///                                       it as a single Create)
+/// Merge an event into the accumulator, keeping the most informative
+/// classification for the file's final state. Delete wins over earlier
+/// states; Create wins over earlier Update/Delete; Update wins only over
+/// Delete (a file that came back). `git checkout`'s unlink+create needs
+/// (Delete, Create) → Create — otherwise the workspace context drops the
+/// still-existing file.
 fn merge_event(
     accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
     incoming: WatchEventInternal,
 ) {
     if let Some(existing) = accumulator.get_mut(&incoming.path) {
         let replace = match (existing.r#type, incoming.r#type) {
-            // Delete final state always wins.
             (_, EventType::delete) => true,
-            // Create overrides earlier Update or Delete.
             (_, EventType::create) => true,
-            // Update overrides earlier Delete (file came back).
             (EventType::delete, EventType::update) => true,
-            // Otherwise keep existing — Create→Update and Update→Update
-            // both mean "file exists" and re-classifying loses info.
             _ => false,
         };
         if replace {
@@ -200,74 +179,55 @@ fn reset_burst(
     *flush_deadline = None;
 }
 
-/// Per-event ingest pipeline: filter → new-directory backfill → transform →
-/// merge into the accumulator → bump the flush deadline. Holds references
-/// to the session-level state (filterer, ignores, origin) so the per-event
-/// call site stays small. The notify watcher is passed in mutably on
-/// platforms that need to register additional watches synchronously
-/// (Linux/Windows); macOS gets recursive watching from FSEvents and never
-/// touches the watcher post-startup.
-struct EventIngestor<'a> {
-    filterer: &'a watch_filterer::WatchFilterer,
-    origin: &'a str,
-    origin_path: &'a str,
-    #[cfg(not(target_os = "macos"))]
-    ignore_globs: &'a NxGlobSet,
-}
-
-impl EventIngestor<'_> {
-    fn ingest(
-        &self,
-        event: NotifyResult,
-        accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
-        burst_start: &mut Option<Instant>,
-        flush_deadline: &mut Option<Instant>,
-        #[cfg(not(target_os = "macos"))] watcher: &mut notify::RecommendedWatcher,
-    ) {
-        let event = match event {
-            Ok(e) => e,
-            Err(notify_err) => {
-                tracing::warn!("notify error: {:?}", notify_err);
-                return;
-            }
-        };
-        trace!(?event, "raw event");
-
-        // Canonicalize and stat each path once; reuse the metadata across
-        // filter, new-directory detection, and transform.
-        let raw = RawWatchEvent::new(event);
-
-        if !self.filterer.check_event(&raw) {
+/// Per-event pipeline: filter → new-directory backfill → transform →
+/// merge → bump the flush deadline.
+fn ingest_event(
+    event: NotifyResult,
+    accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
+    burst_start: &mut Option<Instant>,
+    flush_deadline: &mut Option<Instant>,
+    filterer: &watch_filterer::WatchFilterer,
+    origin: &str,
+    origin_path: &str,
+    #[cfg(not(target_os = "macos"))] ignore_globs: &NxGlobSet,
+    #[cfg(not(target_os = "macos"))] watcher: &mut notify::RecommendedWatcher,
+) {
+    let event = match event {
+        Ok(e) => e,
+        Err(err) => {
+            tracing::warn!("notify error: {:?}", err);
             return;
         }
+    };
 
-        #[cfg(not(target_os = "macos"))]
-        {
-            let new_dirs = new_directories_from_event(&raw, self.ignore_globs);
-            if !new_dirs.is_empty() {
-                trace!(
-                    count = new_dirs.len(),
-                    "registering new directory watches synchronously"
-                );
-                register_and_backfill_new_dirs(watcher, &new_dirs, self.origin, accumulator);
-            }
-        }
+    // Canonicalize and stat each path once; reuse across filter,
+    // new-directory detection, and transform.
+    let raw = RawWatchEvent::new(event);
 
-        match transform_event_to_watch_events(&raw, self.origin_path) {
-            Ok(events) => {
-                for e in events {
-                    merge_event(accumulator, e);
-                }
-            }
-            Err(e) => {
-                tracing::warn!(?e, "event transform failed");
-            }
-        }
-
-        let now = Instant::now();
-        let bs = *burst_start.get_or_insert(now);
-        *flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
+    if !filterer.check_event(&raw) {
+        return;
     }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        let new_dirs = new_directories_from_event(&raw, ignore_globs);
+        if !new_dirs.is_empty() {
+            register_and_backfill_new_dirs(watcher, &new_dirs, origin, accumulator);
+        }
+    }
+
+    match transform_event_to_watch_events(&raw, origin_path) {
+        Ok(events) => {
+            for e in events {
+                merge_event(accumulator, e);
+            }
+        }
+        Err(e) => tracing::warn!(?e, "event transform failed"),
+    }
+
+    let now = Instant::now();
+    let bs = *burst_start.get_or_insert(now);
+    *flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
 }
 
 type NotifyResult = std::result::Result<notify::Event, notify::Error>;
@@ -296,10 +256,9 @@ impl notify::EventHandler for NotifyForwarder {
     }
 }
 
-/// Sole owner of the watcher session: creates the filterer and notify
-/// watcher locally on its stack, registers initial watches, signals
-/// readiness, and runs the select loop until the external force-flush
-/// channel disconnects (the shutdown signal).
+/// Owns the entire watcher session: creates the filterer and notify
+/// watcher on its stack, registers initial watches, signals readiness,
+/// and runs the select loop until force_flush_rx disconnects.
 fn run_flush_loop(
     origin: String,
     additional_globs: Vec<String>,
@@ -308,9 +267,6 @@ fn run_flush_loop(
     ready_tx: Sender<std::result::Result<(), String>>,
     callback: WatchEventCallback,
 ) {
-    trace!("flush loop started");
-
-    // Create the filterer for path-based ignore matching.
     let filterer = match watch_filterer::create_filter(&origin, &additional_globs, use_ignore) {
         Ok(f) => f,
         Err(e) => {
@@ -319,9 +275,7 @@ fn run_flush_loop(
         }
     };
 
-    // Internal notify channel — never escapes this function. NotifyForwarder
-    // lives inside the recommended_watcher and holds a tx clone; when this
-    // function returns, both drop together and the OS subscription releases.
+    // notify_rx never leaves this function; NotifyForwarder owns the tx.
     let (notify_tx, notify_rx) = unbounded::<NotifyResult>();
     let mut watcher = match notify::recommended_watcher(NotifyForwarder { tx: notify_tx }) {
         Ok(w) => w,
@@ -331,30 +285,21 @@ fn run_flush_loop(
         }
     };
 
-    // Register initial watch paths.
     #[cfg(target_os = "macos")]
-    {
-        // macOS: FSEvents handles recursive watching natively.
-        trace!("macOS: watching root recursively via FSEvents");
-        if let Err(e) = watcher.watch(std::path::Path::new(&origin), RecursiveMode::Recursive) {
-            tracing::error!(?e, "failed to watch root directory");
-        }
+    if let Err(e) = watcher.watch(std::path::Path::new(&origin), RecursiveMode::Recursive) {
+        tracing::error!(?e, "failed to watch root directory");
     }
     #[cfg(not(target_os = "macos"))]
     {
-        // Linux/Windows: enumerate non-ignored directories and watch each one
-        // non-recursively to avoid inotify watches on node_modules etc.
-        let path_set = enumerate_watch_paths(&origin, use_ignore);
-        trace!(count = path_set.len(), "registering initial watch paths");
-        for path in &path_set {
-            if let Err(e) = watcher.watch(path, RecursiveMode::NonRecursive) {
+        // Watch each non-ignored dir non-recursively so inotify never
+        // covers node_modules etc.
+        for path in enumerate_watch_paths(&origin, use_ignore) {
+            if let Err(e) = watcher.watch(&path, RecursiveMode::NonRecursive) {
                 tracing::warn!(?e, ?path, "failed to watch path");
             }
         }
     }
 
-    // Signal readiness: the caller's `watch_inner` blocks on this so it
-    // can return only after the OS subscription is live.
     let _ = ready_tx.send(Ok(()));
 
     #[cfg(not(target_os = "macos"))]
@@ -365,65 +310,54 @@ fn run_flush_loop(
         origin_path.push(MAIN_SEPARATOR);
     }
 
-    // Accumulator: events received since the last flush, merged by path.
-    // `burst_start` is the timestamp of the first event in the current
-    // burst; `flush_deadline` is the next wake-up (min of the idle deadline
-    // and the max-wait cap). Both reset together on flush.
     let mut accumulator: HashMap<PathBuf, WatchEventInternal> = HashMap::new();
     let mut burst_start: Option<Instant> = None;
     let mut flush_deadline: Option<Instant> = None;
 
-    let ingestor = EventIngestor {
-        filterer: &filterer,
-        origin: &origin,
-        origin_path: &origin_path,
-        #[cfg(not(target_os = "macos"))]
-        ignore_globs: &ignore_globs,
-    };
-
     loop {
-        // When a burst is in flight, wait until its deadline; otherwise
-        // sleep until either branch wakes us. There's no wall-clock cap on
-        // the idle wait — both channels report Disconnected when their
-        // owners drop, which is our exit signal.
         let idle_wait = flush_deadline
             .map(|d| d.saturating_duration_since(Instant::now()))
             .unwrap_or_else(|| Duration::from_secs(60 * 60));
 
         select! {
             recv(notify_rx) -> res => match res {
-                Ok(event) => ingestor.ingest(
+                Ok(event) => ingest_event(
                     event,
                     &mut accumulator,
                     &mut burst_start,
                     &mut flush_deadline,
+                    &filterer,
+                    &origin,
+                    &origin_path,
+                    #[cfg(not(target_os = "macos"))] &ignore_globs,
                     #[cfg(not(target_os = "macos"))] &mut watcher,
                 ),
-                // Notify channel closed: the watcher we own dropped (only
-                // happens if the recommended_watcher panicked or was
-                // explicitly stopped). Surface a final error to the
-                // callback so consumers don't wait forever.
                 Err(_) => {
+                    // Notify channel closed (watcher panicked / stopped).
                     callback(Err("watcher channel disconnected".to_string()));
                     break;
                 }
             },
             recv(force_flush_rx) -> res => match res {
                 Ok(reply) => {
-                    // Drain any queued notify events so the snapshot
-                    // reflects everything submitted up to this request,
-                    // and collect any other queued ForceFlush replies so
-                    // every concurrent caller gets the same answer.
+                    // Drain any queued notify events so the snapshot reflects
+                    // everything submitted up to this request, and collect any
+                    // other queued ForceFlush replies so concurrent callers
+                    // share the same answer.
                     let mut replies = vec![reply];
                     while let Ok(extra) = force_flush_rx.try_recv() {
                         replies.push(extra);
                     }
                     while let Ok(event) = notify_rx.try_recv() {
-                        ingestor.ingest(
+                        ingest_event(
                             event,
                             &mut accumulator,
                             &mut burst_start,
                             &mut flush_deadline,
+                            &filterer,
+                            &origin,
+                            &origin_path,
+                            #[cfg(not(target_os = "macos"))] &ignore_globs,
                             #[cfg(not(target_os = "macos"))] &mut watcher,
                         );
                     }
@@ -448,28 +382,18 @@ fn run_flush_loop(
                         );
                     }
                 }
-                // Force-flush channel closed: the Watcher struct dropped
-                // its sender (or stop() was called). This is the
-                // shutdown signal.
-                Err(_) => {
-                    trace!("force-flush channel disconnected, exiting flush loop");
-                    break;
-                }
+                // Force-flush channel closed → struct dropped or stop()
+                // called → shutdown.
+                Err(_) => break,
             },
             default(idle_wait) => {
-                // Either the idle window elapsed or the max-wait cap hit
-                // — flush whatever we accumulated and reset.
                 if !accumulator.is_empty() {
-                    let watch_events = snapshot_events(&accumulator);
-                    trace!(count = watch_events.len(), "flushing accumulated events");
-                    callback(Ok(watch_events));
+                    callback(Ok(snapshot_events(&accumulator)));
                 }
                 reset_burst(&mut accumulator, &mut burst_start, &mut flush_deadline);
             }
         }
     }
-
-    trace!("flush loop exited");
 }
 
 #[napi]
@@ -477,11 +401,9 @@ pub struct Watcher {
     pub origin: String,
     additional_globs: Vec<String>,
     use_ignore: bool,
-    /// External handle for sending force-flush requests to the flush
-    /// loop. Wrapped in `Mutex<Option>` so `stop()` can drop the sender
-    /// via `&self`; once dropped, the loop's `force_flush_rx` reports
-    /// `Disconnected` on its next select and the loop exits cleanly —
-    /// no separate `stop_flag` polling needed.
+    /// `Mutex<Option>` so `stop()` can drop the sender via `&self`.
+    /// When dropped, the flush loop's force_flush_rx reports
+    /// `Disconnected` on its next select and the loop exits.
     force_flush_tx: Mutex<Option<Sender<ForceFlushReply>>>,
 }
 
@@ -552,25 +474,15 @@ impl Watcher {
     }
 
     pub(crate) fn watch_inner(&mut self, callback: WatchEventCallback) -> Result<()> {
-        _ = tracing_subscriber::fmt()
-            .with_env_filter(EnvFilter::from_env("NX_NATIVE_LOGGING"))
-            .try_init();
+        crate::native::logger::enable_logger();
 
         let origin = self.origin.clone();
         let additional_globs = self.additional_globs.clone();
         let use_ignore = self.use_ignore;
 
-        // External force-flush channel. Its tx lives on the struct (so
-        // `force_flush_pending` and `stop` can reach it via `&self`); its
-        // rx is owned by the flush loop. When the struct drops or `stop`
-        // is called, this tx drops and the loop's `force_flush_rx`
-        // reports `Disconnected` — that's our shutdown signal.
         let (force_flush_tx, force_flush_rx) = unbounded::<ForceFlushReply>();
-        // Ready signal: lets the caller block until the loop has
-        // finished its synchronous startup (filterer compiled, notify
-        // watcher created, watch paths registered). This preserves the
-        // pre-refactor invariant that initial watches are in place by
-        // the time `watch_inner` returns.
+        // ready signal: caller blocks until the loop has registered the
+        // initial watches (or surfaces a startup failure).
         let (ready_tx, ready_rx) = bounded::<std::result::Result<(), String>>(1);
 
         std::thread::spawn(move || {
@@ -584,12 +496,9 @@ impl Watcher {
             );
         });
 
-        // Block until the loop has registered watches (or report its
-        // initialization failure).
         match ready_rx.recv_timeout(Duration::from_secs(2)) {
             Ok(Ok(())) => {
                 *self.force_flush_tx.lock() = Some(force_flush_tx);
-                trace!("watcher started");
                 Ok(())
             }
             Ok(Err(msg)) => Err(Error::new(Status::GenericFailure, msg)),
@@ -602,12 +511,7 @@ impl Watcher {
 
     #[napi]
     pub async fn stop(&self) -> Result<()> {
-        // Drop the only external sender for the force-flush channel.
-        // The flush loop's next `force_flush_rx` select arm reports
-        // `Disconnected` and the loop exits. The notify watcher (which
-        // lives on the loop's stack) drops with it, releasing the OS
-        // subscription.
-        trace!("stopping the watch process");
+        // Drop the sender → loop's force_flush_rx disconnects → loop exits.
         *self.force_flush_tx.lock() = None;
         Ok(())
     }
