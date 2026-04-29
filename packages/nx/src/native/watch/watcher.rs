@@ -243,62 +243,85 @@ pub(crate) type WatchEventCallback =
 /// synchronously.
 type ForceFlushReply = Sender<Vec<WatchEvent>>;
 
-/// Owns the entire watcher session: creates the filterer and notify
-/// watcher on its stack, registers initial watches, signals readiness,
-/// and runs the select loop until force_flush_rx disconnects.
-fn run_flush_loop(
+/// Everything the flush loop needs once the watcher is live: built once
+/// at startup by `WatchPipeline::new`, consumed by `run_flush_loop`.
+struct WatchPipeline {
+    filterer: watch_filterer::WatchFilterer,
+    notify_rx: Receiver<NotifyResult>,
+    /// Owns the notify_tx (via the closure passed to recommended_watcher).
+    /// Mutated on Linux/Windows when a new directory event triggers
+    /// synchronous registration.
+    watcher: notify::RecommendedWatcher,
     origin: String,
-    additional_globs: Vec<String>,
-    use_ignore: bool,
-    force_flush_rx: Receiver<ForceFlushReply>,
-    ready_tx: Sender<std::result::Result<(), String>>,
-    callback: WatchEventCallback,
-) {
-    let filterer = match watch_filterer::create_filter(&origin, &additional_globs, use_ignore) {
-        Ok(f) => f,
-        Err(e) => {
-            let _ = ready_tx.send(Err(format!("failed to create watch filter: {e}")));
-            return;
-        }
-    };
-
-    // notify_rx never leaves this function. The watcher captures notify_tx
-    // via the closure (notify-rs blanket-impls EventHandler for FnMut).
-    let (notify_tx, notify_rx) = unbounded::<NotifyResult>();
-    let mut watcher = match notify::recommended_watcher(move |event| {
-        let _ = notify_tx.send(event);
-    }) {
-        Ok(w) => w,
-        Err(e) => {
-            let _ = ready_tx.send(Err(format!("failed to create file watcher: {e}")));
-            return;
-        }
-    };
-
-    #[cfg(target_os = "macos")]
-    if let Err(e) = watcher.watch(std::path::Path::new(&origin), RecursiveMode::Recursive) {
-        tracing::error!(?e, "failed to watch root directory");
-    }
+    /// `origin` with a trailing path separator.
+    origin_path: String,
     #[cfg(not(target_os = "macos"))]
-    {
-        // Watch each non-ignored dir non-recursively so inotify never
-        // covers node_modules etc.
+    ignore_globs: Arc<NxGlobSet>,
+}
+
+impl WatchPipeline {
+    fn new(
+        origin: String,
+        additional_globs: &[String],
+        use_ignore: bool,
+    ) -> std::result::Result<Self, String> {
+        let filterer = watch_filterer::create_filter(&origin, additional_globs, use_ignore)
+            .map_err(|e| format!("failed to create watch filter: {e}"))?;
+
+        // notify_rx never leaves this struct. The watcher captures notify_tx
+        // via the closure (notify-rs blanket-impls EventHandler for FnMut).
+        let (notify_tx, notify_rx) = unbounded::<NotifyResult>();
+        let mut watcher = notify::recommended_watcher(move |event| {
+            let _ = notify_tx.send(event);
+        })
+        .map_err(|e| format!("failed to create file watcher: {e}"))?;
+
+        #[cfg(target_os = "macos")]
+        if let Err(e) = watcher.watch(std::path::Path::new(&origin), RecursiveMode::Recursive) {
+            tracing::error!(?e, "failed to watch root directory");
+        }
+        #[cfg(not(target_os = "macos"))]
         for path in enumerate_watch_paths(&origin, use_ignore) {
+            // Watch each non-ignored dir non-recursively so inotify never
+            // covers node_modules etc.
             if let Err(e) = watcher.watch(&path, RecursiveMode::NonRecursive) {
                 tracing::warn!(?e, ?path, "failed to watch path");
             }
         }
+
+        let mut origin_path = origin.clone();
+        if !origin_path.ends_with(MAIN_SEPARATOR) {
+            origin_path.push(MAIN_SEPARATOR);
+        }
+
+        Ok(WatchPipeline {
+            filterer,
+            notify_rx,
+            watcher,
+            origin,
+            origin_path,
+            #[cfg(not(target_os = "macos"))]
+            ignore_globs: build_ignore_glob_set(),
+        })
     }
+}
 
-    let _ = ready_tx.send(Ok(()));
-
-    #[cfg(not(target_os = "macos"))]
-    let ignore_globs = build_ignore_glob_set();
-
-    let mut origin_path = origin.clone();
-    if !origin_path.ends_with(MAIN_SEPARATOR) {
-        origin_path.push(MAIN_SEPARATOR);
-    }
+/// Drives the pipeline: reads notify events and force-flush requests
+/// until force_flush_rx disconnects (the shutdown signal).
+fn run_flush_loop(
+    pipeline: WatchPipeline,
+    force_flush_rx: Receiver<ForceFlushReply>,
+    callback: WatchEventCallback,
+) {
+    let WatchPipeline {
+        filterer,
+        notify_rx,
+        mut watcher,
+        origin,
+        origin_path,
+        #[cfg(not(target_os = "macos"))]
+        ignore_globs,
+    } = pipeline;
 
     let mut accumulator: HashMap<PathBuf, WatchEventInternal> = HashMap::new();
     let mut burst_start: Option<Instant> = None;
@@ -466,37 +489,22 @@ impl Watcher {
     pub(crate) fn watch_inner(&mut self, callback: WatchEventCallback) -> Result<()> {
         crate::native::logger::enable_logger();
 
-        let origin = self.origin.clone();
-        let additional_globs = self.additional_globs.clone();
-        let use_ignore = self.use_ignore;
+        // Build the pipeline synchronously on the calling thread so any
+        // startup error surfaces directly via the Result return —
+        // initial OS watches are guaranteed to be live by the time this
+        // method returns successfully.
+        let pipeline =
+            WatchPipeline::new(self.origin.clone(), &self.additional_globs, self.use_ignore)
+                .map_err(|msg| Error::new(Status::GenericFailure, msg))?;
 
         let (force_flush_tx, force_flush_rx) = unbounded::<ForceFlushReply>();
-        // ready signal: caller blocks until the loop has registered the
-        // initial watches (or surfaces a startup failure).
-        let (ready_tx, ready_rx) = bounded::<std::result::Result<(), String>>(1);
+        *self.force_flush_tx.lock() = Some(force_flush_tx);
 
         std::thread::spawn(move || {
-            run_flush_loop(
-                origin,
-                additional_globs,
-                use_ignore,
-                force_flush_rx,
-                ready_tx,
-                callback,
-            );
+            run_flush_loop(pipeline, force_flush_rx, callback);
         });
 
-        match ready_rx.recv_timeout(Duration::from_secs(2)) {
-            Ok(Ok(())) => {
-                *self.force_flush_tx.lock() = Some(force_flush_tx);
-                Ok(())
-            }
-            Ok(Err(msg)) => Err(Error::new(Status::GenericFailure, msg)),
-            Err(_) => Err(Error::new(
-                Status::GenericFailure,
-                "watcher startup timed out".to_string(),
-            )),
-        }
+        Ok(())
     }
 
     #[napi]
