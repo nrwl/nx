@@ -9,9 +9,9 @@ module.exports = {
   mode: 'jit',
   darkMode: 'class',
   content: [
-    path.join(__dirname, '{pages,app}/**/*.{js,ts,jsx,tsx}'),
-    '../ui-*/src/**/*.{js,ts,jsx,tsx}',
-    '../feature-*/src/**/*.{js,ts,jsx,tsx}',
+    path.join(__dirname, '{pages,app}/**/!(*.stories|*.spec).{js,ts,jsx,tsx}'),
+    '../ui-*/src/**/!(*.stories|*.spec).{js,ts,jsx,tsx}',
+    '../feature-*/src/**/!(*.stories|*.spec).{js,ts,jsx,tsx}',
   ],
   theme: {
     extend: {

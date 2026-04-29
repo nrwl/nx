@@ -940,11 +940,35 @@ describe('shared', () => {
               root: 'apps/app',
             },
           },
+          '@libs/lib-d': {
+            name: '@libs/lib-d',
+            type: 'lib',
+            data: {
+              root: 'libs/lib-d',
+            },
+          },
+          '@foo/graph': {
+            name: '@foo/graph',
+            type: 'lib',
+            data: {
+              root: 'foo/graph',
+            },
+          },
+          '@bar/graph': {
+            name: '@bar/graph',
+            type: 'lib',
+            data: {
+              root: 'bar/graph',
+            },
+          },
         },
         dependencies: {
           'lib-a': [],
           'lib-b': [],
           'lib-c': [],
+          '@libs/lib-d': [],
+          '@foo/graph': [],
+          '@bar/graph': [],
           app: [
             {
               source: 'app',
@@ -1252,6 +1276,76 @@ describe('shared', () => {
       );
 
       expect(result.size).toBe(0);
+    });
+
+    it('should match commit scope using short project name', async () => {
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'abc123',
+          ['libs/lib-d/src/index.ts'],
+          'feat(lib-d): add short scope feature'
+        ),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['@libs/lib-d'],
+        mockReleaseConfig!,
+        mockReleaseGraph
+      );
+
+      const scopedCommits = result.get('@libs/lib-d');
+
+      expect(scopedCommits).toHaveLength(1);
+      expect(scopedCommits?.[0].commit.shortHash).toBe('abc123');
+      expect(scopedCommits?.[0].isProjectScopedCommit).toBe(true);
+    });
+
+    it('should match commit scope using full project name', async () => {
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'def456',
+          ['libs/lib-d/src/index.ts'],
+          'feat(@libs/lib-d): add full scope feature'
+        ),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['@libs/lib-d'],
+        mockReleaseConfig!,
+        mockReleaseGraph
+      );
+
+      const scopedCommits = result.get('@libs/lib-d');
+
+      expect(scopedCommits).toHaveLength(1);
+      expect(scopedCommits?.[0].commit.shortHash).toBe('def456');
+      expect(scopedCommits?.[0].isProjectScopedCommit).toBe(true);
+    });
+
+    it('should throw when commit scope matches multiple projects (ambiguous scope)', async () => {
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'ghi789',
+          ['libs/lib-a/src/index.ts'],
+          'feat(graph): ambiguous scope'
+        ),
+      ];
+
+      try {
+        await getCommitsRelevantToProjects(
+          mockProjectGraph,
+          commits,
+          ['@foo/graph', '@bar/graph'],
+          mockReleaseConfig!,
+          mockReleaseGraph
+        );
+      } catch (err: any) {
+        expect(err.message).toContain('Ambiguous scope "graph"');
+      }
     });
 
     function createMockCommit(

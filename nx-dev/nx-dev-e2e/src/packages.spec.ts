@@ -57,10 +57,6 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/packages/angular/generators/setup-mf',
   },
   {
-    title: '@nx/angular:setup-tailwind',
-    path: '/packages/angular/generators/setup-tailwind',
-  },
-  {
     title: '@nx/angular:stories',
     path: '/packages/angular/generators/stories',
   },

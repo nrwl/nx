@@ -146,9 +146,9 @@ async function main() {
       warnIfUsingOutdatedGlobalInstall(GLOBAL_NX_VERSION, LOCAL_NX_VERSION);
       if (localNx.includes('.nx')) {
         const nxWrapperPath = localNx.replace(/\.nx.*/, '.nx/') + 'nxw.js';
-        await import(nxWrapperPath);
+        require(nxWrapperPath);
       } else {
-        await import(localNx);
+        require(localNx);
       }
     }
   }
