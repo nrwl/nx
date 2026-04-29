@@ -1,5 +1,5 @@
 use std::collections::{HashMap, HashSet};
-use std::path::{MAIN_SEPARATOR, PathBuf};
+use std::path::{MAIN_SEPARATOR, Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
@@ -8,10 +8,6 @@ use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use notify::{RecursiveMode, Watcher as NotifyWatcher};
 use parking_lot::Mutex;
-use tracing::trace;
-
-#[cfg(not(target_os = "macos"))]
-use std::path::Path;
 
 #[cfg(not(target_os = "macos"))]
 use crate::native::glob::{NxGlobSet, build_glob_set};
@@ -23,28 +19,20 @@ use crate::native::watch::types::{
 };
 use crate::native::watch::watch_filterer;
 
-/// Trailing-edge debounce window. The flush loop emits accumulated events
-/// after this much silence on the notify channel. Resets on every event
-/// so a burst of writes with gaps shorter than this coalesces into one flush.
+/// Trailing-edge debounce: emit accumulated events after this much silence.
 const IDLE_WINDOW: Duration = Duration::from_millis(100);
-
-/// Starvation cap. If events keep arriving faster than `IDLE_WINDOW`, the
-/// debounce would never fire. This is the hardest the flush can be deferred
-/// from the start of a burst, after which we flush anyway.
+/// Starvation cap from the start of a burst — flush even if events keep
+/// arriving faster than IDLE_WINDOW.
 const MAX_WAIT: Duration = Duration::from_millis(500);
 
-/// Build the hardcoded ignore GlobSet used to check if new directories should be watched.
 #[cfg(not(target_os = "macos"))]
 fn build_ignore_glob_set() -> Arc<NxGlobSet> {
     build_glob_set(HARDCODED_IGNORE_PATTERNS).expect("These static ignores always build")
 }
 
-/// Register each path with the watcher under a single lock acquisition.
-/// Non-recursive registration. A `MaxFilesWatch` failure terminates and
-/// is returned so the caller can surface it (the inotify watch limit is
-/// fatal — every subsequent registration would fail too). Other errors
-/// are logged at warn-level and skipped: a single bad path shouldn't
-/// prevent others from being watched.
+/// Returns Err on `MaxFilesWatch` — the inotify limit is fatal since
+/// every subsequent registration would fail too. Other errors are
+/// warn-logged and skipped.
 #[cfg(not(target_os = "macos"))]
 fn register_watches<I, P>(
     watcher: &mut notify::RecommendedWatcher,
@@ -66,8 +54,6 @@ where
     Ok(())
 }
 
-/// Enumerate all non-ignored directories to watch individually (non-recursively).
-/// This avoids registering inotify watches on node_modules and other ignored trees.
 #[cfg(not(target_os = "macos"))]
 fn enumerate_watch_paths<P: AsRef<Path>>(directory: P, use_ignores: bool) -> HashSet<PathBuf> {
     let walker = create_walker(&directory, use_ignores);
@@ -80,83 +66,32 @@ fn enumerate_watch_paths<P: AsRef<Path>>(directory: P, use_ignores: bool) -> Has
             }
         }
     }
-
-    // Always include the root directory itself
     path_set.insert(directory.as_ref().to_path_buf());
-
-    trace!(count = path_set.len(), "enumerated watch paths");
     path_set
-}
-
-/// Merge an event into the accumulator, keeping the most informative
-/// classification for the file's final state. Delete wins over earlier
-/// states; Create wins over earlier Update/Delete; Update wins only over
-/// Delete (a file that came back). `git checkout`'s unlink+create needs
-/// (Delete, Create) → Create — otherwise the workspace context drops the
-/// still-existing file.
-fn merge_event(
-    accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
-    incoming: WatchEventInternal,
-) {
-    if let Some(existing) = accumulator.get_mut(&incoming.path) {
-        let replace = match (existing.r#type, incoming.r#type) {
-            (_, EventType::delete) => true,
-            (_, EventType::create) => true,
-            (EventType::delete, EventType::update) => true,
-            _ => false,
-        };
-        if replace {
-            *existing = incoming;
-        }
-    } else {
-        accumulator.insert(incoming.path.clone(), incoming);
-    }
-}
-
-/// Build the napi-facing event list from the accumulator without mutating
-/// it. Pair with `reset_burst` after the events are successfully delivered.
-fn snapshot_events(accumulator: &HashMap<PathBuf, WatchEventInternal>) -> Vec<WatchEvent> {
-    accumulator.values().map(|e| e.into()).collect()
-}
-
-/// Clear the accumulator and burst tracking after a successful flush.
-fn reset_burst(
-    accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
-    burst_start: &mut Option<Instant>,
-    flush_deadline: &mut Option<Instant>,
-) {
-    accumulator.clear();
-    *burst_start = None;
-    *flush_deadline = None;
 }
 
 type NotifyResult = std::result::Result<notify::Event, notify::Error>;
 
-/// Generic event callback invoked from the flush loop. The napi `watch`
-/// entry point wraps a `ThreadsafeFunction` in one of these so the loop
-/// is testable without a JS runtime.
 pub(crate) type WatchEventCallback =
     Box<dyn Fn(std::result::Result<Vec<WatchEvent>, String>) + Send + Sync + 'static>;
 
-/// Reply channel for a single force-flush request. The flush loop sends
-/// the snapshot back to the caller so `force_flush_pending` returns
-/// synchronously.
 type ForceFlushReply = Sender<Vec<WatchEvent>>;
 
-/// Everything the flush loop needs once the watcher is live: built once
-/// at startup by `WatchPipeline::new`, consumed by `run_flush_loop`.
+/// Session config + loop state. Built on the calling thread, then run
+/// by the flush thread.
 struct WatchPipeline {
     filterer: watch_filterer::WatchFilterer,
     notify_rx: Receiver<NotifyResult>,
-    /// Owns the notify_tx (via the closure passed to recommended_watcher).
-    /// Mutated on Linux/Windows when a new directory event triggers
-    /// synchronous registration.
     watcher: notify::RecommendedWatcher,
     origin: String,
     /// `origin` with a trailing path separator.
     origin_path: String,
     #[cfg(not(target_os = "macos"))]
     ignore_globs: Arc<NxGlobSet>,
+
+    accumulator: HashMap<PathBuf, WatchEventInternal>,
+    burst_start: Option<Instant>,
+    flush_deadline: Option<Instant>,
 }
 
 impl WatchPipeline {
@@ -168,8 +103,6 @@ impl WatchPipeline {
         let filterer = watch_filterer::create_filter(&origin, additional_globs, use_ignore)
             .map_err(|e| format!("failed to create watch filter: {e}"))?;
 
-        // notify_rx never leaves this struct. The watcher captures notify_tx
-        // via the closure (notify-rs blanket-impls EventHandler for FnMut).
         let (notify_tx, notify_rx) = unbounded::<NotifyResult>();
         let mut watcher = notify::recommended_watcher(move |event| {
             let _ = notify_tx.send(event);
@@ -177,7 +110,7 @@ impl WatchPipeline {
         .map_err(|e| format!("failed to create file watcher: {e}"))?;
 
         #[cfg(target_os = "macos")]
-        if let Err(e) = watcher.watch(std::path::Path::new(&origin), RecursiveMode::Recursive) {
+        if let Err(e) = watcher.watch(Path::new(&origin), RecursiveMode::Recursive) {
             tracing::error!(?e, "failed to watch root directory");
         }
         #[cfg(not(target_os = "macos"))]
@@ -197,12 +130,42 @@ impl WatchPipeline {
             origin_path,
             #[cfg(not(target_os = "macos"))]
             ignore_globs: build_ignore_glob_set(),
+            accumulator: HashMap::new(),
+            burst_start: None,
+            flush_deadline: None,
         })
     }
 
-    /// Return the new, non-ignored directory paths from a single notify
-    /// event, if it is a directory-creation event. Used on Linux/Windows
-    /// to register watches synchronously when a directory appears.
+    /// Delete wins over earlier states; Create wins over earlier
+    /// Update/Delete; Update wins only over Delete. `git checkout`'s
+    /// unlink+create needs (Delete, Create) → Create — otherwise the
+    /// workspace context drops the still-existing file.
+    fn merge_event(&mut self, incoming: WatchEventInternal) {
+        if let Some(existing) = self.accumulator.get_mut(&incoming.path) {
+            let replace = match (existing.r#type, incoming.r#type) {
+                (_, EventType::delete) => true,
+                (_, EventType::create) => true,
+                (EventType::delete, EventType::update) => true,
+                _ => false,
+            };
+            if replace {
+                *existing = incoming;
+            }
+        } else {
+            self.accumulator.insert(incoming.path.clone(), incoming);
+        }
+    }
+
+    fn snapshot_events(&self) -> Vec<WatchEvent> {
+        self.accumulator.values().map(|e| e.into()).collect()
+    }
+
+    fn reset_burst(&mut self) {
+        self.accumulator.clear();
+        self.burst_start = None;
+        self.flush_deadline = None;
+    }
+
     #[cfg(not(target_os = "macos"))]
     fn new_directories_from_event(&self, event: &RawWatchEvent) -> Vec<PathBuf> {
         use crate::native::watch::types::meta_is_dir;
@@ -222,16 +185,13 @@ impl WatchPipeline {
             .collect()
     }
 
-    /// Register watches for newly created directories, walk them to
-    /// backfill files written before our watch became active, and
-    /// register watches for any nested subdirectories. The walk's create
-    /// events are merged into the accumulator so they emit on the next
-    /// flush. Returns Err on `MaxFilesWatch`.
+    /// Synchronously register watches for new directories, walk them to
+    /// backfill files written before the watch was active, and recurse
+    /// into any nested subdirectories. Returns Err on `MaxFilesWatch`.
     #[cfg(not(target_os = "macos"))]
     fn register_and_backfill_new_dirs(
         &mut self,
         dirs: &[PathBuf],
-        accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
     ) -> std::result::Result<(), notify::Error> {
         use crate::native::walker::nx_walker_sync;
 
@@ -244,14 +204,12 @@ impl WatchPipeline {
                 if full_path.is_dir() {
                     nested_dirs.insert(full_path);
                 } else if full_path.is_file() {
-                    merge_event(
-                        accumulator,
-                        WatchEventInternal {
-                            path: full_path,
-                            r#type: EventType::create,
-                            origin: self.origin.clone(),
-                        },
-                    );
+                    let origin = self.origin.clone();
+                    self.merge_event(WatchEventInternal {
+                        path: full_path,
+                        r#type: EventType::create,
+                        origin,
+                    });
                 }
             }
         }
@@ -259,17 +217,9 @@ impl WatchPipeline {
         register_watches(&mut self.watcher, &nested_dirs)
     }
 
-    /// Per-event pipeline: filter → new-directory backfill → transform →
-    /// merge → bump the flush deadline. Returns Err with a descriptive
-    /// message if a fatal condition (e.g., inotify watch limit reached)
-    /// requires the flush loop to exit and surface the error to JS.
-    fn ingest_event(
-        &mut self,
-        event: NotifyResult,
-        accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
-        burst_start: &mut Option<Instant>,
-        flush_deadline: &mut Option<Instant>,
-    ) -> std::result::Result<(), String> {
+    /// Returns Err if the loop should exit and surface the message via
+    /// the JS callback (e.g. inotify watch-limit reached).
+    fn ingest_event(&mut self, event: NotifyResult) -> std::result::Result<(), String> {
         let event = match event {
             Ok(e) => e,
             Err(err) => {
@@ -278,8 +228,6 @@ impl WatchPipeline {
             }
         };
 
-        // Canonicalize and stat each path once; reuse across filter,
-        // new-directory detection, and transform.
         let raw = RawWatchEvent::new(event);
 
         if !self.filterer.check_event(&raw) {
@@ -290,11 +238,9 @@ impl WatchPipeline {
         {
             let new_dirs = self.new_directories_from_event(&raw);
             if !new_dirs.is_empty() {
-                self.register_and_backfill_new_dirs(&new_dirs, accumulator)
-                    // The error message intentionally contains
-                    // "inotify_add_watch" so the daemon's existing fallback
-                    // matcher in project-graph.ts:432 fires (it falls back
-                    // to non-daemon mode when this substring appears).
+                self.register_and_backfill_new_dirs(&new_dirs)
+                    // Error message contains "inotify_add_watch" so the
+                    // daemon-side fallback at project-graph.ts:432 fires.
                     .map_err(|e| {
                         format!("inotify_add_watch failed registering new directory watch: {e}")
                     })?;
@@ -304,105 +250,78 @@ impl WatchPipeline {
         match transform_event_to_watch_events(&raw, &self.origin_path) {
             Ok(events) => {
                 for e in events {
-                    merge_event(accumulator, e);
+                    self.merge_event(e);
                 }
             }
             Err(e) => tracing::warn!(?e, "event transform failed"),
         }
 
         let now = Instant::now();
-        let bs = *burst_start.get_or_insert(now);
-        *flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
+        let bs = *self.burst_start.get_or_insert(now);
+        self.flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
         Ok(())
     }
 
-    /// Drives the pipeline: reads notify events and force-flush requests
-    /// until force_flush_rx disconnects (the shutdown signal).
+    /// Drives the pipeline until force_flush_rx disconnects.
     fn run(mut self, force_flush_rx: Receiver<ForceFlushReply>, callback: WatchEventCallback) {
-        let mut accumulator: HashMap<PathBuf, WatchEventInternal> = HashMap::new();
-        let mut burst_start: Option<Instant> = None;
-        let mut flush_deadline: Option<Instant> = None;
-
         loop {
-            let idle_wait = flush_deadline
+            let idle_wait = self
+                .flush_deadline
                 .map(|d| d.saturating_duration_since(Instant::now()))
                 .unwrap_or_else(|| Duration::from_secs(60 * 60));
 
             select! {
                 recv(self.notify_rx) -> res => match res {
                     Ok(event) => {
-                        if let Err(msg) = self.ingest_event(
-                            event,
-                            &mut accumulator,
-                            &mut burst_start,
-                            &mut flush_deadline,
-                        ) {
+                        if let Err(msg) = self.ingest_event(event) {
                             callback(Err(msg));
                             break;
                         }
                     }
                     Err(_) => {
-                        // Notify channel closed (watcher panicked / stopped).
                         callback(Err("watcher channel disconnected".to_string()));
                         break;
                     }
                 },
                 recv(force_flush_rx) -> res => match res {
                     Ok(reply) => {
-                        // Drain any queued notify events so the snapshot reflects
-                        // everything submitted up to this request, and collect any
-                        // other queued ForceFlush replies so concurrent callers
-                        // share the same answer.
+                        // Collect concurrent ForceFlush replies so they all
+                        // get the same snapshot; drain pending notify events
+                        // first so the snapshot reflects everything submitted.
                         let mut replies = vec![reply];
                         while let Ok(extra) = force_flush_rx.try_recv() {
                             replies.push(extra);
                         }
                         let mut fatal: Option<String> = None;
                         while let Ok(event) = self.notify_rx.try_recv() {
-                            if let Err(msg) = self.ingest_event(
-                                event,
-                                &mut accumulator,
-                                &mut burst_start,
-                                &mut flush_deadline,
-                            ) {
+                            if let Err(msg) = self.ingest_event(event) {
                                 fatal = Some(msg);
                                 break;
                             }
                         }
-                        let watch_events = snapshot_events(&accumulator);
-                        trace!(
-                            count = watch_events.len(),
-                            replies = replies.len(),
-                            "force-flushing events"
-                        );
+                        let watch_events = self.snapshot_events();
                         let mut any_delivered = false;
                         for r in replies {
                             match r.send(watch_events.clone()) {
                                 Ok(()) => any_delivered = true,
-                                Err(e) => tracing::warn!(?e, "force-flush reply failed; caller gave up"),
+                                Err(e) => tracing::warn!(?e, "force-flush reply failed"),
                             }
                         }
                         if any_delivered {
-                            reset_burst(&mut accumulator, &mut burst_start, &mut flush_deadline);
-                        } else {
-                            tracing::warn!(
-                                "all force-flush replies failed; events retained in accumulator"
-                            );
+                            self.reset_burst();
                         }
                         if let Some(msg) = fatal {
                             callback(Err(msg));
                             break;
                         }
                     }
-                    // Force-flush channel closed → struct dropped or stop()
-                    // called → shutdown.
-                    Err(_) => break,
+                    Err(_) => break, // struct dropped or stop() called
                 },
                 default(idle_wait) => {
-                    if !accumulator.is_empty() {
-                        callback(Ok(snapshot_events(&accumulator)));
+                    if !self.accumulator.is_empty() {
+                        callback(Ok(self.snapshot_events()));
                     }
-                    reset_burst(&mut accumulator, &mut burst_start, &mut flush_deadline);
+                    self.reset_burst();
                 }
             }
         }
@@ -422,22 +341,20 @@ pub struct Watcher {
 
 #[napi]
 impl Watcher {
-    /// Creates a new Watcher instance.
-    /// Will always ignore directories from HARDCODED_IGNORE_PATTERNS plus
-    /// watcher-specific patterns like vite/vitest timestamp files.
+    /// Always applies HARDCODED_IGNORE_PATTERNS plus watcher-specific
+    /// patterns (vite/vitest timestamp files), regardless of `use_ignore`.
     #[napi(constructor)]
     pub fn new(
         origin: String,
         additional_globs: Option<Vec<String>>,
         use_ignore: Option<bool>,
     ) -> Watcher {
-        // Start with hardcoded ignore patterns (same as walker.rs)
         let mut globs: Vec<String> = HARDCODED_IGNORE_PATTERNS
             .iter()
             .map(|p| (*p).to_string())
             .collect();
 
-        // Add watcher-specific patterns (temporary files from build tools)
+        // Vite/Vitest write timestamp files that we don't want to watch.
         globs.extend([
             "vitest.config.ts.timestamp*.mjs".into(),
             "vite.config.ts.timestamp*.mjs".into(),
@@ -469,9 +386,8 @@ impl Watcher {
         #[napi(ts_arg_type = "(err: string | null, events: WatchEvent[]) => void")]
         callback_tsfn: ThreadsafeFunction<Vec<WatchEvent>>,
     ) -> Result<()> {
-        // Bridge the napi ThreadsafeFunction into the generic callback the
-        // inner watch loop expects, so the loop has no compile-time
-        // dependency on napi types and can be exercised from Rust tests.
+        // Adapt the napi ThreadsafeFunction to the generic callback the
+        // loop uses, so the loop is testable without a JS runtime.
         let callback: WatchEventCallback = Box::new(move |res| match res {
             Ok(events) => {
                 callback_tsfn.call(Ok(events), ThreadsafeFunctionCallMode::NonBlocking);
@@ -489,10 +405,6 @@ impl Watcher {
     pub(crate) fn watch_inner(&mut self, callback: WatchEventCallback) -> Result<()> {
         crate::native::logger::enable_logger();
 
-        // Build the pipeline synchronously on the calling thread so any
-        // startup error surfaces directly via the Result return —
-        // initial OS watches are guaranteed to be live by the time this
-        // method returns successfully.
         let pipeline =
             WatchPipeline::new(self.origin.clone(), &self.additional_globs, self.use_ignore)
                 .map_err(|msg| Error::new(Status::GenericFailure, msg))?;
@@ -507,19 +419,15 @@ impl Watcher {
 
     #[napi]
     pub async fn stop(&self) -> Result<()> {
-        // Drop the sender → loop's force_flush_rx disconnects → loop exits.
         *self.force_flush_tx.lock() = None;
         Ok(())
     }
 
-    /// Synchronously drain any events the watcher has accumulated and
-    /// return them. Used by the daemon before serving a cached project
-    /// graph so it can absorb everything the watcher has seen since the
-    /// last flush — closing the IDLE_WINDOW debounce race where the
-    /// daemon would otherwise serve a stale graph.
-    ///
-    /// Returns an empty vec if the watcher hasn't started yet, the
-    /// flush loop has exited, or no events are buffered.
+    /// Synchronously drains the accumulator. Used by the daemon before
+    /// serving a cached project graph so events buffered inside the
+    /// IDLE_WINDOW debounce don't go missing. Returns an empty vec if
+    /// the watcher hasn't started, the loop has exited, or no events
+    /// are buffered.
     #[napi]
     pub fn force_flush_pending(&self) -> Vec<WatchEvent> {
         let tx = match self.force_flush_tx.lock().clone() {
@@ -530,8 +438,6 @@ impl Watcher {
         if tx.send(reply_tx).is_err() {
             return Vec::new();
         }
-        // Bound the wait so a wedged flush loop can't hang the daemon.
-        // The round-trip is normally sub-millisecond.
         reply_rx
             .recv_timeout(Duration::from_millis(500))
             .unwrap_or_default()
@@ -547,39 +453,22 @@ mod tests {
     use std::time::Duration;
     use tempfile::tempdir;
 
-    // All tests below drive the public Watcher API end-to-end:
-    //   inotify -> notify-rs -> ProcMsg channel -> EventIngestor
-    //   (filter + transform + merge) -> accumulator -> idle-window
-    //   flush -> callback
-    //
-    // We use `watch_inner` (a non-napi wrapper around the same loop the
-    // napi `watch` entry point uses) so tests don't need a JS runtime.
-    // The callback appends every emitted batch to a shared Vec, which
-    // each test inspects after waiting for the IDLE_WINDOW debounce.
+    // Tests drive the public Watcher API end-to-end with real fs ops
+    // through `watch_inner` (the non-napi inner of `watch`). The
+    // callback appends every emitted batch into a shared Vec.
 
-    /// Shared collector for events surfaced by the watcher callback.
     type Captured = Arc<Mutex<Vec<WatchEvent>>>;
 
-    /// Spin up a real `Watcher` on `dir` with a callback that stores
-    /// every emitted batch into `captured`. Returns the watcher (kept
-    /// alive for the test's lifetime) and the shared collector.
-    fn start_watcher(dir: &std::path::Path) -> (Watcher, Captured) {
-        // Canonicalize: on macOS `/tmp` is a symlink to `/private/tmp`,
-        // so `tempdir()` hands back `/tmp/.tmpXXX` while events arrive
-        // canonicalized as `/private/tmp/.tmpXXX`. The filterer uses
-        // `path.starts_with(origin)` to scope the synthetic gitignore
-        // built from the hardcoded ignore patterns, and that check
-        // would fail on macOS unless origin is also canonicalized —
-        // so events under `node_modules` etc. would slip past the
-        // filter. Canonicalizing here keeps both sides aligned.
+    fn start_watcher(dir: &Path) -> (Watcher, Captured) {
+        // Canonicalize: on macOS `/tmp` symlinks to `/private/tmp`, so
+        // events arrive with the canonical prefix while origin would
+        // not. The filterer's `path.starts_with(origin)` check needs
+        // them to agree.
         let canonical = dir.canonicalize().expect("canonicalize tempdir");
         let mut w = Watcher::new(
             canonical.to_str().expect("utf-8 path").to_string(),
             None,
-            // Disable gitignore filtering so the test isn't sensitive to
-            // any patterns that might be inherited from the platform's
-            // tmp tree.
-            Some(false),
+            Some(false), // disable gitignore so the platform's tmp tree can't influence the test
         );
         let captured: Captured = Arc::new(Mutex::new(Vec::new()));
         let captured_for_cb = captured.clone();
@@ -589,16 +478,12 @@ mod tests {
             }
         });
         w.watch_inner(callback).expect("start watch");
-        // Wait for the processing thread to register inotify watches.
-        // Without this the first fs op can fire before the watch is in
-        // place and we'd miss the event.
         std::thread::sleep(Duration::from_millis(150));
         (w, captured)
     }
 
-    /// Sleep long enough for IDLE_WINDOW (100ms) to elapse plus a small
-    /// margin for the inotify -> channel hop, then return whatever the
-    /// callback collected so far.
+    /// Wait past one IDLE_WINDOW so the loop emits, then return what
+    /// the callback collected.
     fn collect(captured: &Captured) -> Vec<WatchEvent> {
         std::thread::sleep(Duration::from_millis(250));
         captured.lock().unwrap().clone()
@@ -610,14 +495,10 @@ mod tests {
 
     #[test]
     fn git_style_unlink_then_write_yields_create() {
-        // Regression: `git checkout` does unlink + create on some
-        // tracked files. Pre-fix, the accumulator merged Delete + Create
-        // and kept Delete because "Delete always wins". Downstream
-        // updateFilesInContext then removed the (still-existing) file
-        // from the workspace context — silently dropping the project
-        // from the project graph. With the (Delete, Create) → Create
-        // rule the file shows up as a fresh Create, which downstream
-        // treats correctly as "exists".
+        // Regression: `git checkout` does unlink+create on tracked
+        // files. Pre-fix the accumulator's "Delete always wins" rule
+        // dropped the Create and updateFilesInContext removed the
+        // still-existing file from the workspace context.
         let dir = tempdir().expect("tempdir");
         let target = dir.path().join("foo.txt");
         fs::write(&target, "v1").expect("initial write");
@@ -639,14 +520,9 @@ mod tests {
 
     #[test]
     fn vim_style_atomic_rename_yields_create() {
-        // Vim and many editors save atomically: write content to a
-        // temp file in the same directory, then rename it over the
-        // target. inotify on the target sees IN_MOVED_TO, which
-        // notify-rs translates to Modify(Name(RenameMode::To)) →
-        // EventType::create. We assert that classification survives:
-        // an atomic rename over an existing file should land as
-        // Create, not Delete (which would erroneously remove the file
-        // from the workspace context's index).
+        // Vim-style save: write to a sibling tmp file, then rename it
+        // over the target. inotify on the target sees IN_MOVED_TO,
+        // which we classify as Create.
         let dir = tempdir().expect("tempdir");
         let target = dir.path().join("foo.txt");
         let staging = dir.path().join("foo.txt.swp");
@@ -654,13 +530,11 @@ mod tests {
 
         let (_watcher, captured) = start_watcher(dir.path());
 
-        // Atomic update: write to a sibling tmp, then rename over.
         fs::write(&staging, "v2-via-rename").expect("staging write");
         fs::rename(&staging, &target).expect("atomic rename");
 
         let events = collect(&captured);
-        // Match on exact name to avoid the staging file ("foo.txt.swp")
-        // accidentally satisfying an ends_with("foo.txt") check.
+        // Exact match so the staging file's event can't satisfy us.
         let evt = events
             .iter()
             .find(|e| e.path == "foo.txt")
@@ -674,10 +548,6 @@ mod tests {
 
     #[test]
     fn plain_update_yields_update() {
-        // A normal in-place write to an existing file fires IN_MODIFY,
-        // which classifies as EventType::update. The accumulator
-        // should reflect that — not Create (file is not new) and not
-        // Delete (file is not gone).
         let dir = tempdir().expect("tempdir");
         let target = dir.path().join("foo.txt");
         fs::write(&target, "v1").expect("initial write");
@@ -698,7 +568,6 @@ mod tests {
 
     #[test]
     fn rm_yields_delete() {
-        // Sanity: a real `rm` still produces a Delete after the fix.
         let dir = tempdir().expect("tempdir");
         let target = dir.path().join("foo.txt");
         fs::write(&target, "v1").expect("initial write");
@@ -766,22 +635,13 @@ mod tests {
 
     #[test]
     fn concurrent_force_flush_pending_callers_do_not_time_out() {
-        // Regression: the processing thread used to drop "extra"
-        // ForceFlush requests it found while draining the channel, so
-        // any caller whose request landed in that drained batch would
-        // wait the full 500ms recv_timeout before returning an empty
-        // Vec. Multiple concurrent CLIs hitting the daemon would each
-        // see that latency hit. The fix collects every queued reply
-        // channel and sends the same snapshot to all of them, so every
-        // caller returns immediately.
+        // Regression: pre-fix the loop dropped "extra" ForceFlush
+        // replies, so concurrent callers blocked on the 500 ms
+        // recv_timeout. Now every queued reply gets the same snapshot.
         let dir = tempdir().expect("tempdir");
         let (watcher, _captured) = start_watcher(dir.path());
         let watcher = Arc::new(watcher);
 
-        // Fire several concurrent force_flush_pending calls. Pre-fix,
-        // 1 would return immediately and the rest would each wait 500ms
-        // for a reply that never arrived, yielding an empty Vec. Post-
-        // fix, all of them collect into the same drained snapshot.
         let start = std::time::Instant::now();
         let mut handles = Vec::new();
         for _ in 0..8 {
@@ -793,26 +653,14 @@ mod tests {
         let elapsed = start.elapsed();
 
         assert_eq!(results.len(), 8);
-
-        // Pre-fix this would be ~500ms because 7 of 8 callers timed
-        // out. Post-fix every caller is answered as soon as the
-        // processing thread services the first ForceFlush, which is
-        // sub-millisecond. Allow generous slack for slow CI boxes but
-        // well under the 500ms timeout.
         assert!(
             elapsed < Duration::from_millis(250),
-            "concurrent force_flush_pending took {elapsed:?}, suggesting some callers \
-             hit the 500ms recv_timeout — i.e. their ForceFlush reply was dropped"
+            "concurrent force_flush_pending took {elapsed:?} — likely caller(s) hit the 500ms timeout"
         );
     }
 
     #[test]
     fn multi_file_burst_all_appear_in_one_flush() {
-        // A burst of writes within IDLE_WINDOW should coalesce into a
-        // single callback invocation containing every distinct path.
-        // Verifies that the accumulator handles multiple keys correctly
-        // and that the idle-window debounce doesn't split related
-        // events across batches.
         let dir = tempdir().expect("tempdir");
         let a = dir.path().join("a.txt");
         let b = dir.path().join("b.txt");
@@ -820,7 +668,6 @@ mod tests {
 
         let (_watcher, captured) = start_watcher(dir.path());
 
-        // Three writes back-to-back, well within IDLE_WINDOW (100ms).
         fs::write(&a, "a").expect("write a");
         fs::write(&b, "b").expect("write b");
         fs::write(&c, "c").expect("write c");
@@ -841,11 +688,6 @@ mod tests {
 
     #[test]
     fn rename_yields_delete_for_old_and_create_for_new() {
-        // Cross-name rename: the old path is gone, the new path is
-        // freshly present. inotify fires IN_MOVED_FROM (old) and
-        // IN_MOVED_TO (new); notify-rs maps these to
-        // Modify(Name(RenameMode::From|To)) which our classification
-        // turns into Delete and Create respectively.
         let dir = tempdir().expect("tempdir");
         let old = dir.path().join("old.txt");
         let new = dir.path().join("new.txt");
@@ -880,15 +722,12 @@ mod tests {
 
     #[test]
     fn hardcoded_ignored_paths_never_reach_callback() {
-        // Sanity guard against the filterer regressing: events under
-        // the always-ignored paths (node_modules, .git, .nx/cache,
-        // .nx/workspace-data, .yarn/cache) must never reach the
-        // callback. If they did, every Nx workspace would be flooded
-        // with event spam and the daemon would melt down.
+        // Guards against the filterer regressing — node_modules,
+        // .git, .nx/cache, .nx/workspace-data, .yarn/cache must never
+        // surface events.
         let dir = tempdir().expect("tempdir");
 
-        // Create the ignored-path files BEFORE starting the watcher,
-        // so the dirs themselves exist when watches register.
+        // Create dirs before the watcher starts.
         for ignored in [
             "node_modules",
             ".git",
@@ -903,8 +742,6 @@ mod tests {
 
         let (_watcher, captured) = start_watcher(dir.path());
 
-        // Touch a file in each ignored dir, plus one outside to prove
-        // the watcher is alive.
         for ignored in [
             "node_modules",
             ".git",
@@ -915,17 +752,15 @@ mod tests {
             fs::write(dir.path().join(ignored).join("touched.txt"), "y")
                 .unwrap_or_else(|e| panic!("failed write in {ignored}: {e}"));
         }
+        // Un-ignored write proves the watcher is alive.
         fs::write(dir.path().join("alive.txt"), "z").expect("alive write");
 
         let events = collect(&captured);
-
-        // The watcher must have surfaced the un-ignored write.
         assert!(
             events.iter().any(|e| e.path == "alive.txt"),
             "expected an event for alive.txt; got {events:?}"
         );
 
-        // None of the ignored prefixes should appear in any event path.
         for ignored in [
             "node_modules/",
             ".git/",
