@@ -53,7 +53,7 @@ let storedRustReferences: NxWorkspaceFilesExternals | null = null;
 export function getFileMap(): {
   fileMap: FileMap;
   rustReferences: NxWorkspaceFilesExternals | null;
-  /** @deprecated derivable from `fileMap`; retained for prebuilt nx-cloud workers that destructure it. */
+  /** @deprecated always `[]`; kept so cached nx-cloud workers that destructure it don't see `undefined`. */
   allWorkspaceFiles: FileData[];
 } {
   if (!!storedFileMap) {
@@ -74,20 +74,25 @@ export function getFileMap(): {
   }
 }
 
-// Pre-#34425 nx-cloud workers (e.g. cached v4 distributed-agent at `.nx/cache/cloud/<ver>/.../discrete-task-worker.js`)
-// call `hydrateFileMap(fileMap, allWorkspaceFiles, rustReferences)` via
-// `require('nx/src/project-graph/build-project-graph')`. Detect that legacy
-// 3-arg shape by the type of the 2nd arg so the cached workers keep functioning
-// during the v23 transition. See tmp/notes/nx-cloud-hydrate-file-map-regression.md.
 export function hydrateFileMap(
   fileMap: FileMap,
-  rustReferencesOrLegacyAllFiles: NxWorkspaceFilesExternals | FileData[],
-  legacyRustReferences?: NxWorkspaceFilesExternals
-) {
+  rustReferences: NxWorkspaceFilesExternals
+): void;
+/** @deprecated pass `(fileMap, rustReferences)`. Kept for cached nx-cloud workers still on the 3-arg form. */
+export function hydrateFileMap(
+  fileMap: FileMap,
+  allWorkspaceFiles: FileData[],
+  rustReferences: NxWorkspaceFilesExternals
+): void;
+export function hydrateFileMap(
+  fileMap: FileMap,
+  rustReferencesOrAllFiles: NxWorkspaceFilesExternals | FileData[],
+  maybeRustReferences?: NxWorkspaceFilesExternals
+): void {
   storedFileMap = fileMap;
-  storedRustReferences = Array.isArray(rustReferencesOrLegacyAllFiles)
-    ? (legacyRustReferences ?? null)
-    : rustReferencesOrLegacyAllFiles;
+  storedRustReferences = Array.isArray(rustReferencesOrAllFiles)
+    ? (maybeRustReferences ?? null)
+    : rustReferencesOrAllFiles;
 }
 
 export async function buildProjectGraphUsingProjectFileMap(
