@@ -1062,4 +1062,35 @@ describe('nx package.json workspaces plugin', () => {
       foo: 'bar',
     });
   });
+
+  it('should deeply merge nested objects in user-supplied nx.metadata with auto-generated metadata', () => {
+    vol.fromJSON(
+      {
+        'package.json': JSON.stringify({
+          name: 'lib-a',
+          scripts: { build: 'echo 1' },
+          nx: {
+            metadata: {
+              targetGroups: {
+                Custom: ['lint'],
+              },
+            },
+          },
+        }),
+      },
+      '/root'
+    );
+
+    const result = createNodeFromPackageJson(
+      'package.json',
+      '/root',
+      new PluginCache(),
+      false
+    );
+
+    expect(result.projects['.'].metadata.targetGroups).toEqual({
+      'NPM Scripts': ['build'],
+      Custom: ['lint'],
+    });
+  });
 });

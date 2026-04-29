@@ -865,4 +865,26 @@ describe('getMetadataFromPackageJson', () => {
     );
     expect(result.description).toEqual('User description');
   });
+
+  it('should deeply merge nested objects in user-supplied metadata with auto-generated metadata', () => {
+    const result = getMetadataFromPackageJson(
+      {
+        name: 'my-app',
+        version: '0.0.0',
+        scripts: { build: 'echo 1' },
+        nx: {
+          metadata: {
+            targetGroups: {
+              Custom: ['lint'],
+            },
+          } as any,
+        },
+      },
+      false
+    );
+    expect(result.targetGroups).toEqual({
+      'NPM Scripts': ['build'],
+      Custom: ['lint'],
+    });
+  });
 });
