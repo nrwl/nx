@@ -41,8 +41,9 @@ fun main(args: Array<String>) {
             options.excludeTasks,
             options.excludeTestTasks)
 
-    // Emit per-task results so the Nx batch executor can stream them as an async iterator.
-    // ResultEmitter dedupes, so any results already emitted during the build are skipped here.
+    // Streaming emission happens inside the build/test listeners; this fallback covers
+    // synthesized entries from finalizeTaskResults (tasks that never produced an event,
+    // e.g. excluded or skipped due to an earlier failure). ResultEmitter dedupes.
     results.forEach { (taskId, result) -> ResultEmitter.emit(taskId, result) }
 
     val summary = results.values.groupBy { it.success }

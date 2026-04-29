@@ -192,6 +192,18 @@ fun runTestLauncher(
   val excludeArgs = excludeTestTasks.flatMap { listOf("--exclude-task", it) }
   logger.info("excludeTestTasks $excludeArgs")
 
+  val streamedTestTaskIds = ConcurrentHashMap.newKeySet<String>()
+  val emitTestTask: (String) -> Unit = { nxTaskId ->
+    if (streamedTestTaskIds.add(nxTaskId)) {
+      val success = testTaskStatus[nxTaskId] ?: false
+      val startTime = testStartTimes[nxTaskId] ?: globalStart
+      val endTime = testEndTimes[nxTaskId] ?: System.currentTimeMillis()
+      // Per-class terminalOutput is filled in by finalizeTaskResults below; the
+      // streamed copy goes out empty since test stdout isn't naturally segmented per class.
+      ResultEmitter.emit(nxTaskId, TaskResult(success, startTime, endTime, ""))
+    }
+  }
+
   try {
     connection
         .newTestLauncher()
@@ -204,7 +216,8 @@ fun runTestLauncher(
           setStandardOutput(TeeOutputStream(outputStream, System.err))
           setStandardError(TeeOutputStream(errorStream, System.err))
           addProgressListener(
-              testListener(tasks, testTaskStatus, testStartTimes, testEndTimes), eventTypes)
+              testListener(tasks, testTaskStatus, testStartTimes, testEndTimes, emitTestTask),
+              eventTypes)
           withDetailedFailure()
         }
         .run()
