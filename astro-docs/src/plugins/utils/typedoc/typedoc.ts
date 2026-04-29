@@ -32,12 +32,12 @@ export const directoryToCategoryMap: Record<string, string> = {
 export function setupTypeDoc(logger: LoaderContext['logger']) {
   const tempDir = join(tmpdir(), `nx-devkit-docs`);
   const projectRoot = process.cwd();
-  const buildDir = join(workspaceRoot, 'dist', 'packages', 'devkit');
+  const tsconfigDir = join(tempDir, 'packages', 'devkit');
+  const generatedTsconfigPath = join(tsconfigDir, 'tsconfig.lib.json');
   const outDir = join(tempDir, 'docs', 'generated', 'devkit');
 
-  mkdirSync(buildDir, { recursive: true });
   mkdirSync(outDir, { recursive: true });
-  mkdirSync(join(tempDir, 'packages', 'devkit'), { recursive: true });
+  mkdirSync(tsconfigDir, { recursive: true });
 
   const devkitPath = join(workspaceRoot, 'packages', 'devkit');
   const tsconfigLibPath = join(devkitPath, 'tsconfig.lib.json');
@@ -53,23 +53,20 @@ export function setupTypeDoc(logger: LoaderContext['logger']) {
     );
   }
 
-  cpSync(tsconfigLibPath, join(buildDir, 'tsconfig.lib.json'));
+  cpSync(tsconfigLibPath, generatedTsconfigPath);
   if (existsSync(tsconfigPath)) {
-    cpSync(tsconfigPath, join(tempDir, 'packages', 'devkit', 'tsconfig.json'));
+    cpSync(tsconfigPath, join(tsconfigDir, 'tsconfig.json'));
   }
   if (existsSync(tsconfigBasePath)) {
     cpSync(tsconfigBasePath, join(tempDir, 'tsconfig.base.json'));
   }
 
-  let tsconfigContent = readFileSync(
-    join(buildDir, 'tsconfig.lib.json'),
-    'utf-8'
-  );
+  let tsconfigContent = readFileSync(generatedTsconfigPath, 'utf-8');
   const tsconfigObj = JSON.parse(tsconfigContent);
 
   // remap to generated tsconfig to resolve correct local packages
   if (tsconfigObj.extends === '../../tsconfig.base.json') {
-    tsconfigObj.extends = join(tempDir, 'packages', 'devkit', 'tsconfig.json');
+    tsconfigObj.extends = join(tsconfigDir, 'tsconfig.json');
   }
 
   tsconfigObj.compilerOptions = tsconfigObj.compilerOptions || {};
@@ -98,10 +95,17 @@ export function setupTypeDoc(logger: LoaderContext['logger']) {
     'node_modules/@types/jest/**',
   ];
 
-  writeFileSync(
-    join(buildDir, 'tsconfig.lib.json'),
-    JSON.stringify(tsconfigObj, null, 2)
+  // The tsconfig now lives in tempDir but it operates on devkit's compiled
+  // dist (entry point is dist/packages/devkit/index.d.ts). Resolve include
+  // patterns to absolute paths anchored at the dist directory so TypeDoc
+  // picks up the .d.ts files instead of looking for sources next to the temp
+  // tsconfig.
+  const distDevkitDir = join(workspaceRoot, 'dist', 'packages', 'devkit');
+  tsconfigObj.include = (tsconfigObj.include || ['**/*.ts']).map(
+    (pattern: string) => join(distDevkitDir, pattern)
   );
+
+  writeFileSync(generatedTsconfigPath, JSON.stringify(tsconfigObj, null, 2));
 
   rmSync(outDir, { recursive: true, force: true });
 
@@ -127,7 +131,7 @@ export function setupTypeDoc(logger: LoaderContext['logger']) {
   return {
     projectRoot,
     outDir,
-    buildDir,
+    generatedTsconfigPath,
     defaultTypedocOptions,
   };
 }

@@ -53,7 +53,20 @@
         "production",
         "^production",
         "{projectRoot}/src/content/banner.json",
-        { "env": "NX_DEV_URL" }
+        { "env": "NX_DEV_URL" },
+        "{workspaceRoot}/packages/*/package.json",
+        "{workspaceRoot}/packages/*/{generators,executors,migrations}.json",
+        "{workspaceRoot}/packages/*/src/{generators,executors}/**/schema.json",
+        "{workspaceRoot}/packages/*/src/migrations/**/*.md",
+        "{workspaceRoot}/packages/*/docs/**/*.md",
+        {
+          "json": "{workspaceRoot}/tsconfig.json",
+          "fields": ["compilerOptions"]
+        },
+        {
+          "dependentTasksOutputFiles": "**/*.{d.ts,json,md,js,cjs,mjs}",
+          "transitive": true
+        }
       ],
       "outputs": [
         "{projectRoot}/dist",
