@@ -2,7 +2,6 @@ import {
   ExecutorContext,
   output,
   ProjectGraphProjectNode,
-  Target,
   TaskGraph,
   workspaceRoot,
 } from '@nx/devkit';
@@ -19,9 +18,8 @@ import {
 import { dirname, join } from 'path';
 import { spawn } from 'child_process';
 import {
-  getAllDependsOn,
-  getExcludeTasks,
-  getGradleTaskName,
+  getAllDependsOnFromTaskGraph,
+  getExcludeTasksFromTaskGraph,
 } from './get-exclude-task';
 import { GradlePluginOptions } from '../../plugin/utils/gradle-plugin-options';
 
@@ -46,11 +44,10 @@ export default async function gradleBatch(
       join(projectRoot, 'project.json'),
       workspaceRoot,
       customGradleExecutableDirectory
-    ); // find gradlew near project root
+    );
     gradlewPath = join(context.root, gradlewPath);
     const root = dirname(gradlewPath);
 
-    // set args with passed in args and overrides in command line
     const input = inputs[taskGraph.roots[0]];
 
     let args =
@@ -70,7 +67,8 @@ export default async function gradleBatch(
         taskIds,
         taskGraph,
         inputs,
-        context.projectGraph.nodes
+        context.projectGraph.nodes,
+        context.taskGraph ?? taskGraph
       );
 
     const batchResults = await runTasksInBatch(
@@ -103,28 +101,21 @@ export default async function gradleBatch(
   }
 }
 
-/**
- * Get the gradlew task ids to run
- */
 export function getGradlewTasksToRun(
   taskIds: string[],
   taskGraph: TaskGraph,
   inputs: Record<string, GradleExecutorSchema>,
-  nodes: Record<string, ProjectGraphProjectNode>
+  nodes: Record<string, ProjectGraphProjectNode>,
+  fullTaskGraph: TaskGraph = taskGraph
 ) {
-  const tasksWithExclude: Set<Target> = new Set();
-  const testTasksWithExclude: Set<Target> = new Set();
-  const tasksWithoutExclude: Set<Target> = new Set();
+  const tasksWithExcludeIds = new Set<string>();
+  const testTasksWithExcludeIds = new Set<string>();
+  const tasksWithoutExcludeIds = new Set<string>();
   const gradlewTasksToRun: Record<string, GradleExecutorSchema> = {};
-  const includeDependsOnTasks: Set<string> = new Set();
+  const includeDependsOnTasks = new Set<string>();
 
   for (const taskId of taskIds) {
-    const task = taskGraph.tasks[taskId];
-    const input = inputs[task.id];
-    const taskTarget: Target = {
-      project: task.target.project,
-      target: task.target.target,
-    };
+    const input = inputs[taskId];
 
     gradlewTasksToRun[taskId] = input;
 
@@ -136,45 +127,37 @@ export function getGradlewTasksToRun(
 
     if (input.excludeDependsOn) {
       if (input.testClassName) {
-        testTasksWithExclude.add(taskTarget);
+        testTasksWithExcludeIds.add(taskId);
       } else {
-        tasksWithExclude.add(taskTarget);
+        tasksWithExcludeIds.add(taskId);
       }
     } else {
-      tasksWithoutExclude.add(taskTarget);
+      tasksWithoutExcludeIds.add(taskId);
     }
   }
 
-  const allRunning = new Set<Target>(
-    taskIds.map((id) => ({
-      project: taskGraph.tasks[id].target.project,
-      target: taskGraph.tasks[id].target.target,
-    }))
-  );
-  for (const task of tasksWithoutExclude) {
-    const dependencies = getAllDependsOn(nodes, task.project, task.target);
-    dependencies.forEach((dep) => allRunning.add(dep));
+  const runningTaskIds = new Set<string>(taskIds);
+  for (const depId of getAllDependsOnFromTaskGraph(
+    tasksWithoutExcludeIds,
+    fullTaskGraph
+  )) {
+    runningTaskIds.add(depId);
   }
 
-  const excludeTasks = getExcludeTasks(
-    tasksWithExclude,
+  const excludeTasks = getExcludeTasksFromTaskGraph(
+    tasksWithExcludeIds,
+    runningTaskIds,
+    fullTaskGraph,
     nodes,
-    allRunning,
     includeDependsOnTasks
   );
 
-  const allTestsDependsOn = new Set<Target>();
-  for (const task of testTasksWithExclude) {
-    const taskDependsOn = getAllDependsOn(nodes, task.project, task.target);
-    taskDependsOn.forEach((dep) => allTestsDependsOn.add(dep));
-  }
-  const excludeTestTasks = new Set<string>();
-  for (const task of allTestsDependsOn) {
-    const gradleTaskName = getGradleTaskName(task, nodes);
-    if (gradleTaskName) {
-      excludeTestTasks.add(gradleTaskName);
-    }
-  }
+  const excludeTestTasks = getExcludeTasksFromTaskGraph(
+    testTasksWithExcludeIds,
+    new Set(),
+    fullTaskGraph,
+    nodes
+  );
 
   return {
     gradlewTasksToRun,
