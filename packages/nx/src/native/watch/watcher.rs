@@ -179,57 +179,6 @@ fn reset_burst(
     *flush_deadline = None;
 }
 
-/// Per-event pipeline: filter → new-directory backfill → transform →
-/// merge → bump the flush deadline.
-fn ingest_event(
-    event: NotifyResult,
-    accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
-    burst_start: &mut Option<Instant>,
-    flush_deadline: &mut Option<Instant>,
-    filterer: &watch_filterer::WatchFilterer,
-    origin: &str,
-    origin_path: &str,
-    #[cfg(not(target_os = "macos"))] ignore_globs: &NxGlobSet,
-    #[cfg(not(target_os = "macos"))] watcher: &mut notify::RecommendedWatcher,
-) {
-    let event = match event {
-        Ok(e) => e,
-        Err(err) => {
-            tracing::warn!("notify error: {:?}", err);
-            return;
-        }
-    };
-
-    // Canonicalize and stat each path once; reuse across filter,
-    // new-directory detection, and transform.
-    let raw = RawWatchEvent::new(event);
-
-    if !filterer.check_event(&raw) {
-        return;
-    }
-
-    #[cfg(not(target_os = "macos"))]
-    {
-        let new_dirs = new_directories_from_event(&raw, ignore_globs);
-        if !new_dirs.is_empty() {
-            register_and_backfill_new_dirs(watcher, &new_dirs, origin, accumulator);
-        }
-    }
-
-    match transform_event_to_watch_events(&raw, origin_path) {
-        Ok(events) => {
-            for e in events {
-                merge_event(accumulator, e);
-            }
-        }
-        Err(e) => tracing::warn!(?e, "event transform failed"),
-    }
-
-    let now = Instant::now();
-    let bs = *burst_start.get_or_insert(now);
-    *flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
-}
-
 type NotifyResult = std::result::Result<notify::Event, notify::Error>;
 
 /// Generic event callback invoked from the flush loop. The napi `watch`
@@ -305,6 +254,58 @@ impl WatchPipeline {
         })
     }
 
+    /// Per-event pipeline: filter → new-directory backfill → transform →
+    /// merge → bump the flush deadline.
+    fn ingest_event(
+        &mut self,
+        event: NotifyResult,
+        accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
+        burst_start: &mut Option<Instant>,
+        flush_deadline: &mut Option<Instant>,
+    ) {
+        let event = match event {
+            Ok(e) => e,
+            Err(err) => {
+                tracing::warn!("notify error: {:?}", err);
+                return;
+            }
+        };
+
+        // Canonicalize and stat each path once; reuse across filter,
+        // new-directory detection, and transform.
+        let raw = RawWatchEvent::new(event);
+
+        if !self.filterer.check_event(&raw) {
+            return;
+        }
+
+        #[cfg(not(target_os = "macos"))]
+        {
+            let new_dirs = new_directories_from_event(&raw, &self.ignore_globs);
+            if !new_dirs.is_empty() {
+                register_and_backfill_new_dirs(
+                    &mut self.watcher,
+                    &new_dirs,
+                    &self.origin,
+                    accumulator,
+                );
+            }
+        }
+
+        match transform_event_to_watch_events(&raw, &self.origin_path) {
+            Ok(events) => {
+                for e in events {
+                    merge_event(accumulator, e);
+                }
+            }
+            Err(e) => tracing::warn!(?e, "event transform failed"),
+        }
+
+        let now = Instant::now();
+        let bs = *burst_start.get_or_insert(now);
+        *flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
+    }
+
     /// Drives the pipeline: reads notify events and force-flush requests
     /// until force_flush_rx disconnects (the shutdown signal).
     fn run(mut self, force_flush_rx: Receiver<ForceFlushReply>, callback: WatchEventCallback) {
@@ -319,16 +320,11 @@ impl WatchPipeline {
 
             select! {
                 recv(self.notify_rx) -> res => match res {
-                    Ok(event) => ingest_event(
+                    Ok(event) => self.ingest_event(
                         event,
                         &mut accumulator,
                         &mut burst_start,
                         &mut flush_deadline,
-                        &self.filterer,
-                        &self.origin,
-                        &self.origin_path,
-                        #[cfg(not(target_os = "macos"))] &self.ignore_globs,
-                        #[cfg(not(target_os = "macos"))] &mut self.watcher,
                     ),
                     Err(_) => {
                         // Notify channel closed (watcher panicked / stopped).
@@ -347,16 +343,11 @@ impl WatchPipeline {
                             replies.push(extra);
                         }
                         while let Ok(event) = self.notify_rx.try_recv() {
-                            ingest_event(
+                            self.ingest_event(
                                 event,
                                 &mut accumulator,
                                 &mut burst_start,
                                 &mut flush_deadline,
-                                &self.filterer,
-                                &self.origin,
-                                &self.origin_path,
-                                #[cfg(not(target_os = "macos"))] &self.ignore_globs,
-                                #[cfg(not(target_os = "macos"))] &mut self.watcher,
                             );
                         }
                         let watch_events = snapshot_events(&accumulator);
