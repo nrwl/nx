@@ -39,33 +39,17 @@ fn build_ignore_glob_set() -> Arc<NxGlobSet> {
     build_glob_set(HARDCODED_IGNORE_PATTERNS).expect("These static ignores always build")
 }
 
-/// Return the new, non-ignored directory paths from a single notify event,
-/// if it is a directory-creation event. Used on Linux/Windows to register
-/// watches synchronously when a directory appears.
-#[cfg(not(target_os = "macos"))]
-fn new_directories_from_event(event: &RawWatchEvent, ignore_globs: &NxGlobSet) -> Vec<PathBuf> {
-    use crate::native::watch::types::meta_is_dir;
-    use notify::{EventKind, event::CreateKind};
-
-    if !matches!(
-        event.kind(),
-        EventKind::Create(CreateKind::Folder) | EventKind::Create(CreateKind::Any)
-    ) {
-        return Vec::new();
-    }
-
-    event
-        .paths()
-        .filter(|(path, metadata)| meta_is_dir(metadata) && !ignore_globs.is_match(path))
-        .map(|(path, _)| path.to_path_buf())
-        .collect()
-}
-
 /// Register each path with the watcher under a single lock acquisition.
-/// Non-recursive mode; failure is logged but not propagated since a single
-/// failing path shouldn't prevent others from being watched.
+/// Non-recursive registration. A `MaxFilesWatch` failure terminates and
+/// is returned so the caller can surface it (the inotify watch limit is
+/// fatal — every subsequent registration would fail too). Other errors
+/// are logged at warn-level and skipped: a single bad path shouldn't
+/// prevent others from being watched.
 #[cfg(not(target_os = "macos"))]
-fn register_watches<I, P>(watcher: &mut notify::RecommendedWatcher, paths: I)
+fn register_watches<I, P>(
+    watcher: &mut notify::RecommendedWatcher,
+    paths: I,
+) -> std::result::Result<(), notify::Error>
 where
     I: IntoIterator<Item = P>,
     P: AsRef<Path>,
@@ -73,46 +57,13 @@ where
     for path in paths {
         let path = path.as_ref();
         if let Err(e) = watcher.watch(path, RecursiveMode::NonRecursive) {
+            if matches!(e.kind, notify::ErrorKind::MaxFilesWatch) {
+                return Err(e);
+            }
             tracing::warn!(?e, ?path, "failed to watch directory");
         }
     }
-}
-
-/// Register watches for newly created directories, walk them to backfill
-/// files written before our watch became active, and register watches for
-/// any nested subdirectories encountered. The walk's create events are
-/// merged into the accumulator so they emit on the next flush.
-#[cfg(not(target_os = "macos"))]
-fn register_and_backfill_new_dirs(
-    watcher: &mut notify::RecommendedWatcher,
-    dirs: &[PathBuf],
-    origin: &str,
-    accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
-) {
-    use crate::native::walker::nx_walker_sync;
-
-    register_watches(watcher, dirs);
-
-    let mut nested_dirs: HashSet<PathBuf> = HashSet::new();
-    for dir in dirs {
-        for rel_path in nx_walker_sync(dir, None) {
-            let full_path = dir.join(&rel_path);
-            if full_path.is_dir() {
-                nested_dirs.insert(full_path);
-            } else if full_path.is_file() {
-                merge_event(
-                    accumulator,
-                    WatchEventInternal {
-                        path: full_path,
-                        r#type: EventType::create,
-                        origin: origin.to_owned(),
-                    },
-                );
-            }
-        }
-    }
-
-    register_watches(watcher, &nested_dirs);
+    Ok(())
 }
 
 /// Enumerate all non-ignored directories to watch individually (non-recursively).
@@ -230,13 +181,8 @@ impl WatchPipeline {
             tracing::error!(?e, "failed to watch root directory");
         }
         #[cfg(not(target_os = "macos"))]
-        for path in enumerate_watch_paths(&origin, use_ignore) {
-            // Watch each non-ignored dir non-recursively so inotify never
-            // covers node_modules etc.
-            if let Err(e) = watcher.watch(&path, RecursiveMode::NonRecursive) {
-                tracing::warn!(?e, ?path, "failed to watch path");
-            }
-        }
+        register_watches(&mut watcher, enumerate_watch_paths(&origin, use_ignore))
+            .map_err(|e| format!("failed to register initial watches: {e}"))?;
 
         let mut origin_path = origin.clone();
         if !origin_path.ends_with(MAIN_SEPARATOR) {
@@ -254,20 +200,81 @@ impl WatchPipeline {
         })
     }
 
+    /// Return the new, non-ignored directory paths from a single notify
+    /// event, if it is a directory-creation event. Used on Linux/Windows
+    /// to register watches synchronously when a directory appears.
+    #[cfg(not(target_os = "macos"))]
+    fn new_directories_from_event(&self, event: &RawWatchEvent) -> Vec<PathBuf> {
+        use crate::native::watch::types::meta_is_dir;
+        use notify::{EventKind, event::CreateKind};
+
+        if !matches!(
+            event.kind(),
+            EventKind::Create(CreateKind::Folder) | EventKind::Create(CreateKind::Any)
+        ) {
+            return Vec::new();
+        }
+
+        event
+            .paths()
+            .filter(|(path, metadata)| meta_is_dir(metadata) && !self.ignore_globs.is_match(path))
+            .map(|(path, _)| path.to_path_buf())
+            .collect()
+    }
+
+    /// Register watches for newly created directories, walk them to
+    /// backfill files written before our watch became active, and
+    /// register watches for any nested subdirectories. The walk's create
+    /// events are merged into the accumulator so they emit on the next
+    /// flush. Returns Err on `MaxFilesWatch`.
+    #[cfg(not(target_os = "macos"))]
+    fn register_and_backfill_new_dirs(
+        &mut self,
+        dirs: &[PathBuf],
+        accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
+    ) -> std::result::Result<(), notify::Error> {
+        use crate::native::walker::nx_walker_sync;
+
+        register_watches(&mut self.watcher, dirs)?;
+
+        let mut nested_dirs: HashSet<PathBuf> = HashSet::new();
+        for dir in dirs {
+            for rel_path in nx_walker_sync(dir, None) {
+                let full_path = dir.join(&rel_path);
+                if full_path.is_dir() {
+                    nested_dirs.insert(full_path);
+                } else if full_path.is_file() {
+                    merge_event(
+                        accumulator,
+                        WatchEventInternal {
+                            path: full_path,
+                            r#type: EventType::create,
+                            origin: self.origin.clone(),
+                        },
+                    );
+                }
+            }
+        }
+
+        register_watches(&mut self.watcher, &nested_dirs)
+    }
+
     /// Per-event pipeline: filter → new-directory backfill → transform →
-    /// merge → bump the flush deadline.
+    /// merge → bump the flush deadline. Returns Err with a descriptive
+    /// message if a fatal condition (e.g., inotify watch limit reached)
+    /// requires the flush loop to exit and surface the error to JS.
     fn ingest_event(
         &mut self,
         event: NotifyResult,
         accumulator: &mut HashMap<PathBuf, WatchEventInternal>,
         burst_start: &mut Option<Instant>,
         flush_deadline: &mut Option<Instant>,
-    ) {
+    ) -> std::result::Result<(), String> {
         let event = match event {
             Ok(e) => e,
             Err(err) => {
                 tracing::warn!("notify error: {:?}", err);
-                return;
+                return Ok(());
             }
         };
 
@@ -276,19 +283,21 @@ impl WatchPipeline {
         let raw = RawWatchEvent::new(event);
 
         if !self.filterer.check_event(&raw) {
-            return;
+            return Ok(());
         }
 
         #[cfg(not(target_os = "macos"))]
         {
-            let new_dirs = new_directories_from_event(&raw, &self.ignore_globs);
+            let new_dirs = self.new_directories_from_event(&raw);
             if !new_dirs.is_empty() {
-                register_and_backfill_new_dirs(
-                    &mut self.watcher,
-                    &new_dirs,
-                    &self.origin,
-                    accumulator,
-                );
+                self.register_and_backfill_new_dirs(&new_dirs, accumulator)
+                    // The error message intentionally contains
+                    // "inotify_add_watch" so the daemon's existing fallback
+                    // matcher in project-graph.ts:432 fires (it falls back
+                    // to non-daemon mode when this substring appears).
+                    .map_err(|e| {
+                        format!("inotify_add_watch failed registering new directory watch: {e}")
+                    })?;
             }
         }
 
@@ -304,6 +313,7 @@ impl WatchPipeline {
         let now = Instant::now();
         let bs = *burst_start.get_or_insert(now);
         *flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
+        Ok(())
     }
 
     /// Drives the pipeline: reads notify events and force-flush requests
@@ -320,12 +330,17 @@ impl WatchPipeline {
 
             select! {
                 recv(self.notify_rx) -> res => match res {
-                    Ok(event) => self.ingest_event(
-                        event,
-                        &mut accumulator,
-                        &mut burst_start,
-                        &mut flush_deadline,
-                    ),
+                    Ok(event) => {
+                        if let Err(msg) = self.ingest_event(
+                            event,
+                            &mut accumulator,
+                            &mut burst_start,
+                            &mut flush_deadline,
+                        ) {
+                            callback(Err(msg));
+                            break;
+                        }
+                    }
                     Err(_) => {
                         // Notify channel closed (watcher panicked / stopped).
                         callback(Err("watcher channel disconnected".to_string()));
@@ -342,13 +357,17 @@ impl WatchPipeline {
                         while let Ok(extra) = force_flush_rx.try_recv() {
                             replies.push(extra);
                         }
+                        let mut fatal: Option<String> = None;
                         while let Ok(event) = self.notify_rx.try_recv() {
-                            self.ingest_event(
+                            if let Err(msg) = self.ingest_event(
                                 event,
                                 &mut accumulator,
                                 &mut burst_start,
                                 &mut flush_deadline,
-                            );
+                            ) {
+                                fatal = Some(msg);
+                                break;
+                            }
                         }
                         let watch_events = snapshot_events(&accumulator);
                         trace!(
@@ -369,6 +388,10 @@ impl WatchPipeline {
                             tracing::warn!(
                                 "all force-flush replies failed; events retained in accumulator"
                             );
+                        }
+                        if let Some(msg) = fatal {
+                            callback(Err(msg));
+                            break;
                         }
                     }
                     // Force-flush channel closed → struct dropped or stop()
