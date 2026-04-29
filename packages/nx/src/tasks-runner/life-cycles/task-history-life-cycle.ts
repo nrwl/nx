@@ -103,7 +103,9 @@ export class TaskHistoryLifeCycle implements LifeCycle {
     if (this.flakyTasks?.length > 0) {
       output.warn({
         title: `Nx detected ${
-          this.flakyTasks.length === 1 ? 'a flaky task' : ' flaky tasks'
+          this.flakyTasks.length === 1
+            ? 'a flaky task'
+            : `${this.flakyTasks.length} flaky tasks`
         }`,
         bodyLines: [
           ,
