@@ -11,10 +11,10 @@ common-env-vars: &common-env-vars
 
 common-init-steps: &common-init-steps
   - name: Checkout
-    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml'
 
   - name: Cache restore
-    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
     inputs:
       key: 'pnpm-lock.yaml'
       paths: ~/.local/share/pnpm/store
@@ -22,7 +22,7 @@ common-init-steps: &common-init-steps
 
   # reads mise.toml and installs toolchains needed for repo
   - name: Setup toolchains
-    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-mise/main.yaml'
+    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-mise/main.yaml'
 
   - name: Verify toolchain versions
     script: |
