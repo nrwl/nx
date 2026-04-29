@@ -294,7 +294,7 @@
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-typescript2": "^0.36.0",
     "rxjs": "^7.8.2",
-    "sass": "1.55.0",
+    "sass": "1.97.2",
     "sass-embedded": "1.85.1",
     "sass-loader": "16.0.5",
     "semver": "catalog:",

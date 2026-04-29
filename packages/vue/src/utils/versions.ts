@@ -19,4 +19,4 @@ export const postcssVersion = '8.4.21';
 export const autoprefixerVersion = '10.4.13';
 
 // other deps
-export const sassVersion = '^1.70.0';
+export const sassVersion = '^1.97.2';

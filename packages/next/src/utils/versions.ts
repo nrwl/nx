@@ -8,5 +8,5 @@ export const eslintConfigNext16Version = '^16.1.6';
 export const eslintConfigNext15Version = '^15.2.4';
 export const eslintConfigNext14Version = '~14.2.26';
 export const eslintConfigNextVersion = eslintConfigNext16Version;
-export const sassVersion = '1.62.1';
+export const sassVersion = '1.97.2';
 export const tsLibVersion = '^2.3.0';

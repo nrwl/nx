@@ -46,7 +46,7 @@
     "postcss": "^8.4.38",
     "postcss-import": "~14.1.0",
     "postcss-loader": "^8.1.1",
-    "sass": "^1.85.0",
+    "sass": "^1.97.2",
     "sass-embedded": "^1.83.4",
     "sass-loader": "^16.0.4",
     "source-map-loader": "^5.0.0",
