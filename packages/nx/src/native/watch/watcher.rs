@@ -303,10 +303,13 @@ impl WatchPipeline {
                         }
                         let watch_events = self.snapshot_events();
                         debug!(
+                            count = watch_events.len(),
                             replies = replies.len(),
-                            events = ?watch_events,
                             "force-flush emitting events"
                         );
+                        for e in &watch_events {
+                            debug!("  [{:?}] {}", e.r#type, e.path);
+                        }
                         let mut any_delivered = false;
                         for r in replies {
                             match r.send(watch_events.clone()) {
@@ -327,7 +330,10 @@ impl WatchPipeline {
                 default(idle_wait) => {
                     if !self.accumulator.is_empty() {
                         let events = self.snapshot_events();
-                        debug!(events = ?events, "idle-window emitting events");
+                        debug!(count = events.len(), "idle-window emitting events");
+                        for e in &events {
+                            debug!("  [{:?}] {}", e.r#type, e.path);
+                        }
                         callback(Ok(events));
                     }
                     self.reset_burst();
