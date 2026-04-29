@@ -224,7 +224,7 @@ export declare class Watcher {
    * daemon would otherwise serve a stale graph.
    *
    * Returns an empty vec if the watcher hasn't started yet, the
-   * processing thread has exited, or no events are buffered.
+   * flush loop has exited, or no events are buffered.
    */
   forceFlushPending(): Array<WatchEvent>
 }
