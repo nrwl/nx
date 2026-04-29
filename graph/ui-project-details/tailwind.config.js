@@ -6,7 +6,7 @@ const path = require('node:path');
 // nx-ignore-next-line
 const { workspaceRoot } = require('@nx/devkit');
 
-const glob = '**/*.{js,ts,jsx,tsx,html}';
+const glob = '**/!(*.stories|*.spec).{js,ts,jsx,tsx,html}';
 
 module.exports = {
   content: [

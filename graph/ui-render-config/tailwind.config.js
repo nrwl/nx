@@ -1,6 +1,6 @@
 const path = require('path');
 
-const glob = '**/*.{js,ts,jsx,tsx,html}';
+const glob = '**/!(*.stories|*.spec).{js,ts,jsx,tsx,html}';
 
 module.exports = {
   content: [

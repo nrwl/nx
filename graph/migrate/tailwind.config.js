@@ -1,6 +1,6 @@
 const { join } = require('path');
 
-const glob = '**/*!(*.stories|*.spec).{ts,tsx,html}';
+const glob = '**/!(*.stories|*.spec).{ts,tsx,html}';
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
