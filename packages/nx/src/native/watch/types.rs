@@ -69,12 +69,7 @@ pub struct WatchEvent {
 
 impl From<&WatchEventInternal> for WatchEvent {
     fn from(value: &WatchEventInternal) -> Self {
-        let path = value
-            .path
-            .strip_prefix(&value.origin)
-            .unwrap_or(&value.path)
-            .display()
-            .to_string();
+        let path = value.path.display().to_string();
 
         #[cfg(windows)]
         let path = path.replace('\\', "/");
@@ -86,11 +81,12 @@ impl From<&WatchEventInternal> for WatchEvent {
     }
 }
 
+/// `path` is stored relative to the watcher origin so it can be hashed,
+/// merged, and surfaced to JS without re-stripping a prefix each time.
 #[derive(Debug, Clone)]
 pub(super) struct WatchEventInternal {
     pub path: PathBuf,
     pub r#type: EventType,
-    pub origin: String,
 }
 
 pub(super) fn transform_event_to_watch_events(
@@ -115,9 +111,8 @@ pub(super) fn transform_event_to_watch_events(
     // handling which derives the type from event_kind without re-statting.
     if !meta_exists(metadata) && matches!(event_kind, EventKind::Remove(_)) {
         return Ok(vec![WatchEventInternal {
-            path: path_ref.to_path_buf(),
+            path: relative_to_origin(path_ref, origin),
             r#type: EventType::delete,
-            origin: origin.to_owned(),
         }]);
     }
 
@@ -155,9 +150,8 @@ pub(super) fn transform_event_to_watch_events(
         };
 
         Ok(vec![WatchEventInternal {
-            path: path_ref.to_path_buf(),
+            path: relative_to_origin(path_ref, origin),
             r#type: event_type,
-            origin: origin.to_owned(),
         }])
     }
 
@@ -197,9 +191,8 @@ pub(super) fn transform_event_to_watch_events(
                 }
 
                 result.push(WatchEventInternal {
-                    path,
+                    path: relative_to_origin(&path, origin),
                     r#type: EventType::create,
-                    origin: origin.to_owned(),
                 });
             }
 
@@ -236,8 +229,16 @@ fn create_watch_event_internal(
     };
 
     vec![WatchEventInternal {
-        path: path_ref.into(),
+        path: relative_to_origin(path_ref, origin),
         r#type: event_type,
-        origin: origin.to_owned(),
     }]
+}
+
+/// Strip the watcher origin prefix from an event path. Falls back to the
+/// original path if it doesn't live under origin (shouldn't happen — the
+/// filterer rejects those — but we don't want a panic if it does).
+fn relative_to_origin(path: &Path, origin: &str) -> PathBuf {
+    path.strip_prefix(origin)
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|_| path.to_path_buf())
 }

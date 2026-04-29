@@ -84,7 +84,6 @@ struct WatchPipeline {
     filterer: watch_filterer::WatchFilterer,
     notify_rx: Receiver<NotifyResult>,
     watcher: notify::RecommendedWatcher,
-    origin: String,
     /// `origin` with a trailing path separator.
     origin_path: String,
     #[cfg(not(target_os = "macos"))]
@@ -127,7 +126,6 @@ impl WatchPipeline {
             filterer,
             notify_rx,
             watcher,
-            origin,
             origin_path,
             #[cfg(not(target_os = "macos"))]
             ignore_globs: build_ignore_glob_set(),
@@ -206,11 +204,13 @@ impl WatchPipeline {
                 if full_path.is_dir() {
                     nested_dirs.insert(full_path);
                 } else if full_path.is_file() {
-                    let origin = self.origin.clone();
+                    let path = full_path
+                        .strip_prefix(&self.origin_path)
+                        .map(Path::to_path_buf)
+                        .unwrap_or(full_path);
                     self.merge_event(WatchEventInternal {
-                        path: full_path,
+                        path,
                         r#type: EventType::create,
-                        origin,
                     });
                 }
             }
@@ -303,8 +303,8 @@ impl WatchPipeline {
                         }
                         let watch_events = self.snapshot_events();
                         debug!(
-                            count = watch_events.len(),
                             replies = replies.len(),
+                            events = ?watch_events,
                             "force-flush emitting events"
                         );
                         let mut any_delivered = false;
@@ -327,7 +327,7 @@ impl WatchPipeline {
                 default(idle_wait) => {
                     if !self.accumulator.is_empty() {
                         let events = self.snapshot_events();
-                        debug!(count = events.len(), "idle-window emitting events");
+                        debug!(events = ?events, "idle-window emitting events");
                         callback(Ok(events));
                     }
                     self.reset_burst();
