@@ -101,6 +101,21 @@ describe('lib', () => {
     expect(devDependencies['@angular/build']).toBe(angularDevkitVersion);
   });
 
+  it('should setup vitest-angular test target with watch mode disabled', async () => {
+    await runLibraryGeneratorWithOpts({
+      unitTestRunner: UnitTestRunner.VitestAngular,
+      buildable: true,
+    });
+
+    const project = readProjectConfiguration(tree, 'my-lib');
+    expect(project.targets.test).toStrictEqual({
+      executor: '@nx/angular:unit-test',
+      options: {
+        watch: false,
+      },
+    });
+  });
+
   it('should not touch the package.json when run with `--skipPackageJson`', async () => {
     let initialPackageJson;
     updateJson(tree, 'package.json', (json) => {
