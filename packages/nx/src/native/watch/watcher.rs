@@ -304,106 +304,102 @@ impl WatchPipeline {
             ignore_globs: build_ignore_glob_set(),
         })
     }
-}
 
-/// Drives the pipeline: reads notify events and force-flush requests
-/// until force_flush_rx disconnects (the shutdown signal).
-fn run_flush_loop(
-    pipeline: WatchPipeline,
-    force_flush_rx: Receiver<ForceFlushReply>,
-    callback: WatchEventCallback,
-) {
-    let WatchPipeline {
-        filterer,
-        notify_rx,
-        mut watcher,
-        origin,
-        origin_path,
-        #[cfg(not(target_os = "macos"))]
-        ignore_globs,
-    } = pipeline;
+    /// Drives the pipeline: reads notify events and force-flush requests
+    /// until force_flush_rx disconnects (the shutdown signal).
+    fn run(self, force_flush_rx: Receiver<ForceFlushReply>, callback: WatchEventCallback) {
+        let WatchPipeline {
+            filterer,
+            notify_rx,
+            mut watcher,
+            origin,
+            origin_path,
+            #[cfg(not(target_os = "macos"))]
+            ignore_globs,
+        } = self;
 
-    let mut accumulator: HashMap<PathBuf, WatchEventInternal> = HashMap::new();
-    let mut burst_start: Option<Instant> = None;
-    let mut flush_deadline: Option<Instant> = None;
+        let mut accumulator: HashMap<PathBuf, WatchEventInternal> = HashMap::new();
+        let mut burst_start: Option<Instant> = None;
+        let mut flush_deadline: Option<Instant> = None;
 
-    loop {
-        let idle_wait = flush_deadline
-            .map(|d| d.saturating_duration_since(Instant::now()))
-            .unwrap_or_else(|| Duration::from_secs(60 * 60));
+        loop {
+            let idle_wait = flush_deadline
+                .map(|d| d.saturating_duration_since(Instant::now()))
+                .unwrap_or_else(|| Duration::from_secs(60 * 60));
 
-        select! {
-            recv(notify_rx) -> res => match res {
-                Ok(event) => ingest_event(
-                    event,
-                    &mut accumulator,
-                    &mut burst_start,
-                    &mut flush_deadline,
-                    &filterer,
-                    &origin,
-                    &origin_path,
-                    #[cfg(not(target_os = "macos"))] &ignore_globs,
-                    #[cfg(not(target_os = "macos"))] &mut watcher,
-                ),
-                Err(_) => {
-                    // Notify channel closed (watcher panicked / stopped).
-                    callback(Err("watcher channel disconnected".to_string()));
-                    break;
-                }
-            },
-            recv(force_flush_rx) -> res => match res {
-                Ok(reply) => {
-                    // Drain any queued notify events so the snapshot reflects
-                    // everything submitted up to this request, and collect any
-                    // other queued ForceFlush replies so concurrent callers
-                    // share the same answer.
-                    let mut replies = vec![reply];
-                    while let Ok(extra) = force_flush_rx.try_recv() {
-                        replies.push(extra);
+            select! {
+                recv(notify_rx) -> res => match res {
+                    Ok(event) => ingest_event(
+                        event,
+                        &mut accumulator,
+                        &mut burst_start,
+                        &mut flush_deadline,
+                        &filterer,
+                        &origin,
+                        &origin_path,
+                        #[cfg(not(target_os = "macos"))] &ignore_globs,
+                        #[cfg(not(target_os = "macos"))] &mut watcher,
+                    ),
+                    Err(_) => {
+                        // Notify channel closed (watcher panicked / stopped).
+                        callback(Err("watcher channel disconnected".to_string()));
+                        break;
                     }
-                    while let Ok(event) = notify_rx.try_recv() {
-                        ingest_event(
-                            event,
-                            &mut accumulator,
-                            &mut burst_start,
-                            &mut flush_deadline,
-                            &filterer,
-                            &origin,
-                            &origin_path,
-                            #[cfg(not(target_os = "macos"))] &ignore_globs,
-                            #[cfg(not(target_os = "macos"))] &mut watcher,
+                },
+                recv(force_flush_rx) -> res => match res {
+                    Ok(reply) => {
+                        // Drain any queued notify events so the snapshot reflects
+                        // everything submitted up to this request, and collect any
+                        // other queued ForceFlush replies so concurrent callers
+                        // share the same answer.
+                        let mut replies = vec![reply];
+                        while let Ok(extra) = force_flush_rx.try_recv() {
+                            replies.push(extra);
+                        }
+                        while let Ok(event) = notify_rx.try_recv() {
+                            ingest_event(
+                                event,
+                                &mut accumulator,
+                                &mut burst_start,
+                                &mut flush_deadline,
+                                &filterer,
+                                &origin,
+                                &origin_path,
+                                #[cfg(not(target_os = "macos"))] &ignore_globs,
+                                #[cfg(not(target_os = "macos"))] &mut watcher,
+                            );
+                        }
+                        let watch_events = snapshot_events(&accumulator);
+                        trace!(
+                            count = watch_events.len(),
+                            replies = replies.len(),
+                            "force-flushing events"
                         );
-                    }
-                    let watch_events = snapshot_events(&accumulator);
-                    trace!(
-                        count = watch_events.len(),
-                        replies = replies.len(),
-                        "force-flushing events"
-                    );
-                    let mut any_delivered = false;
-                    for r in replies {
-                        match r.send(watch_events.clone()) {
-                            Ok(()) => any_delivered = true,
-                            Err(e) => tracing::warn!(?e, "force-flush reply failed; caller gave up"),
+                        let mut any_delivered = false;
+                        for r in replies {
+                            match r.send(watch_events.clone()) {
+                                Ok(()) => any_delivered = true,
+                                Err(e) => tracing::warn!(?e, "force-flush reply failed; caller gave up"),
+                            }
+                        }
+                        if any_delivered {
+                            reset_burst(&mut accumulator, &mut burst_start, &mut flush_deadline);
+                        } else {
+                            tracing::warn!(
+                                "all force-flush replies failed; events retained in accumulator"
+                            );
                         }
                     }
-                    if any_delivered {
-                        reset_burst(&mut accumulator, &mut burst_start, &mut flush_deadline);
-                    } else {
-                        tracing::warn!(
-                            "all force-flush replies failed; events retained in accumulator"
-                        );
+                    // Force-flush channel closed → struct dropped or stop()
+                    // called → shutdown.
+                    Err(_) => break,
+                },
+                default(idle_wait) => {
+                    if !accumulator.is_empty() {
+                        callback(Ok(snapshot_events(&accumulator)));
                     }
+                    reset_burst(&mut accumulator, &mut burst_start, &mut flush_deadline);
                 }
-                // Force-flush channel closed → struct dropped or stop()
-                // called → shutdown.
-                Err(_) => break,
-            },
-            default(idle_wait) => {
-                if !accumulator.is_empty() {
-                    callback(Ok(snapshot_events(&accumulator)));
-                }
-                reset_burst(&mut accumulator, &mut burst_start, &mut flush_deadline);
             }
         }
     }
@@ -500,9 +496,7 @@ impl Watcher {
         let (force_flush_tx, force_flush_rx) = unbounded::<ForceFlushReply>();
         *self.force_flush_tx.lock() = Some(force_flush_tx);
 
-        std::thread::spawn(move || {
-            run_flush_loop(pipeline, force_flush_rx, callback);
-        });
+        std::thread::spawn(move || pipeline.run(force_flush_rx, callback));
 
         Ok(())
     }
