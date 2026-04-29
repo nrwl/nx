@@ -28,6 +28,7 @@ import type { PackageJson } from 'nx/src/utils/package-json';
 import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 
 import { getRelativeDirectoryToProjectRoot } from '../get-main-file-dir';
+import { stripGlobToBaseDir } from '../strip-glob-to-base-dir';
 
 export type SupportedFormat = 'cjs' | 'esm';
 
@@ -208,7 +209,11 @@ function addMissingDependencies(
           entry.node
         );
 
-        const depPackageJsonPath = join(root, outputs[0], 'package.json');
+        const depPackageJsonPath = join(
+          root,
+          stripGlobToBaseDir(outputs[0]),
+          'package.json'
+        );
 
         if (existsSync(depPackageJsonPath)) {
           const version = readJsonFile(depPackageJsonPath).version;
