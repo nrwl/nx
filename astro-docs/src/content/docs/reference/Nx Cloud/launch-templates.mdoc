@@ -191,9 +191,9 @@ You can find the [list of Nx Cloud reusable steps here](https://github.com/nrwl/
 launch-templates:
   template-one:
     init-steps:
-      - uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+      - uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml'
       - name: 'Install Node Modules'
-        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node-modules/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-node-modules/main.yaml'
 ```
 
 ### `launch-templates.<template-name>.init-steps[*].script`
@@ -239,7 +239,7 @@ launch-templates:
   template-one:
     init-steps:
       - name: Restore Node Modules Cache
-        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
         inputs:
           # Include patches directories to ensure cache is busted when patches change
           key: 'package-lock.json|yarn.lock|pnpm-lock.yaml|patches/**|.yarn/patches/**|pnpm-patches/**'
@@ -320,7 +320,7 @@ grouped together logically. The below cache steps will also be collapsed togethe
 - group-name: Restore Cache
   steps:
     - name: Restore Node Modules Cache
-      uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+      uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
       inputs:
         # Include patches directories to ensure cache is busted when patches change
         key: 'package-lock.json|patches/**|.yarn/patches/**|pnpm-patches/**'
@@ -328,7 +328,7 @@ grouped together logically. The below cache steps will also be collapsed togethe
           ~/.npm
         base-branch: 'main'
     - name: Restore Browser Binary Cache
-      uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+      uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
       inputs:
         # Include patches directories to ensure cache is busted when patches change
         key: 'package-lock.json|patches/**|.yarn/patches/**|pnpm-patches/**|"browsers"'
