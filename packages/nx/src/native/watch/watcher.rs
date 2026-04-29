@@ -8,6 +8,7 @@ use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use notify::{RecursiveMode, Watcher as NotifyWatcher};
 use parking_lot::Mutex;
+use tracing::debug;
 
 #[cfg(not(target_os = "macos"))]
 use crate::native::glob::{NxGlobSet, build_glob_set};
@@ -195,6 +196,7 @@ impl WatchPipeline {
     ) -> std::result::Result<(), notify::Error> {
         use crate::native::walker::nx_walker_sync;
 
+        debug!(?dirs, "registering watches for new directories");
         register_watches(&mut self.watcher, dirs)?;
 
         let mut nested_dirs: HashSet<PathBuf> = HashSet::new();
@@ -300,6 +302,11 @@ impl WatchPipeline {
                             }
                         }
                         let watch_events = self.snapshot_events();
+                        debug!(
+                            count = watch_events.len(),
+                            replies = replies.len(),
+                            "force-flush emitting events"
+                        );
                         let mut any_delivered = false;
                         for r in replies {
                             match r.send(watch_events.clone()) {
@@ -319,7 +326,9 @@ impl WatchPipeline {
                 },
                 default(idle_wait) => {
                     if !self.accumulator.is_empty() {
-                        callback(Ok(self.snapshot_events()));
+                        let events = self.snapshot_events();
+                        debug!(count = events.len(), "idle-window emitting events");
+                        callback(Ok(events));
                     }
                     self.reset_burst();
                 }
@@ -414,12 +423,14 @@ impl Watcher {
 
         std::thread::spawn(move || pipeline.run(force_flush_rx, callback));
 
+        debug!(origin = %self.origin, "watching started");
         Ok(())
     }
 
     #[napi]
     pub async fn stop(&self) -> Result<()> {
         *self.force_flush_tx.lock() = None;
+        debug!(origin = %self.origin, "watching stopped");
         Ok(())
     }
 
