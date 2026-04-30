@@ -26,12 +26,6 @@ fun testListener(
       classNameToTaskId[gradleClassName]
           ?: classNameToTaskId[gradleClassName.substringAfterLast('.')]
 
-  val debugTests = System.getenv("NX_GRADLE_BATCH_DEBUG_TESTS") == "true"
-  if (debugTests) {
-    System.err.println("[nx-test-debug] classNameToTaskId=$classNameToTaskId")
-    System.err.println("[nx-test-debug] taskPathToTaskIds=$taskPathToTaskIds")
-  }
-
   return { event ->
     when (event) {
       is TaskFinishEvent -> {
@@ -48,11 +42,6 @@ fun testListener(
       }
 
       is TestStartEvent -> {
-        if (debugTests) {
-          val d = event.descriptor as? JvmTestOperationDescriptor
-          System.err.println(
-              "[nx-test-debug] TestStartEvent class=${d?.className} method=${d?.methodName} type=${event.descriptor::class.simpleName}")
-        }
         (event.descriptor as? JvmTestOperationDescriptor)?.className?.let { className ->
           resolveNxTaskId(className)?.let { nxTaskId ->
             testStartTimes.computeIfAbsent(nxTaskId) { event.eventTime }
@@ -62,11 +51,6 @@ fun testListener(
       }
 
       is TestFinishEvent -> {
-        if (debugTests) {
-          val d = event.descriptor as? JvmTestOperationDescriptor
-          System.err.println(
-              "[nx-test-debug] TestFinishEvent class=${d?.className} method=${d?.methodName} type=${event.descriptor::class.simpleName}")
-        }
         (event.descriptor as? JvmTestOperationDescriptor)?.let { descriptor ->
           val className = descriptor.className ?: return@let
           val nxTaskId = resolveNxTaskId(className) ?: return@let
