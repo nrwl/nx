@@ -25,6 +25,12 @@ import { isAiAgent } from '../../../native';
 import { detectPackageManager } from '../../../utils/package-manager';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getVcsRemoteInfo } from '../../../utils/git-utils';
+import {
+  CONNECTED_NEXT_STEPS,
+  hasNxCloudPat,
+  runAgenticOnboard,
+} from '../onboard/agentic-onboard';
+import { writeAiOutput } from '../../ai/ai-output';
 import * as pc from 'picocolors';
 const ora = require('ora');
 const open = require('open');
@@ -149,6 +155,52 @@ async function runConnectToNxCloud(
     ? 'nx-console'
     : 'nx-connect';
 
+  const aiMode = isAiAgent();
+
+  // Agent mode: hybrid flow.
+  //   - PAT present  → full agentic onboard (org select, GitHub auth, etc.) via NDJSON.
+  //   - PAT missing  → emit needs_input directing the agent to run `nx login`.
+  //                    `nx login` defers to the cloud client and works in any
+  //                    directory (with or without an existing connection) as
+  //                    of nx 22.6.0 — the previous `isNxCloudUsed` guard was
+  //                    removed in #34728. Login writes the PAT to
+  //                    ~/.config/nxcloud/nxcloud.ini. After login, agent re-runs
+  //                    `nx connect` and falls into the PAT-present branch.
+  if (aiMode) {
+    // Already connected? Short-circuit. Mirrors the human-mode `isNxCloudUsed`
+    // check below — without this, a re-run of `nx connect` from a connected
+    // workspace re-spawns the bin which then 409s with "Workspace already
+    // exists" because the name is taken on the server. The agent reads that
+    // as a fix-this-input failure even though the connection is fine.
+    if (isNxCloudUsed(nxJson) && nxJson.nxCloudId) {
+      writeAiOutput({
+        stage: 'complete',
+        success: true,
+        status: 'connected',
+        nxCloudId: nxJson.nxCloudId,
+        verifyCommand: 'npx nx-cloud onboard status',
+        message: 'Workspace is already connected to Nx Cloud.',
+        nextSteps: CONNECTED_NEXT_STEPS,
+      });
+      return true;
+    }
+    if (!hasNxCloudPat()) {
+      writeAiOutput({
+        stage: 'needs_input',
+        success: false,
+        actionRequired: 'login_required',
+        message:
+          'Nx Cloud authentication is required. Run `npx nx login` to authenticate (one-time browser OAuth), then re-run `nx connect`.',
+        nextCommand: 'npx nx login',
+        statusCheck: 'npx nx-cloud login --status',
+        hint: '`nx login` opens a browser for one-time OAuth; the resulting PAT is saved to ~/.config/nxcloud/nxcloud.ini and reused for all future workspaces.',
+      });
+      return false;
+    }
+    const result = await runAgenticOnboard({ source: 'nx-connect' });
+    return result.status === 'connected';
+  }
+
   const hasRemote = !!getVcsRemoteInfo();
   if (!hasRemote && options.checkRemote) {
     output.error({
@@ -189,6 +241,7 @@ async function runConnectToNxCloud(
 
     return false;
   }
+
   const token = await connectWorkspaceToCloud({
     generateToken: options?.generateToken,
     installationSource: command ?? installationSource,
@@ -200,6 +253,7 @@ async function runConnectToNxCloud(
     undefined,
     options?.generateToken === true
   );
+
   try {
     const cloudConnectSpinner = ora(
       `Opening Nx Cloud ${connectCloudUrl} in your browser to connect your workspace.`

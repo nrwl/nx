@@ -12,6 +12,10 @@ import { getPackageManagerCommand } from '../../utils/package-manager';
 import { nxVersion } from '../../utils/versions';
 import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
 import { connectExistingRepoToNxCloudPrompt } from '../nx-cloud/connect/connect-to-nx-cloud';
+import {
+  hasNxCloudPat,
+  runAgenticOnboard,
+} from '../nx-cloud/onboard/agentic-onboard';
 import { configurePlugins, installPluginPackages } from './configure-plugins';
 import { determineAiAgents } from './ai-agent-prompts';
 import { setupAiAgentsGenerator } from '../../ai/set-up-ai-agents/set-up-ai-agents';
@@ -456,7 +460,23 @@ async function runInit(
       : 'skip';
   }
   if (nxCloudChoice === 'yes') {
-    await initCloud('nx-init');
+    if (aiMode) {
+      if (!hasNxCloudPat()) {
+        writeAiOutput({
+          stage: 'needs_input',
+          success: false,
+          actionRequired: 'login_required',
+          message:
+            'Nx Cloud authentication is required before connecting. Run `npx nx login` (one-time browser OAuth), then re-run `nx connect`.',
+          nextCommand: 'npx nx login',
+          statusCheck: 'npx nx-cloud login --status',
+        });
+      } else {
+        await runAgenticOnboard({ source: 'nx-init' });
+      }
+    } else {
+      await initCloud('nx-init');
+    }
   } else if (nxCloudChoice === 'never') {
     setNeverConnectToCloud(repoRoot);
   }

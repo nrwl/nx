@@ -34,7 +34,8 @@ import {
   generatePackageManagerFiles,
   getPackageManagerCommand,
 } from './utils/package-manager';
-import { isAiAgent, logProgress } from './utils/ai/ai-output';
+import { isAiAgent, logProgress, writeAiOutput } from './utils/ai/ai-output';
+import { hasNxCloudPat, runAgenticOnboard } from './utils/nx/agentic-onboard';
 
 // State for SIGINT handler - only set after workspace is fully installed
 let workspaceDirectory: string | undefined;
@@ -149,11 +150,22 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       nxCloud !== 'never' &&
       !options.skipCloudConnect
     ) {
-      await connectToNxCloudForTemplate(
-        directory,
-        'create-nx-workspace',
-        useGitHub
-      );
+      if (aiMode && hasNxCloudPat()) {
+        await runAgenticOnboard({
+          source: 'create-nx-workspace',
+          cwd: directory,
+        });
+      } else if (aiMode) {
+        // No PAT — skip the anonymous workspace create; the URL block below
+        // emits a needs_input payload telling the agent to run `nx login`
+        // and then `nx connect` from inside the workspace.
+      } else {
+        await connectToNxCloudForTemplate(
+          directory,
+          'create-nx-workspace',
+          useGitHub
+        );
+      }
     }
   } else {
     // Preset flow - existing behavior
@@ -314,7 +326,27 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
     // Auto-open the Cloud setup URL in the browser when user selected 'yes'
     if (!options.skipCloudConnect) {
-      await openCloudSetupUrl(connectUrl);
+      if (aiModeForCloud) {
+        if (hasNxCloudPat()) {
+          await runAgenticOnboard({
+            source: 'create-nx-workspace',
+            cwd: directory,
+          });
+        } else {
+          writeAiOutput({
+            stage: 'needs_input',
+            success: false,
+            actionRequired: 'login_required',
+            message:
+              'Nx Cloud authentication is required to finish onboarding. Run `npx nx login` from the workspace (one-time browser OAuth), then run `npx nx connect`.',
+            nextCommand: 'npx nx login',
+            statusCheck: 'npx nx-cloud login --status',
+            hint: '`nx login` opens a browser for one-time OAuth; the PAT is saved to ~/.config/nxcloud/nxcloud.ini and reused for future workspaces.',
+          });
+        }
+      } else {
+        await openCloudSetupUrl(connectUrl);
+      }
     }
   } else if (isTemplate && (nxCloud === 'skip' || nxCloud === 'never')) {
     // Strip marker comments from README
