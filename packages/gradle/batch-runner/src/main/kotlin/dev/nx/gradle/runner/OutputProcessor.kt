@@ -75,7 +75,7 @@ object OutputProcessor {
   private val TASK_HEADER = Regex("> Task (:[^\\s]+)")
   private val GRADLE_TASK_PATH = Regex(""":[a-zA-Z][\w\-]*(?::[a-zA-Z][\w\-]*)+""")
 
-  private fun stripNextTaskPreamble(captured: String, currentTaskPath: String): String {
+  internal fun stripNextTaskPreamble(captured: String, currentTaskPath: String): String {
     if (captured.isEmpty()) return captured
     val lines = captured.split('\n').toMutableList()
     while (lines.isNotEmpty()) {

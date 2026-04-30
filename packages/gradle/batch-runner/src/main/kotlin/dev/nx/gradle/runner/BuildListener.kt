@@ -2,9 +2,7 @@ package dev.nx.gradle.runner
 
 import dev.nx.gradle.data.GradleTask
 import dev.nx.gradle.data.TaskResult
-import dev.nx.gradle.runner.OutputProcessor.splitOutputPerTask
 import dev.nx.gradle.util.logger
-import java.io.ByteArrayOutputStream
 import org.gradle.tooling.events.ProgressEvent
 import org.gradle.tooling.events.task.TaskFailureResult
 import org.gradle.tooling.events.task.TaskFinishEvent
@@ -22,20 +20,15 @@ fun buildListener(
     taskStartTimes: MutableMap<String, Long>,
     taskResults: MutableMap<String, TaskResult>,
     pendingEmit: MutableMap<String, String>,
-    outputStream: ByteArrayOutputStream,
+    capture: TaskOutputCapture,
     emitForTaskPath: (taskPath: String, output: String) -> Unit
 ): (ProgressEvent) -> Unit = { event ->
   when (event) {
     is TaskStartEvent -> {
       // Listener thread leads the writer thread; retry parked emits whose bytes have now landed.
-      if (pendingEmit.isNotEmpty()) {
-        val sections = splitOutputPerTask(outputStream.toString("UTF-8"))
-        pendingEmit.keys.toList().forEach { parked ->
-          val captured = sections[parked]
-          if (!captured.isNullOrEmpty()) {
-            emitForTaskPath(parked, captured)
-          }
-        }
+      pendingEmit.keys.toList().forEach { parked ->
+        val captured = capture.getOutput(parked)
+        if (captured.isNotEmpty()) emitForTaskPath(parked, captured)
       }
 
       val taskPath = event.descriptor.taskPath

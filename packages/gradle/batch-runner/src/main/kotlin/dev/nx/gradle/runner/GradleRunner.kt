@@ -110,19 +110,22 @@ fun runBuildLauncher(
     ResultEmitter.emit(nxTaskId, updated)
   }
 
+  // Per-task slicing happens at write time: each byte gets routed into capture's per-task buffer
+  // based on the most recent `> Task :foo:bar` header, so per-task lookups are O(own size).
+  val capture = TaskOutputCapture(System.err)
+
   try {
     connection
         .newBuild()
         .apply {
           forTasks(*taskNames)
           addArguments(*(args + excludeArgs).toTypedArray())
-          // Tee to outputStream for splitOutputPerTask and to System.err for live display.
-          setStandardOutput(TeeOutputStream(outputStream, System.err))
+          setStandardOutput(TeeOutputStream(outputStream, capture))
           setStandardError(TeeOutputStream(errorStream, System.err))
           withDetailedFailure()
           addProgressListener(
               buildListener(
-                  tasks, taskStartTimes, taskResults, pendingEmit, outputStream, ::emitForTaskPath),
+                  tasks, taskStartTimes, taskResults, pendingEmit, capture, ::emitForTaskPath),
               OperationType.TASK)
         }
         .run()
@@ -136,12 +139,13 @@ fun runBuildLauncher(
     errorStream.close()
   }
 
-  // The last task in the build has no successor TaskStartEvent to drain it; flush here. The
-  // resulting sections map is reused by finalizeTaskResults below.
-  val finalSections = splitOutputPerTask(globalOutput)
+  // The last task in the build has no successor TaskStartEvent to drain it; flush here.
   pendingEmit.keys.toList().forEach { taskPath ->
-    emitForTaskPath(taskPath, finalSections[taskPath] ?: "")
+    emitForTaskPath(taskPath, capture.getOutput(taskPath))
   }
+  // finalizeTaskResults synthesizes entries for tasks Gradle never ran (excluded, etc.); it splits
+  // globalOutput once internally for that lookup.
+  val finalSections = splitOutputPerTask(globalOutput)
 
   val globalEnd = System.currentTimeMillis()
   val maxEndTime = taskResults.values.map { it.endTime }.maxOrNull() ?: globalEnd
@@ -191,13 +195,16 @@ fun runTestLauncher(
 
   // Multiple Nx tasks (one per test class) can share a single Gradle test task path; they end
   // up with the same captured section since TAPI doesn't slice stdout by test class.
+  val outputCapture = TaskOutputCapture(System.err)
+  val errorCapture = TaskOutputCapture(System.err)
+
   fun normalizedTaskPath(nxTaskId: String): String? =
       tasks[nxTaskId]?.taskName?.let { ":${normalizeTaskPath(it)}" }
 
   fun capturedFor(nxTaskId: String): String =
       normalizedTaskPath(nxTaskId)?.let { taskPath ->
-        val out = splitOutputPerTask(outputStream.toString("UTF-8"))[taskPath].orEmpty()
-        val err = splitOutputPerTask(errorStream.toString("UTF-8"))[taskPath].orEmpty()
+        val out = outputCapture.getOutput(taskPath)
+        val err = errorCapture.getOutput(taskPath)
         listOf(out, err).filter { it.isNotBlank() }.joinToString("\n")
       } ?: ""
 
@@ -223,8 +230,8 @@ fun runTestLauncher(
           // arguments here
           addArguments(
               *(args + excludeArgs).toTypedArray()) // Combine your existing args with JUnit args
-          setStandardOutput(TeeOutputStream(outputStream, System.err))
-          setStandardError(TeeOutputStream(errorStream, System.err))
+          setStandardOutput(TeeOutputStream(outputStream, outputCapture))
+          setStandardError(TeeOutputStream(errorStream, errorCapture))
           addProgressListener(
               testListener(tasks, testTaskStatus, testStartTimes, testEndTimes, emitTestTask),
               eventTypes)
