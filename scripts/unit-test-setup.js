@@ -23,6 +23,43 @@ const nxSrcPath = (relative) => {
 const realWorkspaceRoot = path.resolve(__dirname, '..');
 
 module.exports = () => {
+  // Diagnostic: dump cwd/argv/config so we can verify in CI logs that jest
+  // is being launched with the project's config (and not the workspace
+  // root's multi-project config). Goes to a sibling file of the fs-trace
+  // log so it lands in the same artifact.
+  if (process.env.NX_FS_TRACE_FOREIGN_READS !== '0') {
+    try {
+      const fs = require('fs');
+      const out = process.env.NX_FS_TRACE_OUTPUT
+        ? path.isAbsolute(process.env.NX_FS_TRACE_OUTPUT)
+          ? process.env.NX_FS_TRACE_OUTPUT
+          : path.join(realWorkspaceRoot, process.env.NX_FS_TRACE_OUTPUT)
+        : path.join(realWorkspaceRoot, 'tmp', 'foreign-fs-reads.log');
+      fs.mkdirSync(path.dirname(out), { recursive: true });
+      const startupOut = out.replace(/\.log$/, '.startup.log');
+      fs.appendFileSync(
+        startupOut,
+        JSON.stringify(
+          {
+            ts: Date.now(),
+            cwd: process.cwd(),
+            argv: process.argv,
+            jestProject:
+              global.expect && global.expect.getState
+                ? global.expect.getState().testPath
+                : null,
+            nxTestProject: process.env.NX_TASK_TARGET_PROJECT,
+            envKeys: Object.keys(process.env)
+              .filter((k) => k.startsWith('NX_') || k === 'JEST_WORKER_ID')
+              .reduce((m, k) => ((m[k] = process.env[k]), m), {}),
+          },
+          null,
+          2
+        ) + '\n---\n'
+      );
+    } catch (_) {}
+  }
+
   /**
    * When the daemon is enabled during unit tests,
    * and the daemon is already running, the daemon-client.ts
