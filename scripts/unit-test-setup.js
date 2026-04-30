@@ -292,7 +292,10 @@ module.exports = () => {
    * ignored because they're either expected inputs or covered by other
    * mocks/inputs.
    */
-  if (process.env.NX_FS_TRACE_FOREIGN_READS) {
+  // Diagnostic trace defaults to ON so we capture data on the next CI run
+  // even if `nx.json`'s target env doesn't propagate. Set
+  // `NX_FS_TRACE_FOREIGN_READS=0` to disable.
+  if (process.env.NX_FS_TRACE_FOREIGN_READS !== '0') {
     const fs = require('fs');
     const realFs = { ...fs };
     const realPromises = fs.promises ? { ...fs.promises } : null;
@@ -393,16 +396,22 @@ module.exports = () => {
       'access',
     ].forEach(wrapAsync);
     if (realPromises) {
-      ['readFile', 'readdir', 'stat', 'lstat', 'realpath', 'open', 'access'].forEach(
-        (name) => {
-          const original = realPromises[name];
-          if (typeof original !== 'function') return;
-          fs.promises[name] = function (target, ...rest) {
-            if (isForeign(target)) recordViolation(`promises.${name}`, target);
-            return original.call(this, target, ...rest);
-          };
-        }
-      );
+      [
+        'readFile',
+        'readdir',
+        'stat',
+        'lstat',
+        'realpath',
+        'open',
+        'access',
+      ].forEach((name) => {
+        const original = realPromises[name];
+        if (typeof original !== 'function') return;
+        fs.promises[name] = function (target, ...rest) {
+          if (isForeign(target)) recordViolation(`promises.${name}`, target);
+          return original.call(this, target, ...rest);
+        };
+      });
     }
   }
 };
