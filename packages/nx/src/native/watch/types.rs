@@ -118,7 +118,7 @@ pub(super) fn transform_event_to_watch_events(
 
     #[cfg(target_os = "macos")]
     {
-        use std::os::macos::fs::MetadataExt;
+        use std::time::Duration;
 
         // Skip directory events
         if meta_is_dir(metadata) {
@@ -136,15 +136,23 @@ pub(super) fn transform_event_to_watch_events(
             // correctly.
             Err(_) => EventType::delete,
             Ok(t) => {
-                let modified_time = t.st_mtime();
-                let birth_time = t.st_birthtime();
-
-                // if a file is created and updated near the same time, we always get a create event
-                // so we need to check the timestamps to see if it was created or updated
-                if modified_time == birth_time {
-                    EventType::create
-                } else {
-                    EventType::update
+                // FSEvents reports Create for in-place updates of recently-active
+                // paths; we disambiguate via inode timestamps. `fs::write` is
+                // O_CREAT (stamps birthtime) + a separate write (stamps mtime)
+                // ~100µs later, so strict ns equality mis-Updates fresh writes
+                // and whole-second equality mis-Creates same-second updates.
+                // Tolerance covers kernel jitter; bursts within IDLE_WINDOW
+                // (100ms) coalesce and the (Create, Update) → Create merge rule
+                // makes the per-event label immaterial inside that window.
+                const FRESH_WRITE_TOLERANCE: Duration = Duration::from_millis(50);
+                let delta = t
+                    .modified()
+                    .ok()
+                    .zip(t.created().ok())
+                    .and_then(|(m, b)| m.duration_since(b).ok());
+                match delta {
+                    Some(d) if d > FRESH_WRITE_TOLERANCE => EventType::update,
+                    _ => EventType::create,
                 }
             }
         };
