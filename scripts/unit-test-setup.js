@@ -421,7 +421,7 @@ module.exports = () => {
 
     const seenStacks = new Set();
     const events = [];
-    const MAX_EVENTS = Number(process.env.NX_FS_TRACE_MAX || 200);
+    const MAX_EVENTS = Number(process.env.NX_FS_TRACE_MAX || 5000);
 
     const isForeign = (target) => {
       if (typeof target !== 'string') {
@@ -447,7 +447,13 @@ module.exports = () => {
       // Drop the top two frames (Error + recordViolation + the wrapper),
       // keep the original caller frames.
       const trimmed = stack.split('\n').slice(3).join('\n');
-      const key = `${op}|${trimmed.split('\n')[0]}`;
+      // Dedup on path AND callsite — earlier we keyed only on the top
+      // frame, which collapsed e.g. `Object.readFileSync (node:fs:444:35)`
+      // across every path Jest's Runtime ever read. Including the path
+      // means we get one entry per distinct foreign file, matching what
+      // the sandbox reports.
+      const targetStr = typeof target === 'string' ? target : String(target);
+      const key = `${op}|${targetStr}|${trimmed.split('\n')[0]}`;
       if (seenStacks.has(key)) return;
       seenStacks.add(key);
       const event = {
