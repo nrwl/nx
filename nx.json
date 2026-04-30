@@ -113,7 +113,10 @@
     },
     "test": {
       "dependsOn": ["test-native", "build-native", "^build-native"],
-      "outputs": ["{workspaceRoot}/dist/test-fs-trace/nx.log"],
+      "outputs": [
+        "{workspaceRoot}/dist/test-fs-trace/nx.log",
+        "{workspaceRoot}/dist/test-fs-trace/nx.startup.log"
+      ],
       "options": {
         "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
         "env": {
