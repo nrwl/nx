@@ -107,6 +107,12 @@
       }
     },
     "test-native": {},
+    "test": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/packages/js/src/release/version-actions.ts"
+      ]
+    },
     "format-native": {
       "command": "cargo fmt",
       "cache": true,
