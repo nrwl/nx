@@ -278,4 +278,129 @@ module.exports = () => {
   mockIsUsingTsSolutionSetup(
     '@nx/workspace/src/utilities/typescript/ts-solution-setup'
   );
+
+  /**
+   * Diagnostic instrumentation: when NX_FS_TRACE_FOREIGN_READS is set, wrap
+   * the fs syscalls jest sandboxing reports as "unexpected reads" and dump
+   * stack traces for the first time each foreign-package path is touched.
+   * Output goes to <NX_FS_TRACE_OUTPUT or `tmp/foreign-fs-reads.log`> so we
+   * can pick it up from CI artifacts. The wrapper is no-op unless the env
+   * var is set, so the regular test run is unaffected.
+   *
+   * "Foreign" means: under <realWorkspaceRoot>/packages/<x> where <x> is not
+   * `nx`. Reads of `packages/nx/...`, the temp dir, node_modules, etc. are
+   * ignored because they're either expected inputs or covered by other
+   * mocks/inputs.
+   */
+  if (process.env.NX_FS_TRACE_FOREIGN_READS) {
+    const fs = require('fs');
+    const realFs = { ...fs };
+    const realPromises = fs.promises ? { ...fs.promises } : null;
+    const packagesRoot = path.join(realWorkspaceRoot, 'packages') + path.sep;
+    const allowedPackagePrefix = path.join(packagesRoot, 'nx') + path.sep;
+    const allowedTmpPrefix = path.join(realWorkspaceRoot, 'tmp') + path.sep;
+    const allowedNodeModules =
+      path.join(realWorkspaceRoot, 'node_modules') + path.sep;
+
+    const seenStacks = new Set();
+    const events = [];
+    const MAX_EVENTS = Number(process.env.NX_FS_TRACE_MAX || 200);
+
+    const isForeign = (target) => {
+      if (typeof target !== 'string') {
+        if (target instanceof Buffer) target = target.toString('utf8');
+        else if (target instanceof URL) target = target.pathname;
+        else return false;
+      }
+      if (!target.startsWith(packagesRoot)) return false;
+      if (target.startsWith(allowedPackagePrefix)) return false;
+      if (target.startsWith(allowedTmpPrefix)) return false;
+      if (target.startsWith(allowedNodeModules)) return false;
+      return true;
+    };
+
+    const out =
+      process.env.NX_FS_TRACE_OUTPUT ||
+      path.join(realWorkspaceRoot, 'tmp', 'foreign-fs-reads.log');
+    try {
+      realFs.mkdirSync(path.dirname(out), { recursive: true });
+    } catch (_) {}
+
+    const recordViolation = (op, target) => {
+      if (seenStacks.size >= MAX_EVENTS) return;
+      const stack = new Error().stack || '';
+      // Drop the top two frames (Error + recordViolation + the wrapper),
+      // keep the original caller frames.
+      const trimmed = stack.split('\n').slice(3).join('\n');
+      const key = `${op}|${trimmed.split('\n')[0]}`;
+      if (seenStacks.has(key)) return;
+      seenStacks.add(key);
+      const event = {
+        op,
+        path: typeof target === 'string' ? target : String(target),
+        stack: trimmed,
+      };
+      events.push(event);
+      // Flush per-event so we still get data if --forceExit kills us.
+      try {
+        realFs.appendFileSync(out, JSON.stringify(event) + '\n');
+      } catch (_) {}
+      // Echo the first 20 unique violations to stderr so they show up in
+      // the CI log directly even without artifact upload.
+      if (seenStacks.size <= 20) {
+        try {
+          process.stderr.write(
+            `[fs-trace] ${op} ${event.path}\n${trimmed}\n---\n`
+          );
+        } catch (_) {}
+      }
+    };
+
+    const wrapSync = (name) => {
+      const original = realFs[name];
+      if (typeof original !== 'function') return;
+      fs[name] = function (target, ...rest) {
+        if (isForeign(target)) recordViolation(name, target);
+        return original.call(this, target, ...rest);
+      };
+    };
+    const wrapAsync = (name) => {
+      const original = realFs[name];
+      if (typeof original !== 'function') return;
+      fs[name] = function (target, ...rest) {
+        if (isForeign(target)) recordViolation(name, target);
+        return original.call(this, target, ...rest);
+      };
+    };
+    [
+      'readFileSync',
+      'readdirSync',
+      'statSync',
+      'lstatSync',
+      'existsSync',
+      'realpathSync',
+      'openSync',
+    ].forEach(wrapSync);
+    [
+      'readFile',
+      'readdir',
+      'stat',
+      'lstat',
+      'realpath',
+      'open',
+      'access',
+    ].forEach(wrapAsync);
+    if (realPromises) {
+      ['readFile', 'readdir', 'stat', 'lstat', 'realpath', 'open', 'access'].forEach(
+        (name) => {
+          const original = realPromises[name];
+          if (typeof original !== 'function') return;
+          fs.promises[name] = function (target, ...rest) {
+            if (isForeign(target)) recordViolation(`promises.${name}`, target);
+            return original.call(this, target, ...rest);
+          };
+        }
+      );
+    }
+  }
 };
