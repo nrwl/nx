@@ -1964,6 +1964,18 @@ describe('Migration', () => {
       });
     });
 
+    it('should default to nx@latest when no packageAndVersion is provided', async () => {
+      jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+        .mockImplementation((pkg, version) => Promise.resolve(version));
+      const r = await parseMigrationsOptions({});
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: 'nx',
+        targetVersion: 'latest',
+      });
+    });
+
     it('should handle different variations of the target package', async () => {
       const packageRegistryViewSpy = jest
         .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')

@@ -1045,7 +1045,7 @@ export async function parseMigrationsOptions(options: {
         : Promise.resolve({} as Record<string, string>),
     ]);
     const { targetPackage, targetVersion } = await parseTargetPackageAndVersion(
-      options['packageAndVersion']
+      options['packageAndVersion'] || 'latest'
     );
     const normalizedTargetPackage = normalizeSlashes(targetPackage);
     if (
