@@ -1,14 +1,24 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import * as devkit from '@nx/devkit';
-import { type ProjectGraph, readJson, type Tree, updateJson } from '@nx/devkit';
+import {
+  addProjectConfiguration,
+  joinPathFragments,
+  type ProjectGraph,
+  readJson,
+  readProjectConfiguration,
+  removeProjectConfiguration,
+  type Tree,
+  updateJson,
+  visitNotIgnoredFiles,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
 import { generateTestLibrary } from '../utils/testing';
-import { angularMoveGenerator } from './move';
+import { move } from './move-impl';
 
-describe('@nx/angular:move', () => {
+describe('move-impl (Angular plugin for @nx/workspace:move)', () => {
   let tree: Tree;
   let projectGraph: ProjectGraph;
 
@@ -27,6 +37,52 @@ describe('@nx/angular:move', () => {
         },
       },
     };
+  }
+
+  // Mimics the file/config moves performed by `@nx/workspace:move` before it
+  // invokes the Angular plugin: copies files to the new root, removes the old
+  // project config, and re-registers the project under its new name with the
+  // root rewritten in target paths.
+  function relocateProject(
+    oldProjectName: string,
+    newProjectName: string,
+    destination: string
+  ): void {
+    const oldConfig = readProjectConfiguration(tree, oldProjectName);
+    const oldRoot = oldConfig.root;
+    const oldProjectJson = joinPathFragments(oldRoot, 'project.json');
+
+    visitNotIgnoredFiles(tree, oldRoot, (filePath) => {
+      if (filePath === oldProjectJson) {
+        return;
+      }
+      const newPath = destination + filePath.slice(oldRoot.length);
+      tree.write(newPath, tree.read(filePath));
+      tree.delete(filePath);
+    });
+
+    removeProjectConfiguration(tree, oldProjectName);
+
+    const escapedOldRoot = oldRoot.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const rewritten = JSON.parse(
+      JSON.stringify(oldConfig).replace(
+        new RegExp(`(?<![\\w-])${escapedOldRoot}(?![\\w-])`, 'g'),
+        destination
+      )
+    );
+    addProjectConfiguration(tree, newProjectName, {
+      ...rewritten,
+      name: newProjectName,
+    });
+  }
+
+  async function runAngularPlugin(
+    oldProjectName: string,
+    destination: string,
+    newProjectName: string = oldProjectName
+  ): Promise<void> {
+    relocateProject(oldProjectName, newProjectName, destination);
+    await move(tree, { oldProjectName, newProjectName });
   }
 
   beforeEach(async () => {
@@ -50,13 +106,7 @@ describe('@nx/angular:move', () => {
   it('should move a project', async () => {
     addProjectToGraph('my-lib');
 
-    await angularMoveGenerator(tree, {
-      projectName: 'my-lib',
-      newProjectName: 'mynewlib',
-      destination: 'mynewlib',
-      updateImportPath: true,
-      skipFormat: true,
-    });
+    await runAngularPlugin('my-lib', 'mynewlib', 'mynewlib');
 
     expect(tree.exists('mynewlib/src/lib/mynewlib-module.ts')).toEqual(true);
   });
@@ -69,12 +119,7 @@ describe('@nx/angular:move', () => {
     });
     addProjectToGraph('mylib2');
 
-    await angularMoveGenerator(tree, {
-      projectName: 'mylib2',
-      destination: 'mynewlib2',
-      updateImportPath: true,
-      skipFormat: true,
-    });
+    await runAngularPlugin('mylib2', 'mynewlib2');
 
     const ngPackageJson = readJson(tree, 'mynewlib2/ng-package.json');
     expect(ngPackageJson.dest).toEqual('../dist/mynewlib2');
@@ -93,13 +138,7 @@ describe('@nx/angular:move', () => {
     });
     addProjectToGraph('mylib2');
 
-    await angularMoveGenerator(tree, {
-      projectName: 'mylib2',
-      newProjectName: 'mynewlib2',
-      destination: 'mynewlib2',
-      updateImportPath: true,
-      skipFormat: true,
-    });
+    await runAngularPlugin('mylib2', 'mynewlib2', 'mynewlib2');
 
     const readme = tree.read('mynewlib2/testing/README.md', 'utf-8');
     expect(readme).toMatchInlineSnapshot(`
@@ -113,12 +152,7 @@ describe('@nx/angular:move', () => {
   it('should handle nesting resulting in the same project name', async () => {
     addProjectToGraph('my-lib');
 
-    await angularMoveGenerator(tree, {
-      projectName: 'my-lib',
-      destination: 'my/lib',
-      updateImportPath: true,
-      skipFormat: true,
-    });
+    await runAngularPlugin('my-lib', 'my/lib');
 
     expect(tree.exists('my/lib/src/lib/my-lib-module.ts')).toBe(true);
     const moduleFile = tree.read('my/lib/src/lib/my-lib-module.ts', 'utf-8');
@@ -175,13 +209,7 @@ describe('@nx/angular:move', () => {
     it('should rename the module files and update the module name', async () => {
       addProjectToGraph('my-lib');
 
-      await angularMoveGenerator(tree, {
-        projectName: 'my-lib',
-        newProjectName: 'shared-my-lib',
-        destination: 'shared/my-lib',
-        updateImportPath: true,
-        skipFormat: true,
-      });
+      await runAngularPlugin('my-lib', 'shared/my-lib', 'shared-my-lib');
 
       expect(tree.exists('shared/my-lib/src/lib/shared-my-lib-module.ts')).toBe(
         true
@@ -210,24 +238,16 @@ describe('@nx/angular:move', () => {
       );
     });
 
-    it('should update any references to the module', async () => {
+    it('should rename the module class in importer files', async () => {
       addProjectToGraph('my-lib');
 
-      await angularMoveGenerator(tree, {
-        projectName: 'my-lib',
-        newProjectName: 'shared-my-lib',
-        destination: 'shared/my-lib',
-        updateImportPath: true,
-        skipFormat: true,
-      });
+      await runAngularPlugin('my-lib', 'shared/my-lib', 'shared-my-lib');
 
       const importerFile = tree.read(
         'my-lib2/src/lib/my-lib2-module.ts',
         'utf-8'
       );
-      expect(importerFile).toContain(
-        `import { SharedMyLibModule } from '@proj/shared-my-lib';`
-      );
+      expect(importerFile).toContain(`import { SharedMyLibModule }`);
       expect(importerFile).toContain(
         `export class MyLib2Module extends SharedMyLibModule {}`
       );
@@ -236,13 +256,7 @@ describe('@nx/angular:move', () => {
     it('should update the index.ts file which exports the module', async () => {
       addProjectToGraph('my-lib');
 
-      await angularMoveGenerator(tree, {
-        projectName: 'my-lib',
-        newProjectName: 'shared-my-lib',
-        destination: 'shared/my-lib',
-        updateImportPath: true,
-        skipFormat: true,
-      });
+      await runAngularPlugin('my-lib', 'shared/my-lib', 'shared-my-lib');
 
       const indexFile = tree.read('shared/my-lib/src/index.ts', 'utf-8');
       expect(indexFile).toContain(
@@ -273,13 +287,7 @@ describe('@nx/angular:move', () => {
     it('should rename the module file and update the module name', async () => {
       addProjectToGraph('my-lib');
 
-      await angularMoveGenerator(tree, {
-        projectName: 'my-lib',
-        newProjectName: 'my-destination',
-        destination: 'my-destination',
-        updateImportPath: true,
-        skipFormat: true,
-      });
+      await runAngularPlugin('my-lib', 'my-destination', 'my-destination');
 
       expect(
         tree.exists('my-destination/src/lib/my-destination-module.ts')
@@ -292,24 +300,16 @@ describe('@nx/angular:move', () => {
       expect(moduleFile).toContain(`export class MyDestinationModule {}`);
     });
 
-    it('should update any references to the module', async () => {
+    it('should rename the module class in importer files', async () => {
       addProjectToGraph('my-lib');
 
-      await angularMoveGenerator(tree, {
-        projectName: 'my-lib',
-        newProjectName: 'my-destination',
-        destination: 'my-destination',
-        updateImportPath: true,
-        skipFormat: true,
-      });
+      await runAngularPlugin('my-lib', 'my-destination', 'my-destination');
 
       const importerFile = tree.read(
         'my-importer/src/lib/my-importing-file.ts',
         'utf-8'
       );
-      expect(importerFile).toContain(
-        `import { MyDestinationModule } from '@proj/my-destination';`
-      );
+      expect(importerFile).toContain(`import { MyDestinationModule }`);
       expect(importerFile).toContain(
         `export class MyExtendedLibModule extends MyDestinationModule {}`
       );
@@ -318,13 +318,7 @@ describe('@nx/angular:move', () => {
     it('should update the index.ts file which exports the module', async () => {
       addProjectToGraph('my-lib');
 
-      await angularMoveGenerator(tree, {
-        projectName: 'my-lib',
-        newProjectName: 'my-destination',
-        destination: 'my-destination',
-        updateImportPath: true,
-        skipFormat: true,
-      });
+      await runAngularPlugin('my-lib', 'my-destination', 'my-destination');
 
       const indexFile = tree.read('my-destination/src/index.ts', 'utf-8');
       expect(indexFile).toContain(
@@ -346,13 +340,7 @@ describe('@nx/angular:move', () => {
       });
       addProjectToGraph('my-lib');
 
-      await angularMoveGenerator(tree, {
-        projectName: 'my-lib',
-        newProjectName: 'my-destination',
-        destination: 'my-destination',
-        updateImportPath: true,
-        skipFormat: true,
-      });
+      await runAngularPlugin('my-lib', 'my-destination', 'my-destination');
 
       const moduleFile = tree.read(
         'my-lib-demo/src/lib/my-lib-demo-module.ts',
@@ -385,13 +373,7 @@ describe('@nx/angular:move', () => {
         skipFormat: true,
       });
 
-      await angularMoveGenerator(tree, {
-        projectName: 'my-lib',
-        destination: 'my-new-lib',
-        newProjectName: 'my-new-lib',
-        updateImportPath: true,
-        skipFormat: true,
-      });
+      await runAngularPlugin('my-lib', 'my-new-lib', 'my-new-lib');
 
       expect(tree.exists('my-lib/src/lib/my-lib.module.ts')).toBe(false);
       expect(tree.read('my-new-lib/src/lib/my-new-lib.module.ts', 'utf-8'))
@@ -435,13 +417,7 @@ describe('@nx/angular:move', () => {
         skipFormat: true,
       });
 
-      await angularMoveGenerator(tree, {
-        projectName: 'my-lib',
-        destination: 'my-new-lib',
-        newProjectName: 'my-new-lib',
-        updateImportPath: true,
-        skipFormat: true,
-      });
+      await runAngularPlugin('my-lib', 'my-new-lib', 'my-new-lib');
 
       expect(tree.exists('my-lib/src/lib/my-lib.module.ts')).toBe(false);
       expect(tree.read('my-new-lib/src/lib/my-new-lib.module.ts', 'utf-8'))

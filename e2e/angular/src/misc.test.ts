@@ -16,7 +16,7 @@ describe('Move Angular Project', () => {
   let newPath: string;
 
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/angular'] });
+    proj = newProject({ packages: ['@nx/angular', '@nx/workspace'] });
     app1 = uniq('app1');
     app2 = uniq('app2');
     newPath = `subfolder/${app2}`;
@@ -32,7 +32,7 @@ describe('Move Angular Project', () => {
    */
   it('should work for apps', () => {
     const moveOutput = runCLI(
-      `generate @nx/angular:move --project ${app1} ${newPath} `
+      `generate @nx/workspace:move --project ${app1} ${newPath} `
     );
 
     // just check the output
@@ -74,7 +74,7 @@ describe('Move Angular Project', () => {
   `
     );
     const moveOutput = runCLI(
-      `generate @nx/angular:move --projectName=${app1}-e2e --destination=${newPath}-e2e`
+      `generate @nx/workspace:move --projectName=${app1}-e2e --destination=${newPath}-e2e`
     );
 
     // just check that the cypress.config.ts is updated correctly
@@ -115,7 +115,7 @@ describe('Move Angular Project', () => {
     );
 
     const moveOutput = runCLI(
-      `generate @nx/angular:move --projectName=${lib1} --destination=shared/${lib1} --newProjectName=shared-${lib1}`
+      `generate @nx/workspace:move --projectName=${lib1} --destination=shared/${lib1} --newProjectName=shared-${lib1}`
     );
 
     const newPath = `shared/${lib1}`;

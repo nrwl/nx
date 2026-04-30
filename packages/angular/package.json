@@ -58,7 +58,6 @@
     "@nx/rspack": "workspace:*",
     "@nx/web": "workspace:*",
     "@nx/webpack": "workspace:*",
-    "@nx/workspace": "workspace:*",
     "@phenomnomnominal/tsquery": "catalog:typescript",
     "@typescript-eslint/type-utils": "^8.0.0",
     "enquirer": "catalog:",

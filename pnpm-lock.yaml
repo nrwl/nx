@@ -2323,9 +2323,6 @@ importers:
       '@nx/webpack':
         specifier: workspace:*
         version: link:../webpack
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../workspace
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
         version: 6.1.4(typescript@5.9.2)
