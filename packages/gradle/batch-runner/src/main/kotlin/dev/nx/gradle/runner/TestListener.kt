@@ -3,6 +3,7 @@ package dev.nx.gradle.runner
 import dev.nx.gradle.data.GradleTask
 import dev.nx.gradle.util.formatMillis
 import dev.nx.gradle.util.logger
+import org.gradle.tooling.events.OperationDescriptor
 import org.gradle.tooling.events.ProgressEvent
 import org.gradle.tooling.events.task.TaskFinishEvent
 import org.gradle.tooling.events.test.*
@@ -12,6 +13,7 @@ fun testListener(
     testTaskStatus: MutableMap<String, Boolean>,
     testStartTimes: MutableMap<String, Long>,
     testEndTimes: MutableMap<String, Long>,
+    onTestOutput: (nxTaskId: String, message: String) -> Unit = { _, _ -> },
     onTestTaskComplete: (nxTaskId: String) -> Unit = {},
 ): (ProgressEvent) -> Unit {
   val classNameToTaskId: Map<String, String> =
@@ -19,8 +21,32 @@ fun testListener(
   val taskPathToTaskIds: Map<String, List<String>> =
       tasks.entries.groupBy({ normalizeTaskPath(it.value.taskName) }, { it.key })
 
+  // Walk up the parent chain to find the test class this output came from,
+  // then map that class name to its Nx task id.
+  fun findNxTaskIdForOutput(descriptor: OperationDescriptor): String? {
+    var current: OperationDescriptor? = descriptor.parent
+    while (current != null) {
+      if (current is JvmTestOperationDescriptor) {
+        val className = current.className
+        if (className != null) {
+          classNameToTaskId[className]?.let {
+            return it
+          }
+        }
+      }
+      current = current.parent
+    }
+    return null
+  }
+
   return { event ->
     when (event) {
+      is TestOutputEvent -> {
+        findNxTaskIdForOutput(event.descriptor)?.let { nxTaskId ->
+          onTestOutput(nxTaskId, event.descriptor.message)
+        }
+      }
+
       is TaskFinishEvent -> {
         val taskPath = event.descriptor.taskPath
         val success = getTaskFinishEventSuccess(event, taskPath)
