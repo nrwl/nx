@@ -260,118 +260,67 @@ export class ExampleRustVersionActions extends VersionActions {
   }
 }
 
+const DEPENDENCY_FIELDS = [
+  'dependencies',
+  'devDependencies',
+  'peerDependencies',
+  'optionalDependencies',
+] as const;
+
 /**
- * A test-only stand-in for `JsVersionActions` from `@nx/js`. Mirrors the
- * orchestration-relevant behavior of the real implementation against
- * synthetic `package.json` files in the tree, without importing
- * `@nx/devkit` or `@nx/js` source — so the nx unit tests can drive the
- * release pipeline without pulling either package's source tree into
- * the sandbox.
- *
- * Anything genuinely specific to `JsVersionActions` (npm registry
- * resolution, lockfile updates, catalog support, etc.) is intentionally
- * not implemented here — those tests live in `packages/js/src/release`
- * where they can import the real `JsVersionActions` directly.
+ * Test-only stand-in for `JsVersionActions` from `@nx/js`. Implements
+ * just enough of the contract to drive the release-orchestration tests
+ * against synthetic `package.json` files in the tree, without importing
+ * `@nx/devkit` or `@nx/js` source. JS-specific behavior (registry
+ * resolution, catalog support, lockfile updates) is exercised by
+ * `packages/js`'s own tests against the real `JsVersionActions`.
  */
 export class MockJsVersionActions extends VersionActions {
   validManifestFilenames = ['package.json'];
 
-  private readPackageJson(tree: Tree, manifestPath: string): any {
-    const raw = tree.read(manifestPath, 'utf-8');
-    if (raw === null) {
-      throw new Error(`Manifest not found at ${manifestPath}`);
-    }
-    return JSON.parse(raw.toString());
-  }
+  private read = (tree: Tree, manifestPath: string): any =>
+    JSON.parse(tree.read(manifestPath, 'utf-8')!.toString());
 
-  private writePackageJson(tree: Tree, manifestPath: string, json: any): void {
-    // Match `@nx/devkit`'s `updateJson` formatting: 2-space indent + trailing
-    // newline so spec snapshots taken against the real implementation
-    // continue to match.
+  // Match `@nx/devkit`'s `updateJson` formatting (2-space indent + trailing
+  // newline) so existing snapshots continue to match.
+  private write = (tree: Tree, manifestPath: string, json: any): void =>
     tree.write(manifestPath, JSON.stringify(json, null, 2) + '\n');
+
+  private sourceManifestPath = (): string =>
+    join(this.projectGraphNode.data.root, 'package.json');
+
+  async readCurrentVersionFromSourceManifest(tree: Tree) {
+    const manifestPath = this.sourceManifestPath();
+    return { manifestPath, currentVersion: this.read(tree, manifestPath).version };
   }
 
-  async readCurrentVersionFromSourceManifest(tree: Tree): Promise<{
-    currentVersion: string;
-    manifestPath: string;
-  }> {
-    const sourcePackageJsonPath = join(
-      this.projectGraphNode.data.root,
-      'package.json'
-    );
-    try {
-      const packageJson = this.readPackageJson(tree, sourcePackageJsonPath);
-      return {
-        manifestPath: sourcePackageJsonPath,
-        currentVersion: packageJson.version,
-      };
-    } catch {
-      throw new Error(
-        `Unable to determine the current version for project "${this.projectGraphNode.name}" from ${sourcePackageJsonPath}, please ensure that the "version" field is set within the package.json file`
-      );
-    }
-  }
-
-  // Stubbed: registry resolution is JS-specific behavior that's exercised
-  // by `packages/js`'s own tests. Tests reaching this code path here
-  // either don't care about the value or override it via a spy.
   async readCurrentVersionFromRegistry() {
-    return {
-      currentVersion: null,
-      logText: 'mock-registry',
-    };
+    return { currentVersion: null, logText: 'mock-registry' };
   }
 
   async readCurrentVersionOfDependency(
     tree: Tree,
     projectGraph: ProjectGraph,
     dependencyProjectName: string
-  ): Promise<{
-    currentVersion: string | null;
-    dependencyCollection: string | null;
-  }> {
-    const sourcePackageJsonPath = join(
-      this.projectGraphNode.data.root,
-      'package.json'
-    );
-    const json = this.readPackageJson(tree, sourcePackageJsonPath);
-    const dependencyPackageName =
+  ) {
+    const json = this.read(tree, this.sourceManifestPath());
+    const name =
       projectGraph.nodes[dependencyProjectName].data.metadata?.js?.packageName;
-    if (!dependencyPackageName) {
-      return { currentVersion: null, dependencyCollection: null };
-    }
-    const dependencyTypes = [
-      'dependencies',
-      'devDependencies',
-      'peerDependencies',
-      'optionalDependencies',
-    ];
-
-    for (const depType of dependencyTypes) {
-      if (json[depType] && json[depType][dependencyPackageName]) {
-        return {
-          currentVersion: json[depType][dependencyPackageName],
-          dependencyCollection: depType,
-        };
+    for (const depType of DEPENDENCY_FIELDS) {
+      if (name && json[depType]?.[name]) {
+        return { currentVersion: json[depType][name], dependencyCollection: depType };
       }
     }
     return { currentVersion: null, dependencyCollection: null };
   }
 
-  async updateProjectVersion(
-    tree: Tree,
-    newVersion: string
-  ): Promise<string[]> {
-    const logMessages: string[] = [];
-    for (const manifestToUpdate of this.manifestsToUpdate) {
-      const json = this.readPackageJson(tree, manifestToUpdate.manifestPath);
+  async updateProjectVersion(tree: Tree, newVersion: string): Promise<string[]> {
+    return this.manifestsToUpdate.map(({ manifestPath }) => {
+      const json = this.read(tree, manifestPath);
       json.version = newVersion;
-      this.writePackageJson(tree, manifestToUpdate.manifestPath, json);
-      logMessages.push(
-        `✍️  New version ${newVersion} written to manifest: ${manifestToUpdate.manifestPath}`
-      );
-    }
-    return logMessages;
+      this.write(tree, manifestPath, json);
+      return `✍️  New version ${newVersion} written to manifest: ${manifestPath}`;
+    });
   }
 
   async updateProjectDependencies(
@@ -379,61 +328,36 @@ export class MockJsVersionActions extends VersionActions {
     projectGraph: ProjectGraph,
     dependenciesToUpdate: Record<string, string>
   ): Promise<string[]> {
-    let numDependenciesToUpdate = Object.keys(dependenciesToUpdate).length;
-    if (numDependenciesToUpdate === 0) {
-      return [];
-    }
+    let count = Object.keys(dependenciesToUpdate).length;
+    if (count === 0) return [];
 
-    const logMessages: string[] = [];
-
-    for (const manifestToUpdate of this.manifestsToUpdate) {
-      const json = this.readPackageJson(tree, manifestToUpdate.manifestPath);
-      const dependencyTypes = [
-        'dependencies',
-        'devDependencies',
-        'peerDependencies',
-        'optionalDependencies',
-      ];
-
-      for (const depType of dependencyTypes) {
+    const logs: string[] = [];
+    for (const { manifestPath, preserveLocalDependencyProtocols } of this
+      .manifestsToUpdate) {
+      const json = this.read(tree, manifestPath);
+      for (const depType of DEPENDENCY_FIELDS) {
         if (!json[depType]) continue;
-        for (const [dep, version] of Object.entries(dependenciesToUpdate)) {
-          const packageName =
-            projectGraph.nodes[dep].data.metadata?.js?.packageName;
-          if (!packageName) {
-            throw new Error(
-              `Unable to determine the package name for project "${dep}" from the project graph metadata, please ensure that the "@nx/js" plugin is installed and the project graph has been built. If the issue persists, please report this issue on https://github.com/nrwl/nx/issues`
-            );
-          }
-          const currentVersion = json[depType][packageName];
-          if (!currentVersion) continue;
+        for (const [dep, newVersion] of Object.entries(dependenciesToUpdate)) {
+          const name = projectGraph.nodes[dep].data.metadata?.js?.packageName;
+          const current = name && json[depType][name];
+          if (!current) continue;
           if (
-            manifestToUpdate.preserveLocalDependencyProtocols &&
-            (currentVersion.startsWith('file:') ||
-              currentVersion.startsWith('workspace:'))
+            preserveLocalDependencyProtocols &&
+            (current.startsWith('file:') || current.startsWith('workspace:'))
           ) {
-            numDependenciesToUpdate--;
+            count--;
             continue;
           }
-          json[depType][packageName] = version;
+          json[depType][name] = newVersion;
         }
       }
-
-      this.writePackageJson(tree, manifestToUpdate.manifestPath, json);
-
-      if (numDependenciesToUpdate === 0) {
-        return [];
+      this.write(tree, manifestPath, json);
+      if (count > 0) {
+        const word = count === 1 ? 'dependency' : 'dependencies';
+        logs.push(`✍️  Updated ${count} ${word} in manifest: ${manifestPath}`);
       }
-
-      const depText =
-        numDependenciesToUpdate === 1 ? 'dependency' : 'dependencies';
-
-      logMessages.push(
-        `✍️  Updated ${numDependenciesToUpdate} ${depText} in manifest: ${manifestToUpdate.manifestPath}`
-      );
     }
-
-    return logMessages;
+    return logs;
   }
 }
 
