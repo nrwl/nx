@@ -36,7 +36,7 @@ describe('Angular Module Federation - Host and Remote', () => {
 
     // generate host app
     runCLI(
-      `generate @nx/angular:host ${hostApp} --style=css --no-standalone --unitTestRunner=jest --no-interactive`
+      `generate @nx/angular:host ${hostApp} --port=${hostPort} --style=css --no-standalone --unitTestRunner=jest --no-interactive`
     );
     // generate remote app
     runCLI(

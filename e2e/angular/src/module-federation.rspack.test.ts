@@ -40,7 +40,7 @@ describe('Angular Module Federation', () => {
 
     // generate host app
     runCLI(
-      `generate @nx/angular:host ${hostApp} --style=css --bundler=rspack --no-standalone --no-interactive`
+      `generate @nx/angular:host ${hostApp} --port=${hostPort} --style=css --bundler=rspack --no-standalone --no-interactive`
     );
     let rspackConfigFileContents = readFile(join(hostApp, 'rspack.config.ts'));
     let updatedConfigFileContents = rspackConfigFileContents.replace(
@@ -185,7 +185,7 @@ describe('Angular Module Federation', () => {
 
     // generate host with playwright e2e runner
     runCLI(
-      `generate @nx/angular:host ${hostApp} --style=css --bundler=rspack --e2eTestRunner=playwright --no-interactive`
+      `generate @nx/angular:host ${hostApp} --port=${hostPort} --style=css --bundler=rspack --e2eTestRunner=playwright --no-interactive`
     );
 
     // generate remote
