@@ -328,6 +328,62 @@ module.exports = () => {
   );
 
   /**
+   * Two helpers in `packages/nx/src/utils/` probe the filesystem via
+   * `require.resolve` to find sibling Nx packages:
+   *
+   *  - `hasNxJsPlugin(projectRoot, workspaceRoot)` (in `has-nx-js-plugin.ts`)
+   *    — checks whether `@nx/js` is installed so it can decide whether to
+   *    inject the implicit `nx-release-publish` target on a
+   *    `package.json`-based project.
+   *  - `readModulePackageJsonWithoutFallbacks(specifier, paths)` (in
+   *    `package-json.ts`) — reads a plugin's `package.json`. Used by
+   *    `readPluginPackageJson`, `readExecutorJson`, and target normalization.
+   *
+   * In unit tests `__dirname` falls back to the real `packages/nx/src/utils`,
+   * so even when callers pass a synthetic `workspaceRoot` like `/tmp/test`,
+   * Node's resolver walks up to the real repo's pnpm-symlinked
+   * `node_modules` and lands on `packages/<plugin>/package.json`. Each one
+   * shows up as a sandbox-violating foreign read.
+   *
+   * Pin both behaviors:
+   *   - `hasNxJsPlugin` → always `true`, matching the de-facto answer in
+   *     this repo (and what tests expect — they assert the implicit
+   *     target gets added).
+   *   - `readModulePackageJsonWithoutFallbacks` → throw MODULE_NOT_FOUND for
+   *     `@nx/*` lookups. Production callers (`readPluginPackageJson`,
+   *     `readExecutorJson`, target normalization) all catch MODULE_NOT_FOUND
+   *     and degrade gracefully.
+   */
+  const hasNxJsPluginPath = nxSrcPath('utils/has-nx-js-plugin');
+  jest.doMock(hasNxJsPluginPath, () => ({
+    __esModule: true,
+    hasNxJsPlugin: () => true,
+  }));
+
+  const packageJsonPath = nxSrcPath('utils/package-json');
+  jest.doMock(packageJsonPath, () => {
+    const actual = jest.requireActual(packageJsonPath);
+    return {
+      __esModule: true,
+      ...actual,
+      readModulePackageJsonWithoutFallbacks: (
+        moduleSpecifier,
+        requirePaths
+      ) => {
+        if (moduleSpecifier && moduleSpecifier.startsWith('@nx/')) {
+          const err = new Error(`Cannot find module '${moduleSpecifier}'`);
+          err.code = 'MODULE_NOT_FOUND';
+          throw err;
+        }
+        return actual.readModulePackageJsonWithoutFallbacks(
+          moduleSpecifier,
+          requirePaths
+        );
+      },
+    };
+  });
+
+  /**
    * Diagnostic instrumentation: when NX_FS_TRACE_FOREIGN_READS is set, wrap
    * the fs syscalls jest sandboxing reports as "unexpected reads" and dump
    * stack traces for the first time each foreign-package path is touched.
