@@ -260,6 +260,183 @@ export class ExampleRustVersionActions extends VersionActions {
   }
 }
 
+/**
+ * A test-only stand-in for `JsVersionActions` from `@nx/js`. Mirrors the
+ * orchestration-relevant behavior of the real implementation against
+ * synthetic `package.json` files in the tree, without importing
+ * `@nx/devkit` or `@nx/js` source — so the nx unit tests can drive the
+ * release pipeline without pulling either package's source tree into
+ * the sandbox.
+ *
+ * Anything genuinely specific to `JsVersionActions` (npm registry
+ * resolution, lockfile updates, catalog support, etc.) is intentionally
+ * not implemented here — those tests live in `packages/js/src/release`
+ * where they can import the real `JsVersionActions` directly.
+ */
+export class MockJsVersionActions extends VersionActions {
+  validManifestFilenames = ['package.json'];
+
+  private readPackageJson(tree: Tree, manifestPath: string): any {
+    const raw = tree.read(manifestPath, 'utf-8');
+    if (raw === null) {
+      throw new Error(`Manifest not found at ${manifestPath}`);
+    }
+    return JSON.parse(raw.toString());
+  }
+
+  private writePackageJson(tree: Tree, manifestPath: string, json: any): void {
+    // Match `@nx/devkit`'s `updateJson` formatting: 2-space indent + trailing
+    // newline so spec snapshots taken against the real implementation
+    // continue to match.
+    tree.write(manifestPath, JSON.stringify(json, null, 2) + '\n');
+  }
+
+  async readCurrentVersionFromSourceManifest(tree: Tree): Promise<{
+    currentVersion: string;
+    manifestPath: string;
+  }> {
+    const sourcePackageJsonPath = join(
+      this.projectGraphNode.data.root,
+      'package.json'
+    );
+    try {
+      const packageJson = this.readPackageJson(tree, sourcePackageJsonPath);
+      return {
+        manifestPath: sourcePackageJsonPath,
+        currentVersion: packageJson.version,
+      };
+    } catch {
+      throw new Error(
+        `Unable to determine the current version for project "${this.projectGraphNode.name}" from ${sourcePackageJsonPath}, please ensure that the "version" field is set within the package.json file`
+      );
+    }
+  }
+
+  // Stubbed: registry resolution is JS-specific behavior that's exercised
+  // by `packages/js`'s own tests. Tests reaching this code path here
+  // either don't care about the value or override it via a spy.
+  async readCurrentVersionFromRegistry() {
+    return {
+      currentVersion: null,
+      logText: 'mock-registry',
+    };
+  }
+
+  async readCurrentVersionOfDependency(
+    tree: Tree,
+    projectGraph: ProjectGraph,
+    dependencyProjectName: string
+  ): Promise<{
+    currentVersion: string | null;
+    dependencyCollection: string | null;
+  }> {
+    const sourcePackageJsonPath = join(
+      this.projectGraphNode.data.root,
+      'package.json'
+    );
+    const json = this.readPackageJson(tree, sourcePackageJsonPath);
+    const dependencyPackageName =
+      projectGraph.nodes[dependencyProjectName].data.metadata?.js?.packageName;
+    if (!dependencyPackageName) {
+      return { currentVersion: null, dependencyCollection: null };
+    }
+    const dependencyTypes = [
+      'dependencies',
+      'devDependencies',
+      'peerDependencies',
+      'optionalDependencies',
+    ];
+
+    for (const depType of dependencyTypes) {
+      if (json[depType] && json[depType][dependencyPackageName]) {
+        return {
+          currentVersion: json[depType][dependencyPackageName],
+          dependencyCollection: depType,
+        };
+      }
+    }
+    return { currentVersion: null, dependencyCollection: null };
+  }
+
+  async updateProjectVersion(
+    tree: Tree,
+    newVersion: string
+  ): Promise<string[]> {
+    const logMessages: string[] = [];
+    for (const manifestToUpdate of this.manifestsToUpdate) {
+      const json = this.readPackageJson(tree, manifestToUpdate.manifestPath);
+      json.version = newVersion;
+      this.writePackageJson(tree, manifestToUpdate.manifestPath, json);
+      logMessages.push(
+        `✍️  New version ${newVersion} written to manifest: ${manifestToUpdate.manifestPath}`
+      );
+    }
+    return logMessages;
+  }
+
+  async updateProjectDependencies(
+    tree: Tree,
+    projectGraph: ProjectGraph,
+    dependenciesToUpdate: Record<string, string>
+  ): Promise<string[]> {
+    let numDependenciesToUpdate = Object.keys(dependenciesToUpdate).length;
+    if (numDependenciesToUpdate === 0) {
+      return [];
+    }
+
+    const logMessages: string[] = [];
+
+    for (const manifestToUpdate of this.manifestsToUpdate) {
+      const json = this.readPackageJson(tree, manifestToUpdate.manifestPath);
+      const dependencyTypes = [
+        'dependencies',
+        'devDependencies',
+        'peerDependencies',
+        'optionalDependencies',
+      ];
+
+      for (const depType of dependencyTypes) {
+        if (!json[depType]) continue;
+        for (const [dep, version] of Object.entries(dependenciesToUpdate)) {
+          const packageName =
+            projectGraph.nodes[dep].data.metadata?.js?.packageName;
+          if (!packageName) {
+            throw new Error(
+              `Unable to determine the package name for project "${dep}" from the project graph metadata, please ensure that the "@nx/js" plugin is installed and the project graph has been built. If the issue persists, please report this issue on https://github.com/nrwl/nx/issues`
+            );
+          }
+          const currentVersion = json[depType][packageName];
+          if (!currentVersion) continue;
+          if (
+            manifestToUpdate.preserveLocalDependencyProtocols &&
+            (currentVersion.startsWith('file:') ||
+              currentVersion.startsWith('workspace:'))
+          ) {
+            numDependenciesToUpdate--;
+            continue;
+          }
+          json[depType][packageName] = version;
+        }
+      }
+
+      this.writePackageJson(tree, manifestToUpdate.manifestPath, json);
+
+      if (numDependenciesToUpdate === 0) {
+        return [];
+      }
+
+      const depText =
+        numDependenciesToUpdate === 1 ? 'dependency' : 'dependencies';
+
+      logMessages.push(
+        `✍️  Updated ${numDependenciesToUpdate} ${depText} in manifest: ${manifestToUpdate.manifestPath}`
+      );
+    }
+
+    return logMessages;
+  }
+}
+
 export class ExampleNonSemverVersionActions extends VersionActions {
   validManifestFilenames = null;
 
@@ -638,20 +815,23 @@ export async function mockResolveVersionActionsForProjectImplementation(
     };
   }
 
+  // Default path: use a self-contained MockJsVersionActions instead of
+  // `jest.requireActual('@nx/js/src/release/version-actions')`. The real
+  // module imports from `@nx/devkit`, which would pull devkit's entire
+  // source tree into the test sandbox. Tests that genuinely depend on
+  // JsVersionActions behavior (registry resolution, lockfile updates,
+  // catalog support, etc.) live in `packages/js/src/release` and import
+  // the real module directly.
   const versionActionsPath = DEFAULT_VERSION_ACTIONS_PATH;
-  // @ts-ignore
-  const loaded = jest.requireActual(versionActionsPath);
-  const JsVersionActions = loaded.default;
-  const versionActions: VersionActions = new JsVersionActions(
+  const versionActions: VersionActions = new MockJsVersionActions(
     releaseGroup,
     projectGraphNode,
     finalConfigForProject
   );
-  // Initialize the versionActions with all the required manifest paths etc
   await versionActions.init(tree);
   return {
     versionActionsPath,
-    versionActions: versionActions,
-    afterAllProjectsVersioned: loaded.afterAllProjectsVersioned,
+    versionActions,
+    afterAllProjectsVersioned: undefined,
   };
 }

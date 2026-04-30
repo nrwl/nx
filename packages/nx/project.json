@@ -108,15 +108,7 @@
     },
     "test-native": {},
     "test": {
-      "inputs": [
-        "...",
-        "{workspaceRoot}/scripts/patched-jest-resolver.js",
-        "{workspaceRoot}/packages/devkit/index.ts",
-        "{workspaceRoot}/packages/devkit/public-api.ts",
-        "{workspaceRoot}/packages/devkit/src/**/*.ts",
-        "{workspaceRoot}/packages/js/src/release/**/*.ts",
-        "{workspaceRoot}/packages/js/src/utils/npm-config.ts"
-      ]
+      "inputs": ["...", "{workspaceRoot}/scripts/patched-jest-resolver.js"]
     },
     "format-native": {
       "command": "cargo fmt",
