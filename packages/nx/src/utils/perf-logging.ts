@@ -24,9 +24,10 @@ new PerformanceObserver((list) => {
       require('../daemon/is-on-daemon') as typeof import('../daemon/is-on-daemon');
     const { serverLogger } =
       require('../daemon/logger') as typeof import('../daemon/logger');
+    const { logger } = require('./logger') as typeof import('./logger');
     const log = isOnDaemon()
       ? (msg: string) => serverLogger.log(msg)
-      : console.log;
+      : (msg: string) => logger.warn(msg);
     for (const entry of entries) {
       log(`Time taken for '${entry.name}' ${entry.duration}ms`);
     }
