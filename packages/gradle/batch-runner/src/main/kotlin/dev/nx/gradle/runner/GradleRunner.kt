@@ -188,26 +188,33 @@ fun runTestLauncher(
   val eventTypes: MutableSet<OperationType> = HashSet()
   eventTypes.add(OperationType.TASK)
   eventTypes.add(OperationType.TEST)
-  eventTypes.add(OperationType.TEST_OUTPUT)
 
   val excludeArgs = excludeTestTasks.flatMap { listOf("--exclude-task", it) }
   logger.info("excludeTestTasks $excludeArgs")
 
-  // Per-Nx-task output, populated from TestOutputEvents so each Nx task gets only its own
-  // class's output (not the shared Gradle-task buffer that multiple parallel classes write to).
-  val nxTaskOutput = ConcurrentHashMap<String, StringBuilder>()
-  val appendTestOutput: (String, String) -> Unit = { nxTaskId, message ->
-    nxTaskOutput
-        .computeIfAbsent(nxTaskId) { StringBuilder() }
-        .also { synchronized(it) { it.append(message) } }
-  }
+  // Per-Nx-task buffers populated lazily from per-Gradle-task captured output.
+  // TestLauncher routes test stdout through setStandardOutput (it diverts it to
+  // TestOutputEvents only when OperationType.TEST_OUTPUT is subscribed), so we
+  // capture by Gradle task path here. Multiple Nx tasks under the same Gradle
+  // test task share the buffer.
+  val outputCapture = TaskOutputCapture(System.err) { _, _ -> }
+  val errorCapture = TaskOutputCapture(System.err) { _, _ -> }
+
+  fun normalizedTaskPath(nxTaskId: String): String? =
+      tasks[nxTaskId]?.taskName?.let { ":${normalizeTaskPath(it)}" }
+
+  fun capturedFor(nxTaskId: String): String =
+      normalizedTaskPath(nxTaskId)?.let { taskPath ->
+        listOf(outputCapture.getOutput(taskPath), errorCapture.getOutput(taskPath))
+            .filter { it.isNotBlank() }
+            .joinToString("\n")
+      } ?: ""
 
   val emitTestTask: (String) -> Unit = { nxTaskId ->
     val success = testTaskStatus[nxTaskId] ?: false
     val startTime = testStartTimes[nxTaskId] ?: globalStart
     val endTime = testEndTimes[nxTaskId] ?: System.currentTimeMillis()
-    val captured = nxTaskOutput[nxTaskId]?.let { synchronized(it) { it.toString() } } ?: ""
-    ResultEmitter.emit(nxTaskId, TaskResult(success, startTime, endTime, captured))
+    ResultEmitter.emit(nxTaskId, TaskResult(success, startTime, endTime, capturedFor(nxTaskId)))
   }
 
   try {
@@ -219,16 +226,10 @@ fun runTestLauncher(
           // arguments here
           addArguments(
               *(args + excludeArgs).toTypedArray()) // Combine your existing args with JUnit args
-          setStandardOutput(TeeOutputStream(outputStream, System.err))
-          setStandardError(TeeOutputStream(errorStream, System.err))
+          setStandardOutput(TeeOutputStream(outputStream, outputCapture))
+          setStandardError(TeeOutputStream(errorStream, errorCapture))
           addProgressListener(
-              testListener(
-                  tasks,
-                  testTaskStatus,
-                  testStartTimes,
-                  testEndTimes,
-                  appendTestOutput,
-                  emitTestTask),
+              testListener(tasks, testTaskStatus, testStartTimes, testEndTimes, emitTestTask),
               eventTypes)
           withDetailedFailure()
         }
@@ -261,9 +262,7 @@ fun runTestLauncher(
       val success = testTaskStatus[nxTaskId] ?: false
       val startTime = testStartTimes[nxTaskId] ?: globalStart
       val endTime = testEndTimes[nxTaskId] ?: globalEnd
-      val captured = nxTaskOutput[nxTaskId]?.let { synchronized(it) { it.toString() } } ?: ""
-
-      taskResults[nxTaskId] = TaskResult(success, startTime, endTime, captured)
+      taskResults[nxTaskId] = TaskResult(success, startTime, endTime, capturedFor(nxTaskId))
     }
   }
 
