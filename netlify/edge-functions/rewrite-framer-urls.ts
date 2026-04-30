@@ -119,7 +119,6 @@ const nextjsPaths = new Set([
   // standalone blog site instead of falling through to Next.js.
   ...(blogUrl ? [] : ['/blog', '/changelog']),
   '/courses',
-  '/pricing',
   '/podcast',
   '/ai-chat',
   '/resources-library',
