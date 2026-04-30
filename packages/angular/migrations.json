@@ -389,6 +389,11 @@
       },
       "description": "Replace 'jest-preset-angular/setup-jest' imports with the new 'setupZoneTestEnv' function.",
       "factory": "./src/migrations/update-22-3-0/update-jest-preset-angular-setup"
+    },
+    "update-23-0-0-update-with-module-federation-import": {
+      "version": "23.0.0-beta.0",
+      "description": "Update the @nx/angular/module-federation import to use @nx/module-federation/angular.",
+      "factory": "./src/migrations/update-23-0-0/migrate-with-mf-import-to-new-package"
     }
   },
   "packageJsonUpdates": {
