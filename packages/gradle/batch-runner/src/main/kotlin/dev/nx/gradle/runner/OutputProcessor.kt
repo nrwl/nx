@@ -1,7 +1,5 @@
 package dev.nx.gradle.runner
 
-import dev.nx.gradle.data.GradleTask
-import dev.nx.gradle.data.TaskResult
 import java.io.ByteArrayOutputStream
 
 object OutputProcessor {
@@ -12,40 +10,6 @@ object OutputProcessor {
       if (output.isNotBlank()) append(output).append("\n")
       if (errorOutput.isNotBlank()) append(errorOutput)
     }
-  }
-
-  fun finalizeTaskResults(
-      tasks: Map<String, GradleTask>,
-      taskResults: MutableMap<String, TaskResult>,
-      globalOutput: String,
-      errorStream: ByteArrayOutputStream,
-      globalStart: Long,
-      globalEnd: Long,
-      perTaskOutput: Map<String, String> = splitOutputPerTask(globalOutput),
-  ): Map<String, TaskResult> {
-    tasks.forEach { (taskId, taskConfig) ->
-      val baseOutput = perTaskOutput[taskConfig.taskName] ?: ""
-      val existingResult = taskResults[taskId]
-
-      val outputWithErrors =
-          if (existingResult?.success == false) {
-            baseOutput + "\n" + errorStream.toString()
-          } else {
-            baseOutput
-          }
-
-      val finalOutput = outputWithErrors.ifBlank { globalOutput }
-
-      taskResults[taskId] =
-          existingResult?.copy(terminalOutput = finalOutput)
-              ?: TaskResult(
-                  success = false,
-                  startTime = globalStart,
-                  endTime = globalEnd,
-                  terminalOutput = finalOutput)
-    }
-
-    return taskResults
   }
 
   /**

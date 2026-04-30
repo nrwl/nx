@@ -41,9 +41,9 @@ fun main(args: Array<String>) {
             options.excludeTasks,
             options.excludeTestTasks)
 
-    // Streaming emission happens inside the build/test listeners; this fallback covers
-    // synthesized entries from finalizeTaskResults (tasks that never produced an event,
-    // e.g. excluded or skipped due to an earlier failure). ResultEmitter dedupes.
+    // Streaming emission happens inside the build/test listeners; ResultEmitter dedupes, so this
+    // is a no-op for everything already streamed. Tasks Gradle never ran aren't in results at
+    // all — gradle-batch.impl.ts's post-loop fallback fills those in on the TS side.
     results.forEach { (taskId, result) -> ResultEmitter.emit(taskId, result) }
 
     val summary = results.values.groupBy { it.success }

@@ -2,9 +2,6 @@ package dev.nx.gradle.runner
 
 import dev.nx.gradle.data.GradleTask
 import dev.nx.gradle.data.TaskResult
-import dev.nx.gradle.runner.OutputProcessor.buildTerminalOutput
-import dev.nx.gradle.runner.OutputProcessor.finalizeTaskResults
-import dev.nx.gradle.runner.OutputProcessor.splitOutputPerTask
 import dev.nx.gradle.util.logger
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.ConcurrentHashMap
@@ -98,7 +95,6 @@ fun runBuildLauncher(
   val pendingEmit = ConcurrentHashMap<String, String>()
 
   val globalStart = System.currentTimeMillis()
-  var globalOutput: String
 
   val excludeArgs = excludeTasks.map { "--exclude-task=$it" }
 
@@ -121,7 +117,7 @@ fun runBuildLauncher(
           forTasks(*taskNames)
           addArguments(*(args + excludeArgs).toTypedArray())
           setStandardOutput(TeeOutputStream(outputStream, capture))
-          setStandardError(TeeOutputStream(errorStream, System.err))
+          setStandardError(TeeOutputStream(errorStream, capture.errorSink()))
           withDetailedFailure()
           addProgressListener(
               buildListener(
@@ -129,23 +125,19 @@ fun runBuildLauncher(
               OperationType.TASK)
         }
         .run()
-    globalOutput = buildTerminalOutput(outputStream, errorStream)
   } catch (e: Exception) {
-    globalOutput =
-        buildTerminalOutput(outputStream, errorStream) + "\nException occurred: ${e.message}"
     logger.warning("\ud83d\udca5 Gradle run failed: ${e.message} $errorStream")
   } finally {
     outputStream.close()
     errorStream.close()
   }
 
-  // The last task in the build has no successor TaskStartEvent to drain it; flush here.
+  // The last task in the build has no successor TaskStartEvent to drain it; flush here. Tasks
+  // Gradle never ran (excluded, configuration error, never realized) aren't in taskResults at
+  // all — gradle-batch.impl.ts's post-loop fallback yields a result for them on the TS side.
   pendingEmit.keys.toList().forEach { taskPath ->
     emitForTaskPath(taskPath, capture.getOutput(taskPath))
   }
-  // finalizeTaskResults synthesizes entries for tasks Gradle never ran (excluded, etc.); it splits
-  // globalOutput once internally for that lookup.
-  val finalSections = splitOutputPerTask(globalOutput)
 
   val globalEnd = System.currentTimeMillis()
   val maxEndTime = taskResults.values.map { it.endTime }.maxOrNull() ?: globalEnd
@@ -154,15 +146,6 @@ fun runBuildLauncher(
       "⏱️ Build start timing gap: ${minStartTime - globalStart}ms (time between first task start and build launcher start) ")
   logger.info(
       "⏱️ Build completion timing gap: ${globalEnd - maxEndTime}ms (time between last task finish and build end)")
-
-  finalizeTaskResults(
-      tasks = tasks,
-      taskResults = taskResults,
-      globalOutput = globalOutput,
-      errorStream = errorStream,
-      globalStart = globalStart,
-      globalEnd = globalEnd,
-      perTaskOutput = finalSections)
 
   logger.info("\u2705 Finished build tasks")
   return taskResults
@@ -185,7 +168,6 @@ fun runTestLauncher(
   logger.info("📋 Collected ${groupedTasks.keys.size} unique task names: $groupedTasks")
 
   val globalStart = System.currentTimeMillis()
-  var globalOutput: String
   val eventTypes: MutableSet<OperationType> = HashSet()
   eventTypes.add(OperationType.TASK)
   eventTypes.add(OperationType.TEST)
@@ -195,18 +177,13 @@ fun runTestLauncher(
 
   // Multiple Nx tasks (one per test class) can share a single Gradle test task path; they end
   // up with the same captured section since TAPI doesn't slice stdout by test class.
-  val outputCapture = TaskOutputCapture(System.err)
-  val errorCapture = TaskOutputCapture(System.err)
+  val capture = TaskOutputCapture(System.err)
 
   fun normalizedTaskPath(nxTaskId: String): String? =
       tasks[nxTaskId]?.taskName?.let { ":${normalizeTaskPath(it)}" }
 
   fun capturedFor(nxTaskId: String): String =
-      normalizedTaskPath(nxTaskId)?.let { taskPath ->
-        val out = outputCapture.getOutput(taskPath)
-        val err = errorCapture.getOutput(taskPath)
-        listOf(out, err).filter { it.isNotBlank() }.joinToString("\n")
-      } ?: ""
+      normalizedTaskPath(nxTaskId)?.let { capture.getOutput(it) } ?: ""
 
   val emittedNxTasks = ConcurrentHashMap.newKeySet<String>()
 
@@ -230,22 +207,18 @@ fun runTestLauncher(
           // arguments here
           addArguments(
               *(args + excludeArgs).toTypedArray()) // Combine your existing args with JUnit args
-          setStandardOutput(TeeOutputStream(outputStream, outputCapture))
-          setStandardError(TeeOutputStream(errorStream, errorCapture))
+          setStandardOutput(TeeOutputStream(outputStream, capture))
+          setStandardError(TeeOutputStream(errorStream, capture.errorSink()))
           addProgressListener(
               testListener(tasks, testTaskStatus, testStartTimes, testEndTimes, emitTestTask),
               eventTypes)
           withDetailedFailure()
         }
         .run()
-    globalOutput = buildTerminalOutput(outputStream, errorStream)
   } catch (e: BuildCancelledException) {
-    globalOutput = buildTerminalOutput(outputStream, errorStream)
     logger.info("✅ Build cancelled gracefully by token.")
   } catch (e: Exception) {
     logger.warning(errorStream.toString())
-    globalOutput =
-        buildTerminalOutput(outputStream, errorStream) + "\nException occurred: ${e.message}"
     logger.warning("\ud83d\udca5 Gradle test run failed: ${e.message} $errorStream")
   } finally {
     outputStream.close()
@@ -269,14 +242,6 @@ fun runTestLauncher(
       taskResults[nxTaskId] = TaskResult(success, startTime, endTime, capturedFor(nxTaskId))
     }
   }
-
-  finalizeTaskResults(
-      tasks = tasks,
-      taskResults = taskResults,
-      globalOutput = globalOutput,
-      errorStream = errorStream,
-      globalStart = globalStart,
-      globalEnd = globalEnd)
 
   logger.info("\u2705 Finished test tasks")
   return taskResults
