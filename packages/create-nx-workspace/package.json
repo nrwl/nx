@@ -33,7 +33,7 @@
     "axios": "1.16.0",
     "chalk": "catalog:",
     "enquirer": "catalog:",
-    "flat": "^5.0.2",
+    "flat": "^6.0.1",
     "open": "^8.4.0",
     "ora": "catalog:",
     "tmp": "catalog:",
