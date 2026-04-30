@@ -28,7 +28,7 @@ import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getCatalogManager } from '../../../utils/catalog';
 import { findNodeMatchingVersion } from './project-graph-pruning';
-import { join } from 'path';
+import { join, relative, sep } from 'path';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 import { satisfies, validRange } from 'semver';
 let currentLockFileHash: string;
@@ -589,13 +589,68 @@ export function stringifyPnpmLockfile(
     +lockfileVersion
   );
 
-  const workspaceDependencyImporters: Record<string, ProjectSnapshot> = {};
-  for (const [packageName, importerPath] of Object.entries(requiredImporters)) {
-    const baseImporter = importers[importerPath];
-    if (baseImporter) {
-      workspaceDependencyImporters[`workspace_modules/${packageName}`] =
-        baseImporter;
+  const workspaceModules = getWorkspacePackagesFromGraph(graph);
+
+  // BFS over transitive workspace dependencies so that every package
+  // copy-workspace-modules writes to disk has a corresponding importer block.
+  // mapRootSnapshot only collects direct workspace deps of the root package;
+  // without this pass, an `app -> lib-a -> lib-b` chain produces a lockfile
+  // missing lib-b's importer, and pnpm fails with ERR_PNPM_OUTDATED_LOCKFILE.
+  const allRequiredImporters: Record<string, string> = { ...requiredImporters };
+  const queue = Object.keys(requiredImporters);
+  while (queue.length > 0) {
+    const pkgName = queue.shift()!;
+    const importerPath = allRequiredImporters[pkgName];
+    const importer = importers[importerPath];
+    if (!importer) continue;
+    for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+      const deps = importer[depType];
+      if (!deps) continue;
+      for (const depName of Object.keys(deps)) {
+        if (workspaceModules.has(depName) && !allRequiredImporters[depName]) {
+          const wsMod = workspaceModules.get(depName);
+          if (wsMod) {
+            allRequiredImporters[depName] = wsMod.data.root;
+            queue.push(depName);
+          }
+        }
+      }
     }
+  }
+
+  const workspaceDependencyImporters: Record<string, ProjectSnapshot> = {};
+  for (const [packageName, importerPath] of Object.entries(
+    allRequiredImporters
+  )) {
+    const baseImporter = importers[importerPath];
+    if (!baseImporter) continue;
+    // Deep-clone so we don't mutate the parsed lockfile data.
+    const importer: ProjectSnapshot = JSON.parse(JSON.stringify(baseImporter));
+
+    // Rewrite workspace-package references to the flat `workspace_modules/`
+    // layout that copy-workspace-modules produces. The original lockfile's
+    // `link:` paths are relative to the package's source location in the
+    // monorepo, so they must be recomputed.
+    for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+      const deps = importer[depType] as Record<string, string> | undefined;
+      if (!deps) continue;
+      for (const depName of Object.keys(deps)) {
+        if (workspaceModules.has(depName)) {
+          // All workspace modules are siblings under workspace_modules/, so
+          // the relative path between them is just relative(packageName, depName).
+          const rel = relative(packageName, depName).split(sep).join('/');
+          // Specifier must match the file: ref that copy-workspace-modules
+          // writes to the package's package.json on disk; otherwise pnpm sees
+          // a mismatch and reports ERR_PNPM_OUTDATED_LOCKFILE.
+          if (importer.specifiers) {
+            importer.specifiers[depName] = `file:${rel}`;
+          }
+          deps[depName] = `link:${rel}`;
+        }
+      }
+    }
+
+    workspaceDependencyImporters[`workspace_modules/${packageName}`] = importer;
   }
 
   const output: Lockfile = {
