@@ -4,6 +4,7 @@ import dev.nx.gradle.data.GradleTask
 import dev.nx.gradle.data.TaskResult
 import dev.nx.gradle.runner.OutputProcessor.buildTerminalOutput
 import dev.nx.gradle.runner.OutputProcessor.finalizeTaskResults
+import dev.nx.gradle.runner.OutputProcessor.splitOutputPerTask
 import dev.nx.gradle.util.logger
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.ConcurrentHashMap
@@ -30,7 +31,6 @@ fun runTasksInParallel(
   val outputStream2 = ByteArrayOutputStream()
   val errorStream2 = ByteArrayOutputStream()
 
-  // --info is for terminal per task
   // --continue is for continue running tasks if one failed in a batch
   // --parallel is for performance
   // -Dorg.gradle.daemon.idletimeout=0 is to kill daemon after 0 ms
@@ -38,7 +38,6 @@ fun runTasksInParallel(
   val workersMax = (cpuCores * 0.5).toInt().coerceAtLeast(1)
   val args =
       mutableListOf(
-          "--info",
           "--continue",
           "-Dorg.gradle.daemon.idletimeout=0",
           "--parallel",
@@ -95,9 +94,9 @@ fun runBuildLauncher(
   val taskStartTimes = mutableMapOf<String, Long>()
   val taskResults = ConcurrentHashMap<String, TaskResult>()
   // Tasks whose TaskFinishEvent fired but whose stdout hasn't been emitted yet.
-  // Keyed by Gradle task path, value is the Nx task id. The capture's
-  // onPrevTaskComplete callback drains entries as the next task's header arrives;
-  // anything still pending after the build is flushed below.
+  // Keyed by Gradle task path, value is the Nx task id. The buildListener drains entries
+  // on each TaskStartEvent (gated on having any captured bytes for the task); anything
+  // still pending at end-of-build is flushed below.
   val pendingEmit = ConcurrentHashMap<String, String>()
 
   val globalStart = System.currentTimeMillis()
@@ -113,22 +112,26 @@ fun runBuildLauncher(
     ResultEmitter.emit(nxTaskId, updated)
   }
 
-  val capture =
-      TaskOutputCapture(System.err) { prevTaskPath, capturedOutput ->
-        emitForTaskPath(prevTaskPath, capturedOutput)
-      }
-
   try {
     connection
         .newBuild()
         .apply {
           forTasks(*taskNames)
           addArguments(*(args + excludeArgs).toTypedArray())
-          setStandardOutput(TeeOutputStream(outputStream, capture))
+          // Tee Gradle's stdout into our buffered outputStream (for splitOutputPerTask) and
+          // System.err (so users see the build output live in their terminal).
+          setStandardOutput(TeeOutputStream(outputStream, System.err))
           setStandardError(TeeOutputStream(errorStream, System.err))
           withDetailedFailure()
           addProgressListener(
-              buildListener(tasks, taskStartTimes, taskResults, pendingEmit), OperationType.TASK)
+              buildListener(
+                  tasks,
+                  taskStartTimes,
+                  taskResults,
+                  pendingEmit,
+                  outputStream,
+                  ::emitForTaskPath),
+              OperationType.TASK)
         }
         .run()
     globalOutput = buildTerminalOutput(outputStream, errorStream)
@@ -141,10 +144,12 @@ fun runBuildLauncher(
     errorStream.close()
   }
 
-  // Flush any tasks whose finish event raced past the next-header trigger
-  // (including the very last task in the build, which has no next header).
+  // Flush any tasks the listener-thread drain didn't catch — typically the last task in the
+  // build (no successor TaskStartEvent fires) and any tasks whose bytes hadn't reached our
+  // stream yet at the time their successor's TaskStartEvent fired.
+  val finalSections = splitOutputPerTask(globalOutput)
   pendingEmit.keys.toList().forEach { taskPath ->
-    emitForTaskPath(taskPath, capture.getOutput(taskPath))
+    emitForTaskPath(taskPath, finalSections[taskPath] ?: "")
   }
 
   val globalEnd = System.currentTimeMillis()
@@ -192,29 +197,36 @@ fun runTestLauncher(
   val excludeArgs = excludeTestTasks.flatMap { listOf("--exclude-task", it) }
   logger.info("excludeTestTasks $excludeArgs")
 
-  // Per-Nx-task buffers populated lazily from per-Gradle-task captured output.
   // TestLauncher routes test stdout through setStandardOutput (it diverts it to
-  // TestOutputEvents only when OperationType.TEST_OUTPUT is subscribed), so we
-  // capture by Gradle task path here. Multiple Nx tasks under the same Gradle
-  // test task share the buffer.
-  val outputCapture = TaskOutputCapture(System.err) { _, _ -> }
-  val errorCapture = TaskOutputCapture(System.err) { _, _ -> }
-
+  // TestOutputEvents only when OperationType.TEST_OUTPUT is subscribed), so we slice the
+  // captured streams by Gradle task path via splitOutputPerTask at emit time. Multiple Nx
+  // tasks under the same Gradle test task share the same section.
   fun normalizedTaskPath(nxTaskId: String): String? =
       tasks[nxTaskId]?.taskName?.let { ":${normalizeTaskPath(it)}" }
 
   fun capturedFor(nxTaskId: String): String =
       normalizedTaskPath(nxTaskId)?.let { taskPath ->
-        listOf(outputCapture.getOutput(taskPath), errorCapture.getOutput(taskPath))
-            .filter { it.isNotBlank() }
-            .joinToString("\n")
+        val out = splitOutputPerTask(outputStream.toString("UTF-8"))[taskPath].orEmpty()
+        val err = splitOutputPerTask(errorStream.toString("UTF-8"))[taskPath].orEmpty()
+        listOf(out, err).filter { it.isNotBlank() }.joinToString("\n")
       } ?: ""
 
+  // Tracks which nxTaskIds we've already streamed so the listener-thread retries are idempotent.
+  // `add` returns true iff newly inserted, so we use it to atomically claim emission.
+  val emittedNxTasks = ConcurrentHashMap.newKeySet<String>()
+
   val emitTestTask: (String) -> Unit = { nxTaskId ->
-    val success = testTaskStatus[nxTaskId] ?: false
-    val startTime = testStartTimes[nxTaskId] ?: globalStart
-    val endTime = testEndTimes[nxTaskId] ?: System.currentTimeMillis()
-    ResultEmitter.emit(nxTaskId, TaskResult(success, startTime, endTime, capturedFor(nxTaskId)))
+    val captured = capturedFor(nxTaskId)
+    // Buffer-state guard: skip if (a) the Gradle test task's bytes haven't reached our stream
+    // yet, or (b) we already emitted for this nxTaskId. Parked tasks will be retried on later
+    // events (other classes' TestFinishEvent, the test task's TaskFinishEvent safety net) and
+    // finally by the end-of-runTestLauncher sweep, by which time output has been flushed.
+    if (captured.isNotEmpty() && emittedNxTasks.add(nxTaskId)) {
+      val success = testTaskStatus[nxTaskId] ?: false
+      val startTime = testStartTimes[nxTaskId] ?: globalStart
+      val endTime = testEndTimes[nxTaskId] ?: System.currentTimeMillis()
+      ResultEmitter.emit(nxTaskId, TaskResult(success, startTime, endTime, captured))
+    }
   }
 
   try {
@@ -226,8 +238,8 @@ fun runTestLauncher(
           // arguments here
           addArguments(
               *(args + excludeArgs).toTypedArray()) // Combine your existing args with JUnit args
-          setStandardOutput(TeeOutputStream(outputStream, outputCapture))
-          setStandardError(TeeOutputStream(errorStream, errorCapture))
+          setStandardOutput(TeeOutputStream(outputStream, System.err))
+          setStandardError(TeeOutputStream(errorStream, System.err))
           addProgressListener(
               testListener(tasks, testTaskStatus, testStartTimes, testEndTimes, emitTestTask),
               eventTypes)

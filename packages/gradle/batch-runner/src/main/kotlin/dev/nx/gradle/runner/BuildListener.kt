@@ -2,7 +2,9 @@ package dev.nx.gradle.runner
 
 import dev.nx.gradle.data.GradleTask
 import dev.nx.gradle.data.TaskResult
+import dev.nx.gradle.runner.OutputProcessor.splitOutputPerTask
 import dev.nx.gradle.util.logger
+import java.io.ByteArrayOutputStream
 import org.gradle.tooling.events.ProgressEvent
 import org.gradle.tooling.events.task.TaskFailureResult
 import org.gradle.tooling.events.task.TaskFinishEvent
@@ -19,10 +21,27 @@ fun buildListener(
     tasks: Map<String, GradleTask>,
     taskStartTimes: MutableMap<String, Long>,
     taskResults: MutableMap<String, TaskResult>,
-    pendingEmit: MutableMap<String, String>
+    pendingEmit: MutableMap<String, String>,
+    outputStream: ByteArrayOutputStream,
+    emitForTaskPath: (taskPath: String, output: String) -> Unit
 ): (ProgressEvent) -> Unit = { event ->
   when (event) {
     is TaskStartEvent -> {
+      // Each TaskStartEvent on the listener is a chance to drain pendingEmit. A parked task is
+      // safe to ship once its bytes have actually reached our OutputStream — splitOutputPerTask
+      // returns an entry for it once Gradle's writer thread has flushed its `> Task :…` header
+      // and content. If the section is empty (writer thread hasn't caught up yet), leave the
+      // task parked for a later TaskStartEvent or the end-of-build flush.
+      if (pendingEmit.isNotEmpty()) {
+        val sections = splitOutputPerTask(outputStream.toString("UTF-8"))
+        pendingEmit.keys.toList().forEach { parked ->
+          val captured = sections[parked]
+          if (!captured.isNullOrEmpty()) {
+            emitForTaskPath(parked, captured)
+          }
+        }
+      }
+
       val taskPath = event.descriptor.taskPath
       tasks.entries
           .find { normalizeTaskPath(it.value.taskName) == normalizeTaskPath(taskPath) }
@@ -42,10 +61,8 @@ fun buildListener(
           ?.let { nxTaskId ->
             val endTime = event.result.endTime
             val startTime = taskStartTimes[nxTaskId] ?: event.result.startTime
-            // Record the result without terminalOutput. Per-task stdout is filled in by
-            // TaskOutputCapture's onPrevTaskComplete callback (when the next task's header
-            // arrives) or by the end-of-build flush. That deferred trigger is what gives us
-            // mid-build streaming with full per-task output.
+            // Record the result without terminalOutput. terminalOutput is filled in when a later
+            // TaskStartEvent fires (drains pendingEmit) or by the end-of-build flush.
             taskResults[nxTaskId] = TaskResult(success, startTime, endTime, "")
             pendingEmit[taskPath] = nxTaskId
           }
