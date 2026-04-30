@@ -50,8 +50,6 @@ describe('translateOnboardPayload (CNW)', () => {
     expect((result as any).nextSteps).toBeDefined();
   });
 
-  // Ocean emits actionRequired as an OBJECT with a `type` discriminator
-  // (CLOUD-4493). Translator splices the deviceCode into the poll command.
   it('maps github_oauth (object actionRequired) with deviceCode spliced into poll command', () => {
     const result = translateOnboardPayload(
       JSON.stringify({
