@@ -28,7 +28,7 @@ catalog:
   semver: '^7.6.3'
   tinyglobby: '^0.2.12'
   yargs: '^17.6.2'
-  yargs-parser: '21.1.1'
+  yargs-parser: '^22.0.0'
 catalogs:
   angular:
     '@angular-devkit/architect': '~0.2102.0'
