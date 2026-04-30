@@ -382,7 +382,9 @@ function preparePackageInstallation(pkg: string, requiredVersion: string) {
     cleanup: () => {},
   };
 
-  console.log(`Fetching ${pkg}...`);
+  if (process.env.NX_AI_AGENT_INIT !== 'true') {
+    console.log(`Fetching ${pkg}...`);
+  }
   const packageManager = detectPackageManager();
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
   generatePackageManagerFiles(tempDir, packageManager);

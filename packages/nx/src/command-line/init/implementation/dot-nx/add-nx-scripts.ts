@@ -61,7 +61,9 @@ export function generateDotNxSetup(version?: string) {
     mode: FsConstants.S_IXUSR | FsConstants.S_IRUSR | FsConstants.S_IWUSR,
   });
   const changes = host.listChanges();
-  printChanges(changes);
+  if (process.env.NX_AI_AGENT_INIT !== 'true') {
+    printChanges(changes);
+  }
   flushChanges(host.root, changes);
   // Ensure that the dot-nx installation is available.
   // This is needed when using a global nx with dot-nx, otherwise running any nx command using global command will fail due to missing modules.

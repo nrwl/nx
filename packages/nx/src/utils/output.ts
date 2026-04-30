@@ -57,6 +57,19 @@ class CLIOutput {
   formatCommand = (taskId: string) => `${pc.dim('nx run')} ${taskId}`;
 
   /**
+   * When running `nx init` under an AI agent we emit only NDJSON on stdout.
+   * All human-formatted output via this class becomes a no-op so the stdout
+   * stream is parseable line-by-line. Callers that need to surface failures
+   * to agents must do so through the structured error event emitted by the
+   * init command (see `writeAiOutput(buildErrorResult(...))`); silent
+   * `output.error` here is intentional — agents check exit code plus the
+   * final NDJSON event, not human-formatted text.
+   */
+  private get isSilenced(): boolean {
+    return process.env.NX_AI_AGENT_INIT === 'true';
+  }
+
+  /**
    * Longer dash character which forms more of a continuous line when place side to side
    * with itself, unlike the standard dash character
    */
@@ -86,10 +99,12 @@ class CLIOutput {
   dim = pc.dim;
 
   private writeToStdOut(str: string) {
+    if (this.isSilenced) return;
     process.stdout.write(str);
   }
 
   overwriteLine(lineText: string = '') {
+    if (this.isSilenced) return;
     // Ensure we always start writing from column 0.
     readline.cursorTo(process.stdout, 0);
     // this replaces the existing text up to the new line length

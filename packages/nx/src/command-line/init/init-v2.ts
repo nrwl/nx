@@ -67,6 +67,13 @@ export async function initHandler(
   options: InitArgs,
   inner = false
 ): Promise<void> {
+  // Set early so all subsequent in-process and subprocess writes (e.g. the
+  // tmp-install fetch log, nx generate output from plugin init generators)
+  // honor NDJSON-only mode.
+  if (isAiAgent()) {
+    process.env.NX_AI_AGENT_INIT = 'true';
+  }
+
   // Use environment variable to force local execution
   if (process.env.NX_USE_LOCAL === 'true' || inner) {
     return await initHandlerImpl(options);
@@ -307,7 +314,9 @@ async function runInit(
       logProgress('detecting', 'Detected non-JavaScript project');
     }
     generateDotNxSetup(version);
-    console.log('');
+    if (!aiMode) {
+      console.log('');
+    }
   } else {
     if (aiMode) {
       logProgress('detecting', 'Detected NPM project');

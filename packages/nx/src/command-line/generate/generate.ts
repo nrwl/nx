@@ -416,7 +416,7 @@ export async function generate(args: { [k: string]: any }) {
 
       const changes = host.listChanges();
 
-      if (!opts.quiet) {
+      if (!opts.quiet && process.env.NX_AI_AGENT_INIT !== 'true') {
         printChanges(changes);
       }
       if (!opts.dryRun) {
