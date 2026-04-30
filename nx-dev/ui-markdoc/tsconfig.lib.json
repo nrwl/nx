@@ -29,6 +29,9 @@
   "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"],
   "references": [
     {
+      "path": "../../packages/nx/tsconfig.lib.json"
+    },
+    {
       "path": "../feature-analytics/tsconfig.lib.json"
     },
     {

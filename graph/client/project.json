@@ -37,6 +37,7 @@
     },
     "build-client": {
       "dependsOn": ["nx:build-native"],
+      "inputs": ["production", "^production"],
       "configurations": {
         "dev": {},
         "nx-console": {},
