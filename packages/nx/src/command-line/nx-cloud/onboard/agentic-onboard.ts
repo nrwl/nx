@@ -128,6 +128,9 @@ const KNOWN_ACTIONS: Record<string, { hint: string; message: string }> = {
     message:
       'Nx Cloud authentication is required. Ask the user to run `npx nx login`, then re-run.',
   },
+  // TODO(CLOUD-4501): once the ocean-side fix lands, simplify the hint to
+  // `On "complete", re-run `npx nx connect`` and drop the connect-workspace
+  // workaround language.
   github_oauth: {
     hint: 'Show the user the verificationUri + userCode and ask them to tell you once they have authorized. When they confirm, run the poll command (single-shot — returns `{"status":"pending"|"complete"|"expired"|"error"}`). On "complete", run `npx nx-cloud onboard connect-workspace --json` directly to advance the connection — this skips the OAuth check and goes straight to creating the workspace. (Re-running `npx nx connect` can re-trigger OAuth due to a known backend state lag — prefer `connect-workspace` until that lands.) On "pending", ask the user to confirm again; they have likely not finished. Do NOT re-run `connect-workspace` BEFORE poll returns "complete" — that mints a fresh device code and orphans the prior authorization.',
     message:
@@ -363,7 +366,18 @@ export async function runAgenticOnboard(
   options: AgenticOnboardOptions
 ): Promise<AgenticOnboardResult> {
   const cwd = options.cwd ?? process.cwd();
-  const bin = resolveNxCloudBin(cwd);
+  let bin: string;
+  try {
+    bin = resolveNxCloudBin(cwd);
+  } catch (err) {
+    return {
+      status: 'error',
+      code: 'BIN_NOT_FOUND',
+      message: `Could not locate nx-cloud bin in ${cwd}: ${
+        err instanceof Error ? err.message : String(err)
+      }`,
+    };
+  }
 
   // The `connect-workspace` subcommand is the one-shot agent flow — it does
   // repo detection and nx.json write-back implicitly. Only --json / --org /

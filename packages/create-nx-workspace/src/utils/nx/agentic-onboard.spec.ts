@@ -16,31 +16,66 @@ describe('translateOnboardPayload (CNW)', () => {
     ).toBeNull();
   });
 
-  it('maps connected payloads', () => {
-    expect(
-      translateOnboardPayload(
-        '{"nxCloudId":"id-1","nxCloudUrl":"https://cloud.nx.app/x"}'
-      )
-    ).toEqual({
+  it('maps connected payloads (flat shape)', () => {
+    const result = translateOnboardPayload(
+      '{"nxCloudId":"id-1","nxCloudUrl":"https://cloud.nx.app/x"}'
+    );
+    expect(result).toMatchObject({
       status: 'connected',
       nxCloudId: 'id-1',
       nxCloudUrl: 'https://cloud.nx.app/x',
+      verifyCommand: 'npx nx-cloud onboard status',
     });
+    expect((result as any).nextSteps).toBeDefined();
   });
 
-  it('maps github_auth_needed action', () => {
-    expect(
-      translateOnboardPayload(
-        '{"actionRequired":"github_auth_needed","deviceCode":"X"}'
-      )
-    ).toMatchObject({
+  it('maps the ocean success payload (workspace.nxCloudId nested)', () => {
+    const result = translateOnboardPayload(
+      JSON.stringify({
+        success: true,
+        workspace: {
+          id: 'ws_1',
+          nxCloudId: 'id-1',
+          overviewUrl: 'https://cloud.nx.app/orgs/o/workspaces/ws_1',
+        },
+        configWritten: true,
+      })
+    );
+    expect(result).toMatchObject({
+      status: 'connected',
+      nxCloudId: 'id-1',
+      nxCloudUrl: 'https://cloud.nx.app/orgs/o/workspaces/ws_1',
+      verifyCommand: 'npx nx-cloud onboard status',
+    });
+    expect((result as any).nextSteps).toBeDefined();
+  });
+
+  // Ocean emits actionRequired as an OBJECT with a `type` discriminator
+  // (CLOUD-4493). Translator splices the deviceCode into the poll command.
+  it('maps github_oauth (object actionRequired) with deviceCode spliced into poll command', () => {
+    const result = translateOnboardPayload(
+      JSON.stringify({
+        success: false,
+        actionRequired: {
+          type: 'github_oauth',
+          deviceCode: 'abc123',
+          userCode: 'WXYZ-1234',
+          verificationUri: 'https://github.com/login/device',
+          message: 'GitHub not connected.',
+        },
+      })
+    );
+    expect(result).toMatchObject({
       status: 'needs_input',
-      actionRequired: 'github_auth_needed',
-      nextCommand: 'npx nx-cloud onboard connect github',
+      actionRequired: 'github_oauth',
+      nextCommand:
+        'npx nx-cloud onboard connect github poll --device-code abc123',
+      verificationUri: 'https://github.com/login/device',
+      userCode: 'WXYZ-1234',
     });
   });
 
-  it('maps login_required action', () => {
+  it('maps login_required (string actionRequired)', () => {
     expect(
       translateOnboardPayload('{"actionRequired":"login_required"}')
     ).toMatchObject({
