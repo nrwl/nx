@@ -114,16 +114,12 @@
     "test": {
       "dependsOn": ["test-native", "build-native", "^build-native"],
       "outputs": [
-        "{workspaceRoot}/dist/test-fs-trace/nx.log",
-        "{workspaceRoot}/dist/test-fs-trace/nx.startup.log"
+        "{projectRoot}/tmp/foreign-fs-reads.log",
+        "{projectRoot}/tmp/foreign-fs-reads.startup.log"
       ],
       "options": {
         "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
-        "env": {
-          "NODE_OPTIONS": "--experimental-vm-modules",
-          "NX_FS_TRACE_FOREIGN_READS": "1",
-          "NX_FS_TRACE_OUTPUT": "dist/test-fs-trace/nx.log"
-        }
+        "env": { "NODE_OPTIONS": "--experimental-vm-modules" }
       }
     },
     "lint": {

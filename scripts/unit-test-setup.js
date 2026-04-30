@@ -22,6 +22,21 @@ const nxSrcPath = (relative) => {
 };
 const realWorkspaceRoot = path.resolve(__dirname, '..');
 
+  // Resolve the diagnostic trace output path once and use it for both
+  // the startup log and the fs-read log. Defaults to
+  // `<projectCwd>/tmp/foreign-fs-reads.log` so each project's `test`
+  // target writes to its own file under {projectRoot}/tmp instead of a
+  // shared workspace-level path (which used to cross-contaminate when
+  // multiple test tasks ran on the same agent).
+  const resolveTraceOut = () => {
+    if (process.env.NX_FS_TRACE_OUTPUT) {
+      return path.isAbsolute(process.env.NX_FS_TRACE_OUTPUT)
+        ? process.env.NX_FS_TRACE_OUTPUT
+        : path.join(process.cwd(), process.env.NX_FS_TRACE_OUTPUT);
+    }
+    return path.join(process.cwd(), 'tmp', 'foreign-fs-reads.log');
+  };
+
 module.exports = () => {
   // Diagnostic: dump cwd/argv/config so we can verify in CI logs that jest
   // is being launched with the project's config (and not the workspace
@@ -30,11 +45,7 @@ module.exports = () => {
   if (process.env.NX_FS_TRACE_FOREIGN_READS !== '0') {
     try {
       const fs = require('fs');
-      const out = process.env.NX_FS_TRACE_OUTPUT
-        ? path.isAbsolute(process.env.NX_FS_TRACE_OUTPUT)
-          ? process.env.NX_FS_TRACE_OUTPUT
-          : path.join(realWorkspaceRoot, process.env.NX_FS_TRACE_OUTPUT)
-        : path.join(realWorkspaceRoot, 'tmp', 'foreign-fs-reads.log');
+      const out = resolveTraceOut();
       fs.mkdirSync(path.dirname(out), { recursive: true });
       const startupOut = out.replace(/\.log$/, '.startup.log');
       fs.appendFileSync(
@@ -359,11 +370,7 @@ module.exports = () => {
       return true;
     };
 
-    const out = process.env.NX_FS_TRACE_OUTPUT
-      ? path.isAbsolute(process.env.NX_FS_TRACE_OUTPUT)
-        ? process.env.NX_FS_TRACE_OUTPUT
-        : path.join(realWorkspaceRoot, process.env.NX_FS_TRACE_OUTPUT)
-      : path.join(realWorkspaceRoot, 'tmp', 'foreign-fs-reads.log');
+    const out = resolveTraceOut();
     try {
       realFs.mkdirSync(path.dirname(out), { recursive: true });
     } catch (_) {}
