@@ -110,7 +110,11 @@ describe('configurationGenerator', () => {
     });
 
     const nxJson = readJson(tree, 'nx.json');
-    expect(nxJson.targetDefaults['@nx/esbuild:esbuild'].inputs).toEqual([
+    const td = nxJson.targetDefaults;
+    const esbuildEntry = Array.isArray(td)
+      ? td.find((e) => e.target === '@nx/esbuild:esbuild')
+      : td['@nx/esbuild:esbuild'];
+    expect(esbuildEntry.inputs).toEqual([
       'production',
       '^production',
       {
