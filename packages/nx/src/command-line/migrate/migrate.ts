@@ -868,6 +868,27 @@ function resolveFirstPartyPackages(
   return set;
 }
 
+export async function resolveMode(
+  mode: 'first-party' | 'all' | undefined
+): Promise<'first-party' | 'all'> {
+  if (mode) {
+    return mode;
+  }
+  if (!process.stdin.isTTY || isCI()) {
+    return 'all';
+  }
+  const { mode: selected } = await prompt<{ mode: 'first-party' | 'all' }>({
+    type: 'select',
+    name: 'mode',
+    message: 'Which packages would you like to migrate?',
+    choices: [
+      { name: 'first-party', message: 'First-party only' },
+      { name: 'all', message: 'All' },
+    ],
+  });
+  return selected;
+}
+
 async function normalizeVersionWithTagCheck(
   pkg: string,
   version: string
@@ -1594,12 +1615,14 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       originalNxJson.installation?.version ??
       readNxVersion(originalPackageJson, root);
 
+    const mode = await resolveMode(opts.mode);
+
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);
 
     const fetch = createFetcher();
     let firstPartyPackages: ReadonlySet<string> | undefined;
-    if (opts.mode === 'first-party') {
+    if (mode === 'first-party') {
       // `@nx/workspace` is version-synced with `nx` and declares an
       // intentionally narrow `packageGroup` ({ nx, nx-cloud }) via its
       // `ng-update` field, whereas `nx` declares the full @nx/* plugin
@@ -1624,7 +1647,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       to: opts.to,
       interactive: opts.interactive && !isCI(),
       excludeAppliedMigrations: opts.excludeAppliedMigrations,
-      mode: opts.mode,
+      mode,
       firstPartyPackages,
     });
 

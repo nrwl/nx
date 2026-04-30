@@ -15,6 +15,7 @@ import {
   normalizeVersion,
   parseMigrationsOptions,
   ResolvedMigrationConfiguration,
+  resolveMode,
 } from './migrate';
 
 const createPackageJson = (
@@ -2245,6 +2246,74 @@ describe('Migration', () => {
         parent: { version: '2.0.0', addToPackageJson: false },
         child: { version: '2.0.0', addToPackageJson: false },
       });
+    });
+  });
+
+  describe('resolveMode', () => {
+    let originalCi: string | undefined;
+    let originalTty: boolean | undefined;
+
+    beforeEach(() => {
+      originalCi = process.env.CI;
+      originalTty = process.stdin.isTTY;
+      jest.clearAllMocks();
+    });
+
+    afterEach(() => {
+      if (originalCi === undefined) {
+        delete process.env.CI;
+      } else {
+        process.env.CI = originalCi;
+      }
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: originalTty,
+        configurable: true,
+      });
+    });
+
+    it('should return the provided mode without prompting', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveMode('first-party');
+      expect(result).toBe('first-party');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('should default to "all" without prompting in non-TTY environments', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: false,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveMode(undefined);
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('should default to "all" without prompting when running in CI', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'true';
+      const result = await resolveMode(undefined);
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('should prompt and return the selection in interactive TTY', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'first-party' }));
+      const result = await resolveMode(undefined);
+      expect(result).toBe('first-party');
+      expect(mockPrompt).toHaveBeenCalled();
     });
   });
 
