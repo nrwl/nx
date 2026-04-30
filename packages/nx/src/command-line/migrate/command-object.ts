@@ -84,6 +84,12 @@ function withMigrationOptions(yargs: Argv) {
       type: 'boolean',
       default: false,
     })
+    .option('mode', {
+      describe:
+        "Restrict which packages to migrate. 'first-party' processes only the target package and the packages in its nx.packageGroup; 'all' processes everything.",
+      type: 'string',
+      choices: ['first-party', 'all'],
+    })
     .check(
       ({ createCommits, commitPrefix, from, excludeAppliedMigrations }) => {
         if (!createCommits && commitPrefix !== defaultCommitPrefix) {

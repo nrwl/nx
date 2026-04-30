@@ -202,6 +202,14 @@ export interface MigratorOptions {
   to: { [pkg: string]: string };
   interactive?: boolean;
   excludeAppliedMigrations?: boolean;
+  /**
+   * Restricts `packageJsonUpdates` filtering based on the value:
+   * - 'first-party' keeps only packages in `firstPartyPackages`
+   * - 'all' / undefined keeps all packages (no filtering)
+   */
+  mode?: 'first-party' | 'all';
+  /** First-party package names used by `mode` for filtering. */
+  firstPartyPackages?: ReadonlySet<string>;
 }
 
 export class Migrator {
@@ -212,6 +220,8 @@ export class Migrator {
   private readonly to: MigratorOptions['to'];
   private readonly interactive: MigratorOptions['interactive'];
   private readonly excludeAppliedMigrations: MigratorOptions['excludeAppliedMigrations'];
+  private readonly mode: MigratorOptions['mode'];
+  private readonly firstPartyPackages: MigratorOptions['firstPartyPackages'];
   private readonly packageUpdates: Record<string, PackageUpdate> = {};
   private readonly collectedVersions: Record<string, string> = {};
   private readonly promptAnswers: Record<string, boolean> = {};
@@ -227,6 +237,8 @@ export class Migrator {
     this.to = opts.to;
     this.interactive = opts.interactive;
     this.excludeAppliedMigrations = opts.excludeAppliedMigrations;
+    this.mode = opts.mode;
+    this.firstPartyPackages = opts.firstPartyPackages;
   }
 
   private async fetchMigrationConfig(
@@ -563,6 +575,9 @@ export class Migrator {
       for (const [packageName, packageUpdate] of Object.entries(
         packageJsonUpdate.packages
       )) {
+        if (this.shouldExcludePackage(packageName)) {
+          continue;
+        }
         if (
           this.shouldApplyPackageUpdate(
             packageUpdate,
@@ -593,6 +608,16 @@ export class Migrator {
     }
 
     return filteredPackageJsonUpdates;
+  }
+
+  private shouldExcludePackage(packageName: string): boolean {
+    if (!this.firstPartyPackages) {
+      return false;
+    }
+    if (this.mode === 'first-party') {
+      return !this.firstPartyPackages.has(packageName);
+    }
+    return false;
   }
 
   private shouldApplyPackageUpdate(
@@ -832,6 +857,17 @@ const LEGACY_NRWL_PACKAGE_GROUP: ArrayPackageGroup = [
   { package: '@nrwl/tao', version: '*' },
 ];
 
+function resolveFirstPartyPackages(
+  targetPackage: string,
+  packageGroup: ArrayPackageGroup | undefined
+): ReadonlySet<string> {
+  const set = new Set<string>([targetPackage]);
+  for (const { package: name } of packageGroup ?? []) {
+    set.add(name);
+  }
+  return set;
+}
+
 async function normalizeVersionWithTagCheck(
   pkg: string,
   version: string
@@ -941,6 +977,7 @@ type GenerateMigrations = {
   to: { [k: string]: string };
   interactive?: boolean;
   excludeAppliedMigrations?: boolean;
+  mode?: 'first-party' | 'all';
 };
 
 type RunMigrations = {
@@ -954,6 +991,12 @@ export async function parseMigrationsOptions(options: {
 }): Promise<GenerateMigrations | RunMigrations> {
   if (options.runMigrations === '') {
     options.runMigrations = 'migrations.json';
+  }
+
+  if (options.mode && options.runMigrations) {
+    throw new Error(
+      `Error: '--mode' cannot be combined with '--run-migrations'.`
+    );
   }
 
   if (!options.runMigrations) {
@@ -976,6 +1019,7 @@ export async function parseMigrationsOptions(options: {
       to,
       interactive: options.interactive,
       excludeAppliedMigrations: options.excludeAppliedMigrations,
+      mode: options.mode,
     };
   } else {
     return {
@@ -1553,15 +1597,35 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);
 
+    const fetch = createFetcher();
+    let firstPartyPackages: ReadonlySet<string> | undefined;
+    if (opts.mode === 'first-party') {
+      // `@nx/workspace` is version-synced with `nx` and declares an
+      // intentionally narrow `packageGroup` ({ nx, nx-cloud }) via its
+      // `ng-update` field, whereas `nx` declares the full @nx/* plugin
+      // fan-out. Their transitive first-party closures are equivalent, so
+      // when `@nx/workspace` is the target we source the set from `nx`
+      // directly to capture the full plugin set.
+      const sourcePackage =
+        opts.targetPackage === '@nx/workspace' ? 'nx' : opts.targetPackage;
+      const rootMetadata = await fetch(sourcePackage, opts.targetVersion);
+      firstPartyPackages = resolveFirstPartyPackages(
+        sourcePackage,
+        rootMetadata.packageGroup
+      );
+    }
+
     const migrator = new Migrator({
       packageJson: originalPackageJson,
       nxInstallation: originalNxJson.installation,
       getInstalledPackageVersion: createInstalledPackageVersionsResolver(root),
-      fetch: createFetcher(),
+      fetch,
       from: opts.from,
       to: opts.to,
       interactive: opts.interactive && !isCI(),
       excludeAppliedMigrations: opts.excludeAppliedMigrations,
+      mode: opts.mode,
+      firstPartyPackages,
     });
 
     const { migrations, packageUpdates, minVersionWithSkippedUpdates } =

@@ -1011,6 +1011,147 @@ describe('Migration', () => {
       });
     });
 
+    describe('--mode', () => {
+      beforeEach(() => {
+        jest.clearAllMocks();
+      });
+
+      it('should keep first-party packages and drop third-party in mixed entries', async () => {
+        const migrator = new Migrator({
+          packageJson: createPackageJson({
+            dependencies: {
+              firstPartyChild: '1.0.0',
+              thirdPartyChild: '1.0.0',
+            },
+          }),
+          getInstalledPackageVersion: () => '1.0.0',
+          fetch: (p) => {
+            if (p === 'mypackage') {
+              return Promise.resolve({
+                version: '2.0.0',
+                packageJsonUpdates: {
+                  mixed: {
+                    version: '2.0.0',
+                    packages: {
+                      firstPartyChild: { version: '3.0.0' },
+                      thirdPartyChild: { version: '3.0.0' },
+                    },
+                  },
+                },
+              });
+            } else if (p === 'firstPartyChild') {
+              return Promise.resolve({ version: '3.0.0' });
+            }
+            return Promise.resolve(null);
+          },
+          from: {},
+          to: {},
+          mode: 'first-party',
+          firstPartyPackages: new Set(['mypackage', 'firstPartyChild']),
+        });
+
+        const result = await migrator.migrate('mypackage', '2.0.0');
+
+        expect(result.packageUpdates).toEqual({
+          mypackage: { version: '2.0.0', addToPackageJson: false },
+          firstPartyChild: { version: '3.0.0', addToPackageJson: false },
+        });
+        expect(result.packageUpdates.thirdPartyChild).toBeUndefined();
+      });
+
+      it('should drop entries that contain only third-party packages without firing their x-prompt', async () => {
+        mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: true }));
+        const migrator = new Migrator({
+          packageJson: createPackageJson({
+            dependencies: {
+              thirdPartyA: '1.0.0',
+              thirdPartyB: '1.0.0',
+            },
+          }),
+          getInstalledPackageVersion: () => '1.0.0',
+          fetch: (p) => {
+            if (p === 'mypackage') {
+              return Promise.resolve({
+                version: '2.0.0',
+                packageJsonUpdates: {
+                  thirdPartyOnly: {
+                    version: '2.0.0',
+                    'x-prompt': 'Update third-party packages?',
+                    packages: {
+                      thirdPartyA: { version: '3.0.0' },
+                      thirdPartyB: { version: '3.0.0' },
+                    },
+                  },
+                },
+              });
+            }
+            return Promise.resolve(null);
+          },
+          from: {},
+          to: {},
+          interactive: true,
+          mode: 'first-party',
+          firstPartyPackages: new Set(['mypackage']),
+        });
+
+        const result = await migrator.migrate('mypackage', '2.0.0');
+
+        expect(result.packageUpdates).toEqual({
+          mypackage: { version: '2.0.0', addToPackageJson: false },
+        });
+        expect(mockPrompt).not.toHaveBeenCalled();
+      });
+
+      it('should source first-party gate from the provided set, not getNxPackageGroup', async () => {
+        // Sanity: a name commonly returned by getNxPackageGroup() that we
+        // deliberately exclude from the first-party set should be filtered out,
+        // and an arbitrary unrelated name that we include should be kept.
+        const migrator = new Migrator({
+          packageJson: createPackageJson({
+            dependencies: {
+              '@nx/react': '1.0.0',
+              'not-in-nx-package-group': '1.0.0',
+            },
+          }),
+          getInstalledPackageVersion: () => '1.0.0',
+          fetch: (p) => {
+            if (p === 'nx') {
+              return Promise.resolve({
+                version: '2.0.0',
+                packageJsonUpdates: {
+                  group: {
+                    version: '2.0.0',
+                    packages: {
+                      '@nx/react': { version: '2.0.0' },
+                      'not-in-nx-package-group': { version: '2.0.0' },
+                    },
+                  },
+                },
+              });
+            } else if (p === 'not-in-nx-package-group') {
+              return Promise.resolve({ version: '2.0.0' });
+            }
+            return Promise.resolve(null);
+          },
+          from: {},
+          to: {},
+          mode: 'first-party',
+          firstPartyPackages: new Set(['nx', 'not-in-nx-package-group']),
+        });
+
+        const result = await migrator.migrate('nx', '2.0.0');
+
+        expect(result.packageUpdates).toEqual({
+          nx: { version: '2.0.0', addToPackageJson: false },
+          'not-in-nx-package-group': {
+            version: '2.0.0',
+            addToPackageJson: false,
+          },
+        });
+        expect(result.packageUpdates['@nx/react']).toBeUndefined();
+      });
+    });
+
     describe('requirements', () => {
       beforeEach(() => {
         jest.clearAllMocks();
@@ -1969,6 +2110,17 @@ describe('Migration', () => {
       await expect(() =>
         parseMigrationsOptions({ packageAndVersion: '8.12.0', to: 'myscope' })
       ).rejects.toThrow(`Incorrect 'to' section. Use --to="package@version"`);
+    });
+
+    it('should reject --mode combined with --run-migrations', async () => {
+      await expect(() =>
+        parseMigrationsOptions({
+          runMigrations: 'migrations.json',
+          mode: 'first-party',
+        })
+      ).rejects.toThrow(
+        `Error: '--mode' cannot be combined with '--run-migrations'.`
+      );
     });
 
     it('should handle backslashes in package names', async () => {
