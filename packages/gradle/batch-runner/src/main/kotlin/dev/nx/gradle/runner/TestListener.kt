@@ -21,6 +21,12 @@ fun testListener(
   val taskPathToTaskIds: Map<String, List<String>> =
       tasks.entries.groupBy({ normalizeTaskPath(it.value.taskName) }, { it.key })
 
+  if (System.getenv("NX_GRADLE_BATCH_DEBUG_TESTS") == "true") {
+    System.err.println("[nx-test-debug] classNameToTaskId=$classNameToTaskId")
+    System.err.println("[nx-test-debug] taskPathToTaskIds=$taskPathToTaskIds")
+  }
+  val debugTests = System.getenv("NX_GRADLE_BATCH_DEBUG_TESTS") == "true"
+
   // Walk up the parent chain to find the test class this output came from,
   // then map that class name to its Nx task id.
   fun findNxTaskIdForOutput(descriptor: OperationDescriptor): String? {
@@ -42,9 +48,12 @@ fun testListener(
   return { event ->
     when (event) {
       is TestOutputEvent -> {
-        findNxTaskIdForOutput(event.descriptor)?.let { nxTaskId ->
-          onTestOutput(nxTaskId, event.descriptor.message)
-        }
+        val message = event.descriptor.message
+        // Subscribing to TEST_OUTPUT diverts test stdout/stderr through events instead of
+        // the build's standard output stream, so we have to echo it ourselves for live display.
+        // Both stdout and stderr go to System.err — System.out is reserved for NX_RESULT lines.
+        System.err.print(message)
+        findNxTaskIdForOutput(event.descriptor)?.let { nxTaskId -> onTestOutput(nxTaskId, message) }
       }
 
       is TaskFinishEvent -> {
@@ -61,6 +70,11 @@ fun testListener(
       }
 
       is TestStartEvent -> {
+        if (debugTests) {
+          val d = event.descriptor as? JvmTestOperationDescriptor
+          System.err.println(
+              "[nx-test-debug] TestStartEvent class=${d?.className} method=${d?.methodName} type=${event.descriptor::class.simpleName}")
+        }
         (event.descriptor as? JvmTestOperationDescriptor)?.className?.let { className ->
           classNameToTaskId[className]?.let { nxTaskId ->
             testStartTimes.computeIfAbsent(nxTaskId) { event.eventTime }
@@ -70,6 +84,11 @@ fun testListener(
       }
 
       is TestFinishEvent -> {
+        if (debugTests) {
+          val d = event.descriptor as? JvmTestOperationDescriptor
+          System.err.println(
+              "[nx-test-debug] TestFinishEvent class=${d?.className} method=${d?.methodName} type=${event.descriptor::class.simpleName}")
+        }
         (event.descriptor as? JvmTestOperationDescriptor)?.let { descriptor ->
           val className = descriptor.className ?: return@let
           val nxTaskId = classNameToTaskId[className] ?: return@let

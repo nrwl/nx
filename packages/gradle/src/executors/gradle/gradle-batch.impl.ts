@@ -214,22 +214,48 @@ async function* streamTasksInBatch(
 
   const rl = createInterface({ input: cp.stdout, crlfDelay: Infinity });
 
+  // Drain stdout into a queue eagerly. Yielding inside the readline loop creates
+  // back-pressure: if the consumer is slow, `yield` blocks, readline pauses, the
+  // OS pipe between Java and Node fills, and Java's NX_RESULT println blocks on
+  // a full pipe — the JVM hangs even though all task work is done.
+  const queue: Array<{ task: string; result: TaskResult }> = [];
+  let notifyAvailable: (() => void) | null = null;
+  let readerClosed = false;
+
+  rl.on('line', (line) => {
+    if (!line.startsWith('NX_RESULT:')) return;
+    try {
+      const data = JSON.parse(line.slice('NX_RESULT:'.length));
+      queue.push({
+        task: data.task,
+        result: {
+          success: data.result.success ?? false,
+          terminalOutput: data.result.terminalOutput ?? '',
+          startTime: data.result.startTime,
+          endTime: data.result.endTime,
+        },
+      });
+    } catch (e) {
+      console.error('[Gradle Batch] Failed to parse result line:', line, e);
+      return;
+    }
+    notifyAvailable?.();
+    notifyAvailable = null;
+  });
+  rl.on('close', () => {
+    readerClosed = true;
+    notifyAvailable?.();
+    notifyAvailable = null;
+  });
+
   try {
-    for await (const line of rl) {
-      if (!line.startsWith('NX_RESULT:')) continue;
-      try {
-        const data = JSON.parse(line.slice('NX_RESULT:'.length));
-        yield {
-          task: data.task,
-          result: {
-            success: data.result.success ?? false,
-            terminalOutput: data.result.terminalOutput ?? '',
-            startTime: data.result.startTime,
-            endTime: data.result.endTime,
-          },
-        };
-      } catch (e) {
-        console.error('[Gradle Batch] Failed to parse result line:', line, e);
+    while (!readerClosed || queue.length > 0) {
+      if (queue.length > 0) {
+        yield queue.shift()!;
+      } else {
+        await new Promise<void>((resolve) => {
+          notifyAvailable = resolve;
+        });
       }
     }
   } finally {
