@@ -2124,6 +2124,28 @@ describe('Migration', () => {
       );
     });
 
+    it('should reject --mode for non-nx-equivalent target on modern versions', async () => {
+      await expect(() =>
+        parseMigrationsOptions({
+          packageAndVersion: '@nx/react@22.0.0',
+          mode: 'first-party',
+        })
+      ).rejects.toThrow(
+        `Error: '--mode' requires the target to be 'nx' or '@nx/workspace'. Got '@nx/react@22.0.0'.`
+      );
+    });
+
+    it('should reject --mode for non-nx-equivalent target on legacy versions', async () => {
+      await expect(() =>
+        parseMigrationsOptions({
+          packageAndVersion: 'nx@13.0.0',
+          mode: 'first-party',
+        })
+      ).rejects.toThrow(
+        `Error: '--mode' requires the target to be '@nrwl/workspace' for Nx <14.0.0. Got 'nx@13.0.0'.`
+      );
+    });
+
     it('should handle backslashes in package names', async () => {
       jest
         .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
@@ -2277,7 +2299,7 @@ describe('Migration', () => {
         configurable: true,
       });
       process.env.CI = 'false';
-      const result = await resolveMode('first-party');
+      const result = await resolveMode('first-party', 'nx', '22.0.0');
       expect(result).toBe('first-party');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
@@ -2288,7 +2310,7 @@ describe('Migration', () => {
         configurable: true,
       });
       process.env.CI = 'false';
-      const result = await resolveMode(undefined);
+      const result = await resolveMode(undefined, 'nx', '22.0.0');
       expect(result).toBe('all');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
@@ -2299,7 +2321,18 @@ describe('Migration', () => {
         configurable: true,
       });
       process.env.CI = 'true';
-      const result = await resolveMode(undefined);
+      const result = await resolveMode(undefined, 'nx', '22.0.0');
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('should default to "all" without prompting for non-nx-equivalent target', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveMode(undefined, '@nx/react', '22.0.0');
       expect(result).toBe('all');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
@@ -2311,7 +2344,7 @@ describe('Migration', () => {
       });
       process.env.CI = 'false';
       mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'first-party' }));
-      const result = await resolveMode(undefined);
+      const result = await resolveMode(undefined, 'nx', '22.0.0');
       expect(result).toBe('first-party');
       expect(mockPrompt).toHaveBeenCalled();
     });

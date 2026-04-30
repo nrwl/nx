@@ -868,11 +868,26 @@ function resolveFirstPartyPackages(
   return set;
 }
 
+function isNxEquivalentTarget(
+  targetPackage: string,
+  targetVersion: string
+): boolean {
+  if (lt(targetVersion, '14.0.0-beta.0')) {
+    return targetPackage === '@nrwl/workspace';
+  }
+  return targetPackage === 'nx' || targetPackage === '@nx/workspace';
+}
+
 export async function resolveMode(
-  mode: 'first-party' | 'all' | undefined
+  mode: 'first-party' | 'all' | undefined,
+  targetPackage: string,
+  targetVersion: string
 ): Promise<'first-party' | 'all'> {
   if (mode) {
     return mode;
+  }
+  if (!isNxEquivalentTarget(targetPackage, targetVersion)) {
+    return 'all';
   }
   if (!process.stdin.isTTY || isCI()) {
     return 'all';
@@ -1032,9 +1047,23 @@ export async function parseMigrationsOptions(options: {
     const { targetPackage, targetVersion } = await parseTargetPackageAndVersion(
       options['packageAndVersion']
     );
+    const normalizedTargetPackage = normalizeSlashes(targetPackage);
+    if (
+      options.mode &&
+      !isNxEquivalentTarget(normalizedTargetPackage, targetVersion)
+    ) {
+      const isLegacy = lt(targetVersion, '14.0.0-beta.0');
+      const validTargets = isLegacy
+        ? `'@nrwl/workspace'`
+        : `'nx' or '@nx/workspace'`;
+      const eraNote = isLegacy ? ' for Nx <14.0.0' : '';
+      throw new Error(
+        `Error: '--mode' requires the target to be ${validTargets}${eraNote}. Got '${normalizedTargetPackage}@${targetVersion}'.`
+      );
+    }
     return {
       type: 'generateMigrations',
-      targetPackage: normalizeSlashes(targetPackage),
+      targetPackage: normalizedTargetPackage,
       targetVersion,
       from,
       to,
@@ -1615,7 +1644,11 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       originalNxJson.installation?.version ??
       readNxVersion(originalPackageJson, root);
 
-    const mode = await resolveMode(opts.mode);
+    const mode = await resolveMode(
+      opts.mode,
+      opts.targetPackage,
+      opts.targetVersion
+    );
 
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);
