@@ -60,4 +60,8 @@ fun main(args: Array<String>) {
       logger.warning("⚠️ Failed to close Gradle connection cleanly: ${e.message}")
     }
   }
+
+  // Force exit so lingering non-daemon threads from the Gradle Tooling API
+  // can't keep the JVM alive after all task work is done.
+  exitProcess(0)
 }

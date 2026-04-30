@@ -14,84 +14,64 @@ fun testListener(
     testEndTimes: MutableMap<String, Long>,
     onTestTaskComplete: (nxTaskId: String) -> Unit = {},
 ): (ProgressEvent) -> Unit {
+  val classNameToTaskId: Map<String, String> =
+      tasks.entries.mapNotNull { (id, task) -> task.testClassName?.let { it to id } }.toMap()
+  val taskPathToTaskIds: Map<String, List<String>> =
+      tasks.entries.groupBy({ normalizeTaskPath(it.value.taskName) }, { it.key })
+
   return { event ->
     when (event) {
       is TaskFinishEvent -> {
         val taskPath = event.descriptor.taskPath
         val success = getTaskFinishEventSuccess(event, taskPath)
 
-        tasks.entries
-            .filter { normalizeTaskPath(it.value.taskName) == normalizeTaskPath(taskPath) }
-            .map { it.key }
-            .forEach { nxTaskId ->
-              testTaskStatus.computeIfAbsent(nxTaskId) { success }
-              testEndTimes.computeIfAbsent(nxTaskId) { event.result.endTime }
-              // Safety net: if no class-level TestFinishEvent fired for this Nx task
-              // (e.g. compile failure skipped the tests), emit it now. The emitter
-              // dedupes, so tasks already streamed at class level are skipped.
-              onTestTaskComplete(nxTaskId)
-            }
+        taskPathToTaskIds[normalizeTaskPath(taskPath)]?.forEach { nxTaskId ->
+          testTaskStatus.computeIfAbsent(nxTaskId) { success }
+          testEndTimes.computeIfAbsent(nxTaskId) { event.result.endTime }
+          // Safety net: tasks that never fired a class-level TestFinishEvent
+          // (e.g. compile failure) emit here. ResultEmitter dedupes.
+          onTestTaskComplete(nxTaskId)
+        }
       }
 
       is TestStartEvent -> {
-        val descriptor = event.descriptor as? JvmTestOperationDescriptor
-
-        descriptor?.className?.let { className ->
-          tasks.entries
-              .find { (_, v) -> v.testClassName == className }
-              ?.key
-              ?.let { nxTaskId ->
-                testStartTimes.computeIfAbsent(nxTaskId) { event.eventTime }
-                logger.info("🏁 Test start: $nxTaskId $className")
-              }
+        (event.descriptor as? JvmTestOperationDescriptor)?.className?.let { className ->
+          classNameToTaskId[className]?.let { nxTaskId ->
+            testStartTimes.computeIfAbsent(nxTaskId) { event.eventTime }
+            logger.info("🏁 Test start: $nxTaskId $className")
+          }
         }
       }
 
       is TestFinishEvent -> {
-        val descriptor = event.descriptor as? JvmTestOperationDescriptor
-        val className = descriptor?.className
-        val nxTaskId =
-            className?.let { name -> tasks.entries.find { (_, v) -> v.testClassName == name }?.key }
+        (event.descriptor as? JvmTestOperationDescriptor)?.let { descriptor ->
+          val className = descriptor.className ?: return@let
+          val nxTaskId = classNameToTaskId[className] ?: return@let
 
-        nxTaskId?.let {
-          testEndTimes[it] = event.result.endTime
+          testEndTimes[nxTaskId] = event.result.endTime
 
-          val isClassLevel = descriptor.methodName == null
-          val passed = event.result is TestSuccessResult || event.result is TestSkippedResult
-
-          if (isClassLevel) {
-            // Class-level result is authoritative for the Nx task; emit now.
-            testTaskStatus[it] = passed
-            when (event.result) {
-              is TestSuccessResult ->
-                  logger.info(
-                      "✅ Test class passed at ${formatMillis(event.result.endTime)}: $it $className")
-              is TestFailureResult -> logger.warning("❌ Test class failed: $it $className")
-              is TestSkippedResult -> logger.warning("⚠️ Test class skipped: $it $className")
-              else -> logger.warning("⚠️ Unknown test class result: $it $className")
-            }
-            onTestTaskComplete(it)
+          val failed = event.result is TestFailureResult
+          if (failed) {
+            // Failure is sticky; a later passing method can't mask it.
+            testTaskStatus[nxTaskId] = false
           } else {
-            // Method-level: failure is sticky so a later passing method can't mask it.
-            val name = descriptor.methodName ?: className ?: "unknown"
-            when (event.result) {
-              is TestSuccessResult -> {
-                testTaskStatus.putIfAbsent(it, true)
-                logger.info("✅ Test passed at ${formatMillis(event.result.endTime)}: $it $name")
-              }
-              is TestFailureResult -> {
-                testTaskStatus[it] = false
-                logger.warning("❌ Test failed: $it $name")
-              }
-              is TestSkippedResult -> {
-                testTaskStatus.putIfAbsent(it, true)
-                logger.warning("⚠️ Test skipped: $it $name")
-              }
-              else -> {
-                testTaskStatus.putIfAbsent(it, true)
-                logger.warning("⚠️ Unknown test result: $it $name")
-              }
-            }
+            testTaskStatus.putIfAbsent(nxTaskId, true)
+          }
+
+          val name = descriptor.methodName ?: className
+          when (event.result) {
+            is TestSuccessResult ->
+                logger.info(
+                    "✅ Test passed at ${formatMillis(event.result.endTime)}: $nxTaskId $name")
+            is TestFailureResult -> logger.warning("❌ Test failed: $nxTaskId $name")
+            is TestSkippedResult -> logger.warning("⚠️ Test skipped: $nxTaskId $name")
+            else -> logger.warning("⚠️ Unknown test result: $nxTaskId $name")
+          }
+
+          if (descriptor.methodName == null) {
+            // Class-level event is the authoritative Nx-task milestone; emit now.
+            testTaskStatus[nxTaskId] = !failed
+            onTestTaskComplete(nxTaskId)
           }
         }
       }

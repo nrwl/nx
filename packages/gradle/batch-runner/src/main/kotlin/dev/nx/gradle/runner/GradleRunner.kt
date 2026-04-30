@@ -192,16 +192,26 @@ fun runTestLauncher(
   val excludeArgs = excludeTestTasks.flatMap { listOf("--exclude-task", it) }
   logger.info("excludeTestTasks $excludeArgs")
 
-  val streamedTestTaskIds = ConcurrentHashMap.newKeySet<String>()
+  // Capture per-Gradle-task output so streamed test results carry the same Gradle output
+  // that build tasks already do. Multiple Nx tasks share one Gradle test task, so they all
+  // get the same captured output. ResultEmitter dedupes streamed emissions.
+  val outputCapture = TaskOutputCapture(System.err) { _, _ -> }
+  val errorCapture = TaskOutputCapture(System.err) { _, _ -> }
+
+  fun normalizedTaskPath(nxTaskId: String): String? =
+      tasks[nxTaskId]?.taskName?.let { ":${normalizeTaskPath(it)}" }
+
   val emitTestTask: (String) -> Unit = { nxTaskId ->
-    if (streamedTestTaskIds.add(nxTaskId)) {
-      val success = testTaskStatus[nxTaskId] ?: false
-      val startTime = testStartTimes[nxTaskId] ?: globalStart
-      val endTime = testEndTimes[nxTaskId] ?: System.currentTimeMillis()
-      // Per-class terminalOutput is filled in by finalizeTaskResults below; the
-      // streamed copy goes out empty since test stdout isn't naturally segmented per class.
-      ResultEmitter.emit(nxTaskId, TaskResult(success, startTime, endTime, ""))
-    }
+    val success = testTaskStatus[nxTaskId] ?: false
+    val startTime = testStartTimes[nxTaskId] ?: globalStart
+    val endTime = testEndTimes[nxTaskId] ?: System.currentTimeMillis()
+    val captured =
+        normalizedTaskPath(nxTaskId)?.let { taskPath ->
+          listOf(outputCapture.getOutput(taskPath), errorCapture.getOutput(taskPath))
+              .filter { it.isNotBlank() }
+              .joinToString("\n")
+        } ?: ""
+    ResultEmitter.emit(nxTaskId, TaskResult(success, startTime, endTime, captured))
   }
 
   try {
@@ -213,8 +223,8 @@ fun runTestLauncher(
           // arguments here
           addArguments(
               *(args + excludeArgs).toTypedArray()) // Combine your existing args with JUnit args
-          setStandardOutput(TeeOutputStream(outputStream, System.err))
-          setStandardError(TeeOutputStream(errorStream, System.err))
+          setStandardOutput(TeeOutputStream(outputStream, outputCapture))
+          setStandardError(TeeOutputStream(errorStream, errorCapture))
           addProgressListener(
               testListener(tasks, testTaskStatus, testStartTimes, testEndTimes, emitTestTask),
               eventTypes)
@@ -249,8 +259,14 @@ fun runTestLauncher(
       val success = testTaskStatus[nxTaskId] ?: false
       val startTime = testStartTimes[nxTaskId] ?: globalStart
       val endTime = testEndTimes[nxTaskId] ?: globalEnd
+      val captured =
+          normalizedTaskPath(nxTaskId)?.let { taskPath ->
+            listOf(outputCapture.getOutput(taskPath), errorCapture.getOutput(taskPath))
+                .filter { it.isNotBlank() }
+                .joinToString("\n")
+          } ?: ""
 
-      taskResults[nxTaskId] = TaskResult(success, startTime, endTime, "")
+      taskResults[nxTaskId] = TaskResult(success, startTime, endTime, captured)
     }
   }
 
