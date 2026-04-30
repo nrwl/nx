@@ -115,7 +115,10 @@
       "dependsOn": ["test-native", "build-native", "^build-native"],
       "options": {
         "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
-        "env": { "NODE_OPTIONS": "--experimental-vm-modules" }
+        "env": {
+          "NODE_OPTIONS": "--experimental-vm-modules",
+          "NX_FS_TRACE_FOREIGN_READS": "1"
+        }
       }
     },
     "lint": {
