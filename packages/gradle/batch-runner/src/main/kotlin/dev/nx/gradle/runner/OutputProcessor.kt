@@ -20,10 +20,9 @@ object OutputProcessor {
       globalOutput: String,
       errorStream: ByteArrayOutputStream,
       globalStart: Long,
-      globalEnd: Long
+      globalEnd: Long,
+      perTaskOutput: Map<String, String> = splitOutputPerTask(globalOutput),
   ): Map<String, TaskResult> {
-    val perTaskOutput = splitOutputPerTask(globalOutput)
-
     tasks.forEach { (taskId, taskConfig) ->
       val baseOutput = perTaskOutput[taskConfig.taskName] ?: ""
       val existingResult = taskResults[taskId]
@@ -51,17 +50,9 @@ object OutputProcessor {
 
   /**
    * Splits a captured Gradle build output by `> Task :foo:bar` headers, keyed by Gradle task path.
-   *
-   * Each returned section also has its trailing scheduling-preamble lines for the *next* task
-   * stripped — Gradle prints lines like `Resolve mutations for :next:task (Thread[…]) started.` and
-   * `:next:task (Thread[…]) started.` between tasks, *before* the next task's `> Task :…` header
-   * arrives in the stream. Header-position attribution puts those lines in the previous task's
-   * bucket; this method removes them.
-   *
-   * Strip rule: walk lines from the trailing end. Drop any line that contains a Gradle task-path
-   * reference (`:foo:bar`-shaped) other than the current section's own task. Stop when a line
-   * either references the current task (legit own-task content) or has no task-path reference at
-   * all (build summary, kotlin compiler chatter, etc.).
+   * Trailing lines that reference any task other than the current section's are stripped — Gradle
+   * prints scheduling preamble for the next task before its `> Task :…` header arrives in the
+   * stream, so header-position attribution would otherwise leak it into the previous section.
    */
   fun splitOutputPerTask(globalOutput: String): Map<String, String> {
     val unescapedOutput = globalOutput.replace("\\u003e", ">").replace("\\n", "\n")

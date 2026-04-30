@@ -93,10 +93,8 @@ fun runBuildLauncher(
 
   val taskStartTimes = mutableMapOf<String, Long>()
   val taskResults = ConcurrentHashMap<String, TaskResult>()
-  // Tasks whose TaskFinishEvent fired but whose stdout hasn't been emitted yet.
-  // Keyed by Gradle task path, value is the Nx task id. The buildListener drains entries
-  // on each TaskStartEvent (gated on having any captured bytes for the task); anything
-  // still pending at end-of-build is flushed below.
+  // Gradle task path -> Nx task id, awaiting an emit. Drained by buildListener on TaskStartEvent
+  // and finally below at end-of-build.
   val pendingEmit = ConcurrentHashMap<String, String>()
 
   val globalStart = System.currentTimeMillis()
@@ -118,8 +116,7 @@ fun runBuildLauncher(
         .apply {
           forTasks(*taskNames)
           addArguments(*(args + excludeArgs).toTypedArray())
-          // Tee Gradle's stdout into our buffered outputStream (for splitOutputPerTask) and
-          // System.err (so users see the build output live in their terminal).
+          // Tee to outputStream for splitOutputPerTask and to System.err for live display.
           setStandardOutput(TeeOutputStream(outputStream, System.err))
           setStandardError(TeeOutputStream(errorStream, System.err))
           withDetailedFailure()
@@ -139,9 +136,8 @@ fun runBuildLauncher(
     errorStream.close()
   }
 
-  // Flush any tasks the listener-thread drain didn't catch — typically the last task in the
-  // build (no successor TaskStartEvent fires) and any tasks whose bytes hadn't reached our
-  // stream yet at the time their successor's TaskStartEvent fired.
+  // The last task in the build has no successor TaskStartEvent to drain it; flush here. The
+  // resulting sections map is reused by finalizeTaskResults below.
   val finalSections = splitOutputPerTask(globalOutput)
   pendingEmit.keys.toList().forEach { taskPath ->
     emitForTaskPath(taskPath, finalSections[taskPath] ?: "")
@@ -161,7 +157,8 @@ fun runBuildLauncher(
       globalOutput = globalOutput,
       errorStream = errorStream,
       globalStart = globalStart,
-      globalEnd = globalEnd)
+      globalEnd = globalEnd,
+      perTaskOutput = finalSections)
 
   logger.info("\u2705 Finished build tasks")
   return taskResults
@@ -192,10 +189,8 @@ fun runTestLauncher(
   val excludeArgs = excludeTestTasks.flatMap { listOf("--exclude-task", it) }
   logger.info("excludeTestTasks $excludeArgs")
 
-  // TestLauncher routes test stdout through setStandardOutput (it diverts it to
-  // TestOutputEvents only when OperationType.TEST_OUTPUT is subscribed), so we slice the
-  // captured streams by Gradle task path via splitOutputPerTask at emit time. Multiple Nx
-  // tasks under the same Gradle test task share the same section.
+  // Multiple Nx tasks (one per test class) can share a single Gradle test task path; they end
+  // up with the same captured section since TAPI doesn't slice stdout by test class.
   fun normalizedTaskPath(nxTaskId: String): String? =
       tasks[nxTaskId]?.taskName?.let { ":${normalizeTaskPath(it)}" }
 
@@ -206,16 +201,11 @@ fun runTestLauncher(
         listOf(out, err).filter { it.isNotBlank() }.joinToString("\n")
       } ?: ""
 
-  // Tracks which nxTaskIds we've already streamed so the listener-thread retries are idempotent.
-  // `add` returns true iff newly inserted, so we use it to atomically claim emission.
   val emittedNxTasks = ConcurrentHashMap.newKeySet<String>()
 
   val emitTestTask: (String) -> Unit = { nxTaskId ->
     val captured = capturedFor(nxTaskId)
-    // Buffer-state guard: skip if (a) the Gradle test task's bytes haven't reached our stream
-    // yet, or (b) we already emitted for this nxTaskId. Parked tasks will be retried on later
-    // events (other classes' TestFinishEvent, the test task's TaskFinishEvent safety net) and
-    // finally by the end-of-runTestLauncher sweep, by which time output has been flushed.
+    // Skip empty captures; they'll be retried on later events or the end-of-runTestLauncher sweep.
     if (captured.isNotEmpty() && emittedNxTasks.add(nxTaskId)) {
       val success = testTaskStatus[nxTaskId] ?: false
       val startTime = testStartTimes[nxTaskId] ?: globalStart

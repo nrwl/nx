@@ -27,11 +27,7 @@ fun buildListener(
 ): (ProgressEvent) -> Unit = { event ->
   when (event) {
     is TaskStartEvent -> {
-      // Each TaskStartEvent on the listener is a chance to drain pendingEmit. A parked task is
-      // safe to ship once its bytes have actually reached our OutputStream — splitOutputPerTask
-      // returns an entry for it once Gradle's writer thread has flushed its `> Task :…` header
-      // and content. If the section is empty (writer thread hasn't caught up yet), leave the
-      // task parked for a later TaskStartEvent or the end-of-build flush.
+      // Listener thread leads the writer thread; retry parked emits whose bytes have now landed.
       if (pendingEmit.isNotEmpty()) {
         val sections = splitOutputPerTask(outputStream.toString("UTF-8"))
         pendingEmit.keys.toList().forEach { parked ->
@@ -61,8 +57,6 @@ fun buildListener(
           ?.let { nxTaskId ->
             val endTime = event.result.endTime
             val startTime = taskStartTimes[nxTaskId] ?: event.result.startTime
-            // Record the result without terminalOutput. terminalOutput is filled in when a later
-            // TaskStartEvent fires (drains pendingEmit) or by the end-of-build flush.
             taskResults[nxTaskId] = TaskResult(success, startTime, endTime, "")
             pendingEmit[taskPath] = nxTaskId
           }
