@@ -125,12 +125,7 @@ fun runBuildLauncher(
           withDetailedFailure()
           addProgressListener(
               buildListener(
-                  tasks,
-                  taskStartTimes,
-                  taskResults,
-                  pendingEmit,
-                  outputStream,
-                  ::emitForTaskPath),
+                  tasks, taskStartTimes, taskResults, pendingEmit, outputStream, ::emitForTaskPath),
               OperationType.TASK)
         }
         .run()

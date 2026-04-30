@@ -53,10 +53,10 @@ object OutputProcessor {
    * Splits a captured Gradle build output by `> Task :foo:bar` headers, keyed by Gradle task path.
    *
    * Each returned section also has its trailing scheduling-preamble lines for the *next* task
-   * stripped — Gradle prints lines like `Resolve mutations for :next:task (Thread[…]) started.`
-   * and `:next:task (Thread[…]) started.` between tasks, *before* the next task's `> Task :…`
-   * header arrives in the stream. Header-position attribution puts those lines in the previous
-   * task's bucket; this method removes them.
+   * stripped — Gradle prints lines like `Resolve mutations for :next:task (Thread[…]) started.` and
+   * `:next:task (Thread[…]) started.` between tasks, *before* the next task's `> Task :…` header
+   * arrives in the stream. Header-position attribution puts those lines in the previous task's
+   * bucket; this method removes them.
    *
    * Strip rule: walk lines from the trailing end. Drop any line that contains a Gradle task-path
    * reference (`:foo:bar`-shaped) other than the current section's own task. Stop when a line
@@ -72,7 +72,8 @@ object OutputProcessor {
     for (section in sections) {
       val trimmedSection = section.trim()
       if (trimmedSection.isEmpty()) continue
-      val header = trimmedSection.lineSequence().firstOrNull { it.startsWith("> Task ") } ?: continue
+      val header =
+          trimmedSection.lineSequence().firstOrNull { it.startsWith("> Task ") } ?: continue
       val taskName = TASK_HEADER.find(header)?.groupValues?.get(1) ?: continue
       val cleaned = stripNextTaskPreamble(trimmedSection, taskName)
       taskOutputMap[taskName] = taskOutputMap[taskName]?.let { "$it\n$cleaned" } ?: cleaned

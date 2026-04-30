@@ -510,7 +510,8 @@ class OutputProcessorTest {
 
       val compileKotlin = sections[":proj:compileKotlin"]!!
       assertTrue(
-          compileKotlin.endsWith("Stored cache entry for task ':proj:compileKotlin' with cache key abc"),
+          compileKotlin.endsWith(
+              "Stored cache entry for task ':proj:compileKotlin' with cache key abc"),
           "current-task references must be preserved")
     }
 
