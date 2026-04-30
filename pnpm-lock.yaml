@@ -2995,8 +2995,8 @@ importers:
         specifier: ^1.5.1
         version: 1.6.1
       ignore:
-        specifier: ^5.0.4
-        version: 5.3.2
+        specifier: ^7.0.5
+        version: 7.0.5
       js-tokens:
         specifier: ^4.0.0
         version: 4.0.0
@@ -3169,8 +3169,8 @@ importers:
         specifier: ^14.0.0
         version: 14.0.0(webpack@5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3)))
       ignore:
-        specifier: ^5.0.4
-        version: 5.3.2
+        specifier: ^7.0.5
+        version: 7.0.5
       next:
         specifier: '>=14.0.0 <17.0.0'
         version: 14.2.28(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.54.0)(babel-plugin-macros@3.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.97.3)
@@ -3563,8 +3563,8 @@ importers:
         specifier: ^5.8.3
         version: 5.18.2
       ignore:
-        specifier: ^5.0.4
-        version: 5.3.2
+        specifier: ^7.0.5
+        version: 7.0.5
       metro-config:
         specifier: '>= 0.82.0'
         version: 0.82.4
