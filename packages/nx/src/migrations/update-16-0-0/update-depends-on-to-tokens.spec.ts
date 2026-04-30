@@ -38,13 +38,12 @@ describe('update-depends-on-to-tokens', () => {
     });
     await update(tree);
     const nxJson = readNxJson(tree);
-    const buildDependencyConfiguration = nxJson.targetDefaults.build
-      .dependsOn[0] as any;
-    const testDependencyConfiguration = nxJson.targetDefaults.test
-      .dependsOn[0] as any;
-    const buildInputConfiguration = nxJson.targetDefaults.build
-      .inputs[0] as any;
-    const testInputConfiguration = nxJson.targetDefaults.test.inputs[0] as any;
+    // Migration ran before targetDefaults supported the array shape.
+    const td = nxJson.targetDefaults as Record<string, any>;
+    const buildDependencyConfiguration = td.build.dependsOn[0] as any;
+    const testDependencyConfiguration = td.test.dependsOn[0] as any;
+    const buildInputConfiguration = td.build.inputs[0] as any;
+    const testInputConfiguration = td.test.inputs[0] as any;
     expect(buildDependencyConfiguration.projects).not.toBeDefined();
     expect(buildDependencyConfiguration.dependencies).not.toBeDefined();
     expect(buildInputConfiguration.projects).not.toBeDefined();
@@ -53,7 +52,7 @@ describe('update-depends-on-to-tokens', () => {
     expect(testInputConfiguration.dependencies).toEqual(true);
     expect(testDependencyConfiguration.projects).not.toBeDefined();
     expect(testDependencyConfiguration.dependencies).toEqual(true);
-    expect(nxJson.targetDefaults.other.dependsOn).toEqual(['^deps']);
+    expect(td.other.dependsOn).toEqual(['^deps']);
   });
 
   it('should update project configurations', async () => {

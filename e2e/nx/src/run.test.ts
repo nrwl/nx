@@ -492,13 +492,23 @@ describe('Nx Running Tests', () => {
         const lib = uniq('lib');
 
         updateJson('nx.json', (nxJson) => {
-          nxJson.targetDefaults ??= {};
-          nxJson.targetDefaults[target] = {
-            executor: 'nx:run-commands',
-            options: {
-              command: `echo Hello from ${target}`,
-            },
-          };
+          if (Array.isArray(nxJson.targetDefaults)) {
+            nxJson.targetDefaults.push({
+              target,
+              executor: 'nx:run-commands',
+              options: {
+                command: `echo Hello from ${target}`,
+              },
+            });
+          } else {
+            nxJson.targetDefaults ??= {};
+            nxJson.targetDefaults[target] = {
+              executor: 'nx:run-commands',
+              options: {
+                command: `echo Hello from ${target}`,
+              },
+            };
+          }
           return nxJson;
         });
 
@@ -522,12 +532,21 @@ describe('Nx Running Tests', () => {
         const lib = uniq('lib');
 
         updateJson('nx.json', (nxJson) => {
-          nxJson.targetDefaults ??= {};
-          nxJson.targetDefaults[`nx:run-commands`] = {
-            options: {
-              command: `echo Hello from ${target}`,
-            },
-          };
+          if (Array.isArray(nxJson.targetDefaults)) {
+            nxJson.targetDefaults.push({
+              target: `nx:run-commands`,
+              options: {
+                command: `echo Hello from ${target}`,
+              },
+            });
+          } else {
+            nxJson.targetDefaults ??= {};
+            nxJson.targetDefaults[`nx:run-commands`] = {
+              options: {
+                command: `echo Hello from ${target}`,
+              },
+            };
+          }
           return nxJson;
         });
 

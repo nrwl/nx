@@ -43,11 +43,24 @@
       }
     },
     "targetDefaults": {
-      "type": "object",
-      "description": "Target defaults",
-      "additionalProperties": {
-        "$ref": "#/definitions/targetDefaultsConfig"
-      }
+      "description": "Target defaults. The recommended form is an array of entries, each filtered by target name (required), and optionally projects and source plugin. The legacy record/object form (keyed by target name or executor) is still read but deprecated; run `nx repair` to convert it.",
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/targetDefaultEntry"
+          }
+        },
+        {
+          "type": "object",
+          "deprecated": true,
+          "deprecationMessage": "The record-shape `targetDefaults` is deprecated and will be removed in a future major. Run `nx repair` to convert this nx.json to the new array-shape `targetDefaults`, which also unlocks the `projects` and `source` filters.",
+          "description": "Deprecated: the record-shape `targetDefaults` is still read for backwards compatibility, but new workspaces should use the array form. Run `nx repair` to convert.",
+          "additionalProperties": {
+            "$ref": "#/definitions/targetDefaultsConfig"
+          }
+        }
+      ]
     },
     "workspaceLayout": {
       "type": "object",
@@ -800,6 +813,82 @@
               "description": "Defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key NX_CLOUD_ENCRYPTION_KEY that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable."
             }
           }
+        }
+      },
+      "additionalProperties": false
+    },
+    "targetDefaultEntry": {
+      "type": "object",
+      "description": "A single target defaults entry.",
+      "required": ["target"],
+      "properties": {
+        "target": {
+          "type": "string",
+          "description": "The target name, target name glob, or executor (e.g. '@nx/vite:test') this default applies to."
+        },
+        "projects": {
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "A project name, glob, or tag (e.g. 'tag:dotnet')."
+            },
+            {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "A list of project names, globs, or tags (e.g. ['apps/*', '!apps/legacy'])."
+            }
+          ],
+          "description": "Restrict the default to matching projects. Uses findMatchingProjects syntax."
+        },
+        "source": {
+          "type": "string",
+          "description": "Restrict the default to targets originated by a specific plugin (e.g. '@nx/vite')."
+        },
+        "executor": {
+          "description": "The function that Nx will invoke when you run this target",
+          "type": "string"
+        },
+        "options": {
+          "type": "object"
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "defaultConfiguration": {
+          "type": "string",
+          "description": "The name of a configuration to use as the default if a configuration is not provided"
+        },
+        "configurations": {
+          "type": "object",
+          "description": "provides extra sets of values that will be merged into the options map",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "continuous": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether this target runs continuously until stopped"
+        },
+        "parallelism": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether this target can be run in parallel with other tasks"
+        },
+        "inputs": {
+          "$ref": "#/definitions/inputs"
+        },
+        "dependsOn": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/dependsOn"
+        },
+        "cache": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/cache"
+        },
+        "syncGenerators": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/syncGenerators"
         }
       },
       "additionalProperties": false

@@ -1,7 +1,10 @@
 import { unlinkSync } from 'fs';
 import { dirname, join, posix, relative, resolve } from 'node:path';
 import { toNewFormat } from '../../../../adapter/angular-json';
-import type { NxJsonConfiguration } from '../../../../config/nx-json';
+import type {
+  NxJsonConfiguration,
+  TargetDefaultEntry,
+} from '../../../../config/nx-json';
 import type { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
 import {
   fileExists,
@@ -95,29 +98,34 @@ function createNxJson(
         : []),
     ].filter(Boolean),
   };
-  nxJson.targetDefaults ??= {};
+  const defaults: TargetDefaultEntry[] = Array.isArray(nxJson.targetDefaults)
+    ? [...nxJson.targetDefaults]
+    : [];
+  const upsert = (target: string, patch: Partial<TargetDefaultEntry>): void => {
+    const idx = defaults.findIndex(
+      (e) =>
+        e.target === target &&
+        e.projects === undefined &&
+        e.source === undefined
+    );
+    if (idx >= 0) defaults[idx] = { ...defaults[idx], ...patch, target };
+    else defaults.push({ target, ...patch });
+  };
   if (workspaceTargets.includes('build')) {
-    nxJson.targetDefaults.build = {
-      ...nxJson.targetDefaults.build,
+    upsert('build', {
       dependsOn: ['^build'],
       inputs: ['production', '^production'],
-    };
+    });
   }
   if (workspaceTargets.includes('server')) {
-    nxJson.targetDefaults.server = {
-      ...nxJson.targetDefaults.server,
-      inputs: ['production', '^production'],
-    };
+    upsert('server', { inputs: ['production', '^production'] });
   }
   if (workspaceTargets.includes('test')) {
     const inputs = ['default', '^production'];
     if (fileExists(join(repoRoot, 'karma.conf.js'))) {
       inputs.push('{workspaceRoot}/karma.conf.js');
     }
-    nxJson.targetDefaults.test = {
-      ...nxJson.targetDefaults.test,
-      inputs,
-    };
+    upsert('test', { inputs });
   }
   if (workspaceTargets.includes('lint')) {
     const inputs = ['default'];
@@ -127,16 +135,13 @@ function createNxJson(
     if (fileExists(join(repoRoot, 'eslint.config.cjs'))) {
       inputs.push('{workspaceRoot}/eslint.config.cjs');
     }
-    nxJson.targetDefaults.lint = {
-      ...nxJson.targetDefaults.lint,
-      inputs,
-    };
+    upsert('lint', { inputs });
   }
   if (workspaceTargets.includes('e2e')) {
-    nxJson.targetDefaults.e2e = {
-      ...nxJson.targetDefaults.e2e,
-      inputs: ['default', '^production'],
-    };
+    upsert('e2e', { inputs: ['default', '^production'] });
+  }
+  if (defaults.length > 0) {
+    nxJson.targetDefaults = defaults;
   }
   writeJsonFile(join(repoRoot, 'nx.json'), nxJson);
 }

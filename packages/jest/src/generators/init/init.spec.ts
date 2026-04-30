@@ -3,6 +3,7 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import {
   type NxJsonConfiguration,
   readJson,
+  type TargetDefaultEntry,
   type Tree,
   updateJson,
 } from '@nx/devkit';
@@ -16,6 +17,11 @@ describe('jest', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    // ensure targetDefaults starts as the array shape so assertions target it
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      json.targetDefaults = [];
+      return json;
+    });
     options = {
       addPlugin: true,
     };
@@ -32,8 +38,6 @@ describe('jest', () => {
 
     const productionFileSet = readJson<NxJsonConfiguration>(tree, 'nx.json')
       .namedInputs.production;
-    const jestDefaults = readJson<NxJsonConfiguration>(tree, 'nx.json')
-      .targetDefaults['@nx/jest:jest'];
     expect(productionFileSet).toContain(
       '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)'
     );
@@ -58,14 +62,17 @@ describe('jest', () => {
         '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
         '!{projectRoot}/**/*.md',
       ];
-      json.targetDefaults.test = {
+      const entries = (json.targetDefaults ?? []) as TargetDefaultEntry[];
+      entries.push({
+        target: 'test',
         inputs: [
           'default',
           '^production',
           '{workspaceRoot}/jest.preset.js',
           '{workspaceRoot}/testSetup.ts',
         ],
-      };
+      });
+      json.targetDefaults = entries;
       nxJson = json;
       return json;
     });

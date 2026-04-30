@@ -11,10 +11,13 @@ import {
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
+  type TargetConfiguration,
+  type TargetDefaults,
   Tree,
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
+import { upsertTargetDefault } from '@nx/devkit/src/generators/target-defaults-utils';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   getProjectType,
@@ -245,13 +248,11 @@ getTestBed().initTestEnvironment(
     // so we need to setup the task pipeline accordingly
     const nxJson = readNxJson(tree);
     const testTarget = schema.testTarget ?? 'test';
-    nxJson.targetDefaults ??= {};
-    nxJson.targetDefaults[testTarget] ??= {};
-    nxJson.targetDefaults[testTarget].dependsOn ??= [];
-    nxJson.targetDefaults[testTarget].dependsOn = Array.from(
-      new Set([...nxJson.targetDefaults[testTarget].dependsOn, '^build'])
+    const existing = findTestDefault(nxJson?.targetDefaults, testTarget);
+    const dependsOn = Array.from(
+      new Set([...(existing?.dependsOn ?? []), '^build'])
     );
-    updateNxJson(tree, nxJson);
+    upsertTargetDefault(tree, { target: testTarget, dependsOn });
   }
 
   const devDependencies = await getCoverageProviderDependency(
@@ -521,6 +522,22 @@ function findBuildTarget(project: {
   }
 
   return project.targets?.build ?? null;
+}
+
+function findTestDefault(
+  td: TargetDefaults | undefined,
+  target: string
+): Partial<TargetConfiguration> | undefined {
+  if (!td) return undefined;
+  if (Array.isArray(td)) {
+    return td.find(
+      (e) =>
+        e.target === target &&
+        e.projects === undefined &&
+        e.source === undefined
+    );
+  }
+  return td[target];
 }
 
 export default configurationGenerator;

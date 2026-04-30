@@ -10,6 +10,7 @@ import {
   ProjectConfiguration,
   readJson,
   readNxJson,
+  TargetConfiguration,
   Tree,
   updateJson,
   updateProjectConfiguration,
@@ -228,23 +229,38 @@ function ensureInputPresent(
 
 // Updates nx.json: rewrites stale eslintrc/eslintignore references across all targetDefaults
 // inputs and namedInputs, and ensures lint targets include the new flat config file as an input
-// (and `production` excludes it).
+// (and `production` excludes it). Handles both the legacy record shape and the new array shape
+// of `targetDefaults`.
 function updateNxJsonConfig(tree: Tree, format: 'cjs' | 'mjs') {
   if (!tree.exists('nx.json')) {
     return;
   }
   updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+    const rewriteTargetInputs = (
+      target: Partial<TargetConfiguration>,
+      isLintTarget: boolean
+    ) => {
+      if (!target.inputs) return;
+      target.inputs = isLintTarget
+        ? ensureInputPresent(
+            target.inputs,
+            `{workspaceRoot}/eslint.config.${format}`,
+            format
+          )
+        : rewriteLegacyInputs(target.inputs, format);
+    };
     if (json.targetDefaults) {
-      for (const [name, target] of Object.entries(json.targetDefaults)) {
-        if (!target.inputs) continue;
-        const isLintTarget = name === 'lint' || name === ESLINT_LINT_EXECUTOR;
-        target.inputs = isLintTarget
-          ? ensureInputPresent(
-              target.inputs,
-              `{workspaceRoot}/eslint.config.${format}`,
-              format
-            )
-          : rewriteLegacyInputs(target.inputs, format);
+      if (Array.isArray(json.targetDefaults)) {
+        for (const entry of json.targetDefaults) {
+          const isLintTarget =
+            entry.target === 'lint' || entry.target === ESLINT_LINT_EXECUTOR;
+          rewriteTargetInputs(entry, isLintTarget);
+        }
+      } else {
+        for (const [name, target] of Object.entries(json.targetDefaults)) {
+          const isLintTarget = name === 'lint' || name === ESLINT_LINT_EXECUTOR;
+          rewriteTargetInputs(target, isLintTarget);
+        }
       }
     }
     if (json.namedInputs) {

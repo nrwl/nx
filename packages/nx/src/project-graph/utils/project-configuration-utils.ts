@@ -387,7 +387,9 @@ export function mergeCreateNodesResults(
   const targetDefaultsResults = createTargetDefaultsResults(
     nodesManager.getRootMap(),
     intermediateDefaultRootMap,
-    nxJsonConfiguration
+    nxJsonConfiguration,
+    configurationSourceMaps,
+    defaultConfigurationSourceMaps
   );
 
   if (targetDefaultsResults.length > 0) {

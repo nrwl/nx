@@ -24,6 +24,7 @@ import {
   runPreTasksExecution,
 } from '../project-graph/plugins/tasks-execution-hooks';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
+import { normalizeTargetDefaults } from '../project-graph/utils/project-configuration/target-defaults';
 import { NxArgs } from '../utils/command-line-utils';
 import { handleErrors } from '../utils/handle-errors';
 import { isCI } from '../utils/is-ci';
@@ -1242,11 +1243,11 @@ export function getRunnerOptions(
   nxArgs: NxArgs,
   isCloudDefault: boolean
 ): any {
-  const defaultCacheableOperations = [];
+  const defaultCacheableOperations: string[] = [];
 
-  for (const key in nxJson.targetDefaults) {
-    if (nxJson.targetDefaults[key].cache) {
-      defaultCacheableOperations.push(key);
+  for (const entry of normalizeTargetDefaults(nxJson.targetDefaults)) {
+    if (entry?.cache && entry.target) {
+      defaultCacheableOperations.push(entry.target);
     }
   }
 

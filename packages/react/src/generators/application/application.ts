@@ -8,10 +8,13 @@ import {
   joinPathFragments,
   readNxJson,
   runTasksInSerial,
+  type TargetConfiguration,
+  type TargetDefaults,
   Tree,
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
+import { upsertTargetDefault } from '@nx/devkit/src/generators/target-defaults-utils';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   addProjectToTsSolutionWorkspace,
@@ -115,16 +118,16 @@ export async function applicationGeneratorInternal(
 
   if (!options.addPlugin) {
     const nxJson = readNxJson(tree);
-    nxJson.targetDefaults ??= {};
-    if (!Object.keys(nxJson.targetDefaults).includes('build')) {
-      nxJson.targetDefaults.build = {
+    const existing = findBuildDefault(nxJson.targetDefaults);
+    if (!existing) {
+      upsertTargetDefault(tree, {
+        target: 'build',
         cache: true,
         dependsOn: ['^build'],
-      };
-    } else if (!nxJson.targetDefaults.build.dependsOn) {
-      nxJson.targetDefaults.build.dependsOn = ['^build'];
+      });
+    } else if (!existing.dependsOn) {
+      upsertTargetDefault(tree, { target: 'build', dependsOn: ['^build'] });
     }
-    updateNxJson(tree, nxJson);
   }
 
   if (options.bundler === 'webpack') {
@@ -239,6 +242,21 @@ export async function applicationGeneratorInternal(
   });
 
   return runTasksInSerial(...tasks);
+}
+
+function findBuildDefault(
+  td: TargetDefaults | undefined
+): Partial<TargetConfiguration> | undefined {
+  if (!td) return undefined;
+  if (Array.isArray(td)) {
+    return td.find(
+      (e) =>
+        e.target === 'build' &&
+        e.projects === undefined &&
+        e.source === undefined
+    );
+  }
+  return td['build'];
 }
 
 export default applicationGenerator;

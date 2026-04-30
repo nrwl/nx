@@ -1,4 +1,5 @@
 import { joinPathFragments, Tree } from '@nx/devkit';
+import { upsertTargetDefault } from '@nx/devkit/src/generators/target-defaults-utils';
 import {
   updateJson,
   generateFiles,
@@ -141,11 +142,10 @@ export async function customServerGenerator(
         'build-custom-server'
       );
     }
-    json.targetDefaults ??= {};
-    json.targetDefaults['build-custom-server'] ??= {};
-    json.targetDefaults['build-custom-server'].cache ??= true;
     return json;
   });
+
+  upsertTargetDefault(host, { target: 'build-custom-server', cache: true });
 
   if (options.compiler === 'swc') {
     // Update app swc to exlude server files

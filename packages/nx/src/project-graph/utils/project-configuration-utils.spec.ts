@@ -752,13 +752,14 @@ describe('project-configuration-utils', () => {
         specifiedResults as any,
         [],
         {
-          targetDefaults: {
-            'test-native': {
+          targetDefaults: [
+            {
+              target: 'test-native',
               executor: '@monodon/rust:test',
               options: {},
               cache: true,
             },
-          },
+          ],
         },
         '/tmp/test',
         errors
@@ -829,13 +830,14 @@ describe('project-configuration-utils', () => {
         specifiedResults as any,
         defaultResults as any,
         {
-          targetDefaults: {
-            'test-native': {
+          targetDefaults: [
+            {
+              target: 'test-native',
               executor: '@monodon/rust:test',
               options: {},
               cache: true,
             },
-          },
+          ],
         },
         '/tmp/test',
         errors

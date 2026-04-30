@@ -1,4 +1,4 @@
-import { addPlugin } from '@nx/devkit/internal';
+import { addPlugin, upsertTargetDefault } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -6,6 +6,8 @@ import {
   readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
+  type TargetConfiguration,
+  type TargetDefaults,
   Tree,
   updateJson,
   updateNxJson,
@@ -43,19 +45,37 @@ function updateProductionFileset(tree: Tree, format: 'mjs' | 'cjs' = 'mjs') {
 
 function addTargetDefaults(tree: Tree, format: 'mjs' | 'cjs') {
   const nxJson = readNxJson(tree);
+  const existing = findExistingLintDefault(nxJson?.targetDefaults);
+  const patch: Partial<TargetConfiguration> = {};
+  if (existing?.cache === undefined) patch.cache = true;
+  if (existing?.inputs === undefined) {
+    patch.inputs = [
+      'default',
+      '^default',
+      `{workspaceRoot}/.eslintrc.json`,
+      `{workspaceRoot}/.eslintignore`,
+      `{workspaceRoot}/eslint.config.${format}`,
+      '{workspaceRoot}/tools/eslint-rules/**/*',
+    ];
+  }
+  if (Object.keys(patch).length > 0) {
+    upsertTargetDefault(tree, { target: '@nx/eslint:lint', ...patch });
+  }
+}
 
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults['@nx/eslint:lint'] ??= {};
-  nxJson.targetDefaults['@nx/eslint:lint'].cache ??= true;
-  nxJson.targetDefaults['@nx/eslint:lint'].inputs ??= [
-    'default',
-    '^default',
-    `{workspaceRoot}/.eslintrc.json`,
-    `{workspaceRoot}/.eslintignore`,
-    `{workspaceRoot}/eslint.config.${format}`,
-    '{workspaceRoot}/tools/eslint-rules/**/*',
-  ];
-  updateNxJson(tree, nxJson);
+function findExistingLintDefault(
+  td: TargetDefaults | undefined
+): Partial<TargetConfiguration> | undefined {
+  if (!td) return undefined;
+  if (Array.isArray(td)) {
+    return td.find(
+      (e) =>
+        e.target === '@nx/eslint:lint' &&
+        e.projects === undefined &&
+        e.source === undefined
+    );
+  }
+  return td['@nx/eslint:lint'];
 }
 
 function updateVsCodeRecommendedExtensions(host: Tree) {

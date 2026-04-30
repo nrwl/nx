@@ -5,6 +5,7 @@ import {
   readJson,
   readProjectConfiguration,
   Tree,
+  updateNxJson,
   updateProjectConfiguration,
   writeJson,
   updateJson,
@@ -588,13 +589,21 @@ describe('jestProject', () => {
     });
 
     it(`should setup a task pipeline for the test target to depend on the deps' build target`, async () => {
+      // seed nx.json with array-shape targetDefaults so the generator's
+      // upsert call preserves the array shape we assert against below
+      const seeded = readNxJson(tree);
+      updateNxJson(tree, { ...seeded, targetDefaults: [] });
+
       await configurationGenerator(tree, {
         ...defaultOptions,
         project: 'pkg1',
       });
 
       const nxJson = readNxJson(tree);
-      expect(nxJson.targetDefaults.test.dependsOn).toStrictEqual(['^build']);
+      expect(nxJson.targetDefaults).toContainEqual({
+        target: 'test',
+        dependsOn: ['^build'],
+      });
     });
 
     it('should generate files with swc compiler', async () => {

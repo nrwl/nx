@@ -5,9 +5,11 @@ import {
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
+  type TargetConfiguration,
+  type TargetDefaults,
   Tree,
-  updateNxJson,
 } from '@nx/devkit';
+import { upsertTargetDefault } from '@nx/devkit/src/generators/target-defaults-utils';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { JestPluginOptions } from '../../plugins/plugin';
@@ -139,14 +141,14 @@ export async function configurationGeneratorInternal(
     // in the TS solution setup, the test target depends on the build outputs
     // so we need to setup the task pipeline accordingly
     const nxJson = readNxJson(tree);
-    nxJson.targetDefaults ??= {};
-    nxJson.targetDefaults[options.targetName] ??= {};
-    nxJson.targetDefaults[options.targetName].dependsOn ??= [];
-    nxJson.targetDefaults[options.targetName].dependsOn.push('^build');
-    nxJson.targetDefaults[options.targetName].dependsOn = Array.from(
-      new Set(nxJson.targetDefaults[options.targetName].dependsOn)
+    const existing = findExistingTestDefault(
+      nxJson?.targetDefaults,
+      options.targetName
     );
-    updateNxJson(tree, nxJson);
+    const dependsOn = Array.from(
+      new Set([...(existing?.dependsOn ?? []), '^build'])
+    );
+    upsertTargetDefault(tree, { target: options.targetName, dependsOn });
   }
 
   if (!schema.skipFormat) {
@@ -154,6 +156,22 @@ export async function configurationGeneratorInternal(
   }
 
   return runTasksInSerial(...tasks);
+}
+
+function findExistingTestDefault(
+  td: TargetDefaults | undefined,
+  targetName: string
+): Partial<TargetConfiguration> | undefined {
+  if (!td) return undefined;
+  if (Array.isArray(td)) {
+    return td.find(
+      (e) =>
+        e.target === targetName &&
+        e.projects === undefined &&
+        e.source === undefined
+    );
+  }
+  return td[targetName];
 }
 
 function ignoreTestOutput(tree: Tree): void {
