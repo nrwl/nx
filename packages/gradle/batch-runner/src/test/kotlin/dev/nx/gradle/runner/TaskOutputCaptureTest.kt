@@ -76,4 +76,52 @@ class TaskOutputCaptureTest {
 
     assertEquals("> Task :proj:foo\nbody", c.getOutput(":proj:foo"))
   }
+
+  @Test
+  fun `errorSink routes bytes into the current task's buffer`() {
+    val c = capture()
+    c.write("> Task :proj:foo\n".toByteArray())
+    val errSink = c.errorSink()
+    errSink.write("error from foo\n".toByteArray())
+
+    assertTrue(c.getOutput(":proj:foo").contains("error from foo"))
+  }
+
+  @Test
+  fun `errorSink without any header drops bytes`() {
+    val c = capture()
+    val errSink = c.errorSink()
+    errSink.write("orphan error\n".toByteArray())
+
+    assertEquals("", c.getOutput(":proj:foo"))
+  }
+
+  @Test
+  fun `stripNextTaskPreamble keeps lines referencing the current task`() {
+    val input =
+        "> Task :proj:foo\n" +
+            "Build cache key for task ':proj:foo' is abc\n" +
+            "Stored cache entry for task ':proj:foo' with cache key abc"
+
+    assertEquals(input, TaskOutputCapture.stripNextTaskPreamble(input, ":proj:foo"))
+  }
+
+  @Test
+  fun `stripNextTaskPreamble keeps lines without any task reference`() {
+    val input = "> Task :proj:test\nRunning tests\nBUILD SUCCESSFUL in 8s"
+
+    assertEquals(input, TaskOutputCapture.stripNextTaskPreamble(input, ":proj:test"))
+  }
+
+  @Test
+  fun `stripNextTaskPreamble does not strip on single-segment task references`() {
+    val input = "> Task :build\nSome output\nSome other line about :build"
+
+    assertEquals(input, TaskOutputCapture.stripNextTaskPreamble(input, ":build"))
+  }
+
+  @Test
+  fun `stripNextTaskPreamble returns empty input unchanged`() {
+    assertEquals("", TaskOutputCapture.stripNextTaskPreamble("", ":proj:foo"))
+  }
 }
