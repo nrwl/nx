@@ -6,119 +6,27 @@ import {
 type Props = YouTubeProps;
 ---
 
-<youtube-tracker data-title={Astro.props.title} data-src={Astro.props.src}>
+<youtube-jsapi>
   <Default {...Astro.props} />
-</youtube-tracker>
+</youtube-jsapi>
 
 <script>
-  import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
-
-  // YT IFrame API states (https://developers.google.com/youtube/iframe_api_reference#Playback_status)
-  const YT_STATE_ENDED = 0;
-  const YT_STATE_PLAYING = 1;
-  const YT_STATE_PAUSED = 2;
-
-  let ytApiPromise: Promise<unknown> | null = null;
-
-  function loadYouTubeIframeApi(): Promise<unknown> {
-    if (typeof window === 'undefined') return Promise.resolve(null);
-    const w = window as unknown as {
-      YT?: { Player?: unknown };
-      onYouTubeIframeAPIReady?: () => void;
-    };
-    if (w.YT && w.YT.Player) return Promise.resolve(w.YT);
-    if (ytApiPromise) return ytApiPromise;
-
-    ytApiPromise = new Promise((resolve) => {
-      const previous = w.onYouTubeIframeAPIReady;
-      w.onYouTubeIframeAPIReady = () => {
-        if (typeof previous === 'function') previous();
-        resolve(w.YT);
-      };
-      const tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
-      tag.async = true;
-      document.head.appendChild(tag);
-    });
-    return ytApiPromise;
-  }
-
-  class YouTubeTrackerElement extends HTMLElement {
-    private player: { destroy?: () => void } | null = null;
-    private link: HTMLAnchorElement | null = null;
-
+  // Patch iframe src with enablejsapi=1 so GA4 enhanced measurement
+  // (video_start, video_progress, video_complete) can hook into the player.
+  class YouTubeJsapiElement extends HTMLElement {
     connectedCallback() {
       const iframe = this.querySelector('iframe');
-      this.link = this.querySelector('a');
-      if (this.link) {
-        this.link.addEventListener('click', this.handleThumbnailClick);
-        return;
-      }
-      if (iframe instanceof HTMLIFrameElement) this.setupIframe(iframe);
-    }
-
-    disconnectedCallback() {
-      this.link?.removeEventListener('click', this.handleThumbnailClick);
-      this.player?.destroy?.();
-      this.player = null;
-    }
-
-    private handleThumbnailClick = () => {
-      this.track('youtube_thumbnail_click');
-    };
-
-    private setupIframe(iframe: HTMLIFrameElement) {
+      if (!(iframe instanceof HTMLIFrameElement)) return;
       try {
         const url = new URL(iframe.src);
-        if (url.searchParams.get('enablejsapi') !== '1') {
-          url.searchParams.set('enablejsapi', '1');
-          iframe.src = url.toString();
-        }
+        if (url.searchParams.get('enablejsapi') === '1') return;
+        url.searchParams.set('enablejsapi', '1');
+        iframe.src = url.toString();
       } catch {
-        return;
+        // Ignore malformed URLs.
       }
-      loadYouTubeIframeApi().then((yt) => {
-        const YT = yt as {
-          Player: new (
-            iframe: HTMLIFrameElement,
-            opts: { events: { onStateChange: (e: { data: number }) => void } }
-          ) => { destroy?: () => void };
-        } | null;
-        if (!YT) return;
-        this.player = new YT.Player(iframe, {
-          events: { onStateChange: this.onStateChange },
-        });
-      });
-    }
-
-    private playFired = false;
-
-    private onStateChange = (event: { data: number }) => {
-      if (event.data === YT_STATE_PLAYING) {
-        // Only fire the first play to avoid noise from buffering -> play cycles.
-        if (this.playFired) return;
-        this.playFired = true;
-        this.track('youtube_play');
-      } else if (event.data === YT_STATE_PAUSED) {
-        this.track('youtube_pause');
-      } else if (event.data === YT_STATE_ENDED) {
-        this.track('youtube_end');
-      }
-    };
-
-    private track(action: string) {
-      sendCustomEventViaGtm(
-        action,
-        'docs_interaction',
-        window.location.pathname,
-        undefined,
-        {
-          video_title: this.dataset.title ?? '',
-          video_src: this.dataset.src ?? '',
-        }
-      );
     }
   }
 
-  customElements.define('youtube-tracker', YouTubeTrackerElement);
+  customElements.define('youtube-jsapi', YouTubeJsapiElement);
 </script>
