@@ -99,19 +99,29 @@ module.exports = () => {
    * if its not mocked, it will return the Nx repo's project
    * graph. We don't want any unit tests to depend on the structure
    * of the Nx repo, so we mock it to return an empty project graph.
+   *
+   * Skipped for `packages/nx` itself — `nx`'s own source code never imports
+   * from `@nx/devkit` (devkit re-exports from nx, not vice versa), and the
+   * relative-path mock for `nx/src/project-graph/project-graph` below
+   * already covers nx's internal `createProjectGraphAsync` callers. Loading
+   * devkit here just to spread `requireActual('@nx/devkit')` would pull
+   * its entire source tree into the sandbox for no callers.
    */
-  jest.doMock('@nx/devkit', () => ({
-    __esModule: true,
-    ...jest.requireActual('@nx/devkit'),
-    createProjectGraphAsync: jest.fn(async () => emptyProjectGraph),
-    /**
-     * `ensurePackage` calls `require(pkg)` which resolves from node_modules
-     * (the installed version) instead of the local source code. Using
-     * `jest.requireActual` routes through Jest's module resolver which
-     * respects tsconfig paths, so it picks up the source code instead.
-     */
-    ensurePackage: jest.fn((pkg) => jest.requireActual(pkg)),
-  }));
+  const isNxProject = process.env.NX_TASK_TARGET_PROJECT === 'nx';
+  if (!isNxProject) {
+    jest.doMock('@nx/devkit', () => ({
+      __esModule: true,
+      ...jest.requireActual('@nx/devkit'),
+      createProjectGraphAsync: jest.fn(async () => emptyProjectGraph),
+      /**
+       * `ensurePackage` calls `require(pkg)` which resolves from node_modules
+       * (the installed version) instead of the local source code. Using
+       * `jest.requireActual` routes through Jest's module resolver which
+       * respects tsconfig paths, so it picks up the source code instead.
+       */
+      ensurePackage: jest.fn((pkg) => jest.requireActual(pkg)),
+    }));
+  }
 
   /**
    * Code inside `packages/nx` imports graph builders via relative paths
