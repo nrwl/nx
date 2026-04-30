@@ -319,9 +319,11 @@ module.exports = () => {
       return true;
     };
 
-    const out =
-      process.env.NX_FS_TRACE_OUTPUT ||
-      path.join(realWorkspaceRoot, 'tmp', 'foreign-fs-reads.log');
+    const out = process.env.NX_FS_TRACE_OUTPUT
+      ? path.isAbsolute(process.env.NX_FS_TRACE_OUTPUT)
+        ? process.env.NX_FS_TRACE_OUTPUT
+        : path.join(realWorkspaceRoot, process.env.NX_FS_TRACE_OUTPUT)
+      : path.join(realWorkspaceRoot, 'tmp', 'foreign-fs-reads.log');
     try {
       realFs.mkdirSync(path.dirname(out), { recursive: true });
     } catch (_) {}
