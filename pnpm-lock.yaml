@@ -2802,8 +2802,8 @@ importers:
         specifier: ^10.0.0
         version: 10.1.2(eslint@9.39.4(jiti@2.6.1))
       globals:
-        specifier: ^15.9.0
-        version: 15.15.0
+        specifier: ^17.0.0
+        version: 17.5.0
       jsonc-eslint-parser:
         specifier: ^2.1.0
         version: 2.4.0
