@@ -1,7 +1,6 @@
 package dev.nx.gradle
 
 import dev.nx.gradle.cli.parseArgs
-import dev.nx.gradle.runner.ResultEmitter
 import dev.nx.gradle.runner.runTasksInParallel
 import dev.nx.gradle.util.configureSingleLineLogger
 import dev.nx.gradle.util.logger
@@ -40,11 +39,6 @@ fun main(args: Array<String>) {
             options.args,
             options.excludeTasks,
             options.excludeTestTasks)
-
-    // Streaming emission happens inside the build/test listeners; ResultEmitter dedupes, so this
-    // is a no-op for everything already streamed. Tasks Gradle never ran aren't in results at
-    // all — gradle-batch.impl.ts's post-loop fallback fills those in on the TS side.
-    results.forEach { (taskId, result) -> ResultEmitter.emit(taskId, result) }
 
     val summary = results.values.groupBy { it.success }
     logger.info(

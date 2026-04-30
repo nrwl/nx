@@ -239,7 +239,12 @@ fun runTestLauncher(
       val success = testTaskStatus[nxTaskId] ?: false
       val startTime = testStartTimes[nxTaskId] ?: globalStart
       val endTime = testEndTimes[nxTaskId] ?: globalEnd
-      taskResults[nxTaskId] = TaskResult(success, startTime, endTime, capturedFor(nxTaskId))
+      val result = TaskResult(success, startTime, endTime, capturedFor(nxTaskId))
+      taskResults[nxTaskId] = result
+      // Streamed tasks are deduped; this emits the ones whose capturedFor was empty when
+      // emitTestTask fired during the build (e.g. test tasks Gradle skipped before producing
+      // any stdout).
+      ResultEmitter.emit(nxTaskId, result)
     }
   }
 
