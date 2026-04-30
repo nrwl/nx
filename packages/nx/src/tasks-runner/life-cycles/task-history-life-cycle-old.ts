@@ -84,6 +84,16 @@ export class LegacyTaskHistoryLifeCycle implements LifeCycle {
 
   printFlakyTasksMessage() {
     if (this.flakyTasks?.length > 0) {
+      const MAX_VISIBLE_FLAKY = 5;
+      const visibleFlaky =
+        this.flakyTasks.length > MAX_VISIBLE_FLAKY + 1
+          ? this.flakyTasks.slice(0, MAX_VISIBLE_FLAKY)
+          : this.flakyTasks;
+      const hiddenCount = this.flakyTasks.length - visibleFlaky.length;
+      const flakyRows = visibleFlaky.map((t) => `  ${t}`);
+      if (hiddenCount > 0) {
+        flakyRows.push(`  ${hiddenCount} more...`);
+      }
       output.warn({
         title: `Nx detected ${
           this.flakyTasks.length === 1
@@ -92,7 +102,7 @@ export class LegacyTaskHistoryLifeCycle implements LifeCycle {
         }`,
         bodyLines: [
           ,
-          ...this.flakyTasks.map((t) => `  ${t}`),
+          ...flakyRows,
           ...(isNxCloudUsed(readNxJson())
             ? []
             : [
