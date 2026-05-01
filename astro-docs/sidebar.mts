@@ -1023,6 +1023,11 @@ const knowledgeBaseGroups: SidebarItems = [
         items: [...getTechnologyKBItems('cypress', 'test-tools')],
       },
       {
+        label: 'Detox',
+        collapsed: true,
+        items: [...getTechnologyKBItems('detox', 'test-tools')],
+      },
+      {
         label: 'Playwright',
         collapsed: true,
         items: [...getTechnologyKBItems('playwright', 'test-tools')],
