@@ -28,7 +28,9 @@ import { getVcsRemoteInfo } from '../../../utils/git-utils';
 import {
   CONNECTED_NEXT_STEPS,
   hasNxCloudPat,
+  OnboardStatus,
   runAgenticOnboard,
+  runOnboardStatus,
 } from '../onboard/agentic-onboard';
 import { writeAiOutput } from '../../ai/ai-output';
 import * as pc from 'picocolors';
@@ -242,6 +244,13 @@ async function runConnectToNxCloud(
     return false;
   }
 
+  // PAT present → bin can call the API directly, no browser-claim needed.
+  // Browser opens only as a fallback for github_oauth / github_app_install.
+  // Needs a remote for the bin's repo detection.
+  if (hasRemote && hasNxCloudPat()) {
+    return runHumanOnboardWithPat(installationSource, workspaceRoot);
+  }
+
   const token = await connectWorkspaceToCloud({
     generateToken: options?.generateToken,
     installationSource: command ?? installationSource,
@@ -274,6 +283,106 @@ async function runConnectToNxCloud(
   }
 
   return true;
+}
+
+async function runHumanOnboardWithPat(
+  source: 'nx-connect' | 'nx-console',
+  cwd: string
+): Promise<boolean> {
+  // Pre-flight prompt for multi-org. Skips a wasted spawn just to read the
+  // bin's "specify --org" error.
+  const status = await runOnboardStatus(cwd);
+  let org: string | undefined;
+  if (status && status.organizations.length > 1) {
+    org = await pickOrgPrompt(status.organizations);
+    if (!org) {
+      output.note({ title: 'Cancelled.' });
+      return false;
+    }
+  }
+
+  const spinner = ora('Connecting workspace to Nx Cloud...').start();
+  const result = await runAgenticOnboard({
+    source,
+    cwd,
+    org,
+    onProgress: (p) => {
+      if (
+        typeof p.message === 'string' &&
+        !('success' in p) &&
+        !('actionRequired' in p)
+      ) {
+        spinner.text = p.message;
+      }
+    },
+  });
+
+  if (result.status === 'connected') {
+    spinner.succeed(
+      `Connected. Workspace${
+        result.nxCloudUrl ? ` → ${result.nxCloudUrl}` : ''
+      }`
+    );
+    output.note({
+      title: 'Verify remote caching',
+      bodyLines: [
+        'Run a cacheable target twice (build/test/lint). Second run should be a cache hit.',
+        `Status check: ${result.verifyCommand}`,
+      ],
+    });
+    return true;
+  }
+
+  if (result.status === 'needs_input') {
+    spinner.warn(result.message);
+    if (result.verificationUri) {
+      output.note({
+        title: 'Action required',
+        bodyLines: [
+          `Open: ${result.verificationUri}`,
+          ...(result.userCode ? [`Enter code: ${result.userCode}`] : []),
+          '',
+          'After completing in the browser, re-run `nx connect`.',
+        ],
+      });
+      // Fire-and-forget; URL is printed above so a failure to open is fine.
+      open(result.verificationUri).catch(() => {});
+    } else if (result.actionRequired === 'login_required') {
+      output.note({
+        title: 'Login required',
+        bodyLines: [
+          'Run `npx nx login` to authenticate, then re-run `nx connect`.',
+        ],
+      });
+    }
+    return false;
+  }
+
+  spinner.fail(result.message);
+  return false;
+}
+
+async function pickOrgPrompt(
+  organizations: OnboardStatus['organizations']
+): Promise<string | undefined> {
+  const enquirer = await handleImport('enquirer');
+  try {
+    const answer = (await enquirer.prompt([
+      {
+        type: 'select',
+        name: 'org',
+        message: 'Pick an Nx Cloud organization for this workspace',
+        choices: organizations.map((o) => ({
+          name: o.id,
+          message: o.name,
+          hint: o.role ? `(${o.role})` : undefined,
+        })),
+      } as any,
+    ])) as { org: string };
+    return answer.org;
+  } catch {
+    return undefined;
+  }
 }
 
 function sleep(ms: number) {

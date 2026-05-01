@@ -59,6 +59,7 @@ export function hasNxCloudPat(
 
 export type AgenticOnboardSource =
   | 'nx-connect'
+  | 'nx-console'
   | 'nx-init'
   | 'nx-init-angular'
   | 'nx-init-monorepo'
@@ -69,12 +70,19 @@ export type AgenticOnboardSource =
 
 export interface AgenticOnboardOptions {
   source: AgenticOnboardSource;
-  /** Working directory for the spawned bin. Defaults to process.cwd(). */
   cwd?: string;
-  /** Optional org id to skip the org-selection step. */
   org?: string;
-  /** Optional workspace name. */
   name?: string;
+  /**
+   * Fires for each parsed JSON payload from the bin. Lets human callers
+   * drive a spinner without routing through writeAiOutput.
+   */
+  onProgress?: (payload: Record<string, unknown>) => void;
+}
+
+/** Subset of `nx-cloud onboard status --json` we consume. */
+export interface OnboardStatus {
+  organizations: Array<{ id: string; name: string; role?: string }>;
 }
 
 /**
@@ -358,6 +366,45 @@ function resolveNxCloudBin(cwd: string): string {
 }
 
 /**
+ * Spawn `nx-cloud onboard status --json`. Returns null on any failure —
+ * callers fall through to the optimistic path.
+ */
+export async function runOnboardStatus(
+  cwd: string = process.cwd()
+): Promise<OnboardStatus | null> {
+  let bin: string;
+  try {
+    bin = resolveNxCloudBin(cwd);
+  } catch {
+    return null;
+  }
+  return new Promise<OnboardStatus | null>((resolve) => {
+    const child = spawn(
+      process.execPath,
+      [bin, 'onboard', 'status', '--json'],
+      { cwd, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true }
+    );
+    let stdout = '';
+    child.stdout.on('data', (c: Buffer) => (stdout += c.toString('utf8')));
+    child.on('error', () => resolve(null));
+    child.on('close', (code) => {
+      if (code !== 0) return resolve(null);
+      const blob = extractJsonObject(stdout) ?? stdout.trim();
+      try {
+        const parsed = JSON.parse(blob);
+        if (parsed && Array.isArray(parsed.organizations)) {
+          resolve(parsed as OnboardStatus);
+        } else {
+          resolve(null);
+        }
+      } catch {
+        resolve(null);
+      }
+    });
+  });
+}
+
+/**
  * Spawns `nx-cloud onboard connect-workspace --json` and resolves with the
  * translated terminal payload. Streams progress NDJSON through writeAiOutput
  * so the agent sees a unified output stream.
@@ -387,10 +434,14 @@ export async function runAgenticOnboard(
   if (options.org) args.push(`--org=${options.org}`);
   if (options.name) args.push(`--name=${options.name}`);
 
-  writeAiOutput({
+  const onProgress = options.onProgress;
+
+  const startMsg = {
     stage: 'configuring',
     message: 'Connecting workspace to Nx Cloud...',
-  });
+  };
+  writeAiOutput(startMsg);
+  onProgress?.(startMsg);
 
   const emitFinal = (result: AgenticOnboardResult): AgenticOnboardResult => {
     // Always surface the normalized result as NDJSON so the agent sees a
@@ -429,7 +480,10 @@ export async function runAgenticOnboard(
       // when the bin obeys --json, and writeAiOutput is a no-op outside agent
       // mode anyway).
       const parsed = safeParse(line);
-      if (parsed) writeAiOutput(parsed);
+      if (parsed) {
+        writeAiOutput(parsed);
+        onProgress?.(parsed);
+      }
       if (result) terminalResult = result;
     };
 
@@ -474,7 +528,10 @@ export async function runAgenticOnboard(
           const result = translateOnboardPayload(blob);
           if (result) {
             const parsed = safeParse(blob);
-            if (parsed) writeAiOutput(parsed);
+            if (parsed) {
+              writeAiOutput(parsed);
+              onProgress?.(parsed);
+            }
             terminalResult = result;
           }
         }
