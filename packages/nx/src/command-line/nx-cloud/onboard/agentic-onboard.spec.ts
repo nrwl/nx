@@ -1,4 +1,7 @@
-import { extractJsonObject, translateOnboardPayload } from './agentic-onboard';
+import {
+  extractJsonPayloads,
+  translateOnboardPayload,
+} from './agentic-onboard';
 
 describe('translateOnboardPayload', () => {
   it('returns null for empty or whitespace lines', () => {
@@ -232,23 +235,60 @@ describe('translateOnboardPayload', () => {
   });
 });
 
-describe('extractJsonObject', () => {
-  it('returns null when there is no JSON object', () => {
-    expect(extractJsonObject('')).toBeNull();
-    expect(extractJsonObject('just human text, no braces')).toBeNull();
+describe('extractJsonPayloads', () => {
+  it('returns [] for empty or whitespace-only input', () => {
+    expect(extractJsonPayloads('')).toEqual([]);
+    expect(extractJsonPayloads('   \n\n  ')).toEqual([]);
   });
 
-  it('extracts a flat JSON object from a clean buffer', () => {
-    expect(extractJsonObject('{"a":1}')).toBe('{"a":1}');
+  it('returns [] when there is no JSON', () => {
+    expect(extractJsonPayloads('just human text, no braces')).toEqual([]);
+    expect(
+      extractJsonPayloads(
+        ' NX   Updating nx.json\n\nNo JSON in this output anywhere.'
+      )
+    ).toEqual([]);
   });
 
-  it('extracts the JSON blob when preceded by human-readable text', () => {
-    const buf = `
- NX   Updating nx.json with Nx Cloud ID
+  // NDJSON case (target shape after CLOUD-4496).
+  it('parses a single NDJSON line', () => {
+    expect(extractJsonPayloads('{"stage":"configuring"}')).toEqual([
+      { stage: 'configuring' },
+    ]);
+  });
 
-Your nx.json has been updated to use an Nx Cloud ID for authentication.
+  it('parses multiple NDJSON lines in order', () => {
+    const buf = [
+      '{"stage":"configuring","message":"Connecting..."}',
+      '{"success":true,"workspace":{"id":"w","nxCloudId":"abc"},"configWritten":true}',
+    ].join('\n');
+    expect(extractJsonPayloads(buf)).toEqual([
+      { stage: 'configuring', message: 'Connecting...' },
+      {
+        success: true,
+        workspace: { id: 'w', nxCloudId: 'abc' },
+        configWritten: true,
+      },
+    ]);
+  });
 
-{
+  it('parses NDJSON with non-JSON noise interleaved', () => {
+    const buf = [
+      ' NX   Some bin output',
+      '{"stage":"configuring"}',
+      'plain text leak',
+      '{"success":true,"workspace":{"nxCloudId":"abc"}}',
+      '',
+    ].join('\n');
+    expect(extractJsonPayloads(buf)).toEqual([
+      { stage: 'configuring' },
+      { success: true, workspace: { nxCloudId: 'abc' } },
+    ]);
+  });
+
+  // Multi-line pretty-printed case (current bin via CLOUD-4496 workaround).
+  it('parses a single multi-line pretty-printed JSON object', () => {
+    const buf = `{
   "success": true,
   "workspace": {
     "id": "abc",
@@ -256,23 +296,96 @@ Your nx.json has been updated to use an Nx Cloud ID for authentication.
   },
   "configWritten": true
 }`;
-    const blob = extractJsonObject(buf);
-    expect(JSON.parse(blob!)).toEqual({
-      success: true,
-      workspace: { id: 'abc', nxCloudId: 'abc123' },
-      configWritten: true,
-    });
+    expect(extractJsonPayloads(buf)).toEqual([
+      {
+        success: true,
+        workspace: { id: 'abc', nxCloudId: 'abc123' },
+        configWritten: true,
+      },
+    ]);
   });
 
-  it('ignores braces inside JSON string values', () => {
-    expect(extractJsonObject('{"msg":"hello {world}","ok":true}')).toBe(
-      '{"msg":"hello {world}","ok":true}'
-    );
+  it('parses multi-line JSON preceded by human-readable noise', () => {
+    const buf = `
+ NX   Updating nx.json with Nx Cloud ID
+
+Your nx.json has been updated.
+
+{
+  "success": true,
+  "workspace": { "nxCloudId": "abc" },
+  "configWritten": true
+}`;
+    expect(extractJsonPayloads(buf)).toEqual([
+      {
+        success: true,
+        workspace: { nxCloudId: 'abc' },
+        configWritten: true,
+      },
+    ]);
   });
 
-  it('handles escaped quotes inside strings without losing brace tracking', () => {
-    expect(extractJsonObject('{"a":"a \\"quoted\\" }","b":1}')).toBe(
-      '{"a":"a \\"quoted\\" }","b":1}'
-    );
+  it('parses multi-line JSON followed by trailing noise', () => {
+    const buf = `{
+  "success": true,
+  "workspace": { "nxCloudId": "abc" }
+}
+NX   Some trailing message`;
+    expect(extractJsonPayloads(buf)).toEqual([
+      { success: true, workspace: { nxCloudId: 'abc' } },
+    ]);
+  });
+
+  // Mixed shapes — multi-line followed by NDJSON, etc.
+  it('parses a mix of multi-line JSON and NDJSON in the same buffer', () => {
+    const buf = `{"stage":"configuring"}
+{
+  "success": true,
+  "workspace": { "nxCloudId": "abc" }
+}
+{"trailing":"event"}`;
+    expect(extractJsonPayloads(buf)).toEqual([
+      { stage: 'configuring' },
+      { success: true, workspace: { nxCloudId: 'abc' } },
+      { trailing: 'event' },
+    ]);
+  });
+
+  // Robustness against JSON content that itself contains braces.
+  it('treats indented inner braces as part of the multi-line object', () => {
+    // The inner `{`/`}` are indented (column > 0), so they don't terminate.
+    const buf = `{
+  "workspace": {
+    "nested": { "deep": true }
+  }
+}`;
+    expect(extractJsonPayloads(buf)).toEqual([
+      { workspace: { nested: { deep: true } } },
+    ]);
+  });
+
+  it('handles braces inside JSON string values (single-line)', () => {
+    expect(extractJsonPayloads('{"msg":"hello {world}","ok":true}')).toEqual([
+      { msg: 'hello {world}', ok: true },
+    ]);
+  });
+
+  // Failure modes — should not throw, just return [].
+  it('skips truncated multi-line JSON (no closing })', () => {
+    const buf = `{
+  "success": true,
+  "workspace": { "nxCloudId": "abc" }`;
+    expect(extractJsonPayloads(buf)).toEqual([]);
+  });
+
+  it('skips malformed JSON without crashing', () => {
+    expect(extractJsonPayloads('{not valid json}')).toEqual([]);
+    expect(extractJsonPayloads('{\n  "success": true,\n  bad,\n}')).toEqual([]);
+  });
+
+  it('rejects non-object top-level values (arrays, primitives)', () => {
+    // Bin only emits objects; arrays/strings would be a contract violation.
+    expect(extractJsonPayloads('[1,2,3]')).toEqual([]);
+    expect(extractJsonPayloads('"just a string"')).toEqual([]);
   });
 });

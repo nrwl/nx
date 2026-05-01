@@ -319,10 +319,12 @@ export async function runAgenticOnboard(
     let terminalResult: AgenticOnboardResult | null = null;
 
     const handleLine = (line: string) => {
-      const result = translateOnboardPayload(line);
-      const parsed = safeParse(line);
-      if (parsed) writeAiOutput(parsed as any);
-      if (result) terminalResult = result;
+      const parsed = tryParseObject(line);
+      if (parsed) {
+        writeAiOutput(parsed as any);
+        const result = translateOnboardPayload(line);
+        if (result) terminalResult = result;
+      }
     };
 
     child.stdout.on('data', (chunk: Buffer) => {
@@ -355,12 +357,10 @@ export async function runAgenticOnboard(
       if (lineBuf.trim()) handleLine(lineBuf);
 
       if (!terminalResult && fullStdout.trim()) {
-        const blob = extractJsonObject(fullStdout);
-        if (blob) {
-          const result = translateOnboardPayload(blob);
+        for (const payload of extractJsonPayloads(fullStdout)) {
+          const result = translateOnboardPayload(JSON.stringify(payload));
           if (result) {
-            const parsed = safeParse(blob);
-            if (parsed) writeAiOutput(parsed as any);
+            writeAiOutput(payload as any);
             terminalResult = result;
           }
         }
@@ -385,29 +385,58 @@ export async function runAgenticOnboard(
   });
 }
 
-function safeParse(line: string): Record<string, unknown> | null {
-  const trimmed = line.trim();
-  if (!trimmed) return null;
-  try {
-    const parsed = JSON.parse(trimmed);
-    return typeof parsed === 'object' && parsed !== null ? parsed : null;
-  } catch {
-    return null;
+/**
+ * Parse every top-level JSON object out of a stdout buffer.
+ *
+ * Handles three shapes from `nx-cloud onboard connect-workspace`:
+ *  - NDJSON: one parseable object per line (target after CLOUD-4496)
+ *  - Pretty-printed multi-line: `{` and matching `}` at column 0 (current bin)
+ *  - Either, with non-JSON noise lines interleaved (always possible — a stray
+ *    `output.note(...)` writing to stdout will leak through any contract)
+ *
+ * "Top-level" = line starts with `{` or `}` at column 0. Inner braces inside
+ * a pretty-printed object are indented and ignored.
+ */
+export function extractJsonPayloads(
+  text: string
+): Array<Record<string, unknown>> {
+  const out: Array<Record<string, unknown>> = [];
+  const lines = text.split(/\r?\n/);
+  let i = 0;
+  while (i < lines.length) {
+    if (!lines[i].startsWith('{')) {
+      i++;
+      continue;
+    }
+    const single = tryParseObject(lines[i]);
+    if (single) {
+      out.push(single);
+      i++;
+      continue;
+    }
+    let j = i + 1;
+    while (j < lines.length && !lines[j].startsWith('}')) j++;
+    if (j < lines.length) {
+      const multi = tryParseObject(lines.slice(i, j + 1).join('\n'));
+      if (multi) {
+        out.push(multi);
+        i = j + 1;
+        continue;
+      }
+    }
+    i++;
   }
+  return out;
 }
 
-/**
- * Slice the JSON object out of a buffer that may contain human-readable noise
- * before it. Workaround for CLOUD-4496 — drop once the bin emits clean `--json`.
- */
-export function extractJsonObject(text: string): string | null {
-  const start = text.indexOf('{');
-  const end = text.lastIndexOf('}');
-  if (start === -1 || end < start) return null;
-  const candidate = text.slice(start, end + 1);
+function tryParseObject(text: string): Record<string, unknown> | null {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
   try {
-    JSON.parse(candidate);
-    return candidate;
+    const v = JSON.parse(trimmed);
+    return typeof v === 'object' && v !== null && !Array.isArray(v)
+      ? (v as Record<string, unknown>)
+      : null;
   } catch {
     return null;
   }

@@ -374,13 +374,13 @@ export async function runAgenticOnboard(
     let terminalResult: AgenticOnboardResult | null = null;
 
     const handleLine = (line: string) => {
-      const result = translateOnboardPayload(line);
-      const parsed = safeParse(line);
+      const parsed = tryParseObject(line);
       if (parsed) {
         writeAiOutput(parsed);
         onProgress?.(parsed);
+        const result = translateOnboardPayload(line);
+        if (result) terminalResult = result;
       }
-      if (result) terminalResult = result;
     };
 
     child.stdout.on('data', (chunk: Buffer) => {
@@ -414,18 +414,16 @@ export async function runAgenticOnboard(
     child.on('close', (code) => {
       if (lineBuf.trim()) handleLine(lineBuf);
 
-      // Recover the JSON object out of mixed stdout (JSON + bin's stray
-      // output.note writes). Workaround for CLOUD-4496.
+      // Re-parse the full buffer to recover any payloads streaming missed:
+      // pretty-printed multi-line JSON (CLOUD-4496) or NDJSON the line
+      // splitter raced with. extractJsonPayloads handles both shapes plus
+      // interleaved noise.
       if (!terminalResult && fullStdout.trim()) {
-        const blob = extractJsonObject(fullStdout);
-        if (blob) {
-          const result = translateOnboardPayload(blob);
+        for (const payload of extractJsonPayloads(fullStdout)) {
+          const result = translateOnboardPayload(JSON.stringify(payload));
           if (result) {
-            const parsed = safeParse(blob);
-            if (parsed) {
-              writeAiOutput(parsed);
-              onProgress?.(parsed);
-            }
+            writeAiOutput(payload);
+            onProgress?.(payload);
             terminalResult = result;
           }
         }
@@ -455,30 +453,60 @@ export async function runAgenticOnboard(
   });
 }
 
-function safeParse(line: string): Record<string, unknown> | null {
-  const trimmed = line.trim();
-  if (!trimmed) return null;
-  try {
-    const parsed = JSON.parse(trimmed);
-    return typeof parsed === 'object' && parsed !== null ? parsed : null;
-  } catch {
-    return null;
+/**
+ * Parse every top-level JSON object out of a stdout buffer.
+ *
+ * Handles three shapes from `nx-cloud onboard connect-workspace`:
+ *  - NDJSON: one parseable object per line (target after CLOUD-4496)
+ *  - Pretty-printed multi-line: `{` and matching `}` at column 0 (current bin)
+ *  - Either, with non-JSON noise lines interleaved (always possible — a stray
+ *    `output.note(...)` writing to stdout will leak through any contract)
+ *
+ * "Top-level" = line starts with `{` or `}` at column 0. Inner braces inside
+ * a pretty-printed object are indented and ignored.
+ */
+export function extractJsonPayloads(
+  text: string
+): Array<Record<string, unknown>> {
+  const out: Array<Record<string, unknown>> = [];
+  const lines = text.split(/\r?\n/);
+  let i = 0;
+  while (i < lines.length) {
+    if (!lines[i].startsWith('{')) {
+      i++;
+      continue;
+    }
+    // NDJSON: whole object on one line.
+    const single = tryParseObject(lines[i]);
+    if (single) {
+      out.push(single);
+      i++;
+      continue;
+    }
+    // Multi-line: walk to the next top-level `}`.
+    let j = i + 1;
+    while (j < lines.length && !lines[j].startsWith('}')) j++;
+    if (j < lines.length) {
+      const multi = tryParseObject(lines.slice(i, j + 1).join('\n'));
+      if (multi) {
+        out.push(multi);
+        i = j + 1;
+        continue;
+      }
+    }
+    i++;
   }
+  return out;
 }
 
-/**
- * Slice the JSON object out of a buffer that may contain human-readable noise
- * before it (e.g. `NX   Updating nx.json with Nx Cloud ID`).
- * Workaround for CLOUD-4496 — once the bin emits clean `--json`, drop this.
- */
-export function extractJsonObject(text: string): string | null {
-  const start = text.indexOf('{');
-  const end = text.lastIndexOf('}');
-  if (start === -1 || end < start) return null;
-  const candidate = text.slice(start, end + 1);
+function tryParseObject(text: string): Record<string, unknown> | null {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
   try {
-    JSON.parse(candidate);
-    return candidate;
+    const v = JSON.parse(trimmed);
+    return typeof v === 'object' && v !== null && !Array.isArray(v)
+      ? (v as Record<string, unknown>)
+      : null;
   } catch {
     return null;
   }
