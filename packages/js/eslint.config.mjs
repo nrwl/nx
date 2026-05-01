@@ -4,6 +4,9 @@ import * as jsoncEslintParser from 'jsonc-eslint-parser';
 export default [
   ...baseConfig,
   {
+    ignores: ['dist'],
+  },
+  {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
       'no-restricted-imports': [
@@ -46,6 +49,9 @@ export default [
           buildTargets: ['build-base'],
           ignoredDependencies: [
             'nx',
+            // Self-reference used only to resolve the package's own
+            // package.json at runtime (see src/utils/versions.ts).
+            '@nx/js',
             // Install-graph dep only: keeps @nx/workspace resolvable in
             // created workspaces so `nx g @nx/workspace:preset` works.
             // No code-level import in @nx/js.

@@ -2,6 +2,15 @@
   "name": "@nx/js",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "!dist/spec",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
   "description": "The JS plugin for Nx contains executors and generators that provide the best experience for developing JavaScript and TypeScript projects. ",
   "repository": {
     "type": "git",
@@ -18,9 +27,27 @@
     "Front-end",
     "Backend"
   ],
-  "main": "src/index.js",
-  "type": "commonjs",
-  "types": "src/index.d.ts",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "babel": [
+        "dist/babel.d.ts"
+      ],
+      "typescript": [
+        "dist/typescript.d.ts"
+      ],
+      "plugins/jest/local-registry": [
+        "dist/plugins/jest/local-registry.d.ts"
+      ],
+      "src/*": [
+        "dist/src/*.d.ts"
+      ],
+      "src/*.js": [
+        "dist/src/*.d.ts"
+      ]
+    }
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"
@@ -32,6 +59,50 @@
   },
   "generators": "./generators.json",
   "executors": "./executors.json",
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./src/index.ts",
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./babel": {
+      "@nx/nx-source": "./babel.ts",
+      "types": "./dist/babel.d.ts",
+      "default": "./dist/babel.js"
+    },
+    "./typescript": {
+      "@nx/nx-source": "./typescript.ts",
+      "types": "./dist/typescript.d.ts",
+      "default": "./dist/typescript.js"
+    },
+    "./plugins/jest/local-registry": {
+      "@nx/nx-source": "./plugins/jest/local-registry.ts",
+      "types": "./dist/plugins/jest/local-registry.d.ts",
+      "default": "./dist/plugins/jest/local-registry.js"
+    },
+    "./src/*/schema": {
+      "@nx/nx-source": "./src/*/schema.json",
+      "default": "./dist/src/*/schema.json"
+    },
+    "./src/*/schema.json": {
+      "@nx/nx-source": "./src/*/schema.json",
+      "default": "./dist/src/*/schema.json"
+    },
+    "./src/*.js": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./dist/src/*.d.ts",
+      "default": "./dist/src/*.js"
+    },
+    "./src/*": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./dist/src/*.d.ts",
+      "default": "./dist/src/*.js"
+    }
+  },
   "dependencies": {
     "@babel/core": "catalog:",
     "@babel/plugin-proposal-decorators": "^7.22.7",
