@@ -485,10 +485,14 @@ function mapWorkspaceModules(
       dependencies: workspaceModuleDefinition?.dependencies,
     };
 
-    if (workspaceModuleDefinition?.dependencies) {
-      for (const depName of Object.keys(
-        workspaceModuleDefinition.dependencies
-      )) {
+    for (const depType of [
+      'dependencies',
+      'optionalDependencies',
+      'peerDependencies',
+    ] as const) {
+      const deps = workspaceModuleDefinition?.[depType];
+      if (!deps) continue;
+      for (const depName of Object.keys(deps)) {
         queue.push(depName);
       }
     }

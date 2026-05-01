@@ -603,7 +603,11 @@ export function stringifyPnpmLockfile(
     const importerPath = allRequiredImporters[pkgName];
     const importer = importers[importerPath];
     if (!importer) continue;
-    for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+    for (const depType of [
+      'dependencies',
+      'optionalDependencies',
+      'peerDependencies',
+    ] as const) {
       const deps = importer[depType];
       if (!deps) continue;
       for (const depName of Object.keys(deps)) {
@@ -631,7 +635,11 @@ export function stringifyPnpmLockfile(
     // layout that copy-workspace-modules produces. The original lockfile's
     // `link:` paths are relative to the package's source location in the
     // monorepo, so they must be recomputed.
-    for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+    for (const depType of [
+      'dependencies',
+      'optionalDependencies',
+      'peerDependencies',
+    ] as const) {
       const deps = importer[depType] as Record<string, string> | undefined;
       if (!deps) continue;
       for (const depName of Object.keys(deps)) {
@@ -641,10 +649,10 @@ export function stringifyPnpmLockfile(
           const rel = relative(packageName, depName).split(sep).join('/');
           // Specifier must match the file: ref that copy-workspace-modules
           // writes to the package's package.json on disk; otherwise pnpm sees
-          // a mismatch and reports ERR_PNPM_OUTDATED_LOCKFILE.
-          if (importer.specifiers) {
-            importer.specifiers[depName] = `file:${rel}`;
-          }
+          // a mismatch and reports ERR_PNPM_OUTDATED_LOCKFILE. Lockfile v6+
+          // may omit `specifiers`, so initialize when missing.
+          if (!importer.specifiers) importer.specifiers = {};
+          importer.specifiers[depName] = `file:${rel}`;
           deps[depName] = `link:${rel}`;
         }
       }
