@@ -631,6 +631,7 @@ mod tests {
             start_time: None,
             end_time: None,
             continuous: None,
+            ..Default::default()
         }
     }
 
@@ -1003,6 +1004,7 @@ mod integration_tests {
             start_time: None,
             end_time: None,
             continuous: None,
+            ..Default::default()
         }
     }
 }

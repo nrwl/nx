@@ -325,7 +325,9 @@ export function getOutputsForTargetAndConfiguration(
     'id' in taskTargetOrTask ? taskTargetOrTask.target : taskTargetOrTask;
   const overrides =
     'id' in taskTargetOrTask ? taskTargetOrTask.overrides : overridesOrNode;
-  node = 'id' in taskTargetOrTask ? overridesOrNode : node;
+  node = (
+    'id' in taskTargetOrTask ? overridesOrNode : node
+  ) as ProjectGraphProjectNode;
 
   const { target, configuration } = taskTarget;
 
@@ -583,7 +585,9 @@ export function getCliPath() {
 }
 
 export function getPrintableCommandArgsForTask(task: Task) {
-  const args: string[] = task.overrides['__overrides_unparsed__'];
+  const args: string[] = (
+    task.overrides as { __overrides_unparsed__: string[] }
+  ).__overrides_unparsed__;
 
   const target = task.target.target.includes(':')
     ? `"${task.target.target}"`

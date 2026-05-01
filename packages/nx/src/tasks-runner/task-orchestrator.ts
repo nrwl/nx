@@ -23,7 +23,7 @@ import {
 import { NxArgs } from '../utils/command-line-utils';
 import { getLocalDbConnection } from '../utils/db-connection';
 import { output } from '../utils/output';
-import { combineOptionsForExecutor } from '../utils/params';
+import { combineOptionsForExecutor, Options } from '../utils/params';
 import { workspaceRoot } from '../utils/workspace-root';
 import {
   EXPECTED_TERMINATION_SIGNALS,
@@ -1044,7 +1044,7 @@ export class TaskOrchestrator {
       try {
         const { schema } = getExecutorForTask(task, this.projects);
         const combinedOptions = combineOptionsForExecutor(
-          task.overrides,
+          task.overrides as Options,
           task.target.configuration ?? targetConfiguration.defaultConfiguration,
           targetConfiguration,
           schema,

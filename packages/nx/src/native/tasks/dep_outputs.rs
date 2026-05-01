@@ -130,9 +130,7 @@ mod tests {
             },
             outputs,
             project_root: Some("test".to_string()),
-            start_time: None,
-            end_time: None,
-            continuous: None,
+            ..Default::default()
         }
     }
 

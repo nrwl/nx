@@ -6,39 +6,86 @@ use napi::{
     sys,
 };
 
+/// A representation of the invocation of an Executor
+#[napi(object)]
+#[derive(Default, Clone, Debug, PartialEq)]
+pub struct Task {
+    /// Unique ID
+    pub id: String,
+    /// Details about which project, target, and configuration to run.
+    pub target: TaskTarget,
+    /// Overrides for the configured options of the target
+    #[napi(ts_type = "Record<string, unknown>")]
+    pub overrides: serde_json::Value,
+    /// The outputs the task may produce
+    pub outputs: Vec<String>,
+    /// Root of the project the task belongs to
+    pub project_root: Option<String>,
+    /// Hash of the task which is used for caching.
+    pub hash: Option<String>,
+    /// Details about the composition of the hash
+    pub hash_details: Option<TaskHashDetails>,
+    /// Unix timestamp of when a Batch Task starts
+    pub start_time: Option<i64>,
+    /// Unix timestamp of when a Batch Task ends
+    pub end_time: Option<i64>,
+    /// Determines if a given task should be cacheable.
+    pub cache: Option<bool>,
+    /// Determines if a given task should be parallelizable.
+    pub parallelism: bool,
+    /// This denotes if the task runs continuously
+    pub continuous: Option<bool>,
+}
+
+/// Details about the composition of a task's hash
 #[napi(object)]
 #[derive(Default, Clone, Debug, PartialEq, Eq)]
-pub struct Task {
-    pub id: String,
-    pub target: TaskTarget,
-    pub outputs: Vec<String>,
-    pub project_root: Option<String>,
-    pub start_time: Option<i64>,
-    pub end_time: Option<i64>,
-    pub continuous: Option<bool>,
+pub struct TaskHashDetails {
+    /// Command of the task
+    pub command: String,
+    /// Hashes of inputs used in the hash
+    pub nodes: HashMap<String, String>,
+    /// Hashes of implicit dependencies which are included in the hash
+    pub implicit_deps: Option<HashMap<String, String>>,
+    /// Hash of the runtime environment which the task was executed
+    pub runtime: Option<HashMap<String, String>>,
 }
 
 #[napi(object)]
 #[derive(Default, Clone, Debug, PartialEq, Eq)]
 pub struct TaskTarget {
+    /// The project for which the task belongs to
     pub project: String,
+    /// The target name which the task should invoke
     pub target: String,
+    /// The configuration of the target which the task invokes
     pub configuration: Option<String>,
 }
 
+/// The result of a completed Task.
+///
+/// Task timing information (start and end timestamps) is available
+/// on the Task object itself via `Task.startTime` and `Task.endTime`.
 #[napi(object)]
-#[derive(Default, Clone, Debug, PartialEq, Eq)]
+#[derive(Default, Clone, Debug, PartialEq)]
 pub struct TaskResult {
     pub task: Task,
+    #[napi(
+        ts_type = "'success' | 'failure' | 'skipped' | 'stopped' | 'local-cache-kept-existing' | 'local-cache' | 'remote-cache'"
+    )]
     pub status: String,
     pub code: i32,
     pub terminal_output: Option<String>,
 }
 
+/// Graph of Tasks to be executed
 #[napi(object)]
 pub struct TaskGraph {
+    /// IDs of Tasks which do not have any dependencies and are thus ready to execute immediately
     pub roots: Vec<String>,
+    /// Map of Task IDs to Tasks
     pub tasks: HashMap<String, Task>,
+    /// Map of Task IDs to IDs of tasks which the task depends on
     pub dependencies: HashMap<String, Vec<String>>,
     pub continuous_dependencies: HashMap<String, Vec<String>>,
 }

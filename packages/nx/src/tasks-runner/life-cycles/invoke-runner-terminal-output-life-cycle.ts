@@ -14,14 +14,14 @@ export class InvokeRunnerTerminalOutputLifeCycle implements LifeCycle {
     output.log({
       color: 'cyan',
       title: `Running ${this.tasks.length} tasks:`,
-      bodyLines: this.tasks.map(
-        (task) =>
-          `- Task ${task.id} ${
-            task.overrides.__overrides_unparsed__.length > 0
-              ? `Overrides: ${task.overrides.__overrides_unparsed__.join(' ')}`
-              : ''
-          }`
-      ),
+      bodyLines: this.tasks.map((task) => {
+        const unparsed = (
+          task.overrides as { __overrides_unparsed__: string[] }
+        ).__overrides_unparsed__;
+        return `- Task ${task.id} ${
+          unparsed.length > 0 ? `Overrides: ${unparsed.join(' ')}` : ''
+        }`;
+      }),
     });
 
     output.addVerticalSeparatorWithoutNewLines('cyan');
@@ -32,10 +32,10 @@ export class InvokeRunnerTerminalOutputLifeCycle implements LifeCycle {
     const taskIds = this.tasks.map((task) => {
       const cached = this.cachedTasks.indexOf(task) !== -1;
       const failed = this.failedTasks.indexOf(task) !== -1;
+      const unparsed = (task.overrides as { __overrides_unparsed__: string[] })
+        .__overrides_unparsed__;
       return `- Task ${task.id} ${
-        task.overrides.__overrides_unparsed__.length > 0
-          ? `Overrides: ${task.overrides.__overrides_unparsed__.join(' ')}`
-          : ''
+        unparsed.length > 0 ? `Overrides: ${unparsed.join(' ')}` : ''
       } ${cached ? 'CACHED' : ''} ${failed ? 'FAILED' : ''}`;
     });
     if (this.failedTasks.length === 0) {
