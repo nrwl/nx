@@ -106,6 +106,13 @@ jobs:
         env:
           NX_AGENT_NAME: ${{ matrix.agent }}
 
+      # Upload agent resource metrics — https://nx.dev/docs/guides/nx-cloud/ci-resource-usage
+      - name: Upload agent metrics
+        if: always()
+        run: npx nx-cloud upload-agent-metrics
+        env:
+          NX_AGENT_NAME: ${{ matrix.agent }}
+
       # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
       - name: Self-Healing CI
         run: npx nx fix-ci
@@ -160,6 +167,12 @@ jobs:
           no_output_timeout: 60m
           environment:
             NX_AGENT_NAME: << parameters.ordinal >>
+      # Upload agent resource metrics — https://nx.dev/docs/guides/nx-cloud/ci-resource-usage
+      - run:
+          command: npx nx-cloud upload-agent-metrics
+          environment:
+            NX_AGENT_NAME: << parameters.ordinal >>
+        when: always
       # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run:
           command: npx nx fix-ci
@@ -221,6 +234,12 @@ jobs:
 
       - script: npm ci
       - script: npx nx start-agent
+        env:
+          NX_AGENT_NAME: $(System.JobPositionInPhase)
+
+      # Upload agent resource metrics — https://nx.dev/docs/guides/nx-cloud/ci-resource-usage
+      - script: npx nx-cloud upload-agent-metrics
+        condition: always()
         env:
           NX_AGENT_NAME: $(System.JobPositionInPhase)
 
@@ -291,8 +310,10 @@ definitions:
           - npm ci
           - npx nx start-agent
         after-script:
-          # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
           - export NX_AGENT_NAME=$BITBUCKET_STEP_UUID
+          # Upload agent resource metrics — https://nx.dev/docs/guides/nx-cloud/ci-resource-usage
+          - npx nx-cloud upload-agent-metrics
+          # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
           - npx nx fix-ci
 
 pipelines:
@@ -345,9 +366,11 @@ image: node:18
     - yarn install --cache-folder .yarn-cache --prefer-offline --frozen-lockfile
     - export NX_AGENT_NAME=$CI_JOB_ID
     - yarn nx start-agent
-  # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
   after_script:
     - export NX_AGENT_NAME=$CI_JOB_ID
+    # Upload agent resource metrics — https://nx.dev/docs/guides/nx-cloud/ci-resource-usage
+    - yarn nx-cloud upload-agent-metrics
+    # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
     - yarn nx fix-ci
 
 # Creating template for a job running DTE (orchestrator)
@@ -466,8 +489,10 @@ pipeline {
                     sh "npx nx start-agent"
                    }
                    post {
-                        // Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
                         always {
+                            // Upload agent resource metrics — https://nx.dev/docs/guides/nx-cloud/ci-resource-usage
+                            sh "npx nx-cloud upload-agent-metrics"
+                            // Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
                             sh "npx nx fix-ci"
                         }
                    }
@@ -482,8 +507,10 @@ pipeline {
                     sh "npx nx start-agent"
                    }
                    post {
-                        // Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
                         always {
+                            // Upload agent resource metrics — https://nx.dev/docs/guides/nx-cloud/ci-resource-usage
+                            sh "npx nx-cloud upload-agent-metrics"
+                            // Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
                             sh "npx nx fix-ci"
                         }
                    }
@@ -498,8 +525,10 @@ pipeline {
                     sh "npx nx start-agent"
                    }
                    post {
-                        // Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
                         always {
+                            // Upload agent resource metrics — https://nx.dev/docs/guides/nx-cloud/ci-resource-usage
+                            sh "npx nx-cloud upload-agent-metrics"
+                            // Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
                             sh "npx nx fix-ci"
                         }
                    }
