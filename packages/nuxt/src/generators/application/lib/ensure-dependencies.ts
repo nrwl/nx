@@ -1,6 +1,5 @@
 import { addDependenciesToPackageJson, type Tree } from '@nx/devkit';
 import {
-  lessVersion,
   sassVersion,
   vueRouterVersion,
   vueTscVersion,
@@ -30,8 +29,6 @@ export async function ensureDependencies(
 
   if (options.style === 'scss') {
     devDependencies['sass'] = sassVersion;
-  } else if (options.style === 'less') {
-    devDependencies['less'] = lessVersion;
   }
 
   return addDependenciesToPackageJson(host, {}, devDependencies);

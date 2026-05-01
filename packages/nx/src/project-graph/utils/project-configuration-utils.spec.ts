@@ -716,6 +716,140 @@ describe('project-configuration-utils', () => {
       expect(buildTarget.inputs).toEqual(['explicit', 'inferred']);
     });
 
+    it('should not let a target-name-keyed default with a foreign executor replace an inferred command target', () => {
+      // Repro: a polyglot workspace has a target-name keyed default
+      // (`test-native`) configured for the rust plugin's executor, and
+      // another plugin (e.g. the dotnet plugin) infers a target with the
+      // same name using the `command` shorthand. The two are incompatible
+      // (run-commands vs @monodon/rust:test), so the inferred target should
+      // win — but currently the synthetic target-defaults entry layers on
+      // top and replaces the executor + options with the rust ones.
+      const specifiedResults = [
+        [
+          [
+            '@nx/dotnet',
+            'libs/dotnet-lib/MyLib.Tests.csproj',
+            {
+              projects: {
+                'libs/dotnet-lib': {
+                  name: 'dotnet-lib',
+                  root: 'libs/dotnet-lib',
+                  targets: {
+                    'test-native': {
+                      command: 'dotnet test',
+                      options: { cwd: '{projectRoot}' },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults as any,
+        [],
+        {
+          targetDefaults: {
+            'test-native': {
+              executor: '@monodon/rust:test',
+              options: {},
+              cache: true,
+            },
+          },
+        },
+        '/tmp/test',
+        errors
+      );
+
+      const testTarget =
+        result.projectRootMap['libs/dotnet-lib'].targets!['test-native'];
+      // The inferred target should still be the run-commands invocation
+      // for `dotnet test` — the rust default's executor is incompatible
+      // and must not silently take over.
+      expect(testTarget.executor).toEqual('nx:run-commands');
+      expect(testTarget.options).toEqual(
+        expect.objectContaining({ command: 'dotnet test' })
+      );
+      expect(errors).toEqual([]);
+    });
+
+    it('should not apply a target-name-keyed default with a foreign executor when project.json declares an empty target alongside an inferred command target', () => {
+      // Same incompatibility, but project.json declares `{}` for the
+      // target — historically the trigger that asks target-defaults to
+      // fill the target in. The fill-in still shouldn't pull a
+      // foreign-executor default on top of the inferred command target.
+      const specifiedResults = [
+        [
+          [
+            '@nx/dotnet',
+            'libs/dotnet-lib/MyLib.Tests.csproj',
+            {
+              projects: {
+                'libs/dotnet-lib': {
+                  name: 'dotnet-lib',
+                  root: 'libs/dotnet-lib',
+                  targets: {
+                    'test-native': {
+                      command: 'dotnet test',
+                      options: { cwd: '{projectRoot}' },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const defaultResults = [
+        [
+          [
+            'nx/core/project-json',
+            'libs/dotnet-lib/project.json',
+            {
+              projects: {
+                'libs/dotnet-lib': {
+                  name: 'dotnet-lib',
+                  root: 'libs/dotnet-lib',
+                  targets: {
+                    'test-native': {},
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults as any,
+        defaultResults as any,
+        {
+          targetDefaults: {
+            'test-native': {
+              executor: '@monodon/rust:test',
+              options: {},
+              cache: true,
+            },
+          },
+        },
+        '/tmp/test',
+        errors
+      );
+
+      const testTarget =
+        result.projectRootMap['libs/dotnet-lib'].targets!['test-native'];
+      expect(testTarget.executor).toEqual('nx:run-commands');
+      expect(testTarget.options).toEqual(
+        expect.objectContaining({ command: 'dotnet test' })
+      );
+      expect(errors).toEqual([]);
+    });
+
     it('should merge multiple specified plugins contributing to the same project', () => {
       const specifiedResults = [
         [

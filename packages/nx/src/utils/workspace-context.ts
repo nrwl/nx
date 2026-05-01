@@ -113,12 +113,12 @@ export async function updateContextWithChangedFiles(
     );
   } else if (isOnDaemon()) {
     // make sure to only import this when running on the daemon
-    const { addUpdatedAndDeletedFiles } = await handleImport(
+    const { scheduleProjectGraphRecomputation } = await handleImport(
       '../daemon/server/project-graph-incremental-recomputation.js',
       __dirname
     );
     // update files for the incremental graph recomputation on the daemon
-    addUpdatedAndDeletedFiles(createdFiles, updatedFiles, deletedFiles);
+    scheduleProjectGraphRecomputation(createdFiles, updatedFiles, deletedFiles);
   } else {
     // daemon is enabled but we are not running on it, ask the daemon to update the context
     await daemonClient.updateWorkspaceContext(

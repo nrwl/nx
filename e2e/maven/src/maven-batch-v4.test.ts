@@ -11,9 +11,8 @@ import { createMavenProject } from './utils/create-maven-project';
 describe('Maven 4 Batch Mode', () => {
   const projectName = uniq('batch-v4-test');
 
-  const runBatchCLI = (cmd: string, opts: { verbose?: boolean } = {}) => {
+  const runBatchCLI = (cmd: string) => {
     return runCLI(cmd, {
-      ...opts,
       env: { NX_BATCH_MODE: 'true' },
     });
   };
@@ -103,7 +102,7 @@ class AppApplicationTests {
     // Regression test for https://github.com/nrwl/nx/issues/34757
     // clean targets are fast and run in parallel, which previously caused
     // workers to exit prematurely when the task queue was momentarily empty.
-    const output = runBatchCLI('run-many -t clean', { verbose: true });
-    expect(output).toContain('BUILD SUCCESS');
+    const output = runBatchCLI('run-many -t clean');
+    expect(output).toContain('Successfully ran target clean');
   });
 });

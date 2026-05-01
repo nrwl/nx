@@ -47,6 +47,7 @@ export default [
             'sass-embedded',
             'sass',
             'ts-checker-rspack-plugin',
+            'less-loader',
           ],
         },
       ],

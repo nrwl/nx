@@ -1313,10 +1313,6 @@ async function determineReactOptions(
             message: 'LESS              [ https://lesscss.org     ]',
           },
           {
-            name: 'tailwind',
-            message: 'tailwind          [ https://tailwindcss.com     ]',
-          },
-          {
             name: 'styled-components',
             message:
               'styled-components [ https://styled-components.com            ]',

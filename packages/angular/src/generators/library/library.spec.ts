@@ -16,13 +16,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { createApp } from '../../utils/nx-devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
-import {
-  angularDevkitVersion,
-  angularVersion,
-  autoprefixerVersion,
-  postcssVersion,
-  tailwindVersion,
-} from '../../utils/versions';
+import { angularDevkitVersion, angularVersion } from '../../utils/versions';
 import { generateTestApplication, generateTestLibrary } from '../utils/testing';
 import { Schema } from './schema';
 
@@ -105,6 +99,21 @@ describe('lib', () => {
 
     const { devDependencies } = readJson(tree, 'package.json');
     expect(devDependencies['@angular/build']).toBe(angularDevkitVersion);
+  });
+
+  it('should setup vitest-angular test target with watch mode disabled', async () => {
+    await runLibraryGeneratorWithOpts({
+      unitTestRunner: UnitTestRunner.VitestAngular,
+      buildable: true,
+    });
+
+    const project = readProjectConfiguration(tree, 'my-lib');
+    expect(project.targets.test).toStrictEqual({
+      executor: '@nx/angular:unit-test',
+      options: {
+        watch: false,
+      },
+    });
   });
 
   it('should not touch the package.json when run with `--skipPackageJson`', async () => {
@@ -1480,70 +1489,6 @@ describe('lib', () => {
           readProjectConfiguration(tree, 'my-lib').targets.lint
         ).toBeUndefined();
       });
-    });
-  });
-
-  describe('--add-tailwind', () => {
-    it('should throw when "--addTailwind=true" and "--buildable" and "--publishable" are not set', async () => {
-      // ACT & ASSERT
-      await expect(
-        runLibraryGeneratorWithOpts({ addTailwind: true })
-      ).rejects.toThrow(
-        `To use "--addTailwind" option, you have to set either "--buildable" or "--publishable".`
-      );
-    });
-
-    it('should not set up Tailwind when "--add-tailwind" is not specified', async () => {
-      // ACT
-      await runLibraryGeneratorWithOpts();
-
-      // ASSERT
-      expect(tree.exists('my-lib/tailwind.config.js')).toBeFalsy();
-      const { devDependencies } = readJson(tree, 'package.json');
-      expect(devDependencies['tailwindcss']).toBeUndefined();
-      expect(devDependencies['postcss']).toBeUndefined();
-      expect(devDependencies['autoprefixer']).toBeUndefined();
-    });
-
-    it('should not set up Tailwind when "--add-tailwind=false"', async () => {
-      // ACT
-      await runLibraryGeneratorWithOpts({ addTailwind: false });
-
-      // ASSERT
-      expect(tree.exists('my-lib/tailwind.config.js')).toBeFalsy();
-      const { devDependencies } = readJson(tree, 'package.json');
-      expect(devDependencies['tailwindcss']).toBeUndefined();
-      expect(devDependencies['postcss']).toBeUndefined();
-      expect(devDependencies['autoprefixer']).toBeUndefined();
-    });
-
-    it('should set up Tailwind when "--add-tailwind=true"', async () => {
-      // ACT
-      await runLibraryGeneratorWithOpts({ addTailwind: true, buildable: true });
-
-      // ASSERT
-      expect(tree.read('my-lib/tailwind.config.js', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
-        const { join } = require('path');
-
-        /** @type {import('tailwindcss').Config} */
-        module.exports = {
-          content: [
-            join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
-            ...createGlobPatternsForDependencies(__dirname),
-          ],
-          theme: {
-            extend: {},
-          },
-          plugins: [],
-        };
-        "
-      `);
-      const { devDependencies } = readJson(tree, 'package.json');
-      expect(devDependencies['tailwindcss']).toBe(tailwindVersion);
-      expect(devDependencies['postcss']).toBe(postcssVersion);
-      expect(devDependencies['autoprefixer']).toBe(autoprefixerVersion);
     });
   });
 

@@ -54,6 +54,18 @@ const messageOptions: Record<string, MessageData[]> = {
       footer:
         '\nFree for small teams. Remote caching and task distribution. 2-minute setup: https://nx.dev/nx-cloud',
     },
+    {
+      code: 'cloud-self-healing-remote-cache',
+      message: `Would you like to enable AI-powered Self-Healing CI and Remote Caching?`,
+      initial: 0,
+      choices: [
+        { value: 'yes', name: 'Yes' },
+        { value: 'skip', name: 'Skip for now' },
+        { value: 'never', name: pc.dim("No, don't ask again") },
+      ],
+      footer: '\nLearn about it at https://nx.dev/nx-cloud',
+      hint: `\n(it's free and can be disabled any time)`,
+    },
   ],
   setupViewLogs: [
     {

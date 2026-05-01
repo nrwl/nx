@@ -38,10 +38,6 @@ export async function normalizeOptions(
     projectType,
   } = project;
 
-  const styledModule = /^(css|scss|less|none)$/.test(options.style)
-    ? null
-    : options.style;
-
   if (
     options.export &&
     getProjectType(tree, projectRoot, projectType) === 'application'
@@ -63,7 +59,6 @@ export async function normalizeOptions(
     ...options,
     directory,
     projectName,
-    styledModule,
     hasStyles: options.style !== 'none',
     className,
     fileName,

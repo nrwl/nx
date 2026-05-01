@@ -19,6 +19,7 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
 import { type PruneLockfileOptions } from './schema';
+import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
 
 export default async function pruneLockfileExecutor(
   schema: PruneLockfileOptions,
@@ -138,6 +139,7 @@ function getOutputDir(schema: PruneLockfileOptions, context: ExecutorContext) {
 }
 
 function normalizeOutputPath(outputPath: string) {
+  outputPath = stripGlobToBaseDir(outputPath);
   if (!outputPath.startsWith(workspaceRoot)) {
     outputPath = join(workspaceRoot, outputPath);
   }

@@ -25,6 +25,7 @@ import { fileExists } from 'nx/src/utils/fileutils';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import { detectModuleFormat } from './lib/detect-module-format';
 import { getOutputFileName } from './lib/output-file';
+import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
 
 interface ActiveTask {
   id: string;
@@ -487,16 +488,6 @@ function getFileToRun(
   }
 
   return join(context.root, buildOptions.outputPath, outputFileName);
-}
-
-function stripGlobToBaseDir(pathWithGlob: string): string {
-  const globIdx = pathWithGlob.search(/[*?[{(]/);
-  if (globIdx === -1) {
-    return pathWithGlob.replace(/[\\/]+$/, '');
-  }
-  const prefix = pathWithGlob.slice(0, globIdx);
-  const lastSep = Math.max(prefix.lastIndexOf('/'), prefix.lastIndexOf('\\'));
-  return lastSep === -1 ? '' : prefix.slice(0, lastSep);
 }
 
 function fileToRunCorrectPath(fileToRun: string): string {

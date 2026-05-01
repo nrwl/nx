@@ -1,6 +1,6 @@
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { basename, dirname, join } from 'path';
-import { existsSync, readdirSync } from 'fs';
+import { readdirSync } from 'fs';
 import {
   type CreateDependencies,
   CreateNodesContextV2,
@@ -18,13 +18,22 @@ import { getLockFileName } from '@nx/js';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { type RollupOptions } from 'rollup';
 import { hashObject } from 'nx/src/hasher/file-hasher';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  isUsingTsSolutionSetup,
+  TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 function readTargetsCache(
   cachePath: string
 ): Record<string, Record<string, TargetConfiguration>> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
+  try {
+    return process.env.NX_CACHE_PROJECT_GRAPH !== 'false'
+      ? readJsonFile(cachePath)
+      : {};
+  } catch {
+    return {};
+  }
 }
 
 function writeTargetsToCache(
@@ -191,6 +200,7 @@ async function buildRollupTarget(
         ? ['production', '^production']
         : ['default', '^default']),
       { externalDependencies: ['rollup'] },
+      TS_SOLUTION_SETUP_TSCONFIG_INPUT,
     ],
     outputs,
     metadata: {

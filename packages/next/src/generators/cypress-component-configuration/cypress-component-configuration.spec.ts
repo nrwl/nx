@@ -1,7 +1,6 @@
 import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
 import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { setupTailwindGenerator } from '@nx/react';
 import { applicationGenerator } from '../application/application';
 import { libraryGenerator } from '../library/library';
 import { cypressComponentConfiguration } from './cypress-component-configuration';
@@ -154,30 +153,6 @@ describe('cypress-component-configuration generator', () => {
       Cypress.Commands.add('mount', mount);
       "
     `);
-  });
-
-  it('should add styles setup in app', async () => {
-    await applicationGenerator(tree, {
-      directory: 'demo',
-      style: 'css',
-    });
-    await setupTailwindGenerator(tree, { project: 'demo' });
-    await cypressComponentConfiguration(tree, {
-      generateTests: false,
-      project: 'demo',
-    });
-
-    expect(tree.read('demo/cypress/support/styles.ct.css', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "/* This is where you can load global styles to apply to all components. */
-      @tailwind base;
-      @tailwind components;
-      @tailwind utilities;
-      "
-    `);
-    expect(tree.read('demo/cypress/support/component.ts', 'utf-8')).toContain(
-      `import './styles.ct.css';`
-    );
   });
 
   it('should setup nextjs lib', async () => {

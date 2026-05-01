@@ -5,10 +5,26 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "dependsOn": ["build-base"],
       "outputs": ["{workspaceRoot}/dist/packages/js/README.md"],
       "command": "node ./scripts/copy-readme.js js",
       "inputs": ["copyReadme"]
+    },
+    "build-base": {
+      "dependsOn": [
+        { "projects": ["nx", "devkit", "workspace"], "target": "build-base" },
+        "build-native",
+        "copy-assets"
+      ]
     }
   },
+  "implicitDependencies": [
+    "eslint",
+    "jest",
+    "rollup",
+    "vite",
+    "vitest",
+    "esbuild"
+  ],
   "tags": []
 }

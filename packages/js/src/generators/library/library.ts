@@ -481,7 +481,14 @@ export async function addLint(
           ignoredFiles.add('{projectRoot}/esbuild.config.{js,ts,mjs,mts}');
         }
         if (options.unitTestRunner === 'vitest') {
-          ignoredFiles.add('{projectRoot}/vite.config.{js,ts,mjs,mts}');
+          // When bundler is 'vite', vite.config holds both build and test config
+          // (added above). Otherwise, @nx/vitest:configuration generates a
+          // dedicated vitest.config file for non-framework JS libraries.
+          ignoredFiles.add(
+            options.bundler === 'vite'
+              ? '{projectRoot}/vite.config.{js,ts,mjs,mts}'
+              : '{projectRoot}/vitest.config.{js,ts,mjs,mts}'
+          );
         }
 
         if (ignoredFiles.size) {

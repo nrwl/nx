@@ -3,7 +3,11 @@ import type { ProjectGraph } from '../../../config/project-graph';
 import type { InputDefinition } from '../../../config/workspace-json-project-json';
 import type { ConfigurationSourceMaps } from '../../../project-graph/utils/project-configuration/source-maps';
 import { getNamedInputs } from '../../../hasher/task-hasher';
-import { getDependencyConfigs } from '../../../tasks-runner/utils';
+import { createTaskGraph } from '../../../tasks-runner/create-task-graph';
+import {
+  createTaskId,
+  getDependencyConfigs,
+} from '../../../tasks-runner/utils';
 import type { ShowTargetBaseOptions } from '../command-object';
 import {
   resolveTarget,
@@ -57,12 +61,13 @@ function resolveTargetInfoData(t: ResolvedTarget) {
       .map(([name, config]) => [name, config.dependsOn])
   );
 
-  const depConfigs = getDependencyConfigs(
-    { project: projectName, target: targetName },
-    extraTargetDeps,
-    graph,
-    [...allTargetNames]
-  );
+  const depConfigs =
+    getDependencyConfigs(
+      { project: projectName, target: targetName },
+      extraTargetDeps,
+      graph,
+      [...allTargetNames]
+    ) ?? [];
 
   // Determine the hoisted command value and which option key it came from
   let command: string | undefined;
@@ -84,18 +89,15 @@ function resolveTargetInfoData(t: ResolvedTarget) {
     commandSourceKey = 'options.script';
   }
 
-  const dependsOn: string[] = [];
-  const depSourceIndices: number[] = [];
-  if (depConfigs && depConfigs.length > 0) {
-    for (let i = 0; i < depConfigs.length; i++) {
-      const dep = depConfigs[i];
-      const projects = resolveDependencyProjects(dep, projectName, graph);
-      for (const p of projects) {
-        dependsOn.push(`${p}:${dep.target}`);
-        depSourceIndices.push(i);
-      }
-    }
-  }
+  const { dependsOn, depSourceIndices, transitiveTasks } =
+    resolveTaskGraphDependencies(
+      graph,
+      extraTargetDeps,
+      projectName,
+      targetName,
+      configuration,
+      depConfigs
+    );
 
   const configurations = Object.keys(targetConfig.configurations ?? {});
   const targetSourceMap = extractTargetSourceMap(
@@ -115,6 +117,7 @@ function resolveTargetInfoData(t: ResolvedTarget) {
     ...(dependsOn.length > 0
       ? { dependsOn, _depSources: depSourceIndices }
       : {}),
+    ...(transitiveTasks.length > 0 ? { transitiveTasks } : {}),
     parallelism: targetConfig.parallelism ?? true,
     continuous: targetConfig.continuous ?? false,
     cache: targetConfig.cache ?? false,
@@ -164,6 +167,130 @@ function resolveDependencyProjects(
       .map((edge) => edge.target);
   }
   return [projectName];
+}
+
+/**
+ * Builds a task graph rooted at the requested target and returns:
+ *   - `dependsOn`: direct task dependencies of the root, with real
+ *     project/target resolution applied.
+ *   - `depSourceIndices`: for each direct dep, the index of the original
+ *     depConfig it corresponds to (for source-map hints), or -1 if unknown.
+ *   - `transitiveTasks`: task IDs reachable through the direct deps (not
+ *     the root, not direct deps).
+ *
+ * If `createTaskGraph` throws (e.g. circular dependencies), falls back to
+ * the `depConfig`-based resolution so the output still shows the configured
+ * list rather than silently collapsing to empty.
+ */
+function resolveTaskGraphDependencies(
+  graph: ProjectGraph,
+  extraTargetDeps: Record<string, any>,
+  projectName: string,
+  targetName: string,
+  configuration: string | undefined,
+  depConfigs: { target: string; dependencies?: boolean; projects?: string[] }[]
+): {
+  dependsOn: string[];
+  depSourceIndices: number[];
+  transitiveTasks: string[];
+} {
+  try {
+    const taskGraph = createTaskGraph(
+      graph,
+      extraTargetDeps,
+      [projectName],
+      [targetName],
+      configuration,
+      {}
+    );
+
+    const rootId = createTaskId(projectName, targetName, configuration);
+    const directDeps = taskGraph.dependencies[rootId] ?? [];
+    const directDepSet = new Set<string>(directDeps);
+
+    const depSourceIndices = directDeps.map((depTaskId) => {
+      const task = taskGraph.tasks[depTaskId];
+      if (!task) return -1;
+      return findDepConfigIndex(task.target, depConfigs, projectName, graph);
+    });
+
+    // `Object.keys(dependencies)` gives the set of real (non-dummy) tasks
+    // in the graph — `filterDummyTasks` (called inside `createTaskGraph`)
+    // removes dummy entries from `dependencies` but leaves them in `tasks`.
+    const transitiveTasks = Object.keys(taskGraph.dependencies).filter(
+      (id) => id !== rootId && !directDepSet.has(id)
+    );
+
+    return { dependsOn: directDeps, depSourceIndices, transitiveTasks };
+  } catch {
+    return {
+      ...resolveDependsOnFromConfigs(depConfigs, projectName, graph),
+      transitiveTasks: [],
+    };
+  }
+}
+
+function resolveDependsOnFromConfigs(
+  depConfigs: { target: string; dependencies?: boolean; projects?: string[] }[],
+  projectName: string,
+  graph: ProjectGraph
+): { dependsOn: string[]; depSourceIndices: number[] } {
+  const dependsOn: string[] = [];
+  const depSourceIndices: number[] = [];
+  for (let i = 0; i < depConfigs.length; i++) {
+    const dep = depConfigs[i];
+    const projects = resolveDependencyProjects(dep, projectName, graph);
+    for (const p of projects) {
+      dependsOn.push(`${p}:${dep.target}`);
+      depSourceIndices.push(i);
+    }
+  }
+  return { dependsOn, depSourceIndices };
+}
+
+/**
+ * Builds the summary line shown beneath the direct `Depends On` list.
+ *
+ * Up to 3 unique target names: list them (`and 5 build, compile transitive tasks`).
+ * Beyond that: collapse to the count alone (`and 12 transitive tasks`).
+ */
+function formatTransitiveSummary(taskIds: string[]): string {
+  const count = taskIds.length;
+  const plural = count === 1 ? 'task' : 'tasks';
+  const targetNames = uniqueTargetNames(taskIds);
+  if (targetNames.length === 0 || targetNames.length > 3) {
+    return `and ${count} transitive ${plural}`;
+  }
+  return `and ${count} ${targetNames.join(', ')} transitive ${plural}`;
+}
+
+function uniqueTargetNames(taskIds: string[]): string[] {
+  const set = new Set<string>();
+  for (const id of taskIds) {
+    // task ids are `project:target` or `project:target:config`
+    const parts = id.split(':');
+    if (parts.length >= 2) set.add(parts[1]);
+  }
+  return [...set].sort();
+}
+
+function findDepConfigIndex(
+  taskTarget: { project: string; target: string },
+  depConfigs: {
+    target: string;
+    dependencies?: boolean;
+    projects?: string[];
+  }[],
+  rootProject: string,
+  graph: ProjectGraph
+): number {
+  for (let i = 0; i < depConfigs.length; i++) {
+    const dep = depConfigs[i];
+    if (dep.target !== taskTarget.target) continue;
+    const resolved = resolveDependencyProjects(dep, rootProject, graph);
+    if (resolved.includes(taskTarget.project)) return i;
+  }
+  return -1;
 }
 
 /**
@@ -288,11 +415,15 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
   if (data.dependsOn && data.dependsOn.length > 0) {
     console.log(`${c.bold('Depends On')}:`);
     for (let i = 0; i < data.dependsOn.length; i++) {
+      const srcIdx = data._depSources?.[i];
       const hint =
-        data._depSources?.[i] !== undefined
-          ? sourceHint(`dependsOn.${data._depSources[i]}`, 'dependsOn')
-          : '';
+        srcIdx !== undefined && srcIdx >= 0
+          ? sourceHint(`dependsOn.${srcIdx}`, 'dependsOn')
+          : sourceHint('dependsOn');
       console.log(`  ${data.dependsOn[i]}${hint}`);
+    }
+    if (data.transitiveTasks && data.transitiveTasks.length > 0) {
+      console.log(`  ${c.dim(formatTransitiveSummary(data.transitiveTasks))}`);
     }
   }
 
