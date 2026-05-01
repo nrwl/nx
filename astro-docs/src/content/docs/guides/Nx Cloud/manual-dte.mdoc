@@ -6,14 +6,6 @@ filter: 'type:Guides'
 
 Using [Nx Agents](/docs/features/ci-features/distribute-task-execution) is the easiest way to distribute task execution, but your organization may not be able to use hosted Nx Agents. You can set up distributed task execution on your own CI provider using the recipes below.
 
-## Uploading agent resource metrics
-
-{% aside type="note" title="Nx Enterprise Required" %}
-This feature is available on Nx Cloud Enterprise plans only. [Reach out to learn more about Nx Enterprise](https://nx.dev/enterprise).
-{% /aside %}
-
-Nx Cloud collects per-agent CPU and memory metrics so you can debug slow tasks and OOM kills in the run timeline. In manual DTE you opt in by adding a single CLI step to each agent job: `npx nx-cloud upload-agent-metrics`. Because the most valuable case is an agent that was killed mid-run, you must use your provider's "always run" mechanism (e.g. `if: always()` in GitHub Actions) so metrics still upload even when the agent step fails. Each provider tab below already includes this step in the right place.
-
 {% tabs syncKey="ci-provider" %}
 
 {% tabitem label="GitHub" %}
@@ -114,6 +106,7 @@ jobs:
         env:
           NX_AGENT_NAME: ${{ matrix.agent }}
 
+      # Upload agent resource metrics — https://nx.dev/docs/guides/nx-cloud/ci-resource-usage
       - name: Upload agent metrics
         if: always()
         run: npx nx-cloud upload-agent-metrics
@@ -174,6 +167,7 @@ jobs:
           no_output_timeout: 60m
           environment:
             NX_AGENT_NAME: << parameters.ordinal >>
+      # Upload agent resource metrics — https://nx.dev/docs/guides/nx-cloud/ci-resource-usage
       - run:
           command: npx nx-cloud upload-agent-metrics
           environment:
@@ -243,6 +237,7 @@ jobs:
         env:
           NX_AGENT_NAME: $(System.JobPositionInPhase)
 
+      # Upload agent resource metrics — https://nx.dev/docs/guides/nx-cloud/ci-resource-usage
       - script: npx nx-cloud upload-agent-metrics
         condition: always()
         env:
@@ -316,6 +311,7 @@ definitions:
           - npx nx start-agent
         after-script:
           - export NX_AGENT_NAME=$BITBUCKET_STEP_UUID
+          # Upload agent resource metrics — https://nx.dev/docs/guides/nx-cloud/ci-resource-usage
           - npx nx-cloud upload-agent-metrics
           # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
           - npx nx fix-ci
@@ -372,6 +368,7 @@ image: node:18
     - yarn nx start-agent
   after_script:
     - export NX_AGENT_NAME=$CI_JOB_ID
+    # Upload agent resource metrics — https://nx.dev/docs/guides/nx-cloud/ci-resource-usage
     - yarn nx-cloud upload-agent-metrics
     # Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
     - yarn nx fix-ci
@@ -493,6 +490,7 @@ pipeline {
                    }
                    post {
                         always {
+                            // Upload agent resource metrics — https://nx.dev/docs/guides/nx-cloud/ci-resource-usage
                             sh "npx nx-cloud upload-agent-metrics"
                             // Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
                             sh "npx nx fix-ci"
@@ -510,6 +508,7 @@ pipeline {
                    }
                    post {
                         always {
+                            // Upload agent resource metrics — https://nx.dev/docs/guides/nx-cloud/ci-resource-usage
                             sh "npx nx-cloud upload-agent-metrics"
                             // Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
                             sh "npx nx fix-ci"
@@ -527,6 +526,7 @@ pipeline {
                    }
                    post {
                         always {
+                            // Upload agent resource metrics — https://nx.dev/docs/guides/nx-cloud/ci-resource-usage
                             sh "npx nx-cloud upload-agent-metrics"
                             // Self-Healing CI: recommend fixes for failures. Learn more: https://nx.dev/ci/features/self-healing-ci
                             sh "npx nx fix-ci"
