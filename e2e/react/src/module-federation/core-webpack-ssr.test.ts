@@ -53,6 +53,11 @@ describe('React Module Federation - Webpack SSR', () => {
     for (const [app, port] of portMap) {
       updateJson(`${app}/project.json`, (project) => {
         project.targets.serve.options.port = port;
+        // The SSR `server` target binds its own socket via @nx/{webpack,rspack}:ssr-dev-server
+        // and defaults to 4200. Pin it so parallel tests don't collide.
+        if (project.targets.server?.options) {
+          project.targets.server.options.port = port;
+        }
         return project;
       });
     }
@@ -94,6 +99,11 @@ describe('React Module Federation - Webpack SSR', () => {
     for (const [app, port] of portMap) {
       updateJson(`${app}/project.json`, (project) => {
         project.targets.serve.options.port = port;
+        // The SSR `server` target binds its own socket via @nx/{webpack,rspack}:ssr-dev-server
+        // and defaults to 4200. Pin it so parallel tests don't collide.
+        if (project.targets.server?.options) {
+          project.targets.server.options.port = port;
+        }
         return project;
       });
     }
@@ -129,6 +139,11 @@ describe('React Module Federation - Webpack SSR', () => {
     for (const [app, port] of portMap) {
       updateJson(`${app}/project.json`, (project) => {
         project.targets.serve.options.port = port;
+        // The SSR `server` target binds its own socket via @nx/{webpack,rspack}:ssr-dev-server
+        // and defaults to 4200. Pin it so parallel tests don't collide.
+        if (project.targets.server?.options) {
+          project.targets.server.options.port = port;
+        }
         return project;
       });
     }
