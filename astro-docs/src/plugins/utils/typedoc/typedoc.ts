@@ -75,23 +75,6 @@ export function setupTypeDoc(logger: LoaderContext['logger']) {
     join(projectRoot, 'node_modules', '@types'),
   ];
 
-  // This ensures that nx and @nx/<plugin> modules resolve to `dist` rather than what's installed in node_modules.
-  // TODO(jack,caleb): If we move outDir from `dist/packages/nx` to `packages/nx/dist` like standard TS solution setup,
-  //                   then this isn't needed anymore since we should have devDependencies that resolve to local
-  //                   `node_modules` not the root one.
-  tsconfigObj.compilerOptions.baseUrl = workspaceRoot;
-  tsconfigObj.compilerOptions.paths = {
-    'nx/*': ['dist/packages/nx/*', 'packages/nx/src/*'],
-    '@nx/*': ['dist/packages/*', 'packages/*/src/*'],
-  };
-
-  // Include dist .d.ts files so TypeDoc can find entry points like dist/index.d.ts.
-  // Use absolute paths since this tsconfig is written to a temp directory.
-  tsconfigObj.include = [
-    ...(tsconfigObj.include || []),
-    join(devkitPath, 'dist', '**', '*.d.ts'),
-  ];
-
   tsconfigObj.exclude = [
     ...(tsconfigObj.exclude || []).filter((e: string) => e !== 'dist'),
     '**/*.spec.ts',
@@ -101,16 +84,6 @@ export function setupTypeDoc(logger: LoaderContext['logger']) {
     'node_modules/@types/jasmine/**',
     'node_modules/@types/jest/**',
   ];
-
-  // The tsconfig now lives in tempDir but it operates on devkit's compiled
-  // dist (entry point is dist/packages/devkit/index.d.ts). Resolve include
-  // patterns to absolute paths anchored at the dist directory so TypeDoc
-  // picks up the .d.ts files instead of looking for sources next to the temp
-  // tsconfig.
-  const distDevkitDir = join(workspaceRoot, 'dist', 'packages', 'devkit');
-  tsconfigObj.include = (tsconfigObj.include || ['**/*.ts']).map(
-    (pattern: string) => join(distDevkitDir, pattern)
-  );
 
   writeFileSync(generatedTsconfigPath, JSON.stringify(tsconfigObj, null, 2));
 
