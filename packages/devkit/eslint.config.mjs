@@ -4,7 +4,7 @@ import * as jsoncEslintParser from 'jsonc-eslint-parser';
 export default [
   ...baseConfig,
   {
-    ignores: ['dist', '**/*.d.ts'],
+    ignores: ['dist'],
   },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
