@@ -7,7 +7,7 @@ import type { ESLint } from 'eslint';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import { dirname, posix, relative, resolve } from 'path';
-import { major } from 'semver';
+import { gte, major } from 'semver';
 import { findFlatConfigFile, findOldConfigFile } from '../../utils/config-file';
 import {
   warnEslintExecutorDeprecation,
@@ -221,12 +221,21 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
   // - ESLint v10+: applySuppressions is set on the constructor, so lintFiles() already applied suppressions.
   //   We only need post-lint handling for writing (suppressAll/suppressRule) and pruning.
   // - ESLint v9.x: The programmatic API silently ignores suppression options, so we handle everything post-lint.
+  const eslintVersion = ESLint.version;
+  let supportsSuppressions = false;
+  try {
+    supportsSuppressions =
+      !isEslintV10 && !!eslintVersion && gte(eslintVersion, '9.24.0');
+  } catch {
+    // Invalid semver (e.g., test mocks) - suppressions not supported
+  }
+
   const needsPostLintSuppressions =
     normalizedOptions.suppressAll ||
     (normalizedOptions.suppressRule &&
       normalizedOptions.suppressRule.length > 0) ||
     normalizedOptions.pruneSuppressions ||
-    !isEslintV10; // v9.x always needs post-lint handling to apply suppressions from the file
+    supportsSuppressions; // Only apply file-based suppressions for v9.x (v10 handles it internally)
 
   if (needsPostLintSuppressions) {
     const suppressionsFilePath = getSuppressionsFilePath(
