@@ -915,8 +915,8 @@ importers:
         specifier: ^1.4.0
         version: 1.12.0
       detect-port:
-        specifier: ^1.5.1
-        version: 1.6.1
+        specifier: ^2.1.0
+        version: 2.1.0
       dotenv:
         specifier: ~16.4.5
         version: 16.4.7
