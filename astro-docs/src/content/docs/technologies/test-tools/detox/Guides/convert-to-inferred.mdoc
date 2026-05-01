@@ -26,30 +26,6 @@ This:
 
 After it runs, the `build`, `test`, and `start` targets on each project come from the inferred plugin.
 
-## Manual setup
-
-If you'd rather wire it yourself, add the plugin to `nx.json`:
-
-```json
-// nx.json
-{
-  "plugins": [
-    {
-      "plugin": "@nx/detox/plugin",
-      "options": {
-        "buildTargetName": "build",
-        "startTargetName": "start",
-        "testTargetName": "test"
-      }
-    }
-  ]
-}
-```
-
-Then remove the explicit `build-ios` / `test-ios` / `build-android` / `test-android` targets from each project — the inferred plugin creates them automatically for any project that has a `.detoxrc` file.
-
-The inferred targets shell out to `detox build`, `detox test`, and `detox start` with the project root as `cwd`. They're cached by default and declare `externalDependencies: ['detox']` as an input.
-
 ## What stays the same
 
 - `detox` itself remains a peer dependency of `@nx/detox` and continues to work normally.
