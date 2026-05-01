@@ -363,35 +363,43 @@ module.exports = () => {
    *     `@nx/*` lookups. Production callers (`readPluginPackageJson`,
    *     `readExecutorJson`, target normalization) all catch MODULE_NOT_FOUND
    *     and degrade gracefully.
+   *
+   * Scoped to `nx:test` only — these mocks target `packages/nx/src/utils/`
+   * source files by absolute physical path and exist to neutralize nx's
+   * own plugin-resolution probing. Applying them to other projects'
+   * tests (rspack, webpack, jest, …) can interfere with legitimate
+   * `@nx/*` lookups those test paths might exercise.
    */
-  const hasNxJsPluginPath = nxSrcPath('utils/has-nx-js-plugin');
-  jest.doMock(hasNxJsPluginPath, () => ({
-    __esModule: true,
-    hasNxJsPlugin: () => true,
-  }));
-
-  const packageJsonPath = nxSrcPath('utils/package-json');
-  jest.doMock(packageJsonPath, () => {
-    const actual = jest.requireActual(packageJsonPath);
-    return {
+  if (isNxProject) {
+    const hasNxJsPluginPath = nxSrcPath('utils/has-nx-js-plugin');
+    jest.doMock(hasNxJsPluginPath, () => ({
       __esModule: true,
-      ...actual,
-      readModulePackageJsonWithoutFallbacks: (
-        moduleSpecifier,
-        requirePaths
-      ) => {
-        if (moduleSpecifier && moduleSpecifier.startsWith('@nx/')) {
-          const err = new Error(`Cannot find module '${moduleSpecifier}'`);
-          err.code = 'MODULE_NOT_FOUND';
-          throw err;
-        }
-        return actual.readModulePackageJsonWithoutFallbacks(
+      hasNxJsPlugin: () => true,
+    }));
+
+    const packageJsonPath = nxSrcPath('utils/package-json');
+    jest.doMock(packageJsonPath, () => {
+      const actual = jest.requireActual(packageJsonPath);
+      return {
+        __esModule: true,
+        ...actual,
+        readModulePackageJsonWithoutFallbacks: (
           moduleSpecifier,
           requirePaths
-        );
-      },
-    };
-  });
+        ) => {
+          if (moduleSpecifier && moduleSpecifier.startsWith('@nx/')) {
+            const err = new Error(`Cannot find module '${moduleSpecifier}'`);
+            err.code = 'MODULE_NOT_FOUND';
+            throw err;
+          }
+          return actual.readModulePackageJsonWithoutFallbacks(
+            moduleSpecifier,
+            requirePaths
+          );
+        },
+      };
+    });
+  }
 
   /**
    * Diagnostic instrumentation: when NX_FS_TRACE_FOREIGN_READS is set, wrap

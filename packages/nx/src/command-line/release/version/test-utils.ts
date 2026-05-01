@@ -291,7 +291,10 @@ export class MockJsVersionActions extends VersionActions {
 
   async readCurrentVersionFromSourceManifest(tree: Tree) {
     const manifestPath = this.sourceManifestPath();
-    return { manifestPath, currentVersion: this.read(tree, manifestPath).version };
+    return {
+      manifestPath,
+      currentVersion: this.read(tree, manifestPath).version,
+    };
   }
 
   async readCurrentVersionFromRegistry() {
@@ -308,13 +311,19 @@ export class MockJsVersionActions extends VersionActions {
       projectGraph.nodes[dependencyProjectName].data.metadata?.js?.packageName;
     for (const depType of DEPENDENCY_FIELDS) {
       if (name && json[depType]?.[name]) {
-        return { currentVersion: json[depType][name], dependencyCollection: depType };
+        return {
+          currentVersion: json[depType][name],
+          dependencyCollection: depType,
+        };
       }
     }
     return { currentVersion: null, dependencyCollection: null };
   }
 
-  async updateProjectVersion(tree: Tree, newVersion: string): Promise<string[]> {
+  async updateProjectVersion(
+    tree: Tree,
+    newVersion: string
+  ): Promise<string[]> {
     return this.manifestsToUpdate.map(({ manifestPath }) => {
       const json = this.read(tree, manifestPath);
       json.version = newVersion;
