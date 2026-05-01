@@ -252,7 +252,11 @@ export async function applySuppressions(
   });
 
   if (shouldWriteSuppressions) {
-    await suppressions.suppress(results, context.suppressRule);
+    const rulesToSuppress =
+      context.suppressRule && context.suppressRule.length > 0
+        ? context.suppressRule
+        : undefined;
+    await suppressions.suppress(results, rulesToSuppress);
   }
 
   if (shouldPrune) {
