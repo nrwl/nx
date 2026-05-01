@@ -75,6 +75,10 @@ export function setupTypeDoc(logger: LoaderContext['logger']) {
     join(projectRoot, 'node_modules', '@types'),
   ];
 
+  // TypeDoc requires its entry points to be referenced by `include` or
+  // `files` in the tsconfig. Point at devkit's compiled .d.ts files.
+  tsconfigObj.include = [join(devkitPath, 'dist', '**', '*.d.ts')];
+
   tsconfigObj.exclude = [
     ...(tsconfigObj.exclude || []).filter((e: string) => e !== 'dist'),
     '**/*.spec.ts',
