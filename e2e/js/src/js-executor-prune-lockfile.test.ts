@@ -9,12 +9,32 @@ import {
   runCommand,
   tmpProjPath,
 } from '@nx/e2e-utils';
+import { cpSync, mkdtempSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 
 const installCmd = {
   pnpm: 'pnpm install --frozen-lockfile',
   yarn: 'yarn install --frozen-lockfile',
   npm: 'npm ci',
 } as const;
+
+// Copy the pruned dist to a fresh tmp dir outside the e2e workspace and run
+// install there. This isolates the install from the surrounding workspace
+// (pnpm-workspace.yaml, parent node_modules) so the assertion is really
+// "the pruned dist is self-sufficient" — i.e. the actual deployment contract.
+function installPrunedDist(
+  packageManager: 'pnpm' | 'yarn' | 'npm',
+  distPath: string
+) {
+  const installDir = mkdtempSync(join(tmpdir(), 'prune-lockfile-install-'));
+  try {
+    cpSync(distPath, installDir, { recursive: true });
+    runCommand(installCmd[packageManager], { cwd: installDir });
+  } finally {
+    rmSync(installDir, { recursive: true, force: true });
+  }
+}
 
 describe('js:prune-lockfile executor', () => {
   describe.each([
@@ -70,9 +90,7 @@ describe('js:prune-lockfile executor', () => {
         runCLI(`copy-workspace-modules ${nodeapp}`);
 
         checkFilesExist(`${nodeapp}/dist/${lockfile}`);
-        runCommand(installCmd[packageManager], {
-          cwd: tmpProjPath(`${nodeapp}/dist`),
-        });
+        installPrunedDist(packageManager, tmpProjPath(`${nodeapp}/dist`));
       });
 
       // app -> lib-a -> lib-b with lib-b having an npm dep. The pruned lockfile
@@ -134,9 +152,7 @@ describe('js:prune-lockfile executor', () => {
         runCLI(`prune-lockfile ${nodeapp}`);
         runCLI(`copy-workspace-modules ${nodeapp}`);
 
-        runCommand(installCmd[packageManager], {
-          cwd: tmpProjPath(`${nodeapp}/dist`),
-        });
+        installPrunedDist(packageManager, tmpProjPath(`${nodeapp}/dist`));
       });
     }
   );
@@ -199,7 +215,7 @@ describe('js:prune-lockfile executor', () => {
         `file:./workspace_modules/@${scope}/${nodelib}`
       );
 
-      runCommand('npm ci', { cwd: tmpProjPath(`${nodeapp}/dist`) });
+      installPrunedDist('npm', tmpProjPath(`${nodeapp}/dist`));
     });
   });
 });
