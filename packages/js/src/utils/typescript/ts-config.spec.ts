@@ -206,6 +206,38 @@ describe('resolvePathsBaseUrl', () => {
     );
   });
 
+  it('should handle tsconfig files with // comments (JSONC) in extends chain', () => {
+    tempFs.createFileSync(
+      'tsconfig.base.json',
+      JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+          paths: { '@lib/*': ['libs/*/src/index.ts'] },
+        },
+      })
+    );
+    tempFs.createFileSync(
+      'tsconfig.intermediate.json',
+      `{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    // TODO: fix this later
+    "strictPropertyInitialization": false
+  }
+}`
+    );
+    tempFs.createFileSync(
+      'project/tsconfig.json',
+      JSON.stringify({
+        extends: '../tsconfig.intermediate.json',
+      })
+    );
+
+    expect(
+      resolvePathsBaseUrl(join(tempFs.tempDir, 'project', 'tsconfig.json'))
+    ).toBe(tempFs.tempDir);
+  });
+
   it('should return tsconfig directory when no paths or baseUrl exist', () => {
     tempFs.createFileSync(
       'tsconfig.json',
