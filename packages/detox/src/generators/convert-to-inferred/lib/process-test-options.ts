@@ -36,7 +36,7 @@ export function processTestOptions(
   if ('buildTarget' in options) {
     migrationLogs.addLog({
       project: projectName,
-      executorName: '@nx/expo:test',
+      executorName: '@nx/detox:test',
       log: 'Unable to migrate `buildTarget` for Detox test. Use "nx run <project>:run-ios" or "nx run <project>:run-android", and pass "--reuse" option when running tests.',
     });
     delete options.buildTarget;
@@ -52,7 +52,7 @@ export function processTestOptions(
     if (!(key in options)) continue;
     migrationLogs.addLog({
       project: projectName,
-      executorName: '@nx/expo:test',
+      executorName: '@nx/detox:test',
       log: `Option "${key}" is not migrated since it was removed in Detox 20.`,
     });
     delete options[key];
