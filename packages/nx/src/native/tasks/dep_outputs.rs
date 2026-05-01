@@ -121,11 +121,9 @@ mod tests {
     use std::collections::HashMap;
 
     pub(super) fn create_test_task(id: &str, outputs: Vec<String>) -> Task {
-        Task {
-            outputs,
-            project_root: Some("test".to_string()),
-            ..Task::new(id, "test", "build")
-        }
+        Task::new(id, "test", "build")
+            .with_outputs(outputs)
+            .with_project_root("test")
     }
 
     #[test]

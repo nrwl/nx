@@ -1088,10 +1088,7 @@ mod tests {
     use tokio::sync::mpsc;
 
     fn create_test_task(id: &str) -> Task {
-        Task {
-            project_root: Some(format!("/tmp/{}", id)),
-            ..Task::new(id, id, "build")
-        }
+        Task::new(id, id, "build").with_project_root(format!("/tmp/{}", id))
     }
 
     fn create_test_inline_app() -> InlineApp {
@@ -1641,10 +1638,7 @@ mod integration_tests {
     use crate::native::tui::config;
 
     fn create_test_task(id: &str) -> Task {
-        Task {
-            project_root: Some(format!("/tmp/{}", id)),
-            ..Task::new(id, id, "build")
-        }
+        Task::new(id, id, "build").with_project_root(format!("/tmp/{}", id))
     }
 
     fn create_test_inline_app() -> InlineApp {

@@ -3000,21 +3000,15 @@ mod tests {
     // Helper function to create a TasksList with test task data
     fn create_test_tasks_list() -> (TasksList, Vec<Task>) {
         let test_tasks = vec![
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("task1", "app1", "test")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("task2", "app1", "build")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("task3", "app2", "lint")
-            },
+            Task::new("task1", "app1", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("task2", "app1", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("task3", "app2", "lint")
+                .with_project_root("")
+                .with_continuous(false),
         ];
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
         let title_text = "Test Tasks".to_string();
@@ -3134,26 +3128,18 @@ mod tests {
         // Actual (bug): Shows │ next to all 4 tasks, but missing └ separator
 
         let test_tasks = vec![
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("task1", "app1", "test")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("task2", "app2", "build")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("task3", "app3", "lint")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("task4", "app4", "deploy")
-            },
+            Task::new("task1", "app1", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("task2", "app2", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("task3", "app3", "lint")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("task4", "app4", "deploy")
+                .with_project_root("")
+                .with_continuous(false),
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
@@ -3575,11 +3561,9 @@ mod tests {
         let mut terminal = create_test_terminal(120, 15);
 
         // Create a task list with a continuous task
-        let continuous_task = Task {
-            project_root: Some("".to_string()),
-            continuous: Some(true),
-            ..Task::new("continuous-task", "app3", "serve")
-        };
+        let continuous_task = Task::new("continuous-task", "app3", "serve")
+            .with_project_root("")
+            .with_continuous(true);
 
         // Add and start the continuous task
         let task_item = TaskItem::new(continuous_task.id.clone(), true);
@@ -3604,11 +3588,9 @@ mod tests {
 
         // Create 12 tasks to test scrolling
         for i in 1..=12 {
-            let task = Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new(format!("task{}", i), format!("app{}", i % 3 + 1), "test")
-            };
+            let task = Task::new(format!("task{}", i), format!("app{}", i % 3 + 1), "test")
+                .with_project_root("")
+                .with_continuous(false);
             tasks.push(task);
         }
 
@@ -3647,11 +3629,9 @@ mod tests {
 
         // Create many tasks to ensure scrolling beyond waiting entries
         for i in 1..=10 {
-            let task = Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new(format!("task{}", i), "app1", "test")
-            };
+            let task = Task::new(format!("task{}", i), "app1", "test")
+                .with_project_root("")
+                .with_continuous(false);
             tasks.push(task);
         }
 
@@ -3701,11 +3681,9 @@ mod tests {
 
         // Create many tasks to ensure scrolling beyond waiting entries and bottom corner
         for i in 1..=10 {
-            let task = Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new(format!("task{}", i), "app1", "test")
-            };
+            let task = Task::new(format!("task{}", i), "app1", "test")
+                .with_project_root("")
+                .with_continuous(false);
             tasks.push(task);
         }
 
@@ -3751,16 +3729,12 @@ mod tests {
     fn test_run_one_mode_with_highlighted_task() {
         // Create a task list with a highlighted initiating task
         let test_tasks = vec![
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("task1", "app1", "test")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("task2", "app1", "build")
-            },
+            Task::new("task1", "app1", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("task2", "app1", "build")
+                .with_project_root("")
+                .with_continuous(false),
         ];
 
         // Create a set of initiating tasks (task1)
@@ -3809,20 +3783,16 @@ mod tests {
         let long_task_name =
             "very-long-task-name-that-exceeds-thirty-characters-to-test-threshold-logic";
         let test_tasks = vec![
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new(long_task_name, "app1", "test")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new(
-                    "another-very-long-task-name-for-testing-purposes",
-                    "app1",
-                    "build",
-                )
-            },
+            Task::new(long_task_name, "app1", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new(
+                "another-very-long-task-name-for-testing-purposes",
+                "app1",
+                "build",
+            )
+            .with_project_root("")
+            .with_continuous(false),
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
@@ -4035,11 +4005,11 @@ mod tests {
 
         let mut tasks = Vec::new();
         for i in 1..=num_tasks {
-            tasks.push(Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new(format!("task{}", i), "app", "test")
-            });
+            tasks.push(
+                Task::new(format!("task{}", i), "app", "test")
+                    .with_project_root("")
+                    .with_continuous(false),
+            );
         }
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(viewport_size)));
@@ -4148,11 +4118,11 @@ mod tests {
 
     // Helper function to create tasks list with specific task name
     fn create_tasks_list_with_name(task_name: &str) -> TasksList {
-        let test_tasks = vec![Task {
-            project_root: Some("".to_string()),
-            continuous: Some(false),
-            ..Task::new(task_name, "app1", "test")
-        }];
+        let test_tasks = vec![
+            Task::new(task_name, "app1", "test")
+                .with_project_root("")
+                .with_continuous(false),
+        ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
         TasksList::new(
@@ -4168,20 +4138,16 @@ mod tests {
     #[test]
     fn test_calculate_column_visibility_mixed_task_name_lengths() {
         let test_tasks = vec![
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("short", "app1", "test")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new(
-                    "this-is-a-very-long-task-name-that-exceeds-thirty-characters",
-                    "app2",
-                    "build",
-                )
-            },
+            Task::new("short", "app1", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new(
+                "this-is-a-very-long-task-name-that-exceeds-thirty-characters",
+                "app2",
+                "build",
+            )
+            .with_project_root("")
+            .with_continuous(false),
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
@@ -4221,40 +4187,30 @@ mod tests {
         // Create tasks with mixed name lengths distributed across viewports
         let test_tasks = vec![
             // Viewport 1: Short task names
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("short1", "app1", "test")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("short2", "app1", "build")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("short3", "app1", "lint")
-            },
+            Task::new("short1", "app1", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("short2", "app1", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("short3", "app1", "lint")
+                .with_project_root("")
+                .with_continuous(false),
             // Viewport 2: Long task names
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new(
-                    "this-is-a-very-long-task-name-that-exceeds-thirty-characters-viewport2-task1",
-                    "app2",
-                    "e2e",
-                )
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new(
-                    "another-extremely-long-task-name-for-testing-viewport-consistency-viewport2-task2",
-                    "app2",
-                    "deploy",
-                )
-            },
+            Task::new(
+                "this-is-a-very-long-task-name-that-exceeds-thirty-characters-viewport2-task1",
+                "app2",
+                "e2e",
+            )
+            .with_project_root("")
+            .with_continuous(false),
+            Task::new(
+                "another-extremely-long-task-name-for-testing-viewport-consistency-viewport2-task2",
+                "app2",
+                "deploy",
+            )
+            .with_project_root("")
+            .with_continuous(false),
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(3))); // viewport size 3
@@ -4309,35 +4265,27 @@ mod tests {
         // Create tasks with mixed name lengths
         let test_tasks = vec![
             // Viewport 1: Short task names
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("short1", "app1", "test")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("short2", "app1", "build")
-            },
+            Task::new("short1", "app1", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("short2", "app1", "build")
+                .with_project_root("")
+                .with_continuous(false),
             // Viewport 2: Long task names
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new(
-                    "this-is-a-very-long-task-name-that-exceeds-thirty-characters-for-testing",
-                    "app2",
-                    "e2e",
-                )
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new(
-                    "another-extremely-long-task-name-for-testing-scrolling-consistency-behavior",
-                    "app2",
-                    "deploy",
-                )
-            },
+            Task::new(
+                "this-is-a-very-long-task-name-that-exceeds-thirty-characters-for-testing",
+                "app2",
+                "e2e",
+            )
+            .with_project_root("")
+            .with_continuous(false),
+            Task::new(
+                "another-extremely-long-task-name-for-testing-scrolling-consistency-behavior",
+                "app2",
+                "deploy",
+            )
+            .with_project_root("")
+            .with_continuous(false),
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(2))); // viewport size 2
@@ -4392,26 +4340,20 @@ mod tests {
         // Create tasks with mixed name lengths
         let test_tasks = vec![
             // Viewport 1: Short task names
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("short1", "app1", "test")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("short2", "app1", "build")
-            },
+            Task::new("short1", "app1", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("short2", "app1", "build")
+                .with_project_root("")
+                .with_continuous(false),
             // Viewport 2: Long task names that would affect column visibility
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new(
+            Task::new(
                     "this-is-a-very-long-task-name-that-exceeds-thirty-characters-and-affects-column-visibility",
                     "app2",
                     "e2e",
                 )
-            },
+                .with_project_root("")
+                .with_continuous(false),
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(2))); // viewport size 2
@@ -4457,11 +4399,11 @@ mod tests {
     fn test_cache_column_spacing_with_long_truncated_task_name() {
         let long_task_name =
             "this-is-a-very-long-task-name-that-will-definitely-be-truncated-when-displayed";
-        let test_tasks = vec![Task {
-            project_root: Some("".to_string()),
-            continuous: Some(false),
-            ..Task::new(long_task_name, "app1", "test")
-        }];
+        let test_tasks = vec![
+            Task::new(long_task_name, "app1", "test")
+                .with_project_root("")
+                .with_continuous(false),
+        ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
         let mut tasks_list = TasksList::new(
@@ -4517,10 +4459,8 @@ mod tests {
         let mut test_tasks = Vec::new();
 
         for i in 0..num_tasks {
-            test_tasks.push(Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new(
+            test_tasks.push(
+                Task::new(
                     format!("task-{}", i + 1),
                     format!("app{}", (i % 5) + 1),
                     if i % 3 == 0 {
@@ -4531,7 +4471,9 @@ mod tests {
                         "lint".to_string()
                     },
                 )
-            });
+                .with_project_root("")
+                .with_continuous(false),
+            );
         }
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
@@ -4803,21 +4745,15 @@ mod tests {
     /// Helper function to create a TasksList with batch-enabled test data
     fn create_test_tasks_list_with_batches() -> (TasksList, Vec<Task>) {
         let test_tasks = vec![
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("app:build", "app", "build")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("lib:build", "lib", "build")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("standalone:test", "standalone", "test")
-            },
+            Task::new("app:build", "app", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("lib:build", "lib", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("standalone:test", "standalone", "test")
+                .with_project_root("")
+                .with_continuous(false),
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
@@ -5498,36 +5434,24 @@ mod tests {
 
         // Create extended task list with additional tasks for multiple batches
         let test_tasks = vec![
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("app:build", "app", "build")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("shared:build", "shared", "build")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("app:test", "app", "test")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("shared:test", "shared", "test")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("lint:check", "lint", "check")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("format:check", "format", "check")
-            },
+            Task::new("app:build", "app", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("shared:build", "shared", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app:test", "app", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("shared:test", "shared", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("lint:check", "lint", "check")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("format:check", "format", "check")
+                .with_project_root("")
+                .with_continuous(false),
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
@@ -5701,26 +5625,18 @@ mod tests {
         // and we validate that they are still grouped under the batch?"
 
         let test_tasks = vec![
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("app:build", "app", "build")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("app:test", "app", "test")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("shared:build", "shared", "build")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("shared:test", "shared", "test")
-            },
+            Task::new("app:build", "app", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app:test", "app", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("shared:build", "shared", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("shared:test", "shared", "test")
+                .with_project_root("")
+                .with_continuous(false),
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
@@ -5906,16 +5822,12 @@ mod tests {
         // This tests the transition from running batch with grouped tasks to individual tasks after completion
 
         let test_tasks = vec![
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("app:build", "app", "build")
-            },
-            Task {
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                ..Task::new("lib:build", "lib", "build")
-            },
+            Task::new("app:build", "app", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("lib:build", "lib", "build")
+                .with_project_root("")
+                .with_continuous(false),
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));

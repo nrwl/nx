@@ -39,14 +39,13 @@ pub struct Task {
 
 impl Task {
     /// Build a Task with the given id and target, leaving all other fields
-    /// at their defaults. Combine with struct-update syntax to override
-    /// just the fields you care about, e.g.:
+    /// at their defaults. Chain `with_*` methods to override individual
+    /// fields, e.g.:
     ///
     /// ```ignore
-    /// Task {
-    ///     project_root: Some("apps/foo".into()),
-    ///     ..Task::new("foo:build", "foo", "build")
-    /// }
+    /// Task::new("foo:build", "foo", "build")
+    ///     .with_project_root("apps/foo")
+    ///     .with_continuous(false)
     /// ```
     pub fn new(
         id: impl Into<String>,
@@ -62,6 +61,46 @@ impl Task {
             },
             ..Default::default()
         }
+    }
+
+    pub fn with_configuration(mut self, configuration: impl Into<String>) -> Self {
+        self.target.configuration = Some(configuration.into());
+        self
+    }
+
+    pub fn with_project_root(mut self, project_root: impl Into<String>) -> Self {
+        self.project_root = Some(project_root.into());
+        self
+    }
+
+    pub fn with_outputs(mut self, outputs: Vec<String>) -> Self {
+        self.outputs = outputs;
+        self
+    }
+
+    pub fn with_continuous(mut self, continuous: bool) -> Self {
+        self.continuous = Some(continuous);
+        self
+    }
+
+    pub fn with_hash(mut self, hash: impl Into<String>) -> Self {
+        self.hash = Some(hash.into());
+        self
+    }
+
+    pub fn with_cache(mut self, cache: bool) -> Self {
+        self.cache = Some(cache);
+        self
+    }
+
+    pub fn with_parallelism(mut self, parallelism: bool) -> Self {
+        self.parallelism = parallelism;
+        self
+    }
+
+    pub fn with_overrides(mut self, overrides: serde_json::Value) -> Self {
+        self.overrides = overrides;
+        self
     }
 }
 

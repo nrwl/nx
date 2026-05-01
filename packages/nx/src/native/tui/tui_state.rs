@@ -618,10 +618,7 @@ mod tests {
     use crate::native::tui::config;
 
     fn create_test_task(id: &str) -> Task {
-        Task {
-            project_root: Some(format!("/tmp/{}", id)),
-            ..Task::new(id, id, "build")
-        }
+        Task::new(id, id, "build").with_project_root(format!("/tmp/{}", id))
     }
 
     fn create_test_state() -> TuiState {
@@ -980,9 +977,6 @@ mod integration_tests {
     }
 
     fn create_test_task(id: &str) -> Task {
-        Task {
-            project_root: Some(format!("/tmp/{}", id)),
-            ..Task::new(id, id, "build")
-        }
+        Task::new(id, id, "build").with_project_root(format!("/tmp/{}", id))
     }
 }
