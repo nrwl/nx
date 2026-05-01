@@ -2989,7 +2989,12 @@ describe('Dependency checks (eslint)', () => {
               type: 'lib',
               data: {
                 root: 'libs/libb',
-                metadata: { js: { packageName: '@mycompany/libb' } },
+                metadata: {
+                  js: {
+                    packageName: '@mycompany/libb',
+                    isInPackageManagerWorkspaces: true,
+                  },
+                },
                 targets: { build: {} },
               },
             },
@@ -3109,7 +3114,12 @@ describe('Dependency checks (eslint)', () => {
               type: 'lib',
               data: {
                 root: 'libs/libb',
-                metadata: { js: { packageName: '@mycompany/libb' } },
+                metadata: {
+                  js: {
+                    packageName: '@mycompany/libb',
+                    isInPackageManagerWorkspaces: true,
+                  },
+                },
                 targets: { build: {} },
               },
             },
@@ -3449,7 +3459,12 @@ describe('Dependency checks (eslint)', () => {
               type: 'lib',
               data: {
                 root: 'libs/libb',
-                metadata: { js: { packageName: '@mycompany/libb' } },
+                metadata: {
+                  js: {
+                    packageName: '@mycompany/libb',
+                    isInPackageManagerWorkspaces: true,
+                  },
+                },
                 targets: {
                   build: {},
                 },
@@ -3529,7 +3544,12 @@ describe('Dependency checks (eslint)', () => {
               type: 'lib',
               data: {
                 root: 'libs/libb',
-                metadata: { js: { packageName: '@mycompany/libb' } },
+                metadata: {
+                  js: {
+                    packageName: '@mycompany/libb',
+                    isInPackageManagerWorkspaces: true,
+                  },
+                },
                 targets: {
                   build: {},
                 },
@@ -3565,6 +3585,75 @@ describe('Dependency checks (eslint)', () => {
           }
         }"
       `);
+    });
+
+    it('should NOT rewrite to workspace:* for workspace projects not in package manager workspaces', () => {
+      // A workspace project consumed via TS path mappings but not registered
+      // in pnpm-workspace.yaml / package.json "workspaces" cannot be resolved
+      // as workspace:*, so the rule must leave its peer dep range alone.
+      const packageJson = {
+        name: '@mycompany/liba',
+        peerDependencies: {
+          '@mycompany/libb': '^1.0.0',
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './libs/libb/package.json': JSON.stringify(
+          { name: '@mycompany/libb', version: '0.0.1' },
+          null,
+          2
+        ),
+        './package.json': JSON.stringify(rootPackageJson, null, 2),
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        { peerDepsVersionStrategy: 'workspace' },
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: { build: {} },
+              },
+            },
+            libb: {
+              name: 'libb',
+              type: 'lib',
+              data: {
+                root: 'libs/libb',
+                metadata: {
+                  js: {
+                    packageName: '@mycompany/libb',
+                    isInPackageManagerWorkspaces: false,
+                  },
+                },
+                targets: { build: {} },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [{ source: 'liba', target: 'libb', type: 'static' }],
+          },
+        },
+        {
+          liba: [createFile(`libs/liba/src/main.ts`, ['libb'])],
+          libb: [createFile(`libs/libb/src/index.ts`)],
+        }
+      );
+
+      // The package range stays as-is — no workspace:* rewrite.
+      expect(failures.some((f) => f.message?.includes('workspace:*'))).toBe(
+        false
+      );
     });
   });
 });

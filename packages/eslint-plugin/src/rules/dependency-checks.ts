@@ -170,14 +170,16 @@ export default ESLintUtils.RuleCreator(
     );
     const expectedDependencyNames = Object.keys(npmDependencies);
 
-    // Package names published by workspace projects. Used to decide whether
-    // `peerDepsVersionStrategy: 'workspace'` should rewrite a peer dep range
-    // to `workspace:*` — only workspace packages should get that treatment;
-    // external npm packages (react, axios, …) must keep their real ranges.
+    // Packages eligible for `workspace:*` rewrites under
+    // `peerDepsVersionStrategy: 'workspace'`. Must be both a workspace project
+    // and registered in the package manager's workspaces — otherwise
+    // `workspace:*` won't resolve at install time.
     const workspacePackageNames = new Set<string>();
     for (const node of Object.values(projectGraph.nodes)) {
-      const name = node.data?.metadata?.js?.packageName;
-      if (name) workspacePackageNames.add(name);
+      const js = node.data?.metadata?.js;
+      if (js?.packageName && js.isInPackageManagerWorkspaces) {
+        workspacePackageNames.add(js.packageName);
+      }
     }
 
     const packageJson = JSON.parse(context.sourceCode.getText());
