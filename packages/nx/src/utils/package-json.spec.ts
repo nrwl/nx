@@ -505,13 +505,20 @@ const exclusions = new Set([
   '@webcontainer/api',
 ]);
 
+// Skip packages this monorepo publishes — pnpm symlinks them into
+// `node_modules/<name>` from `packages/<name>`, so resolving them counts as
+// a cross-project read in CI's sandbox even though it would be a normal
+// install in any consumer workspace. The smoke-test still validates every
+// third-party dep's `package.json` exports.
+const isPublishedHere = (name: string) =>
+  name === 'nx' || name.startsWith('@nx/') || name.startsWith('create-nx-');
+
 describe('readModulePackageJson', () => {
-  it.each(dependencies.filter((x) => !exclusions.has(x)))(
-    `should be able to find %s`,
-    (s) => {
-      expect(() => readModulePackageJson(s)).not.toThrow();
-    }
-  );
+  it.each(
+    dependencies.filter((x) => !exclusions.has(x) && !isPublishedHere(x))
+  )(`should be able to find %s`, (s) => {
+    expect(() => readModulePackageJson(s)).not.toThrow();
+  });
 });
 
 describe('getDependencyVersionFromPackageJson', () => {
