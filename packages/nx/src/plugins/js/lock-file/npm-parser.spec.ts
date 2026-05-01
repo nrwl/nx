@@ -1623,19 +1623,11 @@ describe('NPM lock file utility', () => {
         stringifyNpmLockfile(prunedGraph, JSON.stringify(lockFile), packageJson)
       );
 
-      // Both workspace packages (direct + transitive) get link + workspace
-      // entries. Without the BFS fix, only lib-a would appear and `npm ci`
-      // would fail with "Missing: @myorg/lib-b from lock file".
       expect(result.packages).toHaveProperty('node_modules/@myorg/lib-a');
       expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-a');
       expect(result.packages).toHaveProperty('node_modules/@myorg/lib-b');
       expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-b');
-
-      // Transitive npm dep (lodash) reaches the pruned packages section.
       expect(result.packages).toHaveProperty('node_modules/lodash');
-
-      // The workspace entry for lib-a still records the dependency on lib-b
-      // so npm can resolve the chain.
       expect(
         result.packages['workspace_modules/@myorg/lib-a'].dependencies
       ).toEqual({ '@myorg/lib-b': 'file:../lib-b' });

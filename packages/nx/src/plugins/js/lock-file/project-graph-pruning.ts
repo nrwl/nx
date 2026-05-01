@@ -191,9 +191,7 @@ function traverseWorkspaceNode(
   node: ProjectGraphProjectNode,
   visited: Set<string> = new Set()
 ) {
-  if (visited.has(node.name)) {
-    return;
-  }
+  if (visited.has(node.name)) return;
   visited.add(node.name);
   graph.dependencies[node.name]?.forEach((dep) => {
     const externalDepNode = graph.externalNodes[dep.target];
@@ -201,9 +199,6 @@ function traverseWorkspaceNode(
       traverseNode(graph, builder, externalDepNode);
       return;
     }
-    // Recurse into workspace → workspace deps so that transitive workspace
-    // packages' npm deps reach the pruned graph (and therefore the lockfile's
-    // packages: section).
     const workspaceDepNode = graph.nodes[dep.target];
     if (workspaceDepNode) {
       traverseWorkspaceNode(graph, builder, workspaceDepNode, visited);

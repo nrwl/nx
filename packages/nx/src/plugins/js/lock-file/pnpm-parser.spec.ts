@@ -2668,22 +2668,16 @@ snapshots:
         '/virtual'
       );
 
-      // Both workspace packages (direct + transitive) get importer blocks.
       expect(result).toContain(`workspace_modules/@myorg/lib-a:`);
       expect(result).toContain(`workspace_modules/@myorg/lib-b:`);
-
-      // lib-a's importer references lib-b via the flat workspace_modules layout.
-      // The specifier must be `file:../lib-b` (matching what copy-workspace-modules
-      // writes to lib-a/package.json) — `workspace:*` would produce
-      // ERR_PNPM_OUTDATED_LOCKFILE on `pnpm install --frozen-lockfile`.
+      // Specifier must be `file:` to match what copy-workspace-modules writes
+      // to package.json — `workspace:*` would produce ERR_PNPM_OUTDATED_LOCKFILE.
       expect(result).toMatch(
         /'@myorg\/lib-a':\s+specifier: file:\.\/workspace_modules\/@myorg\/lib-a/
       );
       expect(result).toMatch(
         /'@myorg\/lib-b':\s+specifier: file:\.\.\/lib-b\s+version: link:\.\.\/lib-b/
       );
-
-      // lib-b's transitive npm dep (lodash) made it into the packages section.
       expect(result).toContain(`lodash@4.17.21:`);
     });
 
