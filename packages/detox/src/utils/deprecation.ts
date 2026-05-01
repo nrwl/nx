@@ -4,7 +4,7 @@ import { logger } from '@nx/devkit';
 // convert-to-inferred generator. The inferred plugin (@nx/detox/plugin) and
 // the application/init generators stay supported.
 export const DETOX_EXECUTORS_DEPRECATION_MESSAGE =
-  '`@nx/detox:build` and `@nx/detox:test` are deprecated and will be removed in Nx v24. Run `nx g @nx/detox:convert-to-inferred` to migrate to the `@nx/detox/plugin` inferred targets. See https://nx.dev/docs/technologies/test-tools/detox/guides/convert-to-inferred for details.';
+  '`@nx/detox:build` and `@nx/detox:test` are deprecated and will be removed in Nx v24. Run `nx g @nx/detox:convert-to-inferred` to migrate to the `@nx/detox/plugin` inferred targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.';
 
 export function warnDetoxExecutorsDeprecation(): void {
   logger.warn(DETOX_EXECUTORS_DEPRECATION_MESSAGE);
