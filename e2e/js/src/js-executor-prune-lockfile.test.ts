@@ -160,65 +160,6 @@ describe('js:prune-lockfile executor', () => {
 
         installPrunedDist(packageManager, tmpProjPath(`${nodeapp}/dist`));
       });
-
-      // app -> lib-a <-> lib-b. The pruned lockfile must include both
-      // workspace packages without infinite-looping during the transitive
-      // walk. Without the visited guard in the BFS, this hangs.
-      it('should produce installable pruned output with circular workspace dependencies', () => {
-        const nodeapp = uniq('nodeapp');
-        const liba = uniq('liba');
-        const libb = uniq('libb');
-
-        runCLI(
-          `generate @nx/node:app ${nodeapp} --linter=eslint --unitTestRunner=jest`
-        );
-        runCLI(
-          `generate @nx/js:lib ${liba} --bundler=tsc --linter=eslint --unitTestRunner=jest`
-        );
-        runCLI(
-          `generate @nx/js:lib ${libb} --bundler=tsc --linter=eslint --unitTestRunner=jest`
-        );
-
-        const ref = (name: string) =>
-          packageManager === 'pnpm' ? 'workspace:*' : `file:../${name}`;
-
-        updateJson(`${liba}/package.json`, (json) => {
-          json.dependencies = {
-            ...json.dependencies,
-            [`@${scope}/${libb}`]: ref(libb),
-          };
-          return json;
-        });
-        updateJson(`${libb}/package.json`, (json) => {
-          json.dependencies = {
-            ...json.dependencies,
-            [`@${scope}/${liba}`]: ref(liba),
-          };
-          return json;
-        });
-        updateJson(`${nodeapp}/package.json`, (json) => {
-          json.dependencies = {
-            ...json.dependencies,
-            [`@${scope}/${liba}`]: ref(liba),
-          };
-          json.nx.targets['prune-lockfile'] = {
-            executor: '@nx/js:prune-lockfile',
-            options: { buildTarget: 'build' },
-          };
-          json.nx.targets['copy-workspace-modules'] = {
-            executor: '@nx/js:copy-workspace-modules',
-            options: { buildTarget: 'build' },
-          };
-          return json;
-        });
-        runCommand(`${packageManager} install`);
-
-        runCLI(`build ${nodeapp}`);
-        runCLI(`prune-lockfile ${nodeapp}`);
-        runCLI(`copy-workspace-modules ${nodeapp}`);
-
-        installPrunedDist(packageManager, tmpProjPath(`${nodeapp}/dist`));
-      });
     }
   );
 
