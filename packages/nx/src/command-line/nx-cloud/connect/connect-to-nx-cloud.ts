@@ -242,11 +242,11 @@ async function runConnectToNxCloud(
     return false;
   }
 
-  // PAT present → bin can call the API directly, no browser-claim needed.
-  // Browser opens only as a fallback for github_oauth / github_app_install.
-  // Needs a remote for the bin's repo detection.
+  // PAT present → try the bin one-shot. If it can't complete (needs GH OAuth,
+  // App install, etc.), silently fall through to the legacy browser-claim
+  // flow below — that path always works, just with one more click.
   if (hasRemote && hasNxCloudPat()) {
-    return runHumanOnboardWithPat(installationSource);
+    if (await tryOneShotConnect(installationSource)) return true;
   }
 
   const token = await connectWorkspaceToCloud({
@@ -283,13 +283,14 @@ async function runConnectToNxCloud(
   return true;
 }
 
-async function runHumanOnboardWithPat(
+async function tryOneShotConnect(
   source: 'nx-connect' | 'nx-console'
 ): Promise<boolean> {
   // Mirror the agent path's bin invocation exactly — a prior status spawn
-  // appears to perturb the bin's repo lookup on the next call (first attempt
-  // misses the repo, second succeeds). Driving connect-workspace cold matches
-  // the agent path's one-shot behavior.
+  // appears to perturb the bin's repo lookup on the next call. Driving
+  // connect-workspace cold matches the agent path's one-shot behavior.
+  // Anything short of "connected" → silent stop and let the caller fall
+  // through to the legacy browser-claim flow.
   const spinner = ora('Connecting workspace to Nx Cloud...').start();
   const result = await runAgenticOnboard({
     source,
@@ -313,32 +314,7 @@ async function runHumanOnboardWithPat(
     return true;
   }
 
-  if (result.status === 'needs_input') {
-    spinner.warn(result.message);
-    if (result.verificationUri) {
-      output.note({
-        title: 'Action required',
-        bodyLines: [
-          `Open: ${result.verificationUri}`,
-          ...(result.userCode ? [`Enter code: ${result.userCode}`] : []),
-          '',
-          'After completing in the browser, re-run `nx connect`.',
-        ],
-      });
-      // Fire-and-forget; URL is printed above so a failure to open is fine.
-      open(result.verificationUri).catch(() => {});
-    } else if (result.actionRequired === 'login_required') {
-      output.note({
-        title: 'Login required',
-        bodyLines: [
-          'Run `npx nx login` to authenticate, then re-run `nx connect`.',
-        ],
-      });
-    }
-    return false;
-  }
-
-  spinner.fail(result.message);
+  spinner.stop();
   return false;
 }
 
