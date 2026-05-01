@@ -82,6 +82,7 @@ export interface AgenticOnboardOptions {
 
 /** Subset of `nx-cloud onboard status --json` we consume. */
 export interface OnboardStatus {
+  user?: { email?: string };
   organizations: Array<{ id: string; name: string; role?: string }>;
 }
 

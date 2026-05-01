@@ -301,6 +301,10 @@ async function runHumanOnboardWithPat(
     }
   }
 
+  if (status?.user?.email) {
+    output.log({ title: `Logged in as ${status.user.email}` });
+  }
+
   const spinner = ora('Connecting workspace to Nx Cloud...').start();
   const result = await runAgenticOnboard({
     source,
@@ -323,13 +327,6 @@ async function runHumanOnboardWithPat(
         result.nxCloudUrl ? ` → ${result.nxCloudUrl}` : ''
       }`
     );
-    output.note({
-      title: 'Verify remote caching',
-      bodyLines: [
-        'Run a cacheable target twice (build/test/lint). Second run should be a cache hit.',
-        `Status check: ${result.verifyCommand}`,
-      ],
-    });
     return true;
   }
 
