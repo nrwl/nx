@@ -34,12 +34,42 @@ export function processTestOptions(
   }
 
   if ('buildTarget' in options) {
-    migrationLogs.addLog({
-      project: projectName,
-      executorName: '@nx/detox:test',
-      log: 'Unable to migrate `buildTarget` for Detox test. Use "nx run <project>:run-ios" or "nx run <project>:run-android", and pass "--reuse" option when running tests.',
-    });
+    const value = options.buildTarget;
     delete options.buildTarget;
+
+    if (target && typeof value === 'string' && value.length > 0) {
+      const parts = value.split(':');
+      const refProject = parts.length > 1 ? parts[0] : undefined;
+      const refTargetRaw = parts[parts.length - 1];
+      const sameProject = !refProject || refProject === projectName;
+
+      // The detox build executor's `build-ios` / `build-android` targets on this project
+      // are being migrated into a single platform-agnostic `build` target.
+      const refTarget =
+        sameProject && /^build(-ios|-android)?$/.test(refTargetRaw)
+          ? 'build'
+          : refTargetRaw;
+
+      const dep = sameProject
+        ? refTarget
+        : { projects: refProject, target: refTarget };
+
+      target.dependsOn ??= [];
+      const alreadyPresent = target.dependsOn.some((existing) => {
+        if (typeof existing === 'string' && typeof dep === 'string') {
+          return existing === dep;
+        }
+        if (typeof existing === 'object' && typeof dep === 'object') {
+          return (
+            existing.target === dep.target && existing.projects === dep.projects
+          );
+        }
+        return false;
+      });
+      if (!alreadyPresent) {
+        target.dependsOn.push(dep);
+      }
+    }
   }
 
   const deprecatedOptions = [
