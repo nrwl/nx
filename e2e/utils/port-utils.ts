@@ -7,11 +7,15 @@ import * as path from 'path';
  * lock file. Avoids the TOCTOU race of probing port 0 and then binding it
  * seconds later — another parallel process could be handed the same port in
  * between.
+ *
+ * Starts at 6100 (outside the framework-default zone of 3000/4200/5173/8080/etc.)
+ * so reserved ports never collide with parallel tests that generate apps
+ * without explicitly pinning the dev-server port.
  */
 const LOCK_DIR = process.env.NX_E2E_PORT_LOCK_DIR ?? '/tmp/nx-e2e-port-locks';
 fs.mkdirSync(LOCK_DIR, { recursive: true });
 
-export async function reservePort(start = 4200): Promise<number> {
+export async function reservePort(start = 6100): Promise<number> {
   for (let port = start; port < 65000; port++) {
     const lock = path.join(LOCK_DIR, `${port}.lock`);
     try {
