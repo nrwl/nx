@@ -38,25 +38,25 @@ pub struct Task {
 }
 
 impl Task {
-    /// Build a Task with the given id and target, leaving all other fields
-    /// at their defaults. Chain `with_*` methods to override individual
-    /// fields, e.g.:
+    /// Build a Task for the given project + target. The id is derived as
+    /// `{project}:{target}`, matching the formula used by the TS task graph
+    /// builder. Use `with_configuration` to extend the id with a
+    /// configuration suffix.
     ///
     /// ```ignore
-    /// Task::new("foo:build", "foo", "build")
+    /// Task::new("foo", "build")                      // id = "foo:build"
+    ///     .with_configuration("production")          // id = "foo:build:production"
     ///     .with_project_root("apps/foo")
-    ///     .with_continuous(false)
     /// ```
-    pub fn new(
-        id: impl Into<String>,
-        project: impl Into<String>,
-        target: impl Into<String>,
-    ) -> Self {
+    pub fn new(project: impl Into<String>, target: impl Into<String>) -> Self {
+        let project = project.into();
+        let target = target.into();
+        let id = format!("{project}:{target}");
         Task {
-            id: id.into(),
+            id,
             target: TaskTarget {
-                project: project.into(),
-                target: target.into(),
+                project,
+                target,
                 configuration: None,
             },
             ..Default::default()
@@ -64,7 +64,12 @@ impl Task {
     }
 
     pub fn with_configuration(mut self, configuration: impl Into<String>) -> Self {
-        self.target.configuration = Some(configuration.into());
+        let configuration = configuration.into();
+        self.id = format!(
+            "{}:{}:{}",
+            self.target.project, self.target.target, configuration
+        );
+        self.target.configuration = Some(configuration);
         self
     }
 
