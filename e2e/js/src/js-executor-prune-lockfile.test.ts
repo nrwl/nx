@@ -30,7 +30,13 @@ function installPrunedDist(
   const installDir = mkdtempSync(join(tmpdir(), 'prune-lockfile-install-'));
   try {
     cpSync(distPath, installDir, { recursive: true });
-    runCommand(installCmd[packageManager], { cwd: installDir });
+    // failOnError: true — runCommand silently swallows non-zero exits by
+    // default (see e2e/utils/command-utils.ts), which would let a broken
+    // pruned lockfile pass this assertion. We want a real failure.
+    runCommand(installCmd[packageManager], {
+      cwd: installDir,
+      failOnError: true,
+    });
   } finally {
     rmSync(installDir, { recursive: true, force: true });
   }
