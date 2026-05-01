@@ -1,0 +1,54 @@
+---
+title: Convert to the @nx/cypress inferred plugin
+description: Migrate off the deprecated @nx/cypress:cypress executor by using the @nx/cypress/plugin inferred targets.
+sidebar:
+  label: Convert to the inferred plugin
+filter: 'type:Guides'
+---
+
+The `@nx/cypress:cypress` executor is deprecated and will be removed in **Nx v24**. The `@nx/cypress/plugin` inferred plugin produces equivalent `e2e` and `component-test` targets directly from your `cypress.config.*` file, with no executor wrapper. This guide walks through converting existing executor-based targets to the inferred plugin.
+
+Your Cypress configuration (`cypress.config.ts` / `.js`) does not need to change.
+
+## Auto-convert (recommended)
+
+Run the included generator:
+
+```shell
+nx g @nx/cypress:convert-to-inferred
+```
+
+This:
+
+- Removes `@nx/cypress:cypress` executor targets from each project
+- Ensures `@nx/cypress/plugin` is registered in `nx.json` with the right target-name overrides
+- Preserves any per-target options (configurations, watch mode, baseUrl, dev-server target, etc.) that the inferred plugin can't represent directly
+
+After it runs, the `e2e` and `component-test` targets on each project come from the inferred plugin.
+
+## Manual setup
+
+If you'd rather wire it yourself, add the plugin to `nx.json`:
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/cypress/plugin",
+      "options": {
+        "targetName": "e2e",
+        "componentTestingTargetName": "component-test"
+      }
+    }
+  ]
+}
+```
+
+Then remove the explicit `e2e` (and any `component-test`) targets from each project — the inferred plugin creates them automatically for any project that has a `cypress.config.*` file.
+
+## What stays the same
+
+- `cypress` itself remains a peer dependency of `@nx/cypress` and continues to work normally.
+- The `@nx/cypress` package and the `@nx/cypress/plugin` inferred plugin remain supported.
+- The `@nx/cypress:configuration` and `@nx/cypress:component-configuration` scaffolding generators keep working. New scaffolds emit no executor-based targets when the inferred plugin is registered.

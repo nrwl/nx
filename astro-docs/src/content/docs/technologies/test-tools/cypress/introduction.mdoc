@@ -7,6 +7,14 @@ weight: 2
 filter: 'type:References'
 ---
 
+{% aside type="caution" title="The `@nx/cypress:cypress` executor is deprecated" %}
+The `@nx/cypress:cypress` executor is deprecated and will be removed in **Nx v24**. The `@nx/cypress/plugin` inferred targets remain the supported path — they discover Cypress projects from `cypress.config.*` and produce equivalent `e2e` and `component-test` targets automatically.
+
+If you have explicit executor-based targets, run `nx g @nx/cypress:convert-to-inferred` to migrate them to the inferred plugin. See the [migration guide](/docs/technologies/test-tools/cypress/guides/convert-to-inferred) for details.
+
+The `@nx/cypress` package itself, the inferred plugin, and the scaffolding generators remain supported.
+{% /aside %}
+
 Cypress is a test runner built for the modern web. It has a lot of great features:
 
 - Time travel
