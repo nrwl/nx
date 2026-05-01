@@ -194,12 +194,8 @@ describe('js:prune-lockfile executor', () => {
 
       // Both workspace packages get importer blocks (the bug was that the
       // transitive lib-b importer was missing).
-      expect(prunedLockfile).toContain(
-        `workspace_modules/@${scope}/${liba}:`
-      );
-      expect(prunedLockfile).toContain(
-        `workspace_modules/@${scope}/${libb}:`
-      );
+      expect(prunedLockfile).toContain(`workspace_modules/@${scope}/${liba}:`);
+      expect(prunedLockfile).toContain(`workspace_modules/@${scope}/${libb}:`);
 
       // lib-a's reference to lib-b uses the flat workspace_modules layout.
       // Without the rewrite the lockfile would still say `workspace:*`,
