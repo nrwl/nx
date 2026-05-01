@@ -1,12 +1,15 @@
-import { ChildProcess, Serializable } from 'child_process';
-import { signalToCode } from '../../utils/exit-codes';
-import { RunningTask } from './running-task';
-import { Transform } from 'stream';
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
+import type { ChildProcess, Serializable } from 'child_process';
 import { readFileSync } from 'fs';
+import { Transform } from 'stream';
+import treeKill from 'tree-kill';
+import { signalToCode } from '../../utils/exit-codes';
+import { addPrefixTransformer, getColor } from './output-prefix';
+import type { RunningTask } from './running-task';
 
 export class NodeChildProcessWithNonDirectOutput implements RunningTask {
-  private terminalOutput: string = '';
+  private terminalOutputChunks: string[] = [];
+  private joinedTerminalOutput: string | undefined;
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
     [];
   private outputCallbacks: Array<(output: string) => void> = [];
@@ -23,8 +26,10 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
         const prefixText = `${prefix}:`;
 
         this.childProcess.stdout
-          .pipe(logClearLineToPrefixTransformer(color.bold(prefixText) + ' '))
-          .pipe(addPrefixTransformer(color.bold(prefixText)))
+          .pipe(
+            logClearLineToPrefixTransformer(pc.bold(color(prefixText)) + ' ')
+          )
+          .pipe(addPrefixTransformer(pc.bold(color(prefixText))))
           .pipe(process.stdout);
         this.childProcess.stderr
           .pipe(logClearLineToPrefixTransformer(color(prefixText) + ' '))
@@ -40,11 +45,15 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
       }
     }
 
-    this.childProcess.on('exit', (code, signal) => {
+    // 'close' (not 'exit') ensures stdio has drained before we join chunks (#35302).
+    this.childProcess.on('close', (code, signal) => {
       if (code === null) code = signalToCode(signal);
       this.exitCode = code;
+      // Join once and cache before notifying exit callbacks
+      this.joinedTerminalOutput = this.terminalOutputChunks.join('');
+      this.terminalOutputChunks = [];
       for (const cb of this.exitCallbacks) {
-        cb(code, this.terminalOutput);
+        cb(code, this.joinedTerminalOutput);
       }
     });
 
@@ -56,7 +65,7 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
     });
     this.childProcess.stdout.on('data', (chunk) => {
       const output = chunk.toString();
-      this.terminalOutput += output;
+      this.terminalOutputChunks.push(output);
       // Stream output to TUI via callbacks
       for (const cb of this.outputCallbacks) {
         cb(output);
@@ -64,13 +73,14 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
     });
     this.childProcess.stderr.on('data', (chunk) => {
       const output = chunk.toString();
-      this.terminalOutput += output;
+      this.terminalOutputChunks.push(output);
       // Stream output to TUI via callbacks
       for (const cb of this.outputCallbacks) {
         cb(output);
       }
     });
   }
+
   onExit(cb: (code: number, terminalOutput: string) => void) {
     this.exitCallbacks.push(cb);
   }
@@ -83,7 +93,8 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
     if (typeof this.exitCode === 'number') {
       return {
         code: this.exitCode,
-        terminalOutput: this.terminalOutput,
+        terminalOutput:
+          this.joinedTerminalOutput ?? this.terminalOutputChunks.join(''),
       };
     }
     return new Promise((res) => {
@@ -98,51 +109,14 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
       this.childProcess.send(message);
     }
   }
+
   public kill(signal?: NodeJS.Signals) {
-    if (this.childProcess.connected) {
-      this.childProcess.kill(signal);
+    if (this.childProcess?.pid) {
+      treeKill(this.childProcess.pid, signal, () => {
+        // Ignore errors - process may have already exited
+      });
     }
   }
-}
-
-function addPrefixTransformer(prefix?: string) {
-  const newLineSeparator = process.platform.startsWith('win') ? '\r\n' : '\n';
-  return new Transform({
-    transform(chunk, _encoding, callback) {
-      const list = chunk.toString().split(/\r\n|[\n\v\f\r\x85\u2028\u2029]/g);
-      list
-        .filter(Boolean)
-        .forEach((m) =>
-          this.push(
-            prefix ? prefix + ' ' + m + newLineSeparator : m + newLineSeparator
-          )
-        );
-      callback();
-    },
-  });
-}
-
-const colors = [
-  chalk.green,
-  chalk.greenBright,
-  chalk.blue,
-  chalk.blueBright,
-  chalk.cyan,
-  chalk.cyanBright,
-  chalk.yellow,
-  chalk.yellowBright,
-  chalk.magenta,
-  chalk.magentaBright,
-];
-
-function getColor(projectName: string) {
-  let code = 0;
-  for (let i = 0; i < projectName.length; ++i) {
-    code += projectName.charCodeAt(i);
-  }
-  const colorIndex = code % colors.length;
-
-  return colors[colorIndex];
 }
 
 /**
@@ -222,8 +196,10 @@ export class NodeChildProcessWithDirectOutput implements RunningTask {
   }
 
   kill(signal?: NodeJS.Signals): void {
-    if (this.childProcess.connected) {
-      this.childProcess.kill(signal);
+    if (this.childProcess?.pid) {
+      treeKill(this.childProcess.pid, signal, () => {
+        // Ignore errors - process may have already exited
+      });
     }
   }
 }

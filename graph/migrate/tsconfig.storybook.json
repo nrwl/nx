@@ -2,7 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "emitDecoratorMetadata": true,
-    "outDir": ""
+    "outDir": "",
+    "moduleResolution": "node16"
   },
   "exclude": [
     "src/**/*.spec.ts",

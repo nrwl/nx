@@ -1,6 +1,6 @@
 import { writeFileSync } from 'fs';
 import { dirSync } from 'tmp';
-import * as ora from 'ora';
+import ora from 'ora';
 import { join } from 'path';
 
 import {
@@ -9,9 +9,8 @@ import {
   PackageManager,
 } from './utils/package-manager';
 import { execAndWait } from './utils/child-process-utils';
-import { output } from './utils/output';
 import { nxVersion } from './utils/nx/nx-version';
-import { mapErrorToBodyLines } from './utils/error-utils';
+import { CnwError } from './utils/error-utils';
 
 /**
  * Creates a temporary directory and installs Nx in it.
@@ -48,15 +47,30 @@ export async function createSandbox(packageManager: PackageManager) {
     installSpinner.succeed();
   } catch (e) {
     installSpinner.fail();
-    if (e instanceof Error) {
-      output.error({
-        title: `Failed to install dependencies`,
-        bodyLines: mapErrorToBodyLines(e),
-      });
-    } else {
-      console.error(e);
+    const logFile = e instanceof CnwError ? e.logFile : undefined;
+    const exitCode = e instanceof CnwError ? e.exitCode : undefined;
+    const message = e instanceof Error ? e.message : String(e);
+
+    const lines = [`Failed to install dependencies`];
+    if (message?.trim()) {
+      lines.push(message.trim());
     }
-    process.exit(1);
+    if (exitCode != null) {
+      lines.push(`Exit code: ${exitCode}`);
+    }
+    if (logFile) {
+      lines.push(`Log file: ${logFile}`);
+    }
+    lines.push(
+      `\nPlease verify that "${install}" runs successfully in a temporary directory.`
+    );
+
+    throw new CnwError(
+      'SANDBOX_FAILED',
+      lines.join('\n'),
+      logFile,
+      exitCode ?? undefined
+    );
   } finally {
     installSpinner.stop();
   }

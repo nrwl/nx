@@ -1,8 +1,8 @@
-import * as chalk from 'chalk';
-import { ChildProcess, exec, Serializable } from 'child_process';
+import * as pc from 'picocolors';
+import { ChildProcess, spawn, Serializable } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { isAbsolute, join } from 'path';
-import * as treeKill from 'tree-kill';
+import treeKill from 'tree-kill';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import {
   createPseudoTerminal,
@@ -14,9 +14,9 @@ import {
   loadAndExpandDotEnvFile,
   unloadDotEnvFile,
 } from '../../tasks-runner/task-env';
+import { registerTaskProcessStart } from '../../tasks-runner/task-io-service';
 import { signalToCode } from '../../utils/exit-codes';
 import {
-  LARGE_BUFFER,
   NormalizedRunCommandsOptions,
   RunCommandsCommandOptions,
 } from './run-commands.impl';
@@ -30,7 +30,11 @@ export class ParallelRunningTasks implements RunningTask {
     [];
   private outputCallbacks: Array<(terminalOutput: string) => void> = [];
 
-  constructor(options: NormalizedRunCommandsOptions, context: ExecutorContext) {
+  constructor(
+    options: NormalizedRunCommandsOptions,
+    context: ExecutorContext,
+    taskId: string
+  ) {
     this.childProcesses = options.commands.map(
       (commandConfig) =>
         new RunningNodeProcess(
@@ -40,7 +44,8 @@ export class ParallelRunningTasks implements RunningTask {
           options.env ?? {},
           options.readyWhenStatus,
           options.streamOutput,
-          options.envFile
+          options.envFile,
+          taskId
         )
     );
     this.readyWhenStatus = options.readyWhenStatus;
@@ -217,7 +222,7 @@ export class ParallelRunningTasks implements RunningTask {
 }
 
 export class SeriallyRunningTasks implements RunningTask {
-  private terminalOutput = '';
+  private terminalOutputChunks: string[] = [];
   private currentProcess: RunningTask | PseudoTtyProcess | null = null;
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
     [];
@@ -228,26 +233,29 @@ export class SeriallyRunningTasks implements RunningTask {
   constructor(
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
-    private readonly tuiEnabled: boolean
+    private readonly tuiEnabled: boolean,
+    private readonly taskId: string
   ) {
     this.run(options, context)
       .catch((e) => {
         this.error = e;
       })
       .finally(() => {
+        const terminalOutput = this.terminalOutputChunks.join('');
+        this.terminalOutputChunks = [];
         for (const cb of this.exitCallbacks) {
-          cb(this.code, this.terminalOutput);
+          cb(this.code, terminalOutput);
         }
       });
   }
 
   getResults(): Promise<{ code: number; terminalOutput: string }> {
     return new Promise((res, rej) => {
-      this.onExit((code) => {
+      this.onExit((code, terminalOutput) => {
         if (this.error) {
           rej(this.error);
         } else {
-          res({ code, terminalOutput: this.terminalOutput });
+          res({ code, terminalOutput });
         }
       });
     });
@@ -279,6 +287,7 @@ export class SeriallyRunningTasks implements RunningTask {
         options.color,
         calculateCwd(options.cwd, context),
         options.processEnv ?? options.env ?? {},
+        this.taskId,
         options.usePty,
         options.streamOutput,
         options.tty,
@@ -293,15 +302,14 @@ export class SeriallyRunningTasks implements RunningTask {
       });
 
       let { code, terminalOutput } = await childProcess.getResults();
-      this.terminalOutput += terminalOutput;
+      this.terminalOutputChunks.push(terminalOutput);
       this.code = code;
       if (code !== 0) {
         const output = `Warning: command "${c.command}" exited with non-zero status code`;
-        terminalOutput += output;
         if (options.streamOutput) {
           process.stderr.write(output);
         }
-        this.terminalOutput += terminalOutput;
+        this.terminalOutputChunks.push(output);
 
         // Stop running commands
         break;
@@ -314,6 +322,7 @@ export class SeriallyRunningTasks implements RunningTask {
     color: boolean,
     cwd: string,
     env: Record<string, string>,
+    taskId: string,
     usePty: boolean = true,
     streamOutput: boolean = true,
     tty: boolean,
@@ -330,7 +339,7 @@ export class SeriallyRunningTasks implements RunningTask {
       const pseudoTerminal = createPseudoTerminal();
       registerProcessListener(this, pseudoTerminal);
 
-      return createProcessWithPseudoTty(
+      const pseudoTtyProcess = await createProcessWithPseudoTty(
         pseudoTerminal,
         commandConfig,
         color,
@@ -340,6 +349,15 @@ export class SeriallyRunningTasks implements RunningTask {
         tty,
         envFile
       );
+
+      // Register process for metrics collection (direct run-commands execution)
+      // Skip registration if we're in a forked executor - the fork wrapper already registered
+      const pid = pseudoTtyProcess.getPid();
+      if (pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
+        registerTaskProcessStart(taskId, pid);
+      }
+
+      return pseudoTtyProcess;
     }
 
     return new RunningNodeProcess(
@@ -349,13 +367,14 @@ export class SeriallyRunningTasks implements RunningTask {
       env,
       [],
       streamOutput,
-      envFile
+      envFile,
+      taskId
     );
   }
 }
 
 class RunningNodeProcess implements RunningTask {
-  private terminalOutput = '';
+  private terminalOutputChunks: string[] = [];
   private childProcess: ChildProcess;
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
     [];
@@ -369,20 +388,30 @@ class RunningNodeProcess implements RunningTask {
     env: Record<string, string>,
     private readyWhenStatus: { stringToMatch: string; found: boolean }[],
     streamOutput = true,
-    envFile: string
+    envFile: string,
+    private taskId: string
   ) {
     env = processEnv(color, cwd, env, envFile);
     this.command = commandConfig.command;
-    this.terminalOutput = chalk.dim('> ') + commandConfig.command + '\r\n\r\n';
+    const header = pc.dim('> ') + commandConfig.command + '\r\n\r\n';
+    this.terminalOutputChunks.push(header);
     if (streamOutput) {
-      process.stdout.write(this.terminalOutput);
+      process.stdout.write(header);
     }
-    this.childProcess = exec(commandConfig.command, {
-      maxBuffer: LARGE_BUFFER,
+    this.childProcess = spawn(commandConfig.command, [], {
+      shell: true,
       env,
       cwd,
-      windowsHide: false,
+      windowsHide: true,
     });
+    this.childProcess.stdout?.setEncoding('utf8');
+    this.childProcess.stderr?.setEncoding('utf8');
+
+    // Register process for metrics collection
+    // Skip registration if we're in a forked executor - the fork wrapper already registered
+    if (this.childProcess.pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
+      registerTaskProcessStart(taskId, this.childProcess.pid);
+    }
 
     this.addListeners(commandConfig, streamOutput);
   }
@@ -434,7 +463,7 @@ class RunningNodeProcess implements RunningTask {
     this.childProcess.stdout.on('data', (data) => {
       const output = addColorAndPrefix(data, commandConfig);
 
-      this.terminalOutput += output;
+      this.terminalOutputChunks.push(output);
       this.triggerOutputListeners(output);
 
       if (streamOutput) {
@@ -445,14 +474,14 @@ class RunningNodeProcess implements RunningTask {
         isReady(this.readyWhenStatus, data.toString())
       ) {
         for (const cb of this.exitCallbacks) {
-          cb(0, this.terminalOutput);
+          cb(0, this.terminalOutputChunks.join(''));
         }
       }
     });
     this.childProcess.stderr.on('data', (err) => {
       const output = addColorAndPrefix(err, commandConfig);
 
-      this.terminalOutput += output;
+      this.terminalOutputChunks.push(output);
       this.triggerOutputListeners(output);
 
       if (streamOutput) {
@@ -463,52 +492,74 @@ class RunningNodeProcess implements RunningTask {
         isReady(this.readyWhenStatus, err.toString())
       ) {
         for (const cb of this.exitCallbacks) {
-          cb(1, this.terminalOutput);
+          cb(1, this.terminalOutputChunks.join(''));
         }
       }
     });
     this.childProcess.on('error', (err) => {
       const output = addColorAndPrefix(err.toString(), commandConfig);
-      this.terminalOutput += output;
+      this.terminalOutputChunks.push(output);
       if (streamOutput) {
         process.stderr.write(output);
       }
+      const terminalOutput = this.terminalOutputChunks.join('');
+      this.terminalOutputChunks = [];
+      removeProcessListeners();
       for (const cb of this.exitCallbacks) {
-        cb(1, this.terminalOutput);
+        cb(1, terminalOutput);
       }
     });
-    this.childProcess.on('exit', (code) => {
+
+    // Store signal/exit handlers so they can be removed when the child exits.
+    // Without cleanup, each RunningNodeProcess leaks 4 process listeners.
+    // In a large monorepo (2600+ run-commands tasks), these accumulate and
+    // cause a multi-minute synchronous hang at process.exit() as each handler
+    // calls treeKill on an already-dead PID.
+    const onExit = () => {
+      this.kill();
+    };
+    const onSigInt = () => {
+      this.kill('SIGTERM');
+    };
+    const onSigTerm = () => {
+      this.kill('SIGTERM');
+    };
+    const onSigHup = () => {
+      this.kill('SIGTERM');
+    };
+    const removeProcessListeners = () => {
+      process.removeListener('exit', onExit);
+      process.removeListener('SIGINT', onSigInt);
+      process.removeListener('SIGTERM', onSigTerm);
+      process.removeListener('SIGHUP', onSigHup);
+    };
+
+    this.childProcess.on('exit', (code, signal) => {
+      if (code === null) {
+        code = signalToCode(signal);
+      }
+      removeProcessListeners();
       if (!this.readyWhenStatus.length || isReady(this.readyWhenStatus)) {
+        const terminalOutput = this.terminalOutputChunks.join('');
+        this.terminalOutputChunks = [];
         for (const cb of this.exitCallbacks) {
-          cb(code, this.terminalOutput);
+          cb(code, terminalOutput);
         }
       }
     });
+
     // Terminate any task processes on exit
-    process.on('exit', () => {
-      this.childProcess.kill();
-    });
-    process.on('SIGINT', () => {
-      this.childProcess.kill('SIGTERM');
-      // we exit here because we don't need to write anything to cache.
-      process.exit(signalToCode('SIGINT'));
-    });
-    process.on('SIGTERM', () => {
-      this.childProcess.kill('SIGTERM');
-      // no exit here because we expect child processes to terminate which
-      // will store results to the cache and will terminate this process
-    });
-    process.on('SIGHUP', () => {
-      this.childProcess.kill('SIGTERM');
-      // no exit here because we expect child processes to terminate which
-      // will store results to the cache and will terminate this process
-    });
+    process.on('exit', onExit);
+    process.on('SIGINT', onSigInt);
+    process.on('SIGTERM', onSigTerm);
+    process.on('SIGHUP', onSigHup);
   }
 }
 
 export async function runSingleCommandWithPseudoTerminal(
   normalized: NormalizedRunCommandsOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
+  taskId: string
 ): Promise<PseudoTtyProcess> {
   const pseudoTerminal = createPseudoTerminal();
   const pseudoTtyProcess = await createProcessWithPseudoTty(
@@ -521,6 +572,14 @@ export async function runSingleCommandWithPseudoTerminal(
     pseudoTerminal ? normalized.isTTY : false,
     normalized.envFile
   );
+
+  // Register process for metrics collection (direct run-commands execution)
+  // Skip registration if we're in a forked executor - the fork wrapper already registered
+  const pid = pseudoTtyProcess.getPid();
+  if (pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
+    registerTaskProcessStart(taskId, pid);
+  }
+
   registerProcessListener(pseudoTtyProcess, pseudoTerminal);
   return pseudoTtyProcess;
 }
@@ -549,19 +608,19 @@ function addColorAndPrefix(out: string, config: RunCommandsCommandOptions) {
       .split('\n')
       .map((l) => {
         let prefixText = config.prefix;
-        if (config.prefixColor && chalk[config.prefixColor]) {
-          prefixText = chalk[config.prefixColor](prefixText);
+        if (config.prefixColor && pc[config.prefixColor]) {
+          prefixText = pc[config.prefixColor](prefixText);
         }
-        prefixText = chalk.bold(prefixText);
+        prefixText = pc.bold(prefixText);
         return l.trim().length > 0 ? `${prefixText} ${l}` : l;
       })
       .join('\n');
   }
-  if (config.color && chalk[config.color]) {
-    out = chalk[config.color](out);
+  if (config.color && pc[config.color]) {
+    out = pc[config.color](out);
   }
-  if (config.bgColor && chalk[config.bgColor]) {
-    out = chalk[config.bgColor](out);
+  if (config.bgColor && pc[config.bgColor]) {
+    out = pc[config.bgColor](out);
   }
   return out;
 }
@@ -607,6 +666,9 @@ function processEnv(
   if (color) {
     res.FORCE_COLOR = `${color}`;
   }
+  // Don't leak NX_PREFIX_OUTPUT to child processes — the parent
+  // task-orchestrator handles prefixing, not the spawned commands.
+  delete res.NX_PREFIX_OUTPUT;
   return res;
 }
 
@@ -663,8 +725,6 @@ function registerProcessListener(
   });
   process.on('SIGINT', () => {
     runningTask.kill('SIGTERM');
-    // we exit here because we don't need to write anything to cache.
-    process.exit(signalToCode('SIGINT'));
   });
   process.on('SIGTERM', () => {
     runningTask.kill('SIGTERM');

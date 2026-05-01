@@ -29,6 +29,7 @@ export function updateDependencies(tree: Tree) {
       typescript: typescriptVersion,
       vite: viteVersion,
       '@nx/vite': nxVersion,
+      '@nx/vitest': nxVersion,
     }
   );
 }

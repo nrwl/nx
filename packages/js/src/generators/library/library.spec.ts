@@ -136,7 +136,7 @@ describe('lib', () => {
         });
         const tsconfigJson = readJson(tree, '/tsconfig.base.json');
         expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-          'my-lib/src/index.ts',
+          './my-lib/src/index.ts',
         ]);
       });
 
@@ -150,7 +150,7 @@ describe('lib', () => {
 
         const tsconfigJson = readJson(tree, 'tsconfig.json');
         expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-          'my-lib/src/index.ts',
+          './my-lib/src/index.ts',
         ]);
       });
 
@@ -166,7 +166,7 @@ describe('lib', () => {
         });
         const tsconfigJson = readJson(tree, '/tsconfig.base.json');
         expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-          'my-lib/src/index.ts',
+          './my-lib/src/index.ts',
         ]);
       });
 
@@ -254,7 +254,7 @@ describe('lib', () => {
           name: 'my-lib',
           directory: 'my-dir/my-lib',
         });
-        expect(tree.exists(`my-dir/my-lib/jest.config.ts`)).toBeTruthy();
+        expect(tree.exists(`my-dir/my-lib/jest.config.cts`)).toBeTruthy();
         expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
         expect(tree.exists('my-dir/my-lib/src/lib/my-lib.ts')).toBeTruthy();
         expect(
@@ -286,7 +286,7 @@ describe('lib', () => {
         });
         const tsconfigJson = readJson(tree, '/tsconfig.base.json');
         expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-          'my-dir/my-lib/src/index.ts',
+          './my-dir/my-lib/src/index.ts',
         ]);
         expect(tsconfigJson.compilerOptions.paths['my-lib/*']).toBeUndefined();
       });
@@ -302,7 +302,7 @@ describe('lib', () => {
 
         const tsconfigJson = readJson(tree, '/tsconfig.json');
         expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-          'my-dir/my-lib/src/index.ts',
+          './my-dir/my-lib/src/index.ts',
         ]);
         expect(tsconfigJson.compilerOptions.paths['my-lib/*']).toBeUndefined();
       });
@@ -507,7 +507,7 @@ describe('lib', () => {
       }
     );
 
-    it('should ignore rollup and vite config files when bundler=rollup and unitTestRunner=vitest', async () => {
+    it('should ignore rollup and vitest config files when bundler=rollup and unitTestRunner=vitest', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
         directory: 'my-lib',
@@ -526,7 +526,7 @@ describe('lib', () => {
               ignoredFiles: [
                 '{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}',
                 '{projectRoot}/rollup.config.{js,ts,mjs,mts,cjs,cts}',
-                '{projectRoot}/vite.config.{js,ts,mjs,mts}',
+                '{projectRoot}/vitest.config.{js,ts,mjs,mts}',
               ],
             },
           ],
@@ -534,7 +534,7 @@ describe('lib', () => {
       });
     });
 
-    it('should ignore esbuild and vite config files when bundler=esbuild and unitTestRunner=vitest', async () => {
+    it('should ignore esbuild and vitest config files when bundler=esbuild and unitTestRunner=vitest', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
         directory: 'my-lib',
@@ -553,7 +553,7 @@ describe('lib', () => {
               ignoredFiles: [
                 '{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}',
                 '{projectRoot}/esbuild.config.{js,ts,mjs,mts}',
-                '{projectRoot}/vite.config.{js,ts,mjs,mts}',
+                '{projectRoot}/vitest.config.{js,ts,mjs,mts}',
               ],
             },
           ],
@@ -730,7 +730,7 @@ describe('lib', () => {
         });
         const tsconfigJson = readJson(tree, '/tsconfig.base.json');
         expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-          'my-lib/src/index.js',
+          './my-lib/src/index.js',
         ]);
       });
 
@@ -862,10 +862,10 @@ describe('lib', () => {
 
         expect(tree.exists('my-lib/tsconfig.spec.json')).toBeTruthy();
         expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeTruthy();
-        expect(tree.exists('my-lib/jest.config.ts')).toBeTruthy();
-        expect(tree.read('my-lib/jest.config.ts', 'utf-8'))
+        expect(tree.exists('my-lib/jest.config.cts')).toBeTruthy();
+        expect(tree.read('my-lib/jest.config.cts', 'utf-8'))
           .toMatchInlineSnapshot(`
-                  "export default {
+                  "module.exports = {
                     displayName: 'my-lib',
                     preset: '../jest.preset.js',
                     transform: {
@@ -897,41 +897,41 @@ describe('lib', () => {
 
         expect(tree.exists('my-lib/tsconfig.spec.json')).toBeTruthy();
         expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeTruthy();
-        expect(tree.exists('my-lib/jest.config.ts')).toBeTruthy();
-        expect(tree.read('my-lib/jest.config.ts', 'utf-8'))
+        expect(tree.exists('my-lib/jest.config.cts')).toBeTruthy();
+        expect(tree.read('my-lib/jest.config.cts', 'utf-8'))
           .toMatchInlineSnapshot(`
-        "/* eslint-disable */
-        import { readFileSync } from 'fs';
+                  "/* eslint-disable */
+                  const { readFileSync } = require('fs');
 
-        // Reading the SWC compilation config and remove the "exclude"
-        // for the test files to be compiled by SWC
-        const { exclude: _, ...swcJestConfig } = JSON.parse(
-          readFileSync(\`\${__dirname}/.swcrc\`, 'utf-8')
-        );
+                  // Reading the SWC compilation config and remove the "exclude"
+                  // for the test files to be compiled by SWC
+                  const { exclude: _, ...swcJestConfig } = JSON.parse(
+                    readFileSync(\`\${__dirname}/.swcrc\`, 'utf-8'),
+                  );
 
-        // disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves.
-        // If we do not disable this, SWC Core will read .swcrc and won't transform our test files due to "exclude"
-        if (swcJestConfig.swcrc === undefined) {
-          swcJestConfig.swcrc = false;
-        }
+                  // disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves.
+                  // If we do not disable this, SWC Core will read .swcrc and won't transform our test files due to "exclude"
+                  if (swcJestConfig.swcrc === undefined) {
+                    swcJestConfig.swcrc = false;
+                  }
 
-        // Uncomment if using global setup/teardown files being transformed via swc
-        // https://nx.dev/nx-api/jest/documents/overview#global-setupteardown-with-nx-libraries
-        // jest needs EsModule Interop to find the default exported setup/teardown functions
-        // swcJestConfig.module.noInterop = false;
+                  // Uncomment if using global setup/teardown files being transformed via swc
+                  // https://nx.dev/nx-api/jest/documents/overview#global-setupteardown-with-nx-libraries
+                  // jest needs EsModule Interop to find the default exported setup/teardown functions
+                  // swcJestConfig.module.noInterop = false;
 
-        export default {
-          displayName: 'my-lib',
-          preset: '../jest.preset.js',
-          transform: {
-            '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
-          },
-          moduleFileExtensions: ['ts', 'js', 'html'],
-          testEnvironment: 'jsdom',
-          coverageDirectory: '../coverage/my-lib',
-        };
-        "
-      `);
+                  module.exports = {
+                    displayName: 'my-lib',
+                    preset: '../jest.preset.js',
+                    transform: {
+                      '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
+                    },
+                    moduleFileExtensions: ['ts', 'js', 'html'],
+                    testEnvironment: 'jsdom',
+                    coverageDirectory: '../coverage/my-lib',
+                  };
+                  "
+              `);
         const readme = tree.read('my-lib/README.md', 'utf-8');
         expect(readme).toContain('nx test my-lib');
         // assert the TS solution setup doesn't leak into the old/integrated setup
@@ -1037,7 +1037,7 @@ describe('lib', () => {
           bundler: 'swc',
         });
 
-        const jestConfig = tree.read('my-lib/jest.config.ts').toString();
+        const jestConfig = tree.read('my-lib/jest.config.cts').toString();
         expect(jestConfig).toContain('@swc/jest');
       });
 
@@ -1114,7 +1114,7 @@ describe('lib', () => {
           compiler: 'swc',
         });
 
-        const jestConfig = tree.read('my-lib/jest.config.ts').toString();
+        const jestConfig = tree.read('my-lib/jest.config.cts').toString();
         expect(jestConfig).toContain('@swc/jest');
       });
 
@@ -1637,6 +1637,27 @@ describe('lib', () => {
         },
       });
     });
+
+    it('should keep esbuild aligned with vite when generating mixed bundler libraries', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'esbuild-lib',
+        bundler: 'esbuild',
+        unitTestRunner: 'none',
+      });
+      const esbuildVersion = readJson(tree, 'package.json').devDependencies
+        .esbuild;
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'vite-lib',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies.esbuild).toBe(esbuildVersion);
+    });
   });
 
   describe('--bundler=rollup', () => {
@@ -1773,7 +1794,7 @@ describe('lib', () => {
   });
 
   describe('--testEnvironment', () => {
-    it('should generate a vite config with testEnvironment set to node', async () => {
+    it('should generate a vitest config with testEnvironment set to node', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
         directory: 'my-node-lib',
@@ -1781,12 +1802,13 @@ describe('lib', () => {
         testEnvironment: 'node',
       });
 
-      const content = tree.read('my-node-lib/vite.config.ts', 'utf-8');
+      expect(tree.exists('my-node-lib/vite.config.ts')).toBe(false);
+      const content = tree.read('my-node-lib/vitest.config.mts', 'utf-8');
 
       expect(content).toContain(`environment: 'node'`);
     });
 
-    it('should generate a vite config with testEnvironment set to jsdom by default', async () => {
+    it('should generate a vitest config with testEnvironment set to jsdom by default', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
         directory: 'my-jsdom-lib',
@@ -1794,7 +1816,8 @@ describe('lib', () => {
         testEnvironment: undefined,
       });
 
-      const content = tree.read('my-jsdom-lib/vite.config.ts', 'utf-8');
+      expect(tree.exists('my-jsdom-lib/vite.config.ts')).toBe(false);
+      const content = tree.read('my-jsdom-lib/vitest.config.mts', 'utf-8');
 
       expect(content).toContain(`environment: 'jsdom'`);
     });
@@ -1849,7 +1872,7 @@ describe('lib', () => {
             "test": {
               "executor": "@nx/jest:jest",
               "options": {
-                "jestConfig": "my-lib/jest.config.ts",
+                "jestConfig": "my-lib/jest.config.cts",
               },
               "outputs": [
                 "{workspaceRoot}/coverage/{projectRoot}",
@@ -1900,10 +1923,10 @@ describe('lib', () => {
 
         expect(tree.read('pnpm-workspace.yaml', 'utf-8'))
           .toMatchInlineSnapshot(`
-        "packages:
-          - '${expected}'
-        "
-      `);
+          "packages:
+            - '${expected}'
+          "
+        `);
       }
     );
 
@@ -2040,7 +2063,7 @@ describe('lib', () => {
       expect(readJson(tree, 'my-ts-lib/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {
-            "@swc/helpers": "~0.5.11",
+            "@swc/helpers": "~0.5.18",
           },
           "exports": {
             ".": {
@@ -2093,7 +2116,7 @@ describe('lib', () => {
           },
           "sourceMaps": true,
           "exclude": [
-            "jest.config.ts",
+            "jest.config.[ct]s",
             ".*\\\\.spec.tsx?$",
             ".*\\\\.test.tsx?$",
             "./src/jest-setup.ts$",
@@ -2190,31 +2213,31 @@ describe('lib', () => {
 
         expect(tree.exists('my-lib/tsconfig.spec.json')).toBeTruthy();
         expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeTruthy();
-        expect(tree.exists('my-lib/jest.config.ts')).toBeTruthy();
-        expect(tree.read('my-lib/jest.config.ts', 'utf-8'))
+        expect(tree.exists('my-lib/jest.config.cts')).toBeTruthy();
+        expect(tree.read('my-lib/jest.config.cts', 'utf-8'))
           .toMatchInlineSnapshot(`
-        "/* eslint-disable */
-        import { readFileSync } from 'fs';
+                  "/* eslint-disable */
+                  const { readFileSync } = require('fs');
 
-        // Reading the SWC compilation config for the spec files
-        const swcJestConfig = JSON.parse(
-          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
-        );
+                  // Reading the SWC compilation config for the spec files
+                  const swcJestConfig = JSON.parse(
+                    readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
+                  );
 
-        // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
-        swcJestConfig.swcrc = false;
+                  // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
+                  swcJestConfig.swcrc = false;
 
-        export default {
-          displayName: '@proj/my-lib',
-          preset: '../jest.preset.js',
-          transform: {
-            '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
-          },
-          moduleFileExtensions: ['ts', 'js', 'html'],
-          coverageDirectory: 'test-output/jest/coverage',
-        };
-        "
-      `);
+                  module.exports = {
+                    displayName: '@proj/my-lib',
+                    preset: '../jest.preset.js',
+                    transform: {
+                      '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
+                    },
+                    moduleFileExtensions: ['ts', 'js', 'html'],
+                    coverageDirectory: 'test-output/jest/coverage',
+                  };
+                  "
+              `);
         expect(tree.read('my-lib/.spec.swcrc', 'utf-8')).toMatchInlineSnapshot(`
           "{
             "jsc": {
@@ -2272,7 +2295,7 @@ describe('lib', () => {
       ]);
     });
 
-    it('should exclude a non-buildable library from a plugin registration when it has a build target', async () => {
+    it('should not change the plugin registration for a non-buildable library when it has build options without skipBuildCheck', async () => {
       updateJson(tree, 'nx.json', (json) => {
         json.plugins ??= [];
         json.plugins.push({
@@ -2297,6 +2320,36 @@ describe('lib', () => {
           plugin: '@nx/js/typescript',
           options: {
             build: { targetName: 'build' },
+          },
+        },
+      ]);
+    });
+
+    it('should exclude a non-buildable library from a plugin registration when it has build options with skipBuildCheck', async () => {
+      updateJson(tree, 'nx.json', (json) => {
+        json.plugins ??= [];
+        json.plugins.push({
+          plugin: '@nx/js/typescript',
+          options: {
+            build: { targetName: 'build', skipBuildCheck: true },
+          },
+        });
+        return json;
+      });
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'packages/my-lib',
+        bundler: 'none',
+        unitTestRunner: 'none',
+        linter: 'none',
+      });
+
+      expect(readJson(tree, 'nx.json').plugins).toStrictEqual([
+        {
+          plugin: '@nx/js/typescript',
+          options: {
+            build: { targetName: 'build', skipBuildCheck: true },
           },
           exclude: ['packages/my-lib/*'],
         },

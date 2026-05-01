@@ -68,7 +68,7 @@ describe('vitest generator', () => {
       expect(
         readJson(tree, 'apps/my-test-angular-app/project.json').targets.test
           .executor
-      ).toBe('@nx/vite:test');
+      ).toBe('@nx/vitest:test');
     });
   });
 
@@ -144,7 +144,7 @@ describe('vitest generator', () => {
 
     it('should add @nx/vite dependency', async () => {
       const { devDependencies } = readJson(appTree, 'package.json');
-      expect(devDependencies['@nx/vite']).toBeDefined();
+      expect(devDependencies['@nx/vitest']).toBeDefined();
     });
 
     it('should create correct vite.config.ts file for apps', async () => {
@@ -235,7 +235,6 @@ describe('vitest generator', () => {
       expect(tree.read('apps/my-test-angular-app/src/test-setup.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import '@analogjs/vitest-angular/setup-zone';
-
         import {
           BrowserDynamicTestingModule,
           platformBrowserDynamicTesting,
@@ -244,7 +243,7 @@ describe('vitest generator', () => {
 
         getTestBed().initTestEnvironment(
           BrowserDynamicTestingModule,
-          platformBrowserDynamicTesting()
+          platformBrowserDynamicTesting(),
         );
         "
       `);

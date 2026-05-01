@@ -33,6 +33,12 @@
       "description": "Skip formatting files",
       "default": false,
       "x-priority": "internal"
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
     }
   },
   "required": ["project"],

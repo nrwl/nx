@@ -13,6 +13,7 @@
     "@nx/nx-dev-ui-icons": "workspace:*",
     "@nx/nx-dev-feature-search": "workspace:*",
     "@nx/nx-dev-models-menu": "workspace:*",
-    "@nx/nx-dev-ui-references": "workspace:*"
+    "@nx/nx-dev-ui-references": "workspace:*",
+    "@nx/nx-dev-ui-animations": "workspace:*"
   }
 }

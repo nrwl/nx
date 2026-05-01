@@ -1,7 +1,6 @@
 import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
 import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { setupTailwindGenerator } from '@nx/react';
 import { applicationGenerator } from '../application/application';
 import { libraryGenerator } from '../library/library';
 import { cypressComponentConfiguration } from './cypress-component-configuration';
@@ -58,7 +57,6 @@ describe('cypress-component-configuration generator', () => {
     expect(tree.read('demo/cypress.config.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';
       import { defineConfig } from 'cypress';
-
       export default defineConfig({
         component: nxComponentTestingPreset(__filename),
       });
@@ -82,10 +80,8 @@ describe('cypress-component-configuration generator', () => {
       // You can read more here:
       // https://on.cypress.io/configuration
       // ***********************************************************
-
       // Import commands.ts using ES2015 syntax:
       import './commands';
-
       // add component testing only related command here, such as mount
       declare global {
         // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -96,7 +92,6 @@ describe('cypress-component-configuration generator', () => {
           }
         }
       }
-
       Cypress.Commands.add('mount', mount);
       "
     `);
@@ -143,10 +138,8 @@ describe('cypress-component-configuration generator', () => {
       // You can read more here:
       // https://on.cypress.io/configuration
       // ***********************************************************
-
       // Import commands.ts using ES2015 syntax:
       import './commands';
-
       // add component testing only related command here, such as mount
       declare global {
         // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -157,34 +150,9 @@ describe('cypress-component-configuration generator', () => {
           }
         }
       }
-
       Cypress.Commands.add('mount', mount);
       "
     `);
-  });
-
-  it('should add styles setup in app', async () => {
-    await applicationGenerator(tree, {
-      directory: 'demo',
-      style: 'css',
-    });
-    await setupTailwindGenerator(tree, { project: 'demo' });
-    await cypressComponentConfiguration(tree, {
-      generateTests: false,
-      project: 'demo',
-    });
-
-    expect(tree.read('demo/cypress/support/styles.ct.css', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "/* This is where you can load global styles to apply to all components. */
-      @tailwind base;
-      @tailwind components;
-      @tailwind utilities;
-      "
-    `);
-    expect(tree.read('demo/cypress/support/component.ts', 'utf-8')).toContain(
-      `import './styles.ct.css';`
-    );
   });
 
   it('should setup nextjs lib', async () => {
@@ -222,7 +190,6 @@ describe('cypress-component-configuration generator', () => {
     expect(tree.read('demo/cypress.config.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';
       import { defineConfig } from 'cypress';
-
       export default defineConfig({
         component: nxComponentTestingPreset(__filename),
       });

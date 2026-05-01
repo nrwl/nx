@@ -1,9 +1,12 @@
-import { ExecutorContext } from '@nx/devkit';
+import { ExecutorContext, workspaceRoot } from '@nx/devkit';
 import { GradleExecutorSchema } from './schema';
-import { findGradlewFile } from '../../utils/exec-gradle';
+import {
+  findGradlewFile,
+  getCustomGradleExecutableDirectoryFromPlugin,
+} from '../../utils/exec-gradle';
 import { dirname, join } from 'node:path';
 import runCommandsImpl from 'nx/src/executors/run-commands/run-commands.impl';
-import { getExcludeTasks } from './get-exclude-task';
+import { getExcludeTasksFromTaskGraph } from './get-exclude-task';
 
 export default async function gradleExecutor(
   options: GradleExecutorSchema,
@@ -11,15 +14,28 @@ export default async function gradleExecutor(
 ): Promise<{ success: boolean }> {
   let projectRoot =
     context.projectGraph.nodes[context.projectName]?.data?.root ?? context.root;
-  let gradlewPath = findGradlewFile(join(projectRoot, 'project.json')); // find gradlew near project root
+  const customGradleExecutableDirectory =
+    getCustomGradleExecutableDirectoryFromPlugin(context.nxJsonConfiguration);
+
+  let gradlewPath = findGradlewFile(
+    join(projectRoot, 'project.json'),
+    workspaceRoot,
+    customGradleExecutableDirectory
+  ); // find gradlew near project root
   gradlewPath = join(context.root, gradlewPath);
+
+  if (options.taskName && options.taskName?.includes(' ')) {
+    throw new Error(
+      `Task "${options.taskName}" contains spaces. Only a single Gradle task is allowed per executor invocation.`
+    );
+  }
 
   let args =
     typeof options.args === 'string'
       ? options.args.trim().split(' ')
       : Array.isArray(options.args)
-      ? options.args
-      : [];
+        ? options.args
+        : [];
   if (options.testClassName) {
     args.push(`--tests`, options.testClassName);
   }
@@ -30,6 +46,7 @@ export default async function gradleExecutor(
     'testClassName',
     'args',
     'excludeDependsOn',
+    'includeDependsOnTasks',
     '__unparsed__',
   ]);
   Object.entries(options).forEach(([key, value]) => {
@@ -44,10 +61,17 @@ export default async function gradleExecutor(
     }
   });
 
-  if (options.excludeDependsOn) {
-    getExcludeTasks(
-      new Set([`${context.projectName}:${context.targetName}`]),
-      context.projectGraph.nodes
+  if (options.excludeDependsOn && context.taskGraph) {
+    const taskId = context.configurationName
+      ? `${context.projectName}:${context.targetName}:${context.configurationName}`
+      : `${context.projectName}:${context.targetName}`;
+    const includeDependsOnTasks = new Set(options.includeDependsOnTasks ?? []);
+    getExcludeTasksFromTaskGraph(
+      [taskId],
+      new Set([taskId]),
+      context.taskGraph,
+      context.projectGraph.nodes,
+      includeDependsOnTasks
     ).forEach((task) => {
       if (task) {
         args.push('--exclude-task', task);

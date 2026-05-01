@@ -9,6 +9,7 @@
   "files": ["src/test-setup.ts"],<% } %>
   "include": [
     "jest.config.ts",
+    "jest.config.cts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",<% if (supportTsx) { %>
     "src/**/*.test.tsx",

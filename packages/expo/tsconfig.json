@@ -4,25 +4,10 @@
   "include": [],
   "references": [
     {
-      "path": "../rollup"
-    },
-    {
-      "path": "../react"
-    },
-    {
-      "path": "../js"
-    },
-    {
-      "path": "../eslint"
-    },
-    {
-      "path": "../devkit"
-    },
-    {
-      "path": "../detox"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
-  ]
+  ],
+  "nx": {
+    "addTypecheckTarget": false
+  }
 }

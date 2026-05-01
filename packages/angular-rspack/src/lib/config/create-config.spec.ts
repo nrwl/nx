@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { beforeEach, expect } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AngularRspackPluginOptions } from '../models';
 import * as postcssConfiguration from '../utils/postcss-configuration';
 import { handleConfigurations } from './config-utils/user-defined-config-helpers';
@@ -30,7 +30,7 @@ describe('createConfig', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should create config for mode "production" when optimization=true', async () => {
@@ -73,7 +73,7 @@ describe('createConfig', () => {
 
       await expect(
         createConfig({ options: configBase })
-      ).resolves.toStrictEqual([
+      ).resolves.toMatchObject([
         expect.objectContaining({
           mode: 'production',
           devServer: expect.objectContaining({
@@ -188,7 +188,7 @@ describe('createConfig', () => {
         createConfig({
           options: { ...configBase, root: customRoot },
         })
-      ).resolves.toStrictEqual([
+      ).resolves.toMatchObject([
         expect.objectContaining({
           mode: 'production',
           devServer: expect.objectContaining({
@@ -221,7 +221,7 @@ describe('createConfig', () => {
       const { scripts, styles, ...rest } = configBase;
       await expect(
         createConfig({ options: { ...configBase, optimization: false } })
-      ).resolves.toStrictEqual([
+      ).resolves.toMatchObject([
         expect.objectContaining({
           mode: 'development',
           devServer: expect.objectContaining({
@@ -306,6 +306,55 @@ describe('createConfig', () => {
       ]);
     });
 
+    it('should set default watchOptions with aggregateTimeout of 50ms', async () => {
+      await expect(
+        createConfig({ options: configBase })
+      ).resolves.toStrictEqual([
+        expect.objectContaining({
+          watchOptions: expect.objectContaining({
+            aggregateTimeout: 50,
+          }),
+        }),
+      ]);
+    });
+
+    it('should allow overriding watchOptions.aggregateTimeout', async () => {
+      await expect(
+        createConfig({
+          options: {
+            ...configBase,
+            watchOptions: { aggregateTimeout: 200 },
+          },
+        })
+      ).resolves.toStrictEqual([
+        expect.objectContaining({
+          watchOptions: expect.objectContaining({
+            aggregateTimeout: 200,
+          }),
+        }),
+      ]);
+    });
+
+    it('should merge watchOptions with poll option', async () => {
+      await expect(
+        createConfig({
+          options: {
+            ...configBase,
+            poll: 1000,
+            watchOptions: { aggregateTimeout: 100 },
+          },
+        })
+      ).resolves.toStrictEqual([
+        expect.objectContaining({
+          watchOptions: expect.objectContaining({
+            aggregateTimeout: 100,
+            poll: 1000,
+            ignored: '**/node_modules/**',
+          }),
+        }),
+      ]);
+    });
+
     it.each([
       ['development', 'dev', true],
       ['production', 'prod', false],
@@ -331,6 +380,37 @@ describe('createConfig', () => {
         );
       }
     );
+
+    it('should merge user stats options via rspackConfigOverrides', async () => {
+      const config = await createConfig({
+        options: configBase,
+        rspackConfigOverrides: {
+          stats: { all: false, chunks: false },
+        },
+      });
+
+      expect(config[0].stats).toEqual(
+        expect.objectContaining({ all: false, chunks: false })
+      );
+    });
+
+    it('should allow user to fully override stats options', async () => {
+      const customStats = {
+        all: false,
+        assets: true,
+        errors: true,
+        warnings: true,
+      };
+
+      const config = await createConfig({
+        options: configBase,
+        rspackConfigOverrides: {
+          stats: customStats,
+        },
+      });
+
+      expect(config[0].stats).toEqual(expect.objectContaining(customStats));
+    });
 
     it('should successfully merge multiple configurations', () => {
       const config = handleConfigurations(

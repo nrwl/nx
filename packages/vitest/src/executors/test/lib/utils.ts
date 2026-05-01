@@ -1,0 +1,149 @@
+import {
+  ExecutorContext,
+  joinPathFragments,
+  logger,
+  stripIndents,
+  workspaceRoot,
+} from '@nx/devkit';
+import { VitestExecutorOptions } from '../schema';
+import { normalizeViteConfigFilePath } from '../../../utils/options-utils';
+import { isAbsolute, relative, resolve } from 'path';
+import {
+  loadViteDynamicImport,
+  loadVitestDynamicImport,
+} from '../../../utils/executor-utils';
+
+export async function getOptions(
+  options: VitestExecutorOptions,
+  context: ExecutorContext,
+  projectRoot: string
+): Promise<Record<string, any>> {
+  // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
+  const { loadConfigFromFile } = await loadViteDynamicImport();
+
+  const viteConfigPath = normalizeViteConfigFilePath(
+    context.root,
+    projectRoot,
+    options.configFile
+  );
+
+  if (!viteConfigPath) {
+    throw new Error(
+      stripIndents`
+        Unable to load test config from config file ${viteConfigPath}.
+        
+        Please make sure that vitest is configured correctly, 
+        or use the @nx/vitest:configuration generator to configure it for you.
+        You can read more here: https://nx.dev/nx-api/vitest/generators/configuration
+        `
+    );
+  }
+
+  const resolved = await loadConfigFromFile(
+    {
+      mode: options?.mode ?? 'test',
+      command: 'serve',
+    },
+    viteConfigPath
+  );
+
+  if (!resolved?.config?.['test']) {
+    logger.warn(stripIndents`Unable to load test config from config file ${
+      resolved?.path ?? viteConfigPath
+    }
+  Some settings may not be applied as expected.
+  You can manually set the config in the project, ${
+    context.projectName
+  }, configuration.
+        `);
+  }
+  const root =
+    projectRoot === '.'
+      ? process.cwd()
+      : relative(context.cwd, joinPathFragments(context.root, projectRoot));
+
+  const { parseCLI } = await loadVitestDynamicImport();
+
+  // Use parseCLI for Vitest-specific normalization/validation
+  const {
+    options: { watch, ...normalizedExtraArgs },
+  } = parseCLI(['vitest', ...getOptionsAsArgv(options)]);
+
+  // Filter out options that are handled specially or are parseCLI artifacts
+  const {
+    // Handled specially by executor
+    testFiles: _testFiles,
+    configFile: _configFile,
+    mode: _mode,
+    runMode: _runMode,
+    reportsDirectory,
+    coverage,
+    reporter,
+    reporters,
+    // parseCLI artifacts
+    '--': _dashdash,
+    color: _color,
+    w: _w,
+    // Pass through any additional Vitest options
+    ...passThroughOptions
+  } = normalizedExtraArgs as Record<string, any>;
+
+  return {
+    // Explicitly set watch mode to false if not provided otherwise vitest
+    // will enable watch mode by default for non CI environments
+    watch: watch ?? false,
+    // Pass through any additional Vitest options
+    ...passThroughOptions,
+    // This should not be needed as it's going to be set in vite.config.ts
+    // but leaving it here in case someone did not migrate correctly
+    root: resolved?.config?.root ?? root,
+    config: viteConfigPath,
+    // Vitest's resolveConfig processes reporters in two steps:
+    // 1. options.reporters (plural) sets resolved.reporters
+    // 2. resolved.reporter (singular, from config) overwrites resolved.reporters
+    // Setting reporter to [] prevents config's reporter from overriding NxReporter
+    // (which is pushed onto reporters in vitest.impl.ts).
+    reporter: [],
+    reporters:
+      reporter ??
+      reporters ??
+      // reporter (singular) has higher priority in vitest but is not declared in InlineConfig
+      (resolved?.config?.['test'] as Record<string, any>)?.reporter ??
+      resolved?.config?.['test']?.reporters,
+    coverage: {
+      ...(coverage ?? {}),
+      ...(reportsDirectory && {
+        reportsDirectory: resolveReportsDirectory(reportsDirectory),
+      }),
+    },
+  } as Record<string, any>;
+}
+
+/**
+ * Nx's resolveNxTokensInOptions strips {workspaceRoot}/ from option values,
+ * leaving a workspace-root-relative path. However, vitest resolves
+ * reportsDirectory relative to the project root. This function converts
+ * the path to absolute so vitest resolves it correctly.
+ */
+export function resolveReportsDirectory(reportsDirectory: string): string {
+  if (isAbsolute(reportsDirectory)) {
+    return reportsDirectory;
+  }
+  return resolve(workspaceRoot, reportsDirectory);
+}
+
+export function getOptionsAsArgv(obj: Record<string, any>): string[] {
+  const argv: string[] = [];
+
+  for (const [key, value] of Object.entries(obj)) {
+    if (Array.isArray(value)) {
+      value.forEach((item) => argv.push(`--${key}=${item}`));
+    } else if (typeof value === 'object' && value !== null) {
+      argv.push(`--${key}='${JSON.stringify(value)}'`);
+    } else {
+      argv.push(`--${key}=${value}`);
+    }
+  }
+
+  return argv;
+}

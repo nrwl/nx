@@ -21,7 +21,7 @@ export function ensureProjectIsIncludedInPluginRegistrations(
 
     if (typeof registration === 'string') {
       if (buildTargetName) {
-        // if it's a string all projects are included but the are no user-specified options
+        // if it's a string all projects are included but there are no user-specified options
         // and the build task is not inferred by default, so we need to exclude it
         nxJson.plugins[index] = {
           plugin: '@nx/js/typescript',
@@ -110,52 +110,6 @@ export function ensureProjectIsIncludedInPluginRegistrations(
   }
 }
 
-export function ensureProjectIsExcludedFromPluginRegistrations(
-  nxJson: NxJsonConfiguration,
-  projectRoot: string
-): void {
-  if (
-    !nxJson.plugins?.length ||
-    !nxJson.plugins.some(isTypeScriptPluginRegistration)
-  ) {
-    return;
-  }
-
-  let index = 0;
-  for (const registration of nxJson.plugins) {
-    if (!isTypeScriptPluginRegistration(registration)) {
-      index++;
-      continue;
-    }
-
-    if (typeof registration === 'string') {
-      // if it's a string, it includes all projects, so we need to exclude it
-      nxJson.plugins[index] = {
-        plugin: '@nx/js/typescript',
-        exclude: [`${projectRoot}/*`],
-      };
-    } else {
-      // check if the project would be included by the plugin registration
-      const matchingConfigFiles = findMatchingConfigFiles(
-        [`${projectRoot}/tsconfig.json`],
-        '**/tsconfig.json',
-        registration.include,
-        registration.exclude
-      );
-      if (
-        matchingConfigFiles.length &&
-        (registration.options?.typecheck !== false ||
-          registration.options?.build)
-      ) {
-        // the project is included by a plugin registration that infers any of the targets, so we need to exclude it
-        registration.exclude ??= [];
-        registration.exclude.push(`${projectRoot}/*`);
-      }
-    }
-    index++;
-  }
-}
-
 function isTypeScriptPluginRegistration(
   plugin: string | ExpandedPluginConfiguration
 ): plugin is string | ExpandedPluginConfiguration<TscPluginOptions> {
@@ -174,7 +128,13 @@ function matchesBuildTargetDefinition(
   }
 
   if (!buildTargetName) {
-    return false;
+    // we don't want a build target to be inferred, in which case we'll generate
+    // the package.json with the entry points pointing to source, so, as long as
+    // we don't skip the build check, this registration is valid even if it has
+    // build options defined
+    return typeof buildOptions === 'object'
+      ? !buildOptions.skipBuildCheck
+      : true;
   }
 
   if (buildOptions === true && buildTargetName === 'build') {

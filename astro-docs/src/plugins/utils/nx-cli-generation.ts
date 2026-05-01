@@ -8,6 +8,7 @@ export interface ParsedCliCommand {
   name?: string;
   command?: string;
   description?: string;
+  supportedVersionRange?: string;
   aliases?: string[];
   options?: Array<{
     name: string[];
@@ -16,6 +17,11 @@ export interface ParsedCliCommand {
     default?: any;
     deprecated?: boolean | string;
     choices?: string[];
+  }>;
+  subcommands?: ParsedCliCommand[];
+  examples?: Array<{
+    command: string;
+    description: string;
   }>;
 }
 
@@ -37,6 +43,7 @@ export async function loadNxCliPackage(
       cwd: workspaceRoot,
       silent: true,
       stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+      windowsHide: true,
     });
 
     child.on('message', (message: any) => {
@@ -83,8 +90,8 @@ export async function loadNxCliPackage(
       docType: 'cli',
       description: 'Complete reference for Nx CLI commands',
       filter: 'type:References',
+      weight: 4,
     },
-    // @ts-expect-error - astro types are mismatched bc of auto generated location loading, etc
     rendered: await renderMarkdown(markdown),
     collection: 'nx-reference-packages',
   };
@@ -92,83 +99,188 @@ export async function loadNxCliPackage(
   return entry;
 }
 
+interface FlattenedCommand {
+  fullName: string;
+  cmd: ParsedCliCommand;
+  parentOptions?: ParsedCliCommand['options'];
+}
+
+function flattenCommands(
+  commands: Record<string, ParsedCliCommand>
+): FlattenedCommand[] {
+  const allCommands: FlattenedCommand[] = [];
+
+  const visit = (
+    cmd: ParsedCliCommand,
+    fullName: string,
+    parentOptions?: ParsedCliCommand['options']
+  ) => {
+    allCommands.push({ fullName, cmd, parentOptions });
+
+    if (!cmd.subcommands) {
+      return;
+    }
+
+    for (const sub of cmd.subcommands) {
+      // For $0 (default command), use parent name; otherwise, combine parent and sub name
+      const subName =
+        sub.command?.startsWith('$0') || sub.name === '$0'
+          ? fullName
+          : `${fullName} ${sub.name}`;
+      visit(sub, subName, cmd.options ?? []);
+    }
+  };
+
+  for (const [cmdName, cmd] of Object.entries(commands)) {
+    visit(cmd, cmdName);
+  }
+
+  return allCommands.sort((a, b) => a.fullName.localeCompare(b.fullName));
+}
+
+function generateOptionsTable(
+  options: ParsedCliCommand['options'],
+  label = 'Options'
+): string {
+  if (!options || options.length === 0) {
+    return '';
+  }
+
+  let section = `\n#### ${label}\n\n`;
+  section += '| Option | Type | Description | Default |\n';
+  section += '|--------|------|-------------|---------|\n';
+
+  const sortedOptions = [...options].sort((a, b) =>
+    a.name[0].localeCompare(b.name[0])
+  );
+
+  for (const option of sortedOptions) {
+    // Format option names following the convention:
+    // - Canonical (first) option always gets --
+    // - Single-character aliases get -
+    // - Multi-character aliases get --
+    const [canonical, ...aliases] = option.name;
+    const formattedNames = [canonical, ...aliases].map((name) => {
+      if (name === canonical) {
+        return `\`--${name}\``;
+      }
+      return name.length === 1 ? `\`-${name}\`` : `\`--${name}\``;
+    });
+    const optionNames = formattedNames.join(', ');
+    let description = option.description || '';
+
+    if (option.deprecated) {
+      description += ` **⚠️ Deprecated**${
+        option.deprecated !== true ? `: ${option.deprecated}` : ''
+      }`;
+    }
+
+    if (option.choices && option.choices.length > 0) {
+      description += ` (choices: ${option.choices
+        .map((c) => `\`${c}\``)
+        .join(', ')})`;
+    }
+
+    const defaultValue =
+      option.default !== undefined
+        ? `\`${JSON.stringify(option.default).replace(/"/g, '')}\``
+        : '';
+
+    section += `| ${optionNames} | ${option.type} | ${
+      description || '_No Description_'
+    } | ${defaultValue} |\n`;
+  }
+
+  section += '\n';
+  return section;
+}
+
+function generateExamplesSection(
+  examples: ParsedCliCommand['examples'],
+  commandName: string
+): string {
+  if (!examples || examples.length === 0) {
+    return '';
+  }
+
+  let section = `\n#### \`nx ${commandName}\` Examples\n\n`;
+
+  for (const example of examples) {
+    section += `${example.description}:\n\n`;
+    section += `\`\`\`bash\nnx ${example.command}\n\`\`\`\n\n`;
+  }
+
+  return section;
+}
+
+function generateVersionNote(
+  commandName: string,
+  supportedVersionRange?: string
+): string {
+  if (!supportedVersionRange) {
+    return '';
+  }
+
+  return `\n**Requires ${supportedVersionRange}**\n\n`;
+}
+
 function generateCLIMarkdown(
   commands: Record<string, ParsedCliCommand>
 ): string {
-  const commandNames = Object.keys(commands).sort();
+  const flattenedCommands = flattenCommands(commands);
 
   const content = `
-The Nx command line has various subcommands and options to help you manage your Nx workspace and run tasks efficiently. 
+The Nx command line has various subcommands and options to help you manage your Nx workspace and run tasks efficiently.
 Below is a complete reference for all available commands and their options.
-You can run nx --help to view all available options. 
+You can run nx --help to view all available options.
 
-## Available Commands
+${flattenedCommands
+  .map(({ fullName, cmd, parentOptions }) => {
+    const isSubCommand = parentOptions !== undefined;
+    const headingLevel = isSubCommand ? '###' : '##';
 
-${commandNames
-  .map((cmdName) => {
-    const cmd = commands[cmdName];
-    let section = `### \`nx ${cmdName}\`\n`;
+    let section = `${headingLevel} \`nx ${fullName}\`\n`;
 
+    section += generateVersionNote(fullName, cmd.supportedVersionRange);
     section += cmd.description || 'No description available';
 
     if (cmd.aliases && cmd.aliases.length > 0) {
-      section += `**Aliases:** ${cmd.aliases
+      section += `\n\n**Aliases:** ${cmd.aliases
         .map((alias) => `\`${alias}\``)
         .join(', ')}`;
     }
 
+    // Build the usage command string
+    let usageCmd: string;
+    if (cmd.command && cmd.command.includes('$0')) {
+      // Has $0 placeholder - replace with full name
+      usageCmd = cmd.command.replace('$0', fullName);
+    } else if (cmd.command && parentOptions !== undefined) {
+      // Sub-command without $0: use fullName, append positional args from cmd.command
+      const firstSpaceIdx = cmd.command.indexOf(' ');
+      usageCmd =
+        firstSpaceIdx !== -1
+          ? fullName + cmd.command.substring(firstSpaceIdx)
+          : fullName;
+    } else {
+      usageCmd = cmd.command || fullName;
+    }
+
     section += `\n\n**Usage:**
 \`\`\`bash
-nx ${cmd.command || cmdName}
+nx ${usageCmd}
 \`\`\`
 `;
 
+    // Add examples section if available
+    section += generateExamplesSection(cmd.examples, fullName);
+
+    // If this is a parent command with subcommands, label options as "Shared Options"
+    const hasSubcommands = cmd.subcommands && cmd.subcommands.length > 0;
+    const optionsLabel = hasSubcommands ? 'Shared Options' : 'Options';
+
     // Add options table if there are options
-    if (cmd.options && cmd.options.length > 0) {
-      section += '\n#### Options\n\n';
-      section += '| Option | Type | Description | Default |\n';
-      section += '|--------|------|-------------|---------|\n';
-
-      const sortedOptions = cmd.options.sort((a, b) =>
-        a.name[0].localeCompare(b.name[0])
-      );
-
-      for (const option of sortedOptions) {
-        const optionNames = option.name.map((n) => `\`--${n}\``).join(', ');
-        let description = option.description || '';
-
-        if (option.name.length > 1) {
-          const aliases = option.name
-            .slice(1)
-            .map((a) => `\`-${a}\``)
-            .join(', ');
-          description += ` (alias: ${aliases})`;
-        }
-
-        if (option.deprecated) {
-          description += ` **⚠️ Deprecated**${
-            option.deprecated !== true ? `: ${option.deprecated}` : ''
-          }`;
-        }
-
-        if (option.choices && option.choices.length > 0) {
-          description += ` (choices: ${option.choices
-            .map((c) => `\`${c}\``)
-            .join(', ')})`;
-        }
-
-        const defaultValue =
-          option.default !== undefined
-            ? `\`${JSON.stringify(option.default).replace(/"/g, '')}\``
-            : '';
-
-        section += `| ${optionNames} | ${option.type} | ${
-          description || '_No Description_'
-        } | ${defaultValue} |\n`;
-      }
-
-      section += '\n';
-    }
+    section += generateOptionsTable(cmd.options, optionsLabel);
 
     return section;
   })

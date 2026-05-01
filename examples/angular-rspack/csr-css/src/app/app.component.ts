@@ -6,6 +6,7 @@ import { ApiService } from './api.service';
 import { NxWelcomeComponent } from './nx-welcome.component';
 import { ScssInlineTestComponent } from './scss-inline-test';
 import pkg from '../../package.json';
+import timezones from './data/timezones.json';
 
 declare const nxAngularRspack: string;
 
@@ -35,6 +36,8 @@ export class AppComponent implements OnInit {
     // console.log('version', version);
 
     console.log('version', pkg.version);
+    console.log('timezones', timezones);
+    console.log('UTC offset', timezones.UTC);
   }
 }
 

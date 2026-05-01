@@ -39,6 +39,7 @@ export function addAppFiles(tree: Tree, options: NormalizedSchema) {
               main: './src/main' + (options.js ? '.js' : '.ts'),
               tsConfig: './tsconfig.app.json',
               assets: ['./src/assets'],
+              generatePackageJson: !options.isUsingTsSolutionConfig,
             }
           : null,
     }

@@ -4,6 +4,7 @@ import {
   logger,
   parseTargetString,
   readTargetOptions,
+  workspaceRoot,
 } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
@@ -53,13 +54,19 @@ export function normalizeViteConfigFilePath(
 export function getProjectTsConfigPath(
   projectRoot: string
 ): string | undefined {
-  return existsSync(joinPathFragments(projectRoot, 'tsconfig.app.json'))
+  return existsSync(
+    joinPathFragments(workspaceRoot, projectRoot, 'tsconfig.app.json')
+  )
     ? joinPathFragments(projectRoot, 'tsconfig.app.json')
-    : existsSync(joinPathFragments(projectRoot, 'tsconfig.lib.json'))
-    ? joinPathFragments(projectRoot, 'tsconfig.lib.json')
-    : existsSync(joinPathFragments(projectRoot, 'tsconfig.json'))
-    ? joinPathFragments(projectRoot, 'tsconfig.json')
-    : undefined;
+    : existsSync(
+          joinPathFragments(workspaceRoot, projectRoot, 'tsconfig.lib.json')
+        )
+      ? joinPathFragments(projectRoot, 'tsconfig.lib.json')
+      : existsSync(
+            joinPathFragments(workspaceRoot, projectRoot, 'tsconfig.json')
+          )
+        ? joinPathFragments(projectRoot, 'tsconfig.json')
+        : undefined;
 }
 
 /**

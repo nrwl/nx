@@ -1,6 +1,7 @@
 import { logger } from './logger';
 import { getPackageManagerCommand } from './package-manager';
 import { workspaceRoot } from './workspace-root';
+import { handleImport } from './handle-import';
 import type { NxKey } from '@nx/key';
 
 export function createNxKeyLicenseeInformation(nxKey: NxKey) {
@@ -31,7 +32,7 @@ export async function getNxKeyInformation(): Promise<NxKey | null> {
     const {
       getPowerpackLicenseInformation,
       getPowerpackLicenseInformationAsync,
-    } = (await import(
+    } = (await handleImport(
       '@nx/powerpack-license'
     )) as typeof import('@nx/powerpack-license');
     return (
@@ -39,7 +40,7 @@ export async function getNxKeyInformation(): Promise<NxKey | null> {
     )(workspaceRoot);
   } catch (e) {
     try {
-      const { getNxKeyInformationAsync } = (await import(
+      const { getNxKeyInformationAsync } = (await handleImport(
         '@nx/key'
       )) as typeof import('@nx/key');
       return getNxKeyInformationAsync(workspaceRoot);

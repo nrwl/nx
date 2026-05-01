@@ -16,7 +16,8 @@
     "Backend"
   ],
   "main": "./index.js",
-  "typings": "./index.d.ts",
+  "type": "commonjs",
+  "types": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -27,6 +28,10 @@
   "exports": {
     ".": "./index.js",
     "./plugin-v1": "./plugin-v1.js",
+    "./executors/*/schema.json": "./src/executors/*/schema.json",
+    "./executors/*/schema": "./src/executors/*/schema.d.ts",
+    "./generators/*/schema.json": "./src/generators/*/schema.json",
+    "./generators/*/schema": "./src/generators/*/schema.d.ts",
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json"
@@ -36,7 +41,9 @@
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "toml-eslint-parser": "^0.10.0"
+    "toml-eslint-parser": "^0.10.0",
+    "tree-kill": "^1.2.2",
+    "tslib": "catalog:typescript"
   },
   "devDependencies": {
     "nx": "workspace:*"

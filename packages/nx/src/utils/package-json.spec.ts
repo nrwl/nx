@@ -1,13 +1,24 @@
+jest.mock('child_process');
+
 import { join } from 'path';
-import { workspaceRoot } from './workspace-root';
+import * as childProcess from 'child_process';
+import { mkdtempSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
+import { createTreeWithEmptyWorkspace } from '../generators/testing-utils/create-tree-with-empty-workspace';
+import type { Tree } from '../generators/tree';
+import { writeJson } from '../generators/utils/json';
 import { readJsonFile } from './fileutils';
 import {
   buildTargetFromScript,
+  getDependencyVersionFromPackageJson,
+  installPackageToTmp,
   PackageJson,
   readModulePackageJson,
   readTargetsFromPackageJson,
 } from './package-json';
+import * as pacakgeManager from './package-manager';
 import { getPackageManagerCommand } from './package-manager';
+import { workspaceRoot } from './workspace-root';
 
 describe('buildTargetFromScript', () => {
   it('should use nx:run-script', () => {
@@ -20,7 +31,61 @@ describe('buildTargetFromScript', () => {
   });
 });
 
+describe('installPackageToTmp', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('should always disable lifecycle scripts via environment variables', () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'nx-install-test-'));
+    const cleanup = jest.fn(() =>
+      rmSync(tempDir, { recursive: true, force: true })
+    );
+    jest.spyOn(pacakgeManager, 'createTempNpmDirectory').mockReturnValue({
+      dir: tempDir,
+      cleanup,
+    });
+    jest.spyOn(pacakgeManager, 'detectPackageManager').mockReturnValue('yarn');
+    jest
+      .spyOn(pacakgeManager, 'getPackageManagerVersion')
+      .mockReturnValue('4.0.0');
+    jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+      preInstall: 'yarn set version 4.0.0',
+      addDev: 'yarn add -D',
+      ignoreScriptsFlag: undefined,
+    } as any);
+    const execSyncSpy = jest
+      .spyOn(childProcess, 'execSync')
+      .mockReturnValue('' as any);
+
+    installPackageToTmp('nx', 'latest');
+
+    expect(execSyncSpy).toHaveBeenCalledTimes(2);
+    for (const [, options] of execSyncSpy.mock.calls) {
+      expect(options).toEqual(
+        expect.objectContaining({
+          env: expect.objectContaining({
+            YARN_ENABLE_SCRIPTS: 'false',
+          }),
+        })
+      );
+    }
+
+    cleanup();
+  });
+});
+
 describe('readTargetsFromPackageJson', () => {
+  beforeEach(() => {
+    jest
+      .spyOn(pacakgeManager, 'getPackageManagerCommand')
+      .mockReturnValue({ run: (script) => `npm run ${script}` } as any);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   const packageJson: PackageJson = {
     name: 'my-app',
     version: '0.0.0',
@@ -264,6 +329,33 @@ describe('readTargetsFromPackageJson', () => {
     `);
   });
 
+  it('should override script target when nx target uses command shorthand', () => {
+    const result = readTargetsFromPackageJson(
+      {
+        name: 'my-other-app',
+        version: '',
+        scripts: {
+          build: 'echo 1',
+        },
+        nx: {
+          targets: {
+            build: {
+              command: 'echo 2',
+            },
+          },
+        },
+      },
+      {},
+      workspaceRoot,
+      '/root'
+    );
+    expect(result.build).toMatchInlineSnapshot(`
+      {
+        "command": "echo 2",
+      }
+    `);
+  });
+
   it('should override script if provided in options', () => {
     const result = readTargetsFromPackageJson(
       {
@@ -420,4 +512,300 @@ describe('readModulePackageJson', () => {
       expect(() => readModulePackageJson(s)).not.toThrow();
     }
   );
+});
+
+describe('getDependencyVersionFromPackageJson', () => {
+  let tree: Tree;
+
+  beforeEach(() => {
+    tree = createTreeWithEmptyWorkspace();
+  });
+
+  it('should get single package version from root package.json', () => {
+    writeJson(tree, 'package.json', {
+      dependencies: { react: '^18.2.0' },
+      devDependencies: { jest: '^29.0.0' },
+    });
+
+    const reactVersion = getDependencyVersionFromPackageJson(tree, 'react');
+    const jestVersion = getDependencyVersionFromPackageJson(tree, 'jest');
+
+    expect(reactVersion).toBe('^18.2.0');
+    expect(jestVersion).toBe('^29.0.0');
+  });
+
+  it('should return null for non-existent package', () => {
+    writeJson(tree, 'package.json', {
+      dependencies: { react: '^18.2.0' },
+    });
+
+    const version = getDependencyVersionFromPackageJson(tree, 'non-existent');
+    expect(version).toBeNull();
+  });
+
+  it('should prioritize dependencies over devDependencies', () => {
+    writeJson(tree, 'package.json', {
+      dependencies: { react: '^18.0.0' },
+      devDependencies: { react: '^18.2.0' },
+    });
+
+    const version = getDependencyVersionFromPackageJson(tree, 'react');
+    expect(version).toBe('^18.0.0');
+  });
+
+  it('should read from specific package.json path', () => {
+    writeJson(tree, 'packages/my-lib/package.json', {
+      dependencies: { '@my/util': '^1.0.0' },
+    });
+
+    const version = getDependencyVersionFromPackageJson(
+      tree,
+      '@my/util',
+      'packages/my-lib/package.json'
+    );
+    expect(version).toBe('^1.0.0');
+  });
+
+  it('should work with pre-loaded package.json object', () => {
+    const packageJson: PackageJson = {
+      name: 'test',
+      version: '1.0.0',
+      dependencies: { react: '^18.2.0' },
+      devDependencies: { jest: '^29.0.0' },
+    };
+    writeJson(tree, 'package.json', packageJson);
+
+    const reactVersion = getDependencyVersionFromPackageJson(
+      tree,
+      'react',
+      packageJson
+    );
+    const jestVersion = getDependencyVersionFromPackageJson(
+      tree,
+      'jest',
+      packageJson
+    );
+
+    expect(reactVersion).toBe('^18.2.0');
+    expect(jestVersion).toBe('^29.0.0');
+  });
+
+  it('should check only dependencies section when specified', () => {
+    writeJson(tree, 'package.json', {
+      dependencies: { react: '^18.0.0' },
+      devDependencies: { react: '^17.0.0' },
+    });
+
+    const version = getDependencyVersionFromPackageJson(
+      tree,
+      'react',
+      'package.json',
+      ['dependencies']
+    );
+    expect(version).toBe('^18.0.0');
+  });
+
+  it('should check only devDependencies section when specified', () => {
+    writeJson(tree, 'package.json', {
+      dependencies: { jest: '^28.0.0' },
+      devDependencies: { jest: '^29.0.0' },
+    });
+
+    const version = getDependencyVersionFromPackageJson(
+      tree,
+      'jest',
+      'package.json',
+      ['devDependencies']
+    );
+    expect(version).toBe('^29.0.0');
+  });
+
+  it('should return null when package not in specified section', () => {
+    writeJson(tree, 'package.json', {
+      dependencies: { react: '^18.0.0' },
+      devDependencies: { jest: '^29.0.0' },
+    });
+
+    const version = getDependencyVersionFromPackageJson(
+      tree,
+      'react',
+      'package.json',
+      ['devDependencies']
+    );
+    expect(version).toBeNull();
+  });
+
+  it('should respect custom lookup order', () => {
+    writeJson(tree, 'package.json', {
+      dependencies: { pkg: '^1.0.0' },
+      devDependencies: { pkg: '^2.0.0' },
+    });
+
+    const version = getDependencyVersionFromPackageJson(
+      tree,
+      'pkg',
+      'package.json',
+      ['devDependencies', 'dependencies']
+    );
+    expect(version).toBe('^2.0.0');
+  });
+
+  it('should check peerDependencies when specified', () => {
+    writeJson(tree, 'package.json', {
+      dependencies: { react: '^18.0.0' },
+      peerDependencies: { react: '^17.0.0' },
+    });
+
+    const version = getDependencyVersionFromPackageJson(
+      tree,
+      'react',
+      'package.json',
+      ['peerDependencies']
+    );
+    expect(version).toBe('^17.0.0');
+  });
+
+  it('should check optionalDependencies when specified', () => {
+    writeJson(tree, 'package.json', {
+      dependencies: { fsevents: '^2.3.0' },
+      optionalDependencies: { fsevents: '^2.3.2' },
+    });
+
+    const version = getDependencyVersionFromPackageJson(
+      tree,
+      'fsevents',
+      'package.json',
+      ['optionalDependencies']
+    );
+    expect(version).toBe('^2.3.2');
+  });
+
+  it('should check multiple sections in order', () => {
+    writeJson(tree, 'package.json', {
+      devDependencies: { jest: '^29.0.0' },
+      peerDependencies: { react: '^18.0.0' },
+    });
+
+    const jestVersion = getDependencyVersionFromPackageJson(
+      tree,
+      'jest',
+      'package.json',
+      ['dependencies', 'devDependencies', 'peerDependencies']
+    );
+    const reactVersion = getDependencyVersionFromPackageJson(
+      tree,
+      'react',
+      'package.json',
+      ['dependencies', 'devDependencies', 'peerDependencies']
+    );
+
+    expect(jestVersion).toBe('^29.0.0');
+    expect(reactVersion).toBe('^18.0.0');
+  });
+
+  it('should work with pre-loaded package.json object', () => {
+    const packageJson: PackageJson = {
+      name: 'test',
+      version: '1.0.0',
+      dependencies: { react: '^18.0.0' },
+      devDependencies: { react: '^17.0.0' },
+    };
+    writeJson(tree, 'package.json', packageJson);
+
+    const version = getDependencyVersionFromPackageJson(
+      tree,
+      'react',
+      packageJson,
+      ['devDependencies']
+    );
+    expect(version).toBe('^17.0.0');
+  });
+
+  describe('with catalog references', () => {
+    beforeEach(() => {
+      jest
+        .spyOn(pacakgeManager, 'detectPackageManager')
+        .mockReturnValue('pnpm');
+      tree.write(
+        'pnpm-workspace.yaml',
+        `
+packages:
+  - packages/*
+catalog:
+  react: "^18.2.0"
+  lodash: "^4.17.21"
+catalogs:
+  frontend:
+    vue: "^3.3.0"
+`
+      );
+    });
+
+    it('should resolve catalog reference for single package', () => {
+      writeJson(tree, 'package.json', {
+        dependencies: { react: 'catalog:' },
+      });
+
+      const version = getDependencyVersionFromPackageJson(tree, 'react');
+      expect(version).toBe('^18.2.0');
+    });
+
+    it('should resolve named catalog reference', () => {
+      writeJson(tree, 'package.json', {
+        dependencies: { vue: 'catalog:frontend' },
+      });
+
+      const version = getDependencyVersionFromPackageJson(tree, 'vue');
+      expect(version).toBe('^3.3.0');
+    });
+
+    it('should return null when catalog reference cannot be resolved', () => {
+      writeJson(tree, 'package.json', {
+        dependencies: { unknown: 'catalog:' },
+      });
+
+      const version = getDependencyVersionFromPackageJson(tree, 'unknown');
+      expect(version).toBeNull();
+    });
+
+    it('should work with pre-loaded package.json', () => {
+      const packageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: { react: 'catalog:' },
+      };
+      writeJson(tree, 'package.json', packageJson);
+
+      const version = getDependencyVersionFromPackageJson(
+        tree,
+        'react',
+        packageJson
+      );
+
+      expect(version).toBe('^18.2.0');
+    });
+
+    it('should resolve catalog reference with section-specific lookup', () => {
+      writeJson(tree, 'package.json', {
+        dependencies: { react: 'catalog:' },
+        devDependencies: { lodash: 'catalog:' },
+      });
+
+      const reactVersion = getDependencyVersionFromPackageJson(
+        tree,
+        'react',
+        'package.json',
+        ['dependencies']
+      );
+      const lodashVersion = getDependencyVersionFromPackageJson(
+        tree,
+        'lodash',
+        'package.json',
+        ['devDependencies']
+      );
+
+      expect(reactVersion).toBe('^18.2.0');
+      expect(lodashVersion).toBe('^4.17.21');
+    });
+  });
 });

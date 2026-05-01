@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "Init",
+  "title": "Nx Vitest Init Generator",
+  "type": "object",
+  "description": "Vitest init generator.",
+  "properties": {
+    "addPlugin": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "description": "Add plugin to nx.json. Defaults to true for new workspaces."
+    },
+    "rootProject": {
+      "type": "boolean",
+      "x-priority": "internal"
+    },
+    "keepExistingVersions": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "description": "Keep existing dependencies versions",
+      "default": false
+    },
+    "updatePackageScripts": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "description": "Update package scripts",
+      "default": false
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false
+    },
+    "skipPackageJson": {
+      "description": "Do not add dependencies to `package.json`.",
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": []
+}

@@ -1,5 +1,6 @@
 import { interpolateName } from 'loader-utils';
 import * as path from 'path';
+import { pathToFileURL } from 'url';
 import type { Declaration } from 'postcss';
 import { LoaderContext } from 'webpack';
 
@@ -12,6 +13,16 @@ function wrapUrl(url: string): string {
     wrappedUrl = `'${url}'`;
   }
   return `url(${wrappedUrl})`;
+}
+
+function resolveUrl(from: string, to: string) {
+  const resolvedUrl = new URL(to, new URL(from, 'resolve://'));
+  if (resolvedUrl.protocol === 'resolve:') {
+    // `from` is a relative URL.
+    const { pathname, search, hash } = resolvedUrl;
+    return pathname + search + hash;
+  }
+  return resolvedUrl.toString();
 }
 
 export interface PostcssCliResourcesOptions {
@@ -93,9 +104,15 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
       resourceCache.set(cacheKey, outputUrl);
       return outputUrl;
     }
-    const normalizedUrl = path.resolve(context, inputUrl.replace(/\\/g, '/'));
-    const parsedUrl = new URL(normalizedUrl, 'file:///');
-    const { pathname, hash, search } = parsedUrl;
+    // Separate URL query/hash from the file path before resolving
+    const [, filePath, urlSuffix] = inputUrl.match(/^([^?#]*)(.*)$/)!;
+    const resolvedPath = path.resolve(context, filePath.replace(/\\/g, '/'));
+    const { pathname } = pathToFileURL(resolvedPath);
+    let hash = '';
+    let search = '';
+    if (urlSuffix) {
+      ({ hash, search } = new URL(`file:///dummy${urlSuffix}`));
+    }
     const resolver = (file: string, base: string) =>
       new Promise<boolean | string>((resolve, reject) => {
         loader.resolve(base, decodeURI(file), (err, result) => {
@@ -130,7 +147,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
         }
         const loaderOptions: any = loader.loaders[loader.loaderIndex].options;
         if (deployUrl && loaderOptions.ident !== 'extracted') {
-          outputUrl = new URL(outputUrl, deployUrl).href;
+          outputUrl = resolveUrl(deployUrl, outputUrl);
         }
         resourceCache.set(cacheKey, outputUrl);
         resolve(outputUrl);

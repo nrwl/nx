@@ -1,0 +1,24 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+---
+
+<StarlightPage
+  frontmatter={{
+    title: 'Page not found',
+    description: 'Page not found. Check the URL or try using the search bar.',
+    hero: {
+      title: '404',
+      tagline: 'Page not found. Check the URL or try using the search bar.',
+    },
+    template: 'splash',
+    editUrl: false,
+  }}
+  headings={[]}
+/>
+
+<script>
+  import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
+  document.addEventListener('DOMContentLoaded', () => {
+    sendCustomEventViaGtm('custom_page_view', '404', window.location.pathname);
+  });
+</script>

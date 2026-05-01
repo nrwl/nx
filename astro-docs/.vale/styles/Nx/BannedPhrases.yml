@@ -1,0 +1,29 @@
+extends: existence
+message: "Avoid AI-sounding phrase '%s'. Rewrite to be direct."
+level: error
+ignorecase: true
+tokens:
+  - "It's important to note that"
+  - "It's worth noting that"
+  - 'It should be noted that'
+  - 'In this section, we will explore'
+  - "Let's dive into"
+  - "Let's take a closer look at"
+  - "Whether you're a beginner or an experienced developer"
+  - "In today's fast-paced development environment"
+  - 'Unlock the power of'
+  - 'Harness the power of'
+  - 'Take your workspace to the next level'
+  - 'Streamline your workflow'
+  - 'This comprehensive guide will'
+  - 'Without further ado'
+  - 'In conclusion'
+  - 'To summarize'
+  - "As we've seen"
+  - 'Needless to say'
+  - 'As a matter of fact'
+  - 'Generally speaking'
+  - 'It is worth mentioning'
+  - 'Game-changer'
+  - 'Cutting-edge'
+  - 'Groundbreaking'

@@ -1,7 +1,7 @@
 <p style="text-align: center;">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-dark.svg">
-    <img alt="Nx - Smart Repos · Fast Builds" src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-light.svg" width="100%">
+    <img alt="Nx - Smart Monorepos · Fast Builds" src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-light.svg" width="100%">
   </picture>
 </p>
 
@@ -9,12 +9,12 @@
 
 <hr>
 
-> Note: this plugin is currently experimental.
+> Note: The `@nx/gradle` plugin is currently experimental. Features and APIs may change.
 
-# Nx: Smart Repos · Fast Builds
+# Nx: Smart Monorepos · Fast Builds
 
 Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.
 
-This package is a [Gradle plugin for Nx](https://nx.dev/gradle/overview).
+This package is a [Gradle plugin for Nx](https://nx.dev/technologies/java/gradle/introduction).
 
 {{content}}

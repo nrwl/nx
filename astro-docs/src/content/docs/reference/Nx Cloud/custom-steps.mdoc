@@ -8,7 +8,7 @@ filter: 'type:References'
 
 While Nx Cloud provides several pre-built steps, you can create custom steps to suit your specific needs. Custom steps are defined by creating a new YAML file.
 
-## Defining a Custom Step
+## Defining a custom step
 
 To create a custom step, follow these steps:
 
@@ -42,18 +42,15 @@ inputs:
     required: false
 ```
 
-### Explanation of Fields
+### Explanation of fields
 
 - **name**:
-
   - The name of the custom step.
 
 - **description**:
-
   - A description of what the custom step does.
 
 - **definition**:
-
   - **using**: The runtime environment. Supported values are `node` and `aggregate`.
     - **node**: If `using` is set to `node`, then only `main` and `post` can be used.
     - **aggregate**: If `using` is set to `aggregate`, then only `steps` can be used.
@@ -68,7 +65,7 @@ inputs:
   - **default**: Default value for the input.
   - **required**: Whether the input is required.
 
-### Using Inputs in Scripts
+### Using inputs in scripts
 
 If your custom step has inputs, they can be accessed in scripts or JavaScript files using environment variables. Each input is prefixed with `NX_CLOUD_INPUT_`. For example, if you have an input called `input1`, you can access it in a JavaScript file like this:
 
@@ -77,7 +74,7 @@ const input1 = process.env.NX_CLOUD_INPUT_input1;
 console.log(`The value of input1 is: ${input1}`);
 ```
 
-### Using Custom Steps in Launch Templates
+### Using custom steps in launch templates
 
 Once you've defined your custom step, you can use it in your launch templates by referencing the custom step file. Here's an example:
 
@@ -90,7 +87,7 @@ When specifying the location for the custom step, you must include a branch or t
 launch-templates:
   custom-template:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.11-v7'
+    image: 'ubuntu22.04-node24.14-v1'
     init-steps:
       - name: Custom Step
         uses: 'your-org/your-repo/main/.nx/workflows/custom-steps.yaml'
@@ -105,11 +102,11 @@ launch-templates:
 While you can use both `env` and `inputs` to pass values to custom steps, it is recommended to use `inputs` as they offer validation support, whereas `env` does not.
 {% /aside %}
 
-### Validating Custom Steps
+### Validating custom steps
 
 Just like launch templates, you should validate your custom steps to ensure they are defined correctly. In your CI pipeline, use the `nx-cloud validate` command with the `--step-file` flag to ensure nobody merges in invalid changes to your step:
 
-```shell {% frame="none" %}
+```shell
 nx-cloud validate --workflow-file=./.nx/workflows/custom-steps.yaml --step-file
 ```
 

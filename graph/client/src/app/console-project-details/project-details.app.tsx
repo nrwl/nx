@@ -87,7 +87,7 @@ export function ProjectDetailsApp({
       <>
         <ExpandedTargetsProvider>
           <ProjectDetails
-            project={project}
+            project={project as any}
             sourceMap={sourceMap}
             onViewInProjectGraph={handleViewInProjectGraph}
             onViewInTaskGraph={handleViewInTaskGraph}

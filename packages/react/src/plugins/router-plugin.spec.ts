@@ -1,4 +1,4 @@
-import { type CreateNodesContext } from '@nx/devkit';
+import { type CreateNodesContextV2 } from '@nx/devkit';
 import { createNodesV2 } from './router-plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
@@ -16,7 +16,7 @@ jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
 
 describe('@nx/react/react-router-plugin', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
   let tempFs: TempFs;
   let cwd: string;
 
@@ -38,7 +38,6 @@ describe('@nx/react/react-router-plugin', () => {
           },
         },
         workspaceRoot: tempFs.tempDir,
-        configFiles: [],
       };
 
       await tempFs.createFiles({
@@ -87,7 +86,7 @@ describe('@nx/react/react-router-plugin', () => {
     });
   });
 
-  function mockConfig(path: string, config, context: CreateNodesContext) {
+  function mockConfig(path: string, config, context: CreateNodesContextV2) {
     jest.mock(join(context.workspaceRoot, path), () => config, {
       virtual: true,
     });

@@ -1,0 +1,30 @@
+exclude-reads:
+  - packages/nx/src/native/*.node
+  - 'dist/target/**'
+exclude-writes:
+  - '**/.swc/**'
+  - 'dist/target/**'
+
+task-exclusions:
+  - target: lint
+    exclude-reads:
+      - '**/dist/**/*.json'
+  # TODO: populate-local-registry-storage is doing too much — it reads all build
+  # outputs and writes version-bumped packages across the entire workspace during
+  # nx-release. We're reworking this task to have more focused I/O and will fix
+  # the inputs/outputs properly after that.
+  - project: '@nx/nx-source'
+    target: populate-local-registry-storage
+    exclude-reads:
+      - '**'
+    exclude-writes:
+      - '**'
+  # Webpack snapshots context dirs registered by postcss-loader via tailwind's
+  # dir-dependency emission, so it hashes stories/specs siblings of declared
+  # content even though they never enter the bundle and are intentionally
+  # excluded from inputs.
+  - project: graph-client
+    target: build-client
+    exclude-reads:
+      - '**/*.stories.{js,jsx,ts,tsx,mdx}'
+      - '**/*.{spec,test}.{js,jsx,ts,tsx}'

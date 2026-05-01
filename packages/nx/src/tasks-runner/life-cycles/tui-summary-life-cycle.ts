@@ -6,10 +6,11 @@ import type { LifeCycle } from '../life-cycle';
 import type { TaskStatus } from '../tasks-runner';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { prettyTime } from './pretty-time';
+import { getLeafTasks } from '../task-graph-utils';
 import { viewLogsFooterRows } from './view-logs-utils';
 import * as figures from 'figures';
+import * as pc from 'picocolors';
 import { getTasksHistoryLifeCycle } from './task-history-life-cycle';
-import { getLeafTasks } from '../task-graph-utils';
 
 const LEFT_PAD = `   `;
 const SPACER = `  `;
@@ -48,40 +49,66 @@ export function getTuiTerminalSummaryLifeCycle({
 
   const failedTasks = new Set<string>();
   const inProgressTasks = new Set<string>();
+  // Tasks ended with 'stopped' status (interrupted, didn't finish — counts as failure)
   const stoppedTasks = new Set<string>();
+  // Tasks shown with cyan stopped icon (includes fulfilled continuous tasks ended as 'success')
+  const displayStoppedTasks = new Set<string>();
 
+  // Chunks accumulated progressively during task execution
+  const taskOutputChunks: Record<string, string[]> = {};
+  // Finalized output strings set on task completion — read by summary print functions
   const tasksToTerminalOutputs: Record<string, string> = {};
   const tasksToTaskStatus: Record<string, TaskStatus> = {};
 
   const taskIdsInTheOrderTheyStart: string[] = [];
 
+  const getTerminalOutput = (taskId: string): string =>
+    tasksToTerminalOutputs[taskId] ?? taskOutputChunks[taskId]?.join('') ?? '';
+
   lifeCycle.startTasks = (tasks) => {
     for (let t of tasks) {
-      tasksToTerminalOutputs[t.id] ??= '';
+      taskOutputChunks[t.id] ??= [];
       taskIdsInTheOrderTheyStart.push(t.id);
       inProgressTasks.add(t.id);
     }
   };
 
   lifeCycle.appendTaskOutput = (taskId, output) => {
-    tasksToTerminalOutputs[taskId] += output;
+    // Task already completed and output was finalized by endTasks — discard late-arriving data
+    if (!taskOutputChunks[taskId]) {
+      return;
+    }
+    taskOutputChunks[taskId].push(output);
   };
 
   // TODO(@AgentEnder): The following 2 methods should be one but will need more refactoring
-  lifeCycle.printTaskTerminalOutput = (task, taskStatus) => {
+  lifeCycle.printTaskTerminalOutput = (task, taskStatus, output) => {
     tasksToTaskStatus[task.id] = taskStatus;
+    // Store the complete output for display in the summary
+    // This is called with the full output for cached tasks. For non-cached tasks,
+    // the output doesn't include the portion of the output that prints the command that was being ran.
+    if (
+      output &&
+      !(['failure', 'success'] as Array<TaskStatus>).includes(taskStatus)
+    ) {
+      tasksToTerminalOutputs[task.id] = output;
+    }
   };
   lifeCycle.setTaskStatus = (taskId, taskStatus) => {
     if (taskStatus === NativeTaskStatus.Stopped) {
-      stoppedTasks.add(taskId);
+      displayStoppedTasks.add(taskId);
       inProgressTasks.delete(taskId);
     }
   };
 
   lifeCycle.endTasks = (taskResults) => {
-    for (const { task, status } of taskResults) {
+    for (const { task, status, terminalOutput } of taskResults) {
       totalCompletedTasks++;
       inProgressTasks.delete(task.id);
+      tasksToTaskStatus[task.id] = status;
+      if (status === 'stopped') {
+        stoppedTasks.add(task.id);
+      }
 
       switch (status) {
         case 'remote-cache':
@@ -97,6 +124,15 @@ export function getTuiTerminalSummaryLifeCycle({
           totalFailedTasks++;
           failedTasks.add(task.id);
           break;
+        case 'stopped':
+          break;
+      }
+
+      // Store the final string directly — shares the same reference as
+      // TaskResultsLifeCycle, old chunks become GC-eligible
+      if (terminalOutput !== undefined) {
+        tasksToTerminalOutputs[task.id] = terminalOutput;
+        delete taskOutputChunks[task.id];
       }
     }
   };
@@ -117,16 +153,11 @@ export function getTuiTerminalSummaryLifeCycle({
       return;
     }
 
-    const failure = totalSuccessfulTasks + stoppedTasks.size !== totalTasks;
+    const failure = totalSuccessfulTasks !== totalTasks;
     const cancelled =
-      // Some tasks were in progress...
+      stoppedTasks.size > 0 ||
       inProgressTasks.size > 0 ||
-      // or some tasks had not started yet
-      totalTasks !== tasks.length ||
-      // the run had a continous task as a leaf...
-      // this is needed because continous tasks get marked as stopped when the process is interrupted
-      [...getLeafTasks(taskGraph)].filter((t) => taskGraph.tasks[t].continuous)
-        .length > 0;
+      [...getLeafTasks(taskGraph)].some((t) => taskGraph.tasks[t]?.continuous);
 
     if (isRunOne) {
       printRunOneSummary({
@@ -149,17 +180,21 @@ export function getTuiTerminalSummaryLifeCycle({
     failure: boolean;
     cancelled: boolean;
   }) => {
-    let lines: string[] = [];
-
     // Prints task outputs in the order they were completed
     // above the summary, since run-one should print all task results.
     for (const taskId of taskIdsInTheOrderTheyStart) {
       const taskStatus = tasksToTaskStatus[taskId];
-      const terminalOutput = tasksToTerminalOutputs[taskId];
+      const terminalOutput = getTerminalOutput(taskId);
       output.logCommandOutput(taskId, taskStatus, terminalOutput);
     }
 
-    lines.push(...output.getVerticalSeparatorLines(failure ? 'red' : 'green'));
+    // Print vertical separator
+    const separatorLines = output.getVerticalSeparatorLines(
+      failure ? 'red' : 'green'
+    );
+    for (const line of separatorLines) {
+      console.log(line);
+    }
 
     if (!failure && !cancelled) {
       const text = `Successfully ran ${formatTargetsAndProjects(
@@ -168,39 +203,40 @@ export function getTuiTerminalSummaryLifeCycle({
         tasks
       )}`;
 
-      const taskOverridesLines = [];
+      // Build success message with color applied to the entire block
+      const messageLines = [
+        output.applyNxPrefix(
+          'green',
+          output.colors.green(text) + output.dim(` (${timeTakenText})`)
+        ),
+      ];
+
       const filteredOverrides = Object.entries(overrides).filter(
         // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
         ([flag]) => flag !== 'nxReleaseVersionData'
       );
       if (filteredOverrides.length > 0) {
-        taskOverridesLines.push('');
-        taskOverridesLines.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
+        messageLines.push('');
+        messageLines.push(
+          `${EXTENDED_LEFT_PAD}${pc.dim(pc.green('With additional flags:'))}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            pc.dim(pc.green(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
           )
-          .forEach((arg) => taskOverridesLines.push(arg));
+          .forEach((arg) => messageLines.push(arg));
       }
 
-      lines.push(
-        output.applyNxPrefix(
-          'green',
-          output.colors.green(text) + output.dim(` (${timeTakenText})`)
-        ),
-        ...taskOverridesLines
-      );
-
       if (totalCachedTasks > 0) {
-        lines.push(
+        messageLines.push(
           output.dim(
             `${EOL}Nx read the output from the cache instead of running the command for ${totalCachedTasks} out of ${totalTasks} tasks.`
           )
         );
       }
-      lines = [output.colors.green(lines.join(EOL))];
+
+      // Print the entire success message block with green color
+      console.log(output.colors.green(messageLines.join(EOL)));
     } else if (!cancelled) {
       let text = `Ran target ${output.bold(
         targets[0]
@@ -209,48 +245,51 @@ export function getTuiTerminalSummaryLifeCycle({
         text += ` and ${output.bold(tasks.length - 1)} task(s) they depend on`;
       }
 
-      const taskOverridesLines: string[] = [];
+      // Build failure message lines
+      const messageLines = [
+        output.applyNxPrefix(
+          'red',
+          output.colors.red(text) + output.dim(` (${timeTakenText})`)
+        ),
+      ];
+
       const filteredOverrides = Object.entries(overrides).filter(
         // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
         ([flag]) => flag !== 'nxReleaseVersionData'
       );
       if (filteredOverrides.length > 0) {
-        taskOverridesLines.push('');
-        taskOverridesLines.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
+        messageLines.push('');
+        messageLines.push(
+          `${EXTENDED_LEFT_PAD}${pc.dim(pc.red('With additional flags:'))}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            pc.dim(pc.red(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
           )
-          .forEach((arg) => taskOverridesLines.push(arg));
+          .forEach((arg) => messageLines.push(arg));
       }
 
-      const viewLogs = viewLogsFooterRows(totalFailedTasks);
-
-      lines.push(
-        output.colors.red(
-          [
-            output.applyNxPrefix(
-              'red',
-              output.colors.red(text) + output.dim(` (${timeTakenText})`)
-            ),
-            ...taskOverridesLines,
-            '',
-            `${LEFT_PAD}${output.colors.red(
-              figures.cross
-            )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} failed`,
-            `${LEFT_PAD}${output.dim(
-              figures.tick
-            )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
-              `[${totalCachedTasks} read from cache]`
-            )}`,
-            ...viewLogs,
-          ].join(EOL)
-        )
+      messageLines.push('');
+      messageLines.push(
+        `${LEFT_PAD}${output.colors.red(
+          figures.cross
+        )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} failed`
       );
+      messageLines.push(
+        `${LEFT_PAD}${output.dim(
+          figures.tick
+        )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
+          `[${totalCachedTasks} read from cache]`
+        )}`
+      );
+
+      const viewLogs = viewLogsFooterRows(totalFailedTasks);
+      messageLines.push(...viewLogs);
+
+      // Print the entire failure message block with red color
+      console.log(output.colors.red(messageLines.join(EOL)));
     } else {
-      lines.push(
+      console.log(
         output.applyNxPrefix(
           'red',
           output.colors.red(
@@ -263,9 +302,7 @@ export function getTuiTerminalSummaryLifeCycle({
     }
 
     // adds some vertical space after the summary to avoid bunching against terminal
-    lines.push('');
-
-    console.log(lines.join(EOL));
+    console.log('');
   };
 
   const printRunManySummary = ({
@@ -277,16 +314,26 @@ export function getTuiTerminalSummaryLifeCycle({
   }) => {
     console.log('');
 
-    const lines: string[] = [''];
+    // Collect checklist lines to print after task outputs
+    const checklistLines: string[] = [];
 
-    for (const taskId of taskIdsInTheOrderTheyStart) {
+    // Sort tasks by status: successful tasks first, failed tasks at the end
+    const sortedTaskIds = [...taskIdsInTheOrderTheyStart].sort((a, b) => {
+      const statusA = tasksToTaskStatus[a];
+      const statusB = tasksToTaskStatus[b];
+      const isFailureA = statusA === 'failure' || !statusA ? 1 : 0;
+      const isFailureB = statusB === 'failure' || !statusB ? 1 : 0;
+      return isFailureA - isFailureB;
+    });
+
+    // First pass: Print task outputs and collect checklist lines
+    for (const taskId of sortedTaskIds) {
       const taskStatus = tasksToTaskStatus[taskId];
-      const terminalOutput = tasksToTerminalOutputs[taskId];
-      // Task Status is null?
-      if (!taskStatus) {
+      const terminalOutput = getTerminalOutput(taskId);
+      if (displayStoppedTasks.has(taskId) || !taskStatus) {
         output.logCommandOutput(taskId, taskStatus, terminalOutput);
         output.addNewline();
-        lines.push(
+        checklistLines.push(
           `${LEFT_PAD}${output.colors.cyan(
             figures.squareSmallFilled
           )}${SPACER}${output.colors.gray('nx run ')}${taskId}`
@@ -294,13 +341,43 @@ export function getTuiTerminalSummaryLifeCycle({
       } else if (taskStatus === 'failure') {
         output.logCommandOutput(taskId, taskStatus, terminalOutput);
         output.addNewline();
-        lines.push(
+        checklistLines.push(
           `${LEFT_PAD}${output.colors.red(
             figures.cross
           )}${SPACER}${output.colors.gray('nx run ')}${taskId}`
         );
+      } else if (taskStatus === 'local-cache') {
+        checklistLines.push(
+          `${LEFT_PAD}${output.colors.green(
+            figures.tick
+          )}${SPACER}${output.colors.gray('nx run ')}${taskId}  ${output.dim(
+            '[local cache]'
+          )}`
+        );
+      } else if (taskStatus === 'local-cache-kept-existing') {
+        checklistLines.push(
+          `${LEFT_PAD}${output.colors.green(
+            figures.tick
+          )}${SPACER}${output.colors.gray('nx run ')}${taskId}  ${output.dim(
+            '[existing outputs match the cache, left as is]'
+          )}`
+        );
+      } else if (taskStatus === 'remote-cache') {
+        checklistLines.push(
+          `${LEFT_PAD}${output.colors.green(
+            figures.tick
+          )}${SPACER}${output.colors.gray('nx run ')}${taskId}  ${output.dim(
+            '[remote cache]'
+          )}`
+        );
+      } else if (taskStatus === 'success') {
+        checklistLines.push(
+          `${LEFT_PAD}${output.colors.green(
+            figures.tick
+          )}${SPACER}${output.colors.gray('nx run ')}${taskId}`
+        );
       } else {
-        lines.push(
+        checklistLines.push(
           `${LEFT_PAD}${output.colors.green(
             figures.tick
           )}${SPACER}${output.colors.gray('nx run ')}${taskId}`
@@ -308,41 +385,50 @@ export function getTuiTerminalSummaryLifeCycle({
       }
     }
 
-    lines.push(...output.getVerticalSeparatorLines(failure ? 'red' : 'green'));
+    // Print all checklist lines together
+    console.log();
+    for (const line of checklistLines) {
+      console.log(line);
+    }
 
-    if (totalSuccessfulTasks + stoppedTasks.size === totalTasks) {
-      const successSummaryRows = [];
+    // Print vertical separator
+    const separatorLines = output.getVerticalSeparatorLines(
+      failure ? 'red' : 'green'
+    );
+    for (const line of separatorLines) {
+      console.log(line);
+    }
+
+    if (totalSuccessfulTasks === totalTasks) {
       const text = `Successfully ran ${formatTargetsAndProjects(
         projectNames,
         targets,
         tasks
       )}`;
-      const taskOverridesRows = [];
+
+      const successSummaryRows = [
+        output.applyNxPrefix(
+          'green',
+          output.colors.green(text) + pc.dim(pc.white(` (${timeTakenText})`))
+        ),
+      ];
+
       const filteredOverrides = Object.entries(overrides).filter(
         // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
         ([flag]) => flag !== 'nxReleaseVersionData'
       );
       if (filteredOverrides.length > 0) {
-        taskOverridesRows.push('');
-        taskOverridesRows.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
+        successSummaryRows.push('');
+        successSummaryRows.push(
+          `${EXTENDED_LEFT_PAD}${pc.dim(pc.green('With additional flags:'))}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            pc.dim(pc.green(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
           )
-          .forEach((arg) => taskOverridesRows.push(arg));
+          .forEach((arg) => successSummaryRows.push(arg));
       }
 
-      successSummaryRows.push(
-        ...[
-          output.applyNxPrefix(
-            'green',
-            output.colors.green(text) + output.dim.white(` (${timeTakenText})`)
-          ),
-          ...taskOverridesRows,
-        ]
-      );
       if (totalCachedTasks > 0) {
         successSummaryRows.push(
           output.dim(
@@ -350,48 +436,53 @@ export function getTuiTerminalSummaryLifeCycle({
           )
         );
       }
-      lines.push(successSummaryRows.join(EOL));
+
+      console.log(successSummaryRows.join(EOL));
     } else {
       const text = `${
         cancelled ? 'Cancelled while running' : 'Ran'
       } ${formatTargetsAndProjects(projectNames, targets, tasks)}`;
-      const taskOverridesRows: string[] = [];
+
+      const failureSummaryRows: string[] = [
+        output.applyNxPrefix(
+          'red',
+          output.colors.red(text) + pc.dim(pc.white(` (${timeTakenText})`))
+        ),
+      ];
+
       const filteredOverrides = Object.entries(overrides).filter(
         // Don't print the data passed through from the version subcommand to the publish executor options, it could be quite large and it's an implementation detail.
         ([flag]) => flag !== 'nxReleaseVersionData'
       );
       if (filteredOverrides.length > 0) {
-        taskOverridesRows.push('');
-        taskOverridesRows.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
+        failureSummaryRows.push('');
+        failureSummaryRows.push(
+          `${EXTENDED_LEFT_PAD}${pc.dim(pc.red('With additional flags:'))}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            pc.dim(pc.red(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
           )
-          .forEach((arg) => taskOverridesRows.push(arg));
+          .forEach((arg) => failureSummaryRows.push(arg));
       }
 
-      const numFailedToPrint = 5;
-      const failedTasksForPrinting = Array.from(failedTasks).slice(
-        0,
-        numFailedToPrint
-      );
-      const failureSummaryRows: string[] = [
-        output.applyNxPrefix(
-          'red',
-          output.colors.red(text) + output.dim.white(` (${timeTakenText})`)
-        ),
-        ...taskOverridesRows,
-        '',
-      ];
+      failureSummaryRows.push('');
+
       if (totalCompletedTasks > 0) {
+        // For display purposes, treat stopped tasks as in-progress
+        // (they were running when the process was interrupted)
+        const displayCompleted = totalCompletedTasks - stoppedTasks.size;
+        const displayInProgress = new Set([
+          ...inProgressTasks,
+          ...stoppedTasks,
+        ]);
+
         if (totalSuccessfulTasks > 0) {
           failureSummaryRows.push(
             output.dim(
               `${LEFT_PAD}${output.dim(
                 figures.tick
-              )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
+              )}${SPACER}${totalSuccessfulTasks}${`/${displayCompleted}`} succeeded ${output.dim(
                 `[${totalCachedTasks} read from cache]`
               )}`
             ),
@@ -399,10 +490,15 @@ export function getTuiTerminalSummaryLifeCycle({
           );
         }
         if (totalFailedTasks > 0) {
+          const numFailedToPrint = 5;
+          const failedTasksForPrinting = Array.from(failedTasks).slice(
+            0,
+            numFailedToPrint
+          );
           failureSummaryRows.push(
             `${LEFT_PAD}${output.colors.red(
               figures.cross
-            )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} targets failed, including the following:`,
+            )}${SPACER}${totalFailedTasks}${`/${displayCompleted}`} targets failed, including the following:`,
             '',
             `${failedTasksForPrinting
               .map(
@@ -424,15 +520,15 @@ export function getTuiTerminalSummaryLifeCycle({
             );
           }
         }
-        if (totalCompletedTasks !== totalTasks) {
-          const remainingTasks = totalTasks - totalCompletedTasks;
-          if (inProgressTasks.size) {
+        if (displayCompleted !== totalTasks) {
+          const remainingTasks = totalTasks - displayCompleted;
+          if (displayInProgress.size) {
             failureSummaryRows.push(
               `${LEFT_PAD}${output.colors.red(figures.ellipsis)}${SPACER}${
-                inProgressTasks.size
+                displayInProgress.size
               }${`/${totalTasks}`} targets were in progress, including the following:`,
               '',
-              `${Array.from(inProgressTasks)
+              `${Array.from(displayInProgress)
                 .map(
                   (t) =>
                     `${EXTENDED_LEFT_PAD}${output.colors.red(
@@ -443,11 +539,11 @@ export function getTuiTerminalSummaryLifeCycle({
               ''
             );
           }
-          if (remainingTasks - inProgressTasks.size > 0) {
+          if (remainingTasks - displayInProgress.size > 0) {
             failureSummaryRows.push(
               output.dim(
                 `${LEFT_PAD}${output.colors.red(figures.ellipsis)}${SPACER}${
-                  remainingTasks - inProgressTasks.size
+                  remainingTasks - displayInProgress.size
                 }${`/${totalTasks}`} targets had not started.`
               ),
               ''
@@ -456,15 +552,13 @@ export function getTuiTerminalSummaryLifeCycle({
         }
 
         failureSummaryRows.push(...viewLogsFooterRows(failedTasks.size));
-
-        lines.push(output.colors.red(failureSummaryRows.join(EOL)));
       }
+
+      console.log(output.colors.red(failureSummaryRows.join(EOL)));
     }
 
     // adds some vertical space after the summary to avoid bunching against terminal
-    lines.push('');
-
-    console.log(lines.join(EOL));
+    console.log('');
   };
-  return { lifeCycle, printSummary };
+  return { lifeCycle: lifeCycle as LifeCycle, printSummary };
 }

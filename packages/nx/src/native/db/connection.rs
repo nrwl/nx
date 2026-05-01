@@ -77,7 +77,7 @@ impl NxDbConnection {
         }
     }
 
-    pub fn prepare(&self, sql: &str) -> Result<Statement> {
+    pub fn prepare(&self, sql: &str) -> Result<Statement<'_>> {
         if let Some(conn) = &self.conn {
             retry_db_operation_when_busy!(conn.prepare(sql))
                 .map_err(|e| anyhow::anyhow!("DB prepare error: \"{}\", {:?}", sql, e))
@@ -91,17 +91,12 @@ impl NxDbConnection {
         transaction_operation: impl Fn(&Connection) -> rusqlite::Result<T>,
     ) -> Result<T> {
         if let Some(conn) = self.conn.as_mut() {
-            let transaction = retry_db_operation_when_busy!(conn.transaction())
-                .map_err(|e| anyhow::anyhow!("DB transaction error: {:?}", e))?;
-
-            let result = transaction_operation(&transaction)
-                .map_err(|e| anyhow::anyhow!("DB transaction operation error: {:?}", e))?;
-
-            transaction
-                .commit()
-                .map_err(|e| anyhow::anyhow!("DB transaction commit error: {:?}", e))?;
-
-            Ok(result)
+            retry_db_operation_when_busy!(conn.transaction().and_then(|tx| {
+                let result = transaction_operation(&tx)?;
+                tx.commit()?;
+                Ok(result)
+            }))
+            .map_err(|e| anyhow::anyhow!("DB transaction error: {:?}", e))
         } else {
             anyhow::bail!("No database connection available")
         }
@@ -115,6 +110,28 @@ impl NxDbConnection {
         if let Some(conn) = &self.conn {
             retry_db_operation_when_busy!(conn.query_row(sql, params.clone(), f.clone()).optional())
                 .map_err(|e| anyhow::anyhow!("DB query error: \"{}\", {:?}", sql, e))
+        } else {
+            anyhow::bail!("No database connection available")
+        }
+    }
+
+    /// Run a query and collect every row, retrying the whole prepare+query
+    /// when SQLite reports DatabaseBusy. Use this instead of calling
+    /// `prepare` + `query_map` directly — those bypass the retry wrapper
+    /// and will surface DatabaseBusy to callers when another process
+    /// briefly holds the write lock.
+    pub fn query_map<T, P, F>(&self, sql: &str, params: P, f: F) -> Result<Vec<T>>
+    where
+        P: Params + Clone,
+        F: FnMut(&Row<'_>) -> rusqlite::Result<T> + Clone,
+    {
+        if let Some(conn) = &self.conn {
+            retry_db_operation_when_busy!({
+                let mut stmt = conn.prepare(sql)?;
+                stmt.query_map(params.clone(), f.clone())?
+                    .collect::<rusqlite::Result<Vec<T>>>()
+            })
+            .map_err(|e| anyhow::anyhow!("DB query_map error: \"{}\", {:?}", sql, e))
         } else {
             anyhow::bail!("No database connection available")
         }

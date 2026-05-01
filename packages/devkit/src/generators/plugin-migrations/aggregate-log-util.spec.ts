@@ -29,8 +29,8 @@ describe(`aggregateLog utils`, () => {
     // ASSERT
     expect(logger.warn).toHaveBeenCalled();
     expect(spyLog).toMatchInlineSnapshot(`
-      "[1mEncountered the following while migrating '@nx/vite:serve':[22m
-      [1m[22m   • Encountered 'proxyConfig' in project.json. You will need to copy the contents of this file to the 'server.proxy' property in your Vite config file.
+      "[1mEncountered the following while migrating '@nx/vite:serve':
+      [22m   • Encountered 'proxyConfig' in project.json. You will need to copy the contents of this file to the 'server.proxy' property in your Vite config file.
            [1mAffected Projects[22m
             app
             myapp
@@ -71,16 +71,16 @@ describe(`aggregateLog utils`, () => {
     // ASSERT
     expect(logger.warn).toHaveBeenCalled();
     expect(spyLog).toMatchInlineSnapshot(`
-      "[1mEncountered the following while migrating '@nx/vite:serve':[22m
-      [1m[22m   • Encountered 'proxyConfig' in project.json. You will need to copy the contents of this file to the 'server.proxy' property in your Vite config file.
+      "[1mEncountered the following while migrating '@nx/vite:serve':
+      [22m   • Encountered 'proxyConfig' in project.json. You will need to copy the contents of this file to the 'server.proxy' property in your Vite config file.
            [1mAffected Projects[22m
             app
             shop-app
          • Encountered 'AnotherValue' in project.json. You will need to copy the contents of this file to the 'config.prop' property in your Vite config file.
            [1mAffected Projects[22m
             shop-app
-      [1mEncountered the following while migrating '@nx/vite:build':[22m
-      [1m[22m   • Encountered 'proxyConfig' in project.json. You will need to copy the contents of this file to the 'server.proxy' property in your Vite config file.
+      [1mEncountered the following while migrating '@nx/vite:build':
+      [22m   • Encountered 'proxyConfig' in project.json. You will need to copy the contents of this file to the 'server.proxy' property in your Vite config file.
            [1mAffected Projects[22m
             myapp
       "

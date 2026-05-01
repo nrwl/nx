@@ -1,0 +1,52 @@
+{
+  "name": "examples-angular-rspack-mf-remote",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {},
+  "dependencies": {
+    "@nx/angular-rspack": "workspace:*"
+  },
+  "devDependencies": {
+    "@nx/module-federation": "workspace:*",
+    "@rspack/core": "catalog:rspack",
+    "@rspack/cli": "catalog:rspack"
+  },
+  "main": "./src/app/remote-entry/entry.routes.ts",
+  "types": "./src/app/remote-entry/entry.routes.ts",
+  "exports": {
+    "./Routes": "./src/app/remote-entry/entry.routes.ts"
+  },
+  "nx": {
+    "targets": {
+      "serve": {
+        "dependsOn": [
+          "^build",
+          "examples-angular-rspack-mf-host:serve"
+        ],
+        "options": {
+          "port": 4201
+        }
+      },
+      "build": {
+        "inputs": [
+          "production",
+          "^production",
+          {
+            "dependentTasksOutputFiles": "**/*.js",
+            "transitive": true
+          },
+          "{workspaceRoot}/examples/angular-rspack/patch-devkit-request-path.js",
+          "{workspaceRoot}/examples/angular-rspack/tsconfig.base.json",
+          "{workspaceRoot}/LICENSE",
+          "{workspaceRoot}/tsconfig.json"
+        ],
+        "outputs": [
+          "{projectRoot}/dist"
+        ],
+        "dependsOn": [
+          "^build"
+        ]
+      }
+    }
+  }
+}

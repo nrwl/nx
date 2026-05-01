@@ -1,4 +1,4 @@
-import { readJson, type Tree } from '@nx/devkit';
+import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
 import { clean, coerce, major } from 'semver';
 
 const nxVersion = require('../../package.json').version;
@@ -109,9 +109,7 @@ export function validateInstalledJestVersion(tree?: Tree): void {
 }
 
 function getJestVersionFromTree(tree: Tree): string | null {
-  const packageJson = readJson(tree, 'package.json');
-  const installedVersion =
-    packageJson.devDependencies?.jest ?? packageJson.dependencies?.jest;
+  const installedVersion = getDependencyVersionFromPackageJson(tree, 'jest');
 
   if (!installedVersion) {
     return null;

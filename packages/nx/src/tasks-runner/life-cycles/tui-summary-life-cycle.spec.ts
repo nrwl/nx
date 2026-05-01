@@ -4,16 +4,17 @@ import { Task } from '../../config/task-graph';
 import { TaskStatus as NativeTaskStatus } from '../../native';
 import * as taskHistoryUtils from '../../utils/task-history';
 import { getTuiTerminalSummaryLifeCycle } from './tui-summary-life-cycle';
+import { TaskMetadata } from '../life-cycle';
 
-let originalHrTime;
-let originalColumns;
+let originalHrTime: typeof process.hrtime;
+let originalColumns: typeof process.stdout.columns;
 
 describe('getTuiTerminalSummaryLifeCycle', () => {
   beforeAll(() => {
     originalHrTime = process.hrtime;
     originalColumns = process.stdout.columns;
     process.stdout.columns = 80;
-    process.hrtime = ((x) => {
+    process.hrtime = ((x: Parameters<typeof process.hrtime>[0]) => {
       if (x !== undefined) {
         return [x[0] + 1, x[1]];
       }
@@ -60,9 +61,9 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
       });
 
-      lifeCycle.startTasks([dep], null);
-      lifeCycle.appendTaskOutput(dep.id, 'boom', true);
-      lifeCycle.endTasks(
+      lifeCycle.startTasks?.([dep], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(dep.id, 'boom', true);
+      lifeCycle.endTasks?.(
         [
           {
             code: 1,
@@ -71,10 +72,10 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
             terminalOutput: 'boom',
           },
         ],
-        null
+        null as unknown as TaskMetadata
       );
-      lifeCycle.printTaskTerminalOutput(dep, 'failure', 'boom');
-      lifeCycle.endCommand();
+      lifeCycle.printTaskTerminalOutput?.(dep, 'failure', 'boom');
+      lifeCycle.endCommand?.();
 
       const lines = getOutputLines(printSummary);
 
@@ -119,9 +120,9 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
       });
 
-      lifeCycle.startTasks([dep], null);
-      lifeCycle.appendTaskOutput(dep.id, ':)', true);
-      lifeCycle.endTasks(
+      lifeCycle.startTasks?.([dep], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(dep.id, ':)', true);
+      lifeCycle.endTasks?.(
         [
           {
             code: 1,
@@ -130,12 +131,12 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
             terminalOutput: ':)',
           },
         ],
-        null
+        null as unknown as TaskMetadata
       );
-      lifeCycle.printTaskTerminalOutput(dep, 'success', ':)');
-      lifeCycle.startTasks([target], null);
-      lifeCycle.appendTaskOutput(target.id, "Wait, I'm not done yet", true);
-      lifeCycle.endCommand();
+      lifeCycle.printTaskTerminalOutput?.(dep, 'success', ':)');
+      lifeCycle.startTasks?.([target], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(target.id, "Wait, I'm not done yet", true);
+      lifeCycle.endCommand?.();
 
       const lines = getOutputLines(printSummary);
 
@@ -180,9 +181,9 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
       });
 
-      lifeCycle.startTasks([dep], null);
-      lifeCycle.appendTaskOutput(dep.id, ':)', true);
-      lifeCycle.endTasks(
+      lifeCycle.startTasks?.([dep], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(dep.id, ':)', true);
+      lifeCycle.endTasks?.(
         [
           {
             code: 0,
@@ -191,10 +192,10 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
             terminalOutput: ':)',
           },
         ],
-        null
+        null as unknown as TaskMetadata
       );
-      lifeCycle.printTaskTerminalOutput(dep, 'success', ':)');
-      lifeCycle.endCommand();
+      lifeCycle.printTaskTerminalOutput?.(dep, 'success', ':)');
+      lifeCycle.endCommand?.();
 
       const lines = getOutputLines(printSummary);
 
@@ -243,15 +244,27 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
       });
 
-      lifeCycle.startTasks([target], null);
-      lifeCycle.appendTaskOutput(target.id, 'I was a happy dev server', true);
-      lifeCycle.setTaskStatus(target.id, NativeTaskStatus.Stopped);
-      lifeCycle.printTaskTerminalOutput(
+      lifeCycle.startTasks?.([target], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(target.id, 'I was a happy dev server', true);
+      // With the new flow, continuous tasks are properly ended via endTasks
+      lifeCycle.endTasks?.(
+        [
+          {
+            code: 0,
+            status: 'success',
+            task: target,
+            terminalOutput: 'I was a happy dev server',
+          },
+        ],
+        null as unknown as TaskMetadata
+      );
+      lifeCycle.setTaskStatus?.(target.id, NativeTaskStatus.Stopped);
+      lifeCycle.printTaskTerminalOutput?.(
         target,
         'success',
         'I was a happy dev server'
       );
-      lifeCycle.endCommand();
+      lifeCycle.endCommand?.();
       // Continuous tasks are marked as stopped when the command is stopped
 
       const lines = getOutputLines(printSummary);
@@ -264,6 +277,115 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         ———————————————————————————————————————————————————————————————————————————————
 
          NX   Cancelled running target dev for project test (37w)
+        "
+      `);
+    });
+
+    it('should display success for discrete task with stopped continuous dependency', async () => {
+      const devServer = {
+        id: 'test:serve',
+        continuous: true,
+        target: {
+          target: 'serve',
+          project: 'test',
+        },
+      } as Partial<Task> as Task;
+
+      const e2eTest = {
+        id: 'test:e2e',
+        continuous: false,
+        target: {
+          target: 'e2e',
+          project: 'test',
+        },
+      } as Partial<Task> as Task;
+
+      const { lifeCycle, printSummary } = getTuiTerminalSummaryLifeCycle({
+        args: {
+          targets: ['e2e'],
+        },
+        initiatingProject: 'test',
+        initiatingTasks: [e2eTest],
+        taskGraph: {
+          tasks: { [devServer.id]: devServer, [e2eTest.id]: e2eTest },
+          dependencies: {
+            [devServer.id]: [],
+            [e2eTest.id]: [devServer.id],
+          },
+          continuousDependencies: {
+            [e2eTest.id]: [devServer.id],
+          },
+          roots: [devServer.id],
+        },
+        overrides: {},
+        projectNames: ['test'],
+        tasks: [devServer, e2eTest],
+        resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
+      });
+
+      // Dev server starts
+      lifeCycle.startTasks?.([devServer], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(
+        devServer.id,
+        'Server running on port 4200',
+        true
+      );
+
+      // E2E test starts and succeeds
+      lifeCycle.startTasks?.([e2eTest], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(e2eTest.id, 'All tests passed', true);
+      lifeCycle.endTasks?.(
+        [
+          {
+            code: 0,
+            status: 'success',
+            task: e2eTest,
+            terminalOutput: 'All tests passed',
+          },
+        ],
+        null as unknown as TaskMetadata
+      );
+      lifeCycle.printTaskTerminalOutput?.(
+        e2eTest,
+        'success',
+        'All tests passed'
+      );
+
+      // Dev server is stopped (no longer needed)
+      lifeCycle.endTasks?.(
+        [
+          {
+            code: 0,
+            status: 'success',
+            task: devServer,
+            terminalOutput: 'Server running on port 4200',
+          },
+        ],
+        null as unknown as TaskMetadata
+      );
+      lifeCycle.setTaskStatus?.(devServer.id, NativeTaskStatus.Stopped);
+      lifeCycle.printTaskTerminalOutput?.(
+        devServer,
+        'success',
+        'Server running on port 4200'
+      );
+
+      lifeCycle.endCommand?.();
+
+      const lines = getOutputLines(printSummary);
+
+      // Should show success, not cancelled, because the discrete task (e2e) is the initiating task
+      expect(lines.join('\n')).toMatchInlineSnapshot(`
+        "
+        > nx run test:serve
+
+        Server running on port 4200
+        > nx run test:e2e
+
+        All tests passed
+        ———————————————————————————————————————————————————————————————————————————————
+
+         NX   Successfully ran target e2e for project test and 1 task it depends on (37w)
         "
       `);
     });
@@ -290,7 +412,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         args: {
           targets: ['test'],
         },
-        initiatingProject: null,
+        initiatingProject: '',
         initiatingTasks: [],
         taskGraph: {
           tasks: { foo, bar },
@@ -304,10 +426,10 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
       });
 
-      lifeCycle.startTasks([foo, bar], null);
-      lifeCycle.appendTaskOutput(foo.id, ':)', true);
-      lifeCycle.appendTaskOutput(bar.id, 'boom', true);
-      lifeCycle.endTasks(
+      lifeCycle.startTasks?.([foo, bar], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(foo.id, ':)', true);
+      lifeCycle.appendTaskOutput?.(bar.id, 'boom', true);
+      lifeCycle.endTasks?.(
         [
           {
             code: 1,
@@ -322,11 +444,11 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
             terminalOutput: 'foo',
           },
         ],
-        null
+        null as unknown as TaskMetadata
       );
-      lifeCycle.printTaskTerminalOutput(foo, 'success', ':)');
-      lifeCycle.printTaskTerminalOutput(bar, 'failure', 'boom');
-      lifeCycle.endCommand();
+      lifeCycle.printTaskTerminalOutput?.(foo, 'success', ':)');
+      lifeCycle.printTaskTerminalOutput?.(bar, 'failure', 'boom');
+      lifeCycle.endCommand?.();
 
       const lines = getOutputLines(printSummary);
 
@@ -374,7 +496,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         args: {
           targets: ['test'],
         },
-        initiatingProject: null,
+        initiatingProject: '',
         initiatingTasks: [],
         taskGraph: {
           tasks: { foo, bar },
@@ -388,10 +510,10 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
       });
 
-      lifeCycle.startTasks([bar, foo], null);
-      lifeCycle.appendTaskOutput(foo.id, 'Stop, in the name of', true);
-      lifeCycle.appendTaskOutput(bar.id, 'Love', true);
-      lifeCycle.endTasks(
+      lifeCycle.startTasks?.([bar, foo], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(foo.id, 'Stop, in the name of', true);
+      lifeCycle.appendTaskOutput?.(bar.id, 'Love', true);
+      lifeCycle.endTasks?.(
         [
           {
             code: 0,
@@ -400,10 +522,10 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
             terminalOutput: 'foo',
           },
         ],
-        null
+        null as unknown as TaskMetadata
       );
-      lifeCycle.printTaskTerminalOutput(foo, 'success', ':)');
-      lifeCycle.endCommand();
+      lifeCycle.printTaskTerminalOutput?.(foo, 'success', ':)');
+      lifeCycle.endCommand?.();
 
       const lines = getOutputLines(printSummary);
       expect(lines.join('\n')).toMatchInlineSnapshot(`
@@ -413,8 +535,8 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
 
         Love
 
-           ◼  nx run bar:test
            ✔  nx run foo:test
+           ◼  nx run bar:test
 
         ———————————————————————————————————————————————————————————————————————————————
 
@@ -426,6 +548,117 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
 
               - nx run bar:test
 
+        "
+      `);
+    });
+
+    it('should display stopped icon for stopped continuous task in run-many', async () => {
+      const devServer = {
+        id: 'test:serve',
+        continuous: true,
+        target: {
+          target: 'serve',
+          project: 'test',
+        },
+      } as Partial<Task> as Task;
+
+      const e2eTest = {
+        id: 'test:e2e',
+        continuous: false,
+        target: {
+          target: 'e2e',
+          project: 'test',
+        },
+      } as Partial<Task> as Task;
+
+      const { lifeCycle, printSummary } = getTuiTerminalSummaryLifeCycle({
+        args: {
+          targets: ['e2e'],
+        },
+        initiatingProject: '',
+        initiatingTasks: [e2eTest],
+        taskGraph: {
+          tasks: { [devServer.id]: devServer, [e2eTest.id]: e2eTest },
+          dependencies: {
+            [devServer.id]: [],
+            [e2eTest.id]: [devServer.id],
+          },
+          continuousDependencies: {
+            [e2eTest.id]: [devServer.id],
+          },
+          roots: [devServer.id],
+        },
+        overrides: {},
+        projectNames: ['test'],
+        tasks: [devServer, e2eTest],
+        resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
+      });
+
+      // Dev server starts
+      lifeCycle.startTasks?.([devServer], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(
+        devServer.id,
+        'Server running on port 4200',
+        true
+      );
+
+      // E2E test starts and succeeds
+      lifeCycle.startTasks?.([e2eTest], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(e2eTest.id, 'All tests passed', true);
+      lifeCycle.endTasks?.(
+        [
+          {
+            code: 0,
+            status: 'success',
+            task: e2eTest,
+            terminalOutput: 'All tests passed',
+          },
+        ],
+        null as unknown as TaskMetadata
+      );
+      lifeCycle.printTaskTerminalOutput?.(
+        e2eTest,
+        'success',
+        'All tests passed'
+      );
+
+      // Dev server is stopped (via endTasks with success status, then setTaskStatus)
+      lifeCycle.endTasks?.(
+        [
+          {
+            code: 0,
+            status: 'success',
+            task: devServer,
+            terminalOutput: 'Server running on port 4200',
+          },
+        ],
+        null as unknown as TaskMetadata
+      );
+      lifeCycle.setTaskStatus?.(devServer.id, NativeTaskStatus.Stopped);
+      lifeCycle.printTaskTerminalOutput?.(
+        devServer,
+        'success',
+        'Server running on port 4200'
+      );
+
+      lifeCycle.endCommand?.();
+
+      const lines = getOutputLines(printSummary);
+
+      // The stopped task (devServer) should show cyan ◼ icon, not green ✔
+      expect(lines.join('\n')).toMatchInlineSnapshot(`
+        "
+
+        > nx run test:serve
+
+        Server running on port 4200
+
+           ◼  nx run test:serve
+           ✔  nx run test:e2e
+
+        ———————————————————————————————————————————————————————————————————————————————
+
+         NX   Successfully ran target e2e for project test and 1 task it depends on (37w)
         "
       `);
     });
@@ -450,7 +683,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         args: {
           targets: ['test'],
         },
-        initiatingProject: null,
+        initiatingProject: '',
         initiatingTasks: [],
         overrides: {},
         taskGraph: {
@@ -464,10 +697,10 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
       });
 
-      lifeCycle.startTasks([foo, bar], null);
-      lifeCycle.appendTaskOutput(foo.id, ':)', true);
-      lifeCycle.appendTaskOutput(bar.id, ':)', true);
-      lifeCycle.endTasks(
+      lifeCycle.startTasks?.([foo, bar], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(foo.id, ':)', true);
+      lifeCycle.appendTaskOutput?.(bar.id, ':)', true);
+      lifeCycle.endTasks?.(
         [
           {
             code: 0,
@@ -482,11 +715,11 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
             terminalOutput: ':)',
           },
         ],
-        null
+        null as unknown as TaskMetadata
       );
-      lifeCycle.printTaskTerminalOutput(foo, 'success', ':)');
-      lifeCycle.printTaskTerminalOutput(bar, 'success', ':)');
-      lifeCycle.endCommand();
+      lifeCycle.printTaskTerminalOutput?.(foo, 'success', ':)');
+      lifeCycle.printTaskTerminalOutput?.(bar, 'success', ':)');
+      lifeCycle.endCommand?.();
 
       const lines = getOutputLines(printSummary);
 
@@ -505,8 +738,8 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
   });
 });
 
-function getOutputLines(cb: () => void) {
-  const lines = [];
+function getOutputLines(cb: () => void): string[] {
+  const lines: string[] = [];
   const originalLog = console.log;
   const originalStdout = process.stdout.write;
   let buf = '';
@@ -514,7 +747,11 @@ function getOutputLines(cb: () => void) {
     lines.push(buf + stripVTControlCharacters(args.join(' ')));
     buf = '';
   };
-  process.stdout.write = (chunk, callback) => {
+  process.stdout.write = (
+    chunk: string | Uint8Array,
+    encodingOrCallback?: BufferEncoding | ((err?: Error) => void),
+    callback?: (err?: Error) => void
+  ): boolean => {
     buf += chunk;
     if (buf.includes('boom')) {
     }
@@ -528,8 +765,11 @@ function getOutputLines(cb: () => void) {
       }
       buf = '';
     }
-    if (callback) {
-      callback();
+    // Handle both overload signatures
+    const cb =
+      typeof encodingOrCallback === 'function' ? encodingOrCallback : callback;
+    if (cb) {
+      cb();
     }
     return true;
   };

@@ -2,23 +2,22 @@ import {
   addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
+  getDependencyVersionFromPackageJson,
   installPackagesTask,
-  logger,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { releaseTasks } from '@nx/js/src/generators/library/utils/add-release-config';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import init from '../../generators/init/init';
 import { UnitTestRunner } from '../../utils/test-runners';
 import addLintingGenerator from '../add-linting/add-linting';
-import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
 import { addJest } from '../utils/add-jest';
-import { addVitest } from '../utils/add-vitest';
+import { addVitestAnalog, addVitestAngular } from '../utils/add-vitest';
 import { addBuildableLibrariesPostCssDependencies } from '../utils/dependencies';
 import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
+import { assertNotUsingTsSolutionSetup } from '../utils/validations';
 import { versions } from '../utils/version-utils';
 import { addModule } from './lib/add-module';
 import { addProject } from './lib/add-project';
@@ -29,30 +28,15 @@ import { NormalizedSchema } from './lib/normalized-schema';
 import { setGeneratorDefaults } from './lib/set-generator-defaults';
 import { updateLibPackageNpmScope } from './lib/update-lib-package-npm-scope';
 import { updateTsConfigFiles } from './lib/update-tsconfig-files';
+import { validateOptions } from './lib/validate-options';
 import { Schema } from './schema';
 
 export async function libraryGenerator(
   tree: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(tree, 'angular', 'library');
-
-  // Do some validation checks
-  if (!schema.routing && schema.lazy) {
-    throw new Error(`To use "--lazy" option, "--routing" must also be set.`);
-  }
-
-  if (schema.publishable === true && !schema.importPath) {
-    throw new Error(
-      `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
-    );
-  }
-
-  if (schema.addTailwind && !schema.buildable && !schema.publishable) {
-    throw new Error(
-      `To use "--addTailwind" option, you have to set either "--buildable" or "--publishable".`
-    );
-  }
+  assertNotUsingTsSolutionSetup(tree, 'library');
+  validateOptions(tree, schema);
 
   const options = await normalizeOptions(tree, schema);
   const { libraryOptions } = options;
@@ -67,7 +51,9 @@ export async function libraryGenerator(
   await init(tree, { ...libraryOptions, skipFormat: true });
 
   if (!libraryOptions.skipPackageJson) {
-    ensureAngularDependencies(tree);
+    // if zone.js is not installed, we'll never install it as a dependency
+    // from the library generator
+    ensureAngularDependencies(tree, /*zoneless*/ true);
   }
 
   const project = await addProject(tree, libraryOptions);
@@ -85,14 +71,6 @@ export async function libraryGenerator(
   }
 
   await addLinting(tree, libraryOptions);
-
-  if (libraryOptions.addTailwind) {
-    await setupTailwindGenerator(tree, {
-      project: libraryOptions.name,
-      skipFormat: true,
-      skipPackageJson: libraryOptions.skipPackageJson,
-    });
-  }
 
   if (
     (libraryOptions.buildable || libraryOptions.publishable) &&
@@ -127,6 +105,9 @@ async function addUnitTestRunner(
   host: Tree,
   options: NormalizedSchema['libraryOptions']
 ) {
+  const zoneless =
+    getDependencyVersionFromPackageJson(host, 'zone.js') === null;
+
   switch (options.unitTestRunner) {
     case UnitTestRunner.Jest:
       await addJest(host, {
@@ -134,14 +115,26 @@ async function addUnitTestRunner(
         projectRoot: options.projectRoot,
         skipPackageJson: options.skipPackageJson,
         strict: options.strict,
+        runtimeTsconfigFileName: 'tsconfig.lib.json',
+        zoneless,
       });
       break;
-    case UnitTestRunner.Vitest:
-      await addVitest(host, {
+    case UnitTestRunner.VitestAngular:
+      await addVitestAngular(host, {
         name: options.name,
         projectRoot: options.projectRoot,
         skipPackageJson: options.skipPackageJson,
+        useNxUnitTestRunnerExecutor: true,
+      });
+      break;
+    case UnitTestRunner.VitestAnalog:
+      await addVitestAnalog(host, {
+        name: options.name,
+        projectRoot: options.projectRoot,
+        skipFormat: options.skipFormat,
+        skipPackageJson: options.skipPackageJson,
         strict: options.strict,
+        zoneless,
       });
       break;
   }

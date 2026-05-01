@@ -1,42 +1,59 @@
-let mockDeriveSpecifierFromConventionalCommits = jest.fn();
-let mockDeriveSpecifierFromVersionPlan = jest.fn();
-let mockResolveVersionActionsForProject = jest.fn();
+// Module-level mock container - initialized early so jest.mock factories can reference it
+const mocks = {
+  deriveSpecifierFromConventionalCommits: jest.fn(),
+  deriveSpecifierFromVersionPlan: jest.fn(),
+  resolveVersionActionsForProject: jest.fn(),
+  resolveCurrentVersion: jest.fn(),
+};
 
-jest.doMock('./derive-specifier-from-conventional-commits', () => ({
-  deriveSpecifierFromConventionalCommits:
-    mockDeriveSpecifierFromConventionalCommits,
+// Aliases for test usage
+const mockDeriveSpecifierFromConventionalCommits =
+  mocks.deriveSpecifierFromConventionalCommits;
+const mockDeriveSpecifierFromVersionPlan = mocks.deriveSpecifierFromVersionPlan;
+const mockResolveVersionActionsForProject =
+  mocks.resolveVersionActionsForProject;
+const mockResolveCurrentVersion = mocks.resolveCurrentVersion;
+
+jest.mock('./derive-specifier-from-conventional-commits', () => ({
+  deriveSpecifierFromConventionalCommits: (...args: any[]) =>
+    mocks.deriveSpecifierFromConventionalCommits(...args),
 }));
 
-jest.doMock('./version-actions', () => ({
-  ...jest.requireActual('./version-actions'),
-  deriveSpecifierFromVersionPlan: mockDeriveSpecifierFromVersionPlan,
-  resolveVersionActionsForProject: mockResolveVersionActionsForProject,
-}));
+jest.mock('./version-actions', () => {
+  const actual = jest.requireActual('./version-actions');
+  return {
+    ...actual,
+    deriveSpecifierFromVersionPlan: (...args: any[]) =>
+      mocks.deriveSpecifierFromVersionPlan(...args),
+    resolveVersionActionsForProject: (...args: any[]) =>
+      mocks.resolveVersionActionsForProject(...args),
+  };
+});
 
-jest.doMock('./project-logger', () => ({
-  ...jest.requireActual('./project-logger'),
-  // Don't slow down or add noise to unit tests output unnecessarily
-  ProjectLogger: class ProjectLogger {
-    buffer() {}
-    flush() {}
-  },
-}));
+jest.mock('./project-logger', () => {
+  const actual = jest.requireActual('./project-logger');
+  return {
+    ...actual,
+    // Don't slow down or add noise to unit tests output unnecessarily
+    ProjectLogger: class ProjectLogger {
+      buffer() {}
+      flush() {}
+    },
+  };
+});
 
-let mockResolveCurrentVersion = jest.fn();
-jest.doMock('./resolve-current-version', () => ({
-  resolveCurrentVersion: mockResolveCurrentVersion,
+jest.mock('./resolve-current-version', () => ({
+  resolveCurrentVersion: (...args: any[]) =>
+    mocks.resolveCurrentVersion(...args),
 }));
 
 import { createTreeWithEmptyWorkspace } from '../../../generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from '../../../generators/tree';
 import {
   createNxReleaseConfigAndPopulateWorkspace,
+  createTestReleaseGroupProcessor,
   mockResolveVersionActionsForProjectImplementation,
 } from './test-utils';
-
-const { ReleaseGroupProcessor } = require('./release-group-processor') as {
-  ReleaseGroupProcessor: typeof import('./release-group-processor').ReleaseGroupProcessor;
-};
 
 // Using the daemon in unit tests would cause jest to never exit
 process.env.NX_DAEMON = 'false';
@@ -55,15 +72,10 @@ describe('Multiple Release Groups', () => {
 
   describe('Two unrelated groups, both fixed relationship, just JS', () => {
     it('should correctly version projects using mocked conventional commits', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
             group1 ({ "projectsRelationship": "fixed" }):
               - pkg-a@1.0.0 [js]
               - pkg-b@1.0.0 [js]
@@ -73,13 +85,13 @@ describe('Multiple Release Groups', () => {
               - pkg-d@2.0.0 [js]
                 -> depends on pkg-c
           `,
-        {
-          version: {
-            conventionalCommits: true,
+          {
+            version: {
+              conventionalCommits: true,
+            },
           },
-        },
-        mockResolveCurrentVersion
-      );
+          mockResolveCurrentVersion
+        );
 
       mockDeriveSpecifierFromConventionalCommits.mockImplementation(
         (_, __, ___, ____, { name: projectName }) => {
@@ -93,22 +105,12 @@ describe('Multiple Release Groups', () => {
         }
       );
 
-      const processor = new ReleaseGroupProcessor(
+      const processor = await createTestReleaseGroupProcessor(
         tree,
         projectGraph,
         nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        {
-          dryRun: false,
-          verbose: false,
-          firstRelease: false,
-          preid: undefined,
-          filters,
-        }
+        filters
       );
-
-      await processor.init();
       await processor.processGroups();
 
       // Called for each project
@@ -153,15 +155,10 @@ describe('Multiple Release Groups', () => {
 
   describe('Two unrelated groups, both independent relationship, just JS', () => {
     it('should correctly version projects using mocked conventional commits', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
             group1 ({ "projectsRelationship": "independent" }):
               - pkg-a@1.0.0 [js]
               - pkg-b@1.1.0 [js]
@@ -171,13 +168,13 @@ describe('Multiple Release Groups', () => {
               - pkg-d@2.1.0 [js]
                 -> depends on pkg-c
           `,
-        {
-          version: {
-            conventionalCommits: true,
+          {
+            version: {
+              conventionalCommits: true,
+            },
           },
-        },
-        mockResolveCurrentVersion
-      );
+          mockResolveCurrentVersion
+        );
 
       mockDeriveSpecifierFromConventionalCommits.mockImplementation(
         (_, __, ___, ____, { name: projectName }) => {
@@ -189,22 +186,12 @@ describe('Multiple Release Groups', () => {
         }
       );
 
-      const processor = new ReleaseGroupProcessor(
+      const processor = await createTestReleaseGroupProcessor(
         tree,
         projectGraph,
         nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        {
-          dryRun: false,
-          verbose: false,
-          firstRelease: false,
-          preid: undefined,
-          filters,
-        }
+        filters
       );
-
-      await processor.init();
       await processor.processGroups();
 
       // Called for each project
@@ -250,15 +237,10 @@ describe('Multiple Release Groups', () => {
 
   describe('Two unrelated groups, one fixed one independent, just JS', () => {
     it('should correctly version projects using mocked conventional commits', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
             group1 ({ "projectsRelationship": "fixed" }):
               - pkg-a@1.0.0 [js]
               - pkg-b@1.0.0 [js]
@@ -268,13 +250,13 @@ describe('Multiple Release Groups', () => {
               - pkg-d@2.1.0 [js]
                 -> depends on pkg-c
           `,
-        {
-          version: {
-            conventionalCommits: true,
+          {
+            version: {
+              conventionalCommits: true,
+            },
           },
-        },
-        mockResolveCurrentVersion
-      );
+          mockResolveCurrentVersion
+        );
 
       mockDeriveSpecifierFromConventionalCommits.mockImplementation(
         (_, __, ___, ____, { name: projectName }) => {
@@ -286,22 +268,12 @@ describe('Multiple Release Groups', () => {
         }
       );
 
-      const processor = new ReleaseGroupProcessor(
+      const processor = await createTestReleaseGroupProcessor(
         tree,
         projectGraph,
         nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        {
-          dryRun: false,
-          verbose: false,
-          firstRelease: false,
-          preid: undefined,
-          filters,
-        }
+        filters
       );
-
-      await processor.init();
       await processor.processGroups();
 
       // Called for each project
@@ -346,15 +318,10 @@ describe('Multiple Release Groups', () => {
 
   describe('Two related groups, both fixed relationship, just JS', () => {
     it('should correctly version projects across group boundaries', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
             group1 ({ "projectsRelationship": "fixed" }):
               - pkg-a@1.0.0 [js]
                 -> depends on pkg-c
@@ -363,13 +330,13 @@ describe('Multiple Release Groups', () => {
               - pkg-c@2.0.0 [js]
               - pkg-d@2.0.0 [js]
           `,
-        {
-          version: {
-            conventionalCommits: true,
+          {
+            version: {
+              conventionalCommits: true,
+            },
           },
-        },
-        mockResolveCurrentVersion
-      );
+          mockResolveCurrentVersion
+        );
 
       mockDeriveSpecifierFromConventionalCommits.mockImplementation(
         (_, __, ___, ____, { name: projectName }) => {
@@ -380,22 +347,12 @@ describe('Multiple Release Groups', () => {
         }
       );
 
-      const processor = new ReleaseGroupProcessor(
+      const processor = await createTestReleaseGroupProcessor(
         tree,
         projectGraph,
         nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        {
-          dryRun: false,
-          verbose: false,
-          firstRelease: false,
-          preid: undefined,
-          filters,
-        }
+        filters
       );
-
-      await processor.init();
       await processor.processGroups();
 
       expect(mockResolveVersionActionsForProject).toHaveBeenCalledTimes(4);
@@ -436,15 +393,10 @@ describe('Multiple Release Groups', () => {
 
   describe('Three related groups, all fixed relationship, just JS', () => {
     it('should correctly version projects across transitive group boundaries', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
             group1 ({ "projectsRelationship": "fixed" }):
               - pkg-a@1.0.0 [js]
                 -> depends on pkg-c
@@ -457,13 +409,13 @@ describe('Multiple Release Groups', () => {
               - pkg-e@3.0.0 [js]
               - pkg-f@3.0.0 [js]
           `,
-        {
-          version: {
-            conventionalCommits: true,
+          {
+            version: {
+              conventionalCommits: true,
+            },
           },
-        },
-        mockResolveCurrentVersion
-      );
+          mockResolveCurrentVersion
+        );
 
       mockDeriveSpecifierFromConventionalCommits.mockImplementation(
         (_, __, ___, ____, { name: projectName }) => {
@@ -475,22 +427,12 @@ describe('Multiple Release Groups', () => {
         }
       );
 
-      const processor = new ReleaseGroupProcessor(
+      const processor = await createTestReleaseGroupProcessor(
         tree,
         projectGraph,
         nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        {
-          dryRun: false,
-          verbose: false,
-          firstRelease: false,
-          preid: undefined,
-          filters,
-        }
+        filters
       );
-
-      await processor.init();
       await processor.processGroups();
 
       expect(mockResolveVersionActionsForProject).toHaveBeenCalledTimes(6);
@@ -566,22 +508,17 @@ describe('Multiple Release Groups', () => {
     `;
 
     it('should correctly version projects across group boundaries', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        graphDefinition,
-        {
-          version: {
-            conventionalCommits: true,
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          graphDefinition,
+          {
+            version: {
+              conventionalCommits: true,
+            },
           },
-        },
-        mockResolveCurrentVersion
-      );
+          mockResolveCurrentVersion
+        );
 
       mockDeriveSpecifierFromConventionalCommits.mockImplementation(
         (_, __, ___, ____, { name: projectName }) => {
@@ -597,22 +534,12 @@ describe('Multiple Release Groups', () => {
         }
       );
 
-      const processor = new ReleaseGroupProcessor(
+      const processor = await createTestReleaseGroupProcessor(
         tree,
         projectGraph,
         nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        {
-          dryRun: false,
-          verbose: false,
-          firstRelease: false,
-          preid: undefined,
-          filters,
-        }
+        filters
       );
-
-      await processor.init();
       await processor.processGroups();
 
       expect(mockResolveVersionActionsForProject).toHaveBeenCalledTimes(4);
@@ -651,22 +578,17 @@ describe('Multiple Release Groups', () => {
     });
 
     it('should pick an appropriate overall version across group boundaries when a project is influenced by both a direct specifier and a dependency bump', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        graphDefinition,
-        {
-          version: {
-            conventionalCommits: true,
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          graphDefinition,
+          {
+            version: {
+              conventionalCommits: true,
+            },
           },
-        },
-        mockResolveCurrentVersion
-      );
+          mockResolveCurrentVersion
+        );
 
       mockDeriveSpecifierFromConventionalCommits.mockImplementation(
         (_, __, ___, ____, { name: projectName }) => {
@@ -682,22 +604,12 @@ describe('Multiple Release Groups', () => {
         }
       );
 
-      const processor = new ReleaseGroupProcessor(
+      const processor = await createTestReleaseGroupProcessor(
         tree,
         projectGraph,
         nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        {
-          dryRun: false,
-          verbose: false,
-          firstRelease: false,
-          preid: undefined,
-          filters,
-        }
+        filters
       );
-
-      await processor.init();
       await processor.processGroups();
 
       expect(mockResolveVersionActionsForProject).toHaveBeenCalledTimes(4);
@@ -739,15 +651,10 @@ describe('Multiple Release Groups', () => {
   describe('Mixed JS and Rust projects within groups', () => {
     describe('Two unrelated groups, both fixed relationship, mixed JS and Rust', () => {
       it('should correctly version projects using mocked conventional commits', async () => {
-        const {
-          nxReleaseConfig,
-          projectGraph,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          filters,
-        } = await createNxReleaseConfigAndPopulateWorkspace(
-          tree,
-          `
+        const { nxReleaseConfig, projectGraph, filters } =
+          await createNxReleaseConfigAndPopulateWorkspace(
+            tree,
+            `
               group1 ({ "projectsRelationship": "fixed" }):
                 - pkg-a@1.0.0 [js]
                 - pkg-b@1.0.0 [rust]
@@ -755,13 +662,13 @@ describe('Multiple Release Groups', () => {
                 - pkg-c@2.0.0 [rust]
                 - pkg-d@2.0.0 [js]
             `,
-          {
-            version: {
-              conventionalCommits: true,
+            {
+              version: {
+                conventionalCommits: true,
+              },
             },
-          },
-          mockResolveCurrentVersion
-        );
+            mockResolveCurrentVersion
+          );
 
         mockDeriveSpecifierFromConventionalCommits.mockImplementation(
           (_, __, ___, ____, { name: projectName }) => {
@@ -773,22 +680,12 @@ describe('Multiple Release Groups', () => {
           }
         );
 
-        const processor = new ReleaseGroupProcessor(
+        const processor = await createTestReleaseGroupProcessor(
           tree,
           projectGraph,
           nxReleaseConfig,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          {
-            dryRun: false,
-            verbose: false,
-            firstRelease: false,
-            preid: undefined,
-            filters,
-          }
+          filters
         );
-
-        await processor.init();
         await processor.processGroups();
 
         // Called for each project
@@ -802,17 +699,15 @@ describe('Multiple Release Groups', () => {
           "
         `);
         expect(tree.read('pkg-b/Cargo.toml', 'utf-8')).toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'pkg-b'
-          version = '1.1.0'
+          "[package]
+          name = "pkg-b"
+          version = "1.1.0"
           "
         `);
         expect(tree.read('pkg-c/Cargo.toml', 'utf-8')).toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'pkg-c'
-          version = '2.0.1'
+          "[package]
+          name = "pkg-c"
+          version = "2.0.1"
           "
         `);
         expect(tree.read('pkg-d/package.json', 'utf-8')).toMatchInlineSnapshot(`
@@ -827,15 +722,10 @@ describe('Multiple Release Groups', () => {
 
     describe('Two unrelated groups, both independent relationship, mixed JS and Rust', () => {
       it('should correctly version projects using mocked conventional commits', async () => {
-        const {
-          nxReleaseConfig,
-          projectGraph,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          filters,
-        } = await createNxReleaseConfigAndPopulateWorkspace(
-          tree,
-          `
+        const { nxReleaseConfig, projectGraph, filters } =
+          await createNxReleaseConfigAndPopulateWorkspace(
+            tree,
+            `
               group1 ({ "projectsRelationship": "independent" }):
                 - pkg-a@1.0.0 [js]
                 - pkg-b@1.1.0 [rust]
@@ -843,13 +733,13 @@ describe('Multiple Release Groups', () => {
                 - pkg-c@2.0.0 [rust]
                 - pkg-d@2.1.0 [js]
             `,
-          {
-            version: {
-              conventionalCommits: true,
+            {
+              version: {
+                conventionalCommits: true,
+              },
             },
-          },
-          mockResolveCurrentVersion
-        );
+            mockResolveCurrentVersion
+          );
 
         mockDeriveSpecifierFromConventionalCommits.mockImplementation(
           (_, __, ___, ____, { name: projectName }) => {
@@ -861,22 +751,12 @@ describe('Multiple Release Groups', () => {
           }
         );
 
-        const processor = new ReleaseGroupProcessor(
+        const processor = await createTestReleaseGroupProcessor(
           tree,
           projectGraph,
           nxReleaseConfig,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          {
-            dryRun: false,
-            verbose: false,
-            firstRelease: false,
-            preid: undefined,
-            filters,
-          }
+          filters
         );
-
-        await processor.init();
         await processor.processGroups();
 
         // Called for each project
@@ -890,17 +770,15 @@ describe('Multiple Release Groups', () => {
           "
         `);
         expect(tree.read('pkg-b/Cargo.toml', 'utf-8')).toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'pkg-b'
-          version = '1.1.1'
+          "[package]
+          name = "pkg-b"
+          version = "1.1.1"
           "
         `);
         expect(tree.read('pkg-c/Cargo.toml', 'utf-8')).toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'pkg-c'
-          version = '3.0.0'
+          "[package]
+          name = "pkg-c"
+          version = "3.0.0"
           "
         `);
         expect(tree.read('pkg-d/package.json', 'utf-8')).toMatchInlineSnapshot(`
@@ -915,15 +793,10 @@ describe('Multiple Release Groups', () => {
 
     describe('Two related groups, both fixed relationship, mixed JS and Rust', () => {
       it('should correctly version projects across group boundaries', async () => {
-        const {
-          nxReleaseConfig,
-          projectGraph,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          filters,
-        } = await createNxReleaseConfigAndPopulateWorkspace(
-          tree,
-          `
+        const { nxReleaseConfig, projectGraph, filters } =
+          await createNxReleaseConfigAndPopulateWorkspace(
+            tree,
+            `
               group1 ({ "projectsRelationship": "fixed" }):
                 - pkg-a@1.0.0 [js]
                 - pkg-b@1.0.0 [rust]
@@ -932,13 +805,13 @@ describe('Multiple Release Groups', () => {
                 - pkg-c@2.0.0 [rust]
                 - pkg-d@2.0.0 [js]
             `,
-          {
-            version: {
-              conventionalCommits: true,
+            {
+              version: {
+                conventionalCommits: true,
+              },
             },
-          },
-          mockResolveCurrentVersion
-        );
+            mockResolveCurrentVersion
+          );
 
         mockDeriveSpecifierFromConventionalCommits.mockImplementation(
           (_, __, ___, ____, { name: projectName }) => {
@@ -954,22 +827,12 @@ describe('Multiple Release Groups', () => {
           }
         );
 
-        const processor = new ReleaseGroupProcessor(
+        const processor = await createTestReleaseGroupProcessor(
           tree,
           projectGraph,
           nxReleaseConfig,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          {
-            dryRun: false,
-            verbose: false,
-            firstRelease: false,
-            preid: undefined,
-            filters,
-          }
+          filters
         );
-
-        await processor.init();
         await processor.processGroups();
 
         // Called for each project
@@ -983,20 +846,18 @@ describe('Multiple Release Groups', () => {
           "
         `);
         expect(tree.read('pkg-b/Cargo.toml', 'utf-8')).toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'pkg-b'
-          version = '1.0.1'
+          "[package]
+          name = "pkg-b"
+          version = "1.0.1"
 
           [dependencies]
-          pkg-c = '2.0.1'
+          pkg-c = "2.0.1"
           "
         `);
         expect(tree.read('pkg-c/Cargo.toml', 'utf-8')).toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'pkg-c'
-          version = '2.0.1'
+          "[package]
+          name = "pkg-c"
+          version = "2.0.1"
           "
         `);
         expect(tree.read('pkg-d/package.json', 'utf-8')).toMatchInlineSnapshot(`
@@ -1012,32 +873,27 @@ describe('Multiple Release Groups', () => {
 
   describe('groups filter', () => {
     it('should not error if projects in release groups outside of the filtered groups do not have valid manifestsToUpdate', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
             group1 ({ "projectsRelationship": "fixed" }):
               - pkg-a@1.0.0 [js]
             group2 ({ "projectsRelationship": "fixed" }):
               - pkg-c@2.0.0 [js]
           `,
-        {
-          version: {
-            conventionalCommits: true,
-            manifestRootsToUpdate: ['{projectRoot}'],
+          {
+            version: {
+              conventionalCommits: true,
+              manifestRootsToUpdate: ['{projectRoot}'],
+            },
           },
-        },
-        mockResolveCurrentVersion,
-        {
-          // Only release group1
-          groups: ['group1'],
-        }
-      );
+          mockResolveCurrentVersion,
+          {
+            // Only release group1
+            groups: ['group1'],
+          }
+        );
 
       // Delete the package.json for pkg-c which is outside of the filtered groups. This test is asserting that this does NOT throw an error.
       tree.delete('pkg-c/package.json');
@@ -1049,22 +905,12 @@ describe('Multiple Release Groups', () => {
         }
       );
 
-      const processor = new ReleaseGroupProcessor(
+      const processor = await createTestReleaseGroupProcessor(
         tree,
         projectGraph,
         nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        {
-          dryRun: false,
-          verbose: false,
-          firstRelease: false,
-          preid: undefined,
-          filters,
-        }
+        filters
       );
-
-      await processor.init();
       await processor.processGroups();
 
       // Called for each project
@@ -1076,72 +922,6 @@ describe('Multiple Release Groups', () => {
           "version": "1.1.0"
         }
         "
-      `);
-    });
-
-    it('should error when projects in release groups outside of the filtered groups do not have valid manifestsToUpdate IF they are required to be processed because of dependencies to groups included in the filtered groups', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
-            group1 ({ "projectsRelationship": "fixed" }):
-              - pkg-a@1.0.0 [js]
-                -> depends on pkg-c
-              - pkg-b@1.0.0 [js]
-            group2 ({ "projectsRelationship": "fixed" }):
-              - pkg-c@2.0.0 [js]
-              - pkg-d@2.0.0 [js]
-          `,
-        {
-          version: {
-            conventionalCommits: true,
-            manifestRootsToUpdate: ['{projectRoot}'],
-          },
-        },
-        mockResolveCurrentVersion,
-        {
-          // Only release group2 (but group1 has a dependency on group2)
-          groups: ['group2'],
-        }
-      );
-
-      // Delete the package.json for pkg-c which is outside of the filtered groups. This test is asserting that this DOES throw an error.
-      tree.delete('pkg-c/package.json');
-
-      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
-        (_, __, ___, ____, { name: projectName }) => {
-          if (projectName === 'pkg-c') return 'patch';
-          return 'none';
-        }
-      );
-
-      const processor = new ReleaseGroupProcessor(
-        tree,
-        projectGraph,
-        nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        {
-          dryRun: false,
-          verbose: false,
-          firstRelease: false,
-          preid: undefined,
-          filters,
-        }
-      );
-
-      await expect(processor.init()).rejects
-        .toThrowErrorMatchingInlineSnapshot(`
-        "The project "pkg-c" does not have a package.json file available in ./pkg-c.
-
-        To fix this you will either need to add a package.json file at that location, or configure "release" within your nx.json to exclude "pkg-c" from the current release group, or amend the "release.version.manifestRootsToUpdate" configuration to point to where the relevant manifest should be.
-
-        It is also possible that the project is being processed because of a dependency relationship between what you are directly versioning and the project/release group, in which case you will need to amend your filters to include all relevant projects and release groups."
       `);
     });
   });

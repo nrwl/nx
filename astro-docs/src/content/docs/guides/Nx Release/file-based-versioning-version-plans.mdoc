@@ -11,9 +11,9 @@ Nx release supports file based versioning as a first class use-case through a fe
 - creating version plans and
 - applying version plans.
 
-We will cover both in this recipe, but first we need to enable the feature itself.
+Both in this recipe, but first we need to enable the feature itself.
 
-## Enable Version Plans
+## Enable version plans
 
 To enable version plans as a feature in your workspace, set `release.versionPlans` to `true` in `nx.json`:
 
@@ -21,17 +21,17 @@ To enable version plans as a feature in your workspace, set `release.versionPlan
 // nx.json
 {
   "release": {
-    "versionPlans": true
+    "versionPlans": true,
     // other release config such as projects to include in releases etc
     // projects: ["packages/**/*"]
     // ...
-  }
+  },
 }
 ```
 
 You can also enable or disable this for specific release groups by setting the property at the group level if you don't want to apply it to all matching projects in your workspace.
 
-## Create Version Plans
+## Create version plans
 
 Version plan files live in the `.nx/version-plans/` directory within your workspace (which needs to be tracked by git, so ensure that you are not ignoring the whole `.nx` directory, and instead only the `.nx/workspace-data` and `.nx/cache` directories).
 
@@ -103,15 +103,15 @@ While you could still specify the name of the project it is redundant in this ca
 
 Because these are just files, they can be created manually or by any custom scripts you may wish to write. They simply have to follow the guidance above around structure, location (`./.nx/version-plans/`) and naming (`.md` extension). The exact file name does not matter, it just needs to be unique within the `.nx/version-plans/` directory.
 
-To make things easier, Nx release comes with a built in command to help you generate valid version plan files:
+To make things easier, Nx release comes with a built in command to help you generate valid version plan files. See the [`nx release plan`](/docs/reference/nx-commands#nx-release-plan) CLI reference for all available options.
 
-```shell {% frame="none" %}
+```shell
 nx release plan
 ```
 
 When you run this command you will receive a series of interactive prompts which guide you through the process of creating a version plan file. It will generate a unique name for you and ensure it is written to the correct location.
 
-## Apply Version Plans at Release Time
+## Apply version plans at release time
 
 Using version plans does not change how versioning, changelog generation and publishing is invoked, you can still use the `nx release` CLI or programmatic API as you would for any other versioning strategy.
 
@@ -119,17 +119,17 @@ The only difference is that Nx release will know to reference your version plan 
 
 When you run `nx release` or use the programmatic API, Nx will look for version plan files in the `.nx/version-plans/` directory and apply the desired version bumps to the projects and release groups specified in the Front Matter YAML section of each file. If a project or release group is not found, an error will be thrown and the release will not proceed. Once a particular version plan has been applied it will be deleted from the `.nx/version-plans/` directory so that it does not inadvertently get applied again in the future. The deleted file will be staged and committed alongside your other changed files that were modified directly as part of the release command (depending on your Nx release configuration).
 
-## Ensure That Version Plans Exist for Relevant Changes
+## Ensure that version plans exist for relevant changes
 
 When making changes to your codebase and using version plans as your versioning strategy it is likely that you will want to ensure that a version plan file exists for the changes you are making.
 
 Attempting to keep track of this manually as a part of pull request reviews can be error prone and time consuming, therefore Nx release provides a `nx release plan:check` command which can be used to ensure that a version plan file exists for the changes you are making.
 
-```shell {% frame="none" %}
+```shell
 nx release plan:check
 ```
 
-Running this command will analyze the changed files (supporting the same options you may be familiar with from `nx affected`, such as `--base`, `--head`, `--files`, `--uncommitted`, etc) and then determine which projects have been "touched" as a result. Note that it is specifically touched projects, and not affected in this case, because only directly changed projects are relevant for versioning. The side-effects of versioning independently released dependents are handled by the release process itself (controllable via the `version.generatorOptions.updateDependents` option).
+Running this command will analyze the changed files (supporting the same options you may be familiar with from `nx affected`, such as `--base`, `--head`, `--files`, `--uncommitted`, etc) and then determine which projects have been "touched" as a result. Note that it is specifically touched projects, and not affected in this case, because only directly changed projects are relevant for versioning. The side-effects of versioning independently released dependents are handled by the release process itself (controllable via the `version.updateDependents` option).
 
 ### Running release plan:check in CI
 
@@ -139,7 +139,7 @@ For GitHub Actions, we provide a utility action to do this for you:
 
 ```yaml
 # ...other steps
-- uses: nrwl/nx-set-shas@v4
+- uses: nrwl/nx-set-shas@v5
 # ...other steps including the use of `nx release plan:check`
 ```
 
@@ -164,14 +164,41 @@ By default, all files that have changed are considered, but you may not want all
 {
   "release": {
     "versionPlans": {
-      "ignorePatternsForPlanCheck": ["**/*.spec.ts"]
-    }
-  }
+      "ignorePatternsForPlanCheck": ["**/*.spec.ts"],
+    },
+  },
 }
 ```
 
+{% aside type="caution" title="Important: Pattern Syntax" %}
+
+The `ignorePatternsForPlanCheck` patterns follow [gitignore semantics](https://git-scm.com/docs/gitignore). When using negation patterns (patterns starting with `!`) to "un-ignore" certain files, be aware that:
+
+**Working patterns:**
+
+- `["**/*.spec.ts"]` - ignore all spec files
+- `["**/*.ts", "!**/src/**"]` - ignore all .ts files except those in src/ directories
+
+**Non-working patterns:**
+
+- `["*", "!src/"]` - this does NOT work as expected because `*` in gitignore matches at the root level and negation patterns cannot properly un-ignore nested paths
+
+If you want to ignore all files except those in specific directories, use file extension patterns instead of wildcards:
+
+```jsonc
+{
+  "release": {
+    "versionPlans": {
+      "ignorePatternsForPlanCheck": ["**/*.ts", "**/*.json", "!**/src/**"],
+    },
+  },
+}
+```
+
+{% /aside %}
+
 To see more details about the changed files that were detected and the filtering logic that was used to determine the ultimately changed projects behind the scenes, you can pass `--verbose` to the command:
 
-```shell {% frame="none" %}
+```shell
 nx release plan:check --verbose
 ```

@@ -3,7 +3,7 @@
  * we duplicate the helper functions from @nx/workspace in this file.
  */
 
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { EOL } from 'os';
 import { isCI } from './ci/is-ci';
 
@@ -105,6 +105,14 @@ export class CLIOutput {
 
   addNewline() {
     this.writeToStdOut(EOL);
+  }
+
+  /**
+   * Write lines directly without CLI prefix/badge.
+   * Used for banner output when no title is needed.
+   */
+  writeLines(lines: string[]) {
+    lines.forEach((line) => this.writeToStdOut(`${line}${EOL}`));
   }
 
   addVerticalSeparator(color = 'gray') {

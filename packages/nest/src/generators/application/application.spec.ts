@@ -1,11 +1,11 @@
 import {
+  getProjects,
   readJson,
   readProjectConfiguration,
   updateJson,
   writeJson,
   type Tree,
 } from '@nx/devkit';
-import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from './application';
 
@@ -24,7 +24,7 @@ describe('application generator', () => {
       addPlugin: true,
     });
 
-    const projectConfigurations = devkit.getProjects(tree);
+    const projectConfigurations = getProjects(tree);
     const project = projectConfigurations.get(appDirectory);
 
     expect(projectConfigurations.get(`${appDirectory}-e2e`)).toBeTruthy();
@@ -154,11 +154,13 @@ describe('application generator', () => {
       addPlugin: true,
     });
 
-    const tsConfig = devkit.readJson(tree, `${appDirectory}/tsconfig.app.json`);
+    const tsConfig = readJson(tree, `${appDirectory}/tsconfig.app.json`);
     expect(tsConfig.compilerOptions.emitDecoratorMetadata).toBe(true);
     expect(tsConfig.compilerOptions.target).toBe('es2021');
+    expect(tsConfig.compilerOptions.moduleResolution).toBe('node');
     expect(tsConfig.exclude).toEqual([
       'jest.config.ts',
+      'jest.config.cts',
       'src/**/*.spec.ts',
       'src/**/*.test.ts',
     ]);
@@ -170,7 +172,7 @@ describe('application generator', () => {
       strict: true,
       addPlugin: true,
     });
-    const tsConfig = devkit.readJson(tree, `${appDirectory}/tsconfig.app.json`);
+    const tsConfig = readJson(tree, `${appDirectory}/tsconfig.app.json`);
 
     expect(tsConfig.compilerOptions.strictNullChecks).toBeTruthy();
     expect(tsConfig.compilerOptions.noImplicitAny).toBeTruthy();
@@ -182,27 +184,36 @@ describe('application generator', () => {
   });
 
   describe('--skipFormat', () => {
-    it('should format files', async () => {
-      jest.spyOn(devkit, 'formatFiles');
+    let formatFilesSpy: jest.SpyInstance;
 
+    beforeEach(() => {
+      const devkitModule = require('@nx/devkit');
+      formatFilesSpy = jest
+        .spyOn(devkitModule, 'formatFiles')
+        .mockImplementation(() => Promise.resolve());
+    });
+
+    afterAll(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should format files', async () => {
       await applicationGenerator(tree, {
         directory: appDirectory,
         addPlugin: true,
       });
 
-      expect(devkit.formatFiles).toHaveBeenCalled();
+      expect(formatFilesSpy).toHaveBeenCalled();
     });
 
     it('should not format files when --skipFormat=true', async () => {
-      jest.spyOn(devkit, 'formatFiles');
-
       await applicationGenerator(tree, {
         directory: appDirectory,
         skipFormat: true,
         addPlugin: true,
       });
 
-      expect(devkit.formatFiles).not.toHaveBeenCalled();
+      expect(formatFilesSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -214,7 +225,7 @@ describe('application generator', () => {
         addPlugin: true,
       });
 
-      const projectConfigurations = devkit.getProjects(tree);
+      const projectConfigurations = getProjects(tree);
 
       expect(projectConfigurations.get(`${appDirectory}-e2e`)).toBeUndefined();
     });
@@ -260,7 +271,17 @@ describe('application generator', () => {
       `);
       expect(readJson(tree, 'myapp/package.json')).toMatchInlineSnapshot(`
         {
-          "dependencies": {},
+          "dependencies": {
+            "@nestjs/common": "^11.0.0",
+            "@nestjs/core": "^11.0.0",
+            "@nestjs/platform-express": "^11.0.0",
+            "reflect-metadata": "^0.1.13",
+            "rxjs": "^7.8.0",
+            "tslib": "^2.3.0",
+          },
+          "devDependencies": {
+            "@nestjs/testing": "^11.0.0",
+          },
           "name": "@proj/myapp",
           "nx": {
             "targets": {
@@ -380,6 +401,7 @@ describe('application generator', () => {
             "out-tsc",
             "dist",
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
             "eslint.config.js",
@@ -408,6 +430,7 @@ describe('application generator', () => {
           "extends": "../tsconfig.base.json",
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.d.ts",
@@ -442,6 +465,7 @@ describe('application generator', () => {
           "private",
           "nx",
           "dependencies",
+          "devDependencies",
         ]
       `);
     });
@@ -565,7 +589,7 @@ describe('application generator', () => {
               ],
               "executor": "@nx/jest:jest",
               "options": {
-                "jestConfig": "myapp-e2e/jest.config.ts",
+                "jestConfig": "myapp-e2e/jest.config.cts",
                 "passWithNoTests": true,
               },
               "outputs": [

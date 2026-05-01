@@ -82,6 +82,14 @@
       "type": "string",
       "description": "Change the build mode.",
       "enum": ["compile", "generate"]
+    },
+    "turbo": {
+      "type": "boolean",
+      "description": "Use Turbopack for building (Next.js 15 and below). In Next.js 16+, Turbopack is enabled by default."
+    },
+    "webpack": {
+      "type": "boolean",
+      "description": "Use webpack bundler instead of Turbopack (Next.js 16+ only). This flag is only applicable in Next.js 16 and above where Turbopack is the default."
     }
   },
   "required": ["outputPath"],

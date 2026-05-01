@@ -1,6 +1,6 @@
 ---
 title: Run Only Tasks Affected by a PR
-description: Learn how to use Nx's affected command to determine and run tasks only on projects affected by your changes, improving CI speed and efficiency.
+description: Learn how to use Nx affected command to determine and run tasks only on projects affected by your changes, improving CI speed and efficiency.
 sidebar:
   order: 13
 
@@ -207,11 +207,11 @@ This drastically improves the speed of your CI and reduces the amount of compute
 
 {% /graph %}
 
-## Using Nx Affected Commands
+## Using Nx affected commands
 
 To leverage this feature, use the following command when running your tasks, particularly on CI:
 
-```shell {% frame="none" %}
+```shell
 nx affected -t <task>
 ```
 
@@ -225,11 +225,11 @@ Once the projects are identified, Nx runs the tasks you specified on that subset
 
 You can also visualize the affected projects using the [Nx graph](/docs/features/explore-graph). Simply run:
 
-```shell {% frame="none" %}
+```shell
 nx graph --affected
 ```
 
-## Best Paired with Remote Caching and Distribution
+## Best paired with remote caching and distribution
 
 Using `nx affected` is a powerful tool to reduce the amount of compute that needs to be run. However, this might not be sufficient to significantly speed up your CI pipeline. For example:
 
@@ -238,20 +238,20 @@ Using `nx affected` is a powerful tool to reduce the amount of compute that need
 
 This is why Nx Affected is best paired with [remote caching](/docs/features/ci-features/remote-cache) and [distributed task execution](/docs/features/ci-features/distribute-task-execution).
 
-## Configure Affected on CI
+## Configure affected on CI
 
 To understand which projects are affected, Nx uses the Git history and the [project graph](/docs/features/explore-graph). Git knows which files changed, and the Nx project graph knows which projects those files belong to.
 
 The affected command takes a `base` and `head` commit. The default `base` is your `main` branch, and the default `head` is your current file system. This is generally what you want when developing locally, but in CI, you need to customize these values.
 
-```shell {% frame="none" %}
+```shell
 nx affected -t build --base=origin/main --head=$PR_BRANCH_NAME # where PR_BRANCH_NAME is defined by your CI system
 nx affected -t build --base=origin/main~1 --head=origin/main # rerun what is affected by the last commit in main
 ```
 
 You can also set the base and head SHAs as environment variables:
 
-```shell {% frame="none" %}
+```shell
 NX_BASE=origin/main~1
 NX_HEAD=origin/main
 ```
@@ -260,14 +260,14 @@ NX_HEAD=origin/main
 
 See our guides to get the [last successful CI run for your CI provider](/docs/guides/nx-cloud/setup-ci#get-the-commit-of-the-last-successful-build).
 
-## Ignoring Files from Affected Commands
+## Ignoring files from affected commands
 
 Nx provides two methods to exclude glob patterns (files and folders) from `affected:*` commands:
 
 - Glob patterns defined in your `.gitignore` file are ignored.
 - Glob patterns defined in an optional `.nxignore` file are ignored.
 
-## Marking Projects Affected by Dependency Updates
+## Marking projects affected by dependency updates
 
 By default, Nx will mark all projects as affected whenever your package manager's lock file changes. This behavior is a failsafe in case Nx misses a project that should be affected by a dependency update. If you'd like to opt into smarter behavior, you can configure Nx to only mark projects as affected if they actually depend on the updated packages.
 
@@ -284,6 +284,6 @@ By default, Nx will mark all projects as affected whenever your package manager'
 
 The flag `projectsAffectedByDependencyUpdates` can be set to `auto`, `all`, or an array that contains project specifiers. The default value is `all`.
 
-## Not Using Git
+## Not using git
 
 If you aren't using Git, you can pass `--files` to any affected command to indicate what files have been changed.

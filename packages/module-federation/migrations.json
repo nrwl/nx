@@ -100,6 +100,49 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "22.2.0": {
+      "version": "22.2.0-beta.0",
+      "packages": {
+        "@module-federation/enhanced": {
+          "version": "^0.21.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/runtime": {
+          "version": "^0.21.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/sdk": {
+          "version": "^0.21.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/node": {
+          "version": "^2.7.21",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "22.6.0": {
+      "version": "22.6.0-beta.10",
+      "x-prompt": "Bump @module-federation packages to v2.x to resolve koa CVE-2026-27959 (via dts-plugin)",
+      "packages": {
+        "@module-federation/enhanced": {
+          "version": "^2.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/runtime": {
+          "version": "^2.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/sdk": {
+          "version": "^2.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/node": {
+          "version": "^2.7.21",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

@@ -57,10 +57,6 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/packages/angular/generators/setup-mf',
   },
   {
-    title: '@nx/angular:setup-tailwind',
-    path: '/packages/angular/generators/setup-tailwind',
-  },
-  {
     title: '@nx/angular:stories',
     path: '/packages/angular/generators/stories',
   },
@@ -439,6 +435,7 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/packages/workspace/executors/counter',
   },
 ];
+
 /**
  * Asserting all the packages pages are accounted for and accessible.
  * Generation of the pages is manual since we want to make sure the change is intended.

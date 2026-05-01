@@ -16,7 +16,7 @@ Our project configurations might now look like this:
 {
   // ... more project configuration here
 
-  "tags": ["scope:client", "type:app"]
+  "tags": ["scope:client", "type:app"],
 }
 ```
 
@@ -25,7 +25,7 @@ Our project configurations might now look like this:
   // ... more project configuration here
 
   "tags": ["scope:client", "type:app"],
-  "implicitDependencies": ["client"]
+  "implicitDependencies": ["client"],
 }
 ```
 
@@ -33,7 +33,7 @@ Our project configurations might now look like this:
 {
   // ... more project configuration here
 
-  "tags": ["scope:admin", "type:app"]
+  "tags": ["scope:admin", "type:app"],
 }
 ```
 
@@ -42,7 +42,7 @@ Our project configurations might now look like this:
   // ... more project configuration here
 
   "tags": ["scope:admin", "type:app"],
-  "implicitDependencies": ["admin"]
+  "implicitDependencies": ["admin"],
 }
 ```
 
@@ -50,7 +50,7 @@ Our project configurations might now look like this:
 {
   // ... more project configuration here
 
-  "tags": ["scope:client", "type:feature"]
+  "tags": ["scope:client", "type:feature"],
 }
 ```
 
@@ -58,7 +58,7 @@ Our project configurations might now look like this:
 {
   // ... more project configuration here
 
-  "tags": ["scope:admin", "type:feature"]
+  "tags": ["scope:admin", "type:feature"],
 }
 ```
 
@@ -66,7 +66,7 @@ Our project configurations might now look like this:
 {
   // ... more project configuration here
 
-  "tags": ["scope:shared", "type:ui"]
+  "tags": ["scope:shared", "type:ui"],
 }
 ```
 
@@ -74,7 +74,7 @@ Our project configurations might now look like this:
 {
   // ... more project configuration here
 
-  "tags": ["scope:shared", "type:util"]
+  "tags": ["scope:shared", "type:util"],
 }
 ```
 
@@ -85,7 +85,71 @@ We can now restrict projects within the same group to depend on each other based
 - `ui` can only depend on other `ui`
 - everyone can depend on `util` including `util` itself
 
+{% tabs syncKey="eslint-config-preference" %}
+{% tabitem label="Flat Config" %}
+
+```javascript
+// eslint.config.mjs
+import nx from '@nx/eslint-plugin';
+
+export default [
+  ...nx.configs['flat/base'],
+  ...nx.configs['flat/typescript'],
+  ...nx.configs['flat/javascript'],
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          allow: [],
+          // update depConstraints based on your tags
+          depConstraints: [
+            {
+              sourceTag: 'scope:shared',
+              onlyDependOnLibsWithTags: ['scope:shared'],
+            },
+            {
+              sourceTag: 'scope:admin',
+              onlyDependOnLibsWithTags: ['scope:shared', 'scope:admin'],
+            },
+            {
+              sourceTag: 'scope:client',
+              onlyDependOnLibsWithTags: ['scope:shared', 'scope:client'],
+            },
+            {
+              sourceTag: 'type:app',
+              onlyDependOnLibsWithTags: [
+                'type:feature',
+                'type:ui',
+                'type:util',
+              ],
+            },
+            {
+              sourceTag: 'type:feature',
+              onlyDependOnLibsWithTags: ['type:ui', 'type:util'],
+            },
+            {
+              sourceTag: 'type:ui',
+              onlyDependOnLibsWithTags: ['type:ui', 'type:util'],
+            },
+            {
+              sourceTag: 'type:util',
+              onlyDependOnLibsWithTags: ['type:util'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+];
+```
+
+{% /tabitem %}
+{% tabitem label="Legacy (.eslintrc.json)" %}
+
 ```jsonc
+// .eslintrc.json
 {
   // ... more ESLint config here
 
@@ -98,39 +162,42 @@ We can now restrict projects within the same group to depend on each other based
       "depConstraints": [
         {
           "sourceTag": "scope:shared",
-          "onlyDependOnLibsWithTags": ["scope:shared"]
+          "onlyDependOnLibsWithTags": ["scope:shared"],
         },
         {
           "sourceTag": "scope:admin",
-          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"]
+          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"],
         },
         {
           "sourceTag": "scope:client",
-          "onlyDependOnLibsWithTags": ["scope:shared", "scope:client"]
+          "onlyDependOnLibsWithTags": ["scope:shared", "scope:client"],
         },
         {
           "sourceTag": "type:app",
-          "onlyDependOnLibsWithTags": ["type:feature", "type:ui", "type:util"]
+          "onlyDependOnLibsWithTags": ["type:feature", "type:ui", "type:util"],
         },
         {
           "sourceTag": "type:feature",
-          "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
+          "onlyDependOnLibsWithTags": ["type:ui", "type:util"],
         },
         {
           "sourceTag": "type:ui",
-          "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
+          "onlyDependOnLibsWithTags": ["type:ui", "type:util"],
         },
         {
           "sourceTag": "type:util",
-          "onlyDependOnLibsWithTags": ["type:util"]
-        }
-      ]
-    }
-  ]
+          "onlyDependOnLibsWithTags": ["type:util"],
+        },
+      ],
+    },
+  ],
 
   // ... more ESLint config here
 }
 ```
+
+{% /tabitem %}
+{% /tabs %}
 
 There are no limits to the number of tags, but as you add more tags the complexity of your dependency constraints rises exponentially. It's always good to draw a diagram and carefully plan the boundaries.
 
@@ -138,7 +205,55 @@ There are no limits to the number of tags, but as you add more tags the complexi
 
 Matching just a single source tag is sometimes not enough for solving complex restrictions. To avoid creating ad-hoc tags that are only meant for specific constraints, you can also combine multiple tags with `allSourceTags`. Each tag in the array must be matched for a constraint to be applied:
 
+{% tabs syncKey="eslint-config-preference" %}
+{% tabitem label="Flat Config" %}
+
+```javascript
+// eslint.config.mjs
+import nx from '@nx/eslint-plugin';
+
+export default [
+  ...nx.configs['flat/base'],
+  ...nx.configs['flat/typescript'],
+  ...nx.configs['flat/javascript'],
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          allow: [],
+          // update depConstraints based on your tags
+          depConstraints: [
+            {
+              // this constraint applies to all "admin" projects
+              sourceTag: 'scope:admin',
+              onlyDependOnLibsWithTags: ['scope:shared', 'scope:admin'],
+            },
+            {
+              sourceTag: 'type:ui',
+              onlyDependOnLibsWithTags: ['type:ui', 'type:util'],
+            },
+            {
+              // we don't want our admin ui components to depend on anything except utilities,
+              // and we also want to ban router imports
+              allSourceTags: ['scope:admin', 'type:ui'],
+              onlyDependOnLibsWithTags: ['type:util'],
+              bannedExternalImports: ['*router*'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+];
+```
+
+{% /tabitem %}
+{% tabitem label="Legacy (.eslintrc.json)" %}
+
 ```jsonc
+// .eslintrc.json
 {
   // ... more ESLint config here
 
@@ -152,26 +267,29 @@ Matching just a single source tag is sometimes not enough for solving complex re
         {
           // this constraint applies to all "admin" projects
           "sourceTag": "scope:admin",
-          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"]
+          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"],
         },
         {
           "sourceTag": "type:ui",
-          "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
+          "onlyDependOnLibsWithTags": ["type:ui", "type:util"],
         },
         {
           // we don't want our admin ui components to depend on anything except utilities,
           // and we also want to ban router imports
           "allSourceTags": ["scope:admin", "type:ui"],
           "onlyDependOnLibsWithTags": ["type:util"],
-          "bannedExternalImports": ["*router*"]
-        }
-      ]
-    }
-  ]
+          "bannedExternalImports": ["*router*"],
+        },
+      ],
+    },
+  ],
 
   // ... more ESLint config here
 }
 ```
+
+{% /tabitem %}
+{% /tabs %}
 
 ## Further reading
 

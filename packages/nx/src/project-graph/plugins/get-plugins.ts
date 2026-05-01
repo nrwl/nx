@@ -3,62 +3,108 @@ import { join } from 'node:path';
 import { shouldMergeAngularProjects } from '../../adapter/angular-json';
 import { PluginConfiguration, readNxJson } from '../../config/nx-json';
 import { hashObject } from '../../hasher/file-hasher';
-import { IS_WASM } from '../../native';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { loadNxPluginInIsolation } from './isolation';
 import { loadNxPlugin } from './in-process-loader';
+import { loadIsolatedNxPlugin } from './isolation';
 
+import { isIsolationEnabled } from './isolation/enabled';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
 import {
   cleanupPluginTSTranspiler,
   pluginTranspilerIsRegistered,
 } from './transpiler';
-import { isIsolationEnabled } from './isolation/enabled';
 
 /**
  * Stuff for specified NX Plugins.
  */
 let currentPluginsConfigurationHash: string;
 let loadedPlugins: LoadedNxPlugin[];
-let pendingPluginsPromise:
-  | Promise<readonly [LoadedNxPlugin[], () => void]>
-  | undefined;
+let cachedSeparatedPlugins: SeparatedPlugins;
+let pendingPluginsPromise: Promise<LoadedNxPlugin[]> | undefined;
 let cleanupSpecifiedPlugins: () => void | undefined;
 
+export interface SeparatedPlugins {
+  specifiedPlugins: LoadedNxPlugin[];
+  defaultPlugins: LoadedNxPlugin[];
+}
+
+const loadingMethod = (
+  plugin: PluginConfiguration,
+  root: string,
+  index?: number
+) =>
+  isIsolationEnabled()
+    ? loadIsolatedNxPlugin(plugin, root, index)
+    : loadNxPlugin(plugin, root, index);
+
+/**
+ * Returns all plugins (specified + default) as a flat list.
+ * Specified plugins come first, followed by default plugins.
+ */
 export async function getPlugins(
   root = workspaceRoot
 ): Promise<LoadedNxPlugin[]> {
+  const { specifiedPlugins, defaultPlugins } = await getPluginsSeparated(root);
+  return specifiedPlugins.concat(defaultPlugins);
+}
+
+/**
+ * Returns specified plugins (from nx.json) and default plugins (project.json,
+ * package.json, etc.) as separate arrays. This separation is needed for
+ * two-phase project configuration processing where target defaults are
+ * applied between specified and default plugin results.
+ */
+export async function getPluginsSeparated(
+  root = workspaceRoot
+): Promise<SeparatedPlugins> {
   const pluginsConfiguration = readNxJson(root).plugins ?? [];
   const pluginsConfigurationHash = hashObject(pluginsConfiguration);
 
   // If the plugins configuration has not changed, reuse the current plugins
   if (
-    loadedPlugins &&
+    cachedSeparatedPlugins &&
     pluginsConfigurationHash === currentPluginsConfigurationHash
   ) {
-    return loadedPlugins;
+    return cachedSeparatedPlugins;
   }
 
-  // Cleanup current plugins before loading new ones
+  // Plugins config changed (e.g. `nx add @nx/maven` updated nx.json). The
+  // cached SeparatedPlugins is invalidated by the early-return above, but
+  // pendingPluginsPromise — the in-flight load — would otherwise be reused
+  // by the `??=` below and serve the previous plugin set forever. Tear
+  // down the old workers and force a fresh load.
   cleanupSpecifiedPlugins?.();
-
-  pendingPluginsPromise ??= loadSpecifiedNxPlugins(pluginsConfiguration, root);
-
+  pendingPluginsPromise = undefined;
   currentPluginsConfigurationHash = pluginsConfigurationHash;
-  const [[result, cleanupFn], defaultPlugins] = await Promise.all([
-    pendingPluginsPromise,
+  const results = await Promise.allSettled([
     getOnlyDefaultPlugins(root),
+    (pendingPluginsPromise ??= loadSpecifiedNxPlugins(
+      pluginsConfiguration,
+      root
+    )),
   ]);
 
-  cleanupSpecifiedPlugins = () => {
-    loadedPlugins = undefined;
-    pendingPluginsPromise = undefined;
-    cleanupFn();
-  };
+  const errors: Error[] = [];
+  const defaultPlugins: LoadedNxPlugin[] = [];
+  const specifiedPlugins: LoadedNxPlugin[] = [];
 
-  loadedPlugins = result.concat(defaultPlugins);
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+    if (result.status === 'fulfilled') {
+      (i === 0 ? defaultPlugins : specifiedPlugins).push(...result.value);
+    } else {
+      errors.push(reasonToError(result.reason));
+    }
+  }
 
-  return loadedPlugins;
+  if (errors.length > 0) {
+    throw new AggregateError(errors, errors.map((e) => e.message).join('\n'));
+  }
+
+  cachedSeparatedPlugins = { specifiedPlugins, defaultPlugins };
+  loadedPlugins = specifiedPlugins.concat(defaultPlugins);
+
+  return cachedSeparatedPlugins;
 }
 
 /**
@@ -102,15 +148,14 @@ export async function getOnlyDefaultPlugins(root = workspaceRoot) {
 export function cleanupPlugins() {
   cleanupSpecifiedPlugins?.();
   cleanupDefaultPlugins?.();
+  pendingPluginsPromise = undefined;
+  pendingDefaultPluginPromise = undefined;
+  cachedSeparatedPlugins = undefined;
 }
 
 /**
  * Stuff for generic loading
  */
-
-const loadingMethod = isIsolationEnabled()
-  ? loadNxPluginInIsolation
-  : loadNxPlugin;
 
 async function loadDefaultNxPlugins(root = workspaceRoot) {
   performance.mark('loadDefaultNxPlugins:start');
@@ -118,28 +163,55 @@ async function loadDefaultNxPlugins(root = workspaceRoot) {
   const plugins = getDefaultPlugins(root);
 
   const cleanupFunctions: Array<() => void> = [];
+  const results = await Promise.allSettled(
+    plugins.map(async (plugin) => {
+      performance.mark(`Load Nx Plugin: ${plugin} - start`);
+
+      const [loadedPluginPromise, cleanup] = await loadingMethod(plugin, root);
+
+      cleanupFunctions.push(cleanup);
+      const res = await loadedPluginPromise;
+      performance.mark(`Load Nx Plugin: ${plugin} - end`);
+      performance.measure(
+        `Load Nx Plugin: ${plugin}`,
+        `Load Nx Plugin: ${plugin} - start`,
+        `Load Nx Plugin: ${plugin} - end`
+      );
+
+      return res;
+    })
+  );
+
+  const defaultPluginResults: LoadedNxPlugin[] = [];
+  const errors: Array<{ pluginName: string; error: Error }> = [];
+
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+    if (result.status === 'fulfilled') {
+      defaultPluginResults.push(result.value);
+    } else {
+      errors.push({
+        pluginName: plugins[i],
+        error: reasonToError(result.reason),
+      });
+    }
+  }
+
+  if (errors.length > 0) {
+    for (const fn of cleanupFunctions) {
+      fn();
+    }
+    const errorMessage = errors
+      .map((e) => `  - ${e.pluginName}: ${e.error.message}`)
+      .join('\n');
+    throw new AggregateError(
+      errors.map((e) => e.error),
+      `Failed to load ${errors.length} default Nx plugin(s):\n${errorMessage}`
+    );
+  }
+
   const ret = [
-    await Promise.all(
-      plugins.map(async (plugin) => {
-        performance.mark(`Load Nx Plugin: ${plugin} - start`);
-
-        const [loadedPluginPromise, cleanup] = await loadingMethod(
-          plugin,
-          root
-        );
-
-        cleanupFunctions.push(cleanup);
-        const res = await loadedPluginPromise;
-        performance.mark(`Load Nx Plugin: ${plugin} - end`);
-        performance.measure(
-          `Load Nx Plugin: ${plugin}`,
-          `Load Nx Plugin: ${plugin} - start`,
-          `Load Nx Plugin: ${plugin} - end`
-        );
-
-        return res;
-      })
-    ),
+    defaultPluginResults,
     () => {
       for (const fn of cleanupFunctions) {
         fn();
@@ -159,54 +231,106 @@ async function loadDefaultNxPlugins(root = workspaceRoot) {
 }
 
 async function loadSpecifiedNxPlugins(
-  plugins: PluginConfiguration[],
+  pluginsConfigurations: PluginConfiguration[],
   root = workspaceRoot
-): Promise<readonly [LoadedNxPlugin[], () => void]> {
+): Promise<LoadedNxPlugin[]> {
+  // Returning existing plugins is handled by getPlugins,
+  // so, if we are here and there are existing plugins, they are stale
+  if (cleanupSpecifiedPlugins) {
+    cleanupSpecifiedPlugins();
+  }
+
   performance.mark('loadSpecifiedNxPlugins:start');
 
-  plugins ??= [];
+  pluginsConfigurations ??= [];
 
   const cleanupFunctions: Array<() => void> = [];
-  const ret = [
-    await Promise.all(
-      plugins.map(async (plugin, index) => {
-        const pluginPath = typeof plugin === 'string' ? plugin : plugin.plugin;
-        performance.mark(`Load Nx Plugin: ${pluginPath} - start`);
+  const results = await Promise.allSettled(
+    pluginsConfigurations.map(async (plugin, index) => {
+      const pluginPath = typeof plugin === 'string' ? plugin : plugin.plugin;
+      performance.mark(`Load Nx Plugin: ${pluginPath} - start`);
 
-        const [loadedPluginPromise, cleanup] = await loadingMethod(
-          plugin,
-          root
-        );
+      const [loadedPluginPromise, cleanup] = await loadingMethod(
+        plugin,
+        root,
+        index
+      );
 
-        cleanupFunctions.push(cleanup);
-        const res = await loadedPluginPromise;
-        res.index = index;
-        performance.mark(`Load Nx Plugin: ${pluginPath} - end`);
-        performance.measure(
-          `Load Nx Plugin: ${pluginPath}`,
-          `Load Nx Plugin: ${pluginPath} - start`,
-          `Load Nx Plugin: ${pluginPath} - end`
-        );
+      cleanupFunctions.push(cleanup);
+      const res = await loadedPluginPromise;
+      performance.mark(`Load Nx Plugin: ${pluginPath} - end`);
+      performance.measure(
+        `Load Nx Plugin: ${pluginPath}`,
+        `Load Nx Plugin: ${pluginPath} - start`,
+        `Load Nx Plugin: ${pluginPath} - end`
+      );
 
-        return res;
-      })
-    ),
-    () => {
-      for (const fn of cleanupFunctions) {
-        fn();
-      }
-      if (pluginTranspilerIsRegistered()) {
-        cleanupPluginTSTranspiler();
-      }
-    },
-  ] as const;
+      return res;
+    })
+  );
   performance.mark('loadSpecifiedNxPlugins:end');
   performance.measure(
     'loadSpecifiedNxPlugins',
     'loadSpecifiedNxPlugins:start',
     'loadSpecifiedNxPlugins:end'
   );
-  return ret;
+
+  const plugins: LoadedNxPlugin[] = [];
+  const errors: Array<{ pluginName: string; error: Error }> = [];
+
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+    if (result.status === 'fulfilled') {
+      plugins.push(result.value);
+    } else {
+      const pluginConfig = pluginsConfigurations[i];
+      const pluginName =
+        typeof pluginConfig === 'string' ? pluginConfig : pluginConfig.plugin;
+      errors.push({
+        pluginName,
+        error: reasonToError(result.reason),
+      });
+    }
+  }
+
+  if (errors.length > 0) {
+    for (const fn of cleanupFunctions) {
+      fn();
+    }
+    const errorMessage = errors
+      .map((e) => `  - ${e.pluginName}: ${e.error.message}`)
+      .join('\n');
+    throw new AggregateError(
+      errors.map((e) => e.error),
+      `Failed to load ${errors.length} Nx plugin(s):\n${errorMessage}`
+    );
+  }
+
+  cleanupSpecifiedPlugins = () => {
+    for (const fn of cleanupFunctions) {
+      fn();
+    }
+    if (pluginTranspilerIsRegistered()) {
+      cleanupPluginTSTranspiler();
+    }
+    pendingPluginsPromise = undefined;
+  };
+
+  return plugins;
+}
+
+export function reasonToError(reason: unknown): Error {
+  if (reason instanceof Error) {
+    return reason;
+  }
+  if (typeof reason === 'object' && reason !== null && 'message' in reason) {
+    const error = new Error(String(reason.message));
+    if ('stack' in reason) {
+      error.stack = String(reason.stack);
+    }
+    return error;
+  }
+  return new Error(String(reason));
 }
 
 function getDefaultPlugins(root: string) {

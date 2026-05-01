@@ -1,14 +1,13 @@
-import {
+import type {
   FileData,
   FileMap,
   ProjectFileMap,
   ProjectGraph,
 } from '../config/project-graph';
-import {
+import type {
   ProjectConfiguration,
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
-import { daemonClient } from '../daemon/client/client';
 import { NxWorkspaceFilesExternals } from '../native';
 import {
   getAllFileDataInContext,
@@ -23,8 +22,12 @@ import {
 } from './utils/find-project-for-path';
 
 export interface WorkspaceFileMap {
-  allWorkspaceFiles: FileData[];
   fileMap: FileMap;
+  /**
+   * @deprecated Derived from `fileMap.projectFileMap` + `fileMap.nonProjectFiles`.
+   * Will be removed in a future major. Compute it locally if needed.
+   */
+  allWorkspaceFiles?: FileData[];
 }
 
 export async function createProjectFileMapUsingProjectGraph(
@@ -69,13 +72,23 @@ export function createFileMap(
       nonProjectFiles.push(f);
     }
   }
-  return {
-    allWorkspaceFiles,
+  const result: WorkspaceFileMap = {
     fileMap: {
       projectFileMap,
       nonProjectFiles,
     },
   };
+  Object.defineProperty(result, 'allWorkspaceFiles', {
+    enumerable: false,
+    configurable: true,
+    get() {
+      return buildAllWorkspaceFiles(
+        result.fileMap.projectFileMap,
+        result.fileMap.nonProjectFiles
+      );
+    },
+  });
+  return result;
 }
 
 export function updateFileMap(
@@ -94,10 +107,6 @@ export function updateFileMap(
   );
   return {
     fileMap: updates.fileMap,
-    allWorkspaceFiles: buildAllWorkspaceFiles(
-      updates.fileMap.projectFileMap,
-      updates.fileMap.nonProjectFiles
-    ),
     rustReferences: updates.externalReferences,
   };
 }

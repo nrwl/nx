@@ -1,10 +1,8 @@
+import { joinPathFragments, readJsonFile, workspaceRoot } from '@nx/devkit';
 import { existsSync } from 'fs';
-import { workspaceRoot, readJsonFile, joinPathFragments } from '@nx/devkit';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
-export function readRootPackageJson(): {
-  dependencies?: { [key: string]: string };
-  devDependencies?: { [key: string]: string };
-} {
+export function readRootPackageJson(): PackageJson {
   const pkgJsonPath = joinPathFragments(workspaceRoot, 'package.json');
   if (!existsSync(pkgJsonPath)) {
     throw new Error(

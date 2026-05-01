@@ -80,14 +80,16 @@ async function normalizeOptions(host: Tree, options: Schema) {
     }
   }
 
+  const fileName = options.fileName || (isAppRouter ? 'page' : 'index');
   const { project: projectName, filePath } =
     await determineArtifactNameAndDirectoryOptions(host, {
       name: pageSymbolName,
       path: joinPathFragments(
         options.path,
-        isAppRouter ? 'page.tsx' : 'index.tsx'
+        `${fileName}.${options.js ? 'jsx' : 'tsx'}`
       ),
     });
+
   return {
     ...options,
     path: filePath,

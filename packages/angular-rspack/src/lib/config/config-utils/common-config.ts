@@ -4,6 +4,7 @@ import {
   JS_ALL_EXT_REGEX,
   TS_ALL_EXT_REGEX,
 } from '@nx/angular-rspack-compiler';
+import { workspaceRoot } from '@nx/devkit';
 import {
   HashFormat,
   I18nOptions,
@@ -74,24 +75,38 @@ export async function getCommonConfig(
     resolve: {
       extensions: ['.ts', '.tsx', '.mjs', '.js'],
       symlinks: !normalizedOptions.preserveSymlinks,
-      modules: ['node_modules'],
+      // Make sure we add the root node_modules directory to the node resolver
+      modules: ['node_modules', join(workspaceRoot, 'node_modules')],
       conditionNames: ['es2020', 'es2015', '...'],
       tsConfig: {
         configFile: normalizedOptions.tsConfig,
       },
-      ...(i18n.shouldInline && normalizedOptions.aot
-        ? { alias: { '@angular/localize/init': false } }
-        : {}),
+      alias: {
+        ...(i18n.shouldInline && normalizedOptions.aot
+          ? { '@angular/localize/init': false }
+          : {}),
+        ...(normalizedOptions.fileReplacements?.reduce(
+          (aliases, replacement) => ({
+            ...aliases,
+            [replacement.replace]: replacement.with,
+          }),
+          {}
+        ) ?? {}),
+      },
     },
     resolveLoader: {
       symlinks: !normalizedOptions.preserveSymlinks,
     },
     watch: normalizedOptions.watch,
     watchOptions: {
+      // Default aggregateTimeout to batch rapid filesystem events (e.g., editor backup files)
+      aggregateTimeout: 50,
       poll: normalizedOptions.poll,
       followSymlinks: normalizedOptions.preserveSymlinks,
       ignored:
         normalizedOptions.poll === undefined ? undefined : '**/node_modules/**',
+      // User-provided watchOptions take precedence
+      ...normalizedOptions.watchOptions,
     },
     ignoreWarnings: [
       // https://github.com/webpack-contrib/source-map-loader/blob/b2de4249c7431dd8432da607e08f0f65e9d64219/src/index.js#L83
@@ -122,6 +137,7 @@ export async function getCommonConfig(
           test: TS_ALL_EXT_REGEX,
           use: [
             {
+              // eslint-disable-next-line @nx/enforce-module-boundaries
               loader: require.resolve(
                 '@nx/angular-rspack/loaders/angular-loader'
               ),
@@ -132,6 +148,7 @@ export async function getCommonConfig(
           test: JS_ALL_EXT_REGEX,
           use: [
             {
+              // eslint-disable-next-line @nx/enforce-module-boundaries
               loader: require.resolve(
                 '@nx/angular-rspack/loaders/angular-partial-transform-loader'
               ),

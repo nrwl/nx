@@ -2,9 +2,15 @@ import { RsbuildConfig } from '@rsbuild/core';
 import * as ts from 'typescript';
 import { InlineStyleLanguage, FileReplacement, type Sass } from '../models';
 import { loadCompilerCli } from '../utils';
-import { ComponentStylesheetBundler } from '@angular/build/private';
+import {
+  ComponentStylesheetBundler,
+  findTailwindConfiguration,
+  generateSearchDirectories,
+  loadPostcssConfiguration,
+} from '@angular/build/private';
 import { transformSupportedBrowsersToTargets } from '../utils/targets-from-browsers';
 import { getSupportedBrowsers } from '@angular/build/private';
+import { createRequire } from 'node:module';
 
 export interface StylesheetTransformResult {
   contents: string;
@@ -39,6 +45,9 @@ export const DEFAULT_NG_COMPILER_OPTIONS: ts.CompilerOptions = {
   supportJitMode: false,
 };
 
+let COMPONENT_STYLESHEET_BUNDLER: ComponentStylesheetBundler | undefined =
+  undefined;
+
 export async function setupCompilation(
   config: Pick<RsbuildConfig, 'mode' | 'source'>,
   options: SetupCompilationOptions
@@ -60,7 +69,27 @@ export async function setupCompilation(
 
   const compilerOptions = tsCompilerOptions;
 
-  const componentStylesheetBundler = new ComponentStylesheetBundler(
+  const searchDirectories = await generateSearchDirectories([options.root]);
+  const postcssConfiguration =
+    await loadPostcssConfiguration(searchDirectories);
+  // Skip tailwind configuration if postcss is customized
+  let tailwindConfiguration;
+  if (!postcssConfiguration) {
+    const tailwindConfigPath = findTailwindConfiguration(searchDirectories);
+    if (tailwindConfigPath) {
+      const resolver = createRequire(tailwindConfigPath);
+      try {
+        tailwindConfiguration = {
+          file: tailwindConfigPath,
+          package: resolver.resolve('tailwindcss'),
+        };
+      } catch (e) {
+        // Tailwind config found but package not installed - warning already shown by Angular build
+      }
+    }
+  }
+
+  COMPONENT_STYLESHEET_BUNDLER ??= new ComponentStylesheetBundler(
     {
       workspaceRoot: options.root,
       optimization: config.mode === 'production',
@@ -80,6 +109,8 @@ export async function setupCompilation(
       ),
       includePaths: options.includePaths,
       sass: options.sass,
+      postcssConfiguration,
+      tailwindConfiguration,
     },
     options.inlineStyleLanguage,
     false
@@ -88,7 +119,7 @@ export async function setupCompilation(
   return {
     rootNames,
     compilerOptions,
-    componentStylesheetBundler,
+    componentStylesheetBundler: COMPONENT_STYLESHEET_BUNDLER,
   };
 }
 
@@ -103,9 +134,8 @@ export function styleTransform(
     try {
       let stylesheetResult;
       if (stylesheetFile) {
-        stylesheetResult = await componentStylesheetBundler.bundleFile(
-          stylesheetFile
-        );
+        stylesheetResult =
+          await componentStylesheetBundler.bundleFile(stylesheetFile);
       } else {
         stylesheetResult = await componentStylesheetBundler.bundleInline(
           styles,

@@ -1,8 +1,9 @@
 ---
-title: Overview of the Nx Webpack Plugin
+title: Webpack Plugin for Nx
 description: The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.
 sidebar:
   label: Introduction
+weight: 2
 filter: 'type:References'
 ---
 
@@ -10,7 +11,17 @@ The Nx plugin for [webpack](https://webpack.js.org/).
 
 [Webpack](https://webpack.js.org/) is a static module bundler for modern JavaScript applications. The `@nx/webpack` plugin provides executors that allow you to build and serve your projects using webpack, plus an executor for SSR.
 
-Nx now allows you to [customize your webpack configuration](/docs/technologies/build-tools/webpack/guides/webpack-config-setup) for your projects. And we also offer [a number of webpack plugins](/docs/technologies/build-tools/webpack/guides/webpack-plugins) for supporting Nx and other frameworks.
+You can [customize your webpack configuration](/docs/technologies/build-tools/webpack/guides/webpack-config-setup) for your projects. Nx also provides [a number of webpack plugins](/docs/technologies/build-tools/webpack/guides/webpack-plugins) for supporting Nx and other frameworks.
+
+## Requirements
+
+The `@nx/webpack` plugin supports the following package versions.
+
+| Package   | Supported Versions |
+| --------- | ------------------ |
+| `webpack` | >=5.0.0            |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
 ## Setting up a new Nx workspace with Webpack
 
@@ -18,13 +29,13 @@ You can create a new workspace that uses Webpack with one of the following comma
 
 - Generate a new standalone React app set up with Webpack
 
-```shell {% frame="none" %}
+```shell
 npx create-nx-workspace@latest --preset=react-standalone --bundler=webpack
 ```
 
 - Generate a new React monorepo set up with Webpack
 
-```shell {% frame="none" %}
+```shell
 npx create-nx-workspace@latest --preset=react-monorepo --bundler=webpack
 ```
 
@@ -36,13 +47,13 @@ Make sure to install the `@nx/webpack` version that matches the version of `nx` 
 
 In any Nx workspace, you can install `@nx/webpack` by running the following command:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/webpack
 ```
 
 This will install the correct version of `@nx/webpack`.
 
-### How @nx/webpack Infers Tasks
+### How @nx/webpack infers tasks
 
 The `@nx/webpack` plugin will create a task for any project that has a Webpack configuration file present. Any of the following files will be recognized as a Webpack configuration file:
 
@@ -51,11 +62,11 @@ The `@nx/webpack` plugin will create a task for any project that has a Webpack c
 - `webpack.config.mjs`
 - `webpack.config.cjs`
 
-### View Inferred Tasks
+### View inferred tasks
 
 To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
-### @nx/webpack Configuration
+### @nx/webpack configuration
 
 The `@nx/webpack/plugin` is configured in the `plugins` array in `nx.json`.
 
@@ -80,7 +91,7 @@ The `buildTargetName`, `previewTargetName`, `serveTargetName` and `serveStaticTa
 
 ## Generate a new project using Webpack
 
-You can generate a [React](/docs/technologies/react/introduction) application or a [Web](/docs/reference/core-api/web) application that uses Webpack in an existing Nx workspace. The [`@nx/react:app`](/docs/technologies/react/generators#application), [`@nx/node:app`](/docs/technologies/node/generators#application) and [`@nx/web:app`](/docs/reference/core-api/web/generators/application) generators accept the `bundler` option, where you can pass `webpack`. This will generate a new application configured to use Webpack, and it will also install all the necessary dependencies, including the `@nx/webpack` plugin.
+You can generate a [React](/docs/technologies/react/introduction) application or a [Web](/docs/reference/web) application that uses Webpack in an existing Nx workspace. The [`@nx/react:app`](/docs/technologies/react/generators#application), [`@nx/node:app`](/docs/technologies/node/generators#application) and [`@nx/web:app`](/docs/reference/web/generators#application) generators accept the `bundler` option, where you can pass `webpack`. This will generate a new application configured to use Webpack, and it will also install all the necessary dependencies, including the `@nx/webpack` plugin.
 
 To generate a React application using Webpack, run the following:
 

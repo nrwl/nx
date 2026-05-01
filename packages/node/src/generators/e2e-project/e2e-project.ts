@@ -30,6 +30,7 @@ import {
 } from '@nx/eslint/src/generators/utils/eslint-file';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { findRootJestPreset } from '@nx/jest/src/utils/config/config-file';
+import { getInstalledJestMajorVersion } from '@nx/jest/src/utils/versions';
 import {
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
@@ -54,6 +55,11 @@ export async function e2eProjectGeneratorInternal(
   const options = await normalizeOptions(host, _options);
   const appProject = readProjectConfiguration(host, options.project);
 
+  // Detect Jest 30+ to use .cts config files (CommonJS TypeScript)
+  const jestMajorVersion = getInstalledJestMajorVersion(host);
+  const useCommonJsConfig = jestMajorVersion === null || jestMajorVersion >= 30;
+  const jestConfigExt = useCommonJsConfig ? 'cts' : 'ts';
+
   // TODO(@ndcunningham): This is broken.. the outputs are wrong.. and this isn't using the jest generator
   const packageJson: PackageJson = {
     name: options.importPath,
@@ -73,7 +79,7 @@ export async function e2eProjectGeneratorInternal(
           executor: '@nx/jest:jest',
           outputs: ['{projectRoot}/test-output/jest/coverage'],
           options: {
-            jestConfig: `${options.e2eProjectRoot}/jest.config.ts`,
+            jestConfig: `${options.e2eProjectRoot}/jest.config.${jestConfigExt}`,
             passWithNoTests: true,
           },
           dependsOn: [`${options.project}:build`, `${options.project}:serve`],
@@ -90,7 +96,7 @@ export async function e2eProjectGeneratorInternal(
           executor: '@nx/jest:jest',
           outputs: ['{workspaceRoot}/coverage/{e2eProjectRoot}'],
           options: {
-            jestConfig: `${options.e2eProjectRoot}/jest.config.ts`,
+            jestConfig: `${options.e2eProjectRoot}/jest.config.${jestConfigExt}`,
             passWithNoTests: true,
           },
           dependsOn: [`${options.project}:build`, `${options.project}:serve`],
@@ -190,6 +196,18 @@ export async function e2eProjectGeneratorInternal(
         coverageDirectory,
         tmpl: '',
       }
+    );
+  }
+
+  // Rename jest.config.ts to jest.config.cts for Jest 30+
+  const jestConfigPath = joinPathFragments(
+    options.e2eProjectRoot,
+    'jest.config.ts'
+  );
+  if (host.exists(jestConfigPath) && useCommonJsConfig) {
+    host.rename(
+      jestConfigPath,
+      joinPathFragments(options.e2eProjectRoot, 'jest.config.cts')
     );
   }
 

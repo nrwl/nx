@@ -1,5 +1,4 @@
-import chalk = require('chalk');
-import * as ora from 'ora';
+import * as pc from 'picocolors';
 import { prompt } from 'enquirer';
 import { NxReleaseVersionConfiguration } from '../../../config/nx-json';
 import type { ProjectGraphProjectNode } from '../../../config/project-graph';
@@ -7,8 +6,9 @@ import type { Tree } from '../../../generators/tree';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { getLatestGitTagForPattern } from '../utils/git';
 import { ProjectLogger } from './project-logger';
-import type { FinalConfigForProject } from './release-group-processor';
+import type { FinalConfigForProject } from '../utils/release-graph';
 import { VersionActions } from './version-actions';
+import { globalSpinner } from '../../../utils/spinner';
 
 export async function resolveCurrentVersion(
   tree: Tree,
@@ -109,7 +109,7 @@ export async function resolveCurrentVersionFromDisk(
         projectGraphNode.name
       }" does not have a ${versionActions.validManifestFilenames.join(
         ' or '
-      )} file available in ./${projectGraphNode.data.root}.
+      )} file available in ${projectGraphNode.data.root}
 
 To fix this you will either need to add a ${versionActions.validManifestFilenames.join(
         ' or '
@@ -152,11 +152,9 @@ export async function resolveCurrentVersionFromRegistry(
 
   let registryTxt = '';
 
-  const spinner = ora(
+  const spinner = globalSpinner.start(
     `Resolving the current version for ${projectGraphNode.name} from the configured registry...`
   );
-  spinner.color = 'cyan';
-  spinner.start();
 
   try {
     const res = await versionActions.readCurrentVersionFromRegistry(
@@ -303,9 +301,8 @@ export async function resolveCurrentVersionFromGitTag(
     throw noMatchingGitTagsError;
   }
 
-  const fromDiskRes = await versionActions.readCurrentVersionFromSourceManifest(
-    tree
-  );
+  const fromDiskRes =
+    await versionActions.readCurrentVersionFromSourceManifest(tree);
   // Fallback on disk is available, return it directly
   if (fromDiskRes && fromDiskRes.currentVersion) {
     logger.buffer(
@@ -388,7 +385,7 @@ async function handleNoAvailableDiskFallback({
     const reply = await prompt<{ useZero: boolean }>([
       {
         name: 'useZero',
-        message: `\n${chalk.yellow(
+        message: `\n${pc.yellow(
           `Warning: Unable to resolve the current version for "${projectName}" ${currentVersionSourceMessage} and there is no version on disk to fall back to. This is invalid with ${specifierSource} because the new version is determined by relatively bumping the current version.\n\nTo resolve this, ${resolutionSuggestion}, or set an appropriate version in a supported manifest file such as ${validManifestFilenames}`
         )}. \n\nAlternatively, would you like to continue now by using 0.0.0 as the current version?`,
         type: 'confirm',

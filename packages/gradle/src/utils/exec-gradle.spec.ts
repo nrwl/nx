@@ -1,5 +1,9 @@
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { findGradlewFile } from './exec-gradle';
+import {
+  findGradlewFile,
+  getCustomGradleExecutableDirectoryFromPlugin,
+} from './exec-gradle';
+import { NxJsonConfiguration } from '@nx/devkit';
 
 describe('exec gradle', () => {
   describe('findGradlewFile', () => {
@@ -70,7 +74,7 @@ describe('exec gradle', () => {
       expect(gradlewFile).toEqual('nested/nested/proj/gradlew');
     });
 
-    it('should throw an error if no gradlw in workspace', async () => {
+    it('should throw an error if no gradlew in workspace', async () => {
       await tempFs.createFiles({
         'proj/build.gradle': ``,
         'nested/nested/proj/build.gradle': ``,
@@ -82,6 +86,62 @@ describe('exec gradle', () => {
       expect(() =>
         findGradlewFile('proj/build.gradle', tempFs.tempDir)
       ).toThrow();
+    });
+  });
+
+  describe('getCustomGradleExecutableDirectoryPathFromPlugin', () => {
+    it('should return undefined when nxJson plugins is empty array', () => {
+      const nxJson: NxJsonConfiguration = {
+        plugins: [],
+      };
+      const result = getCustomGradleExecutableDirectoryFromPlugin(nxJson);
+      expect(result).toBeUndefined();
+    });
+
+    it('should return undefined when gradle plugin is not in plugins list', () => {
+      const nxJson: NxJsonConfiguration = {
+        plugins: ['@nx/js', '@nx/react'],
+      };
+      const result = getCustomGradleExecutableDirectoryFromPlugin(nxJson);
+      expect(result).toBeUndefined();
+    });
+
+    it('should return undefined when gradle plugin is specified as string', () => {
+      const nxJson: NxJsonConfiguration = {
+        plugins: ['@nx/gradle'],
+      };
+      const result = getCustomGradleExecutableDirectoryFromPlugin(nxJson);
+      expect(result).toBeUndefined();
+    });
+
+    it('should return undefined when gradle plugin has no gradleExecutableDirectory option', () => {
+      const nxJson: NxJsonConfiguration = {
+        plugins: [
+          {
+            plugin: '@nx/gradle',
+            options: {},
+          },
+        ],
+      };
+      const result = getCustomGradleExecutableDirectoryFromPlugin(nxJson);
+      expect(result).toBeUndefined();
+    });
+
+    it('should return gradleExecutableDirectory from gradle plugin when multiple plugins exist', () => {
+      const nxJson: NxJsonConfiguration = {
+        plugins: [
+          '@nx/js',
+          {
+            plugin: '@nx/gradle',
+            options: {
+              gradleExecutableDirectory: '/path/to/gradle',
+            },
+          },
+          '@nx/react',
+        ],
+      };
+      const result = getCustomGradleExecutableDirectoryFromPlugin(nxJson);
+      expect(result).toBe('/path/to/gradle');
     });
   });
 });

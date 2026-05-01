@@ -27,6 +27,8 @@ export * from './lib/live-stream-notifier';
 export * from './lib/webinar-notifier';
 export * from './lib/hubspot-form';
 export * from './lib/video-modal';
+export * from './lib/video-player';
+export * from './lib/global-search-handler';
 
 export { resourceMenuItems } from './lib/headers/menu-items';
 export { eventItems } from './lib/headers/menu-items';

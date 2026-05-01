@@ -3,11 +3,30 @@
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "comment": "package.json#scripts runs in the project root directory with astro assumes is where the node_modules is. which fails. so run the scripts in project.json#targets with --root command instead",
   "targets": {
+    "prebuild-banner": {
+      "cache": false,
+      "outputs": ["{projectRoot}/src/content/banner.json"],
+      "command": "node ../scripts/documentation/prebuild-banner.mjs",
+      "options": {
+        "cwd": "astro-docs",
+        "env": {
+          "BANNER_OUTPUT_PATH": "src/content/banner.json",
+          "BANNER_ENV_VAR": "BANNER_URL"
+        }
+      }
+    },
     "serve": {
       "continuous": true,
       "dependsOn": [
+        "prebuild-banner",
         {
-          "projects": ["devkit", "create-nx-workspace"],
+          "projects": [
+            "nx",
+            "devkit",
+            "create-nx-workspace",
+            "dotnet",
+            "maven"
+          ],
           "target": "build"
         }
       ],
@@ -18,9 +37,35 @@
     },
     "build": {
       "dependsOn": [
+        "prebuild-banner",
         {
-          "projects": ["devkit", "create-nx-workspace"],
+          "projects": [
+            "nx",
+            "devkit",
+            "create-nx-workspace",
+            "dotnet",
+            "maven"
+          ],
           "target": "build"
+        }
+      ],
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/src/content/banner.json",
+        { "env": "NX_DEV_URL" },
+        "{workspaceRoot}/packages/*/package.json",
+        "{workspaceRoot}/packages/*/{generators,executors,migrations}.json",
+        "{workspaceRoot}/packages/*/src/{generators,executors}/**/schema.json",
+        "{workspaceRoot}/packages/*/src/migrations/**/*.md",
+        "{workspaceRoot}/packages/*/docs/**/*.md",
+        {
+          "json": "{workspaceRoot}/tsconfig.json",
+          "fields": ["compilerOptions"]
+        },
+        {
+          "dependentTasksOutputFiles": "**/*.{d.ts,json,md,js,cjs,mjs}",
+          "transitive": true
         }
       ],
       "outputs": [
@@ -49,7 +94,7 @@
     },
     "test": {
       "executor": "nx:noop",
-      "dependsOn": ["vite:test", "validate-links", "format"]
+      "dependsOn": ["validate-links", "format"]
     },
     "pw-e2e": {
       "dependsOn": ["serve"],
@@ -57,15 +102,21 @@
     },
     "e2e-ci--**/*": {
       "dependsOn": ["preview"],
-      "parallelism": true
+      "parallelism": true,
+      "options": {
+        "args": []
+      }
     },
     "show-report": {
       "command": "playwright show-report dist/astro-docs/playwright-report"
     },
     "validate-links": {
-      "dependsOn": ["build"],
+      "dependsOn": ["build", "nx-dev:build"],
       "cache": true,
       "inputs": [
+        "{projectRoot}/validate-links.ts",
+        { "dependentTasksOutputFiles": "**/*.html" },
+        { "dependentTasksOutputFiles": "**/sitemap*.xml" },
         "{projectRoot}/src/**/*",
         "{projectRoot}/astro.config.mjs",
         "{projectRoot}/sidebar.mts",
@@ -78,10 +129,45 @@
         "cwd": "astro-docs"
       }
     },
+    "vale": {
+      "command": "node scripts/vale-changed.mjs",
+      "options": {
+        "cwd": "{projectRoot}"
+      },
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/src/content/docs/**/*.mdoc",
+        "{projectRoot}/src/content/docs/**/*.mdx",
+        "{projectRoot}/src/content/docs/**/*.md",
+        "{projectRoot}/.vale.ini",
+        "{projectRoot}/.vale/styles/**/*",
+        "{projectRoot}/scripts/vale-changed.mjs"
+      ]
+    },
+    "vale:all": {
+      "command": "node scripts/vale-changed.mjs --all",
+      "options": {
+        "cwd": "{projectRoot}"
+      },
+      "inputs": [
+        "{projectRoot}/src/content/docs/**/*.mdoc",
+        "{projectRoot}/src/content/docs/**/*.mdx",
+        "{projectRoot}/src/content/docs/**/*.md",
+        "{projectRoot}/.vale.ini",
+        "{projectRoot}/.vale/styles/**/*",
+        "{projectRoot}/scripts/vale-changed.mjs"
+      ]
+    },
     "format": {
       "cache": true,
       "//": "nx format doesn't respect overrides, so we manually run prettier for mdoc files",
-      "command": "prettier **/*.mdoc --check"
+      "command": "prettier **/*.mdoc --check",
+      "inputs": [
+        "{projectRoot}/**/*.mdoc",
+        "{workspaceRoot}/.prettierrc",
+        "{workspaceRoot}/.prettierignore",
+        "{workspaceRoot}/.editorconfig"
+      ]
     },
     "format:write": {
       "command": "prettier **/*.mdoc --write"

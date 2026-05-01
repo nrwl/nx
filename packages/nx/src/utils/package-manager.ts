@@ -1,22 +1,22 @@
 import { exec, execFile, execSync } from 'child_process';
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
-import {
-  Pair,
-  ParsedNode,
-  parseDocument,
-  stringify as YAMLStringify,
-  YAMLMap,
-  YAMLSeq,
-  Scalar,
-} from 'yaml';
 import { rm } from 'node:fs/promises';
 import { dirname, join, relative } from 'path';
 import { gte, lt, parse, satisfies } from 'semver';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
-
+import {
+  Pair,
+  ParsedNode,
+  parseDocument,
+  Scalar,
+  YAMLMap,
+  YAMLSeq,
+  stringify as YAMLStringify,
+} from 'yaml';
 import { readNxJson } from '../config/configuration';
 import { readPackageJson } from '../project-graph/file-utils';
+import { getCatalogManager } from './catalog';
 import {
   readFileIfExisting,
   readJsonFile,
@@ -42,6 +42,7 @@ export interface PackageManagerCommands {
   exec: string;
   dlx: string;
   list: string;
+  why: string;
   run: (script: string, args?: string) => string;
   // Make this required once bun adds programatically support for reading config https://github.com/oven-sh/bun/issues/7140
   getRegistryUrl?: string;
@@ -65,11 +66,35 @@ export function detectPackageManager(dir: string = ''): PackageManager {
     (existsSync(join(dir, 'bun.lockb')) || existsSync(join(dir, 'bun.lock'))
       ? 'bun'
       : existsSync(join(dir, 'yarn.lock'))
-      ? 'yarn'
-      : existsSync(join(dir, 'pnpm-lock.yaml'))
-      ? 'pnpm'
-      : 'npm')
+        ? 'yarn'
+        : existsSync(join(dir, 'pnpm-lock.yaml'))
+          ? 'pnpm'
+          : existsSync(join(dir, 'package-lock.json'))
+            ? 'npm'
+            : detectInvokedPackageManager())
   );
+}
+
+/**
+ * Detects which package manager was used to invoke the current command
+ * based on the npm_config_user_agent environment variable.
+ *
+ * Falls back to 'npm' if detection fails.
+ */
+function detectInvokedPackageManager(): PackageManager {
+  const userAgent = process.env.npm_config_user_agent;
+  if (userAgent) {
+    if (userAgent.startsWith('pnpm/')) {
+      return 'pnpm';
+    }
+    if (userAgent.startsWith('yarn/')) {
+      return 'yarn';
+    }
+    if (userAgent.startsWith('bun/')) {
+      return 'bun';
+    }
+  }
+  return 'npm';
 }
 
 /**
@@ -148,6 +173,7 @@ export function getPackageManagerCommand(
         run: (script: string, args?: string) =>
           `yarn ${script}${args ? ` ${args}` : ''}`,
         list: useBerry ? 'yarn info --name-only' : 'yarn list',
+        why: 'yarn why',
         getRegistryUrl: useBerry
           ? 'yarn config get npmRegistryServer'
           : 'yarn config get registry',
@@ -195,6 +221,7 @@ export function getPackageManagerCommand(
               : ''
           }`,
         list: 'pnpm ls --depth 100',
+        why: 'pnpm why',
         getRegistryUrl: 'pnpm config get registry',
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `pnpm publish "${packageRoot}" --json --"${
@@ -204,12 +231,9 @@ export function getPackageManagerCommand(
       };
     },
     npm: () => {
-      // TODO: Remove this
-      process.env.npm_config_legacy_peer_deps ??= 'true';
-
       return {
         install: 'npm install',
-        ciInstall: 'npm ci --legacy-peer-deps',
+        ciInstall: 'npm ci',
         updateLockFile: 'npm install --package-lock-only',
         add: 'npm install',
         addDev: 'npm install -D',
@@ -219,6 +243,7 @@ export function getPackageManagerCommand(
         run: (script: string, args?: string) =>
           `npm run ${script}${args ? ' -- ' + args : ''}`,
         list: 'npm ls',
+        why: 'npm explain',
         getRegistryUrl: 'npm config get registry',
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
@@ -230,7 +255,7 @@ export function getPackageManagerCommand(
       return {
         install: 'bun install',
         ciInstall: 'bun install --no-cache',
-        updateLockFile: 'bun install --frozen-lockfile',
+        updateLockFile: 'bun install --lockfile-only',
         add: 'bun install',
         addDev: 'bun install -D',
         rm: 'bun rm',
@@ -238,6 +263,7 @@ export function getPackageManagerCommand(
         dlx: 'bunx',
         run: (script: string, args: string) => `bun run ${script} -- ${args}`,
         list: 'bun pm ls',
+        why: 'bun why',
         // Unlike npm, bun publish does not support a custom registryConfigKey option
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `bun publish --cwd="${packageRoot}" --json --registry="${registry}" --tag=${tag}`,
@@ -336,7 +362,7 @@ export function findFileInPackageJsonDirectory(
  * @returns Updated string contents of the yarnrc.yml file
  */
 export function modifyYarnRcYmlToFitNewDirectory(contents: string): string {
-  const { parseSyml, stringifySyml } = require('@yarnpkg/parsers');
+  const { parseSyml, stringifySyml } = require('./yarn-syml');
   const parsed: {
     yarnPath?: string;
     plugins?: (string | { path: string; spec: string })[];
@@ -461,10 +487,31 @@ export async function resolvePackageVersionUsingRegistry(
   version: string
 ): Promise<string> {
   try {
-    const result = await packageRegistryView(packageName, version, 'version');
+    let resolvedVersion = version;
+    const manager = getCatalogManager(workspaceRoot);
+    if (manager?.isCatalogReference(version)) {
+      resolvedVersion = manager.resolveCatalogReference(
+        workspaceRoot,
+        packageName,
+        version
+      );
+      if (!resolvedVersion) {
+        throw new Error(
+          `Unable to resolve catalog reference ${packageName}@${version}.`
+        );
+      }
+    }
+
+    const result = await packageRegistryView(
+      packageName,
+      resolvedVersion,
+      'version'
+    );
 
     if (!result) {
-      throw new Error(`Unable to resolve version ${packageName}@${version}.`);
+      throw new Error(
+        `Unable to resolve version ${packageName}@${resolvedVersion}.`
+      );
     }
 
     const lines = result.split('\n');
@@ -479,13 +526,13 @@ export async function resolvePackageVersionUsingRegistry(
      *
      * <package>@<version> '<version>'
      */
-    const resolvedVersion = lines
+    const finalResolvedVersion = lines
       .map((line) => line.split(' ')[1])
       .sort()
       .pop()
       .replace(/'/g, '');
 
-    return resolvedVersion;
+    return finalResolvedVersion;
   } catch {
     throw new Error(`Unable to resolve version ${packageName}@${version}.`);
   }
@@ -503,8 +550,23 @@ export async function resolvePackageVersionUsingInstallation(
   const { dir, cleanup } = createTempNpmDirectory();
 
   try {
+    let resolvedVersion = version;
+    const manager = getCatalogManager(workspaceRoot);
+    if (manager.isCatalogReference(version)) {
+      resolvedVersion = manager.resolveCatalogReference(
+        workspaceRoot,
+        packageName,
+        version
+      );
+      if (!resolvedVersion) {
+        throw new Error(
+          `Unable to resolve catalog reference ${packageName}@${version}.`
+        );
+      }
+    }
+
     const pmc = getPackageManagerCommand();
-    await execAsync(`${pmc.add} ${packageName}@${version}`, {
+    await execAsync(`${pmc.add} ${packageName}@${resolvedVersion}`, {
       cwd: dir,
       windowsHide: true,
     });
@@ -548,19 +610,14 @@ export async function packageRegistryPack(
   pkg: string,
   version: string
 ): Promise<{ tarballPath: string }> {
-  let pm = detectPackageManager();
-  if (pm === 'yarn' || pm === 'bun') {
-    /**
-     * `(p)npm pack` will download a tarball of the specified version,
-     * whereas `yarn` pack creates a tarball of the active workspace, so it
-     * does not work for getting the content of a library.
-     *
-     * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
-     *
-     * bun doesn't currently support pack
-     */
-    pm = 'npm';
-  }
+  /**
+   * Only `npm pack` supports downloading a tarball of a specified remote
+   * package. `yarn` packs the active workspace, `pnpm pack` only packs
+   * the local project, and `bun` doesn't support pack.
+   *
+   * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
+   */
+  const pm = 'npm';
 
   const { stdout } = await execAsync(`${pm} pack ${pkg}@${version}`, {
     cwd,

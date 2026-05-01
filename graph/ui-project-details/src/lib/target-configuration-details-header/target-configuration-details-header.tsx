@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { TargetConfiguration } from '@nx/devkit';
 import { CopyToClipboardButton, Tooltip } from '@nx/graph-ui-common';
@@ -72,15 +71,17 @@ export const TargetConfigurationDetailsHeader = ({
       onClick={collapsable ? toggleCollapse : undefined}
     >
       <div className="flex items-center justify-between gap-4">
-        <div className="flex min-w-0 flex-1 items-center justify-between">
-          <div className="flex min-w-0 flex-1 items-center gap-2">
+        <div className="flex w-full min-w-0 flex-1 items-center justify-between overflow-hidden">
+          <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
             {collapsable &&
               (isCollasped ? (
                 <ChevronDownIcon className="h-3 w-3" />
               ) : (
                 <ChevronUpIcon className="h-3 w-3" />
               ))}
-            <h3 className="font-medium dark:text-slate-300">{targetName}</h3>
+            <h3 className="min-w-0 truncate font-medium dark:text-slate-300">
+              {targetName}
+            </h3>
             <TargetTechnologies
               technologies={targetConfiguration.metadata?.technologies}
               showTooltip={!isCollasped}

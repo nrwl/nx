@@ -177,6 +177,7 @@ describe('Cypress Component Configuration', () => {
       '../**/*.d.ts',
     ]);
     expect(cyTsConfig.compilerOptions.outDir).toEqual('../../dist/out-tsc');
+    expect(cyTsConfig.compilerOptions.moduleResolution).toBe('node10');
     const libTsConfig = readJson(tree, 'libs/cool-lib/tsconfig.lib.json');
     expect(libTsConfig.exclude).toEqual(
       expect.arrayContaining([
@@ -253,18 +254,5 @@ export default defineConfig({
     );
     expect(tree.exists('libs/cool-lib/cypress')).toEqual(true);
     expect(actualProjectConfig.targets['component-test']).toMatchSnapshot();
-  });
-
-  it('should error when using cypress < v10', async () => {
-    mockedInstalledCypressVersion.mockReturnValue(9);
-    await expect(
-      async () =>
-        await componentConfigurationGenerator(tree, {
-          project: 'cool-lib',
-          skipFormat: true,
-        })
-    ).rejects.toThrow(
-      'Cypress version of 10 or higher is required to use component testing. See the migration guide to upgrade. https://nx.dev/cypress/v11-migration-guide'
-    );
   });
 });

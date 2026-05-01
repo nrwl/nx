@@ -7,7 +7,7 @@ filter: 'type:Guides'
 ---
 
 This guide extends the
-[Using Storybook in a Nx workspace - Best practices](/docs/technologies/test-tools/storybook/guides/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. In this guide, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one single Storybook for your workspace, even you are using multiple frameworks, taking advantage of [Storybook Composition](/docs/technologies/test-tools/storybook/guides/storybook-composition-setup).
+[Using Storybook in a Nx workspace - Best practices](/docs/technologies/test-tools/storybook/guides/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one single Storybook for your workspace, even you are using multiple frameworks, taking advantage of [Storybook Composition](/docs/technologies/test-tools/storybook/guides/storybook-composition-setup).
 
 In this case, we are dealing with a Nx workspace that uses multiple frameworks. Essentially, you would need to have one Storybook host for each of the frameworks, containing all the stories of that specific framework, since the Storybook builder can not handle multiple frameworks simultaneously.
 
@@ -31,7 +31,7 @@ It does not matter which framework you use for the host Storybook library. It ca
 
 So, let's use React for the Storybook Composition host library:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/react:lib libs/storybook-host --bundler=none --unitTestRunner=none
 ```
 
@@ -41,7 +41,7 @@ Now that your library is generated, you can write your intro in the generated co
 
 Since you do need a story for your host Storybook, you should use the React storybook configuration generator, and actually choose to generate stories (not an e2e project though):
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/react:storybook-configuration storybook-host --interactionTests=true --generateStories=true
 ```
 
@@ -129,19 +129,19 @@ export default config;
 
 Now, you can serve your host Storybook, as well as the hosted, composed Storybooks. You need to serve the composed Storybooks first, and then your host.
 
-```shell {% frame="none" %}
+```shell
 nx run storybook-host-angular:storybook
 ```
 
 and on a different terminal:
 
-```shell {% frame="none" %}
+```shell
 nx run storybook-host-react:storybook
 ```
 
 and then on a different terminal serve the host:
 
-```shell {% frame="none" %}
+```shell
 nx run storybook-host:storybook
 ```
 
@@ -153,7 +153,7 @@ You can now build and deploy the Storybook host.
 
 You can build the Storybook with:
 
-```shell {% frame="none" %}
+```shell
 nx run storybook-host:build-storybook
 ```
 

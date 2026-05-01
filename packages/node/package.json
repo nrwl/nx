@@ -18,7 +18,8 @@
     "Backend"
   ],
   "main": "./index.js",
-  "typings": "./index.d.ts",
+  "type": "commonjs",
+  "types": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -31,7 +32,7 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "tslib": "^2.3.0",
+    "tslib": "catalog:typescript",
     "@nx/devkit": "workspace:*",
     "@nx/jest": "workspace:*",
     "@nx/js": "workspace:*",

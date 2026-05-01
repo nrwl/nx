@@ -241,7 +241,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump in 'plan1.md' with an invalid release type. Please specify one of major, premajor, minor, preminor, patch, prepatch, prerelease.`
+              `Found a version bump in 'plan1.md' with an invalid release type. Please specify one of: "major" (aliases: "feat!" or "fix!"), "minor" (alias: "feat"), "patch" (alias: "fix"), "premajor", "preminor", "prepatch", "prerelease".`
             );
           });
 
@@ -404,7 +404,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump for project 'pkg1' in 'plan1.md' with an invalid release type. Please specify one of major, premajor, minor, preminor, patch, prepatch, prerelease.`
+              `Found a version bump for project 'pkg1' in 'plan1.md' with an invalid release type. Please specify one of: "major" (aliases: "feat!" or "fix!"), "minor" (alias: "feat"), "patch" (alias: "fix"), "premajor", "preminor", "prepatch", "prerelease".`
             );
           });
 
@@ -537,7 +537,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump for group 'group1' in 'plan1.md' with an invalid release type. Please specify one of major, premajor, minor, preminor, patch, prepatch, prerelease.`
+              `Found a version bump for group 'group1' in 'plan1.md' with an invalid release type. Please specify one of: "major" (aliases: "feat!" or "fix!"), "minor" (alias: "feat"), "patch" (alias: "fix"), "premajor", "preminor", "prepatch", "prerelease".`
             );
           });
 
@@ -716,7 +716,7 @@ describe('version-plans', () => {
                 false
               )
             ).rejects.toThrowErrorMatchingInlineSnapshot(
-              `Found a version bump for project 'pkg1' in 'plan1.md' with an invalid release type. Please specify one of major, premajor, minor, preminor, patch, prepatch, prerelease.`
+              `Found a version bump for project 'pkg1' in 'plan1.md' with an invalid release type. Please specify one of: "major" (aliases: "feat!" or "fix!"), "minor" (alias: "feat"), "patch" (alias: "fix"), "premajor", "preminor", "prepatch", "prerelease".`
             );
           });
 

@@ -1,18 +1,22 @@
-import { type Tree, readJson, createProjectGraphAsync } from '@nx/devkit';
+import {
+  type Tree,
+  createProjectGraphAsync,
+  getDependencyVersionFromPackageJson,
+} from '@nx/devkit';
 import { clean, coerce, major } from 'semver';
 import {
   reactDomV18Version,
+  reactDomVersion,
   reactIsV18Version,
+  reactIsVersion,
   reactV18Version,
   reactVersion,
   typesReactDomV18Version,
-  typesReactIsV18Version,
-  typesReactV18Version,
-  reactDomVersion,
-  reactIsVersion,
-  typesReactVersion,
   typesReactDomVersion,
+  typesReactIsV18Version,
   typesReactIsVersion,
+  typesReactV18Version,
+  typesReactVersion,
 } from './versions';
 
 type ReactDependenciesVersions = {
@@ -57,9 +61,10 @@ export async function isReact18(tree: Tree) {
 }
 
 export function getInstalledReactVersion(tree: Tree): string {
-  const pkgJson = readJson(tree, 'package.json');
-  const installedReactVersion =
-    pkgJson.dependencies && pkgJson.dependencies['react'];
+  const installedReactVersion = getDependencyVersionFromPackageJson(
+    tree,
+    'react'
+  );
 
   if (
     !installedReactVersion ||
@@ -79,4 +84,31 @@ export async function getInstalledReactVersionFromGraph() {
     return undefined;
   }
   return clean(reactDep.data.version) ?? coerce(reactDep.data.version).version;
+}
+
+export function getInstalledReactRouterDevVersion(
+  tree: Tree
+): string | undefined {
+  const installed = getDependencyVersionFromPackageJson(
+    tree,
+    '@react-router/dev'
+  );
+
+  if (!installed || installed === 'latest' || installed === 'next') {
+    return undefined;
+  }
+
+  return clean(installed) ?? coerce(installed)?.version;
+}
+
+export function reactRouterSupportsVite8(tree: Tree): boolean {
+  const installed = getInstalledReactRouterDevVersion(tree);
+  if (!installed) {
+    return true;
+  }
+  const coerced = coerce(installed);
+  if (!coerced) {
+    return true;
+  }
+  return coerced.major > 7 || (coerced.major === 7 && coerced.minor >= 14);
 }

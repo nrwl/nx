@@ -1,35 +1,34 @@
 import {
   CreateDependencies,
-  CreateNodes,
-  CreateNodesContext,
   CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
-  logger,
+  normalizePath,
   ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, isAbsolute, join, relative } from 'path';
+import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync } from 'fs';
+import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
 import {
-  calculateHashesForCreateNodes,
-  calculateHashForCreateNodes,
-} from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { getLockFileName } from '@nx/js';
-import { loadViteDynamicImport } from '../utils/executor-utils';
-import { hashObject } from 'nx/src/hasher/file-hasher';
-import picomatch = require('picomatch');
-import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+  walkTsconfigExtendsChain,
+  type RawTsconfigJsonCache,
+} from '@nx/js/src/internal';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
-
-const pmc = getPackageManagerCommand();
+import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { existsSync, readdirSync } from 'node:fs';
+import { dirname, isAbsolute, join, relative, sep } from 'node:path';
+import { hashObject } from 'nx/src/hasher/file-hasher';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
+import { loadViteDynamicImport } from '../utils/executor-utils';
+import picomatch = require('picomatch');
+import type { ResolvedConfig } from 'vite';
 
 export interface VitePluginOptions {
   buildTargetName?: string;
@@ -42,8 +41,24 @@ export interface VitePluginOptions {
   previewTargetName?: string;
   serveStaticTargetName?: string;
   typecheckTargetName?: string;
+  /**
+   * The compiler to use for type-checking. When unset, defaults to `vue-tsc`
+   * for Vue projects (detected via the `vite:vue` plugin) and `tsc` otherwise.
+   * Set to `tsgo` to use the TypeScript Go compiler (`@typescript/native-preview`),
+   * or `vue-tsc` to force Vue-aware type-checking when auto-detection misses your setup.
+   */
+  compiler?: 'tsc' | 'tsgo' | 'vue-tsc';
   watchDepsTargetName?: string;
   buildDepsTargetName?: string;
+
+  /**
+   * Atomizer for vitest
+   */
+  ciTargetName?: string;
+  /**
+   * The name that should be used to group atomized tasks on CI
+   */
+  ciGroupName?: string;
 }
 
 type ViteTargets = Pick<
@@ -70,7 +85,7 @@ export const createDependencies: CreateDependencies = () => {
 
 const viteVitestConfigGlob = '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}';
 
-export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
+export const createNodes: CreateNodesV2<VitePluginOptions> = [
   viteVitestConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
@@ -98,14 +113,21 @@ export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
         }
       );
 
-    const lockfile = getLockFileName(
-      detectPackageManager(context.workspaceRoot)
+    const detectedPackageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(detectedPackageManager);
+    const lockfile = getLockFileName(detectedPackageManager);
+    const tsconfigChainsByProjectRoot = collectTsconfigInputsByProjectRoot(
+      projectRoots,
+      context.workspaceRoot
     );
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
       { ...normalizedOptions, isUsingTsSolutionSetup },
       context,
-      projectRoots.map((r) => [lockfile])
+      projectRoots.map((root) => [
+        lockfile,
+        ...(tsconfigChainsByProjectRoot.get(root) ?? []),
+      ])
     );
 
     try {
@@ -144,7 +166,9 @@ export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
               tsConfigFiles,
               hasReactRouterConfig,
               isUsingTsSolutionSetup,
-              context
+              context,
+              pmc,
+              tsconfigChainsByProjectRoot.get(projectRoot) ?? []
             ));
 
           const project: ProjectConfiguration = {
@@ -175,65 +199,7 @@ export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
   },
 ];
 
-export const createNodes: CreateNodes<VitePluginOptions> = [
-  viteVitestConfigGlob,
-  async (configFilePath, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
-    );
-    const projectRoot = dirname(configFilePath);
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
-      return {};
-    }
-
-    const tsConfigFiles =
-      siblingFiles.filter((p) => picomatch('tsconfig*{.json,.*.json}')(p)) ??
-      [];
-
-    const hasReactRouterConfig = siblingFiles.some((configFile) => {
-      const parts = configFile.split('.');
-      return (
-        parts[0] === 'react-router' && parts[1] === 'config' && parts.length > 2
-      );
-    });
-
-    const normalizedOptions = normalizeOptions(options);
-
-    const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
-
-    const { projectType, metadata, targets } = await buildViteTargets(
-      configFilePath,
-      projectRoot,
-      normalizedOptions,
-      tsConfigFiles,
-      hasReactRouterConfig,
-      isUsingTsSolutionSetup,
-      context
-    );
-    const project: ProjectConfiguration = {
-      root: projectRoot,
-      targets,
-      metadata,
-    };
-
-    // If project is buildable, then the project type.
-    // If it is not buildable, then leave it to other plugins/project.json to set the project type.
-    if (project.targets[normalizedOptions.buildTargetName]) {
-      project.projectType = projectType;
-    }
-
-    return {
-      projects: {
-        [projectRoot]: project,
-      },
-    };
-  },
-];
+export const createNodesV2 = createNodes;
 
 async function buildViteTargets(
   configFilePath: string,
@@ -242,7 +208,9 @@ async function buildViteTargets(
   tsConfigFiles: string[],
   hasReactRouterConfig: boolean,
   isUsingTsSolutionSetup: boolean,
-  context: CreateNodesContext
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  tsconfigInputs: string[]
 ): Promise<ViteTargets> {
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,
@@ -256,14 +224,41 @@ async function buildViteTargets(
   } catch {
     // do nothing
   }
+  // Workaround for race condition with ESM-only Vite plugins (e.g. @vitejs/plugin-vue@6+)
+  // If vite.config.ts is compiled as CJS, then when both require('@vitejs/plugin-vue') and import('@vitejs/plugin-vue')
+  // are pending in the same process, Node will throw an error:
+  // Error [ERR_INTERNAL_ASSERTION]: Cannot require() ES Module @vitejs/plugin-vue/dist/index.js because it is not yet fully loaded.
+  // This may be caused by a race condition if the module is simultaneously dynamically import()-ed via Promise.all().
+  try {
+    const importVuePlugin = () =>
+      new Function('return import("@vitejs/plugin-vue")')();
+    await importVuePlugin();
+  } catch {
+    // Plugin not installed or not needed, ignore
+  }
+  // Workaround for race condition with vitest/node on Node 24+
+  // When multiple vitest.config files are processed in parallel, Node can throw:
+  // Error [ERR_INTERNAL_ASSERTION]: Cannot require() ES Module vitest/dist/node.js
+  // because it is not yet fully loaded.
+  // See: https://github.com/nrwl/nx/issues/34028
+  try {
+    const importVitestNode = () =>
+      new Function('return import("vitest/node")')();
+    await importVitestNode();
+  } catch {
+    // vitest/node not available or not needed, ignore
+  }
   const { resolveConfig } = await loadViteDynamicImport();
   const viteBuildConfig = await resolveConfig(
     {
       configFile: absoluteConfigFilePath,
       mode: 'development',
+      root: projectRoot,
     },
     'build'
   );
+
+  let metadata: ProjectConfiguration['metadata'] = {};
 
   const { buildOutputs, testOutputs, hasTest, isBuildable, hasServeConfig } =
     getOutputs(viteBuildConfig, projectRoot, context.workspaceRoot);
@@ -272,13 +267,105 @@ async function buildViteTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
 
-  // if file is vitest.config or vite.config has definition for test, create target for test
+  // if file is vitest.config or vite.config has definition for test, create targets for test and/or atomized tests
   if (configFilePath.includes('vitest.config') || hasTest) {
+    const isTypecheckEnabled = !!(viteBuildConfig as any)?.test?.typecheck
+      ?.enabled;
     targets[options.testTargetName] = await testTarget(
       namedInputs,
       testOutputs,
-      projectRoot
+      projectRoot,
+      pmc,
+      isTypecheckEnabled,
+      tsconfigInputs
     );
+
+    if (options.ciTargetName) {
+      const groupName =
+        options.ciGroupName ?? deriveGroupNameFromTarget(options.ciTargetName);
+      const targetGroup = [];
+      const dependsOn: string[] = [];
+      metadata = {
+        targetGroups: {
+          [groupName]: targetGroup,
+        },
+      };
+
+      const projectRootRelativeTestPaths =
+        await getTestPathsRelativeToProjectRoot(
+          projectRoot,
+          context.workspaceRoot
+        );
+
+      for (const relativePath of projectRootRelativeTestPaths) {
+        if (relativePath.includes('../')) {
+          throw new Error(
+            '@nx/vite/plugin attempted to run tests outside of the project root. This is not supported and should not happen. Please open an issue at https://github.com/nrwl/nx/issues/new/choose with the following information:\n\n' +
+              `\n\n${JSON.stringify(
+                {
+                  projectRoot,
+                  relativePath,
+                  projectRootRelativeTestPaths,
+                  context,
+                },
+                null,
+                2
+              )}`
+          );
+        }
+
+        const targetName = `${options.ciTargetName}--${relativePath}`;
+        dependsOn.push(targetName);
+        targets[targetName] = {
+          // It does not make sense to run atomized tests in watch mode as they are intended to be run in CI
+          command: `vitest run ${relativePath}`,
+          cache: targets[options.testTargetName].cache,
+          inputs: targets[options.testTargetName].inputs,
+          outputs: targets[options.testTargetName].outputs,
+          options: {
+            cwd: projectRoot,
+            env: targets[options.testTargetName].options.env,
+          },
+          metadata: {
+            technologies: ['vitest'],
+            description: `Run Vitest Tests in ${relativePath}`,
+            help: {
+              command: `${pmc.exec} vitest --help`,
+              example: {
+                options: {
+                  coverage: true,
+                },
+              },
+            },
+          },
+        };
+        targetGroup.push(targetName);
+      }
+
+      if (targetGroup.length > 0) {
+        targets[options.ciTargetName] = {
+          executor: 'nx:noop',
+          cache: true,
+          inputs: targets[options.testTargetName].inputs,
+          outputs: targets[options.testTargetName].outputs,
+          dependsOn,
+          metadata: {
+            technologies: ['vitest'],
+            description: 'Run Vitest Tests in CI',
+            nonAtomizedTarget: options.testTargetName,
+            help: {
+              command: `${pmc.exec} vitest --help`,
+              example: {
+                options: {
+                  coverage: true,
+                },
+              },
+            },
+          },
+        };
+        targetGroup.unshift(options.ciTargetName);
+      }
+    }
   }
 
   if (hasReactRouterConfig) {
@@ -299,12 +386,13 @@ async function buildViteTargets(
       namedInputs,
       buildOutputs,
       projectRoot,
-      isUsingTsSolutionSetup
+      isUsingTsSolutionSetup,
+      pmc
     );
 
     // If running in library mode, then there is nothing to serve.
     if (!viteBuildConfig.build?.lib || hasServeConfig) {
-      const devTarget = serveTarget(projectRoot, isUsingTsSolutionSetup);
+      const devTarget = serveTarget(projectRoot, isUsingTsSolutionSetup, pmc);
 
       targets[options.serveTargetName] = {
         ...devTarget,
@@ -317,7 +405,8 @@ async function buildViteTargets(
       targets[options.devTargetName] = devTarget;
       targets[options.previewTargetName] = previewTarget(
         projectRoot,
-        options.buildTargetName
+        options.buildTargetName,
+        pmc
       );
       targets[options.serveStaticTargetName] = serveStaticTarget(
         options,
@@ -336,7 +425,17 @@ async function buildViteTargets(
     const hasVuePlugin = viteBuildConfig.plugins?.some(
       (p) => p.name === 'vite:vue'
     );
-    const typeCheckCommand = hasVuePlugin ? 'vue-tsc' : 'tsc';
+    // Explicit `compiler` option wins over inference so users can override
+    // when their setup isn't detected (e.g. custom/non-standard Vue plugin).
+    const resolvedCompiler =
+      options.compiler ?? (hasVuePlugin ? 'vue-tsc' : 'tsc');
+    const typeCheckCommand = resolvedCompiler;
+    const typeCheckExternalDeps =
+      resolvedCompiler === 'tsgo'
+        ? ['@typescript/native-preview']
+        : resolvedCompiler === 'vue-tsc'
+          ? ['vue-tsc', 'typescript']
+          : ['typescript'];
 
     targets[options.typecheckTargetName] = {
       cache: true,
@@ -344,11 +443,7 @@ async function buildViteTargets(
         ...('production' in namedInputs
           ? ['production', '^production']
           : ['default', '^default']),
-        {
-          externalDependencies: hasVuePlugin
-            ? ['vue-tsc', 'typescript']
-            : ['typescript'],
-        },
+        { externalDependencies: typeCheckExternalDeps },
       ],
       command: isUsingTsSolutionSetup
         ? `${typeCheckCommand} --build --emitDeclarationOnly`
@@ -386,7 +481,6 @@ async function buildViteTargets(
     pmc
   );
 
-  const metadata = {};
   return {
     targets,
     metadata,
@@ -401,7 +495,8 @@ async function buildTarget(
   },
   outputs: string[],
   projectRoot: string,
-  isUsingTsSolutionSetup: boolean
+  isUsingTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const buildTarget: TargetConfiguration = {
     command: `vite build`,
@@ -439,7 +534,11 @@ async function buildTarget(
   return buildTarget;
 }
 
-function serveTarget(projectRoot: string, isUsingTsSolutionSetup: boolean) {
+function serveTarget(
+  projectRoot: string,
+  isUsingTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
+) {
   const targetConfig: TargetConfiguration = {
     continuous: true,
     command: `vite`,
@@ -467,7 +566,11 @@ function serveTarget(projectRoot: string, isUsingTsSolutionSetup: boolean) {
   return targetConfig;
 }
 
-function previewTarget(projectRoot: string, buildTargetName) {
+function previewTarget(
+  projectRoot: string,
+  buildTargetName: string,
+  pmc: ReturnType<typeof getPackageManagerCommand>
+) {
   const targetConfig: TargetConfiguration = {
     continuous: true,
     command: `vite preview`,
@@ -497,8 +600,12 @@ async function testTarget(
     [inputName: string]: any[];
   },
   outputs: string[],
-  projectRoot: string
+  projectRoot: string,
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  isTypecheckEnabled: boolean,
+  tsconfigInputs: string[]
 ) {
+  const depOutputsGlob = isTypecheckEnabled ? '**/*.{js,d.ts}' : '**/*.js';
   return {
     command: `vitest`,
     options: { cwd: joinPathFragments(projectRoot) },
@@ -507,10 +614,15 @@ async function testTarget(
       ...('production' in namedInputs
         ? ['default', '^production']
         : ['default', '^default']),
+      ...tsconfigInputs.map((f) => ({
+        json: `{workspaceRoot}/${f}`,
+        fields: ['compilerOptions'],
+      })),
       {
         externalDependencies: ['vitest'],
       },
       { env: 'CI' },
+      { dependentTasksOutputFiles: depOutputsGlob, transitive: true },
     ],
     outputs,
     metadata: {
@@ -550,7 +662,7 @@ function serveStaticTarget(
 }
 
 function getOutputs(
-  viteBuildConfig: Record<string, any> | undefined,
+  viteBuildConfig: ResolvedConfig | undefined,
   projectRoot: string,
   workspaceRoot: string
 ): {
@@ -560,7 +672,11 @@ function getOutputs(
   isBuildable: boolean;
   hasServeConfig: boolean;
 } {
-  const { build, test, server } = viteBuildConfig;
+  // TODO(jack): Remove this cast when @nx/vite switches to moduleResolution:
+  // "nodenext". Vite 8's rolldown types are ESM-only (.d.mts) and not
+  // resolvable under moduleResolution: "node", which breaks rolldownOptions
+  // and vitest's test augmentation on ResolvedConfig.
+  const { build, test, server } = viteBuildConfig as any;
 
   const buildOutputPath = normalizeOutputPath(
     build?.outDir,
@@ -569,10 +685,13 @@ function getOutputs(
     'dist'
   );
 
-  const isBuildable =
+  const isBuildable = Boolean(
     build?.lib ||
-    build?.rollupOptions?.input ||
-    existsSync(join(workspaceRoot, projectRoot, 'index.html'));
+      viteBuildConfig?.builder?.buildApp ||
+      build?.rollupOptions?.input || // Vite <8
+      build?.rolldownOptions?.input || // Vite >=8
+      existsSync(join(workspaceRoot, projectRoot, 'index.html'))
+  );
 
   const hasServeConfig = Boolean(server?.host || server?.port);
 
@@ -609,9 +728,9 @@ function normalizeOutputPath(
       return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
     } else {
       if (outputPath.startsWith('..')) {
-        return join('{workspaceRoot}', join(projectRoot, outputPath));
+        return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);
       } else {
-        return join('{projectRoot}', outputPath);
+        return joinPathFragments('{projectRoot}', outputPath);
       }
     }
   }
@@ -629,9 +748,108 @@ function normalizeOptions(options: VitePluginOptions): VitePluginOptions {
   return options;
 }
 
+/**
+ * Collects tsconfig files that Vite's esbuild-based config bundler reads
+ * but are outside the project root (and thus not covered by `default`).
+ *
+ * Vite < 8 uses esbuild's Build API to bundle config files. esbuild walks
+ * UP from the entry point, reading and parsing every `tsconfig.json` in
+ * every ancestor directory plus their `extends` chains. Vite >= 8 uses
+ * rolldown with `tsconfig: false`, but pnpm can resolve different Vite
+ * versions per project, so we always collect — the walk is cheap (cached
+ * JSON reads) and over-declaring inputs for Vite 8 projects is harmless.
+ */
+function collectTsconfigInputsByProjectRoot(
+  projectRoots: string[],
+  workspaceRoot: string
+): Map<string, string[]> {
+  const jsonCache: RawTsconfigJsonCache = new Map();
+  const result = new Map<string, string[]>();
+
+  const rootTsConfigName = getRootTsConfigFileName();
+
+  for (const projectRoot of projectRoots) {
+    if (projectRoot === '.') continue;
+
+    const outside: string[] = [];
+    const seen = new Set<string>();
+    const projectPrefix = `${projectRoot}/`;
+
+    const collect = (absolutePath: string) => {
+      const wsRelative = relative(workspaceRoot, absolutePath)
+        .split(sep)
+        .join('/');
+      if (seen.has(wsRelative)) return;
+      seen.add(wsRelative);
+      if (wsRelative.startsWith('../') || wsRelative === '..') return;
+      if (
+        wsRelative.startsWith('node_modules/') ||
+        wsRelative.includes('/node_modules/')
+      )
+        return;
+      if (wsRelative === projectRoot || wsRelative.startsWith(projectPrefix))
+        return;
+      if (wsRelative === rootTsConfigName) return;
+      outside.push(wsRelative);
+    };
+
+    // Walk the project tsconfig's extends chain
+    const projectTsconfig = join(workspaceRoot, projectRoot, 'tsconfig.json');
+    if (existsSync(projectTsconfig)) {
+      walkTsconfigExtendsChain(
+        projectTsconfig,
+        (absPath) => {
+          collect(absPath);
+          return 'continue';
+        },
+        { jsonCache }
+      );
+    }
+
+    // Walk UP ancestor directories — esbuild reads every tsconfig.json
+    // between the entry point and the filesystem root.
+    let dir = dirname(projectRoot);
+    while (dir && dir !== '.') {
+      const ancestorTsconfig = join(workspaceRoot, dir, 'tsconfig.json');
+      if (existsSync(ancestorTsconfig)) {
+        walkTsconfigExtendsChain(
+          ancestorTsconfig,
+          (absPath) => {
+            collect(absPath);
+            return 'continue';
+          },
+          { jsonCache }
+        );
+      }
+      const parent = dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+
+    // Check the workspace root itself (dirname loop above stops at '.')
+    const rootTsconfig = join(workspaceRoot, 'tsconfig.json');
+    if (existsSync(rootTsconfig)) {
+      walkTsconfigExtendsChain(
+        rootTsconfig,
+        (absPath) => {
+          collect(absPath);
+          return 'continue';
+        },
+        { jsonCache }
+      );
+    }
+
+    if (outside.length > 0) {
+      result.set(projectRoot, outside);
+    }
+  }
+
+  return result;
+}
+
 function checkIfConfigFileShouldBeProject(
   projectRoot: string,
-  context: CreateNodesContext | CreateNodesContextV2
+  context: CreateNodesContextV2
 ): boolean {
   // Do not create a project if package.json and project.json isn't there.
   const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
@@ -643,4 +861,25 @@ function checkIfConfigFileShouldBeProject(
   }
 
   return true;
+}
+
+async function getTestPathsRelativeToProjectRoot(
+  projectRoot: string,
+  workspaceRoot: string
+): Promise<string[]> {
+  const fullProjectRoot = join(workspaceRoot, projectRoot);
+  const { createVitest } = await import('vitest/node');
+  const vitest = await createVitest('test', {
+    root: fullProjectRoot,
+    dir: fullProjectRoot,
+    filesOnly: true,
+    watch: false,
+  });
+  const relevantTestSpecifications =
+    await vitest.getRelevantTestSpecifications();
+  return relevantTestSpecifications
+    .filter((ts) =>
+      projectRoot === '.' ? true : ts.moduleId.startsWith(fullProjectRoot)
+    )
+    .map((ts) => normalizePath(relative(projectRoot, ts.moduleId)));
 }

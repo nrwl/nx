@@ -1,77 +1,77 @@
-import {
-  ProjectGraph,
-  ProjectGraphProjectNode,
-} from 'nx/src/config/project-graph';
+import { ProjectGraphProjectNode, Target, TaskGraph } from '@nx/devkit';
 
-/**
- * Returns Gradle CLI arguments to exclude dependent tasks
- * that are not part of the current execution set.
- *
- * For example, if a project defines `dependsOn: ['lint']` for the `test` target,
- * and only `test` is running, this will return: ['lint']
- */
-export function getExcludeTasks(
-  taskIds: Set<string>,
+function getGradleTaskName(
+  target: Target,
+  nodes: Record<string, ProjectGraphProjectNode>
+): string | null {
+  return nodes[target.project]?.data?.targets?.[target.target]?.options
+    ?.taskName;
+}
+
+export function getExcludeTasksFromTaskGraph(
+  taskIdsToExcludeDepsOf: Iterable<string>,
+  runningTaskIds: Set<string>,
+  taskGraph: TaskGraph,
   nodes: Record<string, ProjectGraphProjectNode>,
-  runningTaskIds: Set<string> = new Set()
+  includeDependsOnTasks: Set<string> = new Set()
 ): Set<string> {
   const excludes = new Set<string>();
+  const transitiveDepIds = getAllDependsOnFromTaskGraph(
+    taskIdsToExcludeDepsOf,
+    taskGraph
+  );
 
-  for (const taskId of taskIds) {
-    const [project, target] = taskId.split(':');
-    const taskDeps = nodes[project]?.data?.targets?.[target]?.dependsOn ?? [];
-
-    for (const dep of taskDeps) {
-      const taskId = typeof dep === 'string' ? dep : dep?.target;
-      if (taskId && !runningTaskIds.has(taskId)) {
-        const gradleTaskName = getGradleTaskNameWithNxTaskId(taskId, nodes);
-        if (gradleTaskName) {
-          excludes.add(gradleTaskName);
-        }
-      }
+  for (const depTaskId of transitiveDepIds) {
+    if (runningTaskIds.has(depTaskId)) {
+      continue;
+    }
+    const task = taskGraph.tasks[depTaskId];
+    if (!task) {
+      continue;
+    }
+    const gradleTaskName = getGradleTaskName(task.target, nodes);
+    if (gradleTaskName && !includeDependsOnTasks.has(gradleTaskName)) {
+      excludes.add(gradleTaskName);
     }
   }
 
   return excludes;
 }
 
-export function getGradleTaskNameWithNxTaskId(
-  nxTaskId: string,
-  nodes: Record<string, ProjectGraphProjectNode>
-): string | null {
-  const [projectName, targetName] = nxTaskId.split(':');
-  const gradleTaskName =
-    nodes[projectName]?.data?.targets?.[targetName]?.options?.taskName;
-  return gradleTaskName;
-}
-
-export function getAllDependsOn(
-  nodes: Record<string, ProjectGraphProjectNode>,
-  projectName: string,
-  targetName: string
+export function getAllDependsOnFromTaskGraph(
+  startTaskIds: Iterable<string>,
+  taskGraph: TaskGraph
 ): Set<string> {
-  const allDependsOn = new Set<string>();
-  const stack: string[] = [`${projectName}:${targetName}`];
+  const result = new Set<string>();
+  const seen = new Set<string>();
+  const stack: string[] = [];
+
+  const edges = (id: string): string[] => [
+    ...(taskGraph.dependencies[id] ?? []),
+    ...(taskGraph.continuousDependencies?.[id] ?? []),
+  ];
+
+  for (const id of startTaskIds) {
+    seen.add(id);
+    for (const dep of edges(id)) {
+      stack.push(dep);
+    }
+  }
 
   while (stack.length > 0) {
-    const currentTaskId = stack.pop();
-    if (currentTaskId && !allDependsOn.has(currentTaskId)) {
-      allDependsOn.add(currentTaskId);
+    const current = stack.pop();
+    if (seen.has(current)) {
+      continue;
+    }
+    seen.add(current);
+    result.add(current);
 
-      const [currentProjectName, currentTargetName] = currentTaskId.split(':');
-      const directDependencies =
-        nodes[currentProjectName]?.data?.targets?.[currentTargetName]
-          ?.dependsOn ?? [];
-
-      for (const dep of directDependencies) {
-        const depTaskId = typeof dep === 'string' ? dep : dep?.target;
-        if (depTaskId && !allDependsOn.has(depTaskId)) {
-          stack.push(depTaskId);
-        }
+    for (const dep of edges(current)) {
+      if (!seen.has(dep)) {
+        stack.push(dep);
       }
     }
   }
-  allDependsOn.delete(`${projectName}:${targetName}`); // Exclude the starting task itself
 
-  return allDependsOn;
+  return result;
 }

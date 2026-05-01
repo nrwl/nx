@@ -1,5 +1,5 @@
 import {
-  type CreateNodesContext,
+  type CreateNodesContextV2,
   detectPackageManager,
   joinPathFragments,
 } from '@nx/devkit';
@@ -22,7 +22,7 @@ jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
 
 describe('@nx/remix/plugin', () => {
   let createNodesFunction = createNodes[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
   let cwd = process.cwd();
 
   beforeEach(() => {
@@ -57,12 +57,12 @@ describe('@nx/remix/plugin', () => {
             },
           },
           workspaceRoot: tempFs.tempDir,
-          configFiles: [],
         };
         tempFs.createFileSync(
           'package.json',
           JSON.stringify('{name: "my-app", type: "module"}')
         );
+        tempFs.createFileSync('package-lock.json', '{}');
         tempFs.createFileSync(
           'remix.config.cjs',
           `/**
@@ -117,13 +117,13 @@ module.exports = {
             },
           },
           workspaceRoot: tempFs.tempDir,
-          configFiles: [],
         };
 
         tempFs.createFileSync(
           'my-app/project.json',
           JSON.stringify({ name: 'my-app' })
         );
+        tempFs.createFileSync('package-lock.json', '{}');
         const lockFileName = getLockFileName(
           detectPackageManager(tempFs.tempDir)
         );
@@ -298,12 +298,12 @@ module.exports = {
             },
           },
           workspaceRoot: tempFs.tempDir,
-          configFiles: [],
         };
         tempFs.createFileSync(
           'package.json',
           JSON.stringify('{name: "my-app", type: "module"}')
         );
+        tempFs.createFileSync('package-lock.json', '{}');
         const lockFileName = getLockFileName(
           detectPackageManager(tempFs.tempDir)
         );
@@ -365,13 +365,13 @@ module.exports = {
             },
           },
           workspaceRoot: tempFs.tempDir,
-          configFiles: [],
         };
 
         tempFs.createFileSync(
           'my-app/project.json',
           JSON.stringify({ name: 'my-app' })
         );
+        tempFs.createFileSync('package-lock.json', '{}');
 
         tempFs.createFileSync(
           'my-app/vite.config.js',

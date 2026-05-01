@@ -1,6 +1,7 @@
 import { env as appendLocalEnv } from 'npm-run-path';
 import { combineOptionsForExecutor, Schema } from '../../utils/params';
 import { handleErrors } from '../../utils/handle-errors';
+import { handleImport } from '../../utils/handle-import';
 import { printHelp } from '../../utils/print-help';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { relative } from 'path';
@@ -134,7 +135,7 @@ async function printTargetRunHelpInternal(
     } else {
       const cp = exec(helpCommand, {
         env,
-        windowsHide: false,
+        windowsHide: true,
       });
       cp.on('exit', (code) => {
         process.exit(code);
@@ -210,7 +211,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
   } else {
     require('../../adapter/compat');
     const observable = await (
-      await import('../../adapter/ngcli-adapter')
+      await handleImport('../../adapter/ngcli-adapter.js', __dirname)
     ).scheduleTarget(
       root,
       {
@@ -220,9 +221,13 @@ async function runExecutorInternal<T extends { success: boolean }>(
         runOptions: combinedOptions,
         projects: projectsConfigurations.projects,
       },
-      isVerbose
+      isVerbose,
+      projectGraph
     );
-    const { eachValueFrom } = await import('../../adapter/rxjs-for-await');
+    const { eachValueFrom } = await handleImport(
+      '../../adapter/rxjs-for-await.js',
+      __dirname
+    );
     return eachValueFrom(observable as any);
   }
 }

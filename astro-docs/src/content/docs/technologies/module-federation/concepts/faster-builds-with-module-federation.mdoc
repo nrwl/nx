@@ -19,8 +19,7 @@ Federation:
   to unexpected errors.
 
 Nx provides the best experience for teams that want faster builds, but want to also minimize the downsides that come
-with Module Federation. Starting in Nx 14,
-we provide specialized generators, executors, and utilities that make Module Federation easy to set up and work with.
+with Module Federation. Nx provides specialized generators, executors, and utilities that make Module Federation easy to set up and work with.
 
 ## When should I use Module Federation?
 
@@ -56,15 +55,14 @@ of them in the following hierarchy.
 
 ## Creating an example workspace
 
-The best way to understand the setup is through an example. In this section, we will create a `host` application with
+The best way to understand the setup is through an example. we will create a `host` application with
 three remotes under these routes:
 
 1. `/shop`
 1. `/cart`
 1. `/about`
 
-But before we begin, we've put together a couple of example repos (React and Angular) for you to inspect if you want to
-skip ahead.
+Before you begin, check out the example repos (React and Angular) if you want to skip ahead.
 
 {% github_repository url="https://github.com/nrwl/ng-module-federation" /%}
 
@@ -74,13 +72,13 @@ These examples have fully
 functioning [CI](https://github.com/nrwl/react-module-federation/blob/main/.github/workflows/ci.yml) [workflows](https://github.com/nrwl/ng-module-federation/blob/main/.github/workflows/ci.yml)
 that are simple to set up. You can see what the CI does by viewing the sample pull requests in each repo. Also notice
 the [Nx Cloud](https://nx.app) integration, which gives you insight into each pipeline. We'll touch on
-this [later in this guide](#remote-computation-caching-with-nx-cloud).
+This [later ](#remote-computation-caching-with-nx-cloud).
 
 ![Nx Cloud integration for GitHub](../../../../../assets/concepts/module-federation/pull-request.png)
 
 Now, let's continue by creating an empty Nx workspace.
 
-```shell {% frame="none" %}
+```shell
 # Replace acme with desired scope
 npx create-nx-workspace acme --preset=apps
 cd acme
@@ -93,7 +91,7 @@ take advantage of remote caching and other features it provides.
 
 Then, for React users, install the `@nx/react` plugin; and for Angular users, install the `@nx/angular` plugin.
 
-```shell {% frame="none" %}
+```shell
 # If you use React
 nx add @nx/react
 
@@ -106,14 +104,14 @@ Next, generate the host and remote applications.
 {% tabs %}
 {% tabitem label="React" %}
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/react:host apps/host --remotes=shop,cart,about
 ```
 
 {% /tabitem %}
 {% tabitem label="Angular" %}
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/angular:host apps/host --remotes=shop,cart,about
 ```
 
@@ -127,7 +125,7 @@ or `nx g @nx/angular:remote apps/shop --host=host`.
 
 Now, serve `host` to view it in your browser.
 
-```shell {% frame="none" %}
+```shell
 nx serve host --open
 ```
 
@@ -136,7 +134,7 @@ changes to `host` will update its bundle, but changes to remotes will not update
 
 To run one or more remotes in development mode, use the `--devRemotes` option or `run-many`.
 
-```shell {% frame="none" %}
+```shell
 ## React
 nx run-many -t serve -p "shop,cart"
 
@@ -174,7 +172,7 @@ the `implicitDependencies` configuration.
 // apps/host/project.json
 {
   //...
-  "implicitDependencies": ["about", "shop", "cart"]
+  "implicitDependencies": ["about", "shop", "cart"],
 }
 ```
 
@@ -302,9 +300,8 @@ The required `name` property is the magic to link the host and remotes together.
 three remotes by their names.
 
 {% aside type="note" title="More details" %}
-It is important that the values in `remotes` property matches the `name` property of the remote applications. Otherwise,
-webpack will throw an error. Nx handles this automatically for you so there shouldn't be an issue unless it was modified
-manually.
+The values in the `remotes` property must match the `name` property of the remote applications. Otherwise,
+webpack will throw an error. Nx handles this automatically, so this is only a concern if you modify it manually.
 {% /aside %}
 
 ## What does `withModuleFederation` do?
@@ -343,7 +340,7 @@ export const config: ModuleFederationConfig = {
 };
 ```
 
-The `shared` function can return an `undefined` to use Nx's default value, `false` to exclude it from being shared, or
+The `shared` function can return an `undefined` to use Nx default value, `false` to exclude it from being shared, or
 a [shared config](https://webpack.js.org/plugins/module-federation-plugin/#sharing-hints) that webpack supports.
 
 {% aside type="note" title="Analysis" %}
@@ -353,8 +350,7 @@ bundles before optimizing the shared behavior.
 To analyze the size of your bundles, run build with `--statsJson` and use a tool
 like [`webpack-bundle-analyzer`](https://www.npmjs.com/package/webpack-bundle-analyzer).
 
-If you have any feedback regarding this feature, we'd love to hear from you--check
-our [community page](https://nx.dev/community) for links to our Discord and Twitter.
+If you have any feedback regarding this feature, let us know on [our community page](https://nx.dev/community).
 {% /aside %}
 
 ## Remote computation caching with Nx Cloud
@@ -368,7 +364,7 @@ source of a given remote hasn't changed, it will be served from cache.
 
 You can see this behavior locally if you serve the `host` twice.
 
-```shell {% frame="none" %}
+```shell
 nx serve host
 
 # (kill server)
@@ -382,7 +378,7 @@ If, say, someone is working on `shop`, they will get the `cart` and `about` buil
 
 If you inspect the terminal output, you'll see something like this, even if you are on different machines.
 
-```shell {% frame="none" %}
+```shell
 > nx run about:build:development  [existing outputs match the cache, left as is]
 
 (snip)
@@ -416,7 +412,7 @@ In addition to computation caching, Nx Cloud also comes with:
 
 ## Production build and deployment with Nx Cloud
 
-In this section, we'll examine how to set up your production build and simulate a deployment to `http://localhost:3000`.
+We'll examine how to set up your production build and simulate a deployment to `http://localhost:3000`.
 
 First, make sure you have implicit dependencies from `host` to each remote. In case you didn't already set this up, add
 the following line to the `host`'s project configuration.
@@ -424,7 +420,7 @@ the following line to the `host`'s project configuration.
 ```jsonc title="apps/host/project.json"
 {
   //...
-  "implicitDependencies": ["about", "shop", "cart"]
+  "implicitDependencies": ["about", "shop", "cart"],
 }
 ```
 
@@ -467,7 +463,7 @@ dist/apps
 
 Now, we can add a simple deploy command to simulate deploying this folder to production.
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/workspace:run-commands \
 deploy \
 --project=host \
@@ -492,7 +488,7 @@ production/
 └── (snip)
 ```
 
-The above command is just an example. You'll need to use what make sense for your team and workspace.
+The above command is just an example. You'll need to use what makes sense for your team and workspace.
 
 For examples of how CI/CD pipelines can be configured using Nx Cloud and GitHub, see
 our [React](https://github.com/nrwl/react-module-federation)
@@ -507,7 +503,7 @@ and [Angular](https://github.com/nrwl/ng-module-federation) examples.
 By using Module Federation you essentially split your application build process vertically. You can also split it
 horizontally by making some libraries buildable.
 
-We don't recommend making all libraries in your workspace buildable--it will make some things faster but many other
+Making all libraries in your workspace buildable is not recommended. It will make some things faster but many other
 things slower. But in some scenarios making a few large libraries at the bottom of your graph buildable can speed up
 your CI.
 

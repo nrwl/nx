@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { readProjectConfiguration } from '@nx/devkit';
 // nx-ignore-next-line
@@ -46,7 +45,7 @@ describe('Convert webpack', () => {
               optimization: false,
               outputHashing: 'none',
               generatePackageJson: true,
-              sourceMaps: true,
+              sourceMap: true,
             }),
           ],
         };
@@ -94,7 +93,7 @@ describe('Convert webpack', () => {
                   // e.g. \`config.plugins.push(new MyPlugin())\`
                   config.output.clean = true;
                   return config;
-                }
+                },
               );
               "
           `);
@@ -216,7 +215,7 @@ describe('Convert webpack', () => {
               export default composePlugins(
                 withNx(),
                 withReact({ useLegacyHtmlPlugin: true }),
-                withModuleFederation(config, { dts: false })
+                withModuleFederation(config, { dts: false }),
               );
               "
           `);
@@ -316,7 +315,7 @@ describe('Convert webpack', () => {
               export default composePlugins(
                 withNx(),
                 withReact({ useLegacyHtmlPlugin: true }),
-                withModuleFederation(config, { dts: false })
+                withModuleFederation(config, { dts: false }),
               );
               "
           `);
@@ -422,7 +421,7 @@ describe('Convert webpack', () => {
               export default composePlugins(
                 withNx(),
                 withReact({ useLegacyHtmlPlugin: true }),
-                withModuleFederation(config, { dts: false })
+                withModuleFederation(config, { dts: false }),
               );
               "
           `);

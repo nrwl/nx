@@ -1,4 +1,4 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { CreateNodesContextV2 } from '@nx/devkit';
 import type { NextConfig } from 'next';
 
 import { createNodesV2 } from './plugin';
@@ -6,10 +6,12 @@ import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 describe('@nx/next/plugin', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
 
   describe('root projects', () => {
+    let tempFs: TempFs;
     beforeEach(async () => {
+      tempFs = new TempFs('next-root-plugin');
       context = {
         nxJsonConfiguration: {
           namedInputs: {
@@ -17,13 +19,16 @@ describe('@nx/next/plugin', () => {
             production: ['!{projectRoot}/**/*.spec.ts'],
           },
         },
-        workspaceRoot: '',
-        configFiles: [],
+        workspaceRoot: tempFs.tempDir,
       };
+      tempFs.createFileSync('next.config.js', '');
+      tempFs.createFileSync('package.json', JSON.stringify({ name: 'next' }));
+      tempFs.createFileSync('package-lock.json', '{}');
     });
 
     afterEach(() => {
       jest.resetModules();
+      tempFs.cleanup();
     });
 
     it('should create nodes', async () => {
@@ -54,7 +59,6 @@ describe('@nx/next/plugin', () => {
           },
         },
         workspaceRoot: tempFs.tempDir,
-        configFiles: [],
       };
 
       tempFs.createFileSync(
@@ -62,6 +66,7 @@ describe('@nx/next/plugin', () => {
         JSON.stringify({ name: 'my-app' })
       );
       tempFs.createFileSync('my-app/next.config.js', '');
+      tempFs.createFileSync('package-lock.json', '{}');
     });
 
     afterEach(() => {

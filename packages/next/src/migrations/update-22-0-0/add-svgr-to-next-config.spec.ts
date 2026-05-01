@@ -185,31 +185,36 @@ module.exports = composePlugins(...plugins)(nextConfig);
         const originalWebpack = config.webpack;
         // @ts-ignore
         config.webpack = (webpackConfig, ctx) => {
-          // Add SVGR support
+          // Add SVGR support with webpack 5 asset modules
           webpackConfig.module.rules.push({
             test: /.svg$/,
-            issuer: { not: /.(css|scss|sass)$/ },
-            resourceQuery: {
-              not: [
-                /__next_metadata__/,
-                /__next_metadata_route__/,
-                /__next_metadata_image_meta__/,
-              ],
-            },
-            use: [
+            oneOf: [
               {
-                loader: require.resolve('@svgr/webpack'),
-                options: {
-                  svgo: false,
-                  titleProp: true,
-                  ref: true,
+                resourceQuery: /url/,
+                type: 'asset/resource',
+                generator: {
+                  filename: 'static/media/[name].[hash][ext]',
                 },
               },
               {
-                loader: require.resolve('file-loader'),
-                options: {
-                  name: 'static/media/[name].[hash].[ext]',
+                issuer: { not: /.(css|scss|sass)$/ },
+                resourceQuery: {
+                  not: [
+                    /__next_metadata__/,
+                    /__next_metadata_route__/,
+                    /__next_metadata_image_meta__/,
+                  ],
                 },
+                use: [
+                  {
+                    loader: require.resolve('@svgr/webpack'),
+                    options: {
+                      svgo: false,
+                      titleProp: true,
+                      ref: true,
+                    },
+                  },
+                ],
               },
             ],
           });
@@ -282,31 +287,36 @@ module.exports = composePlugins(...plugins)(nextConfig);
         const originalWebpack = config.webpack;
         // @ts-ignore
         config.webpack = (webpackConfig, ctx) => {
-          // Add SVGR support
+          // Add SVGR support with webpack 5 asset modules
           webpackConfig.module.rules.push({
             test: /.svg$/,
-            issuer: { not: /.(css|scss|sass)$/ },
-            resourceQuery: {
-              not: [
-                /__next_metadata__/,
-                /__next_metadata_route__/,
-                /__next_metadata_image_meta__/,
-              ],
-            },
-            use: [
+            oneOf: [
               {
-                loader: require.resolve('@svgr/webpack'),
-                options: {
-                  svgo: true,
-                  titleProp: false,
-                  ref: false,
+                resourceQuery: /url/,
+                type: 'asset/resource',
+                generator: {
+                  filename: 'static/media/[name].[hash][ext]',
                 },
               },
               {
-                loader: require.resolve('file-loader'),
-                options: {
-                  name: 'static/media/[name].[hash].[ext]',
+                issuer: { not: /.(css|scss|sass)$/ },
+                resourceQuery: {
+                  not: [
+                    /__next_metadata__/,
+                    /__next_metadata_route__/,
+                    /__next_metadata_image_meta__/,
+                  ],
                 },
+                use: [
+                  {
+                    loader: require.resolve('@svgr/webpack'),
+                    options: {
+                      svgo: true,
+                      titleProp: false,
+                      ref: false,
+                    },
+                  },
+                ],
               },
             ],
           });
@@ -375,31 +385,36 @@ module.exports = composePlugins(...plugins)(nextConfig);
         const originalWebpack = config.webpack;
         // @ts-ignore
         config.webpack = (webpackConfig, ctx) => {
-          // Add SVGR support
+          // Add SVGR support with webpack 5 asset modules
           webpackConfig.module.rules.push({
             test: /.svg$/,
-            issuer: { not: /.(css|scss|sass)$/ },
-            resourceQuery: {
-              not: [
-                /__next_metadata__/,
-                /__next_metadata_route__/,
-                /__next_metadata_image_meta__/,
-              ],
-            },
-            use: [
+            oneOf: [
               {
-                loader: require.resolve('@svgr/webpack'),
-                options: {
-                  svgo: false,
-                  titleProp: true,
-                  ref: true,
+                resourceQuery: /url/,
+                type: 'asset/resource',
+                generator: {
+                  filename: 'static/media/[name].[hash][ext]',
                 },
               },
               {
-                loader: require.resolve('file-loader'),
-                options: {
-                  name: 'static/media/[name].[hash].[ext]',
+                issuer: { not: /.(css|scss|sass)$/ },
+                resourceQuery: {
+                  not: [
+                    /__next_metadata__/,
+                    /__next_metadata_route__/,
+                    /__next_metadata_image_meta__/,
+                  ],
                 },
+                use: [
+                  {
+                    loader: require.resolve('@svgr/webpack'),
+                    options: {
+                      svgo: false,
+                      titleProp: true,
+                      ref: true,
+                    },
+                  },
+                ],
               },
             ],
           });
@@ -500,31 +515,36 @@ module.exports = composePlugins(...plugins)(nextConfig);
         const originalWebpack = config.webpack;
         // @ts-ignore
         config.webpack = (webpackConfig, ctx) => {
-          // Add SVGR support
+          // Add SVGR support with webpack 5 asset modules
           webpackConfig.module.rules.push({
             test: /.svg$/,
-            issuer: { not: /.(css|scss|sass)$/ },
-            resourceQuery: {
-              not: [
-                /__next_metadata__/,
-                /__next_metadata_route__/,
-                /__next_metadata_image_meta__/,
-              ],
-            },
-            use: [
+            oneOf: [
               {
-                loader: require.resolve('@svgr/webpack'),
-                options: {
-                  svgo: false,
-                  titleProp: true,
-                  ref: true,
+                resourceQuery: /url/,
+                type: 'asset/resource',
+                generator: {
+                  filename: 'static/media/[name].[hash][ext]',
                 },
               },
               {
-                loader: require.resolve('file-loader'),
-                options: {
-                  name: 'static/media/[name].[hash].[ext]',
+                issuer: { not: /.(css|scss|sass)$/ },
+                resourceQuery: {
+                  not: [
+                    /__next_metadata__/,
+                    /__next_metadata_route__/,
+                    /__next_metadata_image_meta__/,
+                  ],
                 },
+                use: [
+                  {
+                    loader: require.resolve('@svgr/webpack'),
+                    options: {
+                      svgo: false,
+                      titleProp: true,
+                      ref: true,
+                    },
+                  },
+                ],
               },
             ],
           });
@@ -599,31 +619,36 @@ module.exports = composePlugins(...plugins)(nextConfig);
         const originalWebpack = config.webpack;
         // @ts-ignore
         config.webpack = (webpackConfig, ctx) => {
-          // Add SVGR support
+          // Add SVGR support with webpack 5 asset modules
           webpackConfig.module.rules.push({
             test: /.svg$/,
-            issuer: { not: /.(css|scss|sass)$/ },
-            resourceQuery: {
-              not: [
-                /__next_metadata__/,
-                /__next_metadata_route__/,
-                /__next_metadata_image_meta__/,
-              ],
-            },
-            use: [
+            oneOf: [
               {
-                loader: require.resolve('@svgr/webpack'),
-                options: {
-                  svgo: false,
-                  titleProp: true,
-                  ref: true,
+                resourceQuery: /url/,
+                type: 'asset/resource',
+                generator: {
+                  filename: 'static/media/[name].[hash][ext]',
                 },
               },
               {
-                loader: require.resolve('file-loader'),
-                options: {
-                  name: 'static/media/[name].[hash].[ext]',
+                issuer: { not: /.(css|scss|sass)$/ },
+                resourceQuery: {
+                  not: [
+                    /__next_metadata__/,
+                    /__next_metadata_route__/,
+                    /__next_metadata_image_meta__/,
+                  ],
                 },
+                use: [
+                  {
+                    loader: require.resolve('@svgr/webpack'),
+                    options: {
+                      svgo: false,
+                      titleProp: true,
+                      ref: true,
+                    },
+                  },
+                ],
               },
             ],
           });
@@ -692,31 +717,36 @@ module.exports = composePlugins(...plugins)(nextConfig);
         const originalWebpack = config.webpack;
         // @ts-ignore
         config.webpack = (webpackConfig, ctx) => {
-          // Add SVGR support
+          // Add SVGR support with webpack 5 asset modules
           webpackConfig.module.rules.push({
             test: /.svg$/,
-            issuer: { not: /.(css|scss|sass)$/ },
-            resourceQuery: {
-              not: [
-                /__next_metadata__/,
-                /__next_metadata_route__/,
-                /__next_metadata_image_meta__/,
-              ],
-            },
-            use: [
+            oneOf: [
               {
-                loader: require.resolve('@svgr/webpack'),
-                options: {
-                  svgo: false,
-                  titleProp: true,
-                  ref: true,
+                resourceQuery: /url/,
+                type: 'asset/resource',
+                generator: {
+                  filename: 'static/media/[name].[hash][ext]',
                 },
               },
               {
-                loader: require.resolve('file-loader'),
-                options: {
-                  name: 'static/media/[name].[hash].[ext]',
+                issuer: { not: /.(css|scss|sass)$/ },
+                resourceQuery: {
+                  not: [
+                    /__next_metadata__/,
+                    /__next_metadata_route__/,
+                    /__next_metadata_image_meta__/,
+                  ],
                 },
+                use: [
+                  {
+                    loader: require.resolve('@svgr/webpack'),
+                    options: {
+                      svgo: false,
+                      titleProp: true,
+                      ref: true,
+                    },
+                  },
+                ],
               },
             ],
           });

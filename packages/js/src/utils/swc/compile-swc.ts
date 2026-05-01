@@ -44,10 +44,10 @@ function getTypeCheckOptions(normalizedOptions: NormalizedSwcExecutorOptions) {
     !normalizedOptions.swcCliOptions.stripLeadingPaths
       ? projectRoot
       : sourceRoot
-      ? sourceRoot
-      : existsSync(join(root, projectRoot, 'src'))
-      ? join(projectRoot, 'src')
-      : projectRoot;
+        ? sourceRoot
+        : existsSync(join(root, projectRoot, 'src'))
+          ? join(projectRoot, 'src')
+          : projectRoot;
 
   const typeCheckOptions: TypeCheckOptions = {
     mode: 'emitDeclarationOnly',
@@ -84,14 +84,17 @@ export async function compileSwc(
     const swcCmdLog = execSync(getSwcCmd(normalizedOptions), {
       encoding: 'utf8',
       cwd: normalizedOptions.swcCliOptions.swcCwd,
-      windowsHide: false,
+      windowsHide: true,
       stdio: 'pipe',
     });
     logger.log(swcCmdLog.replace(/\n/, ''));
   } catch (error) {
-    logger.error('SWC compilation failed');
-    if (error.stderr) {
+    logger.error(`SWC compilation failed: ${error?.message ?? error}`);
+    if (error?.stderr) {
       logger.error(error.stderr.toString());
+    }
+    if (error?.stdout) {
+      logger.error(error.stdout.toString());
     }
     return { success: false };
   }
@@ -138,13 +141,14 @@ export async function* compileSwcWatch(
   return yield* createAsyncIterable<{ success: boolean; outfile: string }>(
     async ({ next, done }) => {
       let processOnExit: () => void;
+      let handleCallback: (type: string, data?: string) => void;
       let stdoutOnData: () => void;
       let stderrOnData: () => void;
       let watcherOnExit: () => void;
 
       const swcWatcher = exec(getSwcCmd(normalizedOptions, true), {
         cwd: normalizedOptions.swcCliOptions.swcCwd,
-        windowsHide: false,
+        windowsHide: true,
       });
 
       processOnExit = () => {
@@ -155,64 +159,74 @@ export async function* compileSwcWatch(
         process.off('exit', processOnExit);
       };
 
-      stdoutOnData = async (data?: string) => {
-        process.stdout.write(data);
-        if (!data.startsWith('Watching')) {
-          const swcStatus = data.includes('Successfully');
+      handleCallback = async (type: string, data?: string) => {
+        if (type === 'stdout' || data.includes('Successfully')) {
+          process.stdout.write(data);
+          if (!data.startsWith('Watching')) {
+            const swcStatus = data.includes('Successfully');
 
-          if (initialPostCompile) {
-            await postCompilationCallback();
-            initialPostCompile = false;
+            if (initialPostCompile) {
+              await postCompilationCallback();
+              initialPostCompile = false;
+            }
+
+            if (
+              normalizedOptions.skipTypeCheck ||
+              normalizedOptions.isTsSolutionSetup
+            ) {
+              next(getResult(swcStatus));
+              return;
+            }
+
+            if (!typeCheckOptions) {
+              typeCheckOptions = getTypeCheckOptions(normalizedOptions);
+            }
+
+            const delayed = delay(5000);
+            next(
+              getResult(
+                await Promise.race([
+                  delayed
+                    .start()
+                    .then(() => ({ tscStatus: false, type: 'timeout' })),
+                  runTypeCheck(typeCheckOptions).then(
+                    ({ errors, warnings }) => {
+                      const hasErrors = errors.length > 0;
+                      if (hasErrors) {
+                        printDiagnostics(errors, warnings);
+                      }
+                      return {
+                        tscStatus: !hasErrors,
+                        type: 'tsc',
+                      };
+                    }
+                  ),
+                ]).then(({ type, tscStatus }) => {
+                  if (type === 'tsc') {
+                    delayed.cancel();
+                    return tscStatus && swcStatus;
+                  }
+
+                  return swcStatus;
+                })
+              )
+            );
           }
-
-          if (
-            normalizedOptions.skipTypeCheck ||
-            normalizedOptions.isTsSolutionSetup
-          ) {
-            next(getResult(swcStatus));
+        } else if (type === 'stderr' && !data.includes('Successfully')) {
+          process.stderr.write(data);
+          if (data.includes('Debugger attached.')) {
             return;
           }
-
-          if (!typeCheckOptions) {
-            typeCheckOptions = getTypeCheckOptions(normalizedOptions);
-          }
-
-          const delayed = delay(5000);
-          next(
-            getResult(
-              await Promise.race([
-                delayed
-                  .start()
-                  .then(() => ({ tscStatus: false, type: 'timeout' })),
-                runTypeCheck(typeCheckOptions).then(({ errors, warnings }) => {
-                  const hasErrors = errors.length > 0;
-                  if (hasErrors) {
-                    printDiagnostics(errors, warnings);
-                  }
-                  return {
-                    tscStatus: !hasErrors,
-                    type: 'tsc',
-                  };
-                }),
-              ]).then(({ type, tscStatus }) => {
-                if (type === 'tsc') {
-                  delayed.cancel();
-                  return tscStatus && swcStatus;
-                }
-
-                return swcStatus;
-              })
-            )
-          );
+          next(getResult(false));
         }
       };
 
+      stdoutOnData = async (data?: string) => {
+        handleCallback('stdout', data);
+      };
+
       stderrOnData = (err?: any) => {
-        process.stderr.write(err);
-        if (err.includes('Debugger attached.')) {
-          return;
-        }
-        next(getResult(false));
+        handleCallback('stderr', err);
       };
 
       watcherOnExit = () => {

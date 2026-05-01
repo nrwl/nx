@@ -1,23 +1,27 @@
-import { writeFileSync } from 'fs';
 import { fork, Serializable } from 'child_process';
-import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { output } from '../utils/output';
-import { getCliPath, getPrintableCommandArgsForTask } from './utils';
-import { Batch } from './tasks-schedule';
+import { writeFileSync } from 'fs';
 import { join } from 'path';
-import { BatchMessageType } from './batch/batch-messages';
-import { stripIndents } from '../utils/strip-indents';
-import { Task, TaskGraph } from '../config/task-graph';
-import { PseudoTerminal, PseudoTtyProcess } from './pseudo-terminal';
-import { signalToCode } from '../utils/exit-codes';
 import { ProjectGraph } from '../config/project-graph';
+import { Task, TaskGraph } from '../config/task-graph';
+import { output } from '../utils/output';
+import { stripIndents } from '../utils/strip-indents';
+import { BatchMessageType } from './batch/batch-messages';
+import { DefaultTasksRunnerOptions } from './default-tasks-runner';
+import { getProcessMetricsService } from './process-metrics-service';
+import {
+  createPseudoTerminal as createPseudoTerminalWithShutdown,
+  PseudoTerminal,
+  PseudoTtyProcess,
+} from './pseudo-terminal';
+import { BatchProcess } from './running-tasks/batch-process';
 import {
   NodeChildProcessWithDirectOutput,
   NodeChildProcessWithNonDirectOutput,
 } from './running-tasks/node-child-process';
-import { BatchProcess } from './running-tasks/batch-process';
 import { RunningTask } from './running-tasks/running-task';
-import { RustPseudoTerminal } from '../native';
+import { registerTaskProcessStart } from './task-io-service';
+import { Batch } from './tasks-schedule';
+import { getCliPath, getPrintableCommandArgsForTask } from './utils';
 
 const forkScript = join(__dirname, './fork.js');
 
@@ -42,7 +46,7 @@ export class ForkedProcessTaskRunner {
 
   // TODO: vsavkin delegate terminal output printing
   public async forkProcessForBatch(
-    { executorName, taskGraph: batchTaskGraph }: Batch,
+    { id: batchId, executorName, taskGraph: batchTaskGraph }: Batch,
     projectGraph: ProjectGraph,
     fullTaskGraph: TaskGraph,
     env: NodeJS.ProcessEnv
@@ -62,9 +66,19 @@ export class ForkedProcessTaskRunner {
     }
 
     const p = fork(workerPath, {
-      stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-      env,
+      stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
+      env: {
+        ...env,
+        NX_FORKED_TASK_EXECUTOR: 'true',
+      },
     });
+
+    // Register batch worker process with all tasks
+    if (p.pid) {
+      const taskIds = Object.keys(batchTaskGraph.tasks);
+      getProcessMetricsService().registerBatch(batchId, taskIds, p.pid);
+    }
+
     const cp = new BatchProcess(p, executorName);
     this.processes.add(cp);
 
@@ -174,7 +188,8 @@ export class ForkedProcessTaskRunner {
   }
 
   private async createPseudoTerminal() {
-    const terminal = new PseudoTerminal(new RustPseudoTerminal());
+    // Use the helper to ensure shutdown callbacks are registered
+    const terminal = createPseudoTerminalWithShutdown(true);
 
     await terminal.init();
 
@@ -205,10 +220,19 @@ export class ForkedProcessTaskRunner {
     const p = await pseudoTerminal.fork(childId, forkScript, {
       cwd: process.cwd(),
       execArgv: process.execArgv,
-      jsEnv: env,
+      jsEnv: {
+        ...env,
+        NX_FORKED_TASK_EXECUTOR: 'true',
+      },
       quiet: !streamOutput,
       commandLabel: `nx run ${task.id}`,
     });
+
+    // Register forked process for metrics collection
+    const pid = p.getPid();
+    if (pid) {
+      registerTaskProcessStart(task.id, pid);
+    }
 
     p.send({
       targetDescription: task.target,
@@ -218,12 +242,7 @@ export class ForkedProcessTaskRunner {
     });
     this.processes.add(p);
 
-    let terminalOutput = '';
-    p.onOutput((msg) => {
-      terminalOutput += msg;
-    });
-
-    p.onExit((code) => {
+    p.onExit((code, terminalOutput) => {
       if (!this.tuiEnabled && code > 128) {
         process.exit(code);
       }
@@ -264,8 +283,16 @@ export class ForkedProcessTaskRunner {
 
       const p = fork(this.cliPath, {
         stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
-        env,
+        env: {
+          ...env,
+          NX_FORKED_TASK_EXECUTOR: 'true',
+        },
       });
+
+      // Register forked process for metrics collection
+      if (p.pid) {
+        registerTaskProcessStart(task.id, p.pid);
+      }
 
       // Send message to run the executor
       p.send({
@@ -322,8 +349,17 @@ export class ForkedProcessTaskRunner {
       }
       const p = fork(this.cliPath, {
         stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-        env,
+        env: {
+          ...env,
+          NX_FORKED_TASK_EXECUTOR: 'true',
+        },
       });
+
+      // Register forked process for metrics collection
+      if (p.pid) {
+        registerTaskProcessStart(task.id, p.pid);
+      }
+
       const cp = new NodeChildProcessWithDirectOutput(p, temporaryOutputPath);
 
       this.processes.add(cp);
@@ -399,23 +435,6 @@ export class ForkedProcessTaskRunner {
       this.cleanup();
       process.off('message', messageHandler);
     });
-    process.once('SIGINT', () => {
-      this.cleanup('SIGTERM');
-      process.off('message', messageHandler);
-      // we exit here because we don't need to write anything to cache.
-      process.exit(signalToCode('SIGINT'));
-    });
-    process.once('SIGTERM', () => {
-      this.cleanup('SIGTERM');
-      process.off('message', messageHandler);
-      // no exit here because we expect child processes to terminate which
-      // will store results to the cache and will terminate this process
-    });
-    process.once('SIGHUP', () => {
-      this.cleanup('SIGTERM');
-      process.off('message', messageHandler);
-      // no exit here because we expect child processes to terminate which
-      // will store results to the cache and will terminate this process
-    });
+    // Signal handlers removed - TaskOrchestrator owns signal handling
   }
 }

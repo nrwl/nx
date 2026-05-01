@@ -4,6 +4,7 @@ import {
   ProjectGraph,
   readProjectConfiguration,
   Tree,
+  updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -29,6 +30,19 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
   ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
   readCachedProjectGraph: jest.fn().mockImplementation(() => projectGraph),
 }));
+
+// TODO(jack): Remove this when Cypress adds Vite 8 support.
+// See: https://github.com/cypress-io/cypress/issues/33078
+function useVite7ForCypressCT(tree: Tree) {
+  updateJson(tree, 'package.json', (json) => {
+    for (const section of ['dependencies', 'devDependencies'] as const) {
+      if (json[section]?.vite) {
+        json[section].vite = '^7.0.0';
+      }
+    }
+    return json;
+  });
+}
 
 describe('React:CypressComponentTestConfiguration', () => {
   let tree: Tree;
@@ -103,6 +117,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,
@@ -157,6 +172,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,
@@ -223,6 +239,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,
@@ -288,6 +305,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,
@@ -333,6 +351,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       style: 'scss',
     });
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: true,
@@ -384,6 +403,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       js: true,
     });
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: true,
@@ -448,6 +468,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       dependencies: {},
     };
 
+    useVite7ForCypressCT(tree);
     await expect(
       cypressComponentConfigGenerator(tree, {
         project: 'some-lib',
@@ -504,6 +525,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,
@@ -514,7 +536,6 @@ describe('React:CypressComponentTestConfiguration', () => {
     expect(config).toMatchInlineSnapshot(`
       "import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
       import { defineConfig } from 'cypress';
-
       export default defineConfig({
         component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
       });
@@ -537,10 +558,8 @@ describe('React:CypressComponentTestConfiguration', () => {
       // You can read more here:
       // https://on.cypress.io/configuration
       // ***********************************************************
-
       // Import commands.ts using ES2015 syntax:
       import './commands';
-
       // add component testing only related command here, such as mount
       declare global {
         // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -551,7 +570,6 @@ describe('React:CypressComponentTestConfiguration', () => {
           }
         }
       }
-
       Cypress.Commands.add('mount', mount);
       "
     `);
@@ -603,6 +621,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,
@@ -626,10 +645,8 @@ describe('React:CypressComponentTestConfiguration', () => {
       // You can read more here:
       // https://on.cypress.io/configuration
       // ***********************************************************
-
       // Import commands.ts using ES2015 syntax:
       import './commands';
-
       // add component testing only related command here, such as mount
       declare global {
         // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -640,7 +657,6 @@ describe('React:CypressComponentTestConfiguration', () => {
           }
         }
       }
-
       Cypress.Commands.add('mount', mount);
       "
     `);

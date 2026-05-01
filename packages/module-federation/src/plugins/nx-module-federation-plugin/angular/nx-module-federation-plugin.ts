@@ -5,6 +5,7 @@ import {
 } from '../../../utils/models';
 import { getModuleFederationConfigSync } from '../../../with-module-federation/angular/utils';
 import { normalizeProjectName } from '../../../utils';
+import { workspaceRoot } from '@nx/devkit';
 
 export class NxModuleFederationPlugin implements RspackPluginInstance {
   constructor(
@@ -22,26 +23,42 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
 
     // This is required to ensure Module Federation will build the project correctly
     compiler.options.optimization ??= {};
-    compiler.options.optimization.runtimeChunk = false;
+    compiler.options.optimization.runtimeChunk =
+      process.env['WEBPACK_SERVE'] && !this._options.config.exposes
+        ? (compiler.options.optimization?.runtimeChunk ?? undefined)
+        : false;
+
     if (compiler.options.optimization.splitChunks) {
       compiler.options.optimization.splitChunks.cacheGroups ??= {};
       compiler.options.optimization.splitChunks.cacheGroups.default = false;
       compiler.options.optimization.splitChunks.cacheGroups.common = false;
     }
+
     compiler.options.output.publicPath = !compiler.options.output.publicPath
       ? 'auto'
       : compiler.options.output.publicPath;
     compiler.options.output.uniqueName = this._options.config.name;
-    if (compiler.options.output.scriptType === 'module') {
-      compiler.options.output.scriptType = undefined;
-      compiler.options.output.module = undefined;
-    }
+    // Ensure workspace root is in resolve.modules so that expose paths
+    // like "apps/remote/src/..." resolve correctly without baseUrl.
+    compiler.options.resolve ??= {};
+    compiler.options.resolve.modules = [
+      ...(compiler.options.resolve.modules ?? ['node_modules']),
+      workspaceRoot,
+    ];
+
     if (this._options.isServer) {
       compiler.options.target = 'async-node';
       compiler.options.output.library ??= {
         type: 'commonjs-module',
       };
       compiler.options.output.library.type = 'commonjs-module';
+    } else {
+      // Ensure ESM output is enabled when using library type 'module'.
+      // Without these, remoteEntry.js emits `export` statements but the
+      // runtime loads it as a classic script, causing "Unexpected token 'export'".
+      compiler.options.experiments ??= {};
+      compiler.options.experiments.outputModule = true;
+      compiler.options.output.module = true;
     }
 
     const config = getModuleFederationConfigSync(
@@ -80,7 +97,7 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
             },
             remoteType: 'script',
           }
-        : {}),
+        : { library: { type: 'module' } }),
       ...(this.configOverride ? this.configOverride : {}),
       runtimePlugins,
     }).apply(compiler);

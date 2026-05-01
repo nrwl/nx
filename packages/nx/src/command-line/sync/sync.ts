@@ -1,4 +1,3 @@
-import * as ora from 'ora';
 import { readNxJson } from '../../config/nx-json';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { output } from '../../utils/output';
@@ -13,7 +12,8 @@ import {
   processSyncGeneratorResultErrors,
 } from '../../utils/sync-generators';
 import type { SyncArgs } from './command-object';
-import chalk = require('chalk');
+import * as pc from 'picocolors';
+import { globalSpinner } from '../../utils/spinner';
 
 interface SyncOptions extends SyncArgs {
   check?: boolean;
@@ -47,7 +47,7 @@ export function syncHandler(options: SyncOptions): Promise<number> {
           ? 'The workspace is up to date'
           : 'The workspace is already up to date',
         bodyLines: syncGenerators.map(
-          (generator) => `[${chalk.bold(generator)}]: All files are up to date.`
+          (generator) => `[${pc.bold(generator)}]: All files are up to date.`
         ),
       });
       return 0;
@@ -111,8 +111,7 @@ export function syncHandler(options: SyncOptions): Promise<number> {
       bodyLines: resultBodyLines,
     });
 
-    const spinner = ora('Syncing the workspace...');
-    spinner.start();
+    const spinner = globalSpinner.start('Syncing the workspace...');
 
     try {
       const flushResult = await flushSyncGeneratorChanges(results);

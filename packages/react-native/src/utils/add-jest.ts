@@ -34,27 +34,33 @@ export async function addJest(
   });
 
   // overwrite the jest.config.ts file because react native needs to have special transform property
-  const configPath = `${appProjectRoot}/jest.config.${js ? 'js' : 'ts'}`;
-  const content = `module.exports = {
+  // Workaround issue where Jest is not picking tyope node nor jest types from tsconfig by using <reference>.
+  const configPath = `${appProjectRoot}/jest.config.${js ? 'js' : 'cts'}`;
+  const content = `/// <reference types="jest" />
+/// <reference types="node" />
+module.exports = {
   displayName: '${projectName}',
   preset: 'react-native',
   resolver: '@nx/jest/plugins/resolver',
   moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.${js ? 'js' : 'ts'}'],
   moduleNameMapper: {
-    '\\\\.svg$': '@nx/react-native/plugins/jest/svg-mock'
+    '[.]svg$': '@nx/react-native/plugins/jest/svg-mock'
   },
   transform: {
-    '^.+\\.(js|ts|tsx)$': [
+    '^.+[.](js|ts|tsx)$': [
       'babel-jest',
       {
         configFile: __dirname + '/.babelrc.js',
       },
     ],
-    '^.+\\.(bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$': require.resolve(
+    '^.+[.](bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$': require.resolve(
       'react-native/jest/assetFileTransformer.js'
     ),
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(.pnpm/.+/node_modules/)?(react-native|@react-native(-community)?)/)',
+  ],
   coverageDirectory: '${offsetFromRoot(
     appProjectRoot
   )}coverage/${appProjectRoot}'

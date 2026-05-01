@@ -14,13 +14,13 @@ export const reactNativeWebVersion = '~0.20.0';
 
 export const metroVersion = '~0.82.4';
 
-export const reactVersion = '19.0.0';
-export const reactDomVersion = '19.0.0';
-export const typesReactVersion = '~19.0.10';
-export const typesReactDomVersion = '~19.0.6';
+export const reactVersion = '^19.0.0';
+export const reactDomVersion = '^19.0.0';
+export const typesReactVersion = '^19.0.10';
+export const typesReactDomVersion = '^19.0.6';
 
 export const testingLibraryReactNativeVersion = '~13.2.0';
-export const reactTestRendererVersion = '~19.0.0';
+export const reactTestRendererVersion = '^19.2.0';
 
 export const reactNativeSvgTransformerVersion = '~1.5.1';
 export const reactNativeSvgVersion = '~15.11.2';

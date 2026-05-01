@@ -17,7 +17,7 @@ declare const document: {
 
 declare const __webpack_init_sharing__: (scope: 'default') => Promise<void>;
 declare const __webpack_share_scopes__: { default: unknown };
-let remoteUrlDefinitions: Record<string, string> = {};
+let remoteUrlDefinitions: Record<string, string>;
 let resolveRemoteUrl: ResolveRemoteUrlFunction;
 const remoteModuleMap = new Map<string, unknown>();
 const remoteContainerMap = new Map<string, unknown>();
@@ -83,6 +83,7 @@ export function setRemoteDefinitions(definitions: Record<string, string>) {
  * ```
  */
 export function setRemoteDefinition(remoteName: string, remoteUrl: string) {
+  remoteUrlDefinitions ??= {};
   remoteUrlDefinitions[remoteName] = remoteUrl;
 }
 

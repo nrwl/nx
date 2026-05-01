@@ -48,7 +48,7 @@ const SHELL_SCRIPT_CONTENTS = [
   // Gets the path to the root of the project
   `path_to_root=$(dirname $BASH_SOURCE)`,
   // Executes the nx wrapper script
-  `node ${path.posix.join('$path_to_root', nxWrapperPath(path.posix))} $@`,
+  `node ${path.posix.join('$path_to_root', nxWrapperPath(path.posix))} "$@"`,
 ].join('\n');
 
 export function generateDotNxSetup(version?: string) {
@@ -65,13 +65,23 @@ export function generateDotNxSetup(version?: string) {
   flushChanges(host.root, changes);
   // Ensure that the dot-nx installation is available.
   // This is needed when using a global nx with dot-nx, otherwise running any nx command using global command will fail due to missing modules.
-  execSync('./nx --version', { stdio: 'ignore' });
+  // Pipe stderr so failures surface in telemetry instead of bare "Command failed: ./nx --version".
+  try {
+    execSync('./nx --version', {
+      stdio: ['ignore', 'ignore', 'pipe'],
+      encoding: 'utf8',
+      windowsHide: true,
+    });
+  } catch (e) {
+    if ((e as any)?.stderr) process.stderr.write((e as any).stderr);
+    throw e;
+  }
 }
 
 export function normalizeVersionForNxJson(pkg: string, version: string) {
   if (!valid(version)) {
     version = execSync(`npm view ${pkg}@${version} version`, {
-      windowsHide: false,
+      windowsHide: true,
     }).toString();
   }
   return version.trimEnd();
@@ -89,7 +99,12 @@ export function writeMinimalNxJson(host: Tree, version: string) {
 
 export function updateGitIgnore(host: Tree) {
   let contents = host.read('.gitignore', 'utf-8') ?? '';
-  ['.nx/installation', '.nx/cache', '.nx/workspace-data'].forEach((file) => {
+  [
+    '.nx/installation',
+    '.nx/cache',
+    '.nx/workspace-data',
+    '.nx/self-healing',
+  ].forEach((file) => {
     if (!contents.includes(file)) {
       contents = [contents, file].join('\n');
     }
@@ -102,6 +117,16 @@ export function getNxWrapperContents() {
   return sanitizeWrapperScript(
     readFileSync(path.join(__dirname, 'nxw.js'), 'utf-8')
   );
+}
+
+// Gets the contents for the nx bash script
+export function getShellScriptContents() {
+  return SHELL_SCRIPT_CONTENTS;
+}
+
+// Gets the contents for the nx.bat batch script
+export function getBatchScriptContents() {
+  return BATCH_SCRIPT_CONTENTS;
 }
 
 // Remove any empty comments or comments that start with `//#: ` or eslint-disable comments.

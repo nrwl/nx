@@ -29,6 +29,8 @@ expect.addSnapshotSerializer({
         .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
         // Normalize the version title date.
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
+        // Filter out plugin worker verbose logs
+        .replaceAll(/\[(isolated-plugin|plugin-worker)\].*\n/g, '')
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')
         .map((r) => r.trim())
@@ -106,6 +108,9 @@ describe('nx release version plans only touched', () => {
       'release plan minor -m "Should not happen due to no changed projects" --verbose',
       {
         silenceError: true,
+        // The "No version bumps were selected" message is emitted via
+        // output.warn (stderr); merge it into stdout for the snapshot.
+        redirectStderr: true,
       }
     );
 

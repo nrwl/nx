@@ -4,7 +4,7 @@ exports[`ci-workflow generator connected to nxCloud circleci pipeline should mat
 "version: 2.1
 
 orbs:
-  nx: nrwl/nx@1.6.2
+  nx: nrwl/nx@1.7.0
 
 env:
   NX_BATCH_MODE: true
@@ -88,7 +88,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.
       # # Change from build to build-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-tests
@@ -103,7 +103,7 @@ exports[`ci-workflow generator not connected to nxCloud circleci pipeline should
 "version: 2.1
 
 orbs:
-  nx: nrwl/nx@1.6.2
+  nx: nrwl/nx@1.7.0
 
 env:
   NX_BATCH_MODE: true
@@ -187,7 +187,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.
       # # Change from build to build-ci if you turn on the atomizer. Learn more: https://nx.dev/nx-api/gradle#splitting-tests

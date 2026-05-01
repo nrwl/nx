@@ -13,7 +13,8 @@ import {
   resolvePackageVersionUsingRegistry,
 } from '../../../../utils/package-manager';
 import { connectExistingRepoToNxCloudPrompt } from '../../../nx-cloud/connect/connect-to-nx-cloud';
-import { initCloud } from '../utils';
+import { initCloud, setNeverConnectToCloud } from '../utils';
+import { MessageOptionKey } from '../../../../utils/ab-testing';
 import type { Options } from './types';
 
 // map of Angular major versions to Nx versions to use for legacy `nx init` migrations,
@@ -23,6 +24,7 @@ const nxAngularLegacyVersionMap: Record<number, string> = {
   15: '~19.0.0',
   16: '~20.1.0',
   17: '~21.1.0',
+  18: '~22.2.0',
 };
 // min major angular version supported in latest Nx
 const minMajorAngularVersionSupported =
@@ -106,11 +108,14 @@ export async function getLegacyMigrationFunctionIfApplicable(
 
   return async () => {
     output.log({ title: '🐳 Nx initialization' });
-    const useNxCloud =
-      options.nxCloud ??
-      (options.interactive
-        ? await connectExistingRepoToNxCloudPrompt()
-        : false);
+    const nxCloudChoice: MessageOptionKey =
+      options.nxCloud === true
+        ? 'yes'
+        : options.nxCloud === false
+          ? 'skip'
+          : options.interactive
+            ? await connectExistingRepoToNxCloudPrompt()
+            : 'skip';
 
     output.log({ title: '📦 Installing dependencies' });
     const pmc = getPackageManagerCommand();
@@ -128,12 +133,14 @@ export async function getLegacyMigrationFunctionIfApplicable(
     output.log({ title: '📝 Setting up workspace' });
     execSync(`${pmc.exec} ${legacyMigrationCommand}`, {
       stdio: [0, 1, 2],
-      windowsHide: false,
+      windowsHide: true,
     });
 
-    if (useNxCloud) {
+    if (nxCloudChoice === 'yes') {
       output.log({ title: '🛠️ Setting up Nx Cloud' });
       await initCloud('nx-init-angular');
+    } else if (nxCloudChoice === 'never') {
+      setNeverConnectToCloud(repoRoot);
     }
   };
 }
@@ -169,7 +176,7 @@ async function installDependencies(
   }
   writeJsonFile(`package.json`, json);
 
-  execSync(pmc.install, { stdio: [0, 1, 2], windowsHide: false });
+  execSync(pmc.install, { stdio: [0, 1, 2], windowsHide: true });
 }
 
 async function resolvePackageVersion(

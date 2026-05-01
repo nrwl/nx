@@ -1,7 +1,7 @@
 import {
-  type CreateNodes,
   type CreateNodesV2,
   type PluginConfiguration,
+  type TargetConfiguration,
   type Tree,
   readNxJson,
   updateNxJson,
@@ -11,17 +11,20 @@ import { findMatchingConfigFiles } from 'nx/src/devkit-internals';
 export function addBuildTargetDefaults(
   tree: Tree,
   executorName: string,
-  buildTargetName = 'build'
+  buildTargetName = 'build',
+  extraInputs: TargetConfiguration['inputs'] = []
 ): void {
   const nxJson = readNxJson(tree);
   nxJson.targetDefaults ??= {};
   nxJson.targetDefaults[executorName] ??= {
     cache: true,
     dependsOn: [`^${buildTargetName}`],
-    inputs:
-      nxJson.namedInputs && 'production' in nxJson.namedInputs
+    inputs: [
+      ...(nxJson.namedInputs && 'production' in nxJson.namedInputs
         ? ['production', '^production']
-        : ['default', '^default'],
+        : ['default', '^default']),
+      ...extraInputs,
+    ],
   };
   updateNxJson(tree, nxJson);
 }
@@ -45,7 +48,7 @@ export async function addE2eCiTargetDefaults(
   }
 
   const resolvedE2ePlugin: {
-    createNodes?: CreateNodes;
+    createNodes?: CreateNodesV2;
     createNodesV2?: CreateNodesV2;
   } = await import(e2ePlugin);
   const e2ePluginGlob =
@@ -79,7 +82,7 @@ export async function addE2eCiTargetDefaults(
   const ciTargetName =
     typeof foundPluginForApplication === 'string'
       ? 'e2e-ci'
-      : (foundPluginForApplication.options as any)?.ciTargetName ?? 'e2e-ci';
+      : ((foundPluginForApplication.options as any)?.ciTargetName ?? 'e2e-ci');
 
   const ciTargetNameGlob = `${ciTargetName}--**/**`;
   nxJson.targetDefaults ??= {};

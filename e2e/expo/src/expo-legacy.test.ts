@@ -45,6 +45,9 @@ describe('@nx/expo (legacy)', () => {
     runCLI(
       `generate @nx/expo:library libs/${libName} --buildable --publishable --importPath=${proj}/${libName} --unitTestRunner=jest --linter=eslint`
     );
+
+    // Build first to speed up static-serve
+    runCLI(`export ${appName}`);
   });
   afterAll(() => {
     process.env.NX_ADD_PLUGINS = originalEnv;
@@ -197,9 +200,7 @@ describe('@nx/expo (legacy)', () => {
   it('should tsc app', async () => {
     expect(() => {
       const pmc = getPackageManagerCommand();
-      runCommand(
-        `${pmc.runUninstalledPackage} tsc -p apps/${appName}/tsconfig.app.json`
-      );
+      runCommand(`${pmc.exec} tsc -p apps/${appName}/tsconfig.app.json`);
       checkFilesExist(
         `dist/out-tsc/apps/${appName}/src/app/App.js`,
         `dist/out-tsc/apps/${appName}/src/app/App.d.ts`,
@@ -283,6 +284,10 @@ describe('@nx/expo (legacy)', () => {
     runCLI(
       `generate @nx/expo:application ${appName2} --e2eTestRunner=playwright --no-interactive --unitTestRunner=jest --linter=eslint`
     );
+
+    // Build first to speed up static-serve
+    runCLI(`export ${appName2}`);
+
     if (runE2ETests()) {
       const results = runCLI(`e2e ${appName2}-e2e`, { verbose: true });
       expect(results).toContain('Successfully ran target e2e');

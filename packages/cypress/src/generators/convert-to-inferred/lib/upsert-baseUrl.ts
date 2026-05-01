@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
 
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 
 export function upsertBaseUrl(
   tree: Tree,
@@ -9,13 +9,11 @@ export function upsertBaseUrl(
 ) {
   const configFileContents = tree.read(configFilePath, 'utf-8');
 
-  const ast = tsquery.ast(configFileContents);
+  const sourceFile = ast(configFileContents);
   const BASE_URL_SELECTOR =
     'PropertyAssignment:has(Identifier[name=e2e]) PropertyAssignment:has(Identifier[name="baseUrl"])';
 
-  const baseUrlNodes = tsquery(ast, BASE_URL_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const baseUrlNodes = query(sourceFile, BASE_URL_SELECTOR);
   if (baseUrlNodes.length !== 0) {
     // The property exists in the config
     const baseUrlValueNode = baseUrlNodes[0].getChildAt(2);
@@ -38,9 +36,7 @@ export function upsertBaseUrl(
     const E2E_OBJECT_SELECTOR =
       'PropertyAssignment:has(Identifier[name=e2e]) ObjectLiteralExpression';
 
-    const e2eConfigNodes = tsquery(ast, E2E_OBJECT_SELECTOR, {
-      visitAllChildren: true,
-    });
+    const e2eConfigNodes = query(sourceFile, E2E_OBJECT_SELECTOR);
     if (e2eConfigNodes.length !== 0) {
       const e2eConfigNode = e2eConfigNodes[0];
       tree.write(

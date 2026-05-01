@@ -3,7 +3,7 @@ import {
   processTargetOutputs,
   toProjectRelativePath,
 } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast, query } from '@phenomnomnominal/tsquery';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 import {
   addConfigValuesToConfigFile,
@@ -209,16 +209,14 @@ function moveDocsModeToConfigFile(
   const configFilePath = getConfigFilePath(tree, configDir);
   const configFileContents = tree.read(configFilePath, 'utf-8');
 
-  const ast = tsquery.ast(configFileContents);
+  const sourceFile = ast(configFileContents);
   const CONFIG_OBJECT_SELECTOR =
     'VariableDeclaration:has(Identifier[name=config]) ObjectLiteralExpression';
   const DOCS_MODE_SELECTOR =
     'PropertyAssignment:has(Identifier[name=docs]) PropertyAssignment:has(Identifier[name=docsMode])';
   const DOCS_SELECTOR = 'PropertyAssignment:has(Identifier[name=docs])';
 
-  const configNodes = tsquery(ast, CONFIG_OBJECT_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const configNodes = query(sourceFile, CONFIG_OBJECT_SELECTOR);
 
   if (configNodes.length === 0) {
     // Invalid config file
@@ -231,9 +229,7 @@ function moveDocsModeToConfigFile(
   }
 
   const configNode = configNodes[0];
-  const hasDocsMode =
-    tsquery(configNode, DOCS_MODE_SELECTOR, { visitAllChildren: true }).length >
-    0;
+  const hasDocsMode = query(configNode, DOCS_MODE_SELECTOR).length > 0;
   if (hasDocsMode) {
     return;
   }
@@ -241,9 +237,7 @@ function moveDocsModeToConfigFile(
   let startPosition = configNode.getStart() + 1;
   let needsDocObject = true;
 
-  const docsNodes = tsquery(configNode, DOCS_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const docsNodes = query(configNode, DOCS_SELECTOR);
   if (docsNodes.length > 0) {
     needsDocObject = false;
     startPosition = docsNodes[0].getStart() + 1;
@@ -272,15 +266,13 @@ function moveStaticDirToConfigFile(
   const configFilePath = getConfigFilePath(tree, configDir);
   const configFileContents = tree.read(configFilePath, 'utf-8');
 
-  const ast = tsquery.ast(configFileContents);
+  const sourceFile = ast(configFileContents);
   const CONFIG_OBJECT_SELECTOR =
     'VariableDeclaration:has(Identifier[name=config]) ObjectLiteralExpression';
   const STATIC_DIRS_SELECTOR =
     'PropertyAssignment:has(Identifier[name=staticDirs])';
 
-  const configNodes = tsquery(ast, CONFIG_OBJECT_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const configNodes = query(sourceFile, CONFIG_OBJECT_SELECTOR);
 
   if (configNodes.length === 0) {
     // Invalid config file
@@ -293,9 +285,7 @@ function moveStaticDirToConfigFile(
   }
 
   const configNode = configNodes[0];
-  const hasStaticDir =
-    tsquery(configNode, STATIC_DIRS_SELECTOR, { visitAllChildren: true })
-      .length > 0;
+  const hasStaticDir = query(configNode, STATIC_DIRS_SELECTOR).length > 0;
   if (hasStaticDir) {
     return;
   }

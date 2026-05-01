@@ -18,7 +18,8 @@
     "Backend"
   ],
   "main": "./index.js",
-  "typings": "./index.d.ts",
+  "type": "commonjs",
+  "types": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -34,7 +35,7 @@
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/node": "workspace:*",
-    "tslib": "^2.3.0"
+    "tslib": "catalog:typescript"
   },
   "peerDependencies": {
     "express": "^4.21.2"

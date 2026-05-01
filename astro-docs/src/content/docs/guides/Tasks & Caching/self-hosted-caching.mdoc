@@ -1,10 +1,11 @@
 ---
 title: 'Remote Cache'
-description: 'Learn how to set up remote cache.'
+description: 'Learn how to set up remote cache with Nx Cloud or a self-hosted solution.'
 filter: 'type:Guides'
 ---
 
-There are several ways to set up remote caching with Nx.
+Remote caching shares build results across your team and CI so you don't repeat work.
+You can use Nx Cloud for a fully managed solution or self-host with one of the available plugins.
 
 {% aside type="note" title="Nx Cloud: Managed Remote Cache" %}
 
@@ -38,7 +39,7 @@ Includes everything from Nx Cloud, plus:
 
 {% /aside %}
 
-## Self-Hosted Cache
+## Self-hosted cache
 
 Great for proof of concepts and small teams.
 
@@ -50,26 +51,34 @@ All packages below (along with other bucket-based remote cache implementations) 
 
 {% /aside %}
 
-All packages are free but require an activation key. Getting a key is a fully automated, self-service process that happens during package installation.
+All packages are free but require an activation key. Getting a key is a fully automated, self-service process that happens during package installation. Install any of the following with `nx add`:
 
-The following remote cache adapters are available:
+| Package                                                                                | Storage                      | Install command              |
+| -------------------------------------------------------------------------------------- | ---------------------------- | ---------------------------- |
+| [`@nx/s3-cache`](/docs/reference/remote-cache-plugins/s3-cache/overview)               | Amazon S3 bucket             | `nx add @nx/s3-cache`        |
+| [`@nx/gcs-cache`](/docs/reference/remote-cache-plugins/gcs-cache/overview)             | Google Cloud Storage         | `nx add @nx/gcs-cache`       |
+| [`@nx/azure-cache`](/docs/reference/remote-cache-plugins/azure-cache/overview)         | Azure Blob Storage           | `nx add @nx/azure-cache`     |
+| [`@nx/shared-fs-cache`](/docs/reference/remote-cache-plugins/shared-fs-cache/overview) | Shared file system directory | `nx add @nx/shared-fs-cache` |
 
-- [@nx/s3-cache](/docs/reference/remote-cache-plugins/s3-cache/overview): Cache is self-hosted on an Amazon S3 bucket
-- [@nx/gcs-cache](/docs/reference/remote-cache-plugins/gcs-cache/overview): Cache is self-hosted on Google Cloud storage
-- [@nx/azure-cache](/docs/reference/remote-cache-plugins/azure-cache/overview): Cache is self-hosted on Azure
-- [@nx/shared-fs-cache](/docs/reference/remote-cache-plugins/shared-fs-cache/overview): Cache is self-hosted on a shared file system location
+The `nx add` command installs the package, configures your workspace, and walks you through generating an activation key.
+The key is saved to `.nx/key/key.ini` and should be committed to your repository.
+In CI or public repositories, set the `NX_KEY` environment variable instead.
+
+If you don't have a key yet, run `nx register` to generate one.
+If your existing key is expired or invalid, delete `.nx/key/key.ini` and run `nx register` again.
+In CI, verify that the `NX_KEY` environment variable is set and matches the key in `.nx/key/key.ini`.
 
 > Why require an activation key? It simply helps us know and support our users. If you prefer not to provide this information, you can also [build your own cache server](#build-your-own-caching-server).
 
-## Build Your Own Caching Server
+## Build your own caching server
 
 Starting in Nx version 20.8, you can build your own caching server using the OpenAPI specification below. This allows you to create a custom remote cache server tailored to your specific needs. The server manages all aspects of the remote cache, including storage, retrieval, and authentication.
 
-Implementation is up to you, but the server must adhere to the OpenAPI specification below to ensure compatibility with Nx's caching mechanism. The endpoints transfer tar archives as binary data. Note that while the underlying data format may change in future Nx versions, the OpenAPI specification should remain stable.
+Implementation is up to you, but the server must adhere to the OpenAPI specification below to ensure compatibility with Nx caching mechanism. The endpoints transfer tar archives as binary data. Note that while the underlying data format may change in future Nx versions, the OpenAPI specification should remain stable.
 
 You can implement your server in any programming language or framework, as long as it adheres to the OpenAPI spec.
 
-### Open API Specification
+### Open API specification
 
 ```json
 // Nx 20.8+
@@ -77,7 +86,7 @@ You can implement your server in any programming language or framework, as long 
   "openapi": "3.0.0",
   "info": {
     "title": "Nx custom remote cache specification.",
-    "description": "Nx is an AI-first build platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.",
+    "description": "Nx is an AI-first monorepo platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.",
     "version": "1.0.0"
   },
   "paths": {
@@ -91,7 +100,7 @@ You can implement your server in any programming language or framework, as long 
           }
         ],
         "responses": {
-          "202": {
+          "200": {
             "description": "Successfully uploaded the output"
           },
           "401": {
@@ -212,18 +221,25 @@ You can implement your server in any programming language or framework, as long 
 }
 ```
 
-### Usage Notes
+### Usage notes
 
 To use your custom caching server, set the `NX_SELF_HOSTED_REMOTE_CACHE_SERVER` environment variable. The following environment variables also affect behavior:
 
 - `NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN`: The authentication token to access the cache server.
 - `NODE_TLS_REJECT_UNAUTHORIZED`: Set to `0` to disable TLS certificate validation.
 
-### Migrating From Custom Tasks Runners
+### Migrating from custom tasks runners
 
-You might have used Nx's now-deprecated custom task runners API in these scenarios:
+You might have used Nx now-deprecated custom task runners API in these scenarios:
 
 - To implement custom self-hosted caching: use one of the implementations listed above
 - To inject custom behavior before and after running tasks: use our new API with dedicated pre and post hooks
 
 To learn more about migrating from custom task runners, [please refer to this detailed guide](/docs/reference/deprecated/custom-tasks-runner).
+
+## Looking for conformance or code owners?
+
+If you previously used Nx Powerpack for conformance rules or code ownership, those features are now part of [Nx Enterprise](/docs/enterprise). See:
+
+- [Conformance](/docs/enterprise/conformance) — write and enforce language-agnostic rules across your workspace
+- [Owners](/docs/enterprise/owners) — define code ownership at the project level and auto-generate CODEOWNERS files

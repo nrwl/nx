@@ -1,0 +1,79 @@
+package dev.nx.gradle
+
+import dev.nx.gradle.dsl.NxArrayBuilder
+import dev.nx.gradle.dsl.NxObjectBuilder
+import dev.nx.gradle.dsl.asJson
+import dev.nx.gradle.dsl.asJsonMap
+import javax.inject.Inject
+import org.gradle.api.Action
+import org.gradle.api.Task
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.MapProperty
+
+/**
+ * Extension for Gradle tasks to declare Nx-specific task configuration.
+ *
+ * This extension allows Gradle tasks to specify Nx target properties via JSON DSL.
+ *
+ * Example usage in Kotlin DSL:
+ * ```
+ * tasks.named("integrationTest") {
+ *   nx {
+ *     set("cache", false)
+ *     array("tags", "integration", "slow")
+ *     set("metadata") {
+ *       set("description", "Run integration tests")
+ *       set("priority", 1)
+ *     }
+ *   }
+ * }
+ * ```
+ *
+ * Example usage in Groovy DSL:
+ * ```
+ * tasks.named('integrationTest') {
+ *   nx {
+ *     set 'cache', false
+ *     array 'tags', 'integration', 'slow'
+ *   }
+ * }
+ * ```
+ */
+open class NxTaskExtension @Inject constructor(objects: ObjectFactory) {
+  /** JSON root for task-level Nx config */
+  val json: MapProperty<String, Any?> = objects.mapProperty(String::class.java, Any::class.java)
+
+  // DSL methods for building JSON config
+
+  fun set(key: String, value: String) = json.put(key, value)
+
+  fun set(key: String, value: Number) = json.put(key, value)
+
+  fun set(key: String, value: Boolean) = json.put(key, value)
+
+  fun set(key: String, block: NxObjectBuilder.() -> Unit) {
+    val obj = NxObjectBuilder().apply(block).content
+    json.put(key, obj)
+  }
+
+  fun set(key: String, action: Action<NxObjectBuilder>) = set(key) { action.execute(this) }
+
+  fun array(key: String, vararg values: Any?) = json.put(key, values.map { asJson(it) })
+
+  fun array(key: String, values: Iterable<*>) = json.put(key, values.map { asJson(it) })
+
+  fun array(key: String, block: NxArrayBuilder.() -> Unit) {
+    val arr = NxArrayBuilder().apply(block).content
+    json.put(key, arr)
+  }
+
+  fun merge(map: Map<String, Any?>) = json.putAll(asJsonMap(map))
+}
+
+/** Type-safe accessor for the nx extension in Kotlin DSL. */
+fun Task.nx(configure: NxTaskExtension.() -> Unit) {
+  val extension =
+      extensions.findByType(NxTaskExtension::class.java)
+          ?: extensions.create("nx", NxTaskExtension::class.java, project.objects)
+  configure(extension)
+}

@@ -23,6 +23,8 @@ import {
   ArrowTrendingUpIcon,
   CommandLineIcon,
   UsersIcon,
+  DocumentChartBarIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { DiscordIcon } from '../discord-icon';
@@ -44,7 +46,7 @@ export const featuresItems: Record<string, MenuItem[]> = {
       name: 'Run Tasks',
       // description: 'Run one or many tasks in parallel.',
       description: null,
-      href: '/features/run-tasks',
+      href: '/docs/features/run-tasks',
       icon: BoltIcon,
       isNew: false,
       isHighlight: false,
@@ -53,7 +55,7 @@ export const featuresItems: Record<string, MenuItem[]> = {
       name: 'Cache Task Results',
       // description: 'Speeds up your local workflow.',
       description: null,
-      href: '/features/cache-task-results',
+      href: '/docs/features/cache-task-results',
       icon: CircleStackIcon,
       isNew: false,
       isHighlight: false,
@@ -62,7 +64,7 @@ export const featuresItems: Record<string, MenuItem[]> = {
       name: 'Explore Your Workspace',
       // description: 'See interactions for tasks and modules.',
       description: null,
-      href: '/features/explore-graph',
+      href: '/docs/features/explore-graph',
       icon: ShareIcon,
       isNew: false,
       isHighlight: false,
@@ -71,7 +73,7 @@ export const featuresItems: Record<string, MenuItem[]> = {
       name: 'Automate Updating Dependencies',
       // description: 'Keep running on latest without effort.',
       description: null,
-      href: '/features/automate-updating-dependencies',
+      href: '/docs/features/automate-updating-dependencies',
       icon: ArrowUpCircleIcon,
       isNew: false,
       isHighlight: false,
@@ -80,7 +82,7 @@ export const featuresItems: Record<string, MenuItem[]> = {
       name: 'Enforce Module Boundaries',
       // description: 'Partition your code into defined units.',
       description: null,
-      href: '/features/enforce-module-boundaries',
+      href: '/docs/features/enforce-module-boundaries',
       icon: Squares2X2Icon,
       isNew: false,
       isHighlight: false,
@@ -89,7 +91,7 @@ export const featuresItems: Record<string, MenuItem[]> = {
       name: 'Manage Releases',
       // description: 'Versioning, changelog, publishing.',
       description: null,
-      href: '/features/manage-releases',
+      href: '/docs/features/manage-releases',
       icon: CubeIcon,
       isNew: false,
       isHighlight: false,
@@ -99,7 +101,7 @@ export const featuresItems: Record<string, MenuItem[]> = {
     {
       name: 'Use Remote Caching (Nx Replay)',
       description: 'Zero-config, fast & secure remote cache solution.',
-      href: '/ci/features/remote-cache',
+      href: '/docs/features/ci-features/remote-cache',
       icon: NxReplayIcon,
       isNew: false,
       isHighlight: false,
@@ -108,17 +110,17 @@ export const featuresItems: Record<string, MenuItem[]> = {
       name: 'Distribute Task Execution (Nx Agents)',
       description:
         'One-line config for distributing tasks across multiple machines',
-      href: '/ci/features/distribute-task-execution',
+      href: '/docs/features/ci-features/distribute-task-execution',
       icon: NxAgentsIcon,
       isNew: false,
       isHighlight: false,
     },
   ],
-  'Nx Powerpack Features (Paid Enterprise Extensions)': [
+  'Nx Enterprise Features': [
     {
       name: 'Run Conformance Rules',
       description: null,
-      href: '/nx-enterprise/powerpack/conformance',
+      href: '/docs/enterprise/conformance',
       icon: CheckBadgeIcon,
       isNew: false,
       isHighlight: false,
@@ -126,7 +128,7 @@ export const featuresItems: Record<string, MenuItem[]> = {
     {
       name: 'Define Project Owners',
       description: null,
-      href: '/nx-enterprise/powerpack/owners',
+      href: '/docs/enterprise/owners',
       icon: UserGroupIcon,
       isNew: false,
       isHighlight: false,
@@ -136,8 +138,8 @@ export const featuresItems: Record<string, MenuItem[]> = {
 export const ossProducts: MenuItem[] = [
   {
     name: 'Nx',
-    description: 'Smart Repos - Fast Builds',
-    href: '/getting-started/intro',
+    description: 'Smart Monorepos - Fast Builds',
+    href: '/docs/getting-started/intro',
     icon: null,
     isNew: false,
     isHighlight: false,
@@ -145,7 +147,7 @@ export const ossProducts: MenuItem[] = [
   {
     name: 'Nx Console',
     description: 'Editor integration for VSCode, Cursor and IntelliJ IDEs',
-    href: '/getting-started/editor-setup',
+    href: '/docs/getting-started/editor-setup',
     icon: null,
     isNew: false,
     isHighlight: false,
@@ -156,9 +158,7 @@ export const learnItems: MenuItem[] = [
   {
     name: 'Step by step tutorials',
     description: null,
-    href: process.env.NEXT_PUBLIC_ASTRO_URL
-      ? '/docs/getting-started/tutorials'
-      : '/getting-started/tutorials',
+    href: '/docs/getting-started/tutorials',
     icon: AcademicCapIcon,
     isNew: false,
     isHighlight: false,
@@ -208,6 +208,30 @@ export const learnItems: MenuItem[] = [
     description: null,
     href: 'https://go.nx.dev/community',
     icon: DiscordIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Books',
+    description: null,
+    href: '/resources-library?filterBy=book',
+    icon: BookOpenIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Case Studies',
+    description: null,
+    href: '/resources-library?filterBy=case-study',
+    icon: DocumentChartBarIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Whitepapers',
+    description: null,
+    href: '/resources-library?filterBy=whitepaper',
+    icon: DocumentTextIcon,
     isNew: false,
     isHighlight: false,
   },

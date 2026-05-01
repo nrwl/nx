@@ -13,15 +13,10 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { createApp } from '../../utils/nx-devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
-import {
-  angularDevkitVersion,
-  angularVersion,
-  autoprefixerVersion,
-  postcssVersion,
-  tailwindVersion,
-} from '../../utils/versions';
+import { angularDevkitVersion, angularVersion } from '../../utils/versions';
 import { generateTestApplication, generateTestLibrary } from '../utils/testing';
 import { Schema } from './schema';
 
@@ -83,7 +78,6 @@ describe('lib', () => {
     expect(dependencies['@angular/router']).toBe(angularVersion);
     expect(dependencies['rxjs']).toBeDefined();
     expect(dependencies['tslib']).toBeDefined();
-    expect(dependencies['zone.js']).toBeDefined();
     expect(devDependencies['@angular/cli']).toBe(angularDevkitVersion);
     expect(devDependencies['@angular/compiler-cli']).toBe(angularVersion);
     expect(devDependencies['@angular/language-service']).toBe(angularVersion);
@@ -93,15 +87,33 @@ describe('lib', () => {
     expect(devDependencies['@angular/build']).toBeUndefined();
     // codelyzer should no longer be there by default
     expect(devDependencies['codelyzer']).toBeUndefined();
+    // zone.js should not be installed by default
+    expect(dependencies['zone.js']).toBeUndefined();
   });
 
-  it('should add @angular/build when using vitest', async () => {
+  it('should add @angular/build when using vitest-angular', async () => {
     await runLibraryGeneratorWithOpts({
-      unitTestRunner: UnitTestRunner.Vitest,
+      unitTestRunner: UnitTestRunner.VitestAngular,
+      buildable: true,
     });
 
     const { devDependencies } = readJson(tree, 'package.json');
     expect(devDependencies['@angular/build']).toBe(angularDevkitVersion);
+  });
+
+  it('should setup vitest-angular test target with watch mode disabled', async () => {
+    await runLibraryGeneratorWithOpts({
+      unitTestRunner: UnitTestRunner.VitestAngular,
+      buildable: true,
+    });
+
+    const project = readProjectConfiguration(tree, 'my-lib');
+    expect(project.targets.test).toStrictEqual({
+      executor: '@nx/angular:unit-test',
+      options: {
+        watch: false,
+      },
+    });
   });
 
   it('should not touch the package.json when run with `--skipPackageJson`', async () => {
@@ -158,7 +170,6 @@ describe('lib', () => {
       expect(packageJson.devDependencies['ng-packagr']).toBeUndefined();
       expect(packageJson.devDependencies['postcss']).toBeUndefined();
       expect(packageJson.devDependencies['autoprefixer']).toBeUndefined();
-      expect(packageJson.devDependencies['postcss-url']).toBeUndefined();
     });
 
     it('should update package.json when publishable', async () => {
@@ -173,7 +184,6 @@ describe('lib', () => {
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
       expect(packageJson.devDependencies['postcss']).toBeDefined();
       expect(packageJson.devDependencies['autoprefixer']).toBeDefined();
-      expect(packageJson.devDependencies['postcss-url']).toBeDefined();
     });
 
     it('should update package.json when buildable', async () => {
@@ -185,7 +195,6 @@ describe('lib', () => {
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
       expect(packageJson.devDependencies['postcss']).toBeDefined();
       expect(packageJson.devDependencies['autoprefixer']).toBeDefined();
-      expect(packageJson.devDependencies['postcss-url']).toBeDefined();
 
       const libPackageJson = readJson(tree, 'my-lib/package.json');
       expect(libPackageJson.dependencies?.['tslib']).toBeFalsy();
@@ -292,7 +301,7 @@ describe('lib', () => {
       // ASSERT
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-lib/src/index.ts',
+        './my-lib/src/index.ts',
       ]);
     });
 
@@ -309,11 +318,11 @@ describe('lib', () => {
           strictInjectionParameters: true,
           strictInputAccessModifiers: true,
           strictTemplates: true,
-          typeCheckHostBindings: true,
         },
         compilerOptions: {
           experimentalDecorators: true,
           importHelpers: true,
+          isolatedModules: true,
           module: 'preserve',
           moduleResolution: 'bundler',
           skipLibCheck: true,
@@ -409,9 +418,10 @@ describe('lib', () => {
         const tsconfigJson = readJson(tree, 'my-lib/tsconfig.lib.json');
         expect(tsconfigJson.exclude).toEqual([
           'src/**/*.spec.ts',
-          'src/test-setup.ts',
-          'jest.config.ts',
           'src/**/*.test.ts',
+          'jest.config.ts',
+          'jest.config.cts',
+          'src/test-setup.ts',
         ]);
       });
 
@@ -425,7 +435,6 @@ describe('lib', () => {
         const tsconfigJson = readJson(tree, 'my-lib/tsconfig.lib.json');
         expect(tsconfigJson.exclude).toEqual([
           'src/**/*.spec.ts',
-          'jest.config.ts',
           'src/**/*.test.ts',
         ]);
       });
@@ -437,7 +446,7 @@ describe('lib', () => {
       await runLibraryGeneratorWithOpts({ directory: 'my-lib2' });
 
       // ASSERT
-      expect(tree.exists(`my-lib/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`my-lib/jest.config.cts`)).toBeTruthy();
       expect(tree.exists('my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists('my-lib/src/lib/my-lib-module.ts')).toBeTruthy();
 
@@ -446,7 +455,7 @@ describe('lib', () => {
       expect(tree.exists('my-lib/src/lib/my-lib.service.ts')).toBeFalsy();
       expect(tree.exists('my-lib/src/lib/my-lib.service.spec.ts')).toBeFalsy();
 
-      expect(tree.exists(`my-lib2/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`my-lib2/jest.config.cts`)).toBeTruthy();
       expect(tree.exists('my-lib2/src/index.ts')).toBeTruthy();
       expect(tree.exists('my-lib2/src/lib/my-lib2-module.ts')).toBeTruthy();
 
@@ -527,7 +536,7 @@ describe('lib', () => {
       });
 
       // ASSERT
-      expect(tree.exists(`my-dir/my-lib/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`my-dir/my-lib/jest.config.cts`)).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(
         tree.exists('my-dir/my-lib/src/lib/my-lib-module.ts')
@@ -542,7 +551,7 @@ describe('lib', () => {
         tree.exists('my-dir/my-lib/src/lib/my-lib.service.spec.ts')
       ).toBeFalsy();
 
-      expect(tree.exists(`my-dir/my-lib2/jest.config.ts`)).toBeTruthy();
+      expect(tree.exists(`my-dir/my-lib2/jest.config.cts`)).toBeTruthy();
       expect(tree.exists('my-dir/my-lib2/src/index.ts')).toBeTruthy();
       expect(
         tree.exists('my-dir/my-lib2/src/lib/my-lib2-module.ts')
@@ -588,7 +597,7 @@ describe('lib', () => {
       // ASSERT
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-dir/my-lib/src/index.ts',
+        './my-dir/my-lib/src/index.ts',
       ]);
       expect(tsconfigJson.compilerOptions.paths['my-lib/*']).toBeUndefined();
     });
@@ -607,7 +616,7 @@ describe('lib', () => {
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
 
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-dir/my-lib/src/index.ts',
+        './my-dir/my-lib/src/index.ts',
       ]);
       expect(tsconfigJson.compilerOptions.paths['my-lib/*']).toBeUndefined();
     });
@@ -653,7 +662,7 @@ describe('lib', () => {
 
       // Make sure these exist
       [
-        'my-dir/my-lib/jest.config.ts',
+        'my-dir/my-lib/jest.config.cts',
         'my-dir/my-lib/ng-package.json',
         'my-dir/my-lib/project.json',
         'my-dir/my-lib/tsconfig.lib.prod.json',
@@ -735,7 +744,7 @@ describe('lib', () => {
         {
           path: 'tsconfig.base.json',
           lookupFn: (json) => json.compilerOptions.paths['@myorg/lib'],
-          expectedValue: ['my-dir/my-lib/src/index.ts'],
+          expectedValue: ['./my-dir/my-lib/src/index.ts'],
         },
         {
           path: 'my-dir/my-lib/ng-package.json',
@@ -858,9 +867,10 @@ describe('lib', () => {
 
         expect(tsConfigLibJson.exclude).toEqual([
           'src/**/*.spec.ts',
-          'src/test-setup.ts',
-          'jest.config.ts',
           'src/**/*.test.ts',
+          'jest.config.ts',
+          'jest.config.cts',
+          'src/test-setup.ts',
         ]);
 
         expect(moduleContents2).toMatchInlineSnapshot(`
@@ -891,18 +901,20 @@ describe('lib', () => {
 
         expect(tsConfigLibJson2.exclude).toEqual([
           'src/**/*.spec.ts',
-          'src/test-setup.ts',
-          'jest.config.ts',
           'src/**/*.test.ts',
+          'jest.config.ts',
+          'jest.config.cts',
+          'src/test-setup.ts',
         ]);
 
         expect(moduleContents3).toMatchSnapshot();
 
         expect(tsConfigLibJson3.exclude).toEqual([
           'src/**/*.spec.ts',
-          'src/test-setup.ts',
-          'jest.config.ts',
           'src/**/*.test.ts',
+          'jest.config.ts',
+          'jest.config.cts',
+          'src/test-setup.ts',
         ]);
       });
 
@@ -1216,9 +1228,76 @@ describe('lib', () => {
           const baseConfig = require("../eslint.config.cjs");
 
           module.exports = [
-              ...baseConfig,
               ...nx.configs["flat/angular"],
               ...nx.configs["flat/angular-template"],
+              ...baseConfig,
+              {
+                  files: [
+                      "**/*.ts"
+                  ],
+                  rules: {
+                      "@angular-eslint/directive-selector": [
+                          "error",
+                          {
+                              type: "attribute",
+                              prefix: "lib",
+                              style: "camelCase"
+                          }
+                      ],
+                      "@angular-eslint/component-selector": [
+                          "error",
+                          {
+                              type: "element",
+                              prefix: "lib",
+                              style: "kebab-case"
+                          }
+                      ]
+                  }
+              },
+              {
+                  files: [
+                      "**/*.html"
+                  ],
+                  // Override or add rules here
+                  rules: {}
+              }
+          ];
+          "
+        `);
+      });
+
+      it('should set parserOptions.project when enabled (flat config)', async () => {
+        tree.write('eslint.config.cjs', '');
+
+        await runLibraryGeneratorWithOpts({
+          linter: 'eslint',
+          setParserOptionsProject: true,
+        });
+
+        const eslintConfig = tree.read('my-lib/eslint.config.cjs', 'utf-8');
+        expect(eslintConfig).toMatchInlineSnapshot(`
+          "const nx = require("@nx/eslint-plugin");
+          const baseConfig = require("../eslint.config.cjs");
+
+          module.exports = [
+              ...nx.configs["flat/angular"],
+              ...nx.configs["flat/angular-template"],
+              ...baseConfig,
+              {
+                  files: [
+                      "**/*.ts",
+                      "**/*.tsx",
+                      "**/*.js",
+                      "**/*.jsx"
+                  ],
+                  languageOptions: {
+                      parserOptions: {
+                          project: [
+                              "my-lib/tsconfig.*?.json"
+                          ]
+                      }
+                  }
+              },
               {
                   files: [
                       "**/*.ts"
@@ -1311,6 +1390,18 @@ describe('lib', () => {
         `);
       });
 
+      it('should set parserOptions.project when enabled (eslintrc)', async () => {
+        await runLibraryGeneratorWithOpts({
+          linter: 'eslint',
+          setParserOptionsProject: true,
+        });
+
+        const eslintConfig = readJson(tree, 'my-lib/.eslintrc.json');
+        expect(eslintConfig.overrides[0].parserOptions.project).toEqual([
+          'my-lib/tsconfig.*?.json',
+        ]);
+      });
+
       it('should add dependency checks to buildable libs', async () => {
         // ACT
         await runLibraryGeneratorWithOpts({
@@ -1401,70 +1492,6 @@ describe('lib', () => {
     });
   });
 
-  describe('--add-tailwind', () => {
-    it('should throw when "--addTailwind=true" and "--buildable" and "--publishable" are not set', async () => {
-      // ACT & ASSERT
-      await expect(
-        runLibraryGeneratorWithOpts({ addTailwind: true })
-      ).rejects.toThrow(
-        `To use "--addTailwind" option, you have to set either "--buildable" or "--publishable".`
-      );
-    });
-
-    it('should not set up Tailwind when "--add-tailwind" is not specified', async () => {
-      // ACT
-      await runLibraryGeneratorWithOpts();
-
-      // ASSERT
-      expect(tree.exists('my-lib/tailwind.config.js')).toBeFalsy();
-      const { devDependencies } = readJson(tree, 'package.json');
-      expect(devDependencies['tailwindcss']).toBeUndefined();
-      expect(devDependencies['postcss']).toBeUndefined();
-      expect(devDependencies['autoprefixer']).toBeUndefined();
-    });
-
-    it('should not set up Tailwind when "--add-tailwind=false"', async () => {
-      // ACT
-      await runLibraryGeneratorWithOpts({ addTailwind: false });
-
-      // ASSERT
-      expect(tree.exists('my-lib/tailwind.config.js')).toBeFalsy();
-      const { devDependencies } = readJson(tree, 'package.json');
-      expect(devDependencies['tailwindcss']).toBeUndefined();
-      expect(devDependencies['postcss']).toBeUndefined();
-      expect(devDependencies['autoprefixer']).toBeUndefined();
-    });
-
-    it('should set up Tailwind when "--add-tailwind=true"', async () => {
-      // ACT
-      await runLibraryGeneratorWithOpts({ addTailwind: true, buildable: true });
-
-      // ASSERT
-      expect(tree.read('my-lib/tailwind.config.js', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
-        const { join } = require('path');
-
-        /** @type {import('tailwindcss').Config} */
-        module.exports = {
-          content: [
-            join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
-            ...createGlobPatternsForDependencies(__dirname),
-          ],
-          theme: {
-            extend: {},
-          },
-          plugins: [],
-        };
-        "
-      `);
-      const { devDependencies } = readJson(tree, 'package.json');
-      expect(devDependencies['tailwindcss']).toBe(tailwindVersion);
-      expect(devDependencies['postcss']).toBe(postcssVersion);
-      expect(devDependencies['autoprefixer']).toBe(autoprefixerVersion);
-    });
-  });
-
   describe('--standalone', () => {
     beforeEach(() => {
       projectGraph = {
@@ -1539,7 +1566,7 @@ describe('lib', () => {
 
             fixture = TestBed.createComponent(MyLibComponent);
             component = fixture.componentInstance;
-            fixture.detectChanges();
+            await fixture.whenStable();
           });
 
           it('should create', () => {
@@ -1852,23 +1879,6 @@ describe('lib', () => {
   });
 
   describe('angular compat support', () => {
-    it('should disable modern class fields behavior in versions lower than v18.1', async () => {
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~18.0.0',
-        },
-      }));
-
-      await runLibraryGeneratorWithOpts();
-
-      expect(
-        readJson(tree, 'my-lib/tsconfig.json').compilerOptions
-          .useDefineForClassFields
-      ).toBe(false);
-    });
-
     it('should not set "typeCheckHostBindings" when strict is true if Angular version is lower than v20', async () => {
       updateJson(tree, 'package.json', (json) => ({
         ...json,
@@ -1887,6 +1897,29 @@ describe('lib', () => {
           "strictInjectionParameters": true,
           "strictInputAccessModifiers": true,
           "strictTemplates": true,
+        }
+      `);
+    });
+
+    it('should set "typeCheckHostBindings" to true when strict is enabled for Angular v20 only', async () => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~20.0.0',
+        },
+      }));
+
+      await runLibraryGeneratorWithOpts();
+
+      expect(readJson(tree, 'my-lib/tsconfig.json').angularCompilerOptions)
+        .toMatchInlineSnapshot(`
+        {
+          "enableI18nLegacyMessageIdFormat": false,
+          "strictInjectionParameters": true,
+          "strictInputAccessModifiers": true,
+          "strictTemplates": true,
+          "typeCheckHostBindings": true,
         }
       `);
     });
@@ -1955,7 +1988,7 @@ describe('lib', () => {
 
             fixture = TestBed.createComponent(MyLibComponent);
             component = fixture.componentInstance;
-            fixture.detectChanges();
+            await fixture.whenStable();
           });
 
           it('should create', () => {
@@ -2010,6 +2043,50 @@ describe('lib', () => {
         "
       `);
     });
+
+    it('should install vitest v3 when using vitest-analog with Angular v20', async () => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~20.3.0',
+        },
+      }));
+
+      await runLibraryGeneratorWithOpts({
+        unitTestRunner: UnitTestRunner.VitestAnalog,
+      });
+
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies['vitest']).toBe(
+        backwardCompatibleVersions[20].vitestVersion
+      );
+      expect(devDependencies['jsdom']).toBe(
+        backwardCompatibleVersions[20].jsdomVersion
+      );
+    });
+
+    it('should install vitest v3 when using vitest-analog with Angular v19', async () => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.2.0',
+        },
+      }));
+
+      await runLibraryGeneratorWithOpts({
+        unitTestRunner: UnitTestRunner.VitestAnalog,
+      });
+
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies['vitest']).toBe(
+        backwardCompatibleVersions[19].vitestVersion
+      );
+      expect(devDependencies['jsdom']).toBe(
+        backwardCompatibleVersions[19].jsdomVersion
+      );
+    });
   });
 
   describe('--skipTsConfig', () => {
@@ -2041,7 +2118,7 @@ describe('lib', () => {
       // ASSERT
       const tsconfigJson = readJson(tree, 'tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-lib/src/index.ts',
+        './my-lib/src/index.ts',
       ]);
     });
 
@@ -2052,7 +2129,7 @@ describe('lib', () => {
       // ASSERT
       const tsconfigJson = readJson(tree, 'tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-lib/src/index.ts',
+        './my-lib/src/index.ts',
       ]);
     });
   });

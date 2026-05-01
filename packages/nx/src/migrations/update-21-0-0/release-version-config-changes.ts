@@ -1,9 +1,5 @@
 import { join } from 'node:path';
-import type {
-  LegacyNxReleaseVersionConfiguration,
-  NxJsonConfiguration,
-  NxReleaseVersionConfiguration,
-} from '../../config/nx-json';
+import type { NxJsonConfiguration } from '../../config/nx-json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import type { Tree } from '../../generators/tree';
 import { readJson, writeJson } from '../../generators/utils/json';
@@ -15,24 +11,9 @@ export default async function update(tree: Tree) {
   if (!nxJson) {
     return;
   }
-  // If the user has explicitly set the useLegacyVersioning property to true, do nothing
-  if (nxJson.release?.version?.useLegacyVersioning === true) {
-    return;
-  }
 
-  function updateProperties(
-    versionConfig: LegacyNxReleaseVersionConfiguration
-  ) {
-    // If the user is using a generator other than the @nx/js one, set useLegacyVersioning to true and nothing else
-    if (
-      'generator' in versionConfig &&
-      versionConfig.generator !== '@nx/js:release-version'
-    ) {
-      (versionConfig as NxReleaseVersionConfiguration).useLegacyVersioning =
-        true;
-      return;
-    }
-
+  // Note: Any's have been used as LegacyVersioning Options have been removed
+  function updateProperties(versionConfig: any) {
     // These options used to live inside of generatorOptions, but are now like for like top-level nx core options
     const coreOptionsToPromoteToTopLevel = [
       'specifierSource',
@@ -54,15 +35,14 @@ export default async function update(tree: Tree) {
       if (versionConfig.generatorOptions.preserveLocalDependencyProtocols) {
         delete versionConfig.generatorOptions.preserveLocalDependencyProtocols;
       } else {
-        (
-          versionConfig as NxReleaseVersionConfiguration
-        ).preserveLocalDependencyProtocols = false;
+        versionConfig.preserveLocalDependencyProtocols = false;
       }
 
       // packageRoot has been replaced by manifestRootsToUpdate
       if (typeof versionConfig.generatorOptions.packageRoot === 'string') {
-        (versionConfig as NxReleaseVersionConfiguration).manifestRootsToUpdate =
-          [versionConfig.generatorOptions.packageRoot];
+        versionConfig.manifestRootsToUpdate = [
+          versionConfig.generatorOptions.packageRoot,
+        ];
         delete versionConfig.generatorOptions.packageRoot;
       }
 
@@ -74,14 +54,9 @@ export default async function update(tree: Tree) {
       ];
       for (const option of versionActionsOptions) {
         if (versionConfig.generatorOptions[option]) {
-          (
-            versionConfig as NxReleaseVersionConfiguration
-          ).versionActionsOptions =
-            (versionConfig as NxReleaseVersionConfiguration)
-              .versionActionsOptions || {};
-          (
-            versionConfig as NxReleaseVersionConfiguration
-          ).versionActionsOptions[option] =
+          versionConfig.versionActionsOptions =
+            versionConfig.versionActionsOptions || {};
+          versionConfig.versionActionsOptions[option] =
             versionConfig.generatorOptions[option];
           delete versionConfig.generatorOptions[option];
         }

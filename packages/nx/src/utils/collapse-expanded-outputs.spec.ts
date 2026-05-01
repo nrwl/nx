@@ -101,4 +101,36 @@ describe('collapseExpandedOutputs', () => {
 
     expect(res).toEqual(['dist/apps/app1']);
   });
+
+  it('should preserve shallow paths when deep paths cause collapse', () => {
+    const outputs = [
+      'dist/libs/mylib/esm/src/file1.js',
+      'dist/libs/mylib/esm/src/file2.js',
+      'dist/libs/mylib/esm/src/file3.js',
+      'dist/libs/mylib/esm/src/file4.js',
+      'libs/mylib/src/generated.ts',
+    ];
+    const res = collapseExpandedOutputs(outputs);
+
+    expect(res).toContain('dist/libs/mylib/esm/src');
+    expect(res).toContain('libs/mylib/src/generated.ts');
+    expect(res).toHaveLength(2);
+  });
+
+  it('should preserve multiple shallow paths at different depths', () => {
+    const outputs = [
+      'dist/deep/nested/path/a.js',
+      'dist/deep/nested/path/b.js',
+      'dist/deep/nested/path/c.js',
+      'dist/deep/nested/path/d.js',
+      'shallow/file.txt',
+      'medium/depth/file.txt',
+    ];
+    const res = collapseExpandedOutputs(outputs);
+
+    expect(res).toContain('dist/deep/nested/path');
+    expect(res).toContain('shallow/file.txt');
+    expect(res).toContain('medium/depth/file.txt');
+    expect(res).toHaveLength(3);
+  });
 });

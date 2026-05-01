@@ -1,4 +1,4 @@
-import { type CreateNodesContext } from '@nx/devkit';
+import { type CreateNodesContextV2 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { createNodesV2 } from './plugin';
@@ -10,7 +10,7 @@ jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
 
 describe('@nx/rspack', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
   let tempFs: TempFs;
   let originalCacheProjectGraph = process.env.NX_CACHE_PROJECT_GRAPH;
 
@@ -18,7 +18,6 @@ describe('@nx/rspack', () => {
     (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
     tempFs = new TempFs('rspack-test');
     context = {
-      configFiles: [],
       nxJsonConfiguration: {
         namedInputs: {
           default: ['{projectRoot}/**/*'],

@@ -69,8 +69,8 @@ const jestOverride = {
 export const getGlobalEsLintConfiguration = (
   unitTestRunner?: string,
   rootProject?: boolean
-): Linter.Config => {
-  const config: Linter.Config = {
+): Linter.LegacyConfig => {
+  const config: Linter.LegacyConfig = {
     root: true,
     ignorePatterns: rootProject ? ['!**/*'] : ['**/*'],
     plugins: ['@nx'],
@@ -117,7 +117,7 @@ export const getGlobalFlatEslintConfiguration = (
     content,
     generateFlatOverride(
       {
-        ignores: ['**/dist'],
+        ignores: ['**/dist', '**/out-tsc'],
       },
       format
     )

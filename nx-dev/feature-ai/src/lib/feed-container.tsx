@@ -1,4 +1,3 @@
-import { sendCustomEvent } from '@nx/nx-dev-feature-analytics';
 import {
   type FormEvent,
   type JSX,
@@ -11,7 +10,7 @@ import { ErrorMessage } from './error-message';
 import { Feed } from './feed/feed';
 import { LoadingState } from './loading-state';
 import { Prompt } from './prompt';
-import { getQueryFromUid, storeQueryForUid } from '@nx/nx-dev-util-ai';
+import { storeQueryForUid } from '@nx/nx-dev-util-ai';
 import { Message, useChat } from 'ai/react';
 import { cx } from '@nx/nx-dev-ui-primitives';
 
@@ -41,11 +40,8 @@ export function FeedContainer(): JSX.Element {
     onError: (error) => {
       setError(error);
     },
-    onResponse: (_response) => {
+    onResponse: () => {
       setStartedReply(true);
-      sendCustomEvent('ai_query', 'ai', 'query', undefined, {
-        query: input,
-      });
       setError(null);
     },
     onFinish: (response: Message) => {
@@ -90,11 +86,8 @@ export function FeedContainer(): JSX.Element {
     setStopped(false);
   };
 
-  const handleFeedback = (statement: 'good' | 'bad', chatItemUid: string) => {
-    const query = getQueryFromUid(chatItemUid);
-    sendCustomEvent('ai_feedback', 'ai', statement, undefined, {
-      query: query ?? 'Could not retrieve the question',
-    });
+  const handleFeedback = () => {
+    // no-op: analytics removed
   };
 
   const handleStopGenerating = () => {
@@ -116,7 +109,7 @@ export function FeedContainer(): JSX.Element {
         data-testid="wrapper"
         className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
       >
-        <div className="mx-auto w-full max-w-4xl grow items-stretch px-4 sm:px-8 ">
+        <div className="mx-auto w-full max-w-4xl grow items-stretch px-4 sm:px-8">
           <div
             id="content-wrapper"
             className="w-full flex-auto flex-grow flex-col"
@@ -136,7 +129,7 @@ export function FeedContainer(): JSX.Element {
                 <div
                   className={cx(
                     'left0 fixed bottom-0 right-0 w-full px-4 py-4 lg:px-0 lg:py-6',
-                    'bg-gradient-to-t from-white via-white/75 dark:from-slate-900 dark:via-slate-900/75'
+                    'bg-gradient-to-t from-white via-white/75 dark:from-zinc-900 dark:via-zinc-900/75'
                   )}
                 >
                   <Prompt

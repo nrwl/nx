@@ -1,3 +1,15 @@
+// Stub out @nx/cypress/plugin so findPluginForConfigFile's dynamic
+// `await import('@nx/cypress/plugin')` (fired when include/exclude is present)
+// doesn't pull real plugin code, which transitively imports @nx/js source and
+// inflates sandbox inputs.
+jest.mock(
+  '@nx/cypress/plugin',
+  () => ({
+    createNodesV2: ['**/cypress.config.{js,ts,mjs,cjs}', jest.fn()],
+  }),
+  { virtual: true }
+);
+
 import { type Tree, readNxJson, updateNxJson } from 'nx/src/devkit-exports';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';

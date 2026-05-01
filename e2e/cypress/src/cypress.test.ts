@@ -1,14 +1,19 @@
+import { join } from 'node:path';
 import {
   checkFilesExist,
   cleanupProject,
   createFile,
+  getPackageManagerCommand,
   killPort,
   newProject,
   readJson,
   runCLI,
+  runCommand,
   runE2ETests,
+  tmpProjPath,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e-utils';
 
 const TEN_MINS_MS = 600_000;
@@ -28,6 +33,13 @@ describe('Cypress E2E Test runner', () => {
       runCLI(
         `generate @nx/react:app apps/${myapp} --e2eTestRunner=cypress --linter=eslint`
       );
+
+      // Ensure project typechecks (See: https://github.com/nrwl/nx/issues/32930)
+      expect(() =>
+        runCommand(`npx tsc --noEmit`, {
+          cwd: join(tmpProjPath(), 'apps', `${myapp}-e2e`),
+        })
+      ).not.toThrow();
 
       // Making sure the package.json file contains the Cypress dependency
       const packageJson = readJson('package.json');
@@ -146,7 +158,8 @@ export default defineConfig({
     TEN_MINS_MS
   );
 
-  it(
+  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
+  it.skip(
     `should allow CT and e2e in same project for a next project`,
     async () => {
       const appName = uniq('next-cy-app');
@@ -156,6 +169,16 @@ export default defineConfig({
       runCLI(
         `generate @nx/next:component apps/${appName}/components/btn --no-interactive`
       );
+      // Cypress CT (@cypress/vite-dev-server) does not support Vite 8 yet.
+      // Downgrade the workspace to Vite 7 before configuring Cypress CT.
+      updateJson('package.json', (json) => {
+        json.devDependencies ??= {};
+        json.devDependencies['vite'] = '^7.0.0';
+        json.devDependencies['@vitejs/plugin-react'] = '^4.2.0';
+        return json;
+      });
+      runCommand(getPackageManagerCommand().install);
+
       runCLI(
         `generate @nx/next:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
       );
@@ -174,16 +197,27 @@ export default defineConfig({
     TEN_MINS_MS
   );
 
-  it(
+  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
+  it.skip(
     `should allow CT and e2e in same project for an angular project`,
     async () => {
       let appName = uniq(`angular-cy-app`);
       runCLI(
-        `generate @nx/angular:app apps/${appName} --e2eTestRunner=none --no-interactive --bundler=webpack`
+        `generate @nx/angular:app apps/${appName} --e2eTestRunner=none --no-interactive --bundler=webpack --no-zoneless`
       );
       runCLI(
         `generate @nx/angular:component apps/${appName}/src/app/btn/btn --no-interactive`
       );
+      // Cypress CT (@cypress/vite-dev-server) does not support Vite 8 yet.
+      // Downgrade the workspace to Vite 7 before configuring Cypress CT.
+      updateJson('package.json', (json) => {
+        json.devDependencies ??= {};
+        json.devDependencies['vite'] = '^7.0.0';
+        json.devDependencies['@vitejs/plugin-react'] = '^4.2.0';
+        return json;
+      });
+      runCommand(getPackageManagerCommand().install);
+
       runCLI(
         `generate @nx/angular:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
       );

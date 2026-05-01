@@ -1,9 +1,17 @@
-import * as ora from 'ora';
-import { isCI } from './is-ci';
+import { isOnDaemon } from '../daemon/is-on-daemon';
+import { sendProgressMessageToTopic } from '../daemon/server/client-socket-context';
+import { ProgressTopic } from './progress-topics';
+import { globalSpinner, SHOULD_SHOW_SPINNERS } from './spinner';
 
 export type DelayedSpinnerOptions = {
   delay?: number;
   ciDelay?: number;
+  /**
+   * When set and running inside the Nx daemon, spinner messages are
+   * broadcast to every client currently subscribed to this topic so
+   * their own spinners stay in sync with daemon-side progress.
+   */
+  progressTopic?: ProgressTopic;
 };
 
 /**
@@ -13,11 +21,12 @@ export type DelayedSpinnerOptions = {
  * takes longer than a certain amount of time.
  */
 export class DelayedSpinner {
-  spinner: ora.Ora;
+  spinner: typeof globalSpinner;
   timeouts: NodeJS.Timeout[] = [];
 
   private lastMessage: string;
   private ready: boolean;
+  private readonly progressTopic: ProgressTopic | undefined;
 
   /**
    * Constructs a new {@link DelayedSpinner} instance.
@@ -26,16 +35,19 @@ export class DelayedSpinner {
    */
   constructor(message: string, opts?: DelayedSpinnerOptions) {
     opts = normalizeDelayedSpinnerOpts(opts);
+    this.progressTopic = opts.progressTopic;
     const delay = SHOULD_SHOW_SPINNERS ? opts.delay : opts.ciDelay;
+    this.lastMessage = message;
+
+    this.broadcastProgress(message);
 
     this.timeouts.push(
       setTimeout(() => {
         this.ready = true;
-        this.lastMessage = message;
         if (!SHOULD_SHOW_SPINNERS) {
           console.warn(this.lastMessage);
-        } else {
-          this.spinner = ora(this.lastMessage).start();
+        } else if (!globalSpinner.isSpinning()) {
+          this.spinner = globalSpinner.start(this.lastMessage);
         }
       }, delay).unref()
     );
@@ -49,12 +61,13 @@ export class DelayedSpinner {
    */
   setMessage(message: string) {
     if (SHOULD_SHOW_SPINNERS) {
-      if (this.spinner) {
-        this.spinner.text = message;
+      if (this.spinner && this.ready) {
+        this.spinner.updateText(message);
       }
     } else if (this.ready && this.lastMessage && this.lastMessage !== message) {
       console.warn(message);
     }
+    this.broadcastProgress(message);
     this.lastMessage = message;
     return this;
   }
@@ -86,9 +99,13 @@ export class DelayedSpinner {
     this.spinner?.stop();
     this.timeouts.forEach((t) => clearTimeout(t));
   }
-}
 
-const SHOULD_SHOW_SPINNERS = process.stdout.isTTY && !isCI();
+  private broadcastProgress(message: string) {
+    if (this.progressTopic && isOnDaemon()) {
+      sendProgressMessageToTopic(this.progressTopic, message);
+    }
+  }
+}
 
 function normalizeDelayedSpinnerOpts(
   opts: DelayedSpinnerOptions | null | undefined

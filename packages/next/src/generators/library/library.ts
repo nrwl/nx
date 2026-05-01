@@ -17,12 +17,14 @@ import {
 import { nextInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
+import { updateViteConfigForServerEntry } from './lib/update-vite-config';
 import { eslintConfigNextVersion, tsLibVersion } from '../../utils/versions';
 import {
   isUsingTsSolutionSetup,
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
   shouldConfigureTsSolutionSetup,
+  getDefinedCustomConditionName,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
@@ -117,10 +119,10 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
       `hello-server.${options.js ? 'js' : 'tsx'}`
     ),
     `// React server components are async so you make database or API calls.
-      export async function HelloServer() {
-        return <h1>Hello Server</h1>
-      }
-    `
+export async function HelloServer() {
+  return <h1>Hello Server</h1>;
+}
+`
   );
 
   const isTsSolutionSetup = isUsingTsSolutionSetup(host);
@@ -128,16 +130,45 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
     addTsConfigPath(host, `${options.importPath}/server`, [serverEntryPath]);
   }
 
-  updateJson(
-    host,
-    joinPathFragments(options.projectRoot, 'tsconfig.json'),
-    (json) => {
-      if (options.style === '@emotion/styled') {
-        json.compilerOptions.jsxImportSource = '@emotion/react';
-      }
-      return json;
+  // Configure Vite and package.json for server entry point when using Vite bundler
+  if (options.bundler === 'vite') {
+    // Update vite.config.mts to support multiple entry points
+    const viteConfigPath = joinPathFragments(
+      options.projectRoot,
+      'vite.config.mts'
+    );
+    updateViteConfigForServerEntry(host, viteConfigPath);
+
+    // Update package.json to include server export
+    const packageJsonPath = joinPathFragments(
+      options.projectRoot,
+      'package.json'
+    );
+    if (host.exists(packageJsonPath)) {
+      updateJson(host, packageJsonPath, (json) => {
+        if (!json.exports) {
+          json.exports = {};
+        }
+
+        // Add server export
+        const serverExport: any = {};
+
+        // For TS Solution setups, include development condition
+        if (isTsSolutionSetup) {
+          const customConditionName = getDefinedCustomConditionName(host);
+          serverExport[customConditionName] = './src/server.ts';
+        }
+
+        serverExport.types = './dist/server.d.ts';
+        serverExport.import = './dist/server.js';
+        serverExport.default = './dist/server.js';
+
+        json.exports['./server'] = serverExport;
+
+        return json;
+      });
     }
-  );
+  }
 
   updateJson(
     host,

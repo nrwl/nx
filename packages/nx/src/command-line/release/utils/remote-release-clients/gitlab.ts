@@ -1,17 +1,17 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { prompt } from 'enquirer';
 import { execSync } from 'node:child_process';
-import { output } from '../../../../utils/output';
+import { orange, output } from '../../../../utils/output';
 import type { PostGitTask } from '../../changelog';
 import type { ResolvedCreateRemoteReleaseProvider } from '../../config/config';
 import type { Reference } from '../git';
 import { ReleaseVersion } from '../shared';
+import { extractGitLabRepoSlug } from './extract-repo-slug';
 import {
   RemoteReleaseClient,
   RemoteReleaseOptions,
   RemoteReleaseResult,
   RemoteRepoData,
-  RemoteRepoSlug,
 } from './remote-release-client';
 
 export interface GitLabRepoData extends RemoteRepoData {
@@ -59,33 +59,24 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
       const remoteUrl = execSync(`git remote get-url ${remoteName}`, {
         encoding: 'utf8',
         stdio: 'pipe',
+        windowsHide: true,
       }).trim();
 
       // Use the default provider if custom one is not specified or releases are disabled
       let hostname = defaultCreateReleaseProvider.hostname;
       let apiBaseUrl = defaultCreateReleaseProvider.apiBaseUrl;
-
       if (
         createReleaseConfig !== false &&
         typeof createReleaseConfig !== 'string'
       ) {
         hostname = createReleaseConfig.hostname || hostname;
-        apiBaseUrl = createReleaseConfig.apiBaseUrl || apiBaseUrl;
+        apiBaseUrl = createReleaseConfig.apiBaseUrl;
       }
 
-      // Extract the project path from the URL
-      const escapedHostname = hostname.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regexString = `${escapedHostname}[/:]([\\w.-]+/[\\w.-]+(?:/[\\w.-]+)*)(\\.git)?`;
-      const regex = new RegExp(regexString);
-      const match = remoteUrl.match(regex);
-
-      if (match && match[1]) {
-        // Remove trailing .git if present
-        const slug = match[1].replace(/\.git$/, '') as RemoteRepoSlug;
-
+      const slug = extractGitLabRepoSlug(remoteUrl, hostname);
+      if (slug) {
         // Encode the project path for use in API URLs
         const projectId = encodeURIComponent(slug);
-
         return {
           hostname,
           apiBaseUrl,
@@ -219,15 +210,11 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
     }/-/releases/${encodeURIComponent(gitTag)}`;
     if (existingRelease) {
       console.error(
-        `${chalk.white('UPDATE')} ${logTitle}${
-          dryRun ? chalk.keyword('orange')(' [dry-run]') : ''
-        }`
+        `${pc.white('UPDATE')} ${logTitle}${dryRun ? orange(' [dry-run]') : ''}`
       );
     } else {
       console.error(
-        `${chalk.green('CREATE')} ${logTitle}${
-          dryRun ? chalk.keyword('orange')(' [dry-run]') : ''
-        }`
+        `${pc.green('CREATE')} ${logTitle}${dryRun ? orange(' [dry-run]') : ''}`
       );
     }
   }
@@ -269,14 +256,14 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
       .then(() => {
         console.info(
           `\nFollow up in the browser to manually create the release:\n\n` +
-            chalk.underline(chalk.cyan(result.url)) +
+            pc.underline(pc.cyan(result.url)) +
             `\n`
         );
       })
       .catch(() => {
         console.info(
           `Open this link to manually create a release: \n` +
-            chalk.underline(chalk.cyan(result.url)) +
+            pc.underline(pc.cyan(result.url)) +
             '\n'
         );
       });

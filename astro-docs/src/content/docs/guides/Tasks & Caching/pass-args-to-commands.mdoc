@@ -269,7 +269,7 @@ To pass args in a one-off manner when running a task, you can also provide them 
 {% tabs %}
 {% tabitem label="Providing args directly as options" %}
 
-```shell {% frame="none" %}
+```shell
 nx build my-app --assetsInlineLimit=2048 --assetsDir=static/assets
 ```
 
@@ -277,7 +277,7 @@ nx build my-app --assetsInlineLimit=2048 --assetsDir=static/assets
 
 {% tabitem label="Providing the \"--args\" option" %}
 
-```shell {% frame="none" %}
+```shell
 nx build my-app --args="--assetsInlineLimit=2048 --assetsDir=static/assets"
 ```
 
@@ -290,7 +290,7 @@ If you provide an arg with the same name as an Nx CLI option (e.g. `--configurat
 
 You can also provide an arg with the same name to both the Nx CLI and the underlying command. For example, to run the `ci` configuration of a `test` target that runs the command `detox test` and pass the `--configuration` arg to the command, you can run:
 
-```shell {% frame="none" %}
+```shell
 nx test mobile-e2e --configuration=ci --args="--configuration=ios.sim.release"
 ```
 

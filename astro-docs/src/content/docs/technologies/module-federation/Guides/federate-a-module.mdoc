@@ -24,7 +24,7 @@ Since we are using Nx, we will create a library for this module.
 
 **Create a library**
 
-```shell {% frame="none" %}
+```shell
 nx generate @nx/js:library hello --unitTestRunner=jest
 ```
 
@@ -51,14 +51,14 @@ Now that we have created the module, we need to configure it to be federated.
 {% tabs %}
 {% tabitem label="React" %}
 
-```shell {% frame="none" %}
+```shell
 nx generate @nx/react:federate-module hello/src/index.ts --name=hello --remote=greeting
 ```
 
 {% /tabitem %}
 {% tabitem label="Angular" %}
 
-```shell {% frame="none" %}
+```shell
 nx generate @nx/angular:federate-module hello/src/index.ts --name=hello --remote=greeting
 ```
 
@@ -169,7 +169,7 @@ If you are using Angular, you would update the application in a similar fashion 
 
 Just run the application as usual.
 
-```shell {% frame="none" %}
+```shell
 nx serve host
 ```
 

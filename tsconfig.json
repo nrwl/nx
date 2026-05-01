@@ -95,6 +95,9 @@
       "path": "./packages/vite"
     },
     {
+      "path": "./packages/vitest"
+    },
+    {
       "path": "./packages/vue"
     },
     {
@@ -125,55 +128,7 @@
       "path": "./graph/ui-project-details"
     },
     {
-      "path": "./typedoc-theme"
-    },
-    {
       "path": "./tools/documentation/create-embeddings"
-    },
-    {
-      "path": "./nx-dev/feature-package-schema-viewer"
-    },
-    {
-      "path": "./nx-dev/data-access-documents"
-    },
-    {
-      "path": "./nx-dev/ui-scrollable-content"
-    },
-    {
-      "path": "./nx-dev/data-access-packages"
-    },
-    {
-      "path": "./nx-dev/data-access-careers"
-    },
-    {
-      "path": "./nx-dev/data-access-courses"
-    },
-    {
-      "path": "./nx-dev/feature-doc-viewer"
-    },
-    {
-      "path": "./nx-dev/ui-ai-landing-page"
-    },
-    {
-      "path": "./nx-dev/feature-analytics"
-    },
-    {
-      "path": "./nx-dev/feature-feedback"
-    },
-    {
-      "path": "./nx-dev/data-access-menu"
-    },
-    {
-      "path": "./nx-dev/ui-video-courses"
-    },
-    {
-      "path": "./nx-dev/models-document"
-    },
-    {
-      "path": "./nx-dev/ui-sponsor-card"
-    },
-    {
-      "path": "./nx-dev/ui-remote-cache"
     },
     {
       "path": "./tools/workspace-plugin"
@@ -182,94 +137,40 @@
       "path": "./e2e/lerna-smoke-tests"
     },
     {
-      "path": "./nx-dev/feature-search"
-    },
-    {
-      "path": "./nx-dev/models-package"
-    },
-    {
-      "path": "./nx-dev/ui-member-card"
-    },
-    {
       "path": "./e2e/workspace-create"
     },
     {
-      "path": "./nx-dev/ui-animations"
+      "path": "./nx-dev/data-access-courses"
     },
     {
-      "path": "./nx-dev/ui-conference"
+      "path": "./nx-dev/data-access-documents"
     },
     {
-      "path": "./nx-dev/ui-enterprise"
+      "path": "./nx-dev/feature-analytics"
     },
     {
-      "path": "./nx-dev/ui-primitives"
+      "path": "./nx-dev/feature-search"
     },
     {
-      "path": "./nx-dev/ui-references"
-    },
-    {
-      "path": "./nx-dev/ui-community"
-    },
-    {
-      "path": "./nx-dev/ui-customers"
-    },
-    {
-      "path": "./nx-dev/ui-powerpack"
-    },
-    {
-      "path": "./tools/eslint-rules"
+      "path": "./nx-dev/models-document"
     },
     {
       "path": "./nx-dev/models-menu"
     },
     {
-      "path": "./nx-dev/ui-commands"
+      "path": "./nx-dev/models-package"
     },
     {
-      "path": "./nx-dev/ui-partners"
+      "path": "./nx-dev/ui-animations"
     },
     {
-      "path": "./nx-dev/feature-ai"
-    },
-    {
-      "path": "./nx-dev/ui-contact"
-    },
-    {
-      "path": "./nx-dev/ui-markdoc"
-    },
-    {
-      "path": "./nx-dev/ui-careers"
-    },
-    {
-      "path": "./nx-dev/ui-company"
-    },
-    {
-      "path": "./nx-dev/ui-courses"
-    },
-    {
-      "path": "./nx-dev/ui-podcast"
-    },
-    {
-      "path": "./nx-dev/ui-pricing"
-    },
-    {
-      "path": "./nx-dev/ui-webinar"
-    },
-    {
-      "path": "./graph/client-e2e"
-    },
-    {
-      "path": "./e2e/react-native"
+      "path": "./nx-dev/ui-blog"
     },
     {
       "path": "./nx-dev/ui-common"
     },
     {
-      "path": "./nx-dev/ui-gradle"
-    },
-    {
-      "path": "./nx-dev/ui-brands"
+      "path": "./nx-dev/ui-courses"
     },
     {
       "path": "./nx-dev/ui-fence"
@@ -278,25 +179,37 @@
       "path": "./nx-dev/ui-icons"
     },
     {
+      "path": "./nx-dev/ui-markdoc"
+    },
+    {
+      "path": "./nx-dev/ui-primitives"
+    },
+    {
+      "path": "./nx-dev/ui-references"
+    },
+    {
       "path": "./nx-dev/ui-theme"
     },
     {
-      "path": "./nx-dev/ui-cloud"
+      "path": "./nx-dev/ui-video-courses"
     },
     {
-      "path": "./nx-dev/ui-react"
+      "path": "./tools/eslint-rules"
+    },
+    {
+      "path": "./nx-dev/feature-ai"
+    },
+    {
+      "path": "./graph/client-e2e"
+    },
+    {
+      "path": "./e2e/react-native"
     },
     {
       "path": "./e2e/playwright"
     },
     {
-      "path": "./nx-dev/ui-home"
-    },
-    {
       "path": "./nx-dev/util-ai"
-    },
-    {
-      "path": "./nx-dev/ui-blog"
     },
     {
       "path": "./e2e/storybook"
@@ -405,6 +318,66 @@
     },
     {
       "path": "./graph/ui-render-config"
+    },
+    {
+      "path": "./packages/dotnet"
+    },
+    {
+      "path": "./e2e/dotnet"
+    },
+    {
+      "path": "./packages/maven"
+    },
+    {
+      "path": "./e2e/maven"
+    },
+    {
+      "path": "./examples/angular-rspack/module-federation/remote"
+    },
+    {
+      "path": "./examples/angular-rspack/module-federation/host"
+    },
+    {
+      "path": "./examples/angular-rspack/zoneless-csr-i18n"
+    },
+    {
+      "path": "./examples/angular-rspack/zoneless-csr-css"
+    },
+    {
+      "path": "./examples/angular-rspack/zoneless-ssg-css"
+    },
+    {
+      "path": "./examples/angular-rspack/zoneless-ssr-css"
+    },
+    {
+      "path": "./examples/angular-rspack/csr-css-assets"
+    },
+    {
+      "path": "./examples/angular-rspack/appshell-css"
+    },
+    {
+      "path": "./examples/angular-rspack/csr-tailwind"
+    },
+    {
+      "path": "./examples/angular-rspack/csr-i18n"
+    },
+    {
+      "path": "./examples/angular-rspack/csr-scss"
+    },
+    {
+      "path": "./examples/angular-rspack/csr-css"
+    },
+    {
+      "path": "./examples/angular-rspack/ssg-css"
+    },
+    {
+      "path": "./examples/angular-rspack/ssr-css"
+    },
+    {
+      "path": "./nx-dev/nx-dev-e2e"
+    },
+    {
+      "path": "./e2e/nx-build"
     }
   ],
   "extends": "./tsconfig.base.json"

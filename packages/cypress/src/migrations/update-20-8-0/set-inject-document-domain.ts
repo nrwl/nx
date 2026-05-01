@@ -1,6 +1,6 @@
 import { formatFiles, type Tree } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ast } from '@phenomnomnominal/tsquery';
 import type {
   Expression,
   ObjectLiteralExpression,
@@ -47,7 +47,7 @@ function setInjectDocumentDomain(cypressConfig: string): string {
     return cypressConfig;
   }
 
-  const sourceFile = tsquery.ast(cypressConfig);
+  const sourceFile = ast(cypressConfig);
   let e2eProperty = getObjectProperty(config, 'e2e');
   let hasOtherTopLevelProperties = config.properties.some(
     (p): p is PropertyAssignment =>
@@ -65,12 +65,12 @@ function setInjectDocumentDomain(cypressConfig: string): string {
     !topLevelExperimentalSkipDomainInjectionProperty
       ? 'not-set'
       : !ts.isArrayLiteralExpression(
-          topLevelExperimentalSkipDomainInjectionProperty.initializer
-        ) ||
-        topLevelExperimentalSkipDomainInjectionProperty.initializer.elements
-          .length > 0
-      ? 'skipping'
-      : 'not-skipping';
+            topLevelExperimentalSkipDomainInjectionProperty.initializer
+          ) ||
+          topLevelExperimentalSkipDomainInjectionProperty.initializer.elements
+            .length > 0
+        ? 'skipping'
+        : 'not-skipping';
 
   let e2eSkipDomainState: 'not-set' | 'skipping' | 'not-skipping' = 'not-set';
   if (e2eProperty) {

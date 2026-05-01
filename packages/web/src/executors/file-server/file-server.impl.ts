@@ -1,3 +1,4 @@
+import { signalToCode } from '@nx/devkit/internal';
 import { execFileSync, fork } from 'child_process';
 import * as pc from 'picocolors';
 import {
@@ -13,6 +14,7 @@ import { join, resolve } from 'path';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
 import { daemonClient } from 'nx/src/daemon/client/client';
 import { interpolate } from 'nx/src/tasks-runner/utils';
+import { stripGlobToBaseDir } from '@nx/js/src/utils/strip-glob-to-base-dir';
 const detectPort = require('detect-port');
 
 // platform specific command name
@@ -99,11 +101,13 @@ function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
       const project = context.projectGraph.nodes[context.projectName];
       const buildTarget = project.data.targets[target.target];
       outputPath = buildTarget.outputs?.[0];
-      if (outputPath)
+      if (outputPath) {
         outputPath = interpolate(outputPath, {
           projectName: project.data.name,
           projectRoot: project.data.root,
         });
+        outputPath = stripGlobToBaseDir(outputPath);
+      }
     }
   } catch (e) {
     throw new Error(`Invalid buildTarget: ${options.buildTarget}`);
@@ -129,8 +133,16 @@ function createFileWatcher(
       includeDependentProjects: true,
     },
     async (error, val) => {
-      if (error === 'closed') {
-        throw new Error('Watch error: Daemon closed the connection');
+      if (error === 'reconnecting') {
+        // Silent - daemon restarts automatically on lockfile changes
+        return;
+      } else if (error === 'reconnected') {
+        // Silent - reconnection succeeded
+        return;
+      } else if (error === 'closed') {
+        throw new Error(
+          'Failed to reconnect to daemon after multiple attempts'
+        );
       } else if (error) {
         throw new Error(`Watch error: ${error?.message ?? 'Unknown'}`);
       } else if (val?.changedFiles.length > 0) {
@@ -172,7 +184,7 @@ export default async function* fileServerExecutor(
           execFileSync(pmCmd, args, {
             stdio: [0, 1, 2],
             shell: true,
-            windowsHide: false,
+            windowsHide: true,
           });
         } catch {
           throw new Error(
@@ -267,7 +279,8 @@ export default async function* fileServerExecutor(
   };
 
   return new Promise<{ success: boolean }>((res) => {
-    serve.on('exit', (code) => {
+    serve.on('exit', (code, signal) => {
+      if (code === null) code = signalToCode(signal);
       if (code == 0) {
         res({ success: true });
       } else {

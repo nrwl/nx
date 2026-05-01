@@ -31,7 +31,7 @@ export async function normalizeLinterOption(
 }
 
 export async function normalizeUnitTestRunnerOption<
-  T extends 'none' | 'jest' | 'vitest'
+  T extends 'none' | 'jest' | 'vitest',
 >(
   tree: Tree,
   unitTestRunner: undefined | T,

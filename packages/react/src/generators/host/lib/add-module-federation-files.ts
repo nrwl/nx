@@ -6,7 +6,10 @@ import {
   offsetFromRoot,
   readProjectConfiguration,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  getProjectSourceRoot,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { maybeJs } from '../../../utils/maybe-js';
 import {
   createNxRspackPluginOptions,
@@ -131,6 +134,15 @@ export function addModuleFederationFiles(
     } else {
       processBundlerConfigFile(options, host, 'webpack.config.js');
       processBundlerConfigFile(options, host, 'webpack.config.prod.js');
+    }
+
+    // Delete TypeScript prod config in TS solution setup - not needed in Crystal
+    if (isUsingTsSolutionSetup(host)) {
+      const prodConfigFileName =
+        options.bundler === 'rspack'
+          ? 'rspack.config.prod.ts'
+          : 'webpack.config.prod.ts';
+      processBundlerConfigFile(options, host, prodConfigFileName);
     }
   }
 

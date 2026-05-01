@@ -11,22 +11,21 @@ import {
 } from 'nx/src/executors/run-commands/run-commands.impl';
 import { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
 import { GradleExecutorSchema } from './schema';
-import { findGradlewFile } from '../../utils/exec-gradle';
+import {
+  findGradlewFile,
+  getCustomGradleExecutableDirectoryFromPlugin,
+} from '../../utils/exec-gradle';
 import { dirname, join } from 'path';
-import { execSync } from 'child_process';
+import { spawn } from 'child_process';
 import {
-  createPseudoTerminal,
-  PseudoTerminal,
-} from 'nx/src/tasks-runner/pseudo-terminal';
-import {
-  getAllDependsOn,
-  getExcludeTasks,
-  getGradleTaskNameWithNxTaskId,
+  getAllDependsOnFromTaskGraph,
+  getExcludeTasksFromTaskGraph,
 } from './get-exclude-task';
+import { GradlePluginOptions } from '../../plugin/utils/gradle-plugin-options';
 
 export const batchRunnerPath = join(
   __dirname,
-  '../../../batch-runner/build/libs/batch-runner-all.jar'
+  '../../../batch-runner/build/libs/gradle-batch-runner-all.jar'
 );
 
 export default async function gradleBatch(
@@ -38,19 +37,25 @@ export default async function gradleBatch(
   try {
     const projectName = taskGraph.tasks[taskGraph.roots[0]]?.target?.project;
     let projectRoot = context.projectGraph.nodes[projectName]?.data?.root ?? '';
-    let gradlewPath = findGradlewFile(join(projectRoot, 'project.json')); // find gradlew near project root
+    const customGradleExecutableDirectory =
+      getCustomGradleExecutableDirectoryFromPlugin(context.nxJsonConfiguration);
+
+    let gradlewPath = findGradlewFile(
+      join(projectRoot, 'project.json'),
+      workspaceRoot,
+      customGradleExecutableDirectory
+    );
     gradlewPath = join(context.root, gradlewPath);
     const root = dirname(gradlewPath);
 
-    // set args with passed in args and overrides in command line
     const input = inputs[taskGraph.roots[0]];
 
     let args =
       typeof input.args === 'string'
         ? input.args.trim().split(' ')
         : Array.isArray(input.args)
-        ? input.args
-        : [];
+          ? input.args
+          : [];
     if (overrides.__overrides_unparsed__.length) {
       args.push(...overrides.__overrides_unparsed__);
     }
@@ -62,7 +67,8 @@ export default async function gradleBatch(
         taskIds,
         taskGraph,
         inputs,
-        context.projectGraph.nodes
+        context.projectGraph.nodes,
+        context.taskGraph ?? taskGraph
       );
 
     const batchResults = await runTasksInBatch(
@@ -95,59 +101,63 @@ export default async function gradleBatch(
   }
 }
 
-/**
- * Get the gradlew task ids to run
- */
 export function getGradlewTasksToRun(
   taskIds: string[],
   taskGraph: TaskGraph,
   inputs: Record<string, GradleExecutorSchema>,
-  nodes: Record<string, ProjectGraphProjectNode>
+  nodes: Record<string, ProjectGraphProjectNode>,
+  fullTaskGraph: TaskGraph = taskGraph
 ) {
-  const taskIdsWithExclude: Set<string> = new Set([]);
-  const testTaskIdsWithExclude: Set<string> = new Set([]);
-  const taskIdsWithoutExclude: Set<string> = new Set([]);
+  const tasksWithExcludeIds = new Set<string>();
+  const testTasksWithExcludeIds = new Set<string>();
+  const tasksWithoutExcludeIds = new Set<string>();
   const gradlewTasksToRun: Record<string, GradleExecutorSchema> = {};
+  const includeDependsOnTasks = new Set<string>();
 
   for (const taskId of taskIds) {
-    const task = taskGraph.tasks[taskId];
-    const input = inputs[task.id];
+    const input = inputs[taskId];
 
     gradlewTasksToRun[taskId] = input;
 
+    if (input.includeDependsOnTasks) {
+      for (const t of input.includeDependsOnTasks) {
+        includeDependsOnTasks.add(t);
+      }
+    }
+
     if (input.excludeDependsOn) {
       if (input.testClassName) {
-        testTaskIdsWithExclude.add(taskId);
+        testTasksWithExcludeIds.add(taskId);
       } else {
-        taskIdsWithExclude.add(taskId);
+        tasksWithExcludeIds.add(taskId);
       }
     } else {
-      taskIdsWithoutExclude.add(taskId);
+      tasksWithoutExcludeIds.add(taskId);
     }
   }
 
-  const allDependsOn = new Set<string>(taskIds);
-  for (const taskId of taskIdsWithoutExclude) {
-    const [projectName, targetName] = taskId.split(':');
-    const dependencies = getAllDependsOn(nodes, projectName, targetName);
-    dependencies.forEach((dep) => allDependsOn.add(dep));
+  const runningTaskIds = new Set<string>(taskIds);
+  for (const depId of getAllDependsOnFromTaskGraph(
+    tasksWithoutExcludeIds,
+    fullTaskGraph
+  )) {
+    runningTaskIds.add(depId);
   }
 
-  const excludeTasks = getExcludeTasks(taskIdsWithExclude, nodes, allDependsOn);
+  const excludeTasks = getExcludeTasksFromTaskGraph(
+    tasksWithExcludeIds,
+    runningTaskIds,
+    fullTaskGraph,
+    nodes,
+    includeDependsOnTasks
+  );
 
-  const allTestsDependsOn = new Set<string>();
-  for (const taskId of testTaskIdsWithExclude) {
-    const [projectName, targetName] = taskId.split(':');
-    const taskDependsOn = getAllDependsOn(nodes, projectName, targetName);
-    taskDependsOn.forEach((dep) => allTestsDependsOn.add(dep));
-  }
-  const excludeTestTasks = new Set<string>();
-  for (let taskId of allTestsDependsOn) {
-    const gradleTaskName = getGradleTaskNameWithNxTaskId(taskId, nodes);
-    if (gradleTaskName) {
-      excludeTestTasks.add(gradleTaskName);
-    }
-  }
+  const excludeTestTasks = getExcludeTasksFromTaskGraph(
+    testTasksWithExcludeIds,
+    new Set(),
+    fullTaskGraph,
+    nodes
+  );
 
   return {
     gradlewTasksToRun,
@@ -165,45 +175,43 @@ async function runTasksInBatch(
 ): Promise<BatchResults> {
   const gradlewBatchStart = performance.mark(`gradlew-batch:start`);
 
-  const usePseudoTerminal =
-    process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
-    PseudoTerminal.isSupported();
-  const command = `java -jar ${batchRunnerPath} --tasks='${JSON.stringify(
-    gradlewTasksToRun
-  )}' --workspaceRoot=${root} --args='${args
-    .join(' ')
-    .replaceAll("'", '"')}' --excludeTasks='${Array.from(excludeTasks).join(
-    ','
-  )}' --excludeTestTasks='${Array.from(excludeTestTasks).join(',')}' ${
-    process.env.NX_VERBOSE_LOGGING === 'true' ? '' : '--quiet'
-  }`;
-  let batchResults;
-  if (usePseudoTerminal && process.env.NX_VERBOSE_LOGGING !== 'true') {
-    const terminal = createPseudoTerminal();
-    await terminal.init();
+  const debugOptions = (process.env.NX_GRADLE_BATCH_DEBUG ?? '').trim();
+  const spawnArgs = [
+    ...(debugOptions ? debugOptions.split(/\s+/) : []),
+    '-jar',
+    batchRunnerPath,
+    `--tasks=${JSON.stringify(gradlewTasksToRun)}`,
+    `--workspaceRoot=${root}`,
+    `--args=${args.join(' ').replaceAll("'", '"')}`,
+    `--excludeTasks=${Array.from(excludeTasks).join(',')}`,
+    `--excludeTestTasks=${Array.from(excludeTestTasks).join(',')}`,
+    ...(process.env.NX_VERBOSE_LOGGING === 'true' ? [] : ['--quiet']),
+  ];
 
-    const cp = terminal.runCommand(command, {
-      cwd: workspaceRoot,
-      jsEnv: process.env,
-      quiet: true,
-    });
-    const results = await cp.getResults();
-    terminal.shutdown(0);
-    batchResults = results.terminalOutput;
-
-    batchResults = batchResults.replace(command, '');
-    const startIndex = batchResults.indexOf('{');
-    const endIndex = batchResults.lastIndexOf('}');
-    // only keep the json part
-    batchResults = batchResults.substring(startIndex, endIndex + 1);
-  } else {
-    batchResults = execSync(command, {
+  // Use 'inherit' for stderr so Gradle output (tee'd to System.err
+  // by TeeOutputStream) flows to the terminal in real-time.
+  // stdout is piped to capture the JSON batch results.
+  const batchResults = await new Promise<string>((resolve, reject) => {
+    const cp = spawn('java', spawnArgs, {
       cwd: workspaceRoot,
       windowsHide: true,
       env: process.env,
-      maxBuffer: LARGE_BUFFER,
-    }).toString();
-  }
+      stdio: ['pipe', 'pipe', 'inherit'],
+    });
+
+    const chunks: Buffer[] = [];
+    cp.stdout.on('data', (chunk) => chunks.push(chunk));
+
+    cp.on('error', reject);
+    cp.on('close', (code) => {
+      if (code !== 0) {
+        reject(new Error(`Gradle batch runner exited with code ${code}`));
+      } else {
+        resolve(Buffer.concat(chunks).toString());
+      }
+    });
+  });
+
   const gradlewBatchEnd = performance.mark(`gradlew-batch:end`);
   performance.measure(
     `gradlew-batch`,

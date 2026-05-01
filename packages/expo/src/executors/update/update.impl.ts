@@ -1,4 +1,5 @@
 import { ExecutorContext, names } from '@nx/devkit';
+import { signalToCode } from '@nx/devkit/internal';
 import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
@@ -42,7 +43,10 @@ function runCliUpdate(
     childProcess = fork(
       resolveEas(workspaceRoot),
       ['update', ...createUpdateOptions(options)],
-      { cwd: pathResolve(workspaceRoot, projectRoot), env: process.env }
+      {
+        cwd: pathResolve(workspaceRoot, projectRoot),
+        env: process.env,
+      }
     );
 
     // Ensure the child process is killed when the parent exits
@@ -52,7 +56,8 @@ function runCliUpdate(
     childProcess.on('error', (err) => {
       reject(err);
     });
-    childProcess.on('exit', (code) => {
+    childProcess.on('exit', (code, signal) => {
+      if (code === null) code = signalToCode(signal);
       if (code === 0) {
         resolve(code);
       } else {

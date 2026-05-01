@@ -10,7 +10,10 @@ import {
 
 describe('file-server', () => {
   beforeAll(() => {
-    newProject({ name: uniq('fileserver') });
+    newProject({
+      name: uniq('fileserver'),
+      packages: ['@nx/web', '@nx/angular', '@nx/react'],
+    });
   });
 
   afterAll(() => cleanupProject());

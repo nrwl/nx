@@ -5,6 +5,7 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  getDependencyVersionFromPackageJson,
   readJson,
   readNxJson,
   runTasksInSerial,
@@ -37,10 +38,10 @@ import { InitSchema } from './schema';
 async function getInstalledTypescriptVersion(
   tree: Tree
 ): Promise<string | null> {
-  const rootPackageJson = readJson(tree, 'package.json');
-  const tsVersionInRootPackageJson =
-    rootPackageJson.devDependencies?.['typescript'] ??
-    rootPackageJson.dependencies?.['typescript'];
+  const tsVersionInRootPackageJson = getDependencyVersionFromPackageJson(
+    tree,
+    'typescript'
+  );
 
   if (!tsVersionInRootPackageJson) {
     return null;
@@ -64,7 +65,11 @@ async function getInstalledTypescriptVersion(
       return installedTsVersion;
     }
   } finally {
-    return checkAndCleanWithSemver('typescript', tsVersionInRootPackageJson);
+    return checkAndCleanWithSemver(
+      tree,
+      'typescript',
+      tsVersionInRootPackageJson
+    );
   }
 }
 

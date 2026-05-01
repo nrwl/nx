@@ -1,0 +1,9 @@
+---
+title: Code Owners
+sidebar:
+  hidden: true
+description: Managing code ownership
+pagefind: false
+---
+
+{% index_page_cards path="reference/owners" /%}

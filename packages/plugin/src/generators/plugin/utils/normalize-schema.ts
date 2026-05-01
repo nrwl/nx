@@ -19,6 +19,7 @@ export interface NormalizedSchema extends Schema {
   fileName: string;
   projectRoot: string;
   projectDirectory: string;
+  e2eProjectDirectory: string;
   parsedTags: string[];
   importPath: string;
   bundler: 'swc' | 'tsc';
@@ -78,6 +79,7 @@ export async function normalizeOptions(
     projectName: isTsSolutionSetup && !options.name ? importPath : projectName,
     projectRoot,
     projectDirectory,
+    e2eProjectDirectory: options.e2eProjectDirectory ?? projectDirectory,
     parsedTags,
     importPath,
     publishable: options.publishable ?? false,

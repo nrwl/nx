@@ -100,27 +100,32 @@ module.exports = composePlugins(
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg')
+                rule.test.toString().includes('svg'),
             );
 
             if (svgLoaderIdx !== -1) {
               config.module.rules.splice(svgLoaderIdx, 1);
             }
 
-            // Add SVGR loader
+            // Add SVGR loader with webpack 5 asset modules
             config.module.rules.push({
               test: /\\.svg$/,
-              issuer: /\\.(js|ts|md)x?$/,
-              use: [
+              oneOf: [
                 {
-                  loader: require.resolve('@svgr/webpack'),
-                  options,
+                  resourceQuery: /url/,
+                  type: 'asset/resource',
+                  generator: {
+                    filename: '[name].[hash][ext]',
+                  },
                 },
                 {
-                  loader: require.resolve('file-loader'),
-                  options: {
-                    name: '[name].[hash].[ext]',
-                  },
+                  issuer: /\\.(js|ts|md)x?$/,
+                  use: [
+                    {
+                      loader: require.resolve('@svgr/webpack'),
+                      options,
+                    },
+                  ],
                 },
               ],
             });
@@ -195,27 +200,32 @@ module.exports = composePlugins(
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg')
+                rule.test.toString().includes('svg'),
             );
 
             if (svgLoaderIdx !== -1) {
               config.module.rules.splice(svgLoaderIdx, 1);
             }
 
-            // Add SVGR loader
+            // Add SVGR loader with webpack 5 asset modules
             config.module.rules.push({
               test: /\\.svg$/,
-              issuer: /\\.(js|ts|md)x?$/,
-              use: [
+              oneOf: [
                 {
-                  loader: require.resolve('@svgr/webpack'),
-                  options,
+                  resourceQuery: /url/,
+                  type: 'asset/resource',
+                  generator: {
+                    filename: '[name].[hash][ext]',
+                  },
                 },
                 {
-                  loader: require.resolve('file-loader'),
-                  options: {
-                    name: '[name].[hash].[ext]',
-                  },
+                  issuer: /\\.(js|ts|md)x?$/,
+                  use: [
+                    {
+                      loader: require.resolve('@svgr/webpack'),
+                      options,
+                    },
+                  ],
                 },
               ],
             });
@@ -234,7 +244,7 @@ module.exports = composePlugins(
           }),
           (config) => {
             return config;
-          }
+          },
         );
         "
       `);
@@ -345,27 +355,32 @@ module.exports = composePlugins(
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg')
+                rule.test.toString().includes('svg'),
             );
 
             if (svgLoaderIdx !== -1) {
               config.module.rules.splice(svgLoaderIdx, 1);
             }
 
-            // Add SVGR loader
+            // Add SVGR loader with webpack 5 asset modules
             config.module.rules.push({
               test: /\\.svg$/,
-              issuer: /\\.(js|ts|md)x?$/,
-              use: [
+              oneOf: [
                 {
-                  loader: require.resolve('@svgr/webpack'),
-                  options,
+                  resourceQuery: /url/,
+                  type: 'asset/resource',
+                  generator: {
+                    filename: '[name].[hash][ext]',
+                  },
                 },
                 {
-                  loader: require.resolve('file-loader'),
-                  options: {
-                    name: '[name].[hash].[ext]',
-                  },
+                  issuer: /\\.(js|ts|md)x?$/,
+                  use: [
+                    {
+                      loader: require.resolve('@svgr/webpack'),
+                      options,
+                    },
+                  ],
                 },
               ],
             });
@@ -438,27 +453,32 @@ module.exports = config;
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg')
+                rule.test.toString().includes('svg'),
             );
 
             if (svgLoaderIdx !== -1) {
               config.module.rules.splice(svgLoaderIdx, 1);
             }
 
-            // Add SVGR loader
+            // Add SVGR loader with webpack 5 asset modules
             config.module.rules.push({
               test: /\\.svg$/,
-              issuer: /\\.(js|ts|md)x?$/,
-              use: [
+              oneOf: [
                 {
-                  loader: require.resolve('@svgr/webpack'),
-                  options,
+                  resourceQuery: /url/,
+                  type: 'asset/resource',
+                  generator: {
+                    filename: '[name].[hash][ext]',
+                  },
                 },
                 {
-                  loader: require.resolve('file-loader'),
-                  options: {
-                    name: '[name].[hash].[ext]',
-                  },
+                  issuer: /\\.(js|ts|md)x?$/,
+                  use: [
+                    {
+                      loader: require.resolve('@svgr/webpack'),
+                      options,
+                    },
+                  ],
                 },
               ],
             });
@@ -531,27 +551,32 @@ export default config;
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg')
+                rule.test.toString().includes('svg'),
             );
 
             if (svgLoaderIdx !== -1) {
               config.module.rules.splice(svgLoaderIdx, 1);
             }
 
-            // Add SVGR loader
+            // Add SVGR loader with webpack 5 asset modules
             config.module.rules.push({
               test: /\\.svg$/,
-              issuer: /\\.(js|ts|md)x?$/,
-              use: [
+              oneOf: [
                 {
-                  loader: require.resolve('@svgr/webpack'),
-                  options,
+                  resourceQuery: /url/,
+                  type: 'asset/resource',
+                  generator: {
+                    filename: '[name].[hash][ext]',
+                  },
                 },
                 {
-                  loader: require.resolve('file-loader'),
-                  options: {
-                    name: '[name].[hash].[ext]',
-                  },
+                  issuer: /\\.(js|ts|md)x?$/,
+                  use: [
+                    {
+                      loader: require.resolve('@svgr/webpack'),
+                      options,
+                    },
+                  ],
                 },
               ],
             });
@@ -625,27 +650,32 @@ export default composePlugins(
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg')
+                rule.test.toString().includes('svg'),
             );
 
             if (svgLoaderIdx !== -1) {
               config.module.rules.splice(svgLoaderIdx, 1);
             }
 
-            // Add SVGR loader
+            // Add SVGR loader with webpack 5 asset modules
             config.module.rules.push({
               test: /\\.svg$/,
-              issuer: /\\.(js|ts|md)x?$/,
-              use: [
+              oneOf: [
                 {
-                  loader: require.resolve('@svgr/webpack'),
-                  options,
+                  resourceQuery: /url/,
+                  type: 'asset/resource',
+                  generator: {
+                    filename: '[name].[hash][ext]',
+                  },
                 },
                 {
-                  loader: require.resolve('file-loader'),
-                  options: {
-                    name: '[name].[hash].[ext]',
-                  },
+                  issuer: /\\.(js|ts|md)x?$/,
+                  use: [
+                    {
+                      loader: require.resolve('@svgr/webpack'),
+                      options,
+                    },
+                  ],
                 },
               ],
             });
@@ -657,6 +687,165 @@ export default composePlugins(
         export default composePlugins(withNx(), withReact(), withSvgr(), (config) => {
           return config;
         });
+        "
+      `);
+    });
+
+    it('should preserve other withReact options when removing svgr: false', async () => {
+      tree.write(
+        'apps/my-app/project.json',
+        JSON.stringify({
+          root: 'apps/my-app',
+          targets: {
+            build: {
+              executor: '@nx/webpack:webpack',
+              options: {
+                webpackConfig: 'apps/my-app/webpack.config.js',
+              },
+            },
+          },
+        })
+      );
+
+      tree.write(
+        'apps/my-app/webpack.config.js',
+        `const { composePlugins, withNx } = require('@nx/webpack');
+const { withReact } = require('@nx/react');
+
+module.exports = composePlugins(
+  withNx(),
+  withReact({
+    svgr: false,
+    stylePreprocessorOptions: { sassOptions: { quietDeps: true } },
+  }),
+  (config) => {
+    return config;
+  }
+);
+`
+      );
+
+      await addSvgrToWebpackConfig(tree);
+
+      const content = tree.read('apps/my-app/webpack.config.js', 'utf-8');
+      expect(content).toMatchInlineSnapshot(`
+        "const { composePlugins, withNx } = require('@nx/webpack');
+        const { withReact } = require('@nx/react');
+
+        module.exports = composePlugins(
+          withNx(),
+          withReact({
+            stylePreprocessorOptions: { sassOptions: { quietDeps: true } },
+          }),
+          (config) => {
+            return config;
+          },
+        );
+        "
+      `);
+    });
+
+    it('should preserve other withReact options when migrating svgr: true', async () => {
+      tree.write(
+        'apps/my-app/project.json',
+        JSON.stringify({
+          root: 'apps/my-app',
+          targets: {
+            build: {
+              executor: '@nx/webpack:webpack',
+              options: {
+                webpackConfig: 'apps/my-app/webpack.config.js',
+              },
+            },
+          },
+        })
+      );
+
+      tree.write(
+        'apps/my-app/webpack.config.js',
+        `const { composePlugins, withNx } = require('@nx/webpack');
+const { withReact } = require('@nx/react');
+
+module.exports = composePlugins(
+  withNx(),
+  withReact({
+    svgr: true,
+    stylePreprocessorOptions: { sassOptions: { quietDeps: true } },
+  }),
+  (config) => {
+    return config;
+  }
+);
+`
+      );
+
+      await addSvgrToWebpackConfig(tree);
+
+      const content = tree.read('apps/my-app/webpack.config.js', 'utf-8');
+      expect(content).toMatchInlineSnapshot(`
+        "const { composePlugins, withNx } = require('@nx/webpack');
+        const { withReact } = require('@nx/react');
+
+        // SVGR support function (migrated from svgr option in withReact/NxReactWebpackPlugin)
+        function withSvgr(svgrOptions = {}) {
+          const defaultOptions = {
+            svgo: false,
+            titleProp: true,
+            ref: true,
+          };
+
+          const options = { ...defaultOptions, ...svgrOptions };
+
+          return function configure(config) {
+            // Remove existing SVG loader if present
+            const svgLoaderIdx = config.module.rules.findIndex(
+              (rule) =>
+                typeof rule === 'object' &&
+                typeof rule.test !== 'undefined' &&
+                rule.test.toString().includes('svg'),
+            );
+
+            if (svgLoaderIdx !== -1) {
+              config.module.rules.splice(svgLoaderIdx, 1);
+            }
+
+            // Add SVGR loader with webpack 5 asset modules
+            config.module.rules.push({
+              test: /\\.svg$/,
+              oneOf: [
+                {
+                  resourceQuery: /url/,
+                  type: 'asset/resource',
+                  generator: {
+                    filename: '[name].[hash][ext]',
+                  },
+                },
+                {
+                  issuer: /\\.(js|ts|md)x?$/,
+                  use: [
+                    {
+                      loader: require.resolve('@svgr/webpack'),
+                      options,
+                    },
+                  ],
+                },
+              ],
+            });
+
+            return config;
+          };
+        }
+
+        module.exports = composePlugins(
+          withNx(),
+          withReact({
+            stylePreprocessorOptions: { sassOptions: { quietDeps: true } },
+          }),
+          withSvgr(),
+          (config) => {
+            return config;
+          },
+        );
         "
       `);
     });
@@ -814,23 +1003,28 @@ module.exports = {
                       typeof rule === 'object' &&
                       rule.test &&
                       rule.test.toString().includes('svg')
-                    )
+                    ),
                 );
 
-                // Add SVGR loader with both default and named exports
+                // Add SVGR loader with webpack 5 asset modules
                 compiler.options.module.rules.push({
                   test: /.svg$/,
-                  issuer: /.[jt]sx?$/,
-                  use: [
+                  oneOf: [
                     {
-                      loader: require.resolve('@svgr/webpack'),
-                      options,
+                      resourceQuery: /url/,
+                      type: 'asset/resource',
+                      generator: {
+                        filename: '[name].[hash][ext]',
+                      },
                     },
                     {
-                      loader: require.resolve('file-loader'),
-                      options: {
-                        name: '[name].[hash].[ext]',
-                      },
+                      issuer: /.[jt]sx?$/,
+                      use: [
+                        {
+                          loader: require.resolve('@svgr/webpack'),
+                          options,
+                        },
+                      ],
                     },
                   ],
                 });
@@ -975,23 +1169,28 @@ module.exports = {
                       typeof rule === 'object' &&
                       rule.test &&
                       rule.test.toString().includes('svg')
-                    )
+                    ),
                 );
 
-                // Add SVGR loader with both default and named exports
+                // Add SVGR loader with webpack 5 asset modules
                 compiler.options.module.rules.push({
                   test: /.svg$/,
-                  issuer: /.[jt]sx?$/,
-                  use: [
+                  oneOf: [
                     {
-                      loader: require.resolve('@svgr/webpack'),
-                      options,
+                      resourceQuery: /url/,
+                      type: 'asset/resource',
+                      generator: {
+                        filename: '[name].[hash][ext]',
+                      },
                     },
                     {
-                      loader: require.resolve('file-loader'),
-                      options: {
-                        name: '[name].[hash].[ext]',
-                      },
+                      issuer: /.[jt]sx?$/,
+                      use: [
+                        {
+                          loader: require.resolve('@svgr/webpack'),
+                          options,
+                        },
+                      ],
                     },
                   ],
                 });
@@ -1092,23 +1291,28 @@ module.exports = webpackConfig;
                       typeof rule === 'object' &&
                       rule.test &&
                       rule.test.toString().includes('svg')
-                    )
+                    ),
                 );
 
-                // Add SVGR loader with both default and named exports
+                // Add SVGR loader with webpack 5 asset modules
                 compiler.options.module.rules.push({
                   test: /.svg$/,
-                  issuer: /.[jt]sx?$/,
-                  use: [
+                  oneOf: [
                     {
-                      loader: require.resolve('@svgr/webpack'),
-                      options,
+                      resourceQuery: /url/,
+                      type: 'asset/resource',
+                      generator: {
+                        filename: '[name].[hash][ext]',
+                      },
                     },
                     {
-                      loader: require.resolve('file-loader'),
-                      options: {
-                        name: '[name].[hash].[ext]',
-                      },
+                      issuer: /.[jt]sx?$/,
+                      use: [
+                        {
+                          loader: require.resolve('@svgr/webpack'),
+                          options,
+                        },
+                      ],
                     },
                   ],
                 });
@@ -1207,23 +1411,28 @@ export default webpackConfig;
                       typeof rule === 'object' &&
                       rule.test &&
                       rule.test.toString().includes('svg')
-                    )
+                    ),
                 );
 
-                // Add SVGR loader with both default and named exports
+                // Add SVGR loader with webpack 5 asset modules
                 compiler.options.module.rules.push({
                   test: /.svg$/,
-                  issuer: /.[jt]sx?$/,
-                  use: [
+                  oneOf: [
                     {
-                      loader: require.resolve('@svgr/webpack'),
-                      options,
+                      resourceQuery: /url/,
+                      type: 'asset/resource',
+                      generator: {
+                        filename: '[name].[hash][ext]',
+                      },
                     },
                     {
-                      loader: require.resolve('file-loader'),
-                      options: {
-                        name: '[name].[hash].[ext]',
-                      },
+                      issuer: /.[jt]sx?$/,
+                      use: [
+                        {
+                          loader: require.resolve('@svgr/webpack'),
+                          options,
+                        },
+                      ],
                     },
                   ],
                 });
@@ -1322,23 +1531,28 @@ export default {
                       typeof rule === 'object' &&
                       rule.test &&
                       rule.test.toString().includes('svg')
-                    )
+                    ),
                 );
 
-                // Add SVGR loader with both default and named exports
+                // Add SVGR loader with webpack 5 asset modules
                 compiler.options.module.rules.push({
                   test: /.svg$/,
-                  issuer: /.[jt]sx?$/,
-                  use: [
+                  oneOf: [
                     {
-                      loader: require.resolve('@svgr/webpack'),
-                      options,
+                      resourceQuery: /url/,
+                      type: 'asset/resource',
+                      generator: {
+                        filename: '[name].[hash][ext]',
+                      },
                     },
                     {
-                      loader: require.resolve('file-loader'),
-                      options: {
-                        name: '[name].[hash].[ext]',
-                      },
+                      issuer: /.[jt]sx?$/,
+                      use: [
+                        {
+                          loader: require.resolve('@svgr/webpack'),
+                          options,
+                        },
+                      ],
                     },
                   ],
                 });
@@ -1545,27 +1759,32 @@ module.exports = composePlugins(withNx(), withReact(), (config) => config);
               (rule) =>
                 typeof rule === 'object' &&
                 typeof rule.test !== 'undefined' &&
-                rule.test.toString().includes('svg')
+                rule.test.toString().includes('svg'),
             );
 
             if (svgLoaderIdx !== -1) {
               config.module.rules.splice(svgLoaderIdx, 1);
             }
 
-            // Add SVGR loader
+            // Add SVGR loader with webpack 5 asset modules
             config.module.rules.push({
               test: /\\.svg$/,
-              issuer: /\\.(js|ts|md)x?$/,
-              use: [
+              oneOf: [
                 {
-                  loader: require.resolve('@svgr/webpack'),
-                  options,
+                  resourceQuery: /url/,
+                  type: 'asset/resource',
+                  generator: {
+                    filename: '[name].[hash][ext]',
+                  },
                 },
                 {
-                  loader: require.resolve('file-loader'),
-                  options: {
-                    name: '[name].[hash].[ext]',
-                  },
+                  issuer: /\\.(js|ts|md)x?$/,
+                  use: [
+                    {
+                      loader: require.resolve('@svgr/webpack'),
+                      options,
+                    },
+                  ],
                 },
               ],
             });
@@ -1607,23 +1826,28 @@ module.exports = composePlugins(withNx(), withReact(), (config) => config);
                       typeof rule === 'object' &&
                       rule.test &&
                       rule.test.toString().includes('svg')
-                    )
+                    ),
                 );
 
-                // Add SVGR loader with both default and named exports
+                // Add SVGR loader with webpack 5 asset modules
                 compiler.options.module.rules.push({
                   test: /.svg$/,
-                  issuer: /.[jt]sx?$/,
-                  use: [
+                  oneOf: [
                     {
-                      loader: require.resolve('@svgr/webpack'),
-                      options,
+                      resourceQuery: /url/,
+                      type: 'asset/resource',
+                      generator: {
+                        filename: '[name].[hash][ext]',
+                      },
                     },
                     {
-                      loader: require.resolve('file-loader'),
-                      options: {
-                        name: '[name].[hash].[ext]',
-                      },
+                      issuer: /.[jt]sx?$/,
+                      use: [
+                        {
+                          loader: require.resolve('@svgr/webpack'),
+                          options,
+                        },
+                      ],
                     },
                   ],
                 });

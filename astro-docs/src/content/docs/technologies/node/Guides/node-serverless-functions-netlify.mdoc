@@ -17,25 +17,25 @@ Depending on your current situation, you can either
 
 Let's walk through both scenarios.
 
-### Starting a New Project
+### Starting a new project
 
 For new workspaces you can create a Nx workspace with serverless function with one command:
 
-```shell {% frame="none" %}
+```shell
 npx create-nx-workspace@latest my-functions --preset=@nx/netlify --site=my-site
 ```
 
-### Configure Existing Projects
+### Configure existing projects
 
 You will need to install `@nx/netlify` if you haven't already.
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/netlify
 ```
 
 Next add the Netlify serverless configuration by running the following command:
 
-```shell {% frame="none" %}
+```shell
 nx g @nx/netlify:setup-functions
 ```
 
@@ -45,15 +45,15 @@ This will do a few things:
 2. Add the `netlify.toml` in the root of the project
 3. Update your `project.json` to have 2 new targets `serve-functions` & `deploy-functions`.
 
-## Serve Your Functions Locally
+## Serve your functions locally
 
 To serve your functions locally, run:
 
-```shell {% frame="none" %}
+```shell
 nx serve-functions
 ```
 
-## Configure Your Netlify Deploy Settings
+## Configure your Netlify deploy settings
 
 Make sure you have a site configured on Netlify (skip if you have already). You have mostly two options:
 
@@ -84,13 +84,13 @@ If you run `npx netlify deploy` in the workspace, the site ID will be automatica
 
 To deploy them to Netlify, run:
 
-```shell {% frame="none" %}
+```shell
 nx deploy-functions
 ```
 
 This creates a "draft deployment" to a temporary URL. If you want to do a production deployment, pass the `--prod` flag:
 
-```shell {% frame="none" %}
+```shell
 nx deploy-functions --prod
 ```
 

@@ -5,7 +5,6 @@ import type { Styles } from '../utils/types';
 export interface Schema {
   directory: string;
   name?: string;
-  addTailwind?: boolean;
   skipFormat?: boolean;
   inlineStyle?: boolean;
   inlineTemplate?: boolean;
@@ -31,4 +30,5 @@ export interface Schema {
   serverRouting?: boolean;
   nxCloudToken?: string;
   addPlugin?: boolean;
+  zoneless?: boolean;
 }

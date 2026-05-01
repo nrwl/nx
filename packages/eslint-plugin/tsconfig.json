@@ -9,13 +9,10 @@
   "files": [],
   "references": [
     {
-      "path": "../js"
-    },
-    {
-      "path": "../devkit"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
-  ]
+  ],
+  "nx": {
+    "addTypecheckTarget": false
+  }
 }

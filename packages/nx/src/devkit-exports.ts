@@ -45,10 +45,7 @@ export { workspaceLayout } from './config/configuration';
 export type {
   NxPlugin,
   NxPluginV2,
-  CreateNodes,
-  CreateNodesFunction,
   CreateNodesResult,
-  CreateNodesContext,
   CreateNodesContextV2,
   CreateNodesFunctionV2,
   CreateNodesResultV2,

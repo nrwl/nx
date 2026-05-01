@@ -1,3 +1,5 @@
+import { join } from 'path';
+import { handleImport } from '../../../utils/handle-import';
 import { output } from '../../../utils/output';
 import { readNxJson } from '../../../config/configuration';
 import { FsTree, flushChanges } from '../../../generators/tree';
@@ -7,6 +9,7 @@ import {
 } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 import { createNxCloudOnboardingURL } from '../../../nx-cloud/utilities/url-shorten';
 import { isNxCloudUsed } from '../../../utils/nx-cloud-utils';
+import { writeJsonFile } from '../../../utils/fileutils';
 import { runNxSync } from '../../../utils/child-process';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { NxArgs } from '../../../utils/command-line-utils';
@@ -17,9 +20,12 @@ import {
   messages,
 } from '../../../utils/ab-testing';
 import { nxVersion } from '../../../utils/versions';
+import { isCI } from '../../../utils/is-ci';
+import { isAiAgent } from '../../../native';
+import { detectPackageManager } from '../../../utils/package-manager';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getVcsRemoteInfo } from '../../../utils/git-utils';
-import chalk = require('chalk');
+import * as pc from 'picocolors';
 const ora = require('ora');
 const open = require('open');
 
@@ -74,6 +80,66 @@ export async function connectWorkspaceToCloud(
 }
 
 export async function connectToNxCloudCommand(
+  options: { generateToken?: boolean; checkRemote?: boolean },
+  command?: string
+): Promise<boolean> {
+  // `connectToNxCloudWithPrompt` (called from `migrate`) records its own stat; skip here to avoid double-counting.
+  const selfRecord = !command;
+  const baseMeta = {
+    nodeVersion: process.versions.node,
+    os: process.platform,
+    packageManager: detectPackageManager(),
+    aiAgent: isAiAgent(),
+    isCI: isCI(),
+  };
+  if (selfRecord) {
+    await recordStat({
+      command: 'connect',
+      nxVersion,
+      useCloud: true,
+      meta: { type: 'start', ...baseMeta },
+    });
+  }
+  try {
+    const result = await runConnectToNxCloud(options, command);
+    if (selfRecord) {
+      await recordStat({
+        command: 'connect',
+        nxVersion,
+        useCloud: result,
+        meta: { type: 'complete', ...baseMeta },
+      });
+    }
+    return result;
+  } catch (error) {
+    if (selfRecord) {
+      const message =
+        (error instanceof Error && error.message) ||
+        String(error ?? 'Unknown error');
+      const errorName =
+        typeof (error as any)?.code === 'string'
+          ? ((error as any).code as string)
+          : error instanceof Error
+            ? error.name
+            : typeof error;
+      await recordStat({
+        command: 'connect',
+        nxVersion,
+        useCloud: false,
+        meta: {
+          type: 'error',
+          errorCode: 'UNKNOWN',
+          errorName,
+          errorMessage: message.slice(0, 500),
+          ...baseMeta,
+        },
+      });
+    }
+    throw error;
+  }
+}
+
+async function runConnectToNxCloud(
   options: { generateToken?: boolean; checkRemote?: boolean },
   command?: string
 ): Promise<boolean> {
@@ -163,30 +229,54 @@ function sleep(ms: number) {
 export async function connectExistingRepoToNxCloudPrompt(
   command = 'init',
   key: MessageKey = 'setupNxCloud'
-): Promise<boolean> {
-  const res = await nxCloudPrompt(key).then(
-    (value: MessageOptionKey) => value === 'yes'
-  );
+): Promise<MessageOptionKey> {
+  const res = await nxCloudPrompt(key);
   await recordStat({
     command,
     nxVersion,
-    useCloud: res,
-    meta: messages.codeOfSelectedPromptMessage(key),
+    useCloud: res === 'yes',
+    meta: {
+      type: 'complete',
+      setupCloudPrompt: messages.codeOfSelectedPromptMessage(key) || '',
+      nxCloudArg: res,
+      nodeVersion: process.versions.node,
+      os: process.platform,
+      packageManager: detectPackageManager(),
+      aiAgent: isAiAgent(),
+      isCI: isCI(),
+    },
   });
   return res;
 }
 
 export async function connectToNxCloudWithPrompt(command: string) {
   const setNxCloud = await nxCloudPrompt('setupNxCloud');
-  const useCloud =
-    setNxCloud === 'yes'
-      ? await connectToNxCloudCommand({ generateToken: false }, command)
-      : false;
+  let useCloud = false;
+  if (setNxCloud === 'yes') {
+    useCloud = await connectToNxCloudCommand({ generateToken: false }, command);
+  } else if (setNxCloud === 'never') {
+    const nxJsonPath = join(workspaceRoot, 'nx.json');
+    const nxJson = readNxJson();
+    if (nxJson) {
+      nxJson.neverConnectToCloud = true;
+      writeJsonFile(nxJsonPath, nxJson);
+    }
+  }
   await recordStat({
     command,
     nxVersion,
     useCloud,
-    meta: messages.codeOfSelectedPromptMessage('setupNxCloud'),
+    meta: {
+      type: 'complete',
+      setupCloudPrompt:
+        messages.codeOfSelectedPromptMessage('setupNxCloud') || '',
+      nxCloudArg: setNxCloud,
+      nodeVersion: process.versions.node,
+      os: process.platform,
+      packageManager: detectPackageManager(),
+      aiAgent: isAiAgent(),
+      isCI: isCI(),
+    },
   });
 }
 
@@ -201,15 +291,16 @@ async function nxCloudPrompt(key: MessageKey): Promise<MessageOptionKey> {
     initial,
   } as any; // meeroslav: types in enquirer are not up to date
   if (footer) {
-    promptConfig.footer = () => chalk.dim(footer);
+    promptConfig.footer = () => pc.dim(footer);
   }
   if (hint) {
-    promptConfig.hint = () => chalk.dim(hint);
+    promptConfig.hint = () => pc.dim(hint);
   }
 
-  return await (await import('enquirer'))
-    .prompt<{ NxCloud: MessageOptionKey }>([promptConfig])
-    .then((a) => {
+  const enquirer = await handleImport('enquirer');
+  return await enquirer
+    .prompt([promptConfig])
+    .then((a: { NxCloud: MessageOptionKey }) => {
       return a.NxCloud;
     });
 }

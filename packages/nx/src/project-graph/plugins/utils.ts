@@ -1,14 +1,10 @@
-import {
-  CreateNodesContext,
-  CreateNodesContextV2,
-  CreateNodesResult,
-} from './public-api';
+import { CreateNodesContextV2, CreateNodesResult } from './public-api';
 import { AggregateCreateNodesError } from '../error-types';
 export async function createNodesFromFiles<T = unknown>(
   createNodes: (
     projectConfigurationFile: string,
     options: T | undefined,
-    context: CreateNodesContext,
+    context: CreateNodesContextV2 & { configFiles: readonly string[] },
     idx: number
   ) => CreateNodesResult | Promise<CreateNodesResult>,
   configFiles: readonly string[],

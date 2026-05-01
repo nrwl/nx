@@ -1,16 +1,14 @@
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { basename, dirname, join } from 'path';
-import { existsSync, readdirSync } from 'fs';
+import { readdirSync } from 'fs';
 import {
   type CreateDependencies,
-  type CreateNodes,
-  CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
-  logger,
   readJsonFile,
   type TargetConfiguration,
   writeJsonFile,
@@ -20,15 +18,22 @@ import { getLockFileName } from '@nx/js';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { type RollupOptions } from 'rollup';
 import { hashObject } from 'nx/src/hasher/file-hasher';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  isUsingTsSolutionSetup,
+  TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
-
-const pmc = getPackageManagerCommand();
 
 function readTargetsCache(
   cachePath: string
 ): Record<string, Record<string, TargetConfiguration>> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
+  try {
+    return process.env.NX_CACHE_PROJECT_GRAPH !== 'false'
+      ? readJsonFile(cachePath)
+      : {};
+  } catch {
+    return {};
+  }
 }
 
 function writeTargetsToCache(
@@ -53,23 +58,7 @@ export interface RollupPluginOptions {
 
 const rollupConfigGlob = '**/rollup.config.{js,cjs,mjs,ts,cts,mts}';
 
-export const createNodes: CreateNodes<RollupPluginOptions> = [
-  rollupConfigGlob,
-  async (configFilePath, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
-    );
-    return createNodesInternal(
-      configFilePath,
-      normalizeOptions(options),
-      context,
-      {},
-      isUsingTsSolutionSetup()
-    );
-  },
-];
-
-export const createNodesV2: CreateNodesV2<RollupPluginOptions> = [
+export const createNodes: CreateNodesV2<RollupPluginOptions> = [
   rollupConfigGlob,
   async (configFilePaths, options, context) => {
     const normalizedOptions = normalizeOptions(options);
@@ -80,6 +69,9 @@ export const createNodesV2: CreateNodesV2<RollupPluginOptions> = [
     );
     const targetsCache = readTargetsCache(cachePath);
     const isTsSolutionSetup = isUsingTsSolutionSetup();
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
 
     try {
       return await createNodesFromFiles(
@@ -89,7 +81,8 @@ export const createNodesV2: CreateNodesV2<RollupPluginOptions> = [
             normalizedOptions,
             context,
             targetsCache,
-            isTsSolutionSetup
+            isTsSolutionSetup,
+            pmc
           ),
         configFilePaths,
         normalizedOptions,
@@ -101,12 +94,15 @@ export const createNodesV2: CreateNodesV2<RollupPluginOptions> = [
   },
 ];
 
+export const createNodesV2 = createNodes;
+
 async function createNodesInternal(
   configFilePath: string,
   options: Required<RollupPluginOptions>,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<string, Record<string, TargetConfiguration>>,
-  isTsSolutionSetup: boolean
+  isTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const projectRoot = dirname(configFilePath);
   const fullyQualifiedProjectRoot = join(context.workspaceRoot, projectRoot);
@@ -132,7 +128,8 @@ async function createNodesInternal(
     projectRoot,
     options,
     context,
-    isTsSolutionSetup
+    isTsSolutionSetup,
+    pmc
   );
 
   return {
@@ -149,8 +146,9 @@ async function buildRollupTarget(
   configFilePath: string,
   projectRoot: string,
   options: RollupPluginOptions,
-  context: CreateNodesContext,
-  isTsSolutionSetup: boolean
+  context: CreateNodesContextV2,
+  isTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<Record<string, TargetConfiguration>> {
   let loadConfigFile: (
     path: string,
@@ -162,9 +160,11 @@ async function buildRollupTarget(
     // Try to load the workspace version of rollup first (it should already exist).
     // Using the workspace rollup ensures that the config file is compatible with the `loadConfigFile` function.
     // e.g. rollup@2 supports having `require` calls in rollup config, but rollup@4 does not.
-    const m = require(require.resolve('rollup/loadConfigFile', {
-      paths: [dirname(configFilePath)],
-    }));
+    const m = require(
+      require.resolve('rollup/loadConfigFile', {
+        paths: [dirname(configFilePath)],
+      })
+    );
     // Rollup 2 has this has default export, but it is named in 3 and 4.
     // See: https://www.unpkg.com/browse/rollup@2.79.1/dist/loadConfigFile.js
     loadConfigFile = typeof m === 'function' ? m : m.loadConfigFile;
@@ -200,6 +200,7 @@ async function buildRollupTarget(
         ? ['production', '^production']
         : ['default', '^default']),
       { externalDependencies: ['rollup'] },
+      TS_SOLUTION_SETUP_TSCONFIG_INPUT,
     ],
     outputs,
     metadata: {
@@ -252,8 +253,8 @@ function getOutputs(
         const outputPathFromConfig = output.dir
           ? output.dir
           : output.file
-          ? dirname(output.file)
-          : 'dist';
+            ? dirname(output.file)
+            : 'dist';
         const outputPath =
           projectRoot === '.'
             ? joinPathFragments(`{workspaceRoot}`, outputPathFromConfig)

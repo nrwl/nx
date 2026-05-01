@@ -4,6 +4,7 @@ import {
   names,
   offsetFromRoot,
 } from '@nx/devkit';
+import { signalToCode } from '@nx/devkit/internal';
 import { ChildProcess, fork } from 'child_process';
 import { resolve as pathResolve } from 'path';
 
@@ -43,7 +44,10 @@ function exportAsync(
     childProcess = fork(
       require.resolve('@expo/cli/build/bin/cli'),
       [`export`, ...createExportOptions(options, projectRoot)],
-      { cwd: pathResolve(workspaceRoot, projectRoot), env: process.env }
+      {
+        cwd: pathResolve(workspaceRoot, projectRoot),
+        env: process.env,
+      }
     );
 
     // Ensure the child process is killed when the parent exits
@@ -53,7 +57,8 @@ function exportAsync(
     childProcess.on('error', (err) => {
       reject(err);
     });
-    childProcess.on('exit', (code) => {
+    childProcess.on('exit', (code, signal) => {
+      if (code === null) code = signalToCode(signal);
       if (code === 0) {
         resolve(code);
       } else {

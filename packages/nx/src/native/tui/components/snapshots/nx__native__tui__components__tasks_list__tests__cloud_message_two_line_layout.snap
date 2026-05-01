@@ -1,13 +1,12 @@
 ---
 source: packages/nx/src/native/tui/components/tasks_list.rs
-assertion_line: 2748
 expression: terminal.backend()
 ---
 "                                             "
 " NX    Completed Test Tasks  Cache   Duration"
 "                                             "
-"  ✔    task1                     -        ..."
-"> ✔    task2                     -        ..."
+"> ✔    task1                     -        ..."
+"  ✔    task2                     -        ..."
 "  ✔    task3                     -        ..."
 "                                             "
 "                                             "

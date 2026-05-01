@@ -1,4 +1,5 @@
 import { Argv, CommandModule } from 'yargs';
+import { handleImport } from '../../utils/handle-import';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { withVerbose } from '../yargs-utils/shared-options';
 
@@ -9,10 +10,10 @@ export const yargsMigrateCommand: CommandModule = {
   - Run migrations (e.g., nx migrate --run-migrations=migrations.json). Use flag --if-exists to run migrations only if the migrations file exists.`,
   builder: (yargs) =>
     linkToNxDevAndExamples(withMigrationOptions(yargs), 'migrate'),
-  handler: async () => {
-    await (await import('./migrate')).runMigration();
-    process.exit(0);
-  },
+  handler: async () =>
+    process.exit(
+      await (await handleImport('./migrate.js', __dirname)).runMigration()
+    ),
 };
 
 export const yargsInternalMigrateCommand: CommandModule = {
@@ -22,7 +23,7 @@ export const yargsInternalMigrateCommand: CommandModule = {
   handler: async (args) =>
     process.exit(
       await (
-        await import('./migrate')
+        await handleImport('./migrate.js', __dirname)
       ).migrate(process.cwd(), args, process.argv.slice(3))
     ),
 };
@@ -70,11 +71,16 @@ function withMigrationOptions(yargs: Argv) {
       describe:
         'Enable prompts to confirm whether to collect optional package updates and migrations.',
       type: 'boolean',
-      default: false,
     })
     .option('excludeAppliedMigrations', {
       describe:
         'Exclude migrations that should have been applied on previous updates. To be used with --from.',
+      type: 'boolean',
+      default: false,
+    })
+    .option('skipInstall', {
+      describe:
+        'Skip installing packages before running migrations. Useful when the installation needs to be performed manually (e.g., to resolve peer dependency conflicts).',
       type: 'boolean',
       default: false,
     })

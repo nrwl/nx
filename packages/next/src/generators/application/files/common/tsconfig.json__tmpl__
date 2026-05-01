@@ -2,7 +2,6 @@
   "extends": "<%= rootTsConfigPath %>",
   "compilerOptions": {
     "jsx": "preserve",
-    <% if (style === '@emotion/styled') { %>"jsxImportSource": "@emotion/react",<% } %>
     "strict": true,
     "noEmit": true,
     "emitDeclarationOnly": false,
@@ -32,5 +31,5 @@
     <% } %>
     "next-env.d.ts"
   ],
-  "exclude": ["node_modules", "jest.config.ts", "<%= rootPath %>**/*.spec.ts", "<%= rootPath %>**/*.test.ts"]
+  "exclude": ["node_modules", "jest.config.ts", "jest.config.cts", "<%= rootPath %>**/*.spec.ts", "<%= rootPath %>**/*.test.ts"]
 }

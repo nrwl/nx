@@ -155,4 +155,68 @@ describe('getDependentPackagesForProject', () => {
       npmPackages: [],
     });
   });
+
+  it('should skip non-npm external dependencies like cargo:', () => {
+    jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
+      '@myorg/lib1': ['libs/lib1/src/index.ts'],
+    });
+
+    const dependencies = getDependentPackagesForProject(
+      {
+        dependencies: {
+          shell: [
+            { source: 'shell', target: 'lib1', type: 'static' },
+            { source: 'shell', target: 'npm:lodash', type: 'static' },
+            { source: 'shell', target: 'cargo:serde', type: 'static' },
+            { source: 'shell', target: 'cargo:tokio', type: 'static' },
+          ],
+          lib1: [{ source: 'lib1', target: 'cargo:rand', type: 'static' }],
+        },
+        nodes: {
+          shell: {
+            name: 'shell',
+            data: { root: 'apps/shell', sourceRoot: 'apps/shell/src' },
+            type: 'app',
+          },
+          lib1: {
+            name: 'lib1',
+            data: { root: 'libs/lib1', sourceRoot: 'libs/lib1/src' },
+            type: 'lib',
+          },
+        } as any,
+        externalNodes: {
+          'npm:lodash': {
+            name: 'npm:lodash',
+            type: 'npm',
+            data: { packageName: 'lodash', version: '4.17.21' },
+          },
+          'cargo:serde': {
+            name: 'cargo:serde',
+            type: 'cargo',
+            data: { packageName: 'serde', version: '1.0.0' },
+          },
+          'cargo:tokio': {
+            name: 'cargo:tokio',
+            type: 'cargo',
+            data: { packageName: 'tokio', version: '1.0.0' },
+          },
+          'cargo:rand': {
+            name: 'cargo:rand',
+            type: 'cargo',
+            data: { packageName: 'rand', version: '0.8.0' },
+          },
+        } as any,
+      },
+      'shell'
+    );
+
+    // Should only include npm packages and workspace libraries,
+    // cargo dependencies should be skipped
+    expect(dependencies).toEqual({
+      workspaceLibraries: [
+        { name: 'lib1', root: 'libs/lib1', importKey: '@myorg/lib1' },
+      ],
+      npmPackages: ['lodash'],
+    });
+  });
 });

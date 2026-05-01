@@ -11,12 +11,6 @@ jest.mock('@nx/cypress/src/utils/versions', () => ({
   ...jest.requireActual('@nx/cypress/src/utils/versions'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
-jest.mock('@nx/devkit', () => {
-  return {
-    ...jest.requireActual('@nx/devkit'),
-    ensurePackage: jest.fn((pkg) => jest.requireActual(pkg)),
-  };
-});
 describe('web app generator (legacy)', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
@@ -121,7 +115,7 @@ describe('web app generator (legacy)', () => {
           "test": {
             "executor": "@nx/jest:jest",
             "options": {
-              "jestConfig": "my-app/jest.config.ts",
+              "jestConfig": "my-app/jest.config.cts",
             },
             "outputs": [
               "{workspaceRoot}/coverage/{projectRoot}",
@@ -230,7 +224,7 @@ describe('web app generator (legacy)', () => {
           "test": {
             "executor": "@nx/jest:jest",
             "options": {
-              "jestConfig": "my-vite-app/jest.config.ts",
+              "jestConfig": "my-vite-app/jest.config.cts",
             },
             "outputs": [
               "{workspaceRoot}/coverage/{projectRoot}",

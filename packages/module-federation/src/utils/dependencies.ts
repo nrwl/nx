@@ -45,14 +45,24 @@ function collectDependencies(
   (projectGraph.dependencies[name] ?? []).forEach((dependency) => {
     if (dependency.target.startsWith('npm:')) {
       dependencies.npmPackages.add(dependency.target.replace('npm:', ''));
-    } else {
-      dependencies.workspaceLibraries.set(dependency.target, {
-        name: dependency.target,
-        root: projectGraph.nodes[dependency.target].data.root,
-        importKey: getLibraryImportPath(dependency.target, projectGraph),
-      });
-      collectDependencies(projectGraph, dependency.target, dependencies, seen);
+    } else if (!dependency.target.includes(':')) {
+      // Only process as workspace library if it's not an external node.
+      // External nodes have prefixes like 'npm:', 'cargo:', etc.
+      if (projectGraph.nodes[dependency.target]) {
+        dependencies.workspaceLibraries.set(dependency.target, {
+          name: dependency.target,
+          root: projectGraph.nodes[dependency.target].data.root,
+          importKey: getLibraryImportPath(dependency.target, projectGraph),
+        });
+        collectDependencies(
+          projectGraph,
+          dependency.target,
+          dependencies,
+          seen
+        );
+      }
     }
+    // Skip other external node types (cargo:, etc.)
   });
 
   return dependencies;
@@ -91,5 +101,7 @@ function getLibraryImportPath(
     }
   }
 
-  return undefined;
+  // Return library name if not found in TS path mappings
+  // This supports TS Solution + PM Workspaces where libs use package.json instead
+  return library;
 }

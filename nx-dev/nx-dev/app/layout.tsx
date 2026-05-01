@@ -1,14 +1,18 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-import Script from 'next/script';
-import AppRouterAnalytics from './app-router-analytics';
-import GlobalScripts from './global-scripts';
-// import { LiveStreamNotifier } from '@nx/nx-dev-ui-common';
 import '../styles/main.css';
-import { FrontendObservability } from '../lib/components/frontend-observability';
 
-// Metadata for the entire site
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.CONTEXT === 'deploy-preview' ||
+          process.env.CONTEXT === 'branch-deploy'
+        ? process.env.DEPLOY_PRIME_URL ||
+          process.env.DEPLOY_URL ||
+          'https://nx.dev'
+        : process.env.URL || 'https://nx.dev'
+  ),
   appleWebApp: { title: 'Nx' },
   applicationName: 'Nx',
   icons: [
@@ -39,13 +43,6 @@ export const metadata: Metadata = {
       rel: 'mask-icon',
     },
   ],
-  alternates: {
-    types: {
-      'application/rss+xml': '/blog/rss.xml',
-      'application/atom+xml': '/blog/atom.xml',
-    },
-  },
-  // Add robots directive when NEXT_PUBLIC_NO_INDEX is set
   ...(process.env.NEXT_PUBLIC_NO_INDEX === 'true' && {
     robots: {
       index: false,
@@ -58,7 +55,6 @@ export const metadata: Metadata = {
   }),
 };
 
-// Viewport settings for the entire site
 export const viewport: Viewport = {
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#F8FAFC' },
@@ -69,39 +65,13 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  const gaMeasurementId = 'UA-88380372-10';
-  const gtmMeasurementId = 'GTM-KW8423B6';
   return (
     <html lang="en" className="h-full scroll-smooth" suppressHydrationWarning>
-      {process.env.NEXT_PUBLIC_COOKIEBOT_DISABLE !== 'true' &&
-      process.env.NEXT_PUBLIC_COOKIEBOT_ID ? (
-        <Script
-          id="Cookiebot"
-          src="https://consent.cookiebot.com/uc.js"
-          data-cbid={process.env.NEXT_PUBLIC_COOKIEBOT_ID}
-          data-blockingmode="auto"
-          type="text/javascript"
-          strategy="beforeInteractive"
-        />
-      ) : null}
-      <AppRouterAnalytics gaMeasurementId={gaMeasurementId} />
       <head>
         <meta
           name="msapplication-TileColor"
           content="#DA532C"
           key="windows-tile-color"
-        />
-        <link
-          rel="alternate"
-          type="application/rss+xml"
-          title="Nx Blog RSS Feed"
-          href="/blog/rss.xml"
-        />
-        <link
-          rel="alternate"
-          type="application/atom+xml"
-          title="Nx Blog Atom Feed"
-          href="/blog/atom.xml"
         />
         <script
           type="text/javascript"
@@ -118,14 +88,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           }}
         />
       </head>
-      <body className="h-full bg-white text-slate-700 antialiased selection:bg-blue-500 selection:text-white dark:bg-slate-900 dark:text-slate-400 dark:selection:bg-sky-500">
+      <body className="h-full bg-white text-zinc-700 antialiased selection:bg-blue-500 selection:text-white dark:bg-zinc-900 dark:text-zinc-400 dark:selection:bg-blue-500">
         {children}
-        {/* <LiveStreamNotifier /> */}
-        <FrontendObservability />
-        <GlobalScripts
-          gaMeasurementId={gaMeasurementId}
-          gtmMeasurementId={gtmMeasurementId}
-        />
       </body>
     </html>
   );

@@ -2,19 +2,21 @@ import {
   addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
+  getDependencyVersionFromPackageJson,
   getProjects,
   installPackagesTask,
+  logger,
   NxJsonConfiguration,
   ProjectConfiguration,
   readJson,
   readNxJson,
-  removeDependenciesFromPackageJson,
   Tree,
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { findEslintFile } from '../utils/eslint-file';
+import { hasEslintPlugin } from '../utils/plugin';
 import { join } from 'path';
 import {
   eslint9__eslintVersion,
@@ -101,6 +103,15 @@ function convertRootToFlatConfig(
   );
 }
 
+const ESLINT_LINT_EXECUTOR = '@nx/eslint:lint';
+
+function isEslintTarget(target: { executor?: string; command?: string }) {
+  return (
+    target.executor === ESLINT_LINT_EXECUTOR ||
+    target.command?.includes('eslint')
+  );
+}
+
 function convertProjectToFlatConfig(
   tree: Tree,
   project: string,
@@ -110,53 +121,60 @@ function convertProjectToFlatConfig(
   format: 'cjs' | 'mjs'
 ) {
   const eslintFile = findEslintFile(tree, projectConfig.root);
-  if (eslintFile && !eslintFile.endsWith('.js')) {
-    if (projectConfig.targets) {
-      const eslintTargets = Object.keys(projectConfig.targets || {}).filter(
-        (t) =>
-          projectConfig.targets[t].executor === '@nx/eslint:lint' ||
-          projectConfig.targets[t].command?.includes('eslint')
-      );
-      let ignorePath: string | undefined;
-      for (const target of eslintTargets) {
-        // remove any obsolete `eslintConfig` options pointing to the old config file
-        if (projectConfig.targets[target].options?.eslintConfig) {
-          delete projectConfig.targets[target].options.eslintConfig;
-        }
-        if (projectConfig.targets[target].options?.ignorePath) {
-          ignorePath = projectConfig.targets[target].options.ignorePath;
-          delete projectConfig.targets[target].options.ignorePath;
-        }
-        updateProjectConfiguration(tree, project, projectConfig);
-      }
-      const nxHasEsLintTargets = Object.keys(nxJson.targetDefaults || {}).some(
-        (t) =>
-          (t === '@nx/eslint:lint' ||
-            nxJson.targetDefaults[t].executor === '@nx/eslint:lint' ||
-            nxJson.targetDefaults[t].command?.includes('eslint')) &&
-          projectConfig.targets?.[t]
-      );
-      const nxHasEsLintPlugin = (nxJson.plugins || []).some((p) =>
-        typeof p === 'string'
-          ? p === '@nx/eslint/plugin'
-          : p.plugin === '@nx/eslint/plugin'
-      );
+  if (!eslintFile || eslintFile.endsWith('.js')) {
+    return;
+  }
 
-      if (nxHasEsLintTargets || nxHasEsLintPlugin || eslintTargets.length > 0) {
-        convertConfigToFlatConfig(
-          tree,
-          projectConfig.root,
-          eslintFile,
-          `eslint.config.${format}`,
-          format,
-          ignorePath
-        );
-        eslintIgnoreFiles.add(`${projectConfig.root}/.eslintignore`);
-        if (ignorePath) {
-          eslintIgnoreFiles.add(ignorePath);
-        }
-      }
+  // Clean up obsolete target options and detect explicit ESLint targets
+  let ignorePath: string | undefined;
+  const eslintTargets = projectConfig.targets
+    ? Object.keys(projectConfig.targets).filter((t) =>
+        isEslintTarget(projectConfig.targets[t])
+      )
+    : [];
+  for (const target of eslintTargets) {
+    if (projectConfig.targets[target].options?.eslintConfig) {
+      delete projectConfig.targets[target].options.eslintConfig;
     }
+    if (projectConfig.targets[target].options?.ignorePath) {
+      ignorePath = projectConfig.targets[target].options.ignorePath;
+      delete projectConfig.targets[target].options.ignorePath;
+    }
+  }
+  if (eslintTargets.length > 0) {
+    updateProjectConfiguration(tree, project, projectConfig);
+  }
+  const hasEslintTargetDefaults =
+    projectConfig.targets &&
+    Object.keys(nxJson.targetDefaults || {}).some(
+      (t) =>
+        (t === ESLINT_LINT_EXECUTOR ||
+          isEslintTarget(nxJson.targetDefaults[t])) &&
+        projectConfig.targets[t]
+    );
+
+  if (
+    eslintTargets.length === 0 &&
+    !hasEslintTargetDefaults &&
+    !hasEslintPlugin(tree)
+  ) {
+    logger.warn(
+      `Skipping "${project}": found ${eslintFile} but no ESLint lint target detected. Convert manually if needed.`
+    );
+    return;
+  }
+
+  convertConfigToFlatConfig(
+    tree,
+    projectConfig.root,
+    eslintFile,
+    `eslint.config.${format}`,
+    format,
+    ignorePath
+  );
+  eslintIgnoreFiles.add(`${projectConfig.root}/.eslintignore`);
+  if (ignorePath) {
+    eslintIgnoreFiles.add(ignorePath);
   }
 }
 
@@ -248,7 +266,20 @@ function processConvertedConfig(
     eslint: eslint9__eslintVersion,
     'eslint-config-prettier': eslintConfigPrettierVersion,
     'typescript-eslint': eslint9__typescriptESLintVersion,
+    '@typescript-eslint/eslint-plugin': eslint9__typescriptESLintVersion,
+    '@typescript-eslint/parser': eslint9__typescriptESLintVersion,
   };
+
+  if (getDependencyVersionFromPackageJson(tree, '@typescript-eslint/utils')) {
+    devDependencies['@typescript-eslint/utils'] =
+      eslint9__typescriptESLintVersion;
+  }
+  if (
+    getDependencyVersionFromPackageJson(tree, '@typescript-eslint/type-utils')
+  ) {
+    devDependencies['@typescript-eslint/type-utils'] =
+      eslint9__typescriptESLintVersion;
+  }
 
   // add missing packages
   if (addESLintRC) {
@@ -260,10 +291,4 @@ function processConvertedConfig(
   }
 
   addDependenciesToPackageJson(tree, {}, devDependencies);
-
-  removeDependenciesFromPackageJson(
-    tree,
-    ['@typescript-eslint/eslint-plugin', '@typescript-eslint/parser'],
-    ['@typescript-eslint/eslint-plugin', '@typescript-eslint/parser']
-  );
 }

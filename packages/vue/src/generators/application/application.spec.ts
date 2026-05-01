@@ -74,7 +74,7 @@ describe('application generator', () => {
       addPlugin: true,
     });
 
-    expect(tree.read('test/vitest.config.ts', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('test/vitest.config.mts', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/rsbuild.config.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { pluginVue } from '@rsbuild/plugin-vue';
       import { defineConfig } from '@rsbuild/core';
@@ -184,50 +184,9 @@ describe('application generator', () => {
         useProjectJson: false,
       });
 
-      expect(tree.read('test/vite.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-        "/// <reference types='vitest' />
-        import { defineConfig } from 'vite';
-        import vue from '@vitejs/plugin-vue';
-
-        export default defineConfig(() => ({
-          root: __dirname,
-          cacheDir: '../node_modules/.vite/test',
-          server: {
-            port: 4200,
-            host: 'localhost',
-          },
-          preview: {
-            port: 4300,
-            host: 'localhost',
-          },
-          plugins: [vue()],
-          // Uncomment this if you are using workers.
-          // worker: {
-          //  plugins: [ nxViteTsPaths() ],
-          // },
-          build: {
-            outDir: './dist',
-            emptyOutDir: true,
-            reportCompressedSize: true,
-            commonjsOptions: {
-              transformMixedEsModules: true,
-            },
-          },
-          test: {
-            name: '@proj/test',
-            watch: false,
-            globals: true,
-            environment: 'jsdom',
-            include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-            reporters: ['default'],
-            coverage: {
-              reportsDirectory: './test-output/vitest/coverage',
-              provider: 'v8' as const,
-            },
-          },
-        }));
-        "
-      `);
+      expect(tree.read('test/vite.config.ts', 'utf-8')).toMatchInlineSnapshot(
+        `null`
+      );
 
       expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
         [

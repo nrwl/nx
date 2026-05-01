@@ -3,6 +3,7 @@ import { join, relative } from 'node:path';
 
 import {
   AggregateCreateNodesError,
+  logger,
   normalizePath,
   readJsonFile,
   workspaceRoot,
@@ -88,10 +89,11 @@ function readGradleReportCache(
 
 export function writeGradleReportToCache(
   cachePath: string,
-  results: GradleReport
+  results: GradleReport,
+  hash: string
 ) {
   let gradleReportJson: GradleReportJSON = {
-    hash: gradleCurrentConfigHash,
+    hash,
     gradleFileToGradleProjectMap: Object.fromEntries(
       results.gradleFileToGradleProjectMap
     ),
@@ -130,11 +132,18 @@ export function writeGradleReportToCache(
     ),
   };
 
-  writeJsonFile(cachePath, gradleReportJson);
+  try {
+    writeJsonFile(cachePath, gradleReportJson);
+  } catch (e) {
+    logger.warn(
+      `Failed to write Gradle report cache to ${cachePath}: ${
+        e instanceof Error ? e.message : 'unknown error'
+      }`
+    );
+  }
 }
 
 let gradleReportCache: GradleReport;
-let gradleCurrentConfigHash: string;
 let gradleReportCachePath: string = join(
   workspaceDataDirectory,
   'gradle-report-v1.hash'
@@ -174,14 +183,9 @@ export async function populateGradleReport(
   const gradleConfigHash = await hashWithWorkspaceContext(workspaceRoot, [
     gradleConfigAndTestGlob,
   ]);
-  gradleReportCache ??= readGradleReportCache(
-    gradleReportCachePath,
-    gradleConfigHash
-  );
-  if (
-    gradleReportCache &&
-    (!gradleCurrentConfigHash || gradleConfigHash === gradleCurrentConfigHash)
-  ) {
+  const cached = readGradleReportCache(gradleReportCachePath, gradleConfigHash);
+  if (cached) {
+    gradleReportCache = cached;
     return;
   }
 
@@ -207,9 +211,12 @@ export async function populateGradleReport(
     gradleProjectReportStart.name,
     gradleProjectReportEnd.name
   );
-  gradleCurrentConfigHash = gradleConfigHash;
   gradleReportCache = processProjectReports(projectReportLines);
-  writeGradleReportToCache(gradleReportCachePath, gradleReportCache);
+  writeGradleReportToCache(
+    gradleReportCachePath,
+    gradleReportCache,
+    gradleConfigHash
+  );
 }
 
 export function processProjectReports(

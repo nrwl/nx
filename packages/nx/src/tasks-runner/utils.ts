@@ -9,6 +9,7 @@ import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import {
+  ProjectConfiguration,
   TargetConfiguration,
   TargetDependencyConfig,
 } from '../config/workspace-json-project-json';
@@ -16,13 +17,12 @@ import {
   getTransformableOutputs,
   validateOutputs as nativeValidateOutputs,
 } from '../native';
-import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { isRelativePath } from '../utils/fileutils';
 import { findMatchingProjects } from '../utils/find-matching-projects';
 import { isGlobPattern } from '../utils/globs';
 import { joinPathFragments } from '../utils/path';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
-import { splitTarget } from '../utils/split-target';
+import { splitTargetFromNodes } from '../utils/split-target';
 import { workspaceRoot } from '../utils/workspace-root';
 import { isTuiEnabled } from './is-tui-enabled';
 
@@ -60,7 +60,7 @@ export function normalizeDependencyConfigDefinition(
 ): NormalizedTargetDependencyConfig[] {
   return expandWildcardTargetConfiguration(
     normalizeDependencyConfigProjects(
-      expandDependencyConfigSyntaxSugar(definition, graph),
+      expandDependencyConfigSyntaxSugar(definition, graph, currentProject),
       currentProject,
       graph
     ),
@@ -89,7 +89,8 @@ export function normalizeDependencyConfigProjects(
 
 export function expandDependencyConfigSyntaxSugar(
   dependencyConfigString: string | TargetDependencyConfig,
-  graph: ProjectGraph
+  graph: ProjectGraph,
+  currentProject?: string
 ): TargetDependencyConfig {
   if (typeof dependencyConfigString !== 'string') {
     return dependencyConfigString;
@@ -110,7 +111,8 @@ export function expandDependencyConfigSyntaxSugar(
 
   const { projects, target } = readProjectAndTargetFromTargetString(
     targetString,
-    graph.nodes
+    graph.nodes,
+    currentProject
   );
 
   return projects ? { projects, target } : { target };
@@ -156,20 +158,22 @@ export function expandWildcardTargetConfiguration(
   );
 
   return matchingTargets.map((t) => ({
+    ...dependencyConfig,
     target: t,
-    projects: dependencyConfig.projects,
-    dependencies: dependencyConfig.dependencies,
   }));
 }
 
 export function readProjectAndTargetFromTargetString(
   targetString: string,
-  projects: Record<string, ProjectGraphProjectNode>
+  projects: Record<string, ProjectGraphProjectNode>,
+  currentProject?: string
 ): { projects?: string[]; target: string } {
   // Support for both `project:target` and `target:with:colons` syntax
-  const [maybeProject, ...segments] = splitTarget(targetString, {
-    nodes: projects,
-  } as ProjectGraph);
+  const [maybeProject, ...segments] = splitTargetFromNodes(
+    targetString,
+    projects,
+    { silent: true, currentProject }
+  );
 
   if (!segments.length) {
     // if no additional segments are provided, then the string references
@@ -225,7 +229,10 @@ export function normalizeTargetDependencyWithStringProjects(
 }
 
 class InvalidOutputsError extends Error {
-  constructor(public outputs: string[], public invalidOutputs: Set<string>) {
+  constructor(
+    public outputs: string[],
+    public invalidOutputs: Set<string>
+  ) {
     super(InvalidOutputsError.createMessage(invalidOutputs));
   }
 
@@ -429,26 +436,69 @@ export function getExecutorNameForTask(task: Task, projectGraph: ProjectGraph) {
   return getTargetConfigurationForTask(task, projectGraph)?.executor;
 }
 
+/**
+ * Expand a set of initiating task IDs by walking through any `nx:noop` tasks
+ * and replacing them with their direct dependencies + continuous dependencies.
+ * Non-noop tasks are kept as-is; cycles are safe.
+ *
+ * An `nx:noop` executor returns immediately, so if it is the only thing
+ * anchoring a continuous child, the child gets killed by
+ * `cleanUpUnneededContinuousTasks` the moment the noop completes. Treating the
+ * noop's dependencies as the real anchors preserves the intended orchestration.
+ */
+export function expandInitiatingTasksThroughNoop(
+  initiatingTasks: Task[],
+  taskGraph: TaskGraph,
+  projectGraph: ProjectGraph
+): Set<string> {
+  const expanded = new Set<string>();
+  const visited = new Set<string>();
+  const queue: string[] = initiatingTasks.map((t) => t.id);
+
+  while (queue.length > 0) {
+    const taskId = queue.shift()!;
+    if (visited.has(taskId)) continue;
+    visited.add(taskId);
+
+    const task = taskGraph.tasks[taskId];
+    if (!task) continue;
+
+    if (getExecutorNameForTask(task, projectGraph) === 'nx:noop') {
+      for (const dep of taskGraph.dependencies[taskId] ?? []) {
+        queue.push(dep);
+      }
+      for (const dep of taskGraph.continuousDependencies[taskId] ?? []) {
+        queue.push(dep);
+      }
+    } else {
+      expanded.add(taskId);
+    }
+  }
+
+  return expanded;
+}
+
 export function getExecutorForTask(
   task: Task,
-  projectGraph: ProjectGraph
+  projects: Record<string, ProjectConfiguration>
 ): ExecutorConfig & { isNgCompat: boolean; isNxExecutor: boolean } {
-  const executor = getExecutorNameForTask(task, projectGraph);
+  const executor =
+    projects[task.target.project]?.targets?.[task.target.target]?.executor;
   const [nodeModule, executorName] = parseExecutor(executor);
 
   return getExecutorInformation(
     nodeModule,
     executorName,
     workspaceRoot,
-    readProjectsConfigurationFromProjectGraph(projectGraph).projects
+    projects
   );
 }
 
 export function getCustomHasher(
   task: Task,
-  projectGraph: ProjectGraph
+  projects: Record<string, ProjectConfiguration>
 ): CustomHasher | null {
-  const factory = getExecutorForTask(task, projectGraph).hasherFactory;
+  const factory = getExecutorForTask(task, projects).hasherFactory;
   return factory ? factory() : null;
 }
 
@@ -576,7 +626,7 @@ export function isCacheableTask(
     cacheableTargets?: string[] | null;
   }
 ): boolean {
-  if (task.cache !== undefined && !longRunningTask(task)) {
+  if (task.cache !== undefined) {
     return task.cache;
   }
 
@@ -591,6 +641,7 @@ export function isCacheableTask(
 function longRunningTask(task: Task) {
   const t = task.target.target;
   return (
+    task.continuous ||
     (!!task.overrides['watch'] && task.overrides['watch'] !== 'false') ||
     t.endsWith(':watch') ||
     t.endsWith('-watch') ||
@@ -603,4 +654,16 @@ function longRunningTask(task: Task) {
 // TODO: vsavkin remove when nx-cloud doesn't depend on it
 export function unparse(options: Object): string[] {
   return serializeOverridesIntoCommandLine(options);
+}
+
+export function createTaskId(
+  project: string,
+  target: string,
+  configuration: string | undefined
+): string {
+  let id = `${project}:${target}`;
+  if (configuration) {
+    id += `:${configuration}`;
+  }
+  return id;
 }

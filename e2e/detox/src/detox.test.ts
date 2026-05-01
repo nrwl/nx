@@ -10,20 +10,14 @@ import {
 describe('@nx/detox', () => {
   let project: string;
   let reactNativeAppName: string;
-  let expoAppName: string;
 
   beforeAll(() => {
-    project = newProject();
+    project = newProject({ packages: ['@nx/react-native'] });
     reactNativeAppName = uniq('appTest');
-    expoAppName = uniq('expoAppTest');
     runCLI(
       `generate @nx/react-native:app ${reactNativeAppName} --e2eTestRunner=detox --install=false --interactive=false`
     );
-    runCLI(
-      `generate @nx/expo:app ${expoAppName} --e2eTestRunner=detox --interactive=false`
-    );
     updateAppDetoxJson(reactNativeAppName);
-    updateAppDetoxJson(expoAppName);
   });
 
   afterAll(() => cleanupProject());
@@ -47,14 +41,6 @@ describe('@nx/detox', () => {
     expect(result).toContain(`building ${reactNativeAppName}`);
     expect(result).toContain(
       `Successfully ran target build for project ${reactNativeAppName}`
-    );
-
-    const expoResult = runCLI(
-      `build ${expoAppName}-e2e -- --configuration e2e.sim.debug`
-    );
-    expect(expoResult).toContain(`building ${expoAppName}`);
-    expect(expoResult).toContain(
-      `Successfully ran target build for project ${expoAppName}`
     );
   }, 200_000);
 });

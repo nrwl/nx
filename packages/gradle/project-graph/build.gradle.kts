@@ -10,7 +10,7 @@ plugins {
 
 group = "dev.nx.gradle"
 
-version = "0.1.8"
+version = "0.1.20"
 
 repositories { mavenCentral() }
 
@@ -18,6 +18,11 @@ dependencies {
   implementation(libs.gson)
   implementation(libs.javaparser.core)
   implementation(libs.kotlinx.coroutines.core)
+  implementation(libs.jgit)
+  implementation(platform(libs.opentelemetry.bom))
+  implementation(libs.opentelemetry.api)
+  implementation(libs.opentelemetry.sdk)
+  implementation(libs.opentelemetry.exporter.otlp)
   // Use compileOnly to avoid runtime conflicts with Kotlin Gradle plugin
   compileOnly(libs.kotlin.compiler.embeddable) {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-gradle-plugin")
@@ -26,6 +31,7 @@ dependencies {
   }
   testImplementation(libs.kotlin.test)
   testImplementation(libs.junit.jupiter)
+  testImplementation(kotlin("gradle-plugin"))
 }
 
 java {
@@ -115,16 +121,15 @@ afterEvaluate {
     }
   }
 
-  val skipSign = project.findProperty("skipSign") == "true"
-  if (!skipSign) {
-    signing {
-      sign(publishing.publications["pluginMaven"])
-      sign(publishing.publications["nxProjectGraphPluginPluginMarkerMaven"])
-    }
+  signing {
+    // Only required when actually publishing to Maven Central (via the
+    // `publish` lifecycle task). publishToMavenLocal targets ~/.m2 and
+    // doesn't need signatures — when no keys are configured, signing
+    // silently no-ops instead of failing the build.
+    setRequired({ gradle.taskGraph.hasTask(":gradle-project-graph:publish") })
+    sign(publishing.publications["pluginMaven"])
+    sign(publishing.publications["nxProjectGraphPluginPluginMarkerMaven"])
   }
-
-  // Even if signing plugin was applied, we can prevent the sign tasks from running
-  tasks.withType<Sign>().configureEach { onlyIf { !skipSign } }
 }
 
 tasks.test { useJUnitPlatform() }

@@ -1,5 +1,10 @@
-import * as fs from 'fs';
+jest.mock('fs', () => ({
+  ...jest.requireActual('fs'),
+  existsSync: jest.fn(),
+}));
+jest.mock('../../../utils/fileutils');
 
+import * as fs from 'fs';
 import * as configModule from '../../../config/configuration';
 import {
   DependencyType,
@@ -13,6 +18,11 @@ import { createPackageJson } from './create-package-json';
 import * as fileutilsModule from '../../../utils/fileutils';
 
 describe('createPackageJson', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+    jest.resetAllMocks();
+  });
+
   it('should add additional dependencies', () => {
     jest.spyOn(fs, 'existsSync').mockReturnValue(false);
     jest.spyOn(fileutilsModule, 'readJsonFile').mockReturnValue({
@@ -515,6 +525,7 @@ describe('createPackageJson', () => {
     });
 
     it('should use fixed versions when creating package json for apps', () => {
+      spies.push(jest.spyOn(configModule, 'readNxJson').mockReturnValue({}));
       spies.push(
         jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
           if (path === 'apps/app1/package.json') {
@@ -543,6 +554,7 @@ describe('createPackageJson', () => {
     });
 
     it('should override fixed versions with local ranges when creating package json for apps', () => {
+      spies.push(jest.spyOn(configModule, 'readNxJson').mockReturnValue({}));
       spies.push(
         jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
           if (path === 'apps/app1/package.json') {
@@ -585,6 +597,7 @@ describe('createPackageJson', () => {
     });
 
     it('should use range versions when creating package json for libs', () => {
+      spies.push(jest.spyOn(configModule, 'readNxJson').mockReturnValue({}));
       spies.push(
         jest
           .spyOn(fileutilsModule, 'readJsonFile')
@@ -615,6 +628,11 @@ describe('createPackageJson', () => {
     });
 
     it('should override range versions with local ranges when creating package json for libs', () => {
+      spies.push(
+        jest
+          .spyOn(configModule, 'readNxJson')
+          .mockReturnValue({ cli: { packageManager: 'pnpm' } })
+      );
       spies.push(
         jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
           if (path === 'libs/lib1/package.json') {
@@ -742,7 +760,7 @@ describe('createPackageJson', () => {
           }
         })
       );
-      const consoleWarnSpy = jest.spyOn(process.stdout, 'write');
+      const consoleWarnSpy = jest.spyOn(process.stderr, 'write');
       spies.push(consoleWarnSpy);
       spies.push(
         jest
@@ -856,6 +874,64 @@ describe('createPackageJson', () => {
             foo: '2.0.0',
             bar: '1.0.0',
           },
+        },
+      });
+    });
+
+    it('should copy pnpm install configuration from root', () => {
+      spies.push(
+        jest
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' || path === 'package.json'
+          )
+      );
+      spies.push(
+        jest
+          .spyOn(fileutilsModule, 'readJsonFile')
+          .mockImplementation((path) => {
+            if (path === 'package.json') {
+              return {
+                ...rootPackageJson(),
+                pnpm: {
+                  onlyBuiltDependencies: ['sharp', 'bcrypt'],
+                  neverBuiltDependencies: ['fsevents'],
+                  allowBuilds: { esbuild: true, rollup: false },
+                  supportedArchitectures: {
+                    os: ['linux'],
+                    cpu: ['x64'],
+                  },
+                  ignoredOptionalDependencies: ['fsevents'],
+                },
+              };
+            }
+            if (path === 'libs/lib1/package.json') {
+              return projectPackageJson();
+            }
+          })
+      );
+
+      expect(
+        createPackageJson('lib1', graph, {
+          root: '',
+        })
+      ).toEqual({
+        dependencies: {
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
+        name: 'other-name',
+        version: '1.2.3',
+        pnpm: {
+          onlyBuiltDependencies: ['sharp', 'bcrypt'],
+          neverBuiltDependencies: ['fsevents'],
+          allowBuilds: { esbuild: true, rollup: false },
+          supportedArchitectures: {
+            os: ['linux'],
+            cpu: ['x64'],
+          },
+          ignoredOptionalDependencies: ['fsevents'],
         },
       });
     });

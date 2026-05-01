@@ -15,7 +15,7 @@
     },
     "uiFramework": {
       "type": "string",
-      "enum": ["angular", "react", "none"],
+      "enum": ["angular", "react", "vue", "none"],
       "description": "UI framework to use with vitest."
     },
     "inSourceTests": {

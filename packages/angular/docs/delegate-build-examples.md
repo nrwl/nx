@@ -1,8 +1,7 @@
 ## Examples
 
-{% tabs %}
+##### Basic Usage
 
-{% tab label="Basic Usage" %}
 Delegate the build of the project to a different target.
 
 ```json
@@ -19,9 +18,8 @@ Delegate the build of the project to a different target.
 }
 ```
 
-{% /tab %}
+##### Watch for build changes
 
-{% tab label="Watch for build changes" %}
 Delegate the build of the project to a different target.
 
 ```json
@@ -37,7 +35,3 @@ Delegate the build of the project to a different target.
   }
 }
 ```
-
-{% /tab %}
-
-{% /tabs %}

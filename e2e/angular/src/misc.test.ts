@@ -16,11 +16,13 @@ describe('Move Angular Project', () => {
   let newPath: string;
 
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/angular'] });
+    proj = newProject({ packages: ['@nx/angular', '@nx/workspace'] });
     app1 = uniq('app1');
     app2 = uniq('app2');
     newPath = `subfolder/${app2}`;
-    runCLI(`generate @nx/angular:app ${app1} --no-interactive`);
+    runCLI(
+      `generate @nx/angular:app ${app1} --unit-test-runner=jest --no-interactive`
+    );
   });
 
   afterAll(() => cleanupProject());
@@ -30,12 +32,12 @@ describe('Move Angular Project', () => {
    */
   it('should work for apps', () => {
     const moveOutput = runCLI(
-      `generate @nx/angular:move --project ${app1} ${newPath} `
+      `generate @nx/workspace:move --project ${app1} ${newPath} `
     );
 
     // just check the output
     expect(moveOutput).toContain(`DELETE ${app1}`);
-    expect(moveOutput).toContain(`CREATE ${newPath}/jest.config.ts`);
+    expect(moveOutput).toContain(`CREATE ${newPath}/jest.config.cts`);
     expect(moveOutput).toContain(`CREATE ${newPath}/tsconfig.app.json`);
     expect(moveOutput).toContain(`CREATE ${newPath}/tsconfig.json`);
     expect(moveOutput).toContain(`CREATE ${newPath}/tsconfig.spec.json`);
@@ -72,7 +74,7 @@ describe('Move Angular Project', () => {
   `
     );
     const moveOutput = runCLI(
-      `generate @nx/angular:move --projectName=${app1}-e2e --destination=${newPath}-e2e`
+      `generate @nx/workspace:move --projectName=${app1}-e2e --destination=${newPath}-e2e`
     );
 
     // just check that the cypress.config.ts is updated correctly
@@ -93,13 +95,17 @@ describe('Move Angular Project', () => {
   it('should work for libraries', () => {
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
-    runCLI(`generate @nx/angular:lib ${lib1} --no-standalone --no-interactive`);
+    runCLI(
+      `generate @nx/angular:lib ${lib1} --unit-test-runner=jest --no-standalone --no-interactive`
+    );
 
     /**
      * Create a library which imports the module from the other lib
      */
 
-    runCLI(`generate @nx/angular:lib ${lib2} --no-standalone --no-interactive`);
+    runCLI(
+      `generate @nx/angular:lib ${lib2} --unit-test-runner=jest --no-standalone --no-interactive`
+    );
 
     updateFile(
       `${lib2}/src/lib/${lib2}-module.ts`,
@@ -109,7 +115,7 @@ describe('Move Angular Project', () => {
     );
 
     const moveOutput = runCLI(
-      `generate @nx/angular:move --projectName=${lib1} --destination=shared/${lib1} --newProjectName=shared-${lib1}`
+      `generate @nx/workspace:move --projectName=${lib1} --destination=shared/${lib1} --newProjectName=shared-${lib1}`
     );
 
     const newPath = `shared/${lib1}`;

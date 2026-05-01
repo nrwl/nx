@@ -5,6 +5,7 @@ import {
   e2eCwd,
   getPackageManagerCommand,
   getPublishedVersion,
+  getSelectedPackageManager,
   isNotWindows,
   killProcessAndPorts,
   newProject,
@@ -14,6 +15,7 @@ import {
   runCLI,
   runCLIAsync,
   runCommand,
+  runCommandAsync,
   runCommandUntil,
   tmpProjPath,
   uniq,
@@ -104,6 +106,273 @@ describe('Nx Commands', () => {
       expect(response.status).toEqual(200);
       await killProcessAndPorts(childProcess.pid, port);
     }, 700000);
+
+    describe('show target', () => {
+      let app: string;
+
+      beforeAll(() => {
+        app = uniq('targetapp');
+        runCLI(
+          `generate @nx/web:app apps/${app} --bundler=webpack --unitTestRunner=vitest --linter=eslint`
+        );
+        // Add a production configuration so the `-c production` test has something to resolve
+        updateJson(`apps/${app}/project.json`, (json) => {
+          json.targets ??= {};
+          json.targets.build ??= {};
+          json.targets.build.configurations ??= {};
+          json.targets.build.configurations.production = {
+            optimization: true,
+          };
+          return json;
+        });
+      });
+
+      /**
+       * Replace the random app name with a stable placeholder so
+       * snapshot output is deterministic across runs.
+       */
+      function normalizeOutput(output: string): string {
+        return output.replaceAll(app, '<APP>');
+      }
+
+      it('should show resolved target configuration', () => {
+        const result = JSON.parse(runCLI(`show target ${app}:build --json`));
+        expect(result.project).toBe(app);
+        expect(result.target).toBe('build');
+        expect(result.executor).toBeDefined();
+        expect(result.options).toBeDefined();
+        expect(result.cache).toBeDefined();
+        expect(result.parallelism).toBeDefined();
+      });
+
+      it('should show target configuration with a specific config', () => {
+        const result = JSON.parse(
+          runCLI(`show target ${app}:build -c production --json`)
+        );
+        expect(result.project).toBe(app);
+        expect(result.target).toBe('build');
+        expect(result.configuration).toBe('production');
+      });
+
+      it('should list resolved input files', () => {
+        const result = JSON.parse(
+          runCLI(`show target inputs ${app}:build --json`)
+        );
+        expect(result.project).toBe(app);
+        expect(result.target).toBe('build');
+        expect(result.files).toBeDefined();
+        expect(Array.isArray(result.files)).toBe(true);
+        expect(result.files.length).toBeGreaterThan(0);
+      });
+
+      it('should list resolved output paths', () => {
+        const result = JSON.parse(
+          runCLI(`show target outputs ${app}:build --json`)
+        );
+        expect(result.project).toBe(app);
+        expect(result.target).toBe('build');
+        expect(result.outputPaths).toBeDefined();
+        expect(Array.isArray(result.outputPaths)).toBe(true);
+        expect(result.outputPaths.length).toBeGreaterThan(0);
+      });
+
+      it('should check a matching input file and exit 0', () => {
+        const result = runCLI(
+          `show target inputs ${app}:build --check apps/${app}/src/main.ts`,
+          { silenceError: true }
+        );
+        expect(result).toContain('is an input');
+        expect(runCLI.lastExitCode).toBe(0);
+      });
+
+      it('should report non-matching input file and exit 1', () => {
+        const result = runCLI(
+          `show target inputs ${app}:build --check definitely/not/an/input.xyz`,
+          { silenceError: true }
+        );
+        expect(result).toContain('is not an input');
+        expect(runCLI.lastExitCode).toBe(1);
+      });
+
+      it('should check a matching output path and exit 0', () => {
+        const result = runCLI(
+          `show target outputs ${app}:build --check dist/apps/${app}/main.js`,
+          { silenceError: true }
+        );
+        expect(result).toContain('is an output');
+        expect(runCLI.lastExitCode).toBe(0);
+      });
+
+      it('should report non-matching output path and exit 1', () => {
+        const result = runCLI(
+          `show target outputs ${app}:build --check definitely/not/an/output`,
+          { silenceError: true }
+        );
+        expect(result).toContain('is not an output');
+        expect(runCLI.lastExitCode).toBe(1);
+      });
+
+      it('should check a directory containing input files and exit 0', () => {
+        const result = runCLI(
+          `show target inputs ${app}:build --check apps/${app}/src`,
+          { silenceError: true }
+        );
+        expect(result).toContain('is a directory containing');
+        expect(result).toContain('input file(s)');
+        expect(runCLI.lastExitCode).toBe(0);
+      });
+
+      it('should error when target not found', () => {
+        const output = runCLI(`show target ${app}:nonexistent`, {
+          silenceError: true,
+        });
+        expect(output).toContain('nonexistent');
+        expect(output).toContain('not found');
+      });
+
+      it('should error when --check is used without a value', () => {
+        const output = runCLI(`show target inputs ${app}:build --check`, {
+          silenceError: true,
+        });
+        expect(output).toContain('Not enough arguments following: check');
+      });
+
+      describe('human-readable output', () => {
+        beforeAll(() => {
+          runCLI(`build ${app}`);
+        });
+
+        it('should render target info', () => {
+          const output = normalizeOutput(runCLI(`show target ${app}:build`));
+          expect(output).toMatchSnapshot();
+        });
+
+        it('should render output paths', () => {
+          const output = normalizeOutput(
+            runCLI(`show target outputs ${app}:build`)
+          );
+          expect(output).toMatchSnapshot();
+        });
+
+        it('should render matching --check input', () => {
+          const output = normalizeOutput(
+            runCLI(
+              `show target inputs ${app}:build --check apps/${app}/src/main.ts`
+            )
+          );
+          expect(output).toMatchSnapshot();
+        });
+
+        it('should render non-matching --check input', () => {
+          const result = runCLI(
+            `show target inputs ${app}:build --check definitely/not/an/input.xyz`,
+            { silenceError: true }
+          );
+          expect(normalizeOutput(result)).toMatchSnapshot();
+        });
+
+        it('should render matching --check output', () => {
+          const output = normalizeOutput(
+            runCLI(`show target outputs ${app}:build --check dist/apps/${app}`)
+          );
+          expect(output).toMatchSnapshot();
+        });
+
+        it('should render non-matching --check output', () => {
+          const result = runCLI(
+            `show target outputs ${app}:build --check definitely/not/an/output`,
+            { silenceError: true }
+          );
+          expect(normalizeOutput(result)).toMatchSnapshot();
+        });
+
+        it('should render directory containing inputs', () => {
+          const result = runCLI(
+            `show target inputs ${app}:build --check apps/${app}/src`,
+            { silenceError: true }
+          );
+          expect(normalizeOutput(result)).toMatchSnapshot();
+        });
+
+        it('should render grouped output when checking multiple inputs', () => {
+          const result = runCLI(
+            `show target inputs ${app}:build --check apps/${app}/src/main.ts apps/${app}/src/app/app.element.ts definitely/not/an/input.xyz`,
+            { silenceError: true }
+          );
+          expect(normalizeOutput(result)).toMatchSnapshot();
+        });
+
+        it('should render grouped output when checking multiple outputs', () => {
+          const result = runCLI(
+            `show target outputs ${app}:build --check dist/apps/${app}/main.js definitely/not/an/output`,
+            { silenceError: true }
+          );
+          expect(normalizeOutput(result)).toMatchSnapshot();
+        });
+      });
+
+      describe('command syntax equivalence', () => {
+        it('should produce the same JSON from both target info syntaxes', () => {
+          const subcommandFirst = JSON.parse(
+            runCLI(`show target ${app}:build --json`)
+          );
+          // The alternative syntax places target identifier first, subcommand second
+          // show target <project:target> is the default/info handler
+          expect(subcommandFirst.project).toBe(app);
+          expect(subcommandFirst.target).toBe('build');
+        });
+
+        it('should produce the same inputs JSON from both syntaxes', () => {
+          const subcommandFirst = JSON.parse(
+            runCLI(`show target inputs ${app}:build --json`)
+          );
+          const targetFirst = JSON.parse(
+            runCLI(`show target ${app}:build inputs --json`)
+          );
+          expect(subcommandFirst).toEqual(targetFirst);
+        });
+
+        it('should produce the same outputs JSON from both syntaxes', () => {
+          const subcommandFirst = JSON.parse(
+            runCLI(`show target outputs ${app}:build --json`)
+          );
+          const targetFirst = JSON.parse(
+            runCLI(`show target ${app}:build outputs --json`)
+          );
+          expect(subcommandFirst).toEqual(targetFirst);
+        });
+
+        it('should produce the same --check result and exit code from both input syntaxes', () => {
+          const subcommandFirst = runCLI(
+            `show target inputs ${app}:build --check apps/${app}/src/main.ts`,
+            { silenceError: true }
+          );
+          const subcommandFirstExitCode = runCLI.lastExitCode;
+          const targetFirst = runCLI(
+            `show target ${app}:build inputs --check apps/${app}/src/main.ts`,
+            { silenceError: true }
+          );
+          const targetFirstExitCode = runCLI.lastExitCode;
+          expect(subcommandFirst).toEqual(targetFirst);
+          expect(subcommandFirstExitCode).toEqual(targetFirstExitCode);
+        });
+
+        it('should produce the same --check result and exit code from both output syntaxes', () => {
+          const subcommandFirst = runCLI(
+            `show target outputs ${app}:build --check dist/apps/${app}/main.js`,
+            { silenceError: true }
+          );
+          const subcommandFirstExitCode = runCLI.lastExitCode;
+          const targetFirst = runCLI(
+            `show target ${app}:build outputs --check dist/apps/${app}/main.js`,
+            { silenceError: true }
+          );
+          const targetFirstExitCode = runCLI.lastExitCode;
+          expect(subcommandFirst).toEqual(targetFirst);
+          expect(subcommandFirstExitCode).toEqual(targetFirstExitCode);
+        });
+      });
+    });
 
     it('should find alternative port when default port is occupied', async () => {
       const app = uniq('myapp');
@@ -275,6 +544,48 @@ describe('Nx Commands', () => {
         );
       }
     }, 120000);
+
+    it('should list plugins as JSON with --json flag', () => {
+      const jsonOutput = runCLI('list --json');
+      const parsed = JSON.parse(jsonOutput);
+
+      expect(parsed.installedPlugins).toBeDefined();
+      expect(Array.isArray(parsed.installedPlugins)).toBe(true);
+      expect(parsed.localWorkspacePlugins).toBeDefined();
+      expect(Array.isArray(parsed.localWorkspacePlugins)).toBe(true);
+
+      const workspacePlugin = parsed.installedPlugins.find(
+        (p) => p.name === '@nx/workspace'
+      );
+      expect(workspacePlugin).toBeDefined();
+      expect(workspacePlugin.path).toBeDefined();
+      expect(workspacePlugin.capabilities).toBeDefined();
+      expect(Array.isArray(workspacePlugin.capabilities)).toBe(true);
+    }, 120000);
+
+    it('should list plugin capabilities as JSON with --json flag', () => {
+      const jsonOutput = runCLI('list @nx/js --json');
+      const parsed = JSON.parse(jsonOutput);
+
+      expect(parsed.name).toBe('@nx/js');
+      expect(parsed.path).toContain('node_modules/@nx/js');
+
+      // check generator values
+      const libGen = parsed.generators['library'];
+      expect(libGen).toBeDefined();
+      expect(libGen.description).toEqual(expect.any(String));
+      expect(libGen.path).toContain('node_modules/@nx/js');
+      expect(libGen.schema).toContain('node_modules/@nx/js');
+      expect(libGen.schema).toContain('schema.json');
+
+      // check executor values
+      const tscExec = parsed.executors['tsc'];
+      expect(tscExec).toBeDefined();
+      expect(tscExec.description).toEqual(expect.any(String));
+      expect(tscExec.path).toContain('node_modules/@nx/js');
+      expect(tscExec.schema).toContain('node_modules/@nx/js');
+      expect(tscExec.schema).toContain('schema.json');
+    }, 120000);
   });
 
   describe('format', () => {
@@ -439,7 +750,7 @@ describe('Nx Commands', () => {
 
   it('should show help if no command provided', () => {
     const output = runCLI('', { silenceError: true });
-    expect(output).toContain('Smart Repos · Fast Builds');
+    expect(output).toContain('Smart Monorepos · Fast Builds');
     expect(output).toContain('Commands:');
   });
 });
@@ -508,7 +819,7 @@ describe('migrate', () => {
     );
 
     updateFile(
-      './node_modules/nx/src/command-line/migrate/migrate.js',
+      './node_modules/nx/dist/src/command-line/migrate/migrate.js',
       (content) => {
         const start = content.indexOf('// testing-fetch-start');
         const end = content.indexOf('// testing-fetch-end');
@@ -537,6 +848,9 @@ describe('migrate', () => {
                         'migrate-child-package-3': {version: '9.0.0', addToPackageJson: false},
                         'migrate-child-package-4': {version: '9.0.0', addToPackageJson: 'dependencies'},
                         'migrate-child-package-5': {version: '9.0.0', addToPackageJson: 'devDependencies'},
+                        'react': {version: '18.2.0', addToPackageJson: false},
+                        'react-dom': {version: '18.2.0', addToPackageJson: false},
+                        'lodash': {version: '4.17.21', addToPackageJson: false},
                       }},
                     }
                   });
@@ -549,6 +863,12 @@ describe('migrate', () => {
                       }
                     }
                   });
+                } else if (packageName === 'react') {
+                  return Promise.resolve({version: '18.2.0'});
+                } else if (packageName === 'react-dom') {
+                  return Promise.resolve({version: '18.2.0'});
+                } else if (packageName === 'lodash') {
+                  return Promise.resolve({version: '4.17.21'});
                 } else {
                   return Promise.resolve({version: '9.0.0'});
                 }
@@ -903,6 +1223,171 @@ describe('migrate', () => {
       ],
     });
   });
+
+  if (getSelectedPackageManager() === 'pnpm') {
+    it('should handle pnpm catalog references and update catalog definitions during migration', () => {
+      // Setup pnpm-workspace.yaml with both default and named catalogs. Include
+      // packages that WILL be updated and packages that SHOULD remain unchanged
+      // to test both scenarios.
+      updateFile(
+        'pnpm-workspace.yaml',
+        `
+packages:
+  - packages/*
+
+catalog:
+  migrate-parent-package: ^1.0.0
+  migrate-child-package: ^1.0.0
+  typescript: ^5.3.0
+
+catalogs:
+  react17:
+    react: ^17.0.2
+    react-dom: ^17.0.2
+
+  tools:
+    eslint: ^8.0.0
+    prettier: ^3.0.0
+`
+      );
+      // Update package.json to use MIXED catalog references and explicit versions
+      updateJson('package.json', (json) => {
+        json.dependencies = {
+          'migrate-parent-package': 'catalog:',
+          react: 'catalog:react17',
+          'react-dom': 'catalog:react17',
+          typescript: 'catalog:',
+          eslint: 'catalog:tools',
+          lodash: '^4.17.0', // explicit version that WILL be updated
+          axios: '^1.6.0', // explicit version that SHOULD stay unchanged
+        };
+        json.devDependencies = {
+          'migrate-child-package': 'catalog:',
+          prettier: 'catalog:tools',
+        };
+        return json;
+      });
+      // Create mock node_modules with RESOLVED versions for packages that will be updated
+      updateFile(
+        `./node_modules/react/package.json`,
+        JSON.stringify({
+          name: 'react',
+          version: '17.0.2',
+        })
+      );
+      updateFile(
+        `./node_modules/react-dom/package.json`,
+        JSON.stringify({
+          name: 'react-dom',
+          version: '17.0.2',
+        })
+      );
+      // Create mock node_modules for packages that should stay unchanged
+      updateFile(
+        `./node_modules/typescript/package.json`,
+        JSON.stringify({
+          name: 'typescript',
+          version: '5.3.0',
+        })
+      );
+      updateFile(
+        `./node_modules/eslint/package.json`,
+        JSON.stringify({
+          name: 'eslint',
+          version: '8.0.0',
+        })
+      );
+      updateFile(
+        `./node_modules/prettier/package.json`,
+        JSON.stringify({
+          name: 'prettier',
+          version: '3.0.0',
+        })
+      );
+      // Create mock node_modules for explicit version packages
+      updateFile(
+        `./node_modules/lodash/package.json`,
+        JSON.stringify({
+          name: 'lodash',
+          version: '4.17.0',
+        })
+      );
+      updateFile(
+        `./node_modules/axios/package.json`,
+        JSON.stringify({
+          name: 'axios',
+          version: '1.6.0',
+        })
+      );
+
+      // Run the migration
+      runCLI(
+        'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
+        {
+          env: {
+            NX_MIGRATE_SKIP_INSTALL: 'true',
+            NX_MIGRATE_USE_LOCAL: 'true',
+          },
+        }
+      );
+
+      // Verify ALL catalog references are PRESERVED in package.json
+      const packageJson = readJson('package.json');
+      expect(packageJson.dependencies['migrate-parent-package']).toEqual(
+        'catalog:'
+      );
+      expect(packageJson.devDependencies['migrate-child-package']).toEqual(
+        'catalog:'
+      );
+      expect(packageJson.dependencies['typescript']).toEqual('catalog:');
+      expect(packageJson.dependencies['react']).toEqual('catalog:react17');
+      expect(packageJson.dependencies['react-dom']).toEqual('catalog:react17');
+      expect(packageJson.dependencies['eslint']).toEqual('catalog:tools');
+      expect(packageJson.devDependencies['prettier']).toEqual('catalog:tools');
+
+      // Verify catalog definitions in pnpm-workspace.yaml
+      const workspaceYaml = readFile('pnpm-workspace.yaml');
+      // UPDATED packages (no ^ prefix as migrations provide resolved versions)
+      expect(workspaceYaml).toContain('migrate-parent-package: "2.0.0"');
+      expect(workspaceYaml).toContain('migrate-child-package: "9.0.0"');
+      expect(workspaceYaml).toContain('react: "18.2.0"');
+      expect(workspaceYaml).toContain('react-dom: "18.2.0"');
+      // PRESERVED packages (retain original format with ^ prefix)
+      expect(workspaceYaml).toContain('typescript: "^5.3.0"');
+      expect(workspaceYaml).toContain('eslint: "^8.0.0"');
+      expect(workspaceYaml).toContain('prettier: "^3.0.0"');
+
+      // Verify explicit version packages: updated and preserved
+      expect(packageJson.dependencies['lodash']).toEqual('4.17.21');
+      expect(packageJson.dependencies['axios']).toEqual('^1.6.0');
+
+      // Verify migrations.json was created correctly
+      const migrationsJson = readJson('migrations.json');
+      expect(migrationsJson.migrations).toEqual([
+        {
+          package: 'migrate-parent-package',
+          version: '1.1.0',
+          name: 'run11',
+        },
+        {
+          package: 'migrate-parent-package',
+          version: '2.0.0',
+          name: 'run20',
+          cli: 'nx',
+        },
+      ]);
+
+      // Run migrations to ensure they execute successfully
+      runCLI('migrate --run-migrations=migrations.json', {
+        env: {
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      });
+
+      expect(readFile('file-20')).toEqual('content20');
+    });
+  }
 });
 
 describe('global installation', () => {
@@ -942,32 +1427,36 @@ describe('global installation', () => {
   });
 
   describe('inside nx directory', () => {
-    beforeAll(() => {
+    beforeEach(() => {
       newProject({ packages: [] });
     });
 
+    afterEach(() => {
+      cleanupProject();
+    });
+
     it('should invoke Nx commands from local repo', () => {
-      const nxJsContents = readFile('node_modules/nx/bin/nx.js');
-      updateFile('node_modules/nx/bin/nx.js', `console.log('local install');`);
+      const nxJsContents = readFile('node_modules/nx/dist/bin/nx.js');
+      updateFile(
+        'node_modules/nx/dist/bin/nx.js',
+        `console.log('local install');`
+      );
       let output: string;
       expect(() => {
         output = runCommand(`nx show projects`);
       }).not.toThrow();
       expect(output).toContain('local install');
-      updateFile('node_modules/nx/bin/nx.js', nxJsContents);
+      updateFile('node_modules/nx/dist/bin/nx.js', nxJsContents);
     });
 
-    it('should warn if local Nx has higher major version', () => {
+    it('should warn if local Nx has higher major version', async () => {
       const packageJsonContents = readFile('node_modules/nx/package.json');
       updateJson('node_modules/nx/package.json', (json) => {
         json.version = `${major(getPublishedVersion()) + 2}.0.0`;
         return json;
       });
-      let output: string;
-      expect(() => {
-        output = runCommand(`nx show projects`);
-      }).not.toThrow();
-      expect(output).toContain(`It's time to update Nx`);
+      const { stderr } = await runCommandAsync(`nx show projects`);
+      expect(stderr).toContain(`It's time to update Nx`);
       updateFile('node_modules/nx/package.json', packageJsonContents);
     });
 

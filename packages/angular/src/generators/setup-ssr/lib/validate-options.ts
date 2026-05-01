@@ -15,6 +15,20 @@ export function validateOptions(tree: Tree, options: Schema): void {
       `The "serverRouting" option is only supported in Angular versions 19.x.x. You are using Angular ${angularVersion}.`
     );
   }
+
+  if (options.serverRouting) {
+    const { targets } = readProjectConfiguration(tree, options.project);
+    const isUsingApplicationBuilder =
+      targets.build.executor === '@angular-devkit/build-angular:application' ||
+      targets.build.executor === '@angular/build:application' ||
+      targets.build.executor === '@nx/angular:application';
+
+    if (!isUsingApplicationBuilder) {
+      throw new Error(
+        'Server routing APIs can only be added to a project using the "application" builder.'
+      );
+    }
+  }
 }
 
 function validateProject(tree: Tree, project: string): void {

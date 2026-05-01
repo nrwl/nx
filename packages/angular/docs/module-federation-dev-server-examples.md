@@ -1,8 +1,7 @@
 ## Examples
 
-{% tabs %}
+##### Basic Usage
 
-{% tab label="Basic Usage" %}
 The Module Federation Dev Server will serve a host application and find the remote applications associated with the host and serve them statically also.  
 See an example set up of it below:
 
@@ -27,9 +26,8 @@ See an example set up of it below:
 }
 ```
 
-{% /tab %}
+##### Serve host with remotes that can be live reloaded
 
-{% tab label="Serve host with remotes that can be live reloaded" %}
 The Module Federation Dev Server will serve a host application and find the remote applications associated with the host and serve a set selection with live reloading enabled also.  
 See an example set up of it below:
 
@@ -60,7 +58,3 @@ See an example set up of it below:
   }
 }
 ```
-
-{% /tab %}
-
-{% /tabs %}

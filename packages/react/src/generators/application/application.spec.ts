@@ -96,7 +96,7 @@ describe('app', () => {
         '@nx/react/typings/cssmodule.d.ts',
         '@nx/react/typings/image.d.ts',
       ]);
-      expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(appTree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
     });
 
     it('should setup cypress correctly for vite', async () => {
@@ -111,23 +111,21 @@ describe('app', () => {
         .toMatchInlineSnapshot(`
         "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
         import { defineConfig } from 'cypress';
-
         export default defineConfig({
-          e2e: {
-            ...nxE2EPreset(__filename, {
-              "cypressDir": "src",
-              "bundler": "vite",
-              "webServerCommands": {
-                "default": "npx nx run my-app:dev",
-                "production": "npx nx run my-app:preview"
-              },
-              "ciWebServerCommand": "npx nx run my-app:preview",
-              "ciBaseUrl": "http://localhost:4300"
-            }),
-            baseUrl: 'http://localhost:4200'
-          }
-        });
-        "
+            e2e: {
+                ...nxE2EPreset(__filename, {
+                    "cypressDir": "src",
+                    "bundler": "vite",
+                    "webServerCommands": {
+                        "default": "npx nx run my-app:dev",
+                        "production": "npx nx run my-app:preview"
+                    },
+                    "ciWebServerCommand": "npx nx run my-app:preview",
+                    "ciBaseUrl": "http://localhost:4300"
+                }),
+                baseUrl: 'http://localhost:4200'
+            }
+        });"
       `);
     });
 
@@ -250,7 +248,7 @@ describe('app', () => {
         '@nx/react/typings/cssmodule.d.ts',
         '@nx/react/typings/image.d.ts',
       ]);
-      expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(appTree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
     });
 
     it('should not overwrite default project if already set', async () => {
@@ -289,7 +287,7 @@ describe('app', () => {
       expect(appTree.exists('my-app/src/app/app.spec.tsx')).toBeTruthy();
       expect(appTree.exists('my-app/src/app/app.module.css')).toBeTruthy();
 
-      const jestConfig = appTree.read('my-app/jest.config.ts').toString();
+      const jestConfig = appTree.read('my-app/jest.config.cts').toString();
       expect(jestConfig).toContain('@nx/react/plugins/jest');
 
       const tsconfig = readJson(appTree, 'my-app/tsconfig.json');
@@ -315,6 +313,7 @@ describe('app', () => {
         'src/**/*.spec.jsx',
         'src/**/*.test.jsx',
         'jest.config.ts',
+        'jest.config.cts',
       ]);
 
       const eslintJson = readJson(appTree, 'my-app/.eslintrc.json');
@@ -330,6 +329,7 @@ describe('app', () => {
           "compilerOptions": {
             "allowJs": true,
             "module": "commonjs",
+            "moduleResolution": "node10",
             "outDir": "../dist/out-tsc",
             "sourceMap": false,
             "types": [
@@ -453,6 +453,7 @@ describe('app', () => {
             'src/**/*.spec.jsx',
             'src/**/*.test.jsx',
             'jest.config.ts',
+            'jest.config.cts',
           ],
         },
         {
@@ -498,27 +499,6 @@ describe('app', () => {
     ).toContain('Hello there');
   });
 
-  it.each`
-    style
-    ${'styled-components'}
-    ${'styled-jsx'}
-    ${'@emotion/styled'}
-  `(
-    'should generate valid .babelrc JSON config for CSS-in-JS solutions',
-    async ({ style }) => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style,
-      });
-
-      expect(() => {
-        readJson(appTree, `my-app/.babelrc`);
-      }).not.toThrow();
-      const content = appTree.read('my-app/src/app/app.tsx').toString();
-      expect(content).toMatchSnapshot();
-    }
-  );
-
   describe('--style scss', () => {
     it('should generate scss styles', async () => {
       await applicationGenerator(appTree, { ...schema, style: 'scss' });
@@ -528,39 +508,10 @@ describe('app', () => {
     });
   });
 
-  describe('--style tailwind', () => {
-    it('should generate tailwind setup', async () => {
-      await applicationGenerator(appTree, { ...schema, style: 'tailwind' });
-      expect(appTree.exists('my-app/tailwind.config.js')).toEqual(true);
-      expect(appTree.read('my-app/src/styles.css', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "@tailwind base;
-        @tailwind components;
-        @tailwind utilities;
-        /* You can add global styles to this file, and also import other style files */
-        "
-      `);
-    });
-
-    it('should not generate any styles files', async () => {
-      await applicationGenerator(appTree, { ...schema, style: 'tailwind' });
-
-      expect(appTree.exists('my-app/src/app/app.tsx')).toBeTruthy();
-      expect(appTree.exists('my-app/src/app/app.spec.tsx')).toBeTruthy();
-      expect(appTree.exists('my-app/src/app/app.css')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.scss')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.module.css')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.module.scss')).toBeFalsy();
-
-      const content = appTree.read('my-app/src/app/app.tsx').toString();
-      expect(content).toMatchSnapshot();
-    });
-  });
-
   it('should setup jest with tsx support', async () => {
     await applicationGenerator(appTree, { ...schema, directory: 'my-app' });
 
-    expect(appTree.read('my-app/jest.config.ts').toString()).toContain(
+    expect(appTree.read('my-app/jest.config.cts').toString()).toContain(
       `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`
     );
   });
@@ -568,7 +519,7 @@ describe('app', () => {
   it('should setup jest with babel-jest support', async () => {
     await applicationGenerator(appTree, { ...schema, directory: 'my-app' });
 
-    expect(appTree.read('my-app/jest.config.ts').toString()).toContain(
+    expect(appTree.read('my-app/jest.config.cts').toString()).toContain(
       "['babel-jest', { presets: ['@nx/react/babel'] }]"
     );
   });
@@ -576,7 +527,7 @@ describe('app', () => {
   it('should setup jest without serializers', async () => {
     await applicationGenerator(appTree, { ...schema, directory: 'my-app' });
 
-    expect(appTree.read('my-app/jest.config.ts').toString()).not.toContain(
+    expect(appTree.read('my-app/jest.config.cts').toString()).not.toContain(
       `'jest-preset-angular/build/AngularSnapshotSerializer.js',`
     );
   });
@@ -598,7 +549,7 @@ describe('app', () => {
       bundler: 'vite',
     });
 
-    expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+    expect(appTree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
     expect(appTree.read('my-app/index.html', 'utf-8')).toContain('main.tsx');
   });
 
@@ -621,7 +572,7 @@ describe('app', () => {
       bundler: 'vite',
     });
 
-    expect(appTree.exists('my-app/vite.config.ts')).toBeTruthy();
+    expect(appTree.exists('my-app/vite.config.mts')).toBeTruthy();
   });
 
   it('should setup the eslint builder', async () => {
@@ -637,10 +588,10 @@ describe('app', () => {
         unitTestRunner: 'none',
       });
 
-      expect(appTree.exists('jest.config.ts')).toBeFalsy();
+      expect(appTree.exists('jest.config.cts')).toBeFalsy();
       expect(appTree.exists('my-app/src/app/app.spec.tsx')).toBeFalsy();
       expect(appTree.exists('my-app/tsconfig.spec.json')).toBeFalsy();
-      expect(appTree.exists('my-app/jest.config.ts')).toBeFalsy();
+      expect(appTree.exists('my-app/jest.config.cts')).toBeFalsy();
     });
   });
 
@@ -812,132 +763,7 @@ describe('app', () => {
         bundler: 'vite',
       });
 
-      expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
-    });
-  });
-
-  describe('--style styled-components', () => {
-    it('should use styled-components as the styled API library', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: 'styled-components',
-      });
-
-      expect(
-        appTree.exists('my-app/src/app/app.styled-components')
-      ).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.tsx')).toBeTruthy();
-      expect(appTree.exists('my-app/src/styles.styled-components')).toBeFalsy();
-
-      const content = appTree.read('my-app/src/app/app.tsx').toString();
-      expect(content).toContain('styled-component');
-      expect(content).toContain('<StyledApp>');
-    });
-
-    it('should add dependencies to package.json', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: 'styled-components',
-      });
-
-      const packageJSON = readJson(appTree, 'package.json');
-      expect(packageJSON.dependencies['styled-components']).toBeDefined();
-    });
-  });
-
-  describe('--style @emotion/styled', () => {
-    it('should use @emotion/styled as the styled API library', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: '@emotion/styled',
-      });
-
-      expect(appTree.exists('my-app/src/app/app.@emotion/styled')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.tsx')).toBeTruthy();
-
-      const content = appTree.read('my-app/src/app/app.tsx').toString();
-      expect(content).toContain('@emotion/styled');
-      expect(content).toContain('<StyledApp>');
-    });
-
-    it('should add jsxImportSource to tsconfig.json', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: '@emotion/styled',
-      });
-
-      const tsconfigJson = readJson(appTree, 'my-app/tsconfig.json');
-      expect(tsconfigJson.compilerOptions['jsxImportSource']).toEqual(
-        '@emotion/react'
-      );
-    });
-
-    it('should exclude styles', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: '@emotion/styled',
-        bundler: 'webpack',
-      });
-
-      expect(
-        appTree.read('my-app/webpack.config.js', 'utf-8')
-      ).toMatchSnapshot();
-    });
-
-    it('should not break if bundler is vite', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: '@emotion/styled',
-        bundler: 'vite',
-      });
-
-      expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
-    });
-
-    it('should add dependencies to package.json', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: '@emotion/styled',
-      });
-
-      const packageJSON = readJson(appTree, 'package.json');
-      expect(packageJSON.dependencies['@emotion/react']).toBeDefined();
-      expect(packageJSON.dependencies['@emotion/styled']).toBeDefined();
-    });
-  });
-
-  describe('--style styled-jsx', () => {
-    it('should use styled-jsx as the styled API library', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: 'styled-jsx',
-      });
-
-      expect(appTree.exists('my-app/src/app/app.styled-jsx')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.tsx')).toBeTruthy();
-
-      const content = appTree.read('my-app/src/app/app.tsx').toString();
-      expect(content).toContain('<style jsx>');
-    });
-
-    it('should add dependencies to package.json', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: 'styled-jsx',
-      });
-
-      const packageJSON = readJson(appTree, 'package.json');
-      expect(packageJSON.dependencies['styled-jsx']).toBeDefined();
-    });
-
-    it('should update babel config', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: 'styled-jsx',
-      });
-
-      const babelrc = readJson(appTree, 'my-app/.babelrc');
-      expect(babelrc.plugins).toContain('styled-jsx/babel');
+      expect(appTree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
     });
   });
 
@@ -982,21 +808,20 @@ describe('app', () => {
     it('should update workspace with defaults when --skipprojectsConfigurations=false', async () => {
       await applicationGenerator(appTree, {
         ...schema,
-        style: 'styled-components',
+        style: 'scss',
         skipNxJson: false,
       });
 
       const nxJson = readNxJson(appTree);
       expect(nxJson.generators['@nx/react']).toMatchObject({
         application: {
-          babel: true,
-          style: 'styled-components',
+          style: 'scss',
         },
         component: {
-          style: 'styled-components',
+          style: 'scss',
         },
         library: {
-          style: 'styled-components',
+          style: 'scss',
         },
       });
     });
@@ -1078,7 +903,7 @@ describe('app', () => {
         unitTestRunner: 'vitest',
       });
 
-      expect(appTree.read('my-app/vite.config.ts', 'utf-8'))
+      expect(appTree.read('my-app/vite.config.mts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
@@ -1087,7 +912,7 @@ describe('app', () => {
         import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
-          root: __dirname,
+          root: import.meta.dirname,
           cacheDir: '../node_modules/.vite/my-app',
           server: {
             port: 4200,
@@ -1104,7 +929,7 @@ describe('app', () => {
           ],
           // Uncomment this if you are using workers.
           // worker: {
-          //  plugins: [ nxViteTsPaths() ],
+          //   plugins: () => [ nxViteTsPaths() ],
           // },
           build: {
             outDir: '../dist/my-app',
@@ -1145,6 +970,7 @@ describe('app', () => {
         'vite/client',
         'vitest',
         '@react-router/node',
+        'node',
       ]);
     });
 
@@ -1165,6 +991,42 @@ describe('app', () => {
       expect(packageJson.devDependencies['@react-router/dev']).toBeDefined();
     });
 
+    it('should default to Vite 8 when @react-router/dev supports it', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        skipFormat: false,
+        useReactRouter: true,
+        routing: true,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+      });
+
+      const rootPackageJson = readJson(appTree, 'package.json');
+      expect(rootPackageJson.devDependencies['vite']).toMatch(/^\^8\./);
+    });
+
+    it('should force Vite 7 when workspace has @react-router/dev < 7.14.0', async () => {
+      updateJson(appTree, 'package.json', (json) => {
+        json.devDependencies = {
+          ...json.devDependencies,
+          '@react-router/dev': '7.13.2',
+        };
+        return json;
+      });
+
+      await applicationGenerator(appTree, {
+        ...schema,
+        skipFormat: false,
+        useReactRouter: true,
+        routing: true,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+      });
+
+      const rootPackageJson = readJson(appTree, 'package.json');
+      expect(rootPackageJson.devDependencies['vite']).toMatch(/^\^7\./);
+    });
+
     it('should be configured to work with jest', async () => {
       await applicationGenerator(appTree, {
         ...schema,
@@ -1175,7 +1037,7 @@ describe('app', () => {
         unitTestRunner: 'jest',
       });
 
-      const jestConfig = appTree.read('my-app/jest.config.ts').toString();
+      const jestConfig = appTree.read('my-app/jest.config.cts').toString();
       expect(jestConfig).toContain('@nx/react/plugins/jest');
       expect(appTree.read('my-app/tsconfig.spec.json').toString())
         .toMatchInlineSnapshot(`
@@ -1196,6 +1058,7 @@ describe('app', () => {
           "files": ["src/test-setup.ts"],
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",
@@ -1254,7 +1117,7 @@ describe('app', () => {
     });
 
     it('should setup targets with vite configuration', () => {
-      expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(appTree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
     });
 
     it('should add dependencies in package.json', () => {
@@ -1273,7 +1136,7 @@ describe('app', () => {
 
     it('should create index.html and vite.config file at the root of the app', () => {
       expect(viteAppTree.exists('/my-app/index.html')).toBe(true);
-      expect(viteAppTree.exists('/my-app/vite.config.ts')).toBe(true);
+      expect(viteAppTree.exists('/my-app/vite.config.mts')).toBe(true);
     });
 
     it('should not include a spec file when the bundler or unitTestRunner is vite and insourceTests is false', async () => {
@@ -1292,28 +1155,21 @@ describe('app', () => {
       );
     });
 
-    it.each`
-      style     | pkg
-      ${'less'} | ${'less'}
-      ${'scss'} | ${'sass'}
-    `(
-      'should add style preprocessor when vite is used',
-      async ({ style, pkg }) => {
-        await applicationGenerator(viteAppTree, {
-          ...schema,
-          style,
-          bundler: 'vite',
-          unitTestRunner: 'vitest',
-          directory: style,
-        });
+    it('should add sass preprocessor when vite is used with scss', async () => {
+      await applicationGenerator(viteAppTree, {
+        ...schema,
+        style: 'scss',
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+        directory: 'scss',
+      });
 
-        expect(readJson(viteAppTree, 'package.json')).toMatchObject({
-          devDependencies: {
-            [pkg]: expect.any(String),
-          },
-        });
-      }
-    );
+      expect(readJson(viteAppTree, 'package.json')).toMatchObject({
+        devDependencies: {
+          sass: expect.any(String),
+        },
+      });
+    });
   });
 
   it('should add targetDefaults to nxJson when addPlugin=false', async () => {
@@ -1794,30 +1650,6 @@ describe('app', () => {
     });
   });
 
-  describe('--bundler=rsbuild', () => {
-    it.each([
-      { style: 'styled-components' },
-      { style: 'styled-jsx' },
-      { style: '@emotion/styled' },
-    ])(
-      `should generate valid rsbuild config files for $style`,
-      async ({ style }) => {
-        await applicationGenerator(appTree, {
-          ...schema,
-          bundler: 'rsbuild',
-          style: style as any,
-        });
-
-        const content = appTree.read('my-app/src/app/app.tsx').toString();
-        expect(content).toMatchSnapshot();
-        const configContents = appTree
-          .read('my-app/rsbuild.config.ts')
-          .toString();
-        expect(configContents).toMatchSnapshot();
-      }
-    );
-  });
-
   describe('react 19 support', () => {
     beforeEach(() => {
       projectGraph = { dependencies: {}, nodes: {}, externalNodes: {} };
@@ -1834,10 +1666,10 @@ describe('app', () => {
 
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.dependencies['react']).toMatchInlineSnapshot(
-        `"19.0.0"`
+        `"^19.0.0"`
       );
       expect(packageJson.dependencies['react-dom']).toMatchInlineSnapshot(
-        `"19.0.0"`
+        `"^19.0.0"`
       );
     });
 
@@ -1878,7 +1710,7 @@ describe('app', () => {
         port: 9000,
       });
 
-      const viteConfig = appTree.read('my-app/vite.config.ts', 'utf-8');
+      const viteConfig = appTree.read('my-app/vite.config.mts', 'utf-8');
       expect(viteConfig).toMatchInlineSnapshot(`
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
@@ -1887,7 +1719,7 @@ describe('app', () => {
         import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
-          root: __dirname,
+          root: import.meta.dirname,
           cacheDir: '../node_modules/.vite/my-app',
           server:{
             port: 9000,
@@ -1900,7 +1732,7 @@ describe('app', () => {
           plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
           // Uncomment this if you are using workers.
           // worker: {
-          //  plugins: [ nxViteTsPaths() ],
+          //   plugins: () => [ nxViteTsPaths() ],
           // },
           build: {
             outDir: '../dist/my-app',
@@ -2020,7 +1852,7 @@ describe('app', () => {
         bundler: 'vite',
       });
 
-      const viteConfig = appTree.read('my-app/vite.config.ts', 'utf-8');
+      const viteConfig = appTree.read('my-app/vite.config.mts', 'utf-8');
       expect(viteConfig).toMatchInlineSnapshot(`
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
@@ -2029,7 +1861,7 @@ describe('app', () => {
         import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
-          root: __dirname,
+          root: import.meta.dirname,
           cacheDir: '../node_modules/.vite/my-app',
           server:{
             port: 4200,
@@ -2042,7 +1874,7 @@ describe('app', () => {
           plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
           // Uncomment this if you are using workers.
           // worker: {
-          //  plugins: [ nxViteTsPaths() ],
+          //   plugins: () => [ nxViteTsPaths() ],
           // },
           build: {
             outDir: '../dist/my-app',

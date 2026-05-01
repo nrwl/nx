@@ -12,7 +12,7 @@ describe('<%= symbolName %>', () => {
 
     fixture = TestBed.createComponent(<%= symbolName %>);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    <%= zoneless ? 'await fixture.whenStable();' : 'fixture.detectChanges();' %>
   });
 
   it('should create', () => {

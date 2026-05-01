@@ -23,8 +23,8 @@ nx run mobile:build-list
 
 ## Examples
 
-{% tabs %}
-{% tab label="Get Status of Different Platforms" %}
+##### Get Status of Different Platforms
+
 The `platform` option allows you to check build status of different platform (e.g. android, ios, all):
 
 ```json
@@ -36,8 +36,7 @@ The `platform` option allows you to check build status of different platform (e.
     }
 ```
 
-{% /tab %}
-{% tab label="Get Status Interactively" %}
+##### Get Status Interactively
 
 The `interactive` option allows you to specify whether to use interactive mode:
 
@@ -50,8 +49,7 @@ The `interactive` option allows you to specify whether to use interactive mode:
     }
 ```
 
-{% /tab %}
-{% tab label="Get Status in JSON Format" %}
+##### Get Status in JSON Format
 
 The `json` option allows you to print the output in JSON format:
 
@@ -64,8 +62,5 @@ The `json` option allows you to print the output in JSON format:
       }
     }
 ```
-
-{% /tab %}
-{% /tabs %}
 
 ---

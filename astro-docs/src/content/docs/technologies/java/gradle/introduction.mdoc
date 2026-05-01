@@ -1,0 +1,212 @@
+---
+title: Gradle Plugin for Nx
+description: Run Gradle tasks through Nx with caching, graph insights, and CI optimization.
+sidebar:
+  label: 'Introduction'
+weight: 2
+filter: 'type:References'
+---
+
+[Gradle](https://gradle.org/) is a build automation tool for JVM-based projects.
+
+The `@nx/gradle` plugin registers Gradle projects in the Nx graph so you can [set up Gradle in Nx](#setup), [run local tasks](#local-development), [configure task inference](#configuration), and [scale in CI](#ci-considerations).
+
+You can use Gradle with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
+
+## Requirements
+
+| Dependency | Supported Versions |
+| ---------- | ------------------ |
+| Java       | >= 17              |
+| Gradle     | >= 8.0             |
+
+Using older Java versions is unsupported and may lead to issues. If you need support for an older version, please create an issue on [GitHub](https://github.com/nrwl/nx).
+
+## Setup
+
+### Install Nx
+
+Install Nx with your preferred package manager:
+
+{% tabs syncKey="package-manager" %}
+{% tabitem label="npm" %}
+
+```shell
+npm install --global nx@latest
+```
+
+You can use `pnpm`, `yarn`, or `bun` if you prefer as well.
+
+{% /tabitem %}
+{% tabitem label="Homebrew (macOS, Linux)" %}
+
+```shell
+brew install nx
+```
+
+{% /tabitem %}
+{% tabitem label="Chocolatey (Windows)" %}
+
+```shell
+choco install nx
+```
+
+{% /tabitem %}
+{% tabitem label="apt (Ubuntu)" %}
+
+```shell
+sudo add-apt-repository ppa:nrwl/nx
+sudo apt update
+sudo apt install nx
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+### Add Nx to a Gradle Workspace
+
+From the root of your Gradle workspace, run:
+
+```shell
+nx init
+```
+
+Nx will add the `@nx/gradle` plugin and configure the Gradle companion plugin `dev.nx.gradle.project-graph` in your build files.
+
+{% aside type="note" title="Gradle Companion Plugin" %}
+The `dev.nx.gradle.project-graph` plugin is added to your `build.gradle` or `build.gradle.kts` so Nx can read your Gradle project graph directly from source.
+{% /aside %}
+
+### Verify the setup
+
+List the projects Nx inferred from Gradle:
+
+```shell
+nx show projects
+```
+
+Open the project details view for a specific project.
+
+```shell
+nx show project my-app
+```
+
+## Local development
+
+Run Gradle tasks through Nx using inferred targets:
+
+```shell
+nx build my-gradle-lib
+nx test my-gradle-lib
+```
+
+Nx maps these targets back to the Gradle tasks (for example `build` or `test`) and executes them using the Gradle wrapper. If a task should run in watch or server mode, mark it as continuous so Nx treats it correctly.
+
+## Configuration
+
+### How @nx/gradle infers tasks
+
+Nx relies on the `dev.nx.gradle.project-graph` Gradle plugin to report your Gradle projects and tasks. The plugin adds an `nxProjectGraph` task that outputs JSON, which Nx uses to build the project graph. Nx also scans your Gradle build files to locate project roots and inputs so it can infer targets accurately.
+
+The `nx init` workflow adds this plugin to your Gradle build files. If you ever need to add it manually, configure it in `build.gradle` or `build.gradle.kts` and apply it to all projects.
+
+### View inferred tasks
+
+To view inferred tasks for a project, open the project details view in Nx Console or run:
+
+```shell
+nx show project my-app
+```
+
+Replace `my-app` with your project name.
+
+### @nx/gradle configuration
+
+Configure the plugin in the `plugins` array of `nx.json`:
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/gradle",
+      "options": {
+        "testTargetName": "test",
+        "ciTestTargetName": "test-ci",
+        "targetNamePrefix": "gradle-",
+        "gradleExecutableDirectory": "./gradle-projects"
+      }
+    }
+  ]
+}
+```
+
+### How options work
+
+Nx passes the plugin options to the Gradle `nxProjectGraph` task as Gradle properties. Any option that ends with `TargetName` overrides the inferred Nx target name for that Gradle task. Use this to avoid name clashes or to introduce CI-specific targets.
+
+### Options
+
+| Option                      | Type   | Default | Description                                                                |
+| --------------------------- | ------ | ------- | -------------------------------------------------------------------------- |
+| `testTargetName`            | string | `test`  | Nx target name to map the Gradle `test` task.                              |
+| `ciTestTargetName`          | string | none    | Enables CI test atomization and defines the base name for CI test targets. |
+| `targetNamePrefix`          | string | none    | Prefix for all inferred Gradle targets (useful in polyglot workspaces).    |
+| `gradleExecutableDirectory` | string | none    | Directory containing the Gradle wrapper to use.                            |
+| `<taskName>TargetName`      | string | none    | Override for any Gradle task name (for example `assembleTargetName`).      |
+
+### Exclude or include specific projects
+
+Use `include`/`exclude` glob patterns to scope the plugin to specific projects:
+
+```json {% meta="{5-6}" %}
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/gradle",
+      "include": ["apps/**/*"],
+      "exclude": ["apps/legacy-app/**/*"],
+      "options": { ... }
+    }
+  ]
+}
+```
+
+Individual Gradle projects can also configure Nx-specific settings using the `nx { }` DSL in `build.gradle` or `build.gradle.kts`.
+
+## CI considerations
+
+Only run what changed in CI:
+
+```shell
+nx affected -t build test
+```
+
+Enable remote caching with Nx Cloud:
+
+```shell
+nx connect
+```
+
+See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for provider-specific workflows. If you set `ciTestTargetName`, Nx will create CI variants that use atomized test targets.
+
+### Batch mode
+
+Batch mode runs multiple Gradle tasks in a single invocation. Enable it by setting `NX_BATCH_MODE=true`:
+
+```shell
+NX_BATCH_MODE=true nx run-many -t build test
+```
+
+If your Gradle builds require specific CI flags (for example `--no-daemon` or custom JVM args), add them to `gradle.properties` so Nx runs consistent settings locally and in CI.
+
+## What's next
+
+{% cardgrid %}
+{% linkcard title="Gradle Tutorial" description="Add Nx to an existing Gradle workspace step-by-step." href="/docs/getting-started/tutorials/gradle-tutorial" /%}
+{% linkcard title="Java with Nx" description="Overview of Java support across Gradle and Maven." href="/docs/technologies/java/introduction" /%}
+{% linkcard title="CI Workflow Generator" description="Generate CI workflows that run affected tasks." href="/docs/reference/workspace/generators#ci-workflow" /%}
+{% linkcard title="Gradle Generators Reference" description="Full reference for @nx/gradle generators." href="/docs/technologies/java/gradle/generators" /%}
+{% linkcard title="Gradle Executors Reference" description="Full reference for @nx/gradle executors." href="/docs/technologies/java/gradle/executors" /%}
+{% /cardgrid %}

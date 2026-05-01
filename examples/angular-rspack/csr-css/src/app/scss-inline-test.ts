@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
   selector: 'app-scss-inline-test',
   template: `
     <div class="content">
-      <h1>SCSS Inline Test</h1>
+      <h1>SCSS Inline Test {{ appName }}</h1>
       <p>This is a test of SCSS Inline</p>
     </div>
   `,
@@ -33,4 +33,7 @@ import { Component } from '@angular/core';
     `,
   ],
 })
-export class ScssInlineTestComponent {}
+export class ScssInlineTestComponent {
+  // Use this to test HMR updates for TS properties
+  appName = 'hello';
+}

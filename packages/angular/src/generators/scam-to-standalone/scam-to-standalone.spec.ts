@@ -75,7 +75,7 @@ describe('scam-to-standalone', () => {
 
           fixture = TestBed.createComponent(Bar);
           component = fixture.componentInstance;
-          fixture.detectChanges();
+          await fixture.whenStable();
         });
 
         it('should create', () => {

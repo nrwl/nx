@@ -128,7 +128,7 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
         '@nx/devkit': nxVersion,
       },
       {
-        [options.unitTestRunner === 'vitest' ? '@nx/vite' : '@nx/jest']:
+        [options.unitTestRunner === 'vitest' ? '@nx/vitest' : '@nx/jest']:
           nxVersion,
         '@nx/js': nxVersion,
         '@nx/plugin': nxVersion,
@@ -148,7 +148,7 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
     tasks.push(
       await e2eProjectGenerator(host, {
         pluginName: options.projectName,
-        projectDirectory: options.projectDirectory,
+        projectDirectory: options.e2eProjectDirectory,
         pluginOutputPath: joinPathFragments(
           'dist',
           options.rootProject ? options.projectName : options.projectRoot

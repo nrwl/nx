@@ -1,6 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import {
   generateFiles,
+  getDependencyVersionFromPackageJson,
   joinPathFragments,
   readProjectConfiguration,
 } from '@nx/devkit';
@@ -12,10 +13,7 @@ import {
   getComponentType,
   getModuleTypeSeparator,
 } from '../../utils/artifact-types';
-import {
-  getInstalledAngularVersionInfo,
-  getInstalledPackageVersion,
-} from '../../utils/version-utils';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
 
 export function generateSSRFiles(
@@ -46,7 +44,7 @@ export function generateSSRFiles(
         : 'server-builder',
       options.standalone ? 'standalone-src' : 'ngmodule-src'
     );
-  } else if (angularMajorVersion === 19) {
+  } else {
     pathToFiles = join(
       baseFilesPath,
       'v19',
@@ -55,19 +53,13 @@ export function generateSSRFiles(
         : 'server-builder',
       options.standalone ? 'standalone-src' : 'ngmodule-src'
     );
-  } else {
-    pathToFiles = join(
-      baseFilesPath,
-      'pre-v19',
-      options.standalone ? 'standalone-src' : 'ngmodule-src'
-    );
   }
 
   const sourceRoot = getProjectSourceRoot(project, tree);
 
-  const ssrVersion = getInstalledPackageVersion(tree, '@angular/ssr');
+  const ssrVersion = getDependencyVersionFromPackageJson(tree, '@angular/ssr');
   const cleanedSsrVersion = ssrVersion
-    ? clean(ssrVersion) ?? coerce(ssrVersion).version
+    ? (clean(ssrVersion) ?? coerce(ssrVersion).version)
     : null;
 
   const componentType = getComponentType(tree);
@@ -81,9 +73,7 @@ export function generateSSRFiles(
     // https://github.com/angular/angular-cli/releases/tag/20.3.0
     gte(angularVersion, '20.3.0') ||
     // https://github.com/angular/angular-cli/releases/tag/19.2.16
-    (angularMajorVersion === 19 && gte(angularVersion, '19.2.16')) ||
-    // https://github.com/angular/angular-cli/releases/tag/18.2.21
-    (angularMajorVersion === 18 && gte(angularVersion, '18.2.21'));
+    (angularMajorVersion === 19 && gte(angularVersion, '19.2.16'));
 
   generateFiles(tree, pathToFiles, sourceRoot, {
     ...options,

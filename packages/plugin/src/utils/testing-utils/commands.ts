@@ -1,4 +1,4 @@
-import { ExecOptions, execSync } from 'child_process';
+import { ExecSyncOptions, execSync } from 'child_process';
 import { tmpProjPath } from './paths';
 import { detectPackageManager, getPackageManagerCommand } from '@nx/devkit';
 import { fileExists } from './utils';
@@ -18,10 +18,10 @@ export function runNxCommand(
 ): string {
   function _runNxCommand(c) {
     const cwd = opts.cwd ?? tmpProjPath();
-    const execSyncOptions: ExecOptions = {
+    const execSyncOptions: ExecSyncOptions = {
       cwd,
       env: { ...process.env, ...opts.env },
-      windowsHide: false,
+      windowsHide: true,
     };
     if (fileExists(tmpProjPath('package.json'))) {
       const pmc = getPackageManagerCommand(detectPackageManager(cwd));
@@ -59,6 +59,7 @@ export function runCommand(
       cwd: opts.cwd ?? tmpProjPath(),
       stdio: ['pipe', 'pipe', 'pipe'],
       env: { ...process.env, ...opts?.env },
+      windowsHide: true,
     }).toString();
   } catch (e) {
     return e.stdout.toString() + e.stderr.toString();

@@ -1,9 +1,11 @@
 import {
   cleanupProject,
+  getPackageManagerCommand,
   killProcessAndPorts,
   newProject,
   readJson,
   runCLI,
+  runCommand,
   runCommandUntil,
   uniq,
   updateFile,
@@ -94,7 +96,7 @@ describe('@nx/vite/plugin', () => {
         );
 
         updateFile(
-          `apps/${myApp}/vite.config.ts`,
+          `apps/${myApp}/vite.config.mts`,
           `/// <reference types='vitest' />
           import { defineConfig } from 'vite';
           import react from '@vitejs/plugin-react';
@@ -171,7 +173,7 @@ describe('@nx/vite/plugin', () => {
         `
       );
       updateJson('tsconfig.base.json', (json) => {
-        json.compilerOptions.paths['~/*'] = [`libs/${mylib}/src/*`];
+        json.compilerOptions.paths['~/*'] = [`./libs/${mylib}/src/*`];
         return json;
       });
 
@@ -200,7 +202,7 @@ describe('@nx/vite/plugin', () => {
         `
       );
       updateJson('tsconfig.base.json', (json) => {
-        json.compilerOptions.paths['~/*'] = [`libs/${mylib}/src/*`];
+        json.compilerOptions.paths['~/*'] = [`./libs/${mylib}/src/*`];
         return json;
       });
 
@@ -237,24 +239,120 @@ describe('@nx/vite/plugin', () => {
         `
       );
       updateJson('tsconfig.base.json', (json) => {
-        json.compilerOptions.paths['match-lib-deep/*'] = [`libs/${lib1}/src/*`];
-        json.compilerOptions.paths['match-lib-top-level'] = [
-          `libs/${lib2}/src/bar.enum.ts`,
+        json.compilerOptions.paths['match-lib-deep/*'] = [
+          `./libs/${lib1}/src/*`,
         ];
-        json.compilerOptions.paths['match-lib/*'] = [`libs/${lib3}/src/*`];
+        json.compilerOptions.paths['match-lib-top-level'] = [
+          `./libs/${lib2}/src/bar.enum.ts`,
+        ];
+        json.compilerOptions.paths['match-lib/*'] = [`./libs/${lib3}/src/*`];
         return json;
       });
 
       expect(() => runCLI(`test ${lib1}`)).not.toThrow();
     });
+
+    it('should support local path aliases in project tsconfig.app.json', () => {
+      const myLocalApp = uniq('myapp');
+      runCLI(
+        `generate @nx/react:app ${myLocalApp} --directory=apps/${myLocalApp} --bundler=vite --unitTestRunner=vitest`
+      );
+
+      // Add a local path alias in the project's tsconfig.app.json
+      updateJson(`apps/${myLocalApp}/tsconfig.app.json`, (json) => {
+        json.compilerOptions = json.compilerOptions || {};
+        json.compilerOptions.paths = {
+          '~/*': ['./src/*'],
+        };
+        return json;
+      });
+
+      // Update the app to use the local path alias
+      updateFile(
+        `apps/${myLocalApp}/src/app/app.tsx`,
+        `import NxWelcome from '~/app/nx-welcome';
+
+        export function App() {
+          return (
+            <div>
+              <NxWelcome title="${myLocalApp}" />
+            </div>
+          );
+        }
+
+        export default App;`
+      );
+
+      // Ensure build works with local path aliases
+      expect(() => runCLI(`build ${myLocalApp}`)).not.toThrow();
+    });
   });
 
+  describe('with Vite 8 and React (default)', () => {
+    const vite8App = uniq('vite8app');
+
+    beforeAll(() => {
+      proj = newProject({
+        packages: ['@nx/react'],
+      });
+      runCLI(
+        `generate @nx/react:app ${vite8App} --directory=apps/${vite8App} --bundler=vite --unitTestRunner=vitest`
+      );
+    });
+
+    afterAll(() => {
+      cleanupProject();
+    });
+
+    it('should build React application with Vite 8', () => {
+      expect(() => runCLI(`build ${vite8App}`)).not.toThrow();
+    }, 200_000);
+
+    it('should test React application with Vite 8', () => {
+      expect(() => runCLI(`test ${vite8App} --watch=false`)).not.toThrow();
+    }, 200_000);
+  });
+
+  describe('with Vite 7 (backward compatibility)', () => {
+    const vite7App = uniq('vite7app');
+
+    beforeAll(() => {
+      proj = newProject({
+        packages: ['@nx/react'],
+      });
+      runCLI(
+        `generate @nx/react:app ${vite7App} --directory=apps/${vite7App} --bundler=vite --unitTestRunner=vitest`
+      );
+
+      // Downgrade to Vite 7 and @vitejs/plugin-react v4 (v6 only supports Vite 8)
+      updateJson('package.json', (json) => {
+        json.devDependencies['vite'] = '^7.0.0';
+        json.devDependencies['@vitejs/plugin-react'] = '^4.2.0';
+        return json;
+      });
+      runCommand(getPackageManagerCommand().install);
+    });
+
+    afterAll(() => {
+      cleanupProject();
+    });
+
+    it('should build React application with Vite 7', () => {
+      expect(() => runCLI(`build ${vite7App}`)).not.toThrow();
+    }, 200_000);
+
+    it('should test React application with Vite 7', () => {
+      expect(() => runCLI(`test ${vite7App} --watch=false`)).not.toThrow();
+    }, 200_000);
+  });
+
+  // TODO(Colum): Move this to a vitest specific e2e project when one is created
   describe('react with vitest only', () => {
     const reactVitest = uniq('reactVitest');
 
     beforeAll(() => {
       proj = newProject({
-        packages: ['@nx/vite', '@nx/react'],
+        packages: ['@nx/vitest', '@nx/react'],
       });
       runCLI(
         `generate @nx/react:app ${reactVitest} --bundler=webpack --unitTestRunner=vitest --e2eTestRunner=none`
@@ -265,14 +363,11 @@ describe('@nx/vite/plugin', () => {
       cleanupProject();
     });
 
-    it('should contain targets build, test and lint', () => {
+    it('should contain targets test', () => {
       const nxJson = readJson('nx.json');
 
-      const vitePlugin = nxJson.plugins.find(
-        (p) => p.plugin === '@nx/vite/plugin'
-      );
+      const vitePlugin = nxJson.plugins.find((p) => p.plugin === '@nx/vitest');
       expect(vitePlugin).toBeDefined();
-      expect(vitePlugin.options.buildTargetName).toEqual('build');
       expect(vitePlugin.options.testTargetName).toEqual('test');
     });
 

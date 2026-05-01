@@ -1,5 +1,4 @@
-{% tabs %}
-{% tab label="Create rule" %}
+##### Create rule
 
 This command will generate a new workspace lint rule called `my-custom-rule`. The new rule will be generated in `tools/eslint-rules/rules` folder:
 
@@ -7,8 +6,7 @@ This command will generate a new workspace lint rule called `my-custom-rule`. Th
 nx g @nx/eslint:workspace-rule my-custom-rule
 ```
 
-{% /tab %}
-{% tab label="Custom sub-folder" %}
+##### Custom sub-folder
 
 We can change the default sub-folder from `rules` and specify a custom one:
 
@@ -17,8 +15,5 @@ nx g @nx/eslint:workspace-rule --name=my-custom-rule --directory=my/custom/path
 ```
 
 The command above will generate the rule in `tools/eslint-rules/my/custom/path` folder.
-
-{% /tab %}
-{% /tabs %}
 
 ---

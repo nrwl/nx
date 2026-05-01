@@ -7,9 +7,7 @@ import {
 } from '@nx/devkit';
 import { createTree } from '@nx/devkit/testing';
 import Ajv from 'ajv';
-import { mkdirSync, writeFileSync } from 'fs';
 import * as nxSchema from 'nx/schemas/nx-schema.json';
-import { join } from 'path';
 import { Preset } from '../utils/presets';
 import { generateWorkspaceFiles } from './generate-workspace-files';
 
@@ -36,9 +34,10 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
 
   beforeEach(() => {
     tree = createTree();
-    // we need an actual path for the package manager version check
-    tree.root = process.cwd();
     jest.clearAllMocks();
+    // Mock getPackageManagerVersion to avoid needing tree.root = process.cwd()
+    // which would cause prettier to load plugins from the real .prettierrc
+    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('10.0.0');
   });
 
   it('should create files', async () => {
@@ -94,12 +93,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
               workspaces: true,
             });
             await formatFiles(tree);
-            const dir = join(__dirname, 'tmp', `${preset}-${nxCloud}`);
-            mkdirSync(dir, { recursive: true });
-            writeFileSync(
-              join(dir, 'README.md'),
-              tree.read('proj/README.md', 'utf-8')
-            );
             expect(tree.read('proj/README.md', 'utf-8')).toMatchSnapshot();
           }
         );
@@ -398,7 +391,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
         - "packages/*"
 
       autoInstallPeers: true
-      strictPeerDependencies: false
       "
     `);
     expect(tree.exists('proj/.npmrc')).toBeFalsy();

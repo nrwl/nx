@@ -1,5 +1,6 @@
 import type { MatchPath } from 'tsconfig-paths';
 import { createMatchPath, loadConfig } from 'tsconfig-paths';
+import { resolvePathsBaseUrl } from '@nx/js/src/utils/typescript/ts-config';
 import * as pc from 'picocolors';
 import { CachedInputFileSystem, ResolverFactory } from 'enhanced-resolve';
 import { dirname, join } from 'path';
@@ -142,7 +143,14 @@ function pnpmResolver(
       exportsConditionNames,
       mainFields
     );
-    const lookupStartPath = dirname(context.originModulePath);
+    let lookupStartPath = dirname(context.originModulePath);
+
+    // Defensive: ensure path is within workspace root.
+    // Handles Expo SDK 54+ where originModulePath may be project-relative.
+    if (!lookupStartPath.startsWith(workspaceRoot)) {
+      lookupStartPath = workspaceRoot;
+    }
+
     const filePath = pnpmResolve.resolveSync(
       {},
       lookupStartPath,
@@ -204,7 +212,7 @@ function getMatcher(debug: boolean) {
   if (!matcher) {
     const result = loadConfig();
     if (result.resultType === 'success') {
-      absoluteBaseUrl = result.absoluteBaseUrl;
+      absoluteBaseUrl = resolvePathsBaseUrl(result.configFileAbsolutePath);
       paths = result.paths;
       if (debug) {
         console.log(

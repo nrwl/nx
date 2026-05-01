@@ -7,6 +7,7 @@ import {
   NxModuleFederationConfigOverride,
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
+import { workspaceRoot } from '@nx/devkit';
 
 const isVarOrWindow = (libType?: string) =>
   libType === 'var' || libType === 'window';
@@ -41,11 +42,16 @@ export async function withModuleFederation(
       config.output.scriptType = 'text/javascript';
     }
 
+    config.resolve ??= {};
+    config.resolve.modules = [
+      ...(config.resolve.modules ?? ['node_modules']),
+      workspaceRoot,
+    ];
     config.optimization = {
       ...(config.optimization ?? {}),
       runtimeChunk:
         isDevServer && !options.exposes
-          ? config.optimization?.runtimeChunk ?? undefined
+          ? (config.optimization?.runtimeChunk ?? undefined)
           : false,
     };
 

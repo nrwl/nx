@@ -6,7 +6,7 @@ filter: 'type:Concepts'
 
 Nx has many features that make your CI faster. Each of these features speeds up your CI in a different way, so that enabling an individual feature will have an immediate impact. These features are also designed to complement each other so that you can use them together to create a fully optimized CI pipeline.
 
-## Use Fast Build Tools
+## Use fast build tools
 
 The purpose of a CI pipeline is to run tasks like `build`, `test`, `lint` and `e2e`. You use different tools to run these tasks (like Webpack or Vite for you `build` task). If the individual tasks in your CI pipeline are slow, then your overall CI pipeline will be slow. Nx has two ways to help with this.
 
@@ -14,7 +14,7 @@ Nx provides plugins for popular tools that make it easy to update to the latest 
 
 Because Nx plugins have a consistent interface for how they are invoked and how they interact with the codebase, it is easier to try out a different tool to see if it is better than what you're currently using. Newer tools that were created with different technologies or different design decisions can be orders of magnitude faster than your existing tools. Or the new tool might not help your project. Browse through the [list of Nx plugins](/docs/plugin-registry), like [vite](/docs/technologies/build-tools/vite/introduction) or [rspack](/docs/technologies/build-tools/rspack/introduction), and try it out on your project with the default settings already configured for you.
 
-## Reduce Wasted Time
+## Reduce wasted time
 
 In a monorepo, most PRs do not affect the entire codebase, so there's no need to run every test in CI for that PR. Nx provides the [`nx affected`](/docs/features/ci-features/affected) command to make sure that only the tests that need to be executed are run for a particular PR.
 
@@ -22,7 +22,7 @@ Even if a particular project was affected by a PR, this could be the third time 
 
 For a more detailed analysis of how these features reduce wasted time in different scenarios, read the [Reduce Wasted Time in CI guide](/docs/concepts/ci-concepts/reduce-waste)
 
-## Parallelize and Distribute Tasks Efficiently
+## Parallelize and distribute tasks efficiently
 
 Every time you use Nx to run a task, Nx will attempt to run the task and all its dependent tasks in parallel in the most efficient way possible. Because Nx knows about [task pipelines](/docs/concepts/task-pipeline-configuration), it can run all the prerequisite tasks first. Nx will automatically run tasks in parallel processes up to the limit defined in the `parallel` property in `nx.json`.
 

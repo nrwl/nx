@@ -1,19 +1,14 @@
 import {
-  CreateNodes,
   CreateNodesV2,
-  CreateNodesContext,
+  CreateNodesContextV2,
   ProjectConfiguration,
   TargetConfiguration,
   createNodesFromFiles,
-  readJsonFile,
-  writeJsonFile,
-  CreateNodesFunction,
-  logger,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { existsSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
 import { findProjectForPath } from 'nx/src/devkit-internals';
 
 import {
@@ -61,14 +56,6 @@ function normalizeOptions(options: GradlePluginOptions): GradlePluginOptions {
 
 type GradleTargets = Record<string, Partial<ProjectConfiguration>>;
 
-function readTargetsCache(cachePath: string): GradleTargets {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
-
-export function writeTargetsToCache(cachePath: string, results: GradleTargets) {
-  writeJsonFile(cachePath, results);
-}
-
 export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
   gradleConfigAndTestGlob,
   async (files, options, context) => {
@@ -79,7 +66,9 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
       workspaceDataDirectory,
       `gradle-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const pluginCache = new PluginCache<Partial<ProjectConfiguration>>(
+      cachePath
+    );
 
     await populateGradleReport(
       context.workspaceRoot,
@@ -95,7 +84,7 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
       return createNodesFromFiles(
         makeCreateNodesForGradleConfigFile(
           gradleReport,
-          targetsCache,
+          pluginCache,
           gradleProjectRootToTestFilesMap
         ),
         buildFiles,
@@ -103,7 +92,7 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      pluginCache.writeToDisk(cachePath);
     }
   },
 ];
@@ -111,13 +100,13 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
 export const makeCreateNodesForGradleConfigFile =
   (
     gradleReport: GradleReport,
-    targetsCache: GradleTargets = {},
+    pluginCache: PluginCache<Partial<ProjectConfiguration>> = new PluginCache(),
     gradleProjectRootToTestFilesMap: Record<string, string[]> = {}
-  ): CreateNodesFunction =>
+  ) =>
   async (
     gradleFilePath,
     options: GradlePluginOptions | undefined,
-    context: CreateNodesContext
+    context: CreateNodesContextV2
   ) => {
     const projectRoot = dirname(gradleFilePath);
     options = normalizeOptions(options);
@@ -127,14 +116,19 @@ export const makeCreateNodesForGradleConfigFile =
       options ?? {},
       context
     );
-    targetsCache[hash] ??= await createGradleProject(
-      gradleReport,
-      gradleFilePath,
-      options,
-      context,
-      gradleProjectRootToTestFilesMap[projectRoot]
-    );
-    const project = targetsCache[hash];
+    if (!pluginCache.has(hash)) {
+      pluginCache.set(
+        hash,
+        await createGradleProject(
+          gradleReport,
+          gradleFilePath,
+          options,
+          context,
+          gradleProjectRootToTestFilesMap[projectRoot]
+        )
+      );
+    }
+    const project = pluginCache.get(hash);
     if (!project) {
       return {};
     }
@@ -149,26 +143,13 @@ export const makeCreateNodesForGradleConfigFile =
  @deprecated This is replaced with {@link createNodesV2}. Update your plugin to export its own `createNodesV2` function that wraps this one instead.
   This function will change to the v2 function in Nx 20.
  */
-export const createNodes: CreateNodes<GradlePluginOptions> = [
-  gradleConfigGlob,
-  async (buildFile, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
-    );
-    const { gradlewFiles } = splitConfigFiles(context.configFiles);
-    await populateGradleReport(context.workspaceRoot, gradlewFiles);
-    const gradleReport = getCurrentGradleReport();
-    const internalCreateNodes =
-      makeCreateNodesForGradleConfigFile(gradleReport);
-    return await internalCreateNodes(buildFile, options, context);
-  },
-];
+export const createNodes = createNodesV2;
 
 async function createGradleProject(
   gradleReport: GradleReport,
   gradleFilePath: string,
   options: GradlePluginOptions | undefined,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   testFiles = []
 ) {
   try {
@@ -244,7 +225,7 @@ async function createGradleProject(
 async function createGradleTargets(
   tasks: GradleTask[],
   options: GradlePluginOptions | undefined,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   outputDirs: Map<string, string>,
   gradleProject: string,
   gradleBuildFilePath: string,
@@ -320,7 +301,7 @@ async function createGradleTargets(
 }
 
 function createInputsMap(
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ): Record<string, TargetConfiguration['inputs']> {
   const namedInputs = context.nxJsonConfiguration.namedInputs;
   return {

@@ -3,15 +3,11 @@ use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
 use crossbeam_channel::Sender;
 use crossbeam_channel::{Receiver, bounded, select};
 use napi::bindgen_prelude::External;
-use napi::{
-    Env, JsFunction,
-    threadsafe_function::{
-        ErrorStrategy::Fatal, ThreadsafeFunction, ThreadsafeFunctionCallMode::NonBlocking,
-    },
-};
-use parking_lot::Mutex;
+use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode::NonBlocking};
+use napi::{Status, bindgen_prelude::Unknown};
+use parking_lot::{Mutex, RwLock};
 use std::io::Write;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use tracing::warn;
 use vt100_ctt::Parser;
 
@@ -22,6 +18,7 @@ pub enum ChildProcessMessage {
 #[napi]
 pub struct ChildProcess {
     parser: Arc<RwLock<Parser>>,
+    pid: i32,
     process_killer: ProcessKiller,
     message_receiver: Receiver<String>,
     pub(crate) wait_receiver: Receiver<String>,
@@ -33,6 +30,7 @@ impl ChildProcess {
     pub fn new(
         parser: Arc<RwLock<Parser>>,
         writer_arc: Arc<Mutex<Box<dyn Write + Send>>>,
+        pid: i32,
         process_killer: ProcessKiller,
         message_receiver: Receiver<String>,
         exit_receiver: Receiver<String>,
@@ -40,6 +38,7 @@ impl ChildProcess {
         Self {
             parser,
             writer_arc,
+            pid,
             process_killer,
             message_receiver,
             wait_receiver: exit_receiver,
@@ -52,24 +51,34 @@ impl ChildProcess {
         External::new((self.parser.clone(), self.writer_arc.clone()))
     }
 
+    #[napi]
+    pub fn get_pid(&self) -> i32 {
+        self.pid
+    }
+
     #[napi(ts_args_type = "signal?: NodeJS.Signals")]
-    pub fn kill(&mut self, signal: Option<&str>) -> anyhow::Result<()> {
+    pub fn kill(&mut self, signal: Option<String>) -> anyhow::Result<()> {
+        let signal = signal.as_deref();
         self.process_killer.kill(signal)
     }
 
     #[napi]
     pub fn on_exit(
         &mut self,
-        #[napi(ts_arg_type = "(message: string) => void")] callback: JsFunction,
+        #[napi(ts_arg_type = "(message: string) => void")] callback: ThreadsafeFunction<
+            String,
+            Unknown<'static>,
+            String,
+            Status,
+            false,
+        >,
     ) -> napi::Result<()> {
         let wait = self.wait_receiver.clone();
-        let callback_tsfn: ThreadsafeFunction<String, Fatal> =
-            callback.create_threadsafe_function(0, |ctx| Ok(vec![ctx.value]))?;
 
         std::thread::spawn(move || {
             // we will only get one exit_code here, so we dont need to do a while loop
             if let Ok(exit_code) = wait.recv() {
-                callback_tsfn.call(exit_code, NonBlocking);
+                callback.call(exit_code, NonBlocking);
             }
         });
 
@@ -79,15 +88,15 @@ impl ChildProcess {
     #[napi]
     pub fn on_output(
         &mut self,
-        env: Env,
-        #[napi(ts_arg_type = "(message: string) => void")] callback: JsFunction,
+        #[napi(ts_arg_type = "(message: string) => void")] callback: ThreadsafeFunction<
+            String,
+            Unknown<'static>,
+            String,
+            Status,
+            false,
+        >,
     ) -> napi::Result<()> {
         let rx = self.message_receiver.clone();
-
-        let mut callback_tsfn: ThreadsafeFunction<String, Fatal> =
-            callback.create_threadsafe_function(0, |ctx| Ok(vec![ctx.value]))?;
-
-        callback_tsfn.unref(&env)?;
 
         let (kill_tx, kill_rx) = bounded::<()>(1);
 
@@ -105,7 +114,7 @@ impl ChildProcess {
                                 // remove it before sending it to js
                                 #[cfg(windows)]
                                 let content = content.replace("\x1B[6n", "");
-                                callback_tsfn.call(content, NonBlocking);
+                                callback.call(content, NonBlocking);
                             },
                             Err(_) => {
                                 break;

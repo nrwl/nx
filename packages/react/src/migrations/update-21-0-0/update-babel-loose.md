@@ -4,10 +4,9 @@ The `classProperties.loose` option is replaced by `loose` in `.babelrc` files.
 
 #### Sample Code Changes
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName=".babelrc" %}
+```json title=".babelrc"
 {
   "presets": [
     [
@@ -25,10 +24,9 @@ The `classProperties.loose` option is replaced by `loose` in `.babelrc` files.
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% highlightLines=[7] fileName=".babelrc" %}
+```json title=".babelrc" {7}
 {
   "presets": [
     [
@@ -43,6 +41,3 @@ The `classProperties.loose` option is replaced by `loose` in `.babelrc` files.
   "plugins": []
 }
 ```
-
-{% /tab %}
-{% /tabs %}

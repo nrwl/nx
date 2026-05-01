@@ -40,13 +40,13 @@ To make Nx aware of the root `package.json` scripts, add an `"nx": {}` property 
 }
 ```
 
-## Running a Root-Level Target
+## Running a root-level target
 
 Once Nx is aware of your root-level scripts, you can run them the same way you would run any other target. Just use the name of your root `package.json` as the project name, or you can omit the project name and Nx will use the project in the current working directory as the default.
 
 For our example, you would run:
 
-```{% title="nx docs" frame="terminal" %}
+```text {% title="nx docs" frame="terminal" %}
 > nx run myorg:docs
 
 yarn run v1.22.19
@@ -58,7 +58,7 @@ Documentation site generated in /docs
 NX   Successfully ran target docs for project myorg (5s)
 ```
 
-## Configuring a Root-Level Target
+## Configuring a root-level target
 
 You can also configure the `inputs` and `outputs` or task pipelines for root-level targets the same way you would for any other target.
 
@@ -77,19 +77,19 @@ Our fully configured example would look like this:
         // generates docs from source code of all dependencies
         "inputs": ["^production"],
         // the docs site is created under /docs
-        "outputs": ["{workspaceRoot}/docs"]
-      }
-    }
+        "outputs": ["{workspaceRoot}/docs"],
+      },
+    },
   },
   "scripts": {
-    "docs": "node ./generateDocsSite.js"
-  }
+    "docs": "node ./generateDocsSite.js",
+  },
 }
 ```
 
 To cache the `docs` target, you can set `cache: true` on the `docs` target shown in the `package.json` above. Your output would then look as follows:
 
-```{% title="nx docs" frame="terminal" %}
+```text {% title="nx docs" frame="terminal" %}
 > nx run myorg:docs  [existing outputs match the cache, left as is]
 
 yarn run v1.22.19

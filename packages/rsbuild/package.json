@@ -29,12 +29,12 @@
   "generators": "./generators.json",
   "executors": "./executors.json",
   "dependencies": {
-    "tslib": "^2.3.0",
+    "tslib": "catalog:typescript",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@rsbuild/core": "1.1.8",
-    "minimatch": "9.0.3",
-    "@phenomnomnominal/tsquery": "~5.0.1"
+    "minimatch": "catalog:",
+    "@phenomnomnominal/tsquery": "catalog:typescript"
   },
   "devDependencies": {
     "nx": "workspace:*"
@@ -48,6 +48,10 @@
       "types": "./index.d.ts",
       "default": "./index.js"
     },
+    "./executors/*/schema.json": "./src/executors/*/schema.json",
+    "./executors/*/schema": "./src/executors/*/schema.d.ts",
+    "./generators/*/schema.json": "./src/generators/*/schema.json",
+    "./generators/*/schema": "./src/generators/*/schema.d.ts",
     "./package.json": {
       "default": "./package.json"
     },

@@ -3,7 +3,7 @@ import type { ProjectGraphProjectNode } from '../../../config/project-graph';
 import type { ProjectConfiguration } from '../../../config/workspace-json-project-json';
 
 export function getWorkspacePackagesMetadata<
-  T extends ProjectGraphProjectNode | ProjectConfiguration
+  T extends ProjectGraphProjectNode | ProjectConfiguration,
 >(
   projects: Record<string, T>
 ): {
@@ -81,7 +81,7 @@ export function getWorkspacePackagesMetadata<
 // adapted from PACKAGE_IMPORTS_EXPORTS_RESOLVE at
 // https://nodejs.org/docs/latest-v22.x/api/esm.html#resolution-algorithm-specification
 export function matchImportToWildcardEntryPointsToProjectMap<
-  T extends ProjectGraphProjectNode | ProjectConfiguration
+  T extends ProjectGraphProjectNode | ProjectConfiguration,
 >(
   wildcardEntryPointsToProjectMap: Record<string, T>,
   importPath: string

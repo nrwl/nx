@@ -90,7 +90,7 @@ describe('Vite Plugin', () => {
 
         it('should generate a coverage file specified by the executor', async () => {
           updateJson(`${myApp}/project.json`, (json) => {
-            json.targets.test.options.reportsDirectory = '../coverage/test-dir';
+            json.targets.test.options.reportsDirectory = 'coverage/test-dir';
             return json;
           });
 
@@ -115,7 +115,7 @@ describe('Vite Plugin', () => {
           return json;
         });
         updateFile(
-          `${myApp}/vite.config.ts`,
+          `${myApp}/vite.config.mts`,
           `/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -142,7 +142,7 @@ export default defineConfig({
   environments: {
     ssr: {
       build: {
-        rollupOptions: {
+        rolldownOptions: {
           input: '${myApp}/src/main.server.tsx'
         }
       }
@@ -345,15 +345,25 @@ export default App;
     it('should build app from libs source', () => {
       const results = runCLI(`build ${app} --buildLibsFromSource=true`);
       expect(results).toContain('Successfully ran target build for project');
-      // this should be more modules than build from dist
-      expect(results).toContain('38 modules transformed');
-    });
+      // Get the last "N modules transformed" (the app build, not lib builds)
+      const sourceMatches = results.match(/(\d+) modules transformed/g);
+      expect(sourceMatches.length).toBeGreaterThan(0);
+      const sourceModuleCount = parseInt(
+        sourceMatches[sourceMatches.length - 1].match(/(\d+)/)[1]
+      );
 
-    it('should build app from libs dist', () => {
-      const results = runCLI(`build ${app} --buildLibsFromSource=false`);
-      expect(results).toContain('Successfully ran target build for project');
-      // this should be less modules than building from source
-      expect(results).toContain('36 modules transformed');
+      const distResults = runCLI(`build ${app} --buildLibsFromSource=false`);
+      expect(distResults).toContain(
+        'Successfully ran target build for project'
+      );
+      const distMatches = distResults.match(/(\d+) modules transformed/g);
+      expect(distMatches.length).toBeGreaterThan(0);
+      const distModuleCount = parseInt(
+        distMatches[distMatches.length - 1].match(/(\d+)/)[1]
+      );
+
+      // building from source should transform more modules than from dist
+      expect(sourceModuleCount).toBeGreaterThan(distModuleCount);
     });
 
     it('should build app from libs without package.json in lib', () => {
@@ -426,7 +436,7 @@ export default App;
         runCLI(
           `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest`
         );
-        expect(exists(tmpProjPath(`libs/${lib}/vite.config.ts`))).toBeTruthy();
+        expect(exists(tmpProjPath(`libs/${lib}/vite.config.mts`))).toBeTruthy();
 
         const result = await runCLIAsync(`test ${lib}`);
         expect(result.combinedOutput).toContain(
@@ -445,7 +455,7 @@ export default App;
         runCLI(
           `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest`
         );
-        updateFile(`libs/${lib}/vite.config.ts`, () => {
+        updateFile(`libs/${lib}/vite.config.mts`, () => {
           return `/// <reference types='vitest' />
         import { defineConfig } from 'vite';
         import react from '@vitejs/plugin-react';
@@ -492,12 +502,12 @@ export default App;
       }, 100_000);
 
       it('should not delete the project directory when coverage is enabled', async () => {
-        // when coverage is enabled in the vite.config.ts but reportsDirectory is removed
+        // when coverage is enabled in the vite.config.mts but reportsDirectory is removed
         // from the @nx/vite:test executor options, vite will delete the project root directory
         runCLI(
           `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest`
         );
-        updateFile(`libs/${lib}/vite.config.ts`, () => {
+        updateFile(`libs/${lib}/vite.config.mts`, () => {
           return `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
@@ -582,7 +592,7 @@ export default defineConfig({
       });
     });
 
-    it('should support ESM-only plugins in vite.config.ts for root apps (#NXP-168)', () => {
+    it('should support ESM-only plugins in vite.config.mts for root apps (#NXP-168)', () => {
       // ESM-only plugin to test with
       updateFile(
         'foo/package.json',
@@ -616,12 +626,12 @@ export default defineConfig({
         `generate @nx/react:app ${rootApp} --rootProject --bundler=vite --unitTestRunner=none --e2eTestRunner=none --style=css --no-interactive`
       );
       updateJson(`package.json`, (json) => {
-        // This allows us to use ESM-only packages in vite.config.ts.
+        // This allows us to use ESM-only packages in vite.config.mts.
         json.type = 'module';
         return json;
       });
       updateFile(
-        `vite.config.ts`,
+        `vite.config.mts`,
         `
         import fooPlugin from '@acme/foo';
         import { defineConfig } from 'vite';

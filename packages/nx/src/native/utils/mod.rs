@@ -5,6 +5,7 @@ mod normalize_trait;
 pub mod path;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod socket_path;
+pub mod time;
 
 pub use find_matching_projects::*;
 pub use get_mod_time::*;
@@ -15,6 +16,7 @@ pub mod ai;
 #[cfg_attr(target_arch = "wasm32", path = "atomics/wasm.rs")]
 pub mod atomics;
 pub mod ci;
+pub mod command;
 pub mod file_lock;
 pub mod git;
 

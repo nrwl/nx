@@ -34,7 +34,7 @@ describe('MF Remote App Generator', () => {
     expect(tree.read('test/webpack.config.js', 'utf-8')).toMatchSnapshot();
     const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
     expect(tsconfigJson.compilerOptions.paths['test/Module']).toEqual([
-      'test/src/app/remote-entry/entry-module.ts',
+      './test/src/app/remote-entry/entry-module.ts',
     ]);
   });
 
@@ -93,7 +93,7 @@ describe('MF Remote App Generator', () => {
     `);
     const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
     expect(tsconfigJson.compilerOptions.paths['test/Module']).toEqual([
-      'test/src/app/remote-entry/entry.module.ts',
+      './test/src/app/remote-entry/entry.module.ts',
     ]);
   });
 
@@ -268,7 +268,7 @@ describe('MF Remote App Generator', () => {
     ).toMatchSnapshot();
     const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
     expect(tsconfigJson.compilerOptions.paths['test/Routes']).toEqual([
-      'test/src/app/remote-entry/entry.routes.ts',
+      './test/src/app/remote-entry/entry.routes.ts',
     ]);
   });
 
@@ -409,6 +409,21 @@ describe('MF Remote App Generator', () => {
         tree.read(`test/src/app/remote-entry/entry.routes.ts`, 'utf-8')
       ).toMatchSnapshot();
       expect(project.targets['static-server']).toMatchSnapshot();
+    });
+
+    it('should not import from `zone.js/node` in the server file even when zoneless is false', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+
+      await generateTestRemoteApplication(tree, {
+        directory: 'test',
+        ssr: true,
+        zoneless: false,
+        skipFormat: true,
+      });
+
+      expect(tree.read(`test/src/main.server.ts`, 'utf-8')).not.toContain(
+        "import 'zone.js/node';"
+      );
     });
 
     it('should generate the correct files when --typescriptConfiguration=true', async () => {
@@ -619,6 +634,28 @@ describe('MF Remote App Generator', () => {
         })
         export class RemoteEntryModule {}"
       `);
+    });
+
+    it('should import from `zone.js/node` in the server file for versions lower than v21', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies = {
+          ...json.dependencies,
+          '@angular/core': '~20.3.0',
+        };
+        return json;
+      });
+
+      await generateTestRemoteApplication(tree, {
+        directory: 'test',
+        ssr: true,
+        zoneless: false,
+        skipFormat: true,
+      });
+
+      expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toContain(
+        "import 'zone.js/node';"
+      );
     });
   });
 });

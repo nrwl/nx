@@ -1,13 +1,12 @@
 import {
   CreateDependencies,
-  CreateNodes,
-  CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesResult,
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
-  logger,
+  joinPathFragments,
   ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
@@ -17,16 +16,17 @@ import {
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { existsSync, readdirSync } from 'fs';
+import {
+  isUsingTsSolutionSetup,
+  TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { readdirSync } from 'fs';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { readWebpackOptions } from '../utils/webpack/read-webpack-options';
 import { resolveUserDefinedWebpackConfig } from '../utils/webpack/resolve-user-defined-webpack-config';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
-
-const pmc = getPackageManagerCommand();
 
 export interface WebpackPluginOptions {
   buildTargetName?: string;
@@ -40,7 +40,13 @@ export interface WebpackPluginOptions {
 type WebpackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 function readTargetsCache(cachePath: string): Record<string, WebpackTargets> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
+  try {
+    return process.env.NX_CACHE_PROJECT_GRAPH !== 'false'
+      ? readJsonFile(cachePath)
+      : {};
+  } catch {
+    return {};
+  }
 }
 
 function writeTargetsToCache(
@@ -59,7 +65,7 @@ export const createDependencies: CreateDependencies = () => {
 
 const webpackConfigGlob = '**/webpack.config.{js,ts,mjs,cjs}';
 
-export const createNodesV2: CreateNodesV2<WebpackPluginOptions> = [
+export const createNodes: CreateNodesV2<WebpackPluginOptions> = [
   webpackConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
@@ -70,6 +76,9 @@ export const createNodesV2: CreateNodesV2<WebpackPluginOptions> = [
     const targetsCache = readTargetsCache(cachePath);
     const normalizedOptions = normalizeOptions(options);
     const isTsSolutionSetup = isUsingTsSolutionSetup();
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -78,7 +87,8 @@ export const createNodesV2: CreateNodesV2<WebpackPluginOptions> = [
             options,
             context,
             targetsCache,
-            isTsSolutionSetup
+            isTsSolutionSetup,
+            pmc
           ),
         configFilePaths,
         normalizedOptions,
@@ -90,29 +100,15 @@ export const createNodesV2: CreateNodesV2<WebpackPluginOptions> = [
   },
 ];
 
-export const createNodes: CreateNodes<WebpackPluginOptions> = [
-  webpackConfigGlob,
-  async (configFilePath, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
-    );
-    const normalizedOptions = normalizeOptions(options);
-    return createNodesInternal(
-      configFilePath,
-      normalizedOptions,
-      context,
-      {},
-      isUsingTsSolutionSetup()
-    );
-  },
-];
+export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
   options: Required<WebpackPluginOptions>,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<string, WebpackTargets>,
-  isTsSolutionSetup: boolean
+  isTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<CreateNodesResult> {
   const projectRoot = dirname(configFilePath);
 
@@ -137,7 +133,8 @@ async function createNodesInternal(
     projectRoot,
     options,
     context,
-    isTsSolutionSetup
+    isTsSolutionSetup,
+    pmc
   );
 
   const { targets, metadata } = targetsCache[hash];
@@ -157,8 +154,9 @@ async function createWebpackTargets(
   configFilePath: string,
   projectRoot: string,
   options: Required<WebpackPluginOptions>,
-  context: CreateNodesContext,
-  isTsSolutionSetup: boolean
+  context: CreateNodesContextV2,
+  isTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<WebpackTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -192,6 +190,7 @@ async function createWebpackTargets(
             {
               externalDependencies: ['webpack-cli'],
             },
+            TS_SOLUTION_SETUP_TSCONFIG_INPUT,
           ]
         : [
             'default',
@@ -199,6 +198,7 @@ async function createWebpackTargets(
             {
               externalDependencies: ['webpack-cli'],
             },
+            TS_SOLUTION_SETUP_TSCONFIG_INPUT,
           ],
     outputs,
     metadata: {
@@ -323,9 +323,9 @@ function normalizeOutputPath(
       )}`;
     } else {
       if (outputPath.startsWith('..')) {
-        return join('{workspaceRoot}', join(projectRoot, outputPath));
+        return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);
       } else {
-        return join('{projectRoot}', outputPath);
+        return joinPathFragments('{projectRoot}', outputPath);
       }
     }
   }

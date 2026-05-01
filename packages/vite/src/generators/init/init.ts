@@ -29,22 +29,6 @@ export function updateNxJsonSettings(tree: Tree) {
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
   }
 
-  const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/vite/plugin'
-      : p.plugin === '@nx/vite/plugin'
-  );
-
-  if (!hasPlugin) {
-    nxJson.targetDefaults ??= {};
-    nxJson.targetDefaults['@nx/vite:test'] ??= {};
-    nxJson.targetDefaults['@nx/vite:test'].cache ??= true;
-    nxJson.targetDefaults['@nx/vite:test'].inputs ??= [
-      'default',
-      productionFileSet ? '^production' : '^default',
-    ];
-  }
-
   updateNxJson(tree, nxJson);
 }
 

@@ -8,6 +8,8 @@ import { prettyTime } from './pretty-time';
 import { Task } from '../../config/task-graph';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { viewLogsFooterRows } from './view-logs-utils';
+import { handleImport } from '../../utils/handle-import';
+import * as pc from 'picocolors';
 
 const LEFT_PAD = `   `;
 const SPACER = `  `;
@@ -73,7 +75,7 @@ export async function createRunOneDynamicOutputRenderer({
   const lifeCycle = {} as Partial<LifeCycle>;
 
   const start = process.hrtime();
-  const figures = await import('figures');
+  const figures = await handleImport('figures');
 
   let state: State = 'EXECUTING_DEPENDENT_TARGETS';
 
@@ -100,6 +102,7 @@ export async function createRunOneDynamicOutputRenderer({
   let renderDependentTargetsIntervalId: NodeJS.Timeout | undefined;
 
   const moveCursorToStartOfDependentTargetLines = () => {
+    readline.cursorTo(process.stdout, 0);
     readline.moveCursor(process.stdout, 0, -dependentTargetsNumLines);
   };
 
@@ -156,10 +159,12 @@ export async function createRunOneDynamicOutputRenderer({
 
     if (totalFailedTasks > 0) {
       linesToRender.push(
-        output.colors.red.dim(
-          `${LEFT_PAD}${output.colors.red(
-            figures.cross
-          )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} dependent project tasks failed (see below)`
+        pc.dim(
+          pc.red(
+            `${LEFT_PAD}${output.colors.red(
+              figures.cross
+            )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} dependent project tasks failed (see below)`
+          )
         )
       );
     }
@@ -292,11 +297,11 @@ export async function createRunOneDynamicOutputRenderer({
       if (filteredOverrides.length > 0) {
         taskOverridesLines.push('');
         taskOverridesLines.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${pc.dim(pc.green('With additional flags:'))}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            pc.dim(pc.green(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
           )
           .forEach((arg) => taskOverridesLines.push(arg));
       }
@@ -336,11 +341,11 @@ export async function createRunOneDynamicOutputRenderer({
       if (filteredOverrides.length > 0) {
         taskOverridesLines.push('');
         taskOverridesLines.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${pc.dim(pc.red('With additional flags:'))}`
         );
         filteredOverrides
           .map(([flag, value]) =>
-            output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            pc.dim(pc.red(formatFlags(EXTENDED_LEFT_PAD, flag, value)))
           )
           .forEach((arg) => taskOverridesLines.push(arg));
       }

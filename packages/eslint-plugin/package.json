@@ -17,7 +17,8 @@
     "Testing"
   ],
   "main": "./src/index.js",
-  "typings": "./src/index.d.ts",
+  "type": "commonjs",
+  "types": "./src/index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -36,15 +37,18 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
-    "@phenomnomnominal/tsquery": "~5.0.1",
+    "@phenomnomnominal/tsquery": "catalog:typescript",
     "@typescript-eslint/type-utils": "^8.0.0",
     "@typescript-eslint/utils": "^8.0.0",
-    "chalk": "^4.1.0",
+    "chalk": "catalog:",
     "confusing-browser-globals": "^1.0.9",
-    "globals": "^15.9.0",
+    "globals": "^17.0.0",
     "jsonc-eslint-parser": "^2.1.0",
-    "semver": "^7.5.3",
-    "tslib": "^2.3.0"
+    "semver": "catalog:",
+    "tslib": "catalog:typescript"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

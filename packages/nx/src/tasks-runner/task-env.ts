@@ -3,6 +3,8 @@ import { config as loadDotEnvFile } from 'dotenv';
 import { expand } from 'dotenv-expand';
 import { workspaceRoot } from '../utils/workspace-root';
 import { join } from 'node:path';
+import { ProjectGraph } from '../config/project-graph';
+import { getEnvPathsForTask } from './task-env-paths';
 
 export function getEnvVariablesForBatchProcess(
   skipNxCache: boolean,
@@ -20,13 +22,31 @@ export function getEnvVariablesForBatchProcess(
   };
 }
 
-export function getTaskSpecificEnv(task: Task) {
+// The orchestrator now calls this eagerly during the coordinator pre-hash
+// in addition to processTask (and again in hashBatchTasks), so the same
+// task hits this function multiple times per run. Each call reads 3+ .env
+// files from disk — memoize by task.id to skip the repeat work.
+//
+// Cache lifetime is the current Nx invocation: the function is only called
+// from CLI/orchestrator code (not the long-lived daemon), so the map is
+// scoped to a single run. Callers must not mutate the returned env — they
+// already spread it into new objects before adding task-specific overrides
+// (see getEnvVariablesForTask).
+const taskSpecificEnvCache = new Map<string, NodeJS.ProcessEnv>();
+
+export function getTaskSpecificEnv(task: Task, graph: ProjectGraph) {
+  const cached = taskSpecificEnvCache.get(task.id);
+  if (cached) return cached;
+
   // Unload any dot env files at the root of the workspace that were loaded on init of Nx.
   const taskEnv = unloadDotEnvFiles({ ...process.env });
-  return process.env.NX_LOAD_DOT_ENV_FILES === 'true'
-    ? loadDotEnvFilesForTask(task, taskEnv)
-    : // If not loading dot env files, ensure env vars created by system are still loaded
-      taskEnv;
+  const env =
+    process.env.NX_LOAD_DOT_ENV_FILES === 'true'
+      ? loadDotEnvFilesForTask(task, graph, taskEnv)
+      : // If not loading dot env files, ensure env vars created by system are still loaded
+        taskEnv;
+  taskSpecificEnvCache.set(task.id, env);
+  return env;
 }
 
 export function getEnvVariablesForTask(
@@ -125,13 +145,16 @@ function getNxEnvVariablesForTask(
 }
 
 /**
- * This function loads a .env file and expands the variables in it.
- * @param filename the .env file to load
+ * This function loads one or more .env files and expands the variables in them.
+ * When multiple files are provided, all files are loaded first, then variable
+ * expansion happens once with the complete set of variables. This ensures
+ * cross-file variable references resolve correctly.
+ * @param filename the .env file(s) to load
  * @param environmentVariables the object to load environment variables into
  * @param override whether to override existing environment variables
  */
 export function loadAndExpandDotEnvFile(
-  filename: string,
+  filename: string | string[],
   environmentVariables: NodeJS.ProcessEnv,
   override = false
 ) {
@@ -165,67 +188,49 @@ export function unloadDotEnvFile(
   });
 }
 
-function getEnvFilesForTask(task: Task): string[] {
-  // Collect dot env files that may pertain to a task
-  return [
-    // Load DotEnv Files for a configuration in the project root
-    ...(task.target.configuration
-      ? [
-          `${task.projectRoot}/.env.${task.target.target}.${task.target.configuration}.local`,
-          `${task.projectRoot}/.env.${task.target.target}.${task.target.configuration}`,
-          `${task.projectRoot}/.env.${task.target.configuration}.local`,
-          `${task.projectRoot}/.env.${task.target.configuration}`,
-          `${task.projectRoot}/.${task.target.target}.${task.target.configuration}.local.env`,
-          `${task.projectRoot}/.${task.target.target}.${task.target.configuration}.env`,
-          `${task.projectRoot}/.${task.target.configuration}.local.env`,
-          `${task.projectRoot}/.${task.target.configuration}.env`,
-        ]
-      : []),
+function getOwnerTargetForTask(
+  task: Task,
+  graph: ProjectGraph
+): [string, string?] {
+  const project = graph.nodes[task.target.project];
+  if (project.data.metadata?.targetGroups) {
+    for (const targets of Object.values(project.data.metadata.targetGroups)) {
+      if (targets.includes(task.target.target)) {
+        for (const target of targets) {
+          if (project.data.targets[target].metadata?.nonAtomizedTarget) {
+            return [
+              target,
+              project.data.targets[target].metadata?.nonAtomizedTarget,
+            ];
+          }
+        }
+      }
+    }
+  }
+  return [task.target.target];
+}
 
-    // Load DotEnv Files for a target in the project root
-    `${task.projectRoot}/.env.${task.target.target}.local`,
-    `${task.projectRoot}/.env.${task.target.target}`,
-    `${task.projectRoot}/.${task.target.target}.local.env`,
-    `${task.projectRoot}/.${task.target.target}.env`,
-    `${task.projectRoot}/.env.local`,
-    `${task.projectRoot}/.local.env`,
-    `${task.projectRoot}/.env`,
+export function getEnvFilesForTask(task: Task, graph: ProjectGraph): string[] {
+  const [target, nonAtomizedTarget] = getOwnerTargetForTask(task, graph);
 
-    // Load DotEnv Files for a configuration in the workspace root
-    ...(task.target.configuration
-      ? [
-          `.env.${task.target.target}.${task.target.configuration}.local`,
-          `.env.${task.target.target}.${task.target.configuration}`,
-          `.env.${task.target.configuration}.local`,
-          `.env.${task.target.configuration}`,
-          `.${task.target.target}.${task.target.configuration}.local.env`,
-          `.${task.target.target}.${task.target.configuration}.env`,
-          `.${task.target.configuration}.local.env`,
-          `.${task.target.configuration}.env`,
-        ]
-      : []),
-
-    // Load DotEnv Files for a target in the workspace root
-    `.env.${task.target.target}.local`,
-    `.env.${task.target.target}`,
-    `.${task.target.target}.local.env`,
-    `.${task.target.target}.env`,
-
-    // Load base DotEnv Files at workspace root
-    `.local.env`,
-    `.env.local`,
-    `.env`,
-  ];
+  return getEnvPathsForTask(
+    task.projectRoot,
+    target,
+    task.target.configuration,
+    nonAtomizedTarget
+  );
 }
 
 function loadDotEnvFilesForTask(
   task: Task,
+  graph: ProjectGraph,
   environmentVariables: NodeJS.ProcessEnv
 ) {
-  const dotEnvFiles = getEnvFilesForTask(task);
-  for (const file of dotEnvFiles) {
-    loadAndExpandDotEnvFile(join(workspaceRoot, file), environmentVariables);
-  }
+  const dotEnvFiles = getEnvFilesForTask(task, graph);
+  loadAndExpandDotEnvFile(
+    dotEnvFiles.map((file) => join(workspaceRoot, file)),
+    environmentVariables
+  );
   return environmentVariables;
 }
 

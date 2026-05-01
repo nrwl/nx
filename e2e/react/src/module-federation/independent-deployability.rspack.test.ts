@@ -16,7 +16,7 @@ describe('Independent Deployability', () => {
   let proj: string;
 
   beforeAll(() => {
-    proj = newProject();
+    proj = newProject({ packages: ['@nx/react', '@nx/js'] });
   });
 
   afterAll(() => {
@@ -106,8 +106,8 @@ describe('Independent Deployability', () => {
 
           it('should navigate to /${remote} from /', () => {
             cy.get('a').contains('${remote[0].toUpperCase()}${remote.slice(
-        1
-      )}').click();
+              1
+            )}').click();
             cy.url().should('include', '/${remote}');
             getGreeting().contains('Welcome ${remote}');
           });
@@ -359,8 +359,8 @@ describe('Independent Deployability', () => {
     
       it('should navigate to /about from /', () => {
         cy.get('a').contains('${remote[0].toUpperCase()}${remote.slice(
-        1
-      )}').click();
+          1
+        )}').click();
         cy.url().should('include', '/${remote}');
         getGreeting().contains('Welcome ${remote}');
       });

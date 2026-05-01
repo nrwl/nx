@@ -7,7 +7,42 @@ import { workspaceRoot } from '../../../utils/workspace-root';
 import { RawGitCommit } from '../utils/git';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from './config';
 import { ReleaseGroupWithName } from './filter-release-groups';
-const fm = require('front-matter');
+const { load } = require('@zkochan/js-yaml');
+
+// Ported from https://github.com/jxson/front-matter/blob/master/index.js
+const fmPattern = new RegExp(
+  '^(' +
+    '\\ufeff?' +
+    '(= yaml =|---)' +
+    '$([\\s\\S]*?)' +
+    '^(?:\\2|\\.\\.\\.)\\s*' +
+    '$' +
+    (process.platform === 'win32' ? '\\r?' : '') +
+    '(?:\\n)?)',
+  'm'
+);
+
+function parseFrontMatter(str: string): {
+  attributes: Record<string, string>;
+  body: string;
+} {
+  str = str || '';
+  const lines = str.split(/(\r?\n)/);
+  if (!lines[0] || !/= yaml =|---/.test(lines[0])) {
+    return { attributes: {}, body: str };
+  }
+
+  const match = fmPattern.exec(str);
+  if (!match) {
+    return { attributes: {}, body: str };
+  }
+
+  const yaml = match[match.length - 1].replace(/^\s+|\s+$/g, '');
+  const attributes = load(yaml) || {};
+  const body = str.replace(match[0], '');
+
+  return { attributes, body };
+}
 
 export interface VersionPlanFile {
   absolutePath: string;
@@ -52,6 +87,18 @@ export interface ProjectsVersionPlan extends VersionPlan {
 
 const versionPlansDirectory = join('.nx', 'version-plans');
 
+const allowedAttributeValues = [
+  // Stable releases (with conventional-commit style aliases)
+  '"major" (aliases: "feat!" or "fix!")',
+  '"minor" (alias: "feat")',
+  '"patch" (alias: "fix")',
+  // Prereleases
+  '"premajor"',
+  '"preminor"',
+  '"prepatch"',
+  '"prerelease"',
+];
+
 export async function readRawVersionPlans(): Promise<RawVersionPlan[]> {
   const versionPlansPath = getVersionPlansAbsolutePath();
   if (!existsSync(versionPlansPath)) {
@@ -66,7 +113,29 @@ export async function readRawVersionPlans(): Promise<RawVersionPlan[]> {
     const versionPlanContent = readFileSync(filePath).toString();
     const versionPlanStats = await stat(filePath);
 
-    const parsedContent = fm(versionPlanContent);
+    const parsedContent = parseFrontMatter(versionPlanContent);
+
+    /**
+     * For convenience allow:
+     * - feat to be used as an alias of minor
+     * - fix to be used as an alias of patch
+     * - Either feat! or fix! to be used as an alias of major
+     */
+    for (const [key, value] of Object.entries(parsedContent.attributes)) {
+      switch (value) {
+        case 'feat':
+          parsedContent.attributes[key] = 'minor';
+          break;
+        case 'fix':
+          parsedContent.attributes[key] = 'patch';
+          break;
+        case 'feat!':
+        case 'fix!':
+          parsedContent.attributes[key] = 'major';
+          break;
+      }
+    }
+
     versionPlans.push({
       absolutePath: filePath,
       relativePath: join(versionPlansDirectory, versionPlanFile),
@@ -132,7 +201,7 @@ export async function setResolvedVersionPlansOnGroups(
             throw new Error(
               `Found a version bump in '${
                 rawVersionPlan.fileName
-              }' with an invalid release type. Please specify one of ${RELEASE_TYPES.join(
+              }' with an invalid release type. Please specify one of: ${allowedAttributeValues.join(
                 ', '
               )}.`
             );
@@ -140,7 +209,7 @@ export async function setResolvedVersionPlansOnGroups(
             throw new Error(
               `Found a version bump for group '${key}' in '${
                 rawVersionPlan.fileName
-              }' with an invalid release type. Please specify one of ${RELEASE_TYPES.join(
+              }' with an invalid release type. Please specify one of: ${allowedAttributeValues.join(
                 ', '
               )}.`
             );
@@ -216,7 +285,7 @@ export async function setResolvedVersionPlansOnGroups(
           throw new Error(
             `Found a version bump for project '${key}' in '${
               rawVersionPlan.fileName
-            }' with an invalid release type. Please specify one of ${RELEASE_TYPES.join(
+            }' with an invalid release type. Please specify one of: ${allowedAttributeValues.join(
               ', '
             )}.`
           );
@@ -266,7 +335,10 @@ export async function setResolvedVersionPlansOnGroups(
                 );
               }
             } else {
-              existingPlan.triggeredByProjects.push(key);
+              // Avoid duplicates when releaseGraph is reused and version plans are resolved multiple times
+              if (!existingPlan.triggeredByProjects.includes(key)) {
+                existingPlan.triggeredByProjects.push(key);
+              }
             }
           } else {
             groupForProject.resolvedVersionPlans.push(<GroupVersionPlan>{
@@ -323,7 +395,7 @@ async function getCommitForVersionPlanFile(
     exec(
       `git log --diff-filter=A --pretty=format:"%s|%h|%an|%ae|%b" -n 1 -- ${rawVersionPlan.absolutePath}`,
       {
-        windowsHide: false,
+        windowsHide: true,
       },
       (error, stdout, stderr) => {
         if (error) {

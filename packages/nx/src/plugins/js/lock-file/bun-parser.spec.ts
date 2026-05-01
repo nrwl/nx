@@ -1564,6 +1564,64 @@ describe('Bun Parser', () => {
       expect(result['npm:is-even/is-odd/is-number']).toBeUndefined();
       expect(result['npm:@quz/pkg2/is-even/is-odd/is-number']).toBeUndefined();
     });
+
+    it('should correctly handle scoped package aliases without incorrectly marking as workspace variants', () => {
+      // This tests two potential bugs:
+      // 1. In buildPackageIndex: a scoped alias like "@custom/lodash" aliasing "lodash"
+      //    could incorrectly mark "lodash" as having workspace variants because the prefix "@custom"
+      //    starts with "@" but doesn't contain "/" (missing check).
+      // 2. In isNestedPackageKey: scoped aliases could be incorrectly filtered as nested packages.
+      const lockFileContent = JSON.stringify({
+        lockfileVersion: 1,
+        workspaces: {
+          '': {
+            name: 'test-workspace',
+            dependencies: {
+              '@custom/lodash': 'npm:lodash@4.17.21',
+              lodash: '^4.17.21',
+            },
+          },
+        },
+        packages: {
+          // Scoped alias pointing to lodash - this is NOT a workspace-specific variant,
+          // it's a scoped package name used as an alias
+          '@custom/lodash': [
+            'lodash@npm:lodash@4.17.21',
+            '',
+            {},
+            'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+          ],
+          // Regular lodash entry
+          lodash: [
+            'lodash@npm:lodash@4.17.21',
+            '',
+            {},
+            'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+          ],
+        },
+      });
+
+      const result = getBunTextLockfileNodes(
+        lockFileContent,
+        'scoped-alias-test'
+      );
+
+      // The scoped alias should be created as an alias node
+      // The packageKey "@custom/lodash" differs from the resolved name "lodash",
+      // so this should be treated as an alias, not filtered out as a nested package
+      expect(result['npm:@custom/lodash']).toBeDefined();
+      expect(result['npm:@custom/lodash'].data.version).toBe(
+        'npm:lodash@4.17.21'
+      );
+
+      // The target package should still exist
+      expect(result['npm:lodash@4.17.21']).toBeDefined();
+
+      // Lodash should still be hoisted since it has a direct entry in the packages section
+      // and appears in workspace dependencies - the scoped alias should NOT prevent hoisting
+      expect(result['npm:lodash']).toBeDefined();
+      expect(result['npm:lodash'].data.version).toBe('4.17.21');
+    });
   });
 
   describe('getBunLockfileDependencies', () => {
@@ -2036,6 +2094,16 @@ describe('Bun Parser', () => {
 
       expect(result).toMatchInlineSnapshot(`
         [
+          {
+            "source": "npm:@types/react@18.3.23",
+            "target": "npm:@types/prop-types@15.7.15",
+            "type": "static",
+          },
+          {
+            "source": "npm:@types/react@18.3.23",
+            "target": "npm:csstype@3.1.3",
+            "type": "static",
+          },
           {
             "source": "npm:loose-envify@1.4.0",
             "target": "npm:js-tokens@4.0.0",

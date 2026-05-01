@@ -6,6 +6,7 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
+import { isAbsolute, resolve } from 'path';
 import { typeDefinitions } from '@nx/js/src/plugins/rollup/type-definitions';
 import {
   calculateProjectBuildableDependencies,
@@ -17,28 +18,31 @@ import {
   getProjectSourceRoot,
   isUsingTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { resolvePathsBaseUrl } from '@nx/js/src/utils/typescript/ts-config';
 import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import nodeResolve from '@rollup/plugin-node-resolve';
-import * as autoprefixer from 'autoprefixer';
+import autoprefixer from 'autoprefixer';
 import { existsSync } from 'node:fs';
 import { dirname, join, parse } from 'node:path';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as rollup from 'rollup';
 import { analyze } from '../analyze';
 import { deleteOutput } from '../delete-output';
+import { nxCopyAssetsPlugin } from '../nx-copy-assets.plugin';
 import { generatePackageJson } from '../package-json/generate-package-json';
 import { swc } from '../swc';
 import { getProjectNode } from './get-project-node';
 import { normalizeOptions } from './normalize-options';
-import { AssetGlobPattern, RollupWithNxPluginOptions } from './with-nx-options';
+import { RollupWithNxPluginOptions } from './with-nx-options';
 
 // These use require because the ES import isn't correct.
 const commonjs = require('@rollup/plugin-commonjs');
 const image = require('@rollup/plugin-image');
 
 const json = require('@rollup/plugin-json');
-const copy = require('rollup-plugin-copy');
-const postcss = require('rollup-plugin-postcss');
+
+// Use our inlined postcss plugin instead of external rollup-plugin-postcss
+import { postcss } from '../postcss';
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
 
@@ -104,7 +108,7 @@ export function withNx(
       : createTmpTsConfig(
           options.tsConfig,
           workspaceRoot,
-          projectRoot,
+          projectNode.data.root,
           dependencies
         );
 
@@ -218,7 +222,7 @@ export function withNx(
     if (isTsSolutionSetup) {
       if (options.generatePackageJson) {
         throw new Error(
-          `Setting 'generatePackageJson: true' is not supported with the current TypeScript setup. Update the 'package.json' file at the project root as needed and unset the 'generatePackageJson' option.`
+          `Setting 'generatePackageJson: true' is not supported with the current TypeScript setup. Update the 'package.json' file at the project root as needed and unset the 'generatePackageJson' option. See https://nx.dev/docs/technologies/node/guides/deploying-node-projects for the recommended pruned package.json workflow.`
         );
       }
       if (options.generateExportsField) {
@@ -230,9 +234,11 @@ export function withNx(
       options.generatePackageJson ??= true;
     }
 
+    const originalTsConfigPath = join(workspaceRoot, options.tsConfig);
     const compilerOptions: Record<string, unknown> = createTsCompilerOptions(
       projectRoot,
       tsConfig,
+      originalTsConfigPath,
       options,
       dependencies
     );
@@ -241,11 +247,10 @@ export function withNx(
       : finalConfig.output.dir;
 
     finalConfig.plugins = [
-      copy({
-        targets: convertCopyAssetsToRollupOptions(
-          options.outputPath,
-          options.assets
-        ),
+      nxCopyAssetsPlugin({
+        assets: options.assets,
+        outputPath: options.outputPath,
+        projectRoot,
       }),
       image(),
       json(),
@@ -365,6 +370,7 @@ function createInput(
 function createTsCompilerOptions(
   projectRoot: string,
   config: ReturnType<typeof ts.parseJsonConfigFileContent>,
+  tsConfigPath: string,
   options: RollupWithNxPluginOptions,
   dependencies?: DependentBuildableProjectNode[]
 ) {
@@ -372,6 +378,18 @@ function createTsCompilerOptions(
     config,
     dependencies ?? []
   );
+  // Resolve paths to absolute so they work without baseUrl and regardless
+  // of which tsconfig the plugin reads (project vs workspace root).
+  const pathsBase = resolvePathsBaseUrl(tsConfigPath);
+  for (const key of Object.keys(compilerOptionPaths)) {
+    compilerOptionPaths[key] = compilerOptionPaths[key].map((p) => {
+      if (isAbsolute(p)) {
+        return p;
+      }
+      const stripped = p.startsWith('./') ? p.slice(2) : p;
+      return resolve(pathsBase, stripped).replace(/\\/g, '/');
+    });
+  }
   const compilerOptions = {
     rootDir: projectRoot,
     allowJs: options.allowJs,
@@ -386,23 +404,6 @@ function createTsCompilerOptions(
     compilerOptions['emitDeclarationOnly'] = true;
   }
   return compilerOptions;
-}
-
-interface RollupCopyAssetOption {
-  src: string;
-  dest: string;
-}
-
-function convertCopyAssetsToRollupOptions(
-  outputPath: string,
-  assets: AssetGlobPattern[]
-): RollupCopyAssetOption[] {
-  return assets
-    ? assets.map((a) => ({
-        src: join(a.input, a.glob).replace(/\\/g, '/'),
-        dest: join(workspaceRoot, outputPath, a.output).replace(/\\/g, '/'),
-      }))
-    : undefined;
 }
 
 function readCompatibleFormats(

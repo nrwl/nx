@@ -1,4 +1,4 @@
-import { workspaceRoot } from '@nx/devkit';
+import { workspaceRoot, type GeneratorsJson } from '@nx/devkit';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, extname, join } from 'node:path';
 import frontMatter from 'front-matter';
@@ -33,6 +33,8 @@ export const pluginToTechnology: Record<string, string> = {
   gradle: 'java',
   maven: 'java',
 
+  dotnet: 'dotnet',
+
   'module-federation': 'module-federation',
 
   eslint: 'eslint',
@@ -51,6 +53,7 @@ export const pluginToTechnology: Record<string, string> = {
   playwright: 'test-tools',
   storybook: 'test-tools',
   detox: 'test-tools',
+  vitest: 'test-tools',
 };
 
 /**
@@ -79,6 +82,108 @@ export function getPluginsInTechnology(technologyCategory: string): string[] {
  */
 export function getAllTechnologyCategories(): string[] {
   return Array.from(new Set(Object.values(pluginToTechnology))).sort();
+}
+
+/**
+ * Get the flattened sidebar items for a given plugin's static guide content.
+ * Returns an array of sidebar items that can be spread into a custom group.
+ *
+ * @param plugin The plugin name (e.g., 'angular', 'react', 'next')
+ * @param technologyCategory Optional category override (e.g., 'react' for 'next')
+ */
+export function getTechnologyKBItems(
+  plugin: string,
+  technologyCategory?: string
+): SidebarSubItem[] {
+  const remappedPluginName = pluginSpecialCasePluginRemapping(plugin);
+  const baseUrl =
+    technologyCategory && technologyCategory !== remappedPluginName
+      ? `/technologies/${technologyCategory}/${remappedPluginName}`
+      : `/technologies/${remappedPluginName}`;
+
+  const contentDir = join(
+    workspaceRoot,
+    'astro-docs',
+    'src',
+    'content',
+    'docs',
+    baseUrl
+  );
+
+  // Get all static files for this plugin
+  const staticFiles = getStaticPluginFiles(contentDir);
+
+  // Filter out the Introduction item (already linked in Technologies & Tools section)
+  const filteredItems: SidebarItem[] = staticFiles.filter((file) => {
+    if (typeof file === 'string') return false;
+    return file.label !== 'Introduction';
+  });
+
+  // Flatten: hoist children of nested groups (e.g. "Guides" → its children)
+  const flatItems: SidebarItem[] = [];
+  for (const item of filteredItems) {
+    if (
+      typeof item === 'object' &&
+      'items' in item &&
+      Array.isArray((item as SidebarSubItem).items)
+    ) {
+      flatItems.push(...(item as SidebarSubItem).items);
+    } else {
+      flatItems.push(item);
+    }
+  }
+
+  return flatItems as SidebarSubItem[];
+}
+
+/**
+ * Get the API reference sidebar items (Generators, Executors, Migrations) for a given plugin.
+ * Returns an array of link items that can be spread into a custom group.
+ *
+ * @param plugin The plugin name (e.g., 'angular', 'react', 'next')
+ * @param technologyCategory Optional category override (e.g., 'react' for 'next')
+ * @param labelPrefix Optional prefix for labels (e.g., 'Next.js' → 'Next.js Generators')
+ */
+export function getTechnologyAPIItems(
+  plugin: string,
+  technologyCategory?: string,
+  labelPrefix?: string
+): SidebarSubItem[] {
+  const remappedPluginName = pluginSpecialCasePluginRemapping(plugin);
+  const baseUrl =
+    technologyCategory && technologyCategory !== remappedPluginName
+      ? `/technologies/${technologyCategory}/${remappedPluginName}`
+      : `/technologies/${remappedPluginName}`;
+
+  const pluginPath = join(pluginBasePath, plugin);
+  const items: SidebarSubItem[] = [];
+
+  if (!existsSync(pluginPath) || !lstatSync(pluginPath).isDirectory()) {
+    return items;
+  }
+
+  const prefix = labelPrefix ? `${labelPrefix} ` : '';
+
+  if (hasValidConfig(pluginPath, 'generators')) {
+    items.push({
+      label: `${prefix}Generators`,
+      link: `${baseUrl}/generators`,
+    });
+  }
+  if (hasValidConfig(pluginPath, 'executors')) {
+    items.push({
+      label: `${prefix}Executors`,
+      link: `${baseUrl}/executors`,
+    });
+  }
+  if (hasValidConfig(pluginPath, 'migrations')) {
+    items.push({
+      label: `${prefix}Migrations`,
+      link: `${baseUrl}/migrations`,
+    });
+  }
+
+  return items;
 }
 
 const pluginBasePath = join(workspaceRoot, 'packages');
@@ -114,26 +219,7 @@ export function getPluginItems(
       throw new Error(`package.json does not have a name: ${packageJsonPath}`);
     }
 
-    if (hasValidConfig(pluginPath, 'generators')) {
-      items.push({
-        label: 'Generators',
-        link: `${baseUrl}/generators`,
-      });
-    }
-
-    if (hasValidConfig(pluginPath, 'executors')) {
-      items.push({
-        label: 'Executors',
-        link: `${baseUrl}/executors`,
-      });
-    }
-
-    if (hasValidConfig(pluginPath, 'migrations')) {
-      items.push({
-        label: 'Migrations',
-        link: `${baseUrl}/migrations`,
-      });
-    }
+    items.push(...getTechnologyAPIItems(plugin, technologyCategory));
   } else {
     console.warn(
       `Plugin path does not exist: ${pluginPath}. Only attempting to load static files.`
@@ -188,18 +274,17 @@ function hasValidConfig(
   const content = JSON.parse(readFileSync(configPath, 'utf-8'));
 
   if (type === 'executors') {
-    return (
+    const hasExecutors =
       content.executors &&
       typeof content.executors === 'object' &&
-      Object.keys(content.executors).length > 0
-    );
+      Object.keys(content.executors).length > 0;
+
+    return hasExecutors && hasVisibleImpls(content.executors);
   }
 
   // migrations can be generators or packageJsonUpdates
   const hasGenerators =
-    content.generators &&
-    typeof content.generators === 'object' &&
-    Object.keys(content.generators).length > 0;
+    isGeneratorsConfig(content) && hasVisibleImpls(content.generators);
 
   const hasPackageJsonUpdates =
     content.packageJsonUpdates &&
@@ -363,12 +448,30 @@ export function pluginSpecialCasePluginRemapping(pluginName: string) {
     // we call the js plugin `typescript` in the URLs technologies
     case 'js':
       return 'typescript';
-    // we make the default java pages be the gradle impl atm.
-    // this will probs change with maven
-    case 'gradle':
-    case 'java':
-      return 'java';
     default:
       return pluginName;
   }
+}
+
+function isGeneratorsConfig(
+  content: unknown
+): content is GeneratorsJson & Pick<Required<GeneratorsJson>, 'generators'> {
+  return !!(
+    content &&
+    typeof content === 'object' &&
+    'generators' in content &&
+    typeof content.generators === 'object'
+  );
+}
+
+/**
+ * validate that a generator/migration/executor config has at least 1 visible implmentation
+ **/
+function hasVisibleImpls(content: Record<string, unknown>): boolean {
+  return (
+    content &&
+    Object.values(content).some(
+      (impl: any) => typeof impl === 'object' && !impl.hidden
+    )
+  );
 }

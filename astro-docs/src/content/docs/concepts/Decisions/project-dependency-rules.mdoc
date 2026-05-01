@@ -26,7 +26,7 @@ A utility library contains low-level utilities used by many libraries and applic
 
 ---
 
-## Feature Libraries
+## Feature libraries
 
 **What is it?**
 
@@ -55,7 +55,7 @@ A feature library can depend on any type of library.
 
 ---
 
-## UI Libraries
+## UI libraries
 
 **What is it?**
 
@@ -71,7 +71,7 @@ A ui library can depend on ui and util libraries.
 
 ---
 
-## Data-access Libraries
+## Data-access libraries
 
 **What is it?**
 
@@ -89,7 +89,7 @@ A data-access library can depend on data-access and util libraries.
 
 ---
 
-## Utility Libraries
+## Utility libraries
 
 **What is it?**
 
@@ -110,11 +110,61 @@ export { formatDate, formatTime } from './src/format-date-fns';
 export { formatCurrency } from './src/format-currency';
 ```
 
-## Enforce Project Dependency Rules
+## Enforce project dependency rules
 
-In order to enforce the dependency constraints that were listed for each type, you can add the following rule in the root `.eslintrc.json` file:
+In order to enforce the dependency constraints that were listed for each type, you can add the following rule in your ESLint configuration:
 
-```json title="/.eslintrc.json"
+{% tabs syncKey="eslint-config-preference" %}
+{% tabitem label="Flat Config" %}
+
+```javascript
+// eslint.config.mjs
+import nx from '@nx/eslint-plugin';
+
+export default [
+  ...nx.configs['flat/base'],
+  ...nx.configs['flat/typescript'],
+  ...nx.configs['flat/javascript'],
+  {
+    ignores: ['**/dist'],
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          allow: [],
+          depConstraints: [
+            {
+              sourceTag: 'type:feature',
+              onlyDependOnLibsWithTags: [
+                'type:feature',
+                'type:ui',
+                'type:util',
+              ],
+            },
+            {
+              sourceTag: 'type:ui',
+              onlyDependOnLibsWithTags: ['type:ui', 'type:util'],
+            },
+            {
+              sourceTag: 'type:util',
+              onlyDependOnLibsWithTags: ['type:util'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+];
+```
+
+{% /tabitem %}
+{% tabitem label="Legacy (.eslintrc.json)" %}
+
+```json
+// .eslintrc.json
 {
   "root": true,
   "ignorePatterns": ["**/*"],
@@ -153,7 +203,10 @@ In order to enforce the dependency constraints that were listed for each type, y
 }
 ```
 
-## Other Types
+{% /tabitem %}
+{% /tabs %}
+
+## Other types
 
 You will probably come up with other library types that make sense for your organization. That's fine. Just keep a few things in mind:
 

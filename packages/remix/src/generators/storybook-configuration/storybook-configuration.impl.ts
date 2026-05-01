@@ -37,7 +37,10 @@ export default async function remixStorybookConfigurationInternal(
   schema.addPlugin ??= addPluginDefault;
   const { root } = readProjectConfiguration(tree, schema.project);
 
-  if (!tree.exists(joinPathFragments(root, 'vite.config.ts'))) {
+  if (
+    !tree.exists(joinPathFragments(root, 'vite.config.mts')) &&
+    !tree.exists(joinPathFragments(root, 'vite.config.ts'))
+  ) {
     const cacheDir = normalizedJoinPaths(
       offsetFromRoot(root),
       'node_modules',

@@ -5,7 +5,9 @@ import type {
 import { NxReleaseConfig } from '../config/config';
 import { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { getFirstGitCommit, getLatestGitTagForPattern } from '../utils/git';
+import { ReleaseGraph } from '../utils/release-graph';
 import { resolveSemverSpecifierFromConventionalCommits } from '../utils/resolve-semver-specifier';
+import { SemverSpecifier, SemverSpecifierType } from '../utils/semver';
 import { ProjectLogger } from './project-logger';
 import { SemverBumpType } from './version-actions';
 
@@ -24,6 +26,7 @@ export async function deriveSpecifierFromConventionalCommits(
   latestMatchingGitTag:
     | Awaited<ReturnType<typeof getLatestGitTagForPattern>>
     | undefined,
+  releaseGraph: ReleaseGraph,
   fallbackCurrentVersionResolver?: 'disk',
   preid?: string
 ): Promise<SemverBumpType> {
@@ -37,8 +40,8 @@ export async function deriveSpecifierFromConventionalCommits(
   const previousVersionRef = latestMatchingGitTag
     ? latestMatchingGitTag.tag
     : fallbackCurrentVersionResolver === 'disk'
-    ? await getFirstGitCommit()
-    : undefined;
+      ? await getFirstGitCommit()
+      : undefined;
 
   if (!previousVersionRef) {
     // This should never happen since the checks above should catch if the current version couldn't be resolved
@@ -49,12 +52,29 @@ export async function deriveSpecifierFromConventionalCommits(
     );
   }
 
-  let specifier = await resolveSemverSpecifierFromConventionalCommits(
-    previousVersionRef,
-    projectGraph,
-    affectedProjects,
-    nxReleaseConfig.conventionalCommits
-  );
+  const projectToSpecifiers =
+    await resolveSemverSpecifierFromConventionalCommits(
+      previousVersionRef,
+      projectGraph,
+      affectedProjects,
+      nxReleaseConfig,
+      releaseGraph
+    );
+
+  const getHighestSemverChange = (
+    semverSpecifiersItr: MapIterator<SemverSpecifier>
+  ) => {
+    const semverSpecifiers = Array.from(semverSpecifiersItr);
+    return semverSpecifiers.sort((a, b) => b - a)[0];
+  };
+
+  const semverSpecifier =
+    releaseGroup.projectsRelationship === 'independent'
+      ? projectToSpecifiers.get(projectGraphNode.name)
+      : getHighestSemverChange(projectToSpecifiers.values());
+
+  let specifier =
+    semverSpecifier === null ? null : SemverSpecifierType[semverSpecifier];
 
   if (!specifier) {
     projectLogger.buffer(

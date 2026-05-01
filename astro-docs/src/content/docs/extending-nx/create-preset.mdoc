@@ -20,7 +20,7 @@ All first-party Nx presets are built into Nx itself, but you can [create your ow
 
 To use a concrete example, let's look at the [`qwik-nx`](https://www.npmjs.com/package/qwik-nx) Nx community plugin. They include a [preset generator](https://github.com/qwikifiers/qwik-nx/tree/main/packages/qwik-nx/src/generators/preset) that you can use to create a new Nx workspace with Qwik support.
 
-```shell {% frame="none" %}
+```shell
 npx create-nx-workspace --preset=qwik-nx
 ```
 
@@ -28,7 +28,7 @@ npx create-nx-workspace --preset=qwik-nx
 
 If you **don't** have an existing plugin you can create one by running
 
-```shell {% frame="none" %}
+```shell
 npx create-nx-plugin my-org --pluginName my-plugin
 ```
 
@@ -36,7 +36,7 @@ npx create-nx-plugin my-org --pluginName my-plugin
 
 To create our preset inside of our plugin we can run
 
-```shell {% frame="none" %}
+```shell
 nx generate @nx/plugin:generator packages/happynrwl/src/generators/preset
 ```
 
@@ -104,6 +104,6 @@ Before you are able to use your newly created preset you must package and publis
 
 After you have published your plugin to a registry you can now use your preset when creating a new workspace
 
-```shell {% frame="none" %}
+```shell
 npx create-nx-workspace my-workspace --preset=my-plugin-name
 ```

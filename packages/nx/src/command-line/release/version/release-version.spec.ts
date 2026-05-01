@@ -1,4 +1,68 @@
-import * as enquirer from 'enquirer';
+// Module-level mock container - initialized early so jest.mock factories can reference it
+const mocks = {
+  deriveSpecifierFromConventionalCommits: jest.fn(),
+  deriveSpecifierFromVersionPlan: jest.fn(),
+  resolveVersionActionsForProject: jest.fn(),
+  prompt: jest.fn(),
+};
+
+// Aliases for test usage
+const mockDeriveSpecifierFromConventionalCommits =
+  mocks.deriveSpecifierFromConventionalCommits;
+const mockDeriveSpecifierFromVersionPlan = mocks.deriveSpecifierFromVersionPlan;
+const mockResolveVersionActionsForProject =
+  mocks.resolveVersionActionsForProject;
+const mockPrompt = mocks.prompt;
+
+jest.mock('./derive-specifier-from-conventional-commits', () => ({
+  deriveSpecifierFromConventionalCommits: (...args: any[]) =>
+    mocks.deriveSpecifierFromConventionalCommits(...args),
+}));
+
+jest.mock('enquirer', () => ({
+  prompt: (...args: any[]) => mocks.prompt(...args),
+}));
+
+jest.mock('./version-actions', () => {
+  // Defer the actual module access to avoid timing issues with ESM
+  let cachedActual: any = null;
+  const getActual = () => {
+    if (!cachedActual) {
+      cachedActual = jest.requireActual('./version-actions');
+    }
+    return cachedActual;
+  };
+
+  return {
+    get NOOP_VERSION_ACTIONS() {
+      return getActual().NOOP_VERSION_ACTIONS;
+    },
+    get VersionActions() {
+      return getActual().VersionActions;
+    },
+    get SemverBumpType() {
+      return getActual().SemverBumpType;
+    },
+    deriveSpecifierFromVersionPlan: (...args: any[]) =>
+      mocks.deriveSpecifierFromVersionPlan(...args),
+    resolveVersionActionsForProject: (...args: any[]) =>
+      mocks.resolveVersionActionsForProject(...args),
+  };
+});
+
+jest.mock('./project-logger', () => {
+  const actual = jest.requireActual('./project-logger');
+  return {
+    ...actual,
+    // Don't slow down or add noise to unit tests output unnecessarily
+    ProjectLogger: class ProjectLogger {
+      buffer() {}
+
+      flush() {}
+    },
+  };
+});
+
 import { NxReleaseVersionConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
 import { createTreeWithEmptyWorkspace } from '../../../generators/testing-utils/create-tree-with-empty-workspace';
@@ -9,12 +73,11 @@ import {
   writeJson,
 } from '../../../generators/utils/json';
 import { output } from '../../../utils/output';
-import { NxReleaseConfig } from '../config/config';
-import { ReleaseGroupWithName } from '../config/filter-release-groups';
+import type { NxReleaseConfig } from '../config/config';
 import { VersionData } from '../utils/shared';
-import { ReleaseGroupProcessor } from './release-group-processor';
 import {
   createNxReleaseConfigAndPopulateWorkspace,
+  createTestReleaseGroupProcessor,
   mockResolveVersionActionsForProjectImplementation,
 } from './test-utils';
 import { SemverBumpType } from './version-actions';
@@ -39,32 +102,6 @@ jest.doMock('nx/src/devkit-exports', () => {
     detectPackageManager: mockDetectPackageManager,
   };
 });
-
-jest.mock('enquirer');
-
-let mockDeriveSpecifierFromConventionalCommits = jest.fn();
-let mockDeriveSpecifierFromVersionPlan = jest.fn();
-let mockResolveVersionActionsForProject = jest.fn();
-
-jest.doMock('./derive-specifier-from-conventional-commits', () => ({
-  deriveSpecifierFromConventionalCommits:
-    mockDeriveSpecifierFromConventionalCommits,
-}));
-
-jest.doMock('./version-actions', () => ({
-  ...jest.requireActual('./version-actions'),
-  deriveSpecifierFromVersionPlan: mockDeriveSpecifierFromVersionPlan,
-  resolveVersionActionsForProject: mockResolveVersionActionsForProject,
-}));
-
-jest.mock('./project-logger', () => ({
-  ...jest.requireActual('./project-logger'),
-  // Don't slow down or add noise to unit tests output unnecessarily
-  ProjectLogger: class ProjectLogger {
-    buffer() {}
-    flush() {}
-  },
-}));
 
 // Using the daemon in unit tests would cause jest to never exit
 process.env.NX_DAEMON = 'false';
@@ -96,16 +133,12 @@ async function releaseVersionGeneratorForTest(
   {
     nxReleaseConfig,
     projectGraph,
-    releaseGroups,
-    releaseGroupToFilteredProjects,
     userGivenSpecifier,
     filters,
     preid,
   }: {
     nxReleaseConfig: NxReleaseConfig;
     projectGraph: ProjectGraph;
-    releaseGroups: ReleaseGroupWithName[];
-    releaseGroupToFilteredProjects: Map<ReleaseGroupWithName, Set<string>>;
     userGivenSpecifier: SemverBumpType | undefined;
     filters?: {
       projects?: string[];
@@ -114,24 +147,19 @@ async function releaseVersionGeneratorForTest(
     preid?: string;
   }
 ): Promise<ReleaseVersionGeneratorResult> {
-  const processor = new ReleaseGroupProcessor(
-    tree,
-    projectGraph,
-    nxReleaseConfig,
-    releaseGroups,
-    releaseGroupToFilteredProjects,
-    {
-      dryRun: false,
-      verbose: false,
-      firstRelease: false,
-      preid,
-      userGivenSpecifier,
-      filters,
-    }
-  );
-
   try {
-    await processor.init();
+    const processor = await createTestReleaseGroupProcessor(
+      tree,
+      projectGraph,
+      nxReleaseConfig,
+      filters || {},
+      {
+        firstRelease: false,
+        preid,
+        userGivenSpecifier,
+      }
+    );
+
     await processor.processGroups();
 
     return {
@@ -142,15 +170,12 @@ async function releaseVersionGeneratorForTest(
          */
         return processor.afterAllProjectsVersioned(
           (nxReleaseConfig.version as NxReleaseVersionConfiguration)
-            .versionActionsOptions
+            .versionActionsOptions ?? {}
         );
       },
       data: processor.getVersionData(),
     };
   } catch (e: any) {
-    // Flush any pending logs before printing the error to make troubleshooting easier
-    processor.flushAllProjectLoggers();
-
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       output.error({
         title: e.message,
@@ -193,15 +218,10 @@ describe('releaseVersionGenerator (ported tests)', () => {
   });
 
   it('should return a versionData object', async () => {
-    const {
-      nxReleaseConfig,
-      projectGraph,
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-      filters,
-    } = await createNxReleaseConfigAndPopulateWorkspace(
-      tree,
-      `
+    const { nxReleaseConfig, projectGraph, filters } =
+      await createNxReleaseConfigAndPopulateWorkspace(
+        tree,
+        `
           __default__ ({ "projectsRelationship": "fixed" }):
             - my-lib@0.0.1 [js]
             - project-with-dependency-on-my-pkg@0.0.1 [js]
@@ -209,12 +229,13 @@ describe('releaseVersionGenerator (ported tests)', () => {
             - project-with-devDependency-on-my-pkg@0.0.1 [js]
               -> depends on my-lib {devDependencies}
         `,
-      {
-        version: {
-          specifierSource: 'prompt',
-        },
-      }
-    );
+        {
+          version: {
+            specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
+          },
+        }
+      );
 
     expect(
       await releaseVersionGeneratorForTest(tree, {
@@ -222,8 +243,6 @@ describe('releaseVersionGenerator (ported tests)', () => {
         projectGraph,
         filters,
         userGivenSpecifier: 'major',
-        releaseGroups,
-        releaseGroupToFilteredProjects,
       })
     ).toMatchInlineSnapshot(`
       {
@@ -247,17 +266,17 @@ describe('releaseVersionGenerator (ported tests)', () => {
                 "type": "static",
               },
             ],
-            "newVersion": "1.0.0",
+            "newVersion": "0.1.0",
           },
           "project-with-dependency-on-my-pkg": {
             "currentVersion": "0.0.1",
             "dependentProjects": [],
-            "newVersion": "1.0.0",
+            "newVersion": "0.1.0",
           },
           "project-with-devDependency-on-my-pkg": {
             "currentVersion": "0.0.1",
             "dependentProjects": [],
-            "newVersion": "1.0.0",
+            "newVersion": "0.1.0",
           },
         },
       }
@@ -268,15 +287,10 @@ describe('releaseVersionGenerator (ported tests)', () => {
     it(`should exit with code one and print guidance when not all of the given projects are appropriate for JS versioning`, async () => {
       stubProcessExit = true;
 
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
             __default__ ({ "projectsRelationship": "fixed" }):
               - my-lib@0.0.1 [js]
               - project-with-dependency-on-my-pkg@0.0.1 [js]
@@ -284,12 +298,13 @@ describe('releaseVersionGenerator (ported tests)', () => {
               - project-with-devDependency-on-my-pkg@0.0.1 [js]
                 -> depends on my-lib {devDependencies}
           `,
-        {
-          version: {
-            specifierSource: 'prompt',
-          },
-        }
-      );
+          {
+            version: {
+              specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
+            },
+          }
+        );
 
       tree.delete('my-lib/package.json');
 
@@ -301,14 +316,12 @@ describe('releaseVersionGenerator (ported tests)', () => {
         nxReleaseConfig,
         projectGraph,
         filters,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
         userGivenSpecifier: 'major',
       });
 
       expect(outputSpy).toHaveBeenCalledWith({
         title: expect.stringContaining(
-          'The project "my-lib" does not have a package.json file available in ./my-lib'
+          'The project "my-lib" does not have a package.json file available in my-lib'
         ),
       });
 
@@ -321,15 +334,10 @@ describe('releaseVersionGenerator (ported tests)', () => {
 
   describe('package with mixed "prod" and "dev" dependencies', () => {
     it('should update local dependencies only where it needs to', async () => {
-      const {
-        projectGraph,
-        nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { projectGraph, nxReleaseConfig, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
             __default__ ({ "projectsRelationship": "fixed" }):
               - my-app@0.0.1 [js]
                 -> depends on my-lib-1
@@ -337,17 +345,16 @@ describe('releaseVersionGenerator (ported tests)', () => {
               - my-lib-1@0.0.1 [js]
               - my-lib-2@0.0.1 [js]
           `,
-        {
-          version: {
-            specifierSource: 'prompt',
-          },
-        }
-      );
+          {
+            version: {
+              specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
+            },
+          }
+        );
 
       await releaseVersionGeneratorForTest(tree, {
         nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
         filters,
         projectGraph,
         userGivenSpecifier: 'major',
@@ -356,13 +363,13 @@ describe('releaseVersionGenerator (ported tests)', () => {
       expect(readJson(tree, 'my-app/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {
-            "my-lib-1": "1.0.0",
+            "my-lib-1": "0.1.0",
           },
           "devDependencies": {
-            "my-lib-2": "1.0.0",
+            "my-lib-2": "0.1.0",
           },
           "name": "my-app",
-          "version": "1.0.0",
+          "version": "0.1.0",
         }
       `);
     });
@@ -370,15 +377,10 @@ describe('releaseVersionGenerator (ported tests)', () => {
 
   describe('fixed release group', () => {
     it(`should work with semver keywords and exact semver versions`, async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
             __default__ ({ "projectsRelationship": "fixed" }):
               - my-lib@0.0.1 [js]
               - project-with-dependency-on-my-pkg@0.0.1 [js]
@@ -386,12 +388,13 @@ describe('releaseVersionGenerator (ported tests)', () => {
               - project-with-devDependency-on-my-pkg@0.0.1 [js]
                 -> depends on my-lib {devDependencies}
           `,
-        {
-          version: {
-            specifierSource: 'prompt',
-          },
-        }
-      );
+          {
+            version: {
+              specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
+            },
+          }
+        );
 
       expect(readJson(tree, 'my-lib/package.json').version).toEqual('0.0.1');
 
@@ -400,52 +403,42 @@ describe('releaseVersionGenerator (ported tests)', () => {
         projectGraph,
         filters,
         userGivenSpecifier: 'major',
-        releaseGroups,
-        releaseGroupToFilteredProjects,
       });
-      expect(readJson(tree, 'my-lib/package.json').version).toEqual('1.0.0');
+      // 0.0.1 + major = 0.1.0 (0.x versioning: major bumps minor)
+      expect(readJson(tree, 'my-lib/package.json').version).toEqual('0.1.0');
 
       await releaseVersionGeneratorForTest(tree, {
         nxReleaseConfig,
         projectGraph,
         filters,
         userGivenSpecifier: 'minor',
-        releaseGroups,
-        releaseGroupToFilteredProjects,
       });
-      expect(readJson(tree, 'my-lib/package.json').version).toEqual('1.1.0');
+      // 0.1.0 + minor = 0.1.1 (0.x versioning: minor bumps patch)
+      expect(readJson(tree, 'my-lib/package.json').version).toEqual('0.1.1');
 
       await releaseVersionGeneratorForTest(tree, {
         nxReleaseConfig,
         projectGraph,
         filters,
         userGivenSpecifier: 'patch',
-        releaseGroups,
-        releaseGroupToFilteredProjects,
       });
-      expect(readJson(tree, 'my-lib/package.json').version).toEqual('1.1.1');
+      // 0.1.1 + patch = 0.1.2
+      expect(readJson(tree, 'my-lib/package.json').version).toEqual('0.1.2');
 
       await releaseVersionGeneratorForTest(tree, {
         nxReleaseConfig,
         projectGraph,
         filters,
         userGivenSpecifier: '1.2.3' as SemverBumpType,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
       });
       expect(readJson(tree, 'my-lib/package.json').version).toEqual('1.2.3');
     });
 
     it(`should apply the updated version to the projects, including updating dependents`, async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
             __default__ ({ "projectsRelationship": "fixed" }):
               - my-lib@0.0.1 [js]
               - project-with-dependency-on-my-pkg@0.0.1 [js]
@@ -453,26 +446,25 @@ describe('releaseVersionGenerator (ported tests)', () => {
               - project-with-devDependency-on-my-pkg@0.0.1 [js]
                 -> depends on my-lib {devDependencies}
           `,
-        {
-          version: {
-            specifierSource: 'prompt',
-          },
-        }
-      );
+          {
+            version: {
+              specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
+            },
+          }
+        );
 
       await releaseVersionGeneratorForTest(tree, {
         nxReleaseConfig,
         projectGraph,
         filters,
         userGivenSpecifier: 'major',
-        releaseGroups,
-        releaseGroupToFilteredProjects,
       });
 
       expect(readJson(tree, 'my-lib/package.json')).toMatchInlineSnapshot(`
         {
           "name": "my-lib",
-          "version": "1.0.0",
+          "version": "0.1.0",
         }
       `);
 
@@ -480,10 +472,10 @@ describe('releaseVersionGenerator (ported tests)', () => {
         .toMatchInlineSnapshot(`
         {
           "dependencies": {
-            "my-lib": "1.0.0",
+            "my-lib": "0.1.0",
           },
           "name": "project-with-dependency-on-my-pkg",
-          "version": "1.0.0",
+          "version": "0.1.0",
         }
       `);
       expect(
@@ -491,10 +483,10 @@ describe('releaseVersionGenerator (ported tests)', () => {
       ).toMatchInlineSnapshot(`
         {
           "devDependencies": {
-            "my-lib": "1.0.0",
+            "my-lib": "0.1.0",
           },
           "name": "project-with-devDependency-on-my-pkg",
-          "version": "1.0.0",
+          "version": "0.1.0",
         }
       `);
     });
@@ -503,26 +495,21 @@ describe('releaseVersionGenerator (ported tests)', () => {
   describe('independent release group', () => {
     describe('specifierSource: prompt', () => {
       it(`should appropriately prompt for each project independently and apply the version updates across all manifest files`, async () => {
-        // @ts-ignore
-        enquirer.prompt = jest
-          .fn()
-          // First project will be minor
+        stubProcessExit = true;
+        // First project will be minor
+        mockPrompt
           .mockReturnValueOnce(Promise.resolve({ specifier: 'minor' }))
           // Next project will be patch
           .mockReturnValueOnce(Promise.resolve({ specifier: 'patch' }))
-          // Final project will be custom explicit version
+          // Final project will be custom explicit version (1.2.3)
+          // For custom version, first prompt returns 'custom', then second prompt returns the version
           .mockReturnValueOnce(Promise.resolve({ specifier: 'custom' }))
           .mockReturnValueOnce(Promise.resolve({ specifier: '1.2.3' }));
 
-        const {
-          nxReleaseConfig,
-          projectGraph,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          filters,
-        } = await createNxReleaseConfigAndPopulateWorkspace(
-          tree,
-          `
+        const { nxReleaseConfig, projectGraph, filters } =
+          await createNxReleaseConfigAndPopulateWorkspace(
+            tree,
+            `
               __default__ ({ "projectsRelationship": "independent" }):
                 - my-lib@0.0.1 [js]
                 - project-with-dependency-on-my-pkg@0.0.1 [js]
@@ -530,26 +517,26 @@ describe('releaseVersionGenerator (ported tests)', () => {
                 - project-with-devDependency-on-my-pkg@0.0.1 [js]
                   -> depends on my-lib {devDependencies}
             `,
-          {
-            version: {
-              specifierSource: 'prompt',
-            },
-          }
-        );
+            {
+              version: {
+                specifierSource: 'prompt',
+                adjustSemverBumpsForZeroMajorVersion: true,
+              },
+            }
+          );
 
         await releaseVersionGeneratorForTest(tree, {
           nxReleaseConfig,
           projectGraph,
           filters,
           userGivenSpecifier: undefined,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
         });
 
+        // 0.0.1 + minor = 0.0.2 (0.x versioning: minor bumps patch)
         expect(readJson(tree, 'my-lib/package.json')).toMatchInlineSnapshot(`
           {
             "name": "my-lib",
-            "version": "0.1.0",
+            "version": "0.0.2",
           }
         `);
 
@@ -557,7 +544,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
           .toMatchInlineSnapshot(`
           {
             "dependencies": {
-              "my-lib": "0.1.0",
+              "my-lib": "0.0.2",
             },
             "name": "project-with-dependency-on-my-pkg",
             "version": "0.0.2",
@@ -568,7 +555,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
         ).toMatchInlineSnapshot(`
           {
             "devDependencies": {
-              "my-lib": "0.1.0",
+              "my-lib": "0.0.2",
             },
             "name": "project-with-devDependency-on-my-pkg",
             "version": "1.2.3",
@@ -576,15 +563,10 @@ describe('releaseVersionGenerator (ported tests)', () => {
         `);
       });
       it(`should respect an explicit user CLI specifier for all, even when projects are independent, and apply the version updates across all manifest files`, async () => {
-        const {
-          nxReleaseConfig,
-          projectGraph,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          filters,
-        } = await createNxReleaseConfigAndPopulateWorkspace(
-          tree,
-          `
+        const { nxReleaseConfig, projectGraph, filters } =
+          await createNxReleaseConfigAndPopulateWorkspace(
+            tree,
+            `
               __default__ ({ "projectsRelationship": "independent" }):
                 - my-lib@0.0.1 [js]
                 - project-with-dependency-on-my-pkg@0.0.1 [js]
@@ -592,20 +574,19 @@ describe('releaseVersionGenerator (ported tests)', () => {
                 - project-with-devDependency-on-my-pkg@0.0.1 [js]
                   -> depends on my-lib {devDependencies}
             `,
-          {
-            version: {
-              specifierSource: 'prompt',
-            },
-          }
-        );
+            {
+              version: {
+                specifierSource: 'prompt',
+                adjustSemverBumpsForZeroMajorVersion: true,
+              },
+            }
+          );
 
         await releaseVersionGeneratorForTest(tree, {
           nxReleaseConfig,
           projectGraph,
           filters,
           userGivenSpecifier: '4.5.6' as SemverBumpType,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
         });
 
         expect(readJson(tree, 'my-lib/package.json')).toMatchInlineSnapshot(`
@@ -640,15 +621,10 @@ describe('releaseVersionGenerator (ported tests)', () => {
 
       describe('updateDependentsOptions', () => {
         it(`should update dependents even when filtering to a subset of projects which do not include those dependents, by default`, async () => {
-          const {
-            nxReleaseConfig,
-            projectGraph,
-            releaseGroups,
-            releaseGroupToFilteredProjects,
-            filters,
-          } = await createNxReleaseConfigAndPopulateWorkspace(
-            tree,
-            `
+          const { nxReleaseConfig, projectGraph, filters } =
+            await createNxReleaseConfigAndPopulateWorkspace(
+              tree,
+              `
                 __default__ ({ "projectsRelationship": "independent" }):
                   - my-lib@0.0.1 [js]
                   - project-with-dependency-on-my-pkg@0.0.1 [js]
@@ -656,18 +632,19 @@ describe('releaseVersionGenerator (ported tests)', () => {
                   - project-with-devDependency-on-my-pkg@0.0.1 [js]
                     -> depends on my-lib {devDependencies}
               `,
-            {
-              version: {
-                specifierSource: 'prompt',
-                // No value for updateDependents, should default to 'auto'
+              {
+                version: {
+                  specifierSource: 'prompt',
+                  adjustSemverBumpsForZeroMajorVersion: true,
+                  // No value for updateDependents, should default to 'always'
+                },
               },
-            },
-            undefined,
-            {
-              // version only my-lib
-              projects: ['my-lib'],
-            }
-          );
+              undefined,
+              {
+                // version only my-lib
+                projects: ['my-lib'],
+              }
+            );
 
           expect(readJson(tree, 'my-lib/package.json').version).toEqual(
             '0.0.1'
@@ -700,8 +677,6 @@ describe('releaseVersionGenerator (ported tests)', () => {
             projectGraph,
             filters,
             userGivenSpecifier: '9.9.9' as SemverBumpType,
-            releaseGroups,
-            releaseGroupToFilteredProjects,
           });
 
           expect(readJson(tree, 'my-lib/package.json')).toMatchInlineSnapshot(`
@@ -736,15 +711,10 @@ describe('releaseVersionGenerator (ported tests)', () => {
         });
 
         it(`should not update dependents when filtering to a subset of projects by default, if "updateDependents" is set to "never"`, async () => {
-          const {
-            nxReleaseConfig,
-            projectGraph,
-            releaseGroups,
-            releaseGroupToFilteredProjects,
-            filters,
-          } = await createNxReleaseConfigAndPopulateWorkspace(
-            tree,
-            `
+          const { nxReleaseConfig, projectGraph, filters } =
+            await createNxReleaseConfigAndPopulateWorkspace(
+              tree,
+              `
                 __default__ ({ "projectsRelationship": "independent" }):
                   - my-lib@0.0.1 [js]
                   - project-with-dependency-on-my-pkg@0.0.1 [js]
@@ -752,25 +722,24 @@ describe('releaseVersionGenerator (ported tests)', () => {
                   - project-with-devDependency-on-my-pkg@0.0.1 [js]
                     -> depends on my-lib {devDependencies}
               `,
-            {
-              version: {
-                specifierSource: 'prompt',
-                updateDependents: 'never',
+              {
+                version: {
+                  specifierSource: 'prompt',
+                  adjustSemverBumpsForZeroMajorVersion: true,
+                  updateDependents: 'never',
+                },
               },
-            },
-            undefined,
-            {
-              projects: ['my-lib'],
-            }
-          );
+              undefined,
+              {
+                projects: ['my-lib'],
+              }
+            );
 
           await releaseVersionGeneratorForTest(tree, {
             nxReleaseConfig,
             projectGraph,
             filters,
             userGivenSpecifier: '9.9.9' as SemverBumpType,
-            releaseGroups,
-            releaseGroupToFilteredProjects,
           });
 
           expect(readJson(tree, 'my-lib/package.json')).toMatchInlineSnapshot(`
@@ -805,15 +774,10 @@ describe('releaseVersionGenerator (ported tests)', () => {
         });
 
         it(`should update dependents even when filtering to a subset of projects which do not include those dependents, if "updateDependents" is "auto"`, async () => {
-          const {
-            nxReleaseConfig,
-            projectGraph,
-            releaseGroups,
-            releaseGroupToFilteredProjects,
-            filters,
-          } = await createNxReleaseConfigAndPopulateWorkspace(
-            tree,
-            `
+          const { nxReleaseConfig, projectGraph, filters } =
+            await createNxReleaseConfigAndPopulateWorkspace(
+              tree,
+              `
                 __default__ ({ "projectsRelationship": "independent" }):
                   - my-lib@0.0.1 [js]
                   - project-with-dependency-on-my-pkg@0.0.1 [js]
@@ -821,25 +785,24 @@ describe('releaseVersionGenerator (ported tests)', () => {
                   - project-with-devDependency-on-my-pkg@0.0.1 [js]
                     -> depends on my-lib {devDependencies}
               `,
-            {
-              version: {
-                specifierSource: 'prompt',
-                updateDependents: 'auto',
+              {
+                version: {
+                  specifierSource: 'prompt',
+                  adjustSemverBumpsForZeroMajorVersion: true,
+                  updateDependents: 'auto',
+                },
               },
-            },
-            undefined,
-            {
-              projects: ['my-lib'],
-            }
-          );
+              undefined,
+              {
+                projects: ['my-lib'],
+              }
+            );
 
           await releaseVersionGeneratorForTest(tree, {
             nxReleaseConfig,
             filters,
             projectGraph,
             userGivenSpecifier: '9.9.9' as SemverBumpType,
-            releaseGroups,
-            releaseGroupToFilteredProjects,
           });
 
           expect(readJson(tree, 'my-lib/package.json')).toMatchInlineSnapshot(`
@@ -873,16 +836,11 @@ describe('releaseVersionGenerator (ported tests)', () => {
           `);
         });
 
-        it('should update dependents with a prepatch when creating a pre-release version', async () => {
-          const {
-            nxReleaseConfig,
-            projectGraph,
-            releaseGroups,
-            releaseGroupToFilteredProjects,
-            filters,
-          } = await createNxReleaseConfigAndPopulateWorkspace(
-            tree,
-            `
+        it('should not apply preid to dependent patch bumps by default when --preid is set', async () => {
+          const { nxReleaseConfig, projectGraph, filters } =
+            await createNxReleaseConfigAndPopulateWorkspace(
+              tree,
+              `
                 __default__ ({ "projectsRelationship": "independent" }):
                   - my-lib@0.0.1 [js]
                   - project-with-dependency-on-my-pkg@0.0.1 [js]
@@ -890,12 +848,147 @@ describe('releaseVersionGenerator (ported tests)', () => {
                   - project-with-devDependency-on-my-pkg@0.0.1 [js]
                     -> depends on my-lib {devDependencies}
               `,
-            {
-              version: {
-                specifierSource: 'prompt',
+              {
+                version: {
+                  specifierSource: 'prompt',
+                  adjustSemverBumpsForZeroMajorVersion: true,
+                  updateDependents: 'auto',
+                },
               },
+              undefined,
+              {
+                projects: ['my-lib'],
+              }
+            );
+
+          // Default behavior (applyPreidToDependents unset): dependents only
+          // get a stable patch bump even though the bumped project is a prerelease.
+          await releaseVersionGeneratorForTest(tree, {
+            nxReleaseConfig,
+            filters,
+            projectGraph,
+            userGivenSpecifier: 'prepatch' as SemverBumpType,
+            preid: 'rc',
+          });
+
+          expect(readJson(tree, 'my-lib/package.json')).toMatchInlineSnapshot(`
+            {
+              "name": "my-lib",
+              "version": "0.0.2-rc.0",
             }
-          );
+          `);
+
+          expect(
+            readJson(tree, 'project-with-dependency-on-my-pkg/package.json')
+          ).toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "my-lib": "0.0.2-rc.0",
+              },
+              "name": "project-with-dependency-on-my-pkg",
+              "version": "0.0.2",
+            }
+          `);
+          expect(
+            readJson(tree, 'project-with-devDependency-on-my-pkg/package.json')
+          ).toMatchInlineSnapshot(`
+            {
+              "devDependencies": {
+                "my-lib": "0.0.2-rc.0",
+              },
+              "name": "project-with-devDependency-on-my-pkg",
+              "version": "0.0.2",
+            }
+          `);
+        });
+
+        it('should apply preid to dependent patch bumps when applyPreidToDependents is enabled and --preid is set', async () => {
+          const { nxReleaseConfig, projectGraph, filters } =
+            await createNxReleaseConfigAndPopulateWorkspace(
+              tree,
+              `
+                __default__ ({ "projectsRelationship": "independent" }):
+                  - my-lib@0.0.1 [js]
+                  - project-with-dependency-on-my-pkg@0.0.1 [js]
+                    -> depends on my-lib
+                  - project-with-devDependency-on-my-pkg@0.0.1 [js]
+                    -> depends on my-lib {devDependencies}
+              `,
+              {
+                version: {
+                  specifierSource: 'prompt',
+                  adjustSemverBumpsForZeroMajorVersion: true,
+                  updateDependents: 'auto',
+                  applyPreidToDependents: true,
+                },
+              },
+              undefined,
+              {
+                projects: ['my-lib'],
+              }
+            );
+
+          // With applyPreidToDependents: true, dependents that are only
+          // receiving a dependent patch bump are upgraded to prepatch so the
+          // preid is actually applied.
+          await releaseVersionGeneratorForTest(tree, {
+            nxReleaseConfig,
+            filters,
+            projectGraph,
+            userGivenSpecifier: 'prepatch' as SemverBumpType,
+            preid: 'rc',
+          });
+
+          expect(readJson(tree, 'my-lib/package.json')).toMatchInlineSnapshot(`
+            {
+              "name": "my-lib",
+              "version": "0.0.2-rc.0",
+            }
+          `);
+
+          expect(
+            readJson(tree, 'project-with-dependency-on-my-pkg/package.json')
+          ).toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "my-lib": "0.0.2-rc.0",
+              },
+              "name": "project-with-dependency-on-my-pkg",
+              "version": "0.0.2-rc.0",
+            }
+          `);
+          expect(
+            readJson(tree, 'project-with-devDependency-on-my-pkg/package.json')
+          ).toMatchInlineSnapshot(`
+            {
+              "devDependencies": {
+                "my-lib": "0.0.2-rc.0",
+              },
+              "name": "project-with-devDependency-on-my-pkg",
+              "version": "0.0.2-rc.0",
+            }
+          `);
+        });
+
+        it('should update dependents with a prepatch when creating a pre-release version', async () => {
+          const { nxReleaseConfig, projectGraph, filters } =
+            await createNxReleaseConfigAndPopulateWorkspace(
+              tree,
+              `
+                __default__ ({ "projectsRelationship": "independent" }):
+                  - my-lib@0.0.1 [js]
+                  - project-with-dependency-on-my-pkg@0.0.1 [js]
+                    -> depends on my-lib
+                  - project-with-devDependency-on-my-pkg@0.0.1 [js]
+                    -> depends on my-lib {devDependencies}
+              `,
+              {
+                version: {
+                  specifierSource: 'prompt',
+                  adjustSemverBumpsForZeroMajorVersion: true,
+                },
+              }
+            );
 
           expect(readJson(tree, 'my-lib/package.json').version).toEqual(
             '0.0.1'
@@ -914,8 +1007,6 @@ describe('releaseVersionGenerator (ported tests)', () => {
             filters,
             projectGraph,
             userGivenSpecifier: 'prepatch' as SemverBumpType,
-            releaseGroups,
-            releaseGroupToFilteredProjects,
             preid: 'alpha',
           });
 
@@ -955,15 +1046,10 @@ describe('releaseVersionGenerator (ported tests)', () => {
 
   describe('leading v in version', () => {
     it(`should strip a leading v from the provided specifier`, async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
             __default__ ({ "projectsRelationship": "fixed" }):
               - my-lib@0.0.1 [js]
               - project-with-dependency-on-my-pkg@0.0.1 [js]
@@ -971,20 +1057,19 @@ describe('releaseVersionGenerator (ported tests)', () => {
               - project-with-devDependency-on-my-pkg@0.0.1 [js]
                 -> depends on my-lib {devDependencies}
           `,
-        {
-          version: {
-            specifierSource: 'prompt',
-          },
-        }
-      );
+          {
+            version: {
+              specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
+            },
+          }
+        );
 
       await releaseVersionGeneratorForTest(tree, {
         nxReleaseConfig,
         projectGraph,
         filters,
         userGivenSpecifier: 'v8.8.8' as SemverBumpType,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
       });
 
       expect(readJson(tree, 'my-lib/package.json')).toMatchInlineSnapshot(`
@@ -1056,22 +1141,15 @@ describe('releaseVersionGenerator (ported tests)', () => {
     }
 
     it('should work with an empty prefix', async () => {
-      const {
-        projectGraph,
-        nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        graphDefinition,
-        {
+      const { projectGraph, nxReleaseConfig, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(tree, graphDefinition, {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
             versionPrefix: '',
+            preserveMatchingDependencyRanges: false,
           },
-        }
-      );
+        });
 
       // Manually set different version prefixes
       setDifferentVersionPrefixes(tree);
@@ -1080,8 +1158,6 @@ describe('releaseVersionGenerator (ported tests)', () => {
         nxReleaseConfig,
         projectGraph,
         filters,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
         userGivenSpecifier: '9.9.9' as SemverBumpType,
       });
 
@@ -1130,22 +1206,15 @@ describe('releaseVersionGenerator (ported tests)', () => {
     });
 
     it('should work with a ^ prefix', async () => {
-      const {
-        projectGraph,
-        nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        graphDefinition,
-        {
+      const { projectGraph, nxReleaseConfig, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(tree, graphDefinition, {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
             versionPrefix: '^',
+            preserveMatchingDependencyRanges: false,
           },
-        }
-      );
+        });
 
       // Manually set different version prefixes
       setDifferentVersionPrefixes(tree);
@@ -1154,8 +1223,6 @@ describe('releaseVersionGenerator (ported tests)', () => {
         nxReleaseConfig,
         projectGraph,
         filters,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
         userGivenSpecifier: '9.9.9' as SemverBumpType,
       });
 
@@ -1204,22 +1271,15 @@ describe('releaseVersionGenerator (ported tests)', () => {
     });
 
     it('should work with a ~ prefix', async () => {
-      const {
-        projectGraph,
-        nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        graphDefinition,
-        {
+      const { projectGraph, nxReleaseConfig, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(tree, graphDefinition, {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
             versionPrefix: '~',
+            preserveMatchingDependencyRanges: false,
           },
-        }
-      );
+        });
 
       // Manually set different version prefixes
       setDifferentVersionPrefixes(tree);
@@ -1228,8 +1288,6 @@ describe('releaseVersionGenerator (ported tests)', () => {
         nxReleaseConfig,
         projectGraph,
         filters,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
         userGivenSpecifier: '9.9.9' as SemverBumpType,
       });
 
@@ -1278,22 +1336,15 @@ describe('releaseVersionGenerator (ported tests)', () => {
     });
 
     it('should respect any existing prefix when explicitly set to "auto"', async () => {
-      const {
-        projectGraph,
-        nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        graphDefinition,
-        {
+      const { projectGraph, nxReleaseConfig, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(tree, graphDefinition, {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
             versionPrefix: 'auto',
+            preserveMatchingDependencyRanges: false,
           },
-        }
-      );
+        });
 
       // Manually set different version prefixes
       setDifferentVersionPrefixes(tree);
@@ -1302,8 +1353,6 @@ describe('releaseVersionGenerator (ported tests)', () => {
         nxReleaseConfig,
         projectGraph,
         filters,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
         userGivenSpecifier: '9.9.9' as SemverBumpType,
       });
 
@@ -1352,23 +1401,16 @@ describe('releaseVersionGenerator (ported tests)', () => {
     });
 
     it('should use the behavior of "auto" by default', async () => {
-      const {
-        projectGraph,
-        nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        graphDefinition,
-        {
+      const { projectGraph, nxReleaseConfig, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(tree, graphDefinition, {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
             // No value, should default to "auto"
             versionPrefix: undefined,
+            preserveMatchingDependencyRanges: false,
           },
-        }
-      );
+        });
 
       // Manually set different version prefixes
       setDifferentVersionPrefixes(tree);
@@ -1377,8 +1419,6 @@ describe('releaseVersionGenerator (ported tests)', () => {
         nxReleaseConfig,
         projectGraph,
         filters,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
         userGivenSpecifier: '9.9.9' as SemverBumpType,
       });
 
@@ -1429,22 +1469,14 @@ describe('releaseVersionGenerator (ported tests)', () => {
     it(`should exit with code one and print guidance for invalid prefix values`, async () => {
       stubProcessExit = true;
 
-      const {
-        projectGraph,
-        nxReleaseConfig,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        graphDefinition,
-        {
+      const { projectGraph, nxReleaseConfig, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(tree, graphDefinition, {
           version: {
             specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
             versionPrefix: '$' as any,
           },
-        }
-      );
+        });
 
       const outputSpy = jest
         .spyOn(output, 'error')
@@ -1456,8 +1488,6 @@ describe('releaseVersionGenerator (ported tests)', () => {
         nxReleaseConfig,
         projectGraph,
         filters,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
         userGivenSpecifier: 'major' as SemverBumpType,
       });
 
@@ -1476,15 +1506,10 @@ Valid values are: "auto", "", "~", "^", "="`,
 
   describe('transitive updateDependents', () => {
     it('should not update transitive dependents when updateDependents is set to "never" and the transitive dependents are not in the same batch', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
               __default__ ({ "projectsRelationship": "independent" }):
                 - my-lib@0.0.1 [js]
                 - project-with-dependency-on-my-lib@0.0.1 [js]
@@ -1492,24 +1517,22 @@ Valid values are: "auto", "", "~", "^", "="`,
                 - project-with-transitive-dependency-on-my-lib@0.0.1 [js]
                   -> depends on project-with-dependency-on-my-lib
             `,
-        {
-          version: {
-            updateDependents: 'never',
+          {
+            version: {
+              updateDependents: 'never',
+            },
           },
-        },
-        undefined,
-        {
-          projects: ['my-lib'],
-        }
-      );
+          undefined,
+          {
+            projects: ['my-lib'],
+          }
+        );
 
       const result = await releaseVersionGeneratorForTest(tree, {
         nxReleaseConfig,
         projectGraph,
         filters,
         userGivenSpecifier: '9.9.9' as SemverBumpType,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
       });
 
       expect(result).toMatchInlineSnapshot(`
@@ -1568,15 +1591,10 @@ Valid values are: "auto", "", "~", "^", "="`,
     });
 
     it('should always update transitive dependents when updateDependents is set to "auto"', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
               __default__ ({ "projectsRelationship": "independent" }):
                 - my-lib@0.0.1 [js]
                 - project-with-dependency-on-my-lib@0.0.1 [js]
@@ -1584,24 +1602,23 @@ Valid values are: "auto", "", "~", "^", "="`,
                 - project-with-transitive-dependency-on-my-lib@0.0.1 [js]
                   -> depends on ^project-with-dependency-on-my-lib {devDependencies}
             `,
-        {
-          version: {
-            updateDependents: 'auto',
+          {
+            version: {
+              updateDependents: 'auto',
+              preserveMatchingDependencyRanges: false,
+            },
           },
-        },
-        undefined,
-        {
-          projects: ['my-lib'],
-        }
-      );
+          undefined,
+          {
+            projects: ['my-lib'],
+          }
+        );
 
       const result = await releaseVersionGeneratorForTest(tree, {
         nxReleaseConfig,
         projectGraph,
         filters,
         userGivenSpecifier: '9.9.9' as SemverBumpType,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
       });
 
       expect(result).toMatchInlineSnapshot(`
@@ -1690,26 +1707,21 @@ Valid values are: "auto", "", "~", "^", "="`,
 
     describe("updateDependents: 'never'", () => {
       it('should allow versioning of circular dependencies when not all projects are included in the current batch', async () => {
-        const {
-          nxReleaseConfig,
-          projectGraph,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          filters,
-        } = await createNxReleaseConfigAndPopulateWorkspace(
-          tree,
-          circularGraphDefinition,
-          {
-            version: {
-              updateDependents: 'never',
+        const { nxReleaseConfig, projectGraph, filters } =
+          await createNxReleaseConfigAndPopulateWorkspace(
+            tree,
+            circularGraphDefinition,
+            {
+              version: {
+                updateDependents: 'never',
+              },
             },
-          },
-          undefined,
-          {
-            // version only package-a
-            projects: ['package-a'],
-          }
-        );
+            undefined,
+            {
+              // version only package-a
+              projects: ['package-a'],
+            }
+          );
 
         expect(readJson(tree, 'package-a/package.json')).toMatchInlineSnapshot(`
         {
@@ -1733,8 +1745,6 @@ Valid values are: "auto", "", "~", "^", "="`,
         expect(
           await releaseVersionGeneratorForTest(tree, {
             nxReleaseConfig,
-            releaseGroups,
-            releaseGroupToFilteredProjects,
             filters,
             projectGraph,
             userGivenSpecifier: '2.0.0' as SemverBumpType,
@@ -1789,26 +1799,21 @@ Valid values are: "auto", "", "~", "^", "="`,
       });
 
       it('should allow versioning of circular dependencies when all projects are included in the current batch', async () => {
-        const {
-          nxReleaseConfig,
-          projectGraph,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          filters,
-        } = await createNxReleaseConfigAndPopulateWorkspace(
-          tree,
-          circularGraphDefinition,
-          {
-            version: {
-              updateDependents: 'never',
+        const { nxReleaseConfig, projectGraph, filters } =
+          await createNxReleaseConfigAndPopulateWorkspace(
+            tree,
+            circularGraphDefinition,
+            {
+              version: {
+                updateDependents: 'never',
+              },
             },
-          },
-          undefined,
-          {
-            // version both packages
-            projects: ['package-a', 'package-b'],
-          }
-        );
+            undefined,
+            {
+              // version both packages
+              projects: ['package-a', 'package-b'],
+            }
+          );
 
         expect(readJson(tree, 'package-a/package.json')).toMatchInlineSnapshot(`
         {
@@ -1832,8 +1837,6 @@ Valid values are: "auto", "", "~", "^", "="`,
         expect(
           await releaseVersionGeneratorForTest(tree, {
             nxReleaseConfig,
-            releaseGroups,
-            releaseGroupToFilteredProjects,
             filters,
             projectGraph,
             userGivenSpecifier: '2.0.0' as SemverBumpType,
@@ -1897,26 +1900,21 @@ Valid values are: "auto", "", "~", "^", "="`,
 
     describe("updateDependents: 'auto'", () => {
       it('should allow versioning of circular dependencies when not all projects are included in the current batch', async () => {
-        const {
-          nxReleaseConfig,
-          projectGraph,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          filters,
-        } = await createNxReleaseConfigAndPopulateWorkspace(
-          tree,
-          circularGraphDefinition,
-          {
-            version: {
-              updateDependents: 'auto',
+        const { nxReleaseConfig, projectGraph, filters } =
+          await createNxReleaseConfigAndPopulateWorkspace(
+            tree,
+            circularGraphDefinition,
+            {
+              version: {
+                updateDependents: 'auto',
+              },
             },
-          },
-          undefined,
-          {
-            // version only package-a
-            projects: ['package-a'],
-          }
-        );
+            undefined,
+            {
+              // version only package-a
+              projects: ['package-a'],
+            }
+          );
 
         expect(readJson(tree, 'package-a/package.json')).toMatchInlineSnapshot(`
         {
@@ -1940,8 +1938,6 @@ Valid values are: "auto", "", "~", "^", "="`,
         expect(
           await releaseVersionGeneratorForTest(tree, {
             nxReleaseConfig,
-            releaseGroups,
-            releaseGroupToFilteredProjects,
             filters,
             projectGraph,
             userGivenSpecifier: '2.0.0' as SemverBumpType,
@@ -2003,26 +1999,21 @@ Valid values are: "auto", "", "~", "^", "="`,
       });
 
       it('should allow versioning of circular dependencies when all projects are included in the current batch', async () => {
-        const {
-          nxReleaseConfig,
-          projectGraph,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
-          filters,
-        } = await createNxReleaseConfigAndPopulateWorkspace(
-          tree,
-          circularGraphDefinition,
-          {
-            version: {
-              updateDependents: 'auto',
+        const { nxReleaseConfig, projectGraph, filters } =
+          await createNxReleaseConfigAndPopulateWorkspace(
+            tree,
+            circularGraphDefinition,
+            {
+              version: {
+                updateDependents: 'auto',
+              },
             },
-          },
-          undefined,
-          {
-            // version both packages
-            projects: ['package-a', 'package-b'],
-          }
-        );
+            undefined,
+            {
+              // version both packages
+              projects: ['package-a', 'package-b'],
+            }
+          );
 
         expect(readJson(tree, 'package-a/package.json')).toMatchInlineSnapshot(`
           {
@@ -2046,8 +2037,6 @@ Valid values are: "auto", "", "~", "^", "="`,
         expect(
           await releaseVersionGeneratorForTest(tree, {
             nxReleaseConfig,
-            releaseGroups,
-            releaseGroupToFilteredProjects,
             filters,
             projectGraph,
             userGivenSpecifier: '2.0.0' as SemverBumpType,
@@ -2112,40 +2101,34 @@ Valid values are: "auto", "", "~", "^", "="`,
 
   describe('preserveLocalDependencyProtocols', () => {
     it('should preserve local `workspace:` references when preserveLocalDependencyProtocols is true', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
             __default__ ({ "projectsRelationship": "independent" }):
               - package-a@1.0.0 [js]
                 -> depends on package-b(workspace:*)
               - package-b@1.0.0 [js]
             `,
-        {
-          version: {
-            specifierSource: 'prompt',
-            preserveLocalDependencyProtocols: true,
+          {
+            version: {
+              specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
+              preserveLocalDependencyProtocols: true,
+            },
           },
-        },
-        undefined,
-        {
-          // version only package-b
-          projects: ['package-b'],
-        }
-      );
+          undefined,
+          {
+            // version only package-b
+            projects: ['package-b'],
+          }
+        );
 
       expect(
         await releaseVersionGeneratorForTest(tree, {
           nxReleaseConfig,
           projectGraph,
           filters,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
           userGivenSpecifier: '2.0.0' as SemverBumpType,
         })
       ).toMatchInlineSnapshot(`
@@ -2193,40 +2176,34 @@ Valid values are: "auto", "", "~", "^", "="`,
     });
 
     it('should preserve local `file:` references when preserveLocalDependencyProtocols is true', async () => {
-      const {
-        nxReleaseConfig,
-        projectGraph,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
-        filters,
-      } = await createNxReleaseConfigAndPopulateWorkspace(
-        tree,
-        `
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
             __default__ ({ "projectsRelationship": "independent" }):
               - package-a@1.0.0 [js]
                 -> depends on package-b(file:../package-b)
               - package-b@1.0.0 [js]
             `,
-        {
-          version: {
-            specifierSource: 'prompt',
-            preserveLocalDependencyProtocols: true,
+          {
+            version: {
+              specifierSource: 'prompt',
+              adjustSemverBumpsForZeroMajorVersion: true,
+              preserveLocalDependencyProtocols: true,
+            },
           },
-        },
-        undefined,
-        {
-          // version only package-b
-          projects: ['package-b'],
-        }
-      );
+          undefined,
+          {
+            // version only package-b
+            projects: ['package-b'],
+          }
+        );
 
       expect(
         await releaseVersionGeneratorForTest(tree, {
           nxReleaseConfig,
           projectGraph,
           filters,
-          releaseGroups,
-          releaseGroupToFilteredProjects,
           userGivenSpecifier: '2.0.0' as SemverBumpType,
         })
       ).toMatchInlineSnapshot(`
@@ -2275,15 +2252,10 @@ Valid values are: "auto", "", "~", "^", "="`,
   });
 
   it('should not double patch transitive dependents that are already direct dependents', async () => {
-    const {
-      nxReleaseConfig,
-      projectGraph,
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-      filters,
-    } = await createNxReleaseConfigAndPopulateWorkspace(
-      tree,
-      `
+    const { nxReleaseConfig, projectGraph, filters } =
+      await createNxReleaseConfigAndPopulateWorkspace(
+        tree,
+        `
         __default__ ({ "projectsRelationship": "independent" }):
           - core@1.0.0 [js:@slateui/core]
           - buttons@1.0.0 [js:@slateui/buttons]
@@ -2292,16 +2264,17 @@ Valid values are: "auto", "", "~", "^", "="`,
             -> depends on core
             -> depends on buttons
       `,
-      {
-        version: {
-          specifierSource: 'prompt',
+        {
+          version: {
+            specifierSource: 'prompt',
+            adjustSemverBumpsForZeroMajorVersion: true,
+          },
         },
-      },
-      undefined,
-      {
-        projects: ['core'],
-      }
-    );
+        undefined,
+        {
+          projects: ['core'],
+        }
+      );
 
     expect(readJson(tree, 'core/package.json')).toMatchInlineSnapshot(`
       {
@@ -2336,8 +2309,6 @@ Valid values are: "auto", "", "~", "^", "="`,
         nxReleaseConfig,
         projectGraph,
         filters,
-        releaseGroups,
-        releaseGroupToFilteredProjects,
         // Bump core to 2.0.0, which will cause buttons and forms to be patched to 1.0.1
         // This prevents a regression against an issue where forms would end up being patched twice to 1.0.2 in this scenario
         userGivenSpecifier: '2.0.0' as SemverBumpType,
@@ -2449,15 +2420,10 @@ Valid values are: "auto", "", "~", "^", "="`,
             }
           );
 
-          const {
-            nxReleaseConfig,
-            projectGraph,
-            releaseGroups,
-            releaseGroupToFilteredProjects,
-            filters,
-          } = await createNxReleaseConfigAndPopulateWorkspace(
-            tree,
-            `
+          const { nxReleaseConfig, projectGraph, filters } =
+            await createNxReleaseConfigAndPopulateWorkspace(
+              tree,
+              `
               myReleaseGroup ({ "projectsRelationship": "independent" }):
                 - my-lib@0.0.1 [js]
                 - root[.]@0.0.1 [js]
@@ -2466,22 +2432,20 @@ Valid values are: "auto", "", "~", "^", "="`,
                 - project-with-devDependency-on-my-pkg@0.0.1 [js]
                   -> depends on my-lib {devDependencies}
             `,
-            {
-              version: {
-                manifestRootsToUpdate: ['dist/{projectRoot}'],
-                currentVersionResolver: 'disk',
+              {
+                version: {
+                  manifestRootsToUpdate: ['dist/{projectRoot}'],
+                  currentVersionResolver: 'disk',
+                },
               },
-            },
-            undefined
-          );
+              undefined
+            );
 
           expect(
             await releaseVersionGeneratorForTest(tree, {
               nxReleaseConfig,
               projectGraph,
               filters,
-              releaseGroups,
-              releaseGroupToFilteredProjects,
               userGivenSpecifier: 'patch',
             })
           ).toMatchInlineSnapshot(`
@@ -2534,15 +2498,10 @@ Valid values are: "auto", "", "~", "^", "="`,
             version: '0.0.1',
           });
 
-          const {
-            nxReleaseConfig,
-            projectGraph,
-            releaseGroups,
-            releaseGroupToFilteredProjects,
-            filters,
-          } = await createNxReleaseConfigAndPopulateWorkspace(
-            tree,
-            `
+          const { nxReleaseConfig, projectGraph, filters } =
+            await createNxReleaseConfigAndPopulateWorkspace(
+              tree,
+              `
               myReleaseGroup ({ "projectsRelationship": "independent" }):
                 - depends-on-my-lib@0.0.1 [js]
                   -> depends on my-lib
@@ -2551,27 +2510,25 @@ Valid values are: "auto", "", "~", "^", "="`,
                 - root[.]@0.0.1 [js:@proj/source]
                 - my-lib-2@0.0.1 [js]
             `,
-            {
-              version: {
-                manifestRootsToUpdate: ['dist/{projectRoot}'],
-                currentVersionResolver: 'disk',
+              {
+                version: {
+                  manifestRootsToUpdate: ['dist/{projectRoot}'],
+                  currentVersionResolver: 'disk',
+                },
               },
-            },
-            undefined,
-            {
-              // depends-on-my-lib will get its dependencies updated in package.json because my-lib is being versioned
-              // this will happen regardless of if depends-on-my-lib should be versioned
-              projects: ['my-lib', 'my-lib-2'],
-            }
-          );
+              undefined,
+              {
+                // depends-on-my-lib will get its dependencies updated in package.json because my-lib is being versioned
+                // this will happen regardless of if depends-on-my-lib should be versioned
+                projects: ['my-lib', 'my-lib-2'],
+              }
+            );
 
           expect(
             await releaseVersionGeneratorForTest(tree, {
               nxReleaseConfig,
               projectGraph,
               filters,
-              releaseGroups,
-              releaseGroupToFilteredProjects,
               userGivenSpecifier: 'patch',
             })
           ).toMatchInlineSnapshot(`

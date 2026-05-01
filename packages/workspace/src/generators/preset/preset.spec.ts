@@ -23,7 +23,6 @@ describe('preset', () => {
     expect(tree.children(`apps/${name}`).sort()).toMatchInlineSnapshot(`
       [
         ".eslintrc.json",
-        "jest.config.ts",
         "project.json",
         "public",
         "src",
@@ -38,7 +37,6 @@ describe('preset', () => {
         "index.html",
         "main.ts",
         "styles.css",
-        "test-setup.ts",
       ]
     `);
     expect(tree.children(`apps/${name}/src/app`).sort()).toMatchInlineSnapshot(`
@@ -122,7 +120,7 @@ describe('preset', () => {
       linter: 'eslint',
     });
     expect(tree.exists(`apps/${name}/src/main.ts`)).toBe(true);
-    expect(tree.read(`apps/${name}/vite.config.ts`, 'utf-8'))
+    expect(tree.read(`apps/${name}/vite.config.mts`, 'utf-8'))
       .toMatchInlineSnapshot(`
       "/// <reference types='vitest' />
       import { defineConfig } from 'vite';
@@ -131,20 +129,20 @@ describe('preset', () => {
       import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
       export default defineConfig(() => ({
-        root: __dirname,
+        root: import.meta.dirname,
         cacheDir: '../../node_modules/.vite/apps/vue-preset-monorepo',
-        server: {
+        server:{
           port: 4200,
           host: 'localhost',
         },
-        preview: {
+        preview:{
           port: 4300,
           host: 'localhost',
         },
         plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
         // Uncomment this if you are using workers.
         // worker: {
-        //  plugins: [ nxViteTsPaths() ],
+        //   plugins: () => [ nxViteTsPaths() ],
         // },
         build: {
           outDir: '../../dist/apps/vue-preset-monorepo',
@@ -164,7 +162,7 @@ describe('preset', () => {
           coverage: {
             reportsDirectory: '../../coverage/apps/vue-preset-monorepo',
             provider: 'v8' as const,
-          },
+          }
         },
       }));
       "
@@ -179,7 +177,8 @@ describe('preset', () => {
       style: 'css',
       linter: 'eslint',
     });
-    expect(tree.exists(`apps/${name}/src/app.vue`)).toBe(true);
+    // Nuxt v4 uses app directory structure by default
+    expect(tree.exists(`apps/${name}/app/app.vue`)).toBe(true);
     expect(readProjectConfiguration(tree, name)).toBeDefined();
   });
 
@@ -277,8 +276,8 @@ describe('preset', () => {
       linter: 'eslint',
       bundler: 'vite',
     });
-    expect(tree.exists('vite.config.ts')).toBe(true);
-    expect(tree.read('vite.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+    expect(tree.exists('vite.config.mts')).toBe(true);
+    expect(tree.read('vite.config.mts', 'utf-8')).toMatchInlineSnapshot(`
       "/// <reference types='vitest' />
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
@@ -286,20 +285,20 @@ describe('preset', () => {
       import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
       export default defineConfig(() => ({
-        root: __dirname,
+        root: import.meta.dirname,
         cacheDir: './node_modules/.vite/react-standalone-preset-vite',
-        server: {
+        server:{
           port: 4200,
           host: 'localhost',
         },
-        preview: {
+        preview:{
           port: 4300,
           host: 'localhost',
         },
         plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
         // Uncomment this if you are using workers.
         // worker: {
-        //  plugins: [ nxViteTsPaths() ],
+        //   plugins: () => [ nxViteTsPaths() ],
         // },
         build: {
           outDir: './dist/react-standalone-preset-vite',
@@ -319,7 +318,7 @@ describe('preset', () => {
           coverage: {
             reportsDirectory: './coverage/react-standalone-preset-vite',
             provider: 'v8' as const,
-          },
+          }
         },
       }));
       "
@@ -334,8 +333,8 @@ describe('preset', () => {
       style: 'css',
       e2eTestRunner: 'cypress',
     });
-    expect(tree.exists('vite.config.ts')).toBe(true);
-    expect(tree.read('vite.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+    expect(tree.exists('vite.config.mts')).toBe(true);
+    expect(tree.read('vite.config.mts', 'utf-8')).toMatchInlineSnapshot(`
       "/// <reference types='vitest' />
       import { defineConfig } from 'vite';
       import vue from '@vitejs/plugin-vue';
@@ -343,20 +342,20 @@ describe('preset', () => {
       import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
       export default defineConfig(() => ({
-        root: __dirname,
+        root: import.meta.dirname,
         cacheDir: './node_modules/.vite/vue-standalone-preset',
-        server: {
+        server:{
           port: 4200,
           host: 'localhost',
         },
-        preview: {
+        preview:{
           port: 4300,
           host: 'localhost',
         },
         plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
         // Uncomment this if you are using workers.
         // worker: {
-        //  plugins: [ nxViteTsPaths() ],
+        //   plugins: () => [ nxViteTsPaths() ],
         // },
         build: {
           outDir: './dist/vue-standalone-preset',
@@ -376,7 +375,7 @@ describe('preset', () => {
           coverage: {
             reportsDirectory: './coverage/vue-standalone-preset',
             provider: 'v8' as const,
-          },
+          }
         },
       }));
       "

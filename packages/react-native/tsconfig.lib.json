@@ -7,7 +7,7 @@
     "tsBuildInfoFile": "../../dist/packages/react-native/tsconfig.tsbuildinfo"
   },
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
-  "include": ["**/*.ts", "**/*.json"],
+  "include": ["**/*.ts"],
   "references": [
     {
       "path": "../react/tsconfig.lib.json"
@@ -26,6 +26,9 @@
     },
     {
       "path": "../rollup/tsconfig.lib.json"
+    },
+    {
+      "path": "../nx/tsconfig.lib.json"
     }
   ]
 }

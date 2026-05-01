@@ -6,10 +6,9 @@ Remove the deprecated `external` and `externalBuildTargets` options from the `@n
 
 Remove `external` and `externalBuildTargets` from the `@nx/js:swc` or `@nx/js:tsc` executor options in project configuration.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="libs/my-lib/project.json" highlightLines=[9,10] %}
+```json title="libs/my-lib/project.json" {9-10}
 {
   "targets": {
     "build": {
@@ -26,10 +25,9 @@ Remove `external` and `externalBuildTargets` from the `@nx/js:swc` or `@nx/js:ts
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% fileName="libs/my-lib/project.json" %}
+```json title="libs/my-lib/project.json"
 {
   "targets": {
     "build": {
@@ -44,15 +42,11 @@ Remove `external` and `externalBuildTargets` from the `@nx/js:swc` or `@nx/js:ts
 }
 ```
 
-{% /tab %}
-{% /tabs %}
-
 Remove `external` and `externalBuildTargets` from the `@nx/js:swc` or `@nx/js:tsc` executor target defaults in `nx.json`.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="nx.json" highlightLines=[8,9] %}
+```json title="nx.json" {8-9}
 {
   "targetDefaults": {
     "@nx/js:swc": {
@@ -68,10 +62,9 @@ Remove `external` and `externalBuildTargets` from the `@nx/js:swc` or `@nx/js:ts
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "targetDefaults": {
     "@nx/js:swc": {
@@ -84,6 +77,3 @@ Remove `external` and `externalBuildTargets` from the `@nx/js:swc` or `@nx/js:ts
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}

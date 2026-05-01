@@ -89,10 +89,10 @@ exports[`Webpack Plugin (legacy) ConvertConfigToWebpackPlugin, should convert wi
       "executor": "@nx/eslint:lint"
     },
     "test": {
-      "executor": "@nx/vite:test",
+      "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "reportsDirectory": "../coverage/app3224373"
+        "reportsDirectory": "coverage/app3224373"
       }
     },
     "serve-static": {

@@ -6,10 +6,9 @@ Renames the `testPathPattern` option to `testPathPatterns` in the `@nx/jest:jest
 
 Rename the option in project configuration:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="apps/myapp/project.json" highlightLines=[7] %}
+```json title="apps/myapp/project.json" {7}
 {
   "targets": {
     "test": {
@@ -23,11 +22,9 @@ Rename the option in project configuration:
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="apps/myapp/project.json" highlightLines=[7] %}
+```json title="apps/myapp/project.json" {7}
 {
   "targets": {
     "test": {
@@ -41,15 +38,11 @@ Rename the option in project configuration:
 }
 ```
 
-{% /tab %}
-{% /tabs %}
-
 Rename the option in project configuration with configurations:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="apps/myapp/project.json" highlightLines=[7,10,11] %}
+```json title="apps/myapp/project.json" {7,10,11}
 {
   "targets": {
     "test": {
@@ -67,11 +60,9 @@ Rename the option in project configuration with configurations:
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="apps/myapp/project.json" highlightLines=[7,10,11] %}
+```json title="apps/myapp/project.json" {7,10,11}
 {
   "targets": {
     "test": {
@@ -89,15 +80,11 @@ Rename the option in project configuration with configurations:
 }
 ```
 
-{% /tab %}
-{% /tabs %}
-
 Rename the option in a target default using the `@nx/jest:jest` executor:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="nx.json" highlightLines=[7] %}
+```json title="nx.json" {7}
 {
   "targetDefaults": {
     "test": {
@@ -111,11 +98,9 @@ Rename the option in a target default using the `@nx/jest:jest` executor:
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="nx.json" highlightLines=[7] %}
+```json title="nx.json" {7}
 {
   "targetDefaults": {
     "test": {
@@ -128,16 +113,12 @@ Rename the option in a target default using the `@nx/jest:jest` executor:
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}
 
 Rename the option in a target default using the `@nx/jest:jest` executor as the key:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="nx.json" highlightLines=[6] %}
+```json title="nx.json" {6}
 {
   "targetDefaults": {
     "@nx/jest:jest": {
@@ -150,11 +131,9 @@ Rename the option in a target default using the `@nx/jest:jest` executor as the 
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="nx.json" highlightLines=[6] %}
+```json title="nx.json" {6}
 {
   "targetDefaults": {
     "@nx/jest:jest": {
@@ -166,6 +145,3 @@ Rename the option in a target default using the `@nx/jest:jest` executor as the 
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}

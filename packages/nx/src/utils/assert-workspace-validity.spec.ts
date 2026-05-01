@@ -32,7 +32,7 @@ describe('assertWorkspaceValidity', () => {
 
     expect(() => assertWorkspaceValidity(mockProjects, {}))
       .toThrowErrorMatchingInlineSnapshot(`
-      "Configuration Error
+      "[Configuration Error]:
       The following implicitDependencies should be an array of strings:
         lib1.implicitDependencies: "*"
 

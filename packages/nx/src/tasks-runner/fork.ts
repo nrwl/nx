@@ -45,8 +45,9 @@ process.on('message', (message: Serializable) => {
   pseudoIPC.sendMessageToParent(message);
 });
 
-childProcess.on('exit', (code) => {
+childProcess.on('exit', (code, signal) => {
   cleanup();
+  if (code === null) code = signalToCode(signal);
   process.exit(code);
 });
 

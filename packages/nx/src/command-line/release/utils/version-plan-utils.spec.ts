@@ -9,6 +9,7 @@ import type {
   ProjectsVersionPlan,
 } from '../config/version-plans';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
+import { createVersionConfig } from './test/test-utils';
 
 describe('version-plan-utils', () => {
   let mockReleaseGroup: ReleaseGroupWithName;
@@ -19,16 +20,14 @@ describe('version-plan-utils', () => {
       projects: ['project-a', 'project-b', 'project-c'],
       projectsRelationship: 'independent',
       changelog: false,
-      version: {
-        conventionalCommits: false,
-        generator: '',
-        generatorOptions: {},
-        groupPreVersionCommand: '',
+      version: createVersionConfig(),
+      releaseTag: {
+        pattern: '',
+        checkAllBranchesWhen: undefined,
+        requireSemver: true,
+        strictPreid: false,
+        preferDockerVersion: undefined,
       },
-      releaseTagPattern: '',
-      releaseTagPatternCheckAllBranchesWhen: undefined,
-      releaseTagPatternRequireSemver: true,
-      releaseTagPatternStrictPreid: false,
       versionPlans: true,
       resolvedVersionPlans: false,
     };

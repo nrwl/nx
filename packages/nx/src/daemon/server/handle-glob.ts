@@ -11,7 +11,7 @@ export async function handleGlob(
 ): Promise<HandlerResult> {
   const files = await globWithWorkspaceContext(workspaceRoot, globs, exclude);
   return {
-    response: JSON.stringify(files),
+    response: files,
     description: 'handleGlob',
   };
 }
@@ -26,7 +26,7 @@ export async function handleMultiGlob(
     exclude
   );
   return {
-    response: JSON.stringify(files),
+    response: files,
     description: 'handleMultiGlob',
   };
 }

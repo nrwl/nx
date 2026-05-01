@@ -28,9 +28,10 @@ export interface NxComposableRspackPlugin {
 }
 
 export interface AsyncNxComposableRspackPlugin {
-  (config: Configuration, ctx: NxRspackExecutionContext):
-    | Configuration
-    | Promise<Configuration>;
+  (
+    config: Configuration,
+    ctx: NxRspackExecutionContext
+  ): Configuration | Promise<Configuration>;
 }
 
 export function composePlugins(

@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "description": "Bump the Maven plugin version and create a migration for users.",
+  "properties": {
+    "newVersion": {
+      "type": "string",
+      "description": "The version to which to bump maven to. New Maven plugin version (e.g., '0.0.10')",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "nxVersion": {
+      "type": "string",
+      "description": "Nx version for the migration (e.g., '22.1.0-beta.7'). To find a good value for this, use 'npm view nx@next' and choose the next prerelease version which will follow that. For example, if the next version of `nx` is 22.1.0-beta.2, then use 22.1.0-beta.3"
+    }
+  },
+  "required": ["newVersion", "nxVersion"],
+  "examples": [
+    {
+      "newVersion": "0.0.10",
+      "nxVersion": "22.1.0-beta.7"
+    }
+  ]
+}

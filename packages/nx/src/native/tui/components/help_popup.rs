@@ -79,6 +79,27 @@ impl HelpPopup {
         }
     }
 
+    pub fn page_up(&mut self) {
+        let page = self.viewport_height.saturating_sub(2).max(1);
+        self.scroll_offset = self.scroll_offset.saturating_sub(page);
+        self.scrollbar_state = self
+            .scrollbar_state
+            .content_length(self.content_height)
+            .viewport_content_length(self.viewport_height)
+            .position(self.scroll_offset);
+    }
+
+    pub fn page_down(&mut self) {
+        let page = self.viewport_height.saturating_sub(2).max(1);
+        let max_scroll = self.content_height.saturating_sub(self.viewport_height);
+        self.scroll_offset = (self.scroll_offset + page).min(max_scroll);
+        self.scrollbar_state = self
+            .scrollbar_state
+            .content_length(self.content_height)
+            .viewport_content_length(self.viewport_height)
+            .position(self.scroll_offset);
+    }
+
     pub fn render(&mut self, f: &mut Frame<'_>, area: Rect) {
         // Add a safety check to prevent rendering outside buffer bounds (this can happen if the user resizes the window a lot before it stabilizes it seems)
         if area.height == 0
@@ -128,6 +149,7 @@ impl HelpPopup {
             ("↓ or j", "Navigate/scroll task output down"),
             ("<ctrl>+u", "Scroll task output up"),
             ("<ctrl>+d", "Scroll task output down"),
+            ("PgUp or PgDn", "Scroll task output by page"),
             ("", ""),
             // Task List Controls
             ("/", "Filter tasks based on search term"),
@@ -187,6 +209,24 @@ impl HelpPopup {
                     Style::default().fg(THEME.info),
                 ),
             ]),
+            Line::from(""),
+            Line::from(vec![Span::styled(
+                "If you would prefer to not use the TUI, you can disable it by: ",
+                Style::default().fg(THEME.primary_fg),
+            )]),
+            Line::from(vec![Span::styled(
+                "- Adding the `--no-tui` flag to your command.",
+                Style::default()
+                    .fg(THEME.info)
+                    .add_modifier(Modifier::ITALIC),
+            )]),
+            Line::from(vec![Span::styled(
+                "- Setting `NX_TUI=false` in your environment.",
+                Style::default()
+                    .fg(THEME.info)
+                    .add_modifier(Modifier::ITALIC),
+            )]),
+            Line::from(""),
             Line::from(vec![
                 Span::styled(
                     "If you are finding Nx useful, please consider giving it a star on GitHub, it means a lot: ",

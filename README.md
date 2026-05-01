@@ -1,74 +1,52 @@
-<p style="text-align: center;">
- <picture>
- <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-dark.svg">
- <img alt="Nx - Smart Repos · Fast Builds" src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-light.svg" width="100%">
- </picture>
-</p>
+<div align="center">
 
-<div style="text-align: center;">
+  <p>
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="images/nx-logo-light.svg">
+      <img src="images/nx-logo.svg" alt="Nx Logo" width="140">
+    </picture>
+  </p>
 
-[![CircleCI](https://circleci.com/gh/nrwl/nx.svg?style=svg)](https://circleci.com/gh/nrwl/nx)
-[![License](https://img.shields.io/npm/l/nx.svg?style=flat-square)]()
-[![NPM Version](https://badge.fury.io/js/nx.svg)](https://www.npmjs.com/package/nx)
-[![Semantic Release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic-release-e10079.svg?style=flat-square)]()
-[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
-[![Join the chat at https://gitter.im/nrwl-nx/community](https://badges.gitter.im/nrwl-nx/community.svg)](https://gitter.im/nrwl-nx/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Join the Official Nx Discord Server](https://img.shields.io/discord/1143497901675401286?label=discord)](https://go.nx.dev/community)
+  <h1 align="center">Smart Monorepos · Fast Builds</h1>
+
+  <p>
+    <a href="https://www.npmjs.com/package/nx"><img src="https://img.shields.io/npm/v/nx.svg?style=for-the-badge" alt="NPM Version"></a>
+    <a href="https://github.com/nrwl/nx"><img src="https://img.shields.io/github/stars/nrwl/nx?style=for-the-badge&logo=github" alt="GitHub Stars"></a>
+    <a href=""><img src="https://img.shields.io/npm/l/nx.svg?style=for-the-badge" alt="License"></a>
+    <a href="https://go.nx.dev/community"><img src="https://img.shields.io/discord/1143497901675401286?label=discord&style=for-the-badge" alt="Discord"></a>
+    <a href="https://x.com/nxdevtools"><img src="https://img.shields.io/badge/@nxdevtools-555?style=for-the-badge&logo=x" alt="X (Twitter)"></a>
+  </p>
+
+ <br />
+
+[**Docs**](https://nx.dev/docs) &nbsp;&bull;&nbsp; [**Changelog**](https://nx.dev/changelog) &nbsp;&bull;&nbsp; [**Blog**](https://nx.dev/blog) &nbsp;&bull;&nbsp; [**Courses**](https://nx.dev/courses) &nbsp;&bull;&nbsp; [**YouTube**](https://youtube.com/@nxdevtools)
+
+<br />
 
 </div>
 
-<hr>
+Nx is a monorepo solution for TypeScript and polyglot codebases. Built with Rust for performance, extensible via TypeScript. Caches what didn't change, runs only what's affected, and comes with an integrated CI solution. Start simple, scale as you grow.
 
-# Smart Repos · Fast Builds
+## Quick Start
 
-Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.
+Visit the [Nx quickstart docs](https://nx.dev/docs/quickstart) to get started.
 
-Create a new Nx workspace with
+## Why Nx?
 
-```shell
-npx create-nx-workspace
-```
+- **Incremental by design -** Run `npx nx init` in any npm/pnpm/yarn workspace. Nx picks up your existing `package.json` scripts, caches their outputs, and runs only what's
+  affected. No changes to your setup required.
+- **AI-native tooling -** The Nx CLI is optimized for autonomous AI agents so they get the context they need and can operate just like a human. [Learn more &raquo;](https://github.com/nrwl/nx-ai-agents-config)
+- **Polyglot plugin system -** Optional plugins auto-discover tasks, configure cache inputs/outputs, and scaffold code based on your actual tooling. Works with Vite, Webpack, Jest, Vitest, ESLint, Gradle, Maven, .NET, Go, and [more](https://nx.dev/technologies).
+- **Integrated CI solution -** [Connect Nx to your CI provider](https://nx.dev/ci/intro/ci-with-nx) (GitHub Actions, GitLab, Azure, etc.) to enable remote caching, task distribution across machines, affected-only runs, and automatic e2e test splitting. [Learn more &raquo;](https://nx.dev/ci/intro/ci-with-nx)
+- **Self-healing CI -** An AI agent on your CI pipeline that detects failures, analyzes root cause, proposes a fix, and verifies it automatically. Local agents connect to CI via MCP to autonomously detect and fix failures. [Learn more &raquo;](https://nx.dev/ci/features/self-healing)
 
-...or run
+## Who uses Nx?
 
-```
-npx nx init
-```
-
-to add Nx to your existing workspace to get faster task scheduling, caching and more. More [in the docs](https://nx.dev/getting-started/intro).
-
-## Learn about CI with Nx Cloud
-
-[Nx Cloud](https://nx.dev/nx-cloud) connects directly to your existing CI setup, helping you scale your monorepos on CI by leveraging [remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nxrepo&utm_medium=readme&utm_campaign=nxrepo), [task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nxrepo&utm_medium=readme&utm_campaign=nxrepo), [automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nxrepo&utm_medium=readme&utm_campaign=nxrepo) and [automated task flakiness detection](https://nx.dev/ci/features/flaky-tasks?utm_source=nxrepo&utm_medium=readme&utm_campaign=nxrepo)
-
-Connect your existing Nx workspace with
-
-```
-npx nx connect
-```
-
-Learn more in the [Nx CI docs &raquo;](https://nx.dev/ci/getting-started/intro?utm_source=nxrepo&utm_medium=readme&utm_campaign=nxrepo)
-
-## Useful links
-
-- [Our docs](https://nx.dev/docs)
-- [Our blog](https://nx.dev/blog)
-- [Our community discord, live stream,...](https://nx.dev/community)
-- [Our YouTube channel](https://www.youtube.com/@NxDevtools)
-- [Our Twitter/X](https://x.com/nxdevtools)
-
-<p style="text-align: center;"><a href="https://www.youtube.com/@nxdevtools/videos" target="_blank" rel="noreferrer"><img src="./images/nx-courses-and-videos.svg" 
-width="100%" alt="Nx - Smart Repos · Fast Builds"></a></p>
+From startups to Fortune 500 companies. [See our Nx success stories &raquo;](https://nx.dev/customers)
 
 ## Want to help?
 
-If you want to file a bug or submit a PR, read up on
-our [guidelines for contributing](https://github.com/nrwl/nx/blob/master/CONTRIBUTING.md) and watch this video that will
-help you get started.
-
-<a href="https://www.youtube.com/watch?v=8LCA_4qxc08" target="_blank" rel="noreferrer">
-<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/how-to-contribute.png" width="600" alt="Nx - How to contribute video"></p>
-</a>
+If you want to file a bug or submit a PR, read up on our [guidelines for contributing](https://github.com/nrwl/nx/blob/master/CONTRIBUTING.md).
 
 ## Core Team
 
@@ -82,22 +60,17 @@ help you get started.
 | ![James Henry](https://avatars.githubusercontent.com/u/900523?s=160&v=4) | ![Jon Cammisuli](https://avatars2.githubusercontent.com/u/4332460?s=160) | ![Max Kless](https://avatars.githubusercontent.com/u/34165455?s=160) | ![Juri Strumpflohner](https://avatars1.githubusercontent.com/u/542458?s=160) |
 | [JamesHenry](https://github.com/JamesHenry)                              | [cammisuli](https://github.com/cammisuli)                                | [MaxKless](https://github.com/MaxKless)                              | [juristr](https://github.com/juristr)                                        |
 
-| Philip Fulcher                                                            | Caleb Ukle                                                            | Colum Ferry                                                            | Steven Nance                                                           |
-| ------------------------------------------------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| ![Philip Fulcher](https://avatars1.githubusercontent.com/u/1536471?s=160) | ![Caleb Ukle](https://avatars.githubusercontent.com/u/23272162?s=160) | ![Colum Ferry](https://avatars.githubusercontent.com/u/12140467?s=160) | ![Steven Nance](https://avatars.githubusercontent.com/u/1036428?s=160) |
-| [philipjfulcher](https://github.com/philipjfulcher)                       | [barbados-clemens](https://github.com/barbados-clemens)               | [Coly010](https://github.com/Coly010)                                  | [llwt](https://github.com/llwt)                                        |
+| Caleb Ukle                                                            | Steven Nance                                                           | Miroslav Jonaš                                                          | Leosvel Pérez Espinosa                                                            |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| ![Caleb Ukle](https://avatars.githubusercontent.com/u/23272162?s=160) | ![Steven Nance](https://avatars.githubusercontent.com/u/1036428?s=160) | ![Miroslav Jonaš](https://avatars.githubusercontent.com/u/881612?s=160) | ![Leosvel Pérez Espinosa](https://avatars.githubusercontent.com/u/12051310?s=160) |
+| [barbados-clemens](https://github.com/barbados-clemens)               | [llwt](https://github.com/llwt)                                        | [meeroslav](https://github.com/meeroslav)                               | [leosvelperez](https://github.com/leosvelperez)                                   |
 
-| Miroslav Jonaš                                                          | Leosvel Pérez Espinosa                                                            | Zachary DeRose                                                           | Craigory Coppola                                                           |
-| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
-| ![Miroslav Jonaš](https://avatars.githubusercontent.com/u/881612?s=160) | ![Leosvel Pérez Espinosa](https://avatars.githubusercontent.com/u/12051310?s=160) | ![Zachary DeRose](https://avatars.githubusercontent.com/u/3788405?s=160) | ![Craigory Coppola](https://avatars.githubusercontent.com/u/6933928?s=160) |
-| [meeroslav](https://github.com/meeroslav)                               | [leosvelperez](https://github.com/leosvelperez)                                   | [ZackDeRose](https://github.com/ZackDeRose)                              | [AgentEnder](https://github.com/AgentEnder)                                |
+| Zachary DeRose                                                           | Craigory Coppola                                                           | Chau Tran                                                            | Nicole Oliver                                                           |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| ![Zachary DeRose](https://avatars.githubusercontent.com/u/3788405?s=160) | ![Craigory Coppola](https://avatars.githubusercontent.com/u/6933928?s=160) | ![Chau Tran](https://avatars.githubusercontent.com/u/25516557?s=160) | ![Nicole Oliver](https://avatars.githubusercontent.com/u/4440385?s=160) |
+| [ZackDeRose](https://github.com/ZackDeRose)                              | [AgentEnder](https://github.com/AgentEnder)                                | [nartc](https://github.com/nartc)                                    | [nixallover](https://github.com/nixallover)                             |
 
-| Chau Tran                                                            | Nicole Oliver                                                           | Rares Matei                                                           | Altan Stalker                                                           |
-| -------------------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| ![Chau Tran](https://avatars.githubusercontent.com/u/25516557?s=160) | ![Nicole Oliver](https://avatars.githubusercontent.com/u/4440385?s=160) | ![Rares Matei](https://avatars.githubusercontent.com/u/5975076?s=160) | ![Altan Stalker](https://avatars.githubusercontent.com/u/6324206?s=160) |
-| [nartc](https://github.com/nartc)                                    | [nixallover](https://github.com/nixallover)                             | [rarmatei](https://github.com/rarmatei)                               | [StalkAltan](https://github.com/StalkAltan)                             |
-
-| Josh VanAllen                                                           | Austin Fahsl                                                           | Louie Weng                                                            |
-| ----------------------------------------------------------------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| ![Josh VanAllen](https://avatars.githubusercontent.com/u/5290334?s=160) | ![Austin Fahsl](https://avatars.githubusercontent.com/u/6913035?s=160) | ![Louie Weng](https://avatars.githubusercontent.com/u/56288712?s=160) |
-| [joshvanallen](https://github.com/joshvanallen)                         | [fahslaj](https://github.com/fahslaj)                                  | [lourw](https://github.com/lourw)                                     |
+| Rares Matei                                                           | Altan Stalker                                                           | Josh VanAllen                                                           | Louie Weng                                                            |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| ![Rares Matei](https://avatars.githubusercontent.com/u/5975076?s=160) | ![Altan Stalker](https://avatars.githubusercontent.com/u/6324206?s=160) | ![Josh VanAllen](https://avatars.githubusercontent.com/u/5290334?s=160) | ![Louie Weng](https://avatars.githubusercontent.com/u/56288712?s=160) |
+| [rarmatei](https://github.com/rarmatei)                               | [StalkAltan](https://github.com/StalkAltan)                             | [joshvanallen](https://github.com/joshvanallen)                         | [lourw](https://github.com/lourw)                                     |

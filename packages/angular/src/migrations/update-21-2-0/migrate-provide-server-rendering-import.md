@@ -6,10 +6,9 @@ Migrate the imports of `provideServerRendering` from `@angular/platform-server` 
 
 Change the import of `provideServerRendering` from `@angular/platform-server` to `@angular/ssr`:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```ts {% fileName="app/app.config.server.ts" highlightLines=[2] %}
+```ts title="app/app.config.server.ts" {2}
 import { ApplicationConfig } from '@angular/core';
 import { provideServerRendering } from '@angular/platform-server';
 
@@ -18,11 +17,9 @@ const serverConfig: ApplicationConfig = {
 };
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```ts {% fileName="app/app.config.server.ts" highlightLines=[2] %}
+```ts title="app/app.config.server.ts" {2}
 import { ApplicationConfig } from '@angular/core';
 import { provideServerRendering } from '@angular/ssr';
 
@@ -31,15 +28,11 @@ const serverConfig: ApplicationConfig = {
 };
 ```
 
-{% /tab %}
-{% /tabs %}
-
 If you already have imports from `@angular/ssr`, the migration will add `provideServerRendering` to the existing import:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```ts {% fileName="app/app.config.server.ts" highlightLines=[2,3] %}
+```ts title="app/app.config.server.ts" {2-3}
 import { ApplicationConfig } from '@angular/core';
 import { provideServerRendering } from '@angular/platform-server';
 import { provideServerRouting } from '@angular/ssr';
@@ -50,11 +43,9 @@ const serverConfig: ApplicationConfig = {
 };
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```ts {% fileName="app/app.config.server.ts" highlightLines=[2] %}
+```ts title="app/app.config.server.ts" {2}
 import { ApplicationConfig } from '@angular/core';
 import { provideServerRouting, provideServerRendering } from '@angular/ssr';
 import { serverRoutes } from './app.routes.server';
@@ -63,6 +54,3 @@ const serverConfig: ApplicationConfig = {
   providers: [provideServerRendering(), provideServerRouting(serverRoutes)],
 };
 ```
-
-{% /tab %}
-{% /tabs %}

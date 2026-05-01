@@ -1,7 +1,5 @@
-import {
-  ConfigurationResult,
-  ConfigurationSourceMaps,
-} from './utils/project-configuration-utils';
+import { ConfigurationResult } from './utils/project-configuration-utils';
+import type { ConfigurationSourceMaps } from './utils/project-configuration/source-maps';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { ProjectGraph } from '../config/project-graph';
 import { CreateNodesFunctionV2 } from './plugins/public-api';
@@ -35,7 +33,13 @@ export class ProjectGraphError extends Error {
     const messageFragments = ['Failed to process project graph.'];
     const mergeNodesErrors = [];
     const unknownErrors = [];
-    for (const e of errors) {
+    // Lets us throw aggregate errors without special handling,
+    // to avoid cases where users fix an error and get hit with another one
+    // which was already there but not reported.
+    let flat = errors.flatMap((e) =>
+      e instanceof AggregateError ? e.errors : e
+    );
+    for (const e of flat) {
       if (
         // Known errors that are self-explanatory
         isAggregateCreateNodesError(e) ||
@@ -121,7 +125,10 @@ export class MultipleProjectsWithSameNameError extends Error {
 }
 
 export class ProjectWithExistingNameError extends Error {
-  constructor(public projectName: string, public projectRoot: string) {
+  constructor(
+    public projectName: string,
+    public projectRoot: string
+  ) {
     super(`The project "${projectName}" is defined in multiple locations.`);
     this.name = this.constructor.name;
   }
@@ -199,6 +206,7 @@ export class ProjectConfigurationsError extends Error {
       | AggregateCreateNodesError
       | ProjectsWithNoNameError
       | MultipleProjectsWithSameNameError
+      | WorkspaceValidityError
     >,
     public readonly partialProjectConfigurationsResult: ConfigurationResult
   ) {
@@ -309,30 +317,55 @@ export function formatAggregateCreateNodesError(
   error: AggregateCreateNodesError,
   pluginName: string
 ) {
+  const errorCount =
+    error.errors.length > 1 ? `${error.errors.length} errors` : 'An error';
+  const pluginLocation = error.pluginIndex
+    ? ` (Defined at nx.json#plugins[${error.pluginIndex}])`
+    : '';
   const errorBodyLines = [
-    `${
-      error.errors.length > 1 ? `${error.errors.length} errors` : 'An error'
-    } occurred while processing files for the ${pluginName} plugin${
-      error.pluginIndex
-        ? ` (Defined at nx.json#plugins[${error.pluginIndex}])`
-        : ''
-    }`,
-    `.`,
+    `${errorCount} occurred while processing files for the ${pluginName} plugin${pluginLocation}.`,
   ];
   const errorStackLines = [];
 
-  const innerErrors = error.errors;
-  for (const [file, e] of innerErrors) {
-    if (file) {
-      errorBodyLines.push(`  - ${file}: ${e.message}`);
-      errorStackLines.push(` - ${file}: ${e.stack}`);
-    } else {
-      errorBodyLines.push(`  - ${e.message}`);
-      errorStackLines.push(` - ${e.stack}`);
+  // Group errors by file so repeated file paths aren't printed multiple times
+  const groupedErrors = new Map<string | null, Error[]>();
+  for (const [file, e] of error.errors) {
+    const key = file ?? null;
+    if (!groupedErrors.has(key)) {
+      groupedErrors.set(key, []);
     }
-    if (e.stack && process.env.NX_VERBOSE_LOGGING === 'true') {
-      const innerStackTrace = '    ' + e.stack.split('\n')?.join('\n    ');
-      errorStackLines.push(innerStackTrace);
+    groupedErrors.get(key).push(e);
+  }
+
+  for (const [file, errors] of groupedErrors) {
+    if (file) {
+      errorBodyLines.push(`  - ${file}:`);
+      errorStackLines.push(` - ${file}:`);
+    }
+    for (const e of errors) {
+      const messageLines = e.message.split('\n');
+      const stackLines = e.stack.split('\n');
+      if (file) {
+        errorBodyLines.push(...messageLines.map((line) => `      ${line}`));
+        errorStackLines.push(...stackLines.map((line) => `     ${line}`));
+      } else {
+        errorBodyLines.push(
+          `  - ${messageLines[0]}`,
+          ...messageLines.slice(1).map((line) => `    ${line}`)
+        );
+        errorStackLines.push(
+          ` - ${stackLines[0]}`,
+          ...stackLines.slice(1).map((line) => `   ${line}`)
+        );
+      }
+      if (e.stack && process.env.NX_VERBOSE_LOGGING === 'true') {
+        const verboseIndent = file ? '       ' : '     ';
+        const innerStackTrace = e.stack
+          .split('\n')
+          .map((line) => `${verboseIndent}${line}`)
+          .join('\n');
+        errorStackLines.push(innerStackTrace);
+      }
     }
   }
 
@@ -375,7 +408,10 @@ export class MergeNodesError extends Error {
 }
 
 export class CreateMetadataError extends Error {
-  constructor(public readonly error: Error, public readonly plugin: string) {
+  constructor(
+    public readonly error: Error,
+    public readonly plugin: string
+  ) {
     super(
       `The "${plugin}" plugin threw an error while creating metadata: ${error.message}`,
       {
@@ -387,7 +423,10 @@ export class CreateMetadataError extends Error {
 }
 
 export class ProcessDependenciesError extends Error {
-  constructor(public readonly pluginName: string, { cause }) {
+  constructor(
+    public readonly pluginName: string,
+    { cause }
+  ) {
     super(
       `The "${pluginName}" plugin threw an error while creating dependencies: ${cause.message}`,
       {
@@ -410,9 +449,13 @@ function isProcessDependenciesError(e: unknown): e is ProcessDependenciesError {
 
 export class WorkspaceValidityError extends Error {
   constructor(public message: string) {
-    message = `Configuration Error\n${message}`;
     super(message);
+    this.message = `[Configuration Error]:\n${message}`;
     this.name = this.constructor.name;
+  }
+
+  toString() {
+    return this.message;
   }
 }
 
@@ -490,7 +533,10 @@ export class DaemonProjectGraphError extends Error {
 }
 
 export class LoadPluginError extends Error {
-  constructor(public plugin: string, cause: Error) {
+  constructor(
+    public plugin: string,
+    cause: Error
+  ) {
     super(`Could not load plugin ${plugin}`, {
       cause,
     });

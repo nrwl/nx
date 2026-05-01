@@ -93,7 +93,7 @@ function reverseEnum<
   EnumObj extends Record<keyof EnumObj, string>,
   Result = {
     [K in EnumObj[keyof EnumObj]]: Extract<Entries<EnumObj>, [any, K]>[0];
-  }
+  },
 >(enumObj: EnumObj): Result {
   return Object.keys(enumObj).reduce((acc, key) => {
     acc[enumObj[key]] = key;

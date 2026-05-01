@@ -1,4 +1,4 @@
-This generator will set up Storybook for your **Angular** project. By default, starting Nx 16, Storybook v7 is used.
+This generator will set up Storybook for your **Angular** project. By default, Storybook v10 is used.
 
 ```bash
 nx g @nx/angular:storybook-configuration project-name

@@ -68,7 +68,8 @@ describe('nx init (NPM repo - legacy)', () => {
     runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --cacheable=compound --no-interactive`
+      } nx@${getPublishedVersion()} init --cacheable=compound --no-interactive`,
+      { env: { NX_USE_LOCAL: 'true' } }
     );
 
     const output = runCommand('npm run compound TEST');

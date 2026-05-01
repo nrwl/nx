@@ -29,6 +29,29 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "22.0.2": {
+      "version": "22.0.2-beta.0",
+      "packages": {
+        "koa": {
+          "version": "^3.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/koa": {
+          "version": "^3.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "22.6.0": {
+      "version": "22.6.0-beta.10",
+      "x-prompt": "Bump koa to ^3.1.2 to resolve CVE-2026-27959 (Host Header Injection)",
+      "packages": {
+        "koa": {
+          "version": "^3.1.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

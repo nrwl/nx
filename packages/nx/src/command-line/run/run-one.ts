@@ -1,26 +1,27 @@
+import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
+import { readNxJson } from '../../config/configuration';
+import { handleImport } from '../../utils/handle-import';
+import { NxJsonConfiguration } from '../../config/nx-json';
+import {
+  ProjectGraph,
+  ProjectGraphProjectNode,
+} from '../../config/project-graph';
+import { TargetDependencyConfig } from '../../config/workspace-json-project-json';
+import {
+  createProjectGraphAsync,
+  readProjectsConfigurationFromProjectGraph,
+} from '../../project-graph/project-graph';
 import { runCommand } from '../../tasks-runner/run-command';
 import {
   readGraphFileFromGraphArg,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
-import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud';
-import {
-  createProjectGraphAsync,
-  readProjectsConfigurationFromProjectGraph,
-} from '../../project-graph/project-graph';
-import {
-  ProjectGraph,
-  ProjectGraphProjectNode,
-} from '../../config/project-graph';
-import { NxJsonConfiguration } from '../../config/nx-json';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { splitTarget } from '../../utils/split-target';
-import { output } from '../../utils/output';
-import { TargetDependencyConfig } from '../../config/workspace-json-project-json';
-import { readNxJson } from '../../config/configuration';
-import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
-import { generateGraph } from '../graph/graph';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
+import { output } from '../../utils/output';
+import { splitTarget } from '../../utils/split-target';
+import { workspaceRoot } from '../../utils/workspace-root';
+import { generateGraph } from '../graph/graph';
+import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud';
 
 export async function runOne(
   cwd: string,
@@ -56,14 +57,22 @@ export async function runOne(
     nxJson
   );
 
+  const { projects, projectName } = getProjects(projectGraph, opts.project);
+
   if (nxArgs.help) {
-    await (await import('./run')).printTargetRunHelp(opts, workspaceRoot);
+    await (
+      await handleImport('./run.js', __dirname)
+    ).printTargetRunHelp(
+      {
+        ...opts,
+        project: projectName,
+      },
+      workspaceRoot
+    );
     process.exit(0);
   }
 
   await connectToNxCloudIfExplicitlyAsked(nxArgs);
-
-  const { projects, projectName } = getProjects(projectGraph, opts.project);
 
   if (nxArgs.graph) {
     const projectNames = projects.map((t) => t.name);
@@ -166,11 +175,15 @@ export function parseRunOneOptions(
   let target;
   let configuration;
 
-  if (parsedArgs[PROJECT_TARGET_CONFIG]?.lastIndexOf(':') > 0) {
+  if (
+    typeof parsedArgs[PROJECT_TARGET_CONFIG] === 'string' &&
+    parsedArgs[PROJECT_TARGET_CONFIG].lastIndexOf(':') > 0
+  ) {
     // run case
     [project, target, configuration] = splitTarget(
       parsedArgs[PROJECT_TARGET_CONFIG],
-      projectGraph
+      projectGraph,
+      { currentProject: defaultProjectName }
     );
     // this is to account for "nx npmscript:dev"
     if (project && !target && defaultProjectName) {
@@ -179,7 +192,7 @@ export function parseRunOneOptions(
     }
   } else if (parsedArgs.target) {
     target = parsedArgs.target;
-  } else if (parsedArgs[PROJECT_TARGET_CONFIG]) {
+  } else if (typeof parsedArgs[PROJECT_TARGET_CONFIG] === 'string') {
     // If project:target:configuration exists but has no colon, check if it's a project with run target
     if (
       projectGraph.nodes[parsedArgs[PROJECT_TARGET_CONFIG]]?.data?.targets?.run

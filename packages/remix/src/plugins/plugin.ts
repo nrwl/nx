@@ -2,14 +2,12 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
   type CreateDependencies,
-  type CreateNodes,
-  type CreateNodesContext,
+  type CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
-  logger,
   ProjectConfiguration,
   readJsonFile,
   type TargetConfiguration,
@@ -36,8 +34,6 @@ export interface RemixPluginOptions {
   serveStaticTargetName?: string;
 }
 
-const pmc = getPackageManagerCommand();
-
 type RemixTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 function readTargetsCache(
@@ -62,12 +58,15 @@ export const createDependencies: CreateDependencies = () => {
 
 const remixConfigGlob = '**/{remix,vite}.config.{js,cjs,mjs,ts,cts,mts}';
 
-export const createNodesV2: CreateNodesV2<RemixPluginOptions> = [
+export const createNodes: CreateNodesV2<RemixPluginOptions> = [
   remixConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `remix-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -76,7 +75,8 @@ export const createNodesV2: CreateNodesV2<RemixPluginOptions> = [
             options,
             context,
             targetsCache,
-            _isUsingTsSolutionSetup()
+            _isUsingTsSolutionSetup(),
+            pmc
           ),
         configFilePaths,
         options,
@@ -88,28 +88,15 @@ export const createNodesV2: CreateNodesV2<RemixPluginOptions> = [
   },
 ];
 
-export const createNodes: CreateNodes<RemixPluginOptions> = [
-  remixConfigGlob,
-  async (configFilePath, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
-    );
-    return createNodesInternal(
-      configFilePath,
-      options,
-      context,
-      {},
-      _isUsingTsSolutionSetup()
-    );
-  },
-];
+export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
   options: RemixPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<string, RemixTargets>,
-  isUsingTsSolutionSetup: boolean
+  isUsingTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const projectRoot = dirname(configFilePath);
   const fullyQualifiedProjectRoot = join(context.workspaceRoot, projectRoot);
@@ -148,7 +135,8 @@ async function createNodesInternal(
     context,
     siblingFiles,
     remixCompiler,
-    isUsingTsSolutionSetup
+    isUsingTsSolutionSetup,
+    pmc
   );
 
   const { targets, metadata } = targetsCache[hash];
@@ -170,10 +158,11 @@ async function buildRemixTargets(
   configFilePath: string,
   projectRoot: string,
   options: RemixPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   siblingFiles: string[],
   remixCompiler: RemixCompiler,
-  isUsingTsSolutionSetup: boolean
+  isUsingTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
   const { buildDirectory, assetsBuildDirectory, serverBuildPath } =
@@ -219,7 +208,8 @@ async function buildRemixTargets(
     projectRoot,
     namedInputs,
     siblingFiles,
-    isUsingTsSolutionSetup
+    isUsingTsSolutionSetup,
+    pmc
   );
 
   addBuildAndWatchDepsTargets(
@@ -342,7 +332,8 @@ function typecheckTarget(
   projectRoot: string,
   namedInputs: { [inputName: string]: any[] },
   siblingFiles: string[],
-  isUsingTsSolutionSetup: boolean
+  isUsingTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): TargetConfiguration {
   const hasTsConfigAppJson = siblingFiles.includes('tsconfig.app.json');
   const typecheckTarget: TargetConfiguration = {

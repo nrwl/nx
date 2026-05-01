@@ -15,7 +15,7 @@ A project's configuration is constructed by Nx from three sources:
 
 Each source will [overwrite the previous source](/docs/guides/tasks--caching/pass-args-to-commands). That means `targetDefaults` will overwrite inferred tasks and project level configuration will overwrite both `targetDefaults` and inferred tasks. The combined project configuration can be viewed in the project details view by using [Nx Console](/docs/getting-started/editor-setup) in your IDE or by running:
 
-```shell {% frame="none" %}
+```shell
 nx show project myproject --web
 ```
 
@@ -65,7 +65,7 @@ nx show project myproject --web
 
 The project details view also shows where each setting is defined so that you know where to change it.
 
-## Project Level Configuration Files
+## Project level configuration files
 
 If you need to edit your project settings or modify an inferred task, you can do so in either `package.json` or `project.json` files. The examples on this page show both styles. Nx merges the two files to get each project's configuration. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/project-schema.json) is available on GitHub.
 
@@ -88,16 +88,16 @@ The following configuration creates `build` and `test` targets for Nx.
 {
   "name": "mylib",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
   },
   "nx": {
     // you could also do this in "scripts", but this "targets" configuration also supports Nx executors
     "targets": {
       "build": {
-        "command": "tsc -p tsconfig.lib.json"
-      }
-    }
-  }
+        "command": "tsc -p tsconfig.lib.json",
+      },
+    },
+  },
 }
 ```
 
@@ -113,15 +113,15 @@ The following configuration creates `build` and `test` targets for Nx.
       "executor": "@nx/jest:jest",
       "options": {
         /* ... */
-      }
+      },
     },
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
         /* ... */
-      }
-    }
-  }
+      },
+    },
+  },
 }
 ```
 
@@ -142,27 +142,27 @@ Below are some more complete examples of project configuration files. For a more
   "scripts": {
     "test": "jest",
     "build": "tsc -p tsconfig.lib.json", // the actual command here is arbitrary
-    "ignored": "exit 1"
+    "ignored": "exit 1",
   },
   "nx": {
     "namedInputs": {
       "default": ["{projectRoot}/**/*"],
-      "production": ["!{projectRoot}/**/*.spec.tsx"]
+      "production": ["!{projectRoot}/**/*.spec.tsx"],
     },
     "targets": {
       "build": {
         "inputs": ["production", "^production"],
         "outputs": ["{workspaceRoot}/dist/libs/mylib"],
-        "dependsOn": ["^build"]
+        "dependsOn": ["^build"],
       },
       "test": {
         "inputs": ["default", "^production"],
         "outputs": [],
-        "dependsOn": ["build"]
-      }
+        "dependsOn": ["build"],
+      },
     },
-    "includedScripts": ["test", "build"] // If you want to limit the scripts Nx sees, you can specify a list here.
-  }
+    "includedScripts": ["test", "build"], // If you want to limit the scripts Nx sees, you can specify a list here.
+  },
 }
 ```
 
@@ -203,7 +203,7 @@ Below are some more complete examples of project configuration files. For a more
 {% /tabitem %}
 {% /tabs %}
 
-## Task Definitions (Targets)
+## Task definitions (Targets)
 
 A large portion of project configuration is related to defining the tasks for the project. In addition, to defining what the task actually does, a task definition also has properties that define the way that Nx should run that task. Those properties are described in detail below.
 
@@ -249,7 +249,7 @@ If you are using distributed task execution, tasks will still be run simultaneou
 
 {% /aside %}
 
-### Inputs and Named Inputs
+### Inputs and named inputs
 
 Each cacheable task needs to define `inputs` which determine whether the task outputs can be retrieved from the cache or the task needs to be re-run. The `namedInputs` defined in `nx.json` or project level configuration are sets of reusable input definitions.
 
@@ -259,16 +259,16 @@ A typical set of inputs may look like this:
 {
   "namedInputs": {
     "default": ["{projectRoot}/**/*"], // every file in the project
-    "production": ["default", "!{projectRoot}/**/*.spec.tsx"] // except test files
+    "production": ["default", "!{projectRoot}/**/*.spec.tsx"], // except test files
   },
   "targets": {
     "build": {
       "inputs": [
         "production", // this project's production files
-        { "externalDependencies": ["vite"] } // the version of the vite package
-      ]
-    }
-  }
+        { "externalDependencies": ["vite"] }, // the version of the vite package
+      ],
+    },
+  },
 }
 ```
 
@@ -296,7 +296,7 @@ Specifically, by default, the following locations are cached for builds:
 
 Read the [configure outputs for task caching](/docs/guides/tasks--caching/configure-outputs) recipe for helpful tips for setting outputs.
 
-#### Basic Example
+#### Basic example
 
 Usually, a target writes to a specific directory or a file. The following instructs Nx to cache `dist/libs/mylib` and `build/libs/mylib/main.js`:
 
@@ -313,7 +313,7 @@ Usually, a target writes to a specific directory or a file. The following instru
 }
 ```
 
-#### Specifying Globs
+#### Specifying globs
 
 Sometimes, multiple targets might write to the same directory. When possible it is recommended to direct these targets into separate directories.
 
@@ -583,7 +583,7 @@ And the E2E project's `e2e` task has a dependency on the `serve` task, which ens
 }
 ```
 
-### Sync Generators
+### Sync generators
 
 In the same way that `dependsOn` tells Nx to run another task before running this task, the `syncGenerator` property tells Nx to run a generator to ensure that your files are in the correct state before this task is run. [Sync generators](/docs/concepts/sync-generators) are especially useful for keeping configuration files up to date with the project graph. Sync generators are available in Nx 19.8+.
 
@@ -631,7 +631,64 @@ In the case of an explicit target using an executor, you can specify the executo
 }
 ```
 
-### Target Metadata
+### Spread token
+
+By default, each configuration source overwrites the previous one for every property it defines. The spread token (`"..."`) lets you control merge priority rather than always replacing.
+
+**In arrays**, `"..."` is substituted with the items from the base array at that position:
+
+```json
+// project.json
+{
+  "targets": {
+    "build": {
+      "inputs": ["my-project-input", "..."]
+    }
+  }
+}
+```
+
+If the inferred target has `inputs: ["default", "^production"]`, the result is `["my-project-input", "default", "^production"]`.
+
+**In objects**, a key of `"..."` set to `true` spreads base properties at that position. Keys defined after `"..."` override base values; keys defined before `"..."` can be overridden by base values.
+
+```json
+// project.json
+{
+  "targets": {
+    "build": {
+      "options": {
+        "env": {
+          "MY_VAR": "my-value",
+          "...": true
+        }
+      }
+    }
+  }
+}
+```
+
+Nx processes target configuration down to `options[x]` and `configurations[x][y]`; values below that are opaque to the merge pipeline. Spread is therefore resolved at these levels:
+
+| Level                                              | Example                                                                     |
+| -------------------------------------------------- | --------------------------------------------------------------------------- |
+| Target root                                        | `"build": { "dependsOn": ["lint"], "...": true }`                           |
+| `inputs`, `outputs`, `dependsOn`, `syncGenerators` | `"inputs": ["my-input", "..."]`                                             |
+| `options`                                          | `"options": { "...": true, "outputPath": "dist/custom" }`                   |
+| `options[x]`                                       | `"options": { "env": { "MY_VAR": "val", "...": true } }`                    |
+| `configurations`                                   | `"configurations": { "my-config": { ... }, "...": true }`                   |
+| `configurations[x]`                                | `"configurations": { "prod": { "...": true, "sourceMap": false } }`         |
+| `configurations[x][y]`                             | `"configurations": { "prod": { "env": { "MY_VAR": "val", "...": true } } }` |
+
+{% aside type="caution" title="Spread does not apply to deeply nested options" %}
+Because `options[x]` and `configurations[x][y]` are the innermost levels Nx inspects, a spread token nested any deeper has no effect. For example, `options.webpack = { "...": true }` works (the spread is at `options[x]`), but `options.webpack.plugins = { "...": true }` is ignored because the spread sits inside the opaque value Nx assigns to `options.webpack`.
+{% /aside %}
+
+{% aside type="note" title="Spread does not apply to `tags` and `implicitDependencies`" %}
+`tags` and `implicitDependencies` always merge across configuration sources — later sources contribute additional entries rather than replacing earlier ones. The spread token is neither needed nor supported for these properties.
+{% /aside %}
+
+### Target metadata
 
 You can add additional metadata to be attached to a target. For example, you can provide a description stating what the
 target does:
@@ -642,14 +699,14 @@ target does:
   "targets": {
     "build": {
       "metadata": {
-        "description": "Build the application for production"
-      }
-    }
-  }
+        "description": "Build the application for production",
+      },
+    },
+  },
 }
 ```
 
-## Project Metadata
+## Project metadata
 
 The following properties describe the project as a whole.
 
@@ -665,8 +722,8 @@ You can annotate your projects with `tags` as follows:
 {
   "name": "mylib",
   "nx": {
-    "tags": ["scope:myteam"]
-  }
+    "tags": ["scope:myteam"],
+  },
 }
 ```
 
@@ -677,7 +734,7 @@ You can annotate your projects with `tags` as follows:
 // project.json
 {
   "root": "libs/mylib",
-  "tags": ["scope:myteam"]
+  "tags": ["scope:myteam"],
 }
 ```
 
@@ -699,8 +756,8 @@ Nx uses powerful source-code analysis to figure out your workspace's project gra
 {
   "name": "mylib",
   "nx": {
-    "implicitDependencies": ["anotherlib"]
-  }
+    "implicitDependencies": ["anotherlib"],
+  },
 }
 ```
 
@@ -711,7 +768,7 @@ Nx uses powerful source-code analysis to figure out your workspace's project gra
 // project.json
 {
   "root": "libs/mylib",
-  "implicitDependencies": ["anotherlib"]
+  "implicitDependencies": ["anotherlib"],
 }
 ```
 
@@ -780,7 +837,7 @@ An implicit dependency could also be a glob pattern:
 
 The `release` property allows project-level overrides for the [nx release](/docs/features/manage-releases) command. This is particularly useful for configuring Docker image publishing.
 
-#### Docker Configuration {% badge text="experimental" /%}
+#### Docker configuration {% badge text="experimental" /%}
 
 {% aside type="caution" title="Experimental Feature" %}
 Docker support in Nx is currently experimental and may undergo breaking changes without following semantic versioning.
@@ -795,9 +852,9 @@ Projects with Docker images can override the global Docker configuration:
   "release": {
     "docker": {
       // Override the repository name for this specific project
-      "repositoryName": "acme/api"
-    }
-  }
+      "repositoryName": "acme/api",
+    },
+  },
 }
 ```
 
@@ -813,8 +870,8 @@ project:
 {
   "name": "admin",
   "metadata": {
-    "description": "This is the admin application"
-  }
+    "description": "This is the admin application",
+  },
 }
 ```
 

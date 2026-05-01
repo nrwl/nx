@@ -7,7 +7,6 @@ import {
   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import {
   testingLibraryDomVersion,
   testingLibraryReactVersion,
@@ -26,7 +25,6 @@ import { addStyleDependencies } from '../../utils/styles';
 import { addLinting } from './lib/add-linting';
 import { customServerGenerator } from '../custom-server/custom-server';
 import { updateCypressTsConfig } from './lib/update-cypress-tsconfig';
-import { showPossibleWarnings } from './lib/show-possible-warnings';
 import { tsLibVersion } from '../../utils/versions';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import {
@@ -37,6 +35,7 @@ import {
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 import { configureForSwc } from '../../utils/add-swc-to-custom-server';
 import { updateJestConfig } from '../../utils/jest-config-util';
+import { isNext14, isNext15 } from '../../utils/version-utils';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
@@ -65,7 +64,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   tasks.push(jsInitTask);
 
   const options = await normalizeOptions(host, schema);
-  showPossibleWarnings(host, options);
 
   const nextTask = await nextInitGenerator(host, {
     ...options,
@@ -73,7 +71,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   });
   tasks.push(nextTask);
 
-  createApplicationFiles(host, options);
+  await createApplicationFiles(host, options);
 
   addProject(host, options);
 
@@ -83,22 +81,14 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     await addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
   }
 
+  const lintTask = await addLinting(host, options);
+  tasks.push(lintTask);
+
   const e2eTask = await addE2e(host, options);
   tasks.push(e2eTask);
 
   const jestTask = await addJest(host, options);
   tasks.push(jestTask);
-
-  const lintTask = await addLinting(host, options);
-  tasks.push(lintTask);
-
-  if (options.style === 'tailwind') {
-    const tailwindTask = await setupTailwindGenerator(host, {
-      project: options.projectName,
-    });
-
-    tasks.push(tailwindTask);
-  }
 
   const styledTask = addStyleDependencies(host, {
     style: options.style,

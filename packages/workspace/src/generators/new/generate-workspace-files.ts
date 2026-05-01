@@ -227,7 +227,7 @@ function setPresetProperty(tree: Tree, options: NormalizedSchema) {
 
 function createNxJson(
   tree: Tree,
-  { directory, defaultBase, preset }: NormalizedSchema
+  { directory, defaultBase, preset, analytics }: NormalizedSchema
 ) {
   const nxJson: NxJsonConfiguration & { $schema: string } = {
     $schema: './node_modules/nx/schemas/nx-schema.json',
@@ -244,6 +244,7 @@ function createNxJson(
             },
           }
         : undefined,
+    analytics,
   };
 
   if (defaultBase === 'main') {
@@ -278,11 +279,11 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.TsStandalone
       ? './files-root-app'
       : (options.preset === Preset.TS &&
-          options.workspaces &&
-          process.env.NX_ADD_PLUGINS !== 'false') ||
-        options.preset === Preset.NPM
-      ? './files-package-based-repo'
-      : './files-integrated-repo';
+            options.workspaces &&
+            process.env.NX_ADD_PLUGINS !== 'false') ||
+          options.preset === Preset.NPM
+        ? './files-package-based-repo'
+        : './files-integrated-repo';
   generateFiles(tree, join(__dirname, filesDirName), options.directory, {
     formattedNames,
     dot: '.',
@@ -340,7 +341,6 @@ function addPnpmSettings(tree: Tree, options: NormalizedSchema) {
   tree.write(
     join(options.directory, 'pnpm-workspace.yaml'),
     `autoInstallPeers: true
-strictPeerDependencies: false
 `
   );
 }

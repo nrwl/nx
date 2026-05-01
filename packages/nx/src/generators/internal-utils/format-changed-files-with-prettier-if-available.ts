@@ -2,10 +2,16 @@ import * as path from 'path';
 import type * as Prettier from 'prettier';
 import { isUsingPrettier } from '../../utils/is-using-prettier';
 import type { Tree } from '../tree';
+import { getNxRequirePaths } from '../../utils/installation-directory';
 
 /**
  * Formats all the created or updated files using Prettier
  * @param tree - the file system tree
+ *
+ * @remarks
+ * Set the environment variable `NX_SKIP_FORMAT` to `true` to skip Prettier
+ * formatting. This is useful for repositories that use alternative formatters
+ * like Biome, dprint, or have custom formatting requirements.
  */
 export async function formatChangedFilesWithPrettierIfAvailable(
   tree: Tree,
@@ -13,6 +19,10 @@ export async function formatChangedFilesWithPrettierIfAvailable(
     silent?: boolean;
   }
 ): Promise<void> {
+  if (process.env.NX_SKIP_FORMAT === 'true') {
+    return;
+  }
+
   const files = new Set(
     tree.listChanges().filter((file) => file.type !== 'DELETE')
   );
@@ -37,9 +47,17 @@ export async function formatFilesWithPrettierIfAvailable(
 ): Promise<Map<string, string>> {
   const results = new Map<string, string>();
 
+  // Check here as well for direct callers of this function
+  if (process.env.NX_SKIP_FORMAT === 'true') {
+    return results;
+  }
+
   let prettier: typeof Prettier;
   try {
-    prettier = await import('prettier');
+    const prettierPath = require.resolve('prettier', {
+      paths: [...getNxRequirePaths(root), __dirname],
+    });
+    prettier = require(prettierPath);
     /**
      * Even after we discovered prettier in node_modules, we need to be sure that the user is intentionally using prettier
      * before proceeding to format with it.
@@ -79,10 +97,7 @@ export async function formatFilesWithPrettierIfAvailable(
 
         results.set(
           file.path,
-          // In prettier v3 the format result is a promise
-          await (prettier.format(file.content.toString('utf-8'), options) as
-            | Promise<string>
-            | string)
+          await prettier.format(file.content.toString('utf-8'), options)
         );
       } catch (e) {
         if (!options?.silent) {

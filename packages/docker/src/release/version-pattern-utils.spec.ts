@@ -151,6 +151,24 @@ describe('version-pattern-utils', () => {
       expect(result).toBe('app-{prod}-{version}');
     });
 
+    it('should substitute versionActionsVersion token when provided', () => {
+      const result = interpolateVersionPattern(
+        '{projectName}-{versionActionsVersion}',
+        {
+          projectName: 'app',
+          versionActionsVersion: '1.2.3',
+        }
+      );
+      expect(result).toBe('app-1.2.3');
+    });
+
+    it('should return versionActionsVersion when pattern is just versionActionsVersion token', () => {
+      const result = interpolateVersionPattern('{versionActionsVersion}', {
+        versionActionsVersion: '4.5.6',
+      });
+      expect(result).toBe('4.5.6');
+    });
+
     it('should handle special characters in projectName', () => {
       const result = interpolateVersionPattern('{projectName}', {
         projectName: '@org/package-name',

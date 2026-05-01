@@ -6,10 +6,9 @@ Update '@angular/ssr' import paths to use the new '/node' entry point when 'Comm
 
 Update import paths for SSR CommonEngine properties to use `@angular/ssr/node`.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```ts {% fileName="apps/app1/server.ts" %}
+```ts title="apps/app1/server.ts"
 import { CommonEngine } from '@angular/ssr';
 import type {
   CommonEngineOptions,
@@ -17,16 +16,12 @@ import type {
 } from '@angular/ssr';
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```ts {% fileName="apps/app1/server.ts" %}
+```ts title="apps/app1/server.ts"
 import { CommonEngine } from '@angular/ssr/node';
 import type {
   CommonEngineOptions,
   CommonEngineRenderOptions,
 } from '@angular/ssr/node';
 ```
-
-{% /tab %}
-{% /tabs %}

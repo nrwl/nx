@@ -10,7 +10,11 @@ import { addEventDispatchContract } from '../utils/index-file/add-event-dispatch
 import { assertIsError } from '../utils/misc-helpers';
 import { ensureOutputPaths } from '../utils/i18n';
 import { addError, addWarning } from '../utils/rspack-diagnostics';
-import { urlJoin } from '../utils/url-join';
+import {
+  addTrailingSlash,
+  joinUrlParts,
+  stripLeadingSlash,
+} from '../utils/url';
 import { getIndexOutputFile } from '../utils/index-file/get-index-output-file';
 
 export interface IndexHtmlPluginOptions extends IndexHtmlGeneratorOptions {
@@ -148,8 +152,17 @@ export class IndexHtmlPlugin
 
     const baseHrefSuffix = localeData.baseHref ?? localeData.subPath + '/';
 
-    return baseHrefSuffix !== ''
-      ? urlJoin(this.options.baseHref || '', baseHrefSuffix)
-      : undefined;
+    let joinedBaseHref: string | undefined;
+    if (baseHrefSuffix !== '') {
+      joinedBaseHref = addTrailingSlash(
+        joinUrlParts(this.options.baseHref || '', baseHrefSuffix)
+      );
+
+      if (this.options.baseHref && this.options.baseHref[0] !== '/') {
+        joinedBaseHref = stripLeadingSlash(joinedBaseHref);
+      }
+    }
+
+    return joinedBaseHref;
   }
 }

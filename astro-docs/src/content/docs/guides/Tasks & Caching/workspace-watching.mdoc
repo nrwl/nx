@@ -1,6 +1,6 @@
 ---
 title: Workspace Watching
-description: Learn how to use Nx's workspace watching feature to automatically execute commands when files change, improving development workflow and productivity.
+description: Learn how to use Nx workspace watching feature to automatically execute commands when files change, improving development workflow and productivity.
 filter: 'type:Guides'
 ---
 
@@ -84,7 +84,7 @@ Traditionally, if you want to rebuild your projects whenever they change, you wo
 
 With the following command, Nx is told to watch all projects, and execute `nx run $NX_PROJECT_NAME:build` for each change.
 
-```shell {% frame="none" %}
+```shell
 nx watch --all -- nx run \$NX_PROJECT_NAME:build
 ```
 
@@ -102,7 +102,7 @@ If you're running this command on Windows Powershell (not WSL), the environment 
 
 For example:
 
-```shell {% frame="none" %}
+```shell
 nx watch --all -- nx run %NX_PROJECT_NAME%:build
 ```
 
@@ -112,7 +112,7 @@ Now every time a package changes, Nx will run the build.
 
 If multiple packages change at the same time, Nx will run the callback for each changed project. Then if additional changes happen while a command is in progress, Nx will batch those changes, and execute them once the current command completes.
 
-## Watch Environment Variables
+## Watch environment variables
 
 Nx will run the watch callback command with the `NX_PROJECT_NAME` and `NX_FILE_CHANGES` environment variables set.
 
@@ -129,29 +129,29 @@ Below are the ways to run the watch with each package manager.
 
 #### pnpm
 
-```shell {% frame="none" %}
+```shell
 pnpm nx watch --all -- echo \$NX_PROJECT_NAME
 ```
 
 #### yarn
 
-```shell {% frame="none" %}
+```shell
 yarn nx -- watch --all -- echo \$NX_PROJECT_NAME
 ```
 
 #### npx
 
-```shell {% frame="none" %}
+```shell
 npx -c 'nx watch --all -- echo \$NX_PROJECT_NAME'
 ```
 
-## Additional Use Cases
+## Additional use cases
 
 ### Watching for specific projects
 
 To watch for specific projects and echo the changed files, run this command:
 
-```shell {% frame="none" %}
+```shell
 nx watch --projects=app1,app2 -- echo \$NX_FILE_CHANGES
 ```
 
@@ -159,7 +159,7 @@ nx watch --projects=app1,app2 -- echo \$NX_FILE_CHANGES
 
 To watch for a project and it's dependencies, run this command:
 
-```shell {% frame="none" %}
+```shell
 nx watch --projects=app1 --includeDependentProjects -- echo \$NX_PROJECT_NAME
 ```
 
@@ -169,7 +169,7 @@ In a monorepo setup, your application might rely on several libraries that need 
 
 To watch and rebuild the dependent libraries of an application, use the following command:
 
-```shell {% frame="none" %}
+```shell
 nx watch --projects=my-app --includeDependentProjects -- nx run-many -t build -p \$NX_PROJECT_NAME --exclude=my-app
 ```
 

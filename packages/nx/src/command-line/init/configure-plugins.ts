@@ -1,5 +1,4 @@
-import * as createSpinner from 'ora';
-import { bold } from 'chalk';
+import { bold } from 'picocolors';
 
 import {
   getPackageManagerCommand,
@@ -22,6 +21,7 @@ import { readNxJson } from '../../config/configuration';
 import { nxVersion } from '../../utils/versions';
 import { runNxSync } from '../../utils/child-process';
 import { writeJsonFile } from '../../utils/fileutils';
+import { globalSpinner } from '../../utils/spinner';
 
 export function installPluginPackages(
   repoRoot: string,
@@ -41,8 +41,12 @@ export function installPluginPackages(
       nxJson.installation.plugins[plugin] = nxVersion;
     }
     writeJsonFile(join(repoRoot, 'nx.json'), nxJson);
-    // Invoking nx wrapper to install plugins.
-    runNxSync('--version', { stdio: 'ignore' });
+    try {
+      runNxSync('--version', { stdio: 'pipe' });
+    } catch (e) {
+      if ((e as any)?.stderr) process.stderr.write((e as any).stderr);
+      throw e;
+    }
   }
 }
 
@@ -90,7 +94,7 @@ export async function runPluginInitGenerator(
   runNxSync(command, {
     stdio: [0, 1, 2],
     cwd: repoRoot,
-    windowsHide: false,
+    windowsHide: true,
     packageManagerCommand: pmc,
   });
 }
@@ -116,15 +120,14 @@ export async function runPluginInitGenerators(
       failedPlugins: {},
     };
   }
-  const spinner = createSpinner();
   let succeededPlugins = [];
   const failedPlugins: {
     [pluginName: string]: Error;
   } = {};
 
   for (const plugin of plugins) {
+    const spinner = globalSpinner.start('Installing plugin ' + plugin);
     try {
-      spinner.start('Installing plugin ' + plugin);
       await runPluginInitGenerator(
         plugin,
         repoRoot,

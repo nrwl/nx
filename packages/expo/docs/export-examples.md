@@ -26,8 +26,8 @@ nx run mobile:export
 
 ## Examples
 
-{% tabs %}
-{% tab label="Specify outputDir" %}
+##### Specify outputDir
+
 The `outputDir` option allows you to specify the output directory of your bundle:
 
 ```json
@@ -45,8 +45,8 @@ The `outputDir` option allows you to specify the output directory of your bundle
 
 or run command: `nx run mobile:export --outputDir=dist/apps/mobile`.
 
-{% /tab %}
-{% tab label="Specify the platform" %}
+##### Specify the platform
+
 The `platform` option allows you to specify the platform to compile with metro bundler: "ios", "android", "all", and "web".
 
 For example, to bundle for web:
@@ -66,8 +66,7 @@ For example, to bundle for web:
 
 or run command `nx export mobile --platform=web`.
 
-{% /tab %}
-{% tab label="Bundle for development" %}
+##### Bundle for development
 
 The `dev` option allows you to bundle for development environments.
 
@@ -87,8 +86,7 @@ The `dev` option allows you to bundle for development environments.
 
 or run command `nx export mobile --dev`.
 
-{% /tab %}
-{% tab label="Clear bundle cache" %}
+##### Clear bundle cache
 
 The `clear` option allows you to clear bundle cache.
 
@@ -107,6 +105,3 @@ The `clear` option allows you to clear bundle cache.
 ```
 
 or run command `nx export mobile --clear`.
-
-{% /tab %}
-{% /tabs %}

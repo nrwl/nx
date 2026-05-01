@@ -30,7 +30,7 @@ const officialPlugins = Object.keys(packagesJson)
   }));
 
 const plugins =
-  require('../../community/approved-plugins.json') as PluginRegistry[];
+  require('../../astro-docs/src/content/approved-community-plugins.json') as PluginRegistry[];
 
 async function main() {
   try {

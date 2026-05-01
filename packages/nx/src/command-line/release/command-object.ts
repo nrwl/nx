@@ -1,17 +1,19 @@
-import { Argv, CommandModule, showHelp } from 'yargs';
+import { type Argv, type CommandModule, showHelp } from 'yargs';
+import { handleImport } from '../../utils/handle-import';
 import { logger } from '../../utils/logger';
 import {
-  OutputStyle,
-  RunManyOptions,
+  type OutputStyle,
+  type RunManyOptions,
   parseCSV,
+  readParallelFromArgsAndEnv,
   withAffectedOptions,
   withOutputStyleOption,
   withOverrides,
   withRunManyOptions,
   withVerbose,
-  readParallelFromArgsAndEnv,
 } from '../yargs-utils/shared-options';
-import { VersionData } from './utils/shared';
+import type { ReleaseGraph } from './utils/release-graph';
+import type { VersionData } from './utils/shared';
 
 // Implemented by every command and subcommand
 export interface BaseNxReleaseArgs {
@@ -51,13 +53,9 @@ export type VersionOptions = NxReleaseArgs &
     specifier?: string;
     preid?: string;
     stageChanges?: boolean;
-    /**
-     * @deprecated Use versionActionsOptionsOverrides instead.
-     *
-     * Using generatorOptionsOverrides is only valid when release.version.useLegacyVersioning is set to true.
-     */
-    generatorOptionsOverrides?: Record<string, unknown>;
     versionActionsOptionsOverrides?: Record<string, unknown>;
+    // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
+    releaseGraph?: ReleaseGraph;
   };
 
 export type ChangelogOptions = NxReleaseArgs &
@@ -71,6 +69,10 @@ export type ChangelogOptions = NxReleaseArgs &
     from?: string;
     interactive?: string;
     createRelease?: false | 'github' | 'gitlab';
+    resolveVersionPlans?: 'all' | 'using-from-and-to';
+    replaceExistingContents?: boolean;
+    // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
+    releaseGraph?: ReleaseGraph;
   };
 
 export type PublishOptions = NxReleaseArgs &
@@ -81,6 +83,8 @@ export type PublishOptions = NxReleaseArgs &
     otp?: number;
     // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
     versionData?: VersionData;
+    // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
+    releaseGraph?: ReleaseGraph;
   };
 
 export type PlanOptions = NxReleaseArgs & {
@@ -104,6 +108,7 @@ export type ReleaseOptions = NxReleaseArgs &
     yes?: boolean;
     preid?: VersionOptions['preid'];
     skipPublish?: boolean;
+    otp?: number;
   };
 
 export type VersionPlanArgs = {
@@ -174,7 +179,9 @@ export const yargsReleaseCommand: CommandModule<
             'The --projects and --groups options are mutually exclusive, please use one or the other.'
           );
         }
-        const nxJson = (await import('../../config/nx-json')).readNxJson();
+        const nxJson = (
+          await handleImport('../../config/nx-json.js', __dirname)
+        ).readNxJson();
         if (argv.groups?.length) {
           for (const group of argv.groups) {
             if (!nxJson.release?.groups?.[group]) {
@@ -222,6 +229,11 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
             description:
               'Skip publishing by automatically answering no to the confirmation prompt for publishing.',
           })
+          .option('otp', {
+            type: 'number',
+            description:
+              'A one-time password for publishing to a registry that requires 2FA.',
+          })
           .check((argv) => {
             if (argv.yes !== undefined && argv.skipPublish !== undefined) {
               throw new Error(
@@ -233,7 +245,7 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
       )
     ),
   handler: async (args) => {
-    const release = await import('./release');
+    const release = await handleImport('./release.js', __dirname);
     const result = await release.releaseCLIHandler(args);
     if (args.dryRun) {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
@@ -273,7 +285,7 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
       )
     ),
   handler: async (args) => {
-    const release = await import('./version');
+    const release = await handleImport('./version.js', __dirname);
     const result = await release.releaseVersionCLIHandler(args);
     if (args.dryRun) {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
@@ -317,6 +329,19 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
               'Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level.',
             choices: ['all', 'workspace', 'projects'],
           })
+          .option('replace-existing-contents', {
+            type: 'boolean',
+            description:
+              'Whether to overwrite the existing changelog contents instead of prepending to them.',
+            default: false,
+          })
+          .option('resolve-version-plans', {
+            type: 'string',
+            description:
+              'How to resolve version plans for changelog generation, defaults to resolving all version plan files available on disk.',
+            choices: ['all', 'using-from-and-to'],
+            default: 'all',
+          })
           .check((argv) => {
             if (!argv.version) {
               throw new Error(
@@ -328,7 +353,7 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
       )
     ),
   handler: async (args) => {
-    const release = await import('./changelog');
+    const release = await handleImport('./changelog.js', __dirname);
     const result = await release.releaseChangelogCLIHandler(args);
     if (args.dryRun) {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
@@ -368,7 +393,7 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
     ),
   handler: async (args) => {
     const status = await (
-      await import('./publish')
+      await handleImport('./publish.js', __dirname)
     ).releasePublishCLIHandler(coerceParallelOption(withOverrides(args, 2)));
     if (args.dryRun) {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
@@ -410,7 +435,7 @@ const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
         default: true,
       }),
   handler: async (args) => {
-    const release = await import('./plan');
+    const release = await handleImport('./plan.js', __dirname);
     const result = await release.releasePlanCLIHandler(args);
     if (args.dryRun) {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
@@ -426,7 +451,7 @@ const planCheckCommand: CommandModule<NxReleaseArgs, PlanCheckOptions> = {
     'Ensure that all touched projects have an applicable version plan created for them.',
   builder: (yargs) => withAffectedOptions(yargs),
   handler: async (args) => {
-    const release = await import('./plan-check');
+    const release = await handleImport('./plan-check.js', __dirname);
     const result = await release.releasePlanCheckCLIHandler(args);
     process.exit(result);
   },

@@ -1,4 +1,4 @@
-import { dirname, join } from 'path';
+import { dirname, join, relative } from 'path';
 import {
   ExecutorsJsonEntry,
   GeneratorsJsonEntry,
@@ -9,10 +9,11 @@ import { getNxRequirePaths } from '../installation-directory';
 import { readPluginPackageJson } from '../../project-graph/plugins';
 import { loadNxPlugin } from '../../project-graph/plugins/in-process-loader';
 import { PackageJson } from '../package-json';
-import { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
+import type { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
 
 export interface PluginCapabilities {
   name: string;
+  path?: string;
   executors?: { [name: string]: ExecutorsJsonEntry };
   generators?: { [name: string]: GeneratorsJsonEntry };
   projectInference?: boolean;
@@ -51,8 +52,10 @@ export async function getPluginCapabilities(
     const pluginModule = includeRuntimeCapabilities
       ? await tryGetModule(packageJson, workspaceRoot)
       : ({} as Record<string, unknown>);
+    const pluginPath = relative(workspaceRoot, dirname(packageJsonPath)) || '.';
     return {
       name: pluginName,
+      path: pluginPath,
       generators: {
         ...tryGetCollection(
           packageJsonPath,

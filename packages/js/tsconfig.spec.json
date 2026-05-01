@@ -16,7 +16,7 @@
     "**/*.spec.jsx",
     "**/*.test.jsx",
     "**/*.d.ts",
-    "jest.config.ts",
+    "jest.config.cts",
     "*.json"
   ],
   "references": [

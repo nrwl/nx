@@ -48,9 +48,7 @@ describe('setupSSR', () => {
         import { AppModule } from './app/app-module';
 
         platformBrowser()
-          .bootstrapModule(AppModule, {
-            ngZoneEventCoalescing: true,
-          })
+          .bootstrapModule(AppModule)
           .catch((err) => console.error(err));
         "
       `);
@@ -64,12 +62,7 @@ describe('setupSSR', () => {
             "types": ["node"]
           },
           "include": ["src/**/*.ts"],
-          "exclude": [
-            "jest.config.ts",
-            "src/test-setup.ts",
-            "src/**/*.test.ts",
-            "src/**/*.spec.ts"
-          ]
+          "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]
         }
         "
       `);
@@ -171,12 +164,7 @@ describe('setupSSR', () => {
             "types": ["node"]
           },
           "include": ["src/**/*.ts"],
-          "exclude": [
-            "jest.config.ts",
-            "src/test-setup.ts",
-            "src/**/*.test.ts",
-            "src/**/*.spec.ts"
-          ]
+          "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]
         }
         "
       `);
@@ -352,22 +340,16 @@ describe('setupSSR', () => {
         import { AppModule } from './app/app-module';
 
         platformBrowser()
-          .bootstrapModule(AppModule, {
-            ngZoneEventCoalescing: true
-          })
+          .bootstrapModule(AppModule)
           .catch((err) => console.error(err));
         "
       `);
       expect(tree.read('app1/tsconfig.server.json', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
-        /* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
-        {
+        "{
           "extends": "./tsconfig.app.json",
           "compilerOptions": {
             "outDir": "../out-tsc/server",
-            "module": "commonjs",
-            "moduleResolution": "node10",
             "types": [
               "node"
             ]
@@ -422,6 +404,23 @@ describe('setupSSR', () => {
       expect(nxJson.targetDefaults.server.cache).toBe(true);
     });
 
+    it('should not import from `zone.js/node` in the server file even when the app is not zoneless', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        standalone: false,
+        bundler: 'webpack',
+        zoneless: false,
+        skipFormat: true,
+      });
+
+      await setupSsr(tree, { project: 'app1' });
+
+      expect(tree.read('app1/src/server.ts', 'utf-8')).not.toContain(
+        "import 'zone.js/node';"
+      );
+    });
+
     it('should create the files correctly for ssr when app is standalone', async () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace();
@@ -453,14 +452,10 @@ describe('setupSSR', () => {
       `);
       expect(tree.read('app1/tsconfig.server.json', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
-        /* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
-        {
+        "{
           "extends": "./tsconfig.app.json",
           "compilerOptions": {
             "outDir": "../out-tsc/server",
-            "module": "commonjs",
-            "moduleResolution": "node10",
             "types": [
               "node"
             ]
@@ -618,7 +613,7 @@ describe('setupSSR', () => {
     // ASSERT
     expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+      "import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
       import { provideRouter } from '@angular/router';
       import { appRoutes } from './app.routes';
       import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
@@ -626,7 +621,6 @@ describe('setupSSR', () => {
       export const appConfig: ApplicationConfig = {
         providers: [provideClientHydration(withEventReplay()),
           provideBrowserGlobalErrorListeners(),
-          provideZoneChangeDetection({ eventCoalescing: true }),
           provideRouter(appRoutes)
         ]
       };
@@ -704,14 +698,13 @@ describe('setupSSR', () => {
 
     expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+      "import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
       import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
       import { appRoutes } from './app.routes';
 
       export const appConfig: ApplicationConfig = {
         providers: [
           provideBrowserGlobalErrorListeners(),
-          provideZoneChangeDetection({ eventCoalescing: true }),
           provideRouter(appRoutes, withEnabledBlockingInitialNavigation())
         ]
       };
@@ -726,7 +719,7 @@ describe('setupSSR', () => {
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
-          '@angular/core': '18.2.0',
+          '@angular/core': '19.2.0',
         },
       }));
       await generateTestApplication(tree, {
@@ -741,115 +734,24 @@ describe('setupSSR', () => {
       // ASSERT
       const pkgJson = readJson(tree, 'package.json');
       expect(pkgJson.dependencies['@angular/ssr']).toBe(
-        backwardCompatibleVersions.angularV18.angularDevkitVersion
+        backwardCompatibleVersions[19].angularDevkitVersion
       );
       expect(pkgJson.dependencies['@angular/platform-server']).toEqual(
-        backwardCompatibleVersions.angularV18.angularVersion
+        backwardCompatibleVersions[19].angularVersion
       );
       expect(pkgJson.dependencies['@angular/ssr']).toEqual(
-        backwardCompatibleVersions.angularV18.angularDevkitVersion
+        backwardCompatibleVersions[19].angularDevkitVersion
       );
       expect(pkgJson.dependencies['express']).toEqual(
-        backwardCompatibleVersions.angularV18.expressVersion
+        backwardCompatibleVersions[19].expressVersion
       );
       expect(
         pkgJson.dependencies['@nguniversal/express-engine']
       ).toBeUndefined();
       expect(pkgJson.devDependencies['@types/express']).toBe(
-        backwardCompatibleVersions.angularV18.typesExpressVersion
+        backwardCompatibleVersions[19].typesExpressVersion
       );
       expect(pkgJson.devDependencies['@nguniversal/builders']).toBeUndefined();
-    });
-
-    it('should add hydration correctly for NgModule apps', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: { '@angular/core': '18.2.0' },
-      }));
-      await generateTestApplication(tree, {
-        directory: 'app1',
-        standalone: false,
-        skipFormat: true,
-      });
-
-      await setupSsr(tree, {
-        project: 'app1',
-        hydration: true,
-        skipFormat: true,
-      });
-
-      expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { NgModule } from '@angular/core';
-        import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
-        import { RouterModule } from '@angular/router';
-        import { AppComponent } from './app.component';
-        import { appRoutes } from './app.routes';
-        import { NxWelcomeComponent } from './nx-welcome.component';
-
-        @NgModule({
-          declarations: [AppComponent, NxWelcomeComponent],
-          imports: [
-            BrowserModule,
-            RouterModule.forRoot(appRoutes),
-          ],
-          providers: [provideClientHydration()],
-          bootstrap: [AppComponent],
-        })
-        export class AppModule {}
-        "
-      `);
-    });
-
-    it('should add hydration correctly to standalone', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: { '@angular/core': '18.2.0' },
-      }));
-      await generateTestApplication(tree, {
-        directory: 'app1',
-        skipFormat: true,
-      });
-
-      await setupSsr(tree, {
-        project: 'app1',
-        hydration: true,
-        skipFormat: true,
-      });
-
-      expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
-        import { provideRouter } from '@angular/router';
-        import { appRoutes } from './app.routes';
-        import { provideClientHydration } from '@angular/platform-browser';
-
-        export const appConfig: ApplicationConfig = {
-          providers: [provideClientHydration(),
-            provideZoneChangeDetection({ eventCoalescing: true }),
-            provideRouter(appRoutes)
-          ]
-        };
-        "
-      `);
-
-      expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
-        import { provideServerRendering } from '@angular/platform-server';
-        import { appConfig } from './app.config';
-
-        const serverConfig: ApplicationConfig = {
-          providers: [
-            provideServerRendering()
-          ]
-        };
-
-        export const config = mergeApplicationConfig(appConfig, serverConfig);
-        "
-      `);
     });
 
     it('should setup server routing using "provideServerRoutesConfig" for NgModule apps when "serverRouting" is true and @angular/ssr version is lower than 19.2.0', async () => {
@@ -1059,27 +961,21 @@ describe('setupSSR', () => {
       ]);
     });
 
-    it.each`
-      angularVersion
-      ${'19.2.16'}
-      ${'18.2.21'}
-    `(
-      'should use "BootstrapContext" in the main.server.ts file when angular version is $angularVersion',
-      async ({ angularVersion }) => {
-        const tree = createTreeWithEmptyWorkspace();
-        updateJson(tree, 'package.json', (json) => ({
-          ...json,
-          dependencies: { '@angular/core': angularVersion },
-        }));
-        await generateTestApplication(tree, {
-          directory: 'app1',
-          skipFormat: true,
-        });
+    it('should use "BootstrapContext" in the main.server.ts file when using an angular v19 version equal or greater than 19.2.16', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { '@angular/core': '19.2.16' },
+      }));
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
 
-        await setupSsr(tree, { project: 'app1', skipFormat: true });
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
 
-        expect(tree.read('app1/src/main.server.ts', 'utf-8'))
-          .toMatchInlineSnapshot(`
+      expect(tree.read('app1/src/main.server.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
         "import { BootstrapContext, bootstrapApplication } from '@angular/platform-browser';
         import { AppComponent } from './app/app.component';
         import { config } from './app/app.config.server';
@@ -1089,31 +985,51 @@ describe('setupSSR', () => {
 
         export default bootstrap;
         "
-        `);
-      }
-    );
+      `);
+    });
 
-    it.each`
-      angularVersion
-      ${'19.2.15'}
-      ${'18.2.20'}
-    `(
-      'should not use "BootstrapContext" in the main.server.ts file when angular version is $angularVersion',
-      async ({ angularVersion }) => {
-        const tree = createTreeWithEmptyWorkspace();
-        updateJson(tree, 'package.json', (json) => ({
-          ...json,
-          dependencies: { '@angular/core': angularVersion },
-        }));
-        await generateTestApplication(tree, {
-          directory: 'app1',
-          skipFormat: true,
-        });
+    it('should use "BootstrapContext" in the main.server.ts file when using an angular v20 version equal or greater than 20.3.0', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { '@angular/core': '20.3.0' },
+      }));
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
 
-        await setupSsr(tree, { project: 'app1', skipFormat: true });
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
 
-        expect(tree.read('app1/src/main.server.ts', 'utf-8'))
-          .toMatchInlineSnapshot(`
+      expect(tree.read('app1/src/main.server.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { BootstrapContext, bootstrapApplication } from '@angular/platform-browser';
+        import { App } from './app/app';
+        import { config } from './app/app.config.server';
+
+        const bootstrap = (context: BootstrapContext) =>
+          bootstrapApplication(App, config, context);
+
+        export default bootstrap;
+        "
+      `);
+    });
+
+    it('should not use "BootstrapContext" in the main.server.ts file when using an angular v19 version lower than 19.2.16', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { '@angular/core': '19.2.15' },
+      }));
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
+
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+      expect(tree.read('app1/src/main.server.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
         "import { bootstrapApplication } from '@angular/platform-browser';
         import { AppComponent } from './app/app.component';
         import { config } from './app/app.config.server';
@@ -1123,8 +1039,7 @@ describe('setupSSR', () => {
         export default bootstrap;
         "
         `);
-      }
-    );
+    });
 
     it('should not use "BootstrapContext" in the main.server.ts file when using an angular v20 version lower than 20.3.0', async () => {
       const tree = createTreeWithEmptyWorkspace();
@@ -1150,6 +1065,25 @@ describe('setupSSR', () => {
         export default bootstrap;
         "
         `);
+    });
+
+    it('should import from `zone.js/node` in the server file for the browser builder in angular versions lower than v21', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { '@angular/core': '~20.3.0' },
+      }));
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        bundler: 'webpack',
+        skipFormat: true,
+      });
+
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+      expect(tree.read('app1/src/server.ts', 'utf-8')).toContain(
+        "import 'zone.js/node';"
+      );
     });
   });
 });

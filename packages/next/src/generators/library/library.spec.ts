@@ -43,37 +43,6 @@ describe('next library', () => {
     expect(tsconfigTypes).toContain('@nx/next/typings/image.d.ts');
   });
 
-  it('should add jsxImportSource in tsconfig.json for @emotion/styled', async () => {
-    const baseOptions: Schema = {
-      directory: '',
-      linter: 'eslint',
-      skipFormat: false,
-      skipTsConfig: false,
-      unitTestRunner: 'jest',
-      style: 'css',
-      component: true,
-    };
-
-    const appTree = createTreeWithEmptyWorkspace();
-
-    await libraryGenerator(appTree, {
-      ...baseOptions,
-      directory: 'my-lib',
-    });
-    await libraryGenerator(appTree, {
-      ...baseOptions,
-      directory: 'my-lib2',
-      style: '@emotion/styled',
-    });
-
-    expect(
-      readJson(appTree, 'my-lib/tsconfig.json').compilerOptions.jsxImportSource
-    ).not.toBeDefined();
-    expect(
-      readJson(appTree, 'my-lib2/tsconfig.json').compilerOptions.jsxImportSource
-    ).toEqual('@emotion/react');
-  });
-
   it('should generate a buildable library', async () => {
     const appTree = createTreeWithEmptyWorkspace();
     await libraryGenerator(appTree, {
@@ -87,8 +56,39 @@ describe('next library', () => {
       bundler: 'vite',
     });
 
-    expect(appTree.exists('my-buildable-lib/vite.config.ts')).toBeTruthy();
+    expect(appTree.exists('my-buildable-lib/vite.config.mts')).toBeTruthy();
   });
+
+  it('should configure server entry point for buildable library with Vite', async () => {
+    const appTree = createTreeWithEmptyWorkspace();
+    await libraryGenerator(appTree, {
+      directory: 'my-buildable-lib',
+      linter: 'eslint',
+      skipFormat: false,
+      skipTsConfig: false,
+      unitTestRunner: 'jest',
+      style: 'css',
+      component: true,
+      bundler: 'vite',
+    });
+
+    // Check vite.config.mts has multiple entry points
+    const viteConfig = appTree.read(
+      'my-buildable-lib/vite.config.mts',
+      'utf-8'
+    );
+    expect(viteConfig).toContain("index: 'src/index.ts'");
+    expect(viteConfig).toContain("server: 'src/server.ts'");
+    expect(viteConfig).toContain('fileName: (format, entryName) =>');
+
+    // Check package.json has server export
+    const packageJson = readJson(appTree, 'my-buildable-lib/package.json');
+    expect(packageJson.exports['./server']).toBeDefined();
+    expect(packageJson.exports['./server'].types).toBe('./dist/server.d.ts');
+    expect(packageJson.exports['./server'].import).toBe('./dist/server.js');
+    expect(packageJson.exports['./server'].default).toBe('./dist/server.js');
+  });
+
   it('should generate a server-only entry point', async () => {
     const appTree = createTreeWithEmptyWorkspace();
 
@@ -111,8 +111,8 @@ describe('next library', () => {
     expect(
       readJson(appTree, 'tsconfig.base.json').compilerOptions.paths
     ).toMatchObject({
-      '@proj/my-lib': ['my-lib/src/index.ts'],
-      '@proj/my-lib/server': ['my-lib/src/server.ts'],
+      '@proj/my-lib': ['./my-lib/src/index.ts'],
+      '@proj/my-lib/server': ['./my-lib/src/server.ts'],
     });
   });
 
@@ -227,6 +227,7 @@ describe('next library', () => {
             "out-tsc",
             "dist",
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
             "src/**/*.spec.tsx",
@@ -263,6 +264,7 @@ describe('next library', () => {
           "extends": "../tsconfig.base.json",
           "include": [
             "jest.config.ts",
+            "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",
@@ -295,7 +297,7 @@ describe('next library', () => {
         bundler: 'vite',
       });
 
-      expect(appTree.exists('my-buildable-lib/vite.config.ts')).toBeTruthy();
+      expect(appTree.exists('my-buildable-lib/vite.config.mts')).toBeTruthy();
     });
 
     it('should create a correct package.json for buildable libraries', async () => {
@@ -365,7 +367,7 @@ describe('next library', () => {
                   "{projectRoot}/test-output/jest/coverage"
                 ],
                 "options": {
-                  "jestConfig": "mylib/jest.config.ts"
+                  "jestConfig": "mylib/jest.config.cts"
                 }
               }
             },

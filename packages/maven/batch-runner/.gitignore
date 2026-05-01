@@ -1,0 +1,24 @@
+# Build artifacts
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies
+dependency-reduced-pom.xml
+
+# Runtime
+*.log

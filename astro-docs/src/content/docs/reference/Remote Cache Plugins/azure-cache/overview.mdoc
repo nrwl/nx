@@ -49,13 +49,13 @@ Includes everything from Nx Cloud, plus:
 
 {% /aside %}
 
-## Set Up @nx/azure-cache
+## Set up @nx/azure-cache
 
-### 1. Install the Package
+### 1. Install the package
 
 Run the following command:
 
-```shell {% frame="none" %}
+```shell
 nx add @nx/azure-cache
 ```
 
@@ -63,7 +63,7 @@ This will add the `@nx/azure-cache` NPM package and automatically configure it f
 
 The key will be saved in your repository (`.nx/key/key.ini`) and should be committed so that every developer has access to it. If your repository is public (or in CI), you can also use an environment variable:
 
-```
+```dotenv
 // .env
 NX_KEY=YOUR_ACTIVATION_KEY
 ```
@@ -109,7 +109,7 @@ Note: Any authentication method that [sets up the `DefaultAzureCredentials`](htt
 If you are using a custom Azure endpoint, you will need to authenticate by [setting the `AZURE_STORAGE_CONNECTION_STRING` environment variable](https://learn.microsoft.com/en-us/azure/storage/common/storage-configure-connection-string). The `@nx/azure-cache` plugin will detect the environment variable and automatically use it to connect to Azure.
 {% /aside %}
 
-### 3. Configure the Nx Cache to Use Azure Storage
+### 3. configure the Nx cache to use Azure storage
 
 Finally, you need to configure your Nx cache in the `nx.json` file. The `container` that you specify needs to already exist - Nx doesn't create it for you.
 
@@ -118,8 +118,8 @@ Finally, you need to configure your Nx cache in the `nx.json` file. The `contain
 {
   "azure": {
     "container": "mycontainer",
-    "accountName": "myaccount"
-  }
+    "accountName": "myaccount",
+  },
 }
 ```
 
@@ -128,9 +128,9 @@ Finally, you need to configure your Nx cache in the `nx.json` file. The `contain
 | **container**   | The name of the container to use |
 | **accountName** | The name of blob storage account |
 
-### Migrating from Custom Tasks Runners
+### Migrating from custom tasks runners
 
-Many people who are interested in Nx Powerpack have previously used custom task runners. Nx offers a new and simpler extension API designed to meet the same use cases as the now-deprecated custom task runners.
+Many people who are interested in Nx caching plugins have previously used custom task runners. Nx offers a new and simpler extension API designed to meet the same use cases as the now-deprecated custom task runners.
 
 To learn more about migrating from custom task runners, [please refer to this detailed guide](/docs/reference/deprecated/custom-tasks-runner).
 
@@ -143,8 +143,8 @@ Nx will only show warnings when the remote cache is not writable. You can disabl
 {
   "azure": {
     // ...
-    "localMode": "read-only"
-  }
+    "localMode": "read-only",
+  },
 }
 ```
 
@@ -155,7 +155,7 @@ The cache mode in CI can also be configured by setting `ciMode` to `read-only` o
 {
   "azure": {
     // ...
-    "ciMode": "read-only"
-  }
+    "ciMode": "read-only",
+  },
 }
 ```

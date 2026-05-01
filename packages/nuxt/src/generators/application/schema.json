@@ -79,6 +79,7 @@
       "type": "string",
       "alias": "s",
       "default": "css",
+      "enum": ["css", "scss", "none"],
       "x-prompt": {
         "message": "Which stylesheet format would you like to use?",
         "type": "list",
@@ -89,11 +90,7 @@
           },
           {
             "value": "scss",
-            "label": "SASS(.scss)       [ https://sass-lang.com          ]"
-          },
-          {
-            "value": "less",
-            "label": "LESS              [ https://lesscss.org            ]"
+            "label": "SASS(.scss)       [ https://sass-lang.com   ]"
           },
           {
             "value": "none",
@@ -110,6 +107,11 @@
     "useProjectJson": {
       "type": "boolean",
       "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
+    },
+    "useAppDir": {
+      "type": "boolean",
+      "description": "Use Nuxt 4 app/ directory structure instead of src/ directory. Defaults to true for Nuxt v4, false for Nuxt v3.",
+      "x-priority": "important"
     }
   },
   "required": ["directory"],

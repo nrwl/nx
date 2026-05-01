@@ -1,0 +1,18 @@
+diff --git a/integrations/heading-links.ts b/integrations/heading-links.ts
+index ebb61d4a8df1721b39d74f0238af227b7039c65e..1f7898f9c0a522689d5959a3502d7ec75ee2a479 100644
+--- a/integrations/heading-links.ts
++++ b/integrations/heading-links.ts
+@@ -31,9 +31,11 @@ export default function rehypeAutolinkHeadings(
+ ) {
+ 	const transformer: Transformer<Root> = (tree, file) => {
+ 		// If the document is not part of the Starlight docs collection, skip it.
+-		if (!normalizePath(file.path).startsWith(docsCollectionPath)) return;
++    // Nx auto generate docs don't have a path so this will fail with an error when we enable autolink headings.
++		if (file.path && !normalizePath(file.path).startsWith(docsCollectionPath)) return;
+ 
+-		const pageLang = absolutePathToLang(file.path);
++    // default to 'en' since path can be null here and is the Nx default lang
++		const pageLang = file.path ? absolutePathToLang(file.path) : 'en';
+ 		const t = useTranslationsForLang(pageLang);
+ 
+ 		visit(tree, 'element', function (node, index, parent) {

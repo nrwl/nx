@@ -1,0 +1,113 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`pom-xml-updater updateNxMavenPluginVersion should correctly identify nx-maven-plugin with whitespace 1`] = `
+"<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>
+          dev.nx.maven
+        </groupId>
+        <artifactId>
+          nx-maven-plugin
+        </artifactId>
+        <version>0.0.8</version>
+      </plugin>
+    </plugins>
+  </build>
+</project>"
+`;
+
+exports[`pom-xml-updater updateNxMavenPluginVersion should handle pom.xml with dependencies and other version elements 1`] = `
+"<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <version>1.0.0</version>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>dev.nx.maven</groupId>
+        <artifactId>nx-maven-plugin</artifactId>
+        <version>0.0.8</version>
+      </plugin>
+    </plugins>
+  </build>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.13.2</version>
+    </dependency>
+  </dependencies>
+</project>"
+`;
+
+exports[`pom-xml-updater updateNxMavenPluginVersion should not update other plugin versions 1`] = `
+"<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>dev.nx.maven</groupId>
+        <artifactId>nx-maven-plugin</artifactId>
+        <version>0.0.8</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>0.0.7</version>
+      </plugin>
+    </plugins>
+  </build>
+</project>"
+`;
+
+exports[`pom-xml-updater updateNxMavenPluginVersion should only update plugins, not parent version 1`] = `
+"<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <parent>
+    <groupId>dev.nx</groupId>
+    <artifactId>nx-parent</artifactId>
+    <version>0.0.7</version>
+  </parent>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>dev.nx.maven</groupId>
+        <artifactId>nx-maven-plugin</artifactId>
+        <version>0.0.8</version>
+      </plugin>
+    </plugins>
+  </build>
+</project>"
+`;
+
+exports[`pom-xml-updater updateNxMavenPluginVersion should preserve XML formatting and structure 1`] = `
+"<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>dev.nx.maven</groupId>
+        <artifactId>nx-maven-plugin</artifactId>
+        <version>0.0.8</version>
+      </plugin>
+    </plugins>
+  </build>
+</project>"
+`;
+
+exports[`pom-xml-updater updateNxMavenPluginVersion should update the nx-maven-plugin version only 1`] = `
+"<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>dev.nx.maven</groupId>
+        <artifactId>nx-maven-plugin</artifactId>
+        <version>0.0.8</version>
+      </plugin>
+    </plugins>
+  </build>
+</project>"
+`;

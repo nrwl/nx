@@ -1,0 +1,11 @@
+extends: existence
+message: "Avoid '%s'. If something were truly simple, you wouldn't need to document it."
+level: suggestion
+ignorecase: true
+tokens:
+  - 'easily'
+  - 'simply'
+  - 'straightforward'
+  - 'obviously'
+  - 'of course'
+  - 'trivial'

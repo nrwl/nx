@@ -20,13 +20,16 @@ import {
   runPluginInitGenerator,
   getFailedToInstallPluginErrorMessages,
 } from '../init/configure-plugins';
-import * as ora from 'ora';
+import { globalSpinner } from '../../utils/spinner';
+import { NxPackageJson } from '../../utils/package-json';
+import { reportNxAddCommand } from '../../analytics';
 
 export function addHandler(options: AddOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {
     output.addNewline();
 
     const [pkgName, version] = parsePackageSpecifier(options.packageSpecifier);
+    reportNxAddCommand(pkgName, version);
     const nxJson = readNxJson();
 
     await installPackage(pkgName, version, nxJson);
@@ -43,8 +46,7 @@ async function installPackage(
   version: string,
   nxJson: NxJsonConfiguration
 ): Promise<void> {
-  const spinner = ora(`Installing ${pkgName}@${version}...`);
-  spinner.start();
+  const spinner = globalSpinner.start(`Installing ${pkgName}@${version}...`);
 
   if (existsSync('package.json')) {
     const pm = detectPackageManager();
@@ -60,13 +62,16 @@ async function installPackage(
       exec(
         command,
         {
-          windowsHide: false,
+          windowsHide: true,
         },
-        (error, stdout) => {
+        (error, stdout, stderr) => {
           if (error) {
             spinner.fail();
             output.addNewline();
-            logger.error(stdout);
+            const errorOutput = [stdout.trim(), stderr.trim()]
+              .filter(Boolean)
+              .join('\n');
+            logger.error(errorOutput);
             output.error({
               title: `Failed to install ${pkgName}. Please check the error above for more details.`,
             });
@@ -121,8 +126,7 @@ async function initializePlugin(
     updatePackageScripts = true;
   }
 
-  const spinner = ora(`Initializing ${pkgName}...`);
-  spinner.start();
+  const spinner = globalSpinner.start(`Initializing ${pkgName}...`);
 
   try {
     await runPluginInitGenerator(
@@ -164,7 +168,7 @@ function parsePackageSpecifier(
 }
 
 export const coreNxPluginVersions = (
-  require('../../../package.json') as typeof import('../../../package.json')
+  require(require.resolve('nx/package.json')) as NxPackageJson
 )['nx-migrations'].packageGroup.reduce(
   (map, entry) => {
     const packageName = typeof entry === 'string' ? entry : entry.package;

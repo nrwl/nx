@@ -46,7 +46,6 @@ import {
   addReleaseConfigForTsSolution,
   releaseTasks,
 } from '@nx/js/src/generators/library/utils/add-release-config';
-import { shouldUseLegacyVersioning } from 'nx/src/command-line/release/config/use-legacy-versioning';
 
 export async function reactNativeLibraryGenerator(
   host: Tree,
@@ -218,12 +217,7 @@ async function addProject(
   } else {
     if (options.publishable) {
       const nxJson = readJson(host, 'nx.json');
-      await addReleaseConfigForNonTsSolution(
-        shouldUseLegacyVersioning(nxJson.release),
-        host,
-        options.name,
-        project
-      );
+      await addReleaseConfigForNonTsSolution(host, options.name, project);
     }
     addProjectConfiguration(host, options.name, project);
   }

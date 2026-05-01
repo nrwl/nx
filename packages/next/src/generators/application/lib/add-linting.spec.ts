@@ -27,7 +27,6 @@ describe('updateEslint', () => {
       parsedTags: [],
       fileName: 'index',
       e2eTestRunner: 'cypress',
-      styledModule: null,
       isTsSolutionSetup: false,
     };
     tree = createTreeWithEmptyWorkspace();
@@ -103,21 +102,15 @@ describe('updateEslint', () => {
 
     expect(tree.read(`${schema.appProjectRoot}/eslint.config.cjs`, 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const { FlatCompat } = require("@eslint/eslintrc");
-      const js = require("@eslint/js");
+      "const nextEslintPluginNext = require("@next/eslint-plugin-next");
       const nx = require("@nx/eslint-plugin");
       const baseConfig = require("../eslint.config.cjs");
 
-      const compat = new FlatCompat({
-        baseDirectory: __dirname,
-        recommendedConfig: js.configs.recommended,
-      });
-
       module.exports = [
-          ...compat.extends("next", "next/core-web-vitals"),
+          { plugins: { "@next/next": nextEslintPluginNext } },
 
-          ...baseConfig,
           ...nx.configs["flat/react-typescript"],
+          ...baseConfig,
           {
               ignores: [
                   ".next/**/*"

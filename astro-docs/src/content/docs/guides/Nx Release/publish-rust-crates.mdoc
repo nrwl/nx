@@ -11,12 +11,12 @@ This recipe guides you through versioning Rust libraries, generating changelogs,
 {% aside type="caution" title="Currently requires legacy versioning" %}
 In Nx v21, the implementation details of versioning were rewritten to enhance flexibility and allow for better cross-ecosystem support. An automated migration was provided in Nx v21 to update your configuration to the new format when running `nx migrate`.
 
-During the lifecycle of Nx v21, you can still opt into the old versioning by setting `release.version.useLegacyVersioning` to `true`, which will keep the original configuration structure and behavior. In Nx v22, the legacy versioning implementation will be removed entirely, so this should only be done temporarily to ease the transition.
+During the lifecycle of Nx v21, you can still opt into the old versioning by setting `release.version.useLegacyVersioning` to `true`, which will keep the original configuration structure and behavior. In Nx v22, the legacy versioning implementation has been removed entirely, so this should only be done temporarily to ease the transition.
 
 Importantly, this recipe currently requires the use of legacy versioning, because the `@monodon/rust` plugin does not yet provide the necessary `VersionActions` implementation to support the new versioning behavior. This will be added in a minor release of Nx v21 and this recipe will be updated accordingly.
 {% /aside %}
 
-## Initialize Nx Release in Your Workspace
+## Initialize Nx release in your workspace
 
 ### Install Nx
 
@@ -26,13 +26,13 @@ Ensure that Nx is installed in your monorepo. Check out the [Installation docs](
 
 The [`@monodon/rust` package](https://github.com/Cammisuli/monodon) is required for Nx Release to manage and release Rust crates. Add it if it is not already installed:
 
-```shell {% frame="none" %}
+```shell
 nx add @monodon/rust
 ```
 
-### Configure Projects to Release
+### Configure projects to release
 
-Nx Release uses Nx's powerful [Project Graph](/docs/features/explore-graph) to understand your projects and their dependencies.
+Nx Release uses Nx powerful [Project Graph](/docs/features/explore-graph) to understand your projects and their dependencies.
 
 If you want to release all of the projects in your workspace, such as when dealing with a series of Rust crates, no configuration is required.
 
@@ -49,13 +49,13 @@ For example, to release just the projects in the `crates` directory:
     "projects": ["crates/*"],
     "version": {
       // Legacy versioning is currently required for the @monodon/rust plugin, see the note above for more details
-      "useLegacyVersioning": true
-    }
-  }
+      "useLegacyVersioning": true,
+    },
+  },
 }
 ```
 
-## Create the First Release
+## Create the first release
 
 The first time you release with Nx Release in your monorepo, you will need to use the `--first-release` option. This tells Nx Release not to expect the existence of any git tags, changelog files, or published packages.
 
@@ -65,11 +65,11 @@ The `--dry-run` option is useful for testing your configuration without actually
 
 To preview your first release, run:
 
-```shell {% frame="none" %}
+```shell
 nx release --first-release --dry-run
 ```
 
-### Pick a New Version
+### Pick a new version
 
 Nx Release will prompt you to pick a version bump for all the crates in the release. By default, all crate versions are kept in sync, so the prompt only needs to be answered one time. If needed, you can [configure Nx to release projects independently](/docs/guides/nx-release/release-projects-independently).
 
@@ -90,7 +90,7 @@ pkg-1 📄 Resolved the current version as 0.1.0 from crates/pkg-1/Cargo.toml
   Custom exact version
 ```
 
-### Preview the Results
+### Preview the results
 
 After this prompt, the command will finish, showing you the preview of changes that would have been made if the `--dry-run` option was not passed.
 
@@ -172,11 +172,11 @@ NX   Skipped publishing packages.
 NOTE: The "dryRun" flag means no changes were made.
 ```
 
-### Run Without `--dry-run`
+### Run without `--dry-run`
 
 If the preview looks good, run the command again without the `--dry-run` option to actually create the release.
 
-```shell {% frame="none" %}
+```shell
 nx release --first-release
 ```
 
@@ -203,17 +203,37 @@ NX   Successfully ran target nx-release-publish for 3 projects
 
 ```
 
-## Manage Git Operations
+## Manage git operations
 
 By default, Nx Release will stage all changes it makes with git. This includes updating `Cargo.toml` files, creating changelog files, and updating the `Cargo.lock` file. After staging the changes, Nx Release will commit the changes and create a git tag for the release.
 
-### Customize the Commit Message and Tag Pattern
+### Customize the commit message and tag pattern
 
 The commit message created by Nx Release defaults to 'chore(release): publish {version}', where `{version}` will be dynamically interpolated with the relevant value based on your actual release, but can be customized with the `release.git.commitMessage` property in nx.json.
 
-The structure of the git tag defaults to `v{version}`. For example, if the version is `1.2.3`, the tag will be `v1.2.3`. This can be customized by setting the `release.releaseTagPattern` property in nx.json.
+The structure of the git tag defaults to `v{version}`. For example, if the version is `1.2.3`, the tag will be `v1.2.3`. This can be customized by setting the `release.releaseTag.pattern` property (Nx 22+) or `release.releaseTagPattern` property (Nx < 22) in nx.json.
 
 For this same example, if you want the commit message to be 'chore(release): 1.2.3' and the tag to be `release/1.2.3`, you would configure nx.json like this:
+
+{% tabs syncKey="nx-release-configuration" %}
+{% tabitem label="Nx 22+" %}
+
+```json
+// nx.json
+{
+  "release": {
+    "releaseTag": {
+      "pattern": "release/{version}"
+    },
+    "git": {
+      "commitMessage": "chore(release): {version}"
+    }
+  }
+}
+```
+
+{% /tabitem %}
+{% tabitem label="Nx < 22" %}
 
 ```json
 // nx.json
@@ -227,9 +247,12 @@ For this same example, if you want the commit message to be 'chore(release): 1.2
 }
 ```
 
+{% /tabitem %}
+{% /tabs %}
+
 When using release groups in which the member projects are versioned together, you can also leverage `{releaseGroupName}` and it will be interpolated appropriately in the commit/tag that gets created for that release group.
 
-## Future Releases
+## Future releases
 
 After the first release, the `--first-release` option will no longer be required. Nx Release will expect to find git tags and changelog files for each package.
 

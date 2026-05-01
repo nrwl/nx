@@ -13,12 +13,12 @@ import type { PluginConfiguration } from '../../config/nx-json';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
 import { LoadPluginError } from '../error-types';
 import path = require('node:path/posix');
-import { loadResolvedNxPluginAsync } from './load-resolved-plugin';
 import { resolveLocalNxPlugin, resolveNxPlugin } from './resolve-plugin';
 import {
   pluginTranspilerIsRegistered,
   registerPluginTSTranspiler,
 } from './transpiler';
+import { handleImport } from '../../utils/handle-import';
 
 export function readPluginPackageJson(
   pluginName: string,
@@ -55,9 +55,13 @@ export function readPluginPackageJson(
   }
 }
 
-export function loadNxPlugin(plugin: PluginConfiguration, root: string) {
+export function loadNxPlugin(
+  plugin: PluginConfiguration,
+  root: string,
+  index?: number
+) {
   return [
-    loadNxPluginAsync(plugin, getNxRequirePaths(root), root),
+    loadNxPluginAsync(plugin, getNxRequirePaths(root), root, index),
     () => {},
   ] as const;
 }
@@ -65,7 +69,8 @@ export function loadNxPlugin(plugin: PluginConfiguration, root: string) {
 export async function loadNxPluginAsync(
   pluginConfiguration: PluginConfiguration,
   paths: string[],
-  root: string
+  root: string,
+  index?: number
 ): Promise<LoadedNxPlugin> {
   const moduleName =
     typeof pluginConfiguration === 'string'
@@ -78,7 +83,15 @@ export async function loadNxPluginAsync(
     if (shouldRegisterTSTranspiler) {
       registerPluginTSTranspiler();
     }
-    return loadResolvedNxPluginAsync(pluginConfiguration, pluginPath, name);
+    const { loadResolvedNxPluginAsync } = await handleImport(
+      require.resolve('./load-resolved-plugin')
+    );
+    return loadResolvedNxPluginAsync(
+      pluginConfiguration,
+      pluginPath,
+      name,
+      index
+    );
   } catch (e) {
     throw new LoadPluginError(moduleName, e);
   }

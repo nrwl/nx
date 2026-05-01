@@ -3,13 +3,17 @@ import {
   ArrowPathIcon,
   PaperAirplaneIcon,
   XMarkIcon,
-  PlusIcon,
   StopIcon,
 } from '@heroicons/react/24/outline';
-import { Button } from '@nx/nx-dev-ui-common';
 import Textarea from 'react-textarea-autosize';
 import { ChatRequestOptions } from 'ai';
 import { cx } from '@nx/nx-dev-ui-primitives';
+
+const controlButtonClasses = cx(
+  'inline-flex items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm',
+  'hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500',
+  'dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800'
+);
 
 export function Prompt({
   isGenerating,
@@ -62,7 +66,7 @@ export function Prompt({
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="relative mx-auto flex max-w-3xl gap-2 rounded-md border border-slate-300 bg-white px-2 py-2 shadow-lg dark:border-slate-900 dark:bg-slate-700"
+      className="relative mx-auto flex max-w-3xl gap-2 rounded-md border border-zinc-300 bg-white px-2 py-2 shadow-lg dark:border-zinc-900 dark:bg-zinc-700"
     >
       <div
         className={cx(
@@ -71,37 +75,34 @@ export function Prompt({
         )}
       >
         {isGenerating && (
-          <Button
-            variant="secondary"
-            size="small"
-            className={cx('bg-white dark:bg-slate-900')}
+          <button
+            type="button"
+            className={controlButtonClasses}
             onClick={handleStopGenerating}
           >
             <StopIcon aria-hidden="true" className="h-5 w-5" />
             <span className="text-base">Stop generating</span>
-          </Button>
+          </button>
         )}
         {showNewChatCta && (
-          <Button
-            variant="secondary"
-            size="small"
-            className={cx('bg-white dark:bg-slate-900')}
+          <button
+            type="button"
+            className={controlButtonClasses}
             onClick={handleNewChat}
           >
             <XMarkIcon aria-hidden="true" className="h-5 w-5" />
             <span className="text-base">Clear chat</span>
-          </Button>
+          </button>
         )}
         {showRegenerateCta && (
-          <Button
-            variant="secondary"
-            size="small"
-            className={cx('bg-white dark:bg-slate-900')}
+          <button
+            type="button"
+            className={controlButtonClasses}
             onClick={onRegenerate}
           >
             <ArrowPathIcon aria-hidden="true" className="h-5 w-5" />
             <span className="text-base">Regenerate</span>
-          </Button>
+          </button>
         )}
       </div>
       <div className="h-full max-h-[300px] w-full overflow-y-auto">
@@ -123,24 +124,20 @@ export function Prompt({
           name="query"
           maxLength={500}
           disabled={isGenerating}
-          className="block w-full resize-none border-none bg-transparent p-0 py-3 pl-2 text-sm placeholder-slate-500 focus-within:outline-none focus:placeholder-slate-400 focus:outline-none focus:ring-0 disabled:cursor-not-allowed dark:text-white dark:focus:placeholder-slate-300"
+          className="block w-full resize-none border-none bg-transparent p-0 py-3 pl-2 text-sm placeholder-zinc-500 focus-within:outline-none focus:placeholder-zinc-400 focus:outline-none focus:ring-0 disabled:cursor-not-allowed dark:text-white dark:focus:placeholder-zinc-300"
           placeholder="How does caching work?"
           rows={1}
         />
       </div>
       <div className="flex">
-        <Button
-          variant="primary"
-          size="small"
+        <button
           type="submit"
           disabled={isGenerating}
-          className="h-12 w-12 self-end disabled:cursor-not-allowed"
+          className="inline-flex h-12 w-12 items-center justify-center self-end rounded-md bg-zinc-900 text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
         >
-          <div hidden className="sr-only">
-            Ask
-          </div>
+          <span className="sr-only">Ask</span>
           <PaperAirplaneIcon aria-hidden="true" className="h-5 w-5" />
-        </Button>
+        </button>
       </div>
     </form>
   );

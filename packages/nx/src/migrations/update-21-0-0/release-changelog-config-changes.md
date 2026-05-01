@@ -6,10 +6,9 @@ The migration will also update release groups changelog configuration, if applic
 
 #### Sample Code Changes
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "release": {
     "changelog": {
@@ -28,10 +27,9 @@ The migration will also update release groups changelog configuration, if applic
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "release": {
     "changelog": {
@@ -49,6 +47,3 @@ The migration will also update release groups changelog configuration, if applic
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}

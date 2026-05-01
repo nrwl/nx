@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`component Generator --module should import the component correctly to the module file when flat is false 1`] = `
 "
@@ -61,7 +61,7 @@ describe('Example', () => {
 
     fixture = TestBed.createComponent(Example);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('should create', () => {
@@ -198,7 +198,7 @@ describe('ExampleComponent', () => {
 
     fixture = TestBed.createComponent(ExampleComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('should create', () => {

@@ -2,7 +2,14 @@ import { ExecutorContext, logger } from '@nx/devkit';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { printDiagnostics, runTypeCheck } from '@nx/js';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { Compiler, MultiCompiler, MultiStats, Stats } from '@rspack/core';
+import {
+  Compiler,
+  MultiCompiler,
+  MultiStats,
+  MultiStatsOptions,
+  Stats,
+  StatsValue,
+} from '@rspack/core';
 import { rmSync } from 'fs';
 import { join, resolve } from 'path';
 import { createCompiler, isMultiCompiler } from '../../utils/create-compiler';
@@ -153,14 +160,16 @@ async function executeTypeCheck(
   }
 }
 
-function getStatsOptions(compiler: Compiler | MultiCompiler) {
+function getStatsOptions(
+  compiler: Compiler | MultiCompiler
+): StatsValue & MultiStatsOptions {
   return isMultiCompiler(compiler)
-    ? {
+    ? ({
         children: compiler.compilers.map((compiler) =>
           compiler.options ? compiler.options.stats : undefined
         ),
-      }
+      } as MultiStatsOptions & StatsValue)
     : compiler.options
-    ? compiler.options.stats
-    : undefined;
+      ? compiler.options.stats
+      : undefined;
 }

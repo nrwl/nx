@@ -12,11 +12,5 @@
     "composite": false
   },
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.mts",
-    "../../../docs/map.json",
-    "../../../docs/generated/manifests/*.json",
-    "../../../community/approved-plugins.json"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.mts"]
 }

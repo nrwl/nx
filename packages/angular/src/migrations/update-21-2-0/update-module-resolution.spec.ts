@@ -118,6 +118,61 @@ describe('update-module-resolution migration', () => {
     expect(config.compilerOptions.moduleResolution).toBe('bundler');
   });
 
+  it('should update moduleResolution for non-buildable libraries without build targets', async () => {
+    addProject('lib1', {
+      root: 'libs/lib1',
+      sourceRoot: 'libs/lib1/src',
+      projectType: 'library',
+      targets: {},
+    });
+    writeJson(tree, 'libs/lib1/tsconfig.json', {
+      extends: '../../tsconfig.base.json',
+      compilerOptions: {},
+    });
+    writeJson(tree, 'libs/lib1/tsconfig.lib.json', {
+      extends: './tsconfig.json',
+      compilerOptions: {
+        module: 'es2020',
+        moduleResolution: 'node',
+      },
+    });
+    writeJson(tree, 'libs/lib1/tsconfig.spec.json', {
+      extends: './tsconfig.json',
+      compilerOptions: {
+        module: 'es2020',
+        moduleResolution: 'node',
+      },
+    });
+
+    await migration(tree);
+
+    const libConfig = readJson(tree, 'libs/lib1/tsconfig.lib.json');
+    const specConfig = readJson(tree, 'libs/lib1/tsconfig.spec.json');
+    expect(libConfig.compilerOptions.moduleResolution).toBe('bundler');
+    expect(specConfig.compilerOptions.moduleResolution).toBe('bundler');
+  });
+
+  it('should update moduleResolution for tsconfig files in project root even without targets', async () => {
+    addProject('lib1', {
+      root: 'libs/lib1',
+      sourceRoot: 'libs/lib1/src',
+      projectType: 'library',
+      targets: {},
+    });
+    writeJson(tree, 'libs/lib1/tsconfig.json', {
+      extends: '../../tsconfig.base.json',
+      compilerOptions: {
+        module: 'es2020',
+        moduleResolution: 'node',
+      },
+    });
+
+    await migration(tree);
+
+    const config = readJson(tree, 'libs/lib1/tsconfig.json');
+    expect(config.compilerOptions.moduleResolution).toBe('bundler');
+  });
+
   function addProject(
     projectName: string,
     config: ProjectConfiguration,

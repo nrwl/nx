@@ -135,7 +135,7 @@ export async function addE2e(
       linter: options.linter,
       setParserOptionsProject: options.setParserOptionsProject,
       webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
-      webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+      webServerCommand: e2eWebServerInfo.e2eWebServerCommand,
       addPlugin: options.addPlugin,
     });
 

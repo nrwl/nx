@@ -3,6 +3,7 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  getDependencyVersionFromPackageJson,
   joinPathFragments,
   offsetFromRoot,
   ProjectConfiguration,
@@ -16,6 +17,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { coerce, major } from 'semver';
 import {
   getInstalledCypressMajorVersion,
   versions,
@@ -42,6 +44,20 @@ export async function componentConfigurationGeneratorInternal(
 ) {
   assertNotUsingTsSolutionSetup(tree, 'cypress', 'component-configuration');
 
+  // Cypress CT does not support Vite 8 yet (@cypress/vite-dev-server
+  // peer dep is ^5.0.0 || ^6.0.0 || ^7.0.0).
+  const viteVersion = getDependencyVersionFromPackageJson(tree, 'vite');
+  if (viteVersion) {
+    const viteMajor = major(coerce(viteVersion));
+    if (viteMajor >= 8) {
+      throw new Error(
+        `Cypress component testing does not yet support Vite ${viteMajor}. ` +
+          `Downgrade to Vite 7 or earlier to use Cypress component testing. ` +
+          `See: https://github.com/cypress-io/cypress/issues/33078`
+      );
+    }
+  }
+
   const tasks: GeneratorCallback[] = [];
   const opts = normalizeOptions(tree, options);
 
@@ -63,7 +79,9 @@ export async function componentConfigurationGeneratorInternal(
 
   const projectConfig = readProjectConfiguration(tree, opts.project);
 
-  tasks.push(updateDeps(tree, opts));
+  if (!opts.skipPackageJson) {
+    tasks.push(updateDeps(tree, opts));
+  }
 
   addProjectFiles(tree, projectConfig, opts);
   if (!hasPlugin || opts.addExplicitTargets) {
@@ -84,13 +102,6 @@ function normalizeOptions(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
-  const cyVersion = getInstalledCypressMajorVersion(tree);
-  if (cyVersion && cyVersion < 10) {
-    throw new Error(
-      'Cypress version of 10 or higher is required to use component testing. See the migration guide to upgrade. https://nx.dev/cypress/v11-migration-guide'
-    );
-  }
-
   const nxJson = readNxJson(tree);
   const addPlugin =
     process.env.NX_ADD_PLUGINS !== 'false' &&

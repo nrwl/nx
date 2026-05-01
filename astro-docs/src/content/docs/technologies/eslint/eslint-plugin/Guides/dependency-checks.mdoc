@@ -24,6 +24,34 @@ Library generators from `@nx` packages will configure this rule automatically wh
 
 To set it up manually for existing libraries, you need to add the `dependency-checks` rule to your project's ESLint configuration:
 
+{% tabs syncKey="eslint-config-preference" %}
+{% tabitem label="Flat Config" %}
+
+```javascript
+// <your-project-root>/eslint.config.mjs
+import nxPlugin from '@nx/eslint-plugin';
+import jsoncParser from 'jsonc-eslint-parser';
+
+export default [
+  ...nxPlugin.configs['flat/base'],
+  ...nxPlugin.configs['flat/typescript'],
+  ...nxPlugin.configs['flat/javascript'],
+  {
+    files: ['**/*.json'],
+    languageOptions: {
+      parser: jsoncParser,
+    },
+    rules: {
+      '@nx/dependency-checks': 'error',
+    },
+  },
+  // ... more ESLint config here
+];
+```
+
+{% /tabitem %}
+{% tabitem label="Legacy (.eslintrc.json)" %}
+
 ```jsonc
 // <your-project-root>/.eslintrc.json
 {
@@ -33,13 +61,16 @@ To set it up manually for existing libraries, you need to add the `dependency-ch
       "files": ["*.json"],
       "parser": "jsonc-eslint-parser",
       "rules": {
-        "@nx/dependency-checks": "error"
-      }
-    }
+        "@nx/dependency-checks": "error",
+      },
+    },
     // ... more ESLint overrides here
-  ]
+  ],
 }
 ```
+
+{% /tabitem %}
+{% /tabs %}
 
 Additionally, you need to adjust your `lintFilePatterns` to include the project's `package.json` file::
 
@@ -55,17 +86,49 @@ Additionally, you need to adjust your `lintFilePatterns` to include the project'
       "options": {
         "lintFilePatterns": [
           "libs/my-lib/**/*.{ts,tsx,js,jsx}",
-          "libs/my-lib/package.json" // add this line
-        ]
-      }
-    }
-  }
+          "libs/my-lib/package.json", // add this line
+        ],
+      },
+    },
+  },
 }
 ```
 
 ### Overriding defaults
 
 Sometimes we intentionally want to add or remove a dependency from our `package.json` despite what the rule suggests. We can use the rule's options to override default behavior:
+
+{% tabs syncKey="eslint-config-preference" %}
+{% tabitem label="Flat Config" %}
+
+```javascript
+// eslint.config.mjs
+export default [
+  // ... other config
+  {
+    files: ['**/*.json'],
+    rules: {
+      '@nx/dependency-checks': [
+        'error',
+        {
+          buildTargets: ['build', 'custom-build'], // add non standard build target names
+          checkMissingDependencies: true, // toggle to disable
+          checkObsoleteDependencies: true, // toggle to disable
+          checkVersionMismatches: true, // toggle to disable
+          ignoredDependencies: ['lodash'], // these libs will be omitted from checks
+          ignoredFiles: ['webpack.config.js', 'eslint.config.mjs'], // list of files that should be skipped for check
+          includeTransitiveDependencies: true, // collect dependencies transitively from children
+          useLocalPathsForWorkspaceDependencies: true, // toggle to disable
+          peerDepsVersionStrategy: 'installed', // or 'workspace' to use workspace:* for peer dependencies
+        },
+      ],
+    },
+  },
+];
+```
+
+{% /tabitem %}
+{% tabitem label="Legacy (.eslintrc.json)" %}
 
 ```jsonc
 // .eslintrc.json
@@ -78,24 +141,29 @@ Sometimes we intentionally want to add or remove a dependency from our `package.
       "checkObsoleteDependencies": true, // toggle to disable
       "checkVersionMismatches": true, // toggle to disable
       "ignoredDependencies": ["lodash"], // these libs will be omitted from checks
-      "ignoredFiles": ["webpack.config.js", "eslint.config.cjs"], // list of files that should be skipped for check
+      "ignoredFiles": ["webpack.config.js", "eslint.config.mjs"], // list of files that should be skipped for check
       "includeTransitiveDependencies": true, // collect dependencies transitively from children
-      "useLocalPathsForWorkspaceDependencies": true // toggle to disable
-    }
-  ]
+      "useLocalPathsForWorkspaceDependencies": true, // toggle to disable
+      "peerDepsVersionStrategy": "installed", // or 'workspace' to use workspace:* for peer dependencies
+    },
+  ],
 }
 ```
 
+{% /tabitem %}
+{% /tabs %}
+
 ## Options
 
-| Property                              | Type            | Default     | Description                                                                                                                                                                                                                                                      |
-| ------------------------------------- | --------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| buildTargets                          | _Array<string>_ | _["build"]_ | List of build target names                                                                                                                                                                                                                                       |
-| checkMissingDependencies              | _boolean_       | _true_      | Disable to skip checking for missing dependencies                                                                                                                                                                                                                |
-| checkObsoleteDependencies             | _boolean_       | _true_      | Disable to skip checking for unused dependencies                                                                                                                                                                                                                 |
-| checkVersionMismatches                | _boolean_       | _true_      | Disable to skip checking if version specifier matches installed version                                                                                                                                                                                          |
-| ignoredDependencies                   | _Array<string>_ | _[]_        | List of dependencies to ignore for checks                                                                                                                                                                                                                        |
-| ignoredFiles                          | _Array<string>_ | N/A         | List of files to ignore when collecting dependencies. The default value will be set based on the selected executor during the generation.                                                                                                                        |
-| includeTransitiveDependencies         | _boolean_       | _false_     | Enable to collect dependencies of children projects                                                                                                                                                                                                              |
-| useLocalPathsForWorkspaceDependencies | _boolean_       | _false_     | Set workspace dependencies as relative file:// paths. Useful for monorepos that link via file:// in package.json files.                                                                                                                                          |
-| runtimeHelpers                        | _Array<string>_ | _[]_        | List of helper packages used by the built output (e.g. `tslib` when using `tsc` and `importHelpers` is set to `true`). The rule already detects some of them in some scenarios, but this option can be used to detect them when it doesn't happen automatically. |
+| Property                              | Type                         | Default       | Description                                                                                                                                                                                                                                                      |
+| ------------------------------------- | ---------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| buildTargets                          | _Array<string>_              | _["build"]_   | List of build target names                                                                                                                                                                                                                                       |
+| checkMissingDependencies              | _boolean_                    | _true_        | Disable to skip checking for missing dependencies                                                                                                                                                                                                                |
+| checkObsoleteDependencies             | _boolean_                    | _true_        | Disable to skip checking for unused dependencies                                                                                                                                                                                                                 |
+| checkVersionMismatches                | _boolean_                    | _true_        | Disable to skip checking if version specifier matches installed version                                                                                                                                                                                          |
+| ignoredDependencies                   | _Array<string>_              | _[]_          | List of dependencies to ignore for checks                                                                                                                                                                                                                        |
+| ignoredFiles                          | _Array<string>_              | N/A           | List of files to ignore when collecting dependencies. The default value will be set based on the selected executor during the generation.                                                                                                                        |
+| includeTransitiveDependencies         | _boolean_                    | _false_       | Enable to collect dependencies of children projects                                                                                                                                                                                                              |
+| useLocalPathsForWorkspaceDependencies | _boolean_                    | _false_       | Set workspace dependencies as relative file:// paths. Useful for monorepos that link via file:// in package.json files.                                                                                                                                          |
+| peerDepsVersionStrategy               | _"installed" \| "workspace"_ | _"installed"_ | Strategy for version specifiers in peer dependencies. Use `"installed"` to use the installed version, or `"workspace"` to use `workspace:*` protocol for monorepo packages.                                                                                      |
+| runtimeHelpers                        | _Array<string>_              | _[]_          | List of helper packages used by the built output (e.g. `tslib` when using `tsc` and `importHelpers` is set to `true`). The rule already detects some of them in some scenarios, but this option can be used to detect them when it doesn't happen automatically. |

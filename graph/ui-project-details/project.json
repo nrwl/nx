@@ -41,6 +41,18 @@
           "buildTarget": "graph-ui-project-details:build-storybook:ci"
         }
       }
+    },
+    "typecheck": {
+      "dependsOn": [
+        "^typecheck",
+        "nx:build-native",
+        { "projects": ["devkit"], "target": "build-base" }
+      ],
+      "inputs": [
+        "...",
+        "{workspaceRoot}/packages/devkit/tsconfig.lib.json",
+        "{workspaceRoot}/packages/nx/tsconfig.lib.json"
+      ]
     }
   },
   "implicitDependencies": ["!devkit"]

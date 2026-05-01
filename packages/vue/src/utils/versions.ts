@@ -7,18 +7,16 @@ export const vueRouterVersion = '^4.5.0';
 
 // test deps
 export const vueTestUtilsVersion = '^2.4.6';
-export const vitePluginVueVersion = '^5.2.3';
+export const vitePluginVueVersion = '^6.0.1';
 
 // linting deps
-export const vueEslintConfigPrettierVersion = '7.1.0';
+export const vueEslintConfigPrettierVersion = '^10.2.0';
 export const vueEslintConfigTypescriptVersion = '^11.0.3';
+export const eslint9__VueEslintConfigTypescriptVersion = '^14.6.0';
 export const eslintPluginVueVersion = '^9.16.1';
 
-// tailwindcss
 export const postcssVersion = '8.4.21';
-export const tailwindcssVersion = '3.2.7';
 export const autoprefixerVersion = '10.4.13';
 
 // other deps
-export const sassVersion = '1.62.1';
-export const lessVersion = '3.12.2';
+export const sassVersion = '^1.97.2';

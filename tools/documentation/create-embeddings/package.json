@@ -12,10 +12,15 @@
     "mdast-util-from-markdown": "*",
     "mdast-util-to-markdown": "*",
     "mdast-util-to-string": "*",
+    "rehype-parse": "^9.0.0",
+    "rehype-remark": "^10.0.0",
+    "remark-stringify": "^11.0.0",
+    "remark-gfm": "^4.0.0",
+    "unified": "^11.0.4",
     "unist-builder": "*"
   },
   "devDependencies": {
     "@types/yargs": "*",
-    "typescript": "*"
+    "typescript": "catalog:typescript"
   }
 }

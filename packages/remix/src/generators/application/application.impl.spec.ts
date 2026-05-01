@@ -43,7 +43,7 @@ describe('Remix Application', () => {
       expect(
         tree.read('tests/routes/_index.spec.tsx', 'utf-8')
       ).toMatchSnapshot();
-      expect(tree.read('vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('vite.config.mts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
     });
 
@@ -125,7 +125,7 @@ describe('Remix Application', () => {
         expectTargetsToBeCorrect(tree, '.');
 
         expect(tree.exists('remix.config.js')).toBeFalsy();
-        expect(tree.read('vitest.config.ts', 'utf-8')).toMatchSnapshot();
+        expect(tree.read('vitest.config.mts', 'utf-8')).toMatchSnapshot();
         expect(
           tree.read('tests/routes/_index.spec.tsx', 'utf-8')
         ).toMatchSnapshot();
@@ -150,7 +150,7 @@ describe('Remix Application', () => {
         expectTargetsToBeCorrect(tree, '.');
 
         expect(tree.exists('remix.config.js')).toBeFalsy();
-        expect(tree.read('jest.config.ts', 'utf-8')).toMatchSnapshot();
+        expect(tree.read('jest.config.cts', 'utf-8')).toMatchSnapshot();
         expect(tree.read('test-setup.ts', 'utf-8')).toMatchSnapshot();
         expect(
           tree.read('tests/routes/_index.spec.tsx', 'utf-8')
@@ -344,7 +344,7 @@ describe('Remix Application', () => {
 
         expect(tree.exists(`${appDir}/remix.config.js`)).toBeFalsy();
         expect(
-          tree.read(`${appDir}/vitest.config.ts`, 'utf-8')
+          tree.read(`${appDir}/vitest.config.mts`, 'utf-8')
         ).toMatchSnapshot();
         expect(tree.read(`${appDir}/test-setup.ts`, 'utf-8')).toMatchSnapshot();
         expect(
@@ -368,7 +368,7 @@ describe('Remix Application', () => {
 
         expect(tree.exists(`${appDir}/remix.config.js`)).toBeFalsy();
         expect(
-          tree.read(`${appDir}/jest.config.ts`, 'utf-8')
+          tree.read(`${appDir}/jest.config.cts`, 'utf-8')
         ).toMatchSnapshot();
         expect(tree.read(`${appDir}/test-setup.ts`, 'utf-8')).toMatchSnapshot();
       });
@@ -464,15 +464,15 @@ describe('Remix Application', () => {
       expect(packageJson).toMatchInlineSnapshot(`
         {
           "dependencies": {
-            "@remix-run/node": "^2.15.0",
-            "@remix-run/react": "^2.15.0",
-            "@remix-run/serve": "^2.15.0",
+            "@remix-run/node": "^2.17.3",
+            "@remix-run/react": "^2.17.3",
+            "@remix-run/serve": "^2.17.3",
             "isbot": "^4.4.0",
             "react": "^18.2.0",
             "react-dom": "^18.2.0",
           },
           "devDependencies": {
-            "@remix-run/dev": "^2.15.0",
+            "@remix-run/dev": "^2.17.3",
             "@types/react": "^18.2.0",
             "@types/react-dom": "^18.2.0",
           },
@@ -543,6 +543,8 @@ describe('Remix Application', () => {
           "exclude": [
             "out-tsc",
             "dist",
+            "jest.config.ts",
+            "jest.config.cts",
             "tests/**/*.spec.ts",
             "tests/**/*.test.ts",
             "tests/**/*.spec.tsx",
@@ -551,7 +553,6 @@ describe('Remix Application', () => {
             "tests/**/*.test.js",
             "tests/**/*.spec.jsx",
             "tests/**/*.test.jsx",
-            "jest.config.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
             "eslint.config.js",
@@ -586,7 +587,9 @@ describe('Remix Application', () => {
           "extends": "../tsconfig.base.json",
           "include": [
             "vite.config.ts",
+            "vite.config.mts",
             "vitest.config.ts",
+            "vitest.config.mts",
             "app/**/*.ts",
             "app/**/*.tsx",
             "app/**/*.js",
@@ -677,15 +680,15 @@ describe('Remix Application', () => {
       expect(readJson(tree, 'apps/myapp/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {
-            "@remix-run/node": "^2.15.0",
-            "@remix-run/react": "^2.15.0",
-            "@remix-run/serve": "^2.15.0",
+            "@remix-run/node": "^2.17.3",
+            "@remix-run/react": "^2.17.3",
+            "@remix-run/serve": "^2.17.3",
             "isbot": "^4.4.0",
             "react": "^18.2.0",
             "react-dom": "^18.2.0",
           },
           "devDependencies": {
-            "@remix-run/dev": "^2.15.0",
+            "@remix-run/dev": "^2.17.3",
             "@types/react": "^18.2.0",
             "@types/react-dom": "^18.2.0",
           },
@@ -724,10 +727,11 @@ describe('Remix Application', () => {
 
       expect(tree.exists('myapp/tsconfig.spec.json')).toBeTruthy();
       expect(tree.exists('myapp/tests/routes/_index.spec.tsx')).toBeTruthy();
-      expect(tree.exists('myapp/jest.config.ts')).toBeTruthy();
-      expect(tree.read('myapp/jest.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+      expect(tree.exists('myapp/jest.config.cts')).toBeTruthy();
+      expect(tree.read('myapp/jest.config.cts', 'utf-8'))
+        .toMatchInlineSnapshot(`
         "/* eslint-disable */
-        import { readFileSync } from 'fs';
+        const { readFileSync } = require('fs')
 
         // Reading the SWC compilation config for the spec files
         const swcJestConfig = JSON.parse(
@@ -737,7 +741,7 @@ describe('Remix Application', () => {
         // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
         swcJestConfig.swcrc = false;
 
-        export default {
+        module.exports = {
           displayName: '@proj/myapp',
           preset: '../jest.preset.js',
           transform: {

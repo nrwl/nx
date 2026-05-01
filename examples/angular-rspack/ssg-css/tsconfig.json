@@ -8,14 +8,13 @@
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "module": "preserve",
+    "lib": ["dom", "es2022"]
   },
   "files": [],
   "include": [],
   "references": [
-    {
-      "path": "../../../packages/angular-rspack"
-    },
     {
       "path": "./tsconfig.editor.json"
     },

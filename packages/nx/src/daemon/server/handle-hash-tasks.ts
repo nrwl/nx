@@ -2,7 +2,6 @@ import { Task, TaskGraph } from '../../config/task-graph';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { readNxJson } from '../../config/configuration';
-import { DaemonProjectGraphError } from '../../project-graph/error-types';
 
 /**
  * We use this not to recreated hasher for every hash operation
@@ -13,25 +12,17 @@ let storedHasher: InProcessTaskHasher | null = null;
 
 export async function handleHashTasks(payload: {
   runnerOptions: any;
-  env: any;
   tasks: Task[];
   taskGraph: TaskGraph;
+  perTaskEnvs: Record<string, NodeJS.ProcessEnv>;
+  cwd: string;
+  collectInputs?: boolean;
 }) {
-  const {
-    error,
-    projectGraph: _graph,
-    allWorkspaceFiles,
-    fileMap,
-    rustReferences,
-  } = await getCachedSerializedProjectGraphPromise();
+  const { error, projectGraph, rustReferences } =
+    await getCachedSerializedProjectGraphPromise();
 
-  let projectGraph = _graph;
   if (error) {
-    if (error instanceof DaemonProjectGraphError) {
-      projectGraph = error.projectGraph;
-    } else {
-      throw error;
-    }
+    throw error;
   }
 
   const nxJson = readNxJson();
@@ -45,8 +36,12 @@ export async function handleHashTasks(payload: {
       payload.runnerOptions
     );
   }
-  const response = JSON.stringify(
-    await storedHasher.hashTasks(payload.tasks, payload.taskGraph, payload.env)
+  const response = await storedHasher.hashTasks(
+    payload.tasks,
+    payload.taskGraph,
+    payload.perTaskEnvs,
+    payload.cwd,
+    payload.collectInputs
   );
   return {
     response,

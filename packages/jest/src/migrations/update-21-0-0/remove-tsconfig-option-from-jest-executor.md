@@ -6,10 +6,9 @@ Removes the previously deprecated and unused `tsConfig` option from the `@nx/jes
 
 Remove the option from the project configuration:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="apps/myapp/project.json" highlightLines=[7] %}
+```json title="apps/myapp/project.json" {7}
 {
   "targets": {
     "test": {
@@ -23,11 +22,9 @@ Remove the option from the project configuration:
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="apps/myapp/project.json" %}
+```json title="apps/myapp/project.json"
 {
   "targets": {
     "test": {
@@ -40,15 +37,11 @@ Remove the option from the project configuration:
 }
 ```
 
-{% /tab %}
-{% /tabs %}
-
 Remove the option from a target default using the `@nx/jest:jest` executor:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="nx.json" highlightLines=[7] %}
+```json title="nx.json" {7}
 {
   "targetDefaults": {
     "test": {
@@ -62,11 +55,9 @@ Remove the option from a target default using the `@nx/jest:jest` executor:
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "targetDefaults": {
     "test": {
@@ -78,16 +69,12 @@ Remove the option from a target default using the `@nx/jest:jest` executor:
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}
 
 Remove the option from a target default using the `@nx/jest:jest` executor as the key:
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="nx.json" highlightLines=[6] %}
+```json title="nx.json" {6}
 {
   "targetDefaults": {
     "@nx/jest:jest": {
@@ -100,11 +87,9 @@ Remove the option from a target default using the `@nx/jest:jest` executor as th
 }
 ```
 
-{% /tab %}
+##### After
 
-{% tab label="After" %}
-
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "targetDefaults": {
     "@nx/jest:jest": {
@@ -115,6 +100,3 @@ Remove the option from a target default using the `@nx/jest:jest` executor as th
   }
 }
 ```
-
-{% /tab %}
-{% /tabs %}

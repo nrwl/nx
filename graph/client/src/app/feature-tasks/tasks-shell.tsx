@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type {
   GraphError,
@@ -7,7 +6,6 @@ import type {
 } from 'nx/src/command-line/graph/graph';
 import type { ProjectGraphProjectNode } from '@nx/devkit';
 
-/* eslint-enable @nx/enforce-module-boundaries */
 import { useTaskGraphContext, NxGraphTaskGraphProvider } from '@nx/graph/tasks';
 import {
   getExternalApiService,
@@ -69,9 +67,37 @@ export function TasksShell() {
     'selectedWorkspace'
   ) as ProjectGraphClientResponse;
 
+  const tasksRouteData = useRouteLoaderData('tasks') as TaskGraphClientResponse;
+  const allTasksRouteData = useRouteLoaderData(
+    'tasksAll'
+  ) as TaskGraphClientResponse;
+
+  const taskGraphError = useMemo(
+    () => allTasksRouteData?.error || tasksRouteData?.error,
+    [allTasksRouteData, tasksRouteData]
+  );
+
   useLayoutEffect(() => {
-    setErrors(routerErrors);
-  }, [routerErrors]);
+    const allErrors: GraphError[] = [];
+
+    if (routerErrors) {
+      allErrors.push(...routerErrors);
+    }
+
+    if (taskGraphError) {
+      allErrors.push({
+        message: taskGraphError,
+        pluginName: 'graph',
+        cause: 'TaskGraphClientResponse error',
+        name: 'graph',
+        stack: '',
+      });
+    }
+
+    if (allErrors.length === 0) return;
+
+    setErrors(allErrors);
+  }, [routerErrors, taskGraphError]);
 
   return (
     <>

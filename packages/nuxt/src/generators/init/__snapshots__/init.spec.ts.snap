@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`init should install required dependencies 1`] = `
 {
@@ -6,7 +6,7 @@ exports[`init should install required dependencies 1`] = `
   "devDependencies": {
     "@nx/nuxt": "0.0.1",
     "@nx/vite": "0.0.1",
-    "nuxt": "^3.10.0",
+    "nuxt": "^4.0.0",
   },
   "name": "@proj/source",
 }

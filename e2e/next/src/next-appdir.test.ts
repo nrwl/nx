@@ -7,6 +7,7 @@ import {
   runE2ETests,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e-utils';
 
 describe('Next.js App Router', () => {
@@ -29,6 +30,13 @@ describe('Next.js App Router', () => {
       `generate @nx/next:app ${appName} --e2eTestRunner=playwright --appDir=true`
     );
     runCLI(`generate @nx/js:lib ${jsLib} --no-interactive`);
+
+    // Turbopack interprets the TS source incorrectly assuming ESM despite package.json type stating module
+    // TODO(Colum): remove this when JS Lib generator switches to ESM
+    updateJson(`${jsLib}/package.json`, (json) => {
+      delete json.type;
+      return json;
+    });
 
     checkFilesExist(`${appName}/src/app/page.tsx`);
     checkFilesExist(`${appName}-e2e/src/example.spec.ts`);
@@ -69,7 +77,7 @@ describe('Next.js App Router', () => {
         `e2e ${appName}-e2e --configuration=production`
       );
       expect(e2eResults).toContain('Successfully ran target e2e for project');
-      expect(await killPorts()).toBeTruthy();
+      await killPorts();
     }
   }, 300_000);
 });

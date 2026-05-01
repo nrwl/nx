@@ -31,6 +31,5 @@ export interface NormalizedSchema extends Omit<Schema, 'js'> {
   fileExtension: string;
   fileExtensionType: FileExtensionType;
   className: string;
-  styledModule: null | string;
   hasStyles: boolean;
 }

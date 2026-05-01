@@ -1,18 +1,14 @@
 import {
-  type CreateNodes,
-  type CreateNodesContext,
+  type CreateNodesContextV2,
   createNodesFromFiles,
   type CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
-  logger,
   normalizePath,
   type NxJsonConfiguration,
   type ProjectConfiguration,
-  readJsonFile,
   type TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
@@ -21,6 +17,7 @@ import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
 import { hashObject } from 'nx/src/devkit-internals';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { dirname, join, relative } from 'path';
 import { NX_PLUGIN_OPTIONS } from '../utils/constants';
@@ -31,20 +28,6 @@ export interface CypressPluginOptions {
   openTargetName?: string;
   componentTestingTargetName?: string;
   ciComponentTestingTargetName?: string;
-}
-
-function readTargetsCache(cachePath: string): Record<string, CypressTargets> {
-  try {
-    return process.env.NX_CACHE_PROJECT_GRAPH !== 'false'
-      ? readJsonFile(cachePath)
-      : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeTargetsToCache(cachePath: string, results: CypressTargets) {
-  writeJsonFile(cachePath, results);
 }
 
 const cypressConfigGlob = '**/cypress.config.{js,ts,mjs,cjs}';
@@ -59,9 +42,7 @@ const defaultPatterns = {
   },
 };
 
-const pmc = getPackageManagerCommand();
-
-export const createNodesV2: CreateNodesV2<CypressPluginOptions> = [
+export const createNodes: CreateNodesV2<CypressPluginOptions> = [
   cypressConfigGlob,
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
@@ -69,40 +50,32 @@ export const createNodesV2: CreateNodesV2<CypressPluginOptions> = [
       workspaceDataDirectory,
       `cypress-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const pluginCache = new PluginCache<CypressTargets>(cachePath);
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+          createNodesInternal(configFile, options, context, pluginCache, pmc),
         configFiles,
         options,
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      pluginCache.writeToDisk(cachePath);
     }
   },
 ];
 
-/**
- * @deprecated This is replaced with {@link createNodesV2}. Update your plugin to export its own `createNodesV2` function that wraps this one instead.
- * This function will change to the v2 function in Nx 20.
- */
-export const createNodes: CreateNodes<CypressPluginOptions> = [
-  cypressConfigGlob,
-  (configFile, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
-    );
-    return createNodesInternal(configFile, options, context, {});
-  },
-];
+export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
   options: CypressPluginOptions,
-  context: CreateNodesContext,
-  targetsCache: CypressTargets
+  context: CreateNodesContextV2,
+  pluginCache: PluginCache<CypressTargets>,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   options = normalizeOptions(options);
   const projectRoot = dirname(configFilePath);
@@ -116,20 +89,24 @@ async function createNodesInternal(
     return {};
   }
 
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
-  );
+  const hash =
+    (await calculateHashForCreateNodes(projectRoot, options, context, [
+      getLockFileName(detectPackageManager(context.workspaceRoot)),
+    ])) + configFilePath;
 
-  targetsCache[hash] ??= await buildCypressTargets(
-    configFilePath,
-    projectRoot,
-    options,
-    context
-  );
-  const { targets, metadata } = targetsCache[hash];
+  if (!pluginCache.has(hash)) {
+    pluginCache.set(
+      hash,
+      await buildCypressTargets(
+        configFilePath,
+        projectRoot,
+        options,
+        context,
+        pmc
+      )
+    );
+  }
+  const { targets, metadata } = pluginCache.get(hash);
 
   const project: Omit<ProjectConfiguration, 'root'> = {
     projectType: 'application',
@@ -257,7 +234,8 @@ async function buildCypressTargets(
   configFilePath: string,
   projectRoot: string,
   options: CypressPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<CypressTargets> {
   const cypressConfig = await loadConfigFile(
     join(context.workspaceRoot, configFilePath)

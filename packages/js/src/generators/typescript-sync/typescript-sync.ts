@@ -28,6 +28,7 @@ interface Tsconfig {
   nx?: {
     sync?: {
       ignoredReferences?: string[];
+      ignoredDependencies?: string[];
     };
   };
 }
@@ -241,6 +242,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
       collectedDependencies
     );
 
+    let foundRuntimeTsConfig = false;
     for (const runtimeTsConfigFileName of runtimeTsConfigFileNames) {
       const runtimeTsConfigPath = joinPathFragments(
         sourceProjectNode.data.root,
@@ -249,6 +251,8 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
       if (!tsconfigExists(tree, tsconfigInfoCaches, runtimeTsConfigPath)) {
         continue;
       }
+
+      foundRuntimeTsConfig = true;
 
       // Update project references for the runtime tsconfig
       updateTsConfigReferences(
@@ -265,13 +269,24 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
       );
     }
 
-    // Update project references for the tsconfig.json file
+    // We keep the project references in the tsconfig.json file if it has files
+    // or if we don't find a runtime tsconfig file, otherwise we don't need to
+    // duplicate the project references in the tsconfig.json file
+    let keepReferencesInTsconfigJson = true;
+    if (foundRuntimeTsConfig) {
+      const sourceProjectTsconfig = parseTsconfig(
+        sourceProjectTsconfigPath,
+        tsSysFromTree
+      );
+      keepReferencesInTsconfigJson = sourceProjectTsconfig.fileNames.length > 0;
+    }
+
     updateTsConfigReferences(
       tree,
       tsSysFromTree,
       tsconfigInfoCaches,
       sourceProjectTsconfigPath,
-      dependencies,
+      keepReferencesInTsconfigJson ? dependencies : [],
       sourceProjectNode.data.root,
       projectRoots,
       changedFiles
@@ -332,6 +347,17 @@ function readRawTsconfigContents(
   return tsconfigInfoCaches.content.get(tsconfigPath);
 }
 
+function parseTsconfig(
+  tsconfigPath: string,
+  sys: ts.System
+): ts.ParsedCommandLine {
+  return ts.parseJsonConfigFileContent(
+    ts.readConfigFile(tsconfigPath, sys.readFile).config,
+    sys,
+    dirname(tsconfigPath)
+  );
+}
+
 /**
  * Within the context of a sync generator, performance is a key concern,
  * so avoid FS interactions whenever possible.
@@ -367,6 +393,9 @@ function updateTsConfigReferences(
   );
   const tsConfig = parseJson<Tsconfig>(stringifiedJsonContents);
   const ignoredReferences = new Set(tsConfig.nx?.sync?.ignoredReferences ?? []);
+  const ignoredDependencies = new Set(
+    tsConfig.nx?.sync?.ignoredDependencies ?? []
+  );
 
   // We have at least one dependency so we can safely set it to an empty array if not already set
   const references = [];
@@ -423,6 +452,12 @@ function updateTsConfigReferences(
   }
 
   for (const dep of dependencies) {
+    if (ignoredDependencies.has(dep.name)) {
+      // The user has explicitly opted out of this dependency edge, typically
+      // to break a circular project reference graph that the project graph
+      // intentionally allows.
+      continue;
+    }
     // Ensure the project reference for the target is set if we can find the
     // relevant tsconfig file
     let referencePath: string;
@@ -703,11 +738,7 @@ function hasCompositeEnabled(
   tsconfigPath: string
 ): boolean {
   if (!tsconfigInfoCaches.composite.has(tsconfigPath)) {
-    const parsed = ts.parseJsonConfigFileContent(
-      ts.readConfigFile(tsconfigPath, tsSysFromTree.readFile).config,
-      tsSysFromTree,
-      dirname(tsconfigPath)
-    );
+    const parsed = parseTsconfig(tsconfigPath, tsSysFromTree);
     tsconfigInfoCaches.composite.set(
       tsconfigPath,
       parsed.options.composite === true

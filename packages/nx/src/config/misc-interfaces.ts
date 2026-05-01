@@ -42,6 +42,7 @@ export interface ExecutorJsonEntryConfig {
   schema: string;
   implementation: string;
   batchImplementation?: string;
+  preferBatch?: boolean;
   description?: string;
   hasher?: string;
 }
@@ -54,6 +55,8 @@ export interface PackageJsonUpdateForPackage {
   ifPackageInstalled?: string;
   alwaysAddToPackageJson?: boolean | Dependencies;
   addToPackageJson?: boolean | Dependencies;
+  ignorePackageGroup?: boolean;
+  ignoreMigrations?: boolean;
 }
 
 export type PackageJsonUpdates = {
@@ -126,6 +129,7 @@ export interface ExecutorConfig {
   hasherFactory?: () => CustomHasher;
   implementationFactory: () => Executor;
   batchImplementationFactory?: () => TaskGraphExecutor;
+  preferBatch?: boolean;
 }
 
 /**

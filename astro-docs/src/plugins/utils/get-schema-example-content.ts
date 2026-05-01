@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve as resolvePath } from 'node:path';
 import { type PluginSchemaWithExamples } from './plugin-schema-parser';
-import { stripMarkdocTags } from './strip-markdoc-tags';
+
 const EXAMPLE_SCHEMA_KEY = 'examplesFile';
 
 /**
@@ -40,7 +40,18 @@ export function getExampleForSchema(
   }
   const exampleFilePath = schema[EXAMPLE_SCHEMA_KEY];
   const schemaDirName = dirname(schemaPath);
-  const docPath = resolvePath(schemaDirName, exampleFilePath);
+  let docPath = resolvePath(schemaDirName, exampleFilePath);
+
+  // If the resolved path doesn't exist and the schema is in a dist/ directory,
+  // try resolving from the source tree instead, since docs files
+  // may not be copied to dist during the build.
+  if (!existsSync(docPath) && schemaPath.includes('/dist/src/')) {
+    const sourceSchemaDir = dirname(schemaPath.replace('/dist/src/', '/src/'));
+    const sourceDocPath = resolvePath(sourceSchemaDir, exampleFilePath);
+    if (existsSync(sourceDocPath)) {
+      docPath = sourceDocPath;
+    }
+  }
 
   if (!existsSync(docPath)) {
     throw new Error(
@@ -61,14 +72,11 @@ export function getExampleForSchema(
     return null;
   }
 
-  // Strip Markdoc tags and transform to Starlight syntax
-  const cleanedContent = stripMarkdocTags(content);
-
   // If content already has headers, increase their level by 1 to nest under generator
-  if (hasHeaders(cleanedContent)) {
-    return cleanedContent.replace(/^(#{1,5})\s/gm, '#$1 ');
+  if (hasHeaders(content)) {
+    return content.replace(/^(#{1,5})\s/gm, '#$1 ');
   }
 
   // Only add Examples header if there are no existing headers
-  return `### Examples\n\n${cleanedContent}`;
+  return `### Examples\n\n${content}`;
 }

@@ -1,7 +1,6 @@
 Depending on your testing type, the Cypress executor is configured in different ways. The following are sample configurations that are created via the [configuration](/nx-api/cypress/generators/configuration) and [component-configuration](/nx-api/cypress/generators/component-configuration) generators.
 
-{% tabs %}
-{% tab label="E2E Testing" %}
+##### E2E Testing
 
 ```json
 "targets": {
@@ -16,9 +15,9 @@ Depending on your testing type, the Cypress executor is configured in different 
 }
 ```
 
-{% callout type="note" title="API Testing" %}
+:::note[API Testing]
 API testing with Cypress is the same setup as e2e testing. Just change which `devServerTarget` is used!
-{% /callout %}
+:::
 
 ### Providing a Base URL
 
@@ -58,24 +57,22 @@ In the _e2e_ application add a configuration to change `devServerTarget` to poin
 }
 ```
 
-{% callout type="note" title="What about Node projects?" %}
+:::note[What about Node projects?]
 The same can be done for backend node apps with [`@nx/js:node` executor](/nx-api/js/executors/node)
-{% /callout %}
+:::
 
 ```bash
 nx e2e my-app-e2e
 ```
 
-{% /tab %}
-{% tab label="Component Testing" %}
+##### Component Testing
 
-{% callout type="note" title="Cypress Component Testing" %}
+:::note[Cypress Component Testing]
 When adding component testing to a project, it's best to use the framework specific generator, instead `cypress-component-project` directly.
 
 - [React component testing](/nx-api/react/generators/cypress-component-configuration)
 - [Angular component testing](/nx-api/angular/generators/cypress-component-configuration)
-
-{% /callout %}
+  :::
 
 ```json
 "targets": {
@@ -93,9 +90,6 @@ When adding component testing to a project, it's best to use the framework speci
 
 It's important `skipServe` is set to true. Nx doesn't need to run the `devServerTarget`, Cypress creates its own dev server for component testing.
 Instead, Nx needs to know what build target to create the correct configuration to pass to Cypress, which is why it's still used in component testing.
-
-{% /tab %}
-{% /tabs %}
 
 ### Environment Variables
 

@@ -1,14 +1,25 @@
 ---
-title: Overview of the Nx Rollup Plugin
+title: Rollup Plugin for Nx
 description: The Nx Plugin for Rollup contains executors and generators that support building applications using Rollup.
 sidebar:
   label: Introduction
+weight: 2
 filter: 'type:References'
 ---
 
 The Nx Plugin for Rollup contains executors and generators that support building applications using Rollup.
 
-## Setting Up @nx/rollup
+## Requirements
+
+The `@nx/rollup` plugin supports the following package versions.
+
+| Package  | Supported Versions |
+| -------- | ------------------ |
+| `rollup` | ^4.14.0            |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+
+## Setting up @nx/rollup
 
 ### Installation
 
@@ -18,7 +29,7 @@ Make sure to install the `@nx/rollup` version that matches the version of `nx` i
 
 In any Nx workspace, you can install `@nx/rollup` by running the following command:
 
-```shell frame="none"
+```shell
 nx add @nx/rollup
 ```
 

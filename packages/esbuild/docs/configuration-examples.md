@@ -2,9 +2,9 @@
 nx g @nx/esbuild:configuration my-package
 ```
 
-{% callout type="note" title="Overwriting existing build option" %}
+:::note[Overwriting existing build option]
 The `configuration` generator validates that an existing `build` target isn't already defined for the project. If you are adding esbuild to a project with an existing `build` target, pass the `--skipValidation` option.
-{% /callout %}
+:::
 
 You may also provide a custom main entry file, or a custom tsconfig file if the defaults don't work. By default, the generator will look for a main file matching `src/index.ts` or `src/main.ts`, and a tsconfig file matching `tsconfig.app.json` or `tsconfig.lib.json`.
 

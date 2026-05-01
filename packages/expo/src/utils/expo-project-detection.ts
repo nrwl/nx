@@ -100,8 +100,8 @@ export async function isExpoProject(
         hasExpoDependency && appConfigHasExpoField
           ? 'Project has Expo dependency and Expo configuration in app config'
           : hasExpoDependency
-          ? 'Project has Expo dependency'
-          : 'App config has Expo configuration',
+            ? 'Project has Expo dependency'
+            : 'App config has Expo configuration',
     };
   }
 

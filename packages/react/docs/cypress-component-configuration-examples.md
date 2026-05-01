@@ -1,4 +1,4 @@
-{% callout type="caution" title="Can I use component testing?" %}
+:::caution[Can I use component testing?]
 React component testing with Nx requires **Cypress version 10.7.0** and up.
 
 You can migrate with to v11 via the [migrate-to-cypress-11 generator](/nx-api/cypress/generators/migrate-to-cypress-11).
@@ -6,7 +6,7 @@ You can migrate with to v11 via the [migrate-to-cypress-11 generator](/nx-api/cy
 This generator is for Cypress based component testing.
 
 If you want to test components via Storybook with Cypress, then check out the [storybook-configuration generator docs](/nx-api/react/generators/storybook-configuration). However, this functionality is deprecated, and will be removed on Nx version 19.
-{% /callout %}
+:::
 
 This generator is designed to get your React project up and running with Cypress Component Testing.
 
@@ -18,7 +18,7 @@ Running this generator, adds the required files to the specified project with a 
 
 The following file will be added to projects where the Component Testing build target is using `webpack` for bundling:
 
-```ts {% fileName="cypress.config.ts" %}
+```ts title="cypress.config.ts"
 import { defineConfig } from 'cypress';
 import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
 
@@ -31,7 +31,7 @@ export default defineConfig({
 
 The following file will be added to projects where the Component Testing build target is using `vite` for bundling:
 
-```ts {% fileName="cypress.config.ts" %}
+```ts title="cypress.config.ts"
 import { defineConfig } from 'cypress';
 import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
 
@@ -44,7 +44,7 @@ export default defineConfig({
 
 Here is an example on how to add custom options to the configuration
 
-```ts {% fileName="cypress.config.ts" %}
+```ts title="cypress.config.ts"
 import { defineConfig } from 'cypress';
 import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
 
@@ -83,10 +83,10 @@ Manually specifying the build target
 nx g @nx/react:cypress-component-configuration --project=my-cool-react-project --build-target:some-react-app:build --generate-tests
 ```
 
-{% callout type="note" title="Build Target with Configuration" %}
+:::note[Build Target with Configuration]
 If you're wanting to use a build target with a specific configuration. i.e. `my-app:build:production`,
 then manually providing `--build-target=my-app:build:production` is the best way to do that.
-{% /callout %}
+:::
 
 ## Auto Generating Tests
 
@@ -106,7 +106,7 @@ nx g component-test my-cool-react-project
 
 Here is an example of the project configuration that is generated. The `--build-target` option is added as the `devServerTarget` which can be changed as needed.
 
-```json {% fileName="project.json" %}
+```json title="project.json"
 {
   "targets" {
     "component-test": {

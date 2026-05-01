@@ -1,7 +1,7 @@
-import * as chalk from 'chalk';
 import { EOL } from 'os';
+import * as pc from 'picocolors';
 import * as readline from 'readline';
-import { isCI } from './is-ci';
+import { WriteStream } from 'tty';
 import type { TaskStatus } from '../tasks-runner/tasks-runner';
 
 const GH_GROUP_PREFIX = '::group::';
@@ -30,17 +30,32 @@ export interface CLISuccessMessageConfig {
 }
 
 /**
- * Automatically disable styling applied by chalk if CI=true
+ * Custom orange color using ANSI 256-color code 214.
+ * picocolors does not support keyword-based colors like chalk,
+ * so orange is implemented manually.
  */
-const forceColor =
-  process.env.FORCE_COLOR === '' || process.env.FORCE_COLOR === 'true';
-if (isCI() && !forceColor) {
-  (chalk as any).level = 0;
+export function orange(text: string): string {
+  return pc.isColorSupported ? `\x1b[38;5;214m${text}\x1b[39m` : String(text);
 }
+
+/**
+ * Map of color names to picocolors functions, used for dynamic color access.
+ */
+const pcColors: Record<string, (text: string) => string> = {
+  cyan: pc.cyan,
+  red: pc.red,
+  yellow: pc.yellow,
+  green: pc.green,
+  gray: pc.gray,
+  white: pc.white,
+  blue: pc.blue,
+  magenta: pc.magenta,
+  orange,
+};
 
 class CLIOutput {
   cliName = 'NX';
-  formatCommand = (taskId: string) => `${chalk.dim('nx run')} ${taskId}`;
+  formatCommand = (taskId: string) => `${pc.dim('nx run')} ${taskId}`;
 
   /**
    * Longer dash character which forms more of a continuous line when place side to side
@@ -60,59 +75,69 @@ class CLIOutput {
    * implementation.
    */
   colors = {
-    gray: chalk.gray,
-    green: chalk.green,
-    red: chalk.red,
-    cyan: chalk.cyan,
-    white: chalk.white,
+    gray: pc.gray,
+    green: pc.green,
+    red: pc.red,
+    cyan: pc.cyan,
+    white: pc.white,
+    orange,
   };
-  bold = chalk.bold;
-  underline = chalk.underline;
-  dim = chalk.dim;
+  bold = pc.bold;
+  underline = pc.underline;
+  dim = pc.dim;
 
-  private writeToStdOut(str: string) {
-    process.stdout.write(str);
+  private writeToStream(str: string, stream: WriteStream = process.stdout) {
+    stream.write(str);
   }
 
   overwriteLine(lineText: string = '') {
+    // Ensure we always start writing from column 0.
+    readline.cursorTo(process.stdout, 0);
     // this replaces the existing text up to the new line length
     process.stdout.write(lineText);
     // clear whatever text might be left to the right of the cursor (happens
     // when existing text was longer than new one)
     readline.clearLine(process.stdout, 1);
-    process.stdout.write(EOL);
+    // Move to the next line and re-anchor to column 0 without relying on
+    // terminal newline translation behavior.
+    process.stdout.write('\n');
+    readline.cursorTo(process.stdout, 0);
   }
 
-  private writeOutputTitle({
-    color,
-    title,
-  }: {
-    color: string;
-    title: string;
-  }): void {
-    this.writeToStdOut(`${this.applyNxPrefix(color, title)}${EOL}`);
+  private writeOutputTitle(
+    {
+      color,
+      title,
+    }: {
+      color: string;
+      title: string;
+    },
+    stream: WriteStream = process.stdout
+  ): void {
+    this.writeToStream(`${this.applyNxPrefix(color, title)}${EOL}`, stream);
   }
 
-  private writeOptionalOutputBody(bodyLines?: string[]): void {
+  private writeOptionalOutputBody(
+    bodyLines?: string[],
+    stream: WriteStream = process.stdout
+  ): void {
     if (!bodyLines) {
       return;
     }
-    this.addNewline();
-    bodyLines.forEach((bodyLine) => this.writeToStdOut(`${bodyLine}${EOL}`));
+    this.addNewline(stream);
+    bodyLines.forEach((bodyLine) =>
+      this.writeToStream(`${bodyLine}${EOL}`, stream)
+    );
   }
 
   applyNxPrefix(color = 'cyan', text: string): string {
-    let nxPrefix = '';
-    if (chalk[color]) {
-      nxPrefix = chalk.reset.inverse.bold[color](` ${this.cliName} `);
-    } else {
-      nxPrefix = chalk.reset.inverse.bold.keyword(color)(` ${this.cliName} `);
-    }
+    const colorFn = pcColors[color] || ((t: string) => t);
+    const nxPrefix = pc.inverse(pc.bold(colorFn(` ${this.cliName} `)));
     return `${nxPrefix}  ${text}`;
   }
 
-  addNewline() {
-    this.writeToStdOut(EOL);
+  addNewline(stream: WriteStream = process.stdout) {
+    this.writeToStream(EOL, stream);
   }
 
   addVerticalSeparator(color = 'gray') {
@@ -122,7 +147,7 @@ class CLIOutput {
   }
 
   addVerticalSeparatorWithoutNewLines(color = 'gray') {
-    this.writeToStdOut(`${this.getVerticalSeparator(color)}${EOL}`);
+    this.writeToStream(`${this.getVerticalSeparator(color)}${EOL}`);
   }
 
   getVerticalSeparatorLines(color = 'gray') {
@@ -130,57 +155,67 @@ class CLIOutput {
   }
 
   private getVerticalSeparator(color: string): string {
-    return chalk.dim[color](this.VERTICAL_SEPARATOR);
+    const colorFn = pcColors[color] || ((t: string) => t);
+    return pc.dim(colorFn(this.VERTICAL_SEPARATOR));
   }
 
   error({ title, slug, bodyLines }: CLIErrorMessageConfig) {
-    this.addNewline();
+    const stream = process.stderr;
+    this.addNewline(stream);
 
-    this.writeOutputTitle({
-      color: 'red',
-      title: chalk.red(title),
-    });
+    this.writeOutputTitle(
+      {
+        color: 'red',
+        title: pc.red(title),
+      },
+      stream
+    );
 
-    this.writeOptionalOutputBody(bodyLines);
+    this.writeOptionalOutputBody(bodyLines, stream);
 
     /**
      * Optional slug to be used in an Nx error message redirect URL
      */
     if (slug && typeof slug === 'string') {
-      this.addNewline();
-      this.writeToStdOut(
-        `${chalk.grey(
+      this.addNewline(stream);
+      this.writeToStream(
+        `${pc.gray(
           '  Learn more about this error: '
-        )}https://errors.nx.dev/${slug}${EOL}`
+        )}https://errors.nx.dev/${slug}${EOL}`,
+        stream
       );
     }
 
-    this.addNewline();
+    this.addNewline(stream);
   }
 
   warn({ title, slug, bodyLines }: CLIWarnMessageConfig) {
-    this.addNewline();
+    this.addNewline(process.stderr);
 
-    this.writeOutputTitle({
-      color: 'yellow',
-      title: chalk.yellow(title),
-    });
+    this.writeOutputTitle(
+      {
+        color: 'yellow',
+        title: pc.yellow(title),
+      },
+      process.stderr
+    );
 
-    this.writeOptionalOutputBody(bodyLines);
+    this.writeOptionalOutputBody(bodyLines, process.stderr);
 
     /**
      * Optional slug to be used in an Nx warning message redirect URL
      */
     if (slug && typeof slug === 'string') {
-      this.addNewline();
-      this.writeToStdOut(
-        `${chalk.grey(
+      this.addNewline(process.stderr);
+      this.writeToStream(
+        `${pc.gray(
           '  Learn more about this warning: '
-        )}https://errors.nx.dev/${slug}${EOL}`
+        )}https://errors.nx.dev/${slug}${EOL}`,
+        process.stderr
       );
     }
 
-    this.addNewline();
+    this.addNewline(process.stderr);
   }
 
   note({ title, bodyLines }: CLINoteMessageConfig) {
@@ -188,7 +223,7 @@ class CLIOutput {
 
     this.writeOutputTitle({
       color: 'orange',
-      title: chalk.keyword('orange')(title),
+      title: orange(title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -201,7 +236,7 @@ class CLIOutput {
 
     this.writeOutputTitle({
       color: 'green',
-      title: chalk.green(title),
+      title: pc.green(title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -220,9 +255,14 @@ class CLIOutput {
     this.addNewline();
   }
 
+  logRawLine(message: string) {
+    this.writeToStream(`${message}${EOL}`);
+    this.addNewline();
+  }
+
   logCommand(message: string, taskStatus?: TaskStatus) {
     this.addNewline();
-    this.writeToStdOut(this.getCommandWithStatus(message, taskStatus));
+    this.writeToStream(this.getCommandWithStatus(message, taskStatus));
     this.addNewline();
     this.addNewline();
   }
@@ -242,16 +282,16 @@ class CLIOutput {
     }
 
     this.addNewline();
-    this.writeToStdOut(commandOutputWithStatus);
+    this.writeToStream(commandOutputWithStatus);
     this.addNewline();
     this.addNewline();
-    this.writeToStdOut(output);
+    this.writeToStream(output);
 
     if (
       process.env.NX_SKIP_LOG_GROUPING !== 'true' &&
       process.env.GITHUB_ACTIONS
     ) {
-      this.writeToStdOut(GH_GROUP_SUFFIX);
+      this.writeToStream(GH_GROUP_SUFFIX);
     }
   }
 
@@ -260,7 +300,7 @@ class CLIOutput {
     taskStatus: TaskStatus
   ): string {
     const commandOutput =
-      chalk.dim('> ') + this.formatCommand(this.normalizeMessage(message));
+      pc.dim('> ') + this.formatCommand(this.normalizeMessage(message));
     return this.addTaskStatus(taskStatus, commandOutput);
   }
 
@@ -289,22 +329,13 @@ class CLIOutput {
     }
   }
 
-  private addTaskStatus(
-    taskStatus:
-      | 'success'
-      | 'failure'
-      | 'skipped'
-      | 'local-cache-kept-existing'
-      | 'local-cache'
-      | 'remote-cache',
-    commandOutput: string
-  ) {
+  private addTaskStatus(taskStatus: TaskStatus, commandOutput: string) {
     if (taskStatus === 'local-cache') {
-      return `${commandOutput}  ${chalk.dim('[local cache]')}`;
+      return `${commandOutput}  ${pc.dim('[local cache]')}`;
     } else if (taskStatus === 'remote-cache') {
-      return `${commandOutput}  ${chalk.dim('[remote cache]')}`;
+      return `${commandOutput}  ${pc.dim('[remote cache]')}`;
     } else if (taskStatus === 'local-cache-kept-existing') {
-      return `${commandOutput}  ${chalk.dim(
+      return `${commandOutput}  ${pc.dim(
         '[existing outputs match the cache, left as is]'
       )}`;
     } else {
@@ -315,9 +346,10 @@ class CLIOutput {
   log({ title, bodyLines, color }: CLIWarnMessageConfig & { color?: string }) {
     this.addNewline();
 
+    const colorFn = color ? pcColors[color] : undefined;
     this.writeOutputTitle({
       color: 'cyan',
-      title: color ? chalk[color](title) : title,
+      title: colorFn ? colorFn(title) : title,
     });
 
     this.writeOptionalOutputBody(bodyLines);

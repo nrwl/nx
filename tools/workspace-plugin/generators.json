@@ -9,6 +9,11 @@
       "factory": "./src/generators/create-nodes-plugin/generator",
       "schema": "./src/generators/create-nodes-plugin/schema.json",
       "description": "Workspace Generator to create a create-nodes-plugin"
+    },
+    "bump-maven-version": {
+      "factory": "./src/generators/bump-maven-version/generator",
+      "schema": "./src/generators/bump-maven-version/schema.json",
+      "description": "Bump Maven plugin version and create migration"
     }
   }
 }

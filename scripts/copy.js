@@ -20,8 +20,6 @@ for (const f of from) {
     onlyDirectories: true,
   });
 
-  console.log(f, matchingFiles);
-
   for (const file of matchingFiles) {
     const destFile = join(dest, basename(file));
     console.log(file, '=>', destFile);

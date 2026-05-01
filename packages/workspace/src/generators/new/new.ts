@@ -38,8 +38,10 @@ interface Schema {
   e2eTestRunner?: string;
   ssr?: boolean;
   prefix?: string;
+  zoneless?: boolean;
   useGitHub?: boolean;
   nxCloud?: 'yes' | 'skip' | 'circleci' | 'github';
+  analytics?: boolean;
   formatter?: string;
   workspaces?: boolean;
   workspaceGlobs?: string | string[];
@@ -80,7 +82,7 @@ export async function newGenerator(tree: Tree, opts: Schema) {
           cwd: joinPathFragments(tree.root, options.directory),
           stdio:
             process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
-          windowsHide: false,
+          windowsHide: true,
         });
       }
       installPackagesTask(
@@ -159,13 +161,13 @@ function normalizeOptions(options: Schema): NormalizedSchema {
     workspaceGlobs: Array.isArray(options.workspaceGlobs)
       ? options.workspaceGlobs
       : options.workspaceGlobs
-      ? [options.workspaceGlobs]
-      : undefined,
+        ? [options.workspaceGlobs]
+        : undefined,
     aiAgents: Array.isArray(options.aiAgents)
       ? options.aiAgents
       : options.aiAgents
-      ? [options.aiAgents]
-      : undefined,
+        ? [options.aiAgents]
+        : undefined,
   };
 
   if (!options.directory) {

@@ -2,16 +2,19 @@ import {
   addDependenciesToPackageJson,
   ensurePackage,
   joinPathFragments,
+  updateJson,
   type Tree,
 } from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
-import { versions } from './version-utils';
+import { getInstalledAngularVersionInfo, versions } from './version-utils';
 
 export type AddJestOptions = {
   name: string;
   projectRoot: string;
   skipPackageJson: boolean;
   strict: boolean;
+  runtimeTsconfigFileName: 'tsconfig.app.json' | 'tsconfig.lib.json';
+  zoneless: boolean;
   addPlugin?: boolean;
 };
 
@@ -20,20 +23,24 @@ export async function addJest(
   options: AddJestOptions
 ): Promise<void> {
   if (!options.skipPackageJson) {
-    process.env.npm_config_legacy_peer_deps ??= 'true';
-
     const pkgVersions = versions(tree);
+    const devDependencies: Record<string, string> = {
+      'jest-preset-angular': pkgVersions.jestPresetAngularVersion,
+    };
+    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+
+    if (angularMajorVersion < 21) {
+      // force jest v29.7.0
+      devDependencies.jest = '^29.7.0';
+    }
+
     addDependenciesToPackageJson(
       tree,
       {
-        // TODO(leo): jest-preset-angular still needs this until https://github.com/thymikee/jest-preset-angular/pull/3079 is merged
+        // TODO(leo): jest-preset-angular still needs this, it has it as a peer dependency
         '@angular/platform-browser-dynamic': pkgVersions.angularVersion,
       },
-      {
-        // force jest v29.7.0, Angular doesn't support Jest v30 yet: https://github.com/angular/angular-cli/pull/30761
-        jest: '^29.7.0',
-        'jest-preset-angular': pkgVersions.jestPresetAngularVersion,
-      },
+      devDependencies,
       undefined,
       true
     );
@@ -59,17 +66,44 @@ export async function addJest(
     'src',
     'test-setup.ts'
   );
-  if (options.strict && tree.exists(setupFile)) {
-    const contents = tree.read(setupFile, 'utf-8');
-    tree.write(
-      setupFile,
-      contents.replace(
-        'setupZoneTestEnv();',
-        `setupZoneTestEnv({
+
+  if (options.zoneless) {
+    tree.write(setupFile, getZonelessSetupFile(options.strict));
+  } else {
+    tree.write(setupFile, getZoneSetupFile(options.strict));
+  }
+
+  const runtimeTsconfigPath = joinPathFragments(
+    options.projectRoot,
+    options.runtimeTsconfigFileName
+  );
+  if (tree.exists(runtimeTsconfigPath)) {
+    updateJson(tree, runtimeTsconfigPath, (json) => {
+      const excludeSet = new Set([
+        ...(json.exclude ?? []),
+        'src/test-setup.ts',
+      ]);
+      json.exclude = Array.from(excludeSet);
+      return json;
+    });
+  }
+}
+
+const strictTestEnvOptions = `{
   errorOnUnknownElements: true,
   errorOnUnknownProperties: true
-});`
-      )
-    );
-  }
+}`;
+
+function getZonelessSetupFile(strict: boolean): string {
+  return `import { setupZonelessTestEnv } from 'jest-preset-angular/setup-env/zoneless';
+
+setupZonelessTestEnv(${strict ? strictTestEnvOptions : ''});
+`;
+}
+
+function getZoneSetupFile(strict: boolean): string {
+  return `import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone';
+
+setupZoneTestEnv(${strict ? strictTestEnvOptions : ''});
+`;
 }

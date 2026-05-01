@@ -5,6 +5,7 @@ import {
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
 import { ModuleFederationPlugin } from '@module-federation/enhanced/webpack';
+import { workspaceRoot } from '@nx/devkit';
 
 export async function withModuleFederation(
   options: ModuleFederationConfig,
@@ -34,11 +35,17 @@ export async function withModuleFederation(
         ...(config.optimization ?? {}),
         runtimeChunk:
           isDevServer && !options.exposes
-            ? config.optimization?.runtimeChunk ?? undefined
+            ? (config.optimization?.runtimeChunk ?? undefined)
             : false,
       },
       resolve: {
         ...(config.resolve ?? {}),
+        // Ensure workspace root is in resolve.modules so that expose paths
+        // like "apps/remote/src/..." resolve correctly without baseUrl.
+        modules: [
+          ...(config.resolve?.modules ?? ['node_modules']),
+          workspaceRoot,
+        ],
         alias: {
           ...(config.resolve?.alias ?? {}),
           ...sharedLibraries.getAliases(),

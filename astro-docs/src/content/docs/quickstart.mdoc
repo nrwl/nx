@@ -1,6 +1,6 @@
 ---
 title: Quickstart with Nx
-description: Get up and running with Nx in minutes - install Nx, set up your editor, configure AI assistance, and choose your development path.
+description: Get up and running with the Nx monorepo platform in minutes - install Nx, set up your editor, configure AI assistance, and choose your development path.
 tableOfContents: false
 filter: 'type:Guides'
 ---
@@ -13,12 +13,10 @@ Get up and running with Nx in just a few minutes by following these simple steps
 
    Installing Nx globally is **optional** - you can use `npx` to run Nx commands without installing it globally, especially if you're working with Node.js projects.
 
-   Installing Nx globally is **optional** - you can use `npx` to run Nx commands without installing it globally, especially if you're working with Node.js projects.
-
    {% tabs syncKey="install-method" %}
    {% tabitem label="npm" %}
 
-   ```shell {% frame="none" %}
+   ```shell
    npm add --global nx
    ```
 
@@ -27,21 +25,21 @@ Get up and running with Nx in just a few minutes by following these simple steps
    {% /tabitem %}
    {% tabitem label="Homebrew (macOS, Linux)" %}
 
-   ```shell {% frame="none" %}
+   ```shell
    brew install nx
    ```
 
    {% /tabitem %}
    {% tabitem label="Chocolatey (Windows)" %}
 
-   ```shell {% frame="none" %}
+   ```shell
    choco install nx
    ```
 
    {% /tabitem %}
    {% tabitem label="apt (Ubuntu)" %}
 
-   ```shell {% frame="none" %}
+   ```shell
    sudo add-apt-repository ppa:nrwl/nx
    sudo apt update
    sudo apt install nx
@@ -54,20 +52,19 @@ Get up and running with Nx in just a few minutes by following these simple steps
 
    For JavaScript-based projects you can **start with a new workspace** using the following command:
 
-   ```shell {% frame="none" %}
+   ```shell
    npx create-nx-workspace@latest
    ```
 
    **Add to an existing project: (recommended also for non-JS projects)**
 
-   ```shell {% frame="none" %}
+   ```shell
    npx nx@latest init
    ```
 
-   **Get the complete experience:**
-   For a fully integrated development workflow with AI-powered CI features, [start directly from Nx Cloud](https://cloud.nx.app/get-started).
+   Want remote caching and CI? Connect to [Nx Cloud](/docs/features/ci-features) after setup.
 
-   Learn more: [Start New Project](/docs/getting-started/start-new-project) • [Add to Existing](/docs/getting-started/start-with-existing-project) • [Complete Nx Experience](https://cloud.nx.app/get-started)
+   Learn more: [Start New Project](/docs/getting-started/start-new-project) • [Add to Existing](/docs/getting-started/start-with-existing-project)
 
 3. Run Your First Commands
 
@@ -75,14 +72,14 @@ Get up and running with Nx in just a few minutes by following these simple steps
 
    **Run a task for a single project:**
 
-   ```shell {% frame="none" %}
+   ```shell
    nx build my-app
    nx test my-lib
    ```
 
    **Run tasks for multiple projects:**
 
-   ```shell {% frame="none" %}
+   ```shell
    nx run-many -t build test lint
    ```
 
@@ -98,9 +95,9 @@ Get up and running with Nx in just a few minutes by following these simple steps
 
    {% linkcard title="I learn better with videos" description="Check out our bite-sized video lessons that teach you about Nx 101, Nx Release and how to incrementally adopt Nx in an existing project."  href="https://nx.dev/courses" /%}
 
-   {% linkcard title="Tell me more about Nx on CI" description="Understand how Nx works on CI, how to configure it and how Nx Cloud helps ensure CI runs fast and efficiently."  href="/docs/getting-started/nx-cloud" /%}
+   {% linkcard title="Tell me more about Nx on CI" description="Understand how Nx works on CI, how to configure it and how Nx Cloud helps ensure CI runs fast and efficiently."  href="/docs/features/ci-features" /%}
 
-   {% linkcard title="Is Nx just for JavaScript projects?" description="Explore Nx's technology integrations and how it can support your specific stack. Even beyond just JavaScript-based projects."  href="/docs/technologies"  /%}
+   {% linkcard title="Is Nx just for JavaScript projects?" description="Explore Nx technology integrations and how it can support your specific stack. Even beyond just JavaScript-based projects."  href="/docs/technologies"  /%}
 
    {% /cardgrid %}
 

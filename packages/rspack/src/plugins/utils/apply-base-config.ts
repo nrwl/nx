@@ -88,18 +88,20 @@ function applyNxIndependentConfig(
         //
         // When the NODE_ENV is something else (e.g. test), then set it to none
         // to prevent extra behavior from rspack.
-        options.mode ??
+        (options.mode ??
         (process.env.NODE_ENV === 'development' ||
         process.env.NODE_ENV === 'production'
           ? (process.env.NODE_ENV as 'development' | 'production')
-          : 'none');
+          : 'none'));
   // When target is Node, the Webpack mode will be set to 'none' which disables in memory caching and causes a full rebuild on every change.
   // So to mitigate this we enable in memory caching when target is Node and in watch mode.
   config.cache =
-    (options.target === 'node' || options.target === 'async-node') &&
-    options.watch
-      ? true
-      : undefined;
+    'cache' in options
+      ? options.cache
+      : (options.target === 'node' || options.target === 'async-node') &&
+          options.watch
+        ? true
+        : undefined;
 
   config.devtool =
     options.sourceMap === true ? 'source-map' : options.sourceMap;
@@ -205,7 +207,7 @@ function applyNxIndependentConfig(
           ],
           concatenateModules: true,
           runtimeChunk: isDevServer
-            ? config.optimization?.runtimeChunk ?? undefined
+            ? (config.optimization?.runtimeChunk ?? undefined)
             : false,
         }
       : {}),
@@ -271,16 +273,33 @@ function applyNxDependentConfig(
     plugins.push(new NxTsconfigPathsRspackPlugin({ ...options, tsConfig }));
   }
 
+  // Normalize typeCheckOptions from deprecated skipTypeChecking for backward compatibility
+  const defaultTypeCheckOptions = { async: true };
+  let typeCheckOptions: boolean | { async: boolean };
+  if (options.typeCheckOptions !== undefined) {
+    if (options.typeCheckOptions === true) {
+      typeCheckOptions = defaultTypeCheckOptions;
+    } else if (options.typeCheckOptions === false) {
+      typeCheckOptions = false;
+    } else {
+      typeCheckOptions = options.typeCheckOptions;
+    }
+  } else if (options.skipTypeChecking) {
+    typeCheckOptions = false;
+  } else {
+    typeCheckOptions = defaultTypeCheckOptions;
+  }
+
   // New TS Solution already has a typecheck target but allow it to run during serve
-  if (
-    (!options?.skipTypeChecking && !isUsingTsSolution) ||
-    (isUsingTsSolution &&
-      options?.skipTypeChecking === false &&
-      process.env['WEBPACK_SERVE'])
-  ) {
+  const shouldTypeCheck =
+    typeCheckOptions !== false &&
+    (!isUsingTsSolution || process.env['WEBPACK_SERVE']);
+
+  if (shouldTypeCheck) {
     const { TsCheckerRspackPlugin } = require('ts-checker-rspack-plugin');
 
     const pluginConfig: any = {
+      ...typeCheckOptions,
       typescript: {
         configFile: path.isAbsolute(tsConfig)
           ? tsConfig
@@ -291,9 +310,11 @@ function applyNxDependentConfig(
 
     // When using TS solution setup, enable build mode to generate declaration files
     // This prevents TS6305 errors when declaration files are expected but missing
-    // from module federation remote imports
+    // from module federation remote imports but disable emitting tsbuildinfo files
+    // so that tsc builds are not affected.
     if (isUsingTsSolution) {
       pluginConfig.typescript.build = true;
+      pluginConfig.typescript.mode = 'readonly';
     }
 
     plugins.push(new TsCheckerRspackPlugin(pluginConfig));
@@ -438,7 +459,7 @@ function applyNxDependentConfig(
   config.externals = externals;
 
   // Enabled for performance
-  config.cache = true;
+  config.cache = 'cache' in options ? options.cache : true;
   config.module = {
     ...config.module,
     rules: [

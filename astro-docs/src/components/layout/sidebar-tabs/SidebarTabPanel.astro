@@ -1,0 +1,18 @@
+---
+interface Props {
+  id: string
+  tabId: string
+  active?: boolean
+}
+
+const { id, tabId, active = false } = Astro.props
+---
+
+<div
+  role="tabpanel"
+  id={id}
+  aria-labelledby={tabId}
+  hidden={!active}
+>
+  <slot />
+</div>

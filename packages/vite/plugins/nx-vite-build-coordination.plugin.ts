@@ -19,7 +19,7 @@ export function nxViteBuildCoordinationPlugin(
   async function buildChangedProjects() {
     await new Promise<void>((res) => {
       activeBuildProcess = exec(options.buildCommand, {
-        windowsHide: false,
+        windowsHide: true,
       });
       activeBuildProcess.stdout.pipe(process.stdout);
       activeBuildProcess.stderr.pipe(process.stderr);
@@ -38,15 +38,21 @@ export function nxViteBuildCoordinationPlugin(
     return daemonClient.registerFileWatcher(
       { watchProjects: 'all' },
       (err, { changedProjects, changedFiles }) => {
-        if (err === 'closed') {
+        if (err === 'reconnecting') {
+          // Silent - daemon restarts automatically on lockfile changes
+          return;
+        } else if (err === 'reconnected') {
+          // Silent - reconnection succeeded
+          return;
+        } else if (err === 'closed') {
           output.error({
-            title: 'Watch connection closed',
-            bodyLines: [
-              'The daemon had closed the connection to this watch process.',
-              'Please restart your watch command.',
-            ],
+            title: `Failed to reconnect to daemon after multiple attempts`,
           });
           process.exit(1);
+        } else if (err) {
+          output.error({
+            title: `Watch error: ${err?.message ?? 'Unknown'}`,
+          });
         }
 
         if (activeBuildProcess) {

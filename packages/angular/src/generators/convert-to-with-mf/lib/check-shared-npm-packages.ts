@@ -1,17 +1,15 @@
 import type { SourceFile, Node } from 'typescript';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
-export function checkSharedNpmPackagesMatchExpected(ast: SourceFile) {
+export function checkSharedNpmPackagesMatchExpected(sourceFile: SourceFile) {
   ensureTypescript();
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { query } = require('@phenomnomnominal/tsquery');
   const SHARE_HELPER_SELECTOR =
     'PropertyAssignment:has(Identifier[name=shared]) > CallExpression:has(Identifier[name=share])';
   const SHARED_PACKAGE_CONFIG_SELECTOR =
     'ObjectLiteralExpression > PropertyAssignment > ObjectLiteralExpression';
 
-  const shareHelperNodes = tsquery(ast, SHARE_HELPER_SELECTOR, {
-    visitAllChildren: true,
-  });
+  const shareHelperNodes = query(sourceFile, SHARE_HELPER_SELECTOR);
 
   let sharedPackageConfigNodes: Node[];
   let settingsToMatch: string[] = [];
@@ -19,27 +17,23 @@ export function checkSharedNpmPackagesMatchExpected(ast: SourceFile) {
     // if we arent sharing using share helper, check for standard object sharing syntax
     const SHARED_OBJECT_SELECTOR =
       'PropertyAssignment:has(Identifier[name=shared]) > ObjectLiteralExpression';
-    const sharedObjectNodes = tsquery(ast, SHARED_OBJECT_SELECTOR, {
-      visitAllChildren: true,
-    });
+    const sharedObjectNodes = query(sourceFile, SHARED_OBJECT_SELECTOR);
 
     if (sharedObjectNodes.length === 0) {
       // nothing is being shared, we're safe to continue
       return true;
     }
 
-    sharedPackageConfigNodes = tsquery(
-      sharedObjectNodes[0],
-      SHARED_PACKAGE_CONFIG_SELECTOR,
-      { visitAllChildren: true }
+    sharedPackageConfigNodes = query(
+      sourceFile,
+      `${SHARED_OBJECT_SELECTOR} ${SHARED_PACKAGE_CONFIG_SELECTOR}`
     );
 
     settingsToMatch = [`singleton: true`, `strictVersion: true`];
   } else {
-    sharedPackageConfigNodes = tsquery(
-      shareHelperNodes[0],
-      SHARED_PACKAGE_CONFIG_SELECTOR,
-      { visitAllChildren: true }
+    sharedPackageConfigNodes = query(
+      sourceFile,
+      `${SHARE_HELPER_SELECTOR} ${SHARED_PACKAGE_CONFIG_SELECTOR}`
     );
 
     settingsToMatch = [

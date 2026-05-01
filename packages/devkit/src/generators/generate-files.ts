@@ -23,6 +23,7 @@ export interface GenerateFilesOptions {
   overwriteStrategy?: OverwriteStrategy;
 }
 
+// TODO(v24): use the version from nx/src/generators/utils
 /**
  * Generates a folder of files based on provided templates.
  *
@@ -58,7 +59,7 @@ export function generateFiles(
   options ??= {};
   options.overwriteStrategy ??= OverwriteStrategy.Overwrite;
 
-  const ejs: typeof import('ejs') = require('ejs');
+  const ejs = require('ejs');
 
   const files = allFilesInDir(srcFolder);
   if (files.length === 0) {

@@ -106,7 +106,8 @@
     },
     "hasTypeAwareRules": {
       "type": "boolean",
-      "description": "When set to `true`, the linter will invalidate its cache when any of its dependencies changes."
+      "description": "Deprecated. No longer has any effect.",
+      "x-deprecated": "No longer has any effect. Will be removed in Nx v23."
     },
     "cacheStrategy": {
       "type": "string",
@@ -142,6 +143,24 @@
       "type": "boolean",
       "description": "When set to false, equivalent of the `--no-error-on-unmatched-pattern` flag on the ESLint CLI.",
       "default": true
+    },
+    "suppressAll": {
+      "type": "boolean",
+      "description": "Suppress all existing violations. This is equivalent to the `--suppress-all` flag on the ESLint CLI. Requires ESLint v9.24.0 or higher.",
+      "default": false
+    },
+    "suppressRule": {
+      "type": "array",
+      "description": "Suppress violations for specific rules. This is equivalent to the `--suppress-rule` flag on the ESLint CLI. Requires ESLint v9.24.0 or higher.",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    },
+    "suppressionsLocation": {
+      "type": "string",
+      "description": "Specify the location of the suppressions file. This is equivalent to the `--suppressions-location` flag on the ESLint CLI. Defaults to 'eslint-suppressions.json' in the project root. Requires ESLint v9.24.0 or higher.",
+      "x-completion-type": "file"
     }
   },
   "examplesFile": "../../../docs/eslint-examples.md"

@@ -2,10 +2,9 @@
 
 Update the `@angular/cli` package version in the `package.json` file at the workspace root to **~20.2.0**.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="package.json" %}
+```json title="package.json"
 {
   "devDependencies": {
     "@angular/cli": "~20.1.0"
@@ -13,17 +12,12 @@ Update the `@angular/cli` package version in the `package.json` file at the work
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% highlightLines=[3] fileName="package.json" %}
+```json title="package.json" {3}
 {
   "devDependencies": {
     "@angular/cli": "~20.2.0"
   }
 }
 ```
-
-{% /tab %}
-
-{% /tabs %}

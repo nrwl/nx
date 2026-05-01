@@ -25,7 +25,14 @@ jest.debug.config.js
 /nx-dev/nx-dev/public/documentation
 /nx-dev/nx-dev/public/tutorials
 /nx-dev/nx-dev/public/images/open-graph
-**/tests/temp-db
+/nx-dev/nx-dev/public/robots.txt
+/nx-dev/nx-dev/public/sitemap-0.xml
+/nx-dev/nx-dev/public/sitemap.xml
+
+# Banner JSON files are generated during static builds
+/nx-dev/nx-dev/lib/banner.json
+/astro-docs/src/content/banner.json
+**/tests/temp-db*
 
 # Issues scraper creates these files, stored by github's cache
 /scripts/issues-scraper/cached
@@ -62,10 +69,12 @@ out
 .profile
 .rustup/
 target
+.flattened-pom.xml
+dependency-reduced-pom.xml
 *.wasm
 /wasi-sdk*
 
-vite.config.*.timestamp*
+*.config.timestamp*
 
 storybook-static
 
@@ -74,10 +83,10 @@ storybook-static
 .kotlin
 
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
+CLAUDE.local.md
 
-.cursor/rules/nx-rules.mdc
 .cursor/mcp.json
-.github/instructions/nx.instructions.md
 
 # Added by Claude Task Master
 # Logs
@@ -90,6 +99,7 @@ dev-debug.log
 node_modules/
 # Environment variables
 .env
+!e2e/dotnet/.env
 # Editor directories and files
 .idea
 .vscode
@@ -108,18 +118,41 @@ node_modules/
 # Upstream docs local configuration (machine-specific)
 .upstreamdocs.local.json
 
-astro-docs/.netlify
+# Netlify build artifacts
+.netlify
+
+coverage
 
 # Angular Rspack Specific Options
 packages/angular-rspack/coverage
 packages/angular-rspack-compiler/coverage
 
-# Angular Rspack Packages use a template to generate the correct README
+# Some Packages use a template to generate the correct README
 packages/angular-rspack/README.md
 packages/angular-rspack-compiler/README.md
+packages/dotnet/README.md
+packages/maven/README.md
+packages/nx/README.md
 
 test-output
 test-results
 
 # TypeScript build info files
 *.tsbuildinfo
+
+# .NET build output
+/packages/dotnet/analyzer/bin
+/packages/dotnet/analyzer/obj
+/*.deb
+.nx/polygraph
+.claude/worktrees
+
+.nx/self-healing
+# Nx Typings Output
+packages/nx/**/*.d.ts
+!packages/nx/src/utils/perf-hooks.d.ts
+!packages/nx/src/ai/set-up-ai-agents/schema.d.ts
+!packages/nx/src/native/index.d.ts
+!packages/nx/src/native/dts-header.d.ts
+e2e/**/*.d.ts
+e2e/**/*.d.ts.map

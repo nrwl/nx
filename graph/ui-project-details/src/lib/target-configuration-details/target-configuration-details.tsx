@@ -130,7 +130,7 @@ export default function TargetConfigurationDetails({
             <h4 className="mb-4">
               <TargetExecutorTitle {...displayHeader} />
             </h4>
-            <p className="pl-5 font-mono">
+            <div className="pl-5 font-mono">
               <TargetExecutor {...displayHeader} link={link}>
                 <TargetSourceInfo
                   className="pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100"
@@ -140,7 +140,7 @@ export default function TargetConfigurationDetails({
                   sourceMap={sourceMap}
                 />
               </TargetExecutor>
-            </p>
+            </div>
           </div>
 
           {script && (
@@ -148,7 +148,7 @@ export default function TargetConfigurationDetails({
               <h4 className="mb-4">
                 <TargetExecutorTitle script={script} />
               </h4>
-              <p className="pl-5 font-mono">
+              <div className="pl-5 font-mono">
                 <TargetExecutor script={script} link={link}>
                   <TargetSourceInfo
                     className="pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100"
@@ -156,7 +156,7 @@ export default function TargetConfigurationDetails({
                     sourceMap={sourceMap}
                   />
                 </TargetExecutor>
-              </p>
+              </div>
             </div>
           )}
 

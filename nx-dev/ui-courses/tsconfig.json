@@ -14,27 +14,6 @@
   "include": [],
   "references": [
     {
-      "path": "../ui-primitives"
-    },
-    {
-      "path": "../ui-markdoc"
-    },
-    {
-      "path": "../ui-icons"
-    },
-    {
-      "path": "../ui-common"
-    },
-    {
-      "path": "../ui-blog"
-    },
-    {
-      "path": "../data-access-documents"
-    },
-    {
-      "path": "../data-access-courses"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ]

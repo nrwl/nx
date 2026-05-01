@@ -1,61 +1,56 @@
 import { existsSync, statSync } from 'fs';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
-import { PerformanceObserver } from 'perf_hooks';
+import { deserialize, serialize } from 'v8';
+import { startAnalytics } from '../../analytics';
 import { hashArray } from '../../hasher/file-hasher';
 import { hashFile } from '../../native';
-import { consumeMessagesFromSocket } from '../../utils/consume-messages-from-socket';
-import { readJsonFile } from '../../utils/fileutils';
-import { PackageJson } from '../../utils/package-json';
+import {
+  consumeMessagesFromSocket,
+  isJsonMessage,
+} from '../../utils/consume-messages-from-socket';
+import '../../utils/perf-logging';
 import { nxVersion } from '../../utils/versions';
 import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { getPlugins } from '../../project-graph/plugins/get-plugins';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
+import { isNxVersionMismatch } from '../is-nx-version-mismatch';
+import { getInstalledNxVersion } from '../../utils/installed-nx-version';
+import { serverLogger } from '../logger';
 import {
-  getFullOsSocketPath,
-  isWindows,
-  killSocketOrPath,
-} from '../socket-utils';
+  GET_CONFIGURE_AI_AGENTS_STATUS,
+  isHandleGetConfigureAiAgentsStatusMessage,
+  isHandleResetConfigureAiAgentsStatusMessage,
+  RESET_CONFIGURE_AI_AGENTS_STATUS,
+} from '../message-types/configure-ai-agents';
+import { applyDaemonEnvFromClient } from '../client/daemon-environment';
+import { isDaemonMessage } from '../message-types/daemon-message';
 import {
-  hasRegisteredFileWatcherSockets,
-  registeredFileWatcherSockets,
-  removeRegisteredFileWatcherSocket,
-} from './file-watching/file-watcher-sockets';
-import { handleHashTasks } from './handle-hash-tasks';
+  FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
+  isHandleFlushSyncGeneratorChangesToDiskMessage,
+} from '../message-types/flush-sync-generator-changes-to-disk';
+import { isHandleForceShutdownMessage } from '../message-types/force-shutdown';
 import {
-  handleOutputsHashesMatch,
-  handleRecordOutputsHash,
-} from './handle-outputs-tracking';
-import { handleProcessInBackground } from './handle-process-in-background';
-import { handleRequestProjectGraph } from './handle-request-project-graph';
-import { handleRequestShutdown } from './handle-request-shutdown';
-import { serverLogger } from './logger';
+  GET_CONTEXT_FILE_DATA,
+  isHandleContextFileDataMessage,
+} from '../message-types/get-context-file-data';
 import {
-  disableOutputsTracking,
-  processFileChangesInOutputs,
-} from './outputs-tracking';
+  GET_FILES_IN_DIRECTORY,
+  isHandleGetFilesInDirectoryMessage,
+} from '../message-types/get-files-in-directory';
 import {
-  addUpdatedAndDeletedFiles,
-  registerProjectGraphRecomputationListener,
-} from './project-graph-incremental-recomputation';
+  GET_NX_WORKSPACE_FILES,
+  isHandleNxWorkspaceFilesMessage,
+} from '../message-types/get-nx-workspace-files';
 import {
-  getOutputWatcherInstance,
-  getWatcherInstance,
-  handleServerProcessTermination,
-  resetInactivityTimeout,
-  respondToClient,
-  respondWithErrorAndExit,
-  SERVER_INACTIVITY_TIMEOUT_MS,
-  storeOutputWatcherInstance,
-  storeWatcherInstance,
-} from './shutdown-utils';
+  GET_REGISTERED_SYNC_GENERATORS,
+  isHandleGetRegisteredSyncGeneratorsMessage,
+} from '../message-types/get-registered-sync-generators';
 import {
-  convertChangeEventsToLogMessage,
-  FileWatcherCallback,
-  watchOutputFiles,
-  watchWorkspace,
-} from './watcher';
-import { handleGlob, handleMultiGlob } from './handle-glob';
+  GET_SYNC_GENERATOR_CHANGES,
+  isHandleGetSyncGeneratorChangesMessage,
+} from '../message-types/get-sync-generator-changes';
 import {
   GLOB,
   isHandleGlobMessage,
@@ -63,26 +58,23 @@ import {
   MULTI_GLOB,
 } from '../message-types/glob';
 import {
-  GET_NX_WORKSPACE_FILES,
-  isHandleNxWorkspaceFilesMessage,
-} from '../message-types/get-nx-workspace-files';
-import { handleNxWorkspaceFiles } from './handle-nx-workspace-files';
-import {
-  GET_CONTEXT_FILE_DATA,
-  isHandleContextFileDataMessage,
-} from '../message-types/get-context-file-data';
-import { handleContextFileData } from './handle-context-file-data';
-import {
-  GET_FILES_IN_DIRECTORY,
-  isHandleGetFilesInDirectoryMessage,
-} from '../message-types/get-files-in-directory';
-import { handleGetFilesInDirectory } from './handle-get-files-in-directory';
-import {
   HASH_GLOB,
   isHandleHashGlobMessage,
   isHandleHashMultiGlobMessage,
 } from '../message-types/hash-glob';
-import { handleHashGlob, handleHashMultiGlob } from './handle-hash-glob';
+import {
+  GET_NX_CONSOLE_STATUS,
+  isHandleGetNxConsoleStatusMessage,
+  isHandleSetNxConsolePreferenceAndInstallMessage,
+  SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
+} from '../message-types/nx-console';
+import { isRegisterProjectGraphListenerMessage } from '../message-types/register-project-graph-listener';
+import {
+  isHandlePostTasksExecutionMessage,
+  isHandlePreTasksExecutionMessage,
+  POST_TASKS_EXECUTION,
+  PRE_TASKS_EXECUTION,
+} from '../message-types/run-tasks-execution-hooks';
 import {
   GET_ESTIMATED_TASK_TIMINGS,
   GET_FLAKY_TASKS,
@@ -92,54 +84,102 @@ import {
   RECORD_TASK_RUNS,
 } from '../message-types/task-history';
 import {
-  handleRecordTaskRuns,
-  handleGetFlakyTasks,
-  handleGetEstimatedTaskTimings,
-} from './handle-task-history';
-import { isHandleForceShutdownMessage } from '../message-types/force-shutdown';
-import { handleForceShutdown } from './handle-force-shutdown';
-import {
-  GET_SYNC_GENERATOR_CHANGES,
-  isHandleGetSyncGeneratorChangesMessage,
-} from '../message-types/get-sync-generator-changes';
-import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
-import { collectAndScheduleSyncGenerators } from './sync-generators';
-import {
-  GET_REGISTERED_SYNC_GENERATORS,
-  isHandleGetRegisteredSyncGeneratorsMessage,
-} from '../message-types/get-registered-sync-generators';
-import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-generators';
-import {
-  UPDATE_WORKSPACE_CONTEXT,
   isHandleUpdateWorkspaceContextMessage,
+  UPDATE_WORKSPACE_CONTEXT,
 } from '../message-types/update-workspace-context';
-import { handleUpdateWorkspaceContext } from './handle-update-workspace-context';
 import {
-  FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
-  isHandleFlushSyncGeneratorChangesToDiskMessage,
-} from '../message-types/flush-sync-generator-changes-to-disk';
+  getFullOsSocketPath,
+  isWindows,
+  killSocketOrPath,
+} from '../socket-utils';
+import { registerFileChangeListener } from './file-watching/file-change-events';
+import {
+  hasRegisteredFileWatcherSockets,
+  registeredFileWatcherSockets,
+  removeRegisteredFileWatcherSocket,
+} from './file-watching/file-watcher-sockets';
+import {
+  handleGetConfigureAiAgentsStatus,
+  handleResetConfigureAiAgentsStatus,
+} from './handle-configure-ai-agents';
+import { handleContextFileData } from './handle-context-file-data';
 import { handleFlushSyncGeneratorChangesToDisk } from './handle-flush-sync-generator-changes-to-disk';
+import { handleForceShutdown } from './handle-force-shutdown';
+import { handleGetFilesInDirectory } from './handle-get-files-in-directory';
+import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-generators';
+import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
+import { handleGlob, handleMultiGlob } from './handle-glob';
+import { handleHashGlob, handleHashMultiGlob } from './handle-hash-glob';
+import { handleHashTasks } from './handle-hash-tasks';
 import {
-  isHandlePostTasksExecutionMessage,
-  isHandlePreTasksExecutionMessage,
-  POST_TASKS_EXECUTION,
-  PRE_TASKS_EXECUTION,
-} from '../message-types/run-tasks-execution-hooks';
+  handleGetNxConsoleStatus,
+  handleSetNxConsolePreferenceAndInstall,
+} from './handle-nx-console';
+import { handleNxWorkspaceFiles } from './handle-nx-workspace-files';
+import {
+  handleOutputsHashesMatchBatch,
+  handleRecordOutputsHashBatch,
+} from './handle-outputs-tracking';
+import { handleProcessInBackground } from './handle-process-in-background';
+import { handleRequestProjectGraph } from './handle-request-project-graph';
+import { handleRequestShutdown } from './handle-request-shutdown';
+import {
+  handleGetEstimatedTaskTimings,
+  handleGetFlakyTasks,
+  handleRecordTaskRuns,
+} from './handle-task-history';
 import {
   handleRunPostTasksExecution,
   handleRunPreTasksExecution,
 } from './handle-tasks-execution-hooks';
+import { handleUpdateWorkspaceContext } from './handle-update-workspace-context';
+import {
+  disableOutputsTracking,
+  processFileChangesInOutputs,
+} from './outputs-tracking';
+import {
+  scheduleProjectGraphRecomputation,
+  registerProjectGraphRecomputationListener,
+  invalidateGraphCache,
+} from './project-graph-incremental-recomputation';
+import {
+  hasRegisteredProjectGraphListenerSockets,
+  registeredProjectGraphListenerSockets,
+  removeRegisteredProjectGraphListenerSocket,
+} from './project-graph-listener-sockets';
+import {
+  getOutputWatcherInstance,
+  getWatcherInstance,
+  handleServerProcessTermination,
+  handleServerProcessTerminationWithRestart,
+  resetInactivityTimeout,
+  respondToClient,
+  respondWithErrorAndExit,
+  SERVER_INACTIVITY_TIMEOUT_MS,
+  storeOutputWatcherInstance,
+  storeWatcherInstance,
+} from './shutdown-utils';
+import {
+  clearSyncGeneratorsCache,
+  collectAndScheduleSyncGenerators,
+} from './sync-generators';
+import {
+  convertChangeEventsToLogMessage,
+  FileWatcherCallback,
+  watchOutputFiles,
+  watchWorkspace,
+} from './watcher';
 
-let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
 let outputsWatcherError: Error | undefined;
 
 global.NX_DAEMON = true;
+process.env.NX_DAEMON_PROCESS = 'true';
 
 export type HandlerResult = {
   description: string;
   error?: any;
-  response?: string;
+  response?: string | object | boolean;
 };
 
 let numberOfOpenConnections = 0;
@@ -152,13 +192,6 @@ const server = createServer(async (socket) => {
     `Established a connection. Number of open connections: ${numberOfOpenConnections}`
   );
   resetInactivityTimeout(handleInactivityTimeout);
-  if (!performanceObserver) {
-    performanceObserver = new PerformanceObserver((list) => {
-      const entry = list.getEntries()[0];
-      serverLogger.log(`Time taken for '${entry.name}'`, `${entry.duration}ms`);
-    });
-    performanceObserver.observe({ entryTypes: ['measure'] });
-  }
 
   socket.on(
     'data',
@@ -168,8 +201,9 @@ const server = createServer(async (socket) => {
   );
 
   socket.on('error', (e) => {
-    serverLogger.log('Socket error');
-    console.error(e);
+    serverLogger.log(`Socket error: ${e.message}`);
+    removeRegisteredFileWatcherSocket(socket);
+    removeRegisteredProjectGraphListenerSocket(socket);
   });
 
   socket.on('close', () => {
@@ -180,11 +214,12 @@ const server = createServer(async (socket) => {
     );
 
     removeRegisteredFileWatcherSocket(socket);
+    removeRegisteredProjectGraphListenerSocket(socket);
   });
 });
 registerProcessTerminationListeners();
 
-async function handleMessage(socket, data: string) {
+async function handleMessage(socket: Socket, data: string) {
   if (workspaceWatcherError) {
     await respondWithErrorAndExit(
       socket,
@@ -193,21 +228,23 @@ async function handleMessage(socket, data: string) {
     );
   }
 
-  const outdated = daemonIsOutdated();
-  if (outdated) {
-    await respondWithErrorAndExit(
-      socket,
-      `Daemon outdated`,
-      new Error(outdated)
-    );
-  }
-
   resetInactivityTimeout(handleInactivityTimeout);
 
   const unparsedPayload = data;
   let payload;
+  let mode: 'json' | 'v8' = 'json';
+
+  serverLogger.log(`Received raw message of length ${unparsedPayload.length}`);
+
   try {
-    payload = JSON.parse(unparsedPayload);
+    // JSON Message
+    if (isJsonMessage(unparsedPayload)) {
+      payload = JSON.parse(unparsedPayload);
+    } else {
+      // V8 Serialized Message
+      payload = deserialize(Buffer.from(unparsedPayload, 'binary'));
+      mode = 'v8';
+    }
   } catch (e) {
     await respondWithErrorAndExit(
       socket,
@@ -215,106 +252,221 @@ async function handleMessage(socket, data: string) {
       new Error(`Unsupported payload sent to daemon server: ${unparsedPayload}`)
     );
   }
+  serverLogger.log(`Received ${mode} message of type ${payload.type}`);
+
+  if (isDaemonMessage(payload) && payload.env) {
+    const envChanged = applyDaemonEnvFromClient(payload.env);
+    if (envChanged) {
+      serverLogger.log('Graph recompute necessary due to env variable refresh');
+      forwardEnvToPluginWorkers(payload.env);
+      invalidateGraphCache();
+    }
+  }
 
   if (payload.type === 'PING') {
-    await handleResult(socket, 'PING', () =>
-      Promise.resolve({ response: JSON.stringify(true), description: 'ping' })
+    await handleResult(
+      socket,
+      'PING',
+      () => Promise.resolve({ response: true, description: 'ping' }),
+      mode
     );
   } else if (payload.type === 'REQUEST_PROJECT_GRAPH') {
-    await handleResult(socket, 'REQUEST_PROJECT_GRAPH', () =>
-      handleRequestProjectGraph()
+    await handleResult(
+      socket,
+      'REQUEST_PROJECT_GRAPH',
+      () => handleRequestProjectGraph(socket),
+      mode
     );
   } else if (payload.type === 'HASH_TASKS') {
-    await handleResult(socket, 'HASH_TASKS', () => handleHashTasks(payload));
+    await handleResult(
+      socket,
+      'HASH_TASKS',
+      () => handleHashTasks(payload),
+      mode
+    );
   } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
-    await handleResult(socket, 'PROCESS_IN_BACKGROUND', () =>
-      handleProcessInBackground(payload)
+    await handleResult(
+      socket,
+      'PROCESS_IN_BACKGROUND',
+      () => handleProcessInBackground(payload),
+      mode
     );
-  } else if (payload.type === 'RECORD_OUTPUTS_HASH') {
-    await handleResult(socket, 'RECORD_OUTPUTS_HASH', () =>
-      handleRecordOutputsHash(payload)
+  } else if (payload.type === 'RECORD_OUTPUTS_HASH_BATCH') {
+    await handleResult(
+      socket,
+      'RECORD_OUTPUTS_HASH_BATCH',
+      () => handleRecordOutputsHashBatch(payload),
+      mode
     );
-  } else if (payload.type === 'OUTPUTS_HASHES_MATCH') {
-    await handleResult(socket, 'OUTPUTS_HASHES_MATCH', () =>
-      handleOutputsHashesMatch(payload)
+  } else if (payload.type === 'OUTPUTS_HASHES_MATCH_BATCH') {
+    await handleResult(
+      socket,
+      'OUTPUTS_HASHES_MATCH_BATCH',
+      () => handleOutputsHashesMatchBatch(payload),
+      mode
     );
   } else if (payload.type === 'REQUEST_SHUTDOWN') {
-    await handleResult(socket, 'REQUEST_SHUTDOWN', () =>
-      handleRequestShutdown(server, numberOfOpenConnections)
+    await handleResult(
+      socket,
+      'REQUEST_SHUTDOWN',
+      () => handleRequestShutdown(server, numberOfOpenConnections),
+      mode
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
     registeredFileWatcherSockets.push({ socket, config: payload.config });
+  } else if (isRegisterProjectGraphListenerMessage(payload)) {
+    registeredProjectGraphListenerSockets.push(socket);
   } else if (isHandleGlobMessage(payload)) {
-    await handleResult(socket, GLOB, () =>
-      handleGlob(payload.globs, payload.exclude)
+    await handleResult(
+      socket,
+      GLOB,
+      () => handleGlob(payload.globs, payload.exclude),
+      mode
     );
   } else if (isHandleMultiGlobMessage(payload)) {
-    await handleResult(socket, MULTI_GLOB, () =>
-      handleMultiGlob(payload.globs, payload.exclude)
+    await handleResult(
+      socket,
+      MULTI_GLOB,
+      () => handleMultiGlob(payload.globs, payload.exclude),
+      mode
     );
   } else if (isHandleNxWorkspaceFilesMessage(payload)) {
-    await handleResult(socket, GET_NX_WORKSPACE_FILES, () =>
-      handleNxWorkspaceFiles(payload.projectRootMap)
+    await handleResult(
+      socket,
+      GET_NX_WORKSPACE_FILES,
+      () => handleNxWorkspaceFiles(payload.projectRootMap),
+      mode
     );
   } else if (isHandleGetFilesInDirectoryMessage(payload)) {
-    await handleResult(socket, GET_FILES_IN_DIRECTORY, () =>
-      handleGetFilesInDirectory(payload.dir)
+    await handleResult(
+      socket,
+      GET_FILES_IN_DIRECTORY,
+      () => handleGetFilesInDirectory(payload.dir),
+      mode
     );
   } else if (isHandleContextFileDataMessage(payload)) {
-    await handleResult(socket, GET_CONTEXT_FILE_DATA, () =>
-      handleContextFileData()
+    await handleResult(
+      socket,
+      GET_CONTEXT_FILE_DATA,
+      () => handleContextFileData(),
+      mode
     );
   } else if (isHandleHashGlobMessage(payload)) {
-    await handleResult(socket, HASH_GLOB, () =>
-      handleHashGlob(payload.globs, payload.exclude)
+    await handleResult(
+      socket,
+      HASH_GLOB,
+      () => handleHashGlob(payload.globs, payload.exclude),
+      mode
     );
   } else if (isHandleHashMultiGlobMessage(payload)) {
-    await handleResult(socket, HASH_GLOB, () =>
-      handleHashMultiGlob(payload.globGroups)
+    await handleResult(
+      socket,
+      HASH_GLOB,
+      () => handleHashMultiGlob(payload.globGroups),
+      mode
     );
   } else if (isHandleGetFlakyTasksMessage(payload)) {
-    await handleResult(socket, GET_FLAKY_TASKS, () =>
-      handleGetFlakyTasks(payload.hashes)
+    await handleResult(
+      socket,
+      GET_FLAKY_TASKS,
+      () => handleGetFlakyTasks(payload.hashes),
+      mode
     );
   } else if (isHandleGetEstimatedTaskTimings(payload)) {
-    await handleResult(socket, GET_ESTIMATED_TASK_TIMINGS, () =>
-      handleGetEstimatedTaskTimings(payload.targets)
+    await handleResult(
+      socket,
+      GET_ESTIMATED_TASK_TIMINGS,
+      () => handleGetEstimatedTaskTimings(payload.targets),
+      mode
     );
   } else if (isHandleWriteTaskRunsToHistoryMessage(payload)) {
-    await handleResult(socket, RECORD_TASK_RUNS, () =>
-      handleRecordTaskRuns(payload.taskRuns)
+    await handleResult(
+      socket,
+      RECORD_TASK_RUNS,
+      () => handleRecordTaskRuns(payload.taskRuns),
+      mode
     );
   } else if (isHandleForceShutdownMessage(payload)) {
-    await handleResult(socket, 'FORCE_SHUTDOWN', () =>
-      handleForceShutdown(server)
+    await handleResult(
+      socket,
+      'FORCE_SHUTDOWN',
+      () => handleForceShutdown(server),
+      mode
     );
   } else if (isHandleGetSyncGeneratorChangesMessage(payload)) {
-    await handleResult(socket, GET_SYNC_GENERATOR_CHANGES, () =>
-      handleGetSyncGeneratorChanges(payload.generators)
+    await handleResult(
+      socket,
+      GET_SYNC_GENERATOR_CHANGES,
+      () => handleGetSyncGeneratorChanges(payload.generators),
+      mode
     );
   } else if (isHandleFlushSyncGeneratorChangesToDiskMessage(payload)) {
-    await handleResult(socket, FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK, () =>
-      handleFlushSyncGeneratorChangesToDisk(payload.generators)
+    await handleResult(
+      socket,
+      FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
+      () => handleFlushSyncGeneratorChangesToDisk(payload.generators),
+      mode
     );
   } else if (isHandleGetRegisteredSyncGeneratorsMessage(payload)) {
-    await handleResult(socket, GET_REGISTERED_SYNC_GENERATORS, () =>
-      handleGetRegisteredSyncGenerators()
+    await handleResult(
+      socket,
+      GET_REGISTERED_SYNC_GENERATORS,
+      () => handleGetRegisteredSyncGenerators(),
+      mode
     );
   } else if (isHandleUpdateWorkspaceContextMessage(payload)) {
-    await handleResult(socket, UPDATE_WORKSPACE_CONTEXT, () =>
-      handleUpdateWorkspaceContext(
-        payload.createdFiles,
-        payload.updatedFiles,
-        payload.deletedFiles
-      )
+    await handleResult(
+      socket,
+      UPDATE_WORKSPACE_CONTEXT,
+      () =>
+        handleUpdateWorkspaceContext(
+          payload.createdFiles,
+          payload.updatedFiles,
+          payload.deletedFiles
+        ),
+      mode
     );
   } else if (isHandlePreTasksExecutionMessage(payload)) {
-    await handleResult(socket, PRE_TASKS_EXECUTION, () =>
-      handleRunPreTasksExecution(payload.context)
+    await handleResult(
+      socket,
+      PRE_TASKS_EXECUTION,
+      () => handleRunPreTasksExecution(payload.context),
+      mode
     );
   } else if (isHandlePostTasksExecutionMessage(payload)) {
-    await handleResult(socket, POST_TASKS_EXECUTION, () =>
-      handleRunPostTasksExecution(payload.context)
+    await handleResult(
+      socket,
+      POST_TASKS_EXECUTION,
+      () => handleRunPostTasksExecution(payload.context),
+      mode
+    );
+  } else if (isHandleGetNxConsoleStatusMessage(payload)) {
+    await handleResult(
+      socket,
+      GET_NX_CONSOLE_STATUS,
+      () => handleGetNxConsoleStatus(),
+      mode
+    );
+  } else if (isHandleSetNxConsolePreferenceAndInstallMessage(payload)) {
+    await handleResult(
+      socket,
+      SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
+      () => handleSetNxConsolePreferenceAndInstall(payload.preference),
+      mode
+    );
+  } else if (isHandleGetConfigureAiAgentsStatusMessage(payload)) {
+    await handleResult(
+      socket,
+      GET_CONFIGURE_AI_AGENTS_STATUS,
+      () => handleGetConfigureAiAgentsStatus(),
+      mode
+    );
+  } else if (isHandleResetConfigureAiAgentsStatusMessage(payload)) {
+    await handleResult(
+      socket,
+      RESET_CONFIGURE_AI_AGENTS_STATUS,
+      () => handleResetConfigureAiAgentsStatus(),
+      mode
     );
   } else {
     await respondWithErrorAndExit(
@@ -328,7 +480,8 @@ async function handleMessage(socket, data: string) {
 export async function handleResult(
   socket: Socket,
   type: string,
-  hrFn: () => Promise<HandlerResult>
+  hrFn: () => Promise<HandlerResult>,
+  mode: 'json' | 'v8'
 ) {
   let hr: HandlerResult;
   const startMark = new Date();
@@ -341,20 +494,31 @@ export async function handleResult(
   if (hr.error) {
     await respondWithErrorAndExit(socket, hr.description, hr.error);
   } else {
-    await respondToClient(socket, hr.response, hr.description);
+    serverLogger.log(
+      `Serializing response for ${type} message in ${mode} mode`
+    );
+    const response =
+      typeof hr.response === 'string'
+        ? hr.response
+        : serializeUnserializedResult(hr.response, mode);
+    serverLogger.log(`Responding to ${type} message`);
+    await respondToClient(socket, response, hr.description);
   }
   const endMark = new Date();
   serverLogger.log(
-    `Handled ${type}. Handling time: ${
+    `Handled ${mode} message ${type}. Handling time: ${
       doneHandlingMark.getTime() - startMark.getTime()
     }. Response time: ${endMark.getTime() - doneHandlingMark.getTime()}.`
   );
 }
 
 function handleInactivityTimeout() {
-  if (hasRegisteredFileWatcherSockets()) {
+  if (
+    hasRegisteredFileWatcherSockets() ||
+    hasRegisteredProjectGraphListenerSockets()
+  ) {
     serverLogger.log(
-      `There are open file watchers. Resetting inactivity timer.`
+      `There are open file watchers or project graph listeners. Resetting inactivity timer.`
     );
     resetInactivityTimeout(handleInactivityTimeout);
   } else {
@@ -394,7 +558,7 @@ function registerProcessTerminationListeners() {
 let existingLockHash: string | undefined;
 
 function daemonIsOutdated(): string | null {
-  if (nxVersionChanged()) {
+  if (isNxVersionMismatch()) {
     return 'NX_VERSION_CHANGED';
   } else if (lockFileHashChanged()) {
     return 'LOCK_FILES_CHANGED';
@@ -402,34 +566,23 @@ function daemonIsOutdated(): string | null {
   return null;
 }
 
-function nxVersionChanged(): boolean {
-  return nxVersion !== getInstalledNxVersion();
-}
-
-const nxPackageJsonPath = require.resolve('nx/package.json');
-
-function getInstalledNxVersion() {
-  try {
-    const { version } = readJsonFile<PackageJson>(nxPackageJsonPath);
-    return version;
-  } catch (e) {
-    // node modules are absent, so we can return null, which would shut down the daemon
-    return null;
-  }
-}
-
 function lockFileHashChanged(): boolean {
-  const lockHashes = [
+  const lockFiles = [
     join(workspaceRoot, 'package-lock.json'),
     join(workspaceRoot, 'yarn.lock'),
     join(workspaceRoot, 'pnpm-lock.yaml'),
     join(workspaceRoot, 'bun.lockb'),
     join(workspaceRoot, 'bun.lock'),
-  ]
-    .filter((file) => existsSync(file))
-    .map((file) => hashFile(file));
+  ];
+
+  const existingFiles = lockFiles.filter((file) => existsSync(file));
+  const lockHashes = existingFiles.map((file) => hashFile(file));
   const newHash = hashArray(lockHashes);
+
   if (existingLockHash && newHash != existingLockHash) {
+    serverLogger.log(
+      `[Server] lock file hash changed! old=${existingLockHash}, new=${newHash}`
+    );
     existingLockHash = newHash;
     return true;
   } else {
@@ -456,16 +609,6 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
 
   try {
     resetInactivityTimeout(handleInactivityTimeout);
-
-    const outdatedReason = daemonIsOutdated();
-    if (outdatedReason) {
-      await handleServerProcessTermination({
-        server,
-        reason: outdatedReason,
-        sockets: openSockets,
-      });
-      return;
-    }
 
     if (err) {
       let error = typeof err === 'string' ? new Error(err) : err;
@@ -503,7 +646,30 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
       }
     }
 
-    addUpdatedAndDeletedFiles(
+    const cap = 10;
+    const summarize = (files: string[]) =>
+      files.length === 0
+        ? '(none)'
+        : files.length <= cap
+          ? files.map((f) => `  - ${f}`).join('\n')
+          : files
+              .slice(0, cap)
+              .map((f) => `  - ${f}`)
+              .join('\n') + `\n  ... and ${files.length - cap} more`;
+    if (
+      createdFilesToHash.length ||
+      updatedFilesToHash.length ||
+      deletedFiles.length
+    ) {
+      serverLogger.watcherLog(
+        `File changes detected:\n` +
+          `Created:\n${summarize(createdFilesToHash)}\n` +
+          `Updated:\n${summarize(updatedFilesToHash)}\n` +
+          `Deleted:\n${summarize(deletedFiles)}`
+      );
+    }
+
+    scheduleProjectGraphRecomputation(
       createdFilesToHash,
       updatedFilesToHash,
       deletedFiles
@@ -545,9 +711,24 @@ const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
 export async function startServer(): Promise<Server> {
   setupWorkspaceContext(workspaceRoot);
 
+  // Initialize analytics for daemon process
+  await startAnalytics();
+
+  const socketPath = getFullOsSocketPath();
+
+  // Log daemon startup information for debugging
+  serverLogger.log(`New daemon starting from: ${__filename}`);
+  serverLogger.log(`New daemon __dirname: ${__dirname}`);
+  serverLogger.log(`New daemon nxVersion: ${nxVersion}`);
+  serverLogger.log(
+    `New daemon getInstalledNxVersion(): ${getInstalledNxVersion()}`
+  );
+
   // Persist metadata about the background process so that it can be cleaned up later if needed
   await writeDaemonJsonProcessCache({
     processId: process.pid,
+    socketPath,
+    nxVersion,
   });
 
   // See notes in socket-command-line-utils.ts on OS differences regarding clean up of existings connections.
@@ -555,21 +736,45 @@ export async function startServer(): Promise<Server> {
     killSocketOrPath();
   }
 
+  serverLogger.log(`[Server] Starting outdated check interval (20ms)`);
+
+  setInterval(() => {
+    if (getDaemonProcessIdSync() !== process.pid) {
+      return handleServerProcessTermination({
+        server,
+        reason: 'this process is no longer the current daemon (native)',
+        sockets: openSockets,
+      });
+    }
+
+    const outdated = daemonIsOutdated();
+    if (outdated) {
+      serverLogger.log(`[Server] Daemon outdated: ${outdated}`);
+      if (outdated === 'LOCK_FILES_CHANGED') {
+        // Lock file changes - restart daemon, clients will reconnect
+        serverLogger.log('[Server] Restarting daemon...');
+        handleServerProcessTerminationWithRestart({
+          server,
+          reason: outdated,
+          sockets: openSockets,
+        });
+      } else {
+        // Version changes or other reasons - just shut down, don't restart
+        serverLogger.log('[Server] Shutting down daemon (no restart)...');
+        handleServerProcessTermination({
+          server,
+          reason: outdated,
+          sockets: openSockets,
+        });
+      }
+    }
+  }, 20).unref();
+
   return new Promise(async (resolve, reject) => {
     try {
-      server.listen(getFullOsSocketPath(), async () => {
+      server.listen(socketPath, async () => {
         try {
-          serverLogger.log(`Started listening on: ${getFullOsSocketPath()}`);
-
-          setInterval(() => {
-            if (getDaemonProcessIdSync() !== process.pid) {
-              return handleServerProcessTermination({
-                server,
-                reason: 'this process is no longer the current daemon (native)',
-                sockets: openSockets,
-              });
-            }
-          }, 20).unref();
+          serverLogger.log(`Started listening on: ${socketPath}`);
 
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
@@ -594,8 +799,20 @@ export async function startServer(): Promise<Server> {
           registerProjectGraphRecomputationListener(
             collectAndScheduleSyncGenerators
           );
+          // register file change listener to invalidate sync generator cache
+          registerFileChangeListener(clearSyncGeneratorsCache);
           // trigger an initial project graph recomputation
-          addUpdatedAndDeletedFiles([], [], []);
+          scheduleProjectGraphRecomputation([], [], []);
+
+          // Kick off Nx Console check in background to prime the cache
+          handleGetNxConsoleStatus().catch(() => {
+            // Ignore errors, this is a background operation
+          });
+
+          // Kick off AI agents outdated check in background to prime the cache
+          handleGetConfigureAiAgentsStatus().catch(() => {
+            // Ignore errors, this is a background operation
+          });
 
           return resolve(server);
         } catch (err) {
@@ -606,4 +823,30 @@ export async function startServer(): Promise<Server> {
       reject(err);
     }
   });
+}
+function forwardEnvToPluginWorkers(env: Record<string, string>) {
+  getPlugins()
+    .then((plugins) => {
+      for (const plugin of plugins) {
+        plugin.setWorkerEnv?.(env)?.catch((e) => {
+          serverLogger.log(
+            `Failed to forward env to plugin worker "${plugin.name}": ${e.message}`
+          );
+        });
+      }
+    })
+    .catch(() => {
+      // Plugins may not be loaded yet — env will be picked up on next load
+    });
+}
+
+function serializeUnserializedResult(
+  response: boolean | object,
+  mode: 'json' | 'v8'
+) {
+  if (mode === 'json') {
+    return JSON.stringify(response);
+  } else {
+    return serialize(response).toString('binary');
+  }
 }

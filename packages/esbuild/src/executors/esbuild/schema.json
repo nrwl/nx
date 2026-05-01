@@ -88,6 +88,13 @@
         "type": "string"
       }
     },
+    "excludeFromExternal": {
+      "type": "array",
+      "description": "List of dependencies that should be excluded from the external list. This is useful when Nx automatically marks certain packages as external, but you want to bundle them instead.",
+      "items": {
+        "type": "string"
+      }
+    },
     "outputHashing": {
       "type": "string",
       "description": "Define the output filename cache-busting hashing mode.",

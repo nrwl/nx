@@ -9,6 +9,12 @@ import org.gradle.tooling.events.task.TaskFinishEvent
 import org.gradle.tooling.events.task.TaskStartEvent
 import org.gradle.tooling.events.task.TaskSuccessResult
 
+/**
+ * Normalizes a Gradle task path by removing the leading colon. Gradle events use paths like
+ * `:project:task` but Nx uses `project:task`.
+ */
+fun normalizeTaskPath(taskPath: String): String = taskPath.trimStart(':')
+
 fun buildListener(
     tasks: Map<String, GradleTask>,
     taskStartTimes: MutableMap<String, Long>,
@@ -16,12 +22,13 @@ fun buildListener(
 ): (ProgressEvent) -> Unit = { event ->
   when (event) {
     is TaskStartEvent -> {
+      val taskPath = event.descriptor.taskPath
       tasks.entries
-          .find { it.value.taskName == event.descriptor.taskPath }
+          .find { normalizeTaskPath(it.value.taskName) == normalizeTaskPath(taskPath) }
           ?.key
           ?.let { nxTaskId ->
             taskStartTimes[nxTaskId] = event.eventTime
-            logger.info("🏁 Task start: $nxTaskId ${event.descriptor.taskPath}")
+            logger.info("🏁 Task start: $nxTaskId $taskPath")
           }
     }
 
@@ -29,7 +36,7 @@ fun buildListener(
       val taskPath = event.descriptor.taskPath
       val success = getTaskFinishEventSuccess(event, taskPath)
       tasks.entries
-          .find { it.value.taskName == taskPath }
+          .find { normalizeTaskPath(it.value.taskName) == normalizeTaskPath(taskPath) }
           ?.key
           ?.let { nxTaskId ->
             val endTime = event.result.endTime

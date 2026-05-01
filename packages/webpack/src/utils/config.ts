@@ -28,9 +28,10 @@ export interface NxComposableWebpackPlugin {
 }
 
 export interface AsyncNxComposableWebpackPlugin {
-  (config: Configuration, ctx: NxWebpackExecutionContext):
-    | Configuration
-    | Promise<Configuration>;
+  (
+    config: Configuration,
+    ctx: NxWebpackExecutionContext
+  ): Configuration | Promise<Configuration>;
 }
 
 export function composePlugins(

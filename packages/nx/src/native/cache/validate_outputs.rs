@@ -1,14 +1,16 @@
 use itertools::Itertools;
 use regex::Regex;
+use std::sync::LazyLock;
 
 use crate::native::glob::{contains_glob_pattern, glob_transform::partition_glob};
 
 const ALLOWED_WORKSPACE_ROOT_OUTPUT_PREFIXES: [&str; 2] = ["!{workspaceRoot}", "{workspaceRoot}"];
 
-fn is_missing_prefix(output: &str) -> bool {
-    let re = Regex::new(r"^!?\{[\s\S]+\}").expect("Output pattern regex should compile");
+static OUTPUT_PREFIX_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^!?\{[\s\S]+\}").expect("Output pattern regex should compile"));
 
-    !re.is_match(output)
+fn is_missing_prefix(output: &str) -> bool {
+    !OUTPUT_PREFIX_RE.is_match(output)
 }
 
 #[napi]
@@ -41,8 +43,8 @@ pub fn validate_outputs(outputs: Vec<String>) -> anyhow::Result<()> {
     let mut error_message = String::new();
     if !missing_prefix.is_empty() {
         error_message.push_str(&format!(
-            "The following outputs are invalid: \n - {}\n\nRun `nx repair` to fix this.",
-            missing_prefix.iter().join("\n - ")
+            "The following outputs are invalid: \n{}\n\nRun `nx repair` to fix this.",
+            missing_prefix.iter().map(|s| format!(" - {}\n   ** Reason: Outputs must start with either \"{{workspaceRoot}}/\" or \"{{projectRoot}}/\".", s)).join("\n")
         ));
     }
     if !workspace_globs.is_empty() {

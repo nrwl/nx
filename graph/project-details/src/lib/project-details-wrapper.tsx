@@ -1,9 +1,8 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from '@nx/devkit';
 // nx-ignore-next-line
 import { GraphError } from 'nx/src/command-line/graph/graph';
-/* eslint-enable @nx/enforce-module-boundaries */
+
 import { useNavigate, useNavigation, useSearchParams } from 'react-router-dom';
 import { Spinner, ErrorToast } from '@nx/graph-ui-common';
 import {
@@ -182,7 +181,7 @@ export function ProjectDetailsWrapper({
   return (
     <>
       <ProjectDetails
-        project={project}
+        project={project as any}
         projectId={projectId}
         sourceMap={sourceMap}
         onViewInProjectGraph={handleViewInProjectGraph}

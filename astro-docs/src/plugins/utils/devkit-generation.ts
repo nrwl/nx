@@ -16,12 +16,9 @@ export async function loadDevkitPackage(
   const { logger, renderMarkdown } = context;
   logger.info('Loading DevKit documentation');
 
-  const { defaultTypedocOptions, outDir, buildDir } = setupTypeDoc(logger);
+  const { defaultTypedocOptions, outDir, generatedTsconfigPath } =
+    setupTypeDoc(logger);
   const entries: CollectionEntry<'nx-reference-packages'>[] = [];
-
-  // TODO: Caleb there seems to be a resolution error where this entrypoint will resolved types
-  // from the node_modules/nx package and not the local workspace changes
-  // see: DOC-188
 
   logger.info('Generating devkit docs to dir...');
   // generate main @nx/devkit docs
@@ -37,7 +34,7 @@ export async function loadDevkitPackage(
       {
         ...defaultTypedocOptions,
         entryPoints: [devkitEntryPoint],
-        tsconfig: join(buildDir, 'tsconfig.lib.json'),
+        tsconfig: generatedTsconfigPath,
         out: outDir,
         excludePrivate: true,
         publicPath: '/docs/reference/devkit/',
@@ -60,7 +57,7 @@ export async function loadDevkitPackage(
       {
         ...defaultTypedocOptions,
         entryPoints: [ngcliEntryPoint],
-        tsconfig: join(buildDir, 'tsconfig.lib.json'),
+        tsconfig: generatedTsconfigPath,
         out: join(outDir, 'ngcli_adapter'),
         publicPath: '/docs/reference/devkit/ngcli_adapter/',
       },

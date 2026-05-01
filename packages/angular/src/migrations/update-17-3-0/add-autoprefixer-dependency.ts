@@ -1,13 +1,16 @@
 import {
   addDependenciesToPackageJson,
   formatFiles,
+  getDependencyVersionFromPackageJson,
   getProjects,
   type Tree,
 } from '@nx/devkit';
-import { getInstalledPackageVersion } from '../../generators/utils/version-utils';
 
 export default async function (tree: Tree) {
-  const autprefixerVersion = getInstalledPackageVersion(tree, 'autoprefixer');
+  const autprefixerVersion = getDependencyVersionFromPackageJson(
+    tree,
+    'autoprefixer'
+  );
   if (autprefixerVersion) {
     return;
   }

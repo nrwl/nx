@@ -26,59 +26,6 @@ describe('release version config changes', () => {
     });
   });
 
-  it('should do nothing when useLegacyVersioning is explicitly true', async () => {
-    const nxJsonBefore = {
-      release: {
-        version: {
-          useLegacyVersioning: true,
-          generatorOptions: {
-            specifierSource: 'prompt',
-            currentVersionResolver: 'registry',
-            currentVersionResolverMetadata: {},
-            fallbackCurrentVersionResolver: 'disk',
-            versionPrefix: 'auto',
-            updateDependents: 'auto',
-            logUnchangedProjects: true,
-          },
-        },
-      },
-    };
-    updateNxJson(tree, nxJsonBefore);
-
-    await update(tree);
-
-    expect(readNxJson(tree)).toEqual(nxJsonBefore);
-  });
-
-  it('should set useLegacyVersioning to true when using a generator other than the @nx/js one, and nothing else', async () => {
-    updateNxJson(tree, {
-      release: {
-        version: {
-          generator: 'some-other-generator',
-          generatorOptions: {
-            something: 'related-to-the-custom-generator',
-          },
-        },
-      },
-    });
-
-    await update(tree);
-
-    expect(readNxJson(tree)).toMatchInlineSnapshot(`
-      {
-        "release": {
-          "version": {
-            "generator": "some-other-generator",
-            "generatorOptions": {
-              "something": "related-to-the-custom-generator",
-            },
-            "useLegacyVersioning": true,
-          },
-        },
-      }
-    `);
-  });
-
   it('should promote certain generatorOptions to top-level options and remove generatorOptions', async () => {
     updateNxJson(tree, {
       release: {
@@ -95,7 +42,7 @@ describe('release version config changes', () => {
           },
         },
       },
-    });
+    } as any);
 
     await update(tree);
 
@@ -124,7 +71,7 @@ describe('release version config changes', () => {
           generatorOptions: { preserveLocalDependencyProtocols: true },
         },
       },
-    });
+    } as any);
 
     await update(tree);
 
@@ -142,7 +89,7 @@ describe('release version config changes', () => {
       release: {
         version: { generatorOptions: {} },
       },
-    });
+    } as any);
 
     await update(tree);
 
@@ -162,7 +109,7 @@ describe('release version config changes', () => {
       release: {
         version: { generatorOptions: { packageRoot: 'dist/{projectName}' } },
       },
-    });
+    } as any);
 
     await update(tree);
 
@@ -191,7 +138,7 @@ describe('release version config changes', () => {
           },
         },
       },
-    });
+    } as any);
 
     await update(tree);
 
@@ -235,7 +182,7 @@ describe('release version config changes', () => {
           },
         },
       },
-    });
+    } as any);
 
     await update(tree);
 

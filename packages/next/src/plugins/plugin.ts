@@ -1,12 +1,10 @@
 import {
   CreateDependencies,
-  CreateNodes,
-  CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
-  logger,
   NxJsonConfiguration,
   readJsonFile,
   TargetConfiguration,
@@ -35,8 +33,6 @@ export interface NextPluginOptions {
   watchDepsTargetName?: string;
 }
 
-const pmc = getPackageManagerCommand();
-
 const nextConfigBlob = '**/next.config.{ts,js,cjs,mjs}';
 
 function readTargetsCache(
@@ -63,13 +59,16 @@ export const createDependencies: CreateDependencies = () => {
   return [];
 };
 
-export const createNodesV2: CreateNodesV2<NextPluginOptions> = [
+export const createNodes: CreateNodesV2<NextPluginOptions> = [
   nextConfigBlob,
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `next-${optionsHash}.json`);
     const targetsCache = readTargetsCache(cachePath);
     const isTsSolutionSetup = isUsingTsSolutionSetup();
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
 
     try {
       return await createNodesFromFiles(
@@ -79,7 +78,8 @@ export const createNodesV2: CreateNodesV2<NextPluginOptions> = [
             options,
             context,
             targetsCache,
-            isTsSolutionSetup
+            isTsSolutionSetup,
+            pmc
           ),
         configFiles,
         options,
@@ -91,43 +91,18 @@ export const createNodesV2: CreateNodesV2<NextPluginOptions> = [
   },
 ];
 
-/**
- * @deprecated This is replaced with {@link createNodesV2}. Update your plugin to export its own `createNodesV2` function that wraps this one instead.
- * This function will change to the v2 function in Nx 21.
- */
-export const createNodes: CreateNodes<NextPluginOptions> = [
-  nextConfigBlob,
-  async (configFilePath, options, context) => {
-    logger.warn(
-      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 21, this will change to the createNodesV2 API.'
-    );
-
-    const optionsHash = hashObject(options);
-    const cachePath = join(workspaceDataDirectory, `next-${optionsHash}.json`);
-    const targetsCache = readTargetsCache(cachePath);
-    const isTsSolutionSetup = isUsingTsSolutionSetup();
-
-    const result = await createNodesInternal(
-      configFilePath,
-      options,
-      context,
-      targetsCache,
-      isTsSolutionSetup
-    );
-    writeTargetsToCache(cachePath, targetsCache);
-    return result;
-  },
-];
+export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
   options: NextPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContextV2,
   targetsCache: Record<
     string,
     Record<string, TargetConfiguration<NextPluginOptions>>
   >,
-  isTsSolutionSetup: boolean
+  isTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const projectRoot = dirname(configFilePath);
 
@@ -153,7 +128,8 @@ async function createNodesInternal(
     projectRoot,
     options,
     context,
-    isTsSolutionSetup
+    isTsSolutionSetup,
+    pmc
   );
 
   return {
@@ -170,8 +146,9 @@ async function buildNextTargets(
   nextConfigPath: string,
   projectRoot: string,
   options: NextPluginOptions,
-  context: CreateNodesContext,
-  isTsSolutionSetup: boolean
+  context: CreateNodesContextV2,
+  isTsSolutionSetup: boolean,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const nextConfig = await getNextConfig(nextConfigPath, context);
   const namedInputs = getNamedInputs(projectRoot, context);
@@ -292,7 +269,7 @@ async function getOutputs(projectRoot, nextConfig) {
 
 function getNextConfig(
   configFilePath: string,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ): Promise<any> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
@@ -313,10 +290,14 @@ function getInputs(
 ): TargetConfiguration['inputs'] {
   return [
     ...('production' in namedInputs
-      ? ['default', '^production']
+      ? ['default', '^default']
       : ['default', '^default']),
     {
       externalDependencies: ['next'],
+    },
+    {
+      dependentTasksOutputFiles: '**/*.d.ts',
+      transitive: true,
     },
   ];
 }

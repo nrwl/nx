@@ -15,6 +15,7 @@ import {
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import { updateDependencies } from '../utils/update-dependencies';
 
 export async function remixLibraryGenerator(
   tree: Tree,
@@ -34,6 +35,8 @@ export async function remixLibraryGeneratorInternal(
   const tasks: GeneratorCallback[] = [];
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(tree, schema.addPlugin);
+  const installTask = updateDependencies(tree);
+  tasks.push(installTask);
   const jsInitTask = await jsInitGenerator(tree, {
     js: schema.js,
     addTsPlugin,

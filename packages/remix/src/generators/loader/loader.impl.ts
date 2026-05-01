@@ -36,7 +36,6 @@ export default async function (tree: Tree, schema: LoaderSchema) {
 
   try {
     insertStatementInDefaultFunction(tree, routeFilePath, statement);
-    // eslint-disable-next-line no-empty
   } catch (err) {
   } finally {
     await formatFiles(tree);

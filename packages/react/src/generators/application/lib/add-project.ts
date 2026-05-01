@@ -51,6 +51,10 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     }
     if (Object.keys(project.targets).length) {
       packageJson.nx ??= {};
+      packageJson.nx.sourceRoot = joinPathFragments(
+        options.appProjectRoot,
+        'src'
+      );
       packageJson.nx.targets = project.targets;
     }
     if (options.parsedTags?.length) {
@@ -117,17 +121,14 @@ function createRspackBuildTarget(
         options.appProjectRoot,
         'rspack.config.js'
       ),
-      styles:
-        options.styledModule || !options.hasStyles
-          ? []
-          : [
-              joinPathFragments(
-                options.appProjectRoot,
-                `src/styles.${
-                  options.style === 'tailwind' ? 'css' : options.style
-                }`
-              ),
-            ],
+      styles: !options.hasStyles
+        ? []
+        : [
+            joinPathFragments(
+              options.appProjectRoot,
+              `src/styles.${options.style}`
+            ),
+          ],
       scripts: [],
       configurations: {
         development: {
@@ -195,17 +196,14 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
         joinPathFragments(options.appProjectRoot, 'src/favicon.ico'),
         joinPathFragments(options.appProjectRoot, 'src/assets'),
       ],
-      styles:
-        options.styledModule || !options.hasStyles
-          ? []
-          : [
-              joinPathFragments(
-                options.appProjectRoot,
-                `src/styles.${
-                  options.style === 'tailwind' ? 'css' : options.style
-                }`
-              ),
-            ],
+      styles: !options.hasStyles
+        ? []
+        : [
+            joinPathFragments(
+              options.appProjectRoot,
+              `src/styles.${options.style}`
+            ),
+          ],
       scripts: [],
       webpackConfig: joinPathFragments(
         options.appProjectRoot,

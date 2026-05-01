@@ -1,5 +1,11 @@
 import type { Tree } from '@nx/devkit';
-import { formatFiles, generateFiles, joinPathFragments } from '@nx/devkit';
+import {
+  formatFiles,
+  generateFiles,
+  joinPathFragments,
+  readProjectConfiguration,
+} from '@nx/devkit';
+import { isZonelessApp } from '../../utils/zoneless';
 import { addToNgModule } from '../utils';
 import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import {
@@ -14,6 +20,9 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
   const options = await normalizeOptions(tree, rawOptions);
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  const project = readProjectConfiguration(tree, options.projectName);
+  const zoneless = isZonelessApp(project);
+
   generateFiles(
     tree,
     joinPathFragments(__dirname, 'files'),
@@ -32,12 +41,9 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
       viewEncapsulation: options.viewEncapsulation,
       displayBlock: options.displayBlock,
       selector: options.selector,
-      // Angular v19 or higher defaults to true, while lower versions default to false
-      setStandalone:
-        (angularMajorVersion >= 19 && !options.standalone) ||
-        (angularMajorVersion < 19 && options.standalone),
       angularMajorVersion,
       ngext: options.ngHtml ? '.ng' : '',
+      zoneless,
       tpl: '',
     }
   );

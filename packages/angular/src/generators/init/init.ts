@@ -4,16 +4,16 @@ import {
   ensurePackage,
   formatFiles,
   type GeneratorCallback,
+  getDependencyVersionFromPackageJson,
   logger,
   readNxJson,
   type Tree,
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { createNodesV2 } from '../../plugins/plugin';
+import { assertNotUsingTsSolutionSetup } from '../utils/validations';
 import {
   getInstalledAngularDevkitVersion,
-  getInstalledPackageVersion,
   versions,
 } from '../utils/version-utils';
 import { Schema } from './schema';
@@ -22,7 +22,7 @@ export async function angularInitGenerator(
   tree: Tree,
   options: Schema
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(tree, 'angular', 'init');
+  assertNotUsingTsSolutionSetup(tree, 'init');
 
   ignoreAngularCacheDirectory(tree);
   const installTask = installAngularDevkitCoreIfMissing(tree, options);
@@ -57,7 +57,7 @@ function installAngularDevkitCoreIfMissing(
   tree: Tree,
   options: Schema
 ): GeneratorCallback {
-  const packageVersion = getInstalledPackageVersion(
+  const packageVersion = getDependencyVersionFromPackageJson(
     tree,
     '@angular-devkit/core'
   );

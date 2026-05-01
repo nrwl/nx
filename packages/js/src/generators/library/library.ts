@@ -5,13 +5,12 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  getDependencyVersionFromPackageJson,
   installPackagesTask,
   joinPathFragments,
-  logger,
   names,
   offsetFromRoot,
   ProjectConfiguration,
-  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -29,7 +28,6 @@ import {
 import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { shouldUseLegacyVersioning } from 'nx/src/command-line/release/config/use-legacy-versioning';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
@@ -152,6 +150,7 @@ export async function libraryGeneratorInternal(
         includeLib: true,
         includeVitest: options.unitTestRunner === 'vitest',
         testEnvironment: options.testEnvironment,
+        useEsmExtension: true,
       },
       false
     );
@@ -175,11 +174,10 @@ export async function libraryGeneratorInternal(
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // Test would have been set up already
   ) {
-    const { vitestGenerator, createOrEditViteConfig } = ensurePackage(
-      '@nx/vite',
-      nxVersion
-    );
-    const vitestTask = await vitestGenerator(tree, {
+    ensurePackage('@nx/vitest', nxVersion);
+    // nx-ignore-next-line
+    const { configurationGenerator } = require('@nx/vitest/generators');
+    const vitestTask = await configurationGenerator(tree, {
       project: options.name,
       uiFramework: 'none',
       coverageProvider: 'v8',
@@ -190,16 +188,6 @@ export async function libraryGeneratorInternal(
       addPlugin: options.addPlugin,
     });
     tasks.push(vitestTask);
-    createOrEditViteConfig(
-      tree,
-      {
-        project: options.name,
-        includeLib: false,
-        includeVitest: true,
-        testEnvironment: options.testEnvironment,
-      },
-      true
-    );
   }
 
   if (!schema.skipTsConfig && !options.isUsingTsSolutionConfig) {
@@ -350,7 +338,6 @@ async function configureProject(
       );
     } else {
       await addReleaseConfigForNonTsSolution(
-        shouldUseLegacyVersioning(nxJson.release),
         tree,
         options.name,
         projectConfiguration,
@@ -494,7 +481,14 @@ export async function addLint(
           ignoredFiles.add('{projectRoot}/esbuild.config.{js,ts,mjs,mts}');
         }
         if (options.unitTestRunner === 'vitest') {
-          ignoredFiles.add('{projectRoot}/vite.config.{js,ts,mjs,mts}');
+          // When bundler is 'vite', vite.config holds both build and test config
+          // (added above). Otherwise, @nx/vitest:configuration generates a
+          // dedicated vitest.config file for non-framework JS libraries.
+          ignoredFiles.add(
+            options.bundler === 'vite'
+              ? '{projectRoot}/vite.config.{js,ts,mjs,mts}'
+              : '{projectRoot}/vitest.config.{js,ts,mjs,mts}'
+          );
         }
 
         if (ignoredFiles.size) {
@@ -741,8 +735,8 @@ async function addJest(
     compiler: options.shouldUseSwcJest
       ? 'swc'
       : options.bundler === 'tsc'
-      ? 'tsc'
-      : undefined,
+        ? 'tsc'
+        : undefined,
     runtimeTsconfigFileName: 'tsconfig.lib.json',
   });
 }
@@ -755,7 +749,7 @@ function replaceJestConfig(
   // the existing config has to be deleted otherwise the new config won't overwrite it
   const existingJestConfig = joinPathFragments(
     filesDir,
-    `jest.config.${options.js ? 'js' : 'ts'}`
+    `jest.config.${options.js ? 'js' : 'cts'}`
   );
   if (tree.exists(existingJestConfig)) {
     tree.delete(existingJestConfig);
@@ -764,7 +758,7 @@ function replaceJestConfig(
 
   // replace with JS:SWC specific jest config
   generateFiles(tree, filesDir, options.projectRoot, {
-    ext: options.js ? 'js' : 'ts',
+    ext: options.js ? 'js' : 'cts',
     jestPreset,
     js: !!options.js,
     project: options.name,
@@ -937,7 +931,9 @@ function addProjectDependencies(
       {
         '@nx/esbuild': nxVersion,
         '@types/node': typesNodeVersion,
-        esbuild: esbuildVersion,
+        esbuild:
+          getDependencyVersionFromPackageJson(tree, 'esbuild') ??
+          esbuildVersion,
       }
     );
   } else if (options.bundler == 'rollup') {

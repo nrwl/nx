@@ -6,25 +6,20 @@ Update the withModuleFederation import to use @nx/module-federation/rspack.
 
 Update import paths for `withModuleFederation` and `withModuleFederationForSSR`.
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```ts {% fileName="apps/shell/rspack.config.ts" %}
+```ts title="apps/shell/rspack.config.ts"
 import {
   withModuleFederation,
   withModuleFederationForSSR,
 } from '@nx/rspack/module-federation';
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```ts {% fileName="apps/shell/rspack.config.ts" %}
+```ts title="apps/shell/rspack.config.ts"
 import {
   withModuleFederation,
   withModuleFederationForSSR,
 } from '@nx/module-federation/rspack';
 ```
-
-{% /tab %}
-{% /tabs %}

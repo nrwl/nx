@@ -45,7 +45,7 @@ describe('Workspaces', () => {
         async () => {
           const plugins = await getPlugins(fs.tempDir);
           const res = await retrieveProjectConfigurations(
-            plugins,
+            { specifiedPlugins: [], defaultPlugins: plugins },
             fs.tempDir,
             readNxJson(fs.tempDir)
           );

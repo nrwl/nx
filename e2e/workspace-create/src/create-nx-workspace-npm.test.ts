@@ -46,6 +46,9 @@ describe('create-nx-workspace --preset=npm', () => {
     } else {
       expect(packageJson.workspaces).toEqual(['packages/*']);
     }
+
+    const nxJson = readJson(`nx.json`);
+    expect(nxJson.nxCloudId).toBeUndefined();
   });
 
   it('should add angular application', () => {
@@ -68,7 +71,7 @@ describe('create-nx-workspace --preset=npm', () => {
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
     expect(tsconfig.compilerOptions.paths).toEqual({
-      [`@${wsName}/${libName}`]: [`packages/${libName}/src/index.ts`],
+      [`@${wsName}/${libName}`]: [`./packages/${libName}/src/index.ts`],
     });
   }, 1_000_000);
 

@@ -1,0 +1,13 @@
+{
+  "name": "vitest",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/vitest",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "node ./scripts/copy-readme.js vitest",
+      "inputs": ["copyReadme"],
+      "outputs": ["{workspaceRoot}/dist/packages/vitest/README.md"]
+    }
+  }
+}

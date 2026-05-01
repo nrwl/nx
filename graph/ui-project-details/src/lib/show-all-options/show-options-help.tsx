@@ -2,7 +2,7 @@ import { Fragment, ReactNode, useMemo, useState } from 'react';
 import { PlayIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Transition } from '@headlessui/react';
 import { getExternalApiService, useEnvironmentConfig } from '@nx/graph-shared';
-/* eslint-disable @nx/enforce-module-boundaries */
+
 // nx-ignore-next-line
 import type { TargetConfiguration } from '@nx/devkit';
 import { TerminalOutput } from '@nx/nx-dev-ui-fence';
@@ -139,7 +139,7 @@ export function ShowOptionsHelp({
                     <code>project.json</code> file for{' '}
                     <span className="font-semibold">{projectName}</span>.
                   </p>
-                  <pre className="mb-2 border border-slate-200 bg-slate-100/50 p-2 p-2 text-slate-400 dark:border-slate-700 dark:bg-slate-700/50 dark:text-slate-500">
+                  <pre className="mb-2 border border-slate-200 bg-slate-100/50 p-2 text-slate-400 dark:border-slate-700 dark:bg-slate-700/50 dark:text-slate-500">
                     {helpExampleTest}
                   </pre>
                   {helpExampleOptions && (

@@ -126,7 +126,7 @@ describe('react app generator (legacy)', () => {
           // e.g. \`config.plugins.push(new MyPlugin())\`
           config.output.clean = true;
           return config;
-        }
+        },
       );
       "
     `);
@@ -140,41 +140,7 @@ describe('react app generator (legacy)', () => {
       skipFormat: true,
     });
     expect(
-      appTree.read('my-vite-app/vite.config.ts', 'utf-8')
+      appTree.read('my-vite-app/vite.config.mts', 'utf-8')
     ).toMatchSnapshot();
-  });
-
-  describe('--style tailwind', () => {
-    it('should not generate any styles files', async () => {
-      await applicationGenerator(appTree, { ...schema, style: 'tailwind' });
-
-      expect(appTree.exists('my-app/src/app/app.tsx')).toBeTruthy();
-      expect(appTree.exists('my-app/src/app/app.spec.tsx')).toBeTruthy();
-      expect(appTree.exists('my-app/src/app/app.css')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.scss')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.module.css')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.module.scss')).toBeFalsy();
-
-      const content = appTree.read('my-app/src/app/app.tsx').toString();
-      expect(content).toMatchSnapshot();
-    });
-
-    it.each`
-      bundler
-      ${'webpack'}
-      ${'rspack'}
-    `('should generate styles.css not styles.tailwind', async ({ bundler }) => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: 'tailwind',
-        bundler,
-      });
-
-      // Should not have `styles.tailwind` in build options since it's not valid -- it needs to be styles.css.
-      const projectConfig = readProjectConfiguration(appTree, 'my-app');
-      expect(projectConfig.targets.build.options.styles).toEqual([
-        'my-app/src/styles.css',
-      ]);
-    });
   });
 });

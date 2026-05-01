@@ -14,7 +14,7 @@ import {
   type SyncGeneratorRunSuccessResult,
 } from '../../utils/sync-generators';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { serverLogger } from './logger';
+import { serverLogger } from '../logger';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
 
 const syncGeneratorsCacheResultPromises = new Map<
@@ -37,6 +37,11 @@ let storedDisabledTaskSyncGeneratorsHash: string | undefined;
 const log = (...messageParts: unknown[]) => {
   serverLogger.log('[SYNC]:', ...messageParts);
 };
+
+export function clearSyncGeneratorsCache(): void {
+  log('clearing sync generators cache due to file changes');
+  syncGeneratorsCacheResultPromises.clear();
+}
 
 export async function getCachedSyncGeneratorChanges(
   generators: string[]
@@ -136,8 +141,16 @@ export function collectAndScheduleSyncGenerators(
       return;
     }
 
-    const { projects } =
-      readProjectsConfigurationFromProjectGraph(projectGraph);
+    // Fetch the latest graph instead of using the captured one which might be stale
+    const { projectGraph: latestGraph, error } =
+      await getCachedSerializedProjectGraphPromise();
+
+    if (!latestGraph || error) {
+      log('Cannot run scheduled generators: graph unavailable or errored');
+      return;
+    }
+
+    const { projects } = readProjectsConfigurationFromProjectGraph(latestGraph);
 
     for (const generator of scheduledGenerators) {
       syncGeneratorsCacheResultPromises.set(

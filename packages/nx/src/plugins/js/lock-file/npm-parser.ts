@@ -53,12 +53,10 @@ type NpmLockFile = {
   version?: string;
   lockfileVersion: number;
   requires?: boolean;
+  overrides?: NormalizedPackageJson['overrides'];
   packages?: Record<string, NpmDependencyV3>;
   dependencies?: Record<string, NpmDependencyV1>;
 };
-
-// we use key => node map to avoid duplicate work when parsing keys
-let keyMap = new Map<string, ProjectGraphExternalNode>();
 let currentLockFileHash: string;
 
 let parsedLockFile: NpmLockFile;
@@ -68,7 +66,6 @@ function parsePackageLockFile(lockFileContent: string, lockFileHash: string) {
     return parsedLockFile;
   }
 
-  keyMap.clear();
   const results = JSON.parse(lockFileContent) as NpmLockFile;
   parsedLockFile = results;
   currentLockFileHash = lockFileHash;
@@ -78,20 +75,23 @@ function parsePackageLockFile(lockFileContent: string, lockFileHash: string) {
 export function getNpmLockfileNodes(
   lockFileContent: string,
   lockFileHash: string
-) {
+): {
+  nodes: Record<string, ProjectGraphExternalNode>;
+  keyMap: Map<string, ProjectGraphExternalNode>;
+} {
   const data = parsePackageLockFile(
     lockFileContent,
     lockFileHash
   ) as NpmLockFile;
 
-  // we use key => node map to avoid duplicate work when parsing keys
-  return getNodes(data, keyMap);
+  return getNodes(data);
 }
 
 export function getNpmLockfileDependencies(
   lockFileContent: string,
   lockFileHash: string,
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
+  keyMap: Map<string, ProjectGraphExternalNode>
 ) {
   const data = parsePackageLockFile(
     lockFileContent,
@@ -101,10 +101,11 @@ export function getNpmLockfileDependencies(
   return getDependencies(data, keyMap, ctx);
 }
 
-function getNodes(
-  data: NpmLockFile,
-  keyMap: Map<string, ProjectGraphExternalNode>
-) {
+function getNodes(data: NpmLockFile): {
+  nodes: Record<string, ProjectGraphExternalNode>;
+  keyMap: Map<string, ProjectGraphExternalNode>;
+} {
+  const keyMap = new Map<string, ProjectGraphExternalNode>();
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
 
   if (data.lockfileVersion > 1) {
@@ -164,7 +165,7 @@ function getNodes(
       results[node.name] = node;
     });
   }
-  return results;
+  return { nodes: results, keyMap };
 }
 
 function addV1Node(
@@ -216,8 +217,8 @@ function createNode(
           snapshot.resolved
             ? [snapshot.resolved]
             : version
-            ? [packageName, version]
-            : [packageName]
+              ? [packageName, version]
+              : [packageName]
         ),
     },
   };
@@ -302,7 +303,12 @@ function findTarget(
   sourcePath: string,
   keyMap: Map<string, ProjectGraphExternalNode>,
   targetName: string,
-  versionRange: string
+  versionRange: string,
+  // When a package is found at a path but its version doesn't satisfy the
+  // range (e.g. due to npm overrides), we keep it as a fallback. npm already
+  // resolved this dependency to that location, so it is the correct target
+  // even though the semver check fails.
+  fallback?: ProjectGraphExternalNode
 ): ProjectGraphExternalNode {
   if (sourcePath && !sourcePath.endsWith('/')) {
     sourcePath = `${sourcePath}/`;
@@ -329,16 +335,21 @@ function findTarget(
     ) {
       return child;
     }
+    // Version mismatch — save as fallback (could be an npm override)
+    if (!fallback) {
+      fallback = child;
+    }
   }
   // the hoisted package did not match, this dependency is missing
   if (!sourcePath) {
-    return;
+    return fallback;
   }
   return findTarget(
     sourcePath.split('node_modules/').slice(0, -1).join('node_modules/'),
     keyMap,
     targetName,
-    versionRange
+    versionRange,
+    fallback
   );
 }
 
@@ -417,6 +428,9 @@ export function stringifyNpmLockfile(
   };
   if (rootLockFile.requires) {
     output.requires = rootLockFile.requires;
+  }
+  if (packageJson.overrides && Object.keys(packageJson.overrides).length > 0) {
+    output.overrides = packageJson.overrides;
   }
   if (lockfileVersion > 1) {
     const packages = mapV3Snapshots(mappedPackages, packageJson);

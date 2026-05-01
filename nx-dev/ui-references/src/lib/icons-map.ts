@@ -4,6 +4,7 @@ export const iconsMap: Record<string, string> = {
   'angular-rspack': '/images/icons/rspack.svg',
   buildtools: '/images/icons/buildtools.svg',
   cli: '/images/icons/nx.svg',
+  'C#': '/images/icons/csharp.svg',
   cypress: '/images/icons/cypress.svg',
   detox: '/images/icons/react.svg',
   devkit: '/images/icons/nx.svg',

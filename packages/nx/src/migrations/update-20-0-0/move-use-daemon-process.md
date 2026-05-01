@@ -4,10 +4,9 @@ Move the `useDaemonProcess` to the root of `nx.json`
 
 #### Sample Code Changes
 
-{% tabs %}
-{% tab label="Before" %}
+##### Before
 
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "tasksRunnerOptions": {
     "default": {
@@ -19,14 +18,10 @@ Move the `useDaemonProcess` to the root of `nx.json`
 }
 ```
 
-{% /tab %}
-{% tab label="After" %}
+##### After
 
-```json {% fileName="nx.json" %}
+```json title="nx.json"
 {
   "useDaemonProcess": false
 }
 ```
-
-{% /tab %}
-{% /tabs %}

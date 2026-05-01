@@ -110,11 +110,7 @@ impl LayoutManager {
             min_horizontal_width: 120, // Minimum width for horizontal layout to be viable
             min_vertical_height: 30,   // Minimum height for vertical layout to be viable
             pane_arrangement: PaneArrangement::None,
-            task_list_visibility: if task_count > 1 {
-                TaskListVisibility::Visible
-            } else {
-                TaskListVisibility::Hidden
-            },
+            task_list_visibility: TaskListVisibility::Visible,
             task_count,
             horizontal_padding: 2, // Default horizontal padding of 2 characters
             vertical_padding: 1,   // Default vertical padding of 1 character
@@ -124,8 +120,6 @@ impl LayoutManager {
     pub fn new_with_run_mode(task_count: usize, run_mode: RunMode) -> Self {
         let mut layout_manager = Self::new(task_count);
         layout_manager.set_task_list_visibility(match run_mode {
-            // nx run task with no dependent tasks
-            RunMode::RunOne if task_count == 1 => TaskListVisibility::Hidden,
             // nx run task with dependent tasks
             RunMode::RunOne => TaskListVisibility::Visible,
             RunMode::RunMany => TaskListVisibility::Visible,

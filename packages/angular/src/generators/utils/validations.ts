@@ -1,5 +1,5 @@
-import type { Tree } from '@nx/devkit';
-import { getProjects } from '@nx/devkit';
+import { getProjects, output, type Tree } from '@nx/devkit';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function validateProject(tree: Tree, projectName: string): void {
   const projects = getProjects(tree);
@@ -22,4 +22,32 @@ export function validateClassName(className: string): void {
   if (!ecmaIdentifierNameRegExp.test(className)) {
     throw new Error(`Class name "${className}" is invalid.`);
   }
+}
+
+export function assertNotUsingTsSolutionSetup(
+  tree: Tree,
+  generatorName: string
+): void {
+  if (
+    process.env.NX_IGNORE_UNSUPPORTED_TS_SETUP === 'true' ||
+    !isUsingTsSolutionSetup(tree)
+  ) {
+    return;
+  }
+
+  const artifactString =
+    generatorName === 'init'
+      ? `"@nx/angular" plugin`
+      : `"@nx/angular:${generatorName}" generator`;
+  output.error({
+    title: `The ${artifactString} doesn't support the existing TypeScript setup`,
+    bodyLines: [
+      `The Angular framework doesn't support a TypeScript setup with project references. See https://github.com/angular/angular/issues/37276 for more details.`,
+      `You can ignore this error, at your own risk, by setting the "NX_IGNORE_UNSUPPORTED_TS_SETUP" environment variable to "true".`,
+    ],
+  });
+
+  throw new Error(
+    `The ${artifactString} doesn't support the existing TypeScript setup. See the error above.`
+  );
 }
