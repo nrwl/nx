@@ -103,6 +103,7 @@ Nx will set the following environment variables so they can be accessible within
 | `NX_INTERACTIVE`               | boolean | Set to `false` when running generators with `--interactive=false`. Use this to prevent prompting during generators                                                        |
 | `NX_RUNNING_NX_IMPORT`         | boolean | Set to `true` while the `nx import` command is executing. Use this to have plugin code or scripts behave differently during an import (e.g. adjust telemetry or logging). |
 | `NX_RUNNING_NX_INIT`           | boolean | Set to `true` while the `nx init` command is executing. Use this to have plugin code or scripts behave differently during workspace initialization.                       |
+| `NX_AI_AGENT_INIT`             | boolean | Set to `true` by `nx init` when it detects it is running inside an AI agent environment. When set, all human-readable CLI output is suppressed and only structured NDJSON events are written to stdout. |
 
 ## Nx Cloud environment variables
 
