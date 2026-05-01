@@ -8,6 +8,10 @@ Using [Nx Agents](/docs/features/ci-features/distribute-task-execution) is the e
 
 ## Uploading agent resource metrics
 
+{% aside type="note" title="Nx Enterprise Required" %}
+This feature is available on Nx Cloud Enterprise plans only. [Reach out to learn more about Nx Enterprise](https://nx.dev/enterprise).
+{% /aside %}
+
 Nx Cloud collects per-agent CPU and memory metrics so you can debug slow tasks and OOM kills in the run timeline. In manual DTE you opt in by adding a single CLI step to each agent job: `npx nx-cloud upload-agent-metrics`. Because the most valuable case is an agent that was killed mid-run, you must use your provider's "always run" mechanism (e.g. `if: always()` in GitHub Actions) so metrics still upload even when the agent step fails. Each provider tab below already includes this step in the right place.
 
 {% tabs syncKey="ci-provider" %}
