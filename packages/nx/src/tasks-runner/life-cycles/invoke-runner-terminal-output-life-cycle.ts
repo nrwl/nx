@@ -1,6 +1,9 @@
 import { output } from '../../utils/output';
 import { TaskStatus } from '../tasks-runner';
-import { getPrintableCommandArgsForTask } from '../utils';
+import {
+  getPrintableCommandArgsForTask,
+  getUnparsedOverrideArgs,
+} from '../utils';
 import type { LifeCycle, TaskResult } from '../life-cycle';
 import { Task } from '../../config/task-graph';
 
@@ -15,9 +18,7 @@ export class InvokeRunnerTerminalOutputLifeCycle implements LifeCycle {
       color: 'cyan',
       title: `Running ${this.tasks.length} tasks:`,
       bodyLines: this.tasks.map((task) => {
-        const unparsed = (
-          task.overrides as { __overrides_unparsed__: string[] }
-        ).__overrides_unparsed__;
+        const unparsed = getUnparsedOverrideArgs(task);
         return `- Task ${task.id} ${
           unparsed.length > 0 ? `Overrides: ${unparsed.join(' ')}` : ''
         }`;
@@ -32,8 +33,7 @@ export class InvokeRunnerTerminalOutputLifeCycle implements LifeCycle {
     const taskIds = this.tasks.map((task) => {
       const cached = this.cachedTasks.indexOf(task) !== -1;
       const failed = this.failedTasks.indexOf(task) !== -1;
-      const unparsed = (task.overrides as { __overrides_unparsed__: string[] })
-        .__overrides_unparsed__;
+      const unparsed = getUnparsedOverrideArgs(task);
       return `- Task ${task.id} ${
         unparsed.length > 0 ? `Overrides: ${unparsed.join(' ')}` : ''
       } ${cached ? 'CACHED' : ''} ${failed ? 'FAILED' : ''}`;

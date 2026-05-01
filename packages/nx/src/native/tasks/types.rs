@@ -40,14 +40,7 @@ pub struct Task {
 impl Task {
     /// Build a Task for the given project + target. The id is derived as
     /// `{project}:{target}`, matching the formula used by the TS task graph
-    /// builder. Use `with_configuration` to extend the id with a
-    /// configuration suffix.
-    ///
-    /// ```ignore
-    /// Task::new("foo", "build")                      // id = "foo:build"
-    ///     .with_configuration("production")          // id = "foo:build:production"
-    ///     .with_project_root("apps/foo")
-    /// ```
+    /// builder in `tasks-runner/create-task-graph.ts`.
     pub fn new(project: impl Into<String>, target: impl Into<String>) -> Self {
         let project = project.into();
         let target = target.into();
@@ -63,16 +56,6 @@ impl Task {
         }
     }
 
-    pub fn with_configuration(mut self, configuration: impl Into<String>) -> Self {
-        let configuration = configuration.into();
-        self.id = format!(
-            "{}:{}:{}",
-            self.target.project, self.target.target, configuration
-        );
-        self.target.configuration = Some(configuration);
-        self
-    }
-
     pub fn with_project_root(mut self, project_root: impl Into<String>) -> Self {
         self.project_root = Some(project_root.into());
         self
@@ -85,26 +68,6 @@ impl Task {
 
     pub fn with_continuous(mut self, continuous: bool) -> Self {
         self.continuous = Some(continuous);
-        self
-    }
-
-    pub fn with_hash(mut self, hash: impl Into<String>) -> Self {
-        self.hash = Some(hash.into());
-        self
-    }
-
-    pub fn with_cache(mut self, cache: bool) -> Self {
-        self.cache = Some(cache);
-        self
-    }
-
-    pub fn with_parallelism(mut self, parallelism: bool) -> Self {
-        self.parallelism = parallelism;
-        self
-    }
-
-    pub fn with_overrides(mut self, overrides: serde_json::Value) -> Self {
-        self.overrides = overrides;
         self
     }
 }
