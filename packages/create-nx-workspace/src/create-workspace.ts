@@ -144,28 +144,21 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       throw e;
     }
 
-    // Connect to Nx Cloud for template flow
+    // Connect to Nx Cloud for template flow.
+    // AI mode defers to the post-git block below: at this point cloneTemplate
+    // has stripped .git, so there's no remote for the bin's repo detection.
+    // Spawning here would either fail (no remote) or 409 the post-git spawn.
     if (
+      !aiMode &&
       nxCloud !== 'skip' &&
       nxCloud !== 'never' &&
       !options.skipCloudConnect
     ) {
-      if (aiMode && hasNxCloudPat()) {
-        await runAgenticOnboard({
-          source: 'create-nx-workspace',
-          cwd: directory,
-        });
-      } else if (aiMode) {
-        // No PAT — skip the anonymous workspace create; the URL block below
-        // emits a needs_input payload telling the agent to run `nx login`
-        // and then `nx connect` from inside the workspace.
-      } else {
-        await connectToNxCloudForTemplate(
-          directory,
-          'create-nx-workspace',
-          useGitHub
-        );
-      }
+      await connectToNxCloudForTemplate(
+        directory,
+        'create-nx-workspace',
+        useGitHub
+      );
     }
   } else {
     // Preset flow - existing behavior
