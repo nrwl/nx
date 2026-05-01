@@ -2687,7 +2687,7 @@ snapshots:
       expect(result).toContain(`lodash@4.17.21:`);
     });
 
-    it('should not infinite-loop on workspace dependency cycles', () => {
+    it('should not infinite-loop on circular workspace dependencies', () => {
       const lockFile = `lockfileVersion: '9.0'
 
 importers:

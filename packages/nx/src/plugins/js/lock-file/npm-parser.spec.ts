@@ -1641,7 +1641,7 @@ describe('NPM lock file utility', () => {
       ).toEqual({ '@myorg/lib-b': 'file:../lib-b' });
     });
 
-    it('should not infinite-loop on workspace dependency cycles', () => {
+    it('should not infinite-loop on circular workspace dependencies', () => {
       const lockFile = {
         name: 'test-app',
         version: '1.0.0',
