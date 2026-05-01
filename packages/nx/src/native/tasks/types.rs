@@ -37,6 +37,34 @@ pub struct Task {
     pub continuous: Option<bool>,
 }
 
+impl Task {
+    /// Build a Task with the given id and target, leaving all other fields
+    /// at their defaults. Combine with struct-update syntax to override
+    /// just the fields you care about, e.g.:
+    ///
+    /// ```ignore
+    /// Task {
+    ///     project_root: Some("apps/foo".into()),
+    ///     ..Task::new("foo:build", "foo", "build")
+    /// }
+    /// ```
+    pub fn new(
+        id: impl Into<String>,
+        project: impl Into<String>,
+        target: impl Into<String>,
+    ) -> Self {
+        Task {
+            id: id.into(),
+            target: TaskTarget {
+                project: project.into(),
+                target: target.into(),
+                configuration: None,
+            },
+            ..Default::default()
+        }
+    }
+}
+
 /// Details about the composition of a task's hash
 #[napi(object)]
 #[derive(Default, Clone, Debug, PartialEq, Eq)]

@@ -122,15 +122,9 @@ mod tests {
 
     pub(super) fn create_test_task(id: &str, outputs: Vec<String>) -> Task {
         Task {
-            id: id.to_string(),
-            target: crate::native::tasks::types::TaskTarget {
-                project: "test".to_string(),
-                target: "build".to_string(),
-                configuration: None,
-            },
             outputs,
             project_root: Some("test".to_string()),
-            ..Default::default()
+            ..Task::new(id, "test", "build")
         }
     }
 

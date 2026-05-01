@@ -615,23 +615,12 @@ static_assertions::assert_impl_all!(TuiState: Send);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::native::tasks::types::TaskTarget;
     use crate::native::tui::config;
 
     fn create_test_task(id: &str) -> Task {
         Task {
-            id: id.to_string(),
-            target: TaskTarget {
-                project: id.to_string(),
-                target: "build".to_string(),
-                configuration: None,
-            },
-            outputs: vec![],
             project_root: Some(format!("/tmp/{}", id)),
-            start_time: None,
-            end_time: None,
-            continuous: None,
-            ..Default::default()
+            ..Task::new(id, id, "build")
         }
     }
 
@@ -924,7 +913,6 @@ mod tests {
 #[cfg(test)]
 mod integration_tests {
     use super::*;
-    use crate::native::tasks::types::TaskTarget;
     use crate::native::tui::config;
 
     #[test]
@@ -993,18 +981,8 @@ mod integration_tests {
 
     fn create_test_task(id: &str) -> Task {
         Task {
-            id: id.to_string(),
-            target: TaskTarget {
-                project: id.to_string(),
-                target: "build".to_string(),
-                configuration: None,
-            },
-            outputs: vec![],
             project_root: Some(format!("/tmp/{}", id)),
-            start_time: None,
-            end_time: None,
-            continuous: None,
-            ..Default::default()
+            ..Task::new(id, id, "build")
         }
     }
 }
