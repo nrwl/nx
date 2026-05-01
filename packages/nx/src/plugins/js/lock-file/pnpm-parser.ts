@@ -626,7 +626,7 @@ export function stringifyPnpmLockfile(
   )) {
     const baseImporter = importers[importerPath];
     if (!baseImporter) continue;
-    const importer: ProjectSnapshot = JSON.parse(JSON.stringify(baseImporter));
+    const importer: ProjectSnapshot = structuredClone(baseImporter);
 
     for (const depType of WORKSPACE_DEP_TYPES) {
       const deps = importer[depType] as Record<string, string> | undefined;
