@@ -164,7 +164,7 @@ describe('js:prune-lockfile executor', () => {
       // app -> lib-a <-> lib-b. The pruned lockfile must include both
       // workspace packages without infinite-looping during the transitive
       // walk. Without the visited guard in the BFS, this hangs.
-      it('should produce installable pruned output with a workspace dependency cycle', () => {
+      it('should produce installable pruned output with circular workspace dependencies', () => {
         const nodeapp = uniq('nodeapp');
         const liba = uniq('liba');
         const libb = uniq('libb');
