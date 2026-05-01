@@ -45,14 +45,32 @@ fn collect_task_dependencies<'a>(
     result
 }
 
-/// Converts tasks to HashInstructions for tasks with outputs
+/// Converts tasks to HashInstructions for tasks with outputs.
+///
+/// When `dependent_tasks_output_files` is `**/*`, tasks with a pre-computed hash
+/// use `TaskHash` (the task hash as a proxy for all outputs) instead of reading
+/// files from disk. This enables upfront hashing without waiting for dependencies
+/// to produce output files.
+///
+/// For specific globs (e.g. `**/*.d.ts`), always reads output files from disk
+/// for precise cache invalidation.
 fn process_tasks_outputs(
     tasks: Vec<&Task>,
     dependent_tasks_output_files: &str,
 ) -> Vec<HashInstruction> {
+    let use_task_hash = dependent_tasks_output_files == "**/*";
+
     tasks
         .into_par_iter()
         .filter_map(|task| {
+            if use_task_hash {
+                if let Some(ref task_hash) = task.hash {
+                    return Some(HashInstruction::TaskHash(
+                        task.id.clone(),
+                        task_hash.clone(),
+                    ));
+                }
+            }
             if !task.outputs.is_empty() {
                 Some(HashInstruction::TaskOutput(
                     dependent_tasks_output_files.to_string(),
@@ -130,6 +148,7 @@ mod tests {
             },
             outputs,
             project_root: Some("test".to_string()),
+            hash: None,
             start_time: None,
             end_time: None,
             continuous: None,
@@ -240,6 +259,79 @@ mod tests {
             HashInstruction::TaskOutput("**/*.js".to_string(), vec!["dist/out3".to_string()]),
         ];
         assert_eq!(result, expected);
+    }
+
+    fn create_test_task_with_hash(id: &str, outputs: Vec<String>, hash: &str) -> Task {
+        let mut task = create_test_task(id, outputs);
+        task.hash = Some(hash.to_string());
+        task
+    }
+
+    #[test]
+    fn test_specific_glob_ignores_task_hash() {
+        // With a specific glob like **/*.d.ts, task hash should NOT be used
+        let task1 =
+            create_test_task_with_hash("task1", vec!["dist/out1".to_string()], "hash123");
+
+        let tasks = vec![&task1];
+        let result = process_tasks_outputs(tasks, "**/*.d.ts");
+
+        // Should use TaskOutput, not TaskHash, even though hash is available
+        assert_eq!(result.len(), 1);
+        assert_eq!(
+            result[0],
+            HashInstruction::TaskOutput("**/*.d.ts".to_string(), vec!["dist/out1".to_string()])
+        );
+    }
+
+    #[test]
+    fn test_all_glob_uses_task_hash_when_available() {
+        // With **/* glob, task hash should be used as proxy
+        let task1 =
+            create_test_task_with_hash("task1", vec!["dist/out1".to_string()], "hash123");
+
+        let tasks = vec![&task1];
+        let result = process_tasks_outputs(tasks, "**/*");
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(
+            result[0],
+            HashInstruction::TaskHash("task1".to_string(), "hash123".to_string())
+        );
+    }
+
+    #[test]
+    fn test_all_glob_falls_back_to_task_output_without_hash() {
+        // With **/* glob but no hash, should fall back to TaskOutput
+        let task1 = create_test_task("task1", vec!["dist/out1".to_string()]);
+
+        let tasks = vec![&task1];
+        let result = process_tasks_outputs(tasks, "**/*");
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(
+            result[0],
+            HashInstruction::TaskOutput("**/*".to_string(), vec!["dist/out1".to_string()])
+        );
+    }
+
+    #[test]
+    fn test_all_glob_mixed_hashed_and_unhashed() {
+        let task1 =
+            create_test_task_with_hash("task1", vec!["dist/out1".to_string()], "hash1");
+        let task2 = create_test_task("task2", vec!["dist/out2".to_string()]);
+
+        let tasks = vec![&task1, &task2];
+        let mut result = process_tasks_outputs(tasks, "**/*");
+        result.sort();
+
+        assert_eq!(result.len(), 2);
+        let has_task_hash = result.iter().any(|i| matches!(i, HashInstruction::TaskHash(_, _)));
+        let has_task_output = result
+            .iter()
+            .any(|i| matches!(i, HashInstruction::TaskOutput(_, _)));
+        assert!(has_task_hash, "Hashed task should use TaskHash");
+        assert!(has_task_output, "Unhashed task should use TaskOutput");
     }
 
     fn create_diamond_graph(depth: usize) -> TaskGraph {
