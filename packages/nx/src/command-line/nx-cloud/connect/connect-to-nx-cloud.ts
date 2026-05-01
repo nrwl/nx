@@ -28,9 +28,7 @@ import { getVcsRemoteInfo } from '../../../utils/git-utils';
 import {
   CONNECTED_NEXT_STEPS,
   hasNxCloudPat,
-  OnboardStatus,
   runAgenticOnboard,
-  runOnboardStatus,
 } from '../onboard/agentic-onboard';
 import { writeAiOutput } from '../../ai/ai-output';
 import * as pc from 'picocolors';
@@ -248,7 +246,7 @@ async function runConnectToNxCloud(
   // Browser opens only as a fallback for github_oauth / github_app_install.
   // Needs a remote for the bin's repo detection.
   if (hasRemote && hasNxCloudPat()) {
-    return runHumanOnboardWithPat(installationSource, workspaceRoot);
+    return runHumanOnboardWithPat(installationSource);
   }
 
   const token = await connectWorkspaceToCloud({
@@ -286,30 +284,15 @@ async function runConnectToNxCloud(
 }
 
 async function runHumanOnboardWithPat(
-  source: 'nx-connect' | 'nx-console',
-  cwd: string
+  source: 'nx-connect' | 'nx-console'
 ): Promise<boolean> {
-  // Pre-flight prompt for multi-org. Skips a wasted spawn just to read the
-  // bin's "specify --org" error.
-  const status = await runOnboardStatus(cwd);
-  let org: string | undefined;
-  if (status && status.organizations.length > 1) {
-    org = await pickOrgPrompt(status.organizations);
-    if (!org) {
-      output.note({ title: 'Cancelled.' });
-      return false;
-    }
-  }
-
-  if (status?.user?.email) {
-    output.log({ title: `Logged in as ${status.user.email}` });
-  }
-
+  // Mirror the agent path's bin invocation exactly — a prior status spawn
+  // appears to perturb the bin's repo lookup on the next call (first attempt
+  // misses the repo, second succeeds). Driving connect-workspace cold matches
+  // the agent path's one-shot behavior.
   const spinner = ora('Connecting workspace to Nx Cloud...').start();
   const result = await runAgenticOnboard({
     source,
-    cwd,
-    org,
     onProgress: (p) => {
       if (
         typeof p.message === 'string' &&
@@ -357,29 +340,6 @@ async function runHumanOnboardWithPat(
 
   spinner.fail(result.message);
   return false;
-}
-
-async function pickOrgPrompt(
-  organizations: OnboardStatus['organizations']
-): Promise<string | undefined> {
-  const enquirer = await handleImport('enquirer');
-  try {
-    const answer = (await enquirer.prompt([
-      {
-        type: 'select',
-        name: 'org',
-        message: 'Pick an Nx Cloud organization for this workspace',
-        choices: organizations.map((o) => ({
-          name: o.id,
-          message: o.name,
-          hint: o.role ? `(${o.role})` : undefined,
-        })),
-      } as any,
-    ])) as { org: string };
-    return answer.org;
-  } catch {
-    return undefined;
-  }
 }
 
 function sleep(ms: number) {

@@ -80,12 +80,6 @@ export interface AgenticOnboardOptions {
   onProgress?: (payload: Record<string, unknown>) => void;
 }
 
-/** Subset of `nx-cloud onboard status --json` we consume. */
-export interface OnboardStatus {
-  user?: { email?: string };
-  organizations: Array<{ id: string; name: string; role?: string }>;
-}
-
 /**
  * Post-connection guidance for the agent to surface to the user. The agent
  * should pick a project from the workspace (build / test / lint) and run a
@@ -364,45 +358,6 @@ export function translateOnboardPayload(
 
 function resolveNxCloudBin(cwd: string): string {
   return require.resolve('nx/bin/nx-cloud.js', { paths: [cwd, __dirname] });
-}
-
-/**
- * Spawn `nx-cloud onboard status --json`. Returns null on any failure —
- * callers fall through to the optimistic path.
- */
-export async function runOnboardStatus(
-  cwd: string = process.cwd()
-): Promise<OnboardStatus | null> {
-  let bin: string;
-  try {
-    bin = resolveNxCloudBin(cwd);
-  } catch {
-    return null;
-  }
-  return new Promise<OnboardStatus | null>((resolve) => {
-    const child = spawn(
-      process.execPath,
-      [bin, 'onboard', 'status', '--json'],
-      { cwd, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true }
-    );
-    let stdout = '';
-    child.stdout.on('data', (c: Buffer) => (stdout += c.toString('utf8')));
-    child.on('error', () => resolve(null));
-    child.on('close', (code) => {
-      if (code !== 0) return resolve(null);
-      const blob = extractJsonObject(stdout) ?? stdout.trim();
-      try {
-        const parsed = JSON.parse(blob);
-        if (parsed && Array.isArray(parsed.organizations)) {
-          resolve(parsed as OnboardStatus);
-        } else {
-          resolve(null);
-        }
-      } catch {
-        resolve(null);
-      }
-    });
-  });
 }
 
 /**
