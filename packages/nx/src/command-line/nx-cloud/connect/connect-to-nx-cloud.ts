@@ -157,21 +157,11 @@ async function runConnectToNxCloud(
 
   const aiMode = isAiAgent();
 
-  // Agent mode: hybrid flow.
-  //   - PAT present  → full agentic onboard (org select, GitHub auth, etc.) via NDJSON.
-  //   - PAT missing  → emit needs_input directing the agent to run `nx login`.
-  //                    `nx login` defers to the cloud client and works in any
-  //                    directory (with or without an existing connection) as
-  //                    of nx 22.6.0 — the previous `isNxCloudUsed` guard was
-  //                    removed in #34728. Login writes the PAT to
-  //                    ~/.config/nxcloud/nxcloud.ini. After login, agent re-runs
-  //                    `nx connect` and falls into the PAT-present branch.
+  // Agent mode: PAT present → agentic onboard via NDJSON. PAT missing →
+  // emit needs_input pointing to `nx login`. Already connected → short-circuit.
   if (aiMode) {
-    // Already connected? Short-circuit. Mirrors the human-mode `isNxCloudUsed`
-    // check below — without this, a re-run of `nx connect` from a connected
-    // workspace re-spawns the bin which then 409s with "Workspace already
-    // exists" because the name is taken on the server. The agent reads that
-    // as a fix-this-input failure even though the connection is fine.
+    // Mirrors the human `isNxCloudUsed` short-circuit below; without this a
+    // re-run from a connected workspace 409s on name reuse.
     if (isNxCloudUsed(nxJson) && nxJson.nxCloudId) {
       writeAiOutput({
         stage: 'complete',
@@ -242,9 +232,8 @@ async function runConnectToNxCloud(
     return false;
   }
 
-  // PAT present → try the bin one-shot. If it can't complete (needs GH OAuth,
-  // App install, etc.), silently fall through to the legacy browser-claim
-  // flow below — that path always works, just with one more click.
+  // PAT + remote → try one-shot. On any non-success, fall through to the
+  // legacy browser-claim flow (always works, one extra click).
   if (hasRemote && hasNxCloudPat()) {
     if (await tryOneShotConnect(installationSource)) return true;
   }
@@ -286,11 +275,9 @@ async function runConnectToNxCloud(
 async function tryOneShotConnect(
   source: 'nx-connect' | 'nx-console'
 ): Promise<boolean> {
-  // Mirror the agent path's bin invocation exactly — a prior status spawn
-  // appears to perturb the bin's repo lookup on the next call. Driving
-  // connect-workspace cold matches the agent path's one-shot behavior.
-  // Anything short of "connected" → silent stop and let the caller fall
-  // through to the legacy browser-claim flow.
+  // Drive connect-workspace cold (no pre-flight). A prior status spawn
+  // perturbs the bin's first repo lookup; the agent path proves cold one-shots
+  // on fresh repos. Non-success → silent stop, caller falls back.
   const spinner = ora('Connecting workspace to Nx Cloud...').start();
   const result = await runAgenticOnboard({
     source,

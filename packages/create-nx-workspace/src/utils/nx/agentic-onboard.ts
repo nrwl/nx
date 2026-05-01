@@ -1,14 +1,7 @@
 /**
- * Agentic Cloud Onboard Helper (CNW copy)
- *
- * Spawns `nx-cloud onboard connect-workspace --json` from the just-created
- * workspace's installed `nx` and translates the terminal payload into CNW's
- * AI-output result shapes.
- *
- * NOTE: intentionally duplicated from
- * packages/nx/src/command-line/nx-cloud/onboard/agentic-onboard.ts.
- * CNW is self-contained and cannot import from the nx package — same
- * duplication pattern as `src/utils/ai/ai-output.ts`.
+ * CNW copy of packages/nx/src/command-line/nx-cloud/onboard/agentic-onboard.ts.
+ * Duplicated because CNW can't import from the nx package (same pattern as
+ * `src/utils/ai/ai-output.ts`).
  */
 
 import { spawn } from 'child_process';
@@ -17,11 +10,7 @@ import { homedir } from 'os';
 import { join } from 'path';
 import { writeAiOutput, logProgress } from '../ai/ai-output';
 
-/**
- * Returns true if `~/.config/nxcloud/nxcloud.ini` has a personalAccessToken
- * for the active Nx Cloud API URL. Same impl as nx-side; intentionally
- * duplicated since CNW can't import from nx.
- */
+/** True iff the user has a PAT for the active Nx Cloud URL. */
 export function hasNxCloudPat(
   apiUrl: string = process.env.NX_CLOUD_API || 'https://cloud.nx.app'
 ): boolean {
@@ -33,14 +22,15 @@ export function hasNxCloudPat(
   } catch {
     return false;
   }
-  const normalize = (s: string) => s.replace(/\\/g, '');
-  const target = normalize(apiUrl);
+  // Ocean writes section headers with `\.` ini-escapes. Strip on both sides.
+  const strip = (s: string) => s.replace(/\\/g, '');
+  const target = strip(apiUrl);
   let inTargetSection = false;
   for (const rawLine of content.split(/\r?\n/)) {
     const line = rawLine.trim();
     if (!line) continue;
     if (line.startsWith('[') && line.endsWith(']')) {
-      inTargetSection = normalize(line.slice(1, -1)) === target;
+      inTargetSection = strip(line.slice(1, -1)) === target;
       continue;
     }
     if (inTargetSection && line.startsWith('personalAccessToken=')) {
@@ -54,7 +44,7 @@ export type AgenticOnboardSource = 'create-nx-workspace';
 
 export interface AgenticOnboardOptions {
   source: AgenticOnboardSource;
-  /** Workspace directory — must contain a `node_modules/nx` install. */
+  /** Must contain a `node_modules/nx` install. */
   cwd: string;
   org?: string;
   name?: string;
@@ -297,9 +287,8 @@ export async function runAgenticOnboard(
     };
   }
 
-  // The `connect-workspace` subcommand is the one-shot agent flow — it does
-  // repo detection and nx.json write-back implicitly. Only --json / --org /
-  // --name are valid here.
+  // connect-workspace does repo detection + nx.json write implicitly.
+  // Only --json / --org / --name are valid on this subcommand.
   const args = [bin, 'onboard', 'connect-workspace', '--json'];
   if (options.org) args.push(`--org=${options.org}`);
   if (options.name) args.push(`--name=${options.name}`);
@@ -307,9 +296,8 @@ export async function runAgenticOnboard(
   logProgress('configuring', 'Connecting workspace to Nx Cloud...');
 
   const emitFinal = (result: AgenticOnboardResult): AgenticOnboardResult => {
-    // Always surface the normalized result so the agent sees a canonical
-    // terminal payload. Don't auto-open verificationUri — stealing focus
-    // from the terminal disorients the user mid-flow.
+    // Surface the normalized result; don't auto-open verificationUri
+    // (stealing focus mid-flow disorients the user).
     writeAiOutput(result as any);
     return result;
   };
@@ -322,9 +310,9 @@ export async function runAgenticOnboard(
       windowsHide: true,
     });
 
-    // Two stdout buffers: line-by-line for NDJSON streaming, full stdout for
-    // multi-line JSON fallback. Ocean's `connect-workspace --json` emits ONE
-    // pretty-printed JSON object — line-by-line parsing alone returns null.
+    // `lineBuf` drives line-by-line NDJSON; `fullStdout` is a fallback for
+    // close-time multi-line JSON parsing (CLOUD-4496 workaround — once the
+    // bin emits one JSON per line the fallback can go).
     let lineBuf = '';
     let fullStdout = '';
     let stderrBuf = '';
@@ -408,29 +396,19 @@ function safeParse(line: string): Record<string, unknown> | null {
   }
 }
 
+/**
+ * Slice the JSON object out of a buffer that may contain human-readable noise
+ * before it. Workaround for CLOUD-4496 — drop once the bin emits clean `--json`.
+ */
 export function extractJsonObject(text: string): string | null {
   const start = text.indexOf('{');
-  if (start === -1) return null;
-  let depth = 0;
-  let inString = false;
-  let escape = false;
-  for (let i = start; i < text.length; i++) {
-    const c = text[i];
-    if (escape) {
-      escape = false;
-      continue;
-    }
-    if (inString) {
-      if (c === '\\') escape = true;
-      else if (c === '"') inString = false;
-      continue;
-    }
-    if (c === '"') inString = true;
-    else if (c === '{') depth++;
-    else if (c === '}') {
-      depth--;
-      if (depth === 0) return text.slice(start, i + 1);
-    }
+  const end = text.lastIndexOf('}');
+  if (start === -1 || end < start) return null;
+  const candidate = text.slice(start, end + 1);
+  try {
+    JSON.parse(candidate);
+    return candidate;
+  } catch {
+    return null;
   }
-  return null;
 }

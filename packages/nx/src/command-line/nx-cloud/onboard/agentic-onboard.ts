@@ -1,13 +1,8 @@
 /**
- * Agentic Cloud Onboard Helper
- *
- * Spawns `nx-cloud onboard connect-workspace --json` and streams its NDJSON
- * to the parent process. Translates the terminal payload into the AI-output
- * result shapes consumed by `nx connect`, `nx init`, and CNW agent paths.
- *
- * The `--json` contract lives in the external nx-cloud package (downloaded at
- * runtime). Treat it as a black box: parse defensively, log unrecognized
- * payloads to the error log instead of crashing.
+ * Spawns `nx-cloud onboard connect-workspace --json` and translates its
+ * terminal payload into the result shapes consumed by `nx connect`, `nx init`,
+ * and CNW. The bin's `--json` contract is external and may shift, so payload
+ * parsing is defensive — unrecognized shapes log and return `error`.
  */
 
 import { spawn } from 'child_process';
@@ -16,17 +11,7 @@ import { homedir } from 'os';
 import { join } from 'path';
 import { writeAiOutput, writeErrorLog } from '../../ai/ai-output';
 
-/**
- * Returns true if `~/.config/nxcloud/nxcloud.ini` has a personalAccessToken
- * for the active Nx Cloud API URL (NX_CLOUD_API or default cloud.nx.app).
- *
- * The .ini is keyed by URL with literal escaped dots in the section header,
- * e.g. `[https://cloud\.nx\.app]`. We match by walking sections rather than
- * regex to avoid escaping pain.
- *
- * When no PAT is found, callers should fall back to anonymous workspace
- * creation + claim URL (matches Netlify CLI pattern).
- */
+/** True iff the user has a PAT for the active Nx Cloud URL. */
 export function hasNxCloudPat(
   apiUrl: string = process.env.NX_CLOUD_API || 'https://cloud.nx.app'
 ): boolean {
@@ -38,16 +23,16 @@ export function hasNxCloudPat(
   } catch {
     return false;
   }
-  // Section headers in nxcloud.ini have literal `\.` for dots. Normalize both
-  // sides by stripping `\` so comparison is robust.
-  const normalize = (s: string) => s.replace(/\\/g, '');
-  const target = normalize(apiUrl);
+  // Ocean writes section headers with `\.` ini-escapes (e.g. `[https://cloud\.nx\.app]`).
+  // Strip `\` on both sides for a forgiving compare.
+  const strip = (s: string) => s.replace(/\\/g, '');
+  const target = strip(apiUrl);
   let inTargetSection = false;
   for (const rawLine of content.split(/\r?\n/)) {
     const line = rawLine.trim();
     if (!line) continue;
     if (line.startsWith('[') && line.endsWith(']')) {
-      inTargetSection = normalize(line.slice(1, -1)) === target;
+      inTargetSection = strip(line.slice(1, -1)) === target;
       continue;
     }
     if (inTargetSection && line.startsWith('personalAccessToken=')) {
@@ -80,14 +65,7 @@ export interface AgenticOnboardOptions {
   onProgress?: (payload: Record<string, unknown>) => void;
 }
 
-/**
- * Post-connection guidance for the agent to surface to the user. The agent
- * should pick a project from the workspace (build / test / lint) and run a
- * cached target twice — the second run should be a cache hit served from
- * Nx Cloud. The Nx run URL printed by `nx` opens the trace in the platform.
- */
 export interface AgenticOnboardNextSteps {
-  /** Tells the agent what to do with `steps`. */
   description: string;
   steps: string[];
 }
@@ -97,9 +75,7 @@ export type AgenticOnboardResult =
       status: 'connected';
       nxCloudId: string;
       nxCloudUrl?: string;
-      /** Command the agent (and user) can run to confirm the connection landed. */
       verifyCommand: string;
-      /** What the agent should suggest to the user now that the connection is live. */
       nextSteps: AgenticOnboardNextSteps;
     }
   | {
@@ -108,9 +84,7 @@ export type AgenticOnboardResult =
       message: string;
       nextCommand: string;
       hint?: string;
-      /** Optional URL the user must visit (e.g. GitHub device-flow verification, app install). */
       verificationUri?: string;
-      /** Optional code the user enters at verificationUri. */
       userCode?: string;
       raw: Record<string, unknown>;
     }
@@ -121,10 +95,7 @@ export type AgenticOnboardResult =
       errorLogPath?: string;
     };
 
-/**
- * Maps ocean's `actionRequired.type` strings onto our normalized action set.
- * Keep keys equal to the ocean values so passthrough Just Works for unknown types.
- */
+// Keys mirror ocean's `actionRequired.type` so unknown types pass through unchanged.
 const KNOWN_ACTIONS: Record<string, { hint: string; message: string }> = {
   login_required: {
     hint: 'After login, run `npx nx connect` again.',
@@ -148,9 +119,7 @@ const KNOWN_ACTIONS: Record<string, { hint: string; message: string }> = {
 
 const STATUS_COMMAND = 'npx nx-cloud onboard status';
 
-/**
- * Canonical post-connection next-steps payload. Keep in sync with the CNW copy.
- */
+// Keep in sync with the CNW copy.
 export const CONNECTED_NEXT_STEPS: AgenticOnboardNextSteps = {
   description:
     'Suggest to the user that they verify remote caching by running a cacheable target twice. Pick an existing project (app, library, or package) from the workspace and use a target it already supports (build, test, lint). Do NOT scaffold a new project for this.',
@@ -163,11 +132,6 @@ export const CONNECTED_NEXT_STEPS: AgenticOnboardNextSteps = {
   ],
 };
 
-/**
- * Compute the command the agent should run next, given a normalized action
- * type and the action's payload (which may carry a deviceCode for the GitHub
- * device flow).
- */
 function nextCommandFor(
   actionType: string,
   info: Record<string, unknown>
@@ -176,14 +140,13 @@ function nextCommandFor(
     case 'login_required':
       return 'npx nx login';
     case 'github_oauth':
-      // Splice deviceCode in so the agent has a complete command. Without the
-      // code the poll subcommand fails — and re-running `connect-workspace`
-      // mints a fresh code, orphaning the user's prior authorization.
+      // Splice deviceCode so the agent has a complete poll command. Re-running
+      // connect-workspace instead would mint a fresh code and orphan the prior.
       return typeof info.deviceCode === 'string'
         ? `npx nx-cloud onboard connect github poll --device-code ${info.deviceCode}`
         : 'npx nx-cloud onboard connect github poll --device-code <deviceCode>';
     case 'github_app_install':
-      // No CLI command — the user must visit the installation URL in a browser.
+      // No CLI command — user installs via the URL.
       return '';
     default:
       return '';
@@ -191,16 +154,8 @@ function nextCommandFor(
 }
 
 /**
- * Pure translator: takes a single line of stdout from `nx-cloud onboard
- * connect-workspace --json` and returns the structured result, or null if the
- * line is a progress message that should pass through without terminating.
- *
- * Exported for unit tests — feed real JSON strings, no mocks needed.
- *
- * Ocean payload shapes (from libs/nx-packages/client-bundle/.../onboarding-connect-workspace.ts):
- *   - Action required: `{ success: false, actionRequired: { type, message, url?, deviceCode?, userCode?, verificationUri?, ... } }`
- *   - Success:         `{ success: true, workspace: { nxCloudId, overviewUrl, ... }, configWritten }`
- *   - Error:           `{ success: false, error: "..." }` (sometimes accompanied by actionRequired)
+ * Translates one stdout line from `connect-workspace --json` into a result, or
+ * null for non-terminal progress lines. Pure — exported for unit tests.
  */
 export function translateOnboardPayload(
   line: string
@@ -272,8 +227,8 @@ export function translateOnboardPayload(
     };
   }
 
-  // Success: nxCloudId may be at the top level (legacy / direct callers) or
-  // nested under `workspace` (current ocean `connect-workspace --json` shape).
+  // nxCloudId is nested under `workspace` in the current bin shape; older
+  // direct callers put it at top level. Accept both.
   const workspace =
     payload.workspace && typeof payload.workspace === 'object'
       ? (payload.workspace as Record<string, unknown>)
@@ -302,12 +257,9 @@ export function translateOnboardPayload(
     };
   }
 
-  // 409 "Workspace already exists" is not a failure — it means the workspace
-  // is already connected on the server. Most callers will be caught earlier
-  // by the connect-to-nx-cloud agent-mode pre-check (which short-circuits when
-  // `nx.json` has `nxCloudId`), but if a caller bypasses that or `nx.json` is
-  // out of sync with the server, surface this as needs_input pointing to
-  // `nx-cloud onboard status` so the agent can confirm and stop.
+  // 409 = workspace already exists server-side. Surface as needs_input (not
+  // error) so callers that bypass the nx.json short-circuit can confirm via
+  // `onboard status` and stop without retrying.
   const message =
     typeof payload.message === 'string'
       ? (payload.message as string)
@@ -362,8 +314,7 @@ function resolveNxCloudBin(cwd: string): string {
 
 /**
  * Spawns `nx-cloud onboard connect-workspace --json` and resolves with the
- * translated terminal payload. Streams progress NDJSON through writeAiOutput
- * so the agent sees a unified output stream.
+ * translated terminal payload. Streams progress NDJSON through writeAiOutput.
  */
 export async function runAgenticOnboard(
   options: AgenticOnboardOptions
@@ -382,10 +333,8 @@ export async function runAgenticOnboard(
     };
   }
 
-  // The `connect-workspace` subcommand is the one-shot agent flow — it does
-  // repo detection and nx.json write-back implicitly. Only --json / --org /
-  // --name are valid here; --detect-repo / --write-config are flags on the
-  // parent `nx-cloud onboard` command, not this subcommand.
+  // connect-workspace does repo detection + nx.json write implicitly.
+  // Only --json / --org / --name are valid on this subcommand.
   const args = [bin, 'onboard', 'connect-workspace', '--json'];
   if (options.org) args.push(`--org=${options.org}`);
   if (options.name) args.push(`--name=${options.name}`);
@@ -400,12 +349,9 @@ export async function runAgenticOnboard(
   onProgress?.(startMsg);
 
   const emitFinal = (result: AgenticOnboardResult): AgenticOnboardResult => {
-    // Always surface the normalized result as NDJSON so the agent sees a
-    // canonical terminal payload — including `verifyCommand` on success
-    // (`npx nx-cloud onboard status`), which the raw bin payload doesn't carry.
-    // Intentionally NOT auto-opening verificationUri in the browser: stealing
-    // window focus from the terminal disorients the user mid-flow. The agent
-    // surfaces the URL + userCode in chat and the user clicks when ready.
+    // Surface the normalized result so the agent sees `verifyCommand` etc.
+    // that the raw bin payload doesn't carry. Intentionally NOT auto-opening
+    // verificationUri — stealing focus mid-flow disorients the user.
     writeAiOutput(result as unknown as Record<string, unknown>);
     return result;
   };
@@ -418,13 +364,10 @@ export async function runAgenticOnboard(
       windowsHide: true,
     });
 
-    // Two stdout buffers: `lineBuf` is consumed line-by-line for NDJSON
-    // streaming, `fullStdout` accumulates the entire output so we can fall
-    // back to parsing it as a single multi-line JSON blob at close. Ocean's
-    // `connect-workspace --json` emits ONE pretty-printed JSON object spanning
-    // many lines (`{\n  "success": false,\n  ...\n}`); the line-by-line parser
-    // sees `{`, `  "success": false,` etc. and rejects them. Without the
-    // fallback, every payload looks like UNKNOWN_PAYLOAD.
+    // `lineBuf` drives line-by-line NDJSON; `fullStdout` is a fallback for
+    // close-time multi-line JSON parsing — the bin currently pretty-prints
+    // its terminal payload across many lines (CLOUD-4496). Once the bin
+    // emits one JSON per line, the fallback can go.
     let lineBuf = '';
     let fullStdout = '';
     let stderrBuf = '';
@@ -432,9 +375,6 @@ export async function runAgenticOnboard(
 
     const handleLine = (line: string) => {
       const result = translateOnboardPayload(line);
-      // Always forward the raw line as NDJSON to the agent (it's already JSON
-      // when the bin obeys --json, and writeAiOutput is a no-op outside agent
-      // mode anyway).
       const parsed = safeParse(line);
       if (parsed) {
         writeAiOutput(parsed);
@@ -474,10 +414,8 @@ export async function runAgenticOnboard(
     child.on('close', (code) => {
       if (lineBuf.trim()) handleLine(lineBuf);
 
-      // Multi-line JSON fallback: ocean's `--json` mode emits ONE pretty-
-      // printed JSON object, sometimes preceded by `output.note(...)` writes
-      // from the bin (e.g. `NX   Updating nx.json with Nx Cloud ID`). Find
-      // the balanced JSON object inside the buffer and translate that.
+      // Recover the JSON object out of mixed stdout (JSON + bin's stray
+      // output.note writes). Workaround for CLOUD-4496.
       if (!terminalResult && fullStdout.trim()) {
         const blob = extractJsonObject(fullStdout);
         if (blob) {
@@ -498,9 +436,8 @@ export async function runAgenticOnboard(
         return;
       }
 
-      // No recognized terminal payload. Inline the captured stdout/stderr in
-      // the error so the agent has actionable context without having to read
-      // a temp file. Still write the log for human debugging.
+      // Inline stdout/stderr in the error message so the agent has actionable
+      // context inline; still write the log for human debugging.
       const errMsg = `nx-cloud onboard exited with code ${code}\nstdout:\n${fullStdout}\nstderr:\n${stderrBuf}`;
       const errorLogPath = writeErrorLog(new Error(errMsg), 'agentic-onboard');
       const summary = stderrBuf.trim() || fullStdout.trim();
@@ -530,37 +467,19 @@ function safeParse(line: string): Record<string, unknown> | null {
 }
 
 /**
- * Extract the JSON object substring from a buffer that may also contain
- * human-readable text. Walks from the first `{` forward, tracks brace depth
- * (string-aware so braces inside JSON strings are ignored), and returns the
- * first balanced top-level object. Used to recover the terminal payload from
- * `--json` output that's polluted by `output.note(...)` writes from the bin
- * (e.g. `NX   Updating nx.json with Nx Cloud ID` printed to stdout before
- * the JSON blob).
+ * Slice the JSON object out of a buffer that may contain human-readable noise
+ * before it (e.g. `NX   Updating nx.json with Nx Cloud ID`).
+ * Workaround for CLOUD-4496 — once the bin emits clean `--json`, drop this.
  */
 export function extractJsonObject(text: string): string | null {
   const start = text.indexOf('{');
-  if (start === -1) return null;
-  let depth = 0;
-  let inString = false;
-  let escape = false;
-  for (let i = start; i < text.length; i++) {
-    const c = text[i];
-    if (escape) {
-      escape = false;
-      continue;
-    }
-    if (inString) {
-      if (c === '\\') escape = true;
-      else if (c === '"') inString = false;
-      continue;
-    }
-    if (c === '"') inString = true;
-    else if (c === '{') depth++;
-    else if (c === '}') {
-      depth--;
-      if (depth === 0) return text.slice(start, i + 1);
-    }
+  const end = text.lastIndexOf('}');
+  if (start === -1 || end < start) return null;
+  const candidate = text.slice(start, end + 1);
+  try {
+    JSON.parse(candidate);
+    return candidate;
+  } catch {
+    return null;
   }
-  return null;
 }

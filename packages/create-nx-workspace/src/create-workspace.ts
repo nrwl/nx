@@ -144,10 +144,8 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       throw e;
     }
 
-    // Connect to Nx Cloud for template flow.
-    // AI mode defers to the post-git block below: at this point cloneTemplate
-    // has stripped .git, so there's no remote for the bin's repo detection.
-    // Spawning here would either fail (no remote) or 409 the post-git spawn.
+    // AI mode defers to the post-git block — cloneTemplate just stripped
+    // .git, so there's no remote yet for the bin's repo detection.
     if (
       !aiMode &&
       nxCloud !== 'skip' &&
