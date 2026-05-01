@@ -5,6 +5,7 @@
   "description": "Run detox test options.",
   "type": "object",
   "cli": "nx",
+  "x-deprecated": "The `@nx/detox:test` executor is deprecated and will be removed in Nx v24. Run `nx g @nx/detox:convert-to-inferred` to migrate to the `@nx/detox/plugin` inferred plugin.",
   "presets": [
     {
       "name": "Test a Detox Configuration",
