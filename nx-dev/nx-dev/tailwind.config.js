@@ -30,10 +30,7 @@ module.exports = {
       'feature-ai',
       'feature-analytics',
       'feature-search',
-    ].map(
-      (dir) =>
-        `../${dir}/src/**/!(*.stories|*.spec).{js,ts,jsx,tsx}`
-    ),
+    ].map((dir) => `../${dir}/src/**/!(*.stories|*.spec).{js,ts,jsx,tsx}`),
   ],
   theme: {
     extend: {
