@@ -2992,9 +2992,6 @@ importers:
       babel-plugin-transform-typescript-metadata:
         specifier: ^0.3.1
         version: 0.3.2(@babel/core@7.26.10)(@babel/traverse@7.29.0)
-      chalk:
-        specifier: 'catalog:'
-        version: 4.1.2
       columnify:
         specifier: ^1.6.0
         version: 1.6.0

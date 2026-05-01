@@ -1,5 +1,5 @@
 // Adapted from https://github.com/npm/cli/blob/c736b622b8504b07f5a19f631ade42dd40063269/lib/utils/tar.js
-import chalk from 'chalk';
+import * as pc from 'picocolors';
 import columnify from 'columnify';
 import { formatBytes } from './format-bytes';
 
@@ -10,7 +10,7 @@ export const logTar = (tarball, opts = {}) => {
   console.log(
     `${unicode ? '📦 ' : 'package:'} ${tarball.name}@${tarball.version}`
   );
-  console.log(chalk.magenta('=== Tarball Contents ==='));
+  console.log(pc.magenta('=== Tarball Contents ==='));
   if (tarball.files.length) {
     console.log('');
     const columnData = columnify(
@@ -32,10 +32,10 @@ export const logTar = (tarball, opts = {}) => {
     });
   }
   if (tarball.bundled.length) {
-    console.log(chalk.magenta('=== Bundled Dependencies ==='));
+    console.log(pc.magenta('=== Bundled Dependencies ==='));
     tarball.bundled.forEach((name) => console.log('', name));
   }
-  console.log(chalk.magenta('=== Tarball Details ==='));
+  console.log(pc.magenta('=== Tarball Details ==='));
   console.log(
     columnify(
       [
