@@ -3,6 +3,7 @@ import {
   clearRequireCache,
   loadConfigFile,
   getNamedInputs,
+  PluginCache,
 } from '@nx/devkit/internal';
 import {
   CreateNodesContextV2,
@@ -14,9 +15,7 @@ import {
   normalizePath,
   NxJsonConfiguration,
   ProjectConfiguration,
-  readJsonFile,
   TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
 import { minimatch } from 'minimatch';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
@@ -77,19 +76,6 @@ type IsolatedModulesResult = {
 
 type JestTargets = Awaited<ReturnType<typeof buildJestTargets>>;
 
-function readTargetsCache(cachePath: string): Record<string, JestTargets> {
-  return process.env.NX_CACHE_PROJECT_GRAPH !== 'false' && existsSync(cachePath)
-    ? readJsonFile(cachePath)
-    : {};
-}
-
-function writeTargetsToCache(
-  cachePath: string,
-  results: Record<string, JestTargets>
-) {
-  writeJsonFile(cachePath, results);
-}
-
 const jestConfigGlob = '**/jest.config.{cjs,mjs,js,cts,mts,ts}';
 
 export const createNodes: CreateNodesV2<JestPluginOptions> = [
@@ -97,7 +83,7 @@ export const createNodes: CreateNodesV2<JestPluginOptions> = [
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `jest-${optionsHash}.hash`);
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<JestTargets>(cachePath);
     // Cache jest preset(s) to avoid penalties of module load times. Most of jest configs will use the same preset.
     const presetCache: Record<string, unknown> = {};
     // Cache tsconfig reads + isolatedModules resolution. Many projects share
@@ -203,18 +189,23 @@ export const createNodes: CreateNodesV2<JestPluginOptions> = [
           const hash = hashes[idx];
           const { rawConfig, needsDtsInputs } = loadedConfigs[idx];
 
-          targetsCache[hash] ??= await buildJestTargets(
-            rawConfig,
-            needsDtsInputs,
-            configFilePath,
-            projectRoot,
-            options,
-            context,
-            presetCache,
-            pmc
-          );
+          if (!targetsCache.has(hash)) {
+            targetsCache.set(
+              hash,
+              await buildJestTargets(
+                rawConfig,
+                needsDtsInputs,
+                configFilePath,
+                projectRoot,
+                options,
+                context,
+                presetCache,
+                pmc
+              )
+            );
+          }
 
-          const { targets, metadata } = targetsCache[hash];
+          const { targets, metadata } = targetsCache.get(hash);
 
           return {
             projects: {
@@ -231,7 +222,7 @@ export const createNodes: CreateNodesV2<JestPluginOptions> = [
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk(cachePath);
     }
   },
 ];

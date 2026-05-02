@@ -1,4 +1,7 @@
-import { calculateHashesForCreateNodes } from '@nx/devkit/internal';
+import {
+  calculateHashesForCreateNodes,
+  PluginCache,
+} from '@nx/devkit/internal';
 import {
   CreateNodesContextV2,
   createNodesFromFiles,
@@ -6,9 +9,7 @@ import {
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
-  readJsonFile,
   TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
 import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
 import {
@@ -55,20 +56,7 @@ const ESLINT_CONFIG_GLOB_V2 = combineGlobPatterns([
   ...PROJECT_CONFIG_FILENAMES.map((f) => `**/${f}`),
 ]);
 
-function readTargetsCache(
-  cachePath: string
-): Record<string, CreateNodesResult['projects']> {
-  return process.env.NX_CACHE_PROJECT_GRAPH !== 'false' && existsSync(cachePath)
-    ? readJsonFile(cachePath)
-    : {};
-}
-
-function writeTargetsToCache(
-  cachePath: string,
-  results: Record<string, CreateNodesResult['projects']>
-) {
-  writeJsonFile(cachePath, results);
-}
+type EslintProjects = CreateNodesResult['projects'];
 
 const internalCreateNodesV2 = async (
   ESLint: typeof ESLintType,
@@ -78,7 +66,7 @@ const internalCreateNodesV2 = async (
   projectRootsByEslintRoots: Map<string, string[]>,
   lintableFilesPerProjectRoot: Map<string, string[]>,
   tsconfigChainsByProjectRoot: Map<string, string[]>,
-  projectsCache: Record<string, CreateNodesResult['projects']>,
+  projectsCache: PluginCache<EslintProjects>,
   hashByRoot: Map<string, string>,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<CreateNodesResult> => {
@@ -101,9 +89,10 @@ const internalCreateNodesV2 = async (
     projectRootsByEslintRoots.get(configDir).map(async (projectRoot) => {
       const hash = hashByRoot.get(projectRoot);
 
-      if (projectsCache[hash]) {
+      const cached = projectsCache.get(hash);
+      if (cached) {
         // We can reuse the projects in the cache.
-        Object.assign(projects, projectsCache[hash]);
+        Object.assign(projects, cached);
         return;
       }
 
@@ -124,7 +113,7 @@ const internalCreateNodesV2 = async (
 
       if (!hasNonIgnoredLintableFiles) {
         // No lintable files in the project, store in the cache and skip further processing
-        projectsCache[hash] = {};
+        projectsCache.set(hash, {});
         return;
       }
 
@@ -141,10 +130,10 @@ const internalCreateNodesV2 = async (
       if (project) {
         projects[projectRoot] = project;
         // Store project into the cache
-        projectsCache[hash] = { [projectRoot]: project };
+        projectsCache.set(hash, { [projectRoot]: project });
       } else {
         // No project found, store in the cache
-        projectsCache[hash] = {};
+        projectsCache.set(hash, {});
       }
     })
   );
@@ -166,7 +155,7 @@ export const createNodes: CreateNodesV2<EslintPluginOptions> = [
       workspaceDataDirectory,
       `eslint-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<EslintProjects>(cachePath);
 
     const { eslintConfigFiles, projectRoots, projectRootsByEslintRoots } =
       splitConfigFiles(configFiles);
@@ -235,7 +224,7 @@ export const createNodes: CreateNodesV2<EslintPluginOptions> = [
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk(cachePath);
     }
   },
 ];

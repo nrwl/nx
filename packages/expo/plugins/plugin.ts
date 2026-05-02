@@ -2,6 +2,7 @@ import {
   getNamedInputs,
   calculateHashForCreateNodes,
   loadConfigFile,
+  PluginCache,
 } from '@nx/devkit/internal';
 import {
   CreateNodesContextV2,
@@ -13,11 +14,10 @@ import {
   NxJsonConfiguration,
   readJsonFile,
   TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
 import { dirname, join } from 'path';
 import { getLockFileName } from '@nx/js';
-import { existsSync, readdirSync } from 'fs';
+import { readdirSync } from 'fs';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { hashObject } from 'nx/src/devkit-internals';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
@@ -36,32 +36,14 @@ export interface ExpoPluginOptions {
   watchDepsTargetName?: string;
 }
 
-function readTargetsCache(
-  cachePath: string
-): Record<string, Record<string, TargetConfiguration<ExpoPluginOptions>>> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
-
-function writeTargetsToCache(
-  cachePath: string,
-  targetsCache: Record<
-    string,
-    Record<string, TargetConfiguration<ExpoPluginOptions>>
-  >
-) {
-  const oldCache = readTargetsCache(cachePath);
-  writeJsonFile(cachePath, {
-    ...oldCache,
-    targetsCache,
-  });
-}
+type ExpoTargets = Record<string, TargetConfiguration<ExpoPluginOptions>>;
 
 export const createNodes: CreateNodesV2<ExpoPluginOptions> = [
   '**/app.{json,config.js,config.ts}',
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `expo-${optionsHash}.hash`);
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<ExpoTargets>(cachePath);
     const pmc = getPackageManagerCommand(
       detectPackageManager(context.workspaceRoot)
     );
@@ -75,7 +57,7 @@ export const createNodes: CreateNodesV2<ExpoPluginOptions> = [
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk(cachePath);
     }
   },
 ];
@@ -86,10 +68,7 @@ async function createNodesInternal(
   configFile: string,
   options: ExpoPluginOptions,
   context: CreateNodesContextV2,
-  targetsCache: Record<
-    string,
-    Record<string, TargetConfiguration<ExpoPluginOptions>>
-  >,
+  targetsCache: PluginCache<ExpoTargets>,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<CreateNodesResult> {
   options = normalizeOptions(options);
@@ -124,12 +103,17 @@ async function createNodesInternal(
     [getLockFileName(detectPackageManager(context.workspaceRoot))]
   );
 
-  targetsCache[hash] ??= buildExpoTargets(projectRoot, options, context, pmc);
+  if (!targetsCache.has(hash)) {
+    targetsCache.set(
+      hash,
+      buildExpoTargets(projectRoot, options, context, pmc)
+    );
+  }
 
   return {
     projects: {
       [projectRoot]: {
-        targets: targetsCache[hash],
+        targets: targetsCache.get(hash),
       },
     },
   };

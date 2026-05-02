@@ -1,6 +1,7 @@
 import {
   calculateHashesForCreateNodes,
   getNamedInputs,
+  PluginCache,
 } from '@nx/devkit/internal';
 import {
   CreateDependencies,
@@ -12,9 +13,7 @@ import {
   joinPathFragments,
   normalizePath,
   ProjectConfiguration,
-  readJsonFile,
   TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
 import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
 import {
@@ -68,16 +67,6 @@ type ViteTargets = Pick<
   'targets' | 'metadata' | 'projectType'
 >;
 
-function readTargetsCache(cachePath: string): Record<string, ViteTargets> {
-  return process.env.NX_CACHE_PROJECT_GRAPH !== 'false' && existsSync(cachePath)
-    ? readJsonFile(cachePath)
-    : {};
-}
-
-function writeTargetsToCache(cachePath, results?: Record<string, ViteTargets>) {
-  writeJsonFile(cachePath, results);
-}
-
 /**
  * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
  */
@@ -93,7 +82,7 @@ export const createNodes: CreateNodesV2<VitePluginOptions> = [
     const optionsHash = hashObject(options);
     const normalizedOptions = normalizeOptions(options);
     const cachePath = join(workspaceDataDirectory, `vite-${optionsHash}.hash`);
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<ViteTargets>(cachePath);
     const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
 
     const { roots: projectRoots, configFiles: validConfigFiles } =
@@ -160,18 +149,23 @@ export const createNodes: CreateNodesV2<VitePluginOptions> = [
           // Adding the config file path to the hash ensures that the final hash value is different
           // for different config files.
           const hash = hashes[idx] + configFile;
-          const { projectType, metadata, targets } = (targetsCache[hash] ??=
-            await buildViteTargets(
-              configFile,
-              projectRoot,
-              normalizedOptions,
-              tsConfigFiles,
-              hasReactRouterConfig,
-              isUsingTsSolutionSetup,
-              context,
-              pmc,
-              tsconfigChainsByProjectRoot.get(projectRoot) ?? []
-            ));
+          if (!targetsCache.has(hash)) {
+            targetsCache.set(
+              hash,
+              await buildViteTargets(
+                configFile,
+                projectRoot,
+                normalizedOptions,
+                tsConfigFiles,
+                hasReactRouterConfig,
+                isUsingTsSolutionSetup,
+                context,
+                pmc,
+                tsconfigChainsByProjectRoot.get(projectRoot) ?? []
+              )
+            );
+          }
+          const { projectType, metadata, targets } = targetsCache.get(hash);
 
           const project: ProjectConfiguration = {
             root: projectRoot,
@@ -196,7 +190,7 @@ export const createNodes: CreateNodesV2<VitePluginOptions> = [
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk(cachePath);
     }
   },
 ];

@@ -2,6 +2,7 @@ import {
   getNamedInputs,
   calculateHashForCreateNodes,
   loadConfigFile,
+  PluginCache,
 } from '@nx/devkit/internal';
 import {
   CreateDependencies,
@@ -12,9 +13,7 @@ import {
   getPackageManagerCommand,
   joinPathFragments,
   parseJson,
-  readJsonFile,
   TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
 import { dirname, join } from 'path';
 import { existsSync, readdirSync, readFileSync } from 'fs';
@@ -34,18 +33,7 @@ export interface StorybookPluginOptions {
   watchDepsTargetName?: string;
 }
 
-function readTargetsCache(
-  cachePath: string
-): Record<string, Record<string, TargetConfiguration>> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
-
-function writeTargetsToCache(
-  cachePath: string,
-  results: Record<string, Record<string, TargetConfiguration>>
-) {
-  writeJsonFile(cachePath, results);
-}
+type StorybookTargets = Record<string, TargetConfiguration>;
 
 /**
  * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
@@ -65,7 +53,7 @@ export const createNodes: CreateNodesV2<StorybookPluginOptions> = [
       workspaceDataDirectory,
       `storybook-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<StorybookTargets>(cachePath);
     const pmc = getPackageManagerCommand(
       detectPackageManager(context.workspaceRoot)
     );
@@ -85,7 +73,7 @@ export const createNodes: CreateNodesV2<StorybookPluginOptions> = [
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk(cachePath);
     }
   },
 ];
@@ -96,7 +84,7 @@ async function createNodesInternal(
   configFilePath: string,
   options: Required<StorybookPluginOptions>,
   context: CreateNodesContextV2,
-  targetsCache: Record<string, Record<string, TargetConfiguration>>,
+  targetsCache: PluginCache<StorybookTargets>,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   let projectRoot = '';
@@ -128,20 +116,25 @@ async function createNodesInternal(
 
   const projectName = buildProjectName(projectRoot, context.workspaceRoot);
 
-  targetsCache[hash] ??= await buildStorybookTargets(
-    configFilePath,
-    projectRoot,
-    options,
-    context,
-    projectName,
-    pmc
-  );
+  if (!targetsCache.has(hash)) {
+    targetsCache.set(
+      hash,
+      await buildStorybookTargets(
+        configFilePath,
+        projectRoot,
+        options,
+        context,
+        projectName,
+        pmc
+      )
+    );
+  }
 
   const result = {
     projects: {
       [projectRoot]: {
         root: projectRoot,
-        targets: targetsCache[hash],
+        targets: targetsCache.get(hash),
       },
     },
   };

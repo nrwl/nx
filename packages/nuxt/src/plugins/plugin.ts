@@ -2,6 +2,7 @@ import {
   loadConfigFile,
   getNamedInputs,
   calculateHashForCreateNodes,
+  PluginCache,
 } from '@nx/devkit/internal';
 import type { NuxtOptions } from '@nuxt/schema';
 import {
@@ -12,35 +13,20 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
-  readJsonFile,
   TargetConfiguration,
   workspaceRoot,
-  writeJsonFile,
 } from '@nx/devkit';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { dirname, isAbsolute, join, relative } from 'path';
-import { existsSync, readdirSync } from 'fs';
+import { readdirSync } from 'fs';
 import { loadNuxtKitDynamicImport } from '../utils/executor-utils';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
+type NuxtTargets = Record<string, TargetConfiguration>;
+
 const cachePath = join(workspaceDataDirectory, 'nuxt.hash');
-const targetsCache = readTargetsCache();
-
-function readTargetsCache(): Record<
-  string,
-  Record<string, TargetConfiguration>
-> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
-
-function writeTargetsToCache() {
-  const oldCache = readTargetsCache();
-  writeJsonFile(cachePath, {
-    ...oldCache,
-    ...targetsCache,
-  });
-}
+const targetsCache = new PluginCache<NuxtTargets>(cachePath);
 
 export interface NuxtPluginOptions {
   buildTargetName?: string;
@@ -61,7 +47,7 @@ export const createNodes: CreateNodesV2<NuxtPluginOptions> = [
       options,
       context
     );
-    writeTargetsToCache();
+    targetsCache.writeToDisk(cachePath);
     return result;
   },
 ];
@@ -95,19 +81,18 @@ async function createNodesInternal(
     context,
     [getLockFileName(detectPackageManager(context.workspaceRoot))]
   );
-  targetsCache[hash] ??= await buildNuxtTargets(
-    configFilePath,
-    projectRoot,
-    options,
-    context,
-    pmc
-  );
+  if (!targetsCache.has(hash)) {
+    targetsCache.set(
+      hash,
+      await buildNuxtTargets(configFilePath, projectRoot, options, context, pmc)
+    );
+  }
 
   return {
     projects: {
       [projectRoot]: {
         root: projectRoot,
-        targets: targetsCache[hash],
+        targets: targetsCache.get(hash),
       },
     },
   };

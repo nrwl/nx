@@ -1,6 +1,7 @@
 import {
   calculateHashForCreateNodes,
   getNamedInputs,
+  PluginCache,
 } from '@nx/devkit/internal';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { basename, dirname, join } from 'path';
@@ -13,9 +14,7 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
-  readJsonFile,
   type TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
 import { getLockFileName } from '@nx/js';
 import { type RollupOptions } from 'rollup';
@@ -25,25 +24,6 @@ import {
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
-
-function readTargetsCache(
-  cachePath: string
-): Record<string, Record<string, TargetConfiguration>> {
-  try {
-    return process.env.NX_CACHE_PROJECT_GRAPH !== 'false'
-      ? readJsonFile(cachePath)
-      : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeTargetsToCache(
-  cachePath: string,
-  results: Record<string, Record<string, TargetConfiguration>>
-) {
-  writeJsonFile(cachePath, results);
-}
 
 /**
  * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
@@ -58,6 +38,8 @@ export interface RollupPluginOptions {
   watchDepsTargetName?: string;
 }
 
+type RollupTargets = Record<string, TargetConfiguration>;
+
 const rollupConfigGlob = '**/rollup.config.{js,cjs,mjs,ts,cts,mts}';
 
 export const createNodes: CreateNodesV2<RollupPluginOptions> = [
@@ -69,7 +51,7 @@ export const createNodes: CreateNodesV2<RollupPluginOptions> = [
       workspaceDataDirectory,
       `rollup-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<RollupTargets>(cachePath);
     const isTsSolutionSetup = isUsingTsSolutionSetup();
     const pmc = getPackageManagerCommand(
       detectPackageManager(context.workspaceRoot)
@@ -91,7 +73,7 @@ export const createNodes: CreateNodesV2<RollupPluginOptions> = [
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk(cachePath);
     }
   },
 ];
@@ -102,7 +84,7 @@ async function createNodesInternal(
   configFilePath: string,
   options: Required<RollupPluginOptions>,
   context: CreateNodesContextV2,
-  targetsCache: Record<string, Record<string, TargetConfiguration>>,
+  targetsCache: PluginCache<RollupTargets>,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
@@ -125,20 +107,25 @@ async function createNodesInternal(
     [getLockFileName(detectPackageManager(context.workspaceRoot))]
   );
 
-  targetsCache[hash] ??= await buildRollupTarget(
-    configFilePath,
-    projectRoot,
-    options,
-    context,
-    isTsSolutionSetup,
-    pmc
-  );
+  if (!targetsCache.has(hash)) {
+    targetsCache.set(
+      hash,
+      await buildRollupTarget(
+        configFilePath,
+        projectRoot,
+        options,
+        context,
+        isTsSolutionSetup,
+        pmc
+      )
+    );
+  }
 
   return {
     projects: {
       [projectRoot]: {
         root: projectRoot,
-        targets: targetsCache[hash],
+        targets: targetsCache.get(hash),
       },
     },
   };
