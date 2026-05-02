@@ -57,7 +57,7 @@ export const createNodes: CreateNodesV2<ReactNativePluginOptions> = [
         context
       );
     } finally {
-      targetsCache.writeToDisk(cachePath);
+      targetsCache.writeToDisk();
     }
   },
 ];

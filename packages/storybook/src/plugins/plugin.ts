@@ -73,7 +73,7 @@ export const createNodes: CreateNodesV2<StorybookPluginOptions> = [
         context
       );
     } finally {
-      targetsCache.writeToDisk(cachePath);
+      targetsCache.writeToDisk();
     }
   },
 ];

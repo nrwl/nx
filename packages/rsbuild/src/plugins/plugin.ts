@@ -66,7 +66,7 @@ export const createNodesV2: CreateNodesV2<RsbuildPluginOptions> = [
         context
       );
     } finally {
-      targetsCache.writeToDisk(cachePath);
+      targetsCache.writeToDisk();
     }
   },
 ];

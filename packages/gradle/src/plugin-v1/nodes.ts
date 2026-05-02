@@ -92,7 +92,7 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
         context
       );
     } finally {
-      pluginCache.writeToDisk(cachePath);
+      pluginCache.writeToDisk();
     }
   },
 ];
@@ -100,7 +100,7 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
 export const makeCreateNodesForGradleConfigFile =
   (
     gradleReport: GradleReport,
-    pluginCache: PluginCache<Partial<ProjectConfiguration>> = new PluginCache(),
+    pluginCache: PluginCache<Partial<ProjectConfiguration>>,
     gradleProjectRootToTestFilesMap: Record<string, string[]> = {}
   ) =>
   async (

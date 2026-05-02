@@ -65,7 +65,7 @@ export const createNodes: CreateNodesV2<CypressPluginOptions> = [
         context
       );
     } finally {
-      pluginCache.writeToDisk(cachePath);
+      pluginCache.writeToDisk();
     }
   },
 ];

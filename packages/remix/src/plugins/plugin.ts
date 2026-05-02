@@ -72,7 +72,7 @@ export const createNodes: CreateNodesV2<RemixPluginOptions> = [
         context
       );
     } finally {
-      targetsCache.writeToDisk(cachePath);
+      targetsCache.writeToDisk();
     }
   },
 ];

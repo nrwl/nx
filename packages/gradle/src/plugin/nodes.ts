@@ -192,7 +192,7 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
 
       return results;
     } finally {
-      pluginCache.writeToDisk(cachePath);
+      pluginCache.writeToDisk();
     }
   },
 ];

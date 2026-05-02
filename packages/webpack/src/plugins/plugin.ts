@@ -79,7 +79,7 @@ export const createNodes: CreateNodesV2<WebpackPluginOptions> = [
         context
       );
     } finally {
-      targetsCache.writeToDisk(cachePath);
+      targetsCache.writeToDisk();
     }
   },
 ];

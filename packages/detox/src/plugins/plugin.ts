@@ -48,7 +48,7 @@ export const createNodes: CreateNodesV2<DetoxPluginOptions> = [
         context
       );
     } finally {
-      targetsCache.writeToDisk(cachePath);
+      targetsCache.writeToDisk();
     }
   },
 ];

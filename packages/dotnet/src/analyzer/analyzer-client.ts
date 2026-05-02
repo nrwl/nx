@@ -43,8 +43,7 @@ function writeAnalyzerCache(
   cache: PluginCache<AnalysisSuccessResult>
 ): void {
   analyzerCaches.set(optionsHash, cache);
-  const cacheFilePath = getCachePathForOptionsHash(optionsHash);
-  cache.writeToDisk(cacheFilePath);
+  cache.writeToDisk();
 }
 
 /**

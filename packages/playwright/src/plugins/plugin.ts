@@ -62,7 +62,7 @@ export const createNodes: CreateNodesV2<PlaywrightPluginOptions> = [
         context
       );
     } finally {
-      pluginCache.writeToDisk(cachePath);
+      pluginCache.writeToDisk();
     }
   },
 ];

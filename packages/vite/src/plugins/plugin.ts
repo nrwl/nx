@@ -190,7 +190,7 @@ export const createNodes: CreateNodesV2<VitePluginOptions> = [
         context
       );
     } finally {
-      targetsCache.writeToDisk(cachePath);
+      targetsCache.writeToDisk();
     }
   },
 ];

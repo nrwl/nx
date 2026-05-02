@@ -18,7 +18,7 @@ export function writeMavenCache(
   cachePath: string,
   cache: PluginCache<MavenAnalysisData>
 ): void {
-  cache.writeToDisk(cachePath);
+  cache.writeToDisk();
 }
 
 /**

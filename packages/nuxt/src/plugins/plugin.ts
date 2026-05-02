@@ -47,7 +47,7 @@ export const createNodes: CreateNodesV2<NuxtPluginOptions> = [
       options,
       context
     );
-    targetsCache.writeToDisk(cachePath);
+    targetsCache.writeToDisk();
     return result;
   },
 ];

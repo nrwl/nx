@@ -24,7 +24,7 @@ export function readPackageJsonConfigurationCache(): PackageJsonConfigurationCac
 
 function writeCache() {
   if (packageJsonPluginCache) {
-    packageJsonPluginCache.writeToDisk(cachePath);
+    packageJsonPluginCache.writeToDisk();
   }
 }
 

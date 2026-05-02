@@ -72,7 +72,7 @@ export const createNodes: CreateNodesV2<NextPluginOptions> = [
         context
       );
     } finally {
-      targetsCache.writeToDisk(cachePath);
+      targetsCache.writeToDisk();
     }
   },
 ];

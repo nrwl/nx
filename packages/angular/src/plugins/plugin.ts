@@ -103,7 +103,7 @@ export const createNodesV2: CreateNodesV2<AngularPluginOptions> = [
         context
       );
     } finally {
-      projectsCache.writeToDisk(cachePath);
+      projectsCache.writeToDisk();
     }
   },
 ];
