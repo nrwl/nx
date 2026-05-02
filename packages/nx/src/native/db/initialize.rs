@@ -19,7 +19,11 @@ pub(crate) fn initialize_db(db_path: &Path) -> anyhow::Result<NxDbConnection> {
         .map_err(|e| anyhow::anyhow!("Failed to create tokio runtime: {:?}", e))?;
 
     let db = rt
-        .block_on(turso::Builder::new_local(&db_path.to_string_lossy()).build())
+        .block_on(
+            turso::Builder::new_local(&db_path.to_string_lossy())
+                .experimental_multiprocess_wal(true)
+                .build(),
+        )
         .map_err(|e| anyhow::anyhow!("Failed to open database: {:?}", e))?;
 
     let conn = db
