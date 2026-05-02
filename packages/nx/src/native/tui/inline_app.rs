@@ -1061,6 +1061,7 @@ impl InlineApp {
         pty: &Arc<PtyInstance>,
     ) {
         use crate::native::tui::theme::THEME;
+        use crate::native::tui::vt100_adapter::Vt100CttScreen;
         use ratatui::style::Style;
         use ratatui::widgets::Block;
         use tui_term::widget::PseudoTerminal;
@@ -1073,7 +1074,7 @@ impl InlineApp {
                 .border_style(Style::default().fg(THEME.primary_fg));
 
             // Use PseudoTerminal with block
-            let pseudo_term = PseudoTerminal::new(&*screen).block(block);
+            let pseudo_term = PseudoTerminal::new(Vt100CttScreen::wrap(&screen)).block(block);
             f.render_widget(pseudo_term, area);
         }
     }
