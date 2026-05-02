@@ -79,7 +79,10 @@ export default async function (globalConfig: Config.ConfigGlobals) {
       }
     }
 
-    if (process.env.NX_E2E_SKIP_CLEANUP !== 'true' || !existsSync('./build')) {
+    if (
+      process.env.NX_E2E_SKIP_GLOBAL_CLEANUP !== 'true' ||
+      !existsSync('./build')
+    ) {
       if (!isCI) {
         registerTsConfigPaths(join(__dirname, '../../tsconfig.base.json'));
         const { e2eCwd } = await import('./get-env-info');

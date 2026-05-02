@@ -327,7 +327,7 @@ jobs:
           NX_NATIVE_LOGGING: 'false'
           NX_E2E_RUN_E2E: 'true'
           NX_CLOUD_NO_TIMEOUTS: 'true'
-          NX_E2E_SKIP_CLEANUP: 'true'
+          NX_E2E_SKIP_GLOBAL_CLEANUP: 'true'
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: ${{ matrix.package_manager }}
           npm_config_registry: http://localhost:4872
@@ -352,7 +352,7 @@ jobs:
           NX_E2E_VERBOSE_LOGGING: 'true'
           NX_NATIVE_LOGGING: 'false'
           NX_E2E_RUN_E2E: 'true'
-          NX_E2E_SKIP_CLEANUP: 'true'
+          NX_E2E_SKIP_GLOBAL_CLEANUP: 'true'
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: 'npm'
           npm_config_registry: http://localhost:4872
