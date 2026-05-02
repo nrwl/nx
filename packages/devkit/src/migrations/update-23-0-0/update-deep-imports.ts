@@ -1,19 +1,18 @@
-import {
-  applyChangesToString,
-  ChangeType,
-  ensurePackage,
-  formatFiles,
-  logger,
-  type StringChange,
-  type Tree,
-  visitNotIgnoredFiles,
-} from '@nx/devkit';
+import { logger, type Tree } from 'nx/src/devkit-exports';
 import type {
   ImportDeclaration,
   ImportSpecifier,
   NamedImports,
   SourceFile,
 } from 'typescript';
+import { formatFiles } from '../../generators/format-files';
+import { visitNotIgnoredFiles } from '../../generators/visit-not-ignored-files';
+import { ensurePackage } from '../../utils/package-json';
+import {
+  applyChangesToString,
+  ChangeType,
+  type StringChange,
+} from '../../utils/string-change';
 import { typescriptVersion } from '../../utils/versions';
 
 const TS_EXTENSIONS = ['.ts', '.tsx', '.cts', '.mts'] as const;
@@ -74,7 +73,9 @@ const FALLBACK_RE = /(['"])@nx\/devkit\/src\/[^'"\n]+?\1/g;
 
 let ts: typeof import('typescript') | undefined;
 
-export default async function updateDevkitDeepImports(tree: Tree) {
+export default async function updateDevkitDeepImports(
+  tree: Tree
+): Promise<void> {
   let touchedCount = 0;
 
   visitNotIgnoredFiles(tree, '.', (filePath) => {
