@@ -156,17 +156,12 @@ Add these sections:
       "options": {
         "packageRoot": "packages/{projectName}"
       }
-    },
-    "build-base": {
-      "outputs": [
-        "{projectRoot}/dist/**/*.{js,cjs,mjs,d.ts}",
-        "{projectRoot}/*.d.ts",
-        "{projectRoot}/src/**/*.d.ts"
-      ]
     }
   }
 }
 ```
+
+Do **not** override `build-base.outputs` in `project.json`. The `@nx/js/typescript` plugin reads `outDir` and `tsBuildInfoFile` from `tsconfig.lib.json` and infers the correct outputs (including the tsbuildinfo and the full set of file extensions). A hand-written override is almost always less complete than the inferred set.
 
 Update the existing `build` target's `outputs` if they reference `{workspaceRoot}/dist/packages/<name>` — they should now reference `{projectRoot}/dist/`.
 
