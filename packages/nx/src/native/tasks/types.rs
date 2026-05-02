@@ -32,7 +32,7 @@ pub struct Task {
     /// Determines if a given task should be cacheable.
     pub cache: Option<bool>,
     /// Determines if a given task should be parallelizable.
-    pub parallelism: bool,
+    pub parallelism: Option<bool>,
     /// This denotes if the task runs continuously
     pub continuous: Option<bool>,
 }
@@ -69,6 +69,12 @@ impl Task {
     pub fn with_continuous(mut self, continuous: bool) -> Self {
         self.continuous = Some(continuous);
         self
+    }
+
+    /// Whether this task may run in parallel with others. Defaults to `true`
+    /// when unset, matching `create-task-graph.ts` (`parallelism ?? true`).
+    pub fn is_parallelizable(&self) -> bool {
+        self.parallelism.unwrap_or(true)
     }
 }
 
