@@ -153,7 +153,7 @@ describe('Angular Module Federation - Host and Remote', () => {
       `serve ${hostApp} --port=${hostPort} --dev-remotes=${remoteApp1}`,
       (output) =>
         !output.includes(`Remote '${remoteApp1}' failed to serve correctly`) &&
-        output.includes(`listening on localhost:${hostPort}`)
+        output.includes(`server ready at http://localhost:${hostPort}`)
     );
     await killProcessAndPorts(processSwc.pid, hostPort, remotePort);
 
@@ -161,7 +161,7 @@ describe('Angular Module Federation - Host and Remote', () => {
       `serve ${hostApp} --port=${hostPort} --dev-remotes=${remoteApp1}`,
       (output) =>
         !output.includes(`Remote '${remoteApp1}' failed to serve correctly`) &&
-        output.includes(`listening on localhost:${hostPort}`),
+        output.includes(`server ready at http://localhost:${hostPort}`),
       { env: { NX_PREFER_TS_NODE: 'true' } }
     );
 
@@ -194,7 +194,7 @@ describe('Angular Module Federation - Host and Remote', () => {
       `serve ${app1} --dev-remotes=${app2}`,
       (output) =>
         !output.includes(`Remote '${app2}' failed to serve correctly`) &&
-        output.includes(`listening on localhost:${app1Port}`)
+        output.includes(`server ready at http://localhost:${app1Port}`)
     );
 
     await killProcessAndPorts(processSwc.pid, app1Port, app2Port);
@@ -203,7 +203,7 @@ describe('Angular Module Federation - Host and Remote', () => {
       `serve ${app1} --dev-remotes=${app2}`,
       (output) =>
         !output.includes(`Remote '${app2}' failed to serve correctly`) &&
-        output.includes(`listening on localhost:${app1Port}`),
+        output.includes(`server ready at http://localhost:${app1Port}`),
       { env: { NX_PREFER_TS_NODE: 'true' } }
     );
 
