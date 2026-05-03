@@ -22,14 +22,6 @@ export interface AnalysisErrorResult {
 }
 export type AnalysisResult = AnalysisSuccessResult | AnalysisErrorResult;
 
-function openAnalyzerCache(
-  optionsHash: string
-): PluginCache<AnalysisSuccessResult> {
-  return new PluginCache<AnalysisSuccessResult>(
-    join(workspaceDataDirectory, `dotnet-${optionsHash}.hash`)
-  );
-}
-
 /**
  * Options passed to the MSBuild analyzer.
  * These are the target names that the analyzer will use to generate targets.
@@ -209,7 +201,9 @@ export async function analyzeProjects(
   }
 
   const optionsHash = hashObject(options);
-  const analyzerCache = openAnalyzerCache(optionsHash);
+  const analyzerCache = new PluginCache<AnalysisSuccessResult>(
+    join(workspaceDataDirectory, `dotnet-${optionsHash}.hash`)
+  );
   const cachedResult = analyzerCache.get(filesHash);
   if (cachedResult) {
     // Update cache
