@@ -31,18 +31,16 @@ function getCachePathForOptionsHash(optionsHash: string): string {
 function readAnalyzerCache(
   optionsHash: string
 ): PluginCache<AnalysisSuccessResult> {
-  if (analyzerCaches.has(optionsHash)) {
-    return analyzerCaches.get(optionsHash)!;
+  let cache = analyzerCaches.get(optionsHash);
+  if (!cache) {
+    const cacheFilePath = getCachePathForOptionsHash(optionsHash);
+    cache = new PluginCache<AnalysisSuccessResult>(cacheFilePath);
+    analyzerCaches.set(optionsHash, cache);
   }
-  const cacheFilePath = getCachePathForOptionsHash(optionsHash);
-  return new PluginCache<AnalysisSuccessResult>(cacheFilePath);
+  return cache;
 }
 
-function writeAnalyzerCache(
-  optionsHash: string,
-  cache: PluginCache<AnalysisSuccessResult>
-): void {
-  analyzerCaches.set(optionsHash, cache);
+function writeAnalyzerCache(cache: PluginCache<AnalysisSuccessResult>): void {
   cache.writeToDisk();
 }
 
@@ -247,7 +245,7 @@ export async function analyzeProjects(
     };
     // Update persistent cache
     analyzerCache.set(filesHash, result);
-    writeAnalyzerCache(optionsHash, analyzerCache);
+    writeAnalyzerCache(analyzerCache);
 
     return result;
   } catch (error) {
