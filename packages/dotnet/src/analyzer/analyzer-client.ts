@@ -22,18 +22,12 @@ export interface AnalysisErrorResult {
 }
 export type AnalysisResult = AnalysisSuccessResult | AnalysisErrorResult;
 
-const analyzerCaches = new Map<string, PluginCache<AnalysisSuccessResult>>();
-
-function getAnalyzerCache(
+function openAnalyzerCache(
   optionsHash: string
 ): PluginCache<AnalysisSuccessResult> {
-  const cachePath = join(workspaceDataDirectory, `dotnet-${optionsHash}.hash`);
-  let cache = analyzerCaches.get(cachePath);
-  if (!cache) {
-    cache = new PluginCache<AnalysisSuccessResult>(cachePath);
-    analyzerCaches.set(cachePath, cache);
-  }
-  return cache;
+  return new PluginCache<AnalysisSuccessResult>(
+    join(workspaceDataDirectory, `dotnet-${optionsHash}.hash`)
+  );
 }
 
 /**
@@ -215,7 +209,7 @@ export async function analyzeProjects(
   }
 
   const optionsHash = hashObject(options);
-  const analyzerCache = getAnalyzerCache(optionsHash);
+  const analyzerCache = openAnalyzerCache(optionsHash);
   const cachedResult = analyzerCache.get(filesHash);
   if (cachedResult) {
     // Update cache
