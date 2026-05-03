@@ -20,37 +20,16 @@ const INFIX_TARGET_COMMANDS = new Set([
 ]);
 
 /**
- * Custom yargs completion handler. In practice we short-circuit in
- * `bin/nx.ts` → `fast-complete.ts`, so this is rarely hit. Kept registered
- * (via `.completion(...)` in nx-commands.ts) as a fallback for any code path
- * that parses with yargs directly.
+ * Returns project/target completions for known nx subcommands. Returns null
+ * when the routing has nothing specific to add — the caller should fall back
+ * to yargs's default command/option enumeration.
  */
-export function completionHandler(
-  current: string,
-  argv: any,
-  done: (completions: ReadonlyArray<string>) => void
-): void {
-  const args: string[] = argv._ ?? [];
-
-  try {
-    const completions = getCompletions(current, args);
-    if (completions !== null) {
-      done(completions);
-      return;
-    }
-  } catch {
-    // Fall through to default on any error
-  }
-
-  done([]);
-}
-
 export function getCompletions(
   current: string,
   args: string[]
 ): string[] | null {
   if (args.length === 0) {
-    return null; // Let yargs handle top-level command completion
+    return null;
   }
 
   const command = args[0];
@@ -86,7 +65,7 @@ export function getCompletions(
     return getProjectNameCompletions(current);
   }
 
-  return null; // Let yargs handle everything else
+  return null;
 }
 
 // Trailing `:` after a project lets the user TAB again to complete targets

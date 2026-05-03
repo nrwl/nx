@@ -37,13 +37,15 @@ const isTsExt = extname(__filename).endsWith('.ts');
 const pathToPkgJson = isTsExt ? '../package.json' : '../../package.json';
 
 async function main() {
-  // Shell tab-completion fast path. Yargs' built-in completion is broken by
-  // our `parserConfiguration({'strip-dashed': true})` — the --get-yargs-
-  // completions flag isn't recognized, so yargs falls through to normal
-  // command matching and fires handlers instead of emitting completions.
-  // Handle completion here before any yargs / workspace init runs.
+  // Shell tab-completion: skip workspace init (analytics, native module,
+  // dotenv, initLocal, daemon client). Yargs's `.completion()` callback in
+  // `nx-commands` handles the request by reading the cached project graph
+  // directly — no workspace state is needed.
   if (process.argv.includes('--get-yargs-completions')) {
-    require('../src/command-line/completion/fast-complete').runFastCompletion();
+    // perf-logging consumes an `init-local` mark; set it before requiring
+    // nx-commands so the measurement doesn't error on missing mark.
+    performance.mark('init-local');
+    (await import('nx/src/command-line/nx-commands')).commandsObject.argv;
     return;
   }
 
