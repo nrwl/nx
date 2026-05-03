@@ -38,6 +38,30 @@ export function getProjectNameCompletions(current: string): string[] {
 }
 
 /**
+ * Returns names of projects that have the given target, matching the prefix.
+ * Used for infix completions like `nx build <TAB>` — we only want projects
+ * that actually have a `build` target, not every project in the workspace.
+ */
+export function getProjectNamesWithTarget(
+  current: string,
+  targetName: string
+): string[] {
+  const graph = getCachedProjectGraph();
+  if (!graph?.nodes) {
+    return [];
+  }
+  const matches: string[] = [];
+  for (const [name, node] of Object.entries<any>(graph.nodes)) {
+    if (node?.data?.targets && targetName in node.data.targets) {
+      if (!current || name.startsWith(current)) {
+        matches.push(name);
+      }
+    }
+  }
+  return matches;
+}
+
+/**
  * Returns target names matching the given prefix.
  * If projectName is provided, only returns targets for that project.
  * Otherwise returns all unique target names across the workspace.

@@ -57,7 +57,7 @@ import { yargsShowCommand } from './show/command-object';
 import { yargsSyncCheckCommand, yargsSyncCommand } from './sync/command-object';
 import { yargsWatchCommand } from './watch/command-object';
 import { yargsCompletionCommand } from './completion/command-object';
-import { getCompletions } from './completion/routing';
+import { getCompletions, getCommandCompletions } from './completion/routing';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -86,9 +86,21 @@ function fallbackCompletion(
     // yargs may include the script name in argv._; drop it so callers see
     // just the command tokens (e.g. ['show', 'project']).
     const args = positional[0] === 'nx' ? positional.slice(1) : positional;
+
+    // Project/target routing first.
     const dynamic = getCompletions(current, args);
     if (dynamic !== null) {
       done(dynamic);
+      return;
+    }
+
+    // Subcommand + option completion for matched top-level commands. Walks
+    // manually instead of letting yargs's defaultCompletion recurse (its
+    // reset() wipes our boolean-flag declaration and causes help text to
+    // leak into stdout for some commands like run-many/affected).
+    const matched = getCommandCompletions(current, args);
+    if (matched !== null) {
+      done(matched);
       return;
     }
   } catch {
