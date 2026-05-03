@@ -27,14 +27,11 @@ const analyzerCaches = new Map<string, PluginCache<AnalysisSuccessResult>>();
 function getAnalyzerCache(
   optionsHash: string
 ): PluginCache<AnalysisSuccessResult> {
-  let cache = analyzerCaches.get(optionsHash);
+  const cachePath = join(workspaceDataDirectory, `dotnet-${optionsHash}.hash`);
+  let cache = analyzerCaches.get(cachePath);
   if (!cache) {
-    const cacheFilePath = join(
-      workspaceDataDirectory,
-      `dotnet-${optionsHash}.hash`
-    );
-    cache = new PluginCache<AnalysisSuccessResult>(cacheFilePath);
-    analyzerCaches.set(optionsHash, cache);
+    cache = new PluginCache<AnalysisSuccessResult>(cachePath);
+    analyzerCaches.set(cachePath, cache);
   }
   return cache;
 }
