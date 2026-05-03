@@ -53,6 +53,7 @@ pub mod user_dimension {
 pub mod event_dimension {
     pub const NX_VERSION: &str = "ep.nx_version";
     pub const IS_AI_AGENT: &str = "ep.is_ai_agent";
+    pub const WORKSPACE_ID: &str = "ep.workspace_id";
     pub const COMMAND: &str = "ep.nx_command";
     pub const GENERATOR_NAME: &str = "ep.generator_name";
     pub const PACKAGE_NAME: &str = "ep.package_name";
