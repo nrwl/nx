@@ -187,8 +187,6 @@ export function buildTargetFromScript(
   };
 }
 
-let packageManagerCommand: PackageManagerCommands | undefined;
-
 export function getMetadataFromPackageJson(
   packageJson: PackageJson,
   isInPackageManagerWorkspaces: boolean
@@ -231,9 +229,18 @@ export function readTargetsFromPackageJson(
   const { scripts, nx, private: isPrivate } = packageJson ?? {};
   const res: Record<string, TargetConfiguration> = {};
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
-  for (const script of includedScripts) {
-    packageManagerCommand ??= getPackageManagerCommand();
-    res[script] = buildTargetFromScript(script, scripts, packageManagerCommand);
+  if (includedScripts.length > 0) {
+    const packageManagerCommand = getPackageManagerCommand(
+      detectPackageManager(workspaceRoot),
+      workspaceRoot
+    );
+    for (const script of includedScripts) {
+      res[script] = buildTargetFromScript(
+        script,
+        scripts,
+        packageManagerCommand
+      );
+    }
   }
   for (const targetName in nx?.targets) {
     const nxTarget = nx.targets[targetName];

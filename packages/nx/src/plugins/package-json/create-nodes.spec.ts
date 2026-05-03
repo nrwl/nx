@@ -14,6 +14,13 @@ describe('nx package.json workspaces plugin', () => {
     nxJsonConfiguration: {},
   };
 
+  beforeEach(() => {
+    // Ensure deterministic package manager detection: without a lockfile the
+    // detector falls back to npm_config_user_agent, which makes test output
+    // depend on whoever invoked jest (npm vs pnpm vs yarn).
+    vol.fromJSON({ 'package-lock.json': '{}' }, '/root');
+  });
+
   afterEach(() => {
     vol.reset();
   });
