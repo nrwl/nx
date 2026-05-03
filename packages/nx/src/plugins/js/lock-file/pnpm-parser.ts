@@ -28,7 +28,7 @@ import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getCatalogManager } from '../../../utils/catalog';
 import { findNodeMatchingVersion } from './project-graph-pruning';
-import { join } from 'path';
+import { join, relative, sep } from 'path';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 import { satisfies, validRange } from 'semver';
 let currentLockFileHash: string;
@@ -589,14 +589,11 @@ export function stringifyPnpmLockfile(
     +lockfileVersion
   );
 
-  const workspaceDependencyImporters: Record<string, ProjectSnapshot> = {};
-  for (const [packageName, importerPath] of Object.entries(requiredImporters)) {
-    const baseImporter = importers[importerPath];
-    if (baseImporter) {
-      workspaceDependencyImporters[`workspace_modules/${packageName}`] =
-        baseImporter;
-    }
-  }
+  const workspaceDependencyImporters = mapWorkspaceDependencyImporters(
+    requiredImporters,
+    importers,
+    graph
+  );
 
   const output: Lockfile = {
     ...data,
@@ -609,6 +606,112 @@ export function stringifyPnpmLockfile(
   };
 
   return stringifyToPnpmYaml(output);
+}
+
+function mapWorkspaceDependencyImporters(
+  requiredImporters: Record<string, string>,
+  importers: Record<string, ProjectSnapshot>,
+  graph: ProjectGraph
+): Record<string, ProjectSnapshot> {
+  const workspaceModules = getWorkspacePackagesFromGraph(graph);
+  const workspaceDependencyImporters: Record<string, ProjectSnapshot> = {};
+  const pendingImporters = Object.entries(requiredImporters);
+
+  for (let i = 0; i < pendingImporters.length; i++) {
+    const [packageName, importerPath] = pendingImporters[i];
+    const workspaceModulesPath = `workspace_modules/${packageName}`;
+    if (workspaceDependencyImporters[workspaceModulesPath]) {
+      continue;
+    }
+
+    const baseImporter = importers[importerPath];
+    if (baseImporter) {
+      workspaceDependencyImporters[workspaceModulesPath] =
+        remapWorkspaceDependencies(baseImporter, packageName, workspaceModules);
+
+      collectWorkspaceDependencyImporters(
+        baseImporter,
+        importerPath,
+        workspaceModules,
+        pendingImporters
+      );
+    }
+  }
+
+  return workspaceDependencyImporters;
+}
+
+function collectWorkspaceDependencyImporters(
+  importer: ProjectSnapshot,
+  importerPath: string,
+  workspaceModules: Map<string, unknown>,
+  pendingImporters: [string, string][]
+) {
+  ['dependencies', 'optionalDependencies', 'devDependencies'].forEach(
+    (depType) => {
+      if (!importer[depType]) {
+        return;
+      }
+
+      for (const [dependencyName, dependencyRef] of Object.entries(
+        importer[depType]
+      )) {
+        if (!workspaceModules.has(dependencyName)) {
+          continue;
+        }
+
+        pendingImporters.push([
+          dependencyName,
+          join(importerPath, dependencyRef.replace(/^(link:|file:)/, '')),
+        ]);
+      }
+    }
+  );
+}
+
+function remapWorkspaceDependencies(
+  importer: ProjectSnapshot,
+  packageName: string,
+  workspaceModules: Map<string, unknown>
+): ProjectSnapshot {
+  const snapshot: ProjectSnapshot = { ...importer };
+
+  ['dependencies', 'optionalDependencies', 'devDependencies'].forEach(
+    (depType) => {
+      if (!snapshot[depType]) {
+        return;
+      }
+
+      snapshot[depType] = { ...snapshot[depType] };
+      for (const dependencyName of Object.keys(snapshot[depType])) {
+        if (!workspaceModules.has(dependencyName)) {
+          continue;
+        }
+
+        snapshot[depType][dependencyName] =
+          `link:${getWorkspaceModuleRelativePath(packageName, dependencyName)}`;
+      }
+    }
+  );
+
+  if (snapshot.specifiers) {
+    snapshot.specifiers = { ...snapshot.specifiers };
+    for (const dependencyName of Object.keys(snapshot.specifiers)) {
+      if (workspaceModules.has(dependencyName)) {
+        snapshot.specifiers[dependencyName] =
+          `file:${getWorkspaceModuleRelativePath(packageName, dependencyName)}`;
+      }
+    }
+  }
+
+  return snapshot;
+}
+
+function getWorkspaceModuleRelativePath(
+  fromPackageName: string,
+  toPackageName: string
+): string {
+  return relative(fromPackageName, toPackageName).split(sep).join('/');
 }
 
 function mapSnapshots(

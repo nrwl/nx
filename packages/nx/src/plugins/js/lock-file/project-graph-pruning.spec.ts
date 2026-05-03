@@ -488,6 +488,18 @@ describe('project-graph-pruning', () => {
               },
             },
           },
+          'workspace-lib-dependency': {
+            name: 'workspace-lib-dependency',
+            type: 'lib',
+            data: {
+              root: 'packages/workspace-lib-dependency',
+              metadata: {
+                js: {
+                  packageName: 'workspace-lib-dependency',
+                },
+              },
+            },
+          },
         },
         dependencies: {
           'npm:lodash': [
@@ -509,6 +521,13 @@ describe('project-graph-pruning', () => {
           'workspace-lib': [
             {
               source: 'workspace-lib',
+              target: 'npm:lodash',
+              type: 'static',
+            },
+          ],
+          'workspace-lib-dependency': [
+            {
+              source: 'workspace-lib-dependency',
               target: 'npm:lodash',
               type: 'static',
             },
@@ -600,6 +619,46 @@ describe('project-graph-pruning', () => {
       const prunedGraph = pruneProjectGraph(graph, prunedPackageJson);
 
       expect(prunedGraph.nodes['workspace-lib']).toBeDefined();
+    });
+
+    it('should include external dependencies from transitive workspace dependencies', () => {
+      graph.dependencies['workspace-lib'] = [
+        {
+          source: 'workspace-lib',
+          target: 'transitive-workspace-lib',
+          type: 'static',
+        },
+      ];
+      graph.nodes['transitive-workspace-lib'] = {
+        name: 'transitive-workspace-lib',
+        type: 'lib',
+        data: {
+          root: 'packages/transitive-workspace-lib',
+          metadata: {
+            js: {
+              packageName: 'transitive-workspace-lib',
+            },
+          },
+        },
+      };
+      graph.dependencies['transitive-workspace-lib'] = [
+        {
+          source: 'transitive-workspace-lib',
+          target: 'npm:lodash',
+          type: 'static',
+        },
+      ];
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: {
+          'workspace-lib': '*',
+        },
+      };
+
+      const prunedGraph = pruneProjectGraph(graph, prunedPackageJson);
+
+      expect(prunedGraph.externalNodes?.['npm:lodash']).toBeDefined();
     });
 
     it('should handle devDependencies', () => {

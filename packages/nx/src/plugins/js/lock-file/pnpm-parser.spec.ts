@@ -1113,6 +1113,108 @@ describe('pnpm LockFile utility', () => {
       );
       expect(Object.keys(externalNodes).length).toEqual(5);
     });
+
+    it('should include transitive workspace dependency importers in the pruned lockfile', () => {
+      const rootLockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@proj/api':
+        specifier: workspace:*
+        version: link:apps/api
+
+  apps/api:
+    dependencies:
+      '@proj/lib-a':
+        specifier: workspace:*
+        version: link:../../libs/lib-a
+
+  libs/lib-a:
+    dependencies:
+      '@proj/lib-b':
+        specifier: workspace:*
+        version: link:../lib-b
+
+  libs/lib-b:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaBf6QTuZ7GkLtJGQmRvR9dFRJlcpNKWPr3L1fq5dJSpE0QdRfwYHksG0lWvS3s9G1u7x0MxA==}
+
+snapshots:
+
+  lodash@4.17.21: {}
+`;
+      const graph: ProjectGraph = {
+        nodes: {
+          api: {
+            name: 'api',
+            type: 'app',
+            data: {
+              root: 'apps/api',
+              metadata: { js: { packageName: '@proj/api' } },
+            },
+          },
+          'lib-a': {
+            name: 'lib-a',
+            type: 'lib',
+            data: {
+              root: 'libs/lib-a',
+              metadata: { js: { packageName: '@proj/lib-a' } },
+            },
+          },
+          'lib-b': {
+            name: 'lib-b',
+            type: 'lib',
+            data: {
+              root: 'libs/lib-b',
+              metadata: { js: { packageName: '@proj/lib-b' } },
+            },
+          },
+        },
+        dependencies: {
+          api: [{ source: 'api', target: 'lib-a', type: 'static' }],
+          'lib-a': [{ source: 'lib-a', target: 'lib-b', type: 'static' }],
+          'lib-b': [{ source: 'lib-b', target: 'npm:lodash', type: 'static' }],
+          'npm:lodash': [],
+        },
+        externalNodes: {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: { packageName: 'lodash', version: '4.17.21' },
+          },
+        },
+      };
+
+      const result = stringifyPnpmLockfile(
+        pruneProjectGraph(graph, {
+          dependencies: { '@proj/lib-a': 'workspace:*' },
+        }),
+        rootLockFile,
+        {
+          dependencies: { '@proj/lib-a': 'workspace:*' },
+        },
+        '/virtual'
+      );
+
+      expect(result).toContain('workspace_modules/@proj/lib-a:');
+      expect(result).toContain('workspace_modules/@proj/lib-b:');
+      expect(result).toContain('specifier: file:../lib-b');
+      expect(result).toContain('version: link:../lib-b');
+      expect(result).toContain('lodash@4.17.21:');
+    });
   });
 
   describe('mixed keys', () => {

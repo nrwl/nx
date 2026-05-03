@@ -188,12 +188,29 @@ function traverseNode(
 function traverseWorkspaceNode(
   graph: ProjectGraph,
   builder: ProjectGraphBuilder,
-  node: ProjectGraphProjectNode
+  node: ProjectGraphProjectNode,
+  seenWorkspaceNodes = new Set<string>()
 ) {
+  if (seenWorkspaceNodes.has(node.name)) {
+    return;
+  }
+  seenWorkspaceNodes.add(node.name);
+
   graph.dependencies[node.name]?.forEach((dep) => {
     const depNode = graph.externalNodes[dep.target];
     if (depNode) {
       traverseNode(graph, builder, depNode);
+      return;
+    }
+
+    const workspaceDepNode = graph.nodes[dep.target];
+    if (workspaceDepNode?.data?.metadata?.js?.packageName) {
+      traverseWorkspaceNode(
+        graph,
+        builder,
+        workspaceDepNode,
+        seenWorkspaceNodes
+      );
     }
   });
 }
