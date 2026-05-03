@@ -5,6 +5,7 @@
     { "glob": "**/files/**/.gitkeep" },
     { "glob": "src/**/schema.json" },
     { "glob": "src/**/schema.d.ts" },
+    { "glob": "PLUGIN.md" },
     "LICENSE"
   ]
 }
