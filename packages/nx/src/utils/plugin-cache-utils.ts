@@ -113,8 +113,7 @@ export class PluginCache<T> {
    *    write an empty cache so the file is valid
    */
   writeToDisk(): void {
-    const { cachePath } = this;
-    mkdirSync(dirname(cachePath), { recursive: true });
+    mkdirSync(dirname(this.cachePath), { recursive: true });
 
     let content: string | undefined;
 
@@ -146,10 +145,10 @@ export class PluginCache<T> {
 
     // Attempt to write the serialized content to disk
     try {
-      writeFileSync(cachePath, content);
+      writeFileSync(this.cachePath, content);
     } catch {
       // Filesystem error — wipe cache so a corrupted file doesn't persist
-      tryRemoveFile(cachePath);
+      tryRemoveFile(this.cachePath);
     }
   }
 

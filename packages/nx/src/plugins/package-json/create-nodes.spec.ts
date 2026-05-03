@@ -1,8 +1,12 @@
 import '../../internal-testing-utils/mock-fs';
 
+import { join } from 'node:path';
 import { vol } from 'memfs';
 import { createNodeFromPackageJson, createNodesV2 } from './create-nodes';
+import { workspaceDataDirectory } from '../../utils/cache-directory';
 import { PluginCache } from '../../utils/plugin-cache-utils';
+
+const packageJsonCachePath = join(workspaceDataDirectory, 'package-json.hash');
 
 describe('nx package.json workspaces plugin', () => {
   const context = {
@@ -52,7 +56,7 @@ describe('nx package.json workspaces plugin', () => {
       createNodeFromPackageJson(
         'package.json',
         '/root',
-        new PluginCache('/root/.nx/test-cache.json'),
+        new PluginCache(packageJsonCachePath),
         false
       )
     ).toMatchInlineSnapshot(`
@@ -106,7 +110,7 @@ describe('nx package.json workspaces plugin', () => {
       createNodeFromPackageJson(
         'packages/lib-a/package.json',
         '/root',
-        new PluginCache('/root/.nx/test-cache.json'),
+        new PluginCache(packageJsonCachePath),
         false
       )
     ).toMatchInlineSnapshot(`
@@ -160,7 +164,7 @@ describe('nx package.json workspaces plugin', () => {
       createNodeFromPackageJson(
         'packages/lib-b/package.json',
         '/root',
-        new PluginCache('/root/.nx/test-cache.json'),
+        new PluginCache(packageJsonCachePath),
         false
       )
     ).toMatchInlineSnapshot(`
@@ -804,7 +808,7 @@ describe('nx package.json workspaces plugin', () => {
       createNodeFromPackageJson(
         'apps/myapp/package.json',
         '/root',
-        new PluginCache('/root/.nx/test-cache.json'),
+        new PluginCache(packageJsonCachePath),
         false
       ).projects['apps/myapp'].projectType
     ).toEqual('application');
@@ -813,7 +817,7 @@ describe('nx package.json workspaces plugin', () => {
       createNodeFromPackageJson(
         'packages/mylib/package.json',
         '/root',
-        new PluginCache('/root/.nx/test-cache.json'),
+        new PluginCache(packageJsonCachePath),
         false
       ).projects['packages/mylib'].projectType
     ).toEqual('library');
@@ -840,7 +844,7 @@ describe('nx package.json workspaces plugin', () => {
       createNodeFromPackageJson(
         'package.json',
         '/root',
-        new PluginCache('/root/.nx/test-cache.json'),
+        new PluginCache(packageJsonCachePath),
         false
       ).projects['.'].projectType
     ).toEqual('library');
@@ -870,7 +874,7 @@ describe('nx package.json workspaces plugin', () => {
       createNodeFromPackageJson(
         'packages/mylib/package.json',
         '/root',
-        new PluginCache('/root/.nx/test-cache.json'),
+        new PluginCache(packageJsonCachePath),
         false
       ).projects['packages/mylib'].projectType
     ).toEqual('library');
@@ -878,7 +882,7 @@ describe('nx package.json workspaces plugin', () => {
       createNodeFromPackageJson(
         'example/package.json',
         '/root',
-        new PluginCache('/root/.nx/test-cache.json'),
+        new PluginCache(packageJsonCachePath),
         false
       ).projects['example'].projectType
     ).toBeUndefined();

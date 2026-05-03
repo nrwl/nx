@@ -24,24 +24,19 @@ export type AnalysisResult = AnalysisSuccessResult | AnalysisErrorResult;
 
 const analyzerCaches = new Map<string, PluginCache<AnalysisSuccessResult>>();
 
-function getCachePathForOptionsHash(optionsHash: string): string {
-  return join(workspaceDataDirectory, `dotnet-${optionsHash}.hash`);
-}
-
-function readAnalyzerCache(
+function getAnalyzerCache(
   optionsHash: string
 ): PluginCache<AnalysisSuccessResult> {
   let cache = analyzerCaches.get(optionsHash);
   if (!cache) {
-    const cacheFilePath = getCachePathForOptionsHash(optionsHash);
+    const cacheFilePath = join(
+      workspaceDataDirectory,
+      `dotnet-${optionsHash}.hash`
+    );
     cache = new PluginCache<AnalysisSuccessResult>(cacheFilePath);
     analyzerCaches.set(optionsHash, cache);
   }
   return cache;
-}
-
-function writeAnalyzerCache(cache: PluginCache<AnalysisSuccessResult>): void {
-  cache.writeToDisk();
 }
 
 /**
@@ -223,7 +218,7 @@ export async function analyzeProjects(
   }
 
   const optionsHash = hashObject(options);
-  const analyzerCache = readAnalyzerCache(optionsHash);
+  const analyzerCache = getAnalyzerCache(optionsHash);
   const cachedResult = analyzerCache.get(filesHash);
   if (cachedResult) {
     // Update cache
@@ -245,7 +240,7 @@ export async function analyzeProjects(
     };
     // Update persistent cache
     analyzerCache.set(filesHash, result);
-    writeAnalyzerCache(analyzerCache);
+    analyzerCache.writeToDisk();
 
     return result;
   } catch (error) {
