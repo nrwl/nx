@@ -59,3 +59,6 @@ tools/documentation/create-embeddings/src/main.mts
 
 # Inlined from `@yarnpkg/parser` keep as is
 packages/nx/src/utils/yarn-syml/syml-grammar.js
+
+# Vendored upstream crate (turso_sdk_kit) — see Cargo.toml [patch.crates-io]
+cargo-patches/

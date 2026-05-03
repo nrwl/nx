@@ -4867,8 +4867,6 @@ dependencies = [
 [[package]]
 name = "turso_sdk_kit"
 version = "0.6.0-pre.26"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6bb7a20900d3dbb940db95a4dff3db8c1684cf101e99ec31ed7fbf54c186d1b"
 dependencies = [
  "bindgen",
  "env_logger",
