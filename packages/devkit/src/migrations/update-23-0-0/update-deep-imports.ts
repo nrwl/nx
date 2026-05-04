@@ -69,8 +69,6 @@ export const DEVKIT_INTERNAL_SYMBOLS: ReadonlySet<string> = new Set([
   'dasherize',
 ]);
 
-const FALLBACK_RE = /(['"])@nx\/devkit\/src\/[^'"\n]+?\1/g;
-
 let ts: typeof import('typescript') | undefined;
 
 export default async function updateDevkitDeepImports(
@@ -120,6 +118,7 @@ export function rewriteDevkitDeepImports(source: string): string {
     if (!stmt.moduleSpecifier.text.startsWith(DEEP_IMPORT_PREFIX)) continue;
 
     const replacement = buildReplacement(stmt, sourceFile);
+    if (replacement === null) continue;
     changes.push(
       {
         type: ChangeType.Delete,
@@ -136,16 +135,6 @@ export function rewriteDevkitDeepImports(source: string): string {
 
   let updated =
     changes.length > 0 ? applyChangesToString(source, changes) : source;
-
-  // Fallback: any remaining `@nx/devkit/src/...` specifiers (default imports,
-  // namespace imports, side-effect imports, dynamic `import(...)`, `require(...)`
-  // calls, etc.) get rewritten to `/internal`. We can't bucket by symbol for
-  // those forms, so `/internal` is the safe default since it re-exports every
-  // symbol that was deep-importable.
-  updated = updated.replace(
-    FALLBACK_RE,
-    (_match, quote: string) => `${quote}${INTERNAL_SPECIFIER}${quote}`
-  );
 
   // Final pass: collapse any duplicate `@nx/devkit` and `@nx/devkit/internal`
   // named-only imports into a single declaration. This handles both the
@@ -261,30 +250,18 @@ function renderSpecifierFromNode(
 function buildReplacement(
   decl: ImportDeclaration,
   sourceFile: SourceFile
-): string {
+): string | null {
   const importClause = decl.importClause;
-
-  // `import '@nx/devkit/src/...';` (side-effect) — no clause to bucket.
-  if (!importClause) {
-    return `import '${INTERNAL_SPECIFIER}';`;
-  }
+  if (!importClause) return null; // side-effect import — can't bucket
 
   const namedBindings = importClause.namedBindings;
   const isNamedImport =
     namedBindings && ts!.isNamedImports(namedBindings) && !importClause.name;
 
-  // Default / namespace / mixed-default-and-named — can't bucket reliably.
-  // Preserve the import shape, swap the specifier.
-  if (!isNamedImport) {
-    const before = source(decl, sourceFile).slice(
-      0,
-      decl.moduleSpecifier.getStart(sourceFile) - decl.getStart(sourceFile)
-    );
-    const after = source(decl, sourceFile).slice(
-      decl.moduleSpecifier.getEnd() - decl.getStart(sourceFile)
-    );
-    return `${before}'${INTERNAL_SPECIFIER}'${after}`;
-  }
+  // Default / namespace / mixed-default-and-named — can't bucket reliably,
+  // and `/internal` doesn't necessarily re-export the symbol they're after.
+  // Leave the original import alone so the user can migrate it by hand.
+  if (!isNamedImport) return null;
 
   const isTypeOnlyImport = importClause.isTypeOnly;
   const elements = (namedBindings as NamedImports).elements;
@@ -302,10 +279,7 @@ function buildReplacement(
   if (internal.length > 0) {
     lines.push(renderImport(internal, INTERNAL_SPECIFIER, isTypeOnlyImport));
   }
-  if (lines.length === 0) {
-    // Defensive: empty `import {} from '...'` — point at /internal.
-    lines.push(`import {} from '${INTERNAL_SPECIFIER}';`);
-  }
+  if (lines.length === 0) return null;
   return lines.join('\n');
 }
 
@@ -336,8 +310,4 @@ function renderImport(
 ): string {
   const prefix = typeOnly ? 'import type' : 'import';
   return `${prefix} { ${specifiers.join(', ')} } from '${from}';`;
-}
-
-function source(decl: ImportDeclaration, sourceFile: SourceFile): string {
-  return sourceFile.text.slice(decl.getStart(sourceFile), decl.getEnd());
 }

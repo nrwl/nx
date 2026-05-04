@@ -86,47 +86,29 @@ describe('update-deep-imports migration', () => {
       expect(output).toContain(`import { names } from '@nx/devkit';`);
     });
 
-    it('falls back to /internal for side-effect imports', () => {
+    it('leaves side-effect imports untouched', () => {
       const input = `import '@nx/devkit/src/utils/some-side-effect';\n`;
-      expect(rewriteDevkitDeepImports(input)).toContain(
-        `import '@nx/devkit/internal';`
-      );
+      expect(rewriteDevkitDeepImports(input)).toBe(input);
     });
 
-    it('falls back to /internal for default imports', () => {
+    it('leaves default imports untouched', () => {
       const input = `import x from '@nx/devkit/src/utils/foo';\n`;
-      const output = rewriteDevkitDeepImports(input);
-      expect(output).toContain(`'@nx/devkit/internal'`);
-      expect(output).toContain(`import x from`);
+      expect(rewriteDevkitDeepImports(input)).toBe(input);
     });
 
-    it('falls back to /internal for namespace imports', () => {
+    it('leaves namespace imports untouched', () => {
       const input = `import * as devkit from '@nx/devkit/src/utils/foo';\n`;
-      const output = rewriteDevkitDeepImports(input);
-      expect(output).toContain(
-        `import * as devkit from '@nx/devkit/internal';`
-      );
+      expect(rewriteDevkitDeepImports(input)).toBe(input);
     });
 
-    it('falls back to /internal for require()', () => {
+    it('leaves require() calls untouched', () => {
       const input = `const x = require('@nx/devkit/src/utils/foo');\n`;
-      expect(rewriteDevkitDeepImports(input)).toBe(
-        `const x = require('@nx/devkit/internal');\n`
-      );
+      expect(rewriteDevkitDeepImports(input)).toBe(input);
     });
 
-    it('falls back to /internal for dynamic import()', () => {
+    it('leaves dynamic import() calls untouched', () => {
       const input = `const x = await import('@nx/devkit/src/utils/foo');\n`;
-      expect(rewriteDevkitDeepImports(input)).toBe(
-        `const x = await import('@nx/devkit/internal');\n`
-      );
-    });
-
-    it('preserves quote style on fallback paths', () => {
-      const input = `const x = require("@nx/devkit/src/utils/foo");\n`;
-      expect(rewriteDevkitDeepImports(input)).toBe(
-        `const x = require("@nx/devkit/internal");\n`
-      );
+      expect(rewriteDevkitDeepImports(input)).toBe(input);
     });
 
     it('does not touch unrelated @nx/devkit imports', () => {
@@ -141,7 +123,7 @@ describe('update-deep-imports migration', () => {
   });
 
   describe('migration runner', () => {
-    it('rewrites deep imports across .ts/.tsx/.cts/.mts files', async () => {
+    it('rewrites named imports across .ts/.tsx/.cts/.mts files', async () => {
       tree.write(
         'libs/foo/src/a.ts',
         `import { dasherize } from '@nx/devkit/src/utils/string-utils';\n`
@@ -152,7 +134,7 @@ describe('update-deep-imports migration', () => {
       );
       tree.write(
         'libs/foo/src/c.cts',
-        `const { classify } = require('@nx/devkit/src/utils/string-utils');\n`
+        `import { classify } from '@nx/devkit/src/utils/string-utils';\n`
       );
       tree.write(
         'libs/foo/src/d.mts',
@@ -172,6 +154,17 @@ describe('update-deep-imports migration', () => {
       );
       expect(tree.read('libs/foo/src/d.mts', 'utf-8')).toContain(
         `'@nx/devkit/internal'`
+      );
+    });
+
+    it('does not rewrite require() calls in .cts files', async () => {
+      const content = `const { classify } = require('@nx/devkit/src/utils/string-utils');\n`;
+      tree.write('libs/foo/src/c.cts', content);
+
+      await migration(tree);
+
+      expect(tree.read('libs/foo/src/c.cts', 'utf-8')).toContain(
+        `require('@nx/devkit/src/utils/string-utils')`
       );
     });
 
