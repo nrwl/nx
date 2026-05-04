@@ -46,8 +46,13 @@ export async function convertToInferred(tree: Tree, options: Schema) {
           e.source === undefined
       );
       if (defaults) {
-        const { target: _t, executor: _e, projects: _p, source: _s, ...rest } =
-          defaults;
+        const {
+          target: _t,
+          executor: _e,
+          projects: _p,
+          source: _s,
+          ...rest
+        } = defaults;
         for (const [key, value] of Object.entries(rest)) {
           target[key] ??= value;
         }

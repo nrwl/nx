@@ -68,8 +68,7 @@ export default async function (tree: Tree) {
     const remaining = [];
     for (const entry of nxJson.targetDefaults) {
       const matches =
-        executors.includes(entry.executor) ||
-        executors.includes(entry.target);
+        executors.includes(entry.executor) || executors.includes(entry.target);
       if (!matches) {
         remaining.push(entry);
         continue;
