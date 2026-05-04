@@ -1,6 +1,6 @@
 import {
   getNamedInputs,
-  calculateHashForCreateNodes,
+  calculateHashesForCreateNodes,
   loadConfigFile,
   PluginCache,
 } from '@nx/devkit/internal';
@@ -58,18 +58,43 @@ export const createNodes: CreateNodesV2<StorybookPluginOptions> = [
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
 
+    const validConfigFiles: string[] = [];
+    const projectRoots: string[] = [];
+    for (const configFile of configFilePaths) {
+      const projectRoot = getProjectRootFromConfigPath(configFile);
+      const siblingFiles = readdirSync(
+        join(context.workspaceRoot, projectRoot)
+      );
+      if (
+        !siblingFiles.includes('package.json') &&
+        !siblingFiles.includes('project.json')
+      ) {
+        continue;
+      }
+      validConfigFiles.push(configFile);
+      projectRoots.push(projectRoot);
+    }
+
+    const projectHashes = await calculateHashesForCreateNodes(
+      projectRoots,
+      normalizedOptions,
+      context,
+      projectRoots.map(() => [lockFileName])
+    );
+
     try {
       return await createNodesFromFiles(
-        (configFile, _, context) =>
+        (configFile, _, context, idx) =>
           createNodesInternal(
             configFile,
             normalizedOptions,
             context,
             targetsCache,
             pmc,
-            lockFileName
+            projectRoots[idx],
+            projectHashes[idx]
           ),
-        configFilePaths,
+        validConfigFiles,
         normalizedOptions,
         context
       );
@@ -81,41 +106,28 @@ export const createNodes: CreateNodesV2<StorybookPluginOptions> = [
 
 export const createNodesV2 = createNodes;
 
-async function createNodesInternal(
-  configFilePath: string,
-  options: Required<StorybookPluginOptions>,
-  context: CreateNodesContextV2,
-  targetsCache: PluginCache<StorybookTargets>,
-  pmc: ReturnType<typeof getPackageManagerCommand>,
-  lockFileName: string
-) {
+function getProjectRootFromConfigPath(configFilePath: string): string {
   let projectRoot = '';
   if (configFilePath.includes('/.storybook')) {
     projectRoot = dirname(configFilePath).replace('/.storybook', '');
   } else {
     projectRoot = dirname(configFilePath).replace('.storybook', '');
   }
-
   if (projectRoot === '') {
     projectRoot = '.';
   }
+  return projectRoot;
+}
 
-  // Do not create a project if package.json and project.json isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
-    return {};
-  }
-
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [lockFileName]
-  );
-
+async function createNodesInternal(
+  configFilePath: string,
+  options: Required<StorybookPluginOptions>,
+  context: CreateNodesContextV2,
+  targetsCache: PluginCache<StorybookTargets>,
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  projectRoot: string,
+  hash: string
+) {
   const projectName = buildProjectName(projectRoot, context.workspaceRoot);
 
   if (!targetsCache.has(hash)) {

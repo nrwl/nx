@@ -1,6 +1,6 @@
 import {
   getNamedInputs,
-  calculateHashForCreateNodes,
+  calculateHashesForCreateNodes,
   loadConfigFile,
   PluginCache,
 } from '@nx/devkit/internal';
@@ -50,18 +50,57 @@ export const createNodes: CreateNodesV2<ReactNativePluginOptions> = [
     const lockFileName = getLockFileName(
       detectPackageManager(context.workspaceRoot)
     );
+    const normalizedOptions = normalizeOptions(options);
+
+    const validConfigFiles: string[] = [];
+    const projectRoots: string[] = [];
+    for (const configFile of configFiles) {
+      const projectRoot = dirname(configFile);
+      const siblingFiles = readdirSync(
+        join(context.workspaceRoot, projectRoot)
+      );
+      if (
+        !siblingFiles.includes('package.json') ||
+        !siblingFiles.includes('metro.config.js')
+      ) {
+        continue;
+      }
+
+      // Check if it's an Expo project — skip if so.
+      const packageJson = readJsonFile(
+        join(context.workspaceRoot, projectRoot, 'package.json')
+      );
+      const appConfig = await getAppConfig(configFile, context);
+      if (
+        appConfig.expo ||
+        packageJson.dependencies?.['expo'] ||
+        packageJson.devDependencies?.['expo']
+      ) {
+        continue;
+      }
+
+      validConfigFiles.push(configFile);
+      projectRoots.push(projectRoot);
+    }
+
+    const projectHashes = await calculateHashesForCreateNodes(
+      projectRoots,
+      normalizedOptions,
+      context,
+      projectRoots.map(() => [lockFileName])
+    );
 
     try {
       return await createNodesFromFiles(
-        (configFile, options, context) =>
+        (configFile, _, context, idx) =>
           createNodesInternal(
             configFile,
-            options,
+            normalizedOptions,
             context,
             targetsCache,
-            lockFileName
+            projectHashes[idx]
           ),
-        configFiles,
+        validConfigFiles,
         options,
         context
       );
@@ -78,39 +117,9 @@ async function createNodesInternal(
   options: ReactNativePluginOptions,
   context: CreateNodesContextV2,
   targetsCache: PluginCache<ReactNativeTargets>,
-  lockFileName: string
+  hash: string
 ): Promise<CreateNodesResult> {
-  options = normalizeOptions(options);
   const projectRoot = dirname(configFile);
-
-  // Do not create a project if package.json or project.json or metro.config.js isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') ||
-    !siblingFiles.includes('metro.config.js')
-  ) {
-    return {};
-  }
-
-  // Check if it's an Expo project
-  const packageJson = readJsonFile(
-    join(context.workspaceRoot, projectRoot, 'package.json')
-  );
-  const appConfig = await getAppConfig(configFile, context);
-  if (
-    appConfig.expo ||
-    packageJson.dependencies?.['expo'] ||
-    packageJson.devDependencies?.['expo']
-  ) {
-    return {};
-  }
-
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [lockFileName]
-  );
 
   if (!targetsCache.has(hash)) {
     targetsCache.set(

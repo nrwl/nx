@@ -1,6 +1,6 @@
 import {
   getNamedInputs,
-  calculateHashForCreateNodes,
+  calculateHashesForCreateNodes,
   loadConfigFile,
   PluginCache,
 } from '@nx/devkit/internal';
@@ -47,19 +47,57 @@ export const createNodes: CreateNodesV2<ExpoPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+    const normalizedOptions = normalizeOptions(options);
+
+    const validConfigFiles: string[] = [];
+    const projectRoots: string[] = [];
+    for (const configFile of configFiles) {
+      const projectRoot = dirname(configFile);
+      const siblingFiles = readdirSync(
+        join(context.workspaceRoot, projectRoot)
+      );
+      if (
+        !siblingFiles.includes('package.json') ||
+        !siblingFiles.includes('metro.config.js')
+      ) {
+        continue;
+      }
+
+      const packageJson = readJsonFile(
+        join(context.workspaceRoot, projectRoot, 'package.json')
+      );
+      const appConfig = await getAppConfig(configFile, context);
+      if (
+        !appConfig.expo &&
+        !packageJson.dependencies?.['expo'] &&
+        !packageJson.devDependencies?.['expo']
+      ) {
+        continue;
+      }
+
+      validConfigFiles.push(configFile);
+      projectRoots.push(projectRoot);
+    }
+
+    const projectHashes = await calculateHashesForCreateNodes(
+      projectRoots,
+      normalizedOptions,
+      context,
+      projectRoots.map(() => [lockFileName])
+    );
 
     try {
       return await createNodesFromFiles(
-        (configFile, options, context) =>
+        (configFile, _, context, idx) =>
           createNodesInternal(
             configFile,
-            options,
+            normalizedOptions,
             context,
             targetsCache,
             pmc,
-            lockFileName
+            projectHashes[idx]
           ),
-        configFiles,
+        validConfigFiles,
         options,
         context
       );
@@ -77,39 +115,9 @@ async function createNodesInternal(
   context: CreateNodesContextV2,
   targetsCache: PluginCache<ExpoTargets>,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  lockFileName: string
+  hash: string
 ): Promise<CreateNodesResult> {
-  options = normalizeOptions(options);
   const projectRoot = dirname(configFile);
-
-  // Do not create a project if package.json or project.json or metro.config.js isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') ||
-    !siblingFiles.includes('metro.config.js')
-  ) {
-    return {};
-  }
-
-  // Check if it's an Expo project
-  const packageJson = readJsonFile(
-    join(context.workspaceRoot, projectRoot, 'package.json')
-  );
-  const appConfig = await getAppConfig(configFile, context);
-  if (
-    !appConfig.expo &&
-    !packageJson.dependencies?.['expo'] &&
-    !packageJson.devDependencies?.['expo']
-  ) {
-    return {};
-  }
-
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [lockFileName]
-  );
 
   if (!targetsCache.has(hash)) {
     targetsCache.set(

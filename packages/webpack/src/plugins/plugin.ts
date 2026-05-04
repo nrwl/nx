@@ -1,5 +1,5 @@
 import {
-  calculateHashForCreateNodes,
+  calculateHashesForCreateNodes,
   getNamedInputs,
   PluginCache,
 } from '@nx/devkit/internal';
@@ -63,19 +63,44 @@ export const createNodes: CreateNodesV2<WebpackPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+
+    const validConfigFiles: string[] = [];
+    const projectRoots: string[] = [];
+    for (const configFile of configFilePaths) {
+      const projectRoot = dirname(configFile);
+      const siblingFiles = readdirSync(
+        join(context.workspaceRoot, projectRoot)
+      );
+      if (
+        !siblingFiles.includes('package.json') &&
+        !siblingFiles.includes('project.json')
+      ) {
+        continue;
+      }
+      validConfigFiles.push(configFile);
+      projectRoots.push(projectRoot);
+    }
+
+    const projectHashes = await calculateHashesForCreateNodes(
+      projectRoots,
+      normalizedOptions,
+      context,
+      projectRoots.map(() => [lockFileName])
+    );
+
     try {
       return await createNodesFromFiles(
-        (configFile, options, context) =>
+        (configFile, opts, context, idx) =>
           createNodesInternal(
             configFile,
-            options,
+            opts,
             context,
             targetsCache,
             isTsSolutionSetup,
             pmc,
-            lockFileName
+            projectHashes[idx]
           ),
-        configFilePaths,
+        validConfigFiles,
         normalizedOptions,
         context
       );
@@ -94,25 +119,9 @@ async function createNodesInternal(
   targetsCache: PluginCache<WebpackTargets>,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  lockFileName: string
+  hash: string
 ): Promise<CreateNodesResult> {
   const projectRoot = dirname(configFilePath);
-
-  // Do not create a project if package.json and project.json isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
-    return {};
-  }
-
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [lockFileName]
-  );
 
   if (!targetsCache.has(hash)) {
     targetsCache.set(

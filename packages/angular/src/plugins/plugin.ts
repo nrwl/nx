@@ -1,5 +1,5 @@
 import {
-  calculateHashForCreateNodes,
+  calculateHashesForCreateNodes,
   getNamedInputs,
   PluginCache,
 } from '@nx/devkit/internal';
@@ -94,18 +94,40 @@ export const createNodesV2: CreateNodesV2<AngularPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+
+    const validConfigFiles: string[] = [];
+    const angularWorkspaceRoots: string[] = [];
+    for (const configFile of configFiles) {
+      const angularWorkspaceRoot = dirname(configFile);
+      const siblingFiles = readdirSync(
+        join(context.workspaceRoot, angularWorkspaceRoot)
+      );
+      if (!siblingFiles.includes('package.json')) {
+        continue;
+      }
+      validConfigFiles.push(configFile);
+      angularWorkspaceRoots.push(angularWorkspaceRoot);
+    }
+
+    const projectHashes = await calculateHashesForCreateNodes(
+      angularWorkspaceRoots,
+      options ?? {},
+      context,
+      angularWorkspaceRoots.map(() => [lockFileName])
+    );
+
     try {
       return await createNodesFromFiles(
-        (configFile, options, context) =>
+        (configFile, opts, context, idx) =>
           createNodesInternal(
             configFile,
-            options,
+            opts,
             context,
             projectsCache,
             pmc,
-            lockFileName
+            projectHashes[idx]
           ),
-        configFiles,
+        validConfigFiles,
         options,
         context
       );
@@ -121,24 +143,9 @@ async function createNodesInternal(
   context: CreateNodesContextV2,
   projectsCache: PluginCache<AngularProjects>,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  lockFileName: string
+  hash: string
 ): Promise<CreateNodesResult> {
   const angularWorkspaceRoot = dirname(configFilePath);
-
-  // Do not create a project if package.json isn't there
-  const siblingFiles = readdirSync(
-    join(context.workspaceRoot, angularWorkspaceRoot)
-  );
-  if (!siblingFiles.includes('package.json')) {
-    return {};
-  }
-
-  const hash = await calculateHashForCreateNodes(
-    angularWorkspaceRoot,
-    options,
-    context,
-    [lockFileName]
-  );
 
   if (!projectsCache.has(hash)) {
     projectsCache.set(

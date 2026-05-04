@@ -1,6 +1,6 @@
 import {
   getNamedInputs,
-  calculateHashForCreateNodes,
+  calculateHashesForCreateNodes,
   PluginCache,
 } from '@nx/devkit/internal';
 import {
@@ -50,19 +50,51 @@ export const createNodesV2: CreateNodesV2<RsbuildPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+    const normalizedOptions = normalizeOptions(options);
+
+    const validConfigFiles: string[] = [];
+    const projectRoots: string[] = [];
+    const tsConfigFilesByIdx: string[][] = [];
+    for (const configFile of configFilePaths) {
+      const projectRoot = dirname(configFile);
+      const siblingFiles = readdirSync(
+        join(context.workspaceRoot, projectRoot)
+      );
+      if (
+        !siblingFiles.includes('package.json') &&
+        !siblingFiles.includes('project.json')
+      ) {
+        continue;
+      }
+      validConfigFiles.push(configFile);
+      projectRoots.push(projectRoot);
+      tsConfigFilesByIdx.push(
+        siblingFiles.filter((p) => minimatch(p, 'tsconfig*{.json,.*.json}')) ??
+          []
+      );
+    }
+
+    const projectHashes = await calculateHashesForCreateNodes(
+      projectRoots,
+      { ...normalizedOptions, isUsingTsSolutionSetup },
+      context,
+      projectRoots.map(() => [lockFileName])
+    );
+
     try {
       return await createNodesFromFiles(
-        (configFile, options, context) =>
+        (configFile, _, context, idx) =>
           createNodesInternal(
             configFile,
-            options,
+            normalizedOptions,
             context,
             targetsCache,
             isUsingTsSolutionSetup,
             pmc,
-            lockFileName
+            tsConfigFilesByIdx[idx],
+            projectHashes[idx]
           ),
-        configFilePaths,
+        validConfigFiles,
         options,
         context
       );
@@ -74,33 +106,15 @@ export const createNodesV2: CreateNodesV2<RsbuildPluginOptions> = [
 
 async function createNodesInternal(
   configFilePath: string,
-  options: RsbuildPluginOptions,
+  normalizedOptions: RsbuildPluginOptions,
   context: CreateNodesContextV2,
   targetsCache: PluginCache<RsbuildTargets>,
   isUsingTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  lockFileName: string
+  tsConfigFiles: string[],
+  hash: string
 ) {
   const projectRoot = dirname(configFilePath);
-  // Do not create a project if package.json and project.json isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
-    return {};
-  }
-
-  const tsConfigFiles =
-    siblingFiles.filter((p) => minimatch(p, 'tsconfig*{.json,.*.json}')) ?? [];
-
-  const normalizedOptions = normalizeOptions(options);
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    { ...normalizedOptions, isUsingTsSolutionSetup },
-    context,
-    [lockFileName]
-  );
 
   if (!targetsCache.has(hash)) {
     targetsCache.set(

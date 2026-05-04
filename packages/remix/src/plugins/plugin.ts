@@ -1,5 +1,5 @@
 import {
-  calculateHashForCreateNodes,
+  calculateHashesForCreateNodes,
   getNamedInputs,
   loadConfigFile,
   PluginCache,
@@ -56,19 +56,59 @@ export const createNodes: CreateNodesV2<RemixPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+    const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
+    const normalizedOptions = normalizeOptions(options);
+
+    const validConfigFiles: string[] = [];
+    const projectRoots: string[] = [];
+    const siblingFilesByIdx: string[][] = [];
+    const remixCompilersByIdx: RemixCompiler[] = [];
+    for (const configFile of configFilePaths) {
+      const projectRoot = dirname(configFile);
+      const siblingFiles = readdirSync(
+        join(context.workspaceRoot, projectRoot)
+      );
+      if (
+        !siblingFiles.includes('package.json') &&
+        !siblingFiles.includes('project.json')
+      ) {
+        continue;
+      }
+      const remixCompiler = determineIsRemixVite(
+        configFile,
+        context.workspaceRoot
+      );
+      if (remixCompiler === RemixCompiler.IsNotRemix) {
+        continue;
+      }
+      validConfigFiles.push(configFile);
+      projectRoots.push(projectRoot);
+      siblingFilesByIdx.push(siblingFiles);
+      remixCompilersByIdx.push(remixCompiler);
+    }
+
+    const projectHashes = await calculateHashesForCreateNodes(
+      projectRoots,
+      { ...normalizedOptions, isUsingTsSolutionSetup },
+      context,
+      projectRoots.map(() => [lockFileName])
+    );
+
     try {
       return await createNodesFromFiles(
-        (configFile, options, context) =>
+        (configFile, _, context, idx) =>
           createNodesInternal(
             configFile,
-            options,
+            normalizedOptions,
             context,
             targetsCache,
-            _isUsingTsSolutionSetup(),
+            isUsingTsSolutionSetup,
             pmc,
-            lockFileName
+            siblingFilesByIdx[idx],
+            remixCompilersByIdx[idx],
+            projectHashes[idx] + configFile
           ),
-        configFilePaths,
+        validConfigFiles,
         options,
         context
       );
@@ -87,37 +127,11 @@ async function createNodesInternal(
   targetsCache: PluginCache<RemixTargets>,
   isUsingTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  lockFileName: string
+  siblingFiles: string[],
+  remixCompiler: RemixCompiler,
+  hash: string
 ) {
   const projectRoot = dirname(configFilePath);
-  const fullyQualifiedProjectRoot = join(context.workspaceRoot, projectRoot);
-  // Do not create a project if package.json and project.json isn't there
-  const siblingFiles = readdirSync(fullyQualifiedProjectRoot);
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
-    return {};
-  }
-
-  options = normalizeOptions(options);
-
-  const remixCompiler = determineIsRemixVite(
-    configFilePath,
-    context.workspaceRoot
-  );
-
-  if (remixCompiler === RemixCompiler.IsNotRemix) {
-    return {};
-  }
-
-  const hash =
-    (await calculateHashForCreateNodes(
-      projectRoot,
-      { ...options, isUsingTsSolutionSetup },
-      context,
-      [lockFileName]
-    )) + configFilePath;
 
   if (!targetsCache.has(hash)) {
     targetsCache.set(

@@ -1,5 +1,5 @@
 import {
-  calculateHashForCreateNodes,
+  calculateHashesForCreateNodes,
   loadConfigFile,
   getNamedInputs,
 } from '@nx/devkit/internal';
@@ -53,18 +53,52 @@ export const createNodes: CreateNodesV2<PlaywrightPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+    const normalizedOptions = normalizeOptions(options);
+
+    const validConfigFiles: string[] = [];
+    const projectRoots: string[] = [];
+    const externalTsconfigInputsByIdx: string[][] = [];
+    for (const configFile of configFilePaths) {
+      const projectRoot = dirname(configFile);
+      const siblingFiles = readdirSync(
+        join(context.workspaceRoot, projectRoot)
+      );
+      if (
+        !siblingFiles.includes('package.json') &&
+        !siblingFiles.includes('project.json')
+      ) {
+        continue;
+      }
+      validConfigFiles.push(configFile);
+      projectRoots.push(projectRoot);
+      externalTsconfigInputsByIdx.push(
+        collectExternalTsconfigInputs(projectRoot, context.workspaceRoot)
+      );
+    }
+
+    const projectHashes = await calculateHashesForCreateNodes(
+      projectRoots,
+      { ...normalizedOptions, CI: process.env.CI },
+      context,
+      projectRoots.map((_, idx) => [
+        lockFileName,
+        ...externalTsconfigInputsByIdx[idx],
+      ])
+    );
+
     try {
       return await createNodesFromFiles(
-        (configFile, options, context) =>
+        (configFile, _, context, idx) =>
           createNodesInternal(
             configFile,
-            options,
+            normalizedOptions,
             context,
             pluginCache,
             pmc,
-            lockFileName
+            externalTsconfigInputsByIdx[idx],
+            projectHashes[idx]
           ),
-        configFilePaths,
+        validConfigFiles,
         options,
         context
       );
@@ -78,39 +112,14 @@ export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
-  options: PlaywrightPluginOptions,
+  normalizedOptions: NormalizedOptions,
   context: CreateNodesContextV2,
   pluginCache: PluginCache<PlaywrightTargets>,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  lockFileName: string
+  externalTsconfigInputs: string[],
+  hash: string
 ) {
   const projectRoot = dirname(configFilePath);
-
-  // Do not create a project if package.json and project.json isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
-    return {};
-  }
-
-  const normalizedOptions = normalizeOptions(options);
-
-  const externalTsconfigInputs = collectExternalTsconfigInputs(
-    projectRoot,
-    context.workspaceRoot
-  );
-
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    {
-      ...normalizedOptions,
-      CI: process.env.CI,
-    },
-    context,
-    [lockFileName, ...externalTsconfigInputs]
-  );
 
   if (!pluginCache.has(hash)) {
     pluginCache.set(

@@ -1,7 +1,7 @@
 import {
   loadConfigFile,
   getNamedInputs,
-  calculateHashForCreateNodes,
+  calculateHashesForCreateNodes,
   PluginCache,
 } from '@nx/devkit/internal';
 import type { NuxtOptions } from '@nuxt/schema';
@@ -40,14 +40,45 @@ export interface NuxtPluginOptions {
 export const createNodes: CreateNodesV2<NuxtPluginOptions> = [
   '**/nuxt.config.{js,ts,mjs,mts,cjs,cts}',
   async (files, options, context) => {
-    //TODO(@nrwl/nx-vue-reviewers): This should batch hashing like our other plugins.
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+    const normalizedOptions = normalizeOptions(options);
+
+    const validConfigFiles: string[] = [];
+    const projectRoots: string[] = [];
+    for (const configFile of files) {
+      const projectRoot = dirname(configFile);
+      const siblingFiles = readdirSync(
+        join(context.workspaceRoot, projectRoot)
+      );
+      if (
+        !siblingFiles.includes('package.json') &&
+        !siblingFiles.includes('project.json')
+      ) {
+        continue;
+      }
+      validConfigFiles.push(configFile);
+      projectRoots.push(projectRoot);
+    }
+
+    const projectHashes = await calculateHashesForCreateNodes(
+      projectRoots,
+      normalizedOptions,
+      context,
+      projectRoots.map(() => [lockFileName])
+    );
+
     const result = await createNodesFromFiles(
-      (configFile, opts, ctx) =>
-        createNodesInternal(configFile, opts, ctx, pmc, lockFileName),
-      files,
+      (configFile, _, ctx, idx) =>
+        createNodesInternal(
+          configFile,
+          normalizedOptions,
+          ctx,
+          pmc,
+          projectHashes[idx]
+        ),
+      validConfigFiles,
       options,
       context
     );
@@ -63,26 +94,9 @@ async function createNodesInternal(
   options: NuxtPluginOptions,
   context: CreateNodesContextV2,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  lockFileName: string
+  hash: string
 ) {
   const projectRoot = dirname(configFilePath);
-  // Do not create a project if package.json and project.json isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
-    return {};
-  }
-
-  options = normalizeOptions(options);
-
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [lockFileName]
-  );
   if (!targetsCache.has(hash)) {
     targetsCache.set(
       hash,
