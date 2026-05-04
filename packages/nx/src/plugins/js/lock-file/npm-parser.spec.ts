@@ -1506,6 +1506,200 @@ describe('NPM lock file utility', () => {
       );
     });
   });
+
+  describe('transitive workspace dependencies', () => {
+    function makeGraph(
+      workspaceProjects: Array<{
+        projectName: string;
+        packageName: string;
+        root: string;
+      }>,
+      workspaceDeps: Record<string, string[]>,
+      externalNodes: ProjectGraph['externalNodes'],
+      externalDeps: Record<string, string[]> = {}
+    ): ProjectGraph {
+      const nodes: ProjectGraph['nodes'] = {};
+      const dependencies: ProjectGraph['dependencies'] = {};
+      for (const { projectName, packageName, root } of workspaceProjects) {
+        nodes[projectName] = {
+          name: projectName,
+          type: 'lib',
+          data: {
+            root,
+            metadata: { js: { packageName } },
+          },
+        } as any;
+        dependencies[projectName] = [
+          ...(workspaceDeps[projectName] ?? []).map((target) => ({
+            source: projectName,
+            target,
+            type: 'static' as any,
+          })),
+          ...(externalDeps[projectName] ?? []).map((target) => ({
+            source: projectName,
+            target,
+            type: 'static' as any,
+          })),
+        ];
+      }
+      return { nodes, dependencies, externalNodes };
+    }
+
+    it('should include node_modules and workspace_modules entries for transitive workspace deps', () => {
+      // app -> @myorg/lib-a -> @myorg/lib-b -> lodash
+      const lockFile = {
+        name: 'test-app',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        packages: {
+          '': {
+            name: 'test-app',
+            version: '1.0.0',
+            dependencies: { '@myorg/lib-a': 'file:libs/lib-a' },
+          },
+          'libs/lib-a': {
+            name: '@myorg/lib-a',
+            version: '0.0.1',
+            dependencies: { '@myorg/lib-b': 'file:../lib-b' },
+          },
+          'node_modules/@myorg/lib-a': {
+            resolved: 'libs/lib-a',
+            link: true,
+          },
+          'libs/lib-b': {
+            name: '@myorg/lib-b',
+            version: '0.0.1',
+            dependencies: { lodash: '^4.17.21' },
+          },
+          'node_modules/@myorg/lib-b': {
+            resolved: 'libs/lib-b',
+            link: true,
+          },
+          'node_modules/lodash': {
+            version: '4.17.21',
+            resolved: 'https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz',
+            integrity:
+              'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+          },
+        },
+      };
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { '@myorg/lib-a': 'file:libs/lib-a' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+          {
+            projectName: '@myorg/lib-b',
+            packageName: '@myorg/lib-b',
+            root: 'libs/lib-b',
+          },
+        ],
+        { '@myorg/lib-a': ['@myorg/lib-b'] },
+        {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: {
+              version: '4.17.21',
+              packageName: 'lodash',
+              hash: 'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+            },
+          },
+        },
+        { '@myorg/lib-b': ['npm:lodash'] }
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = JSON.parse(
+        stringifyNpmLockfile(prunedGraph, JSON.stringify(lockFile), packageJson)
+      );
+
+      expect(result.packages).toHaveProperty('node_modules/@myorg/lib-a');
+      expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-a');
+      expect(result.packages).toHaveProperty('node_modules/@myorg/lib-b');
+      expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-b');
+      expect(result.packages).toHaveProperty('node_modules/lodash');
+      expect(
+        result.packages['workspace_modules/@myorg/lib-a'].dependencies
+      ).toEqual({ '@myorg/lib-b': 'file:../lib-b' });
+    });
+
+    it('should not infinite-loop on circular workspace dependencies', () => {
+      const lockFile = {
+        name: 'test-app',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        packages: {
+          '': {
+            name: 'test-app',
+            version: '1.0.0',
+            dependencies: { '@myorg/lib-a': 'file:libs/lib-a' },
+          },
+          'libs/lib-a': {
+            name: '@myorg/lib-a',
+            version: '0.0.1',
+            dependencies: { '@myorg/lib-b': 'file:../lib-b' },
+          },
+          'node_modules/@myorg/lib-a': {
+            resolved: 'libs/lib-a',
+            link: true,
+          },
+          'libs/lib-b': {
+            name: '@myorg/lib-b',
+            version: '0.0.1',
+            dependencies: { '@myorg/lib-a': 'file:../lib-a' },
+          },
+          'node_modules/@myorg/lib-b': {
+            resolved: 'libs/lib-b',
+            link: true,
+          },
+        },
+      };
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { '@myorg/lib-a': 'file:libs/lib-a' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+          {
+            projectName: '@myorg/lib-b',
+            packageName: '@myorg/lib-b',
+            root: 'libs/lib-b',
+          },
+        ],
+        {
+          '@myorg/lib-a': ['@myorg/lib-b'],
+          '@myorg/lib-b': ['@myorg/lib-a'],
+        },
+        {}
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = JSON.parse(
+        stringifyNpmLockfile(prunedGraph, JSON.stringify(lockFile), packageJson)
+      );
+
+      expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-a');
+      expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-b');
+    });
+  });
 });
 
 function uniq(str: string) {
