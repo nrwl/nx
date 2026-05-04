@@ -390,7 +390,6 @@ describe('@nx/vite/plugin', () => {
     });
   });
 
-
   describe('Library mode', () => {
     it('should exclude serve and preview targets when vite.config.ts is in library mode', async () => {
       const tempFs = new TempFs('test');

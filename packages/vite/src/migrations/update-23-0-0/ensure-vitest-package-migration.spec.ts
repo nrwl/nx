@@ -88,10 +88,7 @@ describe('ensure-vitest-package-migration (v23 safety net)', () => {
 
   it('should be a no-op when @nx/vitest plugin is already registered', async () => {
     const nxJson = readNxJson(tree);
-    nxJson.plugins = [
-      { plugin: '@nx/vite/plugin' },
-      { plugin: '@nx/vitest' },
-    ];
+    nxJson.plugins = [{ plugin: '@nx/vite/plugin' }, { plugin: '@nx/vitest' }];
     updateNxJson(tree, nxJson);
 
     await ensureVitestPackageMigration(tree);

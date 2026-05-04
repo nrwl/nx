@@ -669,4 +669,3 @@ function checkIfConfigFileShouldBeProject(
 
   return true;
 }
-
