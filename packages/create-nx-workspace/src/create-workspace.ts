@@ -16,6 +16,7 @@ import {
   connectToNxCloudForTemplate,
   createNxCloudOnboardingUrl,
   getNxCloudInfo,
+  getSkippedNxCloudInfo,
   openCloudSetupUrl,
   readNxCloudToken,
   setNeverConnectToCloud,
@@ -165,12 +166,13 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     const workspaceGlobs = getWorkspaceGlobsFromPreset(preset);
 
     // nx new requires a preset currently. We should probably make it optional.
-    // Pass `nxCloud` through verbatim so the user's choice is respected (no
-    // forced 'skip' override — the post-git block decides what to do).
     directory = await createEmptyWorkspace<T>(tmpDir, name, packageManager, {
       ...options,
       preset,
       workspaceGlobs,
+      // We want new workspaces to have a short URL to finish Cloud onboarding, but not have nxCloudId set up since it will be handled as part of the onboarding flow.
+      // This is skipping nxCloudId for the "custom" flow.
+      nxCloud: 'skip',
     });
 
     // Mark workspace as ready for SIGINT handler
@@ -271,14 +273,17 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   let connectUrl: string | undefined;
   let nxCloudInfo: string | undefined;
 
-  // Only act when the user explicitly opted in to Nx Cloud. "Maybe later",
-  // "Skip", and "Never" leave the workspace untouched — the user (or agent)
-  // can run `nx connect` on their own. Matches `nx init`'s flow.
-  if (nxCloud !== 'skip' && nxCloud !== 'never' && !options.skipCloudConnect) {
-    if (isAiAgent()) {
+  if (nxCloud !== 'skip' && nxCloud !== 'never') {
+    // "Yes" or "Maybe later" — generate URL, update README, show banner
+    const aiModeForCloud = isAiAgent();
+    if (aiModeForCloud) {
       logProgress('configuring', 'Configuring Nx Cloud...');
     }
-    const token = readNxCloudToken(directory);
+    // skipCloudConnect=true (Maybe later): Skip readNxCloudToken() since no token exists
+    // skipCloudConnect=false (Yes): Read the token as before (cloud was connected)
+    const token = options.skipCloudConnect
+      ? undefined
+      : readNxCloudToken(directory);
 
     connectUrl = await createNxCloudOnboardingUrl(
       nxCloud,
@@ -290,6 +295,8 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     // Store for SIGINT handler
     cloudConnectUrl = connectUrl;
 
+    // Update README with connect URL (strips markers, adds connect section)
+    // Then commit the change - amend if not pushed, new commit if already pushed
     if (isTemplate) {
       const readmeUpdated = addConnectUrlToReadme(directory, connectUrl);
       if (readmeUpdated && !skipGit && commit) {
@@ -305,13 +312,21 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       name
     );
 
-    await openCloudSetupUrl(connectUrl);
-  } else if (isTemplate) {
-    // Strip template README markers; don't replace with a connect URL.
+    // Auto-open the Cloud setup URL in the browser when user selected 'yes'
+    if (!options.skipCloudConnect) {
+      await openCloudSetupUrl(connectUrl);
+    }
+  } else if (isTemplate && (nxCloud === 'skip' || nxCloud === 'never')) {
+    // Strip marker comments from README
     const readmeUpdated = addConnectUrlToReadme(directory, undefined);
     if (readmeUpdated && !skipGit && commit) {
       const alreadyPushed = pushedToVcs === VcsPushStatus.PushedToVcs;
       await amendOrCommitReadme(directory, alreadyPushed);
+    }
+
+    // Only show "nx connect" message for 'skip', not 'never'
+    if (nxCloud === 'skip') {
+      nxCloudInfo = getSkippedNxCloudInfo();
     }
   }
 

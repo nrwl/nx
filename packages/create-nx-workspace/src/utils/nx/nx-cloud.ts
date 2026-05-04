@@ -1,7 +1,11 @@
 import { VcsPushStatus } from '../git/git';
 import { isCI } from '../ci/is-ci';
 import { CLIOutput } from '../output';
-import { getCompletionMessage, CompletionMessageKey } from './messages';
+import {
+  getCompletionMessage,
+  getSkippedCloudMessage,
+  CompletionMessageKey,
+} from './messages';
 import { getBannerVariant, getFlowVariant } from './ab-testing';
 import { nxVersion } from './nx-version';
 import ora from 'ora';
@@ -136,6 +140,12 @@ export async function getNxCloudInfo(
   } else {
     out.success(message);
   }
+  return out.getOutput();
+}
+
+export function getSkippedNxCloudInfo() {
+  const out = new CLIOutput(false);
+  out.success(getSkippedCloudMessage());
   return out.getOutput();
 }
 

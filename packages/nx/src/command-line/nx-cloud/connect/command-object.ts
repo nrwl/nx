@@ -28,7 +28,7 @@ function withConnectOptions(yargs: Argv) {
     .option('browser', {
       type: 'boolean',
       description:
-        'Force the browser-based onboarding flow even when running under an AI agent. Default for human runs; agents otherwise receive a hint to invoke `nx-cloud onboard connect-workspace` directly.',
+        'Use the browser-based onboarding flow through the Nx Cloud app. Defaults for false for AI agents, true otherwise.',
     });
 }
 

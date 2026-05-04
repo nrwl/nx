@@ -135,26 +135,9 @@ export interface PartialSuccessResult extends SuccessResult {
   nxCloudError?: string;
 }
 
-/**
- * Emitted when an agent needs to run a follow-up command (e.g. `nx login`)
- * before the current step can complete. Distinct from `TemplateRequiredResult`
- * (template selection) — this is for auth/onboarding gates surfaced by the
- * agentic Nx Cloud onboard flow.
- */
-export interface NeedsAuthResult {
-  stage: 'needs_input';
-  success: false;
-  actionRequired: string;
-  message: string;
-  nextCommand: string;
-  statusCheck?: string;
-  hint?: string;
-}
-
 export type AiOutputMessage =
   | ProgressMessage
   | TemplateRequiredResult
-  | NeedsAuthResult
   | SuccessResult
   | ErrorResult;
 

@@ -1,4 +1,4 @@
-import { getCompletionMessage } from './messages';
+import { getCompletionMessage, getSkippedCloudMessage } from './messages';
 import { VcsPushStatus } from '../git/git';
 
 describe('Nx Cloud Messages', () => {
@@ -300,6 +300,23 @@ describe('Nx Cloud Messages', () => {
         VcsPushStatus.PushedToVcs
       );
       expect(message.title).toBe('Your CI setup is almost complete.');
+    });
+  });
+
+  describe('Skipped Cloud Messages', () => {
+    it('should return next steps message with nx connect instruction', () => {
+      const message = getSkippedCloudMessage();
+      expect(message).toMatchInlineSnapshot(`
+        {
+          "bodyLines": [
+            "Run "nx connect" to enable remote caching and speed up your CI.",
+            "",
+            "70% faster CI, 60% less compute, automatically fix broken PRs.",
+            "Learn more at https://nx.dev/nx-cloud",
+          ],
+          "title": "Next steps",
+        }
+      `);
     });
   });
 });

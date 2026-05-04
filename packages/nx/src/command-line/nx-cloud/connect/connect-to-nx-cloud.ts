@@ -97,6 +97,9 @@ export async function connectToNxCloudCommand(
     os: process.platform,
     packageManager: detectPackageManager(),
     aiAgent: isAiAgent(),
+    // Distinguish redirected agents (aiAgent && !browser, useCloud=false on complete)
+    // from forced browser flow (browser=true) and the default human path.
+    browser: !!options.browser,
     isCI: isCI(),
   };
   if (selfRecord) {
@@ -159,7 +162,7 @@ async function runConnectToNxCloud(
       success: false,
       actionRequired: 'run_bin',
       message:
-        'Run `npx nx-cloud onboard connect-workspace` directly. It is the agentic onboarding entry point and emits NDJSON.',
+        'Run `npx nx-cloud onboard connect-workspace` directly. It is the agentic onboarding entry point and emits NDJSON. To force the browser-based flow and skip CLI-based onboarding, use `npx nx connect --browser`',
       nextCommand: 'npx nx-cloud onboard connect-workspace',
       hint: 'Parse the NDJSON it emits and act on `actionRequired` per the OnboardPayload contract.',
     });
