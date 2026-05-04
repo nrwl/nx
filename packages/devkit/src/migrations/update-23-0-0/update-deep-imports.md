@@ -28,6 +28,16 @@ import { dasherize, addPlugin } from '@nx/devkit/internal';
 
 `names` was already in the public API, so it joins the existing `@nx/devkit` import. `dasherize` and `addPlugin` move to `@nx/devkit/internal`, and the two `/internal` imports are collapsed into one.
 
-#### Limitations
+#### Fallback for non-named imports
 
-The migration only rewrites named `import { ... } from '@nx/devkit/src/...'` declarations. Default imports, namespace imports, side-effect imports, `require(...)` calls, and dynamic `import(...)` calls are left untouched and need to be migrated by hand to either `@nx/devkit` or `@nx/devkit/internal` depending on the symbol.
+For deep-import shapes that can't be split by symbol — default imports, namespace imports, side-effect imports, `require(...)` calls, and dynamic `import(...)` — the migration rewrites the specifier to `@nx/devkit/internal` as a best guess, since most symbols that previously lived under `@nx/devkit/src/...` ended up there.
+
+```ts
+// Before
+const { dasherize } = require('@nx/devkit/src/utils/string-utils');
+
+// After
+const { dasherize } = require('@nx/devkit/internal');
+```
+
+If the symbol you're after is part of the stable public API instead, the rewritten import will fail to resolve against `@nx/devkit/internal` — switch it to `@nx/devkit` by hand.
