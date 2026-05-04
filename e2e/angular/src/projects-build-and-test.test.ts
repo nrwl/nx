@@ -105,15 +105,16 @@ describe('Angular Projects - Build and Test', () => {
     // port and process cleanup
     await killProcessAndPorts(process.pid, appPort);
 
+    const esbuildPort = await reservePort();
     const esbProcess = await runCommandUntil(
-      `serve ${esbuildStandaloneApp} -- --port=${appPort}`,
+      `serve ${esbuildStandaloneApp} -- --port=${esbuildPort}`,
       (output) =>
         output.includes(`Application bundle generation complete`) &&
-        output.includes(`localhost:${appPort}`)
+        output.includes(`localhost:${esbuildPort}`)
     );
 
     // port and process cleanup
-    await killProcessAndPorts(esbProcess.pid, appPort);
+    await killProcessAndPorts(esbProcess.pid, esbuildPort);
   }, 1000000);
 
   it('should successfully work with rspack for build', async () => {
