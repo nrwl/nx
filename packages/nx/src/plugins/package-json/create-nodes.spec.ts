@@ -14,6 +14,10 @@ describe('nx package.json workspaces plugin', () => {
     nxJsonConfiguration: {},
   };
 
+  const packageManagerCommand = {
+    run: (script: string) => `npm run ${script}`,
+  } as any;
+
   beforeEach(() => {
     // Ensure deterministic package manager detection: without a lockfile the
     // detector falls back to npm_config_user_agent, which makes test output
@@ -64,7 +68,8 @@ describe('nx package.json workspaces plugin', () => {
         'package.json',
         '/root',
         new PluginCache(packageJsonCachePath),
-        false
+        false,
+        packageManagerCommand
       )
     ).toMatchInlineSnapshot(`
       {
@@ -118,7 +123,8 @@ describe('nx package.json workspaces plugin', () => {
         'packages/lib-a/package.json',
         '/root',
         new PluginCache(packageJsonCachePath),
-        false
+        false,
+        packageManagerCommand
       )
     ).toMatchInlineSnapshot(`
       {
@@ -172,7 +178,8 @@ describe('nx package.json workspaces plugin', () => {
         'packages/lib-b/package.json',
         '/root',
         new PluginCache(packageJsonCachePath),
-        false
+        false,
+        packageManagerCommand
       )
     ).toMatchInlineSnapshot(`
       {
@@ -816,7 +823,8 @@ describe('nx package.json workspaces plugin', () => {
         'apps/myapp/package.json',
         '/root',
         new PluginCache(packageJsonCachePath),
-        false
+        false,
+        packageManagerCommand
       ).projects['apps/myapp'].projectType
     ).toEqual('application');
 
@@ -825,7 +833,8 @@ describe('nx package.json workspaces plugin', () => {
         'packages/mylib/package.json',
         '/root',
         new PluginCache(packageJsonCachePath),
-        false
+        false,
+        packageManagerCommand
       ).projects['packages/mylib'].projectType
     ).toEqual('library');
   });
@@ -852,7 +861,8 @@ describe('nx package.json workspaces plugin', () => {
         'package.json',
         '/root',
         new PluginCache(packageJsonCachePath),
-        false
+        false,
+        packageManagerCommand
       ).projects['.'].projectType
     ).toEqual('library');
   });
@@ -882,7 +892,8 @@ describe('nx package.json workspaces plugin', () => {
         'packages/mylib/package.json',
         '/root',
         new PluginCache(packageJsonCachePath),
-        false
+        false,
+        packageManagerCommand
       ).projects['packages/mylib'].projectType
     ).toEqual('library');
     expect(
@@ -890,7 +901,8 @@ describe('nx package.json workspaces plugin', () => {
         'example/package.json',
         '/root',
         new PluginCache(packageJsonCachePath),
-        false
+        false,
+        packageManagerCommand
       ).projects['example'].projectType
     ).toBeUndefined();
   });

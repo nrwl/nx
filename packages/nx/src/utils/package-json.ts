@@ -224,23 +224,14 @@ export function readTargetsFromPackageJson(
   packageJson: PackageJson,
   nxJson: NxJsonConfiguration,
   projectRoot: string,
-  workspaceRoot: string
+  workspaceRoot: string,
+  packageManagerCommand: PackageManagerCommands
 ) {
   const { scripts, nx, private: isPrivate } = packageJson ?? {};
   const res: Record<string, TargetConfiguration> = {};
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
-  if (includedScripts.length > 0) {
-    const packageManagerCommand = getPackageManagerCommand(
-      detectPackageManager(workspaceRoot),
-      workspaceRoot
-    );
-    for (const script of includedScripts) {
-      res[script] = buildTargetFromScript(
-        script,
-        scripts,
-        packageManagerCommand
-      );
-    }
+  for (const script of includedScripts) {
+    res[script] = buildTargetFromScript(script, scripts, packageManagerCommand);
   }
   for (const targetName in nx?.targets) {
     const nxTarget = nx.targets[targetName];

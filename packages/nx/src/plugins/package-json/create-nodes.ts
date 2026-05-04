@@ -15,6 +15,11 @@ import {
   getTagsFromPackageJson,
   readTargetsFromPackageJson,
 } from '../../utils/package-json';
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+  PackageManagerCommands,
+} from '../../utils/package-manager';
 import { joinPathFragments } from '../../utils/path';
 import { nxVersion } from '../../utils/versions';
 import {
@@ -59,6 +64,11 @@ export const createNodesV2: CreateNodesV2 = [
 
     const cache = readPackageJsonConfigurationCache();
 
+    const packageManagerCommand = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot),
+      context.workspaceRoot
+    );
+
     return createNodesFromFiles(
       (packageJsonPath, options, context) => {
         const isInPackageManagerWorkspaces =
@@ -75,7 +85,8 @@ export const createNodesV2: CreateNodesV2 = [
           packageJsonPath,
           context.workspaceRoot,
           cache,
-          isInPackageManagerWorkspaces
+          isInPackageManagerWorkspaces,
+          packageManagerCommand
         );
       },
       packageJsons,
@@ -173,7 +184,8 @@ export function createNodeFromPackageJson(
   pkgJsonPath: string,
   workspaceRoot: string,
   cache: PackageJsonConfigurationCache,
-  isInPackageManagerWorkspaces: boolean
+  isInPackageManagerWorkspaces: boolean,
+  packageManagerCommand: PackageManagerCommands
 ) {
   const json: PackageJson = readJsonFile(join(workspaceRoot, pkgJsonPath));
 
@@ -200,7 +212,8 @@ export function createNodeFromPackageJson(
     workspaceRoot,
     pkgJsonPath,
     readNxJson(workspaceRoot),
-    isInPackageManagerWorkspaces
+    isInPackageManagerWorkspaces,
+    packageManagerCommand
   );
 
   cache.set(hash, project);
@@ -216,7 +229,8 @@ export function buildProjectConfigurationFromPackageJson(
   workspaceRoot: string,
   packageJsonPath: string,
   nxJson: NxJsonConfiguration,
-  isInPackageManagerWorkspaces: boolean
+  isInPackageManagerWorkspaces: boolean,
+  packageManagerCommand: PackageManagerCommands
 ): ProjectConfiguration & { name: string } {
   const normalizedPath = packageJsonPath.split('\\').join('/');
   const projectRoot = dirname(normalizedPath);
@@ -256,7 +270,8 @@ export function buildProjectConfigurationFromPackageJson(
       packageJson,
       nxJson,
       projectRoot,
-      workspaceRoot
+      workspaceRoot,
+      packageManagerCommand
     ),
     tags: getTagsFromPackageJson(packageJson),
     metadata: getMetadataFromPackageJson(
