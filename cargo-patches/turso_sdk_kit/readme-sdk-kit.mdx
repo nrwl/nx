@@ -1,0 +1,40 @@
+---
+name: 2025-11-28-readme-sdk-kit
+---
+
+<Output path="README.md">
+
+<Readme model="openai/gpt-5">
+
+Turso - is the SQLite compatible database written in Rust.
+One of the important features of the Turso - is async IO execution which can be used with modern storage backend like IO uring.
+
+Generate high level readme for low level Turso API written for the purpose of ease SDK development.
+The main logic implemented in the Rust layer but it also propagate to the C API in order to simplify consumption of the bindings from different languages.
+
+Use following simple structure - README must be lightweight:
+
+```md
+# Turso SDK kit
+
+// Write brief description and motiviation here
+
+## Rust example
+
+// Add simple example of usage of Rust API
+
+## C example
+
+// Add simple example of usage of C API
+
+```
+
+turso.h headers will be translated to the bindings.rs with rust-bindgen`
+<File path="./turso.h"/>
+
+<File path="./src/rsapi.rs"/>
+<File path="./src/capi.rs"/>
+
+</Readme>
+
+</Output>

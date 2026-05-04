@@ -1,9 +1,7 @@
-use crate::native::db::connection::NxDbConnection;
+use crate::native::db::connection::{DbValue, NxDbConnection};
 use crate::native::tasks::types::TaskTarget;
 use napi::bindgen_prelude::External;
-use rusqlite::{params, types::Value};
 use std::collections::HashMap;
-use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 use tracing::trace;
 
@@ -47,49 +45,46 @@ impl NxTaskHistory {
     #[napi]
     pub fn record_task_runs(&mut self, task_runs: Vec<TaskRun>) -> anyhow::Result<()> {
         trace!("Recording task runs");
-        self.db.lock().unwrap().transaction(|conn| {
-            let mut stmt = conn.prepare(
+        let db = self.db.lock().unwrap();
+        db.begin_transaction()?;
+        for task_run in task_runs.iter() {
+            db.execute(
                 "INSERT OR REPLACE INTO task_history
-        (hash, status, code, start, end)
-        VALUES (?1, ?2, ?3, ?4, ?5)",
-            )?;
-            for task_run in task_runs.iter() {
-                stmt.execute(params![
-                    task_run.hash,
-                    task_run.status,
-                    task_run.code,
-                    task_run.start,
-                    task_run.end
-                ])
-                .inspect_err(|e| trace!("Error trying to insert {:?}: {:?}", &task_run.hash, e))?;
-            }
-            Ok(())
-        })?;
+                    (hash, status, code, start, end)
+                    VALUES (?1, ?2, ?3, ?4, ?5)",
+                &[
+                    DbValue::from(task_run.hash.as_str()),
+                    DbValue::from(task_run.status.as_str()),
+                    DbValue::Integer(task_run.code as i64),
+                    DbValue::Integer(task_run.start),
+                    DbValue::Integer(task_run.end),
+                ],
+            )
+            .inspect_err(|e| trace!("Error trying to insert {:?}: {:?}", &task_run.hash, e))?;
+        }
+        db.commit_transaction()?;
         Ok(())
     }
 
     #[napi]
     pub fn get_flaky_tasks(&self, hashes: Vec<String>) -> anyhow::Result<Vec<String>> {
-        let values = Rc::new(
-            hashes
-                .iter()
-                .map(|s| Value::from(s.clone()))
-                .collect::<Vec<Value>>(),
-        );
+        if hashes.is_empty() {
+            return Ok(vec![]);
+        }
 
-        self.db
-            .lock()
-            .unwrap()
-            .prepare(
-                "SELECT hash from task_history
-                    WHERE hash IN rarray(?1) AND status != 'stopped'
-                    GROUP BY hash
-                    HAVING COUNT(DISTINCT code) > 1
-                ",
-            )?
-            .query_map([values], |row| row.get(0))?
-            .map(|r| r.map_err(anyhow::Error::from))
-            .collect()
+        // Use IN (?,?,?) with dynamic placeholders instead of rarray
+        let placeholders: Vec<String> = (1..=hashes.len()).map(|i| format!("?{}", i)).collect();
+        let sql = format!(
+            "SELECT hash FROM task_history
+                WHERE hash IN ({}) AND status != 'stopped'
+                GROUP BY hash
+                HAVING COUNT(DISTINCT code) > 1",
+            placeholders.join(", ")
+        );
+        let params: Vec<DbValue> = hashes.into_iter().map(DbValue::from).collect();
+
+        let rows = self.db.lock().unwrap().query_rows(&sql, &params)?;
+        rows.iter().map(|row| row.get_str(0)).collect()
     }
 
     #[napi]
@@ -97,41 +92,43 @@ impl NxTaskHistory {
         &self,
         targets: Vec<TaskTarget>,
     ) -> anyhow::Result<HashMap<String, f64>> {
-        let values = Rc::new(
-            targets
-                .iter()
-                .map(|t| {
-                    Value::from(match &t.configuration {
-                        Some(configuration) => {
-                            format!("{}:{}:{}", t.project, t.target, configuration)
-                        }
-                        _ => format!("{}:{}", t.project, t.target),
-                    })
-                })
-                .collect::<Vec<Value>>(),
-        );
+        if targets.is_empty() {
+            return Ok(HashMap::new());
+        }
 
-        // for older query sql version, need to select:  (project || ':' || target || (CASE WHEN coalesce(configuration, '') <> '' THEN ':' || configuration ELSE '' END)) AS target_string,
-        self.db
-            .lock()
-            .unwrap()
-            .prepare(
-                "
-                SELECT
-                    CONCAT_WS(':', project, target, configuration) AS target_string,
-                    AVG(end - start) AS duration
-                    FROM task_history
-                        JOIN task_details ON task_history.hash = task_details.hash
-                    WHERE target_string in rarray(?1) AND status = 'success'
-                    GROUP BY target_string
-                ",
-            )?
-            .query_map([values], |row| {
-                let target_string: String = row.get(0)?;
-                let duration: f64 = row.get(1)?;
-                Ok((target_string, duration))
-            })?
-            .map(|r| r.map_err(anyhow::Error::from))
-            .collect()
+        let target_strings: Vec<String> = targets
+            .iter()
+            .map(|t| match &t.configuration {
+                Some(configuration) => {
+                    format!("{}:{}:{}", t.project, t.target, configuration)
+                }
+                _ => format!("{}:{}", t.project, t.target),
+            })
+            .collect();
+
+        // Use IN (?,?,?) with dynamic placeholders instead of rarray
+        let placeholders: Vec<String> = (1..=target_strings.len())
+            .map(|i| format!("?{}", i))
+            .collect();
+        let sql = format!(
+            "SELECT
+                CONCAT_WS(':', project, target, configuration) AS target_string,
+                AVG(end - start) AS duration
+                FROM task_history
+                    JOIN task_details ON task_history.hash = task_details.hash
+                WHERE target_string IN ({}) AND status = 'success'
+                GROUP BY target_string",
+            placeholders.join(", ")
+        );
+        let params: Vec<DbValue> = target_strings.into_iter().map(DbValue::from).collect();
+
+        let rows = self.db.lock().unwrap().query_rows(&sql, &params)?;
+        let mut result = HashMap::new();
+        for row in &rows {
+            let target_string = row.get_str(0)?;
+            let duration = row.get_f64(1)?;
+            result.insert(target_string, duration);
+        }
+        Ok(result)
     }
 }

@@ -7,3 +7,11 @@ members = [
 
 [profile.release]
 lto = true
+
+# Local patch: forward NoLock open_flags when multiprocess_wal is enabled.
+# Upstream pre.26 only applies it to the .db file open, not to the inner
+# Database::open_with_flags_async call that opens the .db-wal file.
+# See cargo-patches/turso_sdk_kit/src/rsapi.rs for the diff (search "PATCH:").
+# TODO: drop this patch once upstream releases the fix.
+[patch.crates-io]
+turso_sdk_kit = { path = "cargo-patches/turso_sdk_kit" }
