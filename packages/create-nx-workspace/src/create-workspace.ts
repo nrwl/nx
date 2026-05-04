@@ -275,11 +275,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   // Only act when the user explicitly opted in to Nx Cloud. "Maybe later",
   // "Skip", and "Never" leave the workspace untouched — the user (or agent)
   // can run `nx connect` on their own. Matches `nx init`'s flow.
-  if (
-    nxCloud !== 'skip' &&
-    nxCloud !== 'never' &&
-    !options.skipCloudConnect
-  ) {
+  if (nxCloud !== 'skip' && nxCloud !== 'never' && !options.skipCloudConnect) {
     if (isAiAgent()) {
       logProgress('configuring', 'Configuring Nx Cloud...');
     }

@@ -302,5 +302,4 @@ describe('Nx Cloud Messages', () => {
       expect(message.title).toBe('Your CI setup is almost complete.');
     });
   });
-
 });

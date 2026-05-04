@@ -19,11 +19,17 @@ export const yargsConnectCommand: CommandModule = {
 };
 
 function withConnectOptions(yargs: Argv) {
-  return withVerbose(yargs).option('generateToken', {
-    type: 'boolean',
-    description:
-      'Explicitly asks for a token to be created, do not override existing tokens from Nx Cloud.',
-  });
+  return withVerbose(yargs)
+    .option('generateToken', {
+      type: 'boolean',
+      description:
+        'Explicitly asks for a token to be created, do not override existing tokens from Nx Cloud.',
+    })
+    .option('browser', {
+      type: 'boolean',
+      description:
+        'Use the browser-based onboarding flow instead of the in-terminal one-shot. Opens a claim URL in your browser to finish setup.',
+    });
 }
 
 export const yargsViewLogsCommand: CommandModule = {

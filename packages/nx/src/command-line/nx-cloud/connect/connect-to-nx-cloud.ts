@@ -1,3 +1,4 @@
+import { spawn } from 'child_process';
 import { join } from 'path';
 import { handleImport } from '../../../utils/handle-import';
 import { output } from '../../../utils/output';
@@ -24,12 +25,6 @@ import { isCI } from '../../../utils/is-ci';
 import { isAiAgent } from '../../../native';
 import { detectPackageManager } from '../../../utils/package-manager';
 import { workspaceRoot } from '../../../utils/workspace-root';
-import { getVcsRemoteInfo } from '../../../utils/git-utils';
-import {
-  CONNECTED_NEXT_STEPS,
-  hasNxCloudPat,
-  runAgenticOnboard,
-} from './agentic-onboard';
 import { writeAiOutput } from '../../ai/ai-output';
 import * as pc from 'picocolors';
 const ora = require('ora');
@@ -85,8 +80,15 @@ export async function connectWorkspaceToCloud(
   return accessToken;
 }
 
+export interface ConnectToNxCloudCommandOptions {
+  generateToken?: boolean;
+  checkRemote?: boolean;
+  /** Use the legacy browser-based claim flow instead of the bin one-shot. */
+  browser?: boolean;
+}
+
 export async function connectToNxCloudCommand(
-  options: { generateToken?: boolean; checkRemote?: boolean },
+  options: ConnectToNxCloudCommandOptions,
   command?: string
 ): Promise<boolean> {
   // `connectToNxCloudWithPrompt` (called from `migrate`) records its own stat; skip here to avoid double-counting.
@@ -146,62 +148,73 @@ export async function connectToNxCloudCommand(
 }
 
 async function runConnectToNxCloud(
-  options: { generateToken?: boolean; checkRemote?: boolean },
+  options: ConnectToNxCloudCommandOptions,
   command?: string
 ): Promise<boolean> {
-  const nxJson = readNxJson();
-
-  const installationSource = process.env.NX_CONSOLE
-    ? 'nx-console'
-    : 'nx-connect';
-
-  const aiMode = isAiAgent();
-
-  // Agent mode: PAT present → agentic onboard via NDJSON. PAT missing →
-  // emit needs_input pointing to `nx login`. Already connected → short-circuit.
-  if (aiMode) {
-    // Mirrors the human `isNxCloudUsed` short-circuit below; without this a
-    // re-run from a connected workspace 409s on name reuse.
-    if (isNxCloudUsed(nxJson) && nxJson.nxCloudId) {
-      writeAiOutput({
-        stage: 'complete',
-        success: true,
-        status: 'connected',
-        nxCloudId: nxJson.nxCloudId,
-        verifyCommand: 'npx nx-cloud onboard status',
-        message: 'Workspace is already connected to Nx Cloud.',
-        nextSteps: CONNECTED_NEXT_STEPS,
-      });
-      return true;
-    }
-    if (!hasNxCloudPat()) {
-      writeAiOutput({
-        stage: 'needs_input',
-        success: false,
-        actionRequired: 'login_required',
-        message:
-          'Nx Cloud authentication is required. Run `npx nx login` to authenticate (one-time browser OAuth), then re-run `nx connect`.',
-        nextCommand: 'npx nx login',
-        statusCheck: 'npx nx-cloud login --status',
-        hint: '`nx login` opens a browser for one-time OAuth; the resulting PAT is saved to ~/.config/nxcloud/nxcloud.ini and reused for all future workspaces.',
-      });
-      return false;
-    }
-    const result = await runAgenticOnboard({ source: 'nx-connect' });
-    return result.status === 'connected';
+  // --browser → legacy claim-URL flow (anonymous workspace + browser).
+  if (options.browser) {
+    return runBrowserClaimFlow(options, command);
   }
 
-  const hasRemote = !!getVcsRemoteInfo();
-  if (!hasRemote && options.checkRemote) {
-    output.error({
-      title: 'Missing VCS provider',
-      bodyLines: [
-        'Push this repository to a VCS provider (e.g., GitHub) and try again.',
-        'Go to https://github.com/new to create a repository on GitHub.',
-      ],
+  // Agents: don't spawn the bin ourselves. Hint them to invoke
+  // `nx-cloud onboard connect-workspace` directly so they get the bin's
+  // canonical NDJSON contract without an extra translation layer.
+  if (isAiAgent()) {
+    writeAiOutput({
+      stage: 'needs_input',
+      success: false,
+      actionRequired: 'run_bin',
+      message:
+        'Run `npx nx-cloud onboard connect-workspace` directly. It is the canonical onboarding entry point and emits NDJSON when run under an agent.',
+      nextCommand: 'npx nx-cloud onboard connect-workspace',
+      hint: 'Parse the NDJSON it emits and act on `actionRequired` per the OnboardPayload contract.',
     });
     return false;
   }
+
+  // Humans: hand off to the bin with inherited stdio so the bin's spinner +
+  // human output is what the user sees. The bin owns repo detection, org
+  // selection, GitHub OAuth/App install, workspace creation, and writes
+  // nxCloudId to nx.json.
+  return spawnConnectWorkspace();
+}
+
+async function spawnConnectWorkspace(): Promise<boolean> {
+  let bin: string;
+  try {
+    bin = require.resolve('nx/bin/nx-cloud.js', {
+      paths: [workspaceRoot, __dirname],
+    });
+  } catch {
+    output.error({
+      title: 'Could not locate the nx-cloud binary.',
+      bodyLines: ['Try `npx nx-cloud onboard connect-workspace` directly.'],
+    });
+    return false;
+  }
+  return await new Promise<boolean>((resolve) => {
+    const child = spawn(
+      process.execPath,
+      [bin, 'onboard', 'connect-workspace'],
+      { stdio: 'inherit', cwd: workspaceRoot, windowsHide: true }
+    );
+    child.on('error', () => resolve(false));
+    child.on('close', (code) => resolve(code === 0));
+  });
+}
+
+/**
+ * Legacy browser-claim flow: create an anonymous workspace via the local
+ * generator and open the claim URL in the user's browser.
+ */
+async function runBrowserClaimFlow(
+  options: ConnectToNxCloudCommandOptions,
+  command?: string
+): Promise<boolean> {
+  const nxJson = readNxJson();
+  const installationSource = process.env.NX_CONSOLE
+    ? 'nx-console'
+    : 'nx-connect';
 
   if (isNxCloudUsed(nxJson)) {
     const token =
@@ -230,12 +243,6 @@ async function runConnectToNxCloud(
     });
 
     return false;
-  }
-
-  // PAT + remote → try one-shot. On any non-success, fall through to the
-  // legacy browser-claim flow (always works, one extra click).
-  if (hasRemote && hasNxCloudPat()) {
-    if (await tryOneShotConnect(installationSource)) return true;
   }
 
   const token = await connectWorkspaceToCloud({
@@ -270,39 +277,6 @@ async function runConnectToNxCloud(
   }
 
   return true;
-}
-
-async function tryOneShotConnect(
-  source: 'nx-connect' | 'nx-console'
-): Promise<boolean> {
-  // Drive connect-workspace cold (no pre-flight). A prior status spawn
-  // perturbs the bin's first repo lookup; the agent path proves cold one-shots
-  // on fresh repos. Non-success → silent stop, caller falls back.
-  const spinner = ora('Connecting workspace to Nx Cloud...').start();
-  const result = await runAgenticOnboard({
-    source,
-    onProgress: (p) => {
-      if (
-        typeof p.message === 'string' &&
-        !('success' in p) &&
-        !('actionRequired' in p)
-      ) {
-        spinner.text = p.message;
-      }
-    },
-  });
-
-  if (result.status === 'connected') {
-    spinner.succeed(
-      `Connected. Workspace${
-        result.nxCloudUrl ? ` → ${result.nxCloudUrl}` : ''
-      }`
-    );
-    return true;
-  }
-
-  spinner.stop();
-  return false;
 }
 
 function sleep(ms: number) {
