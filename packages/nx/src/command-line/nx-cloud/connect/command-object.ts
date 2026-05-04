@@ -28,7 +28,7 @@ function withConnectOptions(yargs: Argv) {
     .option('browser', {
       type: 'boolean',
       description:
-        'Use the browser-based onboarding flow instead of the in-terminal one-shot. Opens a claim URL in your browser to finish setup.',
+        'Force the browser-based onboarding flow even when running under an AI agent. Default for human runs; agents otherwise receive a hint to invoke `nx-cloud onboard connect-workspace` directly.',
     });
 }
 

@@ -1,4 +1,3 @@
-import { spawn } from 'child_process';
 import { join } from 'path';
 import { handleImport } from '../../../utils/handle-import';
 import { output } from '../../../utils/output';
@@ -151,56 +150,23 @@ async function runConnectToNxCloud(
   options: ConnectToNxCloudCommandOptions,
   command?: string
 ): Promise<boolean> {
-  // --browser → legacy claim-URL flow (anonymous workspace + browser).
-  if (options.browser) {
-    return runBrowserClaimFlow(options, command);
-  }
-
-  // Agents: don't spawn the bin ourselves. Hint them to invoke
-  // `nx-cloud onboard connect-workspace` directly so they get the bin's
-  // canonical NDJSON contract without an extra translation layer.
-  if (isAiAgent()) {
+  // Agents (unless --browser): hint them to invoke the bin directly so they
+  // get its canonical NDJSON contract without an extra translation layer.
+  // Humans always go through the browser-claim flow.
+  if (!options.browser && isAiAgent()) {
     writeAiOutput({
       stage: 'needs_input',
       success: false,
       actionRequired: 'run_bin',
       message:
-        'Run `npx nx-cloud onboard connect-workspace` directly. It is the canonical onboarding entry point and emits NDJSON when run under an agent.',
+        'Run `npx nx-cloud onboard connect-workspace` directly. It is the agentic onboarding entry point and emits NDJSON.',
       nextCommand: 'npx nx-cloud onboard connect-workspace',
       hint: 'Parse the NDJSON it emits and act on `actionRequired` per the OnboardPayload contract.',
     });
     return false;
   }
 
-  // Humans: hand off to the bin with inherited stdio so the bin's spinner +
-  // human output is what the user sees. The bin owns repo detection, org
-  // selection, GitHub OAuth/App install, workspace creation, and writes
-  // nxCloudId to nx.json.
-  return spawnConnectWorkspace();
-}
-
-async function spawnConnectWorkspace(): Promise<boolean> {
-  let bin: string;
-  try {
-    bin = require.resolve('nx/bin/nx-cloud.js', {
-      paths: [workspaceRoot, __dirname],
-    });
-  } catch {
-    output.error({
-      title: 'Could not locate the nx-cloud binary.',
-      bodyLines: ['Try `npx nx-cloud onboard connect-workspace` directly.'],
-    });
-    return false;
-  }
-  return await new Promise<boolean>((resolve) => {
-    const child = spawn(
-      process.execPath,
-      [bin, 'onboard', 'connect-workspace'],
-      { stdio: 'inherit', cwd: workspaceRoot, windowsHide: true }
-    );
-    child.on('error', () => resolve(false));
-    child.on('close', (code) => resolve(code === 0));
-  });
+  return runBrowserClaimFlow(options, command);
 }
 
 /**
