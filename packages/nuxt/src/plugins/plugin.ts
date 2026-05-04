@@ -41,8 +41,12 @@ export const createNodes: CreateNodesV2<NuxtPluginOptions> = [
   '**/nuxt.config.{js,ts,mjs,mts,cjs,cts}',
   async (files, options, context) => {
     //TODO(@nrwl/nx-vue-reviewers): This should batch hashing like our other plugins.
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
     const result = await createNodesFromFiles(
-      createNodesInternal,
+      (configFile, opts, ctx) =>
+        createNodesInternal(configFile, opts, ctx, pmc, lockFileName),
       files,
       options,
       context
@@ -57,7 +61,9 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFilePath: string,
   options: NuxtPluginOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  lockFileName: string
 ) {
   const projectRoot = dirname(configFilePath);
   // Do not create a project if package.json and project.json isn't there.
@@ -71,15 +77,11 @@ async function createNodesInternal(
 
   options = normalizeOptions(options);
 
-  const pmc = getPackageManagerCommand(
-    detectPackageManager(context.workspaceRoot)
-  );
-
   const hash = await calculateHashForCreateNodes(
     projectRoot,
     options,
     context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    [lockFileName]
   );
   if (!targetsCache.has(hash)) {
     targetsCache.set(

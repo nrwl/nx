@@ -60,9 +60,9 @@ export const createNodes: CreateNodesV2<WebpackPluginOptions> = [
     const targetsCache = new PluginCache<WebpackTargets>(cachePath);
     const normalizedOptions = normalizeOptions(options);
     const isTsSolutionSetup = isUsingTsSolutionSetup();
-    const pmc = getPackageManagerCommand(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -72,7 +72,8 @@ export const createNodes: CreateNodesV2<WebpackPluginOptions> = [
             context,
             targetsCache,
             isTsSolutionSetup,
-            pmc
+            pmc,
+            lockFileName
           ),
         configFilePaths,
         normalizedOptions,
@@ -92,7 +93,8 @@ async function createNodesInternal(
   context: CreateNodesContextV2,
   targetsCache: PluginCache<WebpackTargets>,
   isTsSolutionSetup: boolean,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  lockFileName: string
 ): Promise<CreateNodesResult> {
   const projectRoot = dirname(configFilePath);
 
@@ -109,7 +111,7 @@ async function createNodesInternal(
     projectRoot,
     options,
     context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    [lockFileName]
   );
 
   if (!targetsCache.has(hash)) {

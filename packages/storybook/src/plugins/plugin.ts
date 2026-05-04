@@ -54,9 +54,9 @@ export const createNodes: CreateNodesV2<StorybookPluginOptions> = [
       `storybook-${optionsHash}.hash`
     );
     const targetsCache = new PluginCache<StorybookTargets>(cachePath);
-    const pmc = getPackageManagerCommand(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
 
     try {
       return await createNodesFromFiles(
@@ -66,7 +66,8 @@ export const createNodes: CreateNodesV2<StorybookPluginOptions> = [
             normalizedOptions,
             context,
             targetsCache,
-            pmc
+            pmc,
+            lockFileName
           ),
         configFilePaths,
         normalizedOptions,
@@ -85,7 +86,8 @@ async function createNodesInternal(
   options: Required<StorybookPluginOptions>,
   context: CreateNodesContextV2,
   targetsCache: PluginCache<StorybookTargets>,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  lockFileName: string
 ) {
   let projectRoot = '';
   if (configFilePath.includes('/.storybook')) {
@@ -111,7 +113,7 @@ async function createNodesInternal(
     projectRoot,
     options,
     context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    [lockFileName]
   );
 
   const projectName = buildProjectName(projectRoot, context.workspaceRoot);

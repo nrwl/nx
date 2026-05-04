@@ -52,9 +52,9 @@ export const createNodes: CreateNodesV2<NextPluginOptions> = [
     const cachePath = join(workspaceDataDirectory, `next-${optionsHash}.json`);
     const targetsCache = new PluginCache<NextTargets>(cachePath);
     const isTsSolutionSetup = isUsingTsSolutionSetup();
-    const pmc = getPackageManagerCommand(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
 
     try {
       return await createNodesFromFiles(
@@ -65,7 +65,8 @@ export const createNodes: CreateNodesV2<NextPluginOptions> = [
             context,
             targetsCache,
             isTsSolutionSetup,
-            pmc
+            pmc,
+            lockFileName
           ),
         configFiles,
         options,
@@ -85,7 +86,8 @@ async function createNodesInternal(
   context: CreateNodesContextV2,
   targetsCache: PluginCache<NextTargets>,
   isTsSolutionSetup: boolean,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  lockFileName: string
 ) {
   const projectRoot = dirname(configFilePath);
 
@@ -103,7 +105,7 @@ async function createNodesInternal(
     projectRoot,
     options,
     context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    [lockFileName]
   );
 
   if (!targetsCache.has(hash)) {

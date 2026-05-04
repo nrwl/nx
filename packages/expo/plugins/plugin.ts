@@ -44,14 +44,21 @@ export const createNodes: CreateNodesV2<ExpoPluginOptions> = [
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `expo-${optionsHash}.hash`);
     const targetsCache = new PluginCache<ExpoTargets>(cachePath);
-    const pmc = getPackageManagerCommand(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
 
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache, pmc),
+          createNodesInternal(
+            configFile,
+            options,
+            context,
+            targetsCache,
+            pmc,
+            lockFileName
+          ),
         configFiles,
         options,
         context
@@ -69,7 +76,8 @@ async function createNodesInternal(
   options: ExpoPluginOptions,
   context: CreateNodesContextV2,
   targetsCache: PluginCache<ExpoTargets>,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  lockFileName: string
 ): Promise<CreateNodesResult> {
   options = normalizeOptions(options);
   const projectRoot = dirname(configFile);
@@ -100,7 +108,7 @@ async function createNodesInternal(
     projectRoot,
     options,
     context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    [lockFileName]
   );
 
   if (!targetsCache.has(hash)) {

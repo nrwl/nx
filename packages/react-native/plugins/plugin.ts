@@ -47,11 +47,20 @@ export const createNodes: CreateNodesV2<ReactNativePluginOptions> = [
       `react-native-${optionsHash}.hash`
     );
     const targetsCache = new PluginCache<ReactNativeTargets>(cachePath);
+    const lockFileName = getLockFileName(
+      detectPackageManager(context.workspaceRoot)
+    );
 
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+          createNodesInternal(
+            configFile,
+            options,
+            context,
+            targetsCache,
+            lockFileName
+          ),
         configFiles,
         options,
         context
@@ -68,7 +77,8 @@ async function createNodesInternal(
   configFile: string,
   options: ReactNativePluginOptions,
   context: CreateNodesContextV2,
-  targetsCache: PluginCache<ReactNativeTargets>
+  targetsCache: PluginCache<ReactNativeTargets>,
+  lockFileName: string
 ): Promise<CreateNodesResult> {
   options = normalizeOptions(options);
   const projectRoot = dirname(configFile);
@@ -99,7 +109,7 @@ async function createNodesInternal(
     projectRoot,
     options,
     context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    [lockFileName]
   );
 
   if (!targetsCache.has(hash)) {

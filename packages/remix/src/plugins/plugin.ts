@@ -53,9 +53,9 @@ export const createNodes: CreateNodesV2<RemixPluginOptions> = [
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `remix-${optionsHash}.hash`);
     const targetsCache = new PluginCache<RemixTargets>(cachePath);
-    const pmc = getPackageManagerCommand(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -65,7 +65,8 @@ export const createNodes: CreateNodesV2<RemixPluginOptions> = [
             context,
             targetsCache,
             _isUsingTsSolutionSetup(),
-            pmc
+            pmc,
+            lockFileName
           ),
         configFilePaths,
         options,
@@ -85,7 +86,8 @@ async function createNodesInternal(
   context: CreateNodesContextV2,
   targetsCache: PluginCache<RemixTargets>,
   isUsingTsSolutionSetup: boolean,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  lockFileName: string
 ) {
   const projectRoot = dirname(configFilePath);
   const fullyQualifiedProjectRoot = join(context.workspaceRoot, projectRoot);
@@ -114,7 +116,7 @@ async function createNodesInternal(
       projectRoot,
       { ...options, isUsingTsSolutionSetup },
       context,
-      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+      [lockFileName]
     )) + configFilePath;
 
   if (!targetsCache.has(hash)) {

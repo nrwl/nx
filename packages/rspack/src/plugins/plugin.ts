@@ -47,9 +47,9 @@ export const createNodesV2: CreateNodesV2<RspackPluginOptions> = [
     );
     const targetsCache = new PluginCache<RspackTargets>(cachePath);
     const isTsSolutionSetup = isUsingTsSolutionSetup();
-    const pmc = getPackageManagerCommand(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -59,7 +59,8 @@ export const createNodesV2: CreateNodesV2<RspackPluginOptions> = [
             context,
             targetsCache,
             isTsSolutionSetup,
-            pmc
+            pmc,
+            lockFileName
           ),
         configFilePaths,
         options,
@@ -77,7 +78,8 @@ async function createNodesInternal(
   context: CreateNodesContextV2,
   targetsCache: PluginCache<RspackTargets>,
   isTsSolutionSetup: boolean,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  lockFileName: string
 ) {
   const projectRoot = dirname(configFilePath);
   // Do not create a project if package.json and project.json isn't there.
@@ -99,12 +101,7 @@ async function createNodesInternal(
   const normalizedOptions = normalizeOptions(options);
 
   const lockFileHash =
-    hashFile(
-      join(
-        context.workspaceRoot,
-        getLockFileName(detectPackageManager(context.workspaceRoot))
-      )
-    ) ?? '';
+    hashFile(join(context.workspaceRoot, lockFileName)) ?? '';
 
   const nodeHash = hashArray([
     hashFile(join(context.workspaceRoot, configFilePath)),

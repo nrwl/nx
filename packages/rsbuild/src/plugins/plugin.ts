@@ -47,9 +47,9 @@ export const createNodesV2: CreateNodesV2<RsbuildPluginOptions> = [
     );
     const targetsCache = new PluginCache<RsbuildTargets>(cachePath);
     const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
-    const pmc = getPackageManagerCommand(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -59,7 +59,8 @@ export const createNodesV2: CreateNodesV2<RsbuildPluginOptions> = [
             context,
             targetsCache,
             isUsingTsSolutionSetup,
-            pmc
+            pmc,
+            lockFileName
           ),
         configFilePaths,
         options,
@@ -77,7 +78,8 @@ async function createNodesInternal(
   context: CreateNodesContextV2,
   targetsCache: PluginCache<RsbuildTargets>,
   isUsingTsSolutionSetup: boolean,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  lockFileName: string
 ) {
   const projectRoot = dirname(configFilePath);
   // Do not create a project if package.json and project.json isn't there.
@@ -97,7 +99,7 @@ async function createNodesInternal(
     projectRoot,
     { ...normalizedOptions, isUsingTsSolutionSetup },
     context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    [lockFileName]
   );
 
   if (!targetsCache.has(hash)) {

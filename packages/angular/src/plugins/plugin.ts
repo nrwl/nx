@@ -91,13 +91,20 @@ export const createNodesV2: CreateNodesV2<AngularPluginOptions> = [
       `angular-${optionsHash}.hash`
     );
     const projectsCache = new PluginCache<AngularProjects>(cachePath);
-    const pmc = getPackageManagerCommand(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, projectsCache, pmc),
+          createNodesInternal(
+            configFile,
+            options,
+            context,
+            projectsCache,
+            pmc,
+            lockFileName
+          ),
         configFiles,
         options,
         context
@@ -113,7 +120,8 @@ async function createNodesInternal(
   options: {} | undefined,
   context: CreateNodesContextV2,
   projectsCache: PluginCache<AngularProjects>,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  lockFileName: string
 ): Promise<CreateNodesResult> {
   const angularWorkspaceRoot = dirname(configFilePath);
 
@@ -129,7 +137,7 @@ async function createNodesInternal(
     angularWorkspaceRoot,
     options,
     context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    [lockFileName]
   );
 
   if (!projectsCache.has(hash)) {
