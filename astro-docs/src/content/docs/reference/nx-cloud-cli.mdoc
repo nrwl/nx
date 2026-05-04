@@ -587,9 +587,28 @@ npx nx-cloud start-agent
 
 #### Options
 
-| Option      | Type    | Description                          | Default |
-| ----------- | ------- | ------------------------------------ | ------- |
-| `--verbose` | boolean | Enable verbose logging for debugging | `false` |
+| Option      | Type    | Description                                                                                       | Default |
+| ----------- | ------- | ------------------------------------------------------------------------------------------------- | ------- |
+| `--targets` | string  | Comma-separated list of target names this agent is allowed to pick up. Defaults to every target. |         |
+| `--verbose` | boolean | Enable verbose logging for debugging                                                              | `false` |
+
+#### Pinning an agent to specific targets
+
+By default, an agent picks up any task assigned to the CI run. When agents share a memory-constrained host, you can pin an agent to a subset of targets so that memory-heavy task families never co-locate on the same machine.
+
+```shell
+# This agent will only run e2e tasks
+npx nx-cloud start-agent --targets=e2e
+
+# This agent will run component-test and storybook-test tasks
+npx nx-cloud start-agent --targets=component-test,storybook-test
+```
+
+Combined with a CI matrix, this lets you carve out dedicated agent pools per target class (for example, four agents for `e2e`, four for `build`, the rest for fast tasks like `test`/`lint`).
+
+{% aside type="caution" title="Cover every target" %}
+Make sure every target dispatched by the main job is matched by at least one agent's `--targets` value, otherwise tasks for unmatched targets will never be picked up and the CI run will hang.
+{% /aside %}
 
 #### Environment variables
 
