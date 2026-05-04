@@ -42,16 +42,7 @@ export function hasNxCloudPat(
   return false;
 }
 
-export type AgenticOnboardSource =
-  | 'nx-connect'
-  | 'nx-console'
-  | 'nx-init'
-  | 'nx-init-angular'
-  | 'nx-init-monorepo'
-  | 'nx-init-nest'
-  | 'nx-init-npm-repo'
-  | 'nx-init-turborepo'
-  | 'create-nx-workspace';
+export type AgenticOnboardSource = 'nx-connect' | 'nx-console';
 
 export interface AgenticOnboardOptions {
   source: AgenticOnboardSource;

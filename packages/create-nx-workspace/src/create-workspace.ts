@@ -16,7 +16,6 @@ import {
   connectToNxCloudForTemplate,
   createNxCloudOnboardingUrl,
   getNxCloudInfo,
-  getSkippedNxCloudInfo,
   openCloudSetupUrl,
   readNxCloudToken,
   setNeverConnectToCloud,
@@ -34,8 +33,7 @@ import {
   generatePackageManagerFiles,
   getPackageManagerCommand,
 } from './utils/package-manager';
-import { isAiAgent, logProgress, writeAiOutput } from './utils/ai/ai-output';
-import { hasNxCloudPat, runAgenticOnboard } from './utils/nx/agentic-onboard';
+import { isAiAgent, logProgress } from './utils/ai/ai-output';
 
 // State for SIGINT handler - only set after workspace is fully installed
 let workspaceDirectory: string | undefined;
@@ -144,10 +142,8 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       throw e;
     }
 
-    // AI mode defers to the post-git block — cloneTemplate just stripped
-    // .git, so there's no remote yet for the bin's repo detection.
+    // Connect to Nx Cloud for template flow
     if (
-      !aiMode &&
       nxCloud !== 'skip' &&
       nxCloud !== 'never' &&
       !options.skipCloudConnect
@@ -276,17 +272,18 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   let connectUrl: string | undefined;
   let nxCloudInfo: string | undefined;
 
-  if (nxCloud !== 'skip' && nxCloud !== 'never') {
-    // "Yes" or "Maybe later" — generate URL, update README, show banner
-    const aiModeForCloud = isAiAgent();
-    if (aiModeForCloud) {
+  // Only act when the user explicitly opted in to Nx Cloud. "Maybe later",
+  // "Skip", and "Never" leave the workspace untouched — the user (or agent)
+  // can run `nx connect` on their own. Matches `nx init`'s flow.
+  if (
+    nxCloud !== 'skip' &&
+    nxCloud !== 'never' &&
+    !options.skipCloudConnect
+  ) {
+    if (isAiAgent()) {
       logProgress('configuring', 'Configuring Nx Cloud...');
     }
-    // skipCloudConnect=true (Maybe later): Skip readNxCloudToken() since no token exists
-    // skipCloudConnect=false (Yes): Read the token as before (cloud was connected)
-    const token = options.skipCloudConnect
-      ? undefined
-      : readNxCloudToken(directory);
+    const token = readNxCloudToken(directory);
 
     connectUrl = await createNxCloudOnboardingUrl(
       nxCloud,
@@ -298,8 +295,6 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     // Store for SIGINT handler
     cloudConnectUrl = connectUrl;
 
-    // Update README with connect URL (strips markers, adds connect section)
-    // Then commit the change - amend if not pushed, new commit if already pushed
     if (isTemplate) {
       const readmeUpdated = addConnectUrlToReadme(directory, connectUrl);
       if (readmeUpdated && !skipGit && commit) {
@@ -315,41 +310,13 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       name
     );
 
-    // Auto-open the Cloud setup URL in the browser when user selected 'yes'
-    if (!options.skipCloudConnect) {
-      if (aiModeForCloud) {
-        if (hasNxCloudPat()) {
-          await runAgenticOnboard({
-            source: 'create-nx-workspace',
-            cwd: directory,
-          });
-        } else {
-          writeAiOutput({
-            stage: 'needs_input',
-            success: false,
-            actionRequired: 'login_required',
-            message:
-              'Nx Cloud authentication is required to finish onboarding. Run `npx nx login` from the workspace (one-time browser OAuth), then run `npx nx connect`.',
-            nextCommand: 'npx nx login',
-            statusCheck: 'npx nx-cloud login --status',
-            hint: '`nx login` opens a browser for one-time OAuth; the PAT is saved to ~/.config/nxcloud/nxcloud.ini and reused for future workspaces.',
-          });
-        }
-      } else {
-        await openCloudSetupUrl(connectUrl);
-      }
-    }
-  } else if (isTemplate && (nxCloud === 'skip' || nxCloud === 'never')) {
-    // Strip marker comments from README
+    await openCloudSetupUrl(connectUrl);
+  } else if (isTemplate) {
+    // Strip template README markers; don't replace with a connect URL.
     const readmeUpdated = addConnectUrlToReadme(directory, undefined);
     if (readmeUpdated && !skipGit && commit) {
       const alreadyPushed = pushedToVcs === VcsPushStatus.PushedToVcs;
       await amendOrCommitReadme(directory, alreadyPushed);
-    }
-
-    // Only show "nx connect" message for 'skip', not 'never'
-    if (nxCloud === 'skip') {
-      nxCloudInfo = getSkippedNxCloudInfo();
     }
   }
 

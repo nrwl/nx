@@ -29,7 +29,7 @@ import {
   CONNECTED_NEXT_STEPS,
   hasNxCloudPat,
   runAgenticOnboard,
-} from '../onboard/agentic-onboard';
+} from './agentic-onboard';
 import { writeAiOutput } from '../../ai/ai-output';
 import * as pc from 'picocolors';
 const ora = require('ora');
