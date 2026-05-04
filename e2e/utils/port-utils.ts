@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as net from 'net';
+import * as os from 'os';
 import * as path from 'path';
 
 /**
@@ -12,7 +13,7 @@ import * as path from 'path';
  * so reserved ports never collide with parallel tests that generate apps
  * without explicitly pinning the dev-server port.
  */
-const LOCK_DIR = process.env.NX_E2E_PORT_LOCK_DIR ?? '/tmp/nx-e2e-port-locks';
+const LOCK_DIR = path.join(os.tmpdir(), 'nx-e2e-port-locks');
 fs.mkdirSync(LOCK_DIR, { recursive: true });
 
 export async function reservePort(start = 6100): Promise<number> {
