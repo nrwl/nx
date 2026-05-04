@@ -111,8 +111,11 @@ describe('configurationGenerator', () => {
 
     const nxJson = readJson(tree, 'nx.json');
     const td = nxJson.targetDefaults;
+    // Generators now write the array shape with executor-keyed defaults
+    // surfaced as `executor`, not `target`. The legacy record-shape lookup
+    // is kept as a fallback for tests running against older fixtures.
     const esbuildEntry = Array.isArray(td)
-      ? td.find((e) => e.target === '@nx/esbuild:esbuild')
+      ? td.find((e) => e.executor === '@nx/esbuild:esbuild')
       : td['@nx/esbuild:esbuild'];
     expect(esbuildEntry.inputs).toEqual([
       'production',
