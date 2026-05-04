@@ -237,8 +237,8 @@ catalogs:
       version: 0.5.18
   typescript:
     '@phenomnomnominal/tsquery':
-      specifier: ~6.1.4
-      version: 6.1.4
+      specifier: ~6.2.0
+      version: 6.2.0
     '@types/node':
       specifier: ^20.19.10
       version: 20.19.19
@@ -667,7 +667,7 @@ importers:
         version: 23.0.0-beta.4(@babel/traverse@7.29.0)(@rspack/core@1.6.8(@swc/helpers@0.5.18))(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(html-webpack-plugin@5.5.0(webpack@5.101.3))(lightningcss@1.32.0)(nx@23.0.0-beta.4(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))(typescript@5.9.2)(verdaccio@6.3.2(encoding@0.1.13)(typanion@3.14.0))(webpack-cli@5.1.4(webpack-dev-server@5.2.2)(webpack@5.101.3))
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
-        version: 6.1.4(typescript@5.9.2)
+        version: 6.2.0(typescript@5.9.2)
       '@playwright/test':
         specifier: ^1.36.1
         version: 1.54.0
@@ -2325,7 +2325,7 @@ importers:
         version: link:../webpack
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
-        version: 6.1.4(typescript@5.9.2)
+        version: 6.2.0(typescript@5.9.2)
       '@schematics/angular':
         specifier: catalog:angular-supported-versions
         version: 21.2.0(chokidar@5.0.0)
@@ -2577,7 +2577,7 @@ importers:
         version: link:../js
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
-        version: 6.1.4(typescript@5.9.2)
+        version: 6.2.0(typescript@5.9.2)
       cypress:
         specifier: '>= 13 < 16'
         version: 14.3.0
@@ -2779,7 +2779,7 @@ importers:
         version: link:../js
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
-        version: 6.1.4(typescript@5.9.2)
+        version: 6.2.0(typescript@5.9.2)
       '@typescript-eslint/parser':
         specifier: ^6.13.2 || ^7.0.0 || ^8.0.0
         version: 8.40.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.2)
@@ -2915,7 +2915,7 @@ importers:
         version: link:../js
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
-        version: 6.1.4(typescript@5.9.2)
+        version: 6.2.0(typescript@5.9.2)
       identity-obj-proxy:
         specifier: catalog:jest
         version: 3.0.0
@@ -3168,7 +3168,7 @@ importers:
         version: link:../webpack
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
-        version: 6.1.4(typescript@5.9.2)
+        version: 6.2.0(typescript@5.9.2)
       '@svgr/webpack':
         specifier: ^8.1.0
         version: 8.1.0(typescript@5.9.2)
@@ -3500,7 +3500,7 @@ importers:
         version: link:../web
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
-        version: 6.1.4(typescript@5.9.2)
+        version: 6.2.0(typescript@5.9.2)
       '@svgr/webpack':
         specifier: ^8.0.1
         version: 8.1.0(typescript@5.9.2)
@@ -3615,7 +3615,7 @@ importers:
         version: link:../workspace
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
-        version: 6.1.4(typescript@5.9.2)
+        version: 6.2.0(typescript@5.9.2)
       '@remix-run/dev':
         specifier: ^2.17.3
         version: 2.17.3(@remix-run/react@2.16.8(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.2))(@types/node@24.2.0)(babel-plugin-macros@3.1.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.2.0)(typescript@5.9.2))(tsx@4.20.5)(typescript@5.9.2)(vite@6.3.5(@types/node@24.2.0)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.97.3)(stylus@0.64.0)(terser@5.46.0)(tsx@4.20.5)(yaml@2.8.2))(yaml@2.8.2)
@@ -3701,7 +3701,7 @@ importers:
         version: link:../js
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
-        version: 6.1.4(typescript@5.9.2)
+        version: 6.2.0(typescript@5.9.2)
       '@rsbuild/core':
         specifier: 1.1.8
         version: 1.1.8
@@ -3738,7 +3738,7 @@ importers:
         version: link:../web
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
-        version: 6.1.4(typescript@5.9.2)
+        version: 6.2.0(typescript@5.9.2)
       '@rspack/core':
         specifier: catalog:rspack
         version: 1.6.8(@swc/helpers@0.5.18)
@@ -3844,7 +3844,7 @@ importers:
         version: link:../web
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
-        version: 6.1.4(typescript@5.9.2)
+        version: 6.2.0(typescript@5.9.2)
       semver:
         specifier: 'catalog:'
         version: 7.7.4
@@ -3872,7 +3872,7 @@ importers:
         version: link:../vitest
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
-        version: 6.1.4(typescript@5.9.2)
+        version: 6.2.0(typescript@5.9.2)
       ajv:
         specifier: ^8.0.0
         version: 8.17.1
@@ -3915,7 +3915,7 @@ importers:
         version: link:../js
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
-        version: 6.1.4(typescript@5.9.2)
+        version: 6.2.0(typescript@5.9.2)
       semver:
         specifier: 'catalog:'
         version: 7.7.4
@@ -4038,7 +4038,7 @@ importers:
         version: link:../js
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
-        version: 6.1.4(typescript@5.9.2)
+        version: 6.2.0(typescript@5.9.2)
       ajv:
         specifier: ^8.12.0
         version: 8.17.1
@@ -10986,6 +10986,11 @@ packages:
     peerDependencies:
       typescript: ^3 || ^4 || ^5
 
+  '@phenomnomnominal/tsquery@6.2.0':
+    resolution: {integrity: sha512-Vo9nkhfZxDB/sBiqIY3pjDC4mOSyure+AFlEW5hcy/tRE82MqCXjRN4InnVNMldinRt0dLYqg4HAU2XPq5e1LA==}
+    peerDependencies:
+      typescript: '>3.0.0'
+
   '@pinojs/redact@0.4.0':
     resolution: {integrity: sha512-k2ENnmBugE/rzQfEcdWHcCY+/FM3VLzH9cYEsbdsoqrvzAKRhUZeRNhAZvB8OitQJ1TBed3yqWtdjzS6wJKBwg==}
 
@@ -17028,6 +17033,10 @@ packages:
 
   esquery@1.6.0:
     resolution: {integrity: sha512-ca9pw9fomFcKPvFLXhBKUK90ZvGibiGOvRJNbjljY7s7uq/5YO4BOzcYtJqExdx99rF6aAcnRxHmcUHcz6sQsg==}
+    engines: {node: '>=0.10'}
+
+  esquery@1.7.0:
+    resolution: {integrity: sha512-Ap6G0WQwcU/LHsvLwON1fAQX9Zp0A2Y6Y/cJBl9r/JbW90Zyg4/zbG6zzKa2OTALELarYHmKu0GhpM5EO+7T0g==}
     engines: {node: '>=0.10'}
 
   esrap@2.2.3:
@@ -37603,6 +37612,12 @@ snapshots:
       esquery: 1.6.0
       typescript: 5.9.2
 
+  '@phenomnomnominal/tsquery@6.2.0(typescript@5.9.2)':
+    dependencies:
+      '@types/esquery': 1.5.4
+      esquery: 1.7.0
+      typescript: 5.9.2
+
   '@pinojs/redact@0.4.0': {}
 
   '@pkgjs/parseargs@0.11.0':
@@ -45472,6 +45487,10 @@ snapshots:
   esprima@4.0.1: {}
 
   esquery@1.6.0:
+    dependencies:
+      estraverse: 5.3.0
+
+  esquery@1.7.0:
     dependencies:
       estraverse: 5.3.0
 
