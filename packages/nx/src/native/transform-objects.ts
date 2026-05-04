@@ -33,8 +33,8 @@ export function transformProjectGraphForRust(
     )) {
       targets[targetName] = {
         executor: targetConfig.executor,
-        inputs: targetConfig.inputs,
-        outputs: targetConfig.outputs,
+        inputs: sortObjectKeys(targetConfig.inputs) as Target['inputs'],
+        outputs: sortObjectKeys(targetConfig.outputs) as Target['outputs'],
         options: JSON.stringify(sortObjectKeys(targetConfig.options)),
         configurations: JSON.stringify(sortObjectKeys(targetConfig.configurations)),
         parallelism: targetConfig.parallelism,
@@ -42,7 +42,9 @@ export function transformProjectGraphForRust(
     }
     nodes[projectName] = {
       root: projectNode.data.root,
-      namedInputs: projectNode.data.namedInputs,
+      namedInputs: sortObjectKeys(
+        projectNode.data.namedInputs
+      ) as Project['namedInputs'],
       targets,
       tags: projectNode.data.tags,
     };
