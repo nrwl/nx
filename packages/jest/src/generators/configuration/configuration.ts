@@ -9,7 +9,7 @@ import {
   type TargetDefaults,
   Tree,
 } from '@nx/devkit';
-import { upsertTargetDefault } from '@nx/devkit/src/generators/target-defaults-utils';
+import { upsertTargetDefault } from '@nx/devkit/internal';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { JestPluginOptions } from '../../plugins/plugin';

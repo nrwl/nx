@@ -15,8 +15,10 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { upsertTargetDefault } from '@nx/devkit/src/generators/target-defaults-utils';
-import { normalizeTargetDefaults } from '@nx/devkit/src/utils/normalize-target-defaults';
+import {
+  normalizeTargetDefaults,
+  upsertTargetDefault,
+} from '@nx/devkit/internal';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { assertSupportedCypressVersion } from '../../utils/assert-supported-cypress-version';
 import { warnCypressExecutorGenerating } from '../../utils/deprecation';

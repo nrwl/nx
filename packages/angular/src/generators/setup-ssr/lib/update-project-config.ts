@@ -12,10 +12,9 @@ import {
   logger,
   readNxJson,
   readProjectConfiguration,
-  updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { upsertTargetDefault } from '@nx/devkit/src/generators/target-defaults-utils';
+import { upsertTargetDefault } from '@nx/devkit/internal';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { NormalizedGeneratorOptions } from '../schema';
 import {

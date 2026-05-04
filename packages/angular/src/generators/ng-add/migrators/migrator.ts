@@ -4,8 +4,10 @@ import type {
   Tree,
 } from '@nx/devkit';
 import { joinPathFragments, readNxJson, updateJson } from '@nx/devkit';
-import { upsertTargetDefault } from '@nx/devkit/src/generators/target-defaults-utils';
-import { normalizeTargetDefaults } from '@nx/devkit/src/utils/normalize-target-defaults';
+import {
+  normalizeTargetDefaults,
+  upsertTargetDefault,
+} from '@nx/devkit/internal';
 import { basename } from 'path';
 import type { Logger } from '../utilities/logger';
 import type {

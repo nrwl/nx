@@ -1,5 +1,5 @@
 import { joinPathFragments, Tree } from '@nx/devkit';
-import { upsertTargetDefault } from '@nx/devkit/src/generators/target-defaults-utils';
+import { upsertTargetDefault } from '@nx/devkit/internal';
 import {
   updateJson,
   generateFiles,

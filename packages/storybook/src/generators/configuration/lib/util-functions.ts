@@ -29,8 +29,10 @@ import { UiFramework } from '../../../utils/models';
 import { nxVersion } from '../../../utils/versions';
 import { findEslintFile } from '@nx/eslint/src/generators/utils/eslint-file';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
-import { upsertTargetDefault } from '@nx/devkit/src/generators/target-defaults-utils';
-import { normalizeTargetDefaults } from '@nx/devkit/src/utils/normalize-target-defaults';
+import {
+  normalizeTargetDefaults,
+  upsertTargetDefault,
+} from '@nx/devkit/internal';
 import {
   findRuntimeTsConfigName,
   getProjectType,

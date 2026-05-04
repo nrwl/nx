@@ -12,7 +12,7 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { upsertTargetDefault } from '@nx/devkit/src/generators/target-defaults-utils';
+import { upsertTargetDefault } from '@nx/devkit/internal';
 import type * as ts from 'typescript';
 
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';

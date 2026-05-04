@@ -15,9 +15,8 @@ import {
   type TargetDefaults,
   Tree,
   updateJson,
-  updateNxJson,
 } from '@nx/devkit';
-import { upsertTargetDefault } from '@nx/devkit/src/generators/target-defaults-utils';
+import { upsertTargetDefault } from '@nx/devkit/internal';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   getProjectType,

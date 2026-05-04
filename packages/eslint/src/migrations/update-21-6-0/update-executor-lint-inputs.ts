@@ -1,6 +1,8 @@
 import { type Tree, formatFiles, readNxJson } from '@nx/devkit';
-import { upsertTargetDefault } from '@nx/devkit/src/generators/target-defaults-utils';
-import { normalizeTargetDefaults } from '@nx/devkit/src/utils/normalize-target-defaults';
+import {
+  normalizeTargetDefaults,
+  upsertTargetDefault,
+} from '@nx/devkit/internal';
 
 export default async function (tree: Tree) {
   const nxJson = readNxJson(tree);
