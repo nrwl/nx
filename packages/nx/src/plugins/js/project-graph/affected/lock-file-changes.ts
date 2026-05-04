@@ -14,35 +14,10 @@ import {
 } from '../../../../config/project-graph';
 import { hashArray } from '../../../../hasher/file-hasher';
 import { output } from '../../../../utils/output';
-import { getNpmLockfileNodes } from '../../lock-file/npm-parser';
-import { getPnpmLockfileNodes } from '../../lock-file/pnpm-parser';
-import { getYarnLockfileNodes } from '../../lock-file/yarn-parser';
-import { getBunTextLockfileNodes } from '../../lock-file/bun-parser';
-
-type LockFileNodeParser = (
-  contents: string,
-  hash: string,
-  packageJson: any
-) => Record<string, ProjectGraphExternalNode>;
-
-const LOCK_FILE_PARSERS: Record<string, LockFileNodeParser> = {
-  'pnpm-lock.yaml': (contents, hash) =>
-    getPnpmLockfileNodes(contents, hash).nodes,
-  'pnpm-lock.yml': (contents, hash) =>
-    getPnpmLockfileNodes(contents, hash).nodes,
-  'package-lock.json': (contents, hash) =>
-    getNpmLockfileNodes(contents, hash).nodes,
-  'yarn.lock': (contents, hash, packageJson) =>
-    getYarnLockfileNodes(contents, hash, packageJson ?? {}).nodes,
-  'bun.lock': (contents, hash) => getBunTextLockfileNodes(contents, hash),
-};
-
-const SUPPORTED_LOCK_FILES = Object.keys(LOCK_FILE_PARSERS);
-
-// bun.lockb is a binary file, so auto mode always falls back to "all
-// projects affected" via WholeFileChange. We still need to recognize
-// it when deciding whether a file change is a lock file change.
-const ALL_LOCK_FILES = [...SUPPORTED_LOCK_FILES, 'bun.lockb'];
+import {
+  AUTO_AFFECTED_LOCK_FILES,
+  getLockFileNodesForName,
+} from '../../lock-file/lock-file';
 
 export const getTouchedProjectsFromLockFile: TouchedProjectLocator<
   WholeFileChange | LockFileChange
@@ -56,7 +31,9 @@ export const getTouchedProjectsFromLockFile: TouchedProjectLocator<
   const { projectsAffectedByDependencyUpdates } = readJsPluginConfig(nxJson);
 
   const changedLockFile = fileChanges.find((f) =>
-    ALL_LOCK_FILES.includes(f.file)
+    AUTO_AFFECTED_LOCK_FILES.includes(
+      f.file as (typeof AUTO_AFFECTED_LOCK_FILES)[number]
+    )
   );
 
   if (projectsAffectedByDependencyUpdates === 'auto') {
@@ -99,15 +76,6 @@ function getAutoAffected(
     return [];
   }
 
-  if (!SUPPORTED_LOCK_FILES.includes(changedLockFile.file)) {
-    // Binary formats (bun.lockb) and unrecognized files cannot be
-    // parsed for package-level changes. Fall back to all projects.
-    output.warn({
-      title: `Unable to determine granular changes for "${changedLockFile.file}". All projects will be marked as affected.`,
-    });
-    return allProjectNames;
-  }
-
   const changes = changedLockFile.getChanges();
 
   // A WholeFileChange means we were unable to read both revisions of
@@ -135,19 +103,16 @@ function getAutoAffected(
   // and return the external node names. The graph reversal in
   // filterAffected walks from these nodes to workspace projects.
   const externalNodes = projectGraph?.externalNodes ?? {};
-  const touchedNodeNames = findExternalNodesByPackageName(
+  const { touchedNodeNames, missingPackageNames } = findExternalNodesByPackageName(
     changedPackageNames,
     externalNodes
   );
 
-  if (touchedNodeNames.length > 0) {
-    return touchedNodeNames;
+  if (missingPackageNames.size > 0) {
+    return allProjectNames;
   }
 
-  // Changed packages weren't found in external nodes -- they may have
-  // been removed or the graph may not include them. Fall back to
-  // marking all projects as affected.
-  return allProjectNames;
+  return touchedNodeNames;
 }
 
 /**
@@ -162,27 +127,34 @@ function getChangedPackageNames(
   changes: LockFileChange[],
   packageJson: any
 ): Set<string> | null {
-  const parser = LOCK_FILE_PARSERS[file];
-  if (!parser) return null;
-
   try {
     const changed = new Set<string>();
     for (const change of changes) {
-      const baseVersions = collectPackageVersions(
-        parser(change.baseContent, hashArray([change.baseContent]), packageJson)
+      const baseFingerprints = collectPackageFingerprints(
+        getLockFileNodesForName(
+          file,
+          change.baseContent,
+          hashArray([change.baseContent]),
+          packageJson
+        ).nodes
       );
-      const headVersions = collectPackageVersions(
-        parser(change.headContent, hashArray([change.headContent]), packageJson)
+      const headFingerprints = collectPackageFingerprints(
+        getLockFileNodesForName(
+          file,
+          change.headContent,
+          hashArray([change.headContent]),
+          packageJson
+        ).nodes
       );
 
-      for (const [name, versions] of headVersions) {
-        const baseSet = baseVersions.get(name);
-        if (!baseSet || !setsEqual(baseSet, versions)) {
+      for (const [name, fingerprints] of headFingerprints) {
+        const baseSet = baseFingerprints.get(name);
+        if (!baseSet || !setsEqual(baseSet, fingerprints)) {
           changed.add(name);
         }
       }
-      for (const name of baseVersions.keys()) {
-        if (!headVersions.has(name)) {
+      for (const name of baseFingerprints.keys()) {
+        if (!headFingerprints.has(name)) {
           changed.add(name);
         }
       }
@@ -199,26 +171,29 @@ function getChangedPackageNames(
 
 /**
  * Build a map of packageName -> set of versions present in the
- * external-node record returned by a lock-file parser. Multiple
- * versions of the same package may be installed as transitive deps,
- * so we track all of them.
+ * external-node record returned by a lock-file parser. We include both
+ * version and hash so patched/tarball/integrity-only changes still
+ * count as lockfile changes even when the semver stays the same.
  */
-function collectPackageVersions(
+function collectPackageFingerprints(
   nodes: Record<string, ProjectGraphExternalNode>
 ): Map<string, Set<string>> {
-  const versions = new Map<string, Set<string>>();
+  const fingerprints = new Map<string, Set<string>>();
   for (const node of Object.values(nodes ?? {})) {
     const name = node.data?.packageName;
     if (!name) continue;
-    const version = node.data.version ?? '';
-    let set = versions.get(name);
+    const fingerprint = JSON.stringify({
+      version: node.data.version ?? '',
+      hash: node.data.hash ?? '',
+    });
+    let set = fingerprints.get(name);
     if (!set) {
       set = new Set<string>();
-      versions.set(name, set);
+      fingerprints.set(name, set);
     }
-    set.add(version);
+    set.add(fingerprint);
   }
-  return versions;
+  return fingerprints;
 }
 
 function setsEqual<T>(a: Set<T>, b: Set<T>): boolean {
@@ -236,12 +211,19 @@ function setsEqual<T>(a: Set<T>, b: Set<T>): boolean {
 function findExternalNodesByPackageName(
   packageNames: Set<string>,
   externalNodes: Record<string, ProjectGraphExternalNode>
-): string[] {
-  const nodeNames: string[] = [];
+): { touchedNodeNames: string[]; missingPackageNames: Set<string> } {
+  const touchedNodeNames: string[] = [];
+  const matchedPackageNames = new Set<string>();
   for (const [name, node] of Object.entries(externalNodes)) {
     if (packageNames.has(node.data.packageName)) {
-      nodeNames.push(name);
+      touchedNodeNames.push(name);
+      matchedPackageNames.add(node.data.packageName);
     }
   }
-  return nodeNames;
+  return {
+    touchedNodeNames,
+    missingPackageNames: new Set(
+      Array.from(packageNames).filter((name) => !matchedPackageNames.has(name))
+    ),
+  };
 }

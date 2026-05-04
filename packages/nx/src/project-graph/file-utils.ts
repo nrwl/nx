@@ -1,5 +1,6 @@
-import { execSync } from 'child_process';
-import { existsSync, readFileSync } from 'fs';
+import { execFileSync, execSync } from 'child_process';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
 import { extname, join, relative, sep } from 'path';
 import type { FileData } from '../config/project-graph';
 import type { NxArgs } from '../utils/command-line-utils';
@@ -54,6 +55,7 @@ const TEXT_LOCK_FILES = new Set([
   'pnpm-lock.yml',
   'bun.lock',
 ]);
+const BINARY_LOCK_FILES = new Set(['bun.lockb']);
 
 export function calculateFileChanges(
   files: string[],
@@ -84,10 +86,20 @@ export function calculateFileChanges(
           return [new WholeFileChange()];
         }
 
-        if (TEXT_LOCK_FILES.has(basename)) {
+        if (TEXT_LOCK_FILES.has(basename) || BINARY_LOCK_FILES.has(basename)) {
           try {
-            const atBase = readFileAtRevision(f, nxArgs.base);
-            const atHead = readFileAtRevision(f, nxArgs.head);
+            const atBase = readLockFileAtRevision(
+              f,
+              basename,
+              nxArgs.base,
+              readFileAtRevision
+            );
+            const atHead = readLockFileAtRevision(
+              f,
+              basename,
+              nxArgs.head,
+              readFileAtRevision
+            );
             return [new LockFileChange(atBase, atHead)];
           } catch {
             return [new WholeFileChange()];
@@ -121,6 +133,22 @@ export function calculateFileChanges(
   });
 }
 
+function readLockFileAtRevision(
+  file: string,
+  lockFileName: string,
+  revision: void | string,
+  readFileAtRevision: (f: string, r: string | void) => string
+): string {
+  if (
+    lockFileName === 'bun.lockb' &&
+    readFileAtRevision === defaultReadFileAtRevision
+  ) {
+    return defaultReadBunLockFileAtRevision(file, revision);
+  }
+
+  return readFileAtRevision(file, revision);
+}
+
 export const TEN_MEGABYTES = 1024 * 10000;
 
 function defaultReadFileAtRevision(
@@ -128,15 +156,7 @@ function defaultReadFileAtRevision(
   revision: void | string
 ): string {
   try {
-    const fileFullPath = `${workspaceRoot}${sep}${file}`;
-    const gitRepositoryPath = execSync('git rev-parse --show-toplevel', {
-      windowsHide: true,
-    })
-      .toString()
-      .trim();
-    const filePathInGitRepository = relative(gitRepositoryPath, fileFullPath)
-      .split(sep)
-      .join('/');
+    const filePathInGitRepository = getFilePathInGitRepository(file);
     return !revision
       ? readFileSync(file, 'utf-8')
       : execSync(`git show ${revision}:${filePathInGitRepository}`, {
@@ -149,6 +169,56 @@ function defaultReadFileAtRevision(
   } catch {
     return '';
   }
+}
+
+function defaultReadBunLockFileAtRevision(
+  file: string,
+  revision: void | string
+): string {
+  if (!revision) {
+    return execFileSync('bun', [join(workspaceRoot, file)], {
+      encoding: 'utf-8',
+      maxBuffer: TEN_MEGABYTES,
+      windowsHide: true,
+    }).trim();
+  }
+
+  const filePathInGitRepository = getFilePathInGitRepository(file);
+  const tempDirectory = mkdtempSync(join(tmpdir(), 'nx-bun-lock-'));
+  const tempLockfilePath = join(tempDirectory, 'bun.lockb');
+
+  try {
+    const lockFileContents = execFileSync(
+      'git',
+      ['show', `${revision}:${filePathInGitRepository}`],
+      {
+        maxBuffer: TEN_MEGABYTES,
+        stdio: ['pipe', 'pipe', 'ignore'],
+        windowsHide: true,
+      }
+    );
+
+    writeFileSync(tempLockfilePath, lockFileContents);
+
+    return execFileSync('bun', [tempLockfilePath], {
+      encoding: 'utf-8',
+      maxBuffer: TEN_MEGABYTES,
+      windowsHide: true,
+    }).trim();
+  } finally {
+    rmSync(tempDirectory, { force: true, recursive: true });
+  }
+}
+
+function getFilePathInGitRepository(file: string): string {
+  const fileFullPath = `${workspaceRoot}${sep}${file}`;
+  const gitRepositoryPath = execSync('git rev-parse --show-toplevel', {
+    windowsHide: true,
+  })
+    .toString()
+    .trim();
+
+  return relative(gitRepositoryPath, fileFullPath).split(sep).join('/');
 }
 
 export function defaultFileRead(filePath: string): string | null {

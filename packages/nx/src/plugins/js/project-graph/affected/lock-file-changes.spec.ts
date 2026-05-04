@@ -307,6 +307,9 @@ some-other-external-package@^4.0.1:
       { lockFile: 'pnpm-lock.yml', base: pnpmBase, head: pnpmHead },
       { lockFile: 'package-lock.json', base: npmBase, head: npmHead },
       { lockFile: 'yarn.lock', base: yarnBase, head: yarnHead },
+      // bun.lockb is normalized through the existing Bun lockfile
+      // reader, which today feeds the shared Yarn-style parser path.
+      { lockFile: 'bun.lockb', base: yarnBase, head: yarnHead },
       { lockFile: 'bun.lock', base: bunBase, head: bunHead },
     ];
 
@@ -451,20 +454,87 @@ importers:
           );
           expect(result).toStrictEqual(allNodes);
         });
+
+        it('should return all projects when only some changed packages exist in the current external node graph', () => {
+          const partiallyMappedGraph: ProjectGraph = {
+            ...graph,
+            externalNodes: {
+              'npm:some-external-package':
+                graph.externalNodes['npm:some-external-package']!,
+            },
+          };
+
+          const result = getTouchedProjectsFromLockFile(
+            [
+              {
+                file: lockFile,
+                getChanges: () => [new LockFileChange(base, head)],
+              },
+            ],
+            partiallyMappedGraph.nodes,
+            autoNxJson,
+            undefined,
+            partiallyMappedGraph
+          );
+
+          expect(result).toStrictEqual(allNodes);
+        });
       });
     });
 
-    // bun.lockb is a binary file, so affected detection cannot diff
-    // it. It always produces a WholeFileChange, and auto mode falls
-    // back to marking all projects affected.
-    describe('"bun.lockb"', () => {
-      it('should return all projects on WholeFileChange', () => {
-        const warnSpy = jest.spyOn(output, 'warn').mockImplementation();
+    describe('same-version lockfile changes', () => {
+      it('should return touched packages when only the resolved artifact hash changes', () => {
+        const base = JSON.stringify({
+          name: 'test',
+          version: '1.0.0',
+          lockfileVersion: 3,
+          requires: true,
+          packages: {
+            '': {
+              name: 'test',
+              version: '1.0.0',
+              dependencies: {
+                'some-external-package': '^0.0.1',
+              },
+            },
+            'node_modules/some-external-package': {
+              version: '0.0.1',
+              resolved:
+                'https://registry.npmjs.org/some-external-package/-/some-external-package-0.0.1.tgz',
+              integrity:
+                'sha512-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa==',
+            },
+          },
+        });
+
+        const head = JSON.stringify({
+          name: 'test',
+          version: '1.0.0',
+          lockfileVersion: 3,
+          requires: true,
+          packages: {
+            '': {
+              name: 'test',
+              version: '1.0.0',
+              dependencies: {
+                'some-external-package': '^0.0.1',
+              },
+            },
+            'node_modules/some-external-package': {
+              version: '0.0.1',
+              resolved:
+                'https://registry.npmjs.org/some-external-package/-/some-external-package-0.0.1.tgz',
+              integrity:
+                'sha512-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz==',
+            },
+          },
+        });
+
         const result = getTouchedProjectsFromLockFile(
           [
             {
-              file: 'bun.lockb',
-              getChanges: () => [new WholeFileChange()],
+              file: 'package-lock.json',
+              getChanges: () => [new LockFileChange(base, head)],
             },
           ],
           graph.nodes,
@@ -472,8 +542,8 @@ importers:
           undefined,
           graph
         );
-        expect(result).toStrictEqual(allNodes);
-        warnSpy.mockRestore();
+
+        expect(result).toStrictEqual(['npm:some-external-package']);
       });
     });
 

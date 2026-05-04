@@ -2,6 +2,8 @@ import {
   cleanupProject,
   getPackageManagerCommand,
   newProject,
+  packageManagerLockFile,
+  readFile,
   runCLI,
   runCommand,
   uniq,
@@ -102,22 +104,30 @@ describe('nx affected -- projectsAffectedByDependencyUpdates (e2e)', () => {
           expect(out).not.toContain(libB);
         });
 
-        it('marks only the dependent project affected when a single dependency version bumps', () => {
-          updateJson('package.json', (json) => {
-            json.dependencies['is-odd'] = '3.0.1';
-            return json;
-          });
-          runCommand(getPackageManagerCommand({ packageManager }).install);
-          runCommand(
-            `git add . && git commit -am "chore: bump is-odd (auto mode)"`
-          );
+        const lockfileOnlyTest =
+          packageManagerLockFile[packageManager] === 'bun.lockb' ? it.skip : it;
 
-          const out = runCLI(
-            `show projects --affected --base=HEAD~1 --head=HEAD`
-          );
-          expect(out).toContain(libA);
-          expect(out).not.toContain(libB);
-        });
+        lockfileOnlyTest(
+          'marks only the dependent project affected when a single lockfile entry changes',
+          () => {
+            const lockFile = packageManagerLockFile[packageManager];
+            const currentLockFile = readFile(lockFile);
+            const updatedLockFile = currentLockFile.replace(/\b3\.0\.0\b/g, '3.0.1');
+
+            expect(updatedLockFile).not.toEqual(currentLockFile);
+
+            updateFile(lockFile, updatedLockFile);
+            runCommand(
+              `git add ${lockFile} && git commit -m "chore: bump is-odd in lockfile (auto mode)"`
+            );
+
+            const out = runCLI(
+              `show projects --affected --base=HEAD~1 --head=HEAD`
+            );
+            expect(out).toContain(libA);
+            expect(out).not.toContain(libB);
+          }
+        );
       });
     }
   );
