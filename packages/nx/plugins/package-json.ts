@@ -10,6 +10,10 @@ import { join } from 'path';
 import { ProjectConfiguration } from '../src/config/workspace-json-project-json';
 import { readJsonFile } from '../src/utils/fileutils';
 import { PluginCache } from '../src/utils/plugin-cache-utils';
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+} from '../src/utils/package-manager';
 
 export type PackageJsonConfigurationCache = PluginCache<ProjectConfiguration>;
 
@@ -41,13 +45,19 @@ const plugin: NxPluginV2 = {
       const isInPackageJsonWorkspaces =
         buildPackageJsonWorkspacesMatcher(patterns);
 
+      const packageManagerCommand = getPackageManagerCommand(
+        detectPackageManager(context.workspaceRoot),
+        context.workspaceRoot
+      );
+
       const result = createNodesFromFiles(
         (packageJsonPath) =>
           createNodeFromPackageJson(
             packageJsonPath,
             workspaceRoot,
             cache,
-            isInPackageJsonWorkspaces(packageJsonPath)
+            isInPackageJsonWorkspaces(packageJsonPath),
+            packageManagerCommand
           ),
         configFiles,
         options,
