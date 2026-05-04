@@ -676,6 +676,9 @@ importers:
       '@nx/key':
         specifier: 5.0.4
         version: 5.0.4
+      '@nx/maven':
+        specifier: 23.0.0-beta.8
+        version: 23.0.0-beta.8(nx@23.0.0-rc.4(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))
       '@nx/next':
         specifier: 23.0.0-rc.4
         version: 23.0.0-rc.4(60549e85ad7eaa4ba0542c9fe28d4b3b)
@@ -9877,6 +9880,11 @@ packages:
     peerDependencies:
       nx: '>= 22 <= 24 || ^23.0.0-0'
 
+  '@nx/devkit@23.0.0-beta.8':
+    resolution: {integrity: sha512-8TdY/WXnURagUIXs81W9bgC77Txm/a/X3Eb2UUDaAqlVIdrlQAfH9t5J7kU5MrX/1T3cB4HGjQnXNQHiAaLdVQ==}
+    peerDependencies:
+      nx: '>= 22 <= 24 || ^23.0.0-0'
+
   '@nx/devkit@23.0.0-rc.4':
     resolution: {integrity: sha512-tLx0bRlQBfsCKBX1EU65vG34zRvENF2GYVbfjStE4ILJTy+GiCzFw2g9FriafHlLetICgL8+VOr2rfrUr7Rr1w==}
     peerDependencies:
@@ -10048,6 +10056,9 @@ packages:
   '@nx/key@5.0.4':
     resolution: {integrity: sha512-qovQhxJyC0xvM5cL+Ic2EQIU7D4J/VrDBrUMEbWItxFX9WcM46kRPS7ZASEJUgBCg5i24JlbP+ehbBwDvs9Kug==}
     engines: {node: '>= 10'}
+
+  '@nx/maven@23.0.0-beta.8':
+    resolution: {integrity: sha512-t3aRBVGbPkSMX4Far0l0QoC/31aaNDsGVChA1oYks2GkK8aYiD57+5qCPhrUuq1X8WPPMRk2UABzT1EtT/pL9g==}
 
   '@nx/module-federation@23.0.0-rc.4':
     resolution: {integrity: sha512-Jeb5yIdsl7QphMQh3MBIbfJDBv6waiJD6pFPcJlHtyj5T0oBtVAl1m93LXztOITNP8XwgxaDqbyebR+kyK+vLw==}
@@ -24276,6 +24287,7 @@ packages:
   tsconfck@3.1.6:
     resolution: {integrity: sha512-ks6Vjr/jEw0P1gmOVwutM3B7fWxoWBL2KRDb1JfqGVawBmO5UsvmWOQFGHBPl5yxYz4eERr19E6L7NMv+Fej4w==}
     engines: {node: ^18 || >=20}
+    deprecated: unmaintained
     hasBin: true
     peerDependencies:
       typescript: ^5.0.0
@@ -33181,6 +33193,17 @@ snapshots:
       tslib: 2.8.1
       yargs-parser: 21.1.1
 
+  '@nx/devkit@23.0.0-beta.8(nx@23.0.0-rc.4(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))':
+    dependencies:
+      '@zkochan/js-yaml': 0.0.7
+      ejs: 5.0.1
+      enquirer: 2.3.6
+      minimatch: 10.2.5
+      nx: 23.0.0-rc.4(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18))
+      semver: 7.7.4
+      tslib: 2.8.1
+      yargs-parser: 21.1.1
+
   '@nx/devkit@23.0.0-rc.4(nx@23.0.0-rc.4(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))':
     dependencies:
       '@zkochan/js-yaml': 0.0.7
@@ -33457,6 +33480,15 @@ snapshots:
       '@nx/key-win32-x64-msvc': 5.0.4
     transitivePeerDependencies:
       - debug
+
+  '@nx/maven@23.0.0-beta.8(nx@23.0.0-rc.4(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))':
+    dependencies:
+      '@nx/devkit': 23.0.0-beta.8(nx@23.0.0-rc.4(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))
+      '@xmldom/xmldom': 0.8.11
+      tree-kill: 1.2.2
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - nx
 
   '@nx/module-federation@23.0.0-rc.4(32a55e7d6188877dde80be0d9336b140)':
     dependencies:
@@ -39298,9 +39330,9 @@ snapshots:
       domhandler: 5.0.3
       htmlparser2: 10.0.0
       picocolors: 1.1.1
-      postcss: 8.5.15
+      postcss: 8.5.6
       postcss-media-query-parser: 0.2.3
-      postcss-safe-parser: 7.0.1(postcss@8.5.15)
+      postcss-safe-parser: 7.0.1(postcss@8.5.6)
 
   before-after-hook@2.2.3: {}
 
@@ -40360,12 +40392,12 @@ snapshots:
 
   css-loader@7.1.3(@rspack/core@1.6.8(@swc/helpers@0.5.18))(webpack@5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.27.3)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3(webpack-bundle-analyzer@4.10.2)(webpack-dev-server@5.2.4)(webpack@5.105.2))):
     dependencies:
-      icss-utils: 5.1.0(postcss@8.5.6)
-      postcss: 8.5.6
-      postcss-modules-extract-imports: 3.1.0(postcss@8.5.6)
-      postcss-modules-local-by-default: 4.2.0(postcss@8.5.6)
-      postcss-modules-scope: 3.2.1(postcss@8.5.6)
-      postcss-modules-values: 4.0.0(postcss@8.5.6)
+      icss-utils: 5.1.0(postcss@8.5.15)
+      postcss: 8.5.15
+      postcss-modules-extract-imports: 3.1.0(postcss@8.5.15)
+      postcss-modules-local-by-default: 4.2.0(postcss@8.5.15)
+      postcss-modules-scope: 3.2.1(postcss@8.5.15)
+      postcss-modules-values: 4.0.0(postcss@8.5.15)
       postcss-value-parser: 4.2.0
       semver: 7.7.4
     optionalDependencies:
@@ -40374,12 +40406,12 @@ snapshots:
 
   css-loader@7.1.3(@rspack/core@1.6.8(@swc/helpers@0.5.18))(webpack@5.105.2):
     dependencies:
-      icss-utils: 5.1.0(postcss@8.5.6)
-      postcss: 8.5.6
-      postcss-modules-extract-imports: 3.1.0(postcss@8.5.6)
-      postcss-modules-local-by-default: 4.2.0(postcss@8.5.6)
-      postcss-modules-scope: 3.2.1(postcss@8.5.6)
-      postcss-modules-values: 4.0.0(postcss@8.5.6)
+      icss-utils: 5.1.0(postcss@8.5.15)
+      postcss: 8.5.15
+      postcss-modules-extract-imports: 3.1.0(postcss@8.5.15)
+      postcss-modules-local-by-default: 4.2.0(postcss@8.5.15)
+      postcss-modules-scope: 3.2.1(postcss@8.5.15)
+      postcss-modules-values: 4.0.0(postcss@8.5.15)
       postcss-value-parser: 4.2.0
       semver: 7.7.4
     optionalDependencies:
@@ -40388,12 +40420,12 @@ snapshots:
 
   css-loader@7.1.3(@rspack/core@1.6.8(@swc/helpers@0.5.18))(webpack@5.107.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.6)(webpack-cli@7.0.3)):
     dependencies:
-      icss-utils: 5.1.0(postcss@8.5.6)
-      postcss: 8.5.6
-      postcss-modules-extract-imports: 3.1.0(postcss@8.5.6)
-      postcss-modules-local-by-default: 4.2.0(postcss@8.5.6)
-      postcss-modules-scope: 3.2.1(postcss@8.5.6)
-      postcss-modules-values: 4.0.0(postcss@8.5.6)
+      icss-utils: 5.1.0(postcss@8.5.15)
+      postcss: 8.5.15
+      postcss-modules-extract-imports: 3.1.0(postcss@8.5.15)
+      postcss-modules-local-by-default: 4.2.0(postcss@8.5.15)
+      postcss-modules-scope: 3.2.1(postcss@8.5.15)
+      postcss-modules-values: 4.0.0(postcss@8.5.15)
       postcss-value-parser: 4.2.0
       semver: 7.7.4
     optionalDependencies:
@@ -49633,9 +49665,9 @@ snapshots:
       postcss: 8.5.6
       postcss-value-parser: 4.2.0
 
-  postcss-safe-parser@7.0.1(postcss@8.5.15):
+  postcss-safe-parser@7.0.1(postcss@8.5.6):
     dependencies:
-      postcss: 8.5.15
+      postcss: 8.5.6
 
   postcss-selector-parser@6.0.10:
     dependencies:
@@ -53118,7 +53150,7 @@ snapshots:
       tinyglobby: 0.2.15
       unplugin: 2.3.11
       unplugin-utils: 0.3.1
-      yaml: 2.8.2
+      yaml: 2.9.0
     optionalDependencies:
       vue-router: 4.6.4(vue@3.5.30(typescript@5.9.2))
     transitivePeerDependencies:
@@ -53759,7 +53791,7 @@ snapshots:
       esbuild: 0.27.3
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
-      postcss: 8.5.15
+      postcss: 8.5.6
       rollup: 4.59.0
       tinyglobby: 0.2.15
     optionalDependencies:
@@ -53779,7 +53811,7 @@ snapshots:
       esbuild: 0.27.3
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
-      postcss: 8.5.15
+      postcss: 8.5.6
       rollup: 4.59.0
       tinyglobby: 0.2.15
     optionalDependencies:
@@ -53799,7 +53831,7 @@ snapshots:
       esbuild: 0.27.3
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
-      postcss: 8.5.15
+      postcss: 8.5.6
       rollup: 4.59.0
       tinyglobby: 0.2.15
     optionalDependencies:
@@ -53819,7 +53851,7 @@ snapshots:
       esbuild: 0.27.3
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
-      postcss: 8.5.15
+      postcss: 8.5.6
       rollup: 4.59.0
       tinyglobby: 0.2.15
     optionalDependencies:
