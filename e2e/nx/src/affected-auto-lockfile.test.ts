@@ -112,7 +112,10 @@ describe('nx affected -- projectsAffectedByDependencyUpdates (e2e)', () => {
           () => {
             const lockFile = packageManagerLockFile[packageManager];
             const currentLockFile = readFile(lockFile);
-            const updatedLockFile = currentLockFile.replace(/\b3\.0\.0\b/g, '3.0.1');
+            const updatedLockFile = currentLockFile.replace(
+              /\b3\.0\.0\b/g,
+              '3.0.1'
+            );
 
             expect(updatedLockFile).not.toEqual(currentLockFile);
 

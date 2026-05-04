@@ -1,5 +1,11 @@
 import { execFileSync, execSync } from 'child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
 import { tmpdir } from 'os';
 import { extname, join, relative, sep } from 'path';
 import type { FileData } from '../config/project-graph';

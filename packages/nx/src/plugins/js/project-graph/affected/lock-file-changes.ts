@@ -103,10 +103,8 @@ function getAutoAffected(
   // and return the external node names. The graph reversal in
   // filterAffected walks from these nodes to workspace projects.
   const externalNodes = projectGraph?.externalNodes ?? {};
-  const { touchedNodeNames, missingPackageNames } = findExternalNodesByPackageName(
-    changedPackageNames,
-    externalNodes
-  );
+  const { touchedNodeNames, missingPackageNames } =
+    findExternalNodesByPackageName(changedPackageNames, externalNodes);
 
   if (missingPackageNames.size > 0) {
     return allProjectNames;
