@@ -1,4 +1,8 @@
-import { addPlugin } from '@nx/devkit/internal';
+import {
+  addPlugin,
+  upsertTargetDefault,
+  normalizeTargetDefaults,
+} from '@nx/devkit/internal';
 import {
   type Tree,
   type GeneratorCallback,
@@ -68,17 +72,25 @@ export function updateNxJsonSettings(tree: Tree) {
     typeof p === 'string' ? p === '@nx/vitest' : p.plugin === '@nx/vitest'
   );
 
-  if (!hasPlugin) {
-    nxJson.targetDefaults ??= {};
-    nxJson.targetDefaults['@nx/vitest:test'] ??= {};
-    nxJson.targetDefaults['@nx/vitest:test'].cache ??= true;
-    nxJson.targetDefaults['@nx/vitest:test'].inputs ??= [
-      'default',
-      productionFileSet ? '^production' : '^default',
-    ];
-  }
-
   updateNxJson(tree, nxJson);
+
+  if (!hasPlugin) {
+    const existing = normalizeTargetDefaults(nxJson.targetDefaults).find(
+      (e) =>
+        e.executor === '@nx/vitest:test' &&
+        e.target === undefined &&
+        e.projects === undefined &&
+        e.source === undefined
+    );
+    upsertTargetDefault(tree, {
+      executor: '@nx/vitest:test',
+      cache: existing?.cache ?? true,
+      inputs: existing?.inputs ?? [
+        'default',
+        productionFileSet ? '^production' : '^default',
+      ],
+    });
+  }
 }
 
 export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {

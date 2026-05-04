@@ -1,31 +1,42 @@
-import { type Tree, readNxJson, updateNxJson } from '@nx/devkit';
+import { type Tree, readNxJson } from '@nx/devkit';
+import { upsertTargetDefault } from '@nx/devkit/src/generators/target-defaults-utils';
+import { normalizeTargetDefaults } from '@nx/devkit/src/utils/normalize-target-defaults';
 
 export function addMfEnvToTargetDefaultInputs(tree: Tree) {
   const nxJson = readNxJson(tree);
   const webpackExecutor = '@nx/angular:webpack-browser';
   const mfEnvVar = 'NX_MF_DEV_REMOTES';
 
-  const inputs = [
-    ...(nxJson.namedInputs && 'production' in nxJson.namedInputs
+  const defaultInputs = [
+    ...(nxJson?.namedInputs && 'production' in nxJson.namedInputs
       ? ['production', '^production']
       : ['default', '^default']),
   ];
 
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults[webpackExecutor] ??= {};
-  nxJson.targetDefaults[webpackExecutor].inputs ??= inputs;
-  nxJson.targetDefaults[webpackExecutor].dependsOn ??= ['^build'];
+  const existing = normalizeTargetDefaults(nxJson?.targetDefaults).find(
+    (e) =>
+      e.executor === webpackExecutor &&
+      e.target === undefined &&
+      e.projects === undefined &&
+      e.source === undefined
+  );
 
+  const inputs = [...(existing?.inputs ?? defaultInputs)];
   let mfEnvVarExists = false;
-  for (const input of nxJson.targetDefaults[webpackExecutor].inputs) {
+  for (const input of inputs) {
     if (typeof input === 'object' && input['env'] === mfEnvVar) {
       mfEnvVarExists = true;
       break;
     }
   }
   if (!mfEnvVarExists) {
-    nxJson.targetDefaults[webpackExecutor].inputs.push({ env: mfEnvVar });
+    inputs.push({ env: mfEnvVar });
   }
-  nxJson.targetDefaults[webpackExecutor].cache = true;
-  updateNxJson(tree, nxJson);
+
+  upsertTargetDefault(tree, {
+    executor: webpackExecutor,
+    cache: true,
+    inputs,
+    dependsOn: existing?.dependsOn ?? ['^build'],
+  });
 }

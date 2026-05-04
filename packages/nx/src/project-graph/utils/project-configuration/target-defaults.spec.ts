@@ -90,7 +90,43 @@ describe('findBestTargetDefault', () => {
     ).toEqual({ cache: true });
   });
 
-  it('matches executor when target equals executor string', () => {
+  it('matches by executor field when entry has no target', () => {
+    const entries: TargetDefaultEntry[] = [
+      { executor: '@nx/vite:test', inputs: ['x'] },
+    ];
+    expect(
+      findBestTargetDefault(
+        'test',
+        '@nx/vite:test',
+        undefined,
+        undefined,
+        undefined,
+        entries
+      )
+    ).toEqual({ executor: '@nx/vite:test', inputs: ['x'] });
+  });
+
+  it('executor-only entry does not match when target has no executor', () => {
+    const entries: TargetDefaultEntry[] = [
+      { executor: '@nx/vite:test', inputs: ['x'] },
+    ];
+    expect(
+      findBestTargetDefault(
+        'test',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        entries
+      )
+    ).toBeNull();
+  });
+
+  it('does not interpret entry.target as an executor anymore', () => {
+    // Under the legacy record-shape behavior, a key like '@nx/vite:test'
+    // matched by executor. The new array shape requires `executor` to be
+    // set explicitly — `target: '@nx/vite:test'` only matches a target
+    // literally named that.
     const entries: TargetDefaultEntry[] = [
       { target: '@nx/vite:test', inputs: ['x'] },
     ];
@@ -103,7 +139,7 @@ describe('findBestTargetDefault', () => {
         undefined,
         entries
       )
-    ).toEqual({ inputs: ['x'] });
+    ).toBeNull();
   });
 
   it('target+source beats target only', () => {
@@ -294,8 +330,8 @@ describe('findBestTargetDefault', () => {
     ).toBeNull();
   });
 
-  describe('executor body field (dual-role)', () => {
-    it('matches and bumps tier when body executor equals target executor', () => {
+  describe('executor field', () => {
+    it('matches when entry executor equals target executor (target+executor)', () => {
       const entries: TargetDefaultEntry[] = [
         { target: 'build', inputs: ['target-only'] },
         { target: 'build', executor: '@nx/js:tsc', inputs: ['executor-match'] },
@@ -426,7 +462,7 @@ describe('normalizeTargetDefaults', () => {
     expect(normalizeTargetDefaults(input)).toEqual(input);
   });
 
-  it('converts record to array preserving insertion order', () => {
+  it('converts record to array preserving insertion order, splitting executor keys', () => {
     const result = normalizeTargetDefaults({
       build: { cache: true },
       'e2e-ci--*': { cache: false },
@@ -435,7 +471,7 @@ describe('normalizeTargetDefaults', () => {
     expect(result).toEqual([
       { target: 'build', cache: true },
       { target: 'e2e-ci--*', cache: false },
-      { target: '@nx/vite:test', inputs: ['x'] },
+      { executor: '@nx/vite:test', inputs: ['x'] },
     ]);
   });
 
@@ -490,7 +526,7 @@ describe('readTargetDefaultsForTarget (backwards-compat wrapper)', () => {
     expect(readTargetDefaultsForTarget('test', undefined)).toBeNull();
   });
 
-  it('record: prefers executor key over target key', () => {
+  it('record: executor key wins over target key (executorOnly outranks exactTarget at same tier)', () => {
     expect(
       readTargetDefaultsForTarget(
         'build',
@@ -500,7 +536,7 @@ describe('readTargetDefaultsForTarget (backwards-compat wrapper)', () => {
         },
         '@nx/vite:build'
       )
-    ).toEqual({ inputs: ['by-executor'] });
+    ).toEqual({ executor: '@nx/vite:build', inputs: ['by-executor'] });
   });
 
   it('record: later key wins for overlapping globs', () => {

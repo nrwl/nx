@@ -257,6 +257,7 @@ function createNxJson(
         const buildIdx = td.findIndex(
           (e) =>
             e.target === 'build' &&
+            e.executor === undefined &&
             e.projects === undefined &&
             e.source === undefined
         );

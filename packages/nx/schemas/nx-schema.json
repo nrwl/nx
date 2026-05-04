@@ -43,7 +43,7 @@
       }
     },
     "targetDefaults": {
-      "description": "Target defaults. The recommended form is an array of entries, each filtered by target name (required), and optionally projects and source plugin. The legacy record/object form (keyed by target name or executor) is still read but deprecated; run `nx repair` to convert it.",
+      "description": "Target defaults. The recommended form is an array of entries; each entry matches by `target` (name or glob), `executor`, or both, and optionally narrows by `projects` and `source`. The legacy record/object form (keyed by target name or executor) is still read but deprecated; run `nx repair` to convert it.",
       "oneOf": [
         {
           "type": "array",
@@ -819,12 +819,12 @@
     },
     "targetDefaultEntry": {
       "type": "object",
-      "description": "A single target defaults entry.",
-      "required": ["target"],
+      "description": "A single target defaults entry. At least one of `target` or `executor` must be set.",
+      "anyOf": [{ "required": ["target"] }, { "required": ["executor"] }],
       "properties": {
         "target": {
           "type": "string",
-          "description": "The target name, target name glob, or executor (e.g. '@nx/vite:test') this default applies to."
+          "description": "The target name or glob pattern (e.g. 'build', 'e2e-ci--*') this default applies to. When omitted, the entry matches by `executor` alone."
         },
         "projects": {
           "oneOf": [

@@ -37,7 +37,7 @@ The following is an expanded example showing all options. Your `nx.json` will li
   },
   "targetDefaults": [
     {
-      "target": "@nx/js:tsc",
+      "executor": "@nx/js:tsc",
       "inputs": ["production", "^production"],
       "dependsOn": ["^build"],
       "options": {
@@ -47,10 +47,10 @@ The following is an expanded example showing all options. Your `nx.json` will li
     },
     {
       "target": "test",
+      "executor": "@nx/jest:jest",
       "cache": true,
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "executor": "@nx/jest:jest"
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
     }
   ],
   "release": {
@@ -339,7 +339,7 @@ When defining any options or configurations inside of a target default, you may 
 {
   "targetDefaults": [
     {
-      "target": "@nx/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "{projectRoot}/src/index.ts"
       },
@@ -363,7 +363,7 @@ When defining any options or configurations inside of a target default, you may 
 
 #### Target default priority
 
-Only one entry wins per `(target, project)` tuple — the most specific one (see the table above). In the example above, both entries apply to targets named `build`, but the `@nx/js:tsc` entry matches when the target uses that executor and beats the plain `build` entry because executor matches rank as specific as an exact target-name match. Specify the full config on the winning entry — less-specific entries do not contribute when a more-specific entry matches.
+Only one entry wins per `(target, project)` tuple — the most specific one (see the table above). In the example above, both entries can apply to a `build` target that uses `@nx/js:tsc`; the `executor`-keyed entry wins because executor matches outrank exact target-name matches at the same tier. Specify the full config on the winning entry — less-specific entries do not contribute when a more-specific entry matches.
 
 {% cardgrid %}
 {% linkcard title="Configure Outputs for Task Caching" description="This recipe walks you through how to set outputs" href="/docs/guides/tasks--caching/configure-outputs" /%}
@@ -400,7 +400,7 @@ You can configure options specific to a target's executor. As an example, if you
 {
   "targetDefaults": [
     {
-      "target": "@nx/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "generateExportsField": true
       }

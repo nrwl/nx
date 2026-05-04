@@ -1,7 +1,6 @@
 import { forEachExecutorOptions } from '@nx/devkit/internal';
 import {
   formatFiles,
-  type ProjectConfiguration,
   readNxJson,
   readProjectConfiguration,
   type TargetConfiguration,
@@ -40,34 +39,68 @@ export default async function (tree: Tree) {
   // update options from nx.json target defaults
   const nxJson = readNxJson(tree);
   if (nxJson.targetDefaults) {
-    for (const [targetOrExecutor, targetConfig] of Object.entries(
-      nxJson.targetDefaults
-    )) {
-      if (
-        targetOrExecutor !== EXECUTOR_TO_MIGRATE &&
-        targetConfig.executor !== EXECUTOR_TO_MIGRATE
-      ) {
-        continue;
+    if (Array.isArray(nxJson.targetDefaults)) {
+      const remaining: typeof nxJson.targetDefaults = [];
+      for (const entry of nxJson.targetDefaults) {
+        const matches =
+          entry.executor === EXECUTOR_TO_MIGRATE ||
+          entry.target === EXECUTOR_TO_MIGRATE;
+        if (!matches) {
+          remaining.push(entry);
+          continue;
+        }
+        if (entry.options) {
+          updateOptions(entry as TargetConfiguration);
+        }
+        Object.keys(entry.configurations ?? {}).forEach((config) => {
+          updateConfiguration(entry as TargetConfiguration, config);
+        });
+
+        const meaningfulKeys = Object.keys(entry).filter(
+          (k) =>
+            k !== 'target' &&
+            k !== 'executor' &&
+            k !== 'projects' &&
+            k !== 'source'
+        );
+        if (meaningfulKeys.length === 0) continue;
+        remaining.push(entry);
       }
-
-      if (targetConfig.options) {
-        updateOptions(targetConfig);
-      }
-
-      Object.keys(targetConfig.configurations ?? {}).forEach((config) => {
-        updateConfiguration(targetConfig, config);
-      });
-
-      if (
-        !Object.keys(targetConfig).length ||
-        (Object.keys(targetConfig).length === 1 &&
-          Object.keys(targetConfig)[0] === 'executor')
-      ) {
-        delete nxJson.targetDefaults[targetOrExecutor];
-      }
-
-      if (!Object.keys(nxJson.targetDefaults).length) {
+      if (remaining.length === 0) {
         delete nxJson.targetDefaults;
+      } else {
+        nxJson.targetDefaults = remaining;
+      }
+    } else {
+      for (const [targetOrExecutor, targetConfig] of Object.entries(
+        nxJson.targetDefaults
+      )) {
+        if (
+          targetOrExecutor !== EXECUTOR_TO_MIGRATE &&
+          targetConfig.executor !== EXECUTOR_TO_MIGRATE
+        ) {
+          continue;
+        }
+
+        if (targetConfig.options) {
+          updateOptions(targetConfig);
+        }
+
+        Object.keys(targetConfig.configurations ?? {}).forEach((config) => {
+          updateConfiguration(targetConfig, config);
+        });
+
+        if (
+          !Object.keys(targetConfig).length ||
+          (Object.keys(targetConfig).length === 1 &&
+            Object.keys(targetConfig)[0] === 'executor')
+        ) {
+          delete nxJson.targetDefaults[targetOrExecutor];
+        }
+
+        if (!Object.keys(nxJson.targetDefaults).length) {
+          delete nxJson.targetDefaults;
+        }
       }
     }
 

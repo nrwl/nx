@@ -11,7 +11,7 @@ import {
 } from '@nx/devkit';
 
 const EXECUTOR_TO_MIGRATE = '@nx/jest:jest';
-const ENTRY_META_KEYS = new Set(['target', 'projects', 'source']);
+const ENTRY_META_KEYS = new Set(['target', 'executor', 'projects', 'source']);
 
 export default async function (tree: Tree) {
   // update options from project configs
@@ -104,13 +104,10 @@ export default async function (tree: Tree) {
   await formatFiles(tree);
 }
 
-// An entry is "empty" once only its filter/meta keys (target/projects/source)
-// plus optionally `executor` remain — nothing else worth keeping around.
+// An entry is "empty" once only filter/meta keys remain (target, executor,
+// projects, source) — nothing else worth keeping around.
 function isEntryEmpty(entry: TargetDefaultEntry): boolean {
-  const configKeys = Object.keys(entry).filter(
-    (k) => !ENTRY_META_KEYS.has(k) && k !== 'executor'
-  );
-  return configKeys.length === 0;
+  return Object.keys(entry).every((k) => ENTRY_META_KEYS.has(k));
 }
 
 function updateOptions(target: TargetConfiguration) {

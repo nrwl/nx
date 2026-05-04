@@ -35,13 +35,16 @@ export interface NxAffectedConfig {
  * A single entry in the array-shaped `targetDefaults` configuration.
  * Supports filtering the default's applicability by project set and/or the
  * plugin that originated the target.
+ *
+ * Either `target` or `executor` must be set. An entry with both narrows
+ * the match further (target name AND executor must agree).
  */
 export type TargetDefaultEntry = {
   /**
-   * Target name or glob pattern (e.g. `build`, `e2e-ci--*`). An
-   * executor-qualified key (e.g. `@nx/vite:test`) matches by executor.
+   * Target name or glob pattern (e.g. `build`, `e2e-ci--*`). When omitted,
+   * the entry matches by `executor` alone.
    */
-  target: string;
+  target?: string;
   /**
    * Restrict the default to a subset of projects. Accepts any pattern
    * supported by `findMatchingProjects` (project names, globs, `tag:foo`,

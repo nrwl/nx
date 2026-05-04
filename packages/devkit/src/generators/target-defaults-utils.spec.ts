@@ -65,19 +65,23 @@ describe('target-defaults-utils', () => {
       ]);
     });
 
-    it('preserves legacy record shape when no filters are specified', () => {
+    it('upgrades a legacy record to array on any upsert', () => {
       const nxJson = readNxJson(tree);
       (nxJson as any).targetDefaults = {
         build: { cache: true },
+        '@nx/vite:test': { inputs: ['default'] },
       };
       updateNxJson(tree, nxJson);
 
       upsertTargetDefault(tree, { target: 'test', cache: true });
 
-      expect(readNxJson(tree).targetDefaults).toEqual({
-        build: { cache: true },
-        test: { cache: true },
-      });
+      // Record is normalized first (executor-shaped key splits to executor),
+      // then the new entry is appended.
+      expect(readNxJson(tree).targetDefaults).toEqual([
+        { target: 'build', cache: true },
+        { executor: '@nx/vite:test', inputs: ['default'] },
+        { target: 'test', cache: true },
+      ]);
     });
 
     it('upgrades a legacy record to array when a filter is requested', () => {
@@ -106,19 +110,26 @@ describe('target-defaults-utils', () => {
       tree = createTreeWithEmptyWorkspace();
     });
 
-    it('adds entry to legacy record shape preserving record', () => {
+    function findExecutorEntry(tree: Tree, executor: string) {
+      const td = readNxJson(tree).targetDefaults;
+      if (!Array.isArray(td)) return undefined;
+      return td.find((e: any) => e.executor === executor);
+    }
+
+    it('upgrades a legacy record to array and writes the executor entry', () => {
       const nxJson = readNxJson(tree);
       (nxJson as any).targetDefaults = {};
       updateNxJson(tree, nxJson);
 
       addBuildTargetDefaults(tree, '@nx/vite:build');
 
-      expect(readNxJson(tree).targetDefaults).toEqual({
-        '@nx/vite:build': {
-          cache: true,
-          dependsOn: ['^build'],
-          inputs: ['default', '^default'],
-        },
+      const td = readNxJson(tree).targetDefaults;
+      expect(Array.isArray(td)).toBe(true);
+      expect(td).toContainEqual({
+        executor: '@nx/vite:build',
+        cache: true,
+        dependsOn: ['^build'],
+        inputs: ['default', '^default'],
       });
     });
 
@@ -130,12 +141,10 @@ describe('target-defaults-utils', () => {
       addBuildTargetDefaults(tree, '@nx/vite:build');
       addBuildTargetDefaults(tree, '@nx/vite:build');
 
-      const td = readNxJson(tree).targetDefaults;
-      expect(Array.isArray(td)).toBe(true);
-      expect(td as any).toEqual([
+      expect(readNxJson(tree).targetDefaults).toEqual([
         { target: 'test', cache: true },
         {
-          target: '@nx/vite:build',
+          executor: '@nx/vite:build',
           cache: true,
           dependsOn: ['^build'],
           inputs: ['default', '^default'],
@@ -143,18 +152,18 @@ describe('target-defaults-utils', () => {
       ]);
     });
 
-    it('should set executor-keyed target defaults with default inputs', () => {
+    it('writes an executor-keyed entry with default inputs', () => {
       addBuildTargetDefaults(tree, '@nx/example:build');
 
-      const nxJson = readNxJson(tree);
-      expect((nxJson.targetDefaults as any)['@nx/example:build']).toEqual({
+      expect(findExecutorEntry(tree, '@nx/example:build')).toEqual({
+        executor: '@nx/example:build',
         cache: true,
         dependsOn: ['^build'],
         inputs: ['default', '^default'],
       });
     });
 
-    it('should use production named inputs when available', () => {
+    it('uses production named inputs when available', () => {
       const nxJson = readNxJson(tree);
       nxJson.namedInputs = {
         default: ['{projectRoot}/**/*'],
@@ -164,20 +173,21 @@ describe('target-defaults-utils', () => {
 
       addBuildTargetDefaults(tree, '@nx/example:build');
 
-      expect(
-        (readNxJson(tree).targetDefaults as any)['@nx/example:build'].inputs
-      ).toEqual(['production', '^production']);
+      expect(findExecutorEntry(tree, '@nx/example:build').inputs).toEqual([
+        'production',
+        '^production',
+      ]);
     });
 
-    it('should honor a custom build target name in dependsOn', () => {
+    it('honors a custom build target name in dependsOn', () => {
       addBuildTargetDefaults(tree, '@nx/example:build', 'compile');
 
-      expect(
-        (readNxJson(tree).targetDefaults as any)['@nx/example:build'].dependsOn
-      ).toEqual(['^compile']);
+      expect(findExecutorEntry(tree, '@nx/example:build').dependsOn).toEqual([
+        '^compile',
+      ]);
     });
 
-    it('should append extra inputs after the default/production inputs', () => {
+    it('appends extra inputs after the default/production inputs', () => {
       addBuildTargetDefaults(tree, '@nx/example:build', 'build', [
         {
           json: '{workspaceRoot}/tsconfig.json',
@@ -185,9 +195,7 @@ describe('target-defaults-utils', () => {
         },
       ]);
 
-      expect(
-        (readNxJson(tree).targetDefaults as any)['@nx/example:build'].inputs
-      ).toEqual([
+      expect(findExecutorEntry(tree, '@nx/example:build').inputs).toEqual([
         'default',
         '^default',
         {
@@ -197,20 +205,19 @@ describe('target-defaults-utils', () => {
       ]);
     });
 
-    it('should not overwrite existing target defaults for the executor', () => {
+    it('does not overwrite an existing entry for the executor', () => {
       const nxJson = readNxJson(tree);
-      (nxJson as any).targetDefaults = {
-        '@nx/example:build': { cache: true, inputs: ['custom'] },
-      };
+      (nxJson as any).targetDefaults = [
+        { executor: '@nx/example:build', cache: true, inputs: ['custom'] },
+      ];
       updateNxJson(tree, nxJson);
 
       addBuildTargetDefaults(tree, '@nx/example:build', 'build', [
         { json: '{workspaceRoot}/tsconfig.json', fields: ['extends'] },
       ]);
 
-      expect(
-        (readNxJson(tree).targetDefaults as any)['@nx/example:build']
-      ).toEqual({
+      expect(findExecutorEntry(tree, '@nx/example:build')).toEqual({
+        executor: '@nx/example:build',
         cache: true,
         inputs: ['custom'],
       });
@@ -231,7 +238,19 @@ describe('target-defaults-utils', () => {
       jest.resetModules();
     });
 
-    it('should add e2e-ci--**/** target default for e2e plugin for specified build target when it does not exist', async () => {
+    function findGlobEntry(tree: Tree, target: string) {
+      const td = readNxJson(tree).targetDefaults;
+      if (!Array.isArray(td)) return undefined;
+      return td.find(
+        (e: any) =>
+          e.target === target &&
+          e.executor === undefined &&
+          e.projects === undefined &&
+          e.source === undefined
+      );
+    }
+
+    it('adds an e2e-ci--**/** entry with the build target dependency', async () => {
       // ARRANGE
       const nxJson = readNxJson(tree);
       nxJson.plugins ??= [];
@@ -256,17 +275,13 @@ describe('target-defaults-utils', () => {
       );
 
       // ASSERT
-      const newNxJson = readNxJson(tree);
-      expect(newNxJson.targetDefaults['e2e-ci--**/**']).toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^build",
-          ],
-        }
-      `);
+      expect(findGlobEntry(tree, 'e2e-ci--**/**')).toEqual({
+        target: 'e2e-ci--**/**',
+        dependsOn: ['^build'],
+      });
     });
 
-    it('should update existing e2e-ci--**/** target default for e2e plugin for specified build target when it does not exist in dependsOn', async () => {
+    it('appends a new build target to an existing entry without duplicating', async () => {
       // ARRANGE
       const nxJson = readNxJson(tree);
       nxJson.plugins ??= [];
@@ -277,10 +292,9 @@ describe('target-defaults-utils', () => {
           ciTargetName: 'e2e-ci',
         },
       });
-      nxJson.targetDefaults ??= {};
-      nxJson.targetDefaults['e2e-ci--**/**'] = {
-        dependsOn: ['^build'],
-      };
+      nxJson.targetDefaults = [
+        { target: 'e2e-ci--**/**', dependsOn: ['^build'] },
+      ];
       updateNxJson(tree, nxJson);
 
       tree.write('apps/myapp-e2e/cypress.config.ts', '');
@@ -295,18 +309,13 @@ describe('target-defaults-utils', () => {
       );
 
       // ASSERT
-      const newNxJson = readNxJson(tree);
-      expect(newNxJson.targetDefaults['e2e-ci--**/**']).toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^build",
-            "^build-base",
-          ],
-        }
-      `);
+      expect(findGlobEntry(tree, 'e2e-ci--**/**')).toEqual({
+        target: 'e2e-ci--**/**',
+        dependsOn: ['^build', '^build-base'],
+      });
     });
 
-    it('should read the ciTargetName and add a new entry when it does not exist', async () => {
+    it('reads the ciTargetName and adds a new entry under that glob', async () => {
       // ARRANGE
       const nxJson = readNxJson(tree);
       nxJson.plugins ??= [];
@@ -317,10 +326,9 @@ describe('target-defaults-utils', () => {
           ciTargetName: 'cypress:e2e-ci',
         },
       });
-      nxJson.targetDefaults ??= {};
-      nxJson.targetDefaults['e2e-ci--**/**'] = {
-        dependsOn: ['^build'],
-      };
+      nxJson.targetDefaults = [
+        { target: 'e2e-ci--**/**', dependsOn: ['^build'] },
+      ];
       updateNxJson(tree, nxJson);
 
       tree.write('apps/myapp-e2e/cypress.config.ts', '');
@@ -335,25 +343,17 @@ describe('target-defaults-utils', () => {
       );
 
       // ASSERT
-      const newNxJson = readNxJson(tree);
-      expect(newNxJson.targetDefaults['e2e-ci--**/**']).toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^build",
-          ],
-        }
-      `);
-      expect(newNxJson.targetDefaults['cypress:e2e-ci--**/**'])
-        .toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^build-base",
-          ],
-        }
-      `);
+      expect(findGlobEntry(tree, 'e2e-ci--**/**')).toEqual({
+        target: 'e2e-ci--**/**',
+        dependsOn: ['^build'],
+      });
+      expect(findGlobEntry(tree, 'cypress:e2e-ci--**/**')).toEqual({
+        target: 'cypress:e2e-ci--**/**',
+        dependsOn: ['^build-base'],
+      });
     });
 
-    it('should not add additional e2e-ci--**/** target default for e2e plugin when it already exists with build target', async () => {
+    it('does not duplicate the build target when it already depends on it', async () => {
       // ARRANGE
       const nxJson = readNxJson(tree);
       nxJson.plugins ??= [];
@@ -364,10 +364,9 @@ describe('target-defaults-utils', () => {
           ciTargetName: 'e2e-ci',
         },
       });
-      nxJson.targetDefaults ??= {};
-      nxJson.targetDefaults['e2e-ci--**/**'] = {
-        dependsOn: ['^build'],
-      };
+      nxJson.targetDefaults = [
+        { target: 'e2e-ci--**/**', dependsOn: ['^build'] },
+      ];
       updateNxJson(tree, nxJson);
 
       tree.write('apps/myapp-e2e/cypress.config.ts', '');
@@ -381,28 +380,17 @@ describe('target-defaults-utils', () => {
         'apps/myapp-e2e/cypress.config.ts'
       );
 
-      // ASSERT
-      const newNxJson = readNxJson(tree);
-      expect(newNxJson.targetDefaults).toMatchInlineSnapshot(`
-        {
-          "build": {
-            "cache": true,
-          },
-          "e2e-ci--**/**": {
-            "dependsOn": [
-              "^build",
-            ],
-          },
-          "lint": {
-            "cache": true,
-          },
-        }
-      `);
+      // ASSERT — single entry, single build dependency
+      expect(findGlobEntry(tree, 'e2e-ci--**/**')).toEqual({
+        target: 'e2e-ci--**/**',
+        dependsOn: ['^build'],
+      });
     });
 
-    it('should do nothing when there are no nxJson.plugins does not exist', async () => {
+    it('does nothing when nxJson.plugins is absent', async () => {
       // ARRANGE
       const nxJson = readNxJson(tree);
+      const before = nxJson.targetDefaults;
       nxJson.plugins = undefined;
       updateNxJson(tree, nxJson);
 
@@ -417,23 +405,14 @@ describe('target-defaults-utils', () => {
         'apps/myapp-e2e/cypress.config.ts'
       );
 
-      // ASSERT
-      const newNxJson = readNxJson(tree);
-      expect(newNxJson.targetDefaults).toMatchInlineSnapshot(`
-        {
-          "build": {
-            "cache": true,
-          },
-          "lint": {
-            "cache": true,
-          },
-        }
-      `);
+      // ASSERT — unchanged
+      expect(readNxJson(tree).targetDefaults).toEqual(before);
     });
 
-    it('should do nothing when there are nxJson.plugins but e2e plugin is not registered', async () => {
+    it('does nothing when the e2e plugin is not registered', async () => {
       // ARRANGE
       const nxJson = readNxJson(tree);
+      const before = nxJson.targetDefaults;
       nxJson.plugins ??= [];
       nxJson.plugins.push({
         plugin: '@nx/playwright/plugin',
@@ -455,38 +434,22 @@ describe('target-defaults-utils', () => {
         'apps/myapp-e2e/cypress.config.ts'
       );
 
-      // ASSERT
-      const newNxJson = readNxJson(tree);
-      expect(newNxJson.targetDefaults).toMatchInlineSnapshot(`
-        {
-          "build": {
-            "cache": true,
-          },
-          "lint": {
-            "cache": true,
-          },
-        }
-      `);
+      // ASSERT — unchanged
+      expect(readNxJson(tree).targetDefaults).toEqual(before);
     });
 
-    it('should choose the correct plugin when there are includes', async () => {
+    it('chooses the matching plugin registration via include', async () => {
       // ARRANGE
       const nxJson = readNxJson(tree);
       nxJson.plugins ??= [];
       nxJson.plugins.push({
         plugin: '@nx/cypress/plugin',
-        options: {
-          targetName: 'e2e',
-          ciTargetName: 'e2e-ci',
-        },
+        options: { targetName: 'e2e', ciTargetName: 'e2e-ci' },
         include: ['libs/**'],
       });
       nxJson.plugins.push({
         plugin: '@nx/cypress/plugin',
-        options: {
-          targetName: 'e2e',
-          ciTargetName: 'cypress:e2e-ci',
-        },
+        options: { targetName: 'e2e', ciTargetName: 'cypress:e2e-ci' },
         include: ['apps/**'],
       });
       updateNxJson(tree, nxJson);
@@ -503,35 +466,24 @@ describe('target-defaults-utils', () => {
       );
 
       // ASSERT
-      const newNxJson = readNxJson(tree);
-      expect(newNxJson.targetDefaults['cypress:e2e-ci--**/**'])
-        .toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^build",
-          ],
-        }
-      `);
+      expect(findGlobEntry(tree, 'cypress:e2e-ci--**/**')).toEqual({
+        target: 'cypress:e2e-ci--**/**',
+        dependsOn: ['^build'],
+      });
     });
 
-    it('should choose the correct plugin when there are excludes', async () => {
+    it('chooses the matching plugin registration via exclude', async () => {
       // ARRANGE
       const nxJson = readNxJson(tree);
       nxJson.plugins ??= [];
       nxJson.plugins.push({
         plugin: '@nx/cypress/plugin',
-        options: {
-          targetName: 'e2e',
-          ciTargetName: 'e2e-ci',
-        },
+        options: { targetName: 'e2e', ciTargetName: 'e2e-ci' },
         exclude: ['apps/**'],
       });
       nxJson.plugins.push({
         plugin: '@nx/cypress/plugin',
-        options: {
-          targetName: 'e2e',
-          ciTargetName: 'cypress:e2e-ci',
-        },
+        options: { targetName: 'e2e', ciTargetName: 'cypress:e2e-ci' },
         exclude: ['libs/**'],
       });
       updateNxJson(tree, nxJson);
@@ -548,18 +500,13 @@ describe('target-defaults-utils', () => {
       );
 
       // ASSERT
-      const newNxJson = readNxJson(tree);
-      expect(newNxJson.targetDefaults['cypress:e2e-ci--**/**'])
-        .toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^build",
-          ],
-        }
-      `);
+      expect(findGlobEntry(tree, 'cypress:e2e-ci--**/**')).toEqual({
+        target: 'cypress:e2e-ci--**/**',
+        dependsOn: ['^build'],
+      });
     });
 
-    it('should use the default name when the plugin registration is a string', async () => {
+    it('uses the default ciTargetName when the plugin registration is a string', async () => {
       // ARRANGE
       const nxJson = readNxJson(tree);
       nxJson.plugins ??= [];
@@ -578,14 +525,10 @@ describe('target-defaults-utils', () => {
       );
 
       // ASSERT
-      const newNxJson = readNxJson(tree);
-      expect(newNxJson.targetDefaults['e2e-ci--**/**']).toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^build",
-          ],
-        }
-      `);
+      expect(findGlobEntry(tree, 'e2e-ci--**/**')).toEqual({
+        target: 'e2e-ci--**/**',
+        dependsOn: ['^build'],
+      });
     });
   });
 });

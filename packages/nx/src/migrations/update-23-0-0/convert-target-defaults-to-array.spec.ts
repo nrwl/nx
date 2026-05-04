@@ -63,7 +63,7 @@ describe('convert-target-defaults-to-array migration', () => {
     ]);
   });
 
-  it('keeps executor-style keys as `target` strings', async () => {
+  it('moves executor-style keys to `executor`, leaving `target` unset', async () => {
     const nxJson = readNxJson(tree);
     nxJson.targetDefaults = {
       '@nx/vite:test': { inputs: ['default'] },
@@ -72,8 +72,8 @@ describe('convert-target-defaults-to-array migration', () => {
     updateNxJson(tree, nxJson);
     await convertTargetDefaultsToArray(tree);
     expect(readNxJson(tree).targetDefaults).toEqual([
-      { target: '@nx/vite:test', inputs: ['default'] },
-      { target: 'nx:run-commands', cache: true },
+      { executor: '@nx/vite:test', inputs: ['default'] },
+      { executor: 'nx:run-commands', cache: true },
     ]);
   });
 

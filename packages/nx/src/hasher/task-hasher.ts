@@ -13,6 +13,10 @@ import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { workspaceRoot } from '../utils/workspace-root';
 import { HashInputs, NxWorkspaceFilesExternals } from '../native';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
+import {
+  findBestTargetDefault,
+  normalizeTargetDefaults,
+} from '../project-graph/utils/project-configuration/target-defaults';
 
 // Re-export HashInputs from native module for public API
 export { HashInputs };
@@ -305,7 +309,15 @@ export function getTargetInputs(
   const namedInputs = getNamedInputs(nxJson, projectNode);
 
   const targetData = projectNode.data.targets[target];
-  const targetDefaults = (nxJson.targetDefaults || {})[target];
+  const targetDefaults = findBestTargetDefault(
+    target,
+    targetData?.executor,
+    projectNode.name,
+    projectNode,
+    undefined,
+    normalizeTargetDefaults(nxJson.targetDefaults),
+    targetData?.command
+  );
 
   const inputs = splitInputsIntoSelfAndDependencies(
     targetData.inputs || targetDefaults?.inputs || DEFAULT_INPUTS,
@@ -342,7 +354,15 @@ export function getInputs(
   const projectNode = projectGraph.nodes[task.target.project];
   const namedInputs = getNamedInputs(nxJson, projectNode);
   const targetData = projectNode.data.targets[task.target.target];
-  const targetDefaults = (nxJson.targetDefaults || {})[task.target.target];
+  const targetDefaults = findBestTargetDefault(
+    task.target.target,
+    targetData?.executor,
+    projectNode.name,
+    projectNode,
+    undefined,
+    normalizeTargetDefaults(nxJson.targetDefaults),
+    targetData?.command
+  );
   const { selfInputs, depsInputs, depsOutputs, projectInputs, depsFilesets } =
     splitInputsIntoSelfAndDependencies(
       targetData.inputs || targetDefaults?.inputs || (DEFAULT_INPUTS as any),

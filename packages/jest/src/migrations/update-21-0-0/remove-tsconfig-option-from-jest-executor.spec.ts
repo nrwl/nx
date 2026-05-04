@@ -168,7 +168,7 @@ describe('remove-tsconfig-option-from-jest-executor', () => {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
       json.targetDefaults = [
         {
-          target: '@nx/jest:jest',
+          executor: '@nx/jest:jest',
           options: {
             jestConfig: '{projectRoot}/jest.config.ts',
             tsConfig: '{projectRoot}/tsconfig.json',
@@ -189,7 +189,7 @@ describe('remove-tsconfig-option-from-jest-executor', () => {
     const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
     expect(nxJson.targetDefaults).toEqual([
       {
-        target: '@nx/jest:jest',
+        executor: '@nx/jest:jest',
         options: { jestConfig: '{projectRoot}/jest.config.ts' },
         configurations: { production: { codeCoverage: true } },
       },

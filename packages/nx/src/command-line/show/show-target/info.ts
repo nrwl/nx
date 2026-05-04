@@ -2,8 +2,6 @@ import type { NxJsonConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
 import type { InputDefinition } from '../../../config/workspace-json-project-json';
 import type { ConfigurationSourceMaps } from '../../../project-graph/utils/project-configuration/source-maps';
-import { normalizeTargetDefaults } from '../../../project-graph/utils/project-configuration/target-defaults';
-import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { getNamedInputs } from '../../../hasher/task-hasher';
 import { createTaskGraph } from '../../../tasks-runner/create-task-graph';
 import {
@@ -57,29 +55,13 @@ function resolveTargetInfoData(t: ResolvedTarget) {
     }
   }
 
-  const extraTargetDeps: Record<string, any> = {};
-  const projectNodeForMatch = graph.nodes[projectName];
-  for (const entry of normalizeTargetDefaults(nxJson.targetDefaults)) {
-    if (!entry.target || !entry.dependsOn) continue;
-    if (entry.projects !== undefined) {
-      if (!projectNodeForMatch) continue;
-      const patterns = Array.isArray(entry.projects)
-        ? entry.projects
-        : [entry.projects];
-      const matched = findMatchingProjects(patterns, {
-        [projectName]: projectNodeForMatch,
-      });
-      if (!matched.includes(projectName)) continue;
-    }
-    // Record by target name; later entries overwrite earlier (later array
-    // index wins on ties, mirroring matcher semantics).
-    extraTargetDeps[entry.target] = entry.dependsOn;
-  }
-
+  // dependsOn from targetDefaults is already merged into targetConfig.dependsOn
+  // when the project graph is built, so getDependencyConfigs reads it directly
+  // from the graph node. No extra plumbing needed here.
   const depConfigs =
     getDependencyConfigs(
       { project: projectName, target: targetName },
-      extraTargetDeps,
+      {},
       graph,
       [...allTargetNames]
     ) ?? [];
@@ -107,7 +89,7 @@ function resolveTargetInfoData(t: ResolvedTarget) {
   const { dependsOn, depSourceIndices, transitiveTasks } =
     resolveTaskGraphDependencies(
       graph,
-      extraTargetDeps,
+      {},
       projectName,
       targetName,
       configuration,

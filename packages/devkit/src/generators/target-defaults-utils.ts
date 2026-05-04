@@ -3,7 +3,6 @@ import {
   type PluginConfiguration,
   type TargetConfiguration,
   type TargetDefaultEntry,
-  type TargetDefaults,
   type Tree,
   readNxJson,
   updateNxJson,
@@ -11,58 +10,48 @@ import {
 import { findMatchingConfigFiles } from 'nx/src/devkit-internals';
 import { normalizeTargetDefaults } from '../utils/normalize-target-defaults';
 
-export interface UpsertTargetDefaultOptions
-  extends Partial<TargetConfiguration> {
-  target: string;
-  projects?: string | string[];
-  source?: string;
-}
-
 /**
- * Upsert a `targetDefaults` entry in nx.json. Reads the current shape
- * (array or legacy record), finds a matching entry by the
- * `(target, projects, source)` tuple, and merges the given config into
- * it (or appends a new entry).
+ * Upsert a `targetDefaults` entry in nx.json. Always writes the array
+ * shape — if nx.json still uses the legacy record shape, it is upgraded
+ * in place. Finds a matching entry by the
+ * `(target, executor, projects, source)` tuple and merges the given
+ * config into it, or appends a new entry.
  *
- * If nx.json uses the legacy record shape AND the caller provides a
- * `projects` or `source` filter, nx.json is upgraded to the array shape
- * because the record shape cannot express filtered entries.
+ * The entry must set at least one of `target` / `executor`.
  */
 export function upsertTargetDefault(
   tree: Tree,
-  options: UpsertTargetDefaultOptions
+  options: TargetDefaultEntry
 ): void {
-  const { target, projects, source, ...config } = options;
-  const nxJson = readNxJson(tree) ?? {};
-  const existing: TargetDefaults | undefined = nxJson.targetDefaults;
-  const hasFilter = projects !== undefined || source !== undefined;
-
-  // Legacy record shape, no filters → stay in record shape.
-  if (existing && !Array.isArray(existing) && !hasFilter) {
-    const record = { ...existing };
-    record[target] = { ...(record[target] ?? {}), ...config };
-    nxJson.targetDefaults = record;
-    updateNxJson(tree, nxJson);
-    return;
+  if (options.target === undefined && options.executor === undefined) {
+    throw new Error(
+      'upsertTargetDefault requires at least one of `target` or `executor` to be set.'
+    );
   }
 
-  const entries = normalizeTargetDefaults(existing);
+  const { target, executor, projects, source, ...config } = options;
+  const nxJson = readNxJson(tree) ?? {};
+  const entries = normalizeTargetDefaults(nxJson.targetDefaults);
   const matchIndex = entries.findIndex(
     (e) =>
       e.target === target &&
+      e.executor === executor &&
       projectsEqual(e.projects, projects) &&
       e.source === source
   );
 
   const newEntry: TargetDefaultEntry = {
-    target,
+    ...(target !== undefined ? { target } : {}),
+    ...(executor !== undefined ? { executor } : {}),
     ...(projects !== undefined ? { projects } : {}),
     ...(source !== undefined ? { source } : {}),
     ...config,
   };
 
   if (matchIndex >= 0) {
-    const merged = { ...entries[matchIndex], ...config, target };
+    const merged: TargetDefaultEntry = { ...entries[matchIndex], ...config };
+    if (target !== undefined) merged.target = target;
+    if (executor !== undefined) merged.executor = executor;
     if (projects !== undefined) merged.projects = projects;
     if (source !== undefined) merged.source = source;
     entries[matchIndex] = merged;
@@ -94,8 +83,12 @@ export function addBuildTargetDefaults(
   extraInputs: TargetConfiguration['inputs'] = []
 ): void {
   const nxJson = readNxJson(tree) ?? {};
-  const existing = nxJson.targetDefaults;
-  const defaultConfig: Partial<TargetConfiguration> = {
+  const entries = normalizeTargetDefaults(nxJson.targetDefaults);
+  if (entries.some((e) => e.executor === executorName)) {
+    return;
+  }
+  upsertTargetDefault(tree, {
+    executor: executorName,
     cache: true,
     dependsOn: [`^${buildTargetName}`],
     inputs: [
@@ -104,25 +97,7 @@ export function addBuildTargetDefaults(
         : ['default', '^default']),
       ...extraInputs,
     ],
-  };
-
-  // Preserve legacy record-shape behavior when nx.json is still in that
-  // shape: only set the entry if one does not already exist at the
-  // executor key, and do not upgrade to the array shape.
-  if (existing && !Array.isArray(existing)) {
-    if (existing[executorName]) return;
-    nxJson.targetDefaults = { ...existing, [executorName]: defaultConfig };
-    updateNxJson(tree, nxJson);
-    return;
-  }
-
-  const entries = normalizeTargetDefaults(existing);
-  if (entries.some((e) => e.target === executorName)) {
-    return;
-  }
-  entries.push({ target: executorName, ...defaultConfig });
-  nxJson.targetDefaults = entries;
-  updateNxJson(tree, nxJson);
+  });
 }
 
 export async function addE2eCiTargetDefaults(
@@ -181,40 +156,16 @@ export async function addE2eCiTargetDefaults(
       : ((foundPluginForApplication.options as any)?.ciTargetName ?? 'e2e-ci');
 
   const ciTargetNameGlob = `${ciTargetName}--**/**`;
-  const existing = nxJson.targetDefaults;
-
-  // Legacy record-shape: preserve the existing mutate-in-place behavior.
-  if (existing && !Array.isArray(existing)) {
-    const current = existing[ciTargetNameGlob];
-    if (!current) {
-      existing[ciTargetNameGlob] = { dependsOn: [buildTarget] };
-    } else {
-      current.dependsOn ??= [];
-      if (!current.dependsOn.includes(buildTarget)) {
-        current.dependsOn.push(buildTarget);
-      }
-    }
-    nxJson.targetDefaults = existing;
-    updateNxJson(tree, nxJson);
-    return;
-  }
-
-  const entries = normalizeTargetDefaults(existing);
-  const matchIndex = entries.findIndex(
+  const existing = normalizeTargetDefaults(nxJson.targetDefaults).find(
     (e) =>
       e.target === ciTargetNameGlob &&
+      e.executor === undefined &&
       e.projects === undefined &&
       e.source === undefined
   );
-  if (matchIndex < 0) {
-    entries.push({ target: ciTargetNameGlob, dependsOn: [buildTarget] });
-  } else {
-    const entry = entries[matchIndex];
-    entry.dependsOn ??= [];
-    if (!(entry.dependsOn as (string | unknown)[]).includes(buildTarget)) {
-      (entry.dependsOn as (string | unknown)[]).push(buildTarget);
-    }
+  const dependsOn = [...(existing?.dependsOn ?? [])];
+  if (!dependsOn.includes(buildTarget)) {
+    dependsOn.push(buildTarget);
   }
-  nxJson.targetDefaults = entries;
-  updateNxJson(tree, nxJson);
+  upsertTargetDefault(tree, { target: ciTargetNameGlob, dependsOn });
 }

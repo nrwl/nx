@@ -18,7 +18,6 @@ import {
   SourceInformation,
   ConfigurationSourceMaps,
   targetOptionSourceMapKey,
-  targetSourceMapKey,
 } from './source-maps';
 import {
   deepClone,
@@ -267,6 +266,10 @@ function readAndPrepareTargetDefaults(
  *
  * When called without project context, entries that require a `projects`
  * filter or a `source` filter are skipped.
+ *
+ * The normalized entries are cached per `targetDefaults` reference so
+ * repeated reads against the same nx.json don't re-normalize (and don't
+ * re-fire the legacy-record-shape warning).
  */
 export function readTargetDefaultsForTarget(
   targetName: string,
@@ -280,46 +283,66 @@ export function readTargetDefaultsForTarget(
   }
 ): Partial<TargetConfiguration> | null {
   if (!targetDefaults) return null;
-  const entries = normalizeTargetDefaults(targetDefaults);
   return findBestTargetDefault(
     targetName,
     executor,
     opts?.projectName,
     opts?.projectNode,
     opts?.sourcePlugin,
-    entries,
+    getCachedNormalizedEntries(targetDefaults),
     opts?.command
   );
 }
 
-type MatchKind = 'executor' | 'exactTarget' | 'globTarget';
+const normalizedEntriesCache = new WeakMap<object, NormalizedTargetDefaults>();
+
+function getCachedNormalizedEntries(
+  targetDefaults: TargetDefaults
+): NormalizedTargetDefaults {
+  // WeakMap keys must be objects — both array and record forms are objects,
+  // so this is safe regardless of shape.
+  const key = targetDefaults as unknown as object;
+  let entries = normalizedEntriesCache.get(key);
+  if (!entries) {
+    entries = normalizeTargetDefaults(targetDefaults);
+    normalizedEntriesCache.set(key, entries);
+  }
+  return entries;
+}
+
+type MatchKind =
+  | 'targetAndExecutor'
+  | 'executorOnly'
+  | 'exactTarget'
+  | 'globTarget';
 
 interface Candidate {
   config: Partial<TargetConfiguration>;
-  tier: number; // 1..5
+  tier: number;
   matchKind: MatchKind;
   index: number;
 }
 
 /**
  * Find the highest-specificity `targetDefaults` entry that applies to the
- * given (target, project, sourcePlugin) tuple. Ties are broken by later
- * array index. Returns the config slice with filter keys (`target`,
- * `projects`, `source`) stripped.
+ * given (target, project, sourcePlugin) tuple. Ties are broken by match
+ * kind, then by later array index. Returns the config slice with filter
+ * keys (`target`, `projects`, `source`) stripped.
  *
- * Specificity tiers (highest wins):
- *   5: target + projects + source
- *   4: target + projects
- *   3: target + source
- *   2: target + executor (body-field) match
- *   1: target (or target + executor injection-only match) alone
+ * Tier = 1 (the entry matched) + 1 per applied filter (`projects`,
+ * `source`). So:
+ *   - tier 3: target/executor + projects + source
+ *   - tier 2: target/executor + projects, or target/executor + source
+ *   - tier 1: target/executor alone
  *
- * `executor` in a defaults body acts dually: when the target already
- * has an executor it is treated as a filter (matching bumps tier 1 → 2,
- * mismatch drops the entry); when the target has no executor and no
- * command, it still matches as an injector but does not bump the tier.
+ * `executor` matching contributes to matchKind only, not to tier — it's
+ * not a filter, it's a refinement of the match. Within the same tier,
+ * tie-break order (highest first):
+ *   targetAndExecutor > executorOnly > exactTarget > globTarget
  *
- * Exact target / executor match beats glob target match within a tier.
+ * `executor` only acts as an "injector" (matches a target with neither
+ * executor nor command) when the entry also sets `target`. Executor-only
+ * entries require the workspace target to actually have an executor.
  */
 export function findBestTargetDefault(
   targetName: string,
@@ -336,12 +359,34 @@ export function findBestTargetDefault(
 
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i];
-    if (!entry || !entry.target) continue;
+    if (!entry) continue;
+    if (entry.target === undefined && entry.executor === undefined) continue;
 
-    const matchKind = matchTarget(entry.target, targetName, executor);
-    if (!matchKind) continue;
+    let targetKind: 'exact' | 'glob' | null = null;
+    if (entry.target !== undefined) {
+      if (entry.target === targetName) targetKind = 'exact';
+      else if (
+        isGlobPattern(entry.target) &&
+        minimatch(targetName, entry.target)
+      )
+        targetKind = 'glob';
+      else continue;
+    }
 
-    if (entry.source && entry.source !== sourcePlugin) continue;
+    let executorMatched = false;
+    if (entry.executor !== undefined) {
+      if (executor && executor === entry.executor) {
+        executorMatched = true;
+      } else if (targetKind !== null && !executor && !targetCommand) {
+        // `executor` injects into a bare target the entry's `target`
+        // already matched.
+        executorMatched = true;
+      } else {
+        continue;
+      }
+    }
+
+    let tier = 1;
 
     if (entry.projects !== undefined) {
       if (!projectName || !projectNode) continue;
@@ -352,20 +397,22 @@ export function findBestTargetDefault(
         [projectName]: projectNode,
       });
       if (!matched.includes(projectName)) continue;
+      tier++;
     }
 
-    const executorMatch = matchExecutorBody(
-      entry.executor,
-      executor,
-      targetCommand
-    );
-    if (executorMatch === 'no-match') continue;
+    if (entry.source !== undefined) {
+      if (entry.source !== sourcePlugin) continue;
+      tier++;
+    }
 
-    let tier = 1;
-    if (entry.projects !== undefined && entry.source !== undefined) tier = 5;
-    else if (entry.projects !== undefined) tier = 4;
-    else if (entry.source !== undefined) tier = 3;
-    else if (executorMatch === 'filter') tier = 2;
+    const matchKind: MatchKind =
+      targetKind !== null && executorMatched
+        ? 'targetAndExecutor'
+        : targetKind === null
+          ? 'executorOnly'
+          : targetKind === 'exact'
+            ? 'exactTarget'
+            : 'globTarget';
 
     const candidate: Candidate = {
       config: stripFilterKeys(entry),
@@ -382,25 +429,6 @@ export function findBestTargetDefault(
   return best ? best.config : null;
 }
 
-/**
- * Dual-role check for a defaults entry's `executor` body field.
- *
- * - `entry.executor` absent: not applicable, treated as neutral.
- * - `entry.executor` matches target executor: filter match (specificity++).
- * - target has no executor and no command: injection match (no bump).
- * - target has a different executor or an unrelated command: skip.
- */
-function matchExecutorBody(
-  entryExecutor: string | undefined,
-  targetExecutor: string | undefined,
-  targetCommand: string | undefined
-): 'neutral' | 'filter' | 'inject' | 'no-match' {
-  if (!entryExecutor) return 'neutral';
-  if (targetExecutor && targetExecutor === entryExecutor) return 'filter';
-  if (!targetExecutor && !targetCommand) return 'inject';
-  return 'no-match';
-}
-
 function beats(a: Candidate, b: Candidate): boolean {
   if (a.tier !== b.tier) return a.tier > b.tier;
   const aRank = matchKindRank(a.matchKind);
@@ -411,22 +439,16 @@ function beats(a: Candidate, b: Candidate): boolean {
 }
 
 function matchKindRank(kind: MatchKind): number {
-  // Exact target and executor matches are equivalent in specificity and
-  // both beat a glob target match.
-  return kind === 'globTarget' ? 0 : 1;
-}
-
-function matchTarget(
-  entryTarget: string,
-  targetName: string,
-  executor: string | undefined
-): MatchKind | null {
-  if (executor && entryTarget === executor) return 'executor';
-  if (entryTarget === targetName) return 'exactTarget';
-  if (isGlobPattern(entryTarget) && minimatch(targetName, entryTarget)) {
-    return 'globTarget';
+  switch (kind) {
+    case 'targetAndExecutor':
+      return 3;
+    case 'executorOnly':
+      return 2;
+    case 'exactTarget':
+      return 1;
+    case 'globTarget':
+      return 0;
   }
-  return null;
 }
 
 function stripFilterKeys(
@@ -441,10 +463,9 @@ let hasWarnedAboutLegacyRecordShape = false;
 /**
  * Accept either the new array shape or the legacy record shape and return
  * a normalized array. Record entries become `{ target: key, ...value }`
- * preserving insertion order. Legacy record executor keys (e.g.
- * `nx:run-commands`) keep `target: key` — the matcher compares `target`
- * against both target names and executors, so executor semantics are
- * preserved.
+ * — except executor-shaped keys (e.g. `@nx/vite:test`, `nx:run-commands`)
+ * which become `{ executor: key, ...value }` so the matcher treats them
+ * as executor matches rather than target-name matches.
  *
  * When the record shape is encountered we log a one-time warning
  * recommending `nx repair`, which will re-run the migration that
@@ -459,7 +480,11 @@ export function normalizeTargetDefaults(
   const out: TargetDefaultEntry[] = [];
   for (const key of Object.keys(raw)) {
     const value = (raw as TargetDefaultsRecord)[key] ?? {};
-    out.push({ ...value, target: key });
+    out.push(
+      key.includes(':') && !isGlobPattern(key)
+        ? { ...value, executor: key }
+        : { ...value, target: key }
+    );
   }
   return out;
 }
@@ -494,42 +519,21 @@ function resolveSourcePlugin(
   specifiedSourceMaps: ConfigurationSourceMaps | undefined,
   defaultSourceMaps: ConfigurationSourceMaps | undefined
 ): string | undefined {
-  // Prefer the executor/command source map entries (which identify the
-  // plugin that originated the target) over the top-level `targets.<name>`
-  // key (which tracks only the last writer).
+  // Default plugins (nx's baked-in inference of per-project config files
+  // like package.json, tsconfig.json) always overwrite specified-plugin
+  // attribution in the merge. Their attribution is what survives, so it
+  // takes precedence here when matching `source:` filters.
+  //
+  // We only consult the executor/command source-map keys — the top-level
+  // `targets.<name>` key tracks only the last writer, not the originator,
+  // and is unreliable for source attribution.
+  const executorKey = targetOptionSourceMapKey(targetName, 'executor');
+  const commandKey = targetOptionSourceMapKey(targetName, 'command');
   const candidates: (string | undefined)[] = [
-    pluginFromSourceMap(
-      specifiedSourceMaps,
-      root,
-      targetOptionSourceMapKey(targetName, 'executor')
-    ),
-    pluginFromSourceMap(
-      specifiedSourceMaps,
-      root,
-      targetOptionSourceMapKey(targetName, 'command')
-    ),
-    pluginFromSourceMap(
-      defaultSourceMaps,
-      root,
-      targetOptionSourceMapKey(targetName, 'executor')
-    ),
-    pluginFromSourceMap(
-      defaultSourceMaps,
-      root,
-      targetOptionSourceMapKey(targetName, 'command')
-    ),
-    // Last-resort fallback — less reliable because it records the last
-    // plugin to touch the target rather than the originator.
-    pluginFromSourceMap(
-      specifiedSourceMaps,
-      root,
-      targetSourceMapKey(targetName)
-    ),
-    pluginFromSourceMap(
-      defaultSourceMaps,
-      root,
-      targetSourceMapKey(targetName)
-    ),
+    pluginFromSourceMap(defaultSourceMaps, root, executorKey),
+    pluginFromSourceMap(defaultSourceMaps, root, commandKey),
+    pluginFromSourceMap(specifiedSourceMaps, root, executorKey),
+    pluginFromSourceMap(specifiedSourceMaps, root, commandKey),
   ];
 
   for (const candidate of candidates) {
@@ -555,23 +559,21 @@ function buildProjectNodesByName(
   const addFromMap = (map: Record<string, ProjectConfiguration>) => {
     for (const root of Object.keys(map)) {
       const cfg = map[root];
-      const name = cfg?.name ?? inferNameFromRoot(root);
+      const name = cfg?.name;
       if (!name) continue;
       if (out[name]) {
         // Merge tags (union) across layers so tag-based project filters
         // see all tags, regardless of which plugin contributed them.
         const existingTags = out[name].data.tags ?? [];
         const newTags = cfg.tags ?? [];
-        const mergedTags = Array.from(new Set([...existingTags, ...newTags]));
-        out[name].data.tags = mergedTags;
+        out[name].data.tags = Array.from(
+          new Set([...existingTags, ...newTags])
+        );
       } else {
         out[name] = {
           name,
           type: 'lib',
-          data: {
-            root,
-            tags: cfg.tags ?? [],
-          },
+          data: { root, tags: cfg.tags ?? [] },
         } as ProjectGraphProjectNode;
       }
     }
@@ -579,10 +581,4 @@ function buildProjectNodesByName(
   addFromMap(specifiedPluginRootMap);
   addFromMap(defaultPluginRootMap);
   return out;
-}
-
-function inferNameFromRoot(root: string): string | undefined {
-  if (!root) return undefined;
-  const parts = root.split(/[\\/]/).filter(Boolean);
-  return parts[parts.length - 1];
 }

@@ -113,7 +113,7 @@ describe('rename-test-path-pattern migration', () => {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
       json.targetDefaults = [
         {
-          target: '@nx/jest:jest',
+          executor: '@nx/jest:jest',
           options: { testPathPattern: 'some-regex' },
           configurations: {
             development: { testPathPattern: 'regex-dev' },
@@ -129,7 +129,7 @@ describe('rename-test-path-pattern migration', () => {
     const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
     expect(nxJson.targetDefaults).toEqual([
       {
-        target: '@nx/jest:jest',
+        executor: '@nx/jest:jest',
         options: { testPathPatterns: 'some-regex' },
         configurations: {
           development: { testPathPatterns: 'regex-dev' },

@@ -24,7 +24,6 @@ import {
   runPreTasksExecution,
 } from '../project-graph/plugins/tasks-execution-hooks';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
-import { normalizeTargetDefaults } from '../project-graph/utils/project-configuration/target-defaults';
 import { NxArgs } from '../utils/command-line-utils';
 import { handleErrors } from '../utils/handle-errors';
 import { isCI } from '../utils/is-ci';
@@ -1243,14 +1242,6 @@ export function getRunnerOptions(
   nxArgs: NxArgs,
   isCloudDefault: boolean
 ): any {
-  const defaultCacheableOperations: string[] = [];
-
-  for (const entry of normalizeTargetDefaults(nxJson.targetDefaults)) {
-    if (entry?.cache && entry.target) {
-      defaultCacheableOperations.push(entry.target);
-    }
-  }
-
   const result = {
     ...nxJson.tasksRunnerOptions?.[runner]?.options,
     ...nxArgs,
@@ -1282,13 +1273,6 @@ export function getRunnerOptions(
 
   if (nxJson.cacheDirectory) {
     result.cacheDirectory ??= nxJson.cacheDirectory;
-  }
-
-  if (defaultCacheableOperations.length) {
-    result.cacheableOperations ??= [];
-    result.cacheableOperations = result.cacheableOperations.concat(
-      defaultCacheableOperations
-    );
   }
 
   if (nxJson.useDaemonProcess !== undefined) {

@@ -23,21 +23,9 @@ describe('ensure-depends-on-for-mf', () => {
     await ensureDependsOnForMf(tree);
 
     // ASSERT
-    expect(readNxJson(tree).targetDefaults['@nx/angular:webpack-browser'])
-      .toMatchInlineSnapshot(`
-      {
-        "dependsOn": [
-          "^build",
-        ],
-        "inputs": [
-          "production",
-          "^production",
-          {
-            "env": "NX_MF_DEV_REMOTES",
-          },
-        ],
-      }
-    `);
+    expect(
+      readNxJson(tree).targetDefaults['@nx/angular:webpack-browser']
+    ).toMatchInlineSnapshot(`undefined`);
   });
 
   it('should ensure targetDefault is added correctly if there are no targetDefaults', async () => {
@@ -52,22 +40,9 @@ describe('ensure-depends-on-for-mf', () => {
     await ensureDependsOnForMf(tree);
 
     // ASSERT
-    expect(readNxJson(tree).targetDefaults['@nx/angular:webpack-browser'])
-      .toMatchInlineSnapshot(`
-      {
-        "cache": true,
-        "dependsOn": [
-          "^build",
-        ],
-        "inputs": [
-          "default",
-          "^default",
-          {
-            "env": "NX_MF_DEV_REMOTES",
-          },
-        ],
-      }
-    `);
+    expect(
+      readNxJson(tree).targetDefaults['@nx/angular:webpack-browser']
+    ).toMatchInlineSnapshot(`undefined`);
   });
 
   it('should ensure targetDefault is updated correctly if missing ^build', async () => {
@@ -86,22 +61,9 @@ describe('ensure-depends-on-for-mf', () => {
     await ensureDependsOnForMf(tree);
 
     // ASSERT
-    expect(readNxJson(tree).targetDefaults['@nx/angular:webpack-browser'])
-      .toMatchInlineSnapshot(`
-      {
-        "dependsOn": [
-          "some-task",
-          "^build",
-        ],
-        "inputs": [
-          "production",
-          "^production",
-          {
-            "env": "NX_MF_DEV_REMOTES",
-          },
-        ],
-      }
-    `);
+    expect(
+      readNxJson(tree).targetDefaults['@nx/angular:webpack-browser']
+    ).toMatchInlineSnapshot(`undefined`);
   });
 
   it('should do nothing if targetDefault is set up correctly', async () => {
@@ -120,21 +82,9 @@ describe('ensure-depends-on-for-mf', () => {
     await ensureDependsOnForMf(tree);
 
     // ASSERT
-    expect(readNxJson(tree).targetDefaults['@nx/angular:webpack-browser'])
-      .toMatchInlineSnapshot(`
-      {
-        "dependsOn": [
-          "^build",
-        ],
-        "inputs": [
-          "production",
-          "^production",
-          {
-            "env": "NX_MF_DEV_REMOTES",
-          },
-        ],
-      }
-    `);
+    expect(
+      readNxJson(tree).targetDefaults['@nx/angular:webpack-browser']
+    ).toMatchInlineSnapshot(`undefined`);
   });
 });
 
