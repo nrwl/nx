@@ -1,3 +1,4 @@
+import { calculateHashForCreateNodes } from '@nx/devkit/internal';
 import {
   CreateNodesV2,
   CreateNodesContextV2,
@@ -5,7 +6,6 @@ import {
   TargetConfiguration,
   createNodesFromFiles,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { basename, dirname, join } from 'node:path';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { PluginCache } from 'nx/src/utils/plugin-cache-utils';

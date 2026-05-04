@@ -1,3 +1,4 @@
+import { getNamedInputs } from '@nx/devkit/internal';
 import {
   createNodesFromFiles,
   detectPackageManager,
@@ -13,7 +14,6 @@ import {
   type ProjectConfiguration,
   type TargetConfiguration,
 } from '@nx/devkit';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import {
   existsSync,
   readdirSync,

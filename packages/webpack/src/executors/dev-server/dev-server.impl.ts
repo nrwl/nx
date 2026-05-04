@@ -1,3 +1,4 @@
+import { eachValueFrom } from '@nx/devkit/internal';
 import webpack from 'webpack';
 import {
   ExecutorContext,
@@ -5,7 +6,6 @@ import {
   readTargetOptions,
 } from '@nx/devkit';
 
-import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import { map, tap } from 'rxjs/operators';
 import WebpackDevServer from 'webpack-dev-server';
 

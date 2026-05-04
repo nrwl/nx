@@ -2,7 +2,7 @@ import { Tree, readNxJson } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
+} from '@nx/devkit/internal';
 import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nx/js/src/generators/library/schema';
 import type { LibraryGeneratorOptions, NormalizedOptions } from '../schema';

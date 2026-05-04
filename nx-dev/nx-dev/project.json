@@ -7,14 +7,11 @@
     "next:build": {
       "dependsOn": ["^build", "^typecheck", "typecheck"],
       "inputs": [
-        "default",
-        "^default",
-        { "dependentTasksOutputFiles": "**/*" },
+        "...",
+        { "dependentTasksOutputFiles": "**/*", "transitive": true },
         { "env": "NEXT_PUBLIC_ASTRO_URL" },
         { "env": "NX_DEV_URL" },
-        { "env": "NEXT_PUBLIC_NO_INDEX" },
-        { "externalDependencies": ["next"] },
-        { "dependentTasksOutputFiles": "**/*.d.ts", "transitive": true }
+        { "env": "NEXT_PUBLIC_NO_INDEX" }
       ],
       "outputs": ["{workspaceRoot}/nx-dev/nx-dev/.next"]
     },

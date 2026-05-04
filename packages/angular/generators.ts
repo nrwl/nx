@@ -8,7 +8,6 @@ export * from './src/generators/host/host';
 export * from './src/generators/init/init';
 export * from './src/generators/library-secondary-entry-point/library-secondary-entry-point';
 export * from './src/generators/library/library';
-export * from './src/generators/move/move';
 export * from './src/generators/ngrx/ngrx';
 export * from './src/generators/ngrx-feature-store/ngrx-feature-store';
 export * from './src/generators/ngrx-root-store/ngrx-root-store';

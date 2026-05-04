@@ -1,3 +1,4 @@
+import { createAsyncIterable } from '@nx/devkit/internal';
 import chalk from 'chalk';
 import { ChildProcess, fork } from 'child_process';
 import {
@@ -10,7 +11,6 @@ import {
   readTargetOptions,
   runExecutor,
 } from '@nx/devkit';
-import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { daemonClient } from 'nx/src/daemon/client/client';
 import { randomUUID } from 'crypto';
 import * as path from 'path';

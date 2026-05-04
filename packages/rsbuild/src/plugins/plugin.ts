@@ -1,8 +1,11 @@
 import {
+  getNamedInputs,
+  calculateHashForCreateNodes,
+  PluginCache,
+} from '@nx/devkit/internal';
+import {
   type ProjectConfiguration,
   type TargetConfiguration,
-  readJsonFile,
-  writeJsonFile,
   CreateNodesV2,
   CreateNodesContextV2,
   createNodesFromFiles,
@@ -10,13 +13,11 @@ import {
   getPackageManagerCommand,
   detectPackageManager,
 } from '@nx/devkit';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
-import { existsSync, readdirSync } from 'fs';
+import { readdirSync } from 'fs';
 import { join, dirname, isAbsolute, relative } from 'path';
 import { minimatch } from 'minimatch';
 import { loadConfig, type RsbuildConfig } from '@rsbuild/core';
@@ -34,17 +35,6 @@ export interface RsbuildPluginOptions {
 
 type RsbuildTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
-function readTargetsCache(cachePath: string): Record<string, RsbuildTargets> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
-
-function writeTargetsCache(
-  cachePath,
-  results?: Record<string, RsbuildTargets>
-) {
-  writeJsonFile(cachePath, results);
-}
-
 const rsbuildConfigGlob = '**/rsbuild.config.{js,ts,mjs,mts,cjs,cts}';
 
 export const createNodesV2: CreateNodesV2<RsbuildPluginOptions> = [
@@ -55,7 +45,7 @@ export const createNodesV2: CreateNodesV2<RsbuildPluginOptions> = [
       workspaceDataDirectory,
       `rsbuild-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<RsbuildTargets>(cachePath);
     const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
     const pmc = getPackageManagerCommand(
       detectPackageManager(context.workspaceRoot)
@@ -76,7 +66,7 @@ export const createNodesV2: CreateNodesV2<RsbuildPluginOptions> = [
         context
       );
     } finally {
-      writeTargetsCache(cachePath, targetsCache);
+      targetsCache.writeToDisk(cachePath);
     }
   },
 ];
@@ -85,7 +75,7 @@ async function createNodesInternal(
   configFilePath: string,
   options: RsbuildPluginOptions,
   context: CreateNodesContextV2,
-  targetsCache: Record<string, RsbuildTargets>,
+  targetsCache: PluginCache<RsbuildTargets>,
   isUsingTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
@@ -110,17 +100,22 @@ async function createNodesInternal(
     [getLockFileName(detectPackageManager(context.workspaceRoot))]
   );
 
-  targetsCache[hash] ??= await createRsbuildTargets(
-    configFilePath,
-    projectRoot,
-    normalizedOptions,
-    tsConfigFiles,
-    isUsingTsSolutionSetup,
-    context,
-    pmc
-  );
+  if (!targetsCache.has(hash)) {
+    targetsCache.set(
+      hash,
+      await createRsbuildTargets(
+        configFilePath,
+        projectRoot,
+        normalizedOptions,
+        tsConfigFiles,
+        isUsingTsSolutionSetup,
+        context,
+        pmc
+      )
+    );
+  }
 
-  const { targets, metadata } = targetsCache[hash];
+  const { targets, metadata } = targetsCache.get(hash);
 
   return {
     projects: {

@@ -16,6 +16,7 @@ import { readJson } from '../generators/utils/json';
 import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration/target-merging';
 import { getCatalogManager } from './catalog';
 import { readJsonFile } from './fileutils';
+import { hasNxJsPlugin } from './has-nx-js-plugin';
 import { getNxRequirePaths } from './installation-directory';
 import {
   createTempNpmDirectory,
@@ -276,18 +277,6 @@ export function readTargetsFromPackageJson(
   }
 
   return res;
-}
-
-function hasNxJsPlugin(projectRoot: string, workspaceRoot: string) {
-  try {
-    // nx-ignore-next-line
-    require.resolve('@nx/js/package.json', {
-      paths: [projectRoot, ...getNxRequirePaths(workspaceRoot), __dirname],
-    });
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 /**

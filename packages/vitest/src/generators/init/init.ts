@@ -1,3 +1,4 @@
+import { addPlugin } from '@nx/devkit/internal';
 import {
   type Tree,
   type GeneratorCallback,
@@ -8,7 +9,6 @@ import {
   updateNxJson,
   createProjectGraphAsync,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { InitGeneratorSchema } from './schema';
 import {
   nxVersion,

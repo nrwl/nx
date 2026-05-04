@@ -1,3 +1,9 @@
+import {
+  calculateHashForCreateNodes,
+  getNamedInputs,
+  loadConfigFile,
+  PluginCache,
+} from '@nx/devkit/internal';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
@@ -11,11 +17,7 @@ import {
   ProjectConfiguration,
   readJsonFile,
   type TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { getLockFileName } from '@nx/js';
 import { type AppConfig } from '@remix-run/dev';
 import { dirname, join } from 'path';
@@ -36,19 +38,6 @@ export interface RemixPluginOptions {
 
 type RemixTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
-function readTargetsCache(
-  cachePath: string
-): Record<string, Record<string, TargetConfiguration>> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
-
-function writeTargetsToCache(
-  cachePath: string,
-  results: Record<string, RemixTargets>
-) {
-  writeJsonFile(cachePath, results);
-}
-
 /**
  * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
  */
@@ -63,7 +52,7 @@ export const createNodes: CreateNodesV2<RemixPluginOptions> = [
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `remix-${optionsHash}.hash`);
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<RemixTargets>(cachePath);
     const pmc = getPackageManagerCommand(
       detectPackageManager(context.workspaceRoot)
     );
@@ -83,7 +72,7 @@ export const createNodes: CreateNodesV2<RemixPluginOptions> = [
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk(cachePath);
     }
   },
 ];
@@ -94,7 +83,7 @@ async function createNodesInternal(
   configFilePath: string,
   options: RemixPluginOptions,
   context: CreateNodesContextV2,
-  targetsCache: Record<string, RemixTargets>,
+  targetsCache: PluginCache<RemixTargets>,
   isUsingTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
@@ -128,18 +117,23 @@ async function createNodesInternal(
       [getLockFileName(detectPackageManager(context.workspaceRoot))]
     )) + configFilePath;
 
-  targetsCache[hash] ??= await buildRemixTargets(
-    configFilePath,
-    projectRoot,
-    options,
-    context,
-    siblingFiles,
-    remixCompiler,
-    isUsingTsSolutionSetup,
-    pmc
-  );
+  if (!targetsCache.has(hash)) {
+    targetsCache.set(
+      hash,
+      await buildRemixTargets(
+        configFilePath,
+        projectRoot,
+        options,
+        context,
+        siblingFiles,
+        remixCompiler,
+        isUsingTsSolutionSetup,
+        pmc
+      )
+    );
+  }
 
-  const { targets, metadata } = targetsCache[hash];
+  const { targets, metadata } = targetsCache.get(hash);
 
   const project: ProjectConfiguration = {
     root: projectRoot,

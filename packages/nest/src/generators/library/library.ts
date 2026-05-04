@@ -1,4 +1,5 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
+import { logShowProjectCommand } from '@nx/devkit/internal';
 import {
   formatFiles,
   joinPathFragments,
@@ -7,7 +8,6 @@ import {
   runTasksInSerial,
   writeJson,
 } from '@nx/devkit';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import initGenerator from '../init/init';

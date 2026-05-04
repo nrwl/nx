@@ -1,3 +1,4 @@
+import { addBuildTargetDefaults } from '@nx/devkit/internal';
 import {
   formatFiles,
   joinPathFragments,
@@ -8,7 +9,6 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { getOutputDir, getUpdatedPackageJsonContent } from '@nx/js';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import {

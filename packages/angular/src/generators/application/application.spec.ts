@@ -863,7 +863,9 @@ describe('app', () => {
         const project = readProjectConfiguration(appTree, 'my-app');
         expect(project.targets.test).toStrictEqual({
           executor: '@angular/build:unit-test',
-          options: {},
+          options: {
+            watch: false,
+          },
         });
         const nxJson = readNxJson(appTree);
         expect(nxJson.targetDefaults['@angular/build:unit-test']).toStrictEqual(

@@ -1,5 +1,5 @@
 import { ExecutorContext, logger } from '@nx/devkit';
-import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
+import { createAsyncIterable } from '@nx/devkit/internal';
 import { printDiagnostics, runTypeCheck } from '@nx/js';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import {

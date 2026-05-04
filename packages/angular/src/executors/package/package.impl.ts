@@ -1,5 +1,5 @@
 import type { ExecutorContext } from '@nx/devkit';
-import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
+import { eachValueFrom } from '@nx/devkit/internal';
 import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,

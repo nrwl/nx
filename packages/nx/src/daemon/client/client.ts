@@ -1327,8 +1327,16 @@ export class DaemonClient {
       writeFileSync(DAEMON_OUTPUT_LOG_FILE, '');
     }
 
-    this._out = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
-    this._err = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
+    // Open the log handles into locals first. If the previous daemon's
+    // socket close handler fires reset() while we're awaiting these opens,
+    // it would null out this._out/this._err and the spawn below would hit
+    // `Cannot read properties of null (reading 'fd')`.
+    const [out, err] = await Promise.all([
+      open(DAEMON_OUTPUT_LOG_FILE, 'a'),
+      open(DAEMON_OUTPUT_LOG_FILE, 'a'),
+    ]);
+    this._out = out;
+    this._err = err;
 
     clientLogger.log(`[Client] Starting new daemon server in background`);
 
@@ -1337,7 +1345,7 @@ export class DaemonClient {
       [join(__dirname, `../server/start.js`)],
       {
         cwd: workspaceRoot,
-        stdio: ['ignore', this._out.fd, this._err.fd],
+        stdio: ['ignore', out.fd, err.fd],
         detached: true,
         windowsHide: true,
         shell: false,

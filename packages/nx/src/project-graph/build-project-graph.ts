@@ -53,11 +53,14 @@ let storedRustReferences: NxWorkspaceFilesExternals | null = null;
 export function getFileMap(): {
   fileMap: FileMap;
   rustReferences: NxWorkspaceFilesExternals | null;
+  /** @deprecated always `[]`; kept so cached nx-cloud workers that destructure it don't see `undefined`. */
+  allWorkspaceFiles: FileData[];
 } {
   if (!!storedFileMap) {
     return {
       fileMap: storedFileMap,
       rustReferences: storedRustReferences,
+      allWorkspaceFiles: [],
     };
   } else {
     return {
@@ -66,6 +69,7 @@ export function getFileMap(): {
         projectFileMap: {},
       },
       rustReferences: null,
+      allWorkspaceFiles: [],
     };
   }
 }
@@ -73,9 +77,22 @@ export function getFileMap(): {
 export function hydrateFileMap(
   fileMap: FileMap,
   rustReferences: NxWorkspaceFilesExternals
-) {
+): void;
+/** @deprecated pass `(fileMap, rustReferences)`. Kept for cached nx-cloud workers still on the 3-arg form. */
+export function hydrateFileMap(
+  fileMap: FileMap,
+  allWorkspaceFiles: FileData[],
+  rustReferences: NxWorkspaceFilesExternals
+): void;
+export function hydrateFileMap(
+  fileMap: FileMap,
+  rustReferencesOrAllFiles: NxWorkspaceFilesExternals | FileData[],
+  maybeRustReferences?: NxWorkspaceFilesExternals
+): void {
   storedFileMap = fileMap;
-  storedRustReferences = rustReferences;
+  storedRustReferences = Array.isArray(rustReferencesOrAllFiles)
+    ? (maybeRustReferences ?? null)
+    : rustReferencesOrAllFiles;
 }
 
 export async function buildProjectGraphUsingProjectFileMap(

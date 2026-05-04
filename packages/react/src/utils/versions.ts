@@ -51,7 +51,7 @@ export const moduleFederationNodeVersion = '^2.7.21';
 export const moduleFederationEnhancedVersion = '^2.1.0';
 
 // style preprocessors
-export const sassVersion = '^1.55.0';
+export const sassVersion = '^1.97.2';
 
 // rollup plugins (if needed)
 export const rollupPluginUrlVersion = '^8.0.2';

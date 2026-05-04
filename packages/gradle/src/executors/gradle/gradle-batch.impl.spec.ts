@@ -66,6 +66,14 @@ describe('getGradlewTasksToRun', () => {
           projectRoot: 'app1',
           parallelism: false,
         },
+        'app1:lint': {
+          id: 'app1:lint',
+          target: { project: 'app1', target: 'lint' },
+          outputs: [],
+          overrides: {},
+          projectRoot: 'app1',
+          parallelism: false,
+        },
         'app2:build': {
           id: 'app2:build',
           target: { project: 'app2', target: 'build' },
@@ -75,9 +83,13 @@ describe('getGradlewTasksToRun', () => {
           parallelism: false,
         },
       },
-      dependencies: {},
+      dependencies: {
+        'app1:test': ['app1:lint', 'app2:build'],
+        'app1:lint': [],
+        'app2:build': [],
+      },
       continuousDependencies: {},
-      roots: ['app1:test', 'app2:build'],
+      roots: ['app1:lint', 'app2:build'],
     };
 
     inputs = {
@@ -133,12 +145,32 @@ describe('getGradlewTasksToRun', () => {
     const taskIds = ['app1:test'];
     const result = getGradlewTasksToRun(taskIds, taskGraph, inputs, nodes);
 
-    // Since excludeDependsOn is false, no tasks should be excluded via excludeTasks
-    // This part of the logic is used for `allDependsOn` to correctly calculate runningTaskIds
-    // for `getExcludeTasks` later.
-    // In this specific test, we're not checking `allDependsOn` directly, but the outcome
-    // on `excludeTasks` confirms its effect (or lack thereof due to `excludeDependsOn: false`).
     expect(result.excludeTasks).toEqual(new Set());
+    expect(result.excludeTestTasks).toEqual(new Set());
+  });
+
+  it('should resolve transitive deps via fullTaskGraph when batch graph omits them', () => {
+    const batchTaskGraph: TaskGraph = {
+      tasks: {
+        'app1:test': taskGraph.tasks['app1:test'],
+      },
+      dependencies: {
+        'app1:test': [],
+      },
+      continuousDependencies: {},
+      roots: ['app1:test'],
+    };
+
+    const taskIds = ['app1:test'];
+    const result = getGradlewTasksToRun(
+      taskIds,
+      batchTaskGraph,
+      inputs,
+      nodes,
+      taskGraph
+    );
+
+    expect(result.excludeTasks).toEqual(new Set(['lintApp1', 'buildApp2']));
     expect(result.excludeTestTasks).toEqual(new Set());
   });
 
@@ -151,7 +183,7 @@ describe('getGradlewTasksToRun', () => {
       projectRoot: 'app3',
       parallelism: false,
     };
-    taskGraph.roots.push('app3:deploy');
+    taskGraph.dependencies['app3:deploy'] = ['app1:test'];
     inputs['app3:deploy'] = {
       taskName: 'deploy',
       excludeDependsOn: true,
@@ -171,6 +203,41 @@ describe('getGradlewTasksToRun', () => {
     //   Since app1:test is also running, 'testApp1' should not be excluded.
     //   However, 'lintApp1' and 'buildApp2' (dependencies of 'app1:test') should be excluded.
     expect(result.excludeTasks).toEqual(new Set(['lintApp1']));
+    expect(result.excludeTestTasks).toEqual(new Set());
+  });
+
+  it('does not exclude transitive deps shared with an excludeDependsOn:false task', () => {
+    nodes['lib1'] = {
+      name: 'lib1',
+      type: 'lib',
+      data: {
+        root: 'lib1',
+        targets: {
+          jar: { options: { taskName: 'jarLib1' } },
+        },
+      },
+    };
+    taskGraph.tasks['lib1:jar'] = {
+      id: 'lib1:jar',
+      target: { project: 'lib1', target: 'jar' },
+      outputs: [],
+      overrides: {},
+      projectRoot: 'lib1',
+      parallelism: false,
+    };
+    taskGraph.dependencies['lib1:jar'] = [];
+    taskGraph.dependencies['app1:test'] = ['app1:lint', 'lib1:jar'];
+    taskGraph.dependencies['app2:build'] = ['lib1:jar'];
+
+    const taskIds = ['app1:test', 'app2:build'];
+    const result = getGradlewTasksToRun(taskIds, taskGraph, inputs, nodes);
+
+    // app1:test has excludeDependsOn:true → would exclude its deps (app1:lint, lib1:jar).
+    // app2:build has excludeDependsOn:false → its deps must run, including lib1:jar.
+    // Because lib1:jar is required by app2:build, it must NOT appear in excludeTasks
+    // even though app1:test's exclude pass would otherwise drop it.
+    expect(result.excludeTasks).toEqual(new Set(['lintApp1']));
+    expect(result.excludeTasks.has('jarLib1')).toBe(false);
     expect(result.excludeTestTasks).toEqual(new Set());
   });
 });

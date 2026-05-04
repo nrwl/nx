@@ -1,6 +1,5 @@
 package dev.nx.gradle
 
-import com.google.gson.Gson
 import dev.nx.gradle.cli.parseArgs
 import dev.nx.gradle.runner.runTasksInParallel
 import dev.nx.gradle.util.configureSingleLineLogger
@@ -41,9 +40,6 @@ fun main(args: Array<String>) {
             options.excludeTasks,
             options.excludeTestTasks)
 
-    val reportJson = Gson().toJson(results)
-    println(reportJson)
-
     val summary = results.values.groupBy { it.success }
     logger.info(
         "📊 Summary: ✅ ${summary[true]?.size ?: 0} succeeded, ❌ ${summary[false]?.size ?: 0} failed")
@@ -58,4 +54,8 @@ fun main(args: Array<String>) {
       logger.warning("⚠️ Failed to close Gradle connection cleanly: ${e.message}")
     }
   }
+
+  // Force exit so lingering non-daemon threads from the Gradle Tooling API
+  // can't keep the JVM alive after all task work is done.
+  exitProcess(0)
 }

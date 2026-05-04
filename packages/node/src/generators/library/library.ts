@@ -1,4 +1,9 @@
 import {
+  determineProjectNameAndRootOptions,
+  ensureRootProjectName,
+  addBuildTargetDefaults,
+} from '@nx/devkit/internal';
+import {
   addDependenciesToPackageJson,
   formatFiles,
   generateFiles,
@@ -17,10 +22,6 @@ import {
   updateTsConfigsToJs,
   writeJson,
 } from '@nx/devkit';
-import {
-  determineProjectNameAndRootOptions,
-  ensureRootProjectName,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { addSwcConfig } from '@nx/js/src/utils/swc/add-swc-config';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
@@ -28,7 +29,6 @@ import { join } from 'path';
 import { tslibVersion, typesNodeVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
 import { Schema } from './schema';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import {
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,

@@ -190,7 +190,9 @@ describe('cache', () => {
 
     // Rerun without touching anything
     const rerunWithUntouchedOutputs = runCLI(`build ${mylib}`);
-    expect(rerunWithUntouchedOutputs).toContain('local cache');
+    expect(rerunWithUntouchedOutputs).toContain(
+      'existing outputs match the cache'
+    );
     const outputsWithUntouchedOutputs = [
       ...listFiles('dist/apps'),
       ...listFiles('dist/.next').map((f) => `.next/${f}`),
@@ -209,7 +211,9 @@ describe('cache', () => {
     // Create a file in the dist that does not match output glob
     updateFile('dist/apps/c.ts', '');
 
-    // Rerun
+    // Rerun. Outputs were modified (extra file in dist), so the daemon's
+    // outputs-hash check fails and nx restores from cache → "[local cache]"
+    // rather than the "existing outputs match" no-op path.
     const rerunWithNewUnrelatedFile = runCLI(`build ${mylib}`);
     expect(rerunWithNewUnrelatedFile).toContain('local cache');
     const outputsAfterAddingUntouchedFileAndRerunning = [
@@ -334,7 +338,7 @@ console.log('Build complete');
 
     // Second run - should hit cache and restore without EEXIST error
     const secondRun = runCLI(`build ${projectName}`);
-    expect(secondRun).toContain('local cache');
+    expect(secondRun).toContain('existing outputs match the cache');
   });
 
   it('should use consider filesets when hashing', async () => {

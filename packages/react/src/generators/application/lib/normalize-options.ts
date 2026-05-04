@@ -2,7 +2,7 @@ import { Tree, names, readNxJson } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
+} from '@nx/devkit/internal';
 import {
   assertValidReactRouter,
   assertValidStyle,

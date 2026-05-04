@@ -1,10 +1,10 @@
+import { createAsyncIterable } from '@nx/devkit/internal';
 import {
   ExecutorContext,
   logger,
   parseTargetString,
   readTargetOptions,
 } from '@nx/devkit';
-import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { Configuration } from '@rspack/core';
 import { RspackDevServer } from '@rspack/dev-server';

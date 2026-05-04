@@ -1,3 +1,4 @@
+import { addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -10,7 +11,6 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { gte } from 'semver';
 import { createNodesV2 } from '../../plugins/plugin';
 import {
