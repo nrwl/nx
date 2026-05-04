@@ -370,12 +370,12 @@ function preparePackageInstallation(pkg: string, requiredVersion: string) {
   };
 
   console.log(`Fetching ${pkg}...`);
-  const packageManager = detectPackageManager();
+  const packageManager = detectPackageManager(workspaceRoot);
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
   generatePackageManagerFiles(tempDir, packageManager);
 
-  const preInstallCommand = getPackageManagerCommand(packageManager).preInstall;
   const pmCommands = getPackageManagerCommand(packageManager);
+  const preInstallCommand = pmCommands.preInstall;
   let addCommand = pmCommands.addDev;
   if (packageManager === 'pnpm') {
     addCommand = 'pnpm add -D'; // we need to ensure that we are not using workspace command
