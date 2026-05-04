@@ -32,7 +32,7 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "detect-port": "^1.5.1",
+    "detect-port": "^2.1.0",
     "http-server": "^14.1.0",
     "picocolors": "catalog:",
     "tslib": "catalog:typescript",

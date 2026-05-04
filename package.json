@@ -191,7 +191,7 @@
     "cytoscape-popper": "^2.0.0",
     "cz-git": "^1.4.0",
     "czg": "^1.4.0",
-    "detect-port": "^1.5.1",
+    "detect-port": "^2.1.0",
     "dotenv": "~16.4.5",
     "dotenv-expand": "~12.0.3",
     "ejs": "5.0.1",
