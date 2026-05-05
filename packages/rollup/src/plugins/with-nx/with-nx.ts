@@ -280,8 +280,12 @@ export function withNx(
             const rollupOutputDir = Array.isArray(finalConfig.output)
               ? finalConfig.output[0].dir
               : finalConfig.output.dir;
-            return require('@rollup/plugin-typescript')({
+            const tsPlugin = require('@rollup/plugin-typescript')({
               tsconfig: tsConfigPath,
+              // Use workspace root as the filter base so that source files
+              // from workspace libraries outside this project's rootDir are
+              // not silently excluded by the plugin's include filter.
+              filterRoot: workspaceRoot,
               compilerOptions: {
                 ...tsCompilerOptions,
                 composite: false,
@@ -290,6 +294,7 @@ export function withNx(
                 noEmitOnError: !options.skipTypeCheck,
               },
             });
+            return patchTsPluginForWorkspaceLibs(tsPlugin);
           })(),
       typeDefinitions({
         projectRoot,
@@ -404,6 +409,67 @@ function createTsCompilerOptions(
     compilerOptions['emitDeclarationOnly'] = true;
   }
   return compilerOptions;
+}
+
+/**
+ * Patches @rollup/plugin-typescript to handle workspace library imports
+ * where source files live outside the project's rootDir:
+ *
+ * 1. Suppresses TS6059 ("File is not under rootDir") during compilation
+ *    by intercepting context.error() and downgrading it to a warning.
+ *
+ * 2. Drops declaration files whose output paths escape the output
+ *    directory ("../" prefix) during generateBundle, since rollup
+ *    rejects such paths.
+ */
+export function patchTsPluginForWorkspaceLibs<
+  T extends {
+    buildStart?: (...args: unknown[]) => unknown;
+    generateBundle?: (...args: unknown[]) => unknown;
+  },
+>(tsPlugin: T): T {
+  // Patch buildStart: suppress TS6059 diagnostic
+  const origBuildStart = tsPlugin.buildStart;
+  if (origBuildStart) {
+    tsPlugin.buildStart = function (...args: unknown[]) {
+      const ctx = this as any;
+      const origError = ctx.error.bind(ctx);
+      ctx.error = function (e: any) {
+        if (
+          typeof e === 'object' &&
+          String(e.message ?? '').includes('TS6059')
+        ) {
+          ctx.warn(e);
+          return;
+        }
+        return origError(e);
+      };
+      return origBuildStart.apply(ctx, args);
+    };
+  }
+
+  // Patch generateBundle: drop escaping declaration files
+  const origGenerateBundle = tsPlugin.generateBundle;
+  if (origGenerateBundle) {
+    tsPlugin.generateBundle = function (...args: unknown[]) {
+      const origEmitFile = (this as any).emitFile;
+      (this as any).emitFile = function (
+        emission: Record<string, unknown>
+      ): unknown {
+        if (
+          emission.type === 'asset' &&
+          typeof emission.fileName === 'string' &&
+          emission.fileName.startsWith('..')
+        ) {
+          return;
+        }
+        return origEmitFile.call(this, emission);
+      };
+      return origGenerateBundle.apply(this, args);
+    };
+  }
+
+  return tsPlugin;
 }
 
 function readCompatibleFormats(
