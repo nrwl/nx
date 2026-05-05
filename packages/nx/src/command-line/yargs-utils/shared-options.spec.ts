@@ -343,7 +343,11 @@ describe('readParallelFromArgsAndEnv', () => {
   });
 
   afterEach(() => {
-    process.env.NX_PARALLEL = originalParallel;
+    if (originalParallel === undefined) {
+      delete process.env.NX_PARALLEL;
+    } else {
+      process.env.NX_PARALLEL = originalParallel;
+    }
   });
 
   it('default parallel should be 3', () => {

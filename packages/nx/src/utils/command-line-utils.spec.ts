@@ -21,7 +21,11 @@ describe('splitArgs', () => {
   afterEach(() => {
     process.env.NX_BASE = originalBase;
     process.env.NX_HEAD = originalHead;
-    process.env.NX_PARALLEL = originalParallel;
+    if (originalParallel === undefined) {
+      delete process.env.NX_PARALLEL;
+    } else {
+      process.env.NX_PARALLEL = originalParallel;
+    }
   });
 
   it('should split nx specific arguments into nxArgs', () => {
