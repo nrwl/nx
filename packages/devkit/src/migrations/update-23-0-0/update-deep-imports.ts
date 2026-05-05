@@ -1,8 +1,10 @@
 import { logger, type Tree } from 'nx/src/devkit-exports';
 import type {
+  CallExpression,
   ImportDeclaration,
   ImportSpecifier,
   NamedImports,
+  Node,
   SourceFile,
 } from 'typescript';
 import { formatFiles } from '../../generators/format-files';
@@ -69,7 +71,19 @@ export const DEVKIT_INTERNAL_SYMBOLS: ReadonlySet<string> = new Set([
   'dasherize',
 ]);
 
-const FALLBACK_RE = /(['"])@nx\/devkit\/src\/[^'"\n]+?\1/g;
+// Methods on `jest` and `vi` that take a module specifier as their first
+// argument. Calls like `jest.mock('@nx/devkit/src/...')` are rewritten so the
+// mock target lines up with the rewritten import.
+const MOCK_HELPER_METHODS: ReadonlySet<string> = new Set([
+  'mock',
+  'unmock',
+  'doMock',
+  'dontMock',
+  'requireActual',
+  'requireMock',
+  'importActual',
+  'importMock',
+]);
 
 let ts: typeof import('typescript') | undefined;
 
@@ -134,18 +148,16 @@ export function rewriteDevkitDeepImports(source: string): string {
     );
   }
 
+  // Pass 2: rewrite `require('@nx/devkit/src/...')`, dynamic
+  // `import('@nx/devkit/src/...')`, and `jest.mock(...)` / `vi.mock(...)`-style
+  // calls. We can't bucket these by symbol (no named binding to inspect), so
+  // we route them at `/internal` as a best guess. Walking the AST instead of
+  // string-replacing keeps us out of unrelated string literals — template
+  // strings, `typeof import('...')` type queries, comments, etc.
+  collectCallExpressionRewrites(sourceFile, changes);
+
   let updated =
     changes.length > 0 ? applyChangesToString(source, changes) : source;
-
-  // Fallback: any remaining `@nx/devkit/src/...` specifiers (default imports,
-  // namespace imports, side-effect imports, dynamic `import(...)`, `require(...)`
-  // calls, etc.) get rewritten to `/internal`. We can't bucket by symbol for
-  // those forms, so `/internal` is the safe default since it re-exports every
-  // symbol that was deep-importable.
-  updated = updated.replace(
-    FALLBACK_RE,
-    (_match, quote: string) => `${quote}${INTERNAL_SPECIFIER}${quote}`
-  );
 
   // Final pass: collapse any duplicate `@nx/devkit` and `@nx/devkit/internal`
   // named-only imports into a single declaration. This handles both the
@@ -340,4 +352,61 @@ function renderImport(
 
 function source(decl: ImportDeclaration, sourceFile: SourceFile): string {
   return sourceFile.text.slice(decl.getStart(sourceFile), decl.getEnd());
+}
+
+function collectCallExpressionRewrites(
+  sourceFile: SourceFile,
+  changes: StringChange[]
+): void {
+  const visit = (node: Node): void => {
+    if (
+      ts!.isCallExpression(node) &&
+      shouldRewriteCallExpression(node) &&
+      node.arguments.length >= 1 &&
+      ts!.isStringLiteral(node.arguments[0]) &&
+      node.arguments[0].text.startsWith(DEEP_IMPORT_PREFIX)
+    ) {
+      const arg = node.arguments[0];
+      const start = arg.getStart(sourceFile);
+      const end = arg.getEnd();
+      const quote = sourceFile.text.charAt(start);
+      changes.push(
+        {
+          type: ChangeType.Delete,
+          start,
+          length: end - start,
+        },
+        {
+          type: ChangeType.Insert,
+          index: start,
+          text: `${quote}${INTERNAL_SPECIFIER}${quote}`,
+        }
+      );
+    }
+    ts!.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+}
+
+function shouldRewriteCallExpression(call: CallExpression): boolean {
+  const callee = call.expression;
+  // `require('...')`
+  if (ts!.isIdentifier(callee) && callee.text === 'require') return true;
+  // dynamic `import('...')` — the runtime form parses as a CallExpression
+  // whose callee is the `import` keyword. The type-position form
+  // (`typeof import('...')`) parses as `ImportTypeNode`, not a CallExpression,
+  // so we don't touch it.
+  if (callee.kind === ts!.SyntaxKind.ImportKeyword) return true;
+  // `jest.mock(...)` / `vi.mock(...)` and friends.
+  if (ts!.isPropertyAccessExpression(callee)) {
+    const obj = callee.expression;
+    if (
+      ts!.isIdentifier(obj) &&
+      (obj.text === 'jest' || obj.text === 'vi') &&
+      MOCK_HELPER_METHODS.has(callee.name.text)
+    ) {
+      return true;
+    }
+  }
+  return false;
 }

@@ -30,7 +30,7 @@ import { dasherize, addPlugin } from '@nx/devkit/internal';
 
 #### Fallback for non-named imports
 
-For deep-import shapes that can't be split by symbol — default imports, namespace imports, side-effect imports, `require(...)` calls, and dynamic `import(...)` — the migration rewrites the specifier to `@nx/devkit/internal` as a best guess, since most symbols that previously lived under `@nx/devkit/src/...` ended up there.
+For deep-import shapes that can't be split by symbol — default imports, namespace imports, side-effect imports, `require(...)` calls, dynamic `import(...)`, and `jest.mock(...)` / `vi.mock(...)`-style mock-helper calls — the migration rewrites the specifier to `@nx/devkit/internal` as a best guess, since most symbols that previously lived under `@nx/devkit/src/...` ended up there.
 
 ```ts
 // Before
@@ -40,4 +40,4 @@ const { dasherize } = require('@nx/devkit/src/utils/string-utils');
 const { dasherize } = require('@nx/devkit/internal');
 ```
 
-If the symbol you're after is part of the stable public API instead, the rewritten import will fail to resolve against `@nx/devkit/internal` — switch it to `@nx/devkit` by hand.
+If the symbol you're after is part of the stable public API instead, the rewritten import will fail to resolve against `@nx/devkit/internal` — switch it to `@nx/devkit` by hand. The migration also leaves `typeof import('@nx/devkit/src/...')` type queries and any deep-import strings inside template literals or comments untouched, so you'll need to update those by hand.
