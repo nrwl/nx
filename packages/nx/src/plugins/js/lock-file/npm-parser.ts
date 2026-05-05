@@ -607,13 +607,64 @@ function mapSnapshots(
       visitedNodes,
       rootLockFile
     );
+    emitRootDuplicates(remappedPackages, graph, rootLockFile);
     // initially we naively map package paths to topParent/../parent/child
     // but some of those should be nested higher up the tree
-    remappedPackagesArray = elevateNestedPaths(remappedPackages);
+    remappedPackagesArray = elevateNestedPaths(remappedPackages, rootLockFile);
   } else {
+    emitRootDuplicates(remappedPackages, graph, rootLockFile);
     remappedPackagesArray = Array.from(remappedPackages.values());
   }
   return remappedPackagesArray.sort((a, b) => a.path.localeCompare(b.path));
+}
+
+// Re-emit root paths whose (name, version) matches a graph node but were
+// dropped by the (packageName, version) graph dedup. Iterated to a fixpoint
+// so emitting a parent enables its children.
+function emitRootDuplicates(
+  remappedPackages: Map<string, MappedPackage>,
+  graph: ProjectGraph,
+  rootLockFile: NpmLockFile
+): void {
+  const rootPackages = rootLockFile.packages;
+  if (!rootPackages || !Object.keys(rootPackages).length) {
+    return;
+  }
+  const inGraph = new Set<string>();
+  for (const node of Object.values(graph.externalNodes ?? {})) {
+    inGraph.add(`${node.data.packageName}@${node.data.version}`);
+  }
+
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const [path, rawSnap] of Object.entries(rootPackages)) {
+      if (remappedPackages.has(path)) continue;
+      if (!path.includes('node_modules/')) continue;
+      if (!rawSnap || rawSnap.link || !rawSnap.version) continue;
+
+      const name = path.split('node_modules/').pop()!;
+      if (!inGraph.has(`${name}@${rawSnap.version}`)) continue;
+
+      const segs = path.split('/node_modules/');
+      if (segs.length > 1) {
+        const parentPath = segs.slice(0, -1).join('/node_modules/');
+        if (!remappedPackages.has(parentPath)) continue;
+      }
+
+      const { dev, peer, ...snap } = rawSnap;
+      const valueV1 =
+        rootLockFile.lockfileVersion < 3
+          ? findMatchingPackageV1(
+              rootLockFile.dependencies,
+              name,
+              rawSnap.version
+            )
+          : undefined;
+      remappedPackages.set(path, { path, name, valueV3: snap, valueV1 });
+      changed = true;
+    }
+  }
 }
 
 function mapPackage(
@@ -739,9 +790,11 @@ function sortMappedPackagesPaths(mappedPackages: Map<string, MappedPackage>) {
 }
 
 function elevateNestedPaths(
-  remappedPackages: Map<string, MappedPackage>
+  remappedPackages: Map<string, MappedPackage>,
+  rootLockFile: NpmLockFile
 ): MappedPackage[] {
   const result = new Map<string, MappedPackage>();
+  const rootPackages = rootLockFile.packages ?? {};
   const sortedPaths = sortMappedPackagesPaths(remappedPackages);
 
   sortedPaths.forEach((path) => {
@@ -755,10 +808,11 @@ function elevateNestedPaths(
     }
 
     const packageName = segments.pop();
-    const getNewPath = (segs) =>
+    const getNewPath = (segs: string[]) =>
       `${segs.join('/node_modules/')}/node_modules/${packageName}`;
+    const mappedVersion =
+      mappedPackage.valueV3?.version ?? mappedPackage.valueV1?.version;
 
-    // check if grandparent has the same package
     const shouldElevate = (segs: string[]) => {
       const elevatedPath = getNewPath(segs.slice(0, -1));
       if (result.has(elevatedPath)) {
@@ -768,7 +822,14 @@ function elevateNestedPaths(
           match.valueV3?.version === mappedPackage.valueV3?.version
         );
       }
-      return true;
+      // empty slot — only safe if no deeper consumer needs a different version
+      const elevatedParent = segs.slice(0, -1).join('/node_modules/');
+      return !wouldShadowDescendant(
+        elevatedParent,
+        packageName,
+        mappedVersion,
+        rootPackages
+      );
     };
 
     while (segments.length > 1 && shouldElevate(segments)) {
@@ -786,6 +847,39 @@ function elevateNestedPaths(
   });
 
   return Array.from(result.values());
+}
+
+function wouldShadowDescendant(
+  parentPath: string,
+  packageName: string,
+  candidateVersion: string | undefined,
+  rootPackages: Record<string, NpmDependencyV3>
+): boolean {
+  if (!candidateVersion) return false;
+  const descendantPrefix = parentPath
+    ? `${parentPath}/node_modules/`
+    : 'node_modules/';
+  for (const [key, snap] of Object.entries(rootPackages)) {
+    const isParentItself = key === parentPath;
+    const isDescendant = key.startsWith(descendantPrefix);
+    if (!isParentItself && !isDescendant) continue;
+    if (!snap || snap.link) continue;
+    const declared = {
+      ...snap.dependencies,
+      ...snap.peerDependencies,
+      ...snap.optionalDependencies,
+    };
+    const range = declared[packageName];
+    if (!range) continue;
+    if (range === candidateVersion) continue;
+    try {
+      if (satisfies(candidateVersion, range)) continue;
+    } catch {
+      // unparseable range — treat as a conflict
+    }
+    return true;
+  }
+  return false;
 }
 
 function findMatchingPackageV3(
