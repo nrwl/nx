@@ -13,12 +13,15 @@ import { isMode } from '../../utils/mode-utils';
 import { normalizeOptions } from '../rspack/lib/normalize-options';
 import { getDevServerOptions } from './lib/get-dev-server-config';
 import { DevServerExecutorSchema } from './schema';
+import { warnRspackDevServerExecutorDeprecation } from '../../utils/deprecation';
 
 type DevServer = Configuration['devServer'];
 export default async function* runExecutor(
   options: DevServerExecutorSchema,
   context: ExecutorContext
 ): AsyncIterableIterator<{ success: boolean; baseUrl?: string }> {
+  warnRspackDevServerExecutorDeprecation();
+
   process.env.NODE_ENV ??= options.mode ?? 'development';
 
   if (isMode(process.env.NODE_ENV)) {

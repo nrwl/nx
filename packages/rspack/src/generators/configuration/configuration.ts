@@ -24,6 +24,7 @@ import rspackInitGenerator from '../init/init';
 import { ConfigurationSchema } from './schema';
 import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { Framework } from '../init/schema';
+import { warnRspackExecutorScaffolding } from '../../utils/deprecation';
 
 function projectIsRootProjectInStandaloneWorkspace(projectRoot: string) {
   return relative(workspaceRoot, projectRoot).length === 0;
@@ -185,6 +186,15 @@ export async function configurationGenerator(
       options.framework,
       joinPathFragments(offsetFromRoot(root), 'tsconfig.base.json')
     );
+  }
+
+  const willScaffoldExecutorTargets =
+    !projectAlreadyHasRspackTargets.build ||
+    (options.framework !== 'none' || options.devServer) &&
+      options.framework !== 'nest' &&
+      !projectAlreadyHasRspackTargets.serve;
+  if (willScaffoldExecutorTargets) {
+    warnRspackExecutorScaffolding();
   }
 
   if (!projectAlreadyHasRspackTargets.build) {
