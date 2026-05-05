@@ -67,15 +67,6 @@ nx generate @nx/workspace-plugin:bump-maven-version \
 
 This automates all the version bumping instead of manual file edits.
 
-### Creating a New Plugin
-
-For creating a new create-nodes plugin:
-
-```bash
-nx generate @nx/workspace-plugin:create-nodes-plugin \
-  --name my-custom-plugin
-```
-
 ## When to Use This Skill
 
 Use this skill when you need to:
