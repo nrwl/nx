@@ -59,11 +59,9 @@ public static partial class TargetBuilder
                 new { workingDirectory = "absolute" },
                 new { dependentTasksOutputFiles = "**/*" },
             ],
-            Outputs =
-            [
-                outputPath,
-                intermediatePath
-            ],
+            Outputs = new[] { outputPath, intermediatePath }
+                .Where(p => p is not null)
+                .ToArray()!,
             Metadata = new TargetMetadata
             {
                 Description = description,

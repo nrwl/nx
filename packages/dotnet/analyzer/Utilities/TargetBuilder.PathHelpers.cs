@@ -10,7 +10,8 @@ namespace MsbuildAnalyzer.Utilities;
 /// directory (the MSBuild default) and <c>{workspaceRoot}/…</c> for paths that
 /// escape the project directory but remain inside the workspace (for example
 /// a centralized <c>dist/</c> folder configured via <c>Directory.Build.props</c>).
-/// Paths that escape the workspace are emitted as-is.
+/// Paths that escape the workspace cannot be expressed as Nx outputs, so the
+/// helpers return <c>null</c> for that case and callers filter them out.
 /// </summary>
 public static partial class TargetBuilder
 {
@@ -31,13 +32,14 @@ public static partial class TargetBuilder
     ///   the project directory with a <c>{projectRoot}/</c> prefix.
     /// - Absolute paths elsewhere in the workspace are returned relative to
     ///   the workspace root with a <c>{workspaceRoot}/</c> prefix.
-    /// - Absolute paths outside the workspace are returned as-is (forward-slashed).
+    /// - Absolute paths outside the workspace cannot be expressed as Nx
+    ///   outputs and return <c>null</c> so callers can drop them.
     /// </summary>
-    private static string ResolvePath(string path, string projectDirectory, string workspaceRoot)
+    private static string? ResolvePath(string path, string projectDirectory, string workspaceRoot)
     {
         if (string.IsNullOrEmpty(path))
         {
-            return path;
+            return null;
         }
 
         if (!Path.IsPathRooted(path))
@@ -68,8 +70,9 @@ public static partial class TargetBuilder
                 : $"{{workspaceRoot}}/{relative}";
         }
 
-        // Absolute path outside the workspace - return as-is for Nx to treat as absolute.
-        return normalizedPath.Replace('\\', '/').TrimEnd('/');
+        // Absolute path outside the workspace cannot be tokenized as an Nx
+        // output. Drop it rather than emit something Nx can't honour.
+        return null;
     }
 
     /// <summary>
@@ -93,9 +96,11 @@ public static partial class TargetBuilder
 
     /// <summary>
     /// Gets the artifacts root path relative to the workspace root (defaults to "artifacts").
-    /// Used when constructing paths under the artifacts output layout.
+    /// Used when constructing paths under the artifacts output layout. Returns
+    /// <c>null</c> when the configured path lives outside the workspace, since
+    /// Nx outputs must be expressible relative to <c>{workspaceRoot}</c>.
     /// </summary>
-    private static string GetArtifactsRelativePath(Dictionary<string, string> properties, string workspaceRoot)
+    private static string? GetArtifactsRelativePath(Dictionary<string, string> properties, string workspaceRoot)
     {
         var artifactsPath = properties.GetValueOrDefault("ArtifactsPath") ?? "artifacts";
         if (!Path.IsPathRooted(artifactsPath))
@@ -112,7 +117,7 @@ public static partial class TargetBuilder
                 .Replace('\\', '/').TrimEnd('/');
         }
 
-        return normalizedPath.Replace('\\', '/').TrimEnd('/');
+        return null;
     }
 
     /// <summary>
@@ -148,13 +153,14 @@ public static partial class TargetBuilder
     /// <summary>
     /// Gets the output directory path for build outputs, as a fully-qualified
     /// Nx-prefixed string. Handles both traditional and artifacts layouts.
+    /// Returns <c>null</c> when the path lives outside the workspace.
     /// </summary>
-    private static string GetOutputPath(Dictionary<string, string> properties, string projectName, string projectDirectory, string workspaceRoot)
+    private static string? GetOutputPath(Dictionary<string, string> properties, string projectName, string projectDirectory, string workspaceRoot)
     {
         if (UsesArtifactsOutput(properties))
         {
             var artifactsPath = GetArtifactsRelativePath(properties, workspaceRoot);
-            return $"{{workspaceRoot}}/{artifactsPath}/bin/{projectName}";
+            return artifactsPath is null ? null : $"{{workspaceRoot}}/{artifactsPath}/bin/{projectName}";
         }
 
         var baseOutputPath = properties.GetValueOrDefault("BaseOutputPath");
@@ -167,19 +173,21 @@ public static partial class TargetBuilder
             ?? properties.GetValueOrDefault("OutDir")
             ?? "bin";
 
-        return StripConfiguration(ResolvePath(outputPath, projectDirectory, workspaceRoot));
+        var resolved = ResolvePath(outputPath, projectDirectory, workspaceRoot);
+        return resolved is null ? null : StripConfiguration(resolved);
     }
 
     /// <summary>
     /// Gets the intermediate output directory path (obj), as a fully-qualified
-    /// Nx-prefixed string.
+    /// Nx-prefixed string. Returns <c>null</c> when the path lives outside the
+    /// workspace.
     /// </summary>
-    private static string GetIntermediateOutputPath(Dictionary<string, string> properties, string projectName, string projectDirectory, string workspaceRoot)
+    private static string? GetIntermediateOutputPath(Dictionary<string, string> properties, string projectName, string projectDirectory, string workspaceRoot)
     {
         if (UsesArtifactsOutput(properties))
         {
             var artifactsPath = GetArtifactsRelativePath(properties, workspaceRoot);
-            return $"{{workspaceRoot}}/{artifactsPath}/obj/{projectName}";
+            return artifactsPath is null ? null : $"{{workspaceRoot}}/{artifactsPath}/obj/{projectName}";
         }
 
         var baseIntermediatePath = properties.GetValueOrDefault("BaseIntermediateOutputPath");
@@ -190,18 +198,20 @@ public static partial class TargetBuilder
 
         var intermediatePath = properties.GetValueOrDefault("IntermediateOutputPath") ?? "obj";
 
-        return StripConfiguration(ResolvePath(intermediatePath, projectDirectory, workspaceRoot));
+        var resolved = ResolvePath(intermediatePath, projectDirectory, workspaceRoot);
+        return resolved is null ? null : StripConfiguration(resolved);
     }
 
     /// <summary>
-    /// Gets the publish output directory path, as a fully-qualified Nx-prefixed string.
+    /// Gets the publish output directory path, as a fully-qualified Nx-prefixed
+    /// string. Returns <c>null</c> when the path lives outside the workspace.
     /// </summary>
-    private static string GetPublishDir(Dictionary<string, string> properties, string projectName, string projectDirectory, string workspaceRoot)
+    private static string? GetPublishDir(Dictionary<string, string> properties, string projectName, string projectDirectory, string workspaceRoot)
     {
         if (UsesArtifactsOutput(properties))
         {
             var artifactsPath = GetArtifactsRelativePath(properties, workspaceRoot);
-            return $"{{workspaceRoot}}/{artifactsPath}/publish/{projectName}";
+            return artifactsPath is null ? null : $"{{workspaceRoot}}/{artifactsPath}/publish/{projectName}";
         }
 
         var publishDir = properties.GetValueOrDefault("PublishDir");
@@ -211,18 +221,19 @@ public static partial class TargetBuilder
         }
 
         var outputPath = GetOutputPath(properties, projectName, projectDirectory, workspaceRoot);
-        return $"{outputPath.TrimEnd('/')}/publish";
+        return outputPath is null ? null : $"{outputPath.TrimEnd('/')}/publish";
     }
 
     /// <summary>
-    /// Gets the package output directory path, as a fully-qualified Nx-prefixed string.
+    /// Gets the package output directory path, as a fully-qualified Nx-prefixed
+    /// string. Returns <c>null</c> when the path lives outside the workspace.
     /// </summary>
-    private static string GetPackageOutputPath(Dictionary<string, string> properties, string projectName, string projectDirectory, string workspaceRoot)
+    private static string? GetPackageOutputPath(Dictionary<string, string> properties, string projectName, string projectDirectory, string workspaceRoot)
     {
         if (UsesArtifactsOutput(properties))
         {
             var artifactsPath = GetArtifactsRelativePath(properties, workspaceRoot);
-            return $"{{workspaceRoot}}/{artifactsPath}/package";
+            return artifactsPath is null ? null : $"{{workspaceRoot}}/{artifactsPath}/package";
         }
 
         var packageOutputPath = properties.GetValueOrDefault("PackageOutputPath");
@@ -235,14 +246,15 @@ public static partial class TargetBuilder
     }
 
     /// <summary>
-    /// Gets the test results directory path, as a fully-qualified Nx-prefixed string.
+    /// Gets the test results directory path, as a fully-qualified Nx-prefixed
+    /// string. Returns <c>null</c> when the path lives outside the workspace.
     /// </summary>
-    private static string GetTestResultsDirectory(Dictionary<string, string> properties, string projectName, string projectDirectory, string workspaceRoot)
+    private static string? GetTestResultsDirectory(Dictionary<string, string> properties, string projectName, string projectDirectory, string workspaceRoot)
     {
         if (UsesArtifactsOutput(properties))
         {
             var artifactsPath = GetArtifactsRelativePath(properties, workspaceRoot);
-            return $"{{workspaceRoot}}/{artifactsPath}/TestResults/{projectName}";
+            return artifactsPath is null ? null : $"{{workspaceRoot}}/{artifactsPath}/TestResults/{projectName}";
         }
 
         var testResultsDir = properties.GetValueOrDefault("TestResultsDirectory");

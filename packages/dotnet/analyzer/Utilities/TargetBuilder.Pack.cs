@@ -55,7 +55,9 @@ public static partial class TargetBuilder
                 new { workingDirectory = "absolute" },
                 new { dependentTasksOutputFiles = "**/*" },
             ],
-            Outputs = [$"{packageOutputPath.TrimEnd('/')}/*.nupkg"],
+            Outputs = packageOutputPath is null
+                ? []
+                : [$"{packageOutputPath.TrimEnd('/')}/*.nupkg"],
             Metadata = new TargetMetadata
             {
                 Description = "Create NuGet package",

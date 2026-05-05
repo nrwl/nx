@@ -107,6 +107,7 @@ node_modules/
 *.ntvs*
 *.njsproj
 *.sln
+!/nx.sln
 *.sw?
 .specstory/**
 .cursorindexingignore

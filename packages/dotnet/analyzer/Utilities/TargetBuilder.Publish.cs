@@ -58,7 +58,7 @@ public static partial class TargetBuilder
                 new { workingDirectory = "absolute" },
                 new { dependentTasksOutputFiles = "**/*" },
             ],
-            Outputs = [publishDir],
+            Outputs = publishDir is null ? [] : [publishDir],
             Metadata = new TargetMetadata
             {
                 Description = "Publish the .NET application",

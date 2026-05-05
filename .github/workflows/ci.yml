@@ -82,7 +82,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Restore .NET analyzer projects
-        run: dotnet restore packages/dotnet/analyzer.Tests/MsbuildAnalyzer.Tests.csproj
+        run: dotnet restore nx.sln
 
       - name: Nx Report
         run:

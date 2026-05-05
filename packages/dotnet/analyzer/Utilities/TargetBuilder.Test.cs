@@ -45,7 +45,7 @@ public static partial class TargetBuilder
                 new { dependentTasksOutputFiles = "**/*" },
                 // new { externalDependencies = externalDeps }
             ],
-            Outputs = [testResultsDir],
+            Outputs = testResultsDir is null ? [] : [testResultsDir],
             Metadata = new TargetMetadata
             {
                 Description = "Run .NET tests",
