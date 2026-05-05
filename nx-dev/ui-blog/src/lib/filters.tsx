@@ -85,7 +85,7 @@ export function Filters({
                 aria-label={`Filter by ${filter.label}`}
                 scroll={false}
                 prefetch={false}
-                className="flex items-center justify-center gap-2 rounded-full border border-zinc-400 bg-white px-2.5 py-1.5 font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 hover:text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                className="flex items-center justify-center gap-2 rounded-full border border-zinc-400 bg-white px-2.5 py-1.5 font-medium text-zinc-700 shadow-xs transition hover:bg-zinc-50 hover:text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
                 onClick={() => setSelectedFilterHeading(filter.heading)}
               >
                 {filter.icon && (
@@ -101,7 +101,7 @@ export function Filters({
       <div className="relative lg:hidden">
         <Menu as="div" className="inline-block text-left">
           <MenuButton
-            className="inline-flex w-full justify-center rounded-md border border-zinc-400 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 hover:text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+            className="inline-flex w-full justify-center rounded-md border border-zinc-400 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 shadow-xs transition hover:bg-zinc-50 hover:text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
             aria-label="Select filter topic"
           >
             Topics

@@ -166,11 +166,11 @@ export const TargetConfigurationDetailsHeader = ({
             text={JSON.stringify(targetConfiguration, null, 2)}
             tooltipText="Copy Target"
             tooltipAlignment="right"
-            className="rounded-md bg-inherit p-1 text-sm text-slate-600 ring-1 ring-inset ring-slate-400/40 hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60"
+            className="rounded-md bg-inherit p-1 text-sm text-slate-600 ring-1 ring-slate-400/40 ring-inset hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60"
           />
           {onViewInTaskGraph && (
             <button
-              className="rounded-md bg-inherit p-1 text-sm text-slate-600 ring-1 ring-inset ring-slate-400/40 hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60"
+              className="rounded-md bg-inherit p-1 text-sm text-slate-600 ring-1 ring-slate-400/40 ring-inset hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60"
               data-tooltip="View in Task Graph"
               data-tooltip-align-right
               onClick={(e) => {
@@ -184,7 +184,7 @@ export const TargetConfigurationDetailsHeader = ({
 
           {onRunTarget && (
             <span
-              className="rounded-md bg-inherit p-1 text-sm text-slate-600 ring-1 ring-inset ring-slate-400/40 hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60"
+              className="rounded-md bg-inherit p-1 text-sm text-slate-600 ring-1 ring-slate-400/40 ring-inset hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60"
               data-tooltip="Run Target"
               data-tooltip-align-right
             >
@@ -200,7 +200,7 @@ export const TargetConfigurationDetailsHeader = ({
         </div>
       </div>
       {!isCollasped && (
-        <div className="ml-5 mt-2 text-sm">
+        <div className="mt-2 ml-5 text-sm">
           <div className="flex">
             <SourceInfo
               data={sourceMap[`targets.${targetName}`]}
@@ -210,7 +210,7 @@ export const TargetConfigurationDetailsHeader = ({
           </div>
           {targetName !== 'nx-release-publish' && (
             <div className="mt-2 text-right">
-              <code className="ml-4 rounded bg-gray-100 px-2 py-1 font-mono text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+              <code className="ml-4 rounded-sm bg-gray-100 px-2 py-1 font-mono text-gray-800 dark:bg-gray-700 dark:text-gray-300">
                 nx run {projectName}:{targetName}
               </code>
               <span>
