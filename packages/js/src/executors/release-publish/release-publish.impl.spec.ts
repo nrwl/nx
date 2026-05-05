@@ -2,6 +2,7 @@ import {
   ExecutorContext,
   readJsonFile,
   detectPackageManager,
+  getPackageManagerVersion,
 } from '@nx/devkit';
 import { execSync } from 'child_process';
 import { PublishExecutorSchema } from './schema';
@@ -18,6 +19,7 @@ jest.mock('../../utils/npm-config');
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
   detectPackageManager: jest.fn(() => 'npm'),
+  getPackageManagerVersion: jest.fn(() => '10.0.0'),
   readJsonFile: jest.fn(),
 }));
 jest.mock('./extract-npm-publish-json-data');
@@ -30,6 +32,10 @@ describe('release-publish executor', () => {
   const mockDetectPackageManager = detectPackageManager as jest.MockedFunction<
     typeof detectPackageManager
   >;
+  const mockGetPackageManagerVersion =
+    getPackageManagerVersion as jest.MockedFunction<
+      typeof getPackageManagerVersion
+    >;
   const mockParseRegistryOptions =
     npmConfigModule.parseRegistryOptions as jest.MockedFunction<
       typeof npmConfigModule.parseRegistryOptions
@@ -291,6 +297,129 @@ describe('release-publish executor', () => {
       expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining('"pnpm"')
       );
+    });
+  });
+
+  describe('pnpm 11 publish handling', () => {
+    // pnpm 11 reimplemented `pnpm publish` natively (PR pnpm/pnpm#10591) and `pnpm publish --json`
+    // now writes nothing to stdout on success, breaking `extractNpmPublishJsonData`. Tracked at
+    // pnpm/pnpm#11476. The executor short-circuits on pm==='pnpm' && major>=11 to trust the exit
+    // code instead of parsing stdout.
+    it('should treat exit code 0 as success on pnpm 11 even when stdout is empty', async () => {
+      mockDetectPackageManager.mockReturnValue('pnpm');
+      mockGetPackageManagerVersion.mockReturnValue('11.0.4');
+      mockExecSync.mockReset();
+
+      mockExecSync
+        .mockReturnValueOnce('11.5.1' as any) // npm --version
+        .mockReturnValueOnce(
+          Buffer.from(
+            JSON.stringify({
+              versions: ['0.9.0'],
+              'dist-tags': { latest: '0.9.0' },
+            })
+          )
+        ) // pnpm view
+        .mockReturnValueOnce(Buffer.from('') as any); // pnpm publish (empty stdout)
+
+      const extractSpy = jest.spyOn(extractModule, 'extractNpmPublishJsonData');
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      // The pnpm 11 short-circuit must not invoke the JSON extraction path (which would otherwise
+      // fail on empty stdout and return success: false).
+      expect(extractSpy).not.toHaveBeenCalled();
+      expect(console.error).not.toHaveBeenCalledWith(
+        expect.stringContaining('could not be extracted')
+      );
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining('Published to')
+      );
+    });
+
+    it('should fall through to JSON extraction on pnpm 10 (preserves legacy npm-CLI delegated output)', async () => {
+      mockDetectPackageManager.mockReturnValue('pnpm');
+      mockGetPackageManagerVersion.mockReturnValue('10.18.3');
+      mockExecSync.mockReset();
+
+      mockExecSync
+        .mockReturnValueOnce('11.5.1' as any) // npm --version
+        .mockReturnValueOnce(
+          Buffer.from(
+            JSON.stringify({
+              versions: ['0.9.0'],
+              'dist-tags': { latest: '0.9.0' },
+            })
+          )
+        ) // pnpm view
+        .mockReturnValueOnce(Buffer.from('{...}') as any); // pnpm publish
+
+      jest.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
+        beforeJsonData: '',
+        jsonData: {
+          id: '@scope/test-package@1.0.0',
+          name: '@scope/test-package',
+          version: '1.0.0',
+          size: 100,
+          unpackedSize: 200,
+          shasum: 'abc123',
+          integrity: 'sha512-abc',
+          filename: 'test-package-1.0.0.tgz',
+          files: [],
+          entryCount: 1,
+          bundled: [],
+        },
+        afterJsonData: '',
+      } as any);
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      expect(extractModule.extractNpmPublishJsonData).toHaveBeenCalled();
+    });
+
+    it('should fall through to JSON extraction when pnpm version cannot be determined', async () => {
+      mockDetectPackageManager.mockReturnValue('pnpm');
+      mockGetPackageManagerVersion.mockImplementation(() => {
+        throw new Error('Cannot determine the version of pnpm.');
+      });
+      mockExecSync.mockReset();
+
+      mockExecSync
+        .mockReturnValueOnce('11.5.1' as any) // npm --version
+        .mockReturnValueOnce(
+          Buffer.from(
+            JSON.stringify({
+              versions: ['0.9.0'],
+              'dist-tags': { latest: '0.9.0' },
+            })
+          )
+        ) // pnpm view
+        .mockReturnValueOnce(Buffer.from('{...}') as any); // pnpm publish
+
+      jest.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
+        beforeJsonData: '',
+        jsonData: {
+          id: '@scope/test-package@1.0.0',
+          name: '@scope/test-package',
+          version: '1.0.0',
+          size: 100,
+          unpackedSize: 200,
+          shasum: 'abc123',
+          integrity: 'sha512-abc',
+          filename: 'test-package-1.0.0.tgz',
+          files: [],
+          entryCount: 1,
+          bundled: [],
+        },
+        afterJsonData: '',
+      } as any);
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      expect(extractModule.extractNpmPublishJsonData).toHaveBeenCalled();
     });
   });
 });

@@ -1,9 +1,11 @@
 import {
   detectPackageManager,
   getPackageManagerCommand,
+  getPackageManagerVersion,
   ExecutorContext,
   readJsonFile,
 } from '@nx/devkit';
+import { major } from 'semver';
 import { execSync } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { join } from 'path';
@@ -396,6 +398,40 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
       return {
         success: true,
       };
+    }
+
+    /**
+     * pnpm 11+ rewrote `pnpm publish` natively (it no longer delegates to the npm CLI; see
+     * https://pnpm.io/blog/releases/11.0#native-publish-flow-no-more-npm-cli-fallback). The new
+     * implementation accepts `--json` but writes nothing to stdout on success — the publish handler
+     * returns `undefined` and `--json` only suppresses the human-readable reporter. As a result,
+     * `extractNpmPublishJsonData` below would always return `{ jsonData: null }` and incorrectly
+     * report a successful publish as failed (silently breaking releases — tarballs reach the
+     * registry, but Nx marks the task failed and `--nx-bail=true` skips remaining packages).
+     *
+     * Until pnpm restores `--json` stdout output (tracked at
+     * https://github.com/pnpm/pnpm/issues/11476), trust the exit code: execSync above already throws
+     * on non-zero exit, so reaching this point with pnpm >= 11 means the publish succeeded.
+     *
+     * This intentionally drops the verbose `=== Tarball Details ===` table for pnpm >= 11 in favor of
+     * a minimal summary line, mirroring the existing `pm === 'bun'` branch above. Once pnpm/pnpm#11476
+     * lands and ships, this branch becomes a no-op (the JSON extraction path will succeed again) and
+     * can be removed.
+     */
+    if (pm === 'pnpm') {
+      let pnpmMajor: number | null = null;
+      try {
+        pnpmMajor = major(getPackageManagerVersion('pnpm', context.root));
+      } catch {
+        // If we can't determine the pnpm version, fall through to JSON parsing.
+      }
+      if (pnpmMajor !== null && pnpmMajor >= 11) {
+        console.log(`📦 ${packageJson.name}@${packageJson.version}`);
+        console.log(publishSummaryMessage);
+        return {
+          success: true,
+        };
+      }
     }
 
     /**
