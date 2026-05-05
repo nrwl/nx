@@ -5,6 +5,8 @@ import type {
   TargetDefaultEntry,
   TargetDefaultsRecord,
 } from '../../config/nx-json';
+import type { ProjectGraph } from '../../config/project-graph';
+import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { isGlobPattern } from '../../utils/globs';
 
 /**
@@ -12,13 +14,18 @@ import { isGlobPattern } from '../../utils/globs';
  * array shape introduced in Nx 23. No-op when `targetDefaults` is absent
  * or already an array.
  *
- * Record keys that look like executor strings (`pkg:name`, no glob chars)
- * convert to `{ executor: key, ... }`; everything else converts to
- * `{ target: key, ... }`. This preserves legacy semantics while producing
- * data that's honest about how the matcher will use it.
+ * Disambiguation strategy for record keys (highest precedence first):
+ * 1. Glob → `{ target: key }`.
+ * 2. Project graph available: replicate legacy lookup by checking whether
+ *    the key matches a target name and/or an executor string anywhere in
+ *    the workspace. Emit one entry, or both when it matches both
+ *    (genuinely ambiguous; safer to duplicate than drop a default).
+ * 3. No graph or no match found: fall back to the syntactic heuristic —
+ *    `:` (and not a glob) → executor; otherwise target.
  */
 export default async function convertTargetDefaultsToArray(
-  tree: Tree
+  tree: Tree,
+  projectGraph?: ProjectGraph
 ): Promise<void> {
   if (!tree.exists('nx.json')) {
     return;
@@ -31,11 +38,13 @@ export default async function convertTargetDefaultsToArray(
   if (!targetDefaults) return;
   if (Array.isArray(targetDefaults)) return;
 
+  const graph = projectGraph ?? (await tryCreateProjectGraph());
+
   const legacy = targetDefaults as TargetDefaultsRecord;
   const entries: TargetDefaultEntry[] = [];
   for (const key of Object.keys(legacy)) {
     const value = legacy[key] ?? {};
-    entries.push(legacyKeyToEntry(key, value));
+    entries.push(...legacyKeyToEntries(key, value, graph));
   }
 
   nxJson.targetDefaults = entries;
@@ -47,18 +56,71 @@ export default async function convertTargetDefaultsToArray(
 /**
  * Treat a legacy record key as an executor when it contains `:` and is
  * not a glob (executor strings are `pkg:name`; globs would also contain
- * `*` / `{` / etc., which `isGlobPattern` catches).
+ * `*` / `{` / etc., which `isGlobPattern` catches). Used only as a
+ * syntactic fallback when no graph signal is available.
  */
 export function isExecutorLikeKey(key: string): boolean {
   return key.includes(':') && !isGlobPattern(key);
 }
 
-function legacyKeyToEntry(
+function legacyKeyToEntries(
   key: string,
-  value: Partial<TargetDefaultEntry>
-): TargetDefaultEntry {
-  if (isExecutorLikeKey(key)) {
-    return { ...value, executor: key };
+  value: Partial<TargetDefaultEntry>,
+  graph: ProjectGraph | undefined
+): TargetDefaultEntry[] {
+  if (isGlobPattern(key)) {
+    return [{ ...value, target: key }];
   }
-  return { ...value, target: key };
+
+  if (graph) {
+    const { matchesTargetName, matchesExecutor } = classifyKeyAgainstGraph(
+      key,
+      graph
+    );
+    if (matchesTargetName && matchesExecutor) {
+      return [
+        { ...value, target: key },
+        { ...value, executor: key },
+      ];
+    }
+    if (matchesTargetName) return [{ ...value, target: key }];
+    if (matchesExecutor) return [{ ...value, executor: key }];
+    // Fall through to the syntactic heuristic when the workspace has
+    // neither a target named `key` nor a target using executor `key`.
+  }
+
+  return isExecutorLikeKey(key)
+    ? [{ ...value, executor: key }]
+    : [{ ...value, target: key }];
+}
+
+function classifyKeyAgainstGraph(
+  key: string,
+  graph: ProjectGraph
+): { matchesTargetName: boolean; matchesExecutor: boolean } {
+  let matchesTargetName = false;
+  let matchesExecutor = false;
+  for (const node of Object.values(graph.nodes ?? {})) {
+    const targets = node?.data?.targets;
+    if (!targets) continue;
+    for (const [name, target] of Object.entries(targets)) {
+      if (!matchesTargetName && name === key) matchesTargetName = true;
+      if (!matchesExecutor && target?.executor === key) matchesExecutor = true;
+      if (matchesTargetName && matchesExecutor) {
+        return { matchesTargetName, matchesExecutor };
+      }
+    }
+  }
+  return { matchesTargetName, matchesExecutor };
+}
+
+async function tryCreateProjectGraph(): Promise<ProjectGraph | undefined> {
+  // The graph may fail to build mid-migration (e.g. another change earlier
+  // in the same migrate run left the workspace transiently inconsistent).
+  // Falling back to the syntactic heuristic is safer than aborting.
+  try {
+    return await createProjectGraphAsync();
+  } catch {
+    return undefined;
+  }
 }
