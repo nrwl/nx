@@ -20,6 +20,13 @@ interface ViteTestExecutorOptions {
   watch?: boolean;
 }
 
+type PluginEntry = {
+  plugin: string;
+  options?: Record<string, unknown>;
+  include?: string[];
+  exclude?: string[];
+};
+
 // v23 safety net — @nx/vite:test executor + plugin test inference removed.
 // - swap @nx/vite:test → @nx/vitest:test (project + targetDefaults)
 // - register @nx/vitest plugin alongside default-config @nx/vite/plugin (v22 gap)
@@ -35,12 +42,31 @@ export default async function ensureVitestPackageMigration(
   return installTask;
 }
 
+function workspaceUsesVitest(tree: Tree): boolean {
+  const packageJson = readJson(tree, 'package.json');
+  if (
+    packageJson.dependencies?.['vitest'] ||
+    packageJson.devDependencies?.['vitest']
+  ) {
+    return true;
+  }
+
+  let hasViteTestExecutor = false;
+  forEachExecutorOptions(tree, '@nx/vite:test', () => {
+    hasViteTestExecutor = true;
+  });
+  return hasViteTestExecutor;
+}
+
 function installVitestPackageIfNeeded(tree: Tree): GeneratorCallback {
   const packageJson = readJson(tree, 'package.json');
-  const hasVitest =
+  const hasNxVitest =
     packageJson.dependencies?.['@nx/vitest'] ||
     packageJson.devDependencies?.['@nx/vitest'];
-  if (hasVitest) {
+  if (hasNxVitest) {
+    return () => {};
+  }
+  if (!workspaceUsesVitest(tree)) {
     return () => {};
   }
   return addDependenciesToPackageJson(tree, {}, { '@nx/vitest': nxVersion });
@@ -68,6 +94,13 @@ function migrateExecutorUsages(tree: Tree): void {
   }
 }
 
+function scopeKey(entry: PluginEntry): string {
+  return [
+    (entry.include ?? []).join(','),
+    (entry.exclude ?? []).join(','),
+  ].join('|');
+}
+
 function migratePluginConfigurations(tree: Tree): void {
   const nxJson = readNxJson(tree);
   if (!nxJson?.plugins) {
@@ -75,16 +108,7 @@ function migratePluginConfigurations(tree: Tree): void {
   }
 
   const newPlugins: typeof nxJson.plugins = [];
-  const vitestPluginsToAdd: Array<{
-    plugin: string;
-    options?: Record<string, unknown>;
-    include?: string[];
-    exclude?: string[];
-  }> = [];
-
-  const hasVitestPlugin = nxJson.plugins.some((p) =>
-    typeof p === 'string' ? p === '@nx/vitest' : p.plugin === '@nx/vitest'
-  );
+  const vitestPluginsToAdd: PluginEntry[] = [];
 
   for (const plugin of nxJson.plugins) {
     if (typeof plugin === 'string') {
@@ -106,9 +130,7 @@ function migratePluginConfigurations(tree: Tree): void {
       if (ciTargetName) vitestPluginOptions.ciTargetName = ciTargetName;
       if (ciGroupName) vitestPluginOptions.ciGroupName = ciGroupName;
 
-      const vitestPlugin: (typeof vitestPluginsToAdd)[0] = {
-        plugin: '@nx/vitest',
-      };
+      const vitestPlugin: PluginEntry = { plugin: '@nx/vitest' };
       if (Object.keys(vitestPluginOptions).length > 0) {
         vitestPlugin.options = vitestPluginOptions;
       }
@@ -128,8 +150,33 @@ function migratePluginConfigurations(tree: Tree): void {
     }
   }
 
-  if (!hasVitestPlugin && vitestPluginsToAdd.length > 0) {
-    newPlugins.push(...vitestPluginsToAdd);
+  for (const candidate of vitestPluginsToAdd) {
+    const key = scopeKey(candidate);
+    const existingIdx = newPlugins.findIndex((p) => {
+      if (typeof p === 'string') {
+        return p === '@nx/vitest' && !candidate.include && !candidate.exclude;
+      }
+      return p.plugin === '@nx/vitest' && scopeKey(p as PluginEntry) === key;
+    });
+
+    if (existingIdx !== -1) {
+      if (candidate.options) {
+        const existing = newPlugins[existingIdx];
+        if (typeof existing === 'string') {
+          newPlugins[existingIdx] = {
+            plugin: '@nx/vitest',
+            options: { ...candidate.options },
+          };
+        } else {
+          (existing as PluginEntry).options = {
+            ...candidate.options,
+            ...((existing as PluginEntry).options ?? {}),
+          };
+        }
+      }
+    } else {
+      newPlugins.push(candidate);
+    }
   }
 
   nxJson.plugins = newPlugins;
