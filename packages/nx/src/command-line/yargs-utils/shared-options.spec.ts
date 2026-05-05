@@ -335,6 +335,21 @@ describe('shared-options', () => {
 });
 
 describe('readParallelFromArgsAndEnv', () => {
+  let originalParallel: string;
+
+  beforeEach(() => {
+    originalParallel = process.env.NX_PARALLEL;
+    delete process.env.NX_PARALLEL;
+  });
+
+  afterEach(() => {
+    if (originalParallel === undefined) {
+      delete process.env.NX_PARALLEL;
+    } else {
+      process.env.NX_PARALLEL = originalParallel;
+    }
+  });
+
   it('default parallel should be 3', () => {
     const result = readParallelFromArgsAndEnv({ parallel: 'true' });
     expect(result).toEqual(3);

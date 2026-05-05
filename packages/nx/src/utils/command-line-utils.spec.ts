@@ -6,18 +6,26 @@ jest.mock('../project-graph/file-utils');
 describe('splitArgs', () => {
   let originalBase: string;
   let originalHead: string;
+  let originalParallel: string;
 
   beforeEach(() => {
     originalBase = process.env.NX_BASE;
     originalHead = process.env.NX_HEAD;
+    originalParallel = process.env.NX_PARALLEL;
 
     delete process.env.NX_BASE;
     delete process.env.NX_HEAD;
+    delete process.env.NX_PARALLEL;
   });
 
   afterEach(() => {
     process.env.NX_BASE = originalBase;
     process.env.NX_HEAD = originalHead;
+    if (originalParallel === undefined) {
+      delete process.env.NX_PARALLEL;
+    } else {
+      process.env.NX_PARALLEL = originalParallel;
+    }
   });
 
   it('should split nx specific arguments into nxArgs', () => {
