@@ -7,26 +7,46 @@ describe('splitArgs', () => {
   let originalBase: string;
   let originalHead: string;
   let originalParallel: string;
+  let originalSkipNxCache: string;
+  let originalDisableNxCache: string;
+  let originalSkipRemoteCache: string;
+  let originalDisableRemoteCache: string;
 
   beforeEach(() => {
     originalBase = process.env.NX_BASE;
     originalHead = process.env.NX_HEAD;
     originalParallel = process.env.NX_PARALLEL;
+    originalSkipNxCache = process.env.NX_SKIP_NX_CACHE;
+    originalDisableNxCache = process.env.NX_DISABLE_NX_CACHE;
+    originalSkipRemoteCache = process.env.NX_SKIP_REMOTE_CACHE;
+    originalDisableRemoteCache = process.env.NX_DISABLE_REMOTE_CACHE;
 
     delete process.env.NX_BASE;
     delete process.env.NX_HEAD;
     delete process.env.NX_PARALLEL;
+    delete process.env.NX_SKIP_NX_CACHE;
+    delete process.env.NX_DISABLE_NX_CACHE;
+    delete process.env.NX_SKIP_REMOTE_CACHE;
+    delete process.env.NX_DISABLE_REMOTE_CACHE;
   });
 
   afterEach(() => {
-    process.env.NX_BASE = originalBase;
-    process.env.NX_HEAD = originalHead;
-    if (originalParallel === undefined) {
-      delete process.env.NX_PARALLEL;
-    } else {
-      process.env.NX_PARALLEL = originalParallel;
-    }
+    restoreEnv('NX_BASE', originalBase);
+    restoreEnv('NX_HEAD', originalHead);
+    restoreEnv('NX_PARALLEL', originalParallel);
+    restoreEnv('NX_SKIP_NX_CACHE', originalSkipNxCache);
+    restoreEnv('NX_DISABLE_NX_CACHE', originalDisableNxCache);
+    restoreEnv('NX_SKIP_REMOTE_CACHE', originalSkipRemoteCache);
+    restoreEnv('NX_DISABLE_REMOTE_CACHE', originalDisableRemoteCache);
   });
+
+  function restoreEnv(key: string, value: string | undefined) {
+    if (value === undefined) {
+      delete process.env[key];
+    } else {
+      process.env[key] = value;
+    }
+  }
 
   it('should split nx specific arguments into nxArgs', () => {
     expect(
