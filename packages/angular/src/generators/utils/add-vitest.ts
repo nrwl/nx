@@ -9,10 +9,13 @@ import {
   readProjectConfiguration,
   type Tree,
   updateJson,
-  updateNxJson,
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
+import {
+  normalizeTargetDefaults,
+  upsertTargetDefault,
+} from '@nx/devkit/internal';
 import { readModulePackageJson } from 'nx/src/devkit-internals';
 import { intersects, satisfies, valid, validRange } from 'semver';
 import { nxVersion, oxcProjectRuntimeVersion } from '../../utils/versions';
@@ -54,15 +57,23 @@ export async function addVitestAngular(
   updateProjectConfiguration(tree, options.name, project);
 
   const nxJson = readNxJson(tree);
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults[executor] ??= {
-    cache: true,
-    inputs:
-      nxJson.namedInputs && 'production' in nxJson.namedInputs
-        ? ['default', '^production']
-        : ['default', '^default'],
-  };
-  updateNxJson(tree, nxJson);
+  const existing = normalizeTargetDefaults(nxJson?.targetDefaults).find(
+    (entry) =>
+      entry.executor === executor &&
+      entry.target === undefined &&
+      entry.projects === undefined &&
+      entry.source === undefined
+  );
+  if (!existing) {
+    upsertTargetDefault(tree, {
+      executor,
+      cache: true,
+      inputs:
+        nxJson?.namedInputs && 'production' in nxJson.namedInputs
+          ? ['default', '^production']
+          : ['default', '^default'],
+    });
+  }
 
   configureTypeScriptForVitest(tree, options.projectRoot);
   addVitestScreenshotsToGitIgnore(tree);

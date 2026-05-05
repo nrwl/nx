@@ -104,16 +104,21 @@ export abstract class Migrator {
     }
 
     const nxJson = readNxJson(this.tree);
-    for (const target of targetNames) {
+    for (const name of targetNames) {
+      // `name` may be a target name (e.g. `build`) or a builder/executor
+      // identifier (e.g. `@nx/eslint:lint`). Route to the matching match
+      // field so the entry is honest about how it'll be matched.
+      const isExecutor = name.includes(':');
+      const filter = isExecutor ? { executor: name } : { target: name };
       const existing = normalizeTargetDefaults(nxJson?.targetDefaults).find(
         (e) =>
-          e.target === target &&
-          e.executor === undefined &&
+          (isExecutor ? e.executor === name : e.target === name) &&
+          (isExecutor ? e.target === undefined : e.executor === undefined) &&
           e.projects === undefined &&
           e.source === undefined
       );
       upsertTargetDefault(this.tree, {
-        target,
+        ...filter,
         cache: existing?.cache ?? true,
       });
     }
