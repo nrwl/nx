@@ -1,5 +1,5 @@
 import { names, type TargetConfiguration, type Tree } from '@nx/devkit';
-import type { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
+import type { AggregatedLog } from '@nx/devkit/internal';
 
 export function processTestOptions(
   _tree: Tree,
@@ -34,12 +34,15 @@ export function processTestOptions(
   }
 
   if ('buildTarget' in options) {
-    migrationLogs.addLog({
-      project: projectName,
-      executorName: '@nx/expo:test',
-      log: 'Unable to migrate `buildTarget` for Detox test. Use "nx run <project>:run-ios" or "nx run <project>:run-android", and pass "--reuse" option when running tests.',
-    });
+    const value = options.buildTarget;
     delete options.buildTarget;
+
+    if (target && typeof value === 'string' && value.length > 0) {
+      target.dependsOn ??= [];
+      if (!target.dependsOn.includes(value)) {
+        target.dependsOn.push(value);
+      }
+    }
   }
 
   const deprecatedOptions = [
@@ -52,7 +55,7 @@ export function processTestOptions(
     if (!(key in options)) continue;
     migrationLogs.addLog({
       project: projectName,
-      executorName: '@nx/expo:test',
+      executorName: '@nx/detox:test',
       log: `Option "${key}" is not migrated since it was removed in Detox 20.`,
     });
     delete options[key];

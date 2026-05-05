@@ -1,6 +1,32 @@
 ---
-import { type YouTubeProps, YouTube as Default } from '@nx/nx-dev-ui-common/src/lib/youtube.component'
+import {
+  type YouTubeProps,
+  YouTube as Default,
+} from '@nx/nx-dev-ui-common/src/lib/youtube.component';
 type Props = YouTubeProps;
 ---
 
-<Default {...Astro.props} />
+<youtube-jsapi>
+  <Default {...Astro.props} />
+</youtube-jsapi>
+
+<script>
+  // Patch iframe src with enablejsapi=1 so GA4 enhanced measurement
+  // (video_start, video_progress, video_complete) can hook into the player.
+  class YouTubeJsapiElement extends HTMLElement {
+    connectedCallback() {
+      const iframe = this.querySelector('iframe');
+      if (!(iframe instanceof HTMLIFrameElement)) return;
+      try {
+        const url = new URL(iframe.src);
+        if (url.searchParams.get('enablejsapi') === '1') return;
+        url.searchParams.set('enablejsapi', '1');
+        iframe.src = url.toString();
+      } catch {
+        // Ignore malformed URLs.
+      }
+    }
+  }
+
+  customElements.define('youtube-jsapi', YouTubeJsapiElement);
+</script>

@@ -1,5 +1,5 @@
 import { formatFiles, readNxJson, type Tree, updateNxJson } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import type { WebpackExecutorOptions } from '@nx/webpack';
 
 export default async function (tree: Tree) {

@@ -1,3 +1,4 @@
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import {
   formatFiles,
   type ProjectConfiguration,
@@ -8,7 +9,6 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import type { CypressExecutorOptions } from '../../executors/cypress/cypress.impl';
 
 const EXECUTOR_TO_MIGRATE = '@nx/cypress:cypress';

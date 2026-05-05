@@ -4,6 +4,20 @@ jest.mock('fs', () => ({
 }));
 jest.mock('../../../utils/fileutils');
 
+// Fixtures below reference `@nx/devkit` as a graph external node.
+// `recursivelyCollectPeerDependencies` then runs
+// `require('@nx/devkit/package.json')` to discover peer deps, which resolves
+// to the real `packages/devkit/package.json` via this monorepo's pnpm
+// symlinks and shows up as a sandbox-violating cross-project read. Stub it
+// with the only field this code path consumes — `peerDependencies` —
+// preserving the assertion that `nx` is collected as a transitive peer dep
+// of `@nx/devkit`.
+jest.mock(
+  '@nx/devkit/package.json',
+  () => ({ peerDependencies: { nx: '*' } }),
+  { virtual: true }
+);
+
 import * as fs from 'fs';
 import * as configModule from '../../../config/configuration';
 import {

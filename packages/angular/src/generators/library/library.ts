@@ -1,3 +1,4 @@
+import { logShowProjectCommand } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -7,7 +8,6 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { releaseTasks } from '@nx/js/src/generators/library/utils/add-release-config';
 import init from '../../generators/init/init';

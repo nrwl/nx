@@ -581,26 +581,66 @@ export interface Target {
   parallelism?: boolean
 }
 
+/** A representation of the invocation of an Executor */
 export interface Task {
+  /** Unique ID */
   id: string
+  /** Details about which project, target, and configuration to run. */
   target: TaskTarget
+  /** Overrides for the configured options of the target */
+  overrides: Record<string, unknown>
+  /** The outputs the task may produce */
   outputs: Array<string>
+  /** Root of the project the task belongs to */
   projectRoot?: string
+  /** Hash of the task which is used for caching. */
+  hash?: string
+  /** Details about the composition of the hash */
+  hashDetails?: TaskHashDetails
+  /** Unix timestamp of when a Batch Task starts */
   startTime?: number
+  /** Unix timestamp of when a Batch Task ends */
   endTime?: number
+  /** Determines if a given task should be cacheable. */
+  cache?: boolean
+  /** Determines if a given task should be parallelizable. */
+  parallelism?: boolean
+  /** This denotes if the task runs continuously */
   continuous?: boolean
 }
 
+/** Graph of Tasks to be executed */
 export interface TaskGraph {
+  /** IDs of Tasks which do not have any dependencies and are thus ready to execute immediately */
   roots: Array<string>
+  /** Map of Task IDs to Tasks */
   tasks: Record<string, Task>
+  /** Map of Task IDs to IDs of tasks which the task depends on */
   dependencies: Record<string, Array<string>>
   continuousDependencies: Record<string, Array<string>>
 }
 
+/** Details about the composition of a task's hash */
+export interface TaskHashDetails {
+  /** Command of the task */
+  command: string
+  /** Hashes of inputs used in the hash */
+  nodes: Record<string, string>
+  /** Hashes of implicit dependencies which are included in the hash */
+  implicitDeps?: Record<string, string>
+  /** Hash of the runtime environment which the task was executed */
+  runtime?: Record<string, string>
+}
+
+/**
+ * The result of a completed Task.
+ *
+ * Task timing information (start and end timestamps) is available
+ * on the Task object itself via `Task.startTime` and `Task.endTime`.
+ */
 export interface TaskResult {
   task: Task
-  status: string
+  status: 'success' | 'failure' | 'skipped' | 'stopped' | 'local-cache-kept-existing' | 'local-cache' | 'remote-cache'
   code: number
   terminalOutput?: string
 }
@@ -627,8 +667,11 @@ export declare const enum TaskStatus {
 }
 
 export interface TaskTarget {
+  /** The project for which the task belongs to */
   project: string
+  /** The target name which the task should invoke */
   target: string
+  /** The configuration of the target which the task invokes */
   configuration?: string
 }
 

@@ -2,6 +2,7 @@ import {
   cleanupProject,
   killPorts,
   newProject,
+  reservePort,
   runCLI,
   runE2ETests,
   uniq,
@@ -34,7 +35,7 @@ describe('Vue Plugin', () => {
     );
 
     if (runE2ETests('playwright')) {
-      const availablePort = await getAvailablePort();
+      const availablePort = await reservePort();
 
       updateFile(`${app}-e2e/playwright.config.ts`, (content) => {
         return content
@@ -76,7 +77,7 @@ describe('Vue Plugin', () => {
     );
 
     if (runE2ETests('playwright')) {
-      const availablePort = await getAvailablePort();
+      const availablePort = await reservePort();
 
       updateFile(`${app}-e2e/playwright.config.ts`, (content) => {
         return content
@@ -115,25 +116,3 @@ describe('Vue Plugin', () => {
     );
   });
 });
-
-async function getAvailablePort(): Promise<number> {
-  const net = require('net');
-
-  return new Promise((resolve, reject) => {
-    const server = net.createServer();
-    server.unref();
-    server.on('error', reject);
-
-    server.listen(0, () => {
-      const addressInfo = server.address();
-      if (!addressInfo) {
-        reject(new Error('Failed to get server address'));
-        return;
-      }
-      const port = addressInfo.port;
-      server.close(() => {
-        resolve(port);
-      });
-    });
-  });
-}

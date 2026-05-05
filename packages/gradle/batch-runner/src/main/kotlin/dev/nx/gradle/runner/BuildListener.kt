@@ -18,10 +18,19 @@ fun normalizeTaskPath(taskPath: String): String = taskPath.trimStart(':')
 fun buildListener(
     tasks: Map<String, GradleTask>,
     taskStartTimes: MutableMap<String, Long>,
-    taskResults: MutableMap<String, TaskResult>
+    taskResults: MutableMap<String, TaskResult>,
+    pendingEmit: MutableMap<String, String>,
+    capture: TaskOutputCapture,
+    emitForTaskPath: (taskPath: String, output: String) -> Unit
 ): (ProgressEvent) -> Unit = { event ->
   when (event) {
     is TaskStartEvent -> {
+      // Listener thread leads the writer thread; retry parked emits whose bytes have now landed.
+      pendingEmit.keys.toList().forEach { parked ->
+        val captured = capture.getOutput(parked)
+        if (captured.isNotEmpty()) emitForTaskPath(parked, captured)
+      }
+
       val taskPath = event.descriptor.taskPath
       tasks.entries
           .find { normalizeTaskPath(it.value.taskName) == normalizeTaskPath(taskPath) }
@@ -42,6 +51,7 @@ fun buildListener(
             val endTime = event.result.endTime
             val startTime = taskStartTimes[nxTaskId] ?: event.result.startTime
             taskResults[nxTaskId] = TaskResult(success, startTime, endTime, "")
+            pendingEmit[taskPath] = nxTaskId
           }
     }
   }

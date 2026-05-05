@@ -1,5 +1,5 @@
 import { workspaceRoot, type ExecutorContext } from '@nx/devkit';
-import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
+import { createAsyncIterable } from '@nx/devkit/internal';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { fork } from 'node:child_process';
 import { join } from 'node:path';

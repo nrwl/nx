@@ -14,6 +14,7 @@ import {
 } from './get-targets';
 import { NormalizedSchema } from './normalize-options';
 import type { PackageJson } from 'nx/src/utils/package-json';
+import { warnDetoxExecutorsScaffolding } from '../../../utils/deprecation';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const nxJson = readNxJson(host);
@@ -22,6 +23,10 @@ export function addProject(host: Tree, options: NormalizedSchema) {
       ? p === '@nx/detox/plugin'
       : p.plugin === '@nx/detox/plugin'
   );
+
+  if (!hasPlugin) {
+    warnDetoxExecutorsScaffolding();
+  }
 
   const packageJson: PackageJson = {
     name: options.importPath,

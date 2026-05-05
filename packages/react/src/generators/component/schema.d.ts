@@ -1,4 +1,4 @@
-import type { FileExtensionType } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import type { FileExtensionType } from '@nx/devkit/internal';
 import { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {

@@ -18,6 +18,7 @@ import {
 } from '@nx/devkit';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { coerce, major } from 'semver';
+import { warnCypressExecutorScaffolding } from '../../utils/deprecation';
 import {
   getInstalledCypressMajorVersion,
   versions,
@@ -85,6 +86,7 @@ export async function componentConfigurationGeneratorInternal(
 
   addProjectFiles(tree, projectConfig, opts);
   if (!hasPlugin || opts.addExplicitTargets) {
+    warnCypressExecutorScaffolding();
     addTargetToProject(tree, projectConfig, opts);
   }
   updateNxJsonConfiguration(tree, hasPlugin);
