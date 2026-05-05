@@ -22,6 +22,7 @@ describe('Web Components Applications with bundler set as vite', () => {
         '@nx/vitest',
         '@nx/eslint',
         '@nx/cypress',
+        '@nx/playwright',
       ],
     })
   );

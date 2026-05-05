@@ -28,7 +28,13 @@ describe('Node Applications', () => {
   beforeAll(() => {
     originalEnvPort = process.env.PORT;
     workspaceName = newProject({
-      packages: ['@nx/node', '@nx/express', '@nx/nest', '@nx/webpack'],
+      packages: [
+        '@nx/node',
+        '@nx/express',
+        '@nx/nest',
+        '@nx/webpack',
+        '@nx/jest',
+      ],
       preset: 'ts',
     });
   });

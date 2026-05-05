@@ -29,6 +29,7 @@ describe('Web Components Applications', () => {
         '@nx/vitest',
         '@nx/eslint',
         '@nx/cypress',
+        '@nx/playwright',
       ],
     })
   );
@@ -254,7 +255,15 @@ describe('Web Components Applications', () => {
 
 describe('CLI - Environment Variables', () => {
   it('should automatically load workspace and per-project environment variables', async () => {
-    newProject();
+    newProject({
+      packages: [
+        '@nx/web',
+        '@nx/webpack',
+        '@nx/vitest',
+        '@nx/eslint',
+        '@nx/playwright',
+      ],
+    });
 
     const appName = uniq('app');
     //test if the Nx CLI loads root .env vars
@@ -355,7 +364,17 @@ describe('CLI - Environment Variables', () => {
 });
 
 describe('index.html interpolation', () => {
-  beforeAll(() => newProject());
+  beforeAll(() =>
+    newProject({
+      packages: [
+        '@nx/web',
+        '@nx/webpack',
+        '@nx/vitest',
+        '@nx/eslint',
+        '@nx/playwright',
+      ],
+    })
+  );
   afterAll(() => cleanupProject());
 
   test('should interpolate environment variables', async () => {

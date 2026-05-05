@@ -15,7 +15,7 @@ describe('file-server', () => {
   beforeAll(() => {
     newProject({
       name: uniq('fileserver'),
-      packages: ['@nx/web', '@nx/webpack'],
+      packages: ['@nx/web', '@nx/webpack', '@nx/jest', '@nx/playwright'],
     });
   });
 

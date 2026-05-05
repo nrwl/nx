@@ -21,7 +21,7 @@ import { readdir, stat } from 'fs/promises';
 import { join } from 'path';
 
 describe('cache', () => {
-  beforeEach(() => newProject({ packages: ['@nx/web', '@nx/js'] }));
+  beforeEach(() => newProject({ packages: ['@nx/web', '@nx/js', '@nx/jest'] }));
 
   afterEach(() => cleanupProject());
 

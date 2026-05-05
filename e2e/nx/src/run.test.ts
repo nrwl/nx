@@ -24,7 +24,15 @@ describe('Nx Running Tests', () => {
   beforeAll(
     () =>
       (proj = newProject({
-        packages: ['@nx/js', '@nx/node', '@nx/vite', '@nx/vitest', '@nx/web'],
+        packages: [
+          '@nx/js',
+          '@nx/node',
+          '@nx/vite',
+          '@nx/vitest',
+          '@nx/web',
+          '@nx/jest',
+          '@nx/playwright',
+        ],
       }))
   );
   afterAll(() => cleanupProject());
@@ -846,7 +854,15 @@ describe('Nx Running Tests', () => {
   describe('run-many', () => {
     it('should build specific and all projects', () => {
       // This is required to ensure the numbers used in the assertions make sense for this test
-      const proj = newProject({ packages: ['@nx/js', '@nx/node', '@nx/web'] });
+      const proj = newProject({
+        packages: [
+          '@nx/js',
+          '@nx/node',
+          '@nx/web',
+          '@nx/jest',
+          '@nx/playwright',
+        ],
+      });
       const appA = uniq('appa-rand');
       const libA = uniq('liba-rand');
       const libB = uniq('libb-rand');
