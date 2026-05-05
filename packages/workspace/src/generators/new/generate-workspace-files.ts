@@ -335,12 +335,16 @@ async function createReadme(
   });
 }
 
-// ensure that pnpm install add all the missing peer deps
-
+// pnpm 11 requires allowBuilds for packages with postinstall scripts;
+// onlyBuiltDependencies is the pnpm 10 equivalent (unknown keys are ignored).
 function addPnpmSettings(tree: Tree, options: NormalizedSchema) {
   tree.write(
     join(options.directory, 'pnpm-workspace.yaml'),
     `autoInstallPeers: true
+allowBuilds:
+  nx: true
+onlyBuiltDependencies:
+  - nx
 `
   );
 }
