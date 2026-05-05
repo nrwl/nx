@@ -23,6 +23,6 @@ export function warnNextServerExecutorDeprecation(): void {
 // than only when the user later runs the generated targets.
 export function warnNextExecutorScaffolding(): void {
   logger.warn(
-    'Scaffolding targets that use the deprecated `@nx/next:build` and `@nx/next:server` executors. These executors will be removed in Nx v24. Run `nx g @nx/next:convert-to-inferred` after this scaffold to migrate these targets to the `@nx/next/plugin` inferred plugin and stop emitting executor targets on future scaffolds. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
+    'Generating targets that use the deprecated `@nx/next:build` and `@nx/next:server` executors. These executors will be removed in Nx v24. Run `nx g @nx/next:convert-to-inferred` next to migrate these targets to the `@nx/next/plugin` inferred plugin and prevent future generators from emitting executor targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
   );
 }

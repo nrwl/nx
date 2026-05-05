@@ -17,6 +17,6 @@ export function warnDetoxExecutorsDeprecation(): void {
 // the generated targets.
 export function warnDetoxExecutorsScaffolding(): void {
   logger.warn(
-    'Scaffolding `build-ios`, `test-ios`, `build-android`, and `test-android` targets that use the deprecated `@nx/detox:build` and `@nx/detox:test` executors. These executors will be removed in Nx v24. Run `nx g @nx/detox:convert-to-inferred` after this scaffold to migrate the generated targets to the `@nx/detox/plugin` inferred plugin. To skip emitting executor targets entirely on future scaffolds, register `@nx/detox/plugin` in `nx.json` first (`nx add @nx/detox` or a manual plugin entry). See https://nx.dev/docs/technologies/test-tools/detox/introduction for details.'
+    'Generating `build-ios`, `test-ios`, `build-android`, and `test-android` targets that use the deprecated `@nx/detox:build` and `@nx/detox:test` executors. These executors will be removed in Nx v24. Run `nx g @nx/detox:convert-to-inferred` next to migrate these targets to the `@nx/detox/plugin` inferred plugin and prevent future generators from emitting executor targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
   );
 }

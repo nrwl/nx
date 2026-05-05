@@ -31,6 +31,6 @@ export function warnVitePreviewServerExecutorDeprecation(): void {
 // rather than only when the user later runs the generated targets.
 export function warnViteExecutorScaffolding(): void {
   logger.warn(
-    'Scaffolding targets that use the deprecated `@nx/vite:build`, `@nx/vite:dev-server`, and `@nx/vite:preview-server` executors. These executors will be removed in Nx v24. Run `nx g @nx/vite:convert-to-inferred` after this scaffold to migrate the generated targets to the `@nx/vite/plugin` inferred plugin. To skip emitting executor targets entirely on future scaffolds, register `@nx/vite/plugin` in `nx.json` first (`nx add @nx/vite` or a manual plugin entry). See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
+    'Generating targets that use the deprecated `@nx/vite:build`, `@nx/vite:dev-server`, and `@nx/vite:preview-server` executors. These executors will be removed in Nx v24. Run `nx g @nx/vite:convert-to-inferred` next to migrate these targets to the `@nx/vite/plugin` inferred plugin and prevent future generators from emitting executor targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
   );
 }

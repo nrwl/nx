@@ -15,6 +15,6 @@ export function warnRollupExecutorDeprecation(): void {
 // rather than only when the user later runs the generated target.
 export function warnRollupExecutorScaffolding(): void {
   logger.warn(
-    'Scaffolding a target that uses the deprecated `@nx/rollup:rollup` executor. The executor will be removed in Nx v24. Run `nx g @nx/rollup:convert-to-inferred` after this scaffold to migrate the generated target to the `@nx/rollup/plugin` inferred plugin. To skip emitting executor targets entirely on future scaffolds, register `@nx/rollup/plugin` in `nx.json` first (`nx add @nx/rollup` or a manual plugin entry). See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
+    'Generating a target that uses the deprecated `@nx/rollup:rollup` executor. The executor will be removed in Nx v24. Run `nx g @nx/rollup:convert-to-inferred` next to migrate this target to the `@nx/rollup/plugin` inferred plugin and prevent future generators from emitting executor targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
   );
 }
