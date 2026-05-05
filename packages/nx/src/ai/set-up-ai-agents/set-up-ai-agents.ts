@@ -237,27 +237,46 @@ export async function setupAiAgentsGeneratorImpl(
     updateJson(tree, geminiSettingsPath, (json) =>
       mcpConfigUpdater(json, nxVersion)
     );
-
-    const contextFileName: string | undefined = readJson(
-      tree,
-      geminiSettingsPath
-    ).contextFileName;
+    const geminiSettings = readJson(tree, geminiSettingsPath);
+    const contextFileName: string | string[] | undefined =
+      geminiSettings.context?.fileName ?? geminiSettings.contextFileName;
 
     const geminiMd = geminiMdPath(options.directory);
 
-    // Only set contextFileName to AGENTS.md if GEMINI.md doesn't exist already to preserve existing setups
+    // Only set context.fileName to AGENTS.md if GEMINI.md doesn't exist already to preserve existing setups
     if (!contextFileName && !tree.exists(geminiMd)) {
       writeAgentRules(tree, agentsMd, options.writeNxCloudRules);
-      updateJson(tree, geminiSettingsPath, (json) => ({
-        ...json,
-        contextFileName: 'AGENTS.md',
-      }));
+      updateJson(tree, geminiSettingsPath, (json) => {
+        const { contextFileName, ...rest } = json;
+        return {
+          ...rest,
+          context: {
+            ...rest.context,
+            fileName: 'AGENTS.md',
+          },
+        };
+      });
     } else {
-      writeAgentRules(
-        tree,
-        contextFileName ?? geminiMd,
-        options.writeNxCloudRules
-      );
+      // Migrate legacy contextFileName to the new nested structure only if it exists
+      if (geminiSettings.contextFileName) {
+        updateJson(tree, geminiSettingsPath, (json) => {
+          const { contextFileName, ...rest } = json;
+          return {
+            ...rest,
+            context: {
+              ...rest.context,
+              // prefer already-set context.fileName over legacy key
+              fileName: rest.context?.fileName ?? contextFileName,
+            },
+          };
+        });
+      }
+
+      const primaryContextFile =
+        (Array.isArray(contextFileName)
+          ? contextFileName[0]
+          : contextFileName) ?? geminiMd;
+      writeAgentRules(tree, primaryContextFile, options.writeNxCloudRules);
     }
   }
 

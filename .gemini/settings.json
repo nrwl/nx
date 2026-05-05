@@ -6,5 +6,7 @@
       "args": ["nx", "mcp"]
     }
   },
-  "contextFileName": "AGENTS.md"
+  "context": {
+    "fileName": "AGENTS.md"
+  }
 }

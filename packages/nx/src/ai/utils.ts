@@ -132,11 +132,18 @@ async function getAgentConfiguration(
       let mcpConfigured: boolean;
 
       const geminiSettings = parseGeminiSettings(workspaceRoot);
-      const customContextFilePath: string | undefined =
-        typeof geminiSettings?.contextFileName === 'string'
-          ? geminiSettings.contextFileName
-          : undefined;
+      const rawFileName =
+        geminiSettings?.context?.fileName ?? geminiSettings?.contextFileName;
 
+      const customContextFilePath: string | undefined = Array.isArray(
+        rawFileName
+      )
+        ? typeof rawFileName[0] === 'string'
+          ? rawFileName[0]
+          : undefined
+        : typeof rawFileName === 'string'
+          ? rawFileName
+          : undefined;
       const customContextFilePathExists = customContextFilePath
         ? existsSync(resolve(workspaceRoot, customContextFilePath))
         : false;

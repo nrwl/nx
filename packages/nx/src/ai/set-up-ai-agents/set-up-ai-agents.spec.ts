@@ -539,7 +539,7 @@ describe('setup-ai-agents generator', () => {
         });
       });
 
-      it('should NOT set contextFileName to AGENTS.md when GEMINI.md already exists', async () => {
+      it('should NOT set context.fileName to AGENTS.md when GEMINI.md already exists', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
         };
@@ -571,8 +571,9 @@ describe('setup-ai-agents generator', () => {
         const config = JSON.parse(
           tree.read('.gemini/settings.json')?.toString() ?? '{}'
         );
-        // Should preserve the existing contextFileName
-        expect(config.contextFileName).toBe('GEMINI.md');
+        // Should migrate the existing contextFileName to the new structure
+        expect(config.context?.fileName).toBe('GEMINI.md');
+        expect(config.contextFileName).toBeUndefined();
         // Should still add nx-mcp server
         expect(config.mcpServers['nx-mcp']).toEqual({
           type: 'stdio',
@@ -581,7 +582,7 @@ describe('setup-ai-agents generator', () => {
         });
       });
 
-      it('should set contextFileName to AGENTS.md when GEMINI.md does NOT exist', async () => {
+      it('should set context.fileName to AGENTS.md when GEMINI.md does NOT exist', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
         };
@@ -591,8 +592,8 @@ describe('setup-ai-agents generator', () => {
         const config = JSON.parse(
           tree.read('.gemini/settings.json')?.toString() ?? '{}'
         );
-        // Should set contextFileName to AGENTS.md when GEMINI.md doesn't exist
-        expect(config.contextFileName).toBe('AGENTS.md');
+        // Should set context.fileName to AGENTS.md when GEMINI.md doesn't exist
+        expect(config.context?.fileName).toBe('AGENTS.md');
         expect(config.mcpServers['nx-mcp']).toEqual({
           type: 'stdio',
           command: 'npx',
@@ -600,7 +601,7 @@ describe('setup-ai-agents generator', () => {
         });
       });
 
-      it('should respect existing contextFileName for rule generation', async () => {
+      it('should respect existing context.fileName for rule generation', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
           agents: ['gemini'],
@@ -610,7 +611,9 @@ describe('setup-ai-agents generator', () => {
         tree.write(
           '.gemini/settings.json',
           JSON.stringify({
-            contextFileName: 'CUSTOM-GEMINI.md',
+            context: {
+              fileName: 'CUSTOM-GEMINI.md',
+            },
           })
         );
 
@@ -618,9 +621,80 @@ describe('setup-ai-agents generator', () => {
 
         const configAfter = readJson(tree, '.gemini/settings.json');
 
-        expect(configAfter.contextFileName).toBe('CUSTOM-GEMINI.md');
+        expect(configAfter.context?.fileName).toBe('CUSTOM-GEMINI.md');
         const content = tree.read('CUSTOM-GEMINI.md')?.toString();
         expect(content).toContain('Custom Gemini configuration');
+        expect(content).toContain('Nx');
+      });
+
+      it('should migrate contextFileName even if GEMINI.md does not exist', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+        };
+
+        tree.write(
+          '.gemini/settings.json',
+          JSON.stringify({
+            contextFileName: 'LEGACY.md',
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = readJson(tree, '.gemini/settings.json');
+        expect(config.context?.fileName).toBe('LEGACY.md');
+        expect(config.contextFileName).toBeUndefined();
+        expect(tree.exists('LEGACY.md')).toBe(true);
+      });
+
+      it('should prefer nested context.fileName over legacy contextFileName during migration', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+        };
+
+        tree.write(
+          '.gemini/settings.json',
+          JSON.stringify({
+            contextFileName: 'OLD.md',
+            context: {
+              fileName: 'NEW.md',
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = readJson(tree, '.gemini/settings.json');
+        expect(config.context?.fileName).toBe('NEW.md');
+        expect(config.contextFileName).toBeUndefined();
+      });
+
+      it('should handle context.fileName as string[] and pick the first one for rules', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['gemini'],
+        };
+
+        tree.write(
+          '.gemini/settings.json',
+          JSON.stringify({
+            context: {
+              fileName: ['PRIMARY.md', 'SECONDARY.md'],
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = readJson(tree, '.gemini/settings.json');
+        expect(config.context?.fileName).toEqual([
+          'PRIMARY.md',
+          'SECONDARY.md',
+        ]);
+
+        // Rules should be written to the primary (first) file
+        expect(tree.exists('PRIMARY.md')).toBe(true);
+        const content = tree.read('PRIMARY.md')?.toString();
         expect(content).toContain('Nx');
       });
 
