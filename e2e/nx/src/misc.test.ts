@@ -34,7 +34,9 @@ describe('Nx Commands', () => {
       packages: [
         '@nx/angular',
         '@nx/eslint',
+        '@nx/jest',
         '@nx/next',
+        '@nx/playwright',
         '@nx/vite',
         '@nx/vitest',
         '@nx/web',
