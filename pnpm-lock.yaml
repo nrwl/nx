@@ -108,8 +108,8 @@ catalogs:
       specifier: ~2.3.6
       version: 2.3.6
     minimatch:
-      specifier: 10.2.4
-      version: 10.2.4
+      specifier: 10.2.5
+      version: 10.2.5
     picocolors:
       specifier: ^1.1.0
       version: 1.1.1
@@ -1114,7 +1114,7 @@ importers:
         version: 2.4.7(webpack@5.101.3)
       minimatch:
         specifier: 'catalog:'
-        version: 10.2.4
+        version: 10.2.5
       next-sitemap:
         specifier: ^3.1.10
         version: 3.1.55(@next/env@14.2.35)(next@14.2.35(@babel/core@7.26.10)(@opentelemetry/api@1.9.0)(@playwright/test@1.54.0)(babel-plugin-macros@3.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.97.2))
@@ -2642,7 +2642,7 @@ importers:
         version: 2.3.6
       minimatch:
         specifier: 'catalog:'
-        version: 10.2.4
+        version: 10.2.5
       semver:
         specifier: 'catalog:'
         version: 7.7.4
@@ -2930,7 +2930,7 @@ importers:
         version: 30.2.0
       minimatch:
         specifier: 'catalog:'
-        version: 10.2.4
+        version: 10.2.5
       picocolors:
         specifier: 'catalog:'
         version: 1.1.1
@@ -3330,7 +3330,7 @@ importers:
         version: 2.0.3
       minimatch:
         specifier: 'catalog:'
-        version: 10.2.4
+        version: 10.2.5
       npm-run-path:
         specifier: ^4.0.1
         version: 4.0.1
@@ -3447,7 +3447,7 @@ importers:
         version: 1.54.0
       minimatch:
         specifier: 'catalog:'
-        version: 10.2.4
+        version: 10.2.5
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
@@ -3512,7 +3512,7 @@ importers:
         version: 3.0.5
       minimatch:
         specifier: 'catalog:'
-        version: 10.2.4
+        version: 10.2.5
       semver:
         specifier: 'catalog:'
         version: 7.7.4
@@ -3707,7 +3707,7 @@ importers:
         version: 1.1.8
       minimatch:
         specifier: 'catalog:'
-        version: 10.2.4
+        version: 10.2.5
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
@@ -14729,6 +14729,10 @@ packages:
     resolution: {integrity: sha512-Pdk8c9poy+YhOgVWw1JNN22/HcivgKWwpxKq04M/jTmHyCZn12WPJebZxdjSa5TmBqISrUSgNYU3eRORljfCCw==}
     engines: {node: 20 || >=22}
 
+  brace-expansion@5.0.5:
+    resolution: {integrity: sha512-VZznLgtwhn+Mact9tfiwx64fA9erHH/MCXEUfB/0bX/6Fz6ny5EGTXYltMocqg4xFAQZtnO3DHWWXi8RiuN7cQ==}
+    engines: {node: 18 || 20 || >=22}
+
   braces@3.0.3:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
@@ -20585,6 +20589,10 @@ packages:
 
   minimatch@10.2.4:
     resolution: {integrity: sha512-oRjTw/97aTBN0RHbYCdtF1MQfvusSIBQM0IZEgzl6426+8jSC0nF1a/GmnVLpfB9yyr6g6FTqWqiZVbxrtaCIg==}
+    engines: {node: 18 || 20 || >=22}
+
+  minimatch@10.2.5:
+    resolution: {integrity: sha512-MULkVLfKGYDFYejP07QOurDLLQpcjk7Fw+7jXS2R2czRQzR56yHRveU5NDJEOviH+hETZKSkIk5c+T23GjFUMg==}
     engines: {node: 18 || 20 || >=22}
 
   minimatch@3.1.2:
@@ -40106,7 +40114,7 @@ snapshots:
       '@typescript-eslint/types': 8.59.0
       '@typescript-eslint/visitor-keys': 8.59.0
       debug: 4.4.3(supports-color@8.1.1)
-      minimatch: 10.2.4
+      minimatch: 10.2.5
       semver: 7.7.4
       tinyglobby: 0.2.15
       ts-api-utils: 2.5.0(typescript@5.9.2)
@@ -42584,6 +42592,10 @@ snapshots:
       balanced-match: 1.0.2
 
   brace-expansion@5.0.2:
+    dependencies:
+      balanced-match: 4.0.3
+
+  brace-expansion@5.0.5:
     dependencies:
       balanced-match: 4.0.3
 
@@ -46509,7 +46521,7 @@ snapshots:
 
   glob@13.0.0:
     dependencies:
-      minimatch: 10.2.4
+      minimatch: 10.2.5
       minipass: 7.1.3
       path-scurry: 2.0.1
 
@@ -47374,7 +47386,7 @@ snapshots:
 
   ignore-walk@8.0.0:
     dependencies:
-      minimatch: 10.2.4
+      minimatch: 10.2.5
 
   ignore@5.3.2: {}
 
@@ -50579,6 +50591,10 @@ snapshots:
   minimatch@10.2.4:
     dependencies:
       brace-expansion: 5.0.2
+
+  minimatch@10.2.5:
+    dependencies:
+      brace-expansion: 5.0.5
 
   minimatch@3.1.2:
     dependencies:
