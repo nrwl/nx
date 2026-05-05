@@ -103,6 +103,10 @@ module.exports = withNx(
     );
   } else {
     // Legacy behavior, there is a target in project.json using rollup executor.
+    const { warnRollupExecutorScaffolding } = await import(
+      '@nx/rollup/src/utils/deprecation'
+    );
+    warnRollupExecutorScaffolding();
     const { targets } = readProjectConfiguration(host, options.name);
     targets.build = {
       executor: '@nx/rollup:rollup',

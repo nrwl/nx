@@ -5,6 +5,7 @@
   "description": "Packages a library for different web usages (ESM, CommonJS).",
   "cli": "nx",
   "type": "object",
+  "x-deprecated": "The `@nx/rollup:rollup` executor is deprecated and will be removed in Nx v24. Run `nx g @nx/rollup:convert-to-inferred` to migrate to the `@nx/rollup/plugin` inferred plugin. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.",
   "properties": {
     "project": {
       "type": "string",
