@@ -148,10 +148,10 @@ describe('Angular Projects - Buildable Libraries', () => {
         for (const target of targets) {
           if (
             !config.targetDefaults.some(
-              (e: { target?: string }) => e.target === target
+              (e: { executor?: string }) => e.executor === target
             )
           ) {
-            config.targetDefaults.push({ target, ...defaults });
+            config.targetDefaults.push({ executor: target, ...defaults });
           }
         }
       } else {
