@@ -190,9 +190,9 @@ export async function configurationGenerator(
 
   const willScaffoldExecutorTargets =
     !projectAlreadyHasRspackTargets.build ||
-    (options.framework !== 'none' || options.devServer) &&
+    ((options.framework !== 'none' || options.devServer) &&
       options.framework !== 'nest' &&
-      !projectAlreadyHasRspackTargets.serve;
+      !projectAlreadyHasRspackTargets.serve);
   if (willScaffoldExecutorTargets) {
     warnRspackExecutorScaffolding();
   }

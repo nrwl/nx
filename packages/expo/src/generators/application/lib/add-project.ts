@@ -10,12 +10,14 @@ import {
 } from '@nx/devkit';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
+import { warnExpoExecutorScaffolding } from '../../../utils/deprecation';
 import { NormalizedSchema } from './normalize-options';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const hasPlugin = hasExpoPlugin(host);
 
   if (!hasPlugin) {
+    warnExpoExecutorScaffolding();
     addBuildTargetDefaults(host, '@nx/expo:build');
   }
 
