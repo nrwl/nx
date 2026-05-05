@@ -230,7 +230,6 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
       'server',
     ];
   }
-  upsertTargetDefault(tree, { target: 'server', cache: true });
 
   generateFiles(tree, join(__dirname, 'files'), projectRoot, {
     tmpl: '',
@@ -260,6 +259,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
   }
 
   updateNxJson(tree, nxJson);
+  upsertTargetDefault(tree, { target: 'server', cache: true });
 
   const installTask = addDependenciesToPackageJson(
     tree,
