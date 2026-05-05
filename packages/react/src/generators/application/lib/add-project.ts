@@ -11,6 +11,7 @@ import {
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { maybeJs } from '../../../utils/maybe-js';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
+import { warnWebpackExecutorScaffolding } from '@nx/webpack/src/utils/deprecation';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
@@ -24,6 +25,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
 
   if (options.bundler === 'webpack') {
     if (!hasWebpackPlugin(host) || !options.addPlugin) {
+      warnWebpackExecutorScaffolding();
       project.targets = {
         build: createBuildTarget(options),
         serve: createServeTarget(options),

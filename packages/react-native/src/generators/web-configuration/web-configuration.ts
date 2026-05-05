@@ -6,6 +6,7 @@ import {
   generateFiles,
   GeneratorCallback,
   joinPathFragments,
+  logger,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -145,6 +146,12 @@ async function addBundlerConfiguration(
     }
 
     if (!hasWebpackPlugin(tree)) {
+      // Mirrors warnWebpackExecutorScaffolding from @nx/webpack/src/utils/deprecation.
+      // Inlined to avoid a cross-package import where react-native does not
+      // declare a TypeScript project reference to webpack.
+      logger.warn(
+        'Scaffolding targets that use the deprecated `@nx/webpack:webpack` and `@nx/webpack:dev-server` executors. These executors will be removed in Nx v24. Run `nx g @nx/webpack:convert-to-inferred` after this scaffold to migrate the generated targets to the `@nx/webpack/plugin` inferred plugin. To skip emitting executor targets entirely on future scaffolds, register `@nx/webpack/plugin` in `nx.json` first (`nx add @nx/webpack` or a manual plugin entry). See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
+      );
       const projectConfiguration = readProjectConfiguration(
         tree,
         normalizedSchema.project
