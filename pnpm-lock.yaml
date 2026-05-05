@@ -3637,7 +3637,7 @@ importers:
         version: link:../js
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
-        version: 6.1.4(typescript@5.9.2)
+        version: 6.2.0(typescript@5.9.2)
       '@rollup/plugin-babel':
         specifier: ^6.0.4
         version: 6.0.4(@babel/core@7.29.0)(@types/babel__core@7.20.5)(rollup@4.44.2)
