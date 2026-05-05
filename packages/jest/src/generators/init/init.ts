@@ -77,7 +77,7 @@ function addJestTargetDefaults(tree: Tree, presetExt: JestPresetExtension) {
   }
 
   if (Object.keys(patch).length > 0) {
-    upsertTargetDefault(tree, { target: '@nx/jest:jest', ...patch });
+    upsertTargetDefault(tree, { executor: '@nx/jest:jest', ...patch });
   }
 }
 
@@ -88,7 +88,7 @@ function findExistingJestDefault(
   if (Array.isArray(td)) {
     return td.find(
       (e) =>
-        e.target === '@nx/jest:jest' &&
+        e.executor === '@nx/jest:jest' &&
         e.projects === undefined &&
         e.source === undefined
     );
