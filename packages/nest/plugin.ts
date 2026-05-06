@@ -1,5 +1,5 @@
 export {
   createNodes,
   createNodesV2,
-  NestPluginOptions,
+  type NestPluginOptions,
 } from './src/plugins/plugin';
