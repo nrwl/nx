@@ -1,5 +1,5 @@
 import { runCLI } from 'jest';
-import { readConfig, readConfigs } from 'jest-config';
+import { readConfigs } from 'jest-config';
 import { utils as jestReporterUtils } from '@jest/reporters';
 import { addResult, makeEmptyAggregatedTestResult } from '@jest/test-result';
 import * as path from 'path';
@@ -61,14 +61,6 @@ export async function parseJestConfig(
   context: ExecutorContext,
   multiProjects = false
 ): Promise<Config.Argv> {
-  let jestConfig:
-    | {
-        transform: any;
-        globals: any;
-        setupFilesAfterEnv: any;
-      }
-    | undefined;
-
   // support passing extra args to jest cli supporting 3rd party plugins
   // like 'jest-runner-groups' --group arg
   const extraArgs = getExtraArgs(options, schema);
@@ -112,17 +104,6 @@ export async function parseJestConfig(
 
   if (!multiProjects) {
     options.jestConfig = path.resolve(context.root, options.jestConfig);
-
-    jestConfig = (await readConfig(config, options.jestConfig)).projectConfig;
-  }
-
-  // for backwards compatibility
-  if (options.setupFile && !multiProjects) {
-    const setupFilesAfterEnvSet = new Set([
-      ...(jestConfig.setupFilesAfterEnv ?? []),
-      path.resolve(context.root, options.setupFile),
-    ]);
-    config.setupFilesAfterEnv = Array.from(setupFilesAfterEnvSet);
   }
 
   if (options.testFile) {

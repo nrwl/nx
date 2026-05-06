@@ -27,7 +27,6 @@ describe('jestProject', () => {
   let tree: Tree;
   let defaultOptions: Omit<JestProjectSchema, 'project'> = {
     supportTsx: false,
-    skipSetupFile: false,
     skipSerializers: false,
     testEnvironment: 'jsdom',
     setupFile: 'none',
@@ -172,27 +171,6 @@ describe('jestProject', () => {
         ...defaultOptions,
         project: 'lib1',
         setupFile: 'none',
-      } as JestProjectSchema);
-      const tsConfig = readJson(tree, 'libs/lib1/tsconfig.spec.json');
-      expect(tsConfig.files).toBeUndefined();
-    });
-  });
-
-  describe('--skip-setup-file', () => {
-    it('should generate src/test-setup.ts', async () => {
-      await configurationGenerator(tree, {
-        ...defaultOptions,
-        project: 'lib1',
-        skipSetupFile: true,
-      } as JestProjectSchema);
-      expect(tree.exists('src/test-setup.ts')).toBeFalsy();
-    });
-
-    it('should not list the setup file in tsconfig.spec.json', async () => {
-      await configurationGenerator(tree, {
-        ...defaultOptions,
-        project: 'lib1',
-        skipSetupFile: true,
       } as JestProjectSchema);
       const tsConfig = readJson(tree, 'libs/lib1/tsconfig.spec.json');
       expect(tsConfig.files).toBeUndefined();
