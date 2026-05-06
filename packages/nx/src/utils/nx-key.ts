@@ -19,12 +19,15 @@ export function createNxKeyLicenseeInformation(nxKey: NxKey) {
 
 // `await handleImport` walks node_modules and pays ~25ms per miss; `resolve`
 // is just the filesystem lookup and is microseconds when the package is absent.
+// Only treat MODULE_NOT_FOUND as "not installed" so unrelated errors (permission,
+// corrupt package.json, etc.) still surface instead of being silently hidden.
 function packageInstalled(name: string): boolean {
   try {
     require.resolve(name, { paths: getNxRequirePaths() });
     return true;
-  } catch {
-    return false;
+  } catch (e: any) {
+    if (e?.code === 'MODULE_NOT_FOUND') return false;
+    throw e;
   }
 }
 
