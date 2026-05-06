@@ -247,21 +247,3 @@ export { cacheDir } from './utils/cache-directory';
 export { createProjectFileMapUsingProjectGraph } from './project-graph/file-map-utils';
 
 export { isDaemonEnabled } from './daemon/client/client';
-
-/**
- * @category Sandbox
- */
-export { HashPlanInspector } from './hasher/hash-plan-inspector';
-
-/**
- * @category Sandbox
- */
-export type {
-  SandboxViolationInput,
-  SandboxViolationResult,
-} from './hasher/verify-sandbox-violations';
-
-/**
- * @category Sandbox
- */
-export { verifySandboxViolations } from './hasher/verify-sandbox-violations';

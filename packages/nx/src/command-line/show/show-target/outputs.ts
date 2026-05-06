@@ -1,4 +1,7 @@
-import { getOutputsForTargetAndConfiguration } from '../../../tasks-runner/utils';
+import {
+  createTaskFileResolver,
+  type TaskFileResolver,
+} from '../../../hasher/task-file-resolver';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import type { ShowTargetOutputsOptions } from '../command-object';
 import {
@@ -16,12 +19,22 @@ export async function showTargetOutputsHandler(
   args: ShowTargetOutputsOptions
 ): Promise<void> {
   const t = await resolveTarget(args);
-  const outputsData = resolveOutputsData(t);
+
+  const taskId = t.configuration
+    ? `${t.projectName}:${t.targetName}:${t.configuration}`
+    : `${t.projectName}:${t.targetName}`;
+
+  const resolver = await createTaskFileResolver({
+    projectGraph: t.graph,
+    nxJson: t.nxJson,
+  });
+
+  const outputsData = resolveOutputsData(t, resolver, taskId);
 
   if (args.check !== undefined) {
     const checkItems = deduplicateFolderEntries(args.check);
     const results = checkItems.map((o) =>
-      resolveCheckOutputData(o, outputsData)
+      resolveCheckOutputData(o, outputsData, resolver, taskId)
     );
 
     if (results.length >= 2) {
@@ -49,13 +62,15 @@ export async function showTargetOutputsHandler(
 type OutputsData = ReturnType<typeof resolveOutputsData>;
 type CheckOutputResult = ReturnType<typeof resolveCheckOutputData>;
 
-function resolveOutputsData(t: ResolvedTarget) {
+function resolveOutputsData(
+  t: ResolvedTarget,
+  resolver: TaskFileResolver,
+  taskId: string
+) {
   const { projectName, targetName, configuration, node } = t;
-  const resolvedOutputs = getOutputsForTargetAndConfiguration(
-    { project: projectName, target: targetName, configuration },
-    {},
-    node
-  );
+  // Use the resolver to obtain resolved output paths — avoids duplicating
+  // the getOutputsForTargetAndConfiguration call that the resolver already makes.
+  const resolvedOutputs = resolver.getOutputs(taskId);
 
   const targetConfig = node.data.targets?.[targetName];
   const configuredOutputs: string[] = targetConfig?.outputs ?? [];
@@ -93,25 +108,17 @@ function resolveOutputsData(t: ResolvedTarget) {
 
 function resolveCheckOutputData(
   rawFileToCheck: string,
-  outputsData: OutputsData
+  outputsData: OutputsData,
+  resolver: TaskFileResolver,
+  taskId: string
 ) {
   const fileToCheck = normalizePath(rawFileToCheck);
   const { outputPaths, expandedOutputs } = outputsData;
 
-  let matchedOutput: string | null = null;
-  for (const outputPath of outputPaths) {
-    const normalizedOutput = outputPath.replace(/\\/g, '/');
-    if (
-      fileToCheck === normalizedOutput ||
-      fileToCheck.startsWith(normalizedOutput + '/')
-    ) {
-      matchedOutput = outputPath;
-      break;
-    }
-  }
-  if (!matchedOutput && expandedOutputs.includes(fileToCheck)) {
-    matchedOutput = fileToCheck;
-  }
+  // Delegate the direct-match decision to the resolver (handles exact, prefix,
+  // and glob matching via minimatch — supersedes the previous manual prefix
+  // comparison + expandedOutputs exact-match approach).
+  const matchedOutput = resolver.isOutput(taskId, fileToCheck);
 
   let containedOutputPaths: string[] = [];
   let containedExpandedOutputs: string[] = [];
