@@ -63,6 +63,7 @@ export type TargetDefaultEntry = {
  * @deprecated Use the array-shaped {@link TargetDefaultEntry}[] form instead.
  * Retained so devkit helpers can still read nx.json files that predate the
  * migration.
+ * @todo(v23) Remove this type and all branches that read it.
  */
 export type TargetDefaultsRecord = Record<string, Partial<TargetConfiguration>>;
 

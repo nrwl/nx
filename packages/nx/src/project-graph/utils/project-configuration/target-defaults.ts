@@ -62,14 +62,10 @@ export function createTargetDefaultsResults(
     return [];
   }
 
-  const projectNodesByName = buildProjectNodesByName(
+  const { projectNodesByName, rootToName } = buildProjectNodesByName(
     specifiedPluginRootMap,
     defaultPluginRootMap
   );
-  const rootToName = new Map<string, string>();
-  for (const [name, node] of Object.entries(projectNodesByName)) {
-    rootToName.set(node.data.root, name);
-  }
 
   const syntheticProjects: Record<string, ProjectConfiguration> = {};
 
@@ -471,6 +467,7 @@ function matchKindRank(kind: MatchKind): number {
   }
 }
 
+/** Removes keys used only for locating the defaults, leaving the merge payload. */
 function stripFilterKeys(
   entry: TargetDefaultEntry
 ): Partial<TargetConfiguration> {
@@ -574,29 +571,34 @@ function pluginFromSourceMap(
 function buildProjectNodesByName(
   specifiedPluginRootMap: Record<string, ProjectConfiguration>,
   defaultPluginRootMap: Record<string, ProjectConfiguration>
-): Record<string, ProjectGraphProjectNode> {
-  const out: Record<string, ProjectGraphProjectNode> = {};
+): {
+  projectNodesByName: Record<string, ProjectGraphProjectNode>;
+  rootToName: Map<string, string>;
+} {
+  const projectNodesByName: Record<string, ProjectGraphProjectNode> = {};
+  const rootToName = new Map<string, string>();
   const addFromMap = (map: Record<string, ProjectConfiguration>) => {
     for (const root of Object.keys(map)) {
       const cfg = map[root];
       const name = cfg?.name;
       if (!name) continue;
-      if (out[name]) {
-        const existingTags = out[name].data.tags ?? [];
+      if (projectNodesByName[name]) {
+        const existingTags = projectNodesByName[name].data.tags ?? [];
         const newTags = cfg.tags ?? [];
-        out[name].data.tags = Array.from(
+        projectNodesByName[name].data.tags = Array.from(
           new Set([...existingTags, ...newTags])
         );
       } else {
-        out[name] = {
+        projectNodesByName[name] = {
           name,
           type: cfg.projectType === 'application' ? 'app' : 'lib',
           data: { root, tags: cfg.tags ?? [] },
         } as ProjectGraphProjectNode;
+        rootToName.set(root, name);
       }
     }
   };
   addFromMap(specifiedPluginRootMap);
   addFromMap(defaultPluginRootMap);
-  return out;
+  return { projectNodesByName, rootToName };
 }

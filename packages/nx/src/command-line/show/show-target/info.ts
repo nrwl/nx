@@ -55,12 +55,10 @@ function resolveTargetInfoData(t: ResolvedTarget) {
     }
   }
 
-  // dependsOn from targetDefaults is already merged into targetConfig.dependsOn
-  // when the project graph is built, so getDependencyConfigs reads it directly
-  // from the graph node. No extra plumbing needed here.
   const depConfigs =
     getDependencyConfigs(
       { project: projectName, target: targetName },
+      // no programmatic extras — `dependsOn` is already merged into the graph node
       {},
       graph,
       [...allTargetNames]

@@ -73,7 +73,7 @@ function legacyKeyToEntries(
   graph: ProjectGraph | undefined
 ): TargetDefaultEntry[] {
   if (isGlobPattern(key)) {
-    return [{ ...value, target: key }];
+    return [{ target: key, ...value }];
   }
 
   if (graph) {
@@ -83,19 +83,19 @@ function legacyKeyToEntries(
     );
     if (matchesTargetName && matchesExecutor) {
       return [
-        { ...value, target: key },
-        { ...value, executor: key },
+        { target: key, ...value },
+        { executor: key, ...value },
       ];
     }
-    if (matchesTargetName) return [{ ...value, target: key }];
-    if (matchesExecutor) return [{ ...value, executor: key }];
+    if (matchesTargetName) return [{ target: key, ...value }];
+    if (matchesExecutor) return [{ executor: key, ...value }];
     // Fall through to the syntactic heuristic when the workspace has
     // neither a target named `key` nor a target using executor `key`.
   }
 
   return isExecutorLikeKey(key)
-    ? [{ ...value, executor: key }]
-    : [{ ...value, target: key }];
+    ? [{ executor: key, ...value }]
+    : [{ target: key, ...value }];
 }
 
 function classifyKeyAgainstGraph(
