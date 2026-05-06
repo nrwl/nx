@@ -61,23 +61,26 @@ export function upsertTargetDefault(
       e.source === source
   );
 
-  const newEntry: TargetDefaultEntry = {
-    ...(target !== undefined ? { target } : {}),
-    ...(executor !== undefined ? { executor } : {}),
-    ...(projects !== undefined ? { projects } : {}),
-    ...(source !== undefined ? { source } : {}),
-    ...config,
-  };
-
   if (matchIndex >= 0) {
-    const merged: TargetDefaultEntry = { ...entries[matchIndex], ...config };
-    if (target !== undefined) merged.target = target;
-    if (executor !== undefined) merged.executor = executor;
-    if (projects !== undefined) merged.projects = projects;
-    if (source !== undefined) merged.source = source;
-    entries[matchIndex] = merged;
+    const existing = entries[matchIndex];
+    const {
+      target: et,
+      executor: ee,
+      projects: ep,
+      source: es,
+      ...existingRest
+    } = existing;
+    entries[matchIndex] = buildTargetDefaultEntry(
+      target ?? et,
+      projects ?? ep,
+      source ?? es,
+      executor ?? ee,
+      { ...existingRest, ...config }
+    );
   } else {
-    entries.push(newEntry);
+    entries.push(
+      buildTargetDefaultEntry(target, projects, source, executor, config)
+    );
   }
 
   nxJson.targetDefaults = entries;
@@ -108,6 +111,28 @@ export function findTargetDefault(
       projectsEqual(e.projects, locator.projects) &&
       e.source === locator.source
   );
+}
+
+/**
+ * Construct a `TargetDefaultEntry` with the canonical key order
+ * `target → projects → source → executor → ...rest`. Locators land first
+ * so an entry's filter shape is obvious at a glance; `executor` follows
+ * because it doubles as a payload field.
+ */
+function buildTargetDefaultEntry(
+  target: string | undefined,
+  projects: string | string[] | undefined,
+  source: string | undefined,
+  executor: string | undefined,
+  rest: Partial<TargetConfiguration>
+): TargetDefaultEntry {
+  return {
+    ...(target !== undefined ? { target } : {}),
+    ...(projects !== undefined ? { projects } : {}),
+    ...(source !== undefined ? { source } : {}),
+    ...(executor !== undefined ? { executor } : {}),
+    ...rest,
+  };
 }
 
 function projectsEqual(
