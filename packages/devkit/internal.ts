@@ -40,10 +40,7 @@ export {
   addE2eCiTargetDefaults,
   upsertTargetDefault,
 } from './src/generators/target-defaults-utils';
-export {
-  normalizeTargetDefaults,
-  isTargetDefaultsArray,
-} from './src/utils/normalize-target-defaults';
+export { normalizeTargetDefaults } from './src/utils/normalize-target-defaults';
 
 // Utils
 export { addPlugin } from './src/utils/add-plugin';

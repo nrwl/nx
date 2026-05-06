@@ -1,11 +1,14 @@
 import type { ProjectGraphProjectNode } from '../../../config/project-graph';
 import type { TargetDefaultEntry } from '../../../config/nx-json';
-import {
-  __resetTargetDefaultsLegacyWarning,
-  findBestTargetDefault,
-  normalizeTargetDefaults,
-  readTargetDefaultsForTarget,
-} from './target-defaults';
+
+// The legacy record-shape warning fires once per module load. To assert
+// on it cleanly we re-load the module in each test via `jest.resetModules`
+// so the "warned once" flag resets without an exported test-only reset
+// function. Every test reaches the SUT through these let-bound aliases
+// so each `it` block sees a fresh module instance.
+let findBestTargetDefault: typeof import('./target-defaults').findBestTargetDefault;
+let normalizeTargetDefaults: typeof import('./target-defaults').normalizeTargetDefaults;
+let readTargetDefaultsForTarget: typeof import('./target-defaults').readTargetDefaultsForTarget;
 
 // Silence the legacy record-shape warning everywhere except in the
 // dedicated describe that asserts on it. The warning writes to stderr
@@ -14,7 +17,11 @@ import {
 // test so call history doesn't leak between `it` blocks.
 let stderrWriteSpy: jest.SpyInstance;
 beforeEach(() => {
-  __resetTargetDefaultsLegacyWarning();
+  jest.resetModules();
+  const mod = require('./target-defaults');
+  findBestTargetDefault = mod.findBestTargetDefault;
+  normalizeTargetDefaults = mod.normalizeTargetDefaults;
+  readTargetDefaultsForTarget = mod.readTargetDefaultsForTarget;
   stderrWriteSpy = jest
     .spyOn(process.stderr, 'write')
     .mockImplementation(() => true);
@@ -448,6 +455,83 @@ describe('findBestTargetDefault', () => {
           entries
         )
       ).toEqual({ inputs: ['source-match'] });
+    });
+  });
+
+  // The predicate path is what synthesis uses to fall back to a less-
+  // specific compatible default when the most-specific match would be
+  // incompatible with the project's actual target.
+  describe('predicate (compatible-fallback) path', () => {
+    it('returns the highest-ranked candidate when the predicate accepts it', () => {
+      const entries: TargetDefaultEntry[] = [
+        { target: 'build', cache: true, inputs: ['generic'] },
+        {
+          target: 'build',
+          executor: '@nx/jest:jest',
+          inputs: ['jest-specific'],
+        },
+      ];
+      // Predicate accepts the highest-ranked candidate; iteration
+      // returns it immediately.
+      expect(
+        findBestTargetDefault(
+          'build',
+          '@nx/jest:jest',
+          undefined,
+          undefined,
+          undefined,
+          entries,
+          undefined,
+          () => true
+        )
+      ).toEqual({ executor: '@nx/jest:jest', inputs: ['jest-specific'] });
+    });
+
+    it('falls through ranked candidates and returns the first compatible one', () => {
+      const entries: TargetDefaultEntry[] = [
+        { target: 'build', cache: true, inputs: ['generic'] },
+        {
+          target: 'build',
+          executor: '@nx/jest:jest',
+          inputs: ['jest-specific'],
+        },
+      ];
+      // Predicate rejects any candidate carrying executor '@nx/jest:jest'.
+      // Best (jest-specific) fails; fall back to generic.
+      expect(
+        findBestTargetDefault(
+          'build',
+          '@nx/jest:jest',
+          undefined,
+          undefined,
+          undefined,
+          entries,
+          undefined,
+          (config) => config.executor !== '@nx/jest:jest'
+        )
+      ).toEqual({ cache: true, inputs: ['generic'] });
+    });
+
+    it('returns null when no candidate satisfies the predicate', () => {
+      const entries: TargetDefaultEntry[] = [
+        {
+          target: 'build',
+          executor: '@nx/jest:jest',
+          inputs: ['jest-specific'],
+        },
+      ];
+      expect(
+        findBestTargetDefault(
+          'build',
+          '@nx/jest:jest',
+          undefined,
+          undefined,
+          undefined,
+          entries,
+          undefined,
+          () => false
+        )
+      ).toBeNull();
     });
   });
 });

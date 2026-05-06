@@ -1,7 +1,4 @@
-import {
-  isTargetDefaultsArray,
-  normalizeTargetDefaults,
-} from './normalize-target-defaults';
+import { normalizeTargetDefaults } from './normalize-target-defaults';
 
 describe('normalizeTargetDefaults', () => {
   it('returns [] for undefined', () => {
@@ -37,18 +34,5 @@ describe('normalizeTargetDefaults', () => {
         lint: null as any,
       })
     ).toEqual([{ target: 'build' }, { target: 'lint' }]);
-  });
-});
-
-describe('isTargetDefaultsArray', () => {
-  it('returns true for arrays', () => {
-    expect(isTargetDefaultsArray([])).toBe(true);
-    expect(isTargetDefaultsArray([{ target: 'a' as const }])).toBe(true);
-  });
-
-  it('returns false for record or undefined', () => {
-    expect(isTargetDefaultsArray({})).toBe(false);
-    expect(isTargetDefaultsArray({ build: { cache: true } })).toBe(false);
-    expect(isTargetDefaultsArray(undefined)).toBe(false);
   });
 });

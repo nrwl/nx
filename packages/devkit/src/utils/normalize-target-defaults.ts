@@ -4,7 +4,13 @@ import type {
   TargetDefaultsRecord,
 } from 'nx/src/devkit-exports';
 
-const GLOB_CHARS = ['*', '|', '{', '}', '(', ')', '['];
+// Mirrors `GLOB_CHARACTERS` / `isGlobPattern` from
+// `nx/src/utils/globs.ts`. We can't import from there directly: devkit
+// supports nx +/- 1 major version and that file isn't part of the
+// devkit-exports surface guaranteed across the range. Keeping a local
+// copy that exactly matches the canonical implementation avoids the
+// import while staying behaviorally aligned.
+const GLOB_CHARACTERS = new Set(['*', '|', '{', '}', '(', ')', '[']);
 
 /**
  * Convert an nx.json `targetDefaults` value (either the legacy record shape
@@ -35,17 +41,8 @@ export function normalizeTargetDefaults(
   return out;
 }
 
-/**
- * True when the given `targetDefaults` is already in the array shape.
- */
-export function isTargetDefaultsArray(
-  raw: TargetDefaults | undefined
-): raw is TargetDefaultEntry[] {
-  return Array.isArray(raw);
-}
-
 function isExecutorLikeKey(key: string): boolean {
   if (!key.includes(':')) return false;
-  for (const c of key) if (GLOB_CHARS.includes(c)) return false;
+  for (const c of key) if (GLOB_CHARACTERS.has(c)) return false;
   return true;
 }

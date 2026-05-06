@@ -38,6 +38,12 @@ type CreateNodesResultEntry = readonly [
 /**
  * Builds a synthetic plugin result from nx.json's `targetDefaults`, layered
  * between specified-plugin and default-plugin results during merging.
+ *
+ * Synthesis sees the two layers separately to avoid re-merging specified
+ * results into a parallel rootMap — for each (root, target) where both
+ * layers contribute, it computes the eventual executor/command on the
+ * fly. That's all the matcher needs; the full target merge happens
+ * downstream in the real merge.
  */
 export function createTargetDefaultsResults(
   specifiedPluginRootMap: Record<string, ProjectConfiguration>,
@@ -84,6 +90,13 @@ export function createTargetDefaultsResults(
       specifiedTargets,
       defaultTargets
     )) {
+      const effective = effectiveTargetForLookup(
+        specifiedTargets[targetName],
+        defaultTargets[targetName],
+        root
+      );
+      if (!effective) continue;
+
       const sourcePlugin = resolveSourcePlugin(
         root,
         targetName,
@@ -94,8 +107,7 @@ export function createTargetDefaultsResults(
       const syntheticTarget = buildSyntheticTargetForRoot(
         targetName,
         root,
-        specifiedTargets[targetName],
-        defaultTargets[targetName],
+        effective,
         entries,
         projectName,
         projectNode,
@@ -124,19 +136,18 @@ export function createTargetDefaultsResults(
   ];
 }
 
-// Returns the synthetic defaults target to insert for `targetName` at
-// `root`, or undefined if no defaults apply.
-// Layering: specified plugins < target defaults < default plugins.
-function buildSyntheticTargetForRoot(
-  targetName: string,
-  root: string,
+// Returns the executor/command pair the real merge will end up with at
+// `(root, targetName)`. We don't reproduce the full per-target merge
+// here — only the fields the matcher cares about. For incompatible
+// pairs (e.g. specified `nx:run-commands` vs default `@nx/jest:jest`)
+// the default replaces the specified target wholesale, so we mirror
+// that behavior by returning the default. For compatible pairs, the
+// default's executor wins where set, otherwise the specified's.
+function effectiveTargetForLookup(
   specifiedTarget: TargetConfiguration | undefined,
   defaultTarget: TargetConfiguration | undefined,
-  entries: NormalizedTargetDefaults,
-  projectName: string | undefined,
-  projectNode: ProjectGraphProjectNode | undefined,
-  sourcePlugin: string | undefined
-): TargetConfiguration | undefined {
+  root: string
+): { executor: string | undefined; command: string | undefined } | undefined {
   const resolvedSpecified = specifiedTarget
     ? resolveCommandSyntacticSugar(specifiedTarget, root)
     : undefined;
@@ -144,102 +155,45 @@ function buildSyntheticTargetForRoot(
     ? resolveCommandSyntacticSugar(defaultTarget, root)
     : undefined;
 
-  // Specified-only: layer defaults on top, but only when the resulting
-  // synthetic is compatible with the specified target. An incompatible
-  // synthetic (e.g. an entry with `executor: '@monodon/rust:test'` while
-  // a polyglot plugin infers the same target with `nx:run-commands`)
-  // would otherwise replace the specified target wholesale during the
-  // downstream merge.
-  if (resolvedSpecified && !resolvedDefault) {
-    const targetDefaults = readAndPrepareTargetDefaults(
-      targetName,
-      resolvedSpecified.executor,
-      resolvedSpecified.command,
-      root,
-      entries,
-      projectName,
-      projectNode,
-      sourcePlugin
-    );
-    if (
-      targetDefaults &&
-      !isCompatibleTarget(resolvedSpecified, targetDefaults)
-    ) {
-      return undefined;
-    }
-    return targetDefaults;
-  }
-
-  // Default-only.
-  if (resolvedDefault && !resolvedSpecified) {
-    return readAndPrepareTargetDefaults(
-      targetName,
-      resolvedDefault.executor,
-      resolvedDefault.command,
-      root,
-      entries,
-      projectName,
-      projectNode,
-      sourcePlugin
-    );
-  }
-
-  if (!resolvedSpecified || !resolvedDefault) return undefined;
-
-  // Both compatible: use the default plugin's executor for the lookup.
-  // The same incompatibility check applies — a project.json `{}` entry
-  // asks defaults to fill in the target, but the lookup can still fall
-  // back to a target-name keyed default with a foreign executor that
-  // would replace the inferred target. Skip the synthetic in that case.
-  if (isCompatibleTarget(resolvedSpecified, resolvedDefault)) {
-    const targetDefaults = readAndPrepareTargetDefaults(
-      targetName,
-      resolvedDefault.executor || resolvedSpecified.executor,
-      resolvedDefault.command || resolvedSpecified.command,
-      root,
-      entries,
-      projectName,
-      projectNode,
-      sourcePlugin
-    );
-    if (
-      targetDefaults &&
-      !isCompatibleTarget(resolvedSpecified, targetDefaults)
-    ) {
-      return undefined;
-    }
-    return targetDefaults;
-  }
-
-  // Incompatible: default plugin will replace specified; only defaults
-  // matching the default plugin's executor are useful.
-  const targetDefaults = readAndPrepareTargetDefaults(
-    targetName,
-    resolvedDefault.executor,
-    resolvedDefault.command,
-    root,
-    entries,
-    projectName,
-    projectNode,
-    sourcePlugin
-  );
-  if (targetDefaults && isCompatibleTarget(resolvedDefault, targetDefaults)) {
-    // Stamp executor/command so the default layer merges cleanly on top.
+  if (!resolvedSpecified && !resolvedDefault) return undefined;
+  if (!resolvedSpecified) {
     return {
-      ...targetDefaults,
+      executor: resolvedDefault!.executor,
+      command: resolvedDefault!.command,
+    };
+  }
+  if (!resolvedDefault) {
+    return {
+      executor: resolvedSpecified.executor,
+      command: resolvedSpecified.command,
+    };
+  }
+  if (!isCompatibleTarget(resolvedSpecified, resolvedDefault)) {
+    return {
       executor: resolvedDefault.executor,
       command: resolvedDefault.command,
     };
   }
-
-  return undefined;
+  return {
+    executor: resolvedDefault.executor ?? resolvedSpecified.executor,
+    command: resolvedDefault.command ?? resolvedSpecified.command,
+  };
 }
 
-function readAndPrepareTargetDefaults(
+// Returns the synthetic defaults target to insert for `targetName` at
+// `root`, or undefined if no defaults apply.
+//
+// `effective` is the eventual `(executor, command)` shape — i.e. what
+// the real merge will land on for this target. We pick the highest-
+// ranked default that is compatible with that shape, falling back to
+// less-specific compatible defaults when the most-specific match would
+// be incompatible. The synthetic stamps the effective executor/command
+// so neither neighbor can incompatible-replace it during the real
+// merge and drop its contributions.
+function buildSyntheticTargetForRoot(
   targetName: string,
-  executor: string | undefined,
-  command: string | undefined,
   root: string,
+  effective: { executor: string | undefined; command: string | undefined },
   entries: NormalizedTargetDefaults,
   projectName: string | undefined,
   projectNode: ProjectGraphProjectNode | undefined,
@@ -247,16 +201,34 @@ function readAndPrepareTargetDefaults(
 ): TargetConfiguration | undefined {
   const rawTargetDefaults = findBestTargetDefault(
     targetName,
-    executor,
+    effective.executor,
     projectName,
     projectNode,
     sourcePlugin,
     entries,
-    command
+    effective.command,
+    (candidate) =>
+      isCompatibleTarget(
+        { executor: effective.executor, command: effective.command },
+        candidate
+      )
   );
   if (!rawTargetDefaults) return undefined;
 
-  return resolveCommandSyntacticSugar(deepClone(rawTargetDefaults), root);
+  const synthetic = resolveCommandSyntacticSugar(
+    deepClone(rawTargetDefaults),
+    root
+  );
+
+  // Stamp executor/command from the effective shape. For entries that
+  // already specify these, this is a no-op (the matcher only returned
+  // compatible candidates). For entries that don't, this pre-aligns the
+  // synthetic with both layers so neither can incompatible-replace it
+  // during the real merge.
+  if (effective.executor !== undefined) synthetic.executor = effective.executor;
+  if (effective.command !== undefined) synthetic.command = effective.command;
+
+  return synthetic;
 }
 
 /**
@@ -343,6 +315,12 @@ interface Candidate {
  * `executor` only acts as an "injector" (matches a target with neither
  * executor nor command) when the entry also sets `target`. Executor-only
  * entries require the workspace target to actually have an executor.
+ *
+ * When `predicate` is provided, ranked candidates are iterated and the
+ * first one that satisfies the predicate is returned. This lets synthesis
+ * fall back to a less-specific compatible default when the most-specific
+ * match would be incompatible with the target it's being applied to.
+ * Without a predicate, the highest-ranked candidate is returned directly.
  */
 export function findBestTargetDefault(
   targetName: string,
@@ -351,82 +329,124 @@ export function findBestTargetDefault(
   projectNode: ProjectGraphProjectNode | undefined,
   sourcePlugin: string | undefined,
   entries: NormalizedTargetDefaults,
-  targetCommand?: string | undefined
+  targetCommand?: string | undefined,
+  predicate?: (config: Partial<TargetConfiguration>) => boolean
 ): Partial<TargetConfiguration> | null {
   if (!entries?.length) return null;
 
-  let best: Candidate | null = null;
-
-  for (let i = 0; i < entries.length; i++) {
-    const entry = entries[i];
-    if (!entry) continue;
-    if (entry.target === undefined && entry.executor === undefined) continue;
-
-    let targetKind: 'exact' | 'glob' | null = null;
-    if (entry.target !== undefined) {
-      if (entry.target === targetName) targetKind = 'exact';
-      else if (
-        isGlobPattern(entry.target) &&
-        minimatch(targetName, entry.target)
-      )
-        targetKind = 'glob';
-      else continue;
-    }
-
-    let executorMatched = false;
-    if (entry.executor !== undefined) {
-      if (executor && executor === entry.executor) {
-        executorMatched = true;
-      } else if (targetKind !== null && !executor && !targetCommand) {
-        // `executor` injects into a bare target the entry's `target`
-        // already matched.
-        executorMatched = true;
-      } else {
-        continue;
+  // Without a predicate we only need the single highest-ranked candidate,
+  // so we keep the greedy best-so-far loop to avoid sorting allocations.
+  if (!predicate) {
+    let best: Candidate | null = null;
+    for (let i = 0; i < entries.length; i++) {
+      const candidate = matchEntry(
+        entries[i],
+        i,
+        targetName,
+        executor,
+        projectName,
+        projectNode,
+        sourcePlugin,
+        targetCommand
+      );
+      if (candidate && (!best || beats(candidate, best))) {
+        best = candidate;
       }
     }
+    return best ? best.config : null;
+  }
 
-    let tier = 1;
+  // With a predicate, collect every matching candidate, sort highest-rank
+  // first, and return the first that passes the predicate.
+  const candidates: Candidate[] = [];
+  for (let i = 0; i < entries.length; i++) {
+    const candidate = matchEntry(
+      entries[i],
+      i,
+      targetName,
+      executor,
+      projectName,
+      projectNode,
+      sourcePlugin,
+      targetCommand
+    );
+    if (candidate) candidates.push(candidate);
+  }
+  candidates.sort((a, b) => (beats(a, b) ? -1 : beats(b, a) ? 1 : 0));
+  for (const candidate of candidates) {
+    if (predicate(candidate.config)) return candidate.config;
+  }
+  return null;
+}
 
-    if (entry.projects !== undefined) {
-      if (!projectName || !projectNode) continue;
-      const patterns = Array.isArray(entry.projects)
-        ? entry.projects
-        : [entry.projects];
-      const matched = findMatchingProjects(patterns, {
-        [projectName]: projectNode,
-      });
-      if (!matched.includes(projectName)) continue;
-      tier++;
-    }
+function matchEntry(
+  entry: TargetDefaultEntry | undefined,
+  index: number,
+  targetName: string,
+  executor: string | undefined,
+  projectName: string | undefined,
+  projectNode: ProjectGraphProjectNode | undefined,
+  sourcePlugin: string | undefined,
+  targetCommand: string | undefined
+): Candidate | null {
+  if (!entry) return null;
+  if (entry.target === undefined && entry.executor === undefined) return null;
 
-    if (entry.source !== undefined) {
-      if (entry.source !== sourcePlugin) continue;
-      tier++;
-    }
+  let targetKind: 'exact' | 'glob' | null = null;
+  if (entry.target !== undefined) {
+    if (entry.target === targetName) targetKind = 'exact';
+    else if (isGlobPattern(entry.target) && minimatch(targetName, entry.target))
+      targetKind = 'glob';
+    else return null;
+  }
 
-    const matchKind: MatchKind =
-      targetKind !== null && executorMatched
-        ? 'targetAndExecutor'
-        : targetKind === null
-          ? 'executorOnly'
-          : targetKind === 'exact'
-            ? 'exactTarget'
-            : 'globTarget';
-
-    const candidate: Candidate = {
-      config: stripFilterKeys(entry),
-      tier,
-      matchKind,
-      index: i,
-    };
-
-    if (!best || beats(candidate, best)) {
-      best = candidate;
+  let executorMatched = false;
+  if (entry.executor !== undefined) {
+    if (executor && executor === entry.executor) {
+      executorMatched = true;
+    } else if (targetKind !== null && !executor && !targetCommand) {
+      // `executor` injects into a bare target the entry's `target`
+      // already matched.
+      executorMatched = true;
+    } else {
+      return null;
     }
   }
 
-  return best ? best.config : null;
+  let tier = 1;
+
+  if (entry.projects !== undefined) {
+    if (!projectName || !projectNode) return null;
+    const patterns = Array.isArray(entry.projects)
+      ? entry.projects
+      : [entry.projects];
+    const matched = findMatchingProjects(patterns, {
+      [projectName]: projectNode,
+    });
+    if (!matched.includes(projectName)) return null;
+    tier++;
+  }
+
+  if (entry.source !== undefined) {
+    if (entry.source !== sourcePlugin) return null;
+    tier++;
+  }
+
+  const matchKind: MatchKind =
+    targetKind !== null && executorMatched
+      ? 'targetAndExecutor'
+      : targetKind === null
+        ? 'executorOnly'
+        : targetKind === 'exact'
+          ? 'exactTarget'
+          : 'globTarget';
+
+  return {
+    config: stripFilterKeys(entry),
+    tier,
+    matchKind,
+    index,
+  };
 }
 
 function beats(a: Candidate, b: Candidate): boolean {
@@ -508,11 +528,6 @@ function warnAboutLegacyRecordShapeOnce() {
   );
 }
 
-/** Test-only: resets the module-level "warned once" flag. */
-export function __resetTargetDefaultsLegacyWarning() {
-  hasWarnedAboutLegacyRecordShape = false;
-}
-
 function resolveSourcePlugin(
   root: string,
   targetName: string,
@@ -551,6 +566,11 @@ function pluginFromSourceMap(
   return entry?.[1];
 }
 
+// Walks both layered rootMaps and produces a name → ProjectGraphProjectNode
+// view for `findMatchingProjects` to consult. Default-plugin-only
+// projects are included — they're the bulk of typical workspaces and
+// `projects:` filters need to apply to them too. Tags are unioned across
+// layers so tag-based filters see all contributions.
 function buildProjectNodesByName(
   specifiedPluginRootMap: Record<string, ProjectConfiguration>,
   defaultPluginRootMap: Record<string, ProjectConfiguration>
@@ -562,8 +582,6 @@ function buildProjectNodesByName(
       const name = cfg?.name;
       if (!name) continue;
       if (out[name]) {
-        // Merge tags (union) across layers so tag-based project filters
-        // see all tags, regardless of which plugin contributed them.
         const existingTags = out[name].data.tags ?? [];
         const newTags = cfg.tags ?? [];
         out[name].data.tags = Array.from(
@@ -572,7 +590,7 @@ function buildProjectNodesByName(
       } else {
         out[name] = {
           name,
-          type: 'lib',
+          type: cfg.projectType === 'application' ? 'app' : 'lib',
           data: { root, tags: cfg.tags ?? [] },
         } as ProjectGraphProjectNode;
       }

@@ -309,6 +309,12 @@ export function getTargetInputs(
   const namedInputs = getNamedInputs(nxJson, projectNode);
 
   const targetData = projectNode.data.targets[target];
+  // Fallback path: synthesis already merges any matching target-default's
+  // `inputs` onto the target during graph construction, so this lookup
+  // is only consulted when `targetData.inputs` is unset post-merge. We
+  // pass `sourcePlugin = undefined` deliberately — synth-time attribution
+  // isn't available here and any `source:`-filtered entry that mattered
+  // for this target would already have written its inputs onto it.
   const targetDefaults = findBestTargetDefault(
     target,
     targetData?.executor,
@@ -354,6 +360,9 @@ export function getInputs(
   const projectNode = projectGraph.nodes[task.target.project];
   const namedInputs = getNamedInputs(nxJson, projectNode);
   const targetData = projectNode.data.targets[task.target.target];
+  // See note on the matching call in `getTargetInputs`. Same rationale:
+  // this is a fallback only reached when `targetData.inputs` is unset
+  // post-synthesis. `sourcePlugin = undefined` here is deliberate.
   const targetDefaults = findBestTargetDefault(
     task.target.target,
     targetData?.executor,

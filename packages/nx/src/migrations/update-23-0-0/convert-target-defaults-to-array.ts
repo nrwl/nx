@@ -6,8 +6,12 @@ import type {
   TargetDefaultsRecord,
 } from '../../config/nx-json';
 import type { ProjectGraph } from '../../config/project-graph';
-import { createProjectGraphAsync } from '../../project-graph/project-graph';
+import {
+  createProjectGraphAsync,
+  readCachedProjectGraph,
+} from '../../project-graph/project-graph';
 import { isGlobPattern } from '../../utils/globs';
+import { logger } from '../../utils/logger';
 
 /**
  * Converts the legacy record-shape `targetDefaults` in nx.json to the new
@@ -115,12 +119,29 @@ function classifyKeyAgainstGraph(
 }
 
 async function tryCreateProjectGraph(): Promise<ProjectGraph | undefined> {
-  // The graph may fail to build mid-migration (e.g. another change earlier
-  // in the same migrate run left the workspace transiently inconsistent).
-  // Falling back to the syntactic heuristic is safer than aborting.
+  // Prefer a cached graph so we don't pay the build cost twice when one
+  // already exists (e.g. earlier migrations in the same run that built
+  // it themselves). `readCachedProjectGraph` throws if no cache is
+  // available — fall through to building one in that case.
+  try {
+    return readCachedProjectGraph();
+  } catch {}
+
+  // The graph may fail to build mid-migration (e.g. another change
+  // earlier in the same migrate run left the workspace transiently
+  // inconsistent). Falling back to the syntactic heuristic is safer
+  // than aborting, but warn so users know `:` keys are being
+  // disambiguated by shape rather than by graph evidence.
   try {
     return await createProjectGraphAsync();
-  } catch {
+  } catch (err) {
+    logger.warn(
+      'convert-target-defaults-to-array: project graph could not be built; ' +
+        'falling back to syntactic disambiguation for `:` keys in nx.json `targetDefaults`. ' +
+        'If a key happens to match both a target name and an executor in your workspace, ' +
+        'review the migration result and add the missing entry by hand. ' +
+        `Underlying error: ${err instanceof Error ? err.message : String(err)}`
+    );
     return undefined;
   }
 }
