@@ -113,7 +113,14 @@ describe('findBestTargetDefault', () => {
     ).toEqual({ executor: '@nx/vite:test', inputs: ['x'] });
   });
 
-  it('executor-only entry does not match when target has no executor', () => {
+  it('executor-only entry does not inject into a bare target — no `target` locator means no targeting', () => {
+    // An executor-only entry like `{ executor: '@nx/vite:test' }` is keyed
+    // purely by executor: it applies to existing targets that *already* use
+    // that executor. It cannot be used to assign an executor to an
+    // executor-less target — that would broadcast the executor to every
+    // bare target in the workspace. Compare with the
+    // `target+executor → injection` behavior covered later in this file,
+    // where the `target` locator narrows the assignment to a specific name.
     const entries: TargetDefaultEntry[] = [
       { executor: '@nx/vite:test', inputs: ['x'] },
     ];
@@ -356,6 +363,12 @@ describe('findBestTargetDefault', () => {
     });
 
     it('matches as injection (no tier bump) when target has no executor and no command', () => {
+      // Injection-on-match: the entry has both a `target` locator AND an
+      // `executor` payload. The `target` narrows the match to one specific
+      // name, so it's safe to inject the executor into a bare target with
+      // that name. (Contrast with the executor-only entry test earlier in
+      // this file, which intentionally returns null — without a `target`
+      // locator there's no way to scope the injection.)
       const entries: TargetDefaultEntry[] = [
         { target: 'build', executor: '@nx/js:tsc', inputs: ['inject'] },
       ];

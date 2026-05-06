@@ -62,10 +62,23 @@ export function createTargetDefaultsResults(
     return [];
   }
 
-  const { projectNodesByName, rootToName } = buildProjectNodesByName(
-    specifiedPluginRootMap,
-    defaultPluginRootMap
-  );
+  // The by-name node map is only consulted when an entry has a
+  // `projects:` filter. Skip building it for the common case where no
+  // entry uses that filter — workspaces with simple targetDefaults
+  // shouldn't pay the per-project iteration cost on every graph build.
+  const needsProjectNodes = entries.some((e) => e.projects !== undefined);
+  const { projectNodesByName, rootToName } = needsProjectNodes
+    ? buildProjectNodesAndRootToName(
+        specifiedPluginRootMap,
+        defaultPluginRootMap
+      )
+    : {
+        projectNodesByName: undefined,
+        rootToName: buildRootToName(
+          specifiedPluginRootMap,
+          defaultPluginRootMap
+        ),
+      };
 
   const syntheticProjects: Record<string, ProjectConfiguration> = {};
 
@@ -78,9 +91,10 @@ export function createTargetDefaultsResults(
     const specifiedTargets = specifiedPluginRootMap[root]?.targets ?? {};
     const defaultTargets = defaultPluginRootMap[root]?.targets ?? {};
     const projectName = rootToName.get(root);
-    const projectNode = projectName
-      ? projectNodesByName[projectName]
-      : undefined;
+    const projectNode =
+      projectName && projectNodesByName
+        ? projectNodesByName[projectName]
+        : undefined;
 
     for (const targetName of uniqueKeysInObjects(
       specifiedTargets,
@@ -176,16 +190,17 @@ function effectiveTargetForLookup(
   };
 }
 
-// Returns the synthetic defaults target to insert for `targetName` at
-// `root`, or undefined if no defaults apply.
-//
-// `effective` is the eventual `(executor, command)` shape — i.e. what
-// the real merge will land on for this target. We pick the highest-
-// ranked default that is compatible with that shape, falling back to
-// less-specific compatible defaults when the most-specific match would
-// be incompatible. The synthetic stamps the effective executor/command
-// so neither neighbor can incompatible-replace it during the real
-// merge and drop its contributions.
+/**
+ * Returns the synthetic defaults target to insert for `targetName` at
+ * `root`, or undefined if no defaults apply. The synthetic stamps the
+ * effective executor/command so neither merge neighbor can
+ * incompatible-replace it and drop its contributions.
+ *
+ * @param effective The `(executor, command)` shape the real merge will
+ *   land on. Used both to pick the highest-ranked compatible default
+ *   (falling back to less-specific matches if the best one would be
+ *   incompatible) and as the locked shape stamped onto the synthetic.
+ */
 function buildSyntheticTargetForRoot(
   targetName: string,
   root: string,
@@ -330,31 +345,12 @@ export function findBestTargetDefault(
 ): Partial<TargetConfiguration> | null {
   if (!entries?.length) return null;
 
-  // Without a predicate we only need the single highest-ranked candidate,
-  // so we keep the greedy best-so-far loop to avoid sorting allocations.
-  if (!predicate) {
-    let best: Candidate | null = null;
-    for (let i = 0; i < entries.length; i++) {
-      const candidate = matchEntry(
-        entries[i],
-        i,
-        targetName,
-        executor,
-        projectName,
-        projectNode,
-        sourcePlugin,
-        targetCommand
-      );
-      if (candidate && (!best || beats(candidate, best))) {
-        best = candidate;
-      }
-    }
-    return best ? best.config : null;
-  }
-
-  // With a predicate, collect every matching candidate, sort highest-rank
-  // first, and return the first that passes the predicate.
-  const candidates: Candidate[] = [];
+  // Single greedy best-so-far loop in both the predicate and no-predicate
+  // paths. With a predicate, we filter candidates as they appear and only
+  // promote one to `best` when it passes — equivalent to the previous
+  // "collect-all + sort + first-passing" approach because `beats` is a
+  // total order, but without the sort allocation.
+  let best: Candidate | null = null;
   for (let i = 0; i < entries.length; i++) {
     const candidate = matchEntry(
       entries[i],
@@ -366,15 +362,30 @@ export function findBestTargetDefault(
       sourcePlugin,
       targetCommand
     );
-    if (candidate) candidates.push(candidate);
+    if (!candidate) continue;
+    if (predicate && !predicate(candidate.config)) continue;
+    if (!best || beats(candidate, best)) {
+      best = candidate;
+    }
   }
-  candidates.sort((a, b) => (beats(a, b) ? -1 : beats(b, a) ? 1 : 0));
-  for (const candidate of candidates) {
-    if (predicate(candidate.config)) return candidate.config;
-  }
-  return null;
+  return best ? best.config : null;
 }
 
+/**
+ * Test a single `targetDefaults` entry against the (target, executor,
+ * project, source, command) tuple of the target being resolved. Returns
+ * a `Candidate` with its tier and match kind, or null when the entry
+ * doesn't apply.
+ *
+ * The match facts (`targetName`, `executor`, `projectName`, `projectNode`,
+ * `sourcePlugin`, `targetCommand`) are passed in instead of being read
+ * from the graph node here because callers — `findBestTargetDefault` and
+ * `buildSyntheticTargetForRoot` — work in different graph contexts. The
+ * synthetic builder, in particular, evaluates against the *effective*
+ * executor/command (what the merge will land on), which doesn't always
+ * equal the node's current executor; threading the values explicitly
+ * keeps that asymmetry visible at the call sites.
+ */
 function matchEntry(
   entry: TargetDefaultEntry | undefined,
   index: number,
@@ -401,8 +412,11 @@ function matchEntry(
     if (executor && executor === entry.executor) {
       executorMatched = true;
     } else if (targetKind !== null && !executor && !targetCommand) {
-      // `executor` injects into a bare target the entry's `target`
-      // already matched.
+      // Injection: the entry's `target` locator already narrowed the match
+      // to a specific name, so it's safe to inject the entry's executor
+      // into a bare target. An executor-only entry (no `target` locator)
+      // never reaches this branch — without targeting, it would broadcast
+      // the executor to every executor-less target in the workspace.
       executorMatched = true;
     } else {
       return null;
@@ -445,12 +459,27 @@ function matchEntry(
   };
 }
 
+/**
+ * Specificity ordering for two candidate matches. Higher specificity
+ * wins because the more specific entry is the one the user most likely
+ * wrote to override a broader rule.
+ *
+ * 1. Tier — entries with `projects` or `source` filters are scoped
+ *    narrower than unfiltered entries, so they outrank.
+ * 2. Match kind — within the same tier, more locator slots is more
+ *    specific: `target+executor` > `executor-only` > `exactTarget` >
+ *    `globTarget`. Note `executor-only` outranks `exactTarget`: a
+ *    workspace-wide rule keyed on a specific executor is treated as
+ *    more intentional than a target-name rule that might accidentally
+ *    catch unrelated executors.
+ * 3. Tie-break — later array index wins, so users can append an entry
+ *    to override earlier ones without rewriting them.
+ */
 function beats(a: Candidate, b: Candidate): boolean {
   if (a.tier !== b.tier) return a.tier > b.tier;
   const aRank = matchKindRank(a.matchKind);
   const bRank = matchKindRank(b.matchKind);
   if (aRank !== bRank) return aRank > bRank;
-  // Tie: later array index wins.
   return a.index > b.index;
 }
 
@@ -484,9 +513,17 @@ let hasWarnedAboutLegacyRecordShape = false;
  * which become `{ executor: key, ...value }` so the matcher treats them
  * as executor matches rather than target-name matches.
  *
- * When the record shape is encountered we log a one-time warning
- * recommending `nx repair`, which will re-run the migration that
- * converts `targetDefaults` to the array shape.
+ * The disambiguation here is purely syntactic. This function runs
+ * during graph construction, before the cached graph exists, so it
+ * cannot consult per-project targets to confirm whether `key` is a
+ * target name or an executor — `:` in a record key is genuinely
+ * ambiguous (target names can contain `:`). The
+ * `convert-target-defaults-to-array` migration runs *after*
+ * construction and uses the project graph for proper disambiguation;
+ * that's why the warning below recommends `nx repair`. Sharing more of
+ * the disambiguation logic with the migration is left as a follow-up —
+ * the migration's classifier needs the graph and this code path can't
+ * have one.
  */
 export function normalizeTargetDefaults(
   raw: TargetDefaults | undefined
@@ -568,7 +605,13 @@ function pluginFromSourceMap(
 // projects are included — they're the bulk of typical workspaces and
 // `projects:` filters need to apply to them too. Tags are unioned across
 // layers so tag-based filters see all contributions.
-function buildProjectNodesByName(
+//
+// We don't reuse `mergeProjectConfigurationIntoRootMap` here: it does a
+// full project-config merge (targets, named inputs, source maps, ...)
+// keyed by root, while this function only needs name + tags keyed by
+// name. The full merge would be substantial wasted work on every graph
+// build.
+function buildProjectNodesAndRootToName(
   specifiedPluginRootMap: Record<string, ProjectConfiguration>,
   defaultPluginRootMap: Record<string, ProjectConfiguration>
 ): {
@@ -601,4 +644,27 @@ function buildProjectNodesByName(
   addFromMap(specifiedPluginRootMap);
   addFromMap(defaultPluginRootMap);
   return { projectNodesByName, rootToName };
+}
+
+/**
+ * Lighter-weight version of {@link buildProjectNodesAndRootToName} for
+ * the common path where no `targetDefaults` entry uses a `projects:`
+ * filter. We still need root → name lookup for source-plugin attribution
+ * and project-name resolution, but we can skip building the by-name
+ * node view entirely.
+ */
+function buildRootToName(
+  specifiedPluginRootMap: Record<string, ProjectConfiguration>,
+  defaultPluginRootMap: Record<string, ProjectConfiguration>
+): Map<string, string> {
+  const rootToName = new Map<string, string>();
+  const addFromMap = (map: Record<string, ProjectConfiguration>) => {
+    for (const root of Object.keys(map)) {
+      const name = map[root]?.name;
+      if (name && !rootToName.has(root)) rootToName.set(root, name);
+    }
+  };
+  addFromMap(specifiedPluginRootMap);
+  addFromMap(defaultPluginRootMap);
+  return rootToName;
 }
