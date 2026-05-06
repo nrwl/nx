@@ -235,7 +235,11 @@ For example, `devkit-generation.ts` had to be updated to look for `packages/devk
 
 ### 13. Update `scripts/nx-release.ts`
 
-If the package has special release handling in `scripts/nx-release.ts` (like devkit's `hackFixForDevkitPeerDependencies`), update any paths from `./dist/packages/<name>/` to `./packages/<name>/`.
+Two things to do here:
+
+1. **Add the package to `packagesToReset`.** That array (around `scripts/nx-release.ts:76`) is the snapshot/restore list — every package whose source `package.json` gets mutated by `nx release` (because it now publishes from `packages/<name>/` directly, not `dist/packages/<name>/`) must be in this list. Otherwise the release will leave `packages/<name>/package.json` dirty in the working tree after running. **Easy to forget — and there is no test that catches it.**
+
+2. **Update any package-specific paths.** If the package has special release handling (like devkit's `hackFixForDevkitPeerDependencies`), update any paths from `./dist/packages/<name>/` to `./packages/<name>/`.
 
 ### 14. Update imports across the workspace
 

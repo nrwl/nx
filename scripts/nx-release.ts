@@ -76,6 +76,7 @@ const VALID_AUTHORS_FOR_LATEST = [
   const packagesToReset = [
     'packages/angular-rspack',
     'packages/angular-rspack-compiler',
+    'packages/devkit',
     'packages/dotnet',
     'packages/maven',
     'packages/nx',
