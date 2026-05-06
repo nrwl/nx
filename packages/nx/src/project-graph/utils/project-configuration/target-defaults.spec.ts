@@ -8,6 +8,7 @@ import type { TargetDefaultEntry } from '../../../config/nx-json';
 // so each `it` block sees a fresh module instance.
 let findBestTargetDefault: typeof import('./target-defaults').findBestTargetDefault;
 let normalizeTargetDefaults: typeof import('./target-defaults').normalizeTargetDefaults;
+let normalizeTargetDefaultsAgainstRootMaps: typeof import('./target-defaults').normalizeTargetDefaultsAgainstRootMaps;
 let readTargetDefaultsForTarget: typeof import('./target-defaults').readTargetDefaultsForTarget;
 
 // Silence the legacy record-shape warning everywhere except in the
@@ -21,6 +22,8 @@ beforeEach(() => {
   const mod = require('./target-defaults');
   findBestTargetDefault = mod.findBestTargetDefault;
   normalizeTargetDefaults = mod.normalizeTargetDefaults;
+  normalizeTargetDefaultsAgainstRootMaps =
+    mod.normalizeTargetDefaultsAgainstRootMaps;
   readTargetDefaultsForTarget = mod.readTargetDefaultsForTarget;
   stderrWriteSpy = jest
     .spyOn(process.stderr, 'write')
@@ -643,5 +646,97 @@ describe('readTargetDefaultsForTarget (backwards-compat wrapper)', () => {
         'e2e-ci--file-*': { options: { key: 'long' } },
       })
     ).toEqual({ options: { key: 'long' } });
+  });
+});
+
+describe('normalizeTargetDefaultsAgainstRootMaps', () => {
+  it('classifies an ambiguous `:` key as executor when only an executor matches', () => {
+    expect(
+      normalizeTargetDefaultsAgainstRootMaps(
+        { '@nx/vite:test': { cache: true } },
+        {
+          'apps/a': {
+            root: 'apps/a',
+            targets: { test: { executor: '@nx/vite:test' } },
+          },
+        }
+      )
+    ).toEqual([{ executor: '@nx/vite:test', cache: true }]);
+  });
+
+  it('classifies an ambiguous `:` key as target when only a target name matches', () => {
+    // `serve:dev` is a legitimate target name with `:` in it. The
+    // syntactic heuristic would mis-classify it as an executor; the
+    // graph-aware classifier sees it's a target name and emits a
+    // `target:` entry.
+    expect(
+      normalizeTargetDefaultsAgainstRootMaps(
+        { 'serve:dev': { cache: true } },
+        {
+          'apps/a': {
+            root: 'apps/a',
+            targets: { 'serve:dev': { command: 'echo serve' } },
+          },
+        }
+      )
+    ).toEqual([{ target: 'serve:dev', cache: true }]);
+  });
+
+  it('emits both target and executor entries when the key matches both', () => {
+    // Genuine ambiguity — `webpack-cli:build` happens to be the name of
+    // both a target and a registered executor in the workspace. Emit both
+    // entries rather than guess; matches the v23 migration's behavior.
+    expect(
+      normalizeTargetDefaultsAgainstRootMaps(
+        { 'webpack-cli:build': { cache: true } },
+        {
+          'apps/a': {
+            root: 'apps/a',
+            targets: {
+              'webpack-cli:build': { executor: 'webpack-cli:build' },
+            },
+          },
+        }
+      )
+    ).toEqual([
+      { target: 'webpack-cli:build', cache: true },
+      { executor: 'webpack-cli:build', cache: true },
+    ]);
+  });
+
+  it('falls back to syntactic heuristic when the key matches neither', () => {
+    expect(
+      normalizeTargetDefaultsAgainstRootMaps(
+        { '@nx/some-unused-plugin:build': { cache: true } },
+        { 'apps/a': { root: 'apps/a', targets: {} } }
+      )
+    ).toEqual([{ executor: '@nx/some-unused-plugin:build', cache: true }]);
+  });
+
+  it('classifies a target-named key as `target:` even when the rootMaps are empty', () => {
+    expect(
+      normalizeTargetDefaultsAgainstRootMaps({ build: { cache: true } }, {})
+    ).toEqual([{ target: 'build', cache: true }]);
+  });
+
+  it('passes array shape through unchanged', () => {
+    const input: TargetDefaultEntry[] = [
+      { target: 'build', cache: true },
+      { executor: '@nx/vite:test', inputs: ['x'] },
+    ];
+    expect(
+      normalizeTargetDefaultsAgainstRootMaps(input, {
+        'apps/a': { root: 'apps/a', targets: { test: {} } },
+      })
+    ).toEqual(input);
+  });
+
+  it('treats glob keys as targets without consulting rootMaps', () => {
+    expect(
+      normalizeTargetDefaultsAgainstRootMaps(
+        { 'e2e-ci--*': { dependsOn: ['build'] } },
+        {}
+      )
+    ).toEqual([{ target: 'e2e-ci--*', dependsOn: ['build'] }]);
   });
 });

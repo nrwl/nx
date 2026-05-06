@@ -57,28 +57,32 @@ export function createTargetDefaultsResults(
     return [];
   }
 
-  const entries = normalizeTargetDefaults(targetDefaultsConfig);
+  // Disambiguate `:`-shaped record keys against the actual targets and
+  // executors present in the rootMaps. This is the same idea the v23
+  // `convert-target-defaults-to-array` migration uses against the project
+  // graph — we just consult the rootMaps directly here since we don't have
+  // a graph yet during construction.
+  const entries = normalizeTargetDefaultsAgainstRootMaps(
+    targetDefaultsConfig,
+    specifiedPluginRootMap,
+    defaultPluginRootMap
+  );
   if (entries.length === 0) {
     return [];
   }
 
-  // The by-name node map is only consulted when an entry has a
-  // `projects:` filter. Skip building it for the common case where no
-  // entry uses that filter — workspaces with simple targetDefaults
-  // shouldn't pay the per-project iteration cost on every graph build.
+  // `projectNodesByName` and `rootToName` are only consulted when an entry
+  // has a `projects:` filter — that's the only matcher branch that needs
+  // either the project name or its node. Source-plugin attribution is
+  // root-keyed via `resolveSourcePlugin`, not name-keyed, so it doesn't
+  // need either map. Skip both builds in the common no-filter path.
   const needsProjectNodes = entries.some((e) => e.projects !== undefined);
-  const { projectNodesByName, rootToName } = needsProjectNodes
+  const projectNodes = needsProjectNodes
     ? buildProjectNodesAndRootToName(
         specifiedPluginRootMap,
         defaultPluginRootMap
       )
-    : {
-        projectNodesByName: undefined,
-        rootToName: buildRootToName(
-          specifiedPluginRootMap,
-          defaultPluginRootMap
-        ),
-      };
+    : undefined;
 
   const syntheticProjects: Record<string, ProjectConfiguration> = {};
 
@@ -90,11 +94,10 @@ export function createTargetDefaultsResults(
   for (const root of allRoots) {
     const specifiedTargets = specifiedPluginRootMap[root]?.targets ?? {};
     const defaultTargets = defaultPluginRootMap[root]?.targets ?? {};
-    const projectName = rootToName.get(root);
-    const projectNode =
-      projectName && projectNodesByName
-        ? projectNodesByName[projectName]
-        : undefined;
+    const projectName = projectNodes?.rootToName.get(root);
+    const projectNode = projectName
+      ? projectNodes!.projectNodesByName[projectName]
+      : undefined;
 
     for (const targetName of uniqueKeysInObjects(
       specifiedTargets,
@@ -513,17 +516,15 @@ let hasWarnedAboutLegacyRecordShape = false;
  * which become `{ executor: key, ...value }` so the matcher treats them
  * as executor matches rather than target-name matches.
  *
- * The disambiguation here is purely syntactic. This function runs
- * during graph construction, before the cached graph exists, so it
- * cannot consult per-project targets to confirm whether `key` is a
- * target name or an executor — `:` in a record key is genuinely
- * ambiguous (target names can contain `:`). The
- * `convert-target-defaults-to-array` migration runs *after*
- * construction and uses the project graph for proper disambiguation;
- * that's why the warning below recommends `nx repair`. Sharing more of
- * the disambiguation logic with the migration is left as a follow-up —
- * the migration's classifier needs the graph and this code path can't
- * have one.
+ * Disambiguation here is purely syntactic — `:` in a record key is
+ * genuinely ambiguous (target names can contain `:`). Callers that have
+ * access to the workspace's targets (the graph-construction path, the
+ * v23 migration) should prefer
+ * {@link normalizeTargetDefaultsAgainstRootMaps} or the migration's
+ * graph-based classifier so that ambiguous keys get classified by what
+ * the workspace actually contains. The warning below points end-users
+ * at `nx repair`, which runs the migration that durably resolves the
+ * ambiguity in nx.json on disk.
  */
 export function normalizeTargetDefaults(
   raw: TargetDefaults | undefined
@@ -534,13 +535,73 @@ export function normalizeTargetDefaults(
   const out: TargetDefaultEntry[] = [];
   for (const key of Object.keys(raw)) {
     const value = (raw as TargetDefaultsRecord)[key] ?? {};
-    out.push(
-      key.includes(':') && !isGlobPattern(key)
-        ? { ...value, executor: key }
-        : { ...value, target: key }
-    );
+    out.push(...syntacticallyClassifyLegacyKey(key, value));
   }
   return out;
+}
+
+/**
+ * Same shape contract as {@link normalizeTargetDefaults}, but classifies
+ * `:`-shaped record keys against the targets and executors actually
+ * present in the supplied rootMaps. When a key matches a target name in
+ * the workspace, it becomes a `target:` entry; when it matches an
+ * executor, an `executor:` entry; when it matches both, both entries are
+ * emitted (matching the v23 migration's "duplicate rather than guess"
+ * behavior so neither side of the match silently drops). Falls back to
+ * the syntactic heuristic when there's no evidence either way.
+ */
+export function normalizeTargetDefaultsAgainstRootMaps(
+  raw: TargetDefaults | undefined,
+  ...rootMaps: Record<string, ProjectConfiguration>[]
+): NormalizedTargetDefaults {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  warnAboutLegacyRecordShapeOnce();
+
+  const targetNames = new Set<string>();
+  const executors = new Set<string>();
+  for (const map of rootMaps) {
+    for (const cfg of Object.values(map)) {
+      const targets = cfg?.targets;
+      if (!targets) continue;
+      for (const [name, target] of Object.entries(targets)) {
+        targetNames.add(name);
+        if (target?.executor) executors.add(target.executor);
+      }
+    }
+  }
+
+  const out: TargetDefaultEntry[] = [];
+  for (const key of Object.keys(raw)) {
+    const value = (raw as TargetDefaultsRecord)[key] ?? {};
+    if (isGlobPattern(key)) {
+      out.push({ ...value, target: key });
+      continue;
+    }
+    const matchesTarget = targetNames.has(key);
+    const matchesExecutor = executors.has(key);
+    if (matchesTarget && matchesExecutor) {
+      out.push({ ...value, target: key }, { ...value, executor: key });
+    } else if (matchesExecutor) {
+      out.push({ ...value, executor: key });
+    } else if (matchesTarget) {
+      out.push({ ...value, target: key });
+    } else {
+      out.push(...syntacticallyClassifyLegacyKey(key, value));
+    }
+  }
+  return out;
+}
+
+function syntacticallyClassifyLegacyKey(
+  key: string,
+  value: Partial<TargetConfiguration>
+): TargetDefaultEntry[] {
+  return [
+    key.includes(':') && !isGlobPattern(key)
+      ? { ...value, executor: key }
+      : { ...value, target: key },
+  ];
 }
 
 function warnAboutLegacyRecordShapeOnce() {
@@ -644,27 +705,4 @@ function buildProjectNodesAndRootToName(
   addFromMap(specifiedPluginRootMap);
   addFromMap(defaultPluginRootMap);
   return { projectNodesByName, rootToName };
-}
-
-/**
- * Lighter-weight version of {@link buildProjectNodesAndRootToName} for
- * the common path where no `targetDefaults` entry uses a `projects:`
- * filter. We still need root → name lookup for source-plugin attribution
- * and project-name resolution, but we can skip building the by-name
- * node view entirely.
- */
-function buildRootToName(
-  specifiedPluginRootMap: Record<string, ProjectConfiguration>,
-  defaultPluginRootMap: Record<string, ProjectConfiguration>
-): Map<string, string> {
-  const rootToName = new Map<string, string>();
-  const addFromMap = (map: Record<string, ProjectConfiguration>) => {
-    for (const root of Object.keys(map)) {
-      const name = map[root]?.name;
-      if (name && !rootToName.has(root)) rootToName.set(root, name);
-    }
-  };
-  addFromMap(specifiedPluginRootMap);
-  addFromMap(defaultPluginRootMap);
-  return rootToName;
 }
