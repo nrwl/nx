@@ -32,8 +32,9 @@ export default async function ensureVitestPackageMigration(
     migratedTargetDefaults ||
     registeredVitestPlugin
   ) {
+    const installTask = installVitestPackage(tree);
     await formatFiles(tree);
-    return installVitestPackage(tree);
+    return installTask;
   } else {
     return () => {};
   }

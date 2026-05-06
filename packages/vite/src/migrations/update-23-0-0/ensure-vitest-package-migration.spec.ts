@@ -282,6 +282,80 @@ export default defineConfig({ test: { globals: true } });
     });
   });
 
+  describe('migrateTargetDefaults', () => {
+    it('renames executor-keyed @nx/vite:test entry to @nx/vitest:test', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        '@nx/vite:test': {
+          cache: true,
+          inputs: ['default', '^production'],
+          options: { watch: false },
+        },
+      };
+      updateNxJson(tree, nxJson);
+
+      await ensureVitestPackageMigration(tree);
+
+      const updated = readNxJson(tree);
+      expect(updated.targetDefaults['@nx/vite:test']).toBeUndefined();
+      expect(updated.targetDefaults['@nx/vitest:test']).toEqual({
+        cache: true,
+        inputs: ['default', '^production'],
+        options: { watch: false },
+      });
+    });
+
+    it('swaps the executor field on a target-name-keyed entry', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        test: {
+          executor: '@nx/vite:test',
+          cache: true,
+          options: { watch: false },
+        },
+      };
+      updateNxJson(tree, nxJson);
+
+      await ensureVitestPackageMigration(tree);
+
+      const updated = readNxJson(tree);
+      expect(updated.targetDefaults.test).toEqual({
+        executor: '@nx/vitest:test',
+        cache: true,
+        options: { watch: false },
+      });
+    });
+
+    it('lets legacy @nx/vite:test values overwrite an existing @nx/vitest:test entry on key collision', async () => {
+      // Documents current Object.assign behavior: when both keys exist, legacy
+      // values win on overlapping fields. This is the safer default for users
+      // who set up the legacy entry intentionally and never touched the new
+      // one. Any pre-existing @nx/vitest:test fields not overlapping are kept.
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        '@nx/vite:test': {
+          cache: true,
+          options: { watch: false },
+        },
+        '@nx/vitest:test': {
+          cache: false,
+          inputs: ['default'],
+        },
+      };
+      updateNxJson(tree, nxJson);
+
+      await ensureVitestPackageMigration(tree);
+
+      const updated = readNxJson(tree);
+      expect(updated.targetDefaults['@nx/vite:test']).toBeUndefined();
+      expect(updated.targetDefaults['@nx/vitest:test']).toEqual({
+        cache: true,
+        inputs: ['default'],
+        options: { watch: false },
+      });
+    });
+  });
+
   it('should split vitest options off @nx/vite/plugin into a new @nx/vitest registration', async () => {
     const nxJson = readNxJson(tree);
     nxJson.plugins = [
