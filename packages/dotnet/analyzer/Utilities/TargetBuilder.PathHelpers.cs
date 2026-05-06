@@ -4,6 +4,14 @@ namespace MsbuildAnalyzer.Utilities;
 
 /// <summary>
 /// Path helper methods for TargetBuilder.
+///
+/// Path helpers return fully-qualified output paths prefixed with a location
+/// token Nx understands: <c>{projectRoot}/…</c> for paths inside the project
+/// directory (the MSBuild default) and <c>{workspaceRoot}/…</c> for paths that
+/// escape the project directory but remain inside the workspace (for example
+/// a centralized <c>dist/</c> folder configured via <c>Directory.Build.props</c>).
+/// Paths that escape the workspace cannot be expressed as Nx outputs, so the
+/// helpers return <c>null</c> for that case and callers filter them out.
 /// </summary>
 public static partial class TargetBuilder
 {
@@ -17,39 +25,99 @@ public static partial class TargetBuilder
     }
 
     /// <summary>
-    /// Makes an absolute path relative to the workspace root.
-    /// If the path is already relative, returns it as-is.
+    /// Resolves a raw MSBuild path string to an Nx-prefixed output path.
+    /// - Relative paths are treated as project-relative (MSBuild convention)
+    ///   and returned with a <c>{projectRoot}/</c> prefix.
+    /// - Absolute paths under the project directory are returned relative to
+    ///   the project directory with a <c>{projectRoot}/</c> prefix.
+    /// - Absolute paths elsewhere in the workspace are returned relative to
+    ///   the workspace root with a <c>{workspaceRoot}/</c> prefix.
+    /// - Absolute paths outside the workspace cannot be expressed as Nx
+    ///   outputs and return <c>null</c> so callers can drop them.
     /// </summary>
-    private static string MakeRelativeToWorkspace(string path, string workspaceRoot)
+    private static string? ResolvePath(string path, string projectDirectory, string workspaceRoot)
     {
-        if (string.IsNullOrEmpty(path) || !Path.IsPathRooted(path))
+        if (string.IsNullOrEmpty(path))
         {
-            return path;
+            return null;
         }
 
-        // Normalize paths for comparison
+        if (!Path.IsPathRooted(path))
+        {
+            var normalized = path.Replace('\\', '/').TrimEnd('/');
+            return string.IsNullOrEmpty(normalized) ? "{projectRoot}" : $"{{projectRoot}}/{normalized}";
+        }
+
         var normalizedPath = Path.GetFullPath(path);
-        var normalizedWorkspaceRoot = Path.GetFullPath(workspaceRoot);
+        var normalizedProject = Path.GetFullPath(projectDirectory);
+        var normalizedWorkspace = Path.GetFullPath(workspaceRoot);
 
-        if (normalizedPath.StartsWith(normalizedWorkspaceRoot, StringComparison.OrdinalIgnoreCase))
+        if (IsUnder(normalizedPath, normalizedProject))
         {
-            var relativePath = Path.GetRelativePath(normalizedWorkspaceRoot, normalizedPath);
-            // Convert Windows backslashes to forward slashes for Nx
-            return relativePath.Replace('\\', '/');
+            var relative = Path.GetRelativePath(normalizedProject, normalizedPath)
+                .Replace('\\', '/').TrimEnd('/');
+            return relative == "." || string.IsNullOrEmpty(relative)
+                ? "{projectRoot}"
+                : $"{{projectRoot}}/{relative}";
         }
 
-        // If path is not under workspace root, return it as-is
-        return path;
+        if (IsUnder(normalizedPath, normalizedWorkspace))
+        {
+            var relative = Path.GetRelativePath(normalizedWorkspace, normalizedPath)
+                .Replace('\\', '/').TrimEnd('/');
+            return relative == "." || string.IsNullOrEmpty(relative)
+                ? "{workspaceRoot}"
+                : $"{{workspaceRoot}}/{relative}";
+        }
+
+        // Absolute path outside the workspace cannot be tokenized as an Nx
+        // output. Drop it rather than emit something Nx can't honour.
+        return null;
     }
 
     /// <summary>
-    /// Gets the artifacts root path (defaults to "artifacts" if not specified).
-    /// This path is relative to the workspace root, not the project root.
+    /// Returns true when <paramref name="candidate"/> is the same as, or a
+    /// descendant of, <paramref name="parent"/>. Uses path-aware comparison so
+    /// a prefix like <c>/foo</c> does not match <c>/foobar</c>.
     /// </summary>
-    private static string GetArtifactsPath(Dictionary<string, string> properties, string workspaceRoot)
+    private static bool IsUnder(string candidate, string parent)
+    {
+        if (candidate.Equals(parent, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var parentWithSep = parent.EndsWith(Path.DirectorySeparatorChar) || parent.EndsWith(Path.AltDirectorySeparatorChar)
+            ? parent
+            : parent + Path.DirectorySeparatorChar;
+
+        return candidate.StartsWith(parentWithSep, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Gets the artifacts root path relative to the workspace root (defaults to "artifacts").
+    /// Used when constructing paths under the artifacts output layout. Returns
+    /// <c>null</c> when the configured path lives outside the workspace, since
+    /// Nx outputs must be expressible relative to <c>{workspaceRoot}</c>.
+    /// </summary>
+    private static string? GetArtifactsRelativePath(Dictionary<string, string> properties, string workspaceRoot)
     {
         var artifactsPath = properties.GetValueOrDefault("ArtifactsPath") ?? "artifacts";
-        return MakeRelativeToWorkspace(artifactsPath, workspaceRoot);
+        if (!Path.IsPathRooted(artifactsPath))
+        {
+            return artifactsPath.Replace('\\', '/').TrimEnd('/');
+        }
+
+        var normalizedPath = Path.GetFullPath(artifactsPath);
+        var normalizedWorkspaceRoot = Path.GetFullPath(workspaceRoot);
+
+        if (IsUnder(normalizedPath, normalizedWorkspaceRoot))
+        {
+            return Path.GetRelativePath(normalizedWorkspaceRoot, normalizedPath)
+                .Replace('\\', '/').TrimEnd('/');
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -83,137 +151,118 @@ public static partial class TargetBuilder
     }
 
     /// <summary>
-    /// Gets the output directory path for build outputs.
-    /// Handles both traditional (bin/) and artifacts (artifacts/bin/{ProjectName}/) layouts.
+    /// Gets the output directory path for build outputs, as a fully-qualified
+    /// Nx-prefixed string. Handles both traditional and artifacts layouts.
+    /// Returns <c>null</c> when the path lives outside the workspace.
     /// </summary>
-    private static string GetOutputPath(Dictionary<string, string> properties, string projectName, string workspaceRoot)
+    private static string? GetOutputPath(Dictionary<string, string> properties, string projectName, string projectDirectory, string workspaceRoot)
     {
-        // Check if using artifacts output layout
         if (UsesArtifactsOutput(properties))
         {
-            var artifactsPath = GetArtifactsPath(properties, workspaceRoot);
-            // Artifacts layout: artifacts/bin/{ProjectName}/
-            return $"{artifactsPath}/bin/{projectName}";
+            var artifactsPath = GetArtifactsRelativePath(properties, workspaceRoot);
+            return artifactsPath is null ? null : $"{{workspaceRoot}}/{artifactsPath}/bin/{projectName}";
         }
 
-        // Traditional layout: Prefer BaseOutputPath if available
         var baseOutputPath = properties.GetValueOrDefault("BaseOutputPath");
         if (!string.IsNullOrEmpty(baseOutputPath))
         {
-            var baseRelativePath = MakeRelativeToWorkspace(baseOutputPath, workspaceRoot);
-            // Normalize path separators and trim
-            return baseRelativePath.Replace('\\', '/').TrimEnd('/');
+            return ResolvePath(baseOutputPath, projectDirectory, workspaceRoot);
         }
 
-        // Otherwise use OutputPath and strip configuration if present
         var outputPath = properties.GetValueOrDefault("OutputPath")
             ?? properties.GetValueOrDefault("OutDir")
             ?? "bin";
 
-        var relativePath = MakeRelativeToWorkspace(outputPath, workspaceRoot);
-        return StripConfiguration(relativePath);
+        var resolved = ResolvePath(outputPath, projectDirectory, workspaceRoot);
+        return resolved is null ? null : StripConfiguration(resolved);
     }
 
     /// <summary>
-    /// Gets the intermediate output directory path (obj).
-    /// Handles both traditional and artifacts layouts.
+    /// Gets the intermediate output directory path (obj), as a fully-qualified
+    /// Nx-prefixed string. Returns <c>null</c> when the path lives outside the
+    /// workspace.
     /// </summary>
-    private static string GetIntermediateOutputPath(Dictionary<string, string> properties, string projectName, string workspaceRoot)
+    private static string? GetIntermediateOutputPath(Dictionary<string, string> properties, string projectName, string projectDirectory, string workspaceRoot)
     {
-        // Check if using artifacts output layout
         if (UsesArtifactsOutput(properties))
         {
-            var artifactsPath = GetArtifactsPath(properties, workspaceRoot);
-            // Artifacts layout: artifacts/obj/{ProjectName}/
-            return $"{artifactsPath}/obj/{projectName}";
+            var artifactsPath = GetArtifactsRelativePath(properties, workspaceRoot);
+            return artifactsPath is null ? null : $"{{workspaceRoot}}/{artifactsPath}/obj/{projectName}";
         }
 
-        // Traditional layout: Prefer BaseIntermediateOutputPath if available
         var baseIntermediatePath = properties.GetValueOrDefault("BaseIntermediateOutputPath");
         if (!string.IsNullOrEmpty(baseIntermediatePath))
         {
-            var baseRelativePath = MakeRelativeToWorkspace(baseIntermediatePath, workspaceRoot);
-            // Normalize path separators and trim
-            return baseRelativePath.Replace('\\', '/').TrimEnd('/');
+            return ResolvePath(baseIntermediatePath, projectDirectory, workspaceRoot);
         }
 
-        // Otherwise use IntermediateOutputPath and strip configuration if present
         var intermediatePath = properties.GetValueOrDefault("IntermediateOutputPath") ?? "obj";
 
-        var relativePath = MakeRelativeToWorkspace(intermediatePath, workspaceRoot);
-        return StripConfiguration(relativePath);
+        var resolved = ResolvePath(intermediatePath, projectDirectory, workspaceRoot);
+        return resolved is null ? null : StripConfiguration(resolved);
     }
 
     /// <summary>
-    /// Gets the publish output directory path.
-    /// Handles both traditional and artifacts layouts.
+    /// Gets the publish output directory path, as a fully-qualified Nx-prefixed
+    /// string. Returns <c>null</c> when the path lives outside the workspace.
     /// </summary>
-    private static string GetPublishDir(Dictionary<string, string> properties, string projectName, string workspaceRoot)
+    private static string? GetPublishDir(Dictionary<string, string> properties, string projectName, string projectDirectory, string workspaceRoot)
     {
-        // Check if using artifacts output layout
         if (UsesArtifactsOutput(properties))
         {
-            var artifactsPath = GetArtifactsPath(properties, workspaceRoot);
-            // Artifacts layout: artifacts/publish/{ProjectName}/
-            return $"{artifactsPath}/publish/{projectName}";
+            var artifactsPath = GetArtifactsRelativePath(properties, workspaceRoot);
+            return artifactsPath is null ? null : $"{{workspaceRoot}}/{artifactsPath}/publish/{projectName}";
         }
 
-        // Traditional layout: PublishDir can be customized
         var publishDir = properties.GetValueOrDefault("PublishDir");
         if (!string.IsNullOrEmpty(publishDir))
         {
-            return MakeRelativeToWorkspace(publishDir, workspaceRoot);
+            return ResolvePath(publishDir, projectDirectory, workspaceRoot);
         }
 
-        var outputPath = GetOutputPath(properties, projectName, workspaceRoot);
-        return $"{outputPath.TrimEnd('/')}/publish";
+        var outputPath = GetOutputPath(properties, projectName, projectDirectory, workspaceRoot);
+        return outputPath is null ? null : $"{outputPath.TrimEnd('/')}/publish";
     }
 
     /// <summary>
-    /// Gets the package output directory path.
-    /// Handles both traditional and artifacts layouts.
+    /// Gets the package output directory path, as a fully-qualified Nx-prefixed
+    /// string. Returns <c>null</c> when the path lives outside the workspace.
     /// </summary>
-    private static string GetPackageOutputPath(Dictionary<string, string> properties, string projectName, string workspaceRoot)
+    private static string? GetPackageOutputPath(Dictionary<string, string> properties, string projectName, string projectDirectory, string workspaceRoot)
     {
-        // Check if using artifacts output layout
         if (UsesArtifactsOutput(properties))
         {
-            var artifactsPath = GetArtifactsPath(properties, workspaceRoot);
-            // Artifacts layout: artifacts/package/
-            return $"{artifactsPath}/package";
+            var artifactsPath = GetArtifactsRelativePath(properties, workspaceRoot);
+            return artifactsPath is null ? null : $"{{workspaceRoot}}/{artifactsPath}/package";
         }
 
-        // Traditional layout: PackageOutputPath is where .nupkg files go
         var packageOutputPath = properties.GetValueOrDefault("PackageOutputPath");
         if (!string.IsNullOrEmpty(packageOutputPath))
         {
-            return MakeRelativeToWorkspace(packageOutputPath, workspaceRoot);
+            return ResolvePath(packageOutputPath, projectDirectory, workspaceRoot);
         }
 
-        return GetOutputPath(properties, projectName, workspaceRoot);
+        return GetOutputPath(properties, projectName, projectDirectory, workspaceRoot);
     }
 
     /// <summary>
-    /// Gets the test results directory path.
-    /// Handles both traditional and artifacts layouts.
+    /// Gets the test results directory path, as a fully-qualified Nx-prefixed
+    /// string. Returns <c>null</c> when the path lives outside the workspace.
     /// </summary>
-    private static string GetTestResultsDirectory(Dictionary<string, string> properties, string projectName, string workspaceRoot)
+    private static string? GetTestResultsDirectory(Dictionary<string, string> properties, string projectName, string projectDirectory, string workspaceRoot)
     {
-        // Check if using artifacts output layout
         if (UsesArtifactsOutput(properties))
         {
-            var artifactsPath = GetArtifactsPath(properties, workspaceRoot);
-            // Artifacts layout: artifacts/TestResults/{ProjectName}/
-            return $"{artifactsPath}/TestResults/{projectName}";
+            var artifactsPath = GetArtifactsRelativePath(properties, workspaceRoot);
+            return artifactsPath is null ? null : $"{{workspaceRoot}}/{artifactsPath}/TestResults/{projectName}";
         }
 
-        // Traditional layout: TestResultsDirectory can be customized
         var testResultsDir = properties.GetValueOrDefault("TestResultsDirectory");
         if (!string.IsNullOrEmpty(testResultsDir))
         {
-            return MakeRelativeToWorkspace(testResultsDir, workspaceRoot);
+            return ResolvePath(testResultsDir, projectDirectory, workspaceRoot);
         }
 
-        return "TestResults";
+        return "{projectRoot}/TestResults";
     }
 }

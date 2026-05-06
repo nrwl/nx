@@ -22,7 +22,7 @@ catalog:
   '@zkochan/js-yaml': '0.0.7'
   chalk: '^4.1.0'
   enquirer: '~2.3.6'
-  minimatch: '10.2.4'
+  minimatch: '10.2.5'
   picomatch: '4.0.4'
   picocolors: '^1.1.0'
   semver: '^7.6.3'

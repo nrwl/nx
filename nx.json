@@ -251,6 +251,13 @@
       "exclude": ["packages/react-native/src/generators/application/files/**/*"]
     },
     {
+      "plugin": "@nx/dotnet",
+      "options": {
+        "build": { "targetName": "build:dotnet" },
+        "test": { "targetName": "test-native" }
+      }
+    },
+    {
       "plugin": "@nx/storybook/plugin",
       "options": {
         "serveStorybookTargetName": "serve:storybook",

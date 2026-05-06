@@ -54,7 +54,7 @@
     "@napi-rs/wasm-runtime": "0.2.4",
     "@yarnpkg/lockfile": "^1.1.0",
     "@zkochan/js-yaml": "catalog:",
-    "axios": "1.15.0",
+    "axios": "1.16.0",
     "picocolors": "catalog:",
     "cli-cursor": "3.1.0",
     "cli-spinners": "2.6.1",
