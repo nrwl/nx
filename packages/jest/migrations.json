@@ -65,6 +65,11 @@
       "version": "23.0.0-beta.17",
       "description": "Migrate the deprecated `setupFile` option of the `@nx/jest:jest` executor: push the file path into `setupFilesAfterEnv` in the project's Jest config and remove the option from `project.json` and `nx.json` target defaults.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-jest-executor-setup-file"
+    },
+    "migrate-jest-configuration-skip-setup-file": {
+      "version": "23.0.0-beta.17",
+      "description": "Migrate the deprecated `skipSetupFile` option of the `@nx/jest:configuration` generator stored as a default in `nx.json` or per-project `project.json` to `setupFile: 'none'` (when `true`) or remove it (when `false`).",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-jest-configuration-skip-setup-file"
     }
   },
   "packageJsonUpdates": {
