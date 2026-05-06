@@ -37,7 +37,7 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
               "metadata": {
                 "description": "Run Vite tests",
                 "help": {
-                  "command": "npx vitest --help",
+                  "command": "pnpm exec vitest --help",
                   "example": {
                     "options": {
                       "bail": 1,
@@ -58,7 +58,10 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
             },
             "typecheck": {
               "cache": true,
-              "command": "tsc --noEmit -p tsconfig.lib.json",
+              "command": "tsc --build --emitDeclarationOnly",
+              "dependsOn": [
+                "^typecheck",
+              ],
               "inputs": [
                 "production",
                 "^production",
@@ -71,11 +74,11 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
               "metadata": {
                 "description": "Runs type-checking for the project.",
                 "help": {
-                  "command": "npx tsc -p tsconfig.lib.json --help",
+                  "command": "pnpm exec tsc --build --help",
                   "example": {
-                    "options": {
-                      "noEmit": true,
-                    },
+                    "args": [
+                      "--force",
+                    ],
                   },
                 },
                 "technologies": [
@@ -85,9 +88,12 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
               "options": {
                 "cwd": ".",
               },
+              "syncGenerators": [
+                "@nx/js:typescript-sync",
+              ],
             },
             "watch-deps": {
-              "command": "npx nx watch --projects vite --includeDependentProjects -- npx nx build-deps vite",
+              "command": "pnpm exec nx watch --projects vite --includeDependentProjects -- pnpm exec nx build-deps vite",
               "continuous": true,
               "dependsOn": [
                 "build-deps",
@@ -150,7 +156,7 @@ exports[`@nx/vite/plugin root project should create nodes with ci target name 1`
               "metadata": {
                 "description": "Run Vitest Tests in CI",
                 "help": {
-                  "command": "npx vitest --help",
+                  "command": "pnpm exec vitest --help",
                   "example": {
                     "options": {
                       "coverage": true,
@@ -188,7 +194,7 @@ exports[`@nx/vite/plugin root project should create nodes with ci target name 1`
               "metadata": {
                 "description": "Run Vitest Tests in src/test-1.ts",
                 "help": {
-                  "command": "npx vitest --help",
+                  "command": "pnpm exec vitest --help",
                   "example": {
                     "options": {
                       "coverage": true,
@@ -229,7 +235,7 @@ exports[`@nx/vite/plugin root project should create nodes with ci target name 1`
               "metadata": {
                 "description": "Run Vitest Tests in src/test-2.ts",
                 "help": {
-                  "command": "npx vitest --help",
+                  "command": "pnpm exec vitest --help",
                   "example": {
                     "options": {
                       "coverage": true,
@@ -270,7 +276,7 @@ exports[`@nx/vite/plugin root project should create nodes with ci target name 1`
               "metadata": {
                 "description": "Run Vite tests",
                 "help": {
-                  "command": "npx vitest --help",
+                  "command": "pnpm exec vitest --help",
                   "example": {
                     "options": {
                       "bail": 1,
@@ -291,7 +297,10 @@ exports[`@nx/vite/plugin root project should create nodes with ci target name 1`
             },
             "typecheck": {
               "cache": true,
-              "command": "tsc --noEmit -p tsconfig.lib.json",
+              "command": "tsc --build --emitDeclarationOnly",
+              "dependsOn": [
+                "^typecheck",
+              ],
               "inputs": [
                 "production",
                 "^production",
@@ -304,11 +313,11 @@ exports[`@nx/vite/plugin root project should create nodes with ci target name 1`
               "metadata": {
                 "description": "Runs type-checking for the project.",
                 "help": {
-                  "command": "npx tsc -p tsconfig.lib.json --help",
+                  "command": "pnpm exec tsc --build --help",
                   "example": {
-                    "options": {
-                      "noEmit": true,
-                    },
+                    "args": [
+                      "--force",
+                    ],
                   },
                 },
                 "technologies": [
@@ -318,9 +327,12 @@ exports[`@nx/vite/plugin root project should create nodes with ci target name 1`
               "options": {
                 "cwd": ".",
               },
+              "syncGenerators": [
+                "@nx/js:typescript-sync",
+              ],
             },
             "watch-deps": {
-              "command": "npx nx watch --projects vite --includeDependentProjects -- npx nx build-deps vite",
+              "command": "pnpm exec nx watch --projects vite --includeDependentProjects -- pnpm exec nx build-deps vite",
               "continuous": true,
               "dependsOn": [
                 "build-deps",
@@ -383,7 +395,7 @@ exports[`@nx/vite/plugin root project should create nodes with ci target name an
               "metadata": {
                 "description": "Run Vitest Tests in CI",
                 "help": {
-                  "command": "npx vitest --help",
+                  "command": "pnpm exec vitest --help",
                   "example": {
                     "options": {
                       "coverage": true,
@@ -421,7 +433,7 @@ exports[`@nx/vite/plugin root project should create nodes with ci target name an
               "metadata": {
                 "description": "Run Vitest Tests in src/test-1.ts",
                 "help": {
-                  "command": "npx vitest --help",
+                  "command": "pnpm exec vitest --help",
                   "example": {
                     "options": {
                       "coverage": true,
@@ -462,7 +474,7 @@ exports[`@nx/vite/plugin root project should create nodes with ci target name an
               "metadata": {
                 "description": "Run Vitest Tests in src/test-2.ts",
                 "help": {
-                  "command": "npx vitest --help",
+                  "command": "pnpm exec vitest --help",
                   "example": {
                     "options": {
                       "coverage": true,
@@ -503,7 +515,7 @@ exports[`@nx/vite/plugin root project should create nodes with ci target name an
               "metadata": {
                 "description": "Run Vite tests",
                 "help": {
-                  "command": "npx vitest --help",
+                  "command": "pnpm exec vitest --help",
                   "example": {
                     "options": {
                       "bail": 1,
@@ -524,7 +536,10 @@ exports[`@nx/vite/plugin root project should create nodes with ci target name an
             },
             "typecheck": {
               "cache": true,
-              "command": "tsc --noEmit -p tsconfig.lib.json",
+              "command": "tsc --build --emitDeclarationOnly",
+              "dependsOn": [
+                "^typecheck",
+              ],
               "inputs": [
                 "production",
                 "^production",
@@ -537,11 +552,11 @@ exports[`@nx/vite/plugin root project should create nodes with ci target name an
               "metadata": {
                 "description": "Runs type-checking for the project.",
                 "help": {
-                  "command": "npx tsc -p tsconfig.lib.json --help",
+                  "command": "pnpm exec tsc --build --help",
                   "example": {
-                    "options": {
-                      "noEmit": true,
-                    },
+                    "args": [
+                      "--force",
+                    ],
                   },
                 },
                 "technologies": [
@@ -551,9 +566,12 @@ exports[`@nx/vite/plugin root project should create nodes with ci target name an
               "options": {
                 "cwd": ".",
               },
+              "syncGenerators": [
+                "@nx/js:typescript-sync",
+              ],
             },
             "watch-deps": {
-              "command": "npx nx watch --projects vite --includeDependentProjects -- npx nx build-deps vite",
+              "command": "pnpm exec nx watch --projects vite --includeDependentProjects -- pnpm exec nx build-deps vite",
               "continuous": true,
               "dependsOn": [
                 "build-deps",

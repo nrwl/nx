@@ -1,0 +1,39 @@
+import { readJsonFile, workspaceRoot } from '@nx/devkit';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { Plugin } from 'vite';
+
+/**
+ * Reads `customConditions` from `tsconfig.base.json` and adds them to
+ * Vite's `resolve.conditions` so that Vite can resolve package exports
+ * that use those conditions (e.g. the TypeScript source condition used
+ * in TS solution setups).
+ */
+export function nxTsPlugin(): Plugin {
+  return {
+    name: 'nx-ts',
+    config() {
+      const tsconfigPath = join(workspaceRoot, 'tsconfig.base.json');
+      if (!existsSync(tsconfigPath)) {
+        return;
+      }
+
+      try {
+        const tsconfig = readJsonFile(tsconfigPath);
+        const customConditions: string[] =
+          tsconfig.compilerOptions?.customConditions;
+
+        if (customConditions?.length) {
+          return {
+            resolve: {
+              conditions: customConditions,
+            },
+          };
+        }
+      } catch {
+        // Silently ignore parse errors — the config may be malformed
+        // but that's not this plugin's problem to report.
+      }
+    },
+  };
+}

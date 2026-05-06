@@ -109,4 +109,45 @@ ${content}`
       `Successfully ran target typecheck for project @proj/${reactApp}`
     );
   }, 300_000);
+
+  it('should build app that imports from a generated library', () => {
+    const app = uniq('ts-app');
+    const lib = uniq('ts-lib');
+
+    runCLI(
+      `generate @nx/react:app apps/${app} --bundler=vite --e2eTestRunner=none`
+    );
+    runCLI(
+      `generate @nx/js:lib packages/${lib} --bundler=vite --e2eTestRunner=none`
+    );
+
+    // import from the library in the app
+    updateFile(
+      `apps/${app}/src/app/app.tsx`,
+      (content) => `import { ${names(lib).propertyName} } from '@proj/${lib}';
+console.log(${names(lib).propertyName}());
+
+${content}`
+    );
+
+    const pm = getSelectedPackageManager();
+    if (pm === 'pnpm') {
+      updateJson(`apps/${app}/package.json`, (json) => {
+        json.dependencies ??= {};
+        json.dependencies[`@proj/${lib}`] = 'workspace:*';
+        return json;
+      });
+
+      const pmc = getPackageManagerCommand({ packageManager: pm });
+      runCommand(pmc.install);
+    }
+
+    runCLI(`sync`);
+
+    // build should succeed — proves nxTsPlugin resolves the library's
+    // custom condition exports correctly
+    expect(runCLI(`build ${app}`)).toContain(
+      `Successfully ran target build for project @proj/${app}`
+    );
+  }, 300_000);
 });

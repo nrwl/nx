@@ -322,9 +322,9 @@ describe('vitest generator', () => {
       expect(appTree.read('packages/pkg1/tsconfig.spec.json', 'utf-8'))
         .toMatchInlineSnapshot(`
         "{
-          "extends": "../../tsconfig.base.json",
+          "extends": "./tsconfig.json",
           "compilerOptions": {
-            "outDir": "./out-tsc/vitest",
+            "outDir": "../../dist/out-tsc",
             "types": [
               "vitest/globals",
               "vitest/importMeta",

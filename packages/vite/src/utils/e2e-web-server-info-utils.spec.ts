@@ -39,10 +39,10 @@ describe('getViteE2EWebServerInfo', () => {
     expect(e2eWebServerInfo).toMatchInlineSnapshot(`
       {
         "e2eCiBaseUrl": "http://localhost:4300",
-        "e2eCiWebServerCommand": "npx nx run app:preview",
+        "e2eCiWebServerCommand": "pnpm exec nx run app:preview",
         "e2eDevServerTarget": "app:dev",
         "e2eWebServerAddress": "http://localhost:4200",
-        "e2eWebServerCommand": "npx nx run app:dev",
+        "e2eWebServerCommand": "pnpm exec nx run app:dev",
       }
     `);
   });
@@ -65,10 +65,10 @@ describe('getViteE2EWebServerInfo', () => {
     expect(e2eWebServerInfo).toMatchInlineSnapshot(`
       {
         "e2eCiBaseUrl": "http://localhost:4300",
-        "e2eCiWebServerCommand": "npx nx run app:preview",
+        "e2eCiWebServerCommand": "pnpm exec nx run app:preview",
         "e2eDevServerTarget": "app:dev",
         "e2eWebServerAddress": "http://localhost:4200",
-        "e2eWebServerCommand": "npx nx run app:dev",
+        "e2eWebServerCommand": "pnpm exec nx run app:dev",
       }
     `);
   });
@@ -98,10 +98,10 @@ describe('getViteE2EWebServerInfo', () => {
     expect(e2eWebServerInfo).toMatchInlineSnapshot(`
       {
         "e2eCiBaseUrl": "http://localhost:4300",
-        "e2eCiWebServerCommand": "npx nx run app:vite:preview",
+        "e2eCiWebServerCommand": "pnpm exec nx run app:vite:preview",
         "e2eDevServerTarget": "app:dev",
         "e2eWebServerAddress": "http://localhost:4200",
-        "e2eWebServerCommand": "npx nx run app:dev",
+        "e2eWebServerCommand": "pnpm exec nx run app:dev",
       }
     `);
   });
@@ -140,10 +140,10 @@ describe('getViteE2EWebServerInfo', () => {
     expect(e2eWebServerInfo).toMatchInlineSnapshot(`
       {
         "e2eCiBaseUrl": "http://localhost:4300",
-        "e2eCiWebServerCommand": "npx nx run app:vite-preview",
+        "e2eCiWebServerCommand": "pnpm exec nx run app:vite-preview",
         "e2eDevServerTarget": "app:dev",
         "e2eWebServerAddress": "http://localhost:4200",
-        "e2eWebServerCommand": "npx nx run app:dev",
+        "e2eWebServerCommand": "pnpm exec nx run app:dev",
       }
     `);
   });

@@ -162,7 +162,10 @@ export function createOrEditViteConfig(
     );
   }
 
-  if (!isTsSolutionSetup) {
+  if (isTsSolutionSetup) {
+    imports.push(`import { nxTsPlugin } from '@nx/vite/plugins/nx-ts.plugin'`);
+    plugins.push(`nxTsPlugin()`);
+  } else {
     imports.push(
       `import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'`,
       `import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'`
