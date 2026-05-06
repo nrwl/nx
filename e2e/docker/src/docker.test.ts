@@ -70,6 +70,60 @@ describe('Docker E2Es', () => {
     });
 
     it(
+      'should allow releasing docker images with multiple version plans',
+      async () => {
+        const myapp = 'api';
+        createDockerApp(myapp);
+        addDockerReleaseConfiguration(myapp, {
+          skipVersionActions: false,
+          versionPlans: true,
+          versionSchemes: {
+            production: '{versionActionsVersion}',
+          },
+        });
+        addDockerPluginIfNotExists();
+
+        runCLI(`reset`);
+
+        const result = runCLI(`run ${myapp}:docker:build`);
+        expect(result.includes('Successfully ran target')).toBeTruthy();
+
+        createFile(
+          '.nx/version-plans/bump-patch.md',
+          `---
+${myapp}: patch
+---
+
+Patch docker app
+`
+        );
+        createFile(
+          '.nx/version-plans/bump-minor.md',
+          `---
+${myapp}: minor
+---
+
+Minor docker app
+`
+        );
+
+        await runCommandAsync(`git add .nx/version-plans`);
+        await runCommandAsync(
+          `git commit -m "chore: add docker version plans"`
+        );
+
+        const releaseResult = runCLI(
+          'release --dockerVersionScheme=production --yes --verbose'
+        );
+        expect(releaseResult.includes('Successfully ran target')).toBeTruthy();
+        expect(releaseResult).toContain(
+          'Image tagged with localhost:5000/test/api:0.1.0.'
+        );
+      },
+      TEN_MINS_MS
+    );
+
+    it(
       'should skip default tag when skipDefaultTag is true',
       () => {
         const myapp = uniq('myapp');
@@ -158,7 +212,14 @@ function addDockerPluginIfNotExists() {
   });
 }
 
-function addDockerReleaseConfiguration(name: string) {
+function addDockerReleaseConfiguration(
+  name: string,
+  options: {
+    skipVersionActions?: boolean;
+    versionPlans?: boolean;
+    versionSchemes?: Record<string, string>;
+  } = {}
+) {
   updateJson(`packages/${name}/project.json`, (projectJson) => {
     projectJson.release = {
       docker: {
@@ -172,10 +233,12 @@ function addDockerReleaseConfiguration(name: string) {
     nxJson.release = {
       projects: [name],
       projectsRelationship: 'independent',
+      versionPlans: options.versionPlans ?? false,
       releaseTagPattern: 'release/{projectName}/{version}',
       docker: {
         registryUrl: 'localhost:5000',
-        skipVersionActions: true,
+        skipVersionActions: options.skipVersionActions ?? true,
+        versionSchemes: options.versionSchemes,
       },
     };
     return nxJson;
