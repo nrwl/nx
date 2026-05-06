@@ -14,14 +14,6 @@ import {
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { nxVersion } from '../../utils/versions';
 
-interface ViteTestExecutorOptions {
-  configFile?: string;
-  reportsDirectory?: string;
-  mode?: string;
-  testFiles?: string[];
-  watch?: boolean;
-}
-
 type PluginEntry = ExpandedPluginConfiguration<Record<string, unknown>>;
 
 // @nx/vite no longer infers vitest targets, nor provides vitest executor.
@@ -61,13 +53,9 @@ function installVitestPackage(tree: Tree): GeneratorCallback {
 function migrateExecutorUsages(tree: Tree): boolean {
   const projectsToUpdate = new Set<string>();
 
-  forEachExecutorOptions<ViteTestExecutorOptions>(
-    tree,
-    '@nx/vite:test',
-    (_options, projectName) => {
-      projectsToUpdate.add(projectName);
-    }
-  );
+  forEachExecutorOptions(tree, '@nx/vite:test', (_options, projectName) => {
+    projectsToUpdate.add(projectName);
+  });
 
   if (projectsToUpdate.size === 0) {
     return false;
