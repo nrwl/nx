@@ -1,3 +1,4 @@
+import { getNxRequirePaths } from './installation-directory';
 import { logger } from './logger';
 import { getPackageManagerCommand } from './package-manager';
 import { workspaceRoot } from './workspace-root';
@@ -30,7 +31,7 @@ export async function printNxKey() {
 // is just the filesystem lookup and is microseconds when the package is absent.
 function packageInstalled(name: string): boolean {
   try {
-    require.resolve(name, { paths: [workspaceRoot] });
+    require.resolve(name, { paths: getNxRequirePaths() });
     return true;
   } catch {
     return false;
