@@ -84,16 +84,19 @@ const internalCreateNodesV2 = async (
     return sharedEslint;
   };
 
-  const projects: CreateNodesResult['projects'] = {};
-  await Promise.all(
-    projectRootsByEslintRoots.get(configDir).map(async (projectRoot) => {
+  // Collect each project root's contribution in parallel, but write
+  // them into `projects` afterwards in input order so insertion order
+  // (and therefore downstream merge order) is deterministic. Mutating
+  // `projects` from inside `Promise.all` would order keys by which
+  // async branch resolves first.
+  const orderedProjectRoots = projectRootsByEslintRoots.get(configDir) ?? [];
+  const contributions = await Promise.all(
+    orderedProjectRoots.map(async (projectRoot) => {
       const hash = hashByRoot.get(projectRoot);
 
       const cached = projectsCache.get(hash);
       if (cached) {
-        // We can reuse the projects in the cache.
-        Object.assign(projects, cached);
-        return;
+        return cached;
       }
 
       let hasNonIgnoredLintableFiles = false;
@@ -114,7 +117,7 @@ const internalCreateNodesV2 = async (
       if (!hasNonIgnoredLintableFiles) {
         // No lintable files in the project, store in the cache and skip further processing
         projectsCache.set(hash, {});
-        return;
+        return null;
       }
 
       const project = getProjectUsingESLintConfig(
@@ -128,15 +131,24 @@ const internalCreateNodesV2 = async (
       );
 
       if (project) {
-        projects[projectRoot] = project;
+        const entry = { [projectRoot]: project };
         // Store project into the cache
-        projectsCache.set(hash, { [projectRoot]: project });
-      } else {
-        // No project found, store in the cache
-        projectsCache.set(hash, {});
+        projectsCache.set(hash, entry);
+        return entry;
       }
+
+      // No project found, store in the cache
+      projectsCache.set(hash, {});
+      return null;
     })
   );
+
+  const projects: CreateNodesResult['projects'] = {};
+  for (const contribution of contributions) {
+    if (contribution) {
+      Object.assign(projects, contribution);
+    }
+  }
 
   return {
     projects,
