@@ -11,6 +11,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { dirname, join } from 'node:path/posix';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { allTargetOptions } from '../../utils/targets';
 import { setupSsr } from '../setup-ssr/setup-ssr';
 import { validateProject } from '../utils/validations';
@@ -39,6 +40,7 @@ export async function convertToApplicationExecutor(
   tree: Tree,
   options: GeneratorOptions
 ) {
+  assertSupportedAngularVersion(tree);
   let didAnySucceed = false;
   if (options.project) {
     validateProject(tree, options.project);

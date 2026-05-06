@@ -37,5 +37,11 @@ export function addAngularEsLintDependencies(
     devDependencies['jsonc-eslint-parser'] = jsoncEslintParserVersionToInstall;
   }
 
-  return addDependenciesToPackageJson(tree, {}, devDependencies);
+  return addDependenciesToPackageJson(
+    tree,
+    {},
+    devDependencies,
+    undefined,
+    true
+  );
 }
