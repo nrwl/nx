@@ -32,8 +32,9 @@ jobs:
         node_version:
           - 22
           - 24
+          - 26
         exclude:
-          # run just node v24 on macos and windows
+          # macos skips the oldest node to keep the macos matrix slim
           - os: macos-latest
             node_version: 22
           # - os: windows-latest TODO(Jack): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
