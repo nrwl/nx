@@ -1,7 +1,6 @@
 import { logger } from './logger';
 import { getPackageManagerCommand } from './package-manager';
 import { workspaceRoot } from './workspace-root';
-import { handleImport } from './handle-import';
 import type { NxKey } from '@nx/key';
 
 export function createNxKeyLicenseeInformation(nxKey: NxKey) {
@@ -27,30 +26,32 @@ export async function printNxKey() {
   } catch {}
 }
 
-export async function getNxKeyInformation(): Promise<NxKey | null> {
+// `await handleImport` walks node_modules and pays ~25ms per miss; `resolve`
+// is just the filesystem lookup and is microseconds when the package is absent.
+function packageInstalled(name: string): boolean {
   try {
+    require.resolve(name, { paths: [workspaceRoot] });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function getNxKeyInformation(): Promise<NxKey | null> {
+  if (packageInstalled('@nx/powerpack-license')) {
     const {
       getPowerpackLicenseInformation,
       getPowerpackLicenseInformationAsync,
-    } = (await handleImport(
-      '@nx/powerpack-license'
-    )) as typeof import('@nx/powerpack-license');
+    } = await import('@nx/powerpack-license');
     return (
       getPowerpackLicenseInformationAsync ?? getPowerpackLicenseInformation
     )(workspaceRoot);
-  } catch (e) {
-    try {
-      const { getNxKeyInformationAsync } = (await handleImport(
-        '@nx/key'
-      )) as typeof import('@nx/key');
-      return getNxKeyInformationAsync(workspaceRoot);
-    } catch (e) {
-      if ('code' in e && e.code === 'MODULE_NOT_FOUND') {
-        throw new NxKeyNotInstalledError(e);
-      }
-      throw e;
-    }
   }
+  if (packageInstalled('@nx/key')) {
+    const { getNxKeyInformationAsync } = await import('@nx/key');
+    return getNxKeyInformationAsync(workspaceRoot);
+  }
+  throw new NxKeyNotInstalledError(new Error('MODULE_NOT_FOUND'));
 }
 
 export class NxKeyNotInstalledError extends Error {
