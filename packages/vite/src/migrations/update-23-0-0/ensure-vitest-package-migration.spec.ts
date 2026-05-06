@@ -243,6 +243,45 @@ export default defineConfig({});
     expect(vitestEntries).toHaveLength(0);
   });
 
+  it('should pair @nx/vitest with each scoped @nx/vite/plugin even when one scope already had testTargetName and another was bare', async () => {
+    const nxJson = readNxJson(tree);
+    nxJson.plugins = [
+      {
+        plugin: '@nx/vite/plugin',
+        options: { testTargetName: 'test' },
+        include: ['apps/**/*'],
+      },
+      {
+        plugin: '@nx/vite/plugin',
+        include: ['libs/**/*'],
+      },
+    ];
+    updateNxJson(tree, nxJson);
+    // Vitest signal in libs so workspaceUsesVitest returns true for the bare entry's scope.
+    tree.write(
+      'libs/lib1/vite.config.ts',
+      `import { defineConfig } from 'vite';
+export default defineConfig({ test: { globals: true } });
+`
+    );
+
+    await ensureVitestPackageMigration(tree);
+
+    const updated = readNxJson(tree);
+    // apps scope: vitest options moved off vite, mirrored onto a scoped @nx/vitest.
+    expect(updated.plugins).toContainEqual({
+      plugin: '@nx/vitest',
+      options: { testTargetName: 'test' },
+      include: ['apps/**/*'],
+    });
+    // libs scope: bare vite entry should pick up a paired bare @nx/vitest. This is
+    // the gap — without it, libs/ silently loses test inference under v23.
+    expect(updated.plugins).toContainEqual({
+      plugin: '@nx/vitest',
+      include: ['libs/**/*'],
+    });
+  });
+
   it('should split vitest options off @nx/vite/plugin into a new @nx/vitest registration', async () => {
     const nxJson = readNxJson(tree);
     nxJson.plugins = [

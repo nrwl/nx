@@ -174,13 +174,6 @@ async function ensureVitestPluginRegistration(tree: Tree): Promise<boolean> {
     return false;
   }
 
-  const hasVitestPlugin = nxJson.plugins.some((p) =>
-    typeof p === 'string' ? p === '@nx/vitest' : p.plugin === '@nx/vitest'
-  );
-  if (hasVitestPlugin) {
-    return false;
-  }
-
   const vitePluginRegistrations = nxJson.plugins.filter((p) =>
     typeof p === 'string'
       ? p === '@nx/vite/plugin'
@@ -196,23 +189,48 @@ async function ensureVitestPluginRegistration(tree: Tree): Promise<boolean> {
     return false;
   }
 
+  // Skip @nx/vite/plugin entries whose scope already has a matching @nx/vitest.
+  // Mixed-shape configs (one scope split by migratePluginConfigurations, another
+  // bare) need per-scope checks rather than a global short-circuit.
+  const coveredScopes = new Set(
+    nxJson.plugins
+      .filter((p) =>
+        typeof p === 'string' ? p === '@nx/vitest' : p.plugin === '@nx/vitest'
+      )
+      .map((p) => scopeKey(typeof p === 'string' ? { plugin: p } : p))
+  );
+
+  let added = false;
   for (const vitePlugin of vitePluginRegistrations) {
-    if (typeof vitePlugin === 'string') {
-      nxJson.plugins.push({ plugin: '@nx/vitest' });
+    const vitestPlugin: PluginEntry = { plugin: '@nx/vitest' };
+    if (typeof vitePlugin !== 'string') {
+      if (vitePlugin.include) {
+        vitestPlugin.include = vitePlugin.include as string[];
+      }
+      if (vitePlugin.exclude) {
+        vitestPlugin.exclude = vitePlugin.exclude as string[];
+      }
+    }
+    if (coveredScopes.has(scopeKey(vitestPlugin))) {
       continue;
     }
-    const vitestPlugin: PluginEntry = { plugin: '@nx/vitest' };
-    if (vitePlugin.include) {
-      vitestPlugin.include = vitePlugin.include as string[];
-    }
-    if (vitePlugin.exclude) {
-      vitestPlugin.exclude = vitePlugin.exclude as string[];
-    }
     nxJson.plugins.push(vitestPlugin);
+    coveredScopes.add(scopeKey(vitestPlugin));
+    added = true;
   }
 
+  if (!added) {
+    return false;
+  }
   updateNxJson(tree, nxJson);
   return true;
+}
+
+function scopeKey(entry: PluginEntry): string {
+  return [
+    (entry.include ?? []).join(','),
+    (entry.exclude ?? []).join(','),
+  ].join('|');
 }
 
 async function workspaceUsesVitest(tree: Tree): Promise<boolean> {
