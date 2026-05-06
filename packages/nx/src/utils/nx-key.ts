@@ -38,6 +38,10 @@ function packageInstalled(name: string): boolean {
 }
 
 export async function getNxKeyInformation(): Promise<NxKey | null> {
+  if (packageInstalled('@nx/key')) {
+    const { getNxKeyInformationAsync } = await import('@nx/key');
+    return getNxKeyInformationAsync(workspaceRoot);
+  }
   if (packageInstalled('@nx/powerpack-license')) {
     const {
       getPowerpackLicenseInformation,
@@ -46,10 +50,6 @@ export async function getNxKeyInformation(): Promise<NxKey | null> {
     return (
       getPowerpackLicenseInformationAsync ?? getPowerpackLicenseInformation
     )(workspaceRoot);
-  }
-  if (packageInstalled('@nx/key')) {
-    const { getNxKeyInformationAsync } = await import('@nx/key');
-    return getNxKeyInformationAsync(workspaceRoot);
   }
   throw new NxKeyNotInstalledError(new Error('MODULE_NOT_FOUND'));
 }
