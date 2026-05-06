@@ -16,6 +16,17 @@ describe('ensure-vitest-package-migration (v23 safety net)', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
+  // Adds a vitest config file so the migration treats the workspace as
+  // actually using vitest (matches inference-only setups).
+  function addVitestSignal(tree: Tree) {
+    tree.write(
+      'libs/has-vitest/vitest.config.ts',
+      `import { defineConfig } from 'vitest/config';
+export default defineConfig({});
+`
+    );
+  }
+
   it('should swap remaining @nx/vite:test executor usages to @nx/vitest:test', async () => {
     addProjectConfiguration(tree, 'my-lib', {
       root: 'libs/my-lib',
@@ -41,10 +52,11 @@ describe('ensure-vitest-package-migration (v23 safety net)', () => {
     expect(packageJson.devDependencies['@nx/vitest']).toBeDefined();
   });
 
-  it('should add @nx/vitest plugin when default @nx/vite/plugin is registered as a string', async () => {
+  it('should add @nx/vitest plugin when default @nx/vite/plugin is registered as a string and vitest is in use', async () => {
     const nxJson = readNxJson(tree);
     nxJson.plugins = ['@nx/vite/plugin'];
     updateNxJson(tree, nxJson);
+    addVitestSignal(tree);
 
     await ensureVitestPackageMigration(tree);
 
@@ -53,10 +65,11 @@ describe('ensure-vitest-package-migration (v23 safety net)', () => {
     expect(updated.plugins).toContain('@nx/vite/plugin');
   });
 
-  it('should add @nx/vitest plugin when default @nx/vite/plugin is registered as an object with no test options', async () => {
+  it('should add @nx/vitest plugin when default @nx/vite/plugin is registered as an object with no test options and vitest is in use', async () => {
     const nxJson = readNxJson(tree);
     nxJson.plugins = [{ plugin: '@nx/vite/plugin' }];
     updateNxJson(tree, nxJson);
+    addVitestSignal(tree);
 
     await ensureVitestPackageMigration(tree);
 
@@ -75,6 +88,7 @@ describe('ensure-vitest-package-migration (v23 safety net)', () => {
       },
     ];
     updateNxJson(tree, nxJson);
+    addVitestSignal(tree);
 
     await ensureVitestPackageMigration(tree);
 
@@ -86,10 +100,67 @@ describe('ensure-vitest-package-migration (v23 safety net)', () => {
     });
   });
 
+  it('should detect inference-only usage via vite.config.ts test block and register @nx/vitest', async () => {
+    const nxJson = readNxJson(tree);
+    nxJson.plugins = [{ plugin: '@nx/vite/plugin' }];
+    updateNxJson(tree, nxJson);
+    tree.write(
+      'libs/my-lib/vite.config.ts',
+      `import { defineConfig } from 'vite';
+export default defineConfig({
+  test: { globals: true },
+});
+`
+    );
+
+    await ensureVitestPackageMigration(tree);
+
+    const updated = readNxJson(tree);
+    expect(updated.plugins).toContainEqual({ plugin: '@nx/vitest' });
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies?.['@nx/vitest']).toBeDefined();
+  });
+
+  it('should detect inference-only usage via vitest.config.ts and register @nx/vitest', async () => {
+    const nxJson = readNxJson(tree);
+    nxJson.plugins = [{ plugin: '@nx/vite/plugin' }];
+    updateNxJson(tree, nxJson);
+    tree.write(
+      'libs/my-lib/vitest.config.ts',
+      `import { defineConfig } from 'vitest/config';
+export default defineConfig({});
+`
+    );
+
+    await ensureVitestPackageMigration(tree);
+
+    const updated = readNxJson(tree);
+    expect(updated.plugins).toContainEqual({ plugin: '@nx/vitest' });
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies?.['@nx/vitest']).toBeDefined();
+  });
+
+  it('should not register @nx/vitest when @nx/vite/plugin is registered but workspace has no vitest signal', async () => {
+    const nxJson = readNxJson(tree);
+    nxJson.plugins = [{ plugin: '@nx/vite/plugin' }];
+    updateNxJson(tree, nxJson);
+
+    await ensureVitestPackageMigration(tree);
+
+    const updated = readNxJson(tree);
+    const vitestEntries = (updated.plugins ?? []).filter((p) =>
+      typeof p === 'string' ? p === '@nx/vitest' : p.plugin === '@nx/vitest'
+    );
+    expect(vitestEntries).toHaveLength(0);
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies?.['@nx/vitest']).toBeUndefined();
+  });
+
   it('should be a no-op when @nx/vitest plugin is already registered and @nx/vite/plugin has no vitest options', async () => {
     const nxJson = readNxJson(tree);
     nxJson.plugins = [{ plugin: '@nx/vite/plugin' }, { plugin: '@nx/vitest' }];
     updateNxJson(tree, nxJson);
+    addVitestSignal(tree);
 
     await ensureVitestPackageMigration(tree);
 
@@ -135,11 +206,14 @@ describe('ensure-vitest-package-migration (v23 safety net)', () => {
     expect(updatedPackageJson.devDependencies['@nx/vitest']).toBe('23.0.0');
   });
 
-  it('installs @nx/vitest when root package.json depends on vitest', async () => {
+  it('installs @nx/vitest when @nx/vite/plugin is registered and root package.json depends on vitest', async () => {
     const packageJson = readJson(tree, 'package.json');
     packageJson.devDependencies = packageJson.devDependencies || {};
     packageJson.devDependencies['vitest'] = '^2.0.0';
     tree.write('package.json', JSON.stringify(packageJson, null, 2));
+    const nxJson = readNxJson(tree);
+    nxJson.plugins = [{ plugin: '@nx/vite/plugin' }];
+    updateNxJson(tree, nxJson);
 
     await ensureVitestPackageMigration(tree);
 
@@ -147,7 +221,7 @@ describe('ensure-vitest-package-migration (v23 safety net)', () => {
     expect(updatedPackageJson.devDependencies['@nx/vitest']).toBeDefined();
   });
 
-  it('does not install @nx/vitest when no vitest dependency and no @nx/vite:test executor are present', async () => {
+  it('does not install @nx/vitest when nothing in the workspace needs migrating', async () => {
     addProjectConfiguration(tree, 'my-lib', {
       root: 'libs/my-lib',
       targets: {
@@ -162,6 +236,11 @@ describe('ensure-vitest-package-migration (v23 safety net)', () => {
 
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies?.['@nx/vitest']).toBeUndefined();
+    const updated = readNxJson(tree);
+    const vitestEntries = (updated.plugins ?? []).filter((p) =>
+      typeof p === 'string' ? p === '@nx/vitest' : p.plugin === '@nx/vitest'
+    );
+    expect(vitestEntries).toHaveLength(0);
   });
 
   it('should merge vitest options into existing @nx/vitest when both plugins are registered', async () => {

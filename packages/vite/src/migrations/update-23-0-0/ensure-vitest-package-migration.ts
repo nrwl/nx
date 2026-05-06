@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   formatFiles,
+  globAsync,
   readJson,
   readNxJson,
   readProjectConfiguration,
@@ -30,35 +31,29 @@ type PluginEntry = {
 // v23 safety net — @nx/vite:test executor + plugin test inference removed.
 // - swap @nx/vite:test → @nx/vitest:test (project + targetDefaults)
 // - register @nx/vitest plugin alongside default-config @nx/vite/plugin (v22 gap)
+// - install @nx/vitest only when at least one of the above actually fired
 export default async function ensureVitestPackageMigration(
   tree: Tree
 ): Promise<GeneratorCallback> {
-  const installTask = installVitestPackageIfNeeded(tree);
-  migrateExecutorUsages(tree);
-  migratePluginConfigurations(tree);
-  migrateTargetDefaults(tree);
-  ensureVitestPluginRegistration(tree);
+  const migratedExecutors = migrateExecutorUsages(tree);
+  const migratedPlugins = migratePluginConfigurations(tree);
+  const migratedTargetDefaults = migrateTargetDefaults(tree);
+  const registeredVitestPlugin = await ensureVitestPluginRegistration(tree);
+
   await formatFiles(tree);
-  return installTask;
-}
 
-function workspaceUsesVitest(tree: Tree): boolean {
-  const packageJson = readJson(tree, 'package.json');
   if (
-    packageJson.dependencies?.['vitest'] ||
-    packageJson.devDependencies?.['vitest']
+    migratedExecutors ||
+    migratedPlugins ||
+    migratedTargetDefaults ||
+    registeredVitestPlugin
   ) {
-    return true;
+    return installVitestPackage(tree);
   }
-
-  let hasViteTestExecutor = false;
-  forEachExecutorOptions(tree, '@nx/vite:test', () => {
-    hasViteTestExecutor = true;
-  });
-  return hasViteTestExecutor;
+  return () => {};
 }
 
-function installVitestPackageIfNeeded(tree: Tree): GeneratorCallback {
+function installVitestPackage(tree: Tree): GeneratorCallback {
   const packageJson = readJson(tree, 'package.json');
   const hasNxVitest =
     packageJson.dependencies?.['@nx/vitest'] ||
@@ -66,13 +61,10 @@ function installVitestPackageIfNeeded(tree: Tree): GeneratorCallback {
   if (hasNxVitest) {
     return () => {};
   }
-  if (!workspaceUsesVitest(tree)) {
-    return () => {};
-  }
   return addDependenciesToPackageJson(tree, {}, { '@nx/vitest': nxVersion });
 }
 
-function migrateExecutorUsages(tree: Tree): void {
+function migrateExecutorUsages(tree: Tree): boolean {
   const projectsToUpdate = new Set<string>();
 
   forEachExecutorOptions<ViteTestExecutorOptions>(
@@ -83,6 +75,10 @@ function migrateExecutorUsages(tree: Tree): void {
     }
   );
 
+  if (projectsToUpdate.size === 0) {
+    return false;
+  }
+
   for (const projectName of projectsToUpdate) {
     const projectConfig = readProjectConfiguration(tree, projectName);
     for (const target of Object.values(projectConfig.targets ?? {})) {
@@ -92,6 +88,7 @@ function migrateExecutorUsages(tree: Tree): void {
     }
     updateProjectConfiguration(tree, projectName, projectConfig);
   }
+  return true;
 }
 
 function scopeKey(entry: PluginEntry): string {
@@ -101,14 +98,15 @@ function scopeKey(entry: PluginEntry): string {
   ].join('|');
 }
 
-function migratePluginConfigurations(tree: Tree): void {
+function migratePluginConfigurations(tree: Tree): boolean {
   const nxJson = readNxJson(tree);
   if (!nxJson?.plugins) {
-    return;
+    return false;
   }
 
   const newPlugins: typeof nxJson.plugins = [];
   const vitestPluginsToAdd: PluginEntry[] = [];
+  let changed = false;
 
   for (const plugin of nxJson.plugins) {
     if (typeof plugin === 'string') {
@@ -145,6 +143,7 @@ function migratePluginConfigurations(tree: Tree): void {
         delete updatedVitePlugin.options;
       }
       newPlugins.push(updatedVitePlugin);
+      changed = true;
     } else {
       newPlugins.push(plugin);
     }
@@ -179,14 +178,19 @@ function migratePluginConfigurations(tree: Tree): void {
     }
   }
 
+  if (!changed) {
+    return false;
+  }
+
   nxJson.plugins = newPlugins;
   updateNxJson(tree, nxJson);
+  return true;
 }
 
-function migrateTargetDefaults(tree: Tree): void {
+function migrateTargetDefaults(tree: Tree): boolean {
   const nxJson = readNxJson(tree);
   if (!nxJson?.targetDefaults) {
-    return;
+    return false;
   }
 
   let hasChanges = false;
@@ -207,19 +211,20 @@ function migrateTargetDefaults(tree: Tree): void {
   if (hasChanges) {
     updateNxJson(tree, nxJson);
   }
+  return hasChanges;
 }
 
-function ensureVitestPluginRegistration(tree: Tree): void {
+async function ensureVitestPluginRegistration(tree: Tree): Promise<boolean> {
   const nxJson = readNxJson(tree);
   if (!nxJson?.plugins?.length) {
-    return;
+    return false;
   }
 
   const hasVitestPlugin = nxJson.plugins.some((p) =>
     typeof p === 'string' ? p === '@nx/vitest' : p.plugin === '@nx/vitest'
   );
   if (hasVitestPlugin) {
-    return;
+    return false;
   }
 
   const vitePluginRegistrations = nxJson.plugins.filter((p) =>
@@ -228,7 +233,13 @@ function ensureVitestPluginRegistration(tree: Tree): void {
       : p.plugin === '@nx/vite/plugin'
   );
   if (vitePluginRegistrations.length === 0) {
-    return;
+    return false;
+  }
+
+  // Only register @nx/vitest when the workspace actually uses vitest.
+  // Otherwise we'd add a plugin (and trigger an install) for vite-only setups.
+  if (!(await workspaceUsesVitest(tree))) {
+    return false;
   }
 
   for (const vitePlugin of vitePluginRegistrations) {
@@ -236,11 +247,7 @@ function ensureVitestPluginRegistration(tree: Tree): void {
       nxJson.plugins.push({ plugin: '@nx/vitest' });
       continue;
     }
-    const vitestPlugin: {
-      plugin: string;
-      include?: string[];
-      exclude?: string[];
-    } = { plugin: '@nx/vitest' };
+    const vitestPlugin: PluginEntry = { plugin: '@nx/vitest' };
     if (vitePlugin.include) {
       vitestPlugin.include = vitePlugin.include as string[];
     }
@@ -251,4 +258,43 @@ function ensureVitestPluginRegistration(tree: Tree): void {
   }
 
   updateNxJson(tree, nxJson);
+  return true;
+}
+
+async function workspaceUsesVitest(tree: Tree): Promise<boolean> {
+  const packageJson = readJson(tree, 'package.json');
+  if (
+    packageJson.dependencies?.['vitest'] ||
+    packageJson.devDependencies?.['vitest']
+  ) {
+    return true;
+  }
+
+  let hasViteTestExecutor = false;
+  forEachExecutorOptions(tree, '@nx/vite:test', () => {
+    hasViteTestExecutor = true;
+  });
+  if (hasViteTestExecutor) {
+    return true;
+  }
+
+  // Inference-only setup: vitest.config.* anywhere, or vite.config.* with a
+  // top-level `test:` key. Catches workspaces that relied on @nx/vite/plugin's
+  // test inference without an explicit executor or root vitest dep.
+  const configFiles = await globAsync(tree, [
+    '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}',
+  ]);
+  for (const configFile of configFiles) {
+    if (configFile.includes('vitest.config')) {
+      return true;
+    }
+    const content = tree.read(configFile, 'utf-8') ?? '';
+    // Heuristic: bias toward over-install. A commented-out `test:` line will
+    // false-positive — safer than missing real usage and silently dropping
+    // inferred test targets.
+    if (/(^|[\s,{])test\s*:/m.test(content)) {
+      return true;
+    }
+  }
+  return false;
 }
