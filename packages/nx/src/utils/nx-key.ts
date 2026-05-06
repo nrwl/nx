@@ -1,5 +1,4 @@
 import { getNxRequirePaths } from './installation-directory';
-import { logger } from './logger';
 import { getPackageManagerCommand } from './package-manager';
 import { workspaceRoot } from './workspace-root';
 import type { NxKey } from '@nx/key';
@@ -16,15 +15,6 @@ export function createNxKeyLicenseeInformation(nxKey: NxKey) {
   } else {
     return `Licensed to ${nxKey.organizationName}.`;
   }
-}
-
-export async function printNxKey() {
-  try {
-    const key = await getNxKeyInformation();
-    if (key) {
-      logger.log(createNxKeyLicenseeInformation(key));
-    }
-  } catch {}
 }
 
 // `await handleImport` walks node_modules and pays ~25ms per miss; `resolve`
