@@ -10,7 +10,21 @@ import {
   updateNxJson,
 } from 'nx/src/devkit-exports';
 import { findMatchingConfigFiles } from 'nx/src/devkit-internals';
-import { normalizeTargetDefaults } from '../utils/normalize-target-defaults';
+import { gte, valid } from 'semver';
+import { NX_VERSION } from '../utils/package-json';
+import {
+  downgradeTargetDefaults,
+  normalizeTargetDefaults,
+} from '../utils/normalize-target-defaults';
+
+// devkit supports `nx` at major +/- 1; on nx<23 the array shape doesn't
+// exist yet, so writing array would produce an nx.json the installed nx
+// can't validate. Promote-to-array only when nx is new enough; otherwise
+// preserve a legacy record on disk. Treat unknown / placeholder versions
+// (e.g. workspace dev "0.0.1" before publish replacement) as modern —
+// the alternative would silently downgrade every monorepo dev test.
+const SUPPORTS_ARRAY_TARGET_DEFAULTS =
+  !valid(NX_VERSION) || NX_VERSION === '0.0.1' || gte(NX_VERSION, '23.0.0');
 
 /**
  * Upsert a `targetDefaults` entry. Always writes the array shape — if the
@@ -52,7 +66,8 @@ export function upsertTargetDefault(
   }
 
   const { target, executor, projects, source, ...config } = options;
-  const entries = normalizeTargetDefaults(nxJson.targetDefaults);
+  const originalShape = nxJson.targetDefaults;
+  const entries = normalizeTargetDefaults(originalShape);
   const matchIndex = entries.findIndex(
     (e) =>
       e.target === target &&
@@ -83,7 +98,10 @@ export function upsertTargetDefault(
     );
   }
 
-  nxJson.targetDefaults = entries;
+  nxJson.targetDefaults =
+    SUPPORTS_ARRAY_TARGET_DEFAULTS || Array.isArray(originalShape)
+      ? entries
+      : downgradeTargetDefaults(entries);
   if (callerProvidedNxJson) {
     return nxJson;
   }

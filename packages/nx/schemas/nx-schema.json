@@ -845,38 +845,25 @@
           "description": "Restrict the default to targets originated by a specific plugin (e.g. '@nx/vite')."
         },
         "executor": {
-          "description": "The function that Nx will invoke when you run this target",
-          "type": "string"
+          "$ref": "#/definitions/targetDefaultsConfig/properties/executor"
         },
         "options": {
-          "type": "object"
+          "$ref": "#/definitions/targetDefaultsConfig/properties/options"
         },
         "outputs": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "$ref": "#/definitions/targetDefaultsConfig/properties/outputs"
         },
         "defaultConfiguration": {
-          "type": "string",
-          "description": "The name of a configuration to use as the default if a configuration is not provided"
+          "$ref": "#/definitions/targetDefaultsConfig/properties/defaultConfiguration"
         },
         "configurations": {
-          "type": "object",
-          "description": "provides extra sets of values that will be merged into the options map",
-          "additionalProperties": {
-            "type": "object"
-          }
+          "$ref": "#/definitions/targetDefaultsConfig/properties/configurations"
         },
         "continuous": {
-          "type": "boolean",
-          "default": false,
-          "description": "Whether this target runs continuously until stopped"
+          "$ref": "#/definitions/targetDefaultsConfig/properties/continuous"
         },
         "parallelism": {
-          "type": "boolean",
-          "default": true,
-          "description": "Whether this target can be run in parallel with other tasks"
+          "$ref": "#/definitions/targetDefaultsConfig/properties/parallelism"
         },
         "inputs": {
           "$ref": "#/definitions/inputs"
