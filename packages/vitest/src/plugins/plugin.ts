@@ -152,7 +152,7 @@ export const createNodes: CreateNodesV2<VitestPluginOptions> = [
         context
       );
     } finally {
-      targetsCache.writeToDisk(cachePath);
+      targetsCache.writeToDisk();
     }
   },
 ];

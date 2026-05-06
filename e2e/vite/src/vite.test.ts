@@ -4,6 +4,7 @@ import {
   killProcessAndPorts,
   newProject,
   readJson,
+  reservePort,
   runCLI,
   runCommand,
   runCommandUntil,
@@ -135,7 +136,7 @@ describe('@nx/vite/plugin', () => {
 
     it('should run serve-static', async () => {
       let process: ChildProcess;
-      const port = 8081;
+      const port = await reservePort();
 
       try {
         process = await runCommandUntil(

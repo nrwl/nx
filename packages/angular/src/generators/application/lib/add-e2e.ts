@@ -102,7 +102,7 @@ function getAngularE2EWebServerInfo(
 
   const pm = getPackageManagerCommand();
   return {
-    e2eCiBaseUrl: 'http://localhost:4200',
+    e2eCiBaseUrl: `http://localhost:${e2ePort}`,
     e2eCiWebServerCommand: `${pm.exec} nx run ${projectName}:serve-static`,
     e2eWebServerCommand: `${pm.exec} nx run ${projectName}:serve`,
     e2eWebServerAddress: `http://localhost:${e2ePort}`,

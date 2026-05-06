@@ -187,8 +187,6 @@ export function buildTargetFromScript(
   };
 }
 
-let packageManagerCommand: PackageManagerCommands | undefined;
-
 export function getMetadataFromPackageJson(
   packageJson: PackageJson,
   isInPackageManagerWorkspaces: boolean
@@ -226,13 +224,13 @@ export function readTargetsFromPackageJson(
   packageJson: PackageJson,
   nxJson: NxJsonConfiguration,
   projectRoot: string,
-  workspaceRoot: string
+  workspaceRoot: string,
+  packageManagerCommand: PackageManagerCommands
 ) {
   const { scripts, nx, private: isPrivate } = packageJson ?? {};
   const res: Record<string, TargetConfiguration> = {};
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
   for (const script of includedScripts) {
-    packageManagerCommand ??= getPackageManagerCommand();
     res[script] = buildTargetFromScript(script, scripts, packageManagerCommand);
   }
   for (const targetName in nx?.targets) {
@@ -372,12 +370,12 @@ function preparePackageInstallation(pkg: string, requiredVersion: string) {
   };
 
   console.log(`Fetching ${pkg}...`);
-  const packageManager = detectPackageManager();
+  const packageManager = detectPackageManager(workspaceRoot);
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
   generatePackageManagerFiles(tempDir, packageManager);
 
-  const preInstallCommand = getPackageManagerCommand(packageManager).preInstall;
   const pmCommands = getPackageManagerCommand(packageManager);
+  const preInstallCommand = pmCommands.preInstall;
   let addCommand = pmCommands.addDev;
   if (packageManager === 'pnpm') {
     addCommand = 'pnpm add -D'; // we need to ensure that we are not using workspace command

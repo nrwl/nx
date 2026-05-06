@@ -303,6 +303,7 @@ export function runCommandUntil(
     encoding: 'utf-8',
     env: {
       CI: 'true',
+      NX_DAEMON: 'true',
       // Use new versioning by default in e2e tests
       NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
       ...getStrippedEnvironmentVariables(),

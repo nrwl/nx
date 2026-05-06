@@ -28,14 +28,21 @@ export function createGradleProject(
         cwd,
       })
   );
+  // Run setup-time gradle commands with --no-daemon so we don't leave a
+  // long-lived daemon holding inotify watches on the project dir. A daemon
+  // spawned here outlives the setup phase and interferes with later
+  // non-gradle filesystem operations (e.g. `nx import` runs `git
+  // filter-branch --tree-filter`, which fails with "Unable to read current
+  // working directory" when the daemon is concurrently watching the same
+  // tree). The actual test-body gradle calls keep daemons enabled.
   e2eConsoleLogger(
-    execSync(`${gradleCommand} help --task :init`, {
+    execSync(`${gradleCommand} help --task :init --no-daemon`, {
       cwd,
     }).toString()
   );
   e2eConsoleLogger(
     runCommand(
-      `${gradleCommand} init --type ${type}-application --dsl ${type} --project-name ${projectName} --package ${packageName} --no-incubating --split-project --overwrite`,
+      `${gradleCommand} init --type ${type}-application --dsl ${type} --project-name ${projectName} --package ${packageName} --no-incubating --split-project --overwrite --no-daemon`,
       {
         cwd,
       }
@@ -53,12 +60,7 @@ export function createGradleProject(
 
   try {
     e2eConsoleLogger(
-      runCommand(`${gradleCommand} --stop`, {
-        cwd,
-      })
-    );
-    e2eConsoleLogger(
-      runCommand(`${gradleCommand} clean`, {
+      runCommand(`${gradleCommand} clean --no-daemon`, {
         cwd,
       })
     );

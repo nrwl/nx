@@ -224,7 +224,7 @@ export const createNodes: CreateNodesV2<EslintPluginOptions> = [
         context
       );
     } finally {
-      targetsCache.writeToDisk(cachePath);
+      targetsCache.writeToDisk();
     }
   },
 ];

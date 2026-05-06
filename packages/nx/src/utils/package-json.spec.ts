@@ -76,15 +76,9 @@ describe('installPackageToTmp', () => {
 });
 
 describe('readTargetsFromPackageJson', () => {
-  beforeEach(() => {
-    jest
-      .spyOn(pacakgeManager, 'getPackageManagerCommand')
-      .mockReturnValue({ run: (script) => `npm run ${script}` } as any);
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
+  const packageManagerCommand = {
+    run: (script: string) => `npm run ${script}`,
+  } as any;
 
   const packageJson: PackageJson = {
     name: 'my-app',
@@ -117,7 +111,8 @@ describe('readTargetsFromPackageJson', () => {
       packageJson,
       nxJson1,
       workspaceRoot,
-      '/root'
+      '/root',
+      packageManagerCommand
     );
     expect(result1['nx-release-publish']).toMatchInlineSnapshot(`
       {
@@ -143,7 +138,8 @@ describe('readTargetsFromPackageJson', () => {
       packageJson,
       nxJson2,
       workspaceRoot,
-      '/root'
+      '/root',
+      packageManagerCommand
     );
     expect(result2['nx-release-publish']).toMatchInlineSnapshot(`
       {
@@ -162,7 +158,8 @@ describe('readTargetsFromPackageJson', () => {
       packageJson,
       {},
       workspaceRoot,
-      '/root'
+      '/root',
+      packageManagerCommand
     );
     expect(result).toMatchInlineSnapshot(`
       {
@@ -205,7 +202,8 @@ describe('readTargetsFromPackageJson', () => {
       },
       {},
       workspaceRoot,
-      '/root'
+      '/root',
+      packageManagerCommand
     );
     expect(result).toEqual({
       build: { ...packageJsonBuildTarget, outputs: ['custom'] },
@@ -232,7 +230,8 @@ describe('readTargetsFromPackageJson', () => {
       },
       {},
       workspaceRoot,
-      '/root'
+      '/root',
+      packageManagerCommand
     );
     expect(result).toMatchInlineSnapshot(`
       {
@@ -275,7 +274,8 @@ describe('readTargetsFromPackageJson', () => {
       },
       {},
       workspaceRoot,
-      '/root'
+      '/root',
+      packageManagerCommand
     );
     expect(result.build).toMatchInlineSnapshot(`
       {
@@ -315,7 +315,8 @@ describe('readTargetsFromPackageJson', () => {
       },
       {},
       workspaceRoot,
-      '/root'
+      '/root',
+      packageManagerCommand
     );
     expect(result.build).toMatchInlineSnapshot(`
       {
@@ -347,7 +348,8 @@ describe('readTargetsFromPackageJson', () => {
       },
       {},
       workspaceRoot,
-      '/root'
+      '/root',
+      packageManagerCommand
     );
     expect(result.build).toMatchInlineSnapshot(`
       {
@@ -377,7 +379,8 @@ describe('readTargetsFromPackageJson', () => {
       },
       {},
       workspaceRoot,
-      '/root'
+      '/root',
+      packageManagerCommand
     );
     expect(result.build).toMatchInlineSnapshot(`
       {
@@ -407,7 +410,8 @@ describe('readTargetsFromPackageJson', () => {
       },
       {},
       workspaceRoot,
-      '/root'
+      '/root',
+      packageManagerCommand
     );
     expect(result.build).toMatchInlineSnapshot(`
       {
@@ -476,7 +480,8 @@ describe('readTargetsFromPackageJson', () => {
       },
       {},
       workspaceRoot,
-      '/root'
+      '/root',
+      packageManagerCommand
     );
     expect(result.test).toMatchInlineSnapshot(`
       {

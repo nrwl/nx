@@ -88,7 +88,7 @@ export const createNodesV2: CreateNodesV2<DockerPluginOptions> = [
         context
       );
     } finally {
-      targetsCache.writeToDisk(cachePath);
+      targetsCache.writeToDisk();
     }
   },
 ];

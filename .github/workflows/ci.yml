@@ -81,6 +81,9 @@ jobs:
       - name: Install project dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Restore .NET analyzer projects
+        run: dotnet restore nx.sln
+
       - name: Nx Report
         run:
           pnpm nx report

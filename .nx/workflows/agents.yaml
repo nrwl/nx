@@ -66,6 +66,10 @@ common-init-steps: &common-init-steps
       ./gradlew wrapper
       ./gradlew --version
 
+  - name: Restore .NET analyzer projects
+    script: |
+      dotnet restore packages/dotnet/analyzer.Tests/MsbuildAnalyzer.Tests.csproj
+
   - name: Configure git metadata (needed for lerna smoke tests)
     script: |
       git config --global user.email test@test.com

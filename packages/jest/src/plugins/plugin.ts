@@ -222,7 +222,7 @@ export const createNodes: CreateNodesV2<JestPluginOptions> = [
         context
       );
     } finally {
-      targetsCache.writeToDisk(cachePath);
+      targetsCache.writeToDisk();
     }
   },
 ];

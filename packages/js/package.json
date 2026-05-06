@@ -48,7 +48,7 @@
     "babel-plugin-transform-typescript-metadata": "^0.3.1",
     "chalk": "catalog:",
     "columnify": "^1.6.0",
-    "detect-port": "^1.5.1",
+    "detect-port": "^2.1.0",
     "ignore": "^7.0.5",
     "js-tokens": "^4.0.0",
     "jsonc-parser": "3.2.0",

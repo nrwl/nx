@@ -1,17 +1,16 @@
 ---
 source: packages/nx/src/native/tui/components/tasks_list.rs
-assertion_line: 3114
 expression: terminal.backend()
 ---
 "                                                                                                                        "
 " NX    Running Test Tasks...                                                                            Cache   Duration"
 " │                                                                                                                      "
-">│⠋    task1                                                                                              ...       <1ms"
+">│⠋    app1:test                                                                                          ...       <1ms"
 " │·    Waiting for task...                                                                                              "
 " │·    Waiting for task...                                                                                              "
 " └                                                                                                                      "
-"  ·    task2                                                                                              ...        ..."
-"  ·    task3                                                                                              ...        ..."
+"  ·    app1:build                                                                                         ...        ..."
+"  ·    app2:lint                                                                                          ...        ..."
 "                                                                                                                        "
 "                                                                                                                        "
 "                                                                                                                        "
