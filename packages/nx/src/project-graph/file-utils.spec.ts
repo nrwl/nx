@@ -98,6 +98,7 @@ describe('calculateFileChanges', () => {
   });
 
   it('should return lock file changes for bun.lockb files', () => {
+    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
     const changes = calculateFileChanges(
       ['bun.lockb'],
       {
