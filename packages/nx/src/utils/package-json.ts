@@ -461,7 +461,7 @@ export async function installPackageToTmpAsync(
 /**
  * Get the resolved version of a dependency from package.json.
  *
- * Retrieves a package version and automatically resolves PNPM catalog references
+ * Retrieves a package version and automatically resolves pnpm catalog references
  * (e.g., "catalog:default") to their actual version strings. By default, searches
  * `dependencies` first, then falls back to `devDependencies`.
  *

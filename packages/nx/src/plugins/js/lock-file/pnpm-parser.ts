@@ -178,7 +178,7 @@ function isAliasVersion(depVersion: string) {
 
 /**
  * Finds the appropriate patch hash for a package based on its name and version.
- * Follows PNPM's priority order (https://pnpm.io/settings#patcheddependencies):
+ * Follows pnpm's priority order (https://pnpm.io/settings#patcheddependencies):
  * 1. Exact version match (e.g., "vitest@3.2.4") - highest priority
  * 2. Version range match (e.g., "vitest@^3.0.0")
  * 3. Name-only match (e.g., "vitest") - lowest priority
@@ -312,7 +312,7 @@ function getNodes(
     // Parse the base version (without peer dependency info, etc.)
     const baseVersion = parseBaseVersion(versionFromKey, isV5);
 
-    // Find the appropriate patch hash using PNPM's priority order:
+    // Find the appropriate patch hash using pnpm's priority order:
     // 1. Exact version match, 2. Version range match, 3. Name-only match
     const patchHash = findPatchHash(
       patchEntriesByPackage,

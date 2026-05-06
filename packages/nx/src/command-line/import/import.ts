@@ -776,7 +776,7 @@ async function handleMissingWorkspacesEntry(
                   `See: https://bun.sh/docs/install/workspaces`,
                 ]
               : [
-                  `We recommend enabling PNPM workspaces to install dependencies for the imported project.`,
+                  `We recommend enabling pnpm workspaces to install dependencies for the imported project.`,
                   `Add the following entry to to pnpm-workspace.yaml and run "${pmc.install}":`,
                   pc.bold(`packages:\n  - '${pkgPath}'`),
                   `See: https://pnpm.io/workspaces`,

@@ -10,7 +10,7 @@ This video gives you a birds-eye view of Nx in ~10 minutes. It covers topics suc
 - Nx Architecture
 - Add Nx to an arbitrary project
 - Why would adding Nx be useful?
-- Nx in a PNPM monorepo
+- Nx in a pnpm monorepo
 - Why use Nx Plugins
 - Setting up a new Nx Integrated Monorepo
 - Abstracting low-level configs

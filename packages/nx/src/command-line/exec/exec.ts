@@ -67,7 +67,7 @@ async function runScriptAsNxTarget(
   argv: string[],
   nxArgs: NxArgs
 ) {
-  // NPM, Yarn, and PNPM set this to the name of the currently executing script. Lets use it if we can.
+  // NPM, Yarn, and pnpm set this to the name of the currently executing script. Lets use it if we can.
   const targetName = process.env.npm_lifecycle_event;
   if (targetName) {
     const defaultPorject = getDefaultProject(projectGraph);

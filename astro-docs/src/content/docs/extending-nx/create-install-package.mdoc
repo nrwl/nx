@@ -122,7 +122,7 @@ By running
 npx nx local-registry
 ```
 
-...a local instance of [Verdaccio](https://verdaccio.org/) will be launched at http://localhost:4873 and the NPM, Yarn and PNPM registries will be configured to point to it. This means that you can safely publish, without hitting npm, and test as if you were an end user of your package.
+...a local instance of [Verdaccio](https://verdaccio.org/) will be launched at http://localhost:4873 and the NPM, Yarn and pnpm registries will be configured to point to it. This means that you can safely publish, without hitting npm, and test as if you were an end user of your package.
 
 {% aside type="note" title="Registry Cleanup & Reset" %}
 Note, after terminating the terminal window where the `nx local-registry` command is running (e.g. using `CTRL+c` or `CMD+c`) the registry will be stopped, previously installed packages will be cleaned up and the npm/yarn/pnpm registries will be restored to their original state, pointing to the real NPM servers again.
