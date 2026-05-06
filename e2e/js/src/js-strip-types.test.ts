@@ -109,11 +109,16 @@ module.exports = { displayName: '${lib}', mode };
 `
         );
 
+        // Daemon owns project graph load - disable so fallback log lands in CLI stderr
+        // instead of .nx/workspace-data/d/daemon.log. redirectStderr merges stderr
+        // into the captured result.
         const result = runCLI('report', {
           env: {
             NX_PREFER_NODE_STRIP_TYPES: 'true',
             NX_VERBOSE_LOGGING: 'true',
           },
+          daemon: false,
+          redirectStderr: true,
         });
 
         expect(result).toContain('nx');

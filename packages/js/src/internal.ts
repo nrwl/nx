@@ -5,6 +5,7 @@ export {
 } from './utils/typescript/raw-tsconfig';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 export {
+  loadTsFile,
   registerTsProject,
   registerTsConfigPaths,
 } from 'nx/src/plugins/js/utils/register';

@@ -1,6 +1,6 @@
 import { workspaceRoot } from '@nx/devkit';
 import { loadConfigFile } from '@nx/devkit/internal';
-import { registerTsProject } from '@nx/js/src/internal';
+import { loadTsFile, registerTsProject } from '@nx/js/src/internal';
 import type { TSESLint } from '@typescript-eslint/utils';
 import { existsSync } from 'fs';
 import { dirname, isAbsolute, join, normalize, resolve, sep } from 'path';
@@ -173,16 +173,15 @@ export const workspaceRules = ((): ESLintRules => {
   if (!existsSync(WORKSPACE_PLUGIN_DIR)) {
     return {};
   }
-  // Register `tools/eslint-rules` for TS transpilation
-  const registrationCleanup = registerTsProject(
-    join(WORKSPACE_PLUGIN_DIR, 'tsconfig.json')
-  );
   try {
     /**
      * Currently we only support applying the rules from the user's workspace plugin object
      * (i.e. not other things that plugings can expose like configs, processors etc)
      */
-    const { rules } = require(WORKSPACE_PLUGIN_DIR);
+    const { rules } = loadTsFile(
+      WORKSPACE_PLUGIN_DIR,
+      join(WORKSPACE_PLUGIN_DIR, 'tsconfig.json')
+    );
 
     // Apply the namespace to the resolved rules
     const namespacedRules: ESLintRules = {};
@@ -195,9 +194,5 @@ export const workspaceRules = ((): ESLintRules => {
   } catch (err) {
     console.error(err);
     return {};
-  } finally {
-    if (registrationCleanup) {
-      registrationCleanup();
-    }
   }
 })();

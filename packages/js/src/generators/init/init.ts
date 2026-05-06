@@ -26,9 +26,7 @@ import {
   nxVersion,
   prettierVersion,
   supportedTypescriptVersions,
-  swcCoreVersion,
   swcHelpersVersion,
-  swcNodeVersion,
   tsLibVersion,
   typescriptVersion,
 } from '../../utils/versions';
@@ -151,12 +149,11 @@ export async function initGeneratorInternal(
     }
   }
 
-  const devDependencies = {
+  const devDependencies: Record<string, string> = {
     '@nx/js': nxVersion,
-    // When loading .ts config files (e.g. webpack.config.ts, jest.config.ts, etc.)
-    // we prefer to use SWC, and fallback to ts-node for workspaces that don't use SWC.
-    '@swc-node/register': swcNodeVersion,
-    '@swc/core': swcCoreVersion,
+    // Used by SWC-compiled outputs at runtime. Kept even though `@swc-node/register`
+    // is no longer installed by default - native Node.js type stripping handles
+    // .ts config loading on Node 22.6+ without a transpiler.
     '@swc/helpers': swcHelpersVersion,
   };
 

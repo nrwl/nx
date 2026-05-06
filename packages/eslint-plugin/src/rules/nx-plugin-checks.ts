@@ -10,7 +10,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { getRootTsConfigPath } from '@nx/js';
-import { registerTsProject } from '@nx/js/src/internal';
+import { loadTsFile, registerTsProject } from '@nx/js/src/internal';
 import * as path from 'path';
 import { valid } from 'semver';
 import { readProjectGraph } from '../utils/project-graph-utils';
@@ -624,6 +624,8 @@ export function checkIfIdentifierIsFunction(
   }
 
   // Fallback to require()
-  const m = require(filePath);
+  const m = filePath.endsWith('.ts')
+    ? loadTsFile(filePath, getRootTsConfigPath())
+    : require(filePath);
   return identifier in m && typeof m[identifier] === 'function';
 }

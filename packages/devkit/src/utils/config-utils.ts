@@ -59,6 +59,19 @@ async function loadTypeScriptModule(
   if (require.cache[path]) {
     clearRequireCache();
   }
+
+  // loadTsFile was added in nx@23. @nx/devkit's peer range supports older
+  // nx majors, so fall back to the legacy registerTsProject + require path
+  // when loadTsFile isn't available on the host nx.
+  if (typeof loadTsFile !== 'function') {
+    const cleanup = registerTsProject(tsConfigPath);
+    try {
+      return await loadModuleByExtension(path, extension);
+    } finally {
+      cleanup();
+    }
+  }
+
   try {
     return loadTsFile(path, tsConfigPath);
   } catch (e: any) {

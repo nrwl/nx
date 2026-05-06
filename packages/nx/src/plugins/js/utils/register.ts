@@ -67,7 +67,7 @@ const nodeSupportsNativeTypescript: boolean = !!(process as any).features
  * Some constructs (enum, runtime namespace, legacy decorators,
  * import = require, parameter properties, etc.) aren't supported by native
  * type stripping. `loadTsFile` catches these failures and falls back to
- * swc/ts-node automatically.
+ * registering swc/ts-node + tsconfig-paths automatically.
  *
  * See: https://nodejs.org/api/typescript.html#full-typescript-support
  */
@@ -77,6 +77,14 @@ const preferNodeStripTypes: boolean = (() => {
   }
   return process.env.NX_PREFER_NODE_STRIP_TYPES !== 'false';
 })();
+
+/**
+ * Skip tsconfig-paths registration on the swc/ts-node fallback path. Useful
+ * for workspaces relying on package manager workspaces (pnpm, yarn, npm) for
+ * project linking, where tsconfig path aliases aren't needed.
+ */
+const disableTsConfigPaths: boolean =
+  process.env.NX_DISABLE_TSCONFIG_PATHS === 'true';
 
 /**
  * Optionally, if swc-node and tsconfig-paths are available in the current workspace, apply the require
@@ -112,11 +120,13 @@ export function registerTsProject(
 
   const tsConfigPath = configFilename ? join(path, configFilename) : path;
 
-  // See explanation alongside preferNodeStripTypes declaration
-  // When using Node.js native type stripping, skip transpiler registration
-  // but still register tsconfig-paths for path mapping support
+  // Native strip handles .ts files directly - skip transpiler AND tsconfig-paths
+  // registration. Workspaces using package manager workspaces don't need path
+  // mapping. Callers needing fallback for unsupported syntax (enum, runtime
+  // namespace, legacy decorators, etc.) should use `loadTsFile` instead, which
+  // registers swc/ts-node + tsconfig-paths on demand.
   if (preferNodeStripTypes) {
-    return registerTsConfigPaths(tsConfigPath);
+    return () => {};
   }
   const { compilerOptions, tsConfigRaw } = readCompilerOptions(tsConfigPath);
 
@@ -372,14 +382,18 @@ export function isNativeTypeStripError(err: unknown): boolean {
 }
 
 /**
- * Load a TypeScript file via `require()`, registering tsconfig-paths and (when
- * needed) a swc/ts-node transpiler for the duration of the load.
+ * Load a TypeScript file via `require()`.
  *
- * When native type stripping is preferred (Node 22.6+ by default), the file is
- * loaded directly with no transpiler. If Node throws on an unsupported
- * construct (enum, runtime namespace, legacy decorators, etc.), this falls
- * back to swc/ts-node and retries transparently. Set `NX_VERBOSE_LOGGING=true`
- * to log when the fallback is triggered.
+ * On Node 22.6+ with native strip preferred (default), the file loads directly
+ * with no swc/ts-node and no tsconfig-paths registration. If Node throws on
+ * an unsupported construct (enum, runtime namespace, legacy decorators, etc.),
+ * this registers swc/ts-node + tsconfig-paths and retries - matching the
+ * pre-v23 registration. Set `NX_DISABLE_TSCONFIG_PATHS=true` to skip
+ * tsconfig-paths even on fallback (useful when relying on package manager
+ * workspaces). Set `NX_VERBOSE_LOGGING=true` to log when fallback triggers.
+ *
+ * When native strip is opted out (`NX_PREFER_NODE_STRIP_TYPES=false` or
+ * unsupported Node), uses the legacy `registerTsProject` path.
  *
  * Throws ERR_REQUIRE_ESM unchanged so callers can dispatch to dynamic
  * `import()` for ESM modules.
@@ -394,37 +408,52 @@ export function loadTsFile<T = any>(
     return require(filePath) as T;
   }
 
-  if (preferNodeStripTypes) {
-    const cleanupPaths = registerTsConfigPaths(tsConfigPath);
+  if (!preferNodeStripTypes) {
+    const cleanup = registerTsProject(tsConfigPath);
     try {
       return require(filePath) as T;
-    } catch (err) {
-      if (!isNativeTypeStripError(err)) {
-        throw err;
-      }
-      logNativeStripFallback(filePath, err);
-      const { compilerOptions, tsConfigRaw } = readCompilerOptions(tsConfigPath);
-      const cleanupTranspiler = registerTranspiler(compilerOptions, tsConfigRaw);
-      try {
-        try {
-          delete require.cache[require.resolve(filePath)];
-        } catch {
-          // require.resolve may throw if the failed load never reached cache
-        }
-        return require(filePath) as T;
-      } finally {
-        cleanupTranspiler();
-      }
     } finally {
-      cleanupPaths();
+      cleanup();
     }
   }
 
-  const cleanup = registerTsProject(tsConfigPath);
+  // Native strip path: no registration up front. pnpm/npm/yarn workspaces
+  // resolve aliases without tsconfig-paths.
   try {
     return require(filePath) as T;
-  } finally {
-    cleanup();
+  } catch (err) {
+    if (!isNativeTypeStripError(err)) {
+      throw err;
+    }
+
+    if (!swcNodeInstalled && !tsNodeInstalled) {
+      const original = err instanceof Error ? err.message : String(err);
+      throw new Error(
+        `${NX_PREFIX} ${filePath} uses TypeScript syntax that Node.js native type stripping doesn't support (${original}). Install @swc-node/register and @swc/core (or ts-node) to enable the swc/ts-node fallback, or rewrite the file to remove the unsupported construct.`
+      );
+    }
+
+    logNativeStripFallback(filePath, err);
+
+    // Strip failed. Register swc/ts-node + tsconfig-paths (the legacy
+    // pre-v23 setup) and retry.
+    const cleanups: Array<() => void> = [];
+    if (!disableTsConfigPaths) {
+      cleanups.push(registerTsConfigPaths(tsConfigPath));
+    }
+    const { compilerOptions, tsConfigRaw } = readCompilerOptions(tsConfigPath);
+    cleanups.push(registerTranspiler(compilerOptions, tsConfigRaw));
+
+    try {
+      try {
+        delete require.cache[require.resolve(filePath)];
+      } catch {
+        // require.resolve may throw if the failed load never reached cache
+      }
+      return require(filePath) as T;
+    } finally {
+      for (const fn of cleanups) fn();
+    }
   }
 }
 
@@ -434,7 +463,7 @@ function logNativeStripFallback(filePath: string, err: unknown): void {
   }
   const message = err instanceof Error ? err.message : String(err);
   logger.warn(
-    stripIndent(`${NX_PREFIX} Native Node.js TypeScript stripping failed for ${filePath}. Falling back to swc/ts-node.
+    stripIndent(`${NX_PREFIX} Native Node.js TypeScript stripping failed for ${filePath}. Falling back to swc/ts-node + tsconfig-paths.
   ${message}`)
   );
 }
