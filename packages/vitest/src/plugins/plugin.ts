@@ -584,9 +584,13 @@ async function getTestPathsRelativeToProjectRoot(
   });
   const relevantTestSpecifications =
     await vitest.getRelevantTestSpecifications();
+  // Sort to keep atomized target name insertion order stable.
+  // vitest.getRelevantTestSpecifications uses tinyglobby internally,
+  // which does not sort its filesystem traversal output.
   return relevantTestSpecifications
     .filter((ts) =>
       fullProjectRoot === '.' ? true : ts.moduleId.startsWith(fullProjectRoot)
     )
-    .map((ts) => normalizePath(relative(projectRoot, ts.moduleId)));
+    .map((ts) => normalizePath(relative(projectRoot, ts.moduleId)))
+    .sort();
 }
