@@ -243,14 +243,20 @@ export default defineConfig({});
     expect(vitestEntries).toHaveLength(0);
   });
 
-  it('should merge vitest options into existing @nx/vitest when both plugins are registered', async () => {
+  it('should split vitest options off @nx/vite/plugin into a new @nx/vitest registration', async () => {
     const nxJson = readNxJson(tree);
     nxJson.plugins = [
       {
         plugin: '@nx/vite/plugin',
-        options: { testTargetName: 'unit-test', buildTargetName: 'build' },
+        options: {
+          buildTargetName: 'build',
+          testTargetName: 'unit-test',
+          ciTargetName: 'unit-test-ci',
+          ciGroupName: 'unit-tests',
+        },
+        include: ['apps/**/*'],
+        exclude: ['apps/legacy/*'],
       },
-      { plugin: '@nx/vitest' },
     ];
     updateNxJson(tree, nxJson);
 
@@ -260,37 +266,18 @@ export default defineConfig({});
     expect(updated.plugins).toContainEqual({
       plugin: '@nx/vite/plugin',
       options: { buildTargetName: 'build' },
+      include: ['apps/**/*'],
+      exclude: ['apps/legacy/*'],
     });
-    const vitestEntry = updated.plugins.find(
-      (p) => typeof p !== 'string' && p.plugin === '@nx/vitest'
-    );
-    expect(vitestEntry).toMatchObject({
+    expect(updated.plugins).toContainEqual({
       plugin: '@nx/vitest',
-      options: { testTargetName: 'unit-test' },
-    });
-    const vitestEntries = updated.plugins.filter(
-      (p) => typeof p !== 'string' && p.plugin === '@nx/vitest'
-    );
-    expect(vitestEntries).toHaveLength(1);
-  });
-
-  it('should not overwrite existing @nx/vitest options when merging from @nx/vite/plugin', async () => {
-    const nxJson = readNxJson(tree);
-    nxJson.plugins = [
-      {
-        plugin: '@nx/vite/plugin',
-        options: { testTargetName: 'vite-test' },
+      options: {
+        testTargetName: 'unit-test',
+        ciTargetName: 'unit-test-ci',
+        ciGroupName: 'unit-tests',
       },
-      { plugin: '@nx/vitest', options: { testTargetName: 'vitest-run' } },
-    ];
-    updateNxJson(tree, nxJson);
-
-    await ensureVitestPackageMigration(tree);
-
-    const updated = readNxJson(tree);
-    const vitestEntry = updated.plugins.find(
-      (p) => typeof p !== 'string' && p.plugin === '@nx/vitest'
-    ) as { plugin: string; options: Record<string, unknown> };
-    expect(vitestEntry.options.testTargetName).toBe('vitest-run');
+      include: ['apps/**/*'],
+      exclude: ['apps/legacy/*'],
+    });
   });
 });
