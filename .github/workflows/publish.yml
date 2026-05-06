@@ -176,21 +176,31 @@ jobs:
             build: |
               bash -c "
                 set -e
+                # mise's core node/java backends don't ship musl binaries and fall back to
+                # compile-from-source on Alpine, which fails. Install via apk + tarball instead.
                 echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
-                apk add --no-cache curl ca-certificates git xz build-base lld mise
+                apk add --no-cache curl xz openjdk21 build-base lld dotnet9-sdk
+
+                # Java 21
+                export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
+                export PATH=\"\$JAVA_HOME/bin:\$PATH\"
+                java --version
+
+                # .NET 9 SDK (needed by @nx/dotnet plugin)
+                dotnet --version
+
+                # Node.js musl build from unofficial-builds.nodejs.org
+                curl -fsSL https://unofficial-builds.nodejs.org/download/release/v22.16.0/node-v22.16.0-linux-x64-musl.tar.xz -o node.tar.xz
+                tar -xJf node.tar.xz
+                mv node-v22.16.0-linux-x64-musl /usr/local/node
+                export PATH=\"/usr/local/node/bin:\$PATH\"
+                node --version
+
+                npm i -g pnpm@\${PNPM_VERSION} --force
 
                 # Help clang find GCC runtime (crtbeginS.o, libgcc) and use lld for jemalloc build
                 GCC_DIR=\$(dirname \$(find /usr/lib/gcc -name crtbeginS.o | head -1))
                 export CFLAGS=\"\${CFLAGS} -fuse-ld=lld --gcc-install-dir=\${GCC_DIR}\"
-
-                # Provision Node, Java, .NET, Maven, corepack from mise.toml
-                cd /build
-                mise trust mise.toml
-                mise install
-                eval \"\$(mise env -s bash)\"
-
-                corepack enable
-                corepack prepare --activate
 
                 pnpm install --frozen-lockfile
                 rustup target add x86_64-unknown-linux-musl
@@ -264,8 +274,29 @@ jobs:
             build: |
               bash -c "
                 set -e
+                # mise's core node/java backends don't ship musl binaries and fall back to
+                # compile-from-source on Alpine, which fails. Install via apk + tarball instead.
                 echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
-                apk add --no-cache curl ca-certificates git xz build-base lld mise
+                apk add --no-cache curl xz openjdk21 build-base lld dotnet9-sdk
+
+                # Java 21
+                export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
+                export PATH=\"\$JAVA_HOME/bin:\$PATH\"
+                java --version
+
+                # .NET 9 SDK (needed by @nx/dotnet plugin)
+                dotnet --version
+
+                # Node.js musl build from unofficial-builds.nodejs.org. Container is x64;
+                # rust cross-compiles to aarch64-unknown-linux-musl, so the host node binary
+                # is x64-musl regardless of the build target.
+                curl -fsSL https://unofficial-builds.nodejs.org/download/release/v22.16.0/node-v22.16.0-linux-x64-musl.tar.xz -o node.tar.xz
+                tar -xJf node.tar.xz
+                mv node-v22.16.0-linux-x64-musl /usr/local/node
+                export PATH=\"/usr/local/node/bin:\$PATH\"
+                node --version
+
+                npm i -g pnpm@\${PNPM_VERSION} --force
 
                 # Help clang find GCC runtime (crtbeginS.o, libgcc) and use lld for jemalloc build
                 GCC_DIR=\$(dirname \$(find /aarch64-linux-musl-cross/lib/gcc -name crtbeginS.o | head -1))
@@ -274,15 +305,6 @@ jobs:
                 # Build jemalloc with 64 KiB allocator page so the binary works on aarch64
                 # Linux kernels with 4K/16K/64K pages (Asahi, Ampere, Graviton, etc.).
                 export JEMALLOC_SYS_WITH_LG_PAGE=16
-
-                # Provision Node, Java, .NET, Maven, corepack from mise.toml
-                cd /build
-                mise trust mise.toml
-                mise install
-                eval \"\$(mise env -s bash)\"
-
-                corepack enable
-                corepack prepare --activate
 
                 pnpm install --frozen-lockfile
                 rustup target add aarch64-unknown-linux-musl
