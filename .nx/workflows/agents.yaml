@@ -36,16 +36,18 @@ common-init-steps: &common-init-steps
 
   - name: Install system deps
     script: |
-      # Prefer Azure's mirror because the canonical archive.ubuntu.com periodically
-      # serves a Packages.gz that doesn't match its own InRelease metadata while
-      # mid-sync. Fall back to the canonical mirror if Azure is unreachable, since
-      # connectivity to Azure's mirror has itself been flaky.
-      sudo sed -i 's|http://archive.ubuntu.com/ubuntu|http://azure.archive.ubuntu.com/ubuntu|g; s|http://security.ubuntu.com/ubuntu|http://azure.archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list
-      if ! sudo apt-get update -o Acquire::http::Timeout=15 -o Acquire::Retries=2; then
-        echo "Azure mirror unreachable, falling back to canonical archive.ubuntu.com"
-        sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu|http://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list
-        sudo apt-get update
-      fi
+      # apt mirror+file failover: tab-separated; printf preserves \t (YAML heredocs don't).
+      printf 'https://archive.ubuntu.com/ubuntu/\tpriority:1\n'       | sudo tee /etc/apt/apt-mirrors.txt > /dev/null
+      printf 'https://security.ubuntu.com/ubuntu/\tpriority:2\n'      | sudo tee -a /etc/apt/apt-mirrors.txt > /dev/null
+      printf 'http://azure.archive.ubuntu.com/ubuntu/\tpriority:3\n'  | sudo tee -a /etc/apt/apt-mirrors.txt > /dev/null
+      # Retries=0: mirror+file already retries via failover; apt-level retries multiply stall on a dead mirror.
+      sudo tee /etc/apt/apt.conf.d/80-nx-mirror-failover > /dev/null <<'EOF'
+      Acquire::http::Timeout "5";
+      Acquire::https::Timeout "5";
+      Acquire::Retries "0";
+      EOF
+      sudo sed -i 's|http://archive.ubuntu.com/ubuntu|mirror+file:/etc/apt/apt-mirrors.txt|g; s|http://security.ubuntu.com/ubuntu|mirror+file:/etc/apt/apt-mirrors.txt|g' /etc/apt/sources.list
+      sudo apt-get update
       sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev zip unzip
 
   - name: Pnpm Install from lockfile
