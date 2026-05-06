@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: ['24', '26']
+        node-version: ['26']
 
     steps:
       - name: Checkout
