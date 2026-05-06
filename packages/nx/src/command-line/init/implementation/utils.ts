@@ -40,27 +40,21 @@ export function createNxJsonFile(
   const entries: TargetDefaultEntry[] = Array.isArray(nxJson.targetDefaults)
     ? [...nxJson.targetDefaults]
     : [];
-  const upsert = (target: string, patch: Partial<TargetDefaultEntry>): void => {
-    const idx = entries.findIndex(
-      (e) =>
-        e.target === target &&
-        e.projects === undefined &&
-        e.source === undefined
-    );
-    if (idx >= 0) entries[idx] = { ...entries[idx], ...patch, target };
-    else entries.push({ target, ...patch });
-  };
 
   if (topologicalTargets.length > 0) {
     for (const scriptName of topologicalTargets) {
-      upsert(scriptName, { dependsOn: [`^${scriptName}`] });
+      upsertTargetDefaultEntry(entries, scriptName, {
+        dependsOn: [`^${scriptName}`],
+      });
     }
   }
   for (const [scriptName, output] of Object.entries(scriptOutputs)) {
     if (!output) {
       continue;
     }
-    upsert(scriptName, { outputs: [`{projectRoot}/${output}`] });
+    upsertTargetDefaultEntry(entries, scriptName, {
+      outputs: [`{projectRoot}/${output}`],
+    });
   }
 
   for (const target of cacheableOperations) {
@@ -86,6 +80,24 @@ export function createNxJsonFile(
     nxJson.defaultBase ??= defaultBase;
   }
   writeJsonFile(nxJsonPath, nxJson);
+}
+
+/**
+ * Locate-by-target upsert against an in-memory `targetDefaults` array.
+ * Used by `nx init` code paths that operate on raw JSON before a Tree
+ * exists — generators should use `upsertTargetDefault` from devkit instead.
+ */
+export function upsertTargetDefaultEntry(
+  entries: TargetDefaultEntry[],
+  target: string,
+  patch: Partial<TargetDefaultEntry>
+): void {
+  const idx = entries.findIndex(
+    (e) =>
+      e.target === target && e.projects === undefined && e.source === undefined
+  );
+  if (idx >= 0) entries[idx] = { target, ...entries[idx], ...patch };
+  else entries.push({ target, ...patch });
 }
 
 export function createNxJsonFromTurboJson(

@@ -38,6 +38,7 @@ export { promptWhenInteractive } from './src/generators/prompt';
 export {
   addBuildTargetDefaults,
   addE2eCiTargetDefaults,
+  findTargetDefault,
   upsertTargetDefault,
 } from './src/generators/target-defaults-utils';
 export { normalizeTargetDefaults } from './src/utils/normalize-target-defaults';

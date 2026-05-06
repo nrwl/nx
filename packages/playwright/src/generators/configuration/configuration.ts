@@ -1,4 +1,5 @@
 import {
+  findTargetDefault,
   resolveImportPath,
   promptWhenInteractive,
   upsertTargetDefault,
@@ -11,7 +12,6 @@ import {
   getPackageManagerCommand,
   joinPathFragments,
   logger,
-  type NxJsonConfiguration,
   offsetFromRoot,
   output,
   readNxJson,
@@ -21,7 +21,6 @@ import {
   toJS,
   Tree,
   updateJson,
-  updateNxJson,
   updateProjectConfiguration,
   workspaceRoot,
   writeJson,
@@ -368,29 +367,29 @@ function setupE2ETargetDefaults(tree: Tree) {
 
   // E2e targets depend on all their project's sources + production sources of dependencies
   const productionFileSet = !!nxJson.namedInputs?.production;
+  // Either a `target: 'e2e'` default or a default keyed on the executor
+  // we're about to scaffold will apply to the new target — consider both
+  // before deciding to add cache/inputs. Target-keyed wins when both are
+  // present.
+  const existingForTarget = findTargetDefault(nxJson.targetDefaults, {
+    target: 'e2e',
+  });
+  const existingForExecutor = findTargetDefault(nxJson.targetDefaults, {
+    executor: '@nx/playwright:playwright',
+  });
+  const existingCache = existingForTarget?.cache ?? existingForExecutor?.cache;
+  const existingInputs =
+    existingForTarget?.inputs ?? existingForExecutor?.inputs;
   const patch: Partial<TargetConfiguration> = {};
-  if (!findExistingE2eDefault(nxJson.targetDefaults)?.cache) {
+  if (!existingCache) {
     patch.cache = true;
   }
-  if (!findExistingE2eDefault(nxJson.targetDefaults)?.inputs) {
+  if (!existingInputs) {
     patch.inputs = ['default', productionFileSet ? '^production' : '^default'];
   }
   if (Object.keys(patch).length > 0) {
     upsertTargetDefault(tree, { target: 'e2e', ...patch });
   }
-}
-
-function findExistingE2eDefault(
-  td: NxJsonConfiguration['targetDefaults']
-): Partial<TargetConfiguration> | undefined {
-  if (!td) return undefined;
-  if (Array.isArray(td)) {
-    return td.find(
-      (e) =>
-        e.target === 'e2e' && e.projects === undefined && e.source === undefined
-    );
-  }
-  return td['e2e'];
 }
 
 function addE2eTarget(tree: Tree, options: ConfigurationGeneratorSchema) {

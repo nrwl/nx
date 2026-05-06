@@ -1,8 +1,10 @@
 import {
   type CreateNodesV2,
+  type NxJsonConfiguration,
   type PluginConfiguration,
   type TargetConfiguration,
   type TargetDefaultEntry,
+  type TargetDefaults,
   type Tree,
   readNxJson,
   updateNxJson,
@@ -11,18 +13,38 @@ import { findMatchingConfigFiles } from 'nx/src/devkit-internals';
 import { normalizeTargetDefaults } from '../utils/normalize-target-defaults';
 
 /**
- * Upsert a `targetDefaults` entry in nx.json. Always writes the array
- * shape — if nx.json still uses the legacy record shape, it is upgraded
- * in place. Finds a matching entry by the
- * `(target, executor, projects, source)` tuple and merges the given
- * config into it, or appends a new entry.
+ * Upsert a `targetDefaults` entry. Always writes the array shape — if the
+ * underlying value still uses the legacy record shape, it is upgraded in
+ * place. Finds a matching entry by the `(target, executor, projects,
+ * source)` tuple and merges the given config into it, or appends a new
+ * entry. The entry must set at least one of `target` / `executor`.
  *
- * The entry must set at least one of `target` / `executor`.
+ * Two call shapes:
+ * - `(tree, options)` — reads/writes nx.json itself (single edit).
+ * - `(tree, nxJson, options)` — mutates the provided `nxJson` in place
+ *   and returns it so the caller can batch other edits before calling
+ *   `updateNxJson` exactly once.
  */
 export function upsertTargetDefault(
   tree: Tree,
   options: TargetDefaultEntry
-): void {
+): void;
+export function upsertTargetDefault(
+  tree: Tree,
+  nxJson: NxJsonConfiguration,
+  options: TargetDefaultEntry
+): NxJsonConfiguration;
+export function upsertTargetDefault(
+  tree: Tree,
+  arg2: TargetDefaultEntry | NxJsonConfiguration,
+  arg3?: TargetDefaultEntry
+): NxJsonConfiguration | void {
+  const callerProvidedNxJson = arg3 !== undefined;
+  const options = (callerProvidedNxJson ? arg3 : arg2) as TargetDefaultEntry;
+  const nxJson = (
+    callerProvidedNxJson ? arg2 : (readNxJson(tree) ?? {})
+  ) as NxJsonConfiguration;
+
   if (options.target === undefined && options.executor === undefined) {
     throw new Error(
       'upsertTargetDefault requires at least one of `target` or `executor` to be set.'
@@ -30,7 +52,6 @@ export function upsertTargetDefault(
   }
 
   const { target, executor, projects, source, ...config } = options;
-  const nxJson = readNxJson(tree) ?? {};
   const entries = normalizeTargetDefaults(nxJson.targetDefaults);
   const matchIndex = entries.findIndex(
     (e) =>
@@ -60,7 +81,33 @@ export function upsertTargetDefault(
   }
 
   nxJson.targetDefaults = entries;
+  if (callerProvidedNxJson) {
+    return nxJson;
+  }
   updateNxJson(tree, nxJson);
+}
+
+/**
+ * Find a `targetDefaults` entry by its locator tuple
+ * `(target, executor, projects, source)`. Locator keys default to
+ * `undefined`, matching only entries that also leave them unset — same
+ * semantics as `upsertTargetDefault`. Accepts either array or legacy
+ * record shape.
+ */
+export function findTargetDefault(
+  targetDefaults: TargetDefaults | undefined,
+  locator: Pick<
+    TargetDefaultEntry,
+    'target' | 'executor' | 'projects' | 'source'
+  >
+): TargetDefaultEntry | undefined {
+  return normalizeTargetDefaults(targetDefaults).find(
+    (e) =>
+      e.target === locator.target &&
+      e.executor === locator.executor &&
+      projectsEqual(e.projects, locator.projects) &&
+      e.source === locator.source
+  );
 }
 
 function projectsEqual(
@@ -156,13 +203,9 @@ export async function addE2eCiTargetDefaults(
       : ((foundPluginForApplication.options as any)?.ciTargetName ?? 'e2e-ci');
 
   const ciTargetNameGlob = `${ciTargetName}--**/**`;
-  const existing = normalizeTargetDefaults(nxJson.targetDefaults).find(
-    (e) =>
-      e.target === ciTargetNameGlob &&
-      e.executor === undefined &&
-      e.projects === undefined &&
-      e.source === undefined
-  );
+  const existing = findTargetDefault(nxJson.targetDefaults, {
+    target: ciTargetNameGlob,
+  });
   const dependsOn = [...(existing?.dependsOn ?? [])];
   if (!dependsOn.includes(buildTarget)) {
     dependsOn.push(buildTarget);
