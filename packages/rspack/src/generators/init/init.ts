@@ -1,3 +1,4 @@
+import { addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
@@ -7,7 +8,6 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { initGenerator } from '@nx/js';
 import { createNodesV2 } from '../../../plugin';
 import {
@@ -100,7 +100,6 @@ export async function rspackInitGenerator(
       : {}),
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const version = require('../../../package.json').version;
   if (version !== '0.0.1') {
     // Ignored for local dev / e2e tests.

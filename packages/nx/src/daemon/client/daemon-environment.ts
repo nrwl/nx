@@ -111,6 +111,9 @@ const DAEMON_ENV_PREFIX_EXCLUSIONS = [
   'ALACRITTY_',
   'KONSOLE_',
   'TMUX',
+
+  // Benchmarking / profiling tools
+  'HYPERFINE_', // hyperfine sets HYPERFINE_RANDOMIZED_ENVIRONMENT_OFFSET for each iteration
 ];
 
 function isExcludedEnvVar(key: string): boolean {
@@ -128,4 +131,34 @@ export function getDaemonEnv() {
     }
   }
   return Object.assign(env, DAEMON_ENV_REQUIRED_SETTINGS);
+}
+
+/**
+ * Without the deletion step, a var set by one client (e.g.
+ * `NX_PREFER_NODE_STRIP_TYPES=true` or `JAVA_TOOL_OPTIONS=...` for a single
+ * command) would persist in the daemon and leak into every subsequent
+ * client's project-graph computation. Deletion skips excluded vars and
+ * required settings, which the daemon owns and clients should not control.
+ */
+export function applyDaemonEnvFromClient(newEnv: NodeJS.ProcessEnv): boolean {
+  let changed = false;
+  const allKeys = new Set([
+    ...Object.keys(process.env),
+    ...Object.keys(newEnv),
+  ]);
+  for (const key of allKeys) {
+    if (key in newEnv) {
+      if (process.env[key] !== newEnv[key]) {
+        process.env[key] = newEnv[key];
+        changed = true;
+      }
+    } else if (
+      !isExcludedEnvVar(key) &&
+      !Object.hasOwn(DAEMON_ENV_REQUIRED_SETTINGS, key)
+    ) {
+      delete process.env[key];
+      changed = true;
+    }
+  }
+  return changed;
 }

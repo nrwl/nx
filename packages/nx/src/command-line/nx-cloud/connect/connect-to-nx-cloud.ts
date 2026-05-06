@@ -83,6 +83,66 @@ export async function connectToNxCloudCommand(
   options: { generateToken?: boolean; checkRemote?: boolean },
   command?: string
 ): Promise<boolean> {
+  // `connectToNxCloudWithPrompt` (called from `migrate`) records its own stat; skip here to avoid double-counting.
+  const selfRecord = !command;
+  const baseMeta = {
+    nodeVersion: process.versions.node,
+    os: process.platform,
+    packageManager: detectPackageManager(),
+    aiAgent: isAiAgent(),
+    isCI: isCI(),
+  };
+  if (selfRecord) {
+    await recordStat({
+      command: 'connect',
+      nxVersion,
+      useCloud: true,
+      meta: { type: 'start', ...baseMeta },
+    });
+  }
+  try {
+    const result = await runConnectToNxCloud(options, command);
+    if (selfRecord) {
+      await recordStat({
+        command: 'connect',
+        nxVersion,
+        useCloud: result,
+        meta: { type: 'complete', ...baseMeta },
+      });
+    }
+    return result;
+  } catch (error) {
+    if (selfRecord) {
+      const message =
+        (error instanceof Error && error.message) ||
+        String(error ?? 'Unknown error');
+      const errorName =
+        typeof (error as any)?.code === 'string'
+          ? ((error as any).code as string)
+          : error instanceof Error
+            ? error.name
+            : typeof error;
+      await recordStat({
+        command: 'connect',
+        nxVersion,
+        useCloud: false,
+        meta: {
+          type: 'error',
+          errorCode: 'UNKNOWN',
+          errorName,
+          errorMessage: message.slice(0, 500),
+          ...baseMeta,
+        },
+      });
+    }
+    throw error;
+  }
+}
+
+async function runConnectToNxCloud(
+  options: { generateToken?: boolean; checkRemote?: boolean },
+  command?: string
+): Promise<boolean> {
   const nxJson = readNxJson();
 
   const installationSource = process.env.NX_CONSOLE

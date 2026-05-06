@@ -14,7 +14,7 @@ import { createConsoleLogger, NodeJsSyncHost } from '@angular-devkit/core/node';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 
 // Importing @angular-devkit/architect here will cause issues importing this file without @angular-devkit/architect installed
-/* eslint-disable no-restricted-imports */
+
 import type { Architect, Target } from '@angular-devkit/architect';
 import type { NodeModulesBuilderInfo } from '@angular-devkit/architect/node/node-modules-architect-host';
 

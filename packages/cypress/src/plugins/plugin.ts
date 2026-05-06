@@ -1,4 +1,9 @@
 import {
+  calculateHashForCreateNodes,
+  loadConfigFile,
+  getNamedInputs,
+} from '@nx/devkit/internal';
+import {
   type CreateNodesContextV2,
   createNodesFromFiles,
   type CreateNodesV2,
@@ -10,9 +15,6 @@ import {
   type ProjectConfiguration,
   type TargetConfiguration,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
 import { hashObject } from 'nx/src/devkit-internals';
@@ -51,19 +53,26 @@ export const createNodes: CreateNodesV2<CypressPluginOptions> = [
       `cypress-${optionsHash}.hash`
     );
     const pluginCache = new PluginCache<CypressTargets>(cachePath);
-    const pmc = getPackageManagerCommand(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, pluginCache, pmc),
+          createNodesInternal(
+            configFile,
+            options,
+            context,
+            pluginCache,
+            pmc,
+            lockFileName
+          ),
         configFiles,
         options,
         context
       );
     } finally {
-      pluginCache.writeToDisk(cachePath);
+      pluginCache.writeToDisk();
     }
   },
 ];
@@ -75,7 +84,8 @@ async function createNodesInternal(
   options: CypressPluginOptions,
   context: CreateNodesContextV2,
   pluginCache: PluginCache<CypressTargets>,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  lockFileName: string
 ) {
   options = normalizeOptions(options);
   const projectRoot = dirname(configFilePath);
@@ -89,12 +99,10 @@ async function createNodesInternal(
     return {};
   }
 
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
-  );
+  const hash =
+    (await calculateHashForCreateNodes(projectRoot, options, context, [
+      lockFileName,
+    ])) + configFilePath;
 
   if (!pluginCache.has(hash)) {
     pluginCache.set(

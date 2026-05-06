@@ -63,12 +63,14 @@ export function getLocalDbConnection(
   return connection;
 }
 
-export function removeDbConnections() {
+function removeDbConnections() {
   for (const connection of dbConnectionMap.values()) {
     closeDbConnection(connection);
   }
   dbConnectionMap.clear();
 }
+
+process.on('exit', removeDbConnections);
 
 function getEntryOrSet<TKey, TVal>(
   map: Map<TKey, TVal>,

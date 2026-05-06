@@ -4,9 +4,13 @@
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
 
-@source '../../node_modules/@nx/nx-dev-feature-analytics';
-@source '../../node_modules/@nx/nx-dev-ui-markdoc';
-@source '../../node_modules/@nx/nx-dev-ui-common';
+@source '../../node_modules/@nx/nx-dev-feature-analytics/src';
+@source '../../node_modules/@nx/nx-dev-ui-markdoc/src';
+@source '../../node_modules/@nx/nx-dev-ui-common/src';
+
+@source not "../../e2e";
+@source not "../../**/eslint.config.*";
+@source not "../../node_modules/@nx/nx-dev-ui-markdoc/src/**/*.{spec,test}.*";
 
 /* Custom styles for Nx documentation */
 

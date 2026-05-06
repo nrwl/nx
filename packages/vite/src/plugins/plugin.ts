@@ -1,4 +1,9 @@
 import {
+  calculateHashesForCreateNodes,
+  getNamedInputs,
+  PluginCache,
+} from '@nx/devkit/internal';
+import {
   CreateDependencies,
   CreateNodesContextV2,
   createNodesFromFiles,
@@ -8,12 +13,8 @@ import {
   joinPathFragments,
   normalizePath,
   ProjectConfiguration,
-  readJsonFile,
   TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
 import {
   walkTsconfigExtendsChain,
@@ -41,6 +42,13 @@ export interface VitePluginOptions {
   previewTargetName?: string;
   serveStaticTargetName?: string;
   typecheckTargetName?: string;
+  /**
+   * The compiler to use for type-checking. When unset, defaults to `vue-tsc`
+   * for Vue projects (detected via the `vite:vue` plugin) and `tsc` otherwise.
+   * Set to `tsgo` to use the TypeScript Go compiler (`@typescript/native-preview`),
+   * or `vue-tsc` to force Vue-aware type-checking when auto-detection misses your setup.
+   */
+  compiler?: 'tsc' | 'tsgo' | 'vue-tsc';
   watchDepsTargetName?: string;
   buildDepsTargetName?: string;
 
@@ -59,16 +67,6 @@ type ViteTargets = Pick<
   'targets' | 'metadata' | 'projectType'
 >;
 
-function readTargetsCache(cachePath: string): Record<string, ViteTargets> {
-  return process.env.NX_CACHE_PROJECT_GRAPH !== 'false' && existsSync(cachePath)
-    ? readJsonFile(cachePath)
-    : {};
-}
-
-function writeTargetsToCache(cachePath, results?: Record<string, ViteTargets>) {
-  writeJsonFile(cachePath, results);
-}
-
 /**
  * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
  */
@@ -84,7 +82,7 @@ export const createNodes: CreateNodesV2<VitePluginOptions> = [
     const optionsHash = hashObject(options);
     const normalizedOptions = normalizeOptions(options);
     const cachePath = join(workspaceDataDirectory, `vite-${optionsHash}.hash`);
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<ViteTargets>(cachePath);
     const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
 
     const { roots: projectRoots, configFiles: validConfigFiles } =
@@ -151,18 +149,23 @@ export const createNodes: CreateNodesV2<VitePluginOptions> = [
           // Adding the config file path to the hash ensures that the final hash value is different
           // for different config files.
           const hash = hashes[idx] + configFile;
-          const { projectType, metadata, targets } = (targetsCache[hash] ??=
-            await buildViteTargets(
-              configFile,
-              projectRoot,
-              normalizedOptions,
-              tsConfigFiles,
-              hasReactRouterConfig,
-              isUsingTsSolutionSetup,
-              context,
-              pmc,
-              tsconfigChainsByProjectRoot.get(projectRoot) ?? []
-            ));
+          if (!targetsCache.has(hash)) {
+            targetsCache.set(
+              hash,
+              await buildViteTargets(
+                configFile,
+                projectRoot,
+                normalizedOptions,
+                tsConfigFiles,
+                hasReactRouterConfig,
+                isUsingTsSolutionSetup,
+                context,
+                pmc,
+                tsconfigChainsByProjectRoot.get(projectRoot) ?? []
+              )
+            );
+          }
+          const { projectType, metadata, targets } = targetsCache.get(hash);
 
           const project: ProjectConfiguration = {
             root: projectRoot,
@@ -187,7 +190,7 @@ export const createNodes: CreateNodesV2<VitePluginOptions> = [
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk();
     }
   },
 ];
@@ -418,7 +421,17 @@ async function buildViteTargets(
     const hasVuePlugin = viteBuildConfig.plugins?.some(
       (p) => p.name === 'vite:vue'
     );
-    const typeCheckCommand = hasVuePlugin ? 'vue-tsc' : 'tsc';
+    // Explicit `compiler` option wins over inference so users can override
+    // when their setup isn't detected (e.g. custom/non-standard Vue plugin).
+    const resolvedCompiler =
+      options.compiler ?? (hasVuePlugin ? 'vue-tsc' : 'tsc');
+    const typeCheckCommand = resolvedCompiler;
+    const typeCheckExternalDeps =
+      resolvedCompiler === 'tsgo'
+        ? ['@typescript/native-preview']
+        : resolvedCompiler === 'vue-tsc'
+          ? ['vue-tsc', 'typescript']
+          : ['typescript'];
 
     targets[options.typecheckTargetName] = {
       cache: true,
@@ -426,11 +439,7 @@ async function buildViteTargets(
         ...('production' in namedInputs
           ? ['production', '^production']
           : ['default', '^default']),
-        {
-          externalDependencies: hasVuePlugin
-            ? ['vue-tsc', 'typescript']
-            : ['typescript'],
-        },
+        { externalDependencies: typeCheckExternalDeps },
       ],
       command: isUsingTsSolutionSetup
         ? `${typeCheckCommand} --build --emitDeclarationOnly`

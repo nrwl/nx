@@ -2,7 +2,7 @@ import { Tree, names, readNxJson } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
+} from '@nx/devkit/internal';
 import {
   assertValidReactRouter,
   assertValidStyle,
@@ -50,10 +50,6 @@ export async function normalizeOptions<T extends Schema = Schema>(
 
   const fileName = 'app';
 
-  const styledModule = /^(css|scss|less|tailwind|none)$/.test(options.style)
-    ? null
-    : options.style;
-
   assertValidStyle(options.style);
   assertValidReactRouter(options.useReactRouter, options.bundler);
 
@@ -71,7 +67,6 @@ export async function normalizeOptions<T extends Schema = Schema>(
     e2eProjectRoot,
     parsedTags,
     fileName,
-    styledModule,
     hasStyles: options.style !== 'none',
     names: names(projectNames.projectSimpleName),
     isUsingTsSolutionConfig,

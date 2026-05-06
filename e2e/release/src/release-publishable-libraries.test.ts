@@ -76,7 +76,7 @@ describe('release publishable libraries', () => {
 
     // This is the verdaccio instance that the e2e tests themselves are working from
     e2eRegistryUrl = execSync('npm config get registry').toString().trim();
-  }, 100000);
+  }, 300_000);
 
   beforeEach(() => {
     try {

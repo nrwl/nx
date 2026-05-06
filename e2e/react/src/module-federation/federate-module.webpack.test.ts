@@ -1,19 +1,17 @@
 import {
   cleanupProject,
-  getAvailablePort,
+  reservePorts,
   killProcessAndPorts,
   newProject,
   runCommandUntil,
   runE2ETests,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 
-// TODO: re-enable when @module-federation/enhanced supports webpack 5.106.0+
-// webpack 5.106.0 removed lib/util/create-schema-validation.js which @module-federation/enhanced@2.3.1 depends on
-// eslint-disable-next-line jest/no-disabled-tests
-describe.skip('Federate Module', () => {
+describe('Federate Module', () => {
   let proj: string;
 
   beforeAll(() => {
@@ -27,11 +25,16 @@ describe.skip('Federate Module', () => {
     const module = uniq('module');
     const host = uniq('host');
 
-    const shellPort = await getAvailablePort();
+    const [shellPort, remotePort] = await reservePorts(2);
 
     runCLI(
       `generate @nx/react:host ${host} --bundler=webpack --remotes=${remote} --devServerPort=${shellPort} --e2eTestRunner=cypress --no-interactive --skipFormat`
     );
+
+    updateJson(`${remote}/project.json`, (project) => {
+      project.targets.serve.options.port = remotePort;
+      return project;
+    });
 
     runCLI(`generate @nx/js:lib ${lib} --no-interactive --skipFormat`);
 
@@ -98,7 +101,6 @@ describe.skip('Federate Module', () => {
     );
 
     const hostPort = readPort(host);
-    const remotePort = readPort(remote);
 
     // Build host and remote
     const buildOutput = runCLI(`build ${host}`);
@@ -128,11 +130,16 @@ describe.skip('Federate Module', () => {
     const module = uniq('module');
     const host = uniq('host');
 
-    const shellPort = await getAvailablePort();
+    const [shellPort, remotePort, childRemotePort] = await reservePorts(3);
 
     runCLI(
       `generate @nx/react:host ${host} --remotes=${remote} --devServerPort=${shellPort} --bundler=webpack --e2eTestRunner=cypress --no-interactive --skipFormat`
     );
+
+    updateJson(`${remote}/project.json`, (project) => {
+      project.targets.serve.options.port = remotePort;
+      return project;
+    });
 
     runCLI(`generate @nx/js:lib ${lib} --no-interactive --skipFormat`);
 
@@ -140,6 +147,11 @@ describe.skip('Federate Module', () => {
     runCLI(
       `generate @nx/react:federate-module ${lib}/src/index.ts --bundler=webpack --name=${module} --remote=${childRemote} --remoteDirectory=${childRemote} --no-interactive --skipFormat`
     );
+
+    updateJson(`${childRemote}/project.json`, (project) => {
+      project.targets.serve.options.port = childRemotePort;
+      return project;
+    });
 
     updateFile(
       `${lib}/src/index.ts`,
@@ -191,8 +203,6 @@ describe.skip('Federate Module', () => {
     );
 
     const hostPort = readPort(host);
-    const remotePort = readPort(remote);
-    const childRemotePort = readPort(childRemote);
 
     // Build host and remote
     const buildOutput = runCLI(`build ${host}`);

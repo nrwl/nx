@@ -13,9 +13,6 @@ export function updateSpecConfig(host: Tree, options: NormalizedSchema) {
   updateJson(host, `${options.appProjectRoot}/tsconfig.spec.json`, (json) => {
     const compilerOptions = json.compilerOptions ?? {};
     const types = compilerOptions.types ?? [];
-    if (options.style === 'styled-jsx') {
-      types.push('@nx/react/typings/styled-jsx.d.ts');
-    }
     types.push(
       '@nx/react/typings/cssmodule.d.ts',
       '@nx/react/typings/image.d.ts'

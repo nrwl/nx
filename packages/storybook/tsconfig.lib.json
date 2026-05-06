@@ -30,6 +30,9 @@
     },
     {
       "path": "../devkit/tsconfig.lib.json"
+    },
+    {
+      "path": "../web/tsconfig.lib.json"
     }
   ]
 }

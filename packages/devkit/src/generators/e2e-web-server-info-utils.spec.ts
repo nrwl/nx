@@ -1,3 +1,18 @@
+// Stub out the real @nx/vite/plugin so findPluginForConfigFile's dynamic
+// `await import('@nx/vite/plugin')` doesn't pull @nx/vite and @nx/js source
+// into this test. Only the createNodesV2 glob is consumed, and the include/
+// exclude assertions depend on the nxJson registration, not the real plugin.
+jest.mock(
+  '@nx/vite/plugin',
+  () => ({
+    createNodesV2: [
+      '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}',
+      jest.fn(),
+    ],
+  }),
+  { virtual: true }
+);
+
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import { type Tree, readNxJson, updateNxJson } from 'nx/src/devkit-exports';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';

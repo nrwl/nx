@@ -1,3 +1,4 @@
+import { logShowProjectCommand } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -7,13 +8,11 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { releaseTasks } from '@nx/js/src/generators/library/utils/add-release-config';
 import init from '../../generators/init/init';
 import { UnitTestRunner } from '../../utils/test-runners';
 import addLintingGenerator from '../add-linting/add-linting';
-import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
 import { addJest } from '../utils/add-jest';
 import { addVitestAnalog, addVitestAngular } from '../utils/add-vitest';
 import { addBuildableLibrariesPostCssDependencies } from '../utils/dependencies';
@@ -72,14 +71,6 @@ export async function libraryGenerator(
   }
 
   await addLinting(tree, libraryOptions);
-
-  if (libraryOptions.addTailwind) {
-    await setupTailwindGenerator(tree, {
-      project: libraryOptions.name,
-      skipFormat: true,
-      skipPackageJson: libraryOptions.skipPackageJson,
-    });
-  }
 
   if (
     (libraryOptions.buildable || libraryOptions.publishable) &&

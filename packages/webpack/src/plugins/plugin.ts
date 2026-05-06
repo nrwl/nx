@@ -1,4 +1,9 @@
 import {
+  calculateHashForCreateNodes,
+  getNamedInputs,
+  PluginCache,
+} from '@nx/devkit/internal';
+import {
   CreateDependencies,
   CreateNodesContextV2,
   createNodesFromFiles,
@@ -8,16 +13,15 @@ import {
   getPackageManagerCommand,
   joinPathFragments,
   ProjectConfiguration,
-  readJsonFile,
   TargetConfiguration,
   workspaceRoot,
-  writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { existsSync, readdirSync } from 'fs';
+import {
+  isUsingTsSolutionSetup,
+  TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { readdirSync } from 'fs';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
@@ -36,17 +40,6 @@ export interface WebpackPluginOptions {
 
 type WebpackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
-function readTargetsCache(cachePath: string): Record<string, WebpackTargets> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
-
-function writeTargetsToCache(
-  cachePath: string,
-  results?: Record<string, WebpackTargets>
-) {
-  writeJsonFile(cachePath, results);
-}
-
 /**
  * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
  */
@@ -64,12 +57,12 @@ export const createNodes: CreateNodesV2<WebpackPluginOptions> = [
       workspaceDataDirectory,
       `webpack-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<WebpackTargets>(cachePath);
     const normalizedOptions = normalizeOptions(options);
     const isTsSolutionSetup = isUsingTsSolutionSetup();
-    const pmc = getPackageManagerCommand(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -79,14 +72,15 @@ export const createNodes: CreateNodesV2<WebpackPluginOptions> = [
             context,
             targetsCache,
             isTsSolutionSetup,
-            pmc
+            pmc,
+            lockFileName
           ),
         configFilePaths,
         normalizedOptions,
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk();
     }
   },
 ];
@@ -97,9 +91,10 @@ async function createNodesInternal(
   configFilePath: string,
   options: Required<WebpackPluginOptions>,
   context: CreateNodesContextV2,
-  targetsCache: Record<string, WebpackTargets>,
+  targetsCache: PluginCache<WebpackTargets>,
   isTsSolutionSetup: boolean,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  lockFileName: string
 ): Promise<CreateNodesResult> {
   const projectRoot = dirname(configFilePath);
 
@@ -116,19 +111,24 @@ async function createNodesInternal(
     projectRoot,
     options,
     context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    [lockFileName]
   );
 
-  targetsCache[hash] ??= await createWebpackTargets(
-    configFilePath,
-    projectRoot,
-    options,
-    context,
-    isTsSolutionSetup,
-    pmc
-  );
+  if (!targetsCache.has(hash)) {
+    targetsCache.set(
+      hash,
+      await createWebpackTargets(
+        configFilePath,
+        projectRoot,
+        options,
+        context,
+        isTsSolutionSetup,
+        pmc
+      )
+    );
+  }
 
-  const { targets, metadata } = targetsCache[hash];
+  const { targets, metadata } = targetsCache.get(hash);
 
   return {
     projects: {
@@ -181,6 +181,7 @@ async function createWebpackTargets(
             {
               externalDependencies: ['webpack-cli'],
             },
+            TS_SOLUTION_SETUP_TSCONFIG_INPUT,
           ]
         : [
             'default',
@@ -188,6 +189,7 @@ async function createWebpackTargets(
             {
               externalDependencies: ['webpack-cli'],
             },
+            TS_SOLUTION_SETUP_TSCONFIG_INPUT,
           ],
     outputs,
     metadata: {

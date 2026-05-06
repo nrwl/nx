@@ -37,6 +37,7 @@
       "type": "string",
       "default": "css",
       "alias": "s",
+      "enum": ["css", "scss", "none"],
       "x-prompt": {
         "message": "Which stylesheet format would you like to use?",
         "type": "list",
@@ -47,11 +48,7 @@
           },
           {
             "value": "scss",
-            "label": "SASS(.scss)       [ https://sass-lang.com                     ]"
-          },
-          {
-            "value": "less",
-            "label": "LESS              [ https://lesscss.org                       ]"
+            "label": "SASS(.scss)       [ https://sass-lang.com ]"
           },
           {
             "value": "none",

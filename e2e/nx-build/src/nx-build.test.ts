@@ -15,7 +15,7 @@ const packagesToVerify = [
   {
     name: 'devkit',
     sourceFile: 'index.ts',
-    outputFile: 'dist/packages/devkit/index.js',
+    outputFile: 'packages/devkit/dist/index.js',
   },
   {
     name: 'js',

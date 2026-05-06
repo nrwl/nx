@@ -97,11 +97,6 @@ function createTsConfigForTsSolution(
         json.compilerOptions.types = Array.from(types);
       }
 
-      if (options.style === '@emotion/styled') {
-        json.compilerOptions ??= {};
-        json.compilerOptions.jsxImportSource = '@emotion/react';
-      }
-
       return json;
     });
   }
@@ -136,10 +131,6 @@ function createTsConfigForNonTsSolution(
       },
     ],
   } as any;
-
-  if (options.style === '@emotion/styled') {
-    json.compilerOptions.jsxImportSource = '@emotion/react';
-  }
 
   if (options.bundler === 'vite') {
     json.compilerOptions.types =

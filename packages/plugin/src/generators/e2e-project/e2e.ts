@@ -1,3 +1,4 @@
+import { determineProjectNameAndRootOptions } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   formatFiles,
@@ -17,7 +18,6 @@ import {
   type ProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { LinterType, lintProjectGenerator } from '@nx/eslint';
 import {
   addPropertyToJestConfig,

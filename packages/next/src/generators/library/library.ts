@@ -172,17 +172,6 @@ export async function HelloServer() {
 
   updateJson(
     host,
-    joinPathFragments(options.projectRoot, 'tsconfig.json'),
-    (json) => {
-      if (options.style === '@emotion/styled') {
-        json.compilerOptions.jsxImportSource = '@emotion/react';
-      }
-      return json;
-    }
-  );
-
-  updateJson(
-    host,
     joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
     (json) => {
       if (!json.compilerOptions) {

@@ -10,10 +10,12 @@ import { logger } from '../../../utils/logger';
 import { createSerializableError } from '../../../utils/serializable-error';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { consumeMessage, isPluginWorkerMessage } from './messaging';
+import { setPluginWorkerHostSocket } from './worker-streaming';
 
 import { unlinkSync } from 'fs';
 import { createServer } from 'net';
 import { startAnalytics } from '../../../analytics';
+import { applyDaemonEnvFromClient } from '../../../daemon/client/daemon-environment';
 import '../../../utils/perf-logging';
 
 type Environment = Pick<
@@ -50,6 +52,11 @@ let connectErrorTimeout = setErrorTimeout(
 
 const server = createServer((socket) => {
   connectErrorTimeout?.clear();
+
+  // Make the host-facing socket available to plugin code running in this
+  // worker so it can emit log / progress notifications without having
+  // the socket threaded through every call site.
+  setPluginWorkerHostSocket(socket);
 
   logger.verbose(
     `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) connected`
@@ -143,9 +150,7 @@ const server = createServer((socket) => {
           withErrorHandling(() => plugin.postTasksExecution?.(context)),
         setWorkerEnv: (env) =>
           withErrorHandling(() => {
-            for (const envKey in env) {
-              process.env[envKey] = env[envKey];
-            }
+            applyDaemonEnvFromClient(env);
           }),
       });
     })

@@ -13,6 +13,7 @@ public static partial class TargetBuilder
         string fileName,
         bool isTest,
         Dictionary<string, string> properties,
+        string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
         string productionInput)
@@ -23,10 +24,7 @@ public static partial class TargetBuilder
             ["Configuration"] = "Release"
         };
 
-        var publishDir = GetPublishDir(releaseProperties, projectName, workspaceRoot);
-
-        var useWorkspaceRoot = UsesArtifactsOutput(properties);
-        var outputPrefix = useWorkspaceRoot ? "{workspaceRoot}" : "{projectRoot}";
+        var publishDir = GetPublishDir(releaseProperties, projectName, projectDirectory, workspaceRoot);
 
         string[] defaultFlags = ["--no-build", "--no-dependencies", "--no-restore"];
 
@@ -52,8 +50,15 @@ public static partial class TargetBuilder
             },
             DependsOn = [buildReleaseTarget],
             Cache = true,
-            Inputs = ["default", $"^{productionInput}", new { workingDirectory = "absolute" }],
-            Outputs = [$"{outputPrefix}/{publishDir}"],
+            Inputs =
+            [
+                "default",
+                $"^{productionInput}",
+                "{workspaceRoot}/.editorconfig",
+                new { workingDirectory = "absolute" },
+                new { dependentTasksOutputFiles = "**/*" },
+            ],
+            Outputs = publishDir is null ? [] : [publishDir],
             Metadata = new TargetMetadata
             {
                 Description = "Publish the .NET application",

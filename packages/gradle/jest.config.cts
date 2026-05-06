@@ -4,4 +4,5 @@ module.exports = {
   globals: {},
   displayName: 'gradle',
   preset: '../../jest.preset.js',
+  modulePathIgnorePatterns: ['<rootDir>/batch-runner/'],
 };

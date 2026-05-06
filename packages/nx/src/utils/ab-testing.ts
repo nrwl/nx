@@ -43,8 +43,8 @@ interface MessageData {
 const messageOptions: Record<string, MessageData[]> = {
   setupNxCloud: [
     {
-      code: 'cloud-ab-remote-cache-speed',
-      message: 'Enable remote caching to speed up builds with Nx Cloud?',
+      code: 'cloud-ci-providers-speed',
+      message: 'Speed up GitHub Actions, GitLab CI, and more with Nx Cloud?',
       initial: 0,
       choices: [
         { value: 'yes', name: 'Yes' },
@@ -52,7 +52,19 @@ const messageOptions: Record<string, MessageData[]> = {
         { value: 'never', name: pc.dim("No, don't ask again") },
       ],
       footer:
-        '\nFree for small teams. 2-minute setup with GitHub — cache locally and in CI: https://nx.dev/nx-cloud',
+        '\nFree for small teams. Remote caching and task distribution. 2-minute setup: https://nx.dev/nx-cloud',
+    },
+    {
+      code: 'cloud-self-healing-remote-cache',
+      message: `Would you like to enable AI-powered Self-Healing CI and Remote Caching?`,
+      initial: 0,
+      choices: [
+        { value: 'yes', name: 'Yes' },
+        { value: 'skip', name: 'Skip for now' },
+        { value: 'never', name: pc.dim("No, don't ask again") },
+      ],
+      footer: '\nLearn about it at https://nx.dev/nx-cloud',
+      hint: `\n(it's free and can be disabled any time)`,
     },
   ],
   setupViewLogs: [

@@ -631,6 +631,10 @@ const knowledgeBaseGroups: SidebarItems = [
             label: 'Standalone to monorepo',
             link: 'guides/tips-n-tricks/standalone-to-monorepo',
           },
+          {
+            label: 'Migrate `nx` imports to `@nx/devkit`',
+            link: 'guides/tips-n-tricks/migrate-nx-imports-to-devkit',
+          },
         ],
       },
       {

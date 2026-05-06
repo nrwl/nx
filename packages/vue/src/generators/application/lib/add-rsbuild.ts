@@ -50,14 +50,6 @@ export async function addRsbuild(tree: Tree, options: NormalizedSchema) {
       'pluginSass'
     );
     deps['@rsbuild/plugin-sass'] = versions.rsbuildPluginSassVersion;
-  } else if (options.style === 'less') {
-    addBuildPlugin(
-      tree,
-      pathToConfigFile,
-      '@rsbuild/plugin-less',
-      'pluginLess'
-    );
-    deps['@rsbuild/plugin-less'] = versions.rsbuildPluginLessVersion;
   }
 
   addHtmlTemplatePath(tree, pathToConfigFile, './index.html');

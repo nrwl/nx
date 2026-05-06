@@ -2,6 +2,25 @@
 const path = require('path');
 const fs = require('fs');
 
+// Memoize results of `existsSync(...) && lstatSync(...).isFile()` for
+// resolution probes inside `packages/*`. Each spec file with
+// `jest.mock('@nx/devkit', ...)` (or any cross-package require) makes Jest
+// re-run resolution from scratch, which calls `existsSync` and `lstatSync`
+// on the same workspace files repeatedly. Those probes show up in the
+// sandbox report as "unexpected reads" even though they don't read any
+// file content. The map is process-wide and bounded by the set of
+// workspace package entry points, so memory is trivial.
+const isFileCache = new Map();
+const isWorkspaceFile = (p) => {
+  if (isFileCache.has(p)) return isFileCache.get(p);
+  let result = false;
+  try {
+    result = fs.existsSync(p) && fs.lstatSync(p).isFile();
+  } catch (_) {}
+  isFileCache.set(p, result);
+  return result;
+};
+
 /**
  * Custom resolver which will respect package exports (until Jest supports it natively
  * by resolving https://github.com/facebook/jest/issues/9771)
@@ -12,7 +31,7 @@ const fs = require('fs');
  * - Without this resolver, Jest will fail to resolve these imports correctly
  */
 const enhancedResolver = require('enhanced-resolve').create.sync({
-  conditionNames: ['require', 'node', 'default'],
+  conditionNames: ['@nx/nx-source', 'require', 'node', 'default'],
   extensions: ['.js', '.json', '.node', '.ts', '.tsx'],
 });
 
@@ -49,9 +68,12 @@ module.exports = function (modulePath, options) {
     '@nx/rollup',
     '@nx/eslint',
     '@nx/vite',
+    '@nx/vitest',
     '@nx/jest',
     '@nx/docker',
+    '@nx/dotnet',
     '@nx/js',
+    '@nx/maven',
     '@nx/next',
     '@nx/storybook',
     '@nx/rsbuild',
@@ -66,6 +88,7 @@ module.exports = function (modulePath, options) {
     '@nx/angular',
     '@nx/create-nx-plugin',
     '@nx/create-nx-workspace',
+    '@nx/cypress',
     '@nx/detox',
     '@nx/devkit',
     '@nx/esbuild',
@@ -75,6 +98,7 @@ module.exports = function (modulePath, options) {
     '@nx/node',
     '@nx/nuxt',
     '@nx/playwright',
+    '@nx/plugin',
     '@nx/react',
     '@nx/remix',
     '@nx/webpack',
@@ -147,7 +171,7 @@ module.exports = function (modulePath, options) {
       ];
 
       for (const entry of possibleEntries) {
-        if (fs.existsSync(entry) && fs.lstatSync(entry).isFile()) {
+        if (isWorkspaceFile(entry)) {
           return entry;
         }
       }
@@ -166,10 +190,7 @@ module.exports = function (modulePath, options) {
       ];
 
       for (const possiblePath of possiblePaths) {
-        if (
-          fs.existsSync(possiblePath) &&
-          fs.lstatSync(possiblePath).isFile()
-        ) {
+        if (isWorkspaceFile(possiblePath)) {
           return possiblePath;
         }
       }
@@ -191,10 +212,7 @@ module.exports = function (modulePath, options) {
       ];
 
       for (const possiblePath of possiblePaths) {
-        if (
-          fs.existsSync(possiblePath) &&
-          fs.lstatSync(possiblePath).isFile()
-        ) {
+        if (isWorkspaceFile(possiblePath)) {
           return possiblePath;
         }
       }

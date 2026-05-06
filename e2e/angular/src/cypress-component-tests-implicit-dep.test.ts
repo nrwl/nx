@@ -1,21 +1,16 @@
 import {
-  checkFilesDoNotExist,
-  checkFilesExist,
   getPackageManagerCommand,
   runCLI,
   runCommand,
   runE2ETests,
-  updateFile,
   updateJson,
 } from '@nx/e2e-utils';
-import { join } from 'path';
 import {
   setupCypressComponentTests,
   cleanupCypressComponentTests,
   updateTestToAssertTailwindIsNotApplied,
   useBuildableLibInLib,
   updateBuilableLibTestsToAssertAppStyles,
-  useRootLevelTailwindConfig,
   CypressComponentTestsSetup,
 } from './cypress-component-tests-setup';
 
@@ -42,23 +37,6 @@ describe('Angular Cypress Component Tests - Implicit Dep', () => {
     runCLI(
       `generate @nx/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build --no-interactive`
     );
-
-    // Add tailwind to the buildable lib
-    runCLI(`generate @nx/angular:setup-tailwind --project=${buildableLibName}`);
-    updateFile(
-      `${buildableLibName}/src/lib/input/input.component.cy.ts`,
-      (content) => {
-        // text-green-500 should now apply
-        return content.replace('rgb(0, 0, 0)', 'rgb(34, 197, 94)');
-      }
-    );
-    updateFile(
-      `${buildableLibName}/src/lib/input-standalone/input-standalone.cy.ts`,
-      (content) => {
-        // text-green-500 should now apply
-        return content.replace('rgb(0, 0, 0)', 'rgb(34, 197, 94)');
-      }
-    );
   });
 
   afterAll(() => cleanupCypressComponentTests());
@@ -73,21 +51,6 @@ describe('Angular Cypress Component Tests - Implicit Dep', () => {
     useBuildableLibInLib(projectName, buildableLibName, usedInAppLibName);
 
     updateBuilableLibTestsToAssertAppStyles(appName, buildableLibName);
-
-    if (runE2ETests('cypress')) {
-      expect(runCLI(`component-test ${buildableLibName}`)).toContain(
-        'All specs passed!'
-      );
-    }
-  });
-
-  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
-  it.skip('should use root level tailwinds config', () => {
-    const { buildableLibName } = setup;
-
-    useRootLevelTailwindConfig(join(buildableLibName, 'tailwind.config.js'));
-    checkFilesExist('tailwind.config.js');
-    checkFilesDoNotExist(`${buildableLibName}/tailwind.config.js`);
 
     if (runE2ETests('cypress')) {
       expect(runCLI(`component-test ${buildableLibName}`)).toContain(

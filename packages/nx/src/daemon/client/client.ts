@@ -100,6 +100,10 @@ import {
   PRE_TASKS_EXECUTION,
 } from '../message-types/run-tasks-execution-hooks';
 import {
+  isEmitLogMessage,
+  isUpdateProgressMessage,
+} from '../message-types/streaming-messages';
+import {
   GET_ESTIMATED_TASK_TIMINGS,
   GET_FLAKY_TASKS,
   HandleGetEstimatedTaskTimings,
@@ -159,6 +163,11 @@ export class DaemonClient {
   private currentMessage;
   private currentResolve;
   private currentReject;
+  // Tracks the spinner owned by the in-flight request so streamed
+  // progress updates are routed to the caller's spinner instead of
+  // mutating the process-wide globalSpinner (which may belong to an
+  // unrelated command).
+  private currentSpinner: DelayedSpinner | null = null;
 
   private _enabled: boolean | undefined;
   private _daemonStatus: DaemonStatus = DaemonStatus.DISCONNECTED;
@@ -303,10 +312,8 @@ export class DaemonClient {
     // If the graph takes a while to load, we want to show a spinner.
     spinner = new DelayedSpinner(
       'Calculating the project graph on the Nx Daemon'
-    ).scheduleMessageUpdate(
-      'Calculating the project graph on the Nx Daemon is taking longer than expected. Re-run with NX_DAEMON=false to see more details.',
-      { ciDelay: 60_000, delay: 30_000 }
     );
+    this.currentSpinner = spinner;
     try {
       const response = await this.sendToDaemonViaQueue({
         type: 'REQUEST_PROJECT_GRAPH',
@@ -323,6 +330,7 @@ export class DaemonClient {
       }
     } finally {
       spinner?.cleanup();
+      this.currentSpinner = null;
     }
   }
 
@@ -760,9 +768,9 @@ export class DaemonClient {
         type: 'PROCESS_IN_BACKGROUND',
         requirePath,
         data,
-        // This method is sometimes passed data that cannot be serialized with v8
-        // so we force JSON serialization here
       },
+      // This method is sometimes passed data that cannot be serialized with v8
+      // so we force JSON serialization here
       'json'
     );
   }
@@ -1032,11 +1040,15 @@ export class DaemonClient {
 
   private async sendToDaemonViaQueue<T extends DaemonMessage>(
     messageToDaemon: T,
-    force?: 'v8' | 'json'
+    parser?: 'v8' | 'json'
   ): Promise<any> {
-    return this.queue.sendToQueue(() =>
-      this.sendMessageToDaemon(messageToDaemon, force)
-    );
+    return this.queue.sendToQueue(async () => {
+      // Set currentSpinner inside the queued function so it's only
+      // active while this specific message is in flight — preventing
+      // concurrent callers from overwriting each other's spinner
+      // reference before their turn arrives.
+      return await this.sendMessageToDaemon(messageToDaemon, parser);
+    });
   }
 
   private setUpConnection() {
@@ -1259,6 +1271,19 @@ export class DaemonClient {
         'result-parse-start-' + this.currentMessage.type,
         'result-parse-end-' + this.currentMessage.type
       );
+      // Streaming messages fire side-effects on the client but do not
+      // resolve the pending request promise — the daemon can push several
+      // of these before finally sending the real response. Progress
+      // updates route through the in-flight request's own spinner so
+      // we don't stomp on unrelated commands' spinner text.
+      if (isUpdateProgressMessage(parsedResult)) {
+        this.currentSpinner?.setMessage(parsedResult.message);
+        return;
+      }
+      if (isEmitLogMessage(parsedResult)) {
+        console[parsedResult.level](parsedResult.message);
+        return;
+      }
       if (parsedResult.error) {
         this.currentReject(parsedResult.error);
       } else {
@@ -1302,8 +1327,16 @@ export class DaemonClient {
       writeFileSync(DAEMON_OUTPUT_LOG_FILE, '');
     }
 
-    this._out = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
-    this._err = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
+    // Open the log handles into locals first. If the previous daemon's
+    // socket close handler fires reset() while we're awaiting these opens,
+    // it would null out this._out/this._err and the spawn below would hit
+    // `Cannot read properties of null (reading 'fd')`.
+    const [out, err] = await Promise.all([
+      open(DAEMON_OUTPUT_LOG_FILE, 'a'),
+      open(DAEMON_OUTPUT_LOG_FILE, 'a'),
+    ]);
+    this._out = out;
+    this._err = err;
 
     clientLogger.log(`[Client] Starting new daemon server in background`);
 
@@ -1312,7 +1345,7 @@ export class DaemonClient {
       [join(__dirname, `../server/start.js`)],
       {
         cwd: workspaceRoot,
-        stdio: ['ignore', this._out.fd, this._err.fd],
+        stdio: ['ignore', out.fd, err.fd],
         detached: true,
         windowsHide: true,
         shell: false,

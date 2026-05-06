@@ -174,6 +174,34 @@ export type MessageResult<T extends PluginWorkerMessage['type']> = ResultOf<
 >;
 
 // =============================================================================
+// NOTIFICATIONS (worker -> host, unsolicited, no response expected)
+// =============================================================================
+
+export type PluginWorkerEmitLogNotification = {
+  type: 'emitLog';
+  level: 'log' | 'warn' | 'error';
+  message: string;
+};
+
+export type PluginWorkerNotification = PluginWorkerEmitLogNotification;
+
+const NOTIFICATION_TYPES: ReadonlyArray<PluginWorkerNotification['type']> = [
+  'emitLog',
+];
+
+export function isPluginWorkerNotification(
+  message: Serializable
+): message is PluginWorkerNotification {
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    'type' in message &&
+    typeof message.type === 'string' &&
+    (NOTIFICATION_TYPES as readonly string[]).includes(message.type)
+  );
+}
+
+// =============================================================================
 // TYPE GUARDS
 // =============================================================================
 
@@ -264,7 +292,7 @@ export async function consumeMessage(
  */
 export function sendMessageOverSocket(
   socket: Socket,
-  message: PluginWorkerMessage | PluginWorkerResult
+  message: PluginWorkerMessage | PluginWorkerResult | PluginWorkerNotification
 ): void {
   socket.write(serialize(message));
   socket.write(MESSAGE_END_SEQ);

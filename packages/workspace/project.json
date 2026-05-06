@@ -5,12 +5,36 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "dependsOn": ["build-base"],
       "outputs": ["{workspaceRoot}/dist/packages/workspace/README.md"],
       "command": "node ./scripts/copy-readme.js workspace",
       "inputs": ["copyReadme"]
     },
+    "build-base": {
+      "dependsOn": [
+        { "projects": ["nx", "devkit"], "target": "build-base" },
+        "build-native",
+        "copy-assets"
+      ]
+    },
     "add-extra-dependencies": {
       "command": "node ./scripts/add-dependency-to-build.js workspace nx"
     }
-  }
+  },
+  "implicitDependencies": [
+    "angular",
+    "eslint",
+    "expo",
+    "express",
+    "jest",
+    "js",
+    "nest",
+    "next",
+    "node",
+    "nuxt",
+    "react",
+    "react-native",
+    "vue",
+    "web"
+  ]
 }

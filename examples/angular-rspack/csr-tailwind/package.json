@@ -21,7 +21,6 @@
             "dependentTasksOutputFiles": "**/*.js",
             "transitive": true
           },
-          "{workspaceRoot}/examples/angular-rspack/patch-devkit-request-path.js",
           "{workspaceRoot}/examples/angular-rspack/tsconfig.base.json",
           "{workspaceRoot}/LICENSE",
           "{workspaceRoot}/tsconfig.json"

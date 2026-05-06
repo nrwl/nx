@@ -101,20 +101,32 @@ export class TaskHistoryLifeCycle implements LifeCycle {
 
   printFlakyTasksMessage() {
     if (this.flakyTasks?.length > 0) {
+      const MAX_VISIBLE_FLAKY = 5;
+      const visibleFlaky =
+        this.flakyTasks.length > MAX_VISIBLE_FLAKY + 1
+          ? this.flakyTasks.slice(0, MAX_VISIBLE_FLAKY)
+          : this.flakyTasks;
+      const hiddenCount = this.flakyTasks.length - visibleFlaky.length;
+      const flakyRows = visibleFlaky.map((hash) => {
+        const taskRun = this.taskRuns.get(hash);
+        return `  ${serializeTarget(
+          taskRun.target.project,
+          taskRun.target.target,
+          taskRun.target.configuration
+        )}`;
+      });
+      if (hiddenCount > 0) {
+        flakyRows.push(`  ${hiddenCount} more...`);
+      }
       output.warn({
         title: `Nx detected ${
-          this.flakyTasks.length === 1 ? 'a flaky task' : ' flaky tasks'
+          this.flakyTasks.length === 1
+            ? 'a flaky task'
+            : `${this.flakyTasks.length} flaky tasks`
         }`,
         bodyLines: [
           ,
-          ...this.flakyTasks.map((hash) => {
-            const taskRun = this.taskRuns.get(hash);
-            return `  ${serializeTarget(
-              taskRun.target.project,
-              taskRun.target.target,
-              taskRun.target.configuration
-            )}`;
-          }),
+          ...flakyRows,
           ...(isNxCloudUsed(readNxJson())
             ? []
             : [

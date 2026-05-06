@@ -1,5 +1,6 @@
 exclude-reads:
   - packages/nx/src/native/*.node
+  - packages/nx/dist/src/native/*.node
   - 'dist/target/**'
 exclude-writes:
   - '**/.swc/**'
@@ -19,3 +20,9 @@ task-exclusions:
       - '**'
     exclude-writes:
       - '**'
+
+  - project: graph-client
+    target: build-client
+    exclude-reads:
+      - '**/*.stories.{js,jsx,ts,tsx,mdx}'
+      - '**/*.{spec,test}.{js,jsx,ts,tsx}'

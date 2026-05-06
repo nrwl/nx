@@ -85,3 +85,30 @@ export async function getInstalledReactVersionFromGraph() {
   }
   return clean(reactDep.data.version) ?? coerce(reactDep.data.version).version;
 }
+
+export function getInstalledReactRouterDevVersion(
+  tree: Tree
+): string | undefined {
+  const installed = getDependencyVersionFromPackageJson(
+    tree,
+    '@react-router/dev'
+  );
+
+  if (!installed || installed === 'latest' || installed === 'next') {
+    return undefined;
+  }
+
+  return clean(installed) ?? coerce(installed)?.version;
+}
+
+export function reactRouterSupportsVite8(tree: Tree): boolean {
+  const installed = getInstalledReactRouterDevVersion(tree);
+  if (!installed) {
+    return true;
+  }
+  const coerced = coerce(installed);
+  if (!coerced) {
+    return true;
+  }
+  return coerced.major > 7 || (coerced.major === 7 && coerced.minor >= 14);
+}

@@ -23,7 +23,7 @@ import {
 import { NxArgs } from '../utils/command-line-utils';
 import { getLocalDbConnection } from '../utils/db-connection';
 import { output } from '../utils/output';
-import { combineOptionsForExecutor } from '../utils/params';
+import { combineOptionsForExecutor, Options } from '../utils/params';
 import { workspaceRoot } from '../utils/workspace-root';
 import {
   EXPECTED_TERMINATION_SIGNALS,
@@ -53,6 +53,7 @@ import { TaskStatus } from './tasks-runner';
 import { Batch, TasksSchedule } from './tasks-schedule';
 import {
   calculateReverseDeps,
+  expandInitiatingTasksThroughNoop,
   getExecutorForTask,
   getPrintableCommandArgsForTask,
   getTargetConfigurationForTask,
@@ -98,7 +99,16 @@ export class TaskOrchestrator {
   );
   private reverseTaskDeps = calculateReverseDeps(this.taskGraph);
 
-  private initializingTaskIds = new Set(this.initiatingTasks.map((t) => t.id));
+  // `nx:noop` initiating tasks exit instantly via the fast-path in
+  // `spawnProcess`. If we treat the noop itself as the keep-alive anchor for
+  // its continuous dependencies, `cleanUpUnneededContinuousTasks` kills those
+  // children the moment the noop finishes. Expand through noops so the
+  // underlying real tasks become the anchors.
+  private initializingTaskIds = expandInitiatingTasksThroughNoop(
+    this.initiatingTasks,
+    this.taskGraph,
+    this.projectGraph
+  );
 
   private processedTasks = new Map<string, Promise<NodeJS.ProcessEnv>>();
 
@@ -1034,7 +1044,7 @@ export class TaskOrchestrator {
       try {
         const { schema } = getExecutorForTask(task, this.projects);
         const combinedOptions = combineOptionsForExecutor(
-          task.overrides,
+          task.overrides as Options,
           task.target.configuration ?? targetConfiguration.defaultConfiguration,
           targetConfiguration,
           schema,
