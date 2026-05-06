@@ -36,12 +36,16 @@ common-init-steps: &common-init-steps
 
   - name: Install system deps
     script: |
-      # archive.ubuntu.com periodically serves a Packages.gz that doesn't
-      # match its own InRelease metadata while the canonical mirror is
-      # mid-sync, breaking apt-get update across all agents at once.
-      # Azure's mirror has a better SLA and is what GitHub Actions runners use.
+      # Prefer Azure's mirror because the canonical archive.ubuntu.com periodically
+      # serves a Packages.gz that doesn't match its own InRelease metadata while
+      # mid-sync. Fall back to the canonical mirror if Azure is unreachable, since
+      # connectivity to Azure's mirror has itself been flaky.
       sudo sed -i 's|http://archive.ubuntu.com/ubuntu|http://azure.archive.ubuntu.com/ubuntu|g; s|http://security.ubuntu.com/ubuntu|http://azure.archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list
-      sudo apt-get update
+      if ! sudo apt-get update -o Acquire::http::Timeout=15 -o Acquire::Retries=2; then
+        echo "Azure mirror unreachable, falling back to canonical archive.ubuntu.com"
+        sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu|http://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list
+        sudo apt-get update
+      fi
       sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev zip unzip
 
   - name: Pnpm Install from lockfile
