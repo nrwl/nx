@@ -46,3 +46,32 @@ function isExecutorLikeKey(key: string): boolean {
   for (const c of key) if (GLOB_CHARACTERS.has(c)) return false;
   return true;
 }
+
+/**
+ * Project an array of `TargetDefaultEntry` back into the legacy
+ * record shape. The intended caller is a pre-v23 migration that
+ * normalized to array internally but wants to preserve the original
+ * on-disk record shape so it remains valid against pre-v23 nx.json
+ * schemas.
+ *
+ * Each entry's key is its `target` (if set) or `executor`. Entries that
+ * have both keep the locator role on `target` and retain `executor` as
+ * a value field. Entries with `projects` or `source` filters cannot be
+ * represented in the legacy shape — they are dropped from the output
+ * so the caller can decide whether the loss is acceptable.
+ */
+export function downgradeTargetDefaults(
+  entries: TargetDefaultEntry[]
+): TargetDefaultsRecord {
+  const out: TargetDefaultsRecord = {};
+  for (const entry of entries) {
+    if (entry.projects !== undefined || entry.source !== undefined) continue;
+    const { target, executor, projects, source, ...rest } = entry;
+    const key = target ?? executor;
+    if (key === undefined) continue;
+    const value: Partial<TargetDefaultEntry> = { ...rest };
+    if (target && executor) value.executor = executor;
+    out[key] = value;
+  }
+  return out;
+}

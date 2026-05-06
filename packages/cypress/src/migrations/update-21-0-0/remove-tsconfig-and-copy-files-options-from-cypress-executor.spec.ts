@@ -330,4 +330,86 @@ describe('remove-tsconfig-and-copy-files-options-from-cypress-executor', () => {
     const nxJson = readJson<LegacyNxJson>(tree, 'nx.json');
     expect(nxJson.targetDefaults).toBeUndefined();
   });
+
+  describe('array-shape targetDefaults', () => {
+    it('should strip tsConfig/copyFiles from an executor-keyed array entry', async () => {
+      updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+        json.targetDefaults = [
+          {
+            executor: '@nx/cypress:cypress',
+            options: {
+              tsConfig: '{projectRoot}/tsconfig.json',
+              copyFiles: '**/*.spec.ts',
+              cypressConfig: '{projectRoot}/cypress.config.ts',
+            },
+          },
+        ];
+        return json;
+      });
+
+      await migration(tree);
+
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(nxJson.targetDefaults).toEqual([
+        {
+          executor: '@nx/cypress:cypress',
+          options: {
+            cypressConfig: '{projectRoot}/cypress.config.ts',
+          },
+        },
+      ]);
+    });
+
+    it('should drop an entry that becomes empty after stripping options', async () => {
+      updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+        json.targetDefaults = [
+          {
+            executor: '@nx/cypress:cypress',
+            options: {
+              tsConfig: '{projectRoot}/tsconfig.json',
+              copyFiles: '**/*.spec.ts',
+            },
+          },
+        ];
+        return json;
+      });
+
+      await migration(tree);
+
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(nxJson.targetDefaults).toBeUndefined();
+    });
+
+    it('should preserve unrelated entries alongside cypress matches', async () => {
+      updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+        json.targetDefaults = [
+          {
+            target: 'build',
+            cache: true,
+          },
+          {
+            target: 'e2e',
+            executor: '@nx/cypress:cypress',
+            options: {
+              tsConfig: '{projectRoot}/tsconfig.json',
+              cypressConfig: '{projectRoot}/cypress.config.ts',
+            },
+          },
+        ];
+        return json;
+      });
+
+      await migration(tree);
+
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(nxJson.targetDefaults).toEqual([
+        { target: 'build', cache: true },
+        {
+          target: 'e2e',
+          executor: '@nx/cypress:cypress',
+          options: { cypressConfig: '{projectRoot}/cypress.config.ts' },
+        },
+      ]);
+    });
+  });
 });

@@ -271,4 +271,64 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
       expect(nxJson.targetDefaults[executor]).toBeUndefined();
     }
   );
+
+  describe('array-shape targetDefaults', () => {
+    it.each(executors)(
+      'should strip "tailwindConfig" from an executor-keyed array entry for "%s"',
+      async (executor) => {
+        updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+          json.targetDefaults = [
+            {
+              executor,
+              options: { tailwindConfig: '{projectRoot}/tailwind.config.js' },
+              configurations: {
+                development: {
+                  tailwindConfig: '{projectRoot}/tailwind.config.dev.js',
+                },
+              },
+            },
+          ];
+          return json;
+        });
+
+        await migration(tree);
+
+        const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+        // The entry's only payload was tailwindConfig — once stripped the
+        // entry has nothing left beyond `executor`, so it gets dropped and
+        // the empty `targetDefaults` is removed entirely.
+        expect(nxJson.targetDefaults).toBeUndefined();
+      }
+    );
+
+    it.each(executors)(
+      'should keep an entry that retains other options after stripping tailwindConfig (executor "%s")',
+      async (executor) => {
+        updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+          json.targetDefaults = [
+            {
+              target: 'build',
+              executor,
+              options: {
+                project: 'libs/lib1/ng-package.json',
+                tailwindConfig: '{projectRoot}/tailwind.config.js',
+              },
+            },
+          ];
+          return json;
+        });
+
+        await migration(tree);
+
+        const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+        expect(nxJson.targetDefaults).toEqual([
+          {
+            target: 'build',
+            executor,
+            options: { project: 'libs/lib1/ng-package.json' },
+          },
+        ]);
+      }
+    );
+  });
 });
