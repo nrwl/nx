@@ -138,6 +138,7 @@ exports[`workspace move to nx layout should create nx.json 1`] = `
     },
     {
       "cache": true,
+      "executor": "@nx/eslint:lint",
       "inputs": [
         "default",
         "^default",
@@ -146,7 +147,6 @@ exports[`workspace move to nx layout should create nx.json 1`] = `
         "{workspaceRoot}/eslint.config.mjs",
         "{workspaceRoot}/tools/eslint-rules/**/*",
       ],
-      "target": "@nx/eslint:lint",
     },
   ],
 }

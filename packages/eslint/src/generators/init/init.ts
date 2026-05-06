@@ -1,4 +1,8 @@
-import { addPlugin, upsertTargetDefault } from '@nx/devkit/internal';
+import {
+  addPlugin,
+  findTargetDefault,
+  upsertTargetDefault,
+} from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -7,7 +11,6 @@ import {
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   type TargetConfiguration,
-  type TargetDefaults,
   Tree,
   updateJson,
   updateNxJson,
@@ -45,7 +48,11 @@ function updateProductionFileset(tree: Tree, format: 'mjs' | 'cjs' = 'mjs') {
 
 function addTargetDefaults(tree: Tree, format: 'mjs' | 'cjs') {
   const nxJson = readNxJson(tree);
-  const existing = findExistingLintDefault(nxJson?.targetDefaults);
+  // `@nx/eslint:lint` is an executor identifier — match defaults keyed on
+  // the executor, not on a target named that string.
+  const existing = findTargetDefault(nxJson?.targetDefaults, {
+    executor: '@nx/eslint:lint',
+  });
   const patch: Partial<TargetConfiguration> = {};
   if (existing?.cache === undefined) patch.cache = true;
   if (existing?.inputs === undefined) {
@@ -59,23 +66,8 @@ function addTargetDefaults(tree: Tree, format: 'mjs' | 'cjs') {
     ];
   }
   if (Object.keys(patch).length > 0) {
-    upsertTargetDefault(tree, { target: '@nx/eslint:lint', ...patch });
+    upsertTargetDefault(tree, { executor: '@nx/eslint:lint', ...patch });
   }
-}
-
-function findExistingLintDefault(
-  td: TargetDefaults | undefined
-): Partial<TargetConfiguration> | undefined {
-  if (!td) return undefined;
-  if (Array.isArray(td)) {
-    return td.find(
-      (e) =>
-        e.target === '@nx/eslint:lint' &&
-        e.projects === undefined &&
-        e.source === undefined
-    );
-  }
-  return td['@nx/eslint:lint'];
 }
 
 function updateVsCodeRecommendedExtensions(host: Tree) {

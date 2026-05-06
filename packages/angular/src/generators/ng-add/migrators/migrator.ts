@@ -4,10 +4,7 @@ import type {
   Tree,
 } from '@nx/devkit';
 import { joinPathFragments, readNxJson, updateJson } from '@nx/devkit';
-import {
-  normalizeTargetDefaults,
-  upsertTargetDefault,
-} from '@nx/devkit/internal';
+import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
 import { basename } from 'path';
 import type { Logger } from '../utilities/logger';
 import type {
@@ -105,20 +102,11 @@ export abstract class Migrator {
 
     const nxJson = readNxJson(this.tree);
     for (const name of targetNames) {
-      // `name` may be a target name (e.g. `build`) or a builder/executor
-      // identifier (e.g. `@nx/eslint:lint`). Route to the matching match
-      // field so the entry is honest about how it'll be matched.
-      const isExecutor = name.includes(':');
-      const filter = isExecutor ? { executor: name } : { target: name };
-      const existing = normalizeTargetDefaults(nxJson?.targetDefaults).find(
-        (e) =>
-          (isExecutor ? e.executor === name : e.target === name) &&
-          (isExecutor ? e.target === undefined : e.executor === undefined) &&
-          e.projects === undefined &&
-          e.source === undefined
-      );
+      const existing = findTargetDefault(nxJson?.targetDefaults, {
+        target: name,
+      });
       upsertTargetDefault(this.tree, {
-        ...filter,
+        target: name,
         cache: existing?.cache ?? true,
       });
     }
