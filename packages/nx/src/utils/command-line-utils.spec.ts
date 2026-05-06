@@ -4,49 +4,38 @@ import { withEnvironmentVariables as withEnvironment } from '../internal-testing
 jest.mock('../project-graph/file-utils');
 
 describe('splitArgs', () => {
-  let originalBase: string;
-  let originalHead: string;
-  let originalParallel: string;
-  let originalSkipNxCache: string;
-  let originalDisableNxCache: string;
-  let originalSkipRemoteCache: string;
-  let originalDisableRemoteCache: string;
+  const blockedEnvVars = [
+    'NX_BASE',
+    'NX_HEAD',
+    'NX_PARALLEL',
+    'NX_SKIP_NX_CACHE',
+    'NX_DISABLE_NX_CACHE',
+    'NX_SKIP_REMOTE_CACHE',
+    'NX_DISABLE_REMOTE_CACHE',
+  ];
+  let envVarsToRestore: Record<string, string | undefined> = {};
+
+  function blockParentEnvVar(key: string) {
+    envVarsToRestore[key] = process.env[key];
+    delete process.env[key];
+  }
 
   beforeEach(() => {
-    originalBase = process.env.NX_BASE;
-    originalHead = process.env.NX_HEAD;
-    originalParallel = process.env.NX_PARALLEL;
-    originalSkipNxCache = process.env.NX_SKIP_NX_CACHE;
-    originalDisableNxCache = process.env.NX_DISABLE_NX_CACHE;
-    originalSkipRemoteCache = process.env.NX_SKIP_REMOTE_CACHE;
-    originalDisableRemoteCache = process.env.NX_DISABLE_REMOTE_CACHE;
-
-    delete process.env.NX_BASE;
-    delete process.env.NX_HEAD;
-    delete process.env.NX_PARALLEL;
-    delete process.env.NX_SKIP_NX_CACHE;
-    delete process.env.NX_DISABLE_NX_CACHE;
-    delete process.env.NX_SKIP_REMOTE_CACHE;
-    delete process.env.NX_DISABLE_REMOTE_CACHE;
+    envVarsToRestore = {};
+    for (const key of blockedEnvVars) {
+      blockParentEnvVar(key);
+    }
   });
 
   afterEach(() => {
-    restoreEnv('NX_BASE', originalBase);
-    restoreEnv('NX_HEAD', originalHead);
-    restoreEnv('NX_PARALLEL', originalParallel);
-    restoreEnv('NX_SKIP_NX_CACHE', originalSkipNxCache);
-    restoreEnv('NX_DISABLE_NX_CACHE', originalDisableNxCache);
-    restoreEnv('NX_SKIP_REMOTE_CACHE', originalSkipRemoteCache);
-    restoreEnv('NX_DISABLE_REMOTE_CACHE', originalDisableRemoteCache);
-  });
-
-  function restoreEnv(key: string, value: string | undefined) {
-    if (value === undefined) {
-      delete process.env[key];
-    } else {
-      process.env[key] = value;
+    for (const [key, value] of Object.entries(envVarsToRestore)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
     }
-  }
+  });
 
   it('should split nx specific arguments into nxArgs', () => {
     expect(
