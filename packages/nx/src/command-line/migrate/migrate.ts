@@ -73,6 +73,11 @@ import {
   getNxInstallationPath,
   getNxRequirePaths,
 } from '../../utils/installation-directory';
+import {
+  getInstalledLegacyNrwlWorkspaceVersion,
+  getInstalledNxPackageGroup,
+  getInstalledNxVersion,
+} from '../../utils/installed-nx-version';
 import { readNxJson } from '../../config/configuration';
 import { runNxSync } from '../../utils/child-process';
 import { daemonClient } from '../../daemon/client/client';
@@ -205,9 +210,10 @@ export interface MigratorOptions {
   /**
    * Restricts `packageJsonUpdates` filtering based on the value:
    * - 'first-party' keeps only packages in `firstPartyPackages`
+   * - 'third-party' keeps only packages NOT in `firstPartyPackages`
    * - 'all' / undefined keeps all packages (no filtering)
    */
-  mode?: 'first-party' | 'all';
+  mode?: 'first-party' | 'third-party' | 'all';
   /** First-party package names used by `mode` for filtering. */
   firstPartyPackages?: ReadonlySet<string>;
 }
@@ -229,6 +235,14 @@ export class Migrator {
   private minVersionWithSkippedUpdates: string | undefined;
 
   constructor(opts: MigratorOptions) {
+    if (
+      (opts.mode === 'first-party' || opts.mode === 'third-party') &&
+      !opts.firstPartyPackages
+    ) {
+      throw new Error(
+        `Error: 'firstPartyPackages' is required when 'mode' is '${opts.mode}'.`
+      );
+    }
     this.packageJson = opts.packageJson;
     this.nxInstallation = opts.nxInstallation;
     this.getInstalledPackageVersion = opts.getInstalledPackageVersion;
@@ -259,6 +273,7 @@ export class Migrator {
       version: targetVersion,
       addToPackageJson: false,
     });
+    this.applyModeFilter();
 
     const migrations = await this.createMigrateJson();
     return {
@@ -620,6 +635,21 @@ export class Migrator {
     return false;
   }
 
+  private applyModeFilter(): void {
+    if (this.mode !== 'third-party') {
+      return;
+    }
+    // Cascade walks through first-party packages so cross-plugin third-party
+    // deps (e.g. typescript managed by @nx/js but used by @nx/angular) get
+    // surfaced. Drop the first-party set from the final result here so only
+    // third-party updates land in package.json.
+    for (const name of Object.keys(this.packageUpdates)) {
+      if (this.firstPartyPackages!.has(name)) {
+        delete this.packageUpdates[name];
+      }
+    }
+  }
+
   private shouldApplyPackageUpdate(
     packageUpdate: PackageUpdate,
     packageName: string,
@@ -872,17 +902,38 @@ function isNxEquivalentTarget(
   targetPackage: string,
   targetVersion: string
 ): boolean {
-  if (lt(targetVersion, '14.0.0-beta.0')) {
+  // Non-semver values (e.g., the literal `'latest'` sentinel used during bare
+  // invocation before tag resolution, or in tests) are treated as modern era.
+  if (valid(targetVersion) && lt(targetVersion, '14.0.0-beta.0')) {
     return targetPackage === '@nrwl/workspace';
   }
   return targetPackage === 'nx' || targetPackage === '@nx/workspace';
 }
 
-export async function resolveMode(
-  mode: 'first-party' | 'all' | undefined,
-  targetPackage: string,
+/**
+ * The canonical Nx package for a given target version: `@nrwl/workspace` for
+ * legacy (`< 14.0.0-beta.0`), `nx` otherwise. Non-semver inputs (e.g. the
+ * literal `'latest'` sentinel before tag resolution) resolve to modern era.
+ * Used by `--mode=third-party` to silently swap `@nx/workspace` → `nx` when
+ * walking the cascade.
+ */
+export function resolveCanonicalNxPackage(
   targetVersion: string
-): Promise<'first-party' | 'all'> {
+): 'nx' | '@nrwl/workspace' {
+  return valid(targetVersion) && lt(targetVersion, '14.0.0-beta.0')
+    ? '@nrwl/workspace'
+    : 'nx';
+}
+
+export async function resolveMode(
+  mode: 'first-party' | 'third-party' | 'all' | undefined,
+  targetPackage: string,
+  targetVersion: string,
+  context: { hasFrom: boolean; hasExcludeAppliedMigrations: boolean } = {
+    hasFrom: false,
+    hasExcludeAppliedMigrations: false,
+  }
+): Promise<'first-party' | 'third-party' | 'all'> {
   if (mode) {
     return mode;
   }
@@ -892,14 +943,20 @@ export async function resolveMode(
   if (!process.stdin.isTTY || isCI()) {
     return 'all';
   }
-  const { mode: selected } = await prompt<{ mode: 'first-party' | 'all' }>({
+  const choices: { name: string; message: string }[] = [
+    { name: 'first-party', message: 'First-party only' },
+  ];
+  if (!context.hasFrom && !context.hasExcludeAppliedMigrations) {
+    choices.push({ name: 'third-party', message: 'Third-party only' });
+  }
+  choices.push({ name: 'all', message: 'All' });
+  const { mode: selected } = await prompt<{
+    mode: 'first-party' | 'third-party' | 'all';
+  }>({
     type: 'select',
     name: 'mode',
     message: 'Which packages would you like to migrate?',
-    choices: [
-      { name: 'first-party', message: 'First-party only' },
-      { name: 'all', message: 'All' },
-    ],
+    choices,
   });
   return selected;
 }
@@ -1013,7 +1070,7 @@ type GenerateMigrations = {
   to: { [k: string]: string };
   interactive?: boolean;
   excludeAppliedMigrations?: boolean;
-  mode?: 'first-party' | 'all';
+  mode: 'first-party' | 'third-party' | 'all';
 };
 
 type RunMigrations = {
@@ -1035,49 +1092,173 @@ export async function parseMigrationsOptions(options: {
     );
   }
 
-  if (!options.runMigrations) {
-    const [from, to] = await Promise.all([
-      options.from
-        ? versionOverrides(options.from as string, 'from')
-        : Promise.resolve({} as Record<string, string>),
-      options.to
-        ? await versionOverrides(options.to as string, 'to')
-        : Promise.resolve({} as Record<string, string>),
-    ]);
-    const { targetPackage, targetVersion } = await parseTargetPackageAndVersion(
-      options['packageAndVersion'] || 'latest'
-    );
-    const normalizedTargetPackage = normalizeSlashes(targetPackage);
-    if (
-      options.mode &&
-      !isNxEquivalentTarget(normalizedTargetPackage, targetVersion)
-    ) {
-      const isLegacy = lt(targetVersion, '14.0.0-beta.0');
-      const validTargets = isLegacy
-        ? `'@nrwl/workspace'`
-        : `'nx' or '@nx/workspace'`;
-      const eraNote = isLegacy ? ' for Nx <14.0.0' : '';
-      throw new Error(
-        `Error: '--mode' requires the target to be ${validTargets}${eraNote}. Got '${normalizedTargetPackage}@${targetVersion}'.`
-      );
-    }
-    return {
-      type: 'generateMigrations',
-      targetPackage: normalizedTargetPackage,
-      targetVersion,
-      from,
-      to,
-      interactive: options.interactive,
-      excludeAppliedMigrations: options.excludeAppliedMigrations,
-      mode: options.mode,
-    };
-  } else {
+  if (options.runMigrations) {
     return {
       type: 'runMigrations',
       runMigrations: options.runMigrations as string,
       ifExists: options.ifExists as boolean,
     };
   }
+
+  if (options.mode === 'third-party') {
+    if (options.from) {
+      throw new Error(
+        `Error: '--mode=third-party' cannot be combined with '--from'.`
+      );
+    }
+    if (options.excludeAppliedMigrations === true) {
+      throw new Error(
+        `Error: '--mode=third-party' cannot be combined with '--exclude-applied-migrations'.`
+      );
+    }
+  }
+
+  const [from, to] = await Promise.all([
+    options.from
+      ? versionOverrides(options.from as string, 'from')
+      : Promise.resolve({} as Record<string, string>),
+    options.to
+      ? await versionOverrides(options.to as string, 'to')
+      : Promise.resolve({} as Record<string, string>),
+  ]);
+
+  const positional = options['packageAndVersion'] as string | undefined;
+  let targetPackage: string | undefined;
+  let targetVersion: string | undefined;
+  if (positional) {
+    const parsed = await parseTargetPackageAndVersion(positional);
+    targetPackage = normalizeSlashes(parsed.targetPackage);
+    targetVersion = parsed.targetVersion;
+  }
+
+  // Resolve mode before defaulting target so the default can depend on the
+  // resolved mode (third-party defaults to nx@<installed>; otherwise nx@latest).
+  // For bare invocation, `targetPackage='nx'` and `targetVersion='latest'` are
+  // safe sentinels: `isNxEquivalentTarget` treats the literal `'latest'` as
+  // modern era (semver `lt('latest', '14.0.0-beta.0')` is false).
+  const mode = await resolveMode(
+    options.mode,
+    targetPackage ?? 'nx',
+    targetVersion ?? 'latest',
+    {
+      hasFrom: Object.keys(from).length > 0,
+      hasExcludeAppliedMigrations: options.excludeAppliedMigrations === true,
+    }
+  );
+
+  let installedNxVersion: string | null | undefined;
+  // For third-party, anchor `targetPackage`/`targetVersion` to the installed
+  // canonical when the positional was either omitted or a bare package name
+  // (no semver). This keeps the era gate accepting legacy workspaces, the
+  // upper-bound gate meaningful, and downstream semver comparisons safe from
+  // the literal `'latest'` that `parseTargetPackageAndVersion` emits for bare
+  // package names.
+  if (mode === 'third-party' && (!positional || !valid(targetVersion!))) {
+    const installed = resolveInstalledCanonical();
+    if (!installed) {
+      throw new Error(
+        `Error: '--mode=third-party' requires 'nx' (or '@nrwl/workspace' on Nx <14) to be installed in your workspace. Install dependencies first, then re-run.`
+      );
+    }
+    installedNxVersion = installed.version;
+    targetPackage = installed.canonical;
+    targetVersion = installed.version;
+  } else if (!positional) {
+    const parsed = await parseTargetPackageAndVersion('latest');
+    targetPackage = normalizeSlashes(parsed.targetPackage);
+    targetVersion = parsed.targetVersion;
+  }
+
+  if (options.mode && !isNxEquivalentTarget(targetPackage!, targetVersion!)) {
+    const isLegacy =
+      valid(targetVersion!) && lt(targetVersion!, '14.0.0-beta.0');
+    const validTargets = isLegacy
+      ? `'@nrwl/workspace'`
+      : `'nx' or '@nx/workspace'`;
+    const eraNote = isLegacy ? ' for Nx <14.0.0' : '';
+    throw new Error(
+      `Error: '--mode' requires the target to be ${validTargets}${eraNote}. Got '${targetPackage}@${targetVersion}'.`
+    );
+  }
+
+  if (mode === 'third-party') {
+    const canonical = resolveCanonicalNxPackage(targetVersion!);
+    const isLegacy = canonical === '@nrwl/workspace';
+    // Reuse the resolved installed version from the bare/no-version branch
+    // above when present (it's already era-aware via `resolveInstalledCanonical`).
+    // Otherwise fall back to the era-specific reader.
+    const installed =
+      installedNxVersion ??
+      (isLegacy
+        ? getInstalledLegacyNrwlWorkspaceVersion()
+        : getInstalledNxVersion());
+    if (!installed) {
+      throw new Error(
+        `Error: '--mode=third-party' requires '${canonical}' to be installed in your workspace. Install dependencies first, then re-run.`
+      );
+    }
+    if (gt(targetVersion!, installed)) {
+      throw new Error(
+        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '${targetPackage}@${targetVersion}', installed '${canonical}@${installed}'). Either drop '--mode=third-party' or lower the target.`
+      );
+    }
+    // Gate `--to` for any first-party package, not just the canonical. The
+    // third-party walk follows nx's `packageGroup` (e.g. `@nx/js`,
+    // `@nx/angular`), and `--to <plugin>@<higher>` would expand the walk past
+    // the installed version and surface third-party bumps that only exist in
+    // the newer plugin's history. The first-party set is sourced from the
+    // installed nx package's declared `packageGroup` (authoritative for the
+    // user's current Nx universe). Legacy era falls back to the hardcoded
+    // `LEGACY_NRWL_PACKAGE_GROUP`.
+    const firstPartySet = isLegacy
+      ? new Set<string>([
+          '@nrwl/workspace',
+          ...LEGACY_NRWL_PACKAGE_GROUP.map((p) => p.package),
+        ])
+      : getInstalledNxPackageGroup();
+    for (const [pkg, version] of Object.entries(to)) {
+      if (firstPartySet.has(pkg) && gt(version, installed)) {
+        throw new Error(
+          `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to ${pkg}@${version}', installed '${canonical}@${installed}'). Either drop '--mode=third-party' or lower the '--to' value.`
+        );
+      }
+    }
+  }
+
+  return {
+    type: 'generateMigrations',
+    targetPackage: targetPackage!,
+    targetVersion: targetVersion!,
+    from,
+    to,
+    interactive: options.interactive,
+    excludeAppliedMigrations: options.excludeAppliedMigrations,
+    mode,
+  };
+}
+
+/**
+ * Pick the canonical Nx package + version for `--mode=third-party` when the
+ * user didn't supply an explicit version. Returns `'nx'` for modern era,
+ * falls back to `'@nrwl/workspace'` (legacy era) when only that is installed
+ * or when the installed `nx` itself is `<14`.
+ */
+function resolveInstalledCanonical(): {
+  canonical: 'nx' | '@nrwl/workspace';
+  version: string;
+} | null {
+  const installedNx = getInstalledNxVersion();
+  if (installedNx) {
+    if (lt(installedNx, '14.0.0-beta.0')) {
+      return { canonical: '@nrwl/workspace', version: installedNx };
+    }
+    return { canonical: 'nx', version: installedNx };
+  }
+  const installedLegacy = getInstalledLegacyNrwlWorkspaceVersion();
+  if (installedLegacy) {
+    return { canonical: '@nrwl/workspace', version: installedLegacy };
+  }
+  return null;
 }
 
 function createInstalledPackageVersionsResolver(
@@ -1490,10 +1671,10 @@ async function createMigrationsFile(
 async function updatePackageJson(
   root: string,
   updatedPackages: Record<string, PackageUpdate>
-) {
+): Promise<boolean> {
   const packageJsonPath = join(root, 'package.json');
   if (!existsSync(packageJsonPath)) {
-    return;
+    return false;
   }
 
   const parseOptions: JsonReadOptions = {};
@@ -1501,6 +1682,7 @@ async function updatePackageJson(
 
   const manager = getCatalogManager(root);
   const catalogUpdates = [];
+  let modified = false;
 
   Object.keys(updatedPackages).forEach((p) => {
     const existingVersion = json.dependencies?.[p] ?? json.devDependencies?.[p];
@@ -1519,25 +1701,36 @@ async function updatePackageJson(
 
     // Update non-catalog packages in package.json
     if (json.devDependencies?.[p]) {
-      json.devDependencies[p] = updatedPackages[p].version;
+      if (json.devDependencies[p] !== updatedPackages[p].version) {
+        json.devDependencies[p] = updatedPackages[p].version;
+        modified = true;
+      }
       return;
     }
 
     if (json.dependencies?.[p]) {
-      json.dependencies[p] = updatedPackages[p].version;
+      if (json.dependencies[p] !== updatedPackages[p].version) {
+        json.dependencies[p] = updatedPackages[p].version;
+        modified = true;
+      }
       return;
     }
 
     const dependencyType = updatedPackages[p].addToPackageJson;
     if (typeof dependencyType === 'string') {
       json[dependencyType] ??= {};
-      json[dependencyType][p] = updatedPackages[p].version;
+      if (json[dependencyType][p] !== updatedPackages[p].version) {
+        json[dependencyType][p] = updatedPackages[p].version;
+        modified = true;
+      }
     }
   });
 
-  await writeFormattedJsonFile(packageJsonPath, json, {
-    appendNewLine: parseOptions.endsWithNewline,
-  });
+  if (modified) {
+    await writeFormattedJsonFile(packageJsonPath, json, {
+      appendNewLine: parseOptions.endsWithNewline,
+    });
+  }
 
   // Update catalog definitions
   if (catalogUpdates.length) {
@@ -1545,6 +1738,8 @@ async function updatePackageJson(
     manager!.updateCatalogVersions(root, catalogUpdates);
     await formatCatalogDefinitionFiles(manager!, root);
   }
+
+  return modified || catalogUpdates.length > 0;
 }
 
 async function formatCatalogDefinitionFiles(
@@ -1579,34 +1774,45 @@ async function formatCatalogDefinitionFiles(
 async function updateInstallationDetails(
   root: string,
   updatedPackages: Record<string, PackageUpdate>
-) {
+): Promise<boolean> {
   const nxJsonPath = join(root, 'nx.json');
   const parseOptions: JsonReadOptions = {};
   const nxJson = readJsonFile<NxJsonConfiguration>(nxJsonPath, parseOptions);
 
   if (!nxJson.installation) {
-    return;
+    return false;
   }
 
+  let modified = false;
+
   const nxVersion = updatedPackages.nx?.version;
-  if (nxVersion) {
+  if (nxVersion && nxJson.installation.version !== nxVersion) {
     nxJson.installation.version = nxVersion;
+    modified = true;
   }
 
   if (nxJson.installation.plugins) {
     for (const dep in nxJson.installation.plugins) {
       const update = updatedPackages[dep];
       if (update) {
-        nxJson.installation.plugins[dep] = valid(update.version)
+        const newVersion = valid(update.version)
           ? update.version
           : await resolvePackageVersionUsingRegistry(dep, update.version);
+        if (nxJson.installation.plugins[dep] !== newVersion) {
+          nxJson.installation.plugins[dep] = newVersion;
+          modified = true;
+        }
       }
     }
   }
 
-  await writeFormattedJsonFile(nxJsonPath, nxJson, {
-    appendNewLine: parseOptions.endsWithNewline,
-  });
+  if (modified) {
+    await writeFormattedJsonFile(nxJsonPath, nxJson, {
+      appendNewLine: parseOptions.endsWithNewline,
+    });
+  }
+
+  return modified;
 }
 
 async function isMigratingToNewMajor(from: string, to: string) {
@@ -1644,18 +1850,28 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       originalNxJson.installation?.version ??
       readNxVersion(originalPackageJson, root);
 
-    const mode = await resolveMode(
-      opts.mode,
-      opts.targetPackage,
-      opts.targetVersion
-    );
+    const mode = opts.mode;
+
+    let walkedTargetPackage = opts.targetPackage;
+    let fromOverrides = opts.from;
+    let excludeApplied = opts.excludeAppliedMigrations;
+    if (mode === 'third-party') {
+      // For third-party, walk the canonical Nx target so cross-plugin third-party
+      // dependencies (e.g. typescript managed by @nx/js but used by @nx/angular)
+      // stay consistent. Force a from-zero walk + exclude-applied so we surface
+      // any third-party updates that may have been skipped previously.
+      const canonical = resolveCanonicalNxPackage(opts.targetVersion);
+      walkedTargetPackage = canonical;
+      fromOverrides = { [canonical]: '0.0.0' };
+      excludeApplied = true;
+    }
 
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);
 
     const fetch = createFetcher();
     let firstPartyPackages: ReadonlySet<string> | undefined;
-    if (mode === 'first-party') {
+    if (mode === 'first-party' || mode === 'third-party') {
       // `@nx/workspace` is version-synced with `nx` and declares an
       // intentionally narrow `packageGroup` ({ nx, nx-cloud }) via its
       // `ng-update` field, whereas `nx` declares the full @nx/* plugin
@@ -1663,11 +1879,21 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       // when `@nx/workspace` is the target we source the set from `nx`
       // directly to capture the full plugin set.
       const sourcePackage =
-        opts.targetPackage === '@nx/workspace' ? 'nx' : opts.targetPackage;
+        walkedTargetPackage === '@nx/workspace' ? 'nx' : walkedTargetPackage;
       const rootMetadata = await fetch(sourcePackage, opts.targetVersion);
+      // Legacy `@nrwl/workspace<14` doesn't ship a complete `packageGroup`
+      // in its metadata; the Migrator's cascade injects
+      // `LEGACY_NRWL_PACKAGE_GROUP` for that case, and the post-build
+      // third-party filter must mirror that set or first-party `@nrwl/*`
+      // plugins slip past it.
+      const packageGroup =
+        sourcePackage === '@nrwl/workspace' &&
+        lt(opts.targetVersion, '14.0.0-beta.0')
+          ? LEGACY_NRWL_PACKAGE_GROUP
+          : rootMetadata.packageGroup;
       firstPartyPackages = resolveFirstPartyPackages(
         sourcePackage,
-        rootMetadata.packageGroup
+        packageGroup
       );
     }
 
@@ -1676,19 +1902,22 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       nxInstallation: originalNxJson.installation,
       getInstalledPackageVersion: createInstalledPackageVersionsResolver(root),
       fetch,
-      from: opts.from,
+      from: fromOverrides,
       to: opts.to,
       interactive: opts.interactive && !isCI(),
-      excludeAppliedMigrations: opts.excludeAppliedMigrations,
+      excludeAppliedMigrations: excludeApplied,
       mode,
       firstPartyPackages,
     });
 
     const { migrations, packageUpdates, minVersionWithSkippedUpdates } =
-      await migrator.migrate(opts.targetPackage, opts.targetVersion);
+      await migrator.migrate(walkedTargetPackage, opts.targetVersion);
 
-    await updatePackageJson(root, packageUpdates);
-    await updateInstallationDetails(root, packageUpdates);
+    const wrotePackageJson = await updatePackageJson(root, packageUpdates);
+    const wroteNxJsonInstallation = await updateInstallationDetails(
+      root,
+      packageUpdates
+    );
 
     if (migrations.length > 0) {
       await createMigrationsFile(root, [
@@ -1697,10 +1926,39 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       ] as any);
     }
 
+    const modeLine =
+      mode === 'first-party'
+        ? `- Processed Nx first-party packages only (skipped third-party dependency bumps).`
+        : mode === 'third-party'
+          ? `- Processed third-party dependencies only (skipped Nx first-party package updates).`
+          : null;
+
+    const noChanges =
+      !wrotePackageJson && !wroteNxJsonInstallation && migrations.length === 0;
+
+    if (noChanges) {
+      output.success({
+        title: `No updates were applied.`,
+        bodyLines: [
+          ...(modeLine ? [modeLine] : []),
+          mode === 'third-party'
+            ? `- No third-party dependency bumps were found for the installed Nx version. Either your dependencies are already up to date, or this workspace doesn't manage them in a place 'nx migrate' writes to (e.g. non-JS workspaces only track Nx and its plugins).`
+            : `- No package updates or migrations were found.`,
+        ],
+      });
+      // Nothing was applied; skip the "Next steps" guidance below — it would
+      // tell the user to inspect package.json changes that don't exist.
+      return;
+    }
+
     output.success({
       title: `The migrate command has run successfully.`,
       bodyLines: [
-        `- package.json has been updated.`,
+        ...(modeLine ? [modeLine] : []),
+        ...(wrotePackageJson ? [`- package.json has been updated.`] : []),
+        ...(wroteNxJsonInstallation
+          ? [`- nx.json (installation) has been updated.`]
+          : []),
         migrations.length > 0
           ? `- migrations.json has been generated.`
           : `- There are no migrations to run, so migrations.json has not been created.`,

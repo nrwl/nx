@@ -1,9 +1,22 @@
 const mocks = {
   prompt: jest.fn(),
+  getInstalledNxVersion: jest.fn(),
+  getInstalledNxPackageGroup: jest.fn(),
+  getInstalledLegacyNrwlWorkspaceVersion: jest.fn(),
 };
 const mockPrompt = mocks.prompt;
+const mockGetInstalledNxVersion = mocks.getInstalledNxVersion;
+const mockGetInstalledNxPackageGroup = mocks.getInstalledNxPackageGroup;
+const mockGetInstalledLegacyNrwlWorkspaceVersion =
+  mocks.getInstalledLegacyNrwlWorkspaceVersion;
 jest.mock('enquirer', () => ({
   prompt: (...args: any[]) => mocks.prompt(...args),
+}));
+jest.mock('../../utils/installed-nx-version', () => ({
+  getInstalledNxVersion: () => mocks.getInstalledNxVersion(),
+  getInstalledNxPackageGroup: () => mocks.getInstalledNxPackageGroup(),
+  getInstalledLegacyNrwlWorkspaceVersion: () =>
+    mocks.getInstalledLegacyNrwlWorkspaceVersion(),
 }));
 import { PackageJson } from '../../utils/package-json';
 import * as packageMgrUtils from '../../utils/package-manager';
@@ -15,6 +28,7 @@ import {
   normalizeVersion,
   parseMigrationsOptions,
   ResolvedMigrationConfiguration,
+  resolveCanonicalNxPackage,
   resolveMode,
 } from './migrate';
 
@@ -1151,6 +1165,70 @@ describe('Migration', () => {
         });
         expect(result.packageUpdates['@nx/react']).toBeUndefined();
       });
+
+      it('should drop first-party packages and keep third-party in mixed entries when mode is third-party', async () => {
+        const migrator = new Migrator({
+          packageJson: createPackageJson({
+            dependencies: {
+              firstPartyChild: '1.0.0',
+              thirdPartyChild: '1.0.0',
+            },
+          }),
+          getInstalledPackageVersion: () => '1.0.0',
+          fetch: (p) => {
+            if (p === 'mypackage') {
+              return Promise.resolve({
+                version: '2.0.0',
+                packageJsonUpdates: {
+                  mixed: {
+                    version: '2.0.0',
+                    packages: {
+                      firstPartyChild: { version: '3.0.0' },
+                      thirdPartyChild: { version: '3.0.0' },
+                    },
+                  },
+                },
+              });
+            } else if (p === 'firstPartyChild' || p === 'thirdPartyChild') {
+              return Promise.resolve({ version: '3.0.0' });
+            }
+            return Promise.resolve(null);
+          },
+          from: {},
+          to: {},
+          mode: 'third-party',
+          firstPartyPackages: new Set(['mypackage', 'firstPartyChild']),
+        });
+
+        const result = await migrator.migrate('mypackage', '2.0.0');
+
+        expect(result.packageUpdates).toEqual({
+          thirdPartyChild: { version: '3.0.0', addToPackageJson: false },
+        });
+        expect(result.packageUpdates.mypackage).toBeUndefined();
+        expect(result.packageUpdates.firstPartyChild).toBeUndefined();
+      });
+
+      it.each(['first-party', 'third-party'] as const)(
+        'should throw when constructed with mode=%s but no firstPartyPackages',
+        (mode) => {
+          // Other required callbacks are unused — constructor rejects before any
+          // method runs — so stub them with the simplest valid shape.
+          expect(
+            () =>
+              new Migrator({
+                packageJson: createPackageJson({}),
+                getInstalledPackageVersion: () => '0.0.0',
+                fetch: () => Promise.resolve({ version: '0.0.0' }),
+                from: {},
+                to: {},
+                mode,
+              })
+          ).toThrow(
+            `Error: 'firstPartyPackages' is required when 'mode' is '${mode}'.`
+          );
+        }
+      );
     });
 
     describe('requirements', () => {
@@ -1929,6 +2007,26 @@ describe('Migration', () => {
   });
 
   describe('parseMigrationsOptions', () => {
+    beforeEach(() => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      mockGetInstalledNxPackageGroup.mockReturnValue(
+        new Set([
+          'nx',
+          'nx-cloud',
+          'create-nx-workspace',
+          '@nx/js',
+          '@nx/workspace',
+          '@nx/react',
+        ])
+      );
+      mockGetInstalledLegacyNrwlWorkspaceVersion.mockReturnValue(null);
+    });
+    afterEach(() => {
+      mockGetInstalledNxVersion.mockReset();
+      mockGetInstalledNxPackageGroup.mockReset();
+      mockGetInstalledLegacyNrwlWorkspaceVersion.mockReset();
+    });
+
     it('should work for generating migrations', async () => {
       jest
         .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
@@ -1938,7 +2036,7 @@ describe('Migration', () => {
         from: '@myscope/a@12.3,@myscope/b@1.1.1',
         to: '@myscope/c@12.3.1',
       });
-      expect(r).toEqual({
+      expect(r).toMatchObject({
         type: 'generateMigrations',
         targetPackage: '@nrwl/workspace',
         targetVersion: '8.12.0',
@@ -2158,6 +2256,229 @@ describe('Migration', () => {
       );
     });
 
+    it('should reject --mode=third-party combined with --from', async () => {
+      await expect(() =>
+        parseMigrationsOptions({
+          packageAndVersion: 'nx@22.0.0',
+          mode: 'third-party',
+          from: 'nx@21.0.0',
+        })
+      ).rejects.toThrow(
+        `Error: '--mode=third-party' cannot be combined with '--from'.`
+      );
+    });
+
+    it('should reject --mode=third-party combined with --exclude-applied-migrations', async () => {
+      await expect(() =>
+        parseMigrationsOptions({
+          packageAndVersion: 'nx@22.0.0',
+          mode: 'third-party',
+          excludeAppliedMigrations: true,
+        })
+      ).rejects.toThrow(
+        `Error: '--mode=third-party' cannot be combined with '--exclude-applied-migrations'.`
+      );
+    });
+
+    it('should default bare --mode=third-party to nx@<installed>', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.5.0');
+      const r = await parseMigrationsOptions({ mode: 'third-party' });
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: 'nx',
+        targetVersion: '22.5.0',
+        mode: 'third-party',
+      });
+    });
+
+    it('should reject --mode=third-party when nx is not installed', async () => {
+      mockGetInstalledNxVersion.mockReturnValue(null);
+      await expect(() =>
+        parseMigrationsOptions({ mode: 'third-party' })
+      ).rejects.toThrow(
+        `Error: '--mode=third-party' requires 'nx' (or '@nrwl/workspace' on Nx <14) to be installed in your workspace.`
+      );
+    });
+
+    it('should anchor bare --mode=third-party to legacy @nrwl/workspace canonical when only legacy is installed', async () => {
+      mockGetInstalledNxVersion.mockReturnValue(null);
+      mockGetInstalledLegacyNrwlWorkspaceVersion.mockReturnValue('13.5.0');
+      const r = await parseMigrationsOptions({ mode: 'third-party' });
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: '@nrwl/workspace',
+        targetVersion: '13.5.0',
+        mode: 'third-party',
+      });
+    });
+
+    it('should anchor bare --mode=third-party to @nrwl/workspace canonical when installed nx is legacy (<14)', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('13.5.0');
+      const r = await parseMigrationsOptions({ mode: 'third-party' });
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: '@nrwl/workspace',
+        targetVersion: '13.5.0',
+        mode: 'third-party',
+      });
+    });
+
+    it('should reject --mode=third-party when target is higher than installed', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      await expect(() =>
+        parseMigrationsOptions({
+          packageAndVersion: 'nx@23.0.0',
+          mode: 'third-party',
+        })
+      ).rejects.toThrow(
+        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got 'nx@23.0.0', installed 'nx@22.0.0').`
+      );
+    });
+
+    it('should accept --mode=third-party when target is lower than installed', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.5.0');
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'nx@22.0.0',
+        mode: 'third-party',
+      });
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: 'nx',
+        targetVersion: '22.0.0',
+        mode: 'third-party',
+      });
+    });
+
+    it('should accept --mode=third-party with @nx/workspace target, preserve typed target, and swap to nx canonical at walk time', async () => {
+      // `parseMigrationsOptions` preserves the typed target verbatim; the
+      // silent `@nx/workspace` → `nx` swap happens later in
+      // `generateMigrationsJsonAndUpdatePackageJson` via
+      // `resolveCanonicalNxPackage`.
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      const r = await parseMigrationsOptions({
+        packageAndVersion: '@nx/workspace@22.0.0',
+        mode: 'third-party',
+      });
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: '@nx/workspace',
+        targetVersion: '22.0.0',
+        mode: 'third-party',
+      });
+      expect(
+        resolveCanonicalNxPackage(
+          (r as { targetVersion: string }).targetVersion
+        )
+      ).toBe('nx');
+    });
+
+    it('should reject --mode=third-party with --to canonical higher than installed', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      await expect(() =>
+        parseMigrationsOptions({
+          packageAndVersion: 'nx@22.0.0',
+          mode: 'third-party',
+          to: 'nx@23.0.0',
+        })
+      ).rejects.toThrow(
+        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to nx@23.0.0', installed 'nx@22.0.0').`
+      );
+    });
+
+    it('should reject --mode=third-party with --to for first-party plugins higher than installed', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      await expect(() =>
+        parseMigrationsOptions({
+          packageAndVersion: 'nx@22.0.0',
+          mode: 'third-party',
+          to: '@nx/js@22.6.4',
+        })
+      ).rejects.toThrow(
+        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to @nx/js@22.6.4', installed 'nx@22.0.0').`
+      );
+    });
+
+    it('should reject --mode=third-party with --to create-nx-workspace higher than installed', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      await expect(() =>
+        parseMigrationsOptions({
+          packageAndVersion: 'nx@22.0.0',
+          mode: 'third-party',
+          to: 'create-nx-workspace@22.6.4',
+        })
+      ).rejects.toThrow(
+        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to create-nx-workspace@22.6.4', installed 'nx@22.0.0').`
+      );
+    });
+
+    it('should accept --mode=third-party with --to for non-canonical packages', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'nx@22.0.0',
+        mode: 'third-party',
+        to: 'react@18.0.0',
+      });
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        mode: 'third-party',
+        to: { react: '18.0.0' },
+      });
+    });
+
+    it('should anchor --mode=third-party to installed when target has no version', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.5.0');
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'nx',
+        mode: 'third-party',
+      });
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: 'nx',
+        targetVersion: '22.5.0',
+        mode: 'third-party',
+      });
+    });
+
+    it('should anchor bare-package-name --mode=third-party to legacy canonical when installed nx is <14', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('13.5.0');
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'nx',
+        mode: 'third-party',
+      });
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: '@nrwl/workspace',
+        targetVersion: '13.5.0',
+        mode: 'third-party',
+      });
+    });
+
+    it('should reject --mode=third-party for legacy target when @nrwl/workspace is not installed', async () => {
+      mockGetInstalledLegacyNrwlWorkspaceVersion.mockReturnValue(null);
+      await expect(() =>
+        parseMigrationsOptions({
+          packageAndVersion: '@nrwl/workspace@13.0.0',
+          mode: 'third-party',
+        })
+      ).rejects.toThrow(
+        `Error: '--mode=third-party' requires '@nrwl/workspace' to be installed in your workspace.`
+      );
+    });
+
+    it('should accept --mode=third-party for legacy target when @nrwl/workspace is installed', async () => {
+      mockGetInstalledLegacyNrwlWorkspaceVersion.mockReturnValue('13.5.0');
+      const r = await parseMigrationsOptions({
+        packageAndVersion: '@nrwl/workspace@13.0.0',
+        mode: 'third-party',
+      });
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: '@nrwl/workspace',
+        targetVersion: '13.0.0',
+        mode: 'third-party',
+      });
+    });
+
     it('should handle backslashes in package names', async () => {
       jest
         .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
@@ -2169,7 +2490,7 @@ describe('Migration', () => {
         from: '@myscope\\a@12.3,@myscope\\b@1.1.1',
         to: '@myscope\\c@12.3.1',
       });
-      expect(r).toEqual({
+      expect(r).toMatchObject({
         type: 'generateMigrations',
         targetPackage: '@nx/workspace',
         targetVersion: '8.12.0',
@@ -2359,6 +2680,71 @@ describe('Migration', () => {
       const result = await resolveMode(undefined, 'nx', '22.0.0');
       expect(result).toBe('first-party');
       expect(mockPrompt).toHaveBeenCalled();
+    });
+
+    it('should include third-party in prompt choices by default', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'all' }));
+      await resolveMode(undefined, 'nx', '22.0.0');
+      const choices = mockPrompt.mock.calls[0][0].choices;
+      expect(choices.map((c: { name: string }) => c.name)).toEqual([
+        'first-party',
+        'third-party',
+        'all',
+      ]);
+    });
+
+    it('should hide third-party from prompt choices when --from is provided', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'all' }));
+      await resolveMode(undefined, 'nx', '22.0.0', {
+        hasFrom: true,
+        hasExcludeAppliedMigrations: false,
+      });
+      const choices = mockPrompt.mock.calls[0][0].choices;
+      expect(choices.map((c: { name: string }) => c.name)).toEqual([
+        'first-party',
+        'all',
+      ]);
+    });
+
+    it('should hide third-party from prompt choices when --exclude-applied-migrations is provided', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'all' }));
+      await resolveMode(undefined, 'nx', '22.0.0', {
+        hasFrom: false,
+        hasExcludeAppliedMigrations: true,
+      });
+      const choices = mockPrompt.mock.calls[0][0].choices;
+      expect(choices.map((c: { name: string }) => c.name)).toEqual([
+        'first-party',
+        'all',
+      ]);
+    });
+  });
+
+  describe('resolveCanonicalNxPackage', () => {
+    it.each([
+      ['22.0.0', 'nx'],
+      ['14.0.0-beta.0', 'nx'],
+      ['14.0.0', 'nx'],
+      ['13.999.999', '@nrwl/workspace'],
+      ['13.0.0', '@nrwl/workspace'],
+      ['8.12.0', '@nrwl/workspace'],
+    ] as const)('should resolve %s to %s', (version, expected) => {
+      expect(resolveCanonicalNxPackage(version)).toBe(expected);
     });
   });
 

@@ -86,18 +86,24 @@ function withMigrationOptions(yargs: Argv) {
     })
     .option('mode', {
       describe:
-        "Restrict which packages to migrate. 'first-party' processes only the target package and the packages in its nx.packageGroup; 'all' processes everything.",
+        "Restrict which packages to migrate. Only applies when migrating Nx itself. 'first-party' processes only Nx and its plugins (the target package plus its nx.packageGroup); 'third-party' processes only the third-party dependencies referenced by Nx packageJsonUpdates entries, catching up on any updates that may have been skipped previously; 'all' processes everything. Defaults to 'all' (or prompts in an interactive terminal when targeting Nx).",
       type: 'string',
-      choices: ['first-party', 'all'],
+      choices: ['first-party', 'third-party', 'all'],
     })
     .check(
-      ({ createCommits, commitPrefix, from, excludeAppliedMigrations }) => {
+      ({
+        createCommits,
+        commitPrefix,
+        from,
+        excludeAppliedMigrations,
+        mode,
+      }) => {
         if (!createCommits && commitPrefix !== defaultCommitPrefix) {
           throw new Error(
             'Error: Providing a custom commit prefix requires --create-commits to be enabled'
           );
         }
-        if (excludeAppliedMigrations && !from) {
+        if (excludeAppliedMigrations && !from && mode !== 'third-party') {
           throw new Error(
             'Error: Excluding migrations that should have been previously applied requires --from to be set'
           );
