@@ -198,7 +198,7 @@ export async function generateWorkspaceFiles(
   const [packageMajor] = packageManagerVersion.split('.');
   if (options.packageManager === 'pnpm' && +packageMajor >= 7) {
     if (gte(packageManagerVersion, '10.6.0')) {
-      addPnpmSettings(tree, options);
+      addPnpmSettings(tree, options, packageManagerVersion);
     } else {
       createNpmrc(tree, options);
     }
@@ -335,17 +335,18 @@ async function createReadme(
   });
 }
 
-// pnpm 11 requires allowBuilds for packages with postinstall scripts;
-// onlyBuiltDependencies is the pnpm 10 equivalent (unknown keys are ignored).
-function addPnpmSettings(tree: Tree, options: NormalizedSchema) {
+function addPnpmSettings(
+  tree: Tree,
+  options: NormalizedSchema,
+  packageManagerVersion: string
+) {
+  const buildAllowlist = gte(packageManagerVersion, '11.0.0')
+    ? `allowBuilds:\n  nx: true`
+    : `onlyBuiltDependencies:\n  - nx`;
+
   tree.write(
     join(options.directory, 'pnpm-workspace.yaml'),
-    `autoInstallPeers: true
-allowBuilds:
-  nx: true
-onlyBuiltDependencies:
-  - nx
-`
+    `autoInstallPeers: true\n${buildAllowlist}\n`
   );
 }
 
