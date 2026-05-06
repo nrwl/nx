@@ -215,7 +215,7 @@ async function ensureVitestPluginRegistration(tree: Tree): Promise<boolean> {
   return true;
 }
 
-function scopeKey(entry: PluginEntry): string {
+function scopeKey(entry: { include?: string[]; exclude?: string[] }): string {
   return [
     (entry.include ?? []).join(','),
     (entry.exclude ?? []).join(','),
