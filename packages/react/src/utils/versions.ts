@@ -16,7 +16,7 @@ export const typesReactIsVersion = '^19.0.0';
 export const reactViteVersion = '^4.2.0';
 
 // Needed for React-Router
-export const typesNodeVersion = '^20.0.0';
+export const typesNodeVersion = '^22.0.0';
 
 export const babelPresetReactVersion = '^7.14.5';
 export const babelCoreVersion = '^7.14.5';

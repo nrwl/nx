@@ -11,7 +11,7 @@ export const latestVersions = {
   tsJestVersion: '^29.4.0',
   tslibVersion: '^2.3.0',
   swcJestVersion: '~0.2.38',
-  typesNodeVersion: '20.19.9',
+  typesNodeVersion: '^22.0.0',
   tsNodeVersion: '10.9.1',
 };
 
