@@ -4,6 +4,7 @@ import {
   newProject,
   runCLI,
   uniq,
+  updateFile,
 } from '@nx/e2e-utils';
 
 const TEN_MINS_MS = 600_000;
@@ -85,6 +86,40 @@ describe('native Node.js TypeScript support (NX_PREFER_NODE_STRIP_TYPES)', () =>
         });
 
         expect(result).toContain('nx');
+      },
+      TEN_MINS_MS
+    );
+  });
+
+  describe('fallback to swc/ts-node when native strip cannot handle a config', () => {
+    it(
+      'should fall back to swc/ts-node when a TS config uses an enum',
+      () => {
+        const lib = uniq('lib');
+        runCLI(
+          `generate @nx/js:lib ${lib} --unitTestRunner=jest --no-interactive`
+        );
+
+        // enum is not supported by Node native type stripping - must trigger fallback
+        updateFile(
+          `${lib}/jest.config.cts`,
+          `enum Mode { Standard = 'standard' }
+const mode: Mode = Mode.Standard;
+module.exports = { displayName: '${lib}', mode };
+`
+        );
+
+        const result = runCLI('report', {
+          env: {
+            NX_PREFER_NODE_STRIP_TYPES: 'true',
+            NX_VERBOSE_LOGGING: 'true',
+          },
+        });
+
+        expect(result).toContain('nx');
+        expect(result).toContain(
+          'Native Node.js TypeScript stripping failed'
+        );
       },
       TEN_MINS_MS
     );

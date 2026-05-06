@@ -60,20 +60,22 @@ const nodeSupportsNativeTypescript: boolean = !!(process as any).features
   ?.typescript;
 
 /**
- * When process.features.typescript is truthy and the user has opted in via
- * NX_PREFER_NODE_STRIP_TYPES=true, we can skip registering swc-node or ts-node
- * transpilers since Node.js will handle TypeScript natively.
+ * When process.features.typescript is truthy, default to letting Node.js
+ * handle TypeScript natively via type stripping and skip registering swc-node
+ * or ts-node. Users can opt out by setting NX_PREFER_NODE_STRIP_TYPES=false.
  *
- * This can significantly improve performance when loading TypeScript config files, but there are some things
- * that won't work. See: https://nodejs.org/api/typescript.html#full-typescript-support
+ * Some constructs (enum, runtime namespace, legacy decorators,
+ * import = require, parameter properties, etc.) aren't supported by native
+ * type stripping. `loadTsFile` catches these failures and falls back to
+ * swc/ts-node automatically.
  *
- * TODO(v23): We should turn this on by default, but look at if need to fallback to SWC/ts-node if it fails.
+ * See: https://nodejs.org/api/typescript.html#full-typescript-support
  */
 const preferNodeStripTypes: boolean = (() => {
-  if (process.env.NX_PREFER_NODE_STRIP_TYPES !== 'true') {
+  if (!nodeSupportsNativeTypescript) {
     return false;
   }
-  return nodeSupportsNativeTypescript;
+  return process.env.NX_PREFER_NODE_STRIP_TYPES !== 'false';
 })();
 
 /**
@@ -358,6 +360,86 @@ export function getTranspiler(
 }
 
 /**
+ * Node.js throws this code when native type stripping hits an unsupported
+ * construct (enum, runtime namespace, legacy decorators, import = require,
+ * parameter properties on older Node, etc.).
+ *
+ * Exported for tests.
+ */
+export function isNativeTypeStripError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  return (err as { code?: string }).code === 'ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX';
+}
+
+/**
+ * Load a TypeScript file via `require()`, registering tsconfig-paths and (when
+ * needed) a swc/ts-node transpiler for the duration of the load.
+ *
+ * When native type stripping is preferred (Node 22.6+ by default), the file is
+ * loaded directly with no transpiler. If Node throws on an unsupported
+ * construct (enum, runtime namespace, legacy decorators, etc.), this falls
+ * back to swc/ts-node and retries transparently. Set `NX_VERBOSE_LOGGING=true`
+ * to log when the fallback is triggered.
+ *
+ * Throws ERR_REQUIRE_ESM unchanged so callers can dispatch to dynamic
+ * `import()` for ESM modules.
+ *
+ * @returns the loaded module
+ */
+export function loadTsFile<T = any>(
+  filePath: string,
+  tsConfigPath: string
+): T {
+  if (isInvokedByTsx) {
+    return require(filePath) as T;
+  }
+
+  if (preferNodeStripTypes) {
+    const cleanupPaths = registerTsConfigPaths(tsConfigPath);
+    try {
+      return require(filePath) as T;
+    } catch (err) {
+      if (!isNativeTypeStripError(err)) {
+        throw err;
+      }
+      logNativeStripFallback(filePath, err);
+      const { compilerOptions, tsConfigRaw } = readCompilerOptions(tsConfigPath);
+      const cleanupTranspiler = registerTranspiler(compilerOptions, tsConfigRaw);
+      try {
+        try {
+          delete require.cache[require.resolve(filePath)];
+        } catch {
+          // require.resolve may throw if the failed load never reached cache
+        }
+        return require(filePath) as T;
+      } finally {
+        cleanupTranspiler();
+      }
+    } finally {
+      cleanupPaths();
+    }
+  }
+
+  const cleanup = registerTsProject(tsConfigPath);
+  try {
+    return require(filePath) as T;
+  } finally {
+    cleanup();
+  }
+}
+
+function logNativeStripFallback(filePath: string, err: unknown): void {
+  if (process.env.NX_VERBOSE_LOGGING !== 'true') {
+    return;
+  }
+  const message = err instanceof Error ? err.message : String(err);
+  logger.warn(
+    stripIndent(`${NX_PREFIX} Native Node.js TypeScript stripping failed for ${filePath}. Falling back to swc/ts-node.
+  ${message}`)
+  );
+}
+
+/**
  * Register ts-node or swc-node given a set of compiler options.
  *
  * Note: Several options require enums from typescript. To avoid importing typescript,
@@ -374,7 +456,7 @@ export function registerTranspiler(
 
   if (!transpiler) {
     // If Node.js natively supports TypeScript (22.6+), no transpiler is needed.
-    // Don't warn — Node will handle .ts files via type stripping.
+    // Don't warn - Node will handle .ts files via type stripping.
     if (!nodeSupportsNativeTypescript) {
       warnNoTranspiler();
     }

@@ -1,7 +1,7 @@
 import { existsSync, readdirSync } from 'fs';
 import { pathToFileURL } from 'node:url';
 import { workspaceRoot } from 'nx/src/devkit-exports';
-import { registerTsProject } from 'nx/src/devkit-internals';
+import { loadTsFile, registerTsProject } from 'nx/src/devkit-internals';
 import { dirname, extname, join, sep } from 'path';
 
 export let dynamicImport = new Function(
@@ -40,16 +40,38 @@ async function loadTypeScriptModule(
 ): Promise<any> {
   const tsConfigPath = getTypeScriptConfigPath(path, tsconfigFileNames);
 
-  if (tsConfigPath) {
-    const unregisterTsProject = registerTsProject(tsConfigPath);
+  if (!tsConfigPath) {
+    return await loadModuleByExtension(path, extension);
+  }
+
+  // .mts is ESM-only - register transpiler (no-op when native strip is preferred)
+  // and dispatch to the ESM loader.
+  if (extension === '.mts') {
+    const cleanup = registerTsProject(tsConfigPath);
     try {
-      return await loadModuleByExtension(path, extension);
+      return await loadESM(path);
     } finally {
-      unregisterTsProject();
+      cleanup();
     }
   }
 
-  return await loadModuleByExtension(path, extension);
+  // Hot-reload parity with loadCommonJS.
+  if (require.cache[path]) {
+    clearRequireCache();
+  }
+  try {
+    return loadTsFile(path, tsConfigPath);
+  } catch (e: any) {
+    if (extension === '.ts' && e?.code === 'ERR_REQUIRE_ESM') {
+      const cleanup = registerTsProject(tsConfigPath);
+      try {
+        return await loadESM(path);
+      } finally {
+        cleanup();
+      }
+    }
+    throw e;
+  }
 }
 
 function getTypeScriptConfigPath(
