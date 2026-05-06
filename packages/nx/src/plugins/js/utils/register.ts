@@ -94,6 +94,13 @@ const disableTsConfigPaths: boolean =
  * the root of their project and the fundamentals will still work (but
  * workspace path mapping will not, for example).
  *
+ * Behavior change in v23: when native Node.js type stripping is preferred (the
+ * new default on Node 22.6+), this function is a noop and no longer registers
+ * `tsconfig-paths`. Callers relying on the side effect of path mapping should
+ * switch to `loadTsFile`, which registers swc/ts-node + tsconfig-paths on
+ * demand when the strip path fails. To restore the legacy behavior, set
+ * `NX_PREFER_NODE_STRIP_TYPES=false`.
+ *
  * @returns cleanup function
  */
 export function registerTsProject(tsConfigPath: string): () => void;
@@ -404,6 +411,12 @@ export function loadTsFile<T = any>(
   filePath: string,
   tsConfigPath: string
 ): T {
+  if (!tsConfigPath) {
+    throw new Error(
+      `${NX_PREFIX} loadTsFile requires a tsConfigPath. Got "${tsConfigPath}" while loading ${filePath}.`
+    );
+  }
+
   if (isInvokedByTsx) {
     return require(filePath) as T;
   }

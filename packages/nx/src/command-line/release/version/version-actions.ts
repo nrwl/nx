@@ -139,9 +139,11 @@ export async function resolveVersionActionsForProject(
     VersionActionsClass = cachedData.VersionActionsClass;
     afterAllProjectsVersioned = cachedData.afterAllProjectsVersioned;
   } else {
-    const loaded = versionActionsPath.endsWith('.ts')
-      ? loadTsFile<any>(versionActionsPath, getRootTsConfigPath())
-      : require(versionActionsPath);
+    const rootTsconfigPath = getRootTsConfigPath();
+    const loaded =
+      versionActionsPath.endsWith('.ts') && rootTsconfigPath
+        ? loadTsFile<any>(versionActionsPath, rootTsconfigPath)
+        : require(versionActionsPath);
     VersionActionsClass = loaded.default ?? loaded;
     if (!VersionActionsClass) {
       throw new Error(

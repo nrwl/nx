@@ -1,6 +1,6 @@
 import { workspaceRoot } from '@nx/devkit';
 import { loadConfigFile } from '@nx/devkit/internal';
-import { loadTsFile, registerTsProject } from '@nx/js/src/internal';
+import { loadTsFile } from '@nx/js/src/internal';
 import type { TSESLint } from '@typescript-eslint/utils';
 import { existsSync } from 'fs';
 import { dirname, isAbsolute, join, normalize, resolve, sep } from 'path';
@@ -142,29 +142,23 @@ export async function loadWorkspaceRules(
     return {};
   }
 
-  let registrationCleanup: (() => void) | null = null;
-
   try {
+    const entryFile = resolveDirectoryEntryFile(resolvedDirectory);
     const effectiveTsConfigPath = findTsConfig(resolvedDirectory, tsConfigPath);
 
-    if (effectiveTsConfigPath) {
-      registrationCleanup = registerTsProject(effectiveTsConfigPath);
-    }
-
-    const entryFile = resolveDirectoryEntryFile(resolvedDirectory);
-
-    // Only rules are supported (not configs, processors, etc.)
-    const module = await loadConfigFile(entryFile);
+    // For TS entry files, use loadTsFile directly so the explicitly-provided
+    // tsConfigPath threads into any swc/ts-node fallback. For other extensions
+    // (or when no tsconfig was found), defer to loadConfigFile's auto-discovery.
+    const module =
+      effectiveTsConfigPath && /\.(c|m)?ts$/.test(entryFile)
+        ? loadTsFile<{ rules?: ESLintRules }>(entryFile, effectiveTsConfigPath)
+        : await loadConfigFile<{ rules?: ESLintRules }>(entryFile);
     const rules = module.rules || module;
 
     return rules as ESLintRules;
   } catch (err) {
     console.error(err);
     return {};
-  } finally {
-    if (registrationCleanup) {
-      registrationCleanup();
-    }
   }
 }
 
