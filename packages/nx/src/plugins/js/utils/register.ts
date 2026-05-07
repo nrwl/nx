@@ -50,12 +50,15 @@ const isInvokedByTsx: boolean = (() => {
 })();
 
 /**
- * Whether the current Node.js version supports native TypeScript execution
- * via type stripping (Node 22.6+).
+ * Whether the current Node.js runtime exposes native TypeScript type
+ * stripping. This is the authoritative gate - it correctly handles every
+ * way Node ships TS support:
+ *   - Node 23.6+: unflagged, on by default
+ *   - Node 22.18+ LTS: backported unflagged
+ *   - Node 22.6-22.17 + `--experimental-strip-types` (or `--experimental-transform-types`)
  *
- * process.features.typescript is 'strip' | 'transform' | false in Node 22.6+
+ * `process.features.typescript` is `'strip' | 'transform' | false`.
  */
-
 const nodeSupportsNativeTypescript: boolean = !!(process as any).features
   ?.typescript;
 
@@ -94,13 +97,12 @@ const disableTsConfigPaths: boolean =
  * the root of their project and the fundamentals will still work (but
  * workspace path mapping will not, for example).
  *
- * Behavior change in v23: when native Node.js type stripping is preferred
- * (the new default - unflagged on Node 23+, requires `--experimental-strip-types`
- * on Node 22.6-22.x), this function is a noop and no longer registers
- * `tsconfig-paths`. Callers relying on the side effect of path mapping should
- * switch to `loadTsFile`, which registers swc/ts-node + tsconfig-paths on
- * demand when the strip path fails. To restore the legacy behavior, set
- * `NX_PREFER_NODE_STRIP_TYPES=false`.
+ * Behavior change in v23: when the runtime exposes native TypeScript type
+ * stripping (`process.features.typescript`), this function is a noop and no
+ * longer registers `tsconfig-paths`. Callers relying on the side effect of
+ * path mapping should switch to `loadTsFile`, which registers swc/ts-node
+ * + tsconfig-paths on demand when the strip path fails. To restore the
+ * legacy behavior, set `NX_PREFER_NODE_STRIP_TYPES=false`.
  *
  * @returns cleanup function
  */
@@ -396,8 +398,9 @@ export function isNativeTypeStripError(err: unknown): boolean {
 /**
  * Load a TypeScript file via `require()`.
  *
- * On Node 23+ with native strip preferred (the default; on Node 22.6-22.x it
- * requires `--experimental-strip-types`), the file loads directly with no
+ * When the runtime exposes native TypeScript stripping
+ * (`process.features.typescript`) and the user hasn't opted out via
+ * `NX_PREFER_NODE_STRIP_TYPES=false`, the file loads directly with no
  * swc/ts-node and no tsconfig-paths registration. If Node throws on an
  * unsupported construct (enum, runtime namespace, legacy decorators, etc.),
  * this registers swc/ts-node + tsconfig-paths and retries - matching the
