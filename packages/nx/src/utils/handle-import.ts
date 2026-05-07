@@ -1,11 +1,16 @@
 import { extname, resolve } from 'path';
+import { isNativeTypeStripError } from '../plugins/js/utils/register';
+import { forceRegisterPluginTSTranspiler } from '../project-graph/plugins/transpiler';
 
 /**
  * Dynamically imports a module using CJS require().
  * Provides a single point of change for future ESM migration.
  *
  * Falls back to real import() for ESM-only packages that
- * throw ERR_REQUIRE_ESM.
+ * throw ERR_REQUIRE_ESM. When loading a workspace plugin's `.ts` entry
+ * under native TypeScript stripping, also falls back to swc/ts-node if
+ * the file uses constructs Node can't strip (enum, runtime namespace,
+ * legacy decorators, etc.).
  *
  * @param modulePath - The module specifier (relative, absolute, or package name)
  * @param relativeTo - The directory to resolve relative paths against.
@@ -29,6 +34,15 @@ export async function handleImport<T = any>(
   } catch (e: any) {
     if (e.code === 'ERR_REQUIRE_ESM') {
       return import(resolvedPath) as Promise<T>;
+    }
+    if (isNativeTypeStripError(e)) {
+      forceRegisterPluginTSTranspiler();
+      try {
+        delete require.cache[require.resolve(normalizedPath)];
+      } catch {
+        // require.resolve may throw if the failed load never reached cache
+      }
+      return require(normalizedPath) as T;
     }
     throw e;
   }

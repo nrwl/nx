@@ -90,6 +90,15 @@ const disableTsConfigPaths: boolean =
   process.env.NX_DISABLE_TSCONFIG_PATHS === 'true';
 
 /**
+ * Whether Nx will defer to Node's native TypeScript stripping for the next
+ * `.ts` load. Mirrors the gate used by `loadTsFile`/`registerTsProject` so
+ * other registration sites (e.g. plugin transpiler) can stay aligned.
+ */
+export function isNativeStripPreferred(): boolean {
+  return preferNodeStripTypes;
+}
+
+/**
  * Optionally, if swc-node and tsconfig-paths are available in the current workspace, apply the require
  * register hooks so that .ts files can be used for writing custom workspace projects.
  *

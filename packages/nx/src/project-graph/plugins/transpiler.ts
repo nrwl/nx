@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path/posix';
 import type * as ts from 'typescript';
 import {
+  isNativeStripPreferred,
   registerTranspiler,
   registerTsConfigPaths,
 } from '../../plugins/js/utils/register';
@@ -10,11 +11,52 @@ import { workspaceRoot } from '../../utils/workspace-root';
 
 export let unregisterPluginTSTranspiler: (() => void) | null = null;
 
+const NOOP = () => {};
+
 /**
  * Register swc-node or ts-node if they are not currently registered
  * with some default settings which work well for Nx plugins.
+ *
+ * When the runtime supports native TypeScript stripping and the user hasn't
+ * opted out, this is a noop - Node loads plugin `.ts` files directly. The
+ * lazy fallback in `handleImport` will call `forceRegisterPluginTSTranspiler`
+ * if a plugin uses unsupported syntax (enum, runtime namespace, etc.).
  */
 export function registerPluginTSTranspiler() {
+  if (unregisterPluginTSTranspiler !== null) {
+    return;
+  }
+
+  if (isNativeStripPreferred()) {
+    // Sentinel so pluginTranspilerIsRegistered() reports true and callers
+    // don't keep retrying. The actual transpiler stays unregistered until
+    // a fallback forces it.
+    unregisterPluginTSTranspiler = NOOP;
+    return;
+  }
+
+  doRegisterPluginTSTranspiler();
+}
+
+/**
+ * Always register swc-node or ts-node + tsconfig-paths, ignoring the native
+ * strip preference. Called from the fallback path in `handleImport` when a
+ * plugin `.ts` file throws `ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX` under native
+ * stripping.
+ */
+export function forceRegisterPluginTSTranspiler() {
+  // If the previous registration was the native-strip sentinel, throw it
+  // out so we actually wire up swc/ts-node.
+  if (unregisterPluginTSTranspiler === NOOP) {
+    unregisterPluginTSTranspiler = null;
+  }
+  if (unregisterPluginTSTranspiler !== null) {
+    return;
+  }
+  doRegisterPluginTSTranspiler();
+}
+
+function doRegisterPluginTSTranspiler() {
   // Get the first tsconfig that matches the allowed set
   const tsConfigName = [
     join(workspaceRoot, 'tsconfig.base.json'),
