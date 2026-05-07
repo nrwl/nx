@@ -401,7 +401,9 @@ export function getTranspiler(
  */
 export function isNativeTypeStripError(err: unknown): boolean {
   if (!err || typeof err !== 'object') return false;
-  return (err as { code?: string }).code === 'ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX';
+  return (
+    (err as { code?: string }).code === 'ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX'
+  );
 }
 
 /**
@@ -487,9 +489,8 @@ export function loadTsFile<T = any>(
     if (!disableTsConfigPaths) {
       cleanups.push(registerTsConfigPaths(resolvedTsConfigPath));
     }
-    const { compilerOptions, tsConfigRaw } = readCompilerOptions(
-      resolvedTsConfigPath
-    );
+    const { compilerOptions, tsConfigRaw } =
+      readCompilerOptions(resolvedTsConfigPath);
     cleanups.push(registerTranspiler(compilerOptions, tsConfigRaw));
 
     try {

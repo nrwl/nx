@@ -21,7 +21,8 @@ export async function loadModule<T = any>(
   const isTs = ext === '.ts' || ext === '.cts' || ext === '.mts';
 
   try {
-    const result = isTs && tsConfig ? loadTsFile<any>(path, tsConfig) : require(path);
+    const result =
+      isTs && tsConfig ? loadTsFile<any>(path, tsConfig) : require(path);
     return result.default ?? result;
   } catch (e: any) {
     if (e.code === 'ERR_REQUIRE_ESM') {

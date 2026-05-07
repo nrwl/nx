@@ -48,7 +48,9 @@ export async function loadMiddleware(
   if (!middlewareFns?.length) {
     return [];
   }
-  return Promise.all(middlewareFns.map((fnPath) => loadModule(fnPath, tsConfig)));
+  return Promise.all(
+    middlewareFns.map((fnPath) => loadModule(fnPath, tsConfig))
+  );
 }
 
 export async function loadIndexHtmlTransformer(
