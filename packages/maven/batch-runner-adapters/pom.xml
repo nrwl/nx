@@ -16,8 +16,9 @@
     <description>Maven version-specific adapters for the batch runner</description>
 
     <properties>
-        <!-- Skip deployment for adapter modules - they're bundled in the @nx/maven npm package -->
-        <maven.install.skip>true</maven.install.skip>
+        <!-- Adapter modules are bundled in the @nx/maven npm package, not deployed to Central. -->
+        <!-- Local install IS required so the batch-runner can resolve them as provided-scope deps at compile time. -->
+        <maven.install.skip>false</maven.install.skip>
         <maven.deploy.skip>true</maven.deploy.skip>
         <maven.gpg.skip>true</maven.gpg.skip>
     </properties>
