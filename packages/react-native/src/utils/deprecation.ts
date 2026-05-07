@@ -1,19 +1,32 @@
 import { logger } from '@nx/devkit';
 
 // TODO(v24): Remove the @nx/react-native:build-android, :build-ios, :bundle,
-// :pod-install, :run-android, :run-ios, :start, and :upgrade executors. The
-// inferred plugin (@nx/react-native/plugin) and the convert-to-inferred
-// generator stay supported. (`@nx/react-native:storybook`, `:sync-deps`,
-// and `:ensure-symlink` are not covered by `convert-to-inferred` and stay
-// as-is.)
+// :pod-install, :run-android, :run-ios, :start, :storybook, and :upgrade
+// executors. The inferred plugin (@nx/react-native/plugin) and the
+// convert-to-inferred generator stay supported. (`:sync-deps` and
+// `:ensure-symlink` are Nx-specific glue with no inferred replacement and
+// stay as-is.)
 
 function buildMessage(executorName: string): string {
   return `The \`@nx/react-native:${executorName}\` executor is deprecated and will be removed in Nx v24. Run \`nx g @nx/react-native:convert-to-inferred\` to migrate to the \`@nx/react-native/plugin\` inferred targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.`;
 }
 
+// Storybook has no inferred-plugin replacement in @nx/react-native/plugin and
+// is not handled by the convert-to-inferred generator. Run the
+// @storybook/react-native CLI directly via `nx:run-commands` instead.
+const STORYBOOK_DEPRECATION_MESSAGE =
+  'The `@nx/react-native:storybook` executor is deprecated and will be removed in Nx v24. There is no inferred-plugin replacement for the on-device React Native Storybook flow; run the `@storybook/react-native` CLI directly via `nx:run-commands` instead.';
+
 export function warnReactNativeExecutorDeprecation(executorName: string): void {
   logger.warn(buildMessage(executorName));
 }
+
+export function warnReactNativeStorybookDeprecation(): void {
+  logger.warn(STORYBOOK_DEPRECATION_MESSAGE);
+}
+
+export const reactNativeStorybookDeprecationMessage =
+  STORYBOOK_DEPRECATION_MESSAGE;
 
 export function reactNativeSchemaDeprecationMessage(
   executorName: string

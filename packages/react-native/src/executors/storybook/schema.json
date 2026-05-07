@@ -5,6 +5,7 @@
   "cli": "nx",
   "description": "Load stories for react native.",
   "type": "object",
+  "x-deprecated": "The `@nx/react-native:storybook` executor is deprecated and will be removed in Nx v24. There is no inferred-plugin replacement for the on-device React Native Storybook flow; run the `@storybook/react-native` CLI directly via `nx:run-commands` instead.",
   "properties": {
     "searchDir": {
       "type": "array",
