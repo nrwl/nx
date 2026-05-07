@@ -37,6 +37,10 @@ describe('nx affected -- projectsAffectedByDependencyUpdates (e2e)', () => {
         runCLI(
           `generate @nx/js:lib libs/${libA} --bundler=none --unitTestRunner=none`
         );
+        // Yarn v4 requires the lockfile to be refreshed after a new workspace
+        // package is created; without this, subsequent yarn operations fail
+        // with "This package doesn't seem to be present in your lockfile".
+        runCommand(getPackageManagerCommand({ packageManager }).install);
         runCLI(
           `generate @nx/js:lib libs/${libB} --bundler=none --unitTestRunner=none`
         );
