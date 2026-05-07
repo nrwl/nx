@@ -9,7 +9,7 @@ junit = "5.10.1"
 kotlinx-coroutines = "1.7.3"
 slf4j = "1.7.10"
 gradle-tooling-api = "8.13"
-shadow = "8.1.1"
+shadow = "9.4.1"
 ktfmt = "0.25.0"
 nx-project-graph = "0.1.20"
 gradle-plugin-publish = "1.2.1"
@@ -33,7 +33,7 @@ opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporte
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
 nx-project-graph = { id = "dev.nx.gradle.project-graph", version.ref = "nx-project-graph" }
 gradle-plugin-publish = { id = "com.gradle.plugin-publish", version.ref = "gradle-plugin-publish" }
