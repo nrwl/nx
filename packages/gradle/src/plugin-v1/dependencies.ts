@@ -11,6 +11,10 @@ import { basename, dirname } from 'node:path';
 import { getCurrentGradleReport } from './utils/get-gradle-report';
 import { GRADLE_BUILD_FILES } from '../utils/split-config-files';
 
+/**
+ * @deprecated The `@nx/gradle/plugin-v1` entry is deprecated and will be removed in Nx 24.
+ * Switch to the default `@nx/gradle` plugin.
+ */
 export const createDependencies: CreateDependencies = async (
   _,
   context: CreateDependenciesContext
