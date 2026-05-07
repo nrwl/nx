@@ -1,6 +1,7 @@
 import {
   cleanupProject,
   getPackageManagerCommand,
+  getSelectedPackageManager,
   killPort,
   newProject,
   runCLI,
@@ -58,10 +59,19 @@ describe('Cypress E2E Test runner (legacy)', () => {
       );
       // Cypress CT (@cypress/vite-dev-server) does not support Vite 8 yet.
       // Downgrade the workspace to Vite 7 before configuring Cypress CT.
+      const isYarn = getSelectedPackageManager() === 'yarn';
       updateJson('package.json', (json) => {
         json.devDependencies ??= {};
         json.devDependencies['vite'] = '^7.0.0';
         json.devDependencies['@vitejs/plugin-react'] = '^4.2.0';
+        // Yarn classic's linker bombs ("could not find a copy of vite to link
+        // in node_modules/vitest/node_modules") when intersecting a
+        // top-level `^7.0.0` range with vitest's vite dep+peer combo. Pin
+        // vite via `resolutions` so yarn commits to a single version up
+        // front and skips the buggy hoisting path.
+        if (isYarn) {
+          json.resolutions = { ...(json.resolutions ?? {}), vite: '^7.0.0' };
+        }
         return json;
       });
       runCommand(getPackageManagerCommand().install);
