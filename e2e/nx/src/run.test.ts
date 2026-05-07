@@ -693,18 +693,20 @@ describe('Nx Running Tests', () => {
           `
             const { dirname, basename } = require('path');
             module.exports = {
-              createNodes: ['**/marker.json', (file) => {
-                const root = dirname(file);
-                return {
-                  projects: {
-                    [root]: {
-                      name: basename(root),
-                      targets: {
-                        '${target}': { command: 'echo INFERRED-COMMAND' },
+              createNodes: ['**/marker.json', (files) => {
+                return files.map((file) => {
+                  const root = dirname(file);
+                  return [file, {
+                    projects: {
+                      [root]: {
+                        name: basename(root),
+                        targets: {
+                          '${target}': { command: 'echo INFERRED-COMMAND' },
+                        },
                       },
                     },
-                  },
-                };
+                  }];
+                });
               }],
             };
           `

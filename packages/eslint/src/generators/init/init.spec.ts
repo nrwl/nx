@@ -21,12 +21,18 @@ function getDefault(
   if (Array.isArray(td)) {
     const found = td.find(
       (e) =>
-        e.target === target &&
+        (e.target === target || e.executor === target) &&
         e.projects === undefined &&
         e.source === undefined
     );
     if (!found) return undefined;
-    const { target: _t, projects: _p, source: _s, ...rest } = found;
+    const {
+      target: _t,
+      executor: _e,
+      projects: _p,
+      source: _s,
+      ...rest
+    } = found;
     return rest;
   }
   return td[target];
