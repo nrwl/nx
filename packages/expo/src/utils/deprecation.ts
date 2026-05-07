@@ -18,7 +18,7 @@ export function expoSchemaDeprecationMessage(executorName: string): string {
   return buildMessage(executorName);
 }
 
-export function warnExpoExecutorScaffolding(): void {
+export function warnExpoExecutorGenerating(): void {
   logger.warn(
     'Generating targets that use the deprecated `@nx/expo:build`, `@nx/expo:export`, `@nx/expo:install`, `@nx/expo:prebuild`, `@nx/expo:run`, `@nx/expo:serve`, `@nx/expo:start`, and `@nx/expo:submit` executors. These executors will be removed in Nx v24. Run `nx g @nx/expo:convert-to-inferred` next to migrate these targets to the `@nx/expo/plugin` inferred plugin and prevent future generators from emitting executor targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
   );

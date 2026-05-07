@@ -146,7 +146,7 @@ async function addBundlerConfiguration(
     }
 
     if (!hasWebpackPlugin(tree)) {
-      // Mirrors warnWebpackExecutorScaffolding from @nx/webpack/src/utils/deprecation.
+      // Mirrors warnWebpackExecutorGenerating from @nx/webpack/src/utils/deprecation.
       // Inlined to avoid a cross-package import where react-native does not
       // declare a TypeScript project reference to webpack.
       logger.warn(

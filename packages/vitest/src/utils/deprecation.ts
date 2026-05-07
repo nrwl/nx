@@ -9,12 +9,12 @@ export function warnVitestTestExecutorDeprecation(): void {
   logger.warn(VITEST_TEST_EXECUTOR_DEPRECATION_MESSAGE);
 }
 
-// Fired when the @nx/vitest:configuration generator is about to scaffold a
+// Fired when the @nx/vitest:configuration generator is about to generate a
 // target that uses the deprecated executor — i.e. when @nx/vitest/plugin
-// isn't registered in nx.json. Surfaces the deprecation at scaffold time
+// isn't registered in nx.json. Surfaces the deprecation at generation time
 // rather than only when the user later runs the generated target.
-export function warnVitestExecutorScaffolding(): void {
+export function warnVitestExecutorGenerating(): void {
   logger.warn(
-    'Scaffolding a target that uses the deprecated `@nx/vitest:test` executor. This executor will be removed in Nx v24. Run `nx g @nx/vitest:convert-to-inferred` after this scaffold to migrate the generated target to the `@nx/vitest/plugin` inferred plugin. To skip emitting executor targets entirely on future scaffolds, register `@nx/vitest/plugin` in `nx.json` first (`nx add @nx/vitest` or a manual plugin entry). See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
+    'Generating a target that uses the deprecated `@nx/vitest:test` executor. This executor will be removed in Nx v24. Run `nx g @nx/vitest:convert-to-inferred` next to migrate this target to the `@nx/vitest/plugin` inferred plugin and prevent future generators from emitting executor targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
   );
 }

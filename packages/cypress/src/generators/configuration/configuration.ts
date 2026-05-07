@@ -35,7 +35,7 @@ import { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { addLinterToCyProject } from '../../utils/add-linter';
 import { addDefaultE2EConfig } from '../../utils/config';
-import { warnCypressExecutorScaffolding } from '../../utils/deprecation';
+import { warnCypressExecutorGenerating } from '../../utils/deprecation';
 import {
   getInstalledCypressMajorVersion,
   versions,
@@ -105,7 +105,7 @@ export async function configurationGeneratorInternal(
 
   await addFiles(tree, opts, projectGraph, hasPlugin);
   if (!hasPlugin) {
-    warnCypressExecutorScaffolding();
+    warnCypressExecutorGenerating();
     addTarget(tree, opts, projectGraph);
   }
 

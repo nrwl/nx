@@ -17,7 +17,7 @@ export function warnRspackDevServerExecutorDeprecation(): void {
   logger.warn(RSPACK_DEV_SERVER_EXECUTOR_DEPRECATION_MESSAGE);
 }
 
-export function warnRspackExecutorScaffolding(): void {
+export function warnRspackExecutorGenerating(): void {
   logger.warn(
     'Generating targets that use the deprecated `@nx/rspack:rspack` and `@nx/rspack:dev-server` executors. These executors will be removed in Nx v24. Run `nx g @nx/rspack:convert-to-inferred` next to migrate these targets to the `@nx/rspack/plugin` inferred plugin and prevent future generators from emitting executor targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
   );

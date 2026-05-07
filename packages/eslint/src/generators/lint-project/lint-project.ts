@@ -23,7 +23,7 @@ import {
 } from '../utils/eslint-file';
 import { extname, join } from 'path';
 import { lintInitGenerator } from '../init/init';
-import { warnEslintExecutorScaffolding } from '../../utils/deprecation';
+import { warnEslintExecutorGenerating } from '../../utils/deprecation';
 import type { Linter } from 'eslint';
 import { migrateConfigToMonorepoStyle } from '../init/init-migration';
 import { getProjects } from 'nx/src/generators/utils/project-configuration';
@@ -124,7 +124,7 @@ export async function lintProjectGeneratorInternal(
       };
     }
   } else {
-    warnEslintExecutorScaffolding();
+    warnEslintExecutorGenerating();
     projectConfig.targets ??= {};
     projectConfig.targets['lint'] = {
       executor: '@nx/eslint:lint',

@@ -12,7 +12,7 @@ import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import { StorybookConfigureSchema } from './schema';
 import { initGenerator } from '../init/init';
-import { warnStorybookExecutorScaffolding } from '../../utils/deprecation';
+import { warnStorybookExecutorGenerating } from '../../utils/deprecation';
 
 import {
   addAngularStorybookTarget,
@@ -180,7 +180,7 @@ export async function configurationGeneratorInternal(
   let devDeps = {};
 
   if (!hasPlugin || schema.addExplicitTargets) {
-    warnStorybookExecutorScaffolding();
+    warnStorybookExecutorGenerating();
     if (schema.uiFramework === '@storybook/angular') {
       addAngularStorybookTarget(tree, schema.project, schema.interactionTests);
     } else {

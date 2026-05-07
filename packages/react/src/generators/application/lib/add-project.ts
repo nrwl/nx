@@ -12,7 +12,7 @@ import {
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { maybeJs } from '../../../utils/maybe-js';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
-import { warnWebpackExecutorScaffolding } from '@nx/webpack/src/utils/deprecation';
+import { warnWebpackExecutorGenerating } from '@nx/webpack/src/utils/deprecation';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
@@ -26,7 +26,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
 
   if (options.bundler === 'webpack') {
     if (!hasWebpackPlugin(host) || !options.addPlugin) {
-      warnWebpackExecutorScaffolding();
+      warnWebpackExecutorGenerating();
       project.targets = {
         build: createBuildTarget(options),
         serve: createServeTarget(options),
@@ -36,7 +36,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     options.bundler === 'rspack' &&
     (!hasRspackPlugin(host) || !options.addPlugin)
   ) {
-    // Mirrors warnRspackExecutorScaffolding from @nx/rspack/src/utils/deprecation.
+    // Mirrors warnRspackExecutorGenerating from @nx/rspack/src/utils/deprecation.
     // Inlined to avoid a cross-package import where react does not declare a
     // TypeScript project reference to rspack.
     logger.warn(

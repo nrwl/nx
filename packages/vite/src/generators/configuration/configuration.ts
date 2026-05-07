@@ -24,7 +24,7 @@ import {
 import { join } from 'node:path/posix';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
-import { warnViteExecutorScaffolding } from '../../utils/deprecation';
+import { warnViteExecutorGenerating } from '../../utils/deprecation';
 import {
   addBuildTarget,
   addPreviewTarget,
@@ -111,7 +111,7 @@ export async function viteConfigurationGeneratorInternal(
         (!projectAlreadyHasViteTargets.serve ||
           !projectAlreadyHasViteTargets.preview));
     if (willScaffoldExecutorTargets) {
-      warnViteExecutorScaffolding();
+      warnViteExecutorGenerating();
     }
 
     if (!projectAlreadyHasViteTargets.build) {

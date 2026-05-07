@@ -25,11 +25,11 @@ export function warnVitePreviewServerExecutorDeprecation(): void {
   logger.warn(VITE_PREVIEW_SERVER_EXECUTOR_DEPRECATION_MESSAGE);
 }
 
-// Fired when the @nx/vite:configuration generator is about to scaffold
+// Fired when the @nx/vite:configuration generator is about to generate
 // targets that use the deprecated executors — i.e. when @nx/vite/plugin
-// isn't registered in nx.json. Surfaces the deprecation at scaffold time
+// isn't registered in nx.json. Surfaces the deprecation at generation time
 // rather than only when the user later runs the generated targets.
-export function warnViteExecutorScaffolding(): void {
+export function warnViteExecutorGenerating(): void {
   logger.warn(
     'Generating targets that use the deprecated `@nx/vite:build`, `@nx/vite:dev-server`, and `@nx/vite:preview-server` executors. These executors will be removed in Nx v24. Run `nx g @nx/vite:convert-to-inferred` next to migrate these targets to the `@nx/vite/plugin` inferred plugin and prevent future generators from emitting executor targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
   );

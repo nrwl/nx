@@ -34,7 +34,7 @@ export function reactNativeSchemaDeprecationMessage(
   return buildMessage(executorName);
 }
 
-export function warnReactNativeExecutorScaffolding(): void {
+export function warnReactNativeExecutorGenerating(): void {
   logger.warn(
     'Generating targets that use the deprecated `@nx/react-native:build-android`, `@nx/react-native:build-ios`, `@nx/react-native:bundle`, `@nx/react-native:pod-install`, `@nx/react-native:run-android`, `@nx/react-native:run-ios`, `@nx/react-native:start`, and `@nx/react-native:upgrade` executors. These executors will be removed in Nx v24. Run `nx g @nx/react-native:convert-to-inferred` next to migrate these targets to the `@nx/react-native/plugin` inferred plugin and prevent future generators from emitting executor targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
   );
