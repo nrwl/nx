@@ -2914,4 +2914,278 @@ describe('Migration', () => {
       expect(isNpmPeerDepsError('some PREERESOLVED cache entry')).toBe(false);
     });
   });
+
+  describe('multi-major migration prompt', () => {
+    let originalCi: string | undefined;
+    const originalTtyDescriptor = Object.getOwnPropertyDescriptor(
+      process.stdin,
+      'isTTY'
+    );
+    let originalAccept: string | undefined;
+
+    beforeEach(() => {
+      originalCi = process.env.CI;
+      originalAccept = process.env.NX_ACCEPT_MULTI_MAJOR_UPDATE;
+      mockGetInstalledNxVersion.mockReturnValue('21.0.0');
+      mockGetInstalledNxPackageGroup.mockReturnValue(
+        new Set(['nx', '@nx/js', '@nx/workspace'])
+      );
+      mockGetInstalledLegacyNrwlWorkspaceVersion.mockReturnValue(null);
+      delete process.env.CI;
+      delete process.env.NX_ACCEPT_MULTI_MAJOR_UPDATE;
+    });
+
+    afterEach(() => {
+      mockGetInstalledNxVersion.mockReset();
+      mockGetInstalledNxPackageGroup.mockReset();
+      mockGetInstalledLegacyNrwlWorkspaceVersion.mockReset();
+      mockPrompt.mockReset();
+      if (originalCi === undefined) {
+        delete process.env.CI;
+      } else {
+        process.env.CI = originalCi;
+      }
+      if (originalAccept === undefined) {
+        delete process.env.NX_ACCEPT_MULTI_MAJOR_UPDATE;
+      } else {
+        process.env.NX_ACCEPT_MULTI_MAJOR_UPDATE = originalAccept;
+      }
+      if (originalTtyDescriptor) {
+        Object.defineProperty(process.stdin, 'isTTY', originalTtyDescriptor);
+      } else {
+        delete (process.stdin as { isTTY?: boolean }).isTTY;
+      }
+      jest.restoreAllMocks();
+    });
+
+    function setTty(value: boolean) {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value,
+        configurable: true,
+      });
+    }
+
+    function mockRegistry(map: { latest?: string } & Record<string, string>) {
+      jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+        .mockImplementation((_pkg, version) => {
+          const v = String(version);
+          if (v in map) return Promise.resolve(map[v]!);
+          const match = v.match(/^\^(\d+)\.0\.0$/);
+          if (match && map[match[1]]) return Promise.resolve(map[match[1]]!);
+          if (match) return Promise.reject(new Error('none'));
+          return Promise.resolve(v);
+        });
+    }
+
+    function spyWarn() {
+      return jest
+        .spyOn(require('../../utils/output').output, 'warn')
+        .mockImplementation(() => {});
+    }
+
+    it('should prompt and replace targetVersion with the chosen value (inferred target, TTY)', async () => {
+      setTty(true);
+      mockRegistry({
+        latest: '23.1.0',
+        next: '23.1.0',
+        canary: '23.1.0',
+        '21': '21.5.3',
+        '22': '22.5.3',
+      });
+      mockPrompt.mockResolvedValue({ chosen: '21.5.3' });
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'next',
+        mode: 'all',
+      });
+
+      expect(mockPrompt).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'select',
+          name: 'chosen',
+          message: 'How would you like to proceed?',
+          choices: expect.arrayContaining([
+            expect.objectContaining({ name: '21.5.3' }),
+            expect.objectContaining({ name: '22.5.3' }),
+            expect.objectContaining({ name: '23.1.0' }),
+          ]),
+        })
+      );
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetVersion: '21.5.3',
+      });
+    });
+
+    it('should not include the current-major option when installed is already at latest of current major', async () => {
+      setTty(true);
+      mockGetInstalledNxVersion.mockReturnValue('21.5.3');
+      mockRegistry({
+        latest: '23.1.0',
+        '21': '21.5.3',
+        '22': '22.5.3',
+      });
+      mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
+
+      await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+      });
+
+      const promptArgs = mockPrompt.mock.calls[0][0];
+      const choices = promptArgs.choices as { name: string }[];
+      expect(choices.map((c) => c.name)).toEqual(['22.5.3', '23.1.0']);
+    });
+
+    it('should warn (not prompt) when target was explicitly typed as numeric semver', async () => {
+      setTty(true);
+      const warnSpy = spyWarn();
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'nx@23.1.0',
+        mode: 'all',
+      });
+
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalled();
+      expect(r).toMatchObject({ targetVersion: '23.1.0' });
+    });
+
+    it('should warn (not prompt) in non-TTY environments', async () => {
+      setTty(false);
+      mockRegistry({ latest: '23.1.0' });
+      const warnSpy = spyWarn();
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+      });
+
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalled();
+      expect(r).toMatchObject({ targetVersion: '23.1.0' });
+    });
+
+    it('should not prompt or warn when --accept-multi-major-update flag is set', async () => {
+      setTty(true);
+      mockRegistry({ latest: '23.1.0' });
+      const warnSpy = spyWarn();
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+        acceptMultiMajorUpdate: true,
+      });
+
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(warnSpy).not.toHaveBeenCalled();
+      expect(r).toMatchObject({ targetVersion: '23.1.0' });
+    });
+
+    it('should not prompt or warn when NX_ACCEPT_MULTI_MAJOR_UPDATE env var is set', async () => {
+      setTty(true);
+      process.env.NX_ACCEPT_MULTI_MAJOR_UPDATE = 'true';
+      mockRegistry({ latest: '23.1.0' });
+      const warnSpy = spyWarn();
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+      });
+
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(warnSpy).not.toHaveBeenCalled();
+      expect(r).toMatchObject({ targetVersion: '23.1.0' });
+    });
+
+    it('should not prompt or warn when delta is exactly 1 major', async () => {
+      setTty(true);
+      mockRegistry({ latest: '22.5.3' });
+      const warnSpy = spyWarn();
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+      });
+
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(warnSpy).not.toHaveBeenCalled();
+      expect(r).toMatchObject({ targetVersion: '22.5.3' });
+    });
+
+    it('should not prompt or warn when installed is legacy-era (< 14)', async () => {
+      setTty(true);
+      mockGetInstalledNxVersion.mockReturnValue('13.10.0');
+      mockRegistry({ latest: '23.1.0' });
+      const warnSpy = spyWarn();
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+      });
+
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(warnSpy).not.toHaveBeenCalled();
+      expect(r).toMatchObject({ targetVersion: '23.1.0' });
+    });
+
+    it('should not prompt or warn for --mode=third-party', async () => {
+      setTty(true);
+      const warnSpy = spyWarn();
+
+      const r = await parseMigrationsOptions({ mode: 'third-party' });
+
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(warnSpy).not.toHaveBeenCalled();
+      expect(r).toMatchObject({ mode: 'third-party' });
+    });
+
+    it.each(['nx', '@nx/workspace'])(
+      'should resolve bare-package-name positional `%s` and fire the prompt',
+      async (positional) => {
+        // Regression: `nx migrate nx` and `nx migrate @nx/workspace` previously
+        // bypassed the multi-major check because parseTargetPackageAndVersion
+        // leaves targetVersion as the literal 'latest' for bare-package-name
+        // input.
+        setTty(true);
+        mockRegistry({
+          latest: '23.1.0',
+          '21': '21.5.3',
+          '22': '22.5.3',
+        });
+        mockPrompt.mockResolvedValue({ chosen: '21.5.3' });
+
+        const r = await parseMigrationsOptions({
+          packageAndVersion: positional,
+          mode: 'all',
+        });
+
+        expect(mockPrompt).toHaveBeenCalled();
+        expect(r).toMatchObject({
+          type: 'generateMigrations',
+          targetVersion: '21.5.3',
+        });
+      }
+    );
+
+    it('should warn (not prompt) when next-major lookup fails and current-major option is unavailable', async () => {
+      setTty(true);
+      // Installed at latest of its major → current-major option dropped.
+      // Next-major lookup fails → next-major option dropped. Both
+      // unavailable → fall back to warn.
+      mockGetInstalledNxVersion.mockReturnValue('21.5.3');
+      mockRegistry({ latest: '23.1.0', '21': '21.5.3' });
+      const warnSpy = spyWarn();
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+      });
+
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalled();
+      expect(r).toMatchObject({ targetVersion: '23.1.0' });
+    });
+  });
 });

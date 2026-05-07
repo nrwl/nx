@@ -90,6 +90,12 @@ function withMigrationOptions(yargs: Argv) {
       type: 'string',
       choices: ['first-party', 'third-party', 'all'],
     })
+    .option('acceptMultiMajorUpdate', {
+      describe:
+        'Skip the multi-major migration prompt/warning and migrate directly to the target version even when it crosses more than one major boundary. The recommended process is to update one major version at a time. Equivalent env var: NX_ACCEPT_MULTI_MAJOR_UPDATE=true.',
+      type: 'boolean',
+      default: false,
+    })
     .check(
       ({
         createCommits,

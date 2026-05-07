@@ -926,6 +926,163 @@ export function resolveCanonicalNxPackage(
     : 'nx';
 }
 
+const DIST_TAGS = ['latest', 'next', 'canary'] as const;
+type DistTag = (typeof DIST_TAGS)[number];
+
+const STEPWISE_DOC_URL =
+  'https://nx.dev/docs/guides/tips-n-tricks/advanced-update#one-major-version-at-a-time-small-steps';
+const ACCEPT_MULTI_MAJOR_UPDATE_ENV = 'NX_ACCEPT_MULTI_MAJOR_UPDATE';
+
+// Caret-major (`^X.0.0`) excludes prereleases per semver, so
+// `resolvePackageVersionUsingRegistry` returns the highest stable in major X.
+async function resolveLatestStableInMajor(
+  packageName: string,
+  majorVersion: number
+): Promise<string | null> {
+  try {
+    const resolved = await resolvePackageVersionUsingRegistry(
+      packageName,
+      `^${majorVersion}.0.0`
+    );
+    return valid(resolved) ? resolved : null;
+  } catch {
+    return null;
+  }
+}
+
+const multiMajorHeader = (pkg: string, installed: string, target: string) =>
+  `Migrating across multiple major versions: ${pkg}@${installed} → ${pkg}@${target}.`;
+
+const multiMajorBodyLines = [
+  `The recommended process is to update one major version at a time, in small steps.`,
+  `See ${STEPWISE_DOC_URL}`,
+];
+
+function warnMultiMajorMigration(
+  targetPackage: string,
+  installed: string,
+  target: string
+): void {
+  output.warn({
+    title: multiMajorHeader(targetPackage, installed, target),
+    bodyLines: [
+      ...multiMajorBodyLines,
+      `Pass --accept-multi-major-update or set ${ACCEPT_MULTI_MAJOR_UPDATE_ENV}=true to silence this warning.`,
+    ],
+  });
+}
+
+// Returns the chosen target version. Caller replaces `targetVersion` with it.
+// At least one of `latestInCurrent`/`latestInNext` must be present.
+async function promptMultiMajorMigration(args: {
+  targetPackage: string;
+  installed: string;
+  target: string;
+  latestInCurrent: string | null;
+  latestInNext: string | null;
+}): Promise<string> {
+  const choices: { name: string; message: string }[] = [];
+  if (args.latestInCurrent) {
+    choices.push({
+      name: args.latestInCurrent,
+      message: `Migrate to ${args.targetPackage}@${args.latestInCurrent} (latest in current major)`,
+    });
+  }
+  if (args.latestInNext) {
+    choices.push({
+      name: args.latestInNext,
+      message: `Migrate to ${args.targetPackage}@${args.latestInNext} (next major)`,
+    });
+  }
+  choices.push({
+    name: args.target,
+    message: `Migrate directly to ${args.targetPackage}@${args.target}`,
+  });
+  output.log({
+    title: multiMajorHeader(args.targetPackage, args.installed, args.target),
+    bodyLines: multiMajorBodyLines,
+  });
+  const { chosen } = await prompt<{ chosen: string }>({
+    type: 'select',
+    name: 'chosen',
+    message: 'How would you like to proceed?',
+    choices,
+  });
+  return chosen;
+}
+
+// Flag wins over env var; both default to off.
+function isMultiMajorUpdateAccepted(options: {
+  acceptMultiMajorUpdate?: boolean;
+}): boolean {
+  if (options.acceptMultiMajorUpdate === true) return true;
+  const env = process.env[ACCEPT_MULTI_MAJOR_UPDATE_ENV];
+  return env === 'true' || env === '1';
+}
+
+async function maybePromptOrWarnMultiMajorMigration(args: {
+  mode: 'first-party' | 'third-party' | 'all';
+  options: { acceptMultiMajorUpdate?: boolean };
+  positional: string | undefined;
+  targetPackage: string;
+  targetVersion: string;
+  installedNxVersion: string | null | undefined;
+  targetWasInferred: boolean;
+}): Promise<string> {
+  const { mode, options, targetPackage, targetWasInferred } = args;
+  let { targetVersion } = args;
+  if (mode === 'third-party') return targetVersion;
+  if (isMultiMajorUpdateAccepted(options)) return targetVersion;
+  if (!isNxEquivalentTarget(targetPackage, targetVersion)) return targetVersion;
+  // Bare-package-name positionals (e.g. `nx migrate nx`, `nx migrate
+  // @nx/workspace`) leave `targetVersion` as the literal `'latest'` because
+  // `parseTargetPackageAndVersion` only resolves dist-tags via the registry
+  // when they appear standalone or after `@`. Resolve here so the remaining
+  // semver gates (and the subsequent walk) see a concrete version.
+  if (DIST_TAGS.includes(targetVersion as DistTag)) {
+    try {
+      targetVersion = await normalizeVersionWithTagCheck(
+        targetPackage,
+        targetVersion
+      );
+    } catch {
+      return targetVersion;
+    }
+  }
+  if (!valid(targetVersion) || lt(targetVersion, '14.0.0-beta.0')) {
+    return targetVersion;
+  }
+  const installed = args.installedNxVersion ?? getInstalledNxVersion();
+  if (!installed || !valid(installed)) return targetVersion;
+  // Legacy-era installs are out of scope for the multi-major check.
+  if (lt(installed, '14.0.0-beta.0')) return targetVersion;
+  const installedMajor = major(installed);
+  if (major(targetVersion) - installedMajor < 2) return targetVersion;
+
+  const interactive = !!process.stdin.isTTY && !isCI();
+  if (interactive && targetWasInferred) {
+    const [latestInCurrent, latestInNext] = await Promise.all([
+      resolveLatestStableInMajor(targetPackage, installedMajor),
+      resolveLatestStableInMajor(targetPackage, installedMajor + 1),
+    ]);
+    const showCurrent =
+      latestInCurrent && gt(latestInCurrent, installed)
+        ? latestInCurrent
+        : null;
+    if (showCurrent || latestInNext) {
+      return promptMultiMajorMigration({
+        targetPackage,
+        installed,
+        target: targetVersion,
+        latestInCurrent: showCurrent,
+        latestInNext,
+      });
+    }
+  }
+  warnMultiMajorMigration(targetPackage, installed, targetVersion);
+  return targetVersion;
+}
+
 export async function resolveMode(
   mode: 'first-party' | 'third-party' | 'all' | undefined,
   targetPackage: string,
@@ -1003,9 +1160,11 @@ async function versionOverrides(overrides: string, param: string) {
   return res;
 }
 
-async function parseTargetPackageAndVersion(
-  args: string
-): Promise<{ targetPackage: string; targetVersion: string }> {
+async function parseTargetPackageAndVersion(args: string): Promise<{
+  targetPackage: string;
+  targetVersion: string;
+  wasInferred: boolean;
+}> {
   if (!args) {
     throw new Error(
       `Provide the correct package name and version. E.g., my-package@9.0.0.`
@@ -1015,52 +1174,48 @@ async function parseTargetPackageAndVersion(
   if (args.indexOf('@') > -1) {
     const i = args.lastIndexOf('@');
     if (i === 0) {
-      const targetPackage = args.trim();
-      const targetVersion = 'latest';
-      return { targetPackage, targetVersion };
-    } else {
-      const targetPackage = args.substring(0, i);
-      const maybeVersion = args.substring(i + 1);
-      if (!targetPackage || !maybeVersion) {
-        throw new Error(
-          `Provide the correct package name and version. E.g., my-package@9.0.0.`
-        );
-      }
-      const targetVersion = await normalizeVersionWithTagCheck(
-        targetPackage,
-        maybeVersion
-      );
-      return { targetPackage, targetVersion };
-    }
-  } else {
-    if (
-      args === 'latest' ||
-      args === 'next' ||
-      args === 'canary' ||
-      valid(args) ||
-      args.match(/^\d+(?:\.\d+)?(?:\.\d+)?$/)
-    ) {
-      // Passing `nx` here may seem wrong, but nx and @nrwl/workspace are synced in version.
-      // We could duplicate the ternary below, but its not necessary since they are equivalent
-      // on the registry
-      const targetVersion = await normalizeVersionWithTagCheck('nx', args);
-      const targetPackage =
-        !['latest', 'next', 'canary'].includes(args) &&
-        lt(targetVersion, '14.0.0-beta.0')
-          ? '@nrwl/workspace'
-          : 'nx';
-
       return {
-        targetPackage,
-        targetVersion,
-      };
-    } else {
-      return {
-        targetPackage: args,
+        targetPackage: args.trim(),
         targetVersion: 'latest',
+        wasInferred: true,
       };
     }
+    const targetPackage = args.substring(0, i);
+    const maybeVersion = args.substring(i + 1);
+    if (!targetPackage || !maybeVersion) {
+      throw new Error(
+        `Provide the correct package name and version. E.g., my-package@9.0.0.`
+      );
+    }
+    const targetVersion = await normalizeVersionWithTagCheck(
+      targetPackage,
+      maybeVersion
+    );
+    return {
+      targetPackage,
+      targetVersion,
+      wasInferred: DIST_TAGS.includes(maybeVersion as DistTag),
+    };
   }
+
+  if (
+    DIST_TAGS.includes(args as DistTag) ||
+    valid(args) ||
+    args.match(/^\d+(?:\.\d+)?(?:\.\d+)?$/)
+  ) {
+    // Passing `nx` here may seem wrong, but nx and @nrwl/workspace are synced in version.
+    // We could duplicate the ternary below, but its not necessary since they are equivalent
+    // on the registry
+    const targetVersion = await normalizeVersionWithTagCheck('nx', args);
+    const wasInferred = DIST_TAGS.includes(args as DistTag);
+    const targetPackage =
+      !wasInferred && lt(targetVersion, '14.0.0-beta.0')
+        ? '@nrwl/workspace'
+        : 'nx';
+    return { targetPackage, targetVersion, wasInferred };
+  }
+
+  return { targetPackage: args, targetVersion: 'latest', wasInferred: true };
 }
 
 type GenerateMigrations = {
@@ -1126,10 +1281,12 @@ export async function parseMigrationsOptions(options: {
   const positional = options['packageAndVersion'] as string | undefined;
   let targetPackage: string | undefined;
   let targetVersion: string | undefined;
+  let targetWasInferred = !positional;
   if (positional) {
     const parsed = await parseTargetPackageAndVersion(positional);
     targetPackage = normalizeSlashes(parsed.targetPackage);
     targetVersion = parsed.targetVersion;
+    targetWasInferred = parsed.wasInferred;
   }
 
   // Resolve mode before defaulting target so the default can depend on the
@@ -1181,6 +1338,19 @@ export async function parseMigrationsOptions(options: {
       `Error: '--mode' requires the target to be ${validTargets}${eraNote}. Got '${targetPackage}@${targetVersion}'.`
     );
   }
+
+  // Spec §10: prompt or warn when crossing more than one major boundary.
+  // Each major's metadata may have pruned migrations from much-older versions,
+  // so jumping multiple majors at once can silently skip migrations.
+  targetVersion = await maybePromptOrWarnMultiMajorMigration({
+    mode,
+    options,
+    positional,
+    targetPackage: targetPackage!,
+    targetVersion: targetVersion!,
+    installedNxVersion,
+    targetWasInferred,
+  });
 
   if (mode === 'third-party') {
     const canonical = resolveCanonicalNxPackage(targetVersion!);
