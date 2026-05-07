@@ -3,10 +3,8 @@ import {
   getDependencyVersionFromPackageJson,
   installPackagesTask,
   output,
-  readNxJson,
   Tree,
   updateJson,
-  updateNxJson,
 } from '@nx/devkit';
 import { esbuildVersion } from '@nx/js/src/utils/versions';
 import { intersects } from 'semver';
@@ -19,10 +17,7 @@ import {
   viteVersion,
 } from '../../../utils/versions';
 import { InitGeneratorSchema } from '../schema';
-import {
-  getInstalledViteMajorVersion,
-  getVitestDependenciesVersionsToInstall,
-} from '../../../utils/version-utils';
+import { getInstalledViteMajorVersion } from '../../../utils/version-utils';
 
 function hasIncompatibleInstalledEsbuild(host: Tree): boolean {
   const installedEsbuildVersion = getDependencyVersionFromPackageJson(
@@ -47,8 +42,6 @@ export async function checkDependenciesInstalled(
   host: Tree,
   schema: InitGeneratorSchema
 ) {
-  const { vitest } = await getVitestDependenciesVersionsToInstall(host);
-
   // Determine which vite version to install:
   // 1. Explicit flags take priority (useViteV5/V6/V7)
   // 2. If vite is already installed, keep the matching major version
@@ -93,8 +86,6 @@ export async function checkDependenciesInstalled(
       '@nx/vite': nxVersion,
       '@nx/web': nxVersion,
       vite: viteVersionToInstall,
-      vitest: vitest,
-      '@vitest/ui': vitest,
       jiti: jitiVersion,
     },
     undefined,
