@@ -3,7 +3,6 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  getDependencyVersionFromPackageJson,
   joinPathFragments,
   offsetFromRoot,
   ProjectConfiguration,
@@ -17,7 +16,6 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { coerce, major } from 'semver';
 import { warnCypressExecutorGenerating } from '../../utils/deprecation';
 import {
   getInstalledCypressMajorVersion,
@@ -44,20 +42,6 @@ export async function componentConfigurationGeneratorInternal(
   options: CypressComponentConfigurationSchema
 ) {
   assertNotUsingTsSolutionSetup(tree, 'cypress', 'component-configuration');
-
-  // Cypress CT does not support Vite 8 yet (@cypress/vite-dev-server
-  // peer dep is ^5.0.0 || ^6.0.0 || ^7.0.0).
-  const viteVersion = getDependencyVersionFromPackageJson(tree, 'vite');
-  if (viteVersion) {
-    const viteMajor = major(coerce(viteVersion));
-    if (viteMajor >= 8) {
-      throw new Error(
-        `Cypress component testing does not yet support Vite ${viteMajor}. ` +
-          `Downgrade to Vite 7 or earlier to use Cypress component testing. ` +
-          `See: https://github.com/cypress-io/cypress/issues/33078`
-      );
-    }
-  }
 
   const tasks: GeneratorCallback[] = [];
   const opts = normalizeOptions(tree, options);
