@@ -22,6 +22,7 @@ import { PackageJson } from '../../utils/package-json';
 import * as packageMgrUtils from '../../utils/package-manager';
 
 import {
+  filterDowngradedUpdates,
   formatCommandFailure,
   isNpmPeerDepsError,
   Migrator,
@@ -2745,6 +2746,124 @@ describe('Migration', () => {
       ['8.12.0', '@nrwl/workspace'],
     ] as const)('should resolve %s to %s', (version, expected) => {
       expect(resolveCanonicalNxPackage(version)).toBe(expected);
+    });
+  });
+
+  describe('filterDowngradedUpdates', () => {
+    it('should drop updates whose proposed version is lower than resolved', () => {
+      const result = filterDowngradedUpdates(
+        {
+          react: { version: '18.3.1', addToPackageJson: 'dependencies' },
+        },
+        createPackageJson({ dependencies: { react: '19.0.0' } }),
+        () => '19.0.0'
+      );
+
+      expect(result).toEqual({});
+    });
+
+    it('should keep updates whose proposed version is strictly newer than resolved', () => {
+      const update = {
+        version: '20.0.0',
+        addToPackageJson: 'dependencies' as const,
+      };
+      const result = filterDowngradedUpdates(
+        { react: update },
+        createPackageJson({ dependencies: { react: '19.0.0' } }),
+        () => '19.0.0'
+      );
+
+      expect(result).toEqual({ react: update });
+    });
+
+    it('should keep updates when the package is not installed', () => {
+      const update = {
+        version: '1.0.0',
+        addToPackageJson: 'dependencies' as const,
+      };
+      const result = filterDowngradedUpdates(
+        { 'new-pkg': update },
+        createPackageJson({}),
+        () => null
+      );
+
+      expect(result).toEqual({ 'new-pkg': update });
+    });
+
+    it('should keep narrowing rewrites where the specifier covers a lower version than resolved', () => {
+      // user has `vite: ^6.0.0`, resolved 6.4.2. Cascade proposes `6.4.2` (exact).
+      // Specifier floor is 6.0.0 < resolved 6.4.2 → narrowing → keep.
+      const update = {
+        version: '6.4.2',
+        addToPackageJson: 'devDependencies' as const,
+      };
+      const result = filterDowngradedUpdates(
+        { vite: update },
+        createPackageJson({ devDependencies: { vite: '^6.0.0' } }),
+        () => '6.4.2'
+      );
+
+      expect(result).toEqual({ vite: update });
+    });
+
+    it('should drop no-op rewrites where the specifier is already exact at resolved', () => {
+      // user has `react: 19.0.0` exact, resolved 19.0.0. Cascade proposes `19.0.0`.
+      // Specifier floor is 19.0.0 === resolved 19.0.0 → no-op → drop.
+      const result = filterDowngradedUpdates(
+        {
+          react: { version: '19.0.0', addToPackageJson: 'dependencies' },
+        },
+        createPackageJson({ dependencies: { react: '19.0.0' } }),
+        () => '19.0.0'
+      );
+
+      expect(result).toEqual({});
+    });
+
+    it('should drop equal-version rewrites when the package has no specifier in package.json', () => {
+      // No specifier means there is nothing to narrow; the equal-version write
+      // would just add a new entry that the user never declared. Drop.
+      const result = filterDowngradedUpdates(
+        {
+          'orphan-dep': {
+            version: '1.0.0',
+            addToPackageJson: 'dependencies',
+          },
+        },
+        createPackageJson({}),
+        () => '1.0.0'
+      );
+
+      expect(result).toEqual({});
+    });
+
+    it('should drop downgrades even when the specifier covers the proposed version', () => {
+      // user has `vite: ^6.0.0`, resolved 6.4.2. Cascade proposes `6.2.0`.
+      // Specifier floor 6.0.0 covers 6.2.0, but resolved 6.4.2 > proposed.
+      // Real installed would regress → drop.
+      const result = filterDowngradedUpdates(
+        {
+          vite: { version: '6.2.0', addToPackageJson: 'devDependencies' },
+        },
+        createPackageJson({ devDependencies: { vite: '^6.0.0' } }),
+        () => '6.4.2'
+      );
+
+      expect(result).toEqual({});
+    });
+
+    it('should compare via normalizeVersion so prerelease tags do not block bumps', () => {
+      const update = {
+        version: '1.0.0',
+        addToPackageJson: 'dependencies' as const,
+      };
+      const result = filterDowngradedUpdates(
+        { pkg: update },
+        createPackageJson({ dependencies: { pkg: '1.0.0-beta-next.2' } }),
+        () => '1.0.0-beta-next.2'
+      );
+
+      expect(result).toEqual({ pkg: update });
     });
   });
 

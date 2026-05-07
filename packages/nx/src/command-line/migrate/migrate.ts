@@ -13,6 +13,7 @@ import {
   lt,
   lte,
   major,
+  minVersion,
   parse,
   satisfies,
   valid,
@@ -1668,6 +1669,51 @@ async function createMigrationsFile(
   await writeFormattedJsonFile(join(root, 'migrations.json'), { migrations });
 }
 
+/**
+ * Drop entries from `packageUpdates` that would either downgrade the package
+ * (move resolved version backward) or rewrite a specifier that is already
+ * exactly pinned to the resolved version (a no-op write). Keep genuine
+ * upgrades and narrowing rewrites where the user's range covers a version
+ * lower than what's resolved (the migrator's traditional "lock to recommended
+ * exact pin" behavior).
+ */
+export function filterDowngradedUpdates(
+  packageUpdates: Record<string, PackageUpdate>,
+  packageJson: PackageJson | null,
+  getInstalledVersion: (packageName: string) => string | null
+): Record<string, PackageUpdate> {
+  const result: Record<string, PackageUpdate> = {};
+  for (const [name, update] of Object.entries(packageUpdates)) {
+    const resolved = getInstalledVersion(name);
+    if (!resolved) {
+      // Not installed; let downstream logic decide whether to add it.
+      result[name] = update;
+      continue;
+    }
+    const proposed = normalizeVersion(update.version);
+    const resolvedNorm = normalizeVersion(resolved);
+    if (gt(proposed, resolvedNorm)) {
+      result[name] = update;
+      continue;
+    }
+    if (lt(proposed, resolvedNorm)) {
+      continue;
+    }
+    // proposed === resolved: keep when narrowing a looser specifier to an
+    // exact pin; drop when the specifier is already exact at resolved.
+    const specifier =
+      packageJson?.dependencies?.[name] ?? packageJson?.devDependencies?.[name];
+    if (!specifier) {
+      continue;
+    }
+    const floor = minVersion(specifier);
+    if (floor && lt(floor.version, resolvedNorm)) {
+      result[name] = update;
+    }
+  }
+  return result;
+}
+
 async function updatePackageJson(
   root: string,
   updatedPackages: Record<string, PackageUpdate>
@@ -1897,10 +1943,13 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       );
     }
 
+    const installedPackageVersions =
+      createInstalledPackageVersionsResolver(root);
+
     const migrator = new Migrator({
       packageJson: originalPackageJson,
       nxInstallation: originalNxJson.installation,
-      getInstalledPackageVersion: createInstalledPackageVersionsResolver(root),
+      getInstalledPackageVersion: installedPackageVersions,
       fetch,
       from: fromOverrides,
       to: opts.to,
@@ -1913,15 +1962,28 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     const { migrations, packageUpdates, minVersionWithSkippedUpdates } =
       await migrator.migrate(walkedTargetPackage, opts.targetVersion);
 
-    const wrotePackageJson = await updatePackageJson(root, packageUpdates);
+    // The cascade collects packageJsonUpdates entries against the cascade
+    // root's installed version, but inner per-package pins are only gated
+    // against the in-flight cascade tally — not against each inner package's
+    // installed version. A from-zero walk (e.g. `--mode=third-party`) can
+    // surface a stale historical pin that would write a lower version than
+    // the user already has. Drop those before writing; nx migrate is
+    // forward-only, never a downgrade.
+    const writableUpdates = filterDowngradedUpdates(
+      packageUpdates,
+      originalPackageJson,
+      installedPackageVersions
+    );
+
+    const wrotePackageJson = await updatePackageJson(root, writableUpdates);
     const wroteNxJsonInstallation = await updateInstallationDetails(
       root,
-      packageUpdates
+      writableUpdates
     );
 
     if (migrations.length > 0) {
       await createMigrationsFile(root, [
-        ...addSplitConfigurationMigrationIfAvailable(from, packageUpdates),
+        ...addSplitConfigurationMigrationIfAvailable(from, writableUpdates),
         ...migrations,
       ] as any);
     }
