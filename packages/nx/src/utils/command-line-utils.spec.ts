@@ -4,27 +4,36 @@ import { withEnvironmentVariables as withEnvironment } from '../internal-testing
 jest.mock('../project-graph/file-utils');
 
 describe('splitArgs', () => {
-  let originalBase: string;
-  let originalHead: string;
-  let originalParallel: string;
+  const blockedEnvVars = [
+    'NX_BASE',
+    'NX_HEAD',
+    'NX_PARALLEL',
+    'NX_SKIP_NX_CACHE',
+    'NX_DISABLE_NX_CACHE',
+    'NX_SKIP_REMOTE_CACHE',
+    'NX_DISABLE_REMOTE_CACHE',
+  ];
+  let envVarsToRestore: Record<string, string | undefined> = {};
+
+  function blockParentEnvVar(key: string) {
+    envVarsToRestore[key] = process.env[key];
+    delete process.env[key];
+  }
 
   beforeEach(() => {
-    originalBase = process.env.NX_BASE;
-    originalHead = process.env.NX_HEAD;
-    originalParallel = process.env.NX_PARALLEL;
-
-    delete process.env.NX_BASE;
-    delete process.env.NX_HEAD;
-    delete process.env.NX_PARALLEL;
+    envVarsToRestore = {};
+    for (const key of blockedEnvVars) {
+      blockParentEnvVar(key);
+    }
   });
 
   afterEach(() => {
-    process.env.NX_BASE = originalBase;
-    process.env.NX_HEAD = originalHead;
-    if (originalParallel === undefined) {
-      delete process.env.NX_PARALLEL;
-    } else {
-      process.env.NX_PARALLEL = originalParallel;
+    for (const [key, value] of Object.entries(envVarsToRestore)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
     }
   });
 
