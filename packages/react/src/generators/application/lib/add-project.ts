@@ -12,7 +12,6 @@ import {
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { maybeJs } from '../../../utils/maybe-js';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
-import { warnWebpackExecutorGenerating } from '@nx/webpack/src/utils/deprecation';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
@@ -26,7 +25,14 @@ export function addProject(host: Tree, options: NormalizedSchema) {
 
   if (options.bundler === 'webpack') {
     if (!hasWebpackPlugin(host) || !options.addPlugin) {
-      warnWebpackExecutorGenerating();
+      // Mirrors warnWebpackExecutorGenerating from @nx/webpack/src/utils/deprecation.
+      // Inlined to avoid a cross-package deep import; @nx/webpack's package
+      // exports field doesn't expose internal `src/...` paths, so the import
+      // works at compile time (via tsconfig project refs) but fails at runtime
+      // in published packages.
+      logger.warn(
+        'Generating targets that use the deprecated `@nx/webpack:webpack` and `@nx/webpack:dev-server` executors. These executors will be removed in Nx v24. Run `nx g @nx/webpack:convert-to-inferred` next to migrate these targets to the `@nx/webpack/plugin` inferred plugin and prevent future generators from emitting executor targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
+      );
       project.targets = {
         build: createBuildTarget(options),
         serve: createServeTarget(options),
