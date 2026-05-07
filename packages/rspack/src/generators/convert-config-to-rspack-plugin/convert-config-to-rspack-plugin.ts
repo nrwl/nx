@@ -105,11 +105,7 @@ export async function convertConfigToRspackPluginGenerator(
                 ${
                   withReactConfig
                     ? `new NxReactRspackPlugin(${withReactConfig.getText()})`
-                    : `new NxReactRspackPlugin({
-                  // Uncomment this line if you don't want to use SVGR
-                  // See: https://react-svgr.com/
-                  // svgr: false
-                  })`
+                    : `new NxReactRspackPlugin()`
                 },
                 // NOTE: useLegacyNxPlugin ensures that the non-standard Rspack configuration file previously used still works.
                 // To remove its usage, move options such as "plugins" into this file as standard Rspack configuration options.
