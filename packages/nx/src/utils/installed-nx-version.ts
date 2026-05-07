@@ -47,8 +47,8 @@ export function getInstalledNxVersion(): string | null {
 /**
  * Return the package names declared in the installed `nx` package's
  * `ng-update.packageGroup` (or `nx-migrations.packageGroup`), plus `'nx'`
- * itself. Returns an empty set when nx isn't installed or the metadata is
- * missing — callers should handle that as "no first-party set known".
+ * itself. Returns a set containing only `'nx'` when nx isn't installed or
+ * the metadata is missing.
  */
 export function getInstalledNxPackageGroup(): Set<string> {
   const set = new Set<string>(['nx']);

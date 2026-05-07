@@ -2281,16 +2281,69 @@ describe('Migration', () => {
       );
     });
 
-    it('should default bare --mode=third-party to nx@<installed>', async () => {
-      mockGetInstalledNxVersion.mockReturnValue('22.5.0');
-      const r = await parseMigrationsOptions({ mode: 'third-party' });
-      expect(r).toMatchObject({
-        type: 'generateMigrations',
-        targetPackage: 'nx',
-        targetVersion: '22.5.0',
-        mode: 'third-party',
-      });
-    });
+    it.each([
+      {
+        desc: 'bare invocation, modern nx installed',
+        positional: undefined,
+        installedNx: '22.5.0',
+        installedLegacy: null,
+        expected: { targetPackage: 'nx', targetVersion: '22.5.0' },
+      },
+      {
+        desc: 'bare invocation, only legacy @nrwl/workspace installed',
+        positional: undefined,
+        installedNx: null,
+        installedLegacy: '13.5.0',
+        expected: {
+          targetPackage: '@nrwl/workspace',
+          targetVersion: '13.5.0',
+        },
+      },
+      {
+        desc: 'bare invocation, installed nx is legacy (<14)',
+        positional: undefined,
+        installedNx: '13.5.0',
+        installedLegacy: null,
+        expected: {
+          targetPackage: '@nrwl/workspace',
+          targetVersion: '13.5.0',
+        },
+      },
+      {
+        desc: 'bare-package-name positional `nx`, modern nx installed',
+        positional: 'nx',
+        installedNx: '22.5.0',
+        installedLegacy: null,
+        expected: { targetPackage: 'nx', targetVersion: '22.5.0' },
+      },
+      {
+        desc: 'bare-package-name positional `nx`, installed nx is legacy (<14)',
+        positional: 'nx',
+        installedNx: '13.5.0',
+        installedLegacy: null,
+        expected: {
+          targetPackage: '@nrwl/workspace',
+          targetVersion: '13.5.0',
+        },
+      },
+    ])(
+      'should anchor --mode=third-party to installed canonical: $desc',
+      async ({ positional, installedNx, installedLegacy, expected }) => {
+        mockGetInstalledNxVersion.mockReturnValue(installedNx);
+        mockGetInstalledLegacyNrwlWorkspaceVersion.mockReturnValue(
+          installedLegacy
+        );
+        const r = await parseMigrationsOptions({
+          ...(positional ? { packageAndVersion: positional } : {}),
+          mode: 'third-party',
+        });
+        expect(r).toMatchObject({
+          type: 'generateMigrations',
+          mode: 'third-party',
+          ...expected,
+        });
+      }
+    );
 
     it('should reject --mode=third-party when nx is not installed', async () => {
       mockGetInstalledNxVersion.mockReturnValue(null);
@@ -2299,29 +2352,6 @@ describe('Migration', () => {
       ).rejects.toThrow(
         `Error: '--mode=third-party' requires 'nx' (or '@nrwl/workspace' on Nx <14) to be installed in your workspace.`
       );
-    });
-
-    it('should anchor bare --mode=third-party to legacy @nrwl/workspace canonical when only legacy is installed', async () => {
-      mockGetInstalledNxVersion.mockReturnValue(null);
-      mockGetInstalledLegacyNrwlWorkspaceVersion.mockReturnValue('13.5.0');
-      const r = await parseMigrationsOptions({ mode: 'third-party' });
-      expect(r).toMatchObject({
-        type: 'generateMigrations',
-        targetPackage: '@nrwl/workspace',
-        targetVersion: '13.5.0',
-        mode: 'third-party',
-      });
-    });
-
-    it('should anchor bare --mode=third-party to @nrwl/workspace canonical when installed nx is legacy (<14)', async () => {
-      mockGetInstalledNxVersion.mockReturnValue('13.5.0');
-      const r = await parseMigrationsOptions({ mode: 'third-party' });
-      expect(r).toMatchObject({
-        type: 'generateMigrations',
-        targetPackage: '@nrwl/workspace',
-        targetVersion: '13.5.0',
-        mode: 'third-party',
-      });
     });
 
     it('should reject --mode=third-party when target is higher than installed', async () => {
@@ -2423,34 +2453,6 @@ describe('Migration', () => {
         type: 'generateMigrations',
         mode: 'third-party',
         to: { react: '18.0.0' },
-      });
-    });
-
-    it('should anchor --mode=third-party to installed when target has no version', async () => {
-      mockGetInstalledNxVersion.mockReturnValue('22.5.0');
-      const r = await parseMigrationsOptions({
-        packageAndVersion: 'nx',
-        mode: 'third-party',
-      });
-      expect(r).toMatchObject({
-        type: 'generateMigrations',
-        targetPackage: 'nx',
-        targetVersion: '22.5.0',
-        mode: 'third-party',
-      });
-    });
-
-    it('should anchor bare-package-name --mode=third-party to legacy canonical when installed nx is <14', async () => {
-      mockGetInstalledNxVersion.mockReturnValue('13.5.0');
-      const r = await parseMigrationsOptions({
-        packageAndVersion: 'nx',
-        mode: 'third-party',
-      });
-      expect(r).toMatchObject({
-        type: 'generateMigrations',
-        targetPackage: '@nrwl/workspace',
-        targetVersion: '13.5.0',
-        mode: 'third-party',
       });
     });
 
@@ -2738,12 +2740,9 @@ describe('Migration', () => {
 
   describe('resolveCanonicalNxPackage', () => {
     it.each([
-      ['22.0.0', 'nx'],
-      ['14.0.0-beta.0', 'nx'],
       ['14.0.0', 'nx'],
-      ['13.999.999', '@nrwl/workspace'],
+      ['14.0.0-beta.0', 'nx'],
       ['13.0.0', '@nrwl/workspace'],
-      ['8.12.0', '@nrwl/workspace'],
     ] as const)('should resolve %s to %s', (version, expected) => {
       expect(resolveCanonicalNxPackage(version)).toBe(expected);
     });

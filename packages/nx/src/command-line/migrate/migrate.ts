@@ -1023,10 +1023,8 @@ function isMultiMajorUpdateAccepted(options: {
 async function maybePromptOrWarnMultiMajorMigration(args: {
   mode: 'first-party' | 'third-party' | 'all';
   options: { acceptMultiMajorUpdate?: boolean };
-  positional: string | undefined;
   targetPackage: string;
   targetVersion: string;
-  installedNxVersion: string | null | undefined;
   targetWasInferred: boolean;
 }): Promise<string> {
   const { mode, options, targetPackage, targetWasInferred } = args;
@@ -1052,7 +1050,7 @@ async function maybePromptOrWarnMultiMajorMigration(args: {
   if (!valid(targetVersion) || lt(targetVersion, '14.0.0-beta.0')) {
     return targetVersion;
   }
-  const installed = args.installedNxVersion ?? getInstalledNxVersion();
+  const installed = getInstalledNxVersion();
   if (!installed || !valid(installed)) return targetVersion;
   // Legacy-era installs are out of scope for the multi-major check.
   if (lt(installed, '14.0.0-beta.0')) return targetVersion;
@@ -1322,9 +1320,8 @@ export async function parseMigrationsOptions(options: {
     targetPackage = installed.canonical;
     targetVersion = installed.version;
   } else if (!positional) {
-    const parsed = await parseTargetPackageAndVersion('latest');
-    targetPackage = normalizeSlashes(parsed.targetPackage);
-    targetVersion = parsed.targetVersion;
+    targetPackage = 'nx';
+    targetVersion = await normalizeVersionWithTagCheck('nx', 'latest');
   }
 
   if (options.mode && !isNxEquivalentTarget(targetPackage!, targetVersion!)) {
@@ -1345,10 +1342,8 @@ export async function parseMigrationsOptions(options: {
   targetVersion = await maybePromptOrWarnMultiMajorMigration({
     mode,
     options,
-    positional,
     targetPackage: targetPackage!,
     targetVersion: targetVersion!,
-    installedNxVersion,
     targetWasInferred,
   });
 
