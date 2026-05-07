@@ -1,6 +1,5 @@
 import type ChangelogRenderer from '../../../../release/changelog-renderer';
 import { loadTsFile } from '../../../plugins/js/utils/register';
-import { getRootTsConfigPath } from '../../../plugins/js/utils/typescript';
 import { interpolate } from '../../../tasks-runner/utils';
 import { workspaceRoot } from '../../../utils/workspace-root';
 
@@ -19,9 +18,6 @@ export function resolveChangelogRenderer(
     }
   );
 
-  const rootTsconfigPath = getRootTsConfigPath();
-  const r = rootTsconfigPath
-    ? loadTsFile<any>(interpolatedChangelogRendererPath, rootTsconfigPath)
-    : require(interpolatedChangelogRendererPath);
+  const r = loadTsFile<any>(interpolatedChangelogRendererPath);
   return r.default || r;
 }

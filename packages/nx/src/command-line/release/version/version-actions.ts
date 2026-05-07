@@ -8,7 +8,6 @@ import type {
 } from '../../../config/project-graph';
 import type { Tree } from '../../../generators/tree';
 import { loadTsFile } from '../../../plugins/js/utils/register';
-import { getRootTsConfigPath } from '../../../plugins/js/utils/typescript';
 import { interpolate } from '../../../tasks-runner/utils';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { DEFAULT_VERSION_ACTIONS_PATH } from '../config/config';
@@ -139,11 +138,9 @@ export async function resolveVersionActionsForProject(
     VersionActionsClass = cachedData.VersionActionsClass;
     afterAllProjectsVersioned = cachedData.afterAllProjectsVersioned;
   } else {
-    const rootTsconfigPath = getRootTsConfigPath();
-    const loaded =
-      versionActionsPath.endsWith('.ts') && rootTsconfigPath
-        ? loadTsFile<any>(versionActionsPath, rootTsconfigPath)
-        : require(versionActionsPath);
+    const loaded = versionActionsPath.endsWith('.ts')
+      ? loadTsFile<any>(versionActionsPath)
+      : require(versionActionsPath);
     VersionActionsClass = loaded.default ?? loaded;
     if (!VersionActionsClass) {
       throw new Error(

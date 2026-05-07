@@ -4,7 +4,7 @@ import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
 import { workspaceRoot } from '../../../utils/workspace-root';
-import { readTsConfigWithoutFiles } from './typescript';
+import { getRootTsConfigPath, readTsConfigWithoutFiles } from './typescript';
 
 const swcNodeInstalled = packageIsInstalled('@swc-node/register');
 const tsNodeInstalled = packageIsInstalled('ts-node/register');
@@ -94,8 +94,9 @@ const disableTsConfigPaths: boolean =
  * the root of their project and the fundamentals will still work (but
  * workspace path mapping will not, for example).
  *
- * Behavior change in v23: when native Node.js type stripping is preferred (the
- * new default on Node 22.6+), this function is a noop and no longer registers
+ * Behavior change in v23: when native Node.js type stripping is preferred
+ * (the new default - unflagged on Node 23+, requires `--experimental-strip-types`
+ * on Node 22.6-22.x), this function is a noop and no longer registers
  * `tsconfig-paths`. Callers relying on the side effect of path mapping should
  * switch to `loadTsFile`, which registers swc/ts-node + tsconfig-paths on
  * demand when the strip path fails. To restore the legacy behavior, set
@@ -125,8 +126,6 @@ export function registerTsProject(
     return () => {};
   }
 
-  const tsConfigPath = configFilename ? join(path, configFilename) : path;
-
   // Native strip handles .ts files directly - skip transpiler AND tsconfig-paths
   // registration. Workspaces using package manager workspaces don't need path
   // mapping. Callers needing fallback for unsupported syntax (enum, runtime
@@ -135,6 +134,12 @@ export function registerTsProject(
   if (preferNodeStripTypes) {
     return () => {};
   }
+
+  // Legacy path: prior to v23, Nx always registered swc-node/ts-node and
+  // tsconfig-paths to load .ts config files. v23+ prefers Node's built-in
+  // type stripping; this branch only runs when the user opted out via
+  // NX_PREFER_NODE_STRIP_TYPES=false or when strip is unavailable.
+  const tsConfigPath = configFilename ? join(path, configFilename) : path;
   const { compilerOptions, tsConfigRaw } = readCompilerOptions(tsConfigPath);
 
   const cleanupFunctions: ((...args: unknown[]) => unknown)[] = [
@@ -391,9 +396,10 @@ export function isNativeTypeStripError(err: unknown): boolean {
 /**
  * Load a TypeScript file via `require()`.
  *
- * On Node 22.6+ with native strip preferred (default), the file loads directly
- * with no swc/ts-node and no tsconfig-paths registration. If Node throws on
- * an unsupported construct (enum, runtime namespace, legacy decorators, etc.),
+ * On Node 23+ with native strip preferred (the default; on Node 22.6-22.x it
+ * requires `--experimental-strip-types`), the file loads directly with no
+ * swc/ts-node and no tsconfig-paths registration. If Node throws on an
+ * unsupported construct (enum, runtime namespace, legacy decorators, etc.),
  * this registers swc/ts-node + tsconfig-paths and retries - matching the
  * pre-v23 registration. Set `NX_DISABLE_TSCONFIG_PATHS=true` to skip
  * tsconfig-paths even on fallback (useful when relying on package manager
@@ -402,27 +408,36 @@ export function isNativeTypeStripError(err: unknown): boolean {
  * When native strip is opted out (`NX_PREFER_NODE_STRIP_TYPES=false` or
  * unsupported Node), uses the legacy `registerTsProject` path.
  *
- * Throws ERR_REQUIRE_ESM unchanged so callers can dispatch to dynamic
- * `import()` for ESM modules.
+ * `tsConfigPath` is only consulted on the swc/ts-node fallback path (for
+ * compilerOptions) and for tsconfig-paths registration. Native strip ignores
+ * it. When omitted, defaults to the workspace root tsconfig.
+ *
+ * Note on ESM: Node 22.12+ supports `require()` of synchronous ESM by default,
+ * so most ESM `.ts` configs load via this function without issue. Modules
+ * that use top-level await throw `ERR_REQUIRE_ASYNC_MODULE` and must be
+ * loaded with dynamic `import()` instead. `ERR_REQUIRE_ESM` (legacy code)
+ * bubbles unchanged for the rare case it still fires, so async-aware callers
+ * can dispatch to `import()`.
  *
  * @returns the loaded module
  */
 export function loadTsFile<T = any>(
   filePath: string,
-  tsConfigPath: string
+  tsConfigPath?: string
 ): T {
-  if (!tsConfigPath) {
-    throw new Error(
-      `${NX_PREFIX} loadTsFile requires a tsConfigPath. Got "${tsConfigPath}" while loading ${filePath}.`
-    );
-  }
+  const resolvedTsConfigPath = tsConfigPath ?? getRootTsConfigPath();
 
   if (isInvokedByTsx) {
     return require(filePath) as T;
   }
 
   if (!preferNodeStripTypes) {
-    const cleanup = registerTsProject(tsConfigPath);
+    if (!resolvedTsConfigPath) {
+      throw new Error(
+        `${NX_PREFIX} loadTsFile could not find a workspace tsconfig while loading ${filePath} on the swc/ts-node path. Pass an explicit tsConfigPath or add a tsconfig.base.json/tsconfig.json at the workspace root.`
+      );
+    }
+    const cleanup = registerTsProject(resolvedTsConfigPath);
     try {
       return require(filePath) as T;
     } finally {
@@ -448,13 +463,21 @@ export function loadTsFile<T = any>(
 
     logNativeStripFallback(filePath, err);
 
+    if (!resolvedTsConfigPath) {
+      throw new Error(
+        `${NX_PREFIX} ${filePath} requires the swc/ts-node fallback but no workspace tsconfig was found. Pass an explicit tsConfigPath or add a tsconfig.base.json/tsconfig.json at the workspace root.`
+      );
+    }
+
     // Strip failed. Register swc/ts-node + tsconfig-paths (the legacy
     // pre-v23 setup) and retry.
     const cleanups: Array<() => void> = [];
     if (!disableTsConfigPaths) {
-      cleanups.push(registerTsConfigPaths(tsConfigPath));
+      cleanups.push(registerTsConfigPaths(resolvedTsConfigPath));
     }
-    const { compilerOptions, tsConfigRaw } = readCompilerOptions(tsConfigPath);
+    const { compilerOptions, tsConfigRaw } = readCompilerOptions(
+      resolvedTsConfigPath
+    );
     cleanups.push(registerTranspiler(compilerOptions, tsConfigRaw));
 
     try {

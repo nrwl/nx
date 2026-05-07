@@ -9,7 +9,6 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
-import { getRootTsConfigPath } from '@nx/js';
 import { loadTsFile } from '@nx/js/src/internal';
 import * as path from 'path';
 import { valid } from 'semver';
@@ -619,11 +618,6 @@ export function checkIfIdentifierIsFunction(
   }
 
   // Fallback to require()
-  const rootTsconfigPath = filePath.endsWith('.ts')
-    ? getRootTsConfigPath()
-    : null;
-  const m = rootTsconfigPath
-    ? loadTsFile(filePath, rootTsconfigPath)
-    : require(filePath);
+  const m = filePath.endsWith('.ts') ? loadTsFile(filePath) : require(filePath);
   return identifier in m && typeof m[identifier] === 'function';
 }

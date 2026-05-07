@@ -26,7 +26,6 @@ import {
   nxVersion,
   prettierVersion,
   supportedTypescriptVersions,
-  swcHelpersVersion,
   tsLibVersion,
   typescriptVersion,
 } from '../../utils/versions';
@@ -151,11 +150,12 @@ export async function initGeneratorInternal(
 
   const devDependencies: Record<string, string> = {
     '@nx/js': nxVersion,
-    // Used by SWC-compiled outputs at runtime. Kept even though `@swc-node/register`
-    // is no longer installed by default - native Node.js type stripping handles
-    // .ts config loading on Node 22.6+ without a transpiler.
-    '@swc/helpers': swcHelpersVersion,
   };
+  // SWC-related deps (@swc-node/register, @swc/core, @swc/helpers) are no longer
+  // installed by init. Native Node.js type stripping handles .ts config loading
+  // on Node 23+ (or 22.6+ with --experimental-strip-types). Bundler-specific
+  // generators (@nx/js:lib --bundler=swc, etc.) install @swc/helpers when an
+  // SWC-compiled output actually needs it.
 
   if (!schema.js && !schema.keepExistingVersions) {
     const installedTsVersion = await getInstalledTypescriptVersion(tree);

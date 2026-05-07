@@ -9,7 +9,9 @@ import {
 
 const TEN_MINS_MS = 600_000;
 
-describe('native Node.js TypeScript support (NX_PREFER_NODE_STRIP_TYPES)', () => {
+// Native Node.js TypeScript support is on by default in v23 - no env var needed.
+// NX_PREFER_NODE_STRIP_TYPES=false is the opt-out.
+describe('native Node.js TypeScript support', () => {
   beforeAll(() => {
     newProject({
       name: uniq('strip-types'),
@@ -36,11 +38,7 @@ describe('native Node.js TypeScript support (NX_PREFER_NODE_STRIP_TYPES)', () =>
 
         checkFilesExist(`${lib}/jest.config.cts`);
 
-        // Run nx report with NX_PREFER_NODE_STRIP_TYPES=true
-        // This forces the use of Node.js native type stripping if available
-        const result = runCLI('report', {
-          env: { NX_PREFER_NODE_STRIP_TYPES: 'true' },
-        });
+        const result = runCLI('report');
 
         expect(result).toContain('nx');
       },
@@ -57,10 +55,7 @@ describe('native Node.js TypeScript support (NX_PREFER_NODE_STRIP_TYPES)', () =>
 
         checkFilesExist(`apps/${app}-e2e/cypress.config.ts`);
 
-        // Run nx report with NX_PREFER_NODE_STRIP_TYPES=true
-        const result = runCLI('report', {
-          env: { NX_PREFER_NODE_STRIP_TYPES: 'true' },
-        });
+        const result = runCLI('report');
 
         expect(result).toContain('nx');
       },
@@ -80,10 +75,7 @@ describe('native Node.js TypeScript support (NX_PREFER_NODE_STRIP_TYPES)', () =>
 
         checkFilesExist(`${app}/playwright.config.ts`);
 
-        // Run nx report with NX_PREFER_NODE_STRIP_TYPES=true
-        const result = runCLI('report', {
-          env: { NX_PREFER_NODE_STRIP_TYPES: 'true' },
-        });
+        const result = runCLI('report');
 
         expect(result).toContain('nx');
       },
@@ -113,18 +105,13 @@ module.exports = { displayName: '${lib}', mode };
         // instead of .nx/workspace-data/d/daemon.log. redirectStderr merges stderr
         // into the captured result.
         const result = runCLI('report', {
-          env: {
-            NX_PREFER_NODE_STRIP_TYPES: 'true',
-            NX_VERBOSE_LOGGING: 'true',
-          },
+          env: { NX_VERBOSE_LOGGING: 'true' },
           daemon: false,
           redirectStderr: true,
         });
 
         expect(result).toContain('nx');
-        expect(result).toContain(
-          'Native Node.js TypeScript stripping failed'
-        );
+        expect(result).toContain('Native Node.js TypeScript stripping failed');
       },
       TEN_MINS_MS
     );
