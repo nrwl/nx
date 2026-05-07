@@ -33,7 +33,11 @@ export async function handleImport<T = any>(
     if (e.code === 'ERR_REQUIRE_ESM') {
       return import(resolvedPath) as Promise<T>;
     }
-    if (e?.code === 'ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX') {
+    if (
+      e?.code === 'ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX' ||
+      e?.code === 'MODULE_NOT_FOUND' ||
+      e?.code === 'ERR_MODULE_NOT_FOUND'
+    ) {
       // Lazy-require to avoid pulling register/transpiler (and their
       // daemon/logger transitive deps) into module-eval-time graphs.
       const {

@@ -407,6 +407,17 @@ export function isNativeTypeStripError(err: unknown): boolean {
 }
 
 /**
+ * Module resolution failures - typically a tsconfig path alias that hasn't
+ * been registered yet, or a workspace lib not surfaced via package manager
+ * symlinks. CJS uses `MODULE_NOT_FOUND`, ESM uses `ERR_MODULE_NOT_FOUND`.
+ */
+function isModuleNotFoundError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const code = (err as { code?: string }).code;
+  return code === 'MODULE_NOT_FOUND' || code === 'ERR_MODULE_NOT_FOUND';
+}
+
+/**
  * Load a TypeScript file via `require()`.
  *
  * When the runtime exposes native TypeScript stripping
@@ -460,59 +471,87 @@ export function loadTsFile<T = any>(
   }
 
   // Native strip path: no registration up front. pnpm/npm/yarn workspaces
-  // resolve aliases without tsconfig-paths.
+  // resolve aliases without tsconfig-paths. On failure, lazy-register what
+  // the specific error code indicates is needed and retry:
+  //   - MODULE_NOT_FOUND -> register tsconfig-paths (alias resolution)
+  //   - ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX -> register swc/ts-node + tsconfig-paths
+  // Each kind of registration is attempted at most once, so a file that
+  // hits both errors recovers in at most three attempts.
+  let pathsRegistered = false;
+  let transpilerRegistered = false;
+  const cleanups: Array<() => void> = [];
+
   try {
-    return require(filePath) as T;
-  } catch (err) {
-    if (!isNativeTypeStripError(err)) {
-      throw err;
-    }
-
-    if (!swcNodeInstalled && !tsNodeInstalled) {
-      const original = err instanceof Error ? err.message : String(err);
-      throw new Error(
-        `${NX_PREFIX} ${filePath} uses TypeScript syntax that Node.js native type stripping doesn't support (${original}). Install @swc-node/register and @swc/core (or ts-node) to enable the swc/ts-node fallback, or rewrite the file to remove the unsupported construct.`
-      );
-    }
-
-    logNativeStripFallback(filePath, err);
-
-    if (!resolvedTsConfigPath) {
-      throw new Error(
-        `${NX_PREFIX} ${filePath} requires the swc/ts-node fallback but no workspace tsconfig was found. Pass an explicit tsConfigPath or add a tsconfig.base.json/tsconfig.json at the workspace root.`
-      );
-    }
-
-    // Strip failed. Register swc/ts-node + tsconfig-paths (the legacy
-    // pre-v23 setup) and retry.
-    const cleanups: Array<() => void> = [];
-    if (!disableTsConfigPaths) {
-      cleanups.push(registerTsConfigPaths(resolvedTsConfigPath));
-    }
-    const { compilerOptions, tsConfigRaw } =
-      readCompilerOptions(resolvedTsConfigPath);
-    cleanups.push(registerTranspiler(compilerOptions, tsConfigRaw));
-
-    try {
+    for (let attempt = 1; ; attempt++) {
       try {
-        delete require.cache[require.resolve(filePath)];
-      } catch {
-        // require.resolve may throw if the failed load never reached cache
+        if (attempt > 1) {
+          try {
+            delete require.cache[require.resolve(filePath)];
+          } catch {
+            // require.resolve may throw if the failed load never reached cache
+          }
+        }
+        return require(filePath) as T;
+      } catch (err) {
+        if (
+          isModuleNotFoundError(err) &&
+          !pathsRegistered &&
+          !disableTsConfigPaths &&
+          resolvedTsConfigPath
+        ) {
+          logFallback(
+            filePath,
+            err,
+            'Module not found; registering tsconfig-paths and retrying.'
+          );
+          cleanups.push(registerTsConfigPaths(resolvedTsConfigPath));
+          pathsRegistered = true;
+          continue;
+        }
+
+        if (isNativeTypeStripError(err) && !transpilerRegistered) {
+          if (!swcNodeInstalled && !tsNodeInstalled) {
+            const original = err instanceof Error ? err.message : String(err);
+            throw new Error(
+              `${NX_PREFIX} ${filePath} uses TypeScript syntax that Node.js native type stripping doesn't support (${original}). Install @swc-node/register and @swc/core (or ts-node) to enable the swc/ts-node fallback, or rewrite the file to remove the unsupported construct.`
+            );
+          }
+          if (!resolvedTsConfigPath) {
+            throw new Error(
+              `${NX_PREFIX} ${filePath} requires the swc/ts-node fallback but no workspace tsconfig was found. Pass an explicit tsConfigPath or add a tsconfig.base.json/tsconfig.json at the workspace root.`
+            );
+          }
+          logFallback(
+            filePath,
+            err,
+            'Native Node.js TypeScript stripping failed; falling back to swc/ts-node + tsconfig-paths.'
+          );
+          if (!pathsRegistered && !disableTsConfigPaths) {
+            cleanups.push(registerTsConfigPaths(resolvedTsConfigPath));
+            pathsRegistered = true;
+          }
+          const { compilerOptions, tsConfigRaw } =
+            readCompilerOptions(resolvedTsConfigPath);
+          cleanups.push(registerTranspiler(compilerOptions, tsConfigRaw));
+          transpilerRegistered = true;
+          continue;
+        }
+
+        throw err;
       }
-      return require(filePath) as T;
-    } finally {
-      for (const fn of cleanups) fn();
     }
+  } finally {
+    for (const fn of cleanups) fn();
   }
 }
 
-function logNativeStripFallback(filePath: string, err: unknown): void {
+function logFallback(filePath: string, err: unknown, summary: string): void {
   if (process.env.NX_VERBOSE_LOGGING !== 'true') {
     return;
   }
   const message = err instanceof Error ? err.message : String(err);
   logger.warn(
-    stripIndent(`${NX_PREFIX} Native Node.js TypeScript stripping failed for ${filePath}. Falling back to swc/ts-node + tsconfig-paths.
+    stripIndent(`${NX_PREFIX} ${summary} (${filePath})
   ${message}`)
   );
 }
