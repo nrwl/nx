@@ -30,6 +30,11 @@ export class ParallelRunningTasks implements RunningTask {
     [];
   private outputCallbacks: Array<(terminalOutput: string) => void> = [];
 
+  // Memoized exit so late getResults()/onExit() callers don't hang.
+  private exited = false;
+  private exitCode = 0;
+  private exitTerminalOutput = '';
+
   constructor(
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
@@ -55,6 +60,9 @@ export class ParallelRunningTasks implements RunningTask {
   }
 
   async getResults(): Promise<{ code: number; terminalOutput: string }> {
+    if (this.exited) {
+      return { code: this.exitCode, terminalOutput: this.exitTerminalOutput };
+    }
     return new Promise((res) => {
       this.onExit((code, terminalOutput) => {
         res({ code, terminalOutput });
@@ -67,6 +75,10 @@ export class ParallelRunningTasks implements RunningTask {
   }
 
   onExit(cb: (code: number, terminalOutput: string) => void): void {
+    if (this.exited) {
+      cb(this.exitCode, this.exitTerminalOutput);
+      return;
+    }
     this.exitCallbacks.push(cb);
   }
 
@@ -78,6 +90,16 @@ export class ParallelRunningTasks implements RunningTask {
 
   async kill(signal?: NodeJS.Signals): Promise<void> {
     await Promise.allSettled(this.childProcesses.map((p) => p.kill(signal)));
+  }
+
+  private emitExit(code: number, terminalOutput: string): void {
+    if (this.exited) return;
+    this.exited = true;
+    this.exitCode = code;
+    this.exitTerminalOutput = terminalOutput;
+    for (const cb of this.exitCallbacks) {
+      cb(code, terminalOutput);
+    }
   }
 
   private async run() {
@@ -115,9 +137,7 @@ export class ParallelRunningTasks implements RunningTask {
         }
       }
 
-      for (const cb of this.exitCallbacks) {
-        cb(code, terminalOutput);
-      }
+      this.emitExit(code, terminalOutput);
     } else {
       const runningProcesses = new Set<RunningNodeProcess>();
       let hasFailure = false;
@@ -163,13 +183,9 @@ export class ParallelRunningTasks implements RunningTask {
           process.stderr.write(output);
         }
 
-        for (const cb of this.exitCallbacks) {
-          cb(1, terminalOutput);
-        }
+        this.emitExit(1, terminalOutput);
       } else {
-        for (const cb of this.exitCallbacks) {
-          cb(0, terminalOutput);
-        }
+        this.emitExit(0, terminalOutput);
       }
     }
   }
@@ -197,6 +213,10 @@ export class SeriallyRunningTasks implements RunningTask {
   private error: any;
   private outputCallbacks: Array<(terminalOutput: string) => void> = [];
 
+  // Memoized exit so late getResults()/onExit() callers don't hang.
+  private exited = false;
+  private exitTerminalOutput = '';
+
   constructor(
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
@@ -210,13 +230,29 @@ export class SeriallyRunningTasks implements RunningTask {
       .finally(() => {
         const terminalOutput = this.terminalOutputChunks.join('');
         this.terminalOutputChunks = [];
-        for (const cb of this.exitCallbacks) {
-          cb(this.code, terminalOutput);
-        }
+        this.emitExit(terminalOutput);
       });
   }
 
+  private emitExit(terminalOutput: string): void {
+    if (this.exited) return;
+    this.exited = true;
+    this.exitTerminalOutput = terminalOutput;
+    for (const cb of this.exitCallbacks) {
+      cb(this.code, terminalOutput);
+    }
+  }
+
   getResults(): Promise<{ code: number; terminalOutput: string }> {
+    if (this.exited) {
+      if (this.error) {
+        return Promise.reject(this.error);
+      }
+      return Promise.resolve({
+        code: this.code,
+        terminalOutput: this.exitTerminalOutput,
+      });
+    }
     return new Promise((res, rej) => {
       this.onExit((code, terminalOutput) => {
         if (this.error) {
@@ -229,6 +265,10 @@ export class SeriallyRunningTasks implements RunningTask {
   }
 
   onExit(cb: (code: number, terminalOutput: string) => void): void {
+    if (this.exited) {
+      cb(this.code, this.exitTerminalOutput);
+      return;
+    }
     this.exitCallbacks.push(cb);
   }
 
@@ -350,6 +390,11 @@ class RunningNodeProcess implements RunningTask {
   private closedPromise: Promise<void>;
   public command: string;
 
+  // Memoized exit so late getResults()/onExit() callers don't hang.
+  private exited = false;
+  private exitCode = 0;
+  private exitTerminalOutput = '';
+
   constructor(
     commandConfig: RunCommandsCommandOptions,
     color: boolean,
@@ -392,6 +437,12 @@ class RunningNodeProcess implements RunningTask {
   }
 
   getResults(): Promise<{ code: number; terminalOutput: string }> {
+    if (this.exited) {
+      return Promise.resolve({
+        code: this.exitCode,
+        terminalOutput: this.exitTerminalOutput,
+      });
+    }
     return new Promise((res) => {
       this.onExit((code, terminalOutput) => {
         res({ code, terminalOutput });
@@ -404,11 +455,25 @@ class RunningNodeProcess implements RunningTask {
   }
 
   onExit(cb: (code: number, terminalOutput: string) => void): void {
+    if (this.exited) {
+      cb(this.exitCode, this.exitTerminalOutput);
+      return;
+    }
     this.exitCallbacks.push(cb);
   }
 
   send(message: Serializable): void {
     this.childProcess.send(message);
+  }
+
+  private emitExit(code: number, terminalOutput: string): void {
+    if (this.exited) return;
+    this.exited = true;
+    this.exitCode = code;
+    this.exitTerminalOutput = terminalOutput;
+    for (const cb of this.exitCallbacks) {
+      cb(code, terminalOutput);
+    }
   }
 
   kill(signal?: NodeJS.Signals): Promise<void> {
@@ -509,21 +574,22 @@ class RunningNodeProcess implements RunningTask {
       const terminalOutput = this.terminalOutputChunks.join('');
       this.terminalOutputChunks = [];
       removeProcessListeners();
-      for (const cb of this.exitCallbacks) {
-        cb(1, terminalOutput);
-      }
+      this.emitExit(1, terminalOutput);
     });
     this.childProcess.on('exit', (code, signal) => {
       if (code === null) {
         code = signalToCode(signal);
       }
       removeProcessListeners();
+      const terminalOutput = this.terminalOutputChunks.join('');
+      this.terminalOutputChunks = [];
       if (!this.readyWhenStatus.length || isReady(this.readyWhenStatus)) {
-        const terminalOutput = this.terminalOutputChunks.join('');
-        this.terminalOutputChunks = [];
-        for (const cb of this.exitCallbacks) {
-          cb(code, terminalOutput);
-        }
+        this.emitExit(code, terminalOutput);
+      } else if (code !== 0) {
+        // Process crashed before readyWhen matched; surface the failure so
+        // awaiters unblock. A clean exit (code 0) is left as-is — a parallel
+        // companion command may still produce the readyWhen output.
+        this.emitExit(code, terminalOutput);
       }
     });
     // Terminate any task processes on exit (sync, last resort).
