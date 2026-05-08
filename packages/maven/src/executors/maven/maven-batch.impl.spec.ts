@@ -175,19 +175,34 @@ describe('Maven Batch Executor', () => {
     expect(mavenBatchExecutor).toBeDefined();
   });
 
-  it('should mark unyielded peers as skipped when a sibling fails', async () => {
+  it('should relay skipped status emitted by the runner without modification', async () => {
     const inputs: Record<string, MavenExecutorSchema> = {
       'project-a:build': { phase: 'compile' },
       'project-b:build': { phase: 'compile' },
     };
 
+    // The Kotlin runner now emits an explicit `skipped` NX_RESULT for peers
+    // that didn't run because a sibling failed. The TS side just relays.
     spawnMock.mockReturnValue(
       createFakeChild({
         stderrLines: [
           'NX_RESULT:' +
             JSON.stringify({
               task: 'project-a:build',
-              result: { success: false, terminalOutput: 'compile error' },
+              result: {
+                success: false,
+                status: 'failure',
+                terminalOutput: 'compile error',
+              },
+            }),
+          'NX_RESULT:' +
+            JSON.stringify({
+              task: 'project-b:build',
+              result: {
+                success: false,
+                status: 'skipped',
+                terminalOutput: '',
+              },
             }),
         ],
         exitCode: 1,
@@ -208,23 +223,29 @@ describe('Maven Batch Executor', () => {
         task: 'project-a:build',
         result: expect.objectContaining({
           success: false,
+          status: 'failure',
           terminalOutput: 'compile error',
         }),
       },
       {
         task: 'project-b:build',
-        result: { success: false, status: 'skipped', terminalOutput: '' },
+        result: expect.objectContaining({
+          success: false,
+          status: 'skipped',
+          terminalOutput: '',
+        }),
       },
     ]);
   });
 
-  it('should mark all peers as failed (not skipped) when no sibling reported success/failure', async () => {
+  it('should backfill unreported tasks as failure when the runner crashes', async () => {
     const inputs: Record<string, MavenExecutorSchema> = {
       'project-a:build': { phase: 'compile' },
       'project-b:build': { phase: 'compile' },
     };
 
-    // No NX_RESULT lines emitted; runner just exits non-zero (e.g. JAR crash).
+    // Runner exits non-zero with no NX_RESULT lines (e.g. JAR crash before
+    // reporting anything). The TS side backfills both peers as failure.
     spawnMock.mockReturnValue(
       createFakeChild({ stderrLines: [], exitCode: 1 })
     );
@@ -238,56 +259,11 @@ describe('Maven Batch Executor', () => {
       )
     );
 
-    // Both peers should be marked as failure (not skipped) — there was no
-    // observed sibling failure to attribute the skip to.
     expect(results).toHaveLength(2);
     for (const r of results) {
       expect(r.result.success).toBe(false);
       expect(r.result.status).toBeUndefined();
     }
-  });
-
-  it('should not yield fallbacks for unyielded tasks on a clean exit (lets Nx retry)', async () => {
-    const inputs: Record<string, MavenExecutorSchema> = {
-      'project-a:build': { phase: 'compile' },
-      'project-b:build': { phase: 'compile' },
-    };
-
-    // Only project-a is yielded; project-b's result is missing (e.g.
-    // interleaved stderr swallowed its NX_RESULT line). The runner exits 0,
-    // so Nx's batch retry should pick up the missing task — we must NOT yield
-    // a fallback for it here.
-    spawnMock.mockReturnValue(
-      createFakeChild({
-        stderrLines: [
-          'NX_RESULT:' +
-            JSON.stringify({
-              task: 'project-a:build',
-              result: { success: true, terminalOutput: 'a built' },
-            }),
-        ],
-        exitCode: 0,
-      })
-    );
-
-    const results = await collect(
-      mavenBatchExecutor(
-        taskGraph,
-        inputs,
-        { __overrides_unparsed__: [] },
-        context
-      )
-    );
-
-    expect(results).toEqual([
-      {
-        task: 'project-a:build',
-        result: expect.objectContaining({
-          success: true,
-          terminalOutput: 'a built',
-        }),
-      },
-    ]);
   });
 
   it('should pass through successful results without modification', async () => {

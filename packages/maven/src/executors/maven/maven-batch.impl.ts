@@ -146,45 +146,30 @@ export default async function* mavenBatchExecutor(
 
   const taskIds = Object.keys(taskGraph.tasks);
   const yielded = new Set<string>();
-  // Whether any task in this batch reported a failure. If so, unyielded peers
-  // are treated as `skipped` (they never got to run) rather than `failure`.
-  let sawFailure = false;
-
-  function skippedOrFailedResult(failureMessage: string): TaskResult {
-    if (sawFailure) {
-      return { success: false, status: 'skipped', terminalOutput: '' };
-    }
-    return { success: false, terminalOutput: failureMessage };
-  }
 
   try {
-    // Yield results as they stream in
+    // The Kotlin batch runner is the source of truth for per-task outcomes.
+    // It emits NX_RESULT for every requested task — success, failure, or
+    // skipped (peer failed before this task could run). We just relay.
     for await (const line of rl) {
       if (line.startsWith('NX_RESULT:')) {
         try {
           const jsonStr = line.slice('NX_RESULT:'.length);
           const data = JSON.parse(jsonStr);
-          const result = {
+          const result: TaskResult = {
             success: data.result.success ?? false,
             terminalOutput: data.result.terminalOutput ?? '',
             startTime: data.result.startTime,
             endTime: data.result.endTime,
+            ...(data.result.status ? { status: data.result.status } : {}),
           };
 
-          // Collect terminal output from failed tasks
           if (!result.success && result.terminalOutput) {
             failedTaskOutputs.push(result.terminalOutput);
           }
 
           yielded.add(data.task);
-          if (!result.success) {
-            sawFailure = true;
-          }
-
-          yield {
-            task: data.task,
-            result,
-          };
+          yield { task: data.task, result };
         } catch (e) {
           console.error('[Maven Batch] Failed to parse result line:', line, e);
         }
@@ -208,7 +193,8 @@ export default async function* mavenBatchExecutor(
     );
 
     if (exitCode !== 0) {
-      // If process exited unexpectedly, print captured stderr
+      // The runner exited unexpectedly without reporting on every requested
+      // task. Print captured stderr and any failed task outputs, then throw.
       if (stderrLines.length > 0) {
         console.error(
           `[Maven Batch] Process exited with code ${exitCode}. Stderr output:`
@@ -217,7 +203,6 @@ export default async function* mavenBatchExecutor(
           console.error(line);
         }
       }
-      // Print failed task outputs to stderr so they appear in error.message
       if (failedTaskOutputs.length > 0) {
         console.error('\n[Maven Batch] Failed task outputs:');
         for (const output of failedTaskOutputs) {
@@ -227,23 +212,19 @@ export default async function* mavenBatchExecutor(
       throw new Error(`Maven batch runner exited with code ${exitCode}`);
     }
   } catch (e) {
+    // The runner crashed before reporting on every task. Backfill the missing
+    // ones with a generic failure so Nx doesn't hang waiting for results.
     for (const taskId of taskIds) {
       if (!yielded.has(taskId)) {
         yielded.add(taskId);
         yield {
           task: taskId,
-          result: skippedOrFailedResult((e as Error).toString()),
+          result: {
+            success: false,
+            terminalOutput: (e as Error).toString(),
+          },
         };
       }
     }
-    return;
   }
-
-  // On a clean exit, do NOT yield fallbacks for unyielded tasks. The Maven
-  // batch runner's stderr can interleave concurrent task output such that one
-  // task's NX_RESULT line gets captured inside another task's terminalOutput
-  // string, leaving the inner task unyielded here. Nx's task-orchestrator
-  // retries any tasks in the batch that didn't get a result, which gives those
-  // tasks a real second chance to run instead of permanently marking them as
-  // failed.
 }

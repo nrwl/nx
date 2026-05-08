@@ -21,7 +21,15 @@ data class TaskResult(
     val success: Boolean,
     val terminalOutput: String,
     val startTime: Long = 0,
-    val endTime: Long = 0
+    val endTime: Long = 0,
+    /**
+     * Authoritative outcome consumed by Nx. Defaults to "success" or "failure"
+     * based on `success` for back-compat with older consumers; explicitly set
+     * to "skipped" to indicate a task that did not run (e.g. a peer task in
+     * the same batch failed and Maven aborted before this task could be
+     * scheduled).
+     */
+    val status: String = if (success) "success" else "failure"
 )
 
 /**
