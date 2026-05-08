@@ -50,9 +50,9 @@ function updateProductionFileSet(tree: Tree) {
 }
 
 function addJestTargetDefaults(tree: Tree, presetExt: JestPresetExtension) {
-  const nxJson = readNxJson(tree);
-  const existing = findExistingJestDefault(nxJson?.targetDefaults);
-  const productionFileSet = nxJson?.namedInputs?.production;
+  const nxJson = readNxJson(tree) ?? {};
+  const existing = findExistingJestDefault(nxJson.targetDefaults);
+  const productionFileSet = nxJson.namedInputs?.production;
 
   const patch: Partial<TargetConfiguration> = {};
   if (existing?.cache === undefined) patch.cache = true;
@@ -77,7 +77,8 @@ function addJestTargetDefaults(tree: Tree, presetExt: JestPresetExtension) {
   }
 
   if (Object.keys(patch).length > 0) {
-    upsertTargetDefault(tree, { executor: '@nx/jest:jest', ...patch });
+    upsertTargetDefault(tree, nxJson, { executor: '@nx/jest:jest', ...patch });
+    updateNxJson(tree, nxJson);
   }
 }
 

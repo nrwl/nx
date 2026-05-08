@@ -523,9 +523,9 @@ export function addStorybookToNamedInputs(tree: Tree) {
 }
 
 export function addStorybookToTargetDefaults(tree: Tree, setCache = true) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
 
-  const existing = normalizeTargetDefaults(nxJson?.targetDefaults).find(
+  const existing = normalizeTargetDefaults(nxJson.targetDefaults).find(
     (e) =>
       e.target === 'build-storybook' &&
       e.executor === undefined &&
@@ -537,7 +537,7 @@ export function addStorybookToTargetDefaults(tree: Tree, setCache = true) {
     ? [...existing.inputs]
     : [
         'default',
-        nxJson?.namedInputs && 'production' in nxJson.namedInputs
+        nxJson.namedInputs && 'production' in nxJson.namedInputs
           ? '^production'
           : '^default',
       ];
@@ -554,11 +554,12 @@ export function addStorybookToTargetDefaults(tree: Tree, setCache = true) {
     inputs.push('{projectRoot}/tsconfig.storybook.json');
   }
 
-  upsertTargetDefault(tree, {
+  upsertTargetDefault(tree, nxJson, {
     target: 'build-storybook',
     ...(setCache && existing?.cache === undefined ? { cache: true } : {}),
     inputs,
   });
+  updateNxJson(tree, nxJson);
 }
 
 export function createProjectStorybookDir(

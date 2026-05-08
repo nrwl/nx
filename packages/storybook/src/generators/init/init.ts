@@ -44,7 +44,7 @@ function checkDependenciesInstalled(
 }
 
 function addCacheableOperation(tree: Tree) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
   const cacheableOperations: string[] | null =
     nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations;
 
@@ -54,8 +54,8 @@ function addCacheableOperation(tree: Tree) {
     );
   }
 
+  upsertTargetDefault(tree, nxJson, { target: 'build-storybook', cache: true });
   updateNxJson(tree, nxJson);
-  upsertTargetDefault(tree, { target: 'build-storybook', cache: true });
 }
 
 function moveToDevDependencies(tree: Tree): GeneratorCallback {

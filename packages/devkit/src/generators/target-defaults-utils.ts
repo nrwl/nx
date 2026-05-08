@@ -10,7 +10,7 @@ import {
   updateNxJson,
 } from 'nx/src/devkit-exports';
 import { findMatchingConfigFiles } from 'nx/src/devkit-internals';
-import { gte, major, valid } from 'semver';
+import { major, valid } from 'semver';
 import { NX_VERSION } from '../utils/package-json';
 import {
   downgradeTargetDefaults,
@@ -29,38 +29,21 @@ const SUPPORTS_ARRAY_TARGET_DEFAULTS =
   !valid(NX_VERSION) || NX_VERSION === '0.0.1' || major(NX_VERSION) >= 23;
 
 /**
- * Upsert a `targetDefaults` entry. Always writes the array shape — if the
- * underlying value still uses the legacy record shape, it is upgraded in
- * place. Finds a matching entry by the `(target, executor, projects,
- * source)` tuple and merges the given config into it, or appends a new
- * entry. The entry must set at least one of `target` / `executor`.
+ * Upsert a `targetDefaults` entry on the provided `nxJson`. Mutates
+ * `nxJson` in place and returns it so the caller can chain or batch
+ * other edits before persisting via `updateNxJson` exactly once.
  *
- * Two call shapes:
- * - `(tree, options)` — reads/writes nx.json itself (single edit).
- * - `(tree, nxJson, options)` — mutates the provided `nxJson` in place
- *   and returns it so the caller can batch other edits before calling
- *   `updateNxJson` exactly once.
+ * Always writes the array shape — if the underlying value still uses
+ * the legacy record shape, it is upgraded in place. Finds a matching
+ * entry by the `(target, executor, projects, source)` tuple and merges
+ * the given config into it, or appends a new entry. The entry must set
+ * at least one of `target` / `executor`.
  */
-export function upsertTargetDefault(
-  tree: Tree,
-  options: TargetDefaultEntry
-): void;
 export function upsertTargetDefault(
   tree: Tree,
   nxJson: NxJsonConfiguration,
   options: TargetDefaultEntry
-): NxJsonConfiguration;
-export function upsertTargetDefault(
-  tree: Tree,
-  arg2: TargetDefaultEntry | NxJsonConfiguration,
-  arg3?: TargetDefaultEntry
-): NxJsonConfiguration | void {
-  const callerProvidedNxJson = arg3 !== undefined;
-  const options = (callerProvidedNxJson ? arg3 : arg2) as TargetDefaultEntry;
-  const nxJson = (
-    callerProvidedNxJson ? arg2 : (readNxJson(tree) ?? {})
-  ) as NxJsonConfiguration;
-
+): NxJsonConfiguration {
   if (options.target === undefined && options.executor === undefined) {
     throw new Error(
       'upsertTargetDefault requires at least one of `target` or `executor` to be set.'
@@ -104,10 +87,7 @@ export function upsertTargetDefault(
     SUPPORTS_ARRAY_TARGET_DEFAULTS || Array.isArray(originalShape)
       ? entries
       : downgradeTargetDefaults(entries);
-  if (callerProvidedNxJson) {
-    return nxJson;
-  }
-  updateNxJson(tree, nxJson);
+  return nxJson;
 }
 
 /**
@@ -179,7 +159,7 @@ export function addBuildTargetDefaults(
   if (entries.some((e) => e.executor === executorName)) {
     return;
   }
-  upsertTargetDefault(tree, {
+  upsertTargetDefault(tree, nxJson, {
     executor: executorName,
     cache: true,
     dependsOn: [`^${buildTargetName}`],
@@ -190,6 +170,7 @@ export function addBuildTargetDefaults(
       ...extraInputs,
     ],
   });
+  updateNxJson(tree, nxJson);
 }
 
 export async function addE2eCiTargetDefaults(
@@ -255,5 +236,6 @@ export async function addE2eCiTargetDefaults(
   if (!dependsOn.includes(buildTarget)) {
     dependsOn.push(buildTarget);
   }
-  upsertTargetDefault(tree, { target: ciTargetNameGlob, dependsOn });
+  upsertTargetDefault(tree, nxJson, { target: ciTargetNameGlob, dependsOn });
+  updateNxJson(tree, nxJson);
 }

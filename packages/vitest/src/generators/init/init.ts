@@ -56,7 +56,7 @@ export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
 }
 
 export function updateNxJsonSettings(tree: Tree) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
 
   const productionFileSet = nxJson.namedInputs?.production;
   if (productionFileSet) {
@@ -72,8 +72,6 @@ export function updateNxJsonSettings(tree: Tree) {
     typeof p === 'string' ? p === '@nx/vitest' : p.plugin === '@nx/vitest'
   );
 
-  updateNxJson(tree, nxJson);
-
   if (!hasPlugin) {
     const existing = normalizeTargetDefaults(nxJson.targetDefaults).find(
       (e) =>
@@ -82,7 +80,7 @@ export function updateNxJsonSettings(tree: Tree) {
         e.projects === undefined &&
         e.source === undefined
     );
-    upsertTargetDefault(tree, {
+    upsertTargetDefault(tree, nxJson, {
       executor: '@nx/vitest:test',
       cache: existing?.cache ?? true,
       inputs: existing?.inputs ?? [
@@ -91,6 +89,8 @@ export function updateNxJsonSettings(tree: Tree) {
       ],
     });
   }
+
+  updateNxJson(tree, nxJson);
 }
 
 export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {

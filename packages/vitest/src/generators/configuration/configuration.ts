@@ -15,6 +15,7 @@ import {
   type TargetDefaults,
   Tree,
   updateJson,
+  updateNxJson,
 } from '@nx/devkit';
 import { upsertTargetDefault } from '@nx/devkit/internal';
 import { initGenerator as jsInitGenerator } from '@nx/js';
@@ -245,13 +246,14 @@ getTestBed().initTestEnvironment(
   if (isTsSolutionSetup) {
     // in the TS solution setup, the test target depends on the build outputs
     // so we need to setup the task pipeline accordingly
-    const nxJson = readNxJson(tree);
+    const nxJson = readNxJson(tree) ?? {};
     const testTarget = schema.testTarget ?? 'test';
-    const existing = findTestDefault(nxJson?.targetDefaults, testTarget);
+    const existing = findTestDefault(nxJson.targetDefaults, testTarget);
     const dependsOn = Array.from(
       new Set([...(existing?.dependsOn ?? []), '^build'])
     );
-    upsertTargetDefault(tree, { target: testTarget, dependsOn });
+    upsertTargetDefault(tree, nxJson, { target: testTarget, dependsOn });
+    updateNxJson(tree, nxJson);
   }
 
   const devDependencies = await getCoverageProviderDependency(

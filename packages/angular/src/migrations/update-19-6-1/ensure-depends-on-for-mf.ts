@@ -1,4 +1,4 @@
-import { formatFiles, readNxJson, type Tree } from '@nx/devkit';
+import { formatFiles, readNxJson, type Tree, updateNxJson } from '@nx/devkit';
 import {
   forEachExecutorOptions,
   upsertTargetDefault,
@@ -32,17 +32,17 @@ export default async function (tree: Tree) {
     return;
   }
 
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
   const nxMFDevRemotesEnvVar = 'NX_MF_DEV_REMOTES';
   const webpackExecutor = '@nx/angular:webpack-browser';
   const defaultInputs = [
-    ...(nxJson?.namedInputs && 'production' in nxJson.namedInputs
+    ...(nxJson.namedInputs && 'production' in nxJson.namedInputs
       ? ['production', '^production']
       : ['default', '^default']),
     { env: nxMFDevRemotesEnvVar },
   ];
 
-  const existing = normalizeTargetDefaults(nxJson?.targetDefaults).find(
+  const existing = normalizeTargetDefaults(nxJson.targetDefaults).find(
     (e) =>
       e.executor === webpackExecutor &&
       e.target === undefined &&
@@ -51,7 +51,7 @@ export default async function (tree: Tree) {
   );
 
   if (!existing) {
-    upsertTargetDefault(tree, {
+    upsertTargetDefault(tree, nxJson, {
       executor: webpackExecutor,
       cache: true,
       inputs: defaultInputs,
@@ -70,12 +70,13 @@ export default async function (tree: Tree) {
       inputs.push({ env: nxMFDevRemotesEnvVar });
     }
 
-    upsertTargetDefault(tree, {
+    upsertTargetDefault(tree, nxJson, {
       executor: webpackExecutor,
       ...(existing.cache !== undefined ? { cache: existing.cache } : {}),
       inputs,
       dependsOn,
     });
   }
+  updateNxJson(tree, nxJson);
   await formatFiles(tree);
 }

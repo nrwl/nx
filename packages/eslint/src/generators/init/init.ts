@@ -47,10 +47,10 @@ function updateProductionFileset(tree: Tree, format: 'mjs' | 'cjs' = 'mjs') {
 }
 
 function addTargetDefaults(tree: Tree, format: 'mjs' | 'cjs') {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
   // `@nx/eslint:lint` is an executor identifier — match defaults keyed on
   // the executor, not on a target named that string.
-  const existing = findTargetDefault(nxJson?.targetDefaults, {
+  const existing = findTargetDefault(nxJson.targetDefaults, {
     executor: '@nx/eslint:lint',
   });
   const patch: Partial<TargetConfiguration> = {};
@@ -66,7 +66,11 @@ function addTargetDefaults(tree: Tree, format: 'mjs' | 'cjs') {
     ];
   }
   if (Object.keys(patch).length > 0) {
-    upsertTargetDefault(tree, { executor: '@nx/eslint:lint', ...patch });
+    upsertTargetDefault(tree, nxJson, {
+      executor: '@nx/eslint:lint',
+      ...patch,
+    });
+    updateNxJson(tree, nxJson);
   }
 }
 

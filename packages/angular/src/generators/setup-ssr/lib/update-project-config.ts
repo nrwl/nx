@@ -12,6 +12,7 @@ import {
   logger,
   readNxJson,
   readProjectConfiguration,
+  updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { upsertTargetDefault } from '@nx/devkit/internal';
@@ -149,7 +150,7 @@ export function updateProjectConfigForBrowserBuilder(
 
   updateProjectConfiguration(tree, options.project, projectConfig);
 
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
   if (
     nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations &&
     !nxJson.tasksRunnerOptions.default.options.cacheableOperations.includes(
@@ -162,8 +163,9 @@ export function updateProjectConfigForBrowserBuilder(
   }
   const existing = findServerDefault(nxJson.targetDefaults);
   if (!existing || existing.cache === undefined) {
-    upsertTargetDefault(tree, { target: 'server', cache: true });
+    upsertTargetDefault(tree, nxJson, { target: 'server', cache: true });
   }
+  updateNxJson(tree, nxJson);
 }
 
 function findServerDefault(

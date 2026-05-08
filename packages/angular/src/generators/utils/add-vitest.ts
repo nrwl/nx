@@ -9,6 +9,7 @@ import {
   readProjectConfiguration,
   type Tree,
   updateJson,
+  updateNxJson,
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
@@ -56,8 +57,8 @@ export async function addVitestAngular(
   project.targets.test = { executor, options: { watch: false } };
   updateProjectConfiguration(tree, options.name, project);
 
-  const nxJson = readNxJson(tree);
-  const existing = normalizeTargetDefaults(nxJson?.targetDefaults).find(
+  const nxJson = readNxJson(tree) ?? {};
+  const existing = normalizeTargetDefaults(nxJson.targetDefaults).find(
     (entry) =>
       entry.executor === executor &&
       entry.target === undefined &&
@@ -65,14 +66,15 @@ export async function addVitestAngular(
       entry.source === undefined
   );
   if (!existing) {
-    upsertTargetDefault(tree, {
+    upsertTargetDefault(tree, nxJson, {
       executor,
       cache: true,
       inputs:
-        nxJson?.namedInputs && 'production' in nxJson.namedInputs
+        nxJson.namedInputs && 'production' in nxJson.namedInputs
           ? ['default', '^production']
           : ['default', '^default'],
     });
+    updateNxJson(tree, nxJson);
   }
 
   configureTypeScriptForVitest(tree, options.projectRoot);

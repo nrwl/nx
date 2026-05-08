@@ -3,7 +3,12 @@ import type {
   TargetConfiguration,
   Tree,
 } from '@nx/devkit';
-import { joinPathFragments, readNxJson, updateJson } from '@nx/devkit';
+import {
+  joinPathFragments,
+  readNxJson,
+  updateJson,
+  updateNxJson,
+} from '@nx/devkit';
 import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
 import { basename } from 'path';
 import type { Logger } from '../utilities/logger';
@@ -100,16 +105,17 @@ export abstract class Migrator {
       return;
     }
 
-    const nxJson = readNxJson(this.tree);
+    const nxJson = readNxJson(this.tree) ?? {};
     for (const name of targetNames) {
-      const existing = findTargetDefault(nxJson?.targetDefaults, {
+      const existing = findTargetDefault(nxJson.targetDefaults, {
         target: name,
       });
-      upsertTargetDefault(this.tree, {
+      upsertTargetDefault(this.tree, nxJson, {
         target: name,
         cache: existing?.cache ?? true,
       });
     }
+    updateNxJson(this.tree, nxJson);
   }
 
   // TODO(leo): This should be moved to BuilderMigrator once everything is split into builder migrators.

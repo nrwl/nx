@@ -12,6 +12,7 @@ import {
   type TargetDefaults,
   Tree,
   updateJson,
+  updateNxJson,
 } from '@nx/devkit';
 import { upsertTargetDefault } from '@nx/devkit/internal';
 import { initGenerator as jsInitGenerator } from '@nx/js';
@@ -116,16 +117,21 @@ export async function applicationGeneratorInternal(
   tasks.push(initTask);
 
   if (!options.addPlugin) {
-    const nxJson = readNxJson(tree);
+    const nxJson = readNxJson(tree) ?? {};
     const existing = findBuildDefault(nxJson.targetDefaults);
     if (!existing) {
-      upsertTargetDefault(tree, {
+      upsertTargetDefault(tree, nxJson, {
         target: 'build',
         cache: true,
         dependsOn: ['^build'],
       });
+      updateNxJson(tree, nxJson);
     } else if (!existing.dependsOn) {
-      upsertTargetDefault(tree, { target: 'build', dependsOn: ['^build'] });
+      upsertTargetDefault(tree, nxJson, {
+        target: 'build',
+        dependsOn: ['^build'],
+      });
+      updateNxJson(tree, nxJson);
     }
   }
 

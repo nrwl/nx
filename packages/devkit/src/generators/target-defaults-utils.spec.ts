@@ -38,9 +38,9 @@ describe('target-defaults-utils', () => {
     it('appends a new entry when nx.json has no targetDefaults', () => {
       const nxJson = readNxJson(tree);
       delete nxJson.targetDefaults;
-      updateNxJson(tree, nxJson);
 
-      upsertTargetDefault(tree, { target: 'test', cache: true });
+      upsertTargetDefault(tree, nxJson, { target: 'test', cache: true });
+      updateNxJson(tree, nxJson);
 
       expect(readNxJson(tree).targetDefaults).toEqual([
         { target: 'test', cache: true },
@@ -50,9 +50,12 @@ describe('target-defaults-utils', () => {
     it('merges into an existing array entry with same filter tuple', () => {
       const nxJson = readNxJson(tree);
       nxJson.targetDefaults = [{ target: 'test', cache: true }];
-      updateNxJson(tree, nxJson);
 
-      upsertTargetDefault(tree, { target: 'test', inputs: ['default'] });
+      upsertTargetDefault(tree, nxJson, {
+        target: 'test',
+        inputs: ['default'],
+      });
+      updateNxJson(tree, nxJson);
 
       expect(readNxJson(tree).targetDefaults).toEqual([
         { target: 'test', cache: true, inputs: ['default'] },
@@ -62,13 +65,13 @@ describe('target-defaults-utils', () => {
     it('appends a new array entry when filter tuple differs', () => {
       const nxJson = readNxJson(tree);
       nxJson.targetDefaults = [{ target: 'test', cache: true }];
-      updateNxJson(tree, nxJson);
 
-      upsertTargetDefault(tree, {
+      upsertTargetDefault(tree, nxJson, {
         target: 'test',
         source: '@nx/vite',
         inputs: ['vite'],
       });
+      updateNxJson(tree, nxJson);
 
       expect(readNxJson(tree).targetDefaults).toEqual([
         { target: 'test', cache: true },
@@ -82,9 +85,9 @@ describe('target-defaults-utils', () => {
         build: { cache: true },
         '@nx/vite:test': { inputs: ['default'] },
       };
-      updateNxJson(tree, nxJson);
 
-      upsertTargetDefault(tree, { target: 'test', cache: true });
+      upsertTargetDefault(tree, nxJson, { target: 'test', cache: true });
+      updateNxJson(tree, nxJson);
 
       // Record is normalized first (executor-shaped key splits to executor),
       // then the new entry is appended.
@@ -100,13 +103,13 @@ describe('target-defaults-utils', () => {
       (nxJson as any).targetDefaults = {
         build: { cache: true },
       };
-      updateNxJson(tree, nxJson);
 
-      upsertTargetDefault(tree, {
+      upsertTargetDefault(tree, nxJson, {
         target: 'test',
         projects: 'tag:dotnet',
         inputs: ['x'],
       });
+      updateNxJson(tree, nxJson);
 
       expect(readNxJson(tree).targetDefaults).toEqual([
         { target: 'build', cache: true },

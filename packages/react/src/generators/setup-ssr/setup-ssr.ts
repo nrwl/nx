@@ -258,8 +258,8 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
     tree.write(serverEntry, changes);
   }
 
+  upsertTargetDefault(tree, nxJson, { target: 'server', cache: true });
   updateNxJson(tree, nxJson);
-  upsertTargetDefault(tree, { target: 'server', cache: true });
 
   const installTask = addDependenciesToPackageJson(
     tree,

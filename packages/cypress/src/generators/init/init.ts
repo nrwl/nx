@@ -41,7 +41,8 @@ function setupE2ETargetDefaults(tree: Tree) {
     patch.inputs = ['default', productionFileSet ? '^production' : '^default'];
   }
   if (Object.keys(patch).length > 0) {
-    upsertTargetDefault(tree, { target: 'e2e', ...patch });
+    upsertTargetDefault(tree, nxJson, { target: 'e2e', ...patch });
+    updateNxJson(tree, nxJson);
   }
 }
 

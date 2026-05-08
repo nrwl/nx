@@ -1,4 +1,4 @@
-import { type Tree, readNxJson } from '@nx/devkit';
+import { type Tree, readNxJson, updateNxJson } from '@nx/devkit';
 import {
   normalizeTargetDefaults,
   upsertTargetDefault,
@@ -8,12 +8,12 @@ export function addMfEnvToTargetDefaultInputs(
   tree: Tree,
   bundler: 'rspack' | 'webpack'
 ) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
   const executor =
     bundler === 'rspack' ? '@nx/rspack:rspack' : '@nx/webpack:webpack';
   const mfEnvVar = 'NX_MF_DEV_REMOTES';
 
-  const existing = normalizeTargetDefaults(nxJson?.targetDefaults).find(
+  const existing = normalizeTargetDefaults(nxJson.targetDefaults).find(
     (e) =>
       e.executor === executor &&
       e.target === undefined &&
@@ -33,10 +33,11 @@ export function addMfEnvToTargetDefaultInputs(
     inputs.push({ env: mfEnvVar });
   }
 
-  upsertTargetDefault(tree, {
+  upsertTargetDefault(tree, nxJson, {
     executor,
     cache: true,
     inputs,
     dependsOn: existing?.dependsOn ?? ['^build'],
   });
+  updateNxJson(tree, nxJson);
 }

@@ -8,6 +8,7 @@ import {
   type TargetConfiguration,
   type TargetDefaults,
   Tree,
+  updateNxJson,
 } from '@nx/devkit';
 import { upsertTargetDefault } from '@nx/devkit/internal';
 import { initGenerator as jsInitGenerator } from '@nx/js';
@@ -140,15 +141,19 @@ export async function configurationGeneratorInternal(
 
     // in the TS solution setup, the test target depends on the build outputs
     // so we need to setup the task pipeline accordingly
-    const nxJson = readNxJson(tree);
+    const nxJson = readNxJson(tree) ?? {};
     const existing = findExistingTestDefault(
-      nxJson?.targetDefaults,
+      nxJson.targetDefaults,
       options.targetName
     );
     const dependsOn = Array.from(
       new Set([...(existing?.dependsOn ?? []), '^build'])
     );
-    upsertTargetDefault(tree, { target: options.targetName, dependsOn });
+    upsertTargetDefault(tree, nxJson, {
+      target: options.targetName,
+      dependsOn,
+    });
+    updateNxJson(tree, nxJson);
   }
 
   if (!schema.skipFormat) {

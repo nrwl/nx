@@ -8,6 +8,7 @@ import {
   readProjectConfiguration,
   updateProjectConfiguration,
   readNxJson,
+  updateNxJson,
 } from '@nx/devkit';
 import { CustomServerSchema } from './schema';
 import { join } from 'path';
@@ -145,7 +146,12 @@ export async function customServerGenerator(
     return json;
   });
 
-  upsertTargetDefault(host, { target: 'build-custom-server', cache: true });
+  const nxJson = readNxJson(host) ?? {};
+  upsertTargetDefault(host, nxJson, {
+    target: 'build-custom-server',
+    cache: true,
+  });
+  updateNxJson(host, nxJson);
 
   if (options.compiler === 'swc') {
     // Update app swc to exlude server files
