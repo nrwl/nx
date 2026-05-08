@@ -172,7 +172,6 @@
     "cli-spinners": "2.6.1",
     "columnify": "^1.6.0",
     "confusing-browser-globals": "^1.0.9",
-    "conventional-changelog-cli": "^2.0.23",
     "convert-source-map": "^2.0.0",
     "copy-webpack-plugin": "^14.0.0",
     "css-minimizer-webpack-plugin": "^8.0.0",
