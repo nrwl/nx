@@ -2739,6 +2739,27 @@ mod tests {
         );
     }
 
+    /// `append_task_output` is the streaming path — it must NOT hide the
+    /// cursor, otherwise a still-running task's pane would freeze its cursor
+    /// mid-stream.
+    #[test]
+    fn test_append_task_output_does_not_hide_cursor() {
+        let mut app = create_test_app();
+        let task_id = String::from("app1:build");
+
+        app.append_task_output(task_id.clone(), String::from("first chunk\n"));
+        app.append_task_output(task_id.clone(), String::from("second chunk\n"));
+
+        let state = app.core.state().lock();
+        let pty = state.get_pty_instance(&task_id).expect("PTY should exist");
+        assert!(
+            !pty.get_screen()
+                .expect("PTY parser should be readable")
+                .hide_cursor(),
+            "append_task_output is for streaming; the cursor must remain visible"
+        );
+    }
+
     /// Same finalization for the path where no PTY exists yet (cache hits,
     /// non-streaming results).
     #[test]
