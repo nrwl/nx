@@ -99,12 +99,6 @@
       "description": "Migrates an Angular CLI workspace to Nx or adds the Angular plugin to an Nx workspace.",
       "hidden": true
     },
-    "ngrx": {
-      "factory": "./src/generators/ngrx/ngrx",
-      "schema": "./src/generators/ngrx/schema.json",
-      "description": "Adds NgRx support to an application or library.",
-      "x-deprecated": "Use the 'ngrx-root-store' and 'ngrx-feature-store' generators instead. It will be removed in Nx v22."
-    },
     "ngrx-feature-store": {
       "factory": "./src/generators/ngrx-feature-store/ngrx-feature-store",
       "schema": "./src/generators/ngrx-feature-store/schema.json",

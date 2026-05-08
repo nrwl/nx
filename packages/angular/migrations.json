@@ -394,6 +394,11 @@
       "version": "23.0.0-beta.0",
       "description": "Update the @nx/angular/module-federation import to use @nx/module-federation/angular.",
       "factory": "./src/migrations/update-23-0-0/migrate-with-mf-import-to-new-package"
+    },
+    "update-23-0-0-migrate-ngrx-generator-defaults": {
+      "version": "23.0.0-beta.7",
+      "description": "Split @nx/angular:ngrx generator defaults in nx.json across the @nx/angular:ngrx-root-store and @nx/angular:ngrx-feature-store generators.",
+      "factory": "./src/migrations/update-23-0-0/migrate-ngrx-generator-defaults"
     }
   },
   "packageJsonUpdates": {

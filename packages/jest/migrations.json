@@ -171,6 +171,26 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "23.0.0-pin-jest-30-3-for-rn-compat": {
+      "version": "23.0.0-beta.9",
+      "requires": {
+        "jest": ">=30.0.0"
+      },
+      "packages": {
+        "jest": {
+          "version": "~30.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "babel-jest": {
+          "version": "~30.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/jest": {
+          "version": "~30.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

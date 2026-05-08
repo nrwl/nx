@@ -122,6 +122,8 @@ export function getRelativeImportPath(exportedMember, filePath) {
     );
     if (ext) {
       filePath += ext;
+    } else {
+      return;
     }
   } else if (status.isDirectory()) {
     const file = readdirSync(filePath).find((file) =>

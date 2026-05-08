@@ -1,4 +1,5 @@
 import {
+  ensurePackage,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
@@ -30,8 +31,8 @@ import {
   createOrEditViteConfig,
   TargetFlags,
 } from '../../utils/generator-utils';
+import { nxVersion } from '../../utils/versions';
 import initGenerator from '../init/init';
-import vitestGenerator from '../vitest/vitest-generator';
 import { convertNonVite } from './lib/convert-non-vite';
 import { ViteConfigurationGeneratorSchema } from './schema';
 
@@ -170,23 +171,22 @@ export async function viteConfigurationGeneratorInternal(
   }
 
   if (schema.includeVitest) {
-    const vitestTask = await vitestGenerator(
-      tree,
-      {
-        project: schema.project,
-        uiFramework: schema.uiFramework,
-        inSourceTests: schema.inSourceTests,
-        coverageProvider: 'v8',
-        skipViteConfig: true,
-        testTarget: 'test',
-        skipFormat: true,
-        addPlugin: schema.addPlugin,
-        compiler: schema.compiler,
-        projectType,
-      },
-      false,
-      true
-    );
+    ensurePackage('@nx/vitest', nxVersion);
+    const { configurationGenerator: vitestConfigurationGenerator } =
+      await import('@nx/vitest/generators');
+    const vitestTask = await vitestConfigurationGenerator(tree, {
+      project: schema.project,
+      uiFramework: schema.uiFramework,
+      inSourceTests: schema.inSourceTests,
+      coverageProvider: 'v8',
+      skipViteConfig: true,
+      testTarget: 'test',
+      skipFormat: true,
+      addPlugin: schema.addPlugin,
+      compiler: schema.compiler,
+      projectType,
+      testEnvironment: schema.testEnvironment,
+    });
     tasks.push(vitestTask);
   }
 

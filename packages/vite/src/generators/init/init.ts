@@ -54,7 +54,6 @@ export async function initGeneratorInternal(
       createNodesV2,
       {
         buildTargetName: ['build', 'vite:build', 'vite-build'],
-        testTargetName: ['test', 'vite:test', 'vite-test'],
         serveTargetName: ['serve', 'vite:serve', 'vite-serve'],
         devTargetName: ['dev', 'vite:dev', 'vite-dev'],
         previewTargetName: ['preview', 'vite:preview', 'vite-preview'],

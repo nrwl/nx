@@ -4,7 +4,7 @@ import { clean, coerce, major } from 'semver';
 
 export const nxVersion = require('../../package.json').version;
 export const eslintPluginCypressVersion = '^3.5.0';
-export const typesNodeVersion = '20.19.9';
+export const typesNodeVersion = '^22.0.0';
 export const cypressViteDevServerVersion = '^7.0.1';
 export const cypressVersion = '^15.8.0';
 export const cypressWebpackVersion = '^5.4.1';
@@ -37,7 +37,7 @@ type CompatVersions = 13 | 14;
 const versionMap: Record<CompatVersions, CypressVersions> = {
   13: {
     eslintPluginCypressVersion: '^3.5.0',
-    typesNodeVersion: '20.19.9',
+    typesNodeVersion: '^22.0.0',
     cypressViteDevServerVersion: '^2.2.1',
     cypressVersion: '^13.13.0',
     cypressWebpackVersion: '^3.8.0',
@@ -46,7 +46,7 @@ const versionMap: Record<CompatVersions, CypressVersions> = {
   },
   14: {
     eslintPluginCypressVersion: '^3.5.0',
-    typesNodeVersion: '20.19.9',
+    typesNodeVersion: '^22.0.0',
     cypressViteDevServerVersion: '^6.0.3',
     cypressVersion: '^14.2.1',
     cypressWebpackVersion: '^4.0.2',

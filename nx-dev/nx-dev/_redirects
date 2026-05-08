@@ -88,8 +88,8 @@
 /guides/using-tailwind-css-in-react /recipes/react/using-tailwind-css-in-react 301
 /guides/react-18 /nx-api/react 301
 /guides/using-tailwind-css-with-angular-projects /recipes/angular/using-tailwind-css-with-angular-projects 301
-/guides/misc-ngrx /packages/angular/generators/ngrx 301
-/guides/misc-data-persistence /packages/angular/generators/ngrx 301
+/guides/misc-ngrx /packages/angular/generators/ngrx-root-store 301
+/guides/misc-data-persistence /packages/angular/generators/ngrx-root-store 301
 /guides/nx-devkit-angular-devkit /nx-api/angular/documents/nx-devkit-angular-devkit 301
 /module-federation/faster-builds /concepts/module-federation/faster-builds-with-module-federation 301
 /module-federation/micro-frontend-architecture /concepts/module-federation/micro-frontend-architecture 301
@@ -355,9 +355,9 @@
 
 # --- latestRecipesRefactoring ---
 /recipes/getting-started/set-up-a-new-workspace /docs/getting-started/installation 301
-/recipes/other/misc-ngrx /packages/angular/generators/ngrx 301
-/recipes/other/misc-data-persistence /packages/angular/generators/ngrx 301
-/recipes/other/standalone-ngrx-apis /packages/angular/generators/ngrx 301
+/recipes/other/misc-ngrx /packages/angular/generators/ngrx-root-store 301
+/recipes/other/misc-data-persistence /packages/angular/generators/ngrx-root-store 301
+/recipes/other/standalone-ngrx-apis /packages/angular/generators/ngrx-root-store 301
 /recipes/other/export-project-graph /recipes/features/explore-graph 301
 /recipes/executors/use-executor-configurations /docs/concepts/executors-and-configurations 301
 /recipes/other/azure-last-successful-commit /docs/guides/nx-cloud/setup-ci 301

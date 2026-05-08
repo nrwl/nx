@@ -4,7 +4,6 @@ import {
   logger,
   offsetFromRoot,
   readJson,
-  readNxJson,
   readProjectConfiguration,
   TargetConfiguration,
   Tree,
@@ -14,10 +13,8 @@ import {
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { ViteBuildExecutorOptions } from '../executors/build/schema';
 import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
-import { VitestExecutorOptions } from '../executors/test/schema';
 import { ViteConfigurationGeneratorSchema } from '../generators/configuration/schema';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
-import { VitestGeneratorSchema } from '../generators/vitest/schema';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
 export type TargetFlags = Partial<Record<Target, boolean>>;
@@ -79,50 +76,6 @@ export function findExistingJsBuildTargetInProject(targets: {
     }
   }
   return output;
-}
-
-export function addOrChangeTestTarget(
-  tree: Tree,
-  options: VitestGeneratorSchema,
-  hasPlugin: boolean
-) {
-  const nxJson = readNxJson(tree);
-
-  hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/vite/plugin'
-      : p.plugin === '@nx/vite/plugin' || hasPlugin
-  );
-
-  if (hasPlugin) {
-    return;
-  }
-
-  const project = readProjectConfiguration(tree, options.project);
-  const target = options.testTarget ?? 'test';
-
-  const reportsDirectory = joinPathFragments(
-    offsetFromRoot(project.root),
-    'coverage',
-    project.root === '.' ? options.project : project.root
-  );
-  const testOptions: VitestExecutorOptions = {
-    reportsDirectory,
-  };
-
-  project.targets ??= {};
-
-  if (project.targets[target]) {
-    throw new Error(`Target "${target}" already exists in the project.`);
-  } else {
-    project.targets[target] = {
-      executor: '@nx/vite:test',
-      outputs: ['{options.reportsDirectory}'],
-      options: testOptions,
-    };
-  }
-
-  updateProjectConfiguration(tree, options.project, project);
 }
 
 export function addBuildTarget(

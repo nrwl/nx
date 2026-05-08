@@ -206,6 +206,18 @@ export declare class TaskHasher {
   hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
 }
 
+export declare class TaskInvocationTracker {
+  constructor(db: ExternalObject<NxDbConnection>, rootPid: number)
+  /** Register a task as invoked. Throws if the task was already registered (loop detected). */
+  registerTask(parentPid: number, taskId: string): void
+  /** Remove a task invocation record after task completes. */
+  unregisterTask(taskId: string): void
+  /** Get all invocations for this root_pid, ordered by creation time. */
+  getInvocationChain(): Array<InvocationRecord>
+  /** Clean up stale invocations older than 1 day (handles PID recycling). */
+  cleanupStale(): void
+}
+
 export declare class Watcher {
   origin: string
   /**
@@ -453,6 +465,11 @@ export interface InputsInput {
 export declare function installNxConsole(): Promise<boolean>
 
 export declare function installNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
+
+export interface InvocationRecord {
+  parentPid: number
+  taskId: string
+}
 
 export const IS_WASM: boolean
 
