@@ -69,6 +69,9 @@ export default async function* gradleBatch(
     );
 
   const yielded = new Set<string>();
+  // Whether any task in this batch reported a failure. If so, unyielded peers
+  // are treated as `skipped` (they never got to run) rather than `failure`.
+  let sawFailure = false;
 
   try {
     for await (const event of streamTasksInBatch(
@@ -79,6 +82,9 @@ export default async function* gradleBatch(
       root
     )) {
       yielded.add(event.task);
+      if (!event.result.success) {
+        sawFailure = true;
+      }
       yield event;
     }
   } catch (e) {
@@ -89,24 +95,28 @@ export default async function* gradleBatch(
     for (const taskId of taskIds) {
       if (!yielded.has(taskId)) {
         yielded.add(taskId);
-        yield {
-          task: taskId,
-          result: { success: false, terminalOutput: e.toString() },
-        };
+        yield { task: taskId, result: skippedOrFailedResult(e.toString()) };
       }
     }
     return;
   }
 
-  // Any tasks the batch runner did not report on are treated as failed so Nx
-  // does not hang waiting for results.
+  // Any tasks the batch runner did not report on are treated as skipped (when
+  // a peer failed) or failed so Nx does not hang waiting for results.
   for (const taskId of taskIds) {
     if (!yielded.has(taskId)) {
       yield {
         task: taskId,
-        result: { success: false, terminalOutput: `Gradlew batch failed` },
+        result: skippedOrFailedResult(`Gradlew batch failed`),
       };
     }
+  }
+
+  function skippedOrFailedResult(failureMessage: string): TaskResult {
+    if (sawFailure) {
+      return { success: false, status: 'skipped', terminalOutput: '' };
+    }
+    return { success: false, terminalOutput: failureMessage };
   }
 }
 
