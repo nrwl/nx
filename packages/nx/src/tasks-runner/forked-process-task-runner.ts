@@ -438,17 +438,9 @@ export class ForkedProcessTaskRunner {
       this.cleanup();
       process.off('message', messageHandler);
     });
-    process.once('SIGINT', () => {
-      this.cleanup('SIGTERM').finally(() => {
-        process.off('message', messageHandler);
-        // No process.exit() here — the orchestrator's setupSignalHandlers()
-        // owns the exit decision for the direct path, and in the forked path
-        // the cleanup above is a no-op (0 processes).
-      });
-    });
-    // SIGTERM/SIGHUP are NOT handled here. The orchestrator's
-    // setupSignalHandlers() handles them and calls FPTR.cleanup()
-    // as part of its own cleanup sequence. Using process.once() here
-    // would consume the event before the orchestrator sees it.
+    // No SIGINT/SIGTERM/SIGHUP handlers here. The orchestrator's
+    // setupSignalHandlers() owns signal dispatch and calls FPTR.cleanup()
+    // in the direct path; in the forked path the process is detached
+    // and never receives these signals from the OS.
   }
 }
