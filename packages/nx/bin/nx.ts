@@ -286,6 +286,10 @@ function warnIfUsingOutdatedGlobalInstall(
   globalNxVersion: string,
   localNxVersion?: string
 ) {
+  // Never display during shell completion — stdout is captured as suggestions.
+  if (process.argv.includes('--get-yargs-completions')) {
+    return;
+  }
   // Never display this warning if Nx is already running via Nx
   if (process.env.NX_CLI_SET) {
     return;

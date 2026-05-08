@@ -61,6 +61,9 @@ function generateScript(shell: Shell): string {
 // Baking in an absolute path ties completion to the install location that
 // happened to be active when `nx completion <shell>` was run — bad when
 // users have multiple worktrees or move/delete the original workspace.
+// At TAB time the wrappers prefer the workspace's local nx so completions
+// reflect the installed version (and we sidestep the global → local handoff,
+// which can leak version-mismatch banners into stdout).
 const NX_COMMAND = 'nx';
 
 function generateBashScript(): string {
@@ -73,12 +76,28 @@ function generateBashScript(): string {
 #
 _nx_yargs_completions()
 {
-    local cur_word args type_list
+    local cur_word args type_list nx_cmd dir
 
     cur_word="\${COMP_WORDS[COMP_CWORD]}"
     args=("\${COMP_WORDS[@]}")
 
-    type_list=$(${NX_COMMAND} --get-yargs-completions "\${args[@]}" 2>/dev/null)
+    # Prefer the workspace's local nx over PATH; falls back to PATH outside a workspace.
+    # Checks both standard (node_modules/.bin/nx) and .nx-style (.nx/installation/...) layouts.
+    nx_cmd="${NX_COMMAND}"
+    dir="\$PWD"
+    while [ "\$dir" != "/" ]; do
+      if [ -x "\$dir/node_modules/.bin/nx" ]; then
+        nx_cmd="\$dir/node_modules/.bin/nx"
+        break
+      fi
+      if [ -x "\$dir/.nx/installation/node_modules/.bin/nx" ]; then
+        nx_cmd="\$dir/.nx/installation/node_modules/.bin/nx"
+        break
+      fi
+      dir="\$(dirname "\$dir")"
+    done
+
+    type_list=$("\$nx_cmd" --get-yargs-completions "\${args[@]}" 2>/dev/null)
 
     COMPREPLY=( $(compgen -W "\${type_list}" -- \${cur_word}) )
 
@@ -110,9 +129,26 @@ function generateZshScript(): string {
 #
 if type compdef &>/dev/null; then
   _nx_yargs_completions () {
-    local reply
+    local reply nx_cmd dir
     local si=$IFS
-    IFS=$'\\n' reply=($(${NX_COMMAND} --get-yargs-completions "\${words[@]}" 2>/dev/null))
+
+    # Prefer the workspace's local nx over PATH; falls back to PATH outside a workspace.
+    # Checks both standard (node_modules/.bin/nx) and .nx-style (.nx/installation/...) layouts.
+    nx_cmd="${NX_COMMAND}"
+    dir="\$PWD"
+    while [[ "\$dir" != "/" ]]; do
+      if [[ -x "\$dir/node_modules/.bin/nx" ]]; then
+        nx_cmd="\$dir/node_modules/.bin/nx"
+        break
+      fi
+      if [[ -x "\$dir/.nx/installation/node_modules/.bin/nx" ]]; then
+        nx_cmd="\$dir/.nx/installation/node_modules/.bin/nx"
+        break
+      fi
+      dir="\${dir:h}"
+    done
+
+    IFS=$'\\n' reply=($("\$nx_cmd" --get-yargs-completions "\${words[@]}" 2>/dev/null))
     IFS=$si
     # When completions end with ':' (e.g. project names in \`nx show target\`
     # or \`nx run\`), omit the trailing space so the user can TAB again for
@@ -150,7 +186,22 @@ complete -e -c nx
 function __nx_yargs_completions
   set -l tokens (commandline -cop)
   set -l current (commandline -ct)
-  ${NX_COMMAND} --get-yargs-completions \$tokens "\$current" 2>/dev/null
+  # Prefer the workspace's local nx over PATH; falls back to PATH outside a workspace.
+  # Checks both standard (node_modules/.bin/nx) and .nx-style (.nx/installation/...) layouts.
+  set -l nx_cmd ${NX_COMMAND}
+  set -l dir $PWD
+  while test "\$dir" != "/"
+    if test -x "\$dir/node_modules/.bin/nx"
+      set nx_cmd "\$dir/node_modules/.bin/nx"
+      break
+    end
+    if test -x "\$dir/.nx/installation/node_modules/.bin/nx"
+      set nx_cmd "\$dir/.nx/installation/node_modules/.bin/nx"
+      break
+    end
+    set dir (dirname "\$dir")
+  end
+  \$nx_cmd --get-yargs-completions \$tokens "\$current" 2>/dev/null
 end
 complete -c nx -f -a '(__nx_yargs_completions)'
 ###-end-nx-completions-###
