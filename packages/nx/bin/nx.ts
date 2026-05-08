@@ -8,6 +8,8 @@ if (process.env.FORCE_COLOR === '0') {
   delete process.env.FORCE_COLOR;
 }
 
+// Must be the first import — see enable-compile-cache.ts.
+import '../src/utils/enable-compile-cache';
 import {
   findWorkspaceRoot,
   WorkspaceTypeAndRoot,
