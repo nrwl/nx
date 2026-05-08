@@ -18,6 +18,10 @@ export function resolveChangelogRenderer(
     }
   );
 
-  const r = loadTsFile<any>(interpolatedChangelogRendererPath);
+  // Only use loadTsFile for TS extensions; a plain JS renderer in a non-TS
+  // workspace shouldn't need a workspace tsconfig to load.
+  const r = /\.[cm]?ts$/.test(interpolatedChangelogRendererPath)
+    ? loadTsFile<any>(interpolatedChangelogRendererPath)
+    : require(interpolatedChangelogRendererPath);
   return r.default || r;
 }
