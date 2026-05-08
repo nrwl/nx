@@ -144,47 +144,74 @@ export default async function* mavenBatchExecutor(
   // Collect terminal output from failed tasks
   const failedTaskOutputs: string[] = [];
 
-  // Yield results as they stream in
-  for await (const line of rl) {
-    if (line.startsWith('NX_RESULT:')) {
-      try {
-        const jsonStr = line.slice('NX_RESULT:'.length);
-        const data = JSON.parse(jsonStr);
-        const result = {
-          success: data.result.success ?? false,
-          terminalOutput: data.result.terminalOutput ?? '',
-          startTime: data.result.startTime,
-          endTime: data.result.endTime,
-        };
+  const taskIds = Object.keys(taskGraph.tasks);
+  const yielded = new Set<string>();
+  // Whether any task in this batch reported a failure. If so, unyielded peers
+  // are treated as `skipped` (they never got to run) rather than `failure`.
+  let sawFailure = false;
 
-        // Collect terminal output from failed tasks
-        if (!result.success && result.terminalOutput) {
-          failedTaskOutputs.push(result.terminalOutput);
-        }
-
-        yield {
-          task: data.task,
-          result,
-        };
-      } catch (e) {
-        console.error('[Maven Batch] Failed to parse result line:', line, e);
-      }
-    } else if (line.trim()) {
-      // Collect non-empty stderr lines for error reporting
-      stderrLines.push(line);
+  function skippedOrFailedResult(failureMessage: string): TaskResult {
+    if (sawFailure) {
+      return { success: false, status: 'skipped', terminalOutput: '' };
     }
+    return { success: false, terminalOutput: failureMessage };
   }
 
-  // Wait for process to exit
-  await new Promise<void>((resolve, reject) => {
-    child.on('close', (code) => {
-      if (process.env.NX_VERBOSE_LOGGING === 'true') {
-        console.log(`[Maven Batch] Process exited with code: ${code}`);
+  try {
+    // Yield results as they stream in
+    for await (const line of rl) {
+      if (line.startsWith('NX_RESULT:')) {
+        try {
+          const jsonStr = line.slice('NX_RESULT:'.length);
+          const data = JSON.parse(jsonStr);
+          const result = {
+            success: data.result.success ?? false,
+            terminalOutput: data.result.terminalOutput ?? '',
+            startTime: data.result.startTime,
+            endTime: data.result.endTime,
+          };
+
+          // Collect terminal output from failed tasks
+          if (!result.success && result.terminalOutput) {
+            failedTaskOutputs.push(result.terminalOutput);
+          }
+
+          yielded.add(data.task);
+          if (!result.success) {
+            sawFailure = true;
+          }
+
+          yield {
+            task: data.task,
+            result,
+          };
+        } catch (e) {
+          console.error('[Maven Batch] Failed to parse result line:', line, e);
+        }
+      } else if (line.trim()) {
+        // Collect non-empty stderr lines for error reporting
+        stderrLines.push(line);
       }
+    }
+
+    // Wait for process to exit
+    const exitCode = await new Promise<number>(
+      (resolvePromise, rejectPromise) => {
+        child.on('close', (code) => {
+          if (process.env.NX_VERBOSE_LOGGING === 'true') {
+            console.log(`[Maven Batch] Process exited with code: ${code}`);
+          }
+          resolvePromise(code ?? 0);
+        });
+        child.on('error', rejectPromise);
+      }
+    );
+
+    if (exitCode !== 0) {
       // If process exited unexpectedly, print captured stderr
-      if (code !== 0 && stderrLines.length > 0) {
+      if (stderrLines.length > 0) {
         console.error(
-          `[Maven Batch] Process exited with code ${code}. Stderr output:`
+          `[Maven Batch] Process exited with code ${exitCode}. Stderr output:`
         );
         for (const line of stderrLines) {
           console.error(line);
@@ -197,13 +224,31 @@ export default async function* mavenBatchExecutor(
           console.error(output);
         }
       }
-      // Reject promise if batch runner exited with non-zero code
-      if (code !== 0) {
-        reject(new Error(`Maven batch runner exited with code ${code}`));
-      } else {
-        resolve();
+      throw new Error(`Maven batch runner exited with code ${exitCode}`);
+    }
+  } catch (e) {
+    for (const taskId of taskIds) {
+      if (!yielded.has(taskId)) {
+        yielded.add(taskId);
+        yield {
+          task: taskId,
+          result: skippedOrFailedResult((e as Error).toString()),
+        };
       }
-    });
-    child.on('error', reject);
-  });
+    }
+    return;
+  }
+
+  // Any tasks the batch runner did not report on are treated as skipped (when
+  // a peer failed) or failed so Nx does not hang waiting for results.
+  for (const taskId of taskIds) {
+    if (!yielded.has(taskId)) {
+      yield {
+        task: taskId,
+        result: skippedOrFailedResult(
+          `Maven batch runner did not report a result for ${taskId}`
+        ),
+      };
+    }
+  }
 }
