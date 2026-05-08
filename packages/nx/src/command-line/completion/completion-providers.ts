@@ -62,6 +62,82 @@ export function getProjectNamesWithTarget(
 }
 
 /**
+ * Returns plugin package names (with at least one generator) matching the prefix.
+ */
+export function getGeneratorPluginCompletions(current: string): string[] {
+  const workspaceRoot = process.env.NX_WORKSPACE_ROOT_PATH || process.cwd();
+  const plugins = listPluginsWithGenerators(workspaceRoot);
+  if (!current) {
+    return plugins;
+  }
+  return plugins.filter((p) => p.startsWith(current));
+}
+
+/**
+ * Returns generator names within a single plugin matching the prefix.
+ */
+export function getGeneratorsForPlugin(
+  pluginName: string,
+  current: string
+): string[] {
+  const workspaceRoot = process.env.NX_WORKSPACE_ROOT_PATH || process.cwd();
+  const generators = readGeneratorsJson(workspaceRoot, pluginName);
+  if (!current) {
+    return generators;
+  }
+  return generators.filter((g) => g.startsWith(current));
+}
+
+function listPluginsWithGenerators(workspaceRoot: string): string[] {
+  const pkgPath = join(workspaceRoot, 'package.json');
+  if (!existsSync(pkgPath)) {
+    return [];
+  }
+  let pkg: any;
+  try {
+    pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
+  } catch {
+    return [];
+  }
+  const deps = {
+    ...(pkg.dependencies ?? {}),
+    ...(pkg.devDependencies ?? {}),
+  };
+  const result: string[] = [];
+  for (const dep of Object.keys(deps)) {
+    if (readGeneratorsJson(workspaceRoot, dep).length > 0) {
+      result.push(dep);
+    }
+  }
+  return result;
+}
+
+function readGeneratorsJson(workspaceRoot: string, pluginName: string): string[] {
+  try {
+    const depPkgPath = join(workspaceRoot, 'node_modules', pluginName, 'package.json');
+    if (!existsSync(depPkgPath)) {
+      return [];
+    }
+    const depPkg = JSON.parse(readFileSync(depPkgPath, 'utf-8'));
+    const field = depPkg.generators ?? depPkg.schematics;
+    if (typeof field !== 'string') {
+      return [];
+    }
+    const generatorsJsonPath = join(workspaceRoot, 'node_modules', pluginName, field);
+    if (!existsSync(generatorsJsonPath)) {
+      return [];
+    }
+    const generatorsJson = JSON.parse(readFileSync(generatorsJsonPath, 'utf-8'));
+    const collection = generatorsJson.generators ?? generatorsJson.schematics ?? {};
+    return Object.keys(collection).filter(
+      (k) => !collection[k]?.hidden
+    );
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Returns target names matching the given prefix.
  * If projectName is provided, only returns targets for that project.
  * Otherwise returns all unique target names across the workspace.
