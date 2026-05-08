@@ -37,6 +37,11 @@
       "version": "22.2.0-beta.2",
       "description": "Migrate Vitest usage from @nx/vite to @nx/vitest package.",
       "implementation": "./src/migrations/update-22-2-0/migrate-vitest-to-vitest-package"
+    },
+    "ensure-vitest-package-migration-23": {
+      "version": "23.0.0-beta.0",
+      "description": "Safety net: ensure any remaining @nx/vite:test executor usages are swapped to @nx/vitest:test and @nx/vitest is installed.",
+      "implementation": "./src/migrations/update-23-0-0/ensure-vitest-package-migration"
     }
   },
   "packageJsonUpdates": {

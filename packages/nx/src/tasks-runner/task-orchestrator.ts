@@ -1,8 +1,8 @@
 import { defaultMaxListeners } from 'events';
 import { writeFileSync } from 'fs';
-import * as pc from 'picocolors';
 import { relative } from 'path';
 import { performance } from 'perf_hooks';
+import * as pc from 'picocolors';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
@@ -15,20 +15,21 @@ import { getInputs, TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
   IS_WASM,
+  TaskStatus as NativeTaskStatus,
   parseTaskStatus,
   RunningTasksService,
   TaskDetails,
-  TaskStatus as NativeTaskStatus,
+  TaskInvocationTracker,
 } from '../native';
 import { NxArgs } from '../utils/command-line-utils';
 import { getLocalDbConnection } from '../utils/db-connection';
-import { output } from '../utils/output';
-import { combineOptionsForExecutor, Options } from '../utils/params';
-import { workspaceRoot } from '../utils/workspace-root';
 import {
   EXPECTED_TERMINATION_SIGNALS,
   signalToCode,
 } from '../utils/exit-codes';
+import { output } from '../utils/output';
+import { combineOptionsForExecutor, Options } from '../utils/params';
+import { workspaceRoot } from '../utils/workspace-root';
 import {
   Cache,
   CachedResult,
@@ -41,9 +42,10 @@ import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { isTuiEnabled } from './is-tui-enabled';
 import { TaskMetadata, TaskResult } from './life-cycle';
 import { PseudoTtyProcess } from './pseudo-terminal';
-import { getColor, writePrefixedLines } from './running-tasks/output-prefix';
 import { NoopChildProcess } from './running-tasks/noop-child-process';
+import { getColor, writePrefixedLines } from './running-tasks/output-prefix';
 import { RunningTask } from './running-tasks/running-task';
+import { SharedRunningTask } from './running-tasks/shared-running-task';
 import {
   getEnvVariablesForBatchProcess,
   getEnvVariablesForTask,
@@ -61,7 +63,6 @@ import {
   removeTasksFromTaskGraph,
   shouldStreamOutput,
 } from './utils';
-import { SharedRunningTask } from './running-tasks/shared-running-task';
 
 type CacheHit = {
   task: Task;
@@ -85,6 +86,16 @@ export class TaskOrchestrator {
   private runningTasksService = !IS_WASM
     ? new RunningTasksService(getLocalDbConnection())
     : null;
+  private taskInvocationTracker = !IS_WASM
+    ? new TaskInvocationTracker(
+        getLocalDbConnection(),
+        Number(process.env.NX_INVOCATION_ROOT_PID ?? process.pid)
+      )
+    : null;
+  // Tracks tasks registered by THIS process so that recursive code paths
+  // (e.g. applyFromCacheOrRunBatch looping on incomplete batches) don't
+  // re-register and trip the DB uniqueness constraint.
+  private registeredInvocations = new Set<string>();
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
     this.projects,
@@ -158,6 +169,7 @@ export class TaskOrchestrator {
 
   async init() {
     this.setupSignalHandlers();
+    this.taskInvocationTracker?.cleanupStale();
 
     // Init the ForkedProcessTaskRunner, TasksSchedule, and Cache
     await Promise.all([
@@ -396,6 +408,41 @@ export class TaskOrchestrator {
       if (!this.processedTasks.has(taskId)) {
         this.processedTasks.set(taskId, this.processTask(taskId));
       }
+    }
+  }
+
+  /**
+   * Registers a task invocation and checks for loops across nested Nx processes.
+   * Uses the task_invocations DB table keyed by root PID. registerTask() throws
+   * on unique constraint violation when a parent Nx process already registered
+   * this task — indicating an infinite loop.
+   */
+  private detectTaskInvocationLoop(task: Task): void {
+    if (!this.taskInvocationTracker) return;
+    if (this.registeredInvocations.has(task.id)) return;
+    try {
+      this.taskInvocationTracker.registerTask(process.pid, task.id);
+      this.registeredInvocations.add(task.id);
+    } catch {
+      // Unique constraint violation — task already invoked by an ancestor Nx process
+      const chain = this.taskInvocationTracker.getInvocationChain();
+      const chainDisplay = chain.map((r) => r.taskId).join(' -> ');
+
+      output.error({
+        title: 'Recursive task invocation detected',
+        bodyLines: [
+          `Nx detected a recursive loop of task invocations:`,
+          ``,
+          `  ${chainDisplay} -> ${task.id}`,
+          ``,
+          `Task "${task.id}" was already invoked by a parent Nx process in this chain.`,
+          `This typically happens when a task's command (e.g., "nx ${task.target.target} ${task.target.project}")`,
+          `triggers a chain of tasks that eventually re-invokes itself.`,
+          ``,
+          `To fix this, review the command configuration for the tasks in the chain above.`,
+        ],
+      });
+      process.exit(1);
     }
   }
 
@@ -668,6 +715,10 @@ export class TaskOrchestrator {
 
     if (taskIdsToSkip.length < tasks.length) {
       const runGraph = removeTasksFromTaskGraph(batch.taskGraph, taskIdsToSkip);
+
+      for (const task of Object.values(runGraph.tasks)) {
+        this.detectTaskInvocationLoop(task);
+      }
 
       batchResults = await this.runBatch(
         {
@@ -989,6 +1040,8 @@ export class TaskOrchestrator {
     );
     this.discreteTaskExitHandled.set(task.id, discreteExitHandled);
 
+    this.detectTaskInvocationLoop(task);
+
     const childProcess = await this.runTask(
       task,
       streamOutput,
@@ -1291,6 +1344,7 @@ export class TaskOrchestrator {
           temporaryOutputPath,
           streamOutput
         );
+    this.detectTaskInvocationLoop(task);
     const childProcess = await this.runTask(
       task,
       streamOutput,
@@ -1478,6 +1532,8 @@ export class TaskOrchestrator {
       if (this.completedTasks.has(task.id)) continue;
 
       this.completedTasks.set(task.id, status);
+      this.taskInvocationTracker?.unregisterTask(task.id);
+      this.registeredInvocations.delete(task.id);
 
       if (this.tuiEnabled) {
         this.options.lifeCycle.setTaskStatus(

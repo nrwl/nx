@@ -1,4 +1,4 @@
-import { PerformanceObserver } from 'perf_hooks';
+import { PerformanceMeasure, PerformanceObserver } from 'perf_hooks';
 
 import type { TrackedDetail } from './perf-hooks';
 
@@ -11,7 +11,8 @@ function isTrackedDetail(detail: unknown): detail is TrackedDetail {
 }
 
 new PerformanceObserver((list) => {
-  const entries = list.getEntries();
+  // observer is configured for 'measure' entries only (see .observe call below)
+  const entries = list.getEntries() as PerformanceMeasure[];
   const logEnabled = process.env.NX_PERF_LOGGING === 'true';
   const tracked = entries.filter((e) => isTrackedDetail(e.detail));
 

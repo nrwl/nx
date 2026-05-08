@@ -8,7 +8,6 @@ import { createNodesV2, VitePluginOptions } from '../../plugins/plugin';
 import { buildPostTargetTransformer } from './lib/build-post-target-transformer';
 import { servePostTargetTransformer } from './lib/serve-post-target-transformer';
 import { previewPostTargetTransformer } from './lib/preview-post-target-transformer';
-import { testPostTargetTransformer } from './lib/test-post-target-transformer';
 
 interface Schema {
   project?: string;
@@ -29,7 +28,6 @@ export async function convertToInferred(tree: Tree, options: Schema) {
         buildTargetName: 'build',
         serveTargetName: 'serve',
         previewTargetName: 'preview',
-        testTargetName: 'test',
         serveStaticTargetName: 'serve-static',
       },
       [
@@ -47,11 +45,6 @@ export async function convertToInferred(tree: Tree, options: Schema) {
           executors: ['@nx/vite:preview-server'],
           postTargetTransformer: previewPostTargetTransformer(migrationLogs),
           targetPluginOptionMapper: (target) => ({ previewTargetName: target }),
-        },
-        {
-          executors: ['@nx/vite:test'],
-          postTargetTransformer: testPostTargetTransformer,
-          targetPluginOptionMapper: (target) => ({ testTargetName: target }),
         },
       ],
       options.project

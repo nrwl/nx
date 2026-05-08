@@ -98,7 +98,7 @@ catalogs:
     ts-checker-rspack-plugin: '^1.1.1'
   typescript:
     '@phenomnomnominal/tsquery': '~6.2.0'
-    '@types/node': '^20.19.10'
+    '@types/node': '^24.11.0'
     ts-morph: '^27.0.2'
     ts-node: '10.9.1'
     tsconfig-paths: '^4.1.2'

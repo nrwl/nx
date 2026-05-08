@@ -16,7 +16,7 @@ type MatrixDataOS = {
 type MatrixData = {
   coreProjects: MatrixDataProject[],
   projects: MatrixDataProject[],
-  nodeTLS: number,
+  lowestNodeLTS: number,
   setup: MatrixDataOS[],
 }
 
@@ -67,21 +67,22 @@ const matrixData: MatrixData = {
     { name: 'e2e-storybook', codeowners: 'S04SVQ8H0G5' },
     { name: 'e2e-nuxt', codeowners: 'S04SJ6PL98X' }
   ],
-  // TODO(v23): remove node 20 - EOL April 2026
-  nodeTLS: 20,
+  // Non-core plugins only run on the lowest LTS. Plugin-level changes are
+  // less Node-version-sensitive than core, so single-version coverage is enough.
+  lowestNodeLTS: 22,
   setup: [
     {
       os: 'ubuntu-latest',
       os_name: 'Linux',
       os_timeout: 60,
       package_managers: ['npm', 'pnpm', 'yarn'],
-      node_versions: ['20.19.0', '22.13.0', '24.0.0'],
+      node_versions: ['22.13.0', '24.0.0', '26.0.0'],
       excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo']
     },
     // Docker is not supported on ARM-based macOS runners (no nested virtualization)
     // See: https://github.com/docker/setup-docker-action and https://github.com/douglascamata/setup-docker-macos-action
     // We may want to look into adding intel only for this docker case, at least until vm-in-vm works on latest macos
-    { os: 'macos-latest', os_name: 'MacOS', os_timeout: 90, package_managers: ['npm'], node_versions: ['24.0.0'], excluded: ['e2e-docker'] }
+    { os: 'macos-latest', os_name: 'MacOS', os_timeout: 90, package_managers: ['npm'], node_versions: ['24.0.0', '26.0.0'], excluded: ['e2e-docker'] }
     // TODO (Jack): Fix Windows support as gradle fails when running nx build https://staging.nx.app/runs/LgD4vxGn8w?utm_source=pull-request&utm_medium=comment
     // { os: 'windows-latest', os_name: 'WinOS', os_timeout: 180, package_managers: ['npm'], node_versions: ['24.0.0'], excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo'] }
   ]
@@ -124,7 +125,7 @@ for (let p = 0; p < matrixData.coreProjects.length; p++) {
 }
 // process other projects
 for (let p = 0; p < matrixData.projects.length; p++) {
-  processProject(matrixData.projects[p], matrixData.nodeTLS);
+  processProject(matrixData.projects[p], matrixData.lowestNodeLTS);
 }
 
 if (matrix.length > 256) {
