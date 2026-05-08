@@ -418,6 +418,16 @@ function isModuleNotFoundError(err: unknown): boolean {
 }
 
 /**
+ * Hint appended to errors that the lazy fallback couldn't recover from.
+ * Points users at the env opt-out for cases native strip can't reach (e.g.
+ * ESM with top-level await + unsupported TS syntax, where swc-node's CJS
+ * Module._extensions hook can't intercept dynamic `import()`).
+ */
+const NX_PREFER_NODE_STRIP_TYPES_DOCS_URL =
+  'https://nx.dev/docs/reference/environment-variables#nx_prefer_node_strip_types';
+const STRIP_TYPES_OPT_OUT_HINT = `Set NX_PREFER_NODE_STRIP_TYPES=false to opt out of Node's native TypeScript stripping and use swc/ts-node instead. See ${NX_PREFER_NODE_STRIP_TYPES_DOCS_URL}`;
+
+/**
  * Load a TypeScript file via `require()`.
  *
  * When the runtime exposes native TypeScript stripping
@@ -488,12 +498,12 @@ export function loadTsFile<T = any>(
     if (!swcNodeInstalled && !tsNodeInstalled) {
       const original = err instanceof Error ? err.message : String(err);
       throw new Error(
-        `${NX_PREFIX} ${filePath} could not be loaded under Node's native TypeScript stripping (${original}). Install @swc-node/register and @swc/core (or ts-node) to enable the swc/ts-node fallback.`
+        `${NX_PREFIX} ${filePath} could not be loaded under Node's native TypeScript stripping (${original}). Install @swc-node/register and @swc/core (or ts-node) to enable the swc/ts-node fallback, or ${STRIP_TYPES_OPT_OUT_HINT}`
       );
     }
     if (!resolvedTsConfigPath) {
       throw new Error(
-        `${NX_PREFIX} ${filePath} requires the swc/ts-node fallback but no workspace tsconfig was found. Pass an explicit tsConfigPath or add a tsconfig.base.json/tsconfig.json at the workspace root.`
+        `${NX_PREFIX} ${filePath} requires the swc/ts-node fallback but no workspace tsconfig was found. Pass an explicit tsConfigPath or add a tsconfig.base.json/tsconfig.json at the workspace root. ${STRIP_TYPES_OPT_OUT_HINT}`
       );
     }
     if (!pathsRegistered && !disableTsConfigPaths) {
@@ -553,12 +563,32 @@ export function loadTsFile<T = any>(
           continue;
         }
 
-        throw err;
+        throw augmentLoadFailure(filePath, err);
       }
     }
   } finally {
     for (const fn of cleanups) fn();
   }
+}
+
+/**
+ * If the error isn't an ESM-redispatch signal that callers expect to handle
+ * (`ERR_REQUIRE_ESM`, `ERR_REQUIRE_ASYNC_MODULE`), append the
+ * `NX_PREFER_NODE_STRIP_TYPES=false` opt-out hint so users know there's an
+ * escape hatch for cases native strip can't reach (e.g. ESM with top-level
+ * await + unsupported TS syntax).
+ */
+function augmentLoadFailure(filePath: string, err: unknown): unknown {
+  if (!(err instanceof Error)) return err;
+  const code = (err as { code?: string }).code;
+  if (code === 'ERR_REQUIRE_ESM' || code === 'ERR_REQUIRE_ASYNC_MODULE') {
+    return err;
+  }
+  if (err.message.includes(NX_PREFER_NODE_STRIP_TYPES_DOCS_URL)) {
+    return err;
+  }
+  err.message = `${err.message}\n\n${NX_PREFIX} Failed to load ${filePath} under Node's native TypeScript stripping. ${STRIP_TYPES_OPT_OUT_HINT}`;
+  return err;
 }
 
 function logFallback(filePath: string, err: unknown, summary: string): void {

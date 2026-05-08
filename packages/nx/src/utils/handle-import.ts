@@ -1,5 +1,8 @@
 import { extname, resolve } from 'path';
 
+const STRIP_TYPES_DOCS_URL =
+  'https://nx.dev/docs/reference/environment-variables#nx_prefer_node_strip_types';
+
 /**
  * Dynamically imports a module using CJS require().
  * Provides a single point of change for future ESM migration.
@@ -49,7 +52,25 @@ export async function handleImport<T = any>(
       } catch {
         // require.resolve may throw if the failed load never reached cache
       }
-      return require(normalizedPath) as T;
+      try {
+        return require(normalizedPath) as T;
+      } catch (retryErr: any) {
+        if (
+          retryErr?.code === 'ERR_REQUIRE_ESM' ||
+          retryErr?.code === 'ERR_REQUIRE_ASYNC_MODULE'
+        ) {
+          throw retryErr;
+        }
+        if (retryErr instanceof Error) {
+          // Lazy-require NX_PREFIX so we don't pull logger -> daemon into
+          // module-eval-time graphs.
+          const {
+            NX_PREFIX,
+          } = require('./logger') as typeof import('./logger');
+          retryErr.message = `${retryErr.message}\n\n${NX_PREFIX} Failed to load ${normalizedPath} under Node's native TypeScript stripping. Set NX_PREFER_NODE_STRIP_TYPES=false to opt out and use swc/ts-node instead. See ${STRIP_TYPES_DOCS_URL}`;
+        }
+        throw retryErr;
+      }
     }
     throw e;
   }

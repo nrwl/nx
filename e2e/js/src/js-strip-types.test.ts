@@ -152,5 +152,84 @@ module.exports = { displayName };
       },
       TEN_MINS_MS
     );
+
+    it(
+      'should fall back to swc/ts-node when a .mts config uses an enum',
+      () => {
+        const lib = uniq('lib');
+        runCLI(
+          `generate @nx/js:lib ${lib} --unitTestRunner=jest --no-interactive`
+        );
+
+        // .mts with an enum: Node 22.12+ require()s sync ESM, native strip
+        // throws ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX, loadTsFile registers
+        // swc-node (which hooks .mts), retry succeeds.
+        updateFile(
+          `${lib}/jest.config.mts`,
+          `enum Mode { Standard = 'standard' }
+const mode: Mode = Mode.Standard;
+export default { displayName: '${lib}', mode };
+`
+        );
+
+        const result = runCLI('report', {
+          env: { NX_VERBOSE_LOGGING: 'true' },
+          daemon: false,
+          redirectStderr: true,
+        });
+
+        expect(result).toContain('nx');
+        expect(result).toContain('Native Node.js TypeScript stripping failed');
+      },
+      TEN_MINS_MS
+    );
+
+    it(
+      'should surface the env opt-out hint when a .mts config combines top-level await and unsupported TS syntax, and succeed once the env is set',
+      () => {
+        const lib = uniq('lib');
+        runCLI(
+          `generate @nx/js:lib ${lib} --unitTestRunner=jest --no-interactive`
+        );
+
+        // TLA forces dynamic import(); enum forces native strip to fail.
+        // swc-node only hooks Module._extensions (CJS), so it can't
+        // intercept dynamic import. The lazy fallback can't recover here.
+        updateFile(
+          `${lib}/jest.config.mts`,
+          `enum Mode { Standard = 'standard' }
+const config = await Promise.resolve({ displayName: '${lib}', mode: Mode.Standard });
+export default config;
+`
+        );
+
+        // Default native strip path - expect failure with the opt-out hint.
+        const failed = runCLI('report', {
+          env: { NX_VERBOSE_LOGGING: 'true' },
+          daemon: false,
+          redirectStderr: true,
+          silenceError: true,
+        });
+
+        expect(failed).toContain('NX_PREFER_NODE_STRIP_TYPES=false');
+        expect(failed).toContain(
+          'environment-variables#nx_prefer_node_strip_types'
+        );
+
+        // Opt out via env; legacy path registers ts-node/esm and the file
+        // loads successfully.
+        const ok = runCLI('report', {
+          env: {
+            NX_PREFER_NODE_STRIP_TYPES: 'false',
+            NX_VERBOSE_LOGGING: 'true',
+          },
+          daemon: false,
+          redirectStderr: true,
+        });
+
+        expect(ok).toContain('nx');
+      },
+      TEN_MINS_MS
+    );
   });
 });

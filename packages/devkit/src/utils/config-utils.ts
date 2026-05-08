@@ -44,17 +44,6 @@ async function loadTypeScriptModule(
     return await loadModuleByExtension(path, extension);
   }
 
-  // .mts is ESM-only - register transpiler (no-op when native strip is preferred)
-  // and dispatch to the ESM loader.
-  if (extension === '.mts') {
-    const cleanup = registerTsProject(tsConfigPath);
-    try {
-      return await loadESM(path);
-    } finally {
-      cleanup();
-    }
-  }
-
   // Hot-reload parity with loadCommonJS.
   if (require.cache[path]) {
     clearRequireCache();
@@ -72,10 +61,20 @@ async function loadTypeScriptModule(
     }
   }
 
+  // Both .ts and .mts go through loadTsFile first. Node 22.12+ supports
+  // require() of synchronous ESM by default, and loadTsFile's lazy fallback
+  // covers swc/ts-node + tsconfig-paths registration when needed (swc-node
+  // hooks .cts/.mts/.ts via Module._extensions). Async-only ESM modules
+  // (top-level await) throw ERR_REQUIRE_ASYNC_MODULE and fall through to
+  // dynamic import(). ERR_REQUIRE_ESM is the legacy code for the same case
+  // - kept for older Node lines.
   try {
     return loadTsFile(path, tsConfigPath);
   } catch (e: any) {
-    if (extension === '.ts' && e?.code === 'ERR_REQUIRE_ESM') {
+    if (
+      e?.code === 'ERR_REQUIRE_ESM' ||
+      e?.code === 'ERR_REQUIRE_ASYNC_MODULE'
+    ) {
       const cleanup = registerTsProject(tsConfigPath);
       try {
         return await loadESM(path);
