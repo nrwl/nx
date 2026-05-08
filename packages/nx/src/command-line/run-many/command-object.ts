@@ -44,11 +44,13 @@ export const yargsRunManyCommand: CommandModule = {
 };
 
 // `nx run-many` — no positionals; project/target completion comes from
-// flags. Only the canonical names are listed; yargs's alias map (-p,
-// -t, etc.) is consulted at TAB time.
+// flags. If yargs's alias declarations change, update the duplicates here.
 registerCompletion('run-many', {
   flags: {
     projects: (current) => getProjectNameCompletions(current),
+    p: (current) => getProjectNameCompletions(current),
+    targets: (current) => getTargetNameCompletions(current),
     target: (current) => getTargetNameCompletions(current),
+    t: (current) => getTargetNameCompletions(current),
   },
 });

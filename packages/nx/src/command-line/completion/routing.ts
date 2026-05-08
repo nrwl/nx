@@ -5,58 +5,6 @@ import { findCompletionMetadata, findFlagCompletion } from './metadata';
 require('../nx-commands');
 
 /**
- * Walk yargs's command tree following `args` (skipping flag tokens) and
- * return the leaf yargs instance after running each matched command's
- * builder. Used to read the leaf's option metadata — alias map, etc.
- */
-function findYargsLeaf(args: string[]): any | null {
-  const { commandsObject } = require('../nx-commands') as {
-    commandsObject: any;
-  };
-  const yargs = require('yargs') as typeof import('yargs');
-  let current: any = commandsObject;
-
-  for (const arg of args) {
-    if (arg.startsWith('-')) continue;
-    const handlers = current
-      .getInternalMethods?.()
-      ?.getCommandInstance?.()
-      ?.getCommandHandlers?.();
-    if (!handlers || !handlers[arg]) break;
-    const temp: any = (yargs as any)();
-    try {
-      handlers[arg].builder?.(temp);
-    } catch {
-      break;
-    }
-    current = temp;
-  }
-  return current === commandsObject ? null : current;
-}
-
-/**
- * Given a yargs instance and a typed flag (e.g. `p`), return the set of
- * sibling names that point at the same option (canonical + aliases). Allows
- * a contributor to register only the canonical flag name and have aliases
- * resolve automatically. Returns an empty array if no aliases are known.
- */
-function getFlagAliases(yargsLeaf: any, flag: string): string[] {
-  const opts = yargsLeaf?.getOptions?.();
-  if (!opts) return [];
-  const aliasMap: Record<string, string[]> = opts.alias ?? {};
-  const matches = new Set<string>();
-  for (const [canonical, aliases] of Object.entries(aliasMap)) {
-    const list = aliases ?? [];
-    if (canonical === flag || list.includes(flag)) {
-      matches.add(canonical);
-      for (const a of list) matches.add(a);
-    }
-  }
-  matches.delete(flag);
-  return Array.from(matches);
-}
-
-/**
  * Returns project/target completions for known nx subcommands. Returns null
  * when the routing has nothing specific to add — the caller should fall back
  * to yargs's default command/option enumeration.
@@ -75,8 +23,7 @@ export function getCompletions(
   // 1. Flag-based completion: did the user just type `--focus <TAB>` etc.?
   const activeFlag = stripDashes(getActiveOptionFlag());
   if (activeFlag) {
-    const aliases = getFlagAliases(findYargsLeaf(args), activeFlag);
-    const handler = findFlagCompletion(meta, activeFlag, aliases);
+    const handler = findFlagCompletion(meta, activeFlag);
     if (handler) {
       return handler(current, args);
     }

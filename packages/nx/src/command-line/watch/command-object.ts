@@ -21,6 +21,7 @@ export const yargsWatchCommand: CommandModule = {
 registerCompletion('watch', {
   flags: {
     projects: (current) => getProjectNameCompletions(current),
+    p: (current) => getProjectNameCompletions(current),
   },
 });
 

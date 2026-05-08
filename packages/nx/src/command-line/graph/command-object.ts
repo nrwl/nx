@@ -37,10 +37,11 @@ export const yargsGraphCommand: CommandModule = {
 };
 
 // `nx graph` — no positionals; project completion comes from --focus / --exclude.
-// Only canonical names; yargs aliases auto-resolve at TAB time.
 registerCompletion('graph', {
   flags: {
     targets: (current) => getTargetNameCompletions(current),
+    target: (current) => getTargetNameCompletions(current),
+    t: (current) => getTargetNameCompletions(current),
     focus: (current) => getProjectNameCompletions(current),
     exclude: (current) => getProjectNameCompletions(current),
   },

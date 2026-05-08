@@ -20,7 +20,11 @@ export interface PositionalCompletion {
 export interface CommandCompletionMetadata {
   /** Indexed by positional position (0 = first positional). */
   positionals?: PositionalCompletion[];
-  /** Per-flag value handlers, keyed by canonical flag name (no leading `--`). */
+  /**
+   * Per-flag value handlers, keyed by flag name (no leading `--`).
+   * Aliases are written out as separate entries pointing at the same
+   * function — keeps the map uniform and lookup a single `Map.get`.
+   */
   flags?: Record<string, CompletionFn>;
 }
 
@@ -72,24 +76,12 @@ export function findCompletionMetadata(
 }
 
 /**
- * Resolve a flag's value-completion handler from the matched command's
- * registered metadata. Only commands that explicitly register a handler
- * for the flag participate — there is no global fallback set, so each
- * command declares the flags it owns.
- *
- * Tries the typed flag first, then any aliases yargs knows about. This
- * lets a command register only the canonical flag name (e.g. `projects`)
- * and have `-p` / `--p` resolve to the same handler.
+ * Resolve a flag's value-completion handler. Returns null when no handler
+ * is registered for the typed flag.
  */
 export function findFlagCompletion(
   metadata: CommandCompletionMetadata | null,
-  flag: string,
-  aliases: ReadonlyArray<string> = []
+  flag: string
 ): CompletionFn | null {
-  if (!metadata?.flags) return null;
-  if (metadata.flags[flag]) return metadata.flags[flag];
-  for (const a of aliases) {
-    if (metadata.flags[a]) return metadata.flags[a];
-  }
-  return null;
+  return metadata?.flags?.[flag] ?? null;
 }
