@@ -9,6 +9,7 @@ import {
   logger,
   offsetFromRoot,
   output,
+  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -67,6 +68,16 @@ export async function configurationGeneratorInternal(
   const offsetFromProjectRoot = offsetFromRoot(projectConfig.root);
 
   const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
+  // Detect ESM context for the generated config:
+  //   - The project's package.json type=module wins if present.
+  //   - Otherwise the workspace root package.json type wins.
+  //   - TS solution setup implies ESM (package manager workspaces with
+  //     project-level package.json type=module by convention).
+  // Native Node TypeScript stripping respects the package's effective module
+  // type, so __filename is undefined when the config loads as ESM. The
+  // template branches on this flag to emit `import.meta.dirname` instead.
+  const isEsmConfig =
+    isTsSolutionSetup || isPackageEsm(tree, projectConfig.root);
 
   generateFiles(tree, path.join(__dirname, 'files'), projectConfig.root, {
     offsetFromRoot: offsetFromProjectRoot,
@@ -74,6 +85,7 @@ export async function configurationGeneratorInternal(
     webServerCommand: options.webServerCommand ?? null,
     webServerAddress: options.webServerAddress ?? null,
     isTsSolutionSetup,
+    isEsmConfig,
     ...options,
   });
   const tsconfigPath = joinPathFragments(projectConfig.root, 'tsconfig.json');
@@ -415,3 +427,21 @@ function ignoreTestOutput(
 }
 
 export default configurationGenerator;
+
+function isPackageEsm(tree: Tree, projectRoot: string): boolean {
+  const projectPackageJsonPath = joinPathFragments(projectRoot, 'package.json');
+  if (tree.exists(projectPackageJsonPath)) {
+    const projectPackageJson = readJson<PackageJson>(
+      tree,
+      projectPackageJsonPath
+    );
+    if (projectPackageJson.type) {
+      return projectPackageJson.type === 'module';
+    }
+  }
+  if (tree.exists('package.json')) {
+    const rootPackageJson = readJson<PackageJson>(tree, 'package.json');
+    return rootPackageJson.type === 'module';
+  }
+  return false;
+}

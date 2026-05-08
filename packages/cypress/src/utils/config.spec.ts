@@ -21,7 +21,7 @@ export default defineConfig({
       import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
       export default defineConfig({
           e2e: nxE2EPreset(__filename),
-          component: nxComponentTestingPreset(__filename)
+          component: nxComponentTestingPreset(import.meta.dirname)
       });"
     `);
   });
@@ -41,13 +41,13 @@ export default defineConfig({
       undefined
     );
     expect(actual).toMatchInlineSnapshot(`
-      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset.js';
       import { defineConfig } from 'cypress';
       import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
       export default defineConfig({
           component: nxComponentTestingPreset(__filename),
           e2e: {
-              ...nxE2EPreset(__filename, {
+              ...nxE2EPreset(import.meta.dirname, {
                   "cypressDir": "cypress"
               })
           }
@@ -134,12 +134,12 @@ export default defineConfig({
       'https://example.com'
     );
     expect(actual).toMatchInlineSnapshot(`
-      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset.js';
       import { defineConfig } from 'cypress';
       import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
       export default defineConfig({
           e2e: {
-              ...nxE2EPreset(__filename, {
+              ...nxE2EPreset(import.meta.dirname, {
                   "cypressDir": "cypress"
               }),
               baseUrl: 'https://example.com'
@@ -167,12 +167,12 @@ export default defineConfig({
       undefined
     );
     expect(actual).toMatchInlineSnapshot(`
-      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset.js';
       import { defineConfig } from 'cypress';
       import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
       export default defineConfig({
           e2e: {
-              ...nxE2EPreset(__filename, {
+              ...nxE2EPreset(import.meta.dirname, {
                   "cypressDir": "cypress",
                   "webServerCommands": {
                       "default": "my-app:serve",

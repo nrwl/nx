@@ -45,7 +45,13 @@ export async function addDefaultE2EConfig(
   let updatedConfigContents = cyConfigContents;
 
   if (testingTypeConfig.length === 0) {
-    const configValue = `nxE2EPreset(__filename, ${JSON.stringify(
+    // CJS uses __filename (always defined). ESM has no __filename, so we
+    // pass `import.meta.dirname` (Node 21.2+ / always available on Nx 23
+    // supported Node versions). Native Node TypeScript stripping respects
+    // the package's effective module type, so the choice matters when the
+    // workspace (or project) is type=module.
+    const pathToConfig = isCommonJS ? '__filename' : 'import.meta.dirname';
+    const configValue = `nxE2EPreset(${pathToConfig}, ${JSON.stringify(
       options,
       null,
       2
@@ -63,7 +69,7 @@ export async function addDefaultE2EConfig(
   ${node.properties.map((p) => p.getText()).join(',\n')},
   e2e: {
     ...${configValue}${baseUrlContents}
-  } 
+  }
 }`;
         }
         return `{
@@ -74,10 +80,12 @@ export async function addDefaultE2EConfig(
       }
     );
 
+    // ESM strict resolution requires the explicit `.js` extension on the
+    // subpath import (no exports map on @nx/cypress to map the bare path).
     return isCommonJS
       ? `const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
 ${updatedConfigContents}`
-      : `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      : `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset.js';
 ${updatedConfigContents}`;
   }
   return updatedConfigContents;
@@ -97,6 +105,9 @@ export async function addDefaultCTConfig(
   }
   const { tsquery } = await import('@phenomnomnominal/tsquery');
 
+  const isCommonJS =
+    tsquery.query(cyConfigContents, TS_QUERY_COMMON_JS_EXPORT_SELECTOR).length >
+    0;
   const testingTypeConfig = tsquery.query<PropertyAssignment>(
     cyConfigContents,
     `${TS_QUERY_EXPORT_CONFIG_PREFIX} PropertyAssignment:has(Identifier[name="component"])`
@@ -105,7 +116,10 @@ export async function addDefaultCTConfig(
   let updatedConfigContents = cyConfigContents;
 
   if (testingTypeConfig.length === 0) {
-    let configValue = 'nxComponentTestingPreset(__filename)';
+    // See addDefaultE2EConfig for the rationale on __filename vs
+    // import.meta.dirname.
+    const pathToConfig = isCommonJS ? '__filename' : 'import.meta.dirname';
+    let configValue = `nxComponentTestingPreset(${pathToConfig})`;
     if (options) {
       if (options.bundler !== 'vite') {
         // vite is the default bundler, so we don't need to set it
@@ -113,7 +127,7 @@ export async function addDefaultCTConfig(
       }
 
       if (Object.keys(options).length) {
-        configValue = `nxComponentTestingPreset(__filename, ${JSON.stringify(
+        configValue = `nxComponentTestingPreset(${pathToConfig}, ${JSON.stringify(
           options
         )})`;
       }
