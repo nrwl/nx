@@ -21,7 +21,7 @@ import { hashObject } from 'nx/src/devkit-internals';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
-import { dirname, join, relative } from 'path';
+import { dirname, join, relative, resolve } from 'path';
 import { NX_PLUGIN_OPTIONS } from '../utils/constants';
 
 export interface CypressPluginOptions {
@@ -137,8 +137,35 @@ function getTargetOutputs(outputs: string[], subfolder?: string): string[] {
   );
 }
 
+// Normalize a Cypress config folder (e.g. videosFolder, screenshotsFolder) to a
+// project-root-relative path, then append the per-spec subfolder. Cypress
+// resolves relative folders against the project root (cwd), so this keeps the
+// path Cypress writes to in lockstep with what Nx declares as the target's
+// outputs — regardless of whether the user wrote a relative path or computed
+// an absolute one (e.g. via `path.resolve` / `__dirname`).
+function serializeConfigPath(
+  configPath: string,
+  projectRoot: string,
+  workspaceRoot: string,
+  outputSubfolder: string
+): string {
+  if (!configPath) {
+    return configPath;
+  }
+
+  const fullProjectRoot = resolve(workspaceRoot, projectRoot);
+  const fullConfigPath = resolve(fullProjectRoot, configPath);
+  const relativeConfigPath = normalizePath(
+    relative(fullProjectRoot, fullConfigPath)
+  );
+
+  return normalizePath(join(relativeConfigPath, outputSubfolder));
+}
+
 function getTargetConfig(
   cypressConfig: any,
+  projectRoot: string,
+  workspaceRoot: string,
   outputSubfolder: string,
   ciBaseUrl?: string
 ): string {
@@ -150,21 +177,38 @@ function getTargetConfig(
   const { screenshotsFolder, videosFolder, e2e, component } = cypressConfig;
 
   if (videosFolder) {
-    config['videosFolder'] = join(videosFolder, outputSubfolder);
+    config['videosFolder'] = serializeConfigPath(
+      videosFolder,
+      projectRoot,
+      workspaceRoot,
+      outputSubfolder
+    );
   }
 
   if (screenshotsFolder) {
-    config['screenshotsFolder'] = join(screenshotsFolder, outputSubfolder);
+    config['screenshotsFolder'] = serializeConfigPath(
+      screenshotsFolder,
+      projectRoot,
+      workspaceRoot,
+      outputSubfolder
+    );
   }
 
   if (e2e) {
     config['e2e'] = {};
     if (e2e.videosFolder) {
-      config['e2e']['videosFolder'] = join(e2e.videosFolder, outputSubfolder);
+      config['e2e']['videosFolder'] = serializeConfigPath(
+        e2e.videosFolder,
+        projectRoot,
+        workspaceRoot,
+        outputSubfolder
+      );
     }
     if (e2e.screenshotsFolder) {
-      config['e2e']['screenshotsFolder'] = join(
+      config['e2e']['screenshotsFolder'] = serializeConfigPath(
         e2e.screenshotsFolder,
+        projectRoot,
+        workspaceRoot,
         outputSubfolder
       );
     }
@@ -173,14 +217,18 @@ function getTargetConfig(
   if (component) {
     config['component'] = {};
     if (component.videosFolder) {
-      config['component']['videosFolder'] = join(
+      config['component']['videosFolder'] = serializeConfigPath(
         component.videosFolder,
+        projectRoot,
+        workspaceRoot,
         outputSubfolder
       );
     }
     if (component.screenshotsFolder) {
-      config['component']['screenshotsFolder'] = join(
+      config['component']['screenshotsFolder'] = serializeConfigPath(
         component.screenshotsFolder,
+        projectRoot,
+        workspaceRoot,
         outputSubfolder
       );
     }
@@ -193,14 +241,22 @@ function getTargetConfig(
 function getOutputs(
   projectRoot: string,
   cypressConfig: any,
-  testingType: 'e2e' | 'component'
+  testingType: 'e2e' | 'component',
+  workspaceRoot: string
 ): string[] {
-  function getOutput(path: string): string {
-    if (path.startsWith('..')) {
-      return joinPathFragments('{workspaceRoot}', projectRoot, path);
-    } else {
-      return joinPathFragments('{projectRoot}', path);
+  const fullProjectRoot = resolve(workspaceRoot, projectRoot);
+  function getOutput(outputPath: string): string {
+    const fullPath = resolve(fullProjectRoot, outputPath);
+    const relativeToProjectRoot = normalizePath(
+      relative(fullProjectRoot, fullPath)
+    );
+    if (relativeToProjectRoot.startsWith('..')) {
+      return joinPathFragments(
+        '{workspaceRoot}',
+        relative(workspaceRoot, fullPath)
+      );
     }
+    return joinPathFragments('{projectRoot}', relativeToProjectRoot);
   }
 
   const { screenshotsFolder, videosFolder, e2e, component } = cypressConfig;
@@ -277,7 +333,12 @@ async function buildCypressTargets(
       },
       cache: true,
       inputs: getInputs(namedInputs),
-      outputs: getOutputs(projectRoot, cypressConfig, 'e2e'),
+      outputs: getOutputs(
+        projectRoot,
+        cypressConfig,
+        'e2e',
+        context.workspaceRoot
+      ),
       metadata: {
         technologies: ['cypress'],
         description: 'Runs Cypress Tests',
@@ -334,7 +395,12 @@ async function buildCypressTargets(
       const ciBaseUrl = pluginPresetOptions?.ciBaseUrl;
 
       const dependsOn: TargetConfiguration['dependsOn'] = [];
-      const outputs = getOutputs(projectRoot, cypressConfig, 'e2e');
+      const outputs = getOutputs(
+        projectRoot,
+        cypressConfig,
+        'e2e',
+        context.workspaceRoot
+      );
       const inputs = getInputs(namedInputs);
 
       const groupName = 'E2E (CI)';
@@ -377,6 +443,8 @@ async function buildCypressTargets(
           cache: true,
           command: `cypress run --env webServerCommand="${ciWebServerCommand}" --spec ${relativeSpecFilePath} --config=${getTargetConfig(
             cypressConfig,
+            projectRoot,
+            context.workspaceRoot,
             outputSubfolder,
             ciBaseUrl
           )}`,
@@ -443,7 +511,12 @@ async function buildCypressTargets(
 
   if ('component' in cypressConfig) {
     const inputs = getInputs(namedInputs);
-    const outputs = getOutputs(projectRoot, cypressConfig, 'component');
+    const outputs = getOutputs(
+      projectRoot,
+      cypressConfig,
+      'component',
+      context.workspaceRoot
+    );
 
     // This will not override the e2e target if it is the same
     targets[options.componentTestingTargetName] ??= {
@@ -517,6 +590,8 @@ async function buildCypressTargets(
           cache: true,
           command: `cypress run --component --spec ${relativeSpecFilePath} --config=${getTargetConfig(
             cypressConfig,
+            projectRoot,
+            context.workspaceRoot,
             outputSubfolder
           )}`,
           options: {
