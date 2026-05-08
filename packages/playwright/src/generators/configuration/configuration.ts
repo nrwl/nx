@@ -66,15 +66,16 @@ export async function configurationGeneratorInternal(
   const projectConfig = readProjectConfiguration(tree, options.project);
   const offsetFromProjectRoot = offsetFromRoot(projectConfig.root);
 
+  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
+
   generateFiles(tree, path.join(__dirname, 'files'), projectConfig.root, {
     offsetFromRoot: offsetFromProjectRoot,
     projectRoot: projectConfig.root,
     webServerCommand: options.webServerCommand ?? null,
     webServerAddress: options.webServerAddress ?? null,
+    isTsSolutionSetup,
     ...options,
   });
-
-  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
   const tsconfigPath = joinPathFragments(projectConfig.root, 'tsconfig.json');
   if (tree.exists(tsconfigPath)) {
     if (isTsSolutionSetup) {
