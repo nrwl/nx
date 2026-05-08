@@ -3,11 +3,16 @@ import { clean, coerce, major } from 'semver';
 
 const nxVersion = require('../../package.json').version;
 
+// Jest is pinned to 30.3.x because jest-runtime@30.4.0 added a call to
+// `_moduleMocker.clearMocksOnScope()`, which doesn't exist on the
+// jest-mock@29 ModuleMocker that React Native's preset still feeds in
+// (via `@react-native/jest-preset`'s pinned `jest-environment-node@^29.7.0`).
+// Lift this once Meta ships a Jest-30-aware preset on react-native.
 export const latestVersions = {
   nxVersion,
-  jestVersion: '^30.0.2',
-  babelJestVersion: '^30.0.2',
-  jestTypesVersion: '^30.0.0',
+  jestVersion: '~30.3.0',
+  babelJestVersion: '~30.3.0',
+  jestTypesVersion: '~30.0.0',
   tsJestVersion: '^29.4.0',
   tslibVersion: '^2.3.0',
   swcJestVersion: '~0.2.38',
