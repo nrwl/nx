@@ -300,7 +300,8 @@ type MatchKind =
   | 'targetAndExecutor'
   | 'executorOnly'
   | 'exactTarget'
-  | 'globTarget';
+  | 'globTarget'
+  | 'filterOnly';
 
 interface Candidate {
   config: Partial<TargetConfiguration>;
@@ -315,16 +316,23 @@ interface Candidate {
  * kind, then by later array index. Returns the config slice with filter
  * keys (`target`, `projects`, `source`) stripped.
  *
- * Tier = 1 (the entry matched) + 1 per applied filter (`projects`,
- * `source`). So:
+ * Tier = (1 if a target/executor locator matched, else 0) + 1 per
+ * applied filter (`projects`, `source`). So locator-bearing entries:
  *   - tier 3: target/executor + projects + source
  *   - tier 2: target/executor + projects, or target/executor + source
  *   - tier 1: target/executor alone
+ * And filter-only entries (no `target` and no `executor`):
+ *   - tier 2: projects + source
+ *   - tier 1: projects alone, or source alone
  *
  * `executor` matching contributes to matchKind only, not to tier — it's
  * not a filter, it's a refinement of the match. Within the same tier,
  * tie-break order (highest first):
- *   targetAndExecutor > executorOnly > exactTarget > globTarget
+ *   targetAndExecutor > executorOnly > exactTarget > globTarget > filterOnly
+ *
+ * `filterOnly` ranks below every locator-bearing kind, so a filter-only
+ * entry can never tie-break ahead of one that names a target or executor
+ * at the same tier.
  *
  * `executor` only acts as an "injector" (matches a target with neither
  * executor nor command) when the entry also sets `target`. Executor-only
@@ -400,7 +408,17 @@ function matchEntry(
   targetCommand: string | undefined
 ): Candidate | null {
   if (!entry) return null;
-  if (entry.target === undefined && entry.executor === undefined) return null;
+  // Reject entries with no constraints whatsoever — without a locator
+  // (`target`/`executor`) or a filter (`projects`/`source`) the entry
+  // would broadcast to every (root, target) in the workspace.
+  if (
+    entry.target === undefined &&
+    entry.executor === undefined &&
+    entry.projects === undefined &&
+    entry.source === undefined
+  ) {
+    return null;
+  }
 
   let targetKind: 'exact' | 'glob' | null = null;
   if (entry.target !== undefined) {
@@ -426,7 +444,13 @@ function matchEntry(
     }
   }
 
-  let tier = 1;
+  // Locator-bearing entries get a base tier of 1 (the locator match);
+  // filter-only entries start at 0 so a single filter doesn't tie a
+  // single locator. Filters then add 1 each — with the matchKind
+  // tie-break below, filter-only always loses to locator-bearing at
+  // the same final tier.
+  const hasLocator = targetKind !== null || executorMatched;
+  let tier = hasLocator ? 1 : 0;
 
   if (entry.projects !== undefined) {
     if (!projectName || !projectNode) return null;
@@ -448,11 +472,13 @@ function matchEntry(
   const matchKind: MatchKind =
     targetKind !== null && executorMatched
       ? 'targetAndExecutor'
-      : targetKind === null
+      : executorMatched
         ? 'executorOnly'
         : targetKind === 'exact'
           ? 'exactTarget'
-          : 'globTarget';
+          : targetKind === 'glob'
+            ? 'globTarget'
+            : 'filterOnly';
 
   return {
     config: stripFilterKeys(entry),
@@ -471,10 +497,14 @@ function matchEntry(
  *    narrower than unfiltered entries, so they outrank.
  * 2. Match kind — within the same tier, more locator slots is more
  *    specific: `target+executor` > `executor-only` > `exactTarget` >
- *    `globTarget`. Note `executor-only` outranks `exactTarget`: a
- *    workspace-wide rule keyed on a specific executor is treated as
- *    more intentional than a target-name rule that might accidentally
- *    catch unrelated executors.
+ *    `globTarget` > `filterOnly`. Note `executor-only` outranks
+ *    `exactTarget`: a workspace-wide rule keyed on a specific executor
+ *    is treated as more intentional than a target-name rule that might
+ *    accidentally catch unrelated executors. `filterOnly` (no `target`
+ *    and no `executor`, just `projects` and/or `source`) sits at the
+ *    bottom — it's the explicit "least specific" tier that lets a bare
+ *    `source: '@nx/jest/plugin'` apply to every jest-attributed target
+ *    while still losing to any entry that names the target or executor.
  * 3. Tie-break — later array index wins, so users can append an entry
  *    to override earlier ones without rewriting them.
  */
@@ -489,12 +519,14 @@ function beats(a: Candidate, b: Candidate): boolean {
 function matchKindRank(kind: MatchKind): number {
   switch (kind) {
     case 'targetAndExecutor':
-      return 3;
+      return 4;
     case 'executorOnly':
-      return 2;
+      return 3;
     case 'exactTarget':
-      return 1;
+      return 2;
     case 'globTarget':
+      return 1;
+    case 'filterOnly':
       return 0;
   }
 }
