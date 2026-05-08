@@ -13,6 +13,87 @@ let ts: typeof import('typescript');
 let isTsEsmLoaderRegistered = false;
 
 /**
+ * Force-register an ESM loader (`@swc-node/register/esm` if available, else
+ * `ts-node/esm`) via `Module.register` so dynamic `import()` of TS files
+ * goes through a transpiler.
+ *
+ * **IMPORTANT — global side effect:** `Module.register` is one-shot per
+ * process and applies to *every* subsequent ESM resolution in the process.
+ * Calling this trades native Node.js TypeScript stripping for transpiled
+ * loading on the dynamic-import path for the rest of the run. CJS
+ * `require()` is unaffected (different hook), so `.cts` files via require
+ * keep using native strip + swc-node's `Module._extensions` hook.
+ *
+ * Required for the niche case where an ESM config (`.mts` or `.ts` resolved
+ * as ESM) combines top-level await with TypeScript syntax that native strip
+ * can't handle (`enum`, runtime `namespace`, etc.). TLA forces dynamic
+ * `import()`, which bypasses the CJS hook chain - the only way to intercept
+ * is `Module.register`.
+ *
+ * Idempotent: subsequent calls are no-ops.
+ *
+ * Throws if neither `@swc-node/register` nor `ts-node` is installed.
+ */
+export function forceRegisterEsmLoader(): void {
+  ensureEsmLoaderRegistered({ required: true });
+}
+
+function ensureEsmLoaderRegistered(opts: { required: boolean }): void {
+  if (isTsEsmLoaderRegistered) return;
+
+  const module = require('node:module') as typeof import('node:module');
+  if (typeof module.register !== 'function') {
+    if (opts.required) {
+      throw new Error(
+        `${NX_PREFIX} Module.register is not available in this Node.js version - cannot register an ESM loader for the TypeScript fallback. ${STRIP_TYPES_OPT_OUT_HINT}`
+      );
+    }
+    return;
+  }
+
+  // ts-node reads compilerOptions from this env var. Setting nodenext
+  // module/resolution avoids surprises when ts-node is the chosen loader.
+  process.env.TS_NODE_COMPILER_OPTIONS ??= JSON.stringify({
+    moduleResolution: 'nodenext',
+    module: 'nodenext',
+  });
+
+  // Prefer @swc-node/register/esm (faster) over ts-node/esm.
+  const swcEsm = tryResolveLoader('@swc-node/register/esm');
+  const tsNodeEsm = tryResolveLoader('ts-node/esm');
+  const loaderPath = swcEsm ?? tsNodeEsm;
+
+  if (!loaderPath) {
+    if (opts.required) {
+      throw new Error(
+        `${NX_PREFIX} Cannot register an ESM TypeScript loader to fall back from native stripping. Install @swc-node/register or ts-node, or ${STRIP_TYPES_OPT_OUT_HINT}`
+      );
+    }
+    isTsEsmLoaderRegistered = true;
+    return;
+  }
+
+  if (process.env.NX_VERBOSE_LOGGING === 'true') {
+    const loaderName = swcEsm ? '@swc-node/register/esm' : 'ts-node/esm';
+    logger.warn(
+      stripIndent(`${NX_PREFIX} Registering ESM TypeScript loader ${loaderName}. All subsequent ESM imports in this process will go through it - native Node.js TypeScript stripping is forfeited for the dynamic-import path.`)
+    );
+  }
+
+  const url = require('node:url') as typeof import('node:url');
+  module.register(url.pathToFileURL(loaderPath));
+  isTsEsmLoaderRegistered = true;
+}
+
+function tryResolveLoader(specifier: string): string | null {
+  try {
+    return require.resolve(specifier);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * tsx is a utility to run TypeScript files in node which is growing in popularity:
  * https://tsx.is
  *
@@ -158,25 +239,10 @@ export function registerTsProject(
     registerTranspiler(compilerOptions, tsConfigRaw),
   ];
 
-  // Add ESM support for `.ts` files.
-  // NOTE: There is no cleanup function for this, as it's not possible to unregister the loader.
-  //       Based on limited testing, it doesn't seem to matter if we register it multiple times, but just in
-  //       case let's keep a flag to prevent it.
-  if (!isTsEsmLoaderRegistered) {
-    // We need a way to ensure that `.ts` files are treated as ESM not CJS.
-    // Since there is no way to pass compilerOptions like we do with the programmatic API, we should default
-    // the environment variable that ts-node checks.
-    process.env.TS_NODE_COMPILER_OPTIONS ??= JSON.stringify({
-      moduleResolution: 'nodenext',
-      module: 'nodenext',
-    });
-    const module = require('node:module');
-    if (module.register && packageIsInstalled('ts-node/esm')) {
-      const url = require('node:url');
-      module.register(url.pathToFileURL(require.resolve('ts-node/esm')));
-    }
-    isTsEsmLoaderRegistered = true;
-  }
+  // Best-effort ESM loader registration so dynamic import() of .ts/.mts
+  // files goes through a transpiler. No-op if no ESM loader package is
+  // installed.
+  ensureEsmLoaderRegistered({ required: false });
 
   return () => {
     for (const fn of cleanupFunctions) {

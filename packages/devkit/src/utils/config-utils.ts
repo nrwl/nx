@@ -1,7 +1,11 @@
 import { existsSync, readdirSync } from 'fs';
 import { pathToFileURL } from 'node:url';
 import { workspaceRoot } from 'nx/src/devkit-exports';
-import { loadTsFile, registerTsProject } from 'nx/src/devkit-internals';
+import {
+  forceRegisterEsmLoader,
+  loadTsFile,
+  registerTsProject,
+} from 'nx/src/devkit-internals';
 import { dirname, extname, join, sep } from 'path';
 
 export let dynamicImport = new Function(
@@ -75,6 +79,25 @@ async function loadTypeScriptModule(
       e?.code === 'ERR_REQUIRE_ESM' ||
       e?.code === 'ERR_REQUIRE_ASYNC_MODULE'
     ) {
+      // Force-register an ESM TypeScript loader before dispatching to
+      // dynamic import(). Without this, an .mts config that combines
+      // top-level await with unsupported TS syntax (enum, runtime
+      // namespace, etc.) would fail under native strip - swc-node's CJS
+      // hook can't intercept dynamic imports.
+      //
+      // Module.register is global and one-shot per process. After this
+      // runs, every subsequent ESM import in the process is routed
+      // through the registered loader, forfeiting Node's native
+      // TypeScript stripping for the dynamic-import path. Worth it for
+      // recovery; if the workspace doesn't actually need it, the loader
+      // is never registered (the lazy fallback in loadTsFile handles
+      // most files via require() before this point).
+      //
+      // typeof check guards @nx/devkit running against an older nx that
+      // doesn't export forceRegisterEsmLoader yet.
+      if (typeof forceRegisterEsmLoader === 'function') {
+        forceRegisterEsmLoader();
+      }
       const cleanup = registerTsProject(tsConfigPath);
       try {
         return await loadESM(path);

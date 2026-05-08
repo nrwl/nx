@@ -185,7 +185,7 @@ export default { displayName: '${lib}', mode };
     );
 
     it(
-      'should surface the env opt-out hint when a .mts config combines top-level await and unsupported TS syntax, and succeed once the env is set',
+      'should recover via Module.register when a .mts config combines top-level await and unsupported TS syntax',
       () => {
         const lib = uniq('lib');
         runCLI(
@@ -193,8 +193,11 @@ export default { displayName: '${lib}', mode };
         );
 
         // TLA forces dynamic import(); enum forces native strip to fail.
-        // swc-node only hooks Module._extensions (CJS), so it can't
-        // intercept dynamic import. The lazy fallback can't recover here.
+        // swc-node's CJS Module._extensions hook can't intercept dynamic
+        // imports, so the lazy fallback in config-utils calls
+        // Module.register on @swc-node/register/esm (or ts-node/esm) and
+        // retries via loadESM. Note: this permanently switches the
+        // process's ESM resolution to the registered loader.
         updateFile(
           `${lib}/jest.config.mts`,
           `enum Mode { Standard = 'standard' }
@@ -203,31 +206,14 @@ export default config;
 `
         );
 
-        // Default native strip path - expect failure with the opt-out hint.
-        const failed = runCLI('report', {
+        const result = runCLI('report', {
           env: { NX_VERBOSE_LOGGING: 'true' },
           daemon: false,
           redirectStderr: true,
-          silenceError: true,
         });
 
-        expect(failed).toContain('NX_PREFER_NODE_STRIP_TYPES=false');
-        expect(failed).toContain(
-          'environment-variables#nx-prefer-node-strip-types'
-        );
-
-        // Opt out via env; legacy path registers ts-node/esm and the file
-        // loads successfully. We only care that nx report doesn't throw.
-        expect(() =>
-          runCLI('report', {
-            env: {
-              NX_PREFER_NODE_STRIP_TYPES: 'false',
-              NX_VERBOSE_LOGGING: 'true',
-            },
-            daemon: false,
-            redirectStderr: true,
-          })
-        ).not.toThrow();
+        expect(result).toContain('nx');
+        expect(result).toContain('Registering ESM TypeScript loader');
       },
       TEN_MINS_MS
     );
