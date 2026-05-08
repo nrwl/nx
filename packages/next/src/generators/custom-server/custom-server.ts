@@ -146,12 +146,12 @@ export async function customServerGenerator(
     return json;
   });
 
-  const nxJson = readNxJson(host) ?? {};
-  upsertTargetDefault(host, nxJson, {
+  const updatedNxJson = readNxJson(host) ?? {};
+  upsertTargetDefault(host, updatedNxJson, {
     target: 'build-custom-server',
     cache: true,
   });
-  updateNxJson(host, nxJson);
+  updateNxJson(host, updatedNxJson);
 
   if (options.compiler === 'swc') {
     // Update app swc to exlude server files
