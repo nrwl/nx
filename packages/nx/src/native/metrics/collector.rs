@@ -33,6 +33,107 @@ const DAEMON_SUBPROCESSES_GROUP_ID: &str = "daemon_subprocesses";
 // Shutdown check interval for the collection thread
 const SHUTDOWN_CHECK_INTERVAL_MS: u64 = 50;
 
+/// Detect the effective CPU count, honoring container/cgroup limits when present.
+/// On Linux, returns the minimum of:
+/// - host CPU count
+/// - `ceil(cpu.max quota / period)` from the calling process's actual cgroup
+///   directory (v2 or v1, including the systemd `cpu,cpuacct` co-mount and
+///   bind-mounted hierarchies — see `cgroup` module)
+/// - `sched_getaffinity` (covers cpuset / taskset)
+/// Matches the ceil-quota semantic used by HotSpot JVM, Go 1.25, .NET, and the
+/// num_cpus crate. We bypass `std::thread::available_parallelism()` because
+/// rust-lang/rust's implementation applies the cgroup quota with floor division
+/// internally (`limit / period`) and would silently defeat the ceil for fractional
+/// quotas (e.g. 1.5 cores → 1). See `library/std/src/sys/thread/unix.rs`.
+///
+/// On Windows, returns the minimum of:
+/// - host CPU count
+/// - `ceil(host_cpu_count × CpuRate / 10000)` from a `HARD_CAP` Job Object
+///   rate (Docker `--cpus N` and equivalent — see `job_object` module)
+/// - popcount of the Job Object affinity mask (when `LIMIT_AFFINITY` is set)
+/// - popcount of `GetProcessAffinityMask` (Job + manual + system intersection)
+///
+/// On macOS, returns the host CPU count unchanged. macOS has no
+/// container-style CPU enforcement primitives for native processes; container
+/// runtimes on macOS run Linux VMs where the Linux path applies.
+#[cfg(target_os = "linux")]
+fn detect_effective_cpu_count(host_cpu_count: u32) -> u32 {
+    let mut effective = host_cpu_count;
+
+    if let Some(quota_cpus) = super::cgroup::read_cpu_quota_cores() {
+        effective = effective.min(quota_cpus);
+    }
+
+    if let Some(affinity) = read_sched_affinity_count() {
+        effective = effective.min(affinity);
+    }
+
+    effective.max(1)
+}
+
+/// Count the CPUs the calling process is allowed to run on via `sched_getaffinity`.
+/// Returns `None` when the syscall fails or the resulting set is empty (matches
+/// stdlib's defensive treatment of buggy old MIPS kernels).
+#[cfg(target_os = "linux")]
+fn read_sched_affinity_count() -> Option<u32> {
+    // SAFETY: `cpu_set_t` is a POD bitmask; we zero-init it and pass its size to
+    // a libc function that fills it. No aliasing, no lifetimes leaked.
+    unsafe {
+        let mut set: libc::cpu_set_t = std::mem::zeroed();
+        if libc::sched_getaffinity(0, std::mem::size_of::<libc::cpu_set_t>(), &mut set) != 0 {
+            return None;
+        }
+        let count = libc::CPU_COUNT(&set) as u32;
+        if count == 0 { None } else { Some(count) }
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn detect_effective_cpu_count(host_cpu_count: u32) -> u32 {
+    let mut effective = host_cpu_count;
+    if let Some(job_cpus) = super::job_object::read_job_cpu_quota_cores(host_cpu_count) {
+        effective = effective.min(job_cpus);
+    }
+    effective.max(1)
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "windows")))]
+fn detect_effective_cpu_count(host_cpu_count: u32) -> u32 {
+    host_cpu_count
+}
+
+/// Detect the effective memory limit in bytes, honoring container/cgroup limits.
+/// On Linux, reads the cgroup `memory.max` (v2) or `memory.limit_in_bytes` (v1)
+/// from the calling process's actual cgroup directory (with bind-mount handling),
+/// falling back to host RAM when unlimited or absent.
+///
+/// On Windows, reads the Job Object's `ProcessMemoryLimit` / `JobMemoryLimit`
+/// / `MaximumWorkingSetSize` (whichever are set in `LimitFlags`), takes the
+/// minimum, and falls back to host RAM when no limits are set. Mirrors what
+/// HotSpot and .NET CoreCLR do.
+///
+/// On macOS, returns host RAM unchanged. macOS has no container-style memory
+/// enforcement primitives for native processes; container runtimes on macOS
+/// run Linux VMs where the Linux path applies.
+#[cfg(target_os = "linux")]
+fn detect_effective_total_memory(host_total: u64) -> i64 {
+    super::cgroup::read_memory_limit_bytes(host_total)
+        .map(|b| b.min(host_total) as i64)
+        .unwrap_or(host_total as i64)
+}
+
+#[cfg(target_os = "windows")]
+fn detect_effective_total_memory(host_total: u64) -> i64 {
+    super::job_object::read_job_memory_limit_bytes(host_total)
+        .map(|b| b.min(host_total) as i64)
+        .unwrap_or(host_total as i64)
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "windows")))]
+fn detect_effective_total_memory(host_total: u64) -> i64 {
+    host_total as i64
+}
+
 /// Result from collecting metrics while holding the system lock
 struct MetricsCollectionResults {
     main_cli_processes: Vec<ProcessMetrics>,
@@ -874,8 +975,9 @@ impl ProcessMetricsCollector {
                 .with_memory(MemoryRefreshKind::nothing().with_ram())
                 .with_processes(ProcessRefreshKind::nothing().with_cpu().with_memory()),
         );
-        let cpu_cores = sys.cpus().len() as u32;
-        let total_memory = sys.total_memory() as i64;
+        let host_cpu_count = sys.cpus().len() as u32;
+        let cpu_cores = detect_effective_cpu_count(host_cpu_count);
+        let total_memory = detect_effective_total_memory(sys.total_memory());
 
         Self {
             config,
@@ -1203,6 +1305,63 @@ impl Drop for ProcessMetricsCollector {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn detect_effective_cpu_count_clamps_to_host() {
+        // Host count is the upper bound when no quota detected;
+        // sched_getaffinity may further reduce it (cpuset),
+        // but never increase it.
+        let host = 8;
+        let detected = detect_effective_cpu_count(host);
+        assert!(detected >= 1);
+        assert!(detected <= host);
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn read_sched_affinity_returns_some_in_normal_environments() {
+        // We don't assert a specific count (it depends on the test runner's
+        // environment), but a real Linux process should always be allowed on at
+        // least one CPU.
+        let count = read_sched_affinity_count();
+        assert!(count.is_some_and(|c| c >= 1));
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    #[test]
+    fn detect_effective_cpu_count_passthrough_on_unsupported_os() {
+        assert_eq!(detect_effective_cpu_count(16), 16);
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    #[test]
+    fn detect_effective_total_memory_passthrough_on_unsupported_os() {
+        let host = 12u64 * 1024 * 1024 * 1024;
+        assert_eq!(detect_effective_total_memory(host), host as i64);
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn detect_effective_cpu_count_clamps_to_host_on_windows() {
+        // Windows path may min with Job Object limits; never returns more
+        // than host or less than 1.
+        let host = 8;
+        let detected = detect_effective_cpu_count(host);
+        assert!(detected >= 1);
+        assert!(detected <= host);
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn detect_effective_total_memory_clamps_to_host_on_windows() {
+        // Windows path returns host RAM when no Job memory limit is set, or
+        // the limit when it is — but never more than host.
+        let host = 12u64 * 1024 * 1024 * 1024;
+        let detected = detect_effective_total_memory(host);
+        assert!(detected >= 0);
+        assert!(detected as u64 <= host);
+    }
 
     // Helper to create a test CollectionRunner without NAPI dependencies
     fn create_test_runner() -> (CollectionRunner, Receiver<MetricsCollectionResult>) {
