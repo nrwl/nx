@@ -473,13 +473,38 @@ export function loadTsFile<T = any>(
   // Native strip path: no registration up front. pnpm/npm/yarn workspaces
   // resolve aliases without tsconfig-paths. On failure, lazy-register what
   // the specific error code indicates is needed and retry:
-  //   - MODULE_NOT_FOUND -> register tsconfig-paths (alias resolution)
+  //   - MODULE_NOT_FOUND -> first try tsconfig-paths (alias resolution).
+  //     If that still fails (e.g. extensionless `import './foo'` when
+  //     `foo.ts` is adjacent - Node's resolver doesn't add `.ts`), escalate
+  //     to swc/ts-node which handles `.ts` extension resolution.
   //   - ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX -> register swc/ts-node + tsconfig-paths
-  // Each kind of registration is attempted at most once, so a file that
-  // hits both errors recovers in at most three attempts.
+  // Each registration kind runs at most once, so a file recovers in at
+  // most three attempts.
   let pathsRegistered = false;
   let transpilerRegistered = false;
   const cleanups: Array<() => void> = [];
+
+  const registerTranspilerFallback = (err: unknown) => {
+    if (!swcNodeInstalled && !tsNodeInstalled) {
+      const original = err instanceof Error ? err.message : String(err);
+      throw new Error(
+        `${NX_PREFIX} ${filePath} could not be loaded under Node's native TypeScript stripping (${original}). Install @swc-node/register and @swc/core (or ts-node) to enable the swc/ts-node fallback.`
+      );
+    }
+    if (!resolvedTsConfigPath) {
+      throw new Error(
+        `${NX_PREFIX} ${filePath} requires the swc/ts-node fallback but no workspace tsconfig was found. Pass an explicit tsConfigPath or add a tsconfig.base.json/tsconfig.json at the workspace root.`
+      );
+    }
+    if (!pathsRegistered && !disableTsConfigPaths) {
+      cleanups.push(registerTsConfigPaths(resolvedTsConfigPath));
+      pathsRegistered = true;
+    }
+    const { compilerOptions, tsConfigRaw } =
+      readCompilerOptions(resolvedTsConfigPath);
+    cleanups.push(registerTranspiler(compilerOptions, tsConfigRaw));
+    transpilerRegistered = true;
+  };
 
   try {
     for (let attempt = 1; ; attempt++) {
@@ -493,6 +518,7 @@ export function loadTsFile<T = any>(
         }
         return require(filePath) as T;
       } catch (err) {
+        // Cheap fallback first: register tsconfig-paths and retry.
         if (
           isModuleNotFoundError(err) &&
           !pathsRegistered &&
@@ -509,31 +535,21 @@ export function loadTsFile<T = any>(
           continue;
         }
 
-        if (isNativeTypeStripError(err) && !transpilerRegistered) {
-          if (!swcNodeInstalled && !tsNodeInstalled) {
-            const original = err instanceof Error ? err.message : String(err);
-            throw new Error(
-              `${NX_PREFIX} ${filePath} uses TypeScript syntax that Node.js native type stripping doesn't support (${original}). Install @swc-node/register and @swc/core (or ts-node) to enable the swc/ts-node fallback, or rewrite the file to remove the unsupported construct.`
-            );
-          }
-          if (!resolvedTsConfigPath) {
-            throw new Error(
-              `${NX_PREFIX} ${filePath} requires the swc/ts-node fallback but no workspace tsconfig was found. Pass an explicit tsConfigPath or add a tsconfig.base.json/tsconfig.json at the workspace root.`
-            );
-          }
+        // Heavy fallback: register swc/ts-node (+ paths) and retry. Triggered
+        // by either a strip-types failure or a module resolution failure that
+        // tsconfig-paths alone can't fix (extensionless `./foo` -> `./foo.ts`).
+        if (
+          (isNativeTypeStripError(err) || isModuleNotFoundError(err)) &&
+          !transpilerRegistered
+        ) {
           logFallback(
             filePath,
             err,
-            'Native Node.js TypeScript stripping failed; falling back to swc/ts-node + tsconfig-paths.'
+            isNativeTypeStripError(err)
+              ? 'Native Node.js TypeScript stripping failed; falling back to swc/ts-node + tsconfig-paths.'
+              : 'Module not found after tsconfig-paths; falling back to swc/ts-node + tsconfig-paths.'
           );
-          if (!pathsRegistered && !disableTsConfigPaths) {
-            cleanups.push(registerTsConfigPaths(resolvedTsConfigPath));
-            pathsRegistered = true;
-          }
-          const { compilerOptions, tsConfigRaw } =
-            readCompilerOptions(resolvedTsConfigPath);
-          cleanups.push(registerTranspiler(compilerOptions, tsConfigRaw));
-          transpilerRegistered = true;
+          registerTranspilerFallback(err);
           continue;
         }
 

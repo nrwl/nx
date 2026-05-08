@@ -115,5 +115,42 @@ module.exports = { displayName: '${lib}', mode };
       },
       TEN_MINS_MS
     );
+
+    it(
+      'should fall back to swc/ts-node when a TS config uses an extensionless relative import',
+      () => {
+        const lib = uniq('lib');
+        runCLI(
+          `generate @nx/js:lib ${lib} --unitTestRunner=jest --no-interactive`
+        );
+
+        // Adjacent helper file the config imports without an extension.
+        // Node's native resolver doesn't add `.ts`, so this throws
+        // ERR_MODULE_NOT_FOUND under strip and tsconfig-paths can't fix it -
+        // the loader must escalate to swc/ts-node.
+        updateFile(
+          `${lib}/jest-helpers.ts`,
+          `export const displayName = '${lib}';\n`
+        );
+        updateFile(
+          `${lib}/jest.config.cts`,
+          `import { displayName } from './jest-helpers';
+module.exports = { displayName };
+`
+        );
+
+        const result = runCLI('report', {
+          env: { NX_VERBOSE_LOGGING: 'true' },
+          daemon: false,
+          redirectStderr: true,
+        });
+
+        expect(result).toContain('nx');
+        expect(result).toContain(
+          'Module not found after tsconfig-paths; falling back to swc/ts-node'
+        );
+      },
+      TEN_MINS_MS
+    );
   });
 });
