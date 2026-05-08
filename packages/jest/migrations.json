@@ -42,6 +42,14 @@
       },
       "description": "Replace removed matcher aliases in Jest v30 with their corresponding matcher",
       "implementation": "./src/migrations/update-21-3-0/replace-removed-matcher-aliases"
+    },
+    "pin-jest-30-3-for-rn-compat": {
+      "version": "23.0.0-beta.0",
+      "requires": {
+        "jest": ">=30.0.0 <31.0.0"
+      },
+      "description": "Pin jest, babel-jest, and @types/jest to ~30.3.x because jest-runtime@30.4.0 calls a method on jest-mock@30 that React Native's preset (which still ships jest-environment-node@29) cannot satisfy.",
+      "implementation": "./src/migrations/update-23-0-0/pin-jest-30-3-for-rn-compat"
     }
   },
   "packageJsonUpdates": {
