@@ -101,6 +101,10 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
               val success = results[taskId]?.success == true
               taskStates[taskId] = if (success) TaskState.SUCCEEDED else TaskState.FAILED
 
+              // Skipped-task results collected under the graph lock, emitted
+              // after the lock is released (see comment at the emit site).
+              val pendingSkipEmits = mutableListOf<TaskResult>()
+
               // Update graph and find newly available tasks
               synchronized(graphRef) {
                 val currentGraph = graphRef.get()
@@ -121,10 +125,11 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
                   }
                 }
 
-                // Mark skipped tasks (those removed due to failed dependencies)
-                // and emit a `skipped` NX_RESULT for each so the TS side has an
-                // explicit per-task outcome instead of inferring from missing
-                // entries.
+                // Mark skipped tasks (those removed due to a failed dependency)
+                // under the graph lock, but defer emit + latch I/O until after
+                // the lock — emitResult does JSON serialization and stderr
+                // writes that don't need the graph monitor and would otherwise
+                // stall every other worker on cascading failures.
                 val oldTasks = currentGraph.tasks.keys
                 val newTasks = newGraph.tasks.keys
                 val skippedTasks = oldTasks - newTasks - taskStates.keys
@@ -136,11 +141,15 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
                       TaskResult.skipped(
                           taskId = skippedTaskId, startTime = nowMs, endTime = nowMs)
                   results[skippedTaskId] = skippedResult
-                  emitResult(skippedTaskId, skippedResult)
-                  // Count down skipped tasks too — otherwise the latch never reaches zero.
-                  completionLatch.countDown()
+                  pendingSkipEmits += skippedResult
                 }
               }
+              pendingSkipEmits.forEach { skipped ->
+                emitResult(skipped.taskId, skipped)
+                // Count down skipped tasks too — otherwise the latch never reaches zero.
+                completionLatch.countDown()
+              }
+              pendingSkipEmits.clear()
 
               completionLatch.countDown()
             }

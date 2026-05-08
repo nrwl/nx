@@ -30,21 +30,21 @@ data class TaskResult(
     val endTime: Long = 0,
 ) {
   companion object {
-    fun success(taskId: String, terminalOutput: String, startTime: Long = 0, endTime: Long = 0) =
+    fun success(taskId: String, terminalOutput: String, startTime: Long, endTime: Long) =
         TaskResult(taskId, true, "success", terminalOutput, startTime, endTime)
 
-    fun failure(taskId: String, terminalOutput: String, startTime: Long = 0, endTime: Long = 0) =
+    fun failure(taskId: String, terminalOutput: String, startTime: Long, endTime: Long) =
         TaskResult(taskId, false, "failure", terminalOutput, startTime, endTime)
 
-    fun skipped(taskId: String, startTime: Long = 0, endTime: Long = 0) =
+    fun skipped(taskId: String, startTime: Long, endTime: Long) =
         TaskResult(taskId, false, "skipped", "", startTime, endTime)
 
     fun fromBoolean(
         taskId: String,
         success: Boolean,
         terminalOutput: String,
-        startTime: Long = 0,
-        endTime: Long = 0,
+        startTime: Long,
+        endTime: Long,
     ): TaskResult =
         if (success) success(taskId, terminalOutput, startTime, endTime)
         else failure(taskId, terminalOutput, startTime, endTime)

@@ -144,9 +144,6 @@ export default async function* mavenBatchExecutor(
   // Collect terminal output from failed tasks
   const failedTaskOutputs: string[] = [];
 
-  // The Kotlin batch runner emits an NX_RESULT line for every requested task
-  // (success, failure, or skipped). We just relay; the only fallback below is
-  // for the runner crashing before reporting on every task.
   const taskIds = Object.keys(taskGraph.tasks);
   const yielded = new Set<string>();
 

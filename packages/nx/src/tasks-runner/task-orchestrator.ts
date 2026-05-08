@@ -68,6 +68,18 @@ type CacheHit = {
   cachedResult: CachedResult & { remote: boolean };
 };
 
+/**
+ * Resolve a batch executor's per-task result to a TaskStatus. Prefers an
+ * explicit `status` from the executor; falls back to the `success` boolean
+ * for executors that pre-date the `status` field.
+ */
+function resolveBatchTaskStatus(result: {
+  success: boolean;
+  status?: TaskStatus;
+}): TaskStatus {
+  return result.status ?? (result.success ? 'success' : 'failure');
+}
+
 export class TaskOrchestrator {
   private taskDetails: TaskDetails | null = getTaskDetails();
   private cache: DbCache | Cache = getCache(this.options);
@@ -763,8 +775,7 @@ export class TaskOrchestrator {
       // Heavy operations (caching, scheduling, complete) happen at batch-end in postRunSteps
       batchProcess.onTaskResults((taskId, result) => {
         const task = this.taskGraph.tasks[taskId];
-        const status: TaskStatus =
-          result.status ?? (result.success ? 'success' : 'failure');
+        const status = resolveBatchTaskStatus(result);
 
         // Append before print so printTaskTerminalOutput finds the PTY already
         // populated and no-ops; reversing the order writes terminalOutput twice.
@@ -776,11 +787,16 @@ export class TaskOrchestrator {
           );
         }
 
-        this.options.lifeCycle.printTaskTerminalOutput(
-          task,
-          status,
-          result.terminalOutput ?? ''
-        );
+        // Skipped tasks didn't run, so they have no terminal output and don't
+        // need a per-task PTY — calling printTaskTerminalOutput would otherwise
+        // allocate one just to write a cursor-hide escape.
+        if (status !== 'skipped') {
+          this.options.lifeCycle.printTaskTerminalOutput(
+            task,
+            status,
+            result.terminalOutput ?? ''
+          );
+        }
 
         task.startTime = result.startTime;
         task.endTime = result.endTime;
@@ -802,8 +818,7 @@ export class TaskOrchestrator {
         const task = this.taskGraph.tasks[taskId];
         task.startTime = result.startTime;
         task.endTime = result.endTime;
-        const status: TaskStatus =
-          result.status ?? (result.success ? 'success' : 'failure');
+        const status = resolveBatchTaskStatus(result);
         return {
           code: status === 'success' ? 0 : 1,
           task,

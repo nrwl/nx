@@ -68,9 +68,6 @@ export default async function* gradleBatch(
       context.taskGraph ?? taskGraph
     );
 
-  // The Kotlin batch runner emits an NX_RESULT line for every requested task
-  // (success, failure, or skipped). We just relay; the only fallback below is
-  // for the runner crashing before reporting on every task.
   const yielded = new Set<string>();
 
   try {
