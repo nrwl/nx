@@ -239,16 +239,11 @@ export default async function* mavenBatchExecutor(
     return;
   }
 
-  // Any tasks the batch runner did not report on are treated as skipped (when
-  // a peer failed) or failed so Nx does not hang waiting for results.
-  for (const taskId of taskIds) {
-    if (!yielded.has(taskId)) {
-      yield {
-        task: taskId,
-        result: skippedOrFailedResult(
-          `Maven batch runner did not report a result for ${taskId}`
-        ),
-      };
-    }
-  }
+  // On a clean exit, do NOT yield fallbacks for unyielded tasks. The Maven
+  // batch runner's stderr can interleave concurrent task output such that one
+  // task's NX_RESULT line gets captured inside another task's terminalOutput
+  // string, leaving the inner task unyielded here. Nx's task-orchestrator
+  // retries any tasks in the batch that didn't get a result, which gives those
+  // tasks a real second chance to run instead of permanently marking them as
+  // failed.
 }
