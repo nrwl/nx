@@ -9,18 +9,12 @@ import {
   displayNewlyAddedDepsMessage,
   syncDeps,
 } from '../sync-deps/sync-deps.impl';
-import { warnReactNativeStorybookDeprecation } from '../../utils/deprecation';
 import { PackageJson } from 'nx/src/utils/package-json';
 
-// TODO(v24): Remove this executor. There is no inferred-plugin replacement
-// for the on-device React Native Storybook flow; users should run the
-// `@storybook/react-native` CLI directly via `nx:run-commands` instead.
 export default async function* reactNativeStorybookExecutor(
   options: ReactNativeStorybookOptions,
   context: ExecutorContext
 ): AsyncGenerator<{ success: boolean }> {
-  warnReactNativeStorybookDeprecation();
-
   const { syncDeps: isSyncDepsEnabled = true } = options;
 
   const projectRoot =
