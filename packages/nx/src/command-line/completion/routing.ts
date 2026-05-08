@@ -1,4 +1,6 @@
 import {
+  getGeneratorPluginCompletions,
+  getGeneratorsForPlugin,
   getProjectNameCompletions,
   getProjectNamesWithTarget,
   getTargetNameCompletions,
@@ -21,6 +23,24 @@ const INFIX_TARGET_COMMANDS = new Set([
 ]);
 
 /**
+ * Flags whose value is a project name (or comma-separated list of them).
+ * Applies across every command — wherever a user types `--focus <TAB>`,
+ * `-p <TAB>`, etc., we complete project names.
+ */
+const PROJECT_VALUE_FLAGS = new Set([
+  '-p',
+  '--project',
+  '--projects',
+  '--focus',
+  '--exclude',
+]);
+
+/**
+ * Flags whose value is a target name (or comma-separated list of them).
+ */
+const TARGET_VALUE_FLAGS = new Set(['-t', '--target', '--targets']);
+
+/**
  * Returns project/target completions for known nx subcommands. Returns null
  * when the routing has nothing specific to add — the caller should fall back
  * to yargs's default command/option enumeration.
@@ -31,6 +51,15 @@ export function getCompletions(
 ): string[] | null {
   if (args.length === 0) {
     return null;
+  }
+
+  // Flag-based completions apply to every command: `nx graph --focus <TAB>`,
+  // `nx run-many -t <TAB>`, etc.
+  if (isCompletingTargetOption()) {
+    return getTargetNameCompletions(current);
+  }
+  if (isCompletingProjectOption()) {
+    return getProjectNameCompletions(current);
   }
 
   const command = args[0];
@@ -50,14 +79,19 @@ export function getCompletions(
     return completeProjectTarget(current);
   }
 
-  // nx run-many -t <TAB> / nx affected -t <TAB>
+  // nx generate <plugin>:<generator>  /  nx g <plugin>:<generator>
+  // Yargs includes the partial token in argv._, so args is ['generate']
+  // before any token is typed and ['generate', <partial>] while typing the
+  // first positional. Once a generator is chosen and the next positional
+  // begins, args grows past 2 and we fall through.
+  if ((command === 'generate' || command === 'g') && args.length <= 2) {
+    return completeGenerator(current);
+  }
+
+  // run-many / affected fall through here — yargs default completes their
+  // flag and subcommand names. Project/target values are handled by the
+  // flag-based check above.
   if (command === 'run-many' || command === 'affected') {
-    if (isCompletingTargetOption()) {
-      return getTargetNameCompletions(current);
-    }
-    if (isCompletingProjectOption()) {
-      return getProjectNameCompletions(current);
-    }
     return null;
   }
 
@@ -69,6 +103,23 @@ export function getCompletions(
   }
 
   return null;
+}
+
+/**
+ * Two-stage generator completion. Same TAB-twice flow as project:target —
+ * first stage suggests plugin names with a trailing `:`; second stage
+ * suggests generator names within the chosen plugin.
+ */
+function completeGenerator(current: string): string[] {
+  const colonIdx = current.indexOf(':');
+  if (colonIdx === -1) {
+    return getGeneratorPluginCompletions(current).map((p) => `${p}:`);
+  }
+  const pluginName = current.slice(0, colonIdx);
+  const generatorPrefix = current.slice(colonIdx + 1);
+  return getGeneratorsForPlugin(pluginName, generatorPrefix).map(
+    (g) => `${pluginName}:${g}`
+  );
 }
 
 // Trailing `:` after a project lets the user TAB again to complete targets
@@ -87,19 +138,22 @@ function completeProjectTarget(current: string): string[] {
 }
 
 /**
- * Heuristic: if the last explicit arg before current is -t, --target, or --targets,
- * we're completing a target name.
+ * Heuristic: the last explicit token before `current` (process.argv's
+ * trailing entry) is the flag whose value the user is typing.
  */
-function isCompletingTargetOption(): boolean {
+function getActiveOptionFlag(): string | undefined {
   const rawArgs = process.argv;
-  const lastArg = rawArgs[rawArgs.length - 2];
-  return lastArg === '-t' || lastArg === '--target' || lastArg === '--targets';
+  return rawArgs[rawArgs.length - 2];
+}
+
+function isCompletingTargetOption(): boolean {
+  const flag = getActiveOptionFlag();
+  return flag !== undefined && TARGET_VALUE_FLAGS.has(flag);
 }
 
 function isCompletingProjectOption(): boolean {
-  const rawArgs = process.argv;
-  const lastArg = rawArgs[rawArgs.length - 2];
-  return lastArg === '-p' || lastArg === '--projects';
+  const flag = getActiveOptionFlag();
+  return flag !== undefined && PROJECT_VALUE_FLAGS.has(flag);
 }
 
 /**
