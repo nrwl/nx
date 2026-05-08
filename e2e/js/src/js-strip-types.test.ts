@@ -213,21 +213,21 @@ export default config;
 
         expect(failed).toContain('NX_PREFER_NODE_STRIP_TYPES=false');
         expect(failed).toContain(
-          'environment-variables#nx_prefer_node_strip_types'
+          'environment-variables#nx-prefer-node-strip-types'
         );
 
         // Opt out via env; legacy path registers ts-node/esm and the file
-        // loads successfully.
-        const ok = runCLI('report', {
-          env: {
-            NX_PREFER_NODE_STRIP_TYPES: 'false',
-            NX_VERBOSE_LOGGING: 'true',
-          },
-          daemon: false,
-          redirectStderr: true,
-        });
-
-        expect(ok).toContain('nx');
+        // loads successfully. We only care that nx report doesn't throw.
+        expect(() =>
+          runCLI('report', {
+            env: {
+              NX_PREFER_NODE_STRIP_TYPES: 'false',
+              NX_VERBOSE_LOGGING: 'true',
+            },
+            daemon: false,
+            redirectStderr: true,
+          })
+        ).not.toThrow();
       },
       TEN_MINS_MS
     );

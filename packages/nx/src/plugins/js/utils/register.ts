@@ -424,7 +424,7 @@ function isModuleNotFoundError(err: unknown): boolean {
  * Module._extensions hook can't intercept dynamic `import()`).
  */
 const NX_PREFER_NODE_STRIP_TYPES_DOCS_URL =
-  'https://nx.dev/docs/reference/environment-variables#nx_prefer_node_strip_types';
+  'https://nx.dev/docs/reference/environment-variables#nx-prefer-node-strip-types';
 const STRIP_TYPES_OPT_OUT_HINT = `Set NX_PREFER_NODE_STRIP_TYPES=false to opt out of Node's native TypeScript stripping and use swc/ts-node instead. See ${NX_PREFER_NODE_STRIP_TYPES_DOCS_URL}`;
 
 /**

@@ -1,7 +1,7 @@
 import { extname, resolve } from 'path';
 
 const STRIP_TYPES_DOCS_URL =
-  'https://nx.dev/docs/reference/environment-variables#nx_prefer_node_strip_types';
+  'https://nx.dev/docs/reference/environment-variables#nx-prefer-node-strip-types';
 
 /**
  * Dynamically imports a module using CJS require().
