@@ -763,14 +763,13 @@ export class TaskOrchestrator {
       // Heavy operations (caching, scheduling, complete) happen at batch-end in postRunSteps
       batchProcess.onTaskResults((taskId, result) => {
         const task = this.taskGraph.tasks[taskId];
-        const status = result.success ? 'success' : 'failure';
+        const status: TaskStatus =
+          result.status ?? (result.success ? 'success' : 'failure');
 
-        this.options.lifeCycle.printTaskTerminalOutput(
-          task,
-          status,
-          result.terminalOutput ?? ''
-        );
-
+        // Append before print so the TUI's printTaskTerminalOutput sees the
+        // PTY already populated and no-ops, matching the non-batch flow. The
+        // reverse order would write the same terminalOutput into the per-task
+        // PTY twice — once when print creates it, once when append finds it.
         if (result.terminalOutput) {
           this.options.lifeCycle.appendTaskOutput(
             taskId,
@@ -778,6 +777,12 @@ export class TaskOrchestrator {
             false
           );
         }
+
+        this.options.lifeCycle.printTaskTerminalOutput(
+          task,
+          status,
+          result.terminalOutput ?? ''
+        );
 
         task.startTime = result.startTime;
         task.endTime = result.endTime;
@@ -799,10 +804,12 @@ export class TaskOrchestrator {
         const task = this.taskGraph.tasks[taskId];
         task.startTime = result.startTime;
         task.endTime = result.endTime;
+        const status: TaskStatus =
+          result.status ?? (result.success ? 'success' : 'failure');
         return {
-          code: result.success ? 0 : 1,
+          code: status === 'success' ? 0 : 1,
           task,
-          status: (result.success ? 'success' : 'failure') as TaskStatus,
+          status,
           terminalOutput: result.terminalOutput,
         };
       });
