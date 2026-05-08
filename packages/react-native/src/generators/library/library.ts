@@ -121,14 +121,13 @@ export async function reactNativeLibraryGeneratorInternal(
   const path = joinPathFragments(
     options.projectRoot,
     'src/lib',
-    options.fileName
+    options.js ? `${options.fileName}.js` : options.fileName
   );
   const componentTask = await componentGenerator(host, {
     path: relativeCwd ? relative(relativeCwd, path) : path,
     skipTests: options.unitTestRunner === 'none',
     export: true,
     skipFormat: true,
-    js: options.js,
   });
   tasks.push(() => componentTask);
 

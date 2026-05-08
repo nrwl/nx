@@ -23,8 +23,7 @@ export async function normalizeOptions(
     path: options.path,
     name: options.name,
     allowedFileExtensions: ['js', 'jsx', 'ts', 'tsx'],
-    fileExtension: options.js ? 'js' : 'tsx',
-    js: options.js,
+    fileExtension: 'tsx',
   });
 
   const project = readProjectConfiguration(tree, projectName);
