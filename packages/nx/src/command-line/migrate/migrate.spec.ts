@@ -3037,8 +3037,13 @@ describe('Migration', () => {
       expect(choices.map((c) => c.name)).toEqual(['22.5.3', '23.1.0']);
     });
 
-    it('should warn (not prompt) when target was explicitly typed as numeric semver', async () => {
+    it('should prompt (not warn) when target was explicitly typed as numeric semver', async () => {
       setTty(true);
+      mockRegistry({
+        '21': '21.5.3',
+        '22': '22.5.3',
+      });
+      mockPrompt.mockResolvedValue({ chosen: '21.5.3' });
       const warnSpy = spyWarn();
 
       const r = await parseMigrationsOptions({
@@ -3046,9 +3051,9 @@ describe('Migration', () => {
         mode: 'all',
       });
 
-      expect(mockPrompt).not.toHaveBeenCalled();
-      expect(warnSpy).toHaveBeenCalled();
-      expect(r).toMatchObject({ targetVersion: '23.1.0' });
+      expect(mockPrompt).toHaveBeenCalled();
+      expect(warnSpy).not.toHaveBeenCalled();
+      expect(r).toMatchObject({ targetVersion: '21.5.3' });
     });
 
     it('should warn (not prompt) in non-TTY environments', async () => {

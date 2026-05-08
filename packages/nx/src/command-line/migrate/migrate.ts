@@ -954,7 +954,6 @@ async function versionOverrides(overrides: string, param: string) {
 async function parseTargetPackageAndVersion(args: string): Promise<{
   targetPackage: string;
   targetVersion: string;
-  wasInferred: boolean;
 }> {
   if (!args) {
     throw new Error(
@@ -965,11 +964,7 @@ async function parseTargetPackageAndVersion(args: string): Promise<{
   if (args.indexOf('@') > -1) {
     const i = args.lastIndexOf('@');
     if (i === 0) {
-      return {
-        targetPackage: args.trim(),
-        targetVersion: 'latest',
-        wasInferred: true,
-      };
+      return { targetPackage: args.trim(), targetVersion: 'latest' };
     }
     const targetPackage = args.substring(0, i);
     const maybeVersion = args.substring(i + 1);
@@ -982,11 +977,7 @@ async function parseTargetPackageAndVersion(args: string): Promise<{
       targetPackage,
       maybeVersion
     );
-    return {
-      targetPackage,
-      targetVersion,
-      wasInferred: DIST_TAGS.includes(maybeVersion as DistTag),
-    };
+    return { targetPackage, targetVersion };
   }
 
   if (
@@ -998,15 +989,15 @@ async function parseTargetPackageAndVersion(args: string): Promise<{
     // We could duplicate the ternary below, but its not necessary since they are equivalent
     // on the registry
     const targetVersion = await normalizeVersionWithTagCheck('nx', args);
-    const wasInferred = DIST_TAGS.includes(args as DistTag);
+    const isDistTag = DIST_TAGS.includes(args as DistTag);
     const targetPackage =
-      !wasInferred && lt(targetVersion, '14.0.0-beta.0')
+      !isDistTag && lt(targetVersion, '14.0.0-beta.0')
         ? '@nrwl/workspace'
         : 'nx';
-    return { targetPackage, targetVersion, wasInferred };
+    return { targetPackage, targetVersion };
   }
 
-  return { targetPackage: args, targetVersion: 'latest', wasInferred: true };
+  return { targetPackage: args, targetVersion: 'latest' };
 }
 
 type GenerateMigrations = {
@@ -1061,7 +1052,7 @@ export async function parseMigrationsOptions(options: {
   const positional = options['packageAndVersion'] as string | undefined;
   const resolved = await resolveTargetAndMode({ positional, from, options });
   const { mode, installedNxVersion } = resolved;
-  let { targetPackage, targetVersion, targetWasInferred } = resolved;
+  let { targetPackage, targetVersion } = resolved;
 
   // Spec §10: prompt or warn when crossing more than one major boundary.
   // Each major's metadata may have pruned migrations from much-older versions,
@@ -1071,7 +1062,6 @@ export async function parseMigrationsOptions(options: {
     options,
     targetPackage,
     targetVersion,
-    targetWasInferred,
   });
 
   if (mode === 'third-party') {
@@ -1127,19 +1117,16 @@ async function resolveTargetAndMode(args: {
 }): Promise<{
   targetPackage: string;
   targetVersion: string;
-  targetWasInferred: boolean;
   mode: 'first-party' | 'third-party' | 'all';
   installedNxVersion: string | null | undefined;
 }> {
   const { positional, from, options } = args;
   let targetPackage: string | undefined;
   let targetVersion: string | undefined;
-  let targetWasInferred = !positional;
   if (positional) {
     const parsed = await parseTargetPackageAndVersion(positional);
     targetPackage = normalizeSlashes(parsed.targetPackage);
     targetVersion = parsed.targetVersion;
-    targetWasInferred = parsed.wasInferred;
   }
 
   // Resolve mode before defaulting target so the default can depend on the
@@ -1175,8 +1162,13 @@ async function resolveTargetAndMode(args: {
     targetPackage = installed.canonical;
     targetVersion = installed.version;
   } else if (!positional) {
+    // Bare invocation: default to `nx@latest` as a literal sentinel rather
+    // than resolving via the registry here. Multi-major resolves the dist-tag
+    // when needed (and bails gracefully on registry failure), and the cascade
+    // resolves it for the walk (honouring `NX_MIGRATE_SKIP_REGISTRY_FETCH`).
+    // This matches the resilience of `nx migrate nx`.
     targetPackage = 'nx';
-    targetVersion = await normalizeVersionWithTagCheck('nx', 'latest');
+    targetVersion = 'latest';
   }
 
   if (options.mode && !isNxEquivalentTarget(targetPackage!, targetVersion!)) {
@@ -1194,7 +1186,6 @@ async function resolveTargetAndMode(args: {
   return {
     targetPackage: targetPackage!,
     targetVersion: targetVersion!,
-    targetWasInferred,
     mode,
     installedNxVersion,
   };

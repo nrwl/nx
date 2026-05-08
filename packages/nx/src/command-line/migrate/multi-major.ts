@@ -107,9 +107,8 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
   options: { acceptMultiMajorUpdate?: boolean };
   targetPackage: string;
   targetVersion: string;
-  targetWasInferred: boolean;
 }): Promise<string> {
-  const { mode, options, targetPackage, targetWasInferred } = args;
+  const { mode, options, targetPackage } = args;
   let { targetVersion } = args;
   if (mode === 'third-party') return targetVersion;
   if (isMultiMajorUpdateAccepted(options)) return targetVersion;
@@ -140,7 +139,7 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
   if (major(targetVersion) - installedMajor < 2) return targetVersion;
 
   const interactive = !!process.stdin.isTTY && !isCI();
-  if (interactive && targetWasInferred) {
+  if (interactive) {
     const [latestInCurrent, latestInNext] = await Promise.all([
       resolveLatestStableInMajor(targetPackage, installedMajor),
       resolveLatestStableInMajor(targetPackage, installedMajor + 1),

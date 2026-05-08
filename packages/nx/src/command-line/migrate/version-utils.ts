@@ -42,13 +42,11 @@ export async function normalizeVersionWithTagCheck(
   pkg: string,
   version: string
 ): Promise<string> {
-  // This doesn't seem like a valid version, lets check if its a tag on the registry.
+  // Treat non-parseable inputs (e.g. dist-tags like `latest`/`next`) as
+  // registry references and resolve them. Throws on registry failure;
+  // callers that need to tolerate registry outages must wrap.
   if (version && !parse(version)) {
-    try {
-      return resolvePackageVersionUsingRegistry(pkg, version);
-    } catch {
-      // fall through to old logic
-    }
+    return resolvePackageVersionUsingRegistry(pkg, version);
   }
   return normalizeVersion(version);
 }
