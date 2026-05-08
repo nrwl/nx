@@ -76,7 +76,9 @@ function ensureEsmLoaderRegistered(opts: { required: boolean }): void {
   if (process.env.NX_VERBOSE_LOGGING === 'true') {
     const loaderName = swcEsm ? '@swc-node/register/esm' : 'ts-node/esm';
     logger.warn(
-      stripIndent(`${NX_PREFIX} Registering ESM TypeScript loader ${loaderName}. All subsequent ESM imports in this process will go through it - native Node.js TypeScript stripping is forfeited for the dynamic-import path.`)
+      stripIndent(
+        `${NX_PREFIX} Registering ESM TypeScript loader ${loaderName}. All subsequent ESM imports in this process will go through it - native Node.js TypeScript stripping is forfeited for the dynamic-import path.`
+      )
     );
   }
 

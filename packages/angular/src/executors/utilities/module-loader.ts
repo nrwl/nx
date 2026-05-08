@@ -28,10 +28,7 @@ export async function loadModule<T = any>(
     // ERR_REQUIRE_ESM (legacy) and ERR_REQUIRE_ASYNC_MODULE (Node 22.12+,
     // ESM with top-level await) both indicate the module must be loaded via
     // dynamic import.
-    if (
-      e.code === 'ERR_REQUIRE_ESM' ||
-      e.code === 'ERR_REQUIRE_ASYNC_MODULE'
-    ) {
+    if (e.code === 'ERR_REQUIRE_ESM' || e.code === 'ERR_REQUIRE_ASYNC_MODULE') {
       const result = await loadEsmModule(pathToFileURL(path));
       return (result as { default: T }).default ?? (result as T);
     }

@@ -43,9 +43,8 @@ export async function handleImport<T = any>(
     ) {
       // Lazy-require to avoid pulling register/transpiler (and their
       // daemon/logger transitive deps) into module-eval-time graphs.
-      const {
-        forceRegisterPluginTSTranspiler,
-      } = require('../project-graph/plugins/transpiler') as typeof import('../project-graph/plugins/transpiler');
+      const { forceRegisterPluginTSTranspiler } =
+        require('../project-graph/plugins/transpiler') as typeof import('../project-graph/plugins/transpiler');
       forceRegisterPluginTSTranspiler();
       try {
         delete require.cache[require.resolve(normalizedPath)];
@@ -64,9 +63,8 @@ export async function handleImport<T = any>(
         if (retryErr instanceof Error) {
           // Lazy-require NX_PREFIX so we don't pull logger -> daemon into
           // module-eval-time graphs.
-          const {
-            NX_PREFIX,
-          } = require('./logger') as typeof import('./logger');
+          const { NX_PREFIX } =
+            require('./logger') as typeof import('./logger');
           retryErr.message = `${retryErr.message}\n\n${NX_PREFIX} Failed to load ${normalizedPath} under Node's native TypeScript stripping. Set NX_PREFER_NODE_STRIP_TYPES=false to opt out and use swc/ts-node instead. See ${STRIP_TYPES_DOCS_URL}`;
         }
         throw retryErr;
