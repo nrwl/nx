@@ -140,6 +140,13 @@ fun runBuildLauncher(
   }
 
   val globalEnd = System.currentTimeMillis()
+  taskResults.putAll(
+      emitSkippedForUnreachedTasks(
+          requestedNxTaskIds = tasks.keys,
+          reportedNxTaskIds = taskResults.keys,
+          startTime = globalStart,
+          endTime = globalEnd,
+      ))
   val maxEndTime = taskResults.values.map { it.endTime }.maxOrNull() ?: globalEnd
   val minStartTime = taskResults.values.map { it.startTime }.minOrNull() ?: globalStart
   logger.info(
@@ -149,6 +156,29 @@ fun runBuildLauncher(
 
   logger.info("\u2705 Finished build tasks")
   return taskResults
+}
+
+private fun emitSkippedForUnreachedTasks(
+    requestedNxTaskIds: Set<String>,
+    reportedNxTaskIds: Set<String>,
+    startTime: Long,
+    endTime: Long,
+): Map<String, TaskResult> {
+  val skippedResults = mutableMapOf<String, TaskResult>()
+  requestedNxTaskIds.forEach { nxTaskId ->
+    if (nxTaskId !in reportedNxTaskIds) {
+      val skipped =
+          TaskResult(
+              success = false,
+              startTime = startTime,
+              endTime = endTime,
+              terminalOutput = "",
+              status = "skipped")
+      skippedResults[nxTaskId] = skipped
+      ResultEmitter.emit(nxTaskId, skipped)
+    }
+  }
+  return skippedResults
 }
 
 fun runTestLauncher(
@@ -236,10 +266,20 @@ fun runTestLauncher(
   val taskResults = mutableMapOf<String, TaskResult>()
   tasks.forEach { (nxTaskId, taskConfig) ->
     if (taskConfig.testClassName != null) {
+      val ranTask = testTaskStatus.containsKey(nxTaskId)
       val success = testTaskStatus[nxTaskId] ?: false
       val startTime = testStartTimes[nxTaskId] ?: globalStart
       val endTime = testEndTimes[nxTaskId] ?: globalEnd
-      val result = TaskResult(success, startTime, endTime, capturedFor(nxTaskId))
+      // No test events fired → the test task didn't run (e.g. compilation failed for a peer,
+      // build aborted before tests executed). Mark as skipped rather than a silent failure.
+      val status = if (!ranTask) "skipped" else if (success) "success" else "failure"
+      val result =
+          TaskResult(
+              success = success,
+              startTime = startTime,
+              endTime = endTime,
+              terminalOutput = if (!ranTask) "" else capturedFor(nxTaskId),
+              status = status)
       taskResults[nxTaskId] = result
       // Streamed tasks are deduped; this emits the ones whose capturedFor was empty when
       // emitTestTask fired during the build (e.g. test tasks Gradle skipped before producing

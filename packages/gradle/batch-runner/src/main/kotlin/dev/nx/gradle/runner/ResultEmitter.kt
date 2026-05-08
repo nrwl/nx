@@ -22,6 +22,7 @@ object ResultEmitter {
             "result" to
                 mapOf(
                     "success" to result.success,
+                    "status" to result.status,
                     "startTime" to result.startTime,
                     "endTime" to result.endTime,
                     "terminalOutput" to result.terminalOutput))

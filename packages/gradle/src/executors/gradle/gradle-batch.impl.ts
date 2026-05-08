@@ -69,11 +69,11 @@ export default async function* gradleBatch(
     );
 
   const yielded = new Set<string>();
-  // Whether any task in this batch reported a failure. If so, unyielded peers
-  // are treated as `skipped` (they never got to run) rather than `failure`.
-  let sawFailure = false;
 
   try {
+    // The Kotlin batch runner is the source of truth for per-task outcomes.
+    // It emits NX_RESULT for every requested task — success, failure, or
+    // skipped (peer failed before this task could run). We just relay.
     for await (const event of streamTasksInBatch(
       gradlewTasksToRun,
       excludeTasks,
@@ -82,12 +82,11 @@ export default async function* gradleBatch(
       root
     )) {
       yielded.add(event.task);
-      if (!event.result.success) {
-        sawFailure = true;
-      }
       yield event;
     }
   } catch (e) {
+    // The runner crashed before reporting on every task. Backfill the missing
+    // ones with a generic failure so Nx doesn't hang.
     output.error({
       title: `Gradlew batch failed`,
       bodyLines: [e.toString()],
@@ -95,28 +94,12 @@ export default async function* gradleBatch(
     for (const taskId of taskIds) {
       if (!yielded.has(taskId)) {
         yielded.add(taskId);
-        yield { task: taskId, result: skippedOrFailedResult(e.toString()) };
+        yield {
+          task: taskId,
+          result: { success: false, terminalOutput: e.toString() },
+        };
       }
     }
-    return;
-  }
-
-  // Any tasks the batch runner did not report on are treated as skipped (when
-  // a peer failed) or failed so Nx does not hang waiting for results.
-  for (const taskId of taskIds) {
-    if (!yielded.has(taskId)) {
-      yield {
-        task: taskId,
-        result: skippedOrFailedResult(`Gradlew batch failed`),
-      };
-    }
-  }
-
-  function skippedOrFailedResult(failureMessage: string): TaskResult {
-    if (sawFailure) {
-      return { success: false, status: 'skipped', terminalOutput: '' };
-    }
-    return { success: false, terminalOutput: failureMessage };
   }
 }
 
@@ -243,6 +226,7 @@ async function* streamTasksInBatch(
           terminalOutput: data.result.terminalOutput ?? '',
           startTime: data.result.startTime,
           endTime: data.result.endTime,
+          ...(data.result.status ? { status: data.result.status } : {}),
         },
       });
     } catch (e) {

@@ -292,14 +292,29 @@ describe('getGradlewTasksToRun', () => {
       } as unknown as ExecutorContext;
     });
 
-    it('marks unyielded peers as skipped when a sibling fails', async () => {
+    it('relays skipped status emitted by the runner without modification', async () => {
+      // The Kotlin runner now emits an explicit `skipped` NX_RESULT for peers
+      // that didn't run because a sibling failed. The TS side just relays.
       spawnMock.mockReturnValue(
         createFakeChild({
           stdoutLines: [
             'NX_RESULT:' +
               JSON.stringify({
                 task: 'app2:build',
-                result: { success: false, terminalOutput: 'compile error' },
+                result: {
+                  success: false,
+                  status: 'failure',
+                  terminalOutput: 'compile error',
+                },
+              }),
+            'NX_RESULT:' +
+              JSON.stringify({
+                task: 'app1:test',
+                result: {
+                  success: false,
+                  status: 'skipped',
+                  terminalOutput: '',
+                },
               }),
           ],
           exitCode: 1,
@@ -319,17 +334,22 @@ describe('getGradlewTasksToRun', () => {
       expect(byTask['app2:build']).toEqual(
         expect.objectContaining({
           success: false,
+          status: 'failure',
           terminalOutput: 'compile error',
         })
       );
-      expect(byTask['app1:test']).toEqual({
-        success: false,
-        status: 'skipped',
-        terminalOutput: '',
-      });
+      expect(byTask['app1:test']).toEqual(
+        expect.objectContaining({
+          success: false,
+          status: 'skipped',
+          terminalOutput: '',
+        })
+      );
     });
 
-    it('marks all peers as failed when no sibling reported success/failure', async () => {
+    it('backfills unreported tasks as failure when the runner crashes', async () => {
+      // Runner exits non-zero with no NX_RESULT lines — TS side backfills as
+      // failure so Nx doesn't hang waiting for the missing task.
       spawnMock.mockReturnValue(
         createFakeChild({ stdoutLines: [], exitCode: 1 })
       );
@@ -343,7 +363,6 @@ describe('getGradlewTasksToRun', () => {
         )
       );
 
-      // No yielded failure to attribute the skip to → both are real failures.
       expect(results).toHaveLength(2);
       for (const r of results) {
         expect(r.result.success).toBe(false);
