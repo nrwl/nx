@@ -144,24 +144,23 @@ export default async function* mavenBatchExecutor(
   // Collect terminal output from failed tasks
   const failedTaskOutputs: string[] = [];
 
+  // The Kotlin batch runner emits an NX_RESULT line for every requested task
+  // (success, failure, or skipped). We just relay; the only fallback below is
+  // for the runner crashing before reporting on every task.
   const taskIds = Object.keys(taskGraph.tasks);
   const yielded = new Set<string>();
 
   try {
-    // The Kotlin batch runner is the source of truth for per-task outcomes.
-    // It emits NX_RESULT for every requested task — success, failure, or
-    // skipped (peer failed before this task could run). We just relay.
     for await (const line of rl) {
       if (line.startsWith('NX_RESULT:')) {
         try {
-          const jsonStr = line.slice('NX_RESULT:'.length);
-          const data = JSON.parse(jsonStr);
+          const data = JSON.parse(line.slice('NX_RESULT:'.length));
           const result: TaskResult = {
             success: data.result.success ?? false,
+            status: data.result.status,
             terminalOutput: data.result.terminalOutput ?? '',
             startTime: data.result.startTime,
             endTime: data.result.endTime,
-            ...(data.result.status ? { status: data.result.status } : {}),
           };
 
           if (!result.success && result.terminalOutput) {
@@ -174,12 +173,10 @@ export default async function* mavenBatchExecutor(
           console.error('[Maven Batch] Failed to parse result line:', line, e);
         }
       } else if (line.trim()) {
-        // Collect non-empty stderr lines for error reporting
         stderrLines.push(line);
       }
     }
 
-    // Wait for process to exit
     const exitCode = await new Promise<number>(
       (resolvePromise, rejectPromise) => {
         child.on('close', (code) => {
@@ -193,8 +190,6 @@ export default async function* mavenBatchExecutor(
     );
 
     if (exitCode !== 0) {
-      // The runner exited unexpectedly without reporting on every requested
-      // task. Print captured stderr and any failed task outputs, then throw.
       if (stderrLines.length > 0) {
         console.error(
           `[Maven Batch] Process exited with code ${exitCode}. Stderr output:`
@@ -212,8 +207,7 @@ export default async function* mavenBatchExecutor(
       throw new Error(`Maven batch runner exited with code ${exitCode}`);
     }
   } catch (e) {
-    // The runner crashed before reporting on every task. Backfill the missing
-    // ones with a generic failure so Nx doesn't hang waiting for results.
+    // Runner crashed before reporting on every task — backfill so Nx doesn't hang.
     for (const taskId of taskIds) {
       if (!yielded.has(taskId)) {
         yielded.add(taskId);

@@ -178,10 +178,8 @@ export type TaskResult = {
   startTime?: number;
   endTime?: number;
   /**
-   * Optional explicit status. When set, takes precedence over `success` for
-   * status reporting. Use this to mark a task as `skipped` (e.g. a batch
-   * dependent that never ran because a peer failed) so it doesn't display
-   * as a failure even though `success` is false.
+   * Explicit status. When set, takes precedence over `success`. Set to
+   * `'skipped'` for a batch task that never ran because a peer failed.
    */
   status?: 'success' | 'failure' | 'skipped';
 };

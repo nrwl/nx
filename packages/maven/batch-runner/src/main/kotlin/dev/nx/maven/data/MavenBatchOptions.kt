@@ -16,21 +16,40 @@ data class MavenBatchTask(
     val project: String
 )
 
+/**
+ * Per-task result. `status` is always sent on the wire — one of
+ * `"success"`, `"failure"`, or `"skipped"`. `success` is also sent for
+ * back-compat with older Nx versions that don't read `status` yet.
+ */
 data class TaskResult(
     val taskId: String,
     val success: Boolean,
+    val status: String,
     val terminalOutput: String,
     val startTime: Long = 0,
     val endTime: Long = 0,
-    /**
-     * Authoritative outcome consumed by Nx. Defaults to "success" or "failure"
-     * based on `success` for back-compat with older consumers; explicitly set
-     * to "skipped" to indicate a task that did not run (e.g. a peer task in
-     * the same batch failed and Maven aborted before this task could be
-     * scheduled).
-     */
-    val status: String = if (success) "success" else "failure"
-)
+) {
+  companion object {
+    fun success(taskId: String, terminalOutput: String, startTime: Long = 0, endTime: Long = 0) =
+        TaskResult(taskId, true, "success", terminalOutput, startTime, endTime)
+
+    fun failure(taskId: String, terminalOutput: String, startTime: Long = 0, endTime: Long = 0) =
+        TaskResult(taskId, false, "failure", terminalOutput, startTime, endTime)
+
+    fun skipped(taskId: String, startTime: Long = 0, endTime: Long = 0) =
+        TaskResult(taskId, false, "skipped", "", startTime, endTime)
+
+    fun fromBoolean(
+        taskId: String,
+        success: Boolean,
+        terminalOutput: String,
+        startTime: Long = 0,
+        endTime: Long = 0,
+    ): TaskResult =
+        if (success) success(taskId, terminalOutput, startTime, endTime)
+        else failure(taskId, terminalOutput, startTime, endTime)
+  }
+}
 
 /**
  * A representation of the invocation of an Executor

@@ -68,12 +68,12 @@ export default async function* gradleBatch(
       context.taskGraph ?? taskGraph
     );
 
+  // The Kotlin batch runner emits an NX_RESULT line for every requested task
+  // (success, failure, or skipped). We just relay; the only fallback below is
+  // for the runner crashing before reporting on every task.
   const yielded = new Set<string>();
 
   try {
-    // The Kotlin batch runner is the source of truth for per-task outcomes.
-    // It emits NX_RESULT for every requested task — success, failure, or
-    // skipped (peer failed before this task could run). We just relay.
     for await (const event of streamTasksInBatch(
       gradlewTasksToRun,
       excludeTasks,
@@ -85,8 +85,6 @@ export default async function* gradleBatch(
       yield event;
     }
   } catch (e) {
-    // The runner crashed before reporting on every task. Backfill the missing
-    // ones with a generic failure so Nx doesn't hang.
     output.error({
       title: `Gradlew batch failed`,
       bodyLines: [e.toString()],
@@ -223,10 +221,10 @@ async function* streamTasksInBatch(
         task: data.task,
         result: {
           success: data.result.success ?? false,
+          status: data.result.status,
           terminalOutput: data.result.terminalOutput ?? '',
           startTime: data.result.startTime,
           endTime: data.result.endTime,
-          ...(data.result.status ? { status: data.result.status } : {}),
         },
       });
     } catch (e) {

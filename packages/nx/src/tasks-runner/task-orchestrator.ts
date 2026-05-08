@@ -766,10 +766,8 @@ export class TaskOrchestrator {
         const status: TaskStatus =
           result.status ?? (result.success ? 'success' : 'failure');
 
-        // Append before print so the TUI's printTaskTerminalOutput sees the
-        // PTY already populated and no-ops, matching the non-batch flow. The
-        // reverse order would write the same terminalOutput into the per-task
-        // PTY twice — once when print creates it, once when append finds it.
+        // Append before print so printTaskTerminalOutput finds the PTY already
+        // populated and no-ops; reversing the order writes terminalOutput twice.
         if (result.terminalOutput) {
           this.options.lifeCycle.appendTaskOutput(
             taskId,

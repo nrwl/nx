@@ -133,16 +133,11 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
                   log.debug("Task $skippedTaskId was skipped due to a failed dependency")
                   taskStates[skippedTaskId] = TaskState.SKIPPED
                   val skippedResult =
-                      TaskResult(
-                          taskId = skippedTaskId,
-                          success = false,
-                          terminalOutput = "",
-                          startTime = nowMs,
-                          endTime = nowMs,
-                          status = "skipped")
+                      TaskResult.skipped(
+                          taskId = skippedTaskId, startTime = nowMs, endTime = nowMs)
                   results[skippedTaskId] = skippedResult
                   emitResult(skippedTaskId, skippedResult)
-                  // IMPORTANT: Count down skipped tasks too, or latch will never reach zero
+                  // Count down skipped tasks too — otherwise the latch never reaches zero.
                   completionLatch.countDown()
                 }
               }
@@ -206,15 +201,12 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     // If task has no goals, return success immediately
     if (mavenBatchTask.goals.isEmpty()) {
       val endTime = System.currentTimeMillis()
-      return TaskResult(
-        taskId = taskId,
-        success = true,
-        terminalOutput = "",
-        startTime = startTime,
-        endTime = endTime
-      ).also {
-        results[taskId] = it
-      }
+      return TaskResult.success(
+              taskId = taskId,
+              terminalOutput = "",
+              startTime = startTime,
+              endTime = endTime)
+          .also { results[taskId] = it }
     }
     val goals = mavenBatchTask.goals
     val arguments = buildArguments(mavenBatchTask)
@@ -255,13 +247,13 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
         }
       }
 
-      val result = TaskResult(
-        taskId = taskId,
-        success = success,
-        terminalOutput = outputText,
-        startTime = startTime,
-        endTime = endTime
-      )
+      val result =
+          TaskResult.fromBoolean(
+              taskId = taskId,
+              success = success,
+              terminalOutput = outputText,
+              startTime = startTime,
+              endTime = endTime)
       results[taskId] = result
       result
     } catch (e: Exception) {
@@ -274,13 +266,12 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
         log.error("Maven output before exception for task $taskId:\n$outputText")
       }
 
-      val result = TaskResult(
-        taskId = taskId,
-        success = false,
-        terminalOutput = "$outputText\nError: $errorMsg",
-        startTime = startTime,
-        endTime = endTime
-      )
+      val result =
+          TaskResult.failure(
+              taskId = taskId,
+              terminalOutput = "$outputText\nError: $errorMsg",
+              startTime = startTime,
+              endTime = endTime)
       results[taskId] = result
       result
     }
