@@ -5,11 +5,14 @@ import { registerTsConfigPaths } from '@nx/js/src/internal';
 import { NxReporter } from './lib/nx-reporter';
 import { getOptions } from './lib/utils';
 import { loadVitestDynamicImport } from '../../utils/executor-utils';
+import { warnVitestTestExecutorDeprecation } from '../../utils/deprecation';
 
 export async function* vitestExecutor(
   options: VitestExecutorOptions,
   context: ExecutorContext
 ) {
+  warnVitestTestExecutorDeprecation();
+
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 

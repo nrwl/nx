@@ -16,7 +16,7 @@ export function CallToAction({
   return (
     <section className="relative isolate px-6 py-32 sm:py-40 lg:px-8">
       <svg
-        className="absolute inset-0 -z-10 h-full w-full stroke-black/10 [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)] dark:stroke-white/10"
+        className="absolute inset-0 -z-10 h-full w-full [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)] stroke-black/10 dark:stroke-white/10"
         aria-hidden="true"
       >
         <defs>
@@ -74,7 +74,7 @@ export function CallToAction({
             href={mainActionLink}
             title={mainActionTitle}
             prefetch={false}
-            className="rounded-md bg-zinc-950 px-3.5 py-2.5 text-sm font-semibold text-zinc-100 shadow-sm hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
+            className="rounded-md bg-zinc-950 px-3.5 py-2.5 text-sm font-semibold text-zinc-100 shadow-xs hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
           >
             {mainActionLinkText}
           </Link>
@@ -82,7 +82,7 @@ export function CallToAction({
             href="/contact"
             title="Get in touch"
             prefetch={false}
-            className="group text-sm font-semibold leading-6 text-zinc-950 dark:text-white"
+            className="group text-sm leading-6 font-semibold text-zinc-950 dark:text-white"
             onClick={() =>
               sendCustomEventViaGtm('contact-click', 'footer-cta', '')
             }

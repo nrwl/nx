@@ -6,6 +6,7 @@
   "cli": "nx",
   "description": "Serve up Storybook in development mode.",
   "type": "object",
+  "x-deprecated": "The `@nx/storybook:storybook` executor is deprecated and will be removed in Nx v24. Run `nx g @nx/storybook:convert-to-inferred` to migrate to the `@nx/storybook/plugin` inferred plugin. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.",
   "presets": [
     {
       "name": "Default minimum setup",

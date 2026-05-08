@@ -16,11 +16,14 @@ import customServer from './custom-server.impl';
 import { createCliOptions } from '../../utils/create-cli-options';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { getInstalledNextVersionRuntime } from '../../utils/runtime-version-utils';
+import { warnNextServerExecutorDeprecation } from '../../utils/deprecation';
 
 export default async function* serveExecutor(
   options: NextServeBuilderOptions,
   context: ExecutorContext
 ) {
+  warnNextServerExecutorDeprecation();
+
   const buildOptions = readTargetOptions<NextBuildBuilderOptions>(
     parseTargetString(options.buildTarget, context),
     context

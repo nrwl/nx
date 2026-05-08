@@ -42,6 +42,22 @@
       "version": "23.0.0-beta.0",
       "description": "Safety net: ensure any remaining @nx/vite:test executor usages are swapped to @nx/vitest:test and @nx/vitest is installed.",
       "implementation": "./src/migrations/update-23-0-0/ensure-vitest-package-migration"
+    },
+    "rename-rollup-options-to-rolldown-options": {
+      "version": "23.0.0-beta.10",
+      "requires": {
+        "vite": ">=8.0.0"
+      },
+      "description": "Rename `rollupOptions` to `rolldownOptions` in vite config files (top-level and inside `environments`). Vite 8 replaced Rollup with Rolldown.",
+      "implementation": "./src/migrations/update-23-0-0/rename-rollup-options-to-rolldown-options"
+    },
+    "create-ai-instructions-for-vite-8": {
+      "version": "23.0.0-beta.10",
+      "requires": {
+        "vite": ">=8.0.0"
+      },
+      "description": "Create AI Instructions to help migrate users workspaces past breaking changes for Vite 8.",
+      "implementation": "./src/migrations/update-23-0-0/create-ai-instructions-for-vite-8"
     }
   },
   "packageJsonUpdates": {
@@ -153,6 +169,22 @@
           "version": "~2.1.2",
           "alwaysAddToPackageJson": false
         }
+      }
+    },
+    "23.0.0": {
+      "version": "23.0.0-beta.10",
+      "packages": {
+        "vite": {
+          "version": "^8.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitejs/plugin-react": {
+          "version": "^6.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      },
+      "incompatibleWith": {
+        "@remix-run/dev": "*"
       }
     }
   }

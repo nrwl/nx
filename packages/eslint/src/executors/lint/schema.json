@@ -6,6 +6,7 @@
   "description": "ESLint Lint Target.",
   "cli": "nx",
   "type": "object",
+  "x-deprecated": "The `@nx/eslint:lint` executor is deprecated and will be removed in Nx v24. Run `nx g @nx/eslint:convert-to-inferred` to migrate to the `@nx/eslint/plugin` inferred plugin. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.",
   "properties": {
     "eslintConfig": {
       "type": "string",

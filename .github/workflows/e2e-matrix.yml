@@ -32,7 +32,9 @@ jobs:
         node_version:
           - 22
           - 24
-          - 26
+          # TODO: re-enable once playwright ships the yauzl fix for node 26 extract hang.
+          # See https://github.com/microsoft/playwright/issues/40724
+          # - 26
         exclude:
           # macos skips the oldest node to keep the macos matrix slim
           - os: macos-latest

@@ -3,6 +3,7 @@ export {
   createProjectRootMappingsFromProjectConfigurations,
   PluginCache,
   safeWriteFileCache,
+  emitPluginWorkerLog,
 } from 'nx/src/devkit-internals';
 
 // Generators

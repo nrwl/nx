@@ -4,6 +4,7 @@ import { ChildProcess, fork } from 'child_process';
 import { resolve as pathResolve } from 'path';
 import { isPackagerRunning } from './lib/is-packager-running';
 import { ReactNativeStartOptions } from './schema';
+import { warnReactNativeExecutorDeprecation } from '../../utils/deprecation';
 
 export interface ReactNativeStartOutput {
   port?: number;
@@ -14,6 +15,8 @@ export default async function* startExecutor(
   options: ReactNativeStartOptions,
   context: ExecutorContext
 ): AsyncGenerator<ReactNativeStartOutput> {
+  warnReactNativeExecutorDeprecation('start');
+
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
