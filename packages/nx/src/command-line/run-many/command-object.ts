@@ -10,6 +10,11 @@ import {
   withTuiOptions,
 } from '../yargs-utils/shared-options';
 import { handleImport } from '../../utils/handle-import';
+import { registerCompletion } from '../completion/metadata';
+import {
+  getProjectNameCompletions,
+  getTargetNameCompletions,
+} from '../completion/completion-providers';
 
 export const yargsRunManyCommand: CommandModule = {
   command: 'run-many',
@@ -37,3 +42,13 @@ export const yargsRunManyCommand: CommandModule = {
     process.exit(exitCode);
   },
 };
+
+// `nx run-many` — no positionals; project/target completion comes from
+// flags. Only the canonical names are listed; yargs's alias map (-p,
+// -t, etc.) is consulted at TAB time.
+registerCompletion('run-many', {
+  flags: {
+    projects: (current) => getProjectNameCompletions(current),
+    target: (current) => getTargetNameCompletions(current),
+  },
+});

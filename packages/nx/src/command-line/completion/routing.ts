@@ -1,44 +1,60 @@
-import {
-  getGeneratorPluginCompletions,
-  getGeneratorsForPlugin,
-  getProjectNameCompletions,
-  getProjectNamesWithTarget,
-  getTargetNameCompletions,
-} from './completion-providers';
+import { findCompletionMetadata, findFlagCompletion } from './metadata';
+
+// Eager-import the central command registry so each command-object's
+// `registerCompletion` side-effect runs before the first lookup.
+require('../nx-commands');
 
 /**
- * Known Nx commands that act as infix target aliases.
- * When a user types `nx build <TAB>`, we complete with project names.
+ * Walk yargs's command tree following `args` (skipping flag tokens) and
+ * return the leaf yargs instance after running each matched command's
+ * builder. Used to read the leaf's option metadata — alias map, etc.
  */
-const INFIX_TARGET_COMMANDS = new Set([
-  'build',
-  'serve',
-  'test',
-  'lint',
-  'e2e',
-  'dev',
-  'start',
-  'preview',
-  'typecheck',
-]);
+function findYargsLeaf(args: string[]): any | null {
+  const { commandsObject } = require('../nx-commands') as {
+    commandsObject: any;
+  };
+  const yargs = require('yargs') as typeof import('yargs');
+  let current: any = commandsObject;
+
+  for (const arg of args) {
+    if (arg.startsWith('-')) continue;
+    const handlers = current
+      .getInternalMethods?.()
+      ?.getCommandInstance?.()
+      ?.getCommandHandlers?.();
+    if (!handlers || !handlers[arg]) break;
+    const temp: any = (yargs as any)();
+    try {
+      handlers[arg].builder?.(temp);
+    } catch {
+      break;
+    }
+    current = temp;
+  }
+  return current === commandsObject ? null : current;
+}
 
 /**
- * Flags whose value is a project name (or comma-separated list of them).
- * Applies across every command — wherever a user types `--focus <TAB>`,
- * `-p <TAB>`, etc., we complete project names.
+ * Given a yargs instance and a typed flag (e.g. `p`), return the set of
+ * sibling names that point at the same option (canonical + aliases). Allows
+ * a contributor to register only the canonical flag name and have aliases
+ * resolve automatically. Returns an empty array if no aliases are known.
  */
-const PROJECT_VALUE_FLAGS = new Set([
-  '-p',
-  '--project',
-  '--projects',
-  '--focus',
-  '--exclude',
-]);
-
-/**
- * Flags whose value is a target name (or comma-separated list of them).
- */
-const TARGET_VALUE_FLAGS = new Set(['-t', '--target', '--targets']);
+function getFlagAliases(yargsLeaf: any, flag: string): string[] {
+  const opts = yargsLeaf?.getOptions?.();
+  if (!opts) return [];
+  const aliasMap: Record<string, string[]> = opts.alias ?? {};
+  const matches = new Set<string>();
+  for (const [canonical, aliases] of Object.entries(aliasMap)) {
+    const list = aliases ?? [];
+    if (canonical === flag || list.includes(flag)) {
+      matches.add(canonical);
+      for (const a of list) matches.add(a);
+    }
+  }
+  matches.delete(flag);
+  return Array.from(matches);
+}
 
 /**
  * Returns project/target completions for known nx subcommands. Returns null
@@ -53,88 +69,34 @@ export function getCompletions(
     return null;
   }
 
-  // Flag-based completions apply to every command: `nx graph --focus <TAB>`,
-  // `nx run-many -t <TAB>`, etc.
-  if (isCompletingTargetOption()) {
-    return getTargetNameCompletions(current);
-  }
-  if (isCompletingProjectOption()) {
-    return getProjectNameCompletions(current);
-  }
+  const match = findCompletionMetadata(args);
+  const meta = match?.metadata ?? null;
 
-  const command = args[0];
-
-  // nx show project <TAB>
-  if (command === 'show' && args.length >= 2 && args[1] === 'project') {
-    return getProjectNameCompletions(current);
+  // 1. Flag-based completion: did the user just type `--focus <TAB>` etc.?
+  const activeFlag = stripDashes(getActiveOptionFlag());
+  if (activeFlag) {
+    const aliases = getFlagAliases(findYargsLeaf(args), activeFlag);
+    const handler = findFlagCompletion(meta, activeFlag, aliases);
+    if (handler) {
+      return handler(current, args);
+    }
   }
 
-  // nx show target <TAB>
-  if (command === 'show' && args.length >= 2 && args[1] === 'target') {
-    return completeProjectTarget(current);
-  }
-
-  // nx run <project> or nx run <project>:<target>
-  if (command === 'run') {
-    return completeProjectTarget(current);
-  }
-
-  // nx generate <plugin>:<generator>  /  nx g <plugin>:<generator>
-  // Yargs includes the partial token in argv._, so args is ['generate']
-  // before any token is typed and ['generate', <partial>] while typing the
-  // first positional. Once a generator is chosen and the next positional
-  // begins, args grows past 2 and we fall through.
-  if ((command === 'generate' || command === 'g') && args.length <= 2) {
-    return completeGenerator(current);
-  }
-
-  // run-many / affected fall through here — yargs default completes their
-  // flag and subcommand names. Project/target values are handled by the
-  // flag-based check above.
-  if (command === 'run-many' || command === 'affected') {
+  // 2. Positional completion: which positional is the user typing?
+  if (match) {
+    const positional = match.metadata.positionals?.[match.positionalIndex];
+    if (positional?.complete) {
+      return positional.complete(current, args);
+    }
+    if (positional?.choices) {
+      return positional.choices.filter((c) => c.startsWith(current));
+    }
+    // Past all declared positionals — fall through to flag completion.
     return null;
   }
 
-  // Infix commands: nx build <TAB>, nx serve <TAB>, etc. Only list projects
-  // that actually have the matching target — `nx build <TAB>` should not
-  // suggest projects without a build target.
-  if (INFIX_TARGET_COMMANDS.has(command)) {
-    return getProjectNamesWithTarget(current, command);
-  }
-
+  // No matching metadata — fall through to yargs's command/option defaults.
   return null;
-}
-
-/**
- * Two-stage generator completion. Same TAB-twice flow as project:target —
- * first stage suggests plugin names with a trailing `:`; second stage
- * suggests generator names within the chosen plugin.
- */
-function completeGenerator(current: string): string[] {
-  const colonIdx = current.indexOf(':');
-  if (colonIdx === -1) {
-    return getGeneratorPluginCompletions(current).map((p) => `${p}:`);
-  }
-  const pluginName = current.slice(0, colonIdx);
-  const generatorPrefix = current.slice(colonIdx + 1);
-  return getGeneratorsForPlugin(pluginName, generatorPrefix).map(
-    (g) => `${pluginName}:${g}`
-  );
-}
-
-// Trailing `:` after a project lets the user TAB again to complete targets
-// without backspacing a shell-inserted space and typing `:` themselves. The
-// bash/zsh scripts detect the trailing colon and suppress the space.
-function completeProjectTarget(current: string): string[] {
-  const colonIdx = current.indexOf(':');
-  if (colonIdx === -1) {
-    return getProjectNameCompletions(current).map((p) => `${p}:`);
-  }
-  const projectName = current.slice(0, colonIdx);
-  const targetPrefix = current.slice(colonIdx + 1);
-  return getTargetNameCompletions(targetPrefix, projectName).map(
-    (t) => `${projectName}:${t}`
-  );
 }
 
 /**
@@ -146,14 +108,9 @@ function getActiveOptionFlag(): string | undefined {
   return rawArgs[rawArgs.length - 2];
 }
 
-function isCompletingTargetOption(): boolean {
-  const flag = getActiveOptionFlag();
-  return flag !== undefined && TARGET_VALUE_FLAGS.has(flag);
-}
-
-function isCompletingProjectOption(): boolean {
-  const flag = getActiveOptionFlag();
-  return flag !== undefined && PROJECT_VALUE_FLAGS.has(flag);
+function stripDashes(flag: string | undefined): string | null {
+  if (!flag || !flag.startsWith('-')) return null;
+  return flag.replace(/^-+/, '');
 }
 
 /**

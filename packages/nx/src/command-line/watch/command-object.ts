@@ -3,6 +3,8 @@ import { WatchArguments } from './watch';
 import { handleImport } from '../../utils/handle-import';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { parseCSV, withVerbose } from '../yargs-utils/shared-options';
+import { registerCompletion } from '../completion/metadata';
+import { getProjectNameCompletions } from '../completion/completion-providers';
 
 export const yargsWatchCommand: CommandModule = {
   command: 'watch',
@@ -14,6 +16,13 @@ export const yargsWatchCommand: CommandModule = {
     );
   },
 };
+
+// `nx watch` — no positionals; project completion comes from -p/--projects.
+registerCompletion('watch', {
+  flags: {
+    projects: (current) => getProjectNameCompletions(current),
+  },
+});
 
 function withWatchOptions(yargs: Argv) {
   return (

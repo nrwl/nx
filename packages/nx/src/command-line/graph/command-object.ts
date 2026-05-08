@@ -6,6 +6,11 @@ import {
   withVerbose,
 } from '../yargs-utils/shared-options';
 import { handleImport } from '../../utils/handle-import';
+import { registerCompletion } from '../completion/metadata';
+import {
+  getProjectNameCompletions,
+  getTargetNameCompletions,
+} from '../completion/completion-providers';
 
 export const yargsGraphCommand: CommandModule = {
   command: 'graph',
@@ -30,6 +35,16 @@ export const yargsGraphCommand: CommandModule = {
       await handleImport('./graph.js', __dirname)
     ).generateGraph(args as any, []),
 };
+
+// `nx graph` — no positionals; project completion comes from --focus / --exclude.
+// Only canonical names; yargs aliases auto-resolve at TAB time.
+registerCompletion('graph', {
+  flags: {
+    targets: (current) => getTargetNameCompletions(current),
+    focus: (current) => getProjectNameCompletions(current),
+    exclude: (current) => getProjectNameCompletions(current),
+  },
+});
 
 export function withGraphOptions(yargs: Argv) {
   return yargs

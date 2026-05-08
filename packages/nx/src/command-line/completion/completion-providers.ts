@@ -62,6 +62,39 @@ export function getProjectNamesWithTarget(
 }
 
 /**
+ * Two-stage completion of a `project[:target]` token. First stage returns
+ * project names with a trailing `:` so the shell suppresses the space and
+ * the user can TAB again for targets within the chosen project.
+ */
+export function completeProjectTarget(current: string): string[] {
+  const colonIdx = current.indexOf(':');
+  if (colonIdx === -1) {
+    return getProjectNameCompletions(current).map((p) => `${p}:`);
+  }
+  const projectName = current.slice(0, colonIdx);
+  const targetPrefix = current.slice(colonIdx + 1);
+  return getTargetNameCompletions(targetPrefix, projectName).map(
+    (t) => `${projectName}:${t}`
+  );
+}
+
+/**
+ * Two-stage completion of a `<plugin>:<generator>` token, mirroring
+ * project:target above.
+ */
+export function completeGenerator(current: string): string[] {
+  const colonIdx = current.indexOf(':');
+  if (colonIdx === -1) {
+    return getGeneratorPluginCompletions(current).map((p) => `${p}:`);
+  }
+  const pluginName = current.slice(0, colonIdx);
+  const generatorPrefix = current.slice(colonIdx + 1);
+  return getGeneratorsForPlugin(pluginName, generatorPrefix).map(
+    (g) => `${pluginName}:${g}`
+  );
+}
+
+/**
  * Returns plugin package names (with at least one generator) matching the prefix.
  */
 export function getGeneratorPluginCompletions(current: string): string[] {
