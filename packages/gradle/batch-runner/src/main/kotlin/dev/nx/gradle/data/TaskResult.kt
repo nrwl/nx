@@ -1,9 +1,9 @@
 package dev.nx.gradle.data
 
 /**
- * Per-task result emitted over NX_RESULT. `status` is always sent — one of
- * `"success"`, `"failure"`, or `"skipped"`. `success` is also sent for
- * back-compat with Nx versions that don't read `status` yet.
+ * Per-task result emitted over NX_RESULT. `status` is always sent — one of `"success"`,
+ * `"failure"`, or `"skipped"`. `success` is also sent for back-compat with Nx versions that don't
+ * read `status` yet.
  */
 data class TaskResult(
     val success: Boolean,

@@ -50,8 +50,7 @@ fun buildListener(
           ?.let { nxTaskId ->
             val endTime = event.result.endTime
             val startTime = taskStartTimes[nxTaskId] ?: event.result.startTime
-            taskResults[nxTaskId] =
-                TaskResult.fromBoolean(success, startTime, endTime, "")
+            taskResults[nxTaskId] = TaskResult.fromBoolean(success, startTime, endTime, "")
             pendingEmit[taskPath] = nxTaskId
           }
     }

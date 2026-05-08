@@ -216,8 +216,7 @@ fun runTestLauncher(
       val success = testTaskStatus[nxTaskId] ?: false
       val startTime = testStartTimes[nxTaskId] ?: globalStart
       val endTime = testEndTimes[nxTaskId] ?: System.currentTimeMillis()
-      ResultEmitter.emit(
-          nxTaskId, TaskResult.fromBoolean(success, startTime, endTime, captured))
+      ResultEmitter.emit(nxTaskId, TaskResult.fromBoolean(success, startTime, endTime, captured))
     }
   }
 

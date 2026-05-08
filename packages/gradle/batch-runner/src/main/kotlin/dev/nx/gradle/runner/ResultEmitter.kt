@@ -5,9 +5,8 @@ import dev.nx.gradle.data.TaskResult
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Emits per-task results as `NX_RESULT:{json}` lines on stdout so the Nx batch
- * executor can stream them as an async iterator. Mirrors the Maven runner
- * protocol. Each emit is deduped by task id.
+ * Emits per-task results as `NX_RESULT:{json}` lines on stdout so the Nx batch executor can stream
+ * them as an async iterator. Mirrors the Maven runner protocol. Each emit is deduped by task id.
  */
 object ResultEmitter {
   private val gson = Gson()
