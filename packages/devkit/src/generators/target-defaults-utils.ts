@@ -10,7 +10,7 @@ import {
   updateNxJson,
 } from 'nx/src/devkit-exports';
 import { findMatchingConfigFiles } from 'nx/src/devkit-internals';
-import { gte, valid } from 'semver';
+import { gte, major, valid } from 'semver';
 import { NX_VERSION } from '../utils/package-json';
 import {
   downgradeTargetDefaults,
@@ -23,8 +23,10 @@ import {
 // preserve a legacy record on disk. Treat unknown / placeholder versions
 // (e.g. workspace dev "0.0.1" before publish replacement) as modern —
 // the alternative would silently downgrade every monorepo dev test.
+// Compare on major so beta/rc pre-release tags (`23.0.0-beta.8`) count
+// as nx 23 — `gte` would treat them as less than `23.0.0`.
 const SUPPORTS_ARRAY_TARGET_DEFAULTS =
-  !valid(NX_VERSION) || NX_VERSION === '0.0.1' || gte(NX_VERSION, '23.0.0');
+  !valid(NX_VERSION) || NX_VERSION === '0.0.1' || major(NX_VERSION) >= 23;
 
 /**
  * Upsert a `targetDefaults` entry. Always writes the array shape — if the

@@ -36,7 +36,7 @@ function setupE2ETargetDefaults(tree: Tree) {
   const productionFileSet = !!nxJson.namedInputs?.production;
   const existing = findExistingE2eDefault(nxJson.targetDefaults);
   const patch: Partial<TargetConfiguration> = {};
-  if (!existing?.cache) patch.cache = true;
+  if (existing?.cache === undefined) patch.cache = true;
   if (!existing?.inputs) {
     patch.inputs = ['default', productionFileSet ? '^production' : '^default'];
   }
