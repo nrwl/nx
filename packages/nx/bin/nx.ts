@@ -45,6 +45,14 @@ async function main() {
     // perf-logging consumes an `init-local` mark; set it before requiring
     // nx-commands so the measurement doesn't error on missing mark.
     performance.mark('init-local');
+    // Fast path: if the user's TAB lands in a registered metadata path
+    // (project/target names, generators, flag values), serve the
+    // completion without loading the full yargs command surface.
+    const { tryFastCompletion } = await import(
+      'nx/src/command-line/completion/fast-path'
+    );
+    if (tryFastCompletion()) return;
+    // Slow path: top-level command enumeration, unmigrated commands.
     (await import('nx/src/command-line/nx-commands')).commandsObject.argv;
     return;
   }

@@ -12,11 +12,6 @@ import {
   withTargetAndConfigurationOption,
   withTuiOptions,
 } from '../yargs-utils/shared-options';
-import { registerCompletion } from '../completion/metadata';
-import {
-  getProjectNameCompletions,
-  getTargetNameCompletions,
-} from '../completion/completion-providers';
 
 export const yargsAffectedCommand: CommandModule = {
   command: 'affected',
@@ -146,18 +141,6 @@ export const yargsAffectedLintCommand: CommandModule = {
     process.exit(exitCode);
   },
 };
-
-// `nx affected` — no positionals; project/target completion comes from flags.
-registerCompletion('affected', {
-  flags: {
-    projects: (current) => getProjectNameCompletions(current),
-    p: (current) => getProjectNameCompletions(current),
-    targets: (current) => getTargetNameCompletions(current),
-    target: (current) => getTargetNameCompletions(current),
-    t: (current) => getTargetNameCompletions(current),
-    exclude: (current) => getProjectNameCompletions(current),
-  },
-});
 
 export const yargsAffectedE2ECommand: CommandModule = {
   command: 'affected:e2e',

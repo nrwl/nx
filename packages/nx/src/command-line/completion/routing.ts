@@ -1,8 +1,10 @@
 import { findCompletionMetadata, findFlagCompletion } from './metadata';
 
-// Eager-import the central command registry so each command-object's
-// `registerCompletion` side-effect runs before the first lookup.
-require('../nx-commands');
+// Eager-import the lightweight registrations barrel so each command's
+// `registerCompletion` side-effect runs before the first lookup. This
+// is much cheaper than loading the full nx-commands surface — only
+// the metadata helpers and providers each command needs.
+require('./registrations');
 
 /**
  * Returns project/target completions for known nx subcommands. Returns null

@@ -145,9 +145,17 @@ function listPluginsWithGenerators(workspaceRoot: string): string[] {
   return result;
 }
 
-function readGeneratorsJson(workspaceRoot: string, pluginName: string): string[] {
+function readGeneratorsJson(
+  workspaceRoot: string,
+  pluginName: string
+): string[] {
   try {
-    const depPkgPath = join(workspaceRoot, 'node_modules', pluginName, 'package.json');
+    const depPkgPath = join(
+      workspaceRoot,
+      'node_modules',
+      pluginName,
+      'package.json'
+    );
     if (!existsSync(depPkgPath)) {
       return [];
     }
@@ -156,15 +164,21 @@ function readGeneratorsJson(workspaceRoot: string, pluginName: string): string[]
     if (typeof field !== 'string') {
       return [];
     }
-    const generatorsJsonPath = join(workspaceRoot, 'node_modules', pluginName, field);
+    const generatorsJsonPath = join(
+      workspaceRoot,
+      'node_modules',
+      pluginName,
+      field
+    );
     if (!existsSync(generatorsJsonPath)) {
       return [];
     }
-    const generatorsJson = JSON.parse(readFileSync(generatorsJsonPath, 'utf-8'));
-    const collection = generatorsJson.generators ?? generatorsJson.schematics ?? {};
-    return Object.keys(collection).filter(
-      (k) => !collection[k]?.hidden
+    const generatorsJson = JSON.parse(
+      readFileSync(generatorsJsonPath, 'utf-8')
     );
+    const collection =
+      generatorsJson.generators ?? generatorsJson.schematics ?? {};
+    return Object.keys(collection).filter((k) => !collection[k]?.hidden);
   } catch {
     return [];
   }
