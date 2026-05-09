@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`convertToWithMF should migrate a standard previous generated host config correctly 1`] = `
 "const { withModuleFederation } = require('@nx/module-federation/angular');

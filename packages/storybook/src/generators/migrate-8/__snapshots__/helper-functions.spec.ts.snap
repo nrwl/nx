@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Helper functions for the Storybook 8 migration generator getAllStorybookInfo and onlyShowGuide should return all info for all projects with Storybook 1`] = `
 {

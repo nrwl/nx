@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`ErrorBoundary --apiVersion=2 should correctly add the ErrorBoundary to the route file 1`] = `
 "import { useRouteError, isRouteErrorResponse } from '@remix-run/react';
