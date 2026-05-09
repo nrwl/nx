@@ -52,6 +52,12 @@ import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
 import { flushPendingWorkspaceChanges } from './watcher';
 import { serverLogger } from '../logger';
+import {
+  captureInputsSnapshot,
+  describeInputsDrift,
+  detectInputsDrift,
+  type InputsSnapshot,
+} from './inputs-snapshot';
 
 interface SerializedProjectGraph {
   error: Error | null;
@@ -96,6 +102,14 @@ let recomputationGeneration = 0;
 // state (we just haven't written it yet) and must not trigger a reset.
 let cacheHasBeenPersisted = false;
 
+// Stat/hash signatures for every input the cached graph depends on.
+// Captured at compute completion and consulted on every cache-hit
+// request so the daemon does not rely on the file watcher to observe
+// edits to nx.json, root package.json, workspace plugin sources, or
+// files matched by plugin createNodesV2 globs. `undefined` means there
+// is no valid cache to verify (first compute, error, or post-reset).
+let cachedInputsSnapshot: InputsSnapshot | undefined;
+
 /**
  * Start a fresh project graph computation, in parallel with any in-flight
  * one. The new promise becomes `cachedSerializedProjectGraphPromise`; any
@@ -122,6 +136,24 @@ function kickOffRecompute() {
         result.error
       );
       persistProjectGraphToDisk(result);
+      // Snapshot inputs only when we are still the latest compute. A
+      // newer kickOff would have already replaced the cached promise,
+      // so capturing here would associate this snapshot with a stale
+      // graph and either spurious-recompute or mask drift on the
+      // newer one.
+      try {
+        cachedInputsSnapshot = await captureInputsSnapshot(plugins);
+      } catch (e) {
+        // A failed snapshot drops us back to "no snapshot" — the next
+        // request will trigger a recompute via the !snapshot branch
+        // rather than serving an uncovered cache.
+        cachedInputsSnapshot = undefined;
+        serverLogger.log(
+          `Failed to snapshot project graph inputs: ${
+            e instanceof Error ? e.message : String(e)
+          }. Next request will recompute.`
+        );
+      }
     }
     return result;
   })();
@@ -148,17 +180,41 @@ export async function getCachedSerializedProjectGraphPromise(
 
     await resetInternalStateIfNxDepsMissing();
 
+    // Direct-disk drift check on the cached graph's inputs. The watcher
+    // pipeline (kernel → notify → channel → JS) is asynchronous to the
+    // writing process, so a write that already landed on disk may not
+    // yet have populated `collected*`. Verifying inputs by stat/hash
+    // bypasses the watcher entirely and is the only cache-validity
+    // check that holds under inotify pressure, NFS, container FSes,
+    // and watcher restarts.
+    let driftReason: ReturnType<typeof describeInputsDrift> | null = null;
+    if (cachedInputsSnapshot && cachedSerializedProjectGraphPromise) {
+      try {
+        const reason = await detectInputsDrift(cachedInputsSnapshot);
+        if (reason) driftReason = describeInputsDrift(reason);
+      } catch (e) {
+        // A failed drift check forces a recompute rather than risking a
+        // stale serve. The recompute will rebuild the snapshot.
+        driftReason = `input drift check threw: ${
+          e instanceof Error ? e.message : String(e)
+        }`;
+      }
+    }
+
     // If no compute exists or events are still in collected*, kick one off.
     // Otherwise reuse whatever is already in flight or cached.
     const needsRecompute =
       !cachedSerializedProjectGraphPromise ||
       collectedUpdatedFiles.size > 0 ||
-      collectedDeletedFiles.size > 0;
+      collectedDeletedFiles.size > 0 ||
+      driftReason !== null;
     if (needsRecompute) {
       serverLogger.log(
-        cachedSerializedProjectGraphPromise
-          ? `Recomputing project graph because of ${collectedUpdatedFiles.size} updated and ${collectedDeletedFiles.size} deleted files.`
-          : 'No in-memory cached project graph found. Recomputing it...'
+        !cachedSerializedProjectGraphPromise
+          ? 'No in-memory cached project graph found. Recomputing it...'
+          : driftReason
+            ? `Recomputing project graph because input drift was detected: ${driftReason}.`
+            : `Recomputing project graph because of ${collectedUpdatedFiles.size} updated and ${collectedDeletedFiles.size} deleted files.`
       );
       kickOffRecompute();
     } else {
@@ -194,6 +250,7 @@ export async function getCachedSerializedProjectGraphPromise(
 
     if (errors?.length) {
       cachedSerializedProjectGraphPromise = null;
+      cachedInputsSnapshot = undefined;
     }
 
     return result;
@@ -202,6 +259,7 @@ export async function getCachedSerializedProjectGraphPromise(
     // serve the same state, as it could cause issues if the error is caused by something
     // transient
     cachedSerializedProjectGraphPromise = null;
+    cachedInputsSnapshot = undefined;
     return {
       error: e,
       serializedProjectGraph: null,
@@ -343,6 +401,7 @@ export function invalidateGraphCache() {
   // deadlock: the async function resumes, sees the variable is non-null (pointing
   // at its own Promise), takes the "reuse" branch, and awaits itself forever.
   cachedSerializedProjectGraphPromise = null;
+  cachedInputsSnapshot = undefined;
 }
 
 async function processFilesAndCreateAndSerializeProjectGraph(
@@ -600,6 +659,7 @@ async function createAndSerializeProjectGraph({
 
 async function resetInternalState() {
   cachedSerializedProjectGraphPromise = undefined;
+  cachedInputsSnapshot = undefined;
   fileMapWithFiles = undefined;
   currentProjectFileMapCache = undefined;
   currentProjectGraph = undefined;
