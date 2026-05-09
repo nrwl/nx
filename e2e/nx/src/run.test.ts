@@ -717,7 +717,7 @@ describe('Nx Running Tests', () => {
           const entries = nxJson.targetDefaults ?? [];
           entries.push({
             target,
-            source: pluginPath,
+            plugin: pluginPath,
             outputs: ['{workspaceRoot}/source-filter-marker'],
           });
           nxJson.targetDefaults = entries;
