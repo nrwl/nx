@@ -1,9 +1,11 @@
 import {
   cleanupProject,
   getPackageManagerCommand,
+  getSelectedPackageManager,
   killProcessAndPorts,
   newProject,
   readJson,
+  reservePort,
   runCLI,
   runCommand,
   runCommandUntil,
@@ -135,7 +137,7 @@ describe('@nx/vite/plugin', () => {
 
     it('should run serve-static', async () => {
       let process: ChildProcess;
-      const port = 8081;
+      const port = await reservePort();
 
       try {
         process = await runCommandUntil(
@@ -173,7 +175,7 @@ describe('@nx/vite/plugin', () => {
         `
       );
       updateJson('tsconfig.base.json', (json) => {
-        json.compilerOptions.paths['~/*'] = [`libs/${mylib}/src/*`];
+        json.compilerOptions.paths['~/*'] = [`./libs/${mylib}/src/*`];
         return json;
       });
 
@@ -202,7 +204,7 @@ describe('@nx/vite/plugin', () => {
         `
       );
       updateJson('tsconfig.base.json', (json) => {
-        json.compilerOptions.paths['~/*'] = [`libs/${mylib}/src/*`];
+        json.compilerOptions.paths['~/*'] = [`./libs/${mylib}/src/*`];
         return json;
       });
 
@@ -239,11 +241,13 @@ describe('@nx/vite/plugin', () => {
         `
       );
       updateJson('tsconfig.base.json', (json) => {
-        json.compilerOptions.paths['match-lib-deep/*'] = [`libs/${lib1}/src/*`];
-        json.compilerOptions.paths['match-lib-top-level'] = [
-          `libs/${lib2}/src/bar.enum.ts`,
+        json.compilerOptions.paths['match-lib-deep/*'] = [
+          `./libs/${lib1}/src/*`,
         ];
-        json.compilerOptions.paths['match-lib/*'] = [`libs/${lib3}/src/*`];
+        json.compilerOptions.paths['match-lib-top-level'] = [
+          `./libs/${lib2}/src/bar.enum.ts`,
+        ];
+        json.compilerOptions.paths['match-lib/*'] = [`./libs/${lib3}/src/*`];
         return json;
       });
 
@@ -259,9 +263,8 @@ describe('@nx/vite/plugin', () => {
       // Add a local path alias in the project's tsconfig.app.json
       updateJson(`apps/${myLocalApp}/tsconfig.app.json`, (json) => {
         json.compilerOptions = json.compilerOptions || {};
-        json.compilerOptions.baseUrl = '.';
         json.compilerOptions.paths = {
-          '~/*': ['src/*'],
+          '~/*': ['./src/*'],
         };
         return json;
       });
@@ -324,9 +327,18 @@ describe('@nx/vite/plugin', () => {
       );
 
       // Downgrade to Vite 7 and @vitejs/plugin-react v4 (v6 only supports Vite 8)
+      const isYarn = getSelectedPackageManager() === 'yarn';
       updateJson('package.json', (json) => {
         json.devDependencies['vite'] = '^7.0.0';
         json.devDependencies['@vitejs/plugin-react'] = '^4.2.0';
+        // Yarn classic's linker bombs ("could not find a copy of vite to link
+        // in node_modules/vitest/node_modules") when intersecting a
+        // top-level `^7.0.0` range with vitest's vite dep+peer combo. Pin
+        // vite via `resolutions` so yarn commits to a single version up
+        // front and skips the buggy hoisting path.
+        if (isYarn) {
+          json.resolutions = { ...(json.resolutions ?? {}), vite: '^7.0.0' };
+        }
         return json;
       });
       runCommand(getPackageManagerCommand().install);

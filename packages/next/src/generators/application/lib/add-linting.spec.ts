@@ -27,7 +27,6 @@ describe('updateEslint', () => {
       parsedTags: [],
       fileName: 'index',
       e2eTestRunner: 'cypress',
-      styledModule: null,
       isTsSolutionSetup: false,
     };
     tree = createTreeWithEmptyWorkspace();

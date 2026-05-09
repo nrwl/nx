@@ -1,21 +1,5 @@
-import { readJsonFile } from '../utils/fileutils';
-import type { PackageJson } from '../utils/package-json';
 import { nxVersion } from '../utils/versions';
-import { workspaceRoot } from '../utils/workspace-root';
-import { getNxRequirePaths } from '../utils/installation-directory';
-
-export function getInstalledNxVersion(): string | null {
-  try {
-    const nxPackageJsonPath = require.resolve('nx/package.json', {
-      paths: getNxRequirePaths(workspaceRoot),
-    });
-    const { version } = readJsonFile<PackageJson>(nxPackageJsonPath);
-    return version;
-  } catch {
-    // node modules are absent
-    return null;
-  }
-}
+import { getInstalledNxVersion } from '../utils/installed-nx-version';
 
 export function isNxVersionMismatch(): boolean {
   return getInstalledNxVersion() !== nxVersion;

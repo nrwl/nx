@@ -578,6 +578,10 @@ These plugins use
 For more information, refer to
 the [Module Federation recipe](/docs/technologies/module-federation/concepts/faster-builds-with-module-federation).
 
+{% aside type="note" title="Install @nx/module-federation" %}
+These plugins live in the `@nx/module-federation` package. Install it with your package manager, or use the Nx Module Federation generators (such as `@nx/angular:host`, `@nx/angular:remote`, `@nx/react:host`, or `@nx/react:remote`), which add the dependency for you.
+{% /aside %}
+
 #### Options
 
 Both `withModuleFederation` and `withModuleFederationForSSR` share the same options. The `withModuleFederation` plugin
@@ -640,7 +644,8 @@ match [`ModuleFederationPlugin`'s sharing configuration](https://webpack.js.org/
 
 ```js
 const { composePlugins, withNx } = require('@nx/webpack');
-const { withReact, withModuleFederation } = require('@nx/react');
+const { withReact } = require('@nx/react');
+const { withModuleFederation } = require('@nx/module-federation/webpack');
 
 // Host config
 // e.g. { remotes: ['about', 'dashboard'] }
@@ -661,22 +666,14 @@ module.exports = composePlugins(
 {% tabitem label="Angular Module Federation" %}
 
 ```js
-const {
-  composePlugins,
-  withModuleFederation,
-} = require('@nx/angular/module-federation');
+const { withModuleFederation } = require('@nx/module-federation/angular');
 
 // Host config
 // e.g. { remotes: ['about', 'dashboard'] }
 const moduleFederationConfig = require('./module-federation.config');
 
-module.exports = composePlugins(
-  withModuleFederation(moduleFederationConfig),
-  (config) => {
-    // Further customize webpack config
-    return config;
-  }
-);
+// `dts: false` disables type generation since Nx already provides typing support for module federation.
+module.exports = withModuleFederation(moduleFederationConfig, { dts: false });
 ```
 
 {% /tabitem %}
@@ -684,7 +681,8 @@ module.exports = composePlugins(
 
 ```js
 const { composePlugins, withNx } = require('@nx/webpack');
-const { withReact, withModuleFederatioForSSRn } = require('@nx/react');
+const { withReact } = require('@nx/react');
+const { withModuleFederationForSSR } = require('@nx/module-federation/webpack');
 
 // Host config
 // e.g. { remotes: ['about', 'dashboard'] }
@@ -705,22 +703,16 @@ module.exports = composePlugins(
 {% tabitem label="Angular Module Federation for SSR" %}
 
 ```js
-const {
-  composePlugins,
-  withModuleFederationForSSR,
-} = require('@nx/angular/module-federation');
+const { withModuleFederationForSSR } = require('@nx/module-federation/angular');
 
 // Host config
 // e.g. { remotes: ['about', 'dashboard'] }
 const moduleFederationConfig = require('./module-federation.config');
 
-module.exports = composePlugins(
-  withModuleFederationForSSR(moduleFederationConfig),
-  (config) => {
-    // Further customize webpack config
-    return config;
-  }
-);
+// `dts: false` disables type generation since Nx already provides typing support for module federation.
+module.exports = withModuleFederationForSSR(moduleFederationConfig, {
+  dts: false,
+});
 ```
 
 {% /tabitem %}

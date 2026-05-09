@@ -3,23 +3,23 @@ import {
   BatchInfo,
   BatchStatus,
   ExternalObject,
+  TaskResult,
   TaskStatus as NativeTaskStatus,
 } from '../native';
 import { TaskStatus } from './tasks-runner';
 
 /**
- * The result of a completed {@link Task}
+ * The result of a completed {@link Task}.
+ *
+ * Defined as a Rust struct in `packages/nx/src/native/tasks/types.rs` and
+ * exposed to TypeScript via NAPI. Re-exported here so existing imports
+ * keep working.
  *
  * Task timing information (start and end timestamps) is available
  * on the {@link Task} object itself via {@link Task.startTime} and
  * {@link Task.endTime}.
  */
-export interface TaskResult {
-  task: Task;
-  status: TaskStatus;
-  code: number;
-  terminalOutput?: string;
-}
+export type { TaskResult };
 
 /**
  * A map of {@link TaskResult} keyed by the ID of the completed {@link Task}s

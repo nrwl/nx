@@ -1,3 +1,4 @@
+import { addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -9,7 +10,6 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { eslintVersion, nxVersion } from '../../utils/versions';
 import {
   determineEslintConfigFormat,
@@ -49,9 +49,11 @@ function addTargetDefaults(tree: Tree, format: 'mjs' | 'cjs') {
   nxJson.targetDefaults['@nx/eslint:lint'].cache ??= true;
   nxJson.targetDefaults['@nx/eslint:lint'].inputs ??= [
     'default',
+    '^default',
     `{workspaceRoot}/.eslintrc.json`,
     `{workspaceRoot}/.eslintignore`,
     `{workspaceRoot}/eslint.config.${format}`,
+    '{workspaceRoot}/tools/eslint-rules/**/*',
   ];
   updateNxJson(tree, nxJson);
 }

@@ -81,10 +81,6 @@ export interface RollupWithNxPluginOptions {
    */
   tsConfig: string;
   /**
-   * Use rollup-plugin-typescript2 instead of @rollup/plugin-typescript.
-   */
-  useLegacyTypescriptPlugin?: boolean;
-  /**
    * Use oxc-transform for generating TypeScript declaration files (.d.ts)
    * instead of the TypeScript compiler. Requires `isolatedDeclarations: true`
    * in the project's tsconfig. This is significantly faster and removes the

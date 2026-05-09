@@ -17,6 +17,7 @@ import {
 } from '../utils/package-manager';
 import { parse } from 'semver';
 import * as os from 'os';
+import { createHash } from 'crypto';
 import { getCurrentMachineId } from '../utils/machine-id-cache';
 import { isCI } from '../utils/is-ci';
 import { generateWorkspaceId } from '../utils/analytics-prompt';
@@ -69,7 +70,7 @@ export async function startAnalytics() {
     return;
   }
   const isNxCloud = !!(nxJson?.nxCloudId ?? nxJson?.nxCloudAccessToken);
-  const userId = await getCurrentMachineId();
+  const userId = await getTelemetryUserId(workspaceId);
   const packageManagerInfo = getPackageManagerInfo();
 
   const nodeVersion = parse(process.version);
@@ -261,4 +262,13 @@ function getPackageManagerInfo() {
 function isAnalyticsEnabled(): boolean {
   const nxJson = readNxJson(workspaceRoot);
   return nxJson?.analytics === true;
+}
+
+// Mix workspace id in: shared Docker images (Gitpod, Cypress, etc.) bake
+// in /etc/machine-id, so machine-id alone collapses many users into one.
+async function getTelemetryUserId(workspaceId: string): Promise<string> {
+  const machineId = await getCurrentMachineId();
+  return createHash('sha256')
+    .update(`${machineId}|${workspaceId}`)
+    .digest('hex');
 }

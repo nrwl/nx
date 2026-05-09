@@ -5,6 +5,7 @@ import { ChildProcess, fork } from 'child_process';
 
 import { ReactNativeBundleOptions } from './schema';
 import { mkdirSync } from 'fs';
+import { warnReactNativeExecutorDeprecation } from '../../utils/deprecation';
 
 export interface ReactNativeBundleOutput {
   success: boolean;
@@ -14,6 +15,8 @@ export default async function* bundleExecutor(
   options: ReactNativeBundleOptions,
   context: ExecutorContext
 ): AsyncGenerator<ReactNativeBundleOutput> {
+  warnReactNativeExecutorDeprecation('bundle');
+
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 

@@ -8,7 +8,6 @@ export { default as metaGenerator } from './src/generators/meta/meta.impl';
 export { default as presetGenerator } from './src/generators/preset/preset.impl';
 export { default as resourceRouteGenerator } from './src/generators/resource-route/resource-route.impl';
 export { default as routeGenerator } from './src/generators/route/route.impl';
-export { default as setupTailwindGenerator } from './src/generators/setup-tailwind/setup-tailwind.impl';
 export { default as storybookConfigurationGenerator } from './src/generators/storybook-configuration/storybook-configuration.impl';
 export { default as styleGenerator } from './src/generators/style/style.impl';
 export { default as initGenerator } from './src/generators/init/init';

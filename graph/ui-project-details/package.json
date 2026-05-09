@@ -14,6 +14,7 @@
     "@nx/graph-ui-common": "workspace:",
     "@nx/graph-ui-icons": "workspace:",
     "@nx/graph-shared": "workspace:",
-    "@nx/nx-dev-ui-fence": "workspace:"
+    "@nx/nx-dev-ui-fence": "workspace:",
+    "tailwind-merge": "^2.4.0"
   }
 }

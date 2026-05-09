@@ -99,6 +99,14 @@ private fun processTestFiles(
     targetNameOverrides: Map<String, String>,
     targetNamePrefix: String
 ) {
+  val dependsOnTasks = getDependsOnTask(testTask)
+  val testTaskInputs =
+      getInputsForTask(
+          dependsOnTasks, testTask, projectRoot, workspaceRoot, null, gitIgnoreClassifier)
+  val testTaskOutputs = getOutputsForTask(testTask, projectRoot, workspaceRoot)
+  val testTaskDependsOn =
+      getDependsOnForTask(dependsOnTasks, testTask, null, targetNameOverrides, targetNamePrefix)
+
   testFiles
       .filter { isTestFile(it, workspaceRoot) }
       .forEach { testFile ->
@@ -111,11 +119,9 @@ private fun processTestFiles(
                   projectBuildPath,
                   testClassPackagePath,
                   testTask,
-                  projectRoot,
-                  workspaceRoot,
-                  gitIgnoreClassifier,
-                  targetNameOverrides,
-                  targetNamePrefix)
+                  testTaskInputs,
+                  testTaskOutputs,
+                  testTaskDependsOn)
           targetGroups[testCiTargetGroup]?.add(targetName)
 
           ciDependsOn.add(DependsOnEntry(target = targetName, params = DependsOnParams.FORWARD))
@@ -142,15 +148,10 @@ private fun buildTestCiTarget(
     projectBuildPath: String,
     testClassPackagePath: String,
     testTask: Task,
-    projectRoot: String,
-    workspaceRoot: String,
-    gitIgnoreClassifier: GitIgnoreClassifier,
-    targetNameOverrides: Map<String, String>,
-    targetNamePrefix: String
+    testTaskInputs: List<Any>?,
+    testTaskOutputs: List<String>?,
+    testTaskDependsOn: List<DependsOnEntry>?
 ): MutableMap<String, Any?> {
-  val taskInputs =
-      getInputsForTask(null, testTask, projectRoot, workspaceRoot, null, gitIgnoreClassifier)
-
   val target =
       mutableMapOf<String, Any?>(
           "executor" to "@nx/gradle:gradle",
@@ -162,18 +163,16 @@ private fun buildTestCiTarget(
               getMetadata(
                   "Runs Gradle test $testClassPackagePath in CI.", projectBuildPath, "test"),
           "cache" to true,
-          "inputs" to taskInputs)
+          "inputs" to testTaskInputs)
 
-  getOutputsForTask(testTask, projectRoot, workspaceRoot)
+  testTaskOutputs
       ?.takeIf { it.isNotEmpty() }
       ?.let {
         testTask.logger.info("${testTask.path}: found ${it.size} outputs entries")
         target["outputs"] = it
       }
 
-  getDependsOnForTask(null, testTask, null, targetNameOverrides, targetNamePrefix)
-      ?.takeIf { it.isNotEmpty() }
-      ?.let { target["dependsOn"] = it }
+  testTaskDependsOn?.takeIf { it.isNotEmpty() }?.let { target["dependsOn"] = it }
 
   return target
 }

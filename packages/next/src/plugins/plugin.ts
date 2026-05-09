@@ -1,4 +1,10 @@
 import {
+  calculateHashForCreateNodes,
+  loadConfigFile,
+  getNamedInputs,
+  PluginCache,
+} from '@nx/devkit/internal';
+import {
   CreateDependencies,
   CreateNodesContextV2,
   createNodesFromFiles,
@@ -6,17 +12,12 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   NxJsonConfiguration,
-  readJsonFile,
   TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName } from '@nx/js';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { existsSync, readdirSync } from 'fs';
+import { readdirSync } from 'fs';
 import { hashObject } from 'nx/src/devkit-internals';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { dirname, join } from 'path';
@@ -35,22 +36,7 @@ export interface NextPluginOptions {
 
 const nextConfigBlob = '**/next.config.{ts,js,cjs,mjs}';
 
-function readTargetsCache(
-  cachePath: string
-): Record<string, Record<string, TargetConfiguration<NextPluginOptions>>> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
-
-function writeTargetsToCache(
-  cachePath: string,
-  targetsCache: Record<string, TargetConfiguration<NextPluginOptions>>
-) {
-  const oldCache = readTargetsCache(cachePath);
-  writeJsonFile(cachePath, {
-    ...oldCache,
-    ...targetsCache,
-  });
-}
+type NextTargets = Record<string, TargetConfiguration<NextPluginOptions>>;
 
 /**
  * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
@@ -64,11 +50,11 @@ export const createNodes: CreateNodesV2<NextPluginOptions> = [
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `next-${optionsHash}.json`);
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<NextTargets>(cachePath);
     const isTsSolutionSetup = isUsingTsSolutionSetup();
-    const pmc = getPackageManagerCommand(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
 
     try {
       return await createNodesFromFiles(
@@ -79,14 +65,15 @@ export const createNodes: CreateNodesV2<NextPluginOptions> = [
             context,
             targetsCache,
             isTsSolutionSetup,
-            pmc
+            pmc,
+            lockFileName
           ),
         configFiles,
         options,
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk();
     }
   },
 ];
@@ -97,12 +84,10 @@ async function createNodesInternal(
   configFilePath: string,
   options: NextPluginOptions,
   context: CreateNodesContextV2,
-  targetsCache: Record<
-    string,
-    Record<string, TargetConfiguration<NextPluginOptions>>
-  >,
+  targetsCache: PluginCache<NextTargets>,
   isTsSolutionSetup: boolean,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  lockFileName: string
 ) {
   const projectRoot = dirname(configFilePath);
 
@@ -120,23 +105,28 @@ async function createNodesInternal(
     projectRoot,
     options,
     context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    [lockFileName]
   );
 
-  targetsCache[hash] ??= await buildNextTargets(
-    configFilePath,
-    projectRoot,
-    options,
-    context,
-    isTsSolutionSetup,
-    pmc
-  );
+  if (!targetsCache.has(hash)) {
+    targetsCache.set(
+      hash,
+      await buildNextTargets(
+        configFilePath,
+        projectRoot,
+        options,
+        context,
+        isTsSolutionSetup,
+        pmc
+      )
+    );
+  }
 
   return {
     projects: {
       [projectRoot]: {
         root: projectRoot,
-        targets: targetsCache[hash],
+        targets: targetsCache.get(hash),
       },
     },
   };
@@ -290,10 +280,14 @@ function getInputs(
 ): TargetConfiguration['inputs'] {
   return [
     ...('production' in namedInputs
-      ? ['default', '^production']
+      ? ['default', '^default']
       : ['default', '^default']),
     {
       externalDependencies: ['next'],
+    },
+    {
+      dependentTasksOutputFiles: '**/*.d.ts',
+      transitive: true,
     },
   ];
 }

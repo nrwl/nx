@@ -33,7 +33,6 @@ export interface RollupExecutorOptions {
   rollupConfig?: string | string[];
   skipTypeCheck?: boolean;
   skipTypeField?: boolean;
-  useLegacyTypescriptPlugin?: boolean;
   useOxcDeclarations?: boolean;
   watch?: boolean;
 }

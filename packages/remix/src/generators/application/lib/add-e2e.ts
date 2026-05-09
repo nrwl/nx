@@ -1,3 +1,4 @@
+import { getE2EWebServerInfo } from '@nx/devkit/internal';
 import {
   type Tree,
   addProjectConfiguration,
@@ -9,7 +10,6 @@ import {
 } from '@nx/devkit';
 import { type NormalizedSchema } from './normalize-options';
 import { nxVersion } from '../../../utils/versions';
-import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function addE2E(

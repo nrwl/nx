@@ -28,9 +28,16 @@ import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getCatalogManager } from '../../../utils/catalog';
 import { findNodeMatchingVersion } from './project-graph-pruning';
-import { join } from 'path';
+import { join, relative, sep } from 'path';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 import { satisfies, validRange } from 'semver';
+
+const WORKSPACE_DEP_TYPES = [
+  'dependencies',
+  'optionalDependencies',
+  'peerDependencies',
+] as const;
+
 let currentLockFileHash: string;
 
 let parsedLockFile: Lockfile;
@@ -589,13 +596,55 @@ export function stringifyPnpmLockfile(
     +lockfileVersion
   );
 
-  const workspaceDependencyImporters: Record<string, ProjectSnapshot> = {};
-  for (const [packageName, importerPath] of Object.entries(requiredImporters)) {
-    const baseImporter = importers[importerPath];
-    if (baseImporter) {
-      workspaceDependencyImporters[`workspace_modules/${packageName}`] =
-        baseImporter;
+  const workspaceModules = getWorkspacePackagesFromGraph(graph);
+
+  // Walk transitive workspace deps so every package copy-workspace-modules
+  // writes to disk has a matching importer block. Without this, pnpm errors
+  // with ERR_PNPM_OUTDATED_LOCKFILE on transitive workspace chains.
+  const allRequiredImporters: Record<string, string> = { ...requiredImporters };
+  const queue = Object.keys(requiredImporters);
+  while (queue.length > 0) {
+    const pkgName = queue.shift()!;
+    const importer = importers[allRequiredImporters[pkgName]];
+    if (!importer) continue;
+    for (const depType of WORKSPACE_DEP_TYPES) {
+      const deps = importer[depType];
+      if (!deps) continue;
+      for (const depName of Object.keys(deps)) {
+        if (workspaceModules.has(depName) && !allRequiredImporters[depName]) {
+          allRequiredImporters[depName] =
+            workspaceModules.get(depName)!.data.root;
+          queue.push(depName);
+        }
+      }
     }
+  }
+
+  const workspaceDependencyImporters: Record<string, ProjectSnapshot> = {};
+  for (const [packageName, importerPath] of Object.entries(
+    allRequiredImporters
+  )) {
+    const baseImporter = importers[importerPath];
+    if (!baseImporter) continue;
+    const importer: ProjectSnapshot = structuredClone(baseImporter);
+
+    for (const depType of WORKSPACE_DEP_TYPES) {
+      const deps = importer[depType] as Record<string, string> | undefined;
+      if (!deps) continue;
+      for (const depName of Object.keys(deps)) {
+        if (!workspaceModules.has(depName)) continue;
+        // All workspace modules are siblings under workspace_modules/, so the
+        // relative path between them is relative(packageName, depName).
+        // Specifier must match the file: ref copy-workspace-modules writes
+        // to the package's package.json — pnpm errors on a mismatch.
+        const rel = relative(packageName, depName).split(sep).join('/');
+        if (!importer.specifiers) importer.specifiers = {};
+        importer.specifiers[depName] = `file:${rel}`;
+        deps[depName] = `link:${rel}`;
+      }
+    }
+
+    workspaceDependencyImporters[`workspace_modules/${packageName}`] = importer;
   }
 
   const output: Lockfile = {

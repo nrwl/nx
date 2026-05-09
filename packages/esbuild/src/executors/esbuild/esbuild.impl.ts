@@ -1,5 +1,6 @@
 import * as pc from 'picocolors';
 import type { ExecutorContext } from '@nx/devkit';
+import { createAsyncIterable } from '@nx/devkit/internal';
 import {
   cacheDir,
   joinPathFragments,
@@ -23,7 +24,6 @@ import {
   EsBuildExecutorOptions,
   NormalizedEsBuildExecutorOptions,
 } from './schema';
-import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import {
   buildEsbuildOptions,
   getOutExtension,

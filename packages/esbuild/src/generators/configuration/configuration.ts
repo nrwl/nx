@@ -1,3 +1,4 @@
+import { addBuildTargetDefaults } from '@nx/devkit/internal';
 import {
   formatFiles,
   joinPathFragments,
@@ -8,13 +9,13 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { getOutputDir, getUpdatedPackageJsonContent } from '@nx/js';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import {
   getDefinedCustomConditionName,
   getProjectSourceRoot,
   isUsingTsSolutionSetup,
+  TS_SOLUTION_SETUP_TSCONFIG_INPUT,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { basename, dirname, join } from 'node:path/posix';
 import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
@@ -56,7 +57,9 @@ function addBuildTarget(
   options: EsBuildProjectSchema,
   isTsSolutionSetup: boolean
 ) {
-  addBuildTargetDefaults(tree, '@nx/esbuild:esbuild', options.buildTarget);
+  addBuildTargetDefaults(tree, '@nx/esbuild:esbuild', options.buildTarget, [
+    TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+  ]);
   const project = readProjectConfiguration(tree, options.project);
 
   const prevBuildOptions = project.targets?.[options.buildTarget]?.options;

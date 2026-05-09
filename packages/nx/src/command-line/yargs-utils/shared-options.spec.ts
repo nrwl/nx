@@ -1,11 +1,18 @@
 import * as stream from 'node:stream';
 import * as yargs from 'yargs';
 
+jest.mock('../../native', () => ({
+  ...jest.requireActual('../../native'),
+  isAiAgent: jest.fn(() => false),
+  IS_WASM: false,
+}));
+
 import {
   readParallelFromArgsAndEnv,
   withAffectedOptions,
   withOutputStyleOption,
   withRunManyOptions,
+  withRunOptions,
   withTuiOptions,
 } from './shared-options';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
@@ -299,9 +306,50 @@ describe('shared-options', () => {
       expect(result.tuiAutoExit).toEqual(5);
     });
   });
+
+  describe('withRunOptions nxBail', () => {
+    it('should use NX_BAIL env var if --nxBail is not set', async () =>
+      withEnvironmentVariables(
+        {
+          NX_BAIL: 'true',
+        },
+        async () => {
+          const command = withRunOptions(argv);
+          const result = await command.parseAsync([]);
+          expect(result.nxBail).toEqual(true);
+        }
+      ));
+
+    it('should default nxBail to false when NX_BAIL is not set', async () =>
+      withEnvironmentVariables(
+        {
+          NX_BAIL: undefined,
+        },
+        async () => {
+          const command = withRunOptions(argv);
+          const result = await command.parseAsync([]);
+          expect(result.nxBail).toEqual(false);
+        }
+      ));
+  });
 });
 
 describe('readParallelFromArgsAndEnv', () => {
+  let originalParallel: string;
+
+  beforeEach(() => {
+    originalParallel = process.env.NX_PARALLEL;
+    delete process.env.NX_PARALLEL;
+  });
+
+  afterEach(() => {
+    if (originalParallel === undefined) {
+      delete process.env.NX_PARALLEL;
+    } else {
+      process.env.NX_PARALLEL = originalParallel;
+    }
+  });
+
   it('default parallel should be 3', () => {
     const result = readParallelFromArgsAndEnv({ parallel: 'true' });
     expect(result).toEqual(3);

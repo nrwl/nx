@@ -1,5 +1,5 @@
 import { dirname } from 'path';
-import { WatchEvent, getFilesForOutputs } from '../../native';
+import { WatchEvent, getFilesForOutputsBatch } from '../../native';
 import { collapseExpandedOutputs } from '../../utils/collapse-expanded-outputs';
 import { workspaceRoot } from '../../utils/workspace-root';
 
@@ -40,29 +40,6 @@ export function _outputsHashesMatch(outputs: string[], hash: string) {
   return true;
 }
 
-export function recordedHash(output: string) {
-  return recordedHashes[output];
-}
-
-export async function recordOutputsHash(_outputs: string[], hash: string) {
-  const outputs = await normalizeOutputs(_outputs);
-  if (disabled) return;
-  _recordOutputsHash(outputs, hash);
-}
-
-export async function outputsHashesMatch(_outputs: string[], hash: string) {
-  const outputs = await normalizeOutputs(_outputs);
-  if (disabled) return false;
-  return _outputsHashesMatch(outputs, hash);
-}
-
-async function normalizeOutputs(outputs: string[]) {
-  let expandedOutputs = collapseExpandedOutputs(
-    getFilesForOutputs(workspaceRoot, outputs)
-  );
-  return expandedOutputs;
-}
-
 export function processFileChangesInOutputs(
   changeEvents: WatchEvent[],
   now: number = undefined
@@ -91,6 +68,65 @@ export function processFileChangesInOutputs(
       }
       current = dirname(current);
     }
+  }
+}
+
+/**
+ * Check whether the on-disk outputs of each entry still match the hash
+ * the daemon recorded for them. Uses Rayon-parallel filesystem scanning
+ * for uncached entries.
+ */
+export function outputsHashesMatchBatch(
+  entries: { outputs: string[]; hash: string }[]
+): boolean[] {
+  if (disabled) return entries.map(() => false);
+
+  // Fast path: skip filesystem scan for entries with no recorded hash.
+  // _outputsHashesMatch will return false immediately if the hash isn't
+  // in numberOfExpandedOutputs, so scanning the filesystem is wasted work.
+  const needsScan: number[] = [];
+  const results: boolean[] = new Array(entries.length);
+  for (let i = 0; i < entries.length; i++) {
+    if (numberOfExpandedOutputs[entries[i].hash] === undefined) {
+      results[i] = false;
+    } else {
+      needsScan.push(i);
+    }
+  }
+
+  if (needsScan.length > 0) {
+    // Only scan outputs for entries that have recorded hashes
+    const outputsBatch = needsScan.map((i) => entries[i].outputs);
+    const expandedBatch = getFilesForOutputsBatch(workspaceRoot, outputsBatch);
+
+    for (let j = 0; j < needsScan.length; j++) {
+      const expanded = collapseExpandedOutputs(expandedBatch[j]);
+      results[needsScan[j]] = _outputsHashesMatch(
+        expanded,
+        entries[needsScan[j]].hash
+      );
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Record the hash of each entry's on-disk outputs so future
+ * outputsHashesMatchBatch calls can skip redundant cache copies.
+ * Uses Rayon-parallel filesystem scanning.
+ */
+export function recordOutputsHashBatch(
+  entries: { outputs: string[]; hash: string }[]
+) {
+  if (disabled) return;
+
+  const outputsBatch = entries.map((e) => e.outputs);
+  const expandedBatch = getFilesForOutputsBatch(workspaceRoot, outputsBatch);
+
+  for (let i = 0; i < entries.length; i++) {
+    const expanded = collapseExpandedOutputs(expandedBatch[i]);
+    _recordOutputsHash(expanded, entries[i].hash);
   }
 }
 

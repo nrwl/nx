@@ -83,6 +83,7 @@ storybook-static
 .kotlin
 
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
 CLAUDE.local.md
 
 .cursor/mcp.json
@@ -106,6 +107,7 @@ node_modules/
 *.ntvs*
 *.njsproj
 *.sln
+!/nx.sln
 *.sw?
 .specstory/**
 .cursorindexingignore
@@ -132,6 +134,7 @@ packages/angular-rspack-compiler/README.md
 packages/dotnet/README.md
 packages/maven/README.md
 packages/nx/README.md
+packages/devkit/README.md
 
 test-output
 test-results
@@ -142,6 +145,8 @@ test-results
 # .NET build output
 /packages/dotnet/analyzer/bin
 /packages/dotnet/analyzer/obj
+/packages/dotnet/analyzer.Tests/bin
+/packages/dotnet/analyzer.Tests/obj
 /*.deb
 .nx/polygraph
 .claude/worktrees
@@ -152,5 +157,6 @@ packages/nx/**/*.d.ts
 !packages/nx/src/utils/perf-hooks.d.ts
 !packages/nx/src/ai/set-up-ai-agents/schema.d.ts
 !packages/nx/src/native/index.d.ts
+!packages/nx/src/native/dts-header.d.ts
 e2e/**/*.d.ts
 e2e/**/*.d.ts.map

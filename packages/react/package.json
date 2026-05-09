@@ -36,7 +36,6 @@
     "@phenomnomnominal/tsquery": "catalog:typescript",
     "@svgr/webpack": "^8.0.1",
     "minimatch": "catalog:",
-    "picocolors": "catalog:",
     "tslib": "catalog:typescript",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
@@ -84,11 +83,7 @@
       "require": "./babel.js",
       "types": "./babel.d.ts"
     },
-    "./tailwind": {
-      "import": "./tailwind.js",
-      "require": "./tailwind.js",
-      "types": "./tailwind.d.ts"
-    },
+    "./tailwind": "./tailwind.js",
     "./module-federation": {
       "import": "./module-federation.js",
       "require": "./module-federation.js",

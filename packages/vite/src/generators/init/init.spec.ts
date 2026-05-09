@@ -163,7 +163,6 @@ describe('@nx/vite:init', () => {
                 "previewTargetName": "preview",
                 "serveStaticTargetName": "serve-static",
                 "serveTargetName": "serve",
-                "testTargetName": "test",
                 "typecheckTargetName": "typecheck",
                 "watchDepsTargetName": "watch-deps",
               },

@@ -48,7 +48,12 @@
       "defaultConfiguration": "release"
     },
     "typecheck": {
-      "dependsOn": ["^typecheck", "nx:build-native"]
+      "dependsOn": ["^typecheck", "nx:build-native"],
+      "inputs": [
+        "...",
+        "{workspaceRoot}/packages/devkit/tsconfig.lib.json",
+        "{workspaceRoot}/packages/nx/tsconfig.lib.json"
+      ]
     },
     "serve-base": {
       "configurations": {
