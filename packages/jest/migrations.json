@@ -42,6 +42,14 @@
       },
       "description": "Replace removed matcher aliases in Jest v30 with their corresponding matcher",
       "implementation": "./src/migrations/update-21-3-0/replace-removed-matcher-aliases"
+    },
+    "update-snapshot-guide-link": {
+      "version": "23.0.0-beta.6",
+      "requires": {
+        "jest": ">=30.0.0"
+      },
+      "description": "Update the Jest snapshot guide link in `.snap` files from the legacy `https://goo.gl/fbAQLP` URL to `https://jestjs.io/docs/snapshot-testing`, which Jest v30 now requires.",
+      "implementation": "./src/migrations/update-23-0-0/update-snapshot-guide-link"
     }
   },
   "packageJsonUpdates": {
