@@ -1,5 +1,5 @@
 import { formatFiles, workspaceRoot, type Tree } from '@nx/devkit';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import { loadConfigFile } from '@nx/devkit/internal';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { ast, query } from '@phenomnomnominal/tsquery';
 import { join } from 'node:path';

@@ -19,11 +19,15 @@ The Nx policy is to support the LTS versions (i.e. actively maintained even numb
 Other versions of Node.js **may** still work without issue for these versions of Nx. Those include versions which are already EOL, or odd version numbers (e.g. 23), which Node.js actively discourages using in production.
 {% /aside %}
 
-| Nx Version     | Node Version             |
-| -------------- | ------------------------ |
-| 22.x (current) | 24.x, ^22.12.0, ^20.19.0 |
-| 21.x           | 24.x, ^22.12.0, ^20.19.0 |
-| 20.x           | 22.x, 20.x, 18.x         |
+{% aside type="note" title="Node 26" %}
+Node 26 is on the Current release track and enters LTS in October 2026. Nx tests against it in CI and supports it today.
+{% /aside %}
+
+| Nx Version     | Node Version                   |
+| -------------- | ------------------------------ |
+| 22.x (current) | 26.x, 24.x, ^22.12.0, ^20.19.0 |
+| 21.x           | 24.x, ^22.12.0, ^20.19.0       |
+| 20.x           | 22.x, 20.x, 18.x               |
 
 We intentionally do not include an `"engines"` field in the `package.json` file for Nx in order to allow for user flexibility, but this table should be considered the official compatibility matrix.
 

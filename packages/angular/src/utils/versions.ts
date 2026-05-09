@@ -19,7 +19,6 @@ export const webpackMergeVersion = '^5.8.0';
 
 export const angularEslintVersion = '^21.2.0';
 export const typescriptEslintVersion = '^7.16.0';
-export const tailwindVersion = '^3.0.2';
 export const postcssVersion = '^8.4.5';
 export const postcssUrlVersion = '~10.1.3';
 export const autoprefixerVersion = '^10.4.0';
@@ -27,7 +26,7 @@ export const tsNodeVersion = '10.9.1';
 export const lessVersion = '^4.3.0';
 
 export const jestPresetAngularVersion = '~16.0.0';
-export const typesNodeVersion = '20.19.9';
+export const typesNodeVersion = '^22.0.0';
 export const jasmineMarblesVersion = '^0.9.2';
 
 export const vitestVersion = '^4.0.8';

@@ -2,9 +2,9 @@ import { joinPathFragments, TargetConfiguration, Tree } from '@nx/devkit';
 import {
   processTargetOutputs,
   toProjectRelativePath,
-} from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
+  AggregatedLog,
+} from '@nx/devkit/internal';
 import { ast, query } from '@phenomnomnominal/tsquery';
-import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 import {
   addConfigValuesToConfigFile,
   ensureViteConfigPathIsRelative,

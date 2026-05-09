@@ -1,3 +1,4 @@
+import { resolveImportPath, promptWhenInteractive } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -19,8 +20,6 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { resolveImportPath } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { Linter, LinterType } from '@nx/eslint';
 import {
   getRelativePathToRootTsConfig,
@@ -36,6 +35,7 @@ import { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { addLinterToCyProject } from '../../utils/add-linter';
 import { addDefaultE2EConfig } from '../../utils/config';
+import { warnCypressExecutorGenerating } from '../../utils/deprecation';
 import {
   getInstalledCypressMajorVersion,
   versions,
@@ -105,6 +105,7 @@ export async function configurationGeneratorInternal(
 
   await addFiles(tree, opts, projectGraph, hasPlugin);
   if (!hasPlugin) {
+    warnCypressExecutorGenerating();
     addTarget(tree, opts, projectGraph);
   }
 

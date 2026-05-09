@@ -640,7 +640,7 @@ async function handleUnsupportedUserProvidedTargetsErrors(
      your changes before converting a project to use Vite, and test the converted project thoroughly before deploying it.
     `
   );
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+
   const { Confirm } = require('enquirer');
   const prompt = new Confirm({
     name: 'question',
@@ -676,7 +676,6 @@ export async function handleUnknownExecutors(projectName: string) {
       `
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { Confirm } = require('enquirer');
   const prompt = new Confirm({
     name: 'question',
@@ -701,7 +700,7 @@ export function determineFrameworkAndTarget(
   }
 ): { target: 'node' | 'web'; framework?: Framework } {
   ensureTypescript();
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+
   const { ast, query } = require('@phenomnomnominal/tsquery');
 
   // First try to infer if the target is node

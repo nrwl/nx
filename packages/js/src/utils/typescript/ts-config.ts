@@ -205,30 +205,31 @@ function resolveExtendsPath(ext: string, fromDir: string): string | null {
 export function readTsConfigPaths(tsConfig?: string | ts.ParsedCommandLine) {
   tsConfig ??= getRootTsConfigPath();
   try {
-    if (!tsModule) {
-      tsModule = ensureTypescript();
-    }
-
     let config: ts.ParsedCommandLine;
 
     if (typeof tsConfig === 'string') {
+      if (!tsModule) {
+        tsModule = ensureTypescript();
+      }
+
       const configFile = tsModule.readConfigFile(
         tsConfig,
         tsModule.sys.readFile
       );
+      // Stub `readDirectory` to skip the source-file scan — only `paths` is consumed.
+      const parseConfigHost: ts.ParseConfigHost = {
+        ...tsModule.sys,
+        readDirectory: () => [],
+      };
       config = tsModule.parseJsonConfigFileContent(
         configFile.config,
-        tsModule.sys,
+        parseConfigHost,
         dirname(tsConfig)
       );
     } else {
       config = tsConfig;
     }
-    if (config.options?.paths) {
-      return config.options.paths;
-    } else {
-      return null;
-    }
+    return config.options?.paths ?? null;
   } catch (e) {
     return null;
   }

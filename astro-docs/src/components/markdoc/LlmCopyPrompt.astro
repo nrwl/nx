@@ -16,7 +16,7 @@ const id = `llm-prompt-${Math.random().toString(36).slice(2, 9)}`;
 const promptLines = finalPrompt.split('\n').filter((l) => l.length > 0);
 ---
 
-<llm-copy-prompt data-content-id={id}>
+<llm-copy-prompt data-content-id={id} data-prompt-title={title}>
   <details class="llm-prompt-card">
     <summary>
       <div class="llm-prompt-header">
@@ -284,6 +284,8 @@ const promptLines = finalPrompt.split('\n').filter((l) => l.length > 0);
 </style>
 
 <script>
+  import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
+
   class LlmCopyPromptElement extends HTMLElement {
     private button: HTMLButtonElement | null = null;
     private collapseCaret: HTMLElement | null = null;
@@ -335,10 +337,21 @@ const promptLines = finalPrompt.split('\n').filter((l) => l.length > 0);
       try {
         await navigator.clipboard.writeText(this.content);
         this.showCopiedState();
+        this.trackCopy();
       } catch (err) {
         console.error('Failed to copy:', err);
       }
     };
+
+    private trackCopy() {
+      sendCustomEventViaGtm(
+        'llm_prompt_copy',
+        'docs_interaction',
+        window.location.pathname,
+        undefined,
+        { prompt_title: this.dataset.promptTitle ?? '' }
+      );
+    }
 
     private showCopiedState() {
       this.button?.classList.add('copied');

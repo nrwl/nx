@@ -229,6 +229,17 @@ export interface NxReleaseVersionConfiguration {
    * This is false by default for backward compatibility.
    */
   adjustSemverBumpsForZeroMajorVersion?: boolean;
+  /**
+   * Whether to apply the --preid value to the implicit patch bumps given to
+   * dependents (and other projects in a fixed release group) when a dependency
+   * is versioned. When true, those dependents are bumped as a prepatch using
+   * the same preid, so a dependency moving to "1.2.3-rc.0" will bump its
+   * dependents to "1.0.1-rc.0" instead of "1.0.1".
+   *
+   * This is false by default for backward compatibility — consuming an RC of a
+   * dependency does not necessarily mean the consumer itself is an RC.
+   */
+  applyPreidToDependents?: boolean;
 }
 
 export interface NxReleaseChangelogConfiguration {
@@ -875,7 +886,9 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   useInferencePlugins?: boolean;
 
   /**
-   * Set this to true to disable connection to Nx Cloud
+   * Setting this to true will cause all attempts to setup your workspace to Nx Cloud to fail.
+   * This value does not prevent using Nx Cloud if already connected.
+   * Use NX_NO_CLOUD=true env var or the `--no-cloud` arg to prevent using Nx Cloud when running commands.
    */
   neverConnectToCloud?: boolean;
 

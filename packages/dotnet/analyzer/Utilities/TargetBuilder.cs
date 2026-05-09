@@ -17,6 +17,7 @@ public static partial class TargetBuilder
         bool isExe,
         List<PackageReference> packageRefs,
         Dictionary<string, string> properties,
+        string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
         NxJsonConfig? nxJson)
@@ -26,12 +27,12 @@ public static partial class TargetBuilder
         // Determine the appropriate input for production builds
         var productionInput = GetProductionInput(nxJson);
 
-        AddBuildTarget(targets, projectName, fileName, isTest, properties, workspaceRoot, options, productionInput);
-        AddBuildReleaseTarget(targets, projectName, fileName, isTest, properties, workspaceRoot, options, productionInput);
+        AddBuildTarget(targets, projectName, fileName, isTest, properties, projectDirectory, workspaceRoot, options, productionInput);
+        AddBuildReleaseTarget(targets, projectName, fileName, isTest, properties, projectDirectory, workspaceRoot, options, productionInput);
 
         if (isTest)
         {
-            AddTestTarget(targets, projectName, fileName, packageRefs, properties, workspaceRoot, options, productionInput);
+            AddTestTarget(targets, projectName, fileName, packageRefs, properties, projectDirectory, workspaceRoot, options, productionInput);
         }
 
         AddRestoreTarget(targets, fileName, options);
@@ -40,13 +41,13 @@ public static partial class TargetBuilder
 
         if (isExe)
         {
-            AddPublishTarget(targets, projectName, fileName, isTest, properties, workspaceRoot, options, productionInput);
+            AddPublishTarget(targets, projectName, fileName, isTest, properties, projectDirectory, workspaceRoot, options, productionInput);
             AddRunTarget(targets, fileName, options);
         }
 
         if (!isExe && !isTest)
         {
-            AddPackTarget(targets, projectName, fileName, properties, workspaceRoot, options, productionInput);
+            AddPackTarget(targets, projectName, fileName, properties, projectDirectory, workspaceRoot, options, productionInput);
         }
 
         return targets;

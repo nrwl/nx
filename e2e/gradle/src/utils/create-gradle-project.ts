@@ -5,8 +5,8 @@ import {
   tmpProjPath,
 } from '@nx/e2e-utils';
 import { execSync } from 'child_process';
-import { readFileSync } from 'fs';
-import { createFileSync, writeFileSync } from 'fs-extra';
+import { existsSync, readFileSync } from 'fs';
+import { appendFileSync, createFileSync, writeFileSync } from 'fs-extra';
 import { join, resolve } from 'path';
 
 const kotlinVersion = '2.1.20';
@@ -28,14 +28,21 @@ export function createGradleProject(
         cwd,
       })
   );
+  // Run setup-time gradle commands with --no-daemon so we don't leave a
+  // long-lived daemon holding inotify watches on the project dir. A daemon
+  // spawned here outlives the setup phase and interferes with later
+  // non-gradle filesystem operations (e.g. `nx import` runs `git
+  // filter-branch --tree-filter`, which fails with "Unable to read current
+  // working directory" when the daemon is concurrently watching the same
+  // tree). The actual test-body gradle calls keep daemons enabled.
   e2eConsoleLogger(
-    execSync(`${gradleCommand} help --task :init`, {
+    execSync(`${gradleCommand} help --task :init --no-daemon`, {
       cwd,
     }).toString()
   );
   e2eConsoleLogger(
     runCommand(
-      `${gradleCommand} init --type ${type}-application --dsl ${type} --project-name ${projectName} --package ${packageName} --no-incubating --split-project --overwrite`,
+      `${gradleCommand} init --type ${type}-application --dsl ${type} --project-name ${projectName} --package ${packageName} --no-incubating --split-project --overwrite --no-daemon`,
       {
         cwd,
       }
@@ -45,16 +52,15 @@ export function createGradleProject(
   // Update Kotlin version to 2.0.21 after project creation
   if (type === 'kotlin') {
     updateKotlinVersion(cwd, type);
+    // The Kotlin Gradle Plugin writes session/IPC files under .kotlin/.
+    // gradle init's template doesn't include it, so events for those
+    // files leak through the daemon's watcher and cause recompute storms.
+    appendToGitignore(cwd, '.kotlin/');
   }
 
   try {
     e2eConsoleLogger(
-      runCommand(`${gradleCommand} --stop`, {
-        cwd,
-      })
-    );
-    e2eConsoleLogger(
-      runCommand(`${gradleCommand} clean`, {
+      runCommand(`${gradleCommand} clean --no-daemon`, {
         cwd,
       })
     );
@@ -88,14 +94,21 @@ export function createGradleProject(
   addSpringBootPlugin(
     join(cwd, `app/build.gradle${type === 'kotlin' ? '.kts' : ''}`)
   );
+}
 
-  e2eConsoleLogger(
-    execSync(
-      `${gradleCommand} :gradle-project-graph:publishToMavenLocal -PskipSign=true`,
-      {
-        cwd: `${__dirname}/../../../..`,
-      }
-    ).toString()
+function appendToGitignore(cwd: string, entry: string) {
+  const gitignorePath = join(cwd, '.gitignore');
+  if (!existsSync(gitignorePath)) {
+    writeFileSync(gitignorePath, `${entry}\n`);
+    return;
+  }
+  const existing = readFileSync(gitignorePath, 'utf-8');
+  if (existing.split('\n').some((line) => line.trim() === entry.trim())) {
+    return;
+  }
+  appendFileSync(
+    gitignorePath,
+    existing.endsWith('\n') ? `${entry}\n` : `\n${entry}\n`
   );
 }
 

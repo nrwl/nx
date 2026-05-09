@@ -1,3 +1,4 @@
+import { addPlugin, checkAndCleanWithSemver } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -11,8 +12,6 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { satisfies, valid } from 'semver';

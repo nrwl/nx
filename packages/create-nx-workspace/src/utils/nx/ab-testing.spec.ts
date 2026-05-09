@@ -104,7 +104,7 @@ describe('ab-testing', () => {
     });
   });
 
-  describe('setupNxCloudV2 prompt variants', () => {
+  describe('setupNxCloudV2 prompt', () => {
     const originalEnv = process.env;
 
     beforeEach(() => {
@@ -116,28 +116,28 @@ describe('ab-testing', () => {
       process.env = originalEnv;
     });
 
-    it.each([
-      { flowVariant: '0', expectedCode: 'connect-to-cloud' },
-      { flowVariant: '1', expectedCode: 'cloud-ab-never-rebuild' },
-      { flowVariant: '2', expectedCode: 'cloud-ab-ci-providers-speed' },
-    ])(
-      'should select $expectedCode for flow variant $flowVariant',
-      ({ flowVariant, expectedCode }) => {
+    it.each(['0', '1', '2'])(
+      'should return the same prompt for flow variant %s',
+      (flowVariant) => {
         jest.resetModules();
         process.env.NX_CNW_FLOW_VARIANT = flowVariant;
         const { PromptMessages: FreshPromptMessages } = require('./ab-testing');
         const pm = new FreshPromptMessages();
-        expect(pm.getPrompt('setupNxCloudV2').code).toBe(expectedCode);
+        expect(pm.getPrompt('setupNxCloudV2').code).toBe(
+          'cloud-ci-providers-speed'
+        );
       }
     );
 
-    it('should select variant 0 for docs generation', () => {
+    it('should return the same prompt for docs generation', () => {
       process.env.NX_GENERATE_DOCS_PROCESS = 'true';
       const { PromptMessages: FreshPromptMessages } = jest.requireActual(
         './ab-testing'
       ) as typeof import('./ab-testing');
       const pm = new FreshPromptMessages();
-      expect(pm.getPrompt('setupNxCloudV2').code).toBe('connect-to-cloud');
+      expect(pm.getPrompt('setupNxCloudV2').code).toBe(
+        'cloud-ci-providers-speed'
+      );
     });
   });
 });

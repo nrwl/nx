@@ -10,5 +10,6 @@
       "inputs": ["copyReadme"]
     }
   },
+  "implicitDependencies": ["cypress", "eslint"],
   "tags": []
 }

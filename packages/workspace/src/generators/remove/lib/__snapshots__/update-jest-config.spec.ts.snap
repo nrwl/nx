@@ -34,8 +34,7 @@ exports[`updateRootJestConfig should delete lib project ref from root jest confi
 `;
 
 exports[`updateRootJestConfig should delete project if root jest config is not a multi-project config 1`] = `
-"/* eslint-disable */
-export default {
+"export default {
   displayName: 'node-app',
   preset: './jest.preset.js',
   testEnvironment: 'node',

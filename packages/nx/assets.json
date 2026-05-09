@@ -15,7 +15,6 @@
     { "glob": "src/native/wasi-worker-browser.mjs" },
     { "glob": "src/native/wasi-worker.mjs" },
     { "glob": "src/native/*.{node,wasm}", "includeIgnoredFiles": true },
-    { "glob": "schemas/*.json" },
     { "glob": "native-packages/*/package.json" },
     {
       "glob": "index.d.ts",

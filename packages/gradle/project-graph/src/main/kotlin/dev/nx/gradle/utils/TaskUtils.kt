@@ -18,6 +18,17 @@ import org.gradle.api.tasks.bundling.AbstractArchiveTask
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.api.tasks.testing.Test as GradleTest
 
+private val kotlinCompileToolClass: Class<*>? by lazy {
+  try {
+    Class.forName("org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool")
+  } catch (e: Throwable) {
+    null
+  }
+}
+
+private fun isKotlinCompileTask(task: Task): Boolean =
+    kotlinCompileToolClass?.isInstance(task) == true
+
 /**
  * Process a task and convert it into target Going to populate:
  * - cache
@@ -161,12 +172,12 @@ fun getGradleFilesInputs(workspaceRoot: String): List<String> {
 fun inferExtensionsFromInputProperties(task: Task, dependentTasks: Set<Task>): Set<String> {
   val extensions = mutableSetOf<String>()
 
-  when (task) {
-    is GradleTest -> {
+  when {
+    task is GradleTest -> {
       extensions.add("class")
       extensions.add("jar")
     }
-    is AbstractCompile -> extensions.add("class")
+    task is AbstractCompile || isKotlinCompileTask(task) -> extensions.add("class")
   }
 
   dependentTasks.forEach { depTask ->
@@ -177,7 +188,7 @@ fun inferExtensionsFromInputProperties(task: Task, dependentTasks: Set<Task>): S
         task.logger.debug("Could not read archiveExtension for ${depTask.path}: ${e.message}")
       }
     }
-    if (depTask is AbstractCompile) {
+    if (depTask is AbstractCompile || isKotlinCompileTask(depTask)) {
       extensions.add("class")
     }
   }

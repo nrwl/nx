@@ -23,10 +23,13 @@ import { addNxToAngularCliRepo } from './implementation/angular';
 import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts';
 import {
   createNxJsonFile,
+  extractErrorName,
   initCloud,
   isMonorepo,
   printFinalMessage,
+  readErrorStderr,
   setNeverConnectToCloud,
+  toErrorString,
   updateGitIgnore,
 } from './implementation/utils';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
@@ -92,8 +95,69 @@ export async function initHandler(
   }
 }
 
+async function recordInitError(
+  error: unknown,
+  baseMeta: Record<string, string | boolean>
+): Promise<void> {
+  const errorMessage = toErrorString(error);
+  const errorCode = determineErrorCode(error);
+  const stderr = readErrorStderr(error).trim();
+  const telemetryMessage = (
+    stderr ? `${errorMessage} | stderr: ${stderr.slice(-250)}` : errorMessage
+  ).slice(0, 500);
+  const errorName = extractErrorName(error, stderr);
+
+  await recordStat({
+    command: 'init',
+    nxVersion,
+    useCloud: false,
+    meta: {
+      type: 'error',
+      errorCode,
+      errorName,
+      errorMessage: telemetryMessage,
+      ...baseMeta,
+    },
+  });
+
+  if (baseMeta.aiAgent) {
+    const errorLogPath = writeErrorLog(error);
+    writeAiOutput(buildErrorResult(errorMessage, errorCode, errorLogPath));
+  } else {
+    // Restore the cursor in case the user bailed during an interactive
+    // prompt. Skip for AI agents — it would corrupt NDJSON output.
+    process.stdout.write('\x1b[?25h');
+  }
+  process.exit(1);
+}
+
 async function initHandlerImpl(options: InitArgs): Promise<void> {
   process.env.NX_RUNNING_NX_INIT = 'true';
+  const baseMeta = {
+    nodeVersion: process.versions.node,
+    os: process.platform,
+    packageManager: detectPackageManager(),
+    aiAgent: isAiAgent(),
+    isCI: isCI(),
+  };
+  recordStat({
+    command: 'init',
+    nxVersion,
+    useCloud: false,
+    meta: { type: 'start', ...baseMeta },
+  });
+
+  try {
+    return await runInit(options, baseMeta);
+  } catch (error) {
+    await recordInitError(error, baseMeta);
+  }
+}
+
+async function runInit(
+  options: InitArgs,
+  baseMeta: Record<string, string | boolean>
+): Promise<void> {
   const version =
     process.env.NX_VERSION ?? (prerelease(nxVersion) ? nxVersion : 'latest');
   if (process.env.NX_VERSION) {

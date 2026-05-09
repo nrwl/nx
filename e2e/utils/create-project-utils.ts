@@ -752,7 +752,7 @@ export function cleanupProject({
   skipReset,
   ...opts
 }: RunCmdOpts & { skipReset?: boolean } = {}) {
-  if (process.env.NX_E2E_SKIP_CLEANUP) {
+  if (process.env.NX_E2E_SKIP_PROJECT_CLEANUP) {
     resetWorkspaceContext();
     return;
   }

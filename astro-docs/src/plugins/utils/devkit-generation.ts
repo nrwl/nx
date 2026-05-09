@@ -16,16 +16,17 @@ export async function loadDevkitPackage(
   const { logger, renderMarkdown } = context;
   logger.info('Loading DevKit documentation');
 
-  const { defaultTypedocOptions, outDir, buildDir } = setupTypeDoc(logger);
+  const { defaultTypedocOptions, outDir, generatedTsconfigPath } =
+    setupTypeDoc(logger);
   const entries: CollectionEntry<'nx-reference-packages'>[] = [];
 
   logger.info('Generating devkit docs to dir...');
   // generate main @nx/devkit docs
   const devkitEntryPoint = join(
     workspaceRoot,
-    'dist',
     'packages',
     'devkit',
+    'dist',
     'index.d.ts'
   );
   if (existsSync(devkitEntryPoint)) {
@@ -33,7 +34,7 @@ export async function loadDevkitPackage(
       {
         ...defaultTypedocOptions,
         entryPoints: [devkitEntryPoint],
-        tsconfig: join(buildDir, 'tsconfig.lib.json'),
+        tsconfig: generatedTsconfigPath,
         out: outDir,
         excludePrivate: true,
         publicPath: '/docs/reference/devkit/',
@@ -46,9 +47,9 @@ export async function loadDevkitPackage(
   // generate ngcli docs in same dir
   const ngcliEntryPoint = join(
     workspaceRoot,
-    'dist',
     'packages',
     'devkit',
+    'dist',
     'ngcli-adapter.d.ts'
   );
   if (existsSync(ngcliEntryPoint)) {
@@ -56,7 +57,7 @@ export async function loadDevkitPackage(
       {
         ...defaultTypedocOptions,
         entryPoints: [ngcliEntryPoint],
-        tsconfig: join(buildDir, 'tsconfig.lib.json'),
+        tsconfig: generatedTsconfigPath,
         out: join(outDir, 'ngcli_adapter'),
         publicPath: '/docs/reference/devkit/ngcli_adapter/',
       },

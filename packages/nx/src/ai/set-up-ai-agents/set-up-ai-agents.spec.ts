@@ -5,7 +5,7 @@ import { setupAiAgentsGenerator } from './set-up-ai-agents';
 import { SetupAiAgentsGeneratorSchema } from './schema';
 import { readJson } from '../../generators/utils/json';
 import { getAgentRulesWrapped } from '../constants';
-import * as packageJsonUtils from '../../utils/package-json';
+import * as installedNxVersionUtils from '../../utils/installed-nx-version';
 import * as cloneModule from '../clone-ai-config-repo';
 import * as fs from 'fs';
 
@@ -24,27 +24,24 @@ jest.mock('fs', () => {
 
 describe('setup-ai-agents generator', () => {
   let tree: Tree;
-  let readModulePackageJsonSpy: jest.SpyInstance;
+  let getInstalledNxVersionSpy: jest.SpyInstance;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
     // Use local implementation instead of fetching from latest
     process.env.NX_AI_FILES_USE_LOCAL = 'true';
 
-    // Mock readModulePackageJson to return Nx 22+ by default
+    // Mock getInstalledNxVersion to return Nx 22+ by default
     // This ensures existing tests pass by defaulting to the new format
-    readModulePackageJsonSpy = jest
-      .spyOn(packageJsonUtils, 'readModulePackageJson')
-      .mockReturnValue({
-        packageJson: { name: 'nx', version: '22.0.0' },
-        path: '/fake/path/package.json',
-      });
+    getInstalledNxVersionSpy = jest
+      .spyOn(installedNxVersionUtils, 'getInstalledNxVersion')
+      .mockReturnValue('22.0.0');
   });
 
   afterEach(() => {
     delete process.env.NX_AI_FILES_USE_LOCAL;
-    if (readModulePackageJsonSpy) {
-      readModulePackageJsonSpy.mockRestore();
+    if (getInstalledNxVersionSpy) {
+      getInstalledNxVersionSpy.mockRestore();
     }
   });
 
@@ -961,10 +958,7 @@ describe('setup-ai-agents generator', () => {
       });
 
       it('should preserve extra args when upgrading from Nx 21 to 22 (gemini)', async () => {
-        readModulePackageJsonSpy.mockReturnValue({
-          packageJson: { name: 'nx', version: '22.0.0' },
-          path: '/fake/path/package.json',
-        });
+        getInstalledNxVersionSpy.mockReturnValue('22.0.0');
 
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
@@ -1186,10 +1180,7 @@ config_file = ".codex/agents/ci-monitor-subagent.toml"
       });
 
       it('should write generated config.toml with adjusted MCP args for Nx < 22', async () => {
-        readModulePackageJsonSpy.mockReturnValue({
-          packageJson: { name: 'nx', version: '21.0.0' },
-          path: '/fake/path/package.json',
-        });
+        getInstalledNxVersionSpy.mockReturnValue('21.0.0');
 
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
@@ -1327,10 +1318,7 @@ sandbox_mode = "read-only"
 
     describe('Nx version-specific MCP configuration', () => {
       it('should use "nx mcp" for Nx 22+ (gemini)', async () => {
-        readModulePackageJsonSpy.mockReturnValue({
-          packageJson: { name: 'nx', version: '22.0.0' },
-          path: '/fake/path/package.json',
-        });
+        getInstalledNxVersionSpy.mockReturnValue('22.0.0');
 
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
@@ -1350,10 +1338,7 @@ sandbox_mode = "read-only"
       });
 
       it('should use "nx-mcp" for Nx < 22 (gemini)', async () => {
-        readModulePackageJsonSpy.mockReturnValue({
-          packageJson: { name: 'nx', version: '21.0.0' },
-          path: '/fake/path/package.json',
-        });
+        getInstalledNxVersionSpy.mockReturnValue('21.0.0');
 
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
@@ -1373,9 +1358,7 @@ sandbox_mode = "read-only"
       });
 
       it('should use "nx mcp" as fallback when version cannot be determined (gemini)', async () => {
-        readModulePackageJsonSpy.mockImplementation(() => {
-          throw new Error('Module not found');
-        });
+        getInstalledNxVersionSpy.mockReturnValue(null);
 
         // Mock readFileSync to fail only for package.json so it falls back to default version
         // but allow other file reads (needed for generateFiles)
@@ -1413,10 +1396,7 @@ sandbox_mode = "read-only"
       });
 
       it('should use "nx mcp" for Nx 23+ (gemini)', async () => {
-        readModulePackageJsonSpy.mockReturnValue({
-          packageJson: { name: 'nx', version: '23.1.0' },
-          path: '/fake/path/package.json',
-        });
+        getInstalledNxVersionSpy.mockReturnValue('23.1.0');
 
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',

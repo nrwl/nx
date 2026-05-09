@@ -5,6 +5,11 @@
       "implementation": "./dist/generators/init/init",
       "schema": "./dist/generators/init/schema.json",
       "description": "Initialize .NET support in an Nx workspace"
+    },
+    "ci-workflow": {
+      "implementation": "./dist/generators/ci-workflow/generator",
+      "schema": "./dist/generators/ci-workflow/schema.json",
+      "description": "Setup a CI Workflow to run Nx in CI"
     }
   }
 }

@@ -5,9 +5,44 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "dependsOn": ["build-base"],
       "command": "node ./scripts/copy-readme.js react",
       "inputs": ["copyReadme"],
       "outputs": ["{workspaceRoot}/dist/packages/react/README.md"]
+    },
+    "build-base": {
+      "dependsOn": [
+        {
+          "projects": [
+            "nx",
+            "devkit",
+            "workspace",
+            "js",
+            "cypress",
+            "docker",
+            "eslint",
+            "module-federation",
+            "node",
+            "playwright",
+            "rollup",
+            "rsbuild",
+            "rspack",
+            "storybook",
+            "vite",
+            "vitest",
+            "web",
+            "webpack",
+            "nest"
+          ],
+          "target": "build-base"
+        },
+        "build-native",
+        "copy-assets"
+      ]
+    },
+    "nx-release-publish": {
+      "dependsOn": []
     }
-  }
+  },
+  "implicitDependencies": ["rspack"]
 }

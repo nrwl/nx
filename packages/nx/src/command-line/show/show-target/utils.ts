@@ -205,15 +205,16 @@ export function hasCustomHasher(
   targetName: string,
   graph: ProjectGraph
 ): boolean {
+  // Lazy require avoids a circular dependency with tasks-runner/utils.
+  const { getExecutorForTask } = require('../../../tasks-runner/utils');
   try {
-    const { getExecutorForTask } = require('../../../tasks-runner/utils');
+    const { projects } = readProjectsConfigurationFromProjectGraph(graph);
     const task = {
       id: `${projectName}:${targetName}`,
       target: { project: projectName, target: targetName },
       overrides: {},
     };
-    const executorConfig = getExecutorForTask(task, graph);
-    return !!executorConfig.hasherFactory;
+    return !!getExecutorForTask(task, projects).hasherFactory;
   } catch {
     return false;
   }

@@ -5,6 +5,7 @@ import { ChildProcess, fork } from 'child_process';
 import { ReactNativeBuildAndroidOptions } from './schema';
 import { chmodAndroidGradlewFiles } from '../../utils/chmod-android-gradle-files';
 import { getCliOptions } from '../../utils/get-cli-options';
+import { warnReactNativeExecutorDeprecation } from '../../utils/deprecation';
 
 export interface ReactNativeBuildOutput {
   success: boolean;
@@ -14,6 +15,8 @@ export default async function* buildAndroidExecutor(
   options: ReactNativeBuildAndroidOptions,
   context: ExecutorContext
 ): AsyncGenerator<ReactNativeBuildOutput> {
+  warnReactNativeExecutorDeprecation('build-android');
+
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   chmodAndroidGradlewFiles(join(context.root, projectRoot, 'android'));

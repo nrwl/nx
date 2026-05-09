@@ -2,6 +2,7 @@ import type { Serializable } from 'child_process';
 import type { Socket } from 'net';
 import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
+import { serialize } from '../../../daemon/socket-utils';
 import { MESSAGE_END_SEQ } from '../../../utils/consume-messages-from-socket';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import type {
@@ -136,6 +137,18 @@ type PluginMessageDefs = DefineMessages<{
           error: Error;
         };
   };
+
+  setWorkerEnv: {
+    payload: Record<string, string>;
+    result:
+      | {
+          success: true;
+        }
+      | {
+          success: false;
+          error: Error;
+        };
+  };
 }>;
 
 // =============================================================================
@@ -161,6 +174,34 @@ export type MessageResult<T extends PluginWorkerMessage['type']> = ResultOf<
 >;
 
 // =============================================================================
+// NOTIFICATIONS (worker -> host, unsolicited, no response expected)
+// =============================================================================
+
+export type PluginWorkerEmitLogNotification = {
+  type: 'emitLog';
+  level: 'log' | 'warn' | 'error';
+  message: string;
+};
+
+export type PluginWorkerNotification = PluginWorkerEmitLogNotification;
+
+const NOTIFICATION_TYPES: ReadonlyArray<PluginWorkerNotification['type']> = [
+  'emitLog',
+];
+
+export function isPluginWorkerNotification(
+  message: Serializable
+): message is PluginWorkerNotification {
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    'type' in message &&
+    typeof message.type === 'string' &&
+    (NOTIFICATION_TYPES as readonly string[]).includes(message.type)
+  );
+}
+
+// =============================================================================
 // TYPE GUARDS
 // =============================================================================
 
@@ -171,6 +212,7 @@ const MESSAGE_TYPES: ReadonlyArray<PluginWorkerMessage['type']> = [
   'createMetadata',
   'preTasksExecution',
   'postTasksExecution',
+  'setWorkerEnv',
 ];
 
 const RESULT_TYPES: ReadonlyArray<PluginWorkerResult['type']> = [
@@ -180,6 +222,7 @@ const RESULT_TYPES: ReadonlyArray<PluginWorkerResult['type']> = [
   'createMetadataResult',
   'preTasksExecutionResult',
   'postTasksExecutionResult',
+  'setWorkerEnvResult',
 ];
 
 export function isPluginWorkerMessage(
@@ -249,7 +292,8 @@ export async function consumeMessage(
  */
 export function sendMessageOverSocket(
   socket: Socket,
-  message: PluginWorkerMessage | PluginWorkerResult
+  message: PluginWorkerMessage | PluginWorkerResult | PluginWorkerNotification
 ): void {
-  socket.write(JSON.stringify(message) + MESSAGE_END_SEQ);
+  socket.write(serialize(message));
+  socket.write(MESSAGE_END_SEQ);
 }

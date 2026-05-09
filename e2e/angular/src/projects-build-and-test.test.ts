@@ -5,6 +5,7 @@ import {
   killPort,
   killProcessAndPorts,
   readFile,
+  reservePort,
   runCLI,
   runCommandUntil,
   runE2ETests,
@@ -95,7 +96,7 @@ describe('Angular Projects - Build and Test', () => {
       expect(await killPort(4200)).toBeTruthy();
     }
 
-    const appPort = 4207;
+    const appPort = await reservePort();
     const process = await runCommandUntil(
       `serve ${app1} -- --port=${appPort}`,
       (output) => output.includes(`listening on localhost:${appPort}`)

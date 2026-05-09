@@ -15,6 +15,7 @@ import { resolve as pathResolve } from 'path';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 import { resolveEas } from '../../utils/resolve-eas';
+import { warnExpoExecutorDeprecation } from '../../utils/deprecation';
 
 import { ExpoEasBuildOptions } from './schema';
 
@@ -28,6 +29,8 @@ export default async function* buildExecutor(
   options: ExpoEasBuildOptions,
   context: ExecutorContext
 ): AsyncGenerator<ReactNativeBuildOutput> {
+  warnExpoExecutorDeprecation('build');
+
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 

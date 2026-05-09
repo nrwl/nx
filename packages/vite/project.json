@@ -9,5 +9,6 @@
       "command": "node ./scripts/copy-readme.js vite",
       "inputs": ["copyReadme"]
     }
-  }
+  },
+  "implicitDependencies": ["eslint"]
 }

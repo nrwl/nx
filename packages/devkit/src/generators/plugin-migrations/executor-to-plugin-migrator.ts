@@ -617,7 +617,7 @@ async function getCreateNodesResultsForPlugin(
       pluginConfiguration
     );
     projectConfigs = await retrieveProjectConfigurations(
-      [plugin],
+      { specifiedPlugins: [plugin], defaultPlugins: [] },
       tree.root,
       nxJson
     );

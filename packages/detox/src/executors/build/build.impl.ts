@@ -4,6 +4,7 @@ import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
 import { DetoxBuildOptions } from './schema';
+import { warnDetoxExecutorsDeprecation } from '../../utils/deprecation';
 
 export interface DetoxBuildOutput {
   success: boolean;
@@ -15,6 +16,8 @@ export default async function* detoxBuildExecutor(
   options: DetoxBuildOptions,
   context: ExecutorContext
 ): AsyncGenerator<DetoxBuildOutput> {
+  warnDetoxExecutorsDeprecation();
+
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 

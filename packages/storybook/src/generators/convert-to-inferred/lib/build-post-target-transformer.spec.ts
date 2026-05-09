@@ -1,5 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
+import { AggregatedLog } from '@nx/devkit/internal';
 import { buildPostTargetTransformer } from './build-post-target-transformer';
 
 describe('buildPostTargetTransformer', () => {

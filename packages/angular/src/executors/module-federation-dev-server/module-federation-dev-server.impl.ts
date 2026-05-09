@@ -1,16 +1,16 @@
 import {
+  eachValueFrom,
+  combineAsyncIterables,
+  createAsyncIterable,
+  mapAsyncIterable,
+} from '@nx/devkit/internal';
+import {
   type ExecutorContext,
   logger,
   readProjectsConfigurationFromProjectGraph,
 } from '@nx/devkit';
 import { type Schema } from './schema';
 import { normalizeOptions, startRemotes } from './lib';
-import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
-import {
-  combineAsyncIterables,
-  createAsyncIterable,
-  mapAsyncIterable,
-} from '@nx/devkit/src/utils/async-iterable';
 import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
