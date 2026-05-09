@@ -1,8 +1,8 @@
 import {
   cleanupProject,
   fileExists,
-  getAvailablePort,
-  getAvailablePorts,
+  reservePort,
+  reservePorts,
   killProcessAndPorts,
   newProject,
   readJson,
@@ -24,7 +24,7 @@ describe('Dynamic Module Federation', () => {
   it('should load remote dynamic module', async () => {
     const shell = uniq('shell');
     const remote = uniq('remote');
-    const [shellPort, remotePort] = await getAvailablePorts(2);
+    const [shellPort, remotePort] = await reservePorts(2);
 
     runCLI(
       `generate @nx/react:host ${shell} --remotes=${remote} --devServerPort=${shellPort} --bundler=rspack --e2eTestRunner=cypress --dynamic=true --no-interactive --skipFormat`

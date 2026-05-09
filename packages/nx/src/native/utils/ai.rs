@@ -71,10 +71,14 @@ fn is_gemini_ai() -> bool {
 }
 
 /// Detects which AI agent is running and returns its name.
-/// Returns None if no agent is detected.
+/// Returns None if no agent is detected or when running inside the Nx daemon.
 /// Filtering against supported agents should be done on the TypeScript side.
 #[napi]
 pub fn detect_ai_agent() -> Option<String> {
+    if env::var("NX_DAEMON_PROCESS").is_ok() {
+        return None;
+    }
+
     if is_claude_ai() {
         Some("claude".to_string())
     } else if is_cursor_ai() {
@@ -90,9 +94,16 @@ pub fn detect_ai_agent() -> Option<String> {
     }
 }
 
-/// Detects if the current process is being run by an AI agent
+/// Detects if the current process is being run by an AI agent.
+/// Always returns false when running inside the Nx daemon, since the daemon
+/// is a long-lived process that should not inherit AI agent behavior from
+/// the client that connected to it.
 #[napi]
 pub fn is_ai_agent() -> bool {
+    if env::var("NX_DAEMON_PROCESS").is_ok() {
+        return false;
+    }
+
     let is_ai =
         is_claude_ai() || is_replit_ai() || is_cursor_ai() || is_opencode_ai() || is_gemini_ai();
 

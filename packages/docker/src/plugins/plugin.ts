@@ -1,19 +1,21 @@
 import {
+  calculateHashesForCreateNodes,
+  getNamedInputs,
+  PluginCache,
+} from '@nx/devkit/internal';
+import {
   type CreateNodesV2,
   type ProjectConfiguration,
   type TargetConfiguration,
   createNodesFromFiles,
   readJsonFile,
-  writeJsonFile,
   CreateNodesContextV2,
   workspaceRoot,
 } from '@nx/devkit';
-import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLatestCommitSha } from 'nx/src/utils/git-utils';
 import { interpolateObject } from '../utils/interpolate-pattern';
 
@@ -52,17 +54,6 @@ interface NormalizedDockerPluginOptions {
 
 type DockerTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
-function readTargetsCache(cachePath: string): Record<string, DockerTargets> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
-
-function writeTargetsCache(
-  cachePath: string,
-  results?: Record<string, DockerTargets>
-) {
-  writeJsonFile(cachePath, results ?? {});
-}
-
 const dockerfileGlob = '**/Dockerfile';
 
 export const createNodesV2: CreateNodesV2<DockerPluginOptions> = [
@@ -73,7 +64,7 @@ export const createNodesV2: CreateNodesV2<DockerPluginOptions> = [
       workspaceDataDirectory,
       `docker-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<DockerTargets>(cachePath);
     const projectRoots = configFilePaths.map((c) => dirname(c));
     const normalizedOptions = normalizePluginOptions(options);
     // TODO(colum): investigate hashing only the dockerfile
@@ -97,7 +88,7 @@ export const createNodesV2: CreateNodesV2<DockerPluginOptions> = [
         context
       );
     } finally {
-      writeTargetsCache(cachePath, targetsCache);
+      targetsCache.writeToDisk();
     }
   },
 ];
@@ -107,17 +98,18 @@ async function createNodesInternal(
   hash: string,
   normalizedOptions: NormalizedDockerPluginOptions,
   context: CreateNodesContextV2,
-  targetsCache: Record<string, DockerTargets>
+  targetsCache: PluginCache<DockerTargets>
 ) {
   const projectRoot = dirname(configFilePath);
 
-  targetsCache[hash] ??= await createDockerTargets(
-    projectRoot,
-    normalizedOptions,
-    context
-  );
+  if (!targetsCache.has(hash)) {
+    targetsCache.set(
+      hash,
+      await createDockerTargets(projectRoot, normalizedOptions, context)
+    );
+  }
 
-  const { targets, metadata } = targetsCache[hash];
+  const { targets, metadata } = targetsCache.get(hash);
 
   return {
     projects: {

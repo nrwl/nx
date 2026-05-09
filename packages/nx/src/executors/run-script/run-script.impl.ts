@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import { spawn } from 'child_process';
 import * as path from 'path';
 import treeKill from 'tree-kill';
 import type { ExecutorContext } from '../../config/misc-interfaces';
@@ -7,8 +7,6 @@ import {
   PseudoTerminal,
 } from '../../tasks-runner/pseudo-terminal';
 import { getPackageManagerCommand } from '../../utils/package-manager';
-
-const LARGE_BUFFER = 1024 * 1000000;
 
 export interface RunScriptOptions {
   script: string;
@@ -54,21 +52,28 @@ function nodeProcess(
   env: Record<string, string>
 ): Promise<void> {
   return new Promise<void>((res, rej) => {
-    let cp = exec(
-      command,
-      { cwd, env, maxBuffer: LARGE_BUFFER, windowsHide: true },
-      (error) => {
-        if (error) {
-          rej(error);
-        } else {
-          res();
-        }
-      }
-    );
+    let cp = spawn(command, [], {
+      shell: true,
+      cwd,
+      env,
+      windowsHide: true,
+    });
 
     // Forward stdout/stderr to parent process
     cp.stdout.pipe(process.stdout);
     cp.stderr.pipe(process.stderr);
+
+    cp.on('error', (error) => {
+      rej(error);
+    });
+
+    cp.on('exit', (code) => {
+      if (code === 0) {
+        res();
+      } else {
+        rej(new Error(`Command "${command}" exited with non-zero status code`));
+      }
+    });
 
     const exitHandler = (signal: NodeJS.Signals) => {
       if (cp && cp.pid && !cp.killed) {

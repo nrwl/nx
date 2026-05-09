@@ -9,6 +9,8 @@ import { PackageJson } from '../../utils/package-json';
 import * as packageMgrUtils from '../../utils/package-manager';
 
 import {
+  formatCommandFailure,
+  isNpmPeerDepsError,
   Migrator,
   normalizeVersion,
   parseMigrationsOptions,
@@ -38,6 +40,20 @@ describe('Migration', () => {
 
       await expect(migrator.migrate('mypackage', 'myversion')).rejects.toThrow(
         /cannot fetch/
+      );
+    });
+
+    it('should fail fast when a fetched migration config is missing a version', async () => {
+      const migrator = new Migrator({
+        packageJson: createPackageJson(),
+        getInstalledPackageVersion: () => '1.0.0',
+        fetch: () => Promise.resolve({} as ResolvedMigrationConfiguration),
+        from: {},
+        to: {},
+      });
+
+      await expect(migrator.migrate('mypackage', '2.0.0')).rejects.toThrow(
+        'Fetched migration metadata for mypackage is invalid: the target version is missing.'
       );
     });
 
@@ -355,6 +371,81 @@ describe('Migration', () => {
         packageUpdates: {
           parent: { version: '2.0.0', addToPackageJson: false },
           child: { version: '2.0.0', addToPackageJson: false },
+        },
+      });
+    });
+
+    it('should fail fast when an applied package update is missing a version', async () => {
+      const migrator = new Migrator({
+        packageJson: createPackageJson({
+          dependencies: {
+            parent: '1.0.0',
+            child: '1.0.0',
+          },
+        }),
+        getInstalledPackageVersion: () => '1.0.0',
+        fetch: (p) => {
+          if (p === 'parent') {
+            return Promise.resolve({
+              version: '2.0.0',
+              packageJsonUpdates: {
+                version2: {
+                  version: '2.0.0',
+                  packages: {
+                    child: { version: undefined as any },
+                  },
+                },
+              },
+            });
+          }
+
+          return Promise.resolve({ version: '2.0.0' });
+        },
+        from: {},
+        to: {},
+      });
+
+      await expect(migrator.migrate('parent', '2.0.0')).rejects.toThrow(
+        'Fetched migration metadata for parent is invalid: the target version for child is missing.'
+      );
+    });
+
+    it('should not fail for a skipped package update with a missing version', async () => {
+      const migrator = new Migrator({
+        packageJson: createPackageJson({
+          dependencies: {
+            parent: '1.0.0',
+          },
+        }),
+        getInstalledPackageVersion: () => '1.0.0',
+        fetch: (p) => {
+          if (p === 'parent') {
+            return Promise.resolve({
+              version: '2.0.0',
+              packageJsonUpdates: {
+                version2: {
+                  version: '2.0.0',
+                  requires: {
+                    other: '1.0.0',
+                  },
+                  packages: {
+                    child: { version: undefined as any },
+                  },
+                },
+              },
+            });
+          }
+
+          return Promise.resolve({ version: '2.0.0' });
+        },
+        from: {},
+        to: {},
+      });
+
+      expect(await migrator.migrate('parent', '2.0.0')).toEqual({
+        migrations: [],
+        packageUpdates: {
+          parent: { version: '2.0.0', addToPackageJson: false },
         },
       });
     });
@@ -1665,6 +1756,36 @@ describe('Migration', () => {
     });
   });
 
+  describe('command failures', () => {
+    it('should format child process failures using stderr output', () => {
+      expect(
+        formatCommandFailure('pnpm add nx@22.6.1', {
+          message: 'Command failed: pnpm add nx@22.6.1',
+          stderr: 'ERR_PNPM_FETCH_404 GET https://registry.npmjs.org/nx',
+        })
+      ).toBe(
+        [
+          'Command failed: pnpm add nx@22.6.1',
+          'ERR_PNPM_FETCH_404 GET https://registry.npmjs.org/nx',
+        ].join('\n')
+      );
+    });
+
+    it('should fall back to the child process message when no output is available', () => {
+      expect(
+        formatCommandFailure('pnpm add nx@22.6.1', {
+          message:
+            'Command failed: pnpm add nx@22.6.1\nSomething else went wrong',
+        })
+      ).toBe(
+        [
+          'Command failed: pnpm add nx@22.6.1',
+          'Something else went wrong',
+        ].join('\n')
+      );
+    });
+  });
+
   describe('parseMigrationsOptions', () => {
     it('should work for generating migrations', async () => {
       jest
@@ -1972,6 +2093,54 @@ describe('Migration', () => {
         parent: { version: '2.0.0', addToPackageJson: false },
         child: { version: '2.0.0', addToPackageJson: false },
       });
+    });
+  });
+
+  describe('isNpmPeerDepsError', () => {
+    it('should detect the npm 7-9 ERESOLVE code line', () => {
+      const stderr = [
+        'npm ERR! code ERESOLVE',
+        'npm ERR! ERESOLVE unable to resolve dependency tree',
+      ].join('\n');
+      expect(isNpmPeerDepsError(stderr)).toBe(true);
+    });
+
+    it('should detect the npm 10+ ERESOLVE code line', () => {
+      const stderr = [
+        'npm error code ERESOLVE',
+        'npm error ERESOLVE could not resolve',
+      ].join('\n');
+      expect(isNpmPeerDepsError(stderr)).toBe(true);
+    });
+
+    it('should fall back to phrase matching when ERESOLVE is absent', () => {
+      expect(
+        isNpmPeerDepsError('npm ERR! Unable to resolve dependency tree')
+      ).toBe(true);
+      expect(
+        isNpmPeerDepsError('Could not resolve dependency: peer react@"^18"')
+      ).toBe(true);
+      expect(
+        isNpmPeerDepsError('Conflicting peer dependency: typescript@5.0.0')
+      ).toBe(true);
+    });
+
+    it('should not match unrelated npm errors', () => {
+      expect(
+        isNpmPeerDepsError('npm ERR! code ENOENT\nnpm ERR! path ./missing')
+      ).toBe(false);
+      expect(
+        isNpmPeerDepsError(
+          'network timeout fetching https://registry.npmjs.org'
+        )
+      ).toBe(false);
+      expect(isNpmPeerDepsError('')).toBe(false);
+    });
+
+    it('should not match substrings of unrelated words', () => {
+      // `\bERESOLVE\b` must not match arbitrary identifiers that merely contain
+      // the letters (e.g. a hypothetical "PREERESOLVED" token).
+      expect(isNpmPeerDepsError('some PREERESOLVED cache entry')).toBe(false);
     });
   });
 });

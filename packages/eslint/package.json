@@ -32,6 +32,7 @@
   "generators": "./generators.json",
   "executors": "./executors.json",
   "peerDependencies": {
+    "@nx/jest": "workspace:*",
     "@zkochan/js-yaml": "0.0.7",
     "eslint": "^8.0.0 || ^9.0.0 || ^10.0.0"
   },
@@ -46,6 +47,9 @@
     "nx": "workspace:*"
   },
   "peerDependenciesMeta": {
+    "@nx/jest": {
+      "optional": true
+    },
     "@zkochan/js-yaml": {
       "optional": true
     }

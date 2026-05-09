@@ -4,7 +4,6 @@ import {
   type Tree,
 } from '@nx/devkit';
 import {
-  lessVersion,
   sassVersion,
   vitePluginVueVersion,
   vueRouterVersion,
@@ -14,7 +13,7 @@ import {
 
 export type EnsureDependenciesOptions = {
   routing?: boolean;
-  style?: 'scss' | 'less' | 'none' | 'css';
+  style?: 'scss' | 'none' | 'css';
 };
 
 export function ensureDependencies(
@@ -34,8 +33,6 @@ export function ensureDependencies(
 
   if (options.style === 'scss') {
     devDependencies['sass'] = sassVersion;
-  } else if (options.style === 'less') {
-    devDependencies['less'] = lessVersion;
   }
 
   return addDependenciesToPackageJson(tree, dependencies, devDependencies);

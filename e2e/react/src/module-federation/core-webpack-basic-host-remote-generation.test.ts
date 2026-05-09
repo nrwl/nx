@@ -1,13 +1,14 @@
 import { stripIndents } from '@nx/devkit';
 import {
   checkFilesExist,
-  getAvailablePort,
+  reservePorts,
   killProcessAndPorts,
   runCLIAsync,
   runCommandUntil,
   runE2ETests,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 import {
@@ -33,11 +34,24 @@ describe('React Module Federation - Webpack Basic - Host Remote Generation', () 
       const remote1 = uniq('remote1');
       const remote2 = uniq('remote2');
       const remote3 = uniq('remote3');
-      const shellPort = await getAvailablePort();
+      const [shellPort, remote1Port, remote2Port, remote3Port] =
+        await reservePorts(4);
 
       runCLI(
         `generate @nx/react:host ${shell} --remotes=${remote1},${remote2},${remote3} --devServerPort=${shellPort} --bundler=webpack --e2eTestRunner=cypress --style=css --no-interactive --skipFormat --js=${js}`
       );
+
+      const remotePorts: Array<[string, number]> = [
+        [remote1, remote1Port],
+        [remote2, remote2Port],
+        [remote3, remote3Port],
+      ];
+      for (const [remote, port] of remotePorts) {
+        updateJson(`${remote}/project.json`, (project) => {
+          project.targets.serve.options.port = port;
+          return project;
+        });
+      }
 
       checkFilesExist(`${shell}/module-federation.config.${js ? 'js' : 'ts'}`);
       checkFilesExist(

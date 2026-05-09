@@ -8,6 +8,7 @@ jest.mock('@nx/devkit', () => ({
 
 // Needed so the current environment is not used
 jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
+  ...jest.requireActual('@nx/js/src/utils/typescript/ts-solution-setup'),
   isUsingTsSolutionSetup: jest.fn(() => false),
 }));
 
@@ -20,8 +21,10 @@ describe('@nx/webpack/plugin', () => {
   let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContextV2;
   let tempFs: TempFs;
+  let originalCacheProjectGraph = process.env.NX_CACHE_PROJECT_GRAPH;
 
   beforeEach(() => {
+    process.env.NX_CACHE_PROJECT_GRAPH = 'false';
     tempFs = new TempFs('webpack-plugin');
 
     context = {
@@ -39,10 +42,16 @@ describe('@nx/webpack/plugin', () => {
       JSON.stringify({ name: 'my-app' })
     );
     tempFs.createFileSync('my-app/webpack.config.js', '');
+    tempFs.createFileSync('package-lock.json', '{}');
   });
 
   afterEach(() => {
     jest.resetModules();
+    if (originalCacheProjectGraph !== undefined) {
+      process.env.NX_CACHE_PROJECT_GRAPH = originalCacheProjectGraph;
+    } else {
+      delete process.env.NX_CACHE_PROJECT_GRAPH;
+    }
   });
 
   it('should create nodes', async () => {
@@ -93,6 +102,14 @@ describe('@nx/webpack/plugin', () => {
                         "externalDependencies": [
                           "webpack-cli",
                         ],
+                      },
+                      {
+                        "fields": [
+                          "extends",
+                          "files",
+                          "include",
+                        ],
+                        "json": "{workspaceRoot}/tsconfig.json",
                       },
                     ],
                     "metadata": {

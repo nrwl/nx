@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import { assign } from '@xstate/immer';
 // nx-ignore-next-line
 import type {
@@ -7,7 +6,7 @@ import type {
 } from 'nx/src/config/misc-interfaces';
 // nx-ignore-next-line
 import { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
-/* eslint-enable @nx/enforce-module-boundaries */
+
 import { createMachine } from 'xstate';
 export interface MigrateState {
   migrations: MigrationDetailsWithId[];

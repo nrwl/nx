@@ -3,7 +3,7 @@ import type { Linter, LinterType } from '@nx/eslint';
 export interface Schema {
   directory: string;
   name?: string;
-  style: 'none' | 'css' | 'scss' | 'less';
+  style: 'none' | 'css' | 'scss';
   bundler?: 'vite' | 'rsbuild';
   skipFormat?: boolean;
   tags?: string;

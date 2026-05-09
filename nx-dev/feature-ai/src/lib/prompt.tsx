@@ -3,13 +3,17 @@ import {
   ArrowPathIcon,
   PaperAirplaneIcon,
   XMarkIcon,
-  PlusIcon,
   StopIcon,
 } from '@heroicons/react/24/outline';
-import { Button } from '@nx/nx-dev-ui-common';
 import Textarea from 'react-textarea-autosize';
 import { ChatRequestOptions } from 'ai';
 import { cx } from '@nx/nx-dev-ui-primitives';
+
+const controlButtonClasses = cx(
+  'inline-flex items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm',
+  'hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500',
+  'dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800'
+);
 
 export function Prompt({
   isGenerating,
@@ -71,37 +75,34 @@ export function Prompt({
         )}
       >
         {isGenerating && (
-          <Button
-            variant="secondary"
-            size="small"
-            className={cx('bg-white dark:bg-zinc-900')}
+          <button
+            type="button"
+            className={controlButtonClasses}
             onClick={handleStopGenerating}
           >
             <StopIcon aria-hidden="true" className="h-5 w-5" />
             <span className="text-base">Stop generating</span>
-          </Button>
+          </button>
         )}
         {showNewChatCta && (
-          <Button
-            variant="secondary"
-            size="small"
-            className={cx('bg-white dark:bg-zinc-900')}
+          <button
+            type="button"
+            className={controlButtonClasses}
             onClick={handleNewChat}
           >
             <XMarkIcon aria-hidden="true" className="h-5 w-5" />
             <span className="text-base">Clear chat</span>
-          </Button>
+          </button>
         )}
         {showRegenerateCta && (
-          <Button
-            variant="secondary"
-            size="small"
-            className={cx('bg-white dark:bg-zinc-900')}
+          <button
+            type="button"
+            className={controlButtonClasses}
             onClick={onRegenerate}
           >
             <ArrowPathIcon aria-hidden="true" className="h-5 w-5" />
             <span className="text-base">Regenerate</span>
-          </Button>
+          </button>
         )}
       </div>
       <div className="h-full max-h-[300px] w-full overflow-y-auto">
@@ -129,18 +130,14 @@ export function Prompt({
         />
       </div>
       <div className="flex">
-        <Button
-          variant="contrast"
-          size="small"
+        <button
           type="submit"
           disabled={isGenerating}
-          className="h-12 w-12 self-end disabled:cursor-not-allowed"
+          className="inline-flex h-12 w-12 items-center justify-center self-end rounded-md bg-zinc-900 text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
         >
-          <div hidden className="sr-only">
-            Ask
-          </div>
+          <span className="sr-only">Ask</span>
           <PaperAirplaneIcon aria-hidden="true" className="h-5 w-5" />
-        </Button>
+        </button>
       </div>
     </form>
   );

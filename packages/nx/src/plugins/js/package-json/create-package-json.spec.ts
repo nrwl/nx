@@ -4,6 +4,20 @@ jest.mock('fs', () => ({
 }));
 jest.mock('../../../utils/fileutils');
 
+// Fixtures below reference `@nx/devkit` as a graph external node.
+// `recursivelyCollectPeerDependencies` then runs
+// `require('@nx/devkit/package.json')` to discover peer deps, which resolves
+// to the real `packages/devkit/package.json` via this monorepo's pnpm
+// symlinks and shows up as a sandbox-violating cross-project read. Stub it
+// with the only field this code path consumes — `peerDependencies` —
+// preserving the assertion that `nx` is collected as a transitive peer dep
+// of `@nx/devkit`.
+jest.mock(
+  '@nx/devkit/package.json',
+  () => ({ peerDependencies: { nx: '*' } }),
+  { virtual: true }
+);
+
 import * as fs from 'fs';
 import * as configModule from '../../../config/configuration';
 import {
@@ -760,7 +774,7 @@ describe('createPackageJson', () => {
           }
         })
       );
-      const consoleWarnSpy = jest.spyOn(process.stdout, 'write');
+      const consoleWarnSpy = jest.spyOn(process.stderr, 'write');
       spies.push(consoleWarnSpy);
       spies.push(
         jest
@@ -874,6 +888,64 @@ describe('createPackageJson', () => {
             foo: '2.0.0',
             bar: '1.0.0',
           },
+        },
+      });
+    });
+
+    it('should copy pnpm install configuration from root', () => {
+      spies.push(
+        jest
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' || path === 'package.json'
+          )
+      );
+      spies.push(
+        jest
+          .spyOn(fileutilsModule, 'readJsonFile')
+          .mockImplementation((path) => {
+            if (path === 'package.json') {
+              return {
+                ...rootPackageJson(),
+                pnpm: {
+                  onlyBuiltDependencies: ['sharp', 'bcrypt'],
+                  neverBuiltDependencies: ['fsevents'],
+                  allowBuilds: { esbuild: true, rollup: false },
+                  supportedArchitectures: {
+                    os: ['linux'],
+                    cpu: ['x64'],
+                  },
+                  ignoredOptionalDependencies: ['fsevents'],
+                },
+              };
+            }
+            if (path === 'libs/lib1/package.json') {
+              return projectPackageJson();
+            }
+          })
+      );
+
+      expect(
+        createPackageJson('lib1', graph, {
+          root: '',
+        })
+      ).toEqual({
+        dependencies: {
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
+        name: 'other-name',
+        version: '1.2.3',
+        pnpm: {
+          onlyBuiltDependencies: ['sharp', 'bcrypt'],
+          neverBuiltDependencies: ['fsevents'],
+          allowBuilds: { esbuild: true, rollup: false },
+          supportedArchitectures: {
+            os: ['linux'],
+            cpu: ['x64'],
+          },
+          ignoredOptionalDependencies: ['fsevents'],
         },
       });
     });

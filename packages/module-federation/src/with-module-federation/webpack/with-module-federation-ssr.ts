@@ -5,6 +5,7 @@ import {
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
 import type { NormalModuleReplacementPlugin } from 'webpack';
+import { workspaceRoot } from '@nx/devkit';
 
 export async function withModuleFederationForSSR(
   options: ModuleFederationConfig,
@@ -27,6 +28,11 @@ export async function withModuleFederationForSSR(
   return (config) => {
     config.target = 'async-node';
     config.output.uniqueName = options.name;
+    config.resolve ??= {};
+    config.resolve.modules = [
+      ...(config.resolve.modules ?? ['node_modules']),
+      workspaceRoot,
+    ];
     config.optimization = {
       ...(config.optimization ?? {}),
       runtimeChunk: isDevServer

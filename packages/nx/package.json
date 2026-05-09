@@ -9,6 +9,18 @@
     "url": "https://github.com/nrwl/nx.git",
     "directory": "packages/nx"
   },
+  "files": [
+    "dist/bin",
+    "dist/plugins",
+    "dist/presets",
+    "dist/release",
+    "dist/src",
+    "dist/tasks-runners",
+    "schemas",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
   "scripts": {
     "postinstall": "node -e \"try{require('./dist/bin/post-install')}catch(e){}\""
   },
@@ -38,25 +50,23 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "@ltd/j-toml": "^1.38.0",
+    "smol-toml": "1.6.1",
     "@napi-rs/wasm-runtime": "0.2.4",
     "@yarnpkg/lockfile": "^1.1.0",
-    "@yarnpkg/parsers": "3.0.2",
     "@zkochan/js-yaml": "catalog:",
-    "axios": "1.12.0",
+    "axios": "1.16.0",
     "picocolors": "catalog:",
     "cli-cursor": "3.1.0",
     "cli-spinners": "2.6.1",
     "cliui": "^8.0.1",
     "dotenv": "~16.4.5",
-    "dotenv-expand": "~11.0.6",
-    "ejs": "^3.1.7",
+    "dotenv-expand": "~12.0.3",
+    "ejs": "5.0.1",
     "enquirer": "catalog:",
     "figures": "3.2.0",
     "flat": "^5.0.2",
-    "front-matter": "^4.0.2",
     "ignore": "^7.0.5",
-    "jest-diff": "catalog:jest",
+    "@jest/diff-sequences": "30.0.1",
     "jsonc-parser": "3.2.0",
     "lines-and-columns": "2.0.3",
     "minimatch": "catalog:",
@@ -160,6 +170,7 @@
   "napi": {
     "binaryName": "nx",
     "packageName": "@nx/nx",
+    "dtsHeaderFile": "packages/nx/src/native/dts-header.d.ts",
     "wasm": {
       "initialMemory": 1024,
       "maximumMemory": 32768
@@ -192,7 +203,7 @@
         "dist/plugins/*.d.ts"
       ],
       "src/native": [
-        "src/native/index.d.ts"
+        "dist/src/native/index.d.ts"
       ],
       "src": [
         "dist/src/index.d.ts"
@@ -216,10 +227,10 @@
         "dist/src/project-graph/plugins/isolation/index.d.ts"
       ],
       "src/native/index": [
-        "src/native/index.d.ts"
+        "dist/src/native/index.d.ts"
       ],
       "src/native/index.js": [
-        "src/native/index.d.ts"
+        "dist/src/native/index.d.ts"
       ],
       "src/plugins/js": [
         "dist/src/plugins/js/index.d.ts"
@@ -232,6 +243,9 @@
       ],
       "src/utils/catalog": [
         "dist/src/utils/catalog/index.d.ts"
+      ],
+      "src/internal-testing-utils/*": [
+        "src/internal-testing-utils/*.ts"
       ],
       "src/*.js": [
         "dist/src/*.d.ts"
@@ -330,17 +344,17 @@
     },
     "./src/native": {
       "@nx/nx-source": "./src/native/index.js",
-      "types": "./src/native/index.d.ts",
+      "types": "./dist/src/native/index.d.ts",
       "default": "./dist/src/native/index.js"
     },
     "./src/native/index": {
       "@nx/nx-source": "./src/native/index.js",
-      "types": "./src/native/index.d.ts",
+      "types": "./dist/src/native/index.d.ts",
       "default": "./dist/src/native/index.js"
     },
     "./src/native/index.js": {
       "@nx/nx-source": "./src/native/index.js",
-      "types": "./src/native/index.d.ts",
+      "types": "./dist/src/native/index.d.ts",
       "default": "./dist/src/native/index.js"
     },
     "./src/native/*.js": {
@@ -400,6 +414,10 @@
     "./src/native/*.mjs": {
       "@nx/nx-source": "./src/native/*.mjs",
       "default": "./dist/src/native/*.mjs"
+    },
+    "./src/internal-testing-utils/*": {
+      "types": "./src/internal-testing-utils/*.ts",
+      "default": "./src/internal-testing-utils/*.ts"
     },
     "./src/*.js": {
       "@nx/nx-source": "./src/*.ts",

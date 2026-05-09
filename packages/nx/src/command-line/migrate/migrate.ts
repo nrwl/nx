@@ -1,5 +1,5 @@
 import * as pc from 'picocolors';
-import { exec, execSync, type StdioOptions } from 'child_process';
+import { exec, execSync, spawn, type StdioOptions } from 'child_process';
 import { prompt } from 'enquirer';
 import { handleImport } from '../../utils/handle-import';
 import { dirname, join } from 'path';
@@ -56,8 +56,6 @@ import {
   createTempNpmDirectory,
   detectPackageManager,
   getPackageManagerCommand,
-  PackageManager,
-  PackageManagerCommands,
   packageRegistryPack,
   packageRegistryView,
   resolvePackageVersionUsingRegistry,
@@ -78,7 +76,7 @@ import {
 import { readNxJson } from '../../config/configuration';
 import { runNxSync } from '../../utils/child-process';
 import { daemonClient } from '../../daemon/client/client';
-import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import { isNxCloudUsed, isNxCloudDisabled } from '../../utils/nx-cloud-utils';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
@@ -95,6 +93,57 @@ export interface ResolvedMigrationConfiguration extends MigrationsJson {
 }
 
 const execAsync = promisify(exec);
+
+type CommandFailure = {
+  message?: string;
+  stderr?: string | Buffer;
+  stdout?: string | Buffer;
+};
+
+export function formatCommandFailure(
+  command: string,
+  error: CommandFailure
+): string {
+  const normalizeCommandOutput = (
+    output: string | Buffer | null | undefined
+  ): string | undefined => {
+    if (!output) {
+      return undefined;
+    }
+
+    const normalized =
+      typeof output === 'string' ? output.trim() : output.toString().trim();
+    return normalized || undefined;
+  };
+
+  const details =
+    normalizeCommandOutput(error.stderr) ||
+    normalizeCommandOutput(error.stdout) ||
+    normalizeCommandOutput(error.message)
+      ?.replace(`Command failed: ${command}`, '')
+      .trim();
+
+  return [`Command failed: ${command}`, ...(details ? [details] : [])].join(
+    '\n'
+  );
+}
+
+function runOrReturnExitCode(run: () => void): number {
+  try {
+    run();
+    return 0;
+  } catch (e) {
+    if (
+      typeof e === 'object' &&
+      e !== null &&
+      'status' in e &&
+      typeof e.status === 'number'
+    ) {
+      return e.status;
+    }
+    throw e;
+  }
+}
 
 export function normalizeVersion(version: string) {
   const [semver, ...prereleaseTagParts] = version.split('-');
@@ -180,6 +229,19 @@ export class Migrator {
     this.excludeAppliedMigrations = opts.excludeAppliedMigrations;
   }
 
+  private async fetchMigrationConfig(
+    packageName: string,
+    packageVersion: string
+  ): Promise<ResolvedMigrationConfiguration> {
+    const migrationConfig = await this.fetch(packageName, packageVersion);
+    if (!migrationConfig.version) {
+      throw new Error(
+        `Fetched migration metadata for ${packageName} is invalid: the target version is missing.`
+      );
+    }
+    return migrationConfig;
+  }
+
   async migrate(targetPackage: string, targetVersion: string) {
     await this.buildPackageJsonUpdates(targetPackage, {
       version: targetVersion,
@@ -205,7 +267,10 @@ export class Migrator {
         if (currentVersion === null) return [];
 
         const { version } = this.packageUpdates[packageName];
-        const { generators } = await this.fetch(packageName, version);
+        const { generators } = await this.fetchMigrationConfig(
+          packageName,
+          version
+        );
 
         if (!generators) return [];
 
@@ -255,6 +320,11 @@ export class Migrator {
             )))
         ) {
           Object.entries(packageUpdate.packages).forEach(([name, update]) => {
+            this.validatePackageUpdateVersion(
+              packageToCheck.package,
+              name,
+              update
+            );
             filteredUpdates[name] = update;
             this.packageUpdates[name] = update;
           });
@@ -294,7 +364,10 @@ export class Migrator {
 
     let migrationConfig: ResolvedMigrationConfiguration;
     try {
-      migrationConfig = await this.fetch(targetPackage, targetVersion);
+      migrationConfig = await this.fetchMigrationConfig(
+        targetPackage,
+        targetVersion
+      );
     } catch (e) {
       if (e?.message?.includes('No matching version')) {
         throw new Error(
@@ -350,11 +423,17 @@ export class Migrator {
     return (
       await Promise.all(
         Object.entries(packageUpdatesToApply).map(
-          ([packageName, packageUpdate]) =>
-            this.populatePackageJsonUpdatesAndGetPackagesToCheck(
+          ([packageName, packageUpdate]) => {
+            this.validatePackageUpdateVersion(
+              targetPackage,
               packageName,
               packageUpdate
-            )
+            );
+            return this.populatePackageJsonUpdatesAndGetPackagesToCheck(
+              packageName,
+              packageUpdate
+            );
+          }
         )
       )
     )
@@ -530,6 +609,18 @@ export class Migrator {
       (!this.collectedVersions[packageName] ||
         this.gt(packageUpdate.version, this.collectedVersions[packageName]))
     );
+  }
+
+  private validatePackageUpdateVersion(
+    sourcePackageName: string,
+    packageName: string,
+    packageUpdate: PackageUpdate
+  ) {
+    if (!packageUpdate.version) {
+      throw new Error(
+        `Fetched migration metadata for ${sourcePackageName} is invalid: the target version for ${packageName} is missing.`
+      );
+    }
   }
 
   private addPackageUpdate(name: string, packageUpdate: PackageUpdate): void {
@@ -1155,7 +1246,51 @@ async function downloadPackageMigrationsFromRegistry(
   return result;
 }
 
+function createConcurrencyLimiter(concurrency: number) {
+  const queue: (() => void)[] = [];
+  let active = 0;
+
+  function next() {
+    while (queue.length > 0 && active < concurrency) {
+      active++;
+      queue.shift()();
+    }
+  }
+
+  return function limit<T>(fn: () => Promise<T>): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      queue.push(() => {
+        fn()
+          .then(resolve, reject)
+          .finally(() => {
+            active--;
+            next();
+          });
+      });
+      next();
+    });
+  };
+}
+
+const installConcurrencyLimit = process.env.NX_MIGRATE_INSTALL_CONCURRENCY
+  ? createConcurrencyLimiter(
+      Math.max(
+        1,
+        Math.floor(Number(process.env.NX_MIGRATE_INSTALL_CONCURRENCY)) || 1
+      )
+    )
+  : null;
+
 async function getPackageMigrationsUsingInstall(
+  packageName: string,
+  packageVersion: string
+): Promise<ResolvedMigrationConfiguration> {
+  const run = () =>
+    getPackageMigrationsUsingInstallImpl(packageName, packageVersion);
+  return installConcurrencyLimit ? installConcurrencyLimit(run) : run();
+}
+
+async function getPackageMigrationsUsingInstallImpl(
   packageName: string,
   packageVersion: string
 ): Promise<ResolvedMigrationConfiguration> {
@@ -1191,8 +1326,16 @@ async function getPackageMigrationsUsingInstall(
 
     result = { ...migrations, packageGroup, version: packageJson.version };
   } catch (e) {
+    const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
+
     throw new Error(
-      `Failed to fetch migrations for ${packageName}@${packageVersion}: ${e.message}`
+      [
+        `Failed to fetch migrations for ${packageName}@${packageVersion}`,
+        formatCommandFailure(
+          `${pmc.add} ${packageName}@${packageVersion}`,
+          e as CommandFailure
+        ),
+      ].join('\n')
     );
   } finally {
     await cleanup();
@@ -1450,6 +1593,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
         ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
         (await isMigratingToNewMajor(from, opts.targetVersion)) &&
         !isCI() &&
+        !isNxCloudDisabled(originalNxJson) &&
         !isNxCloudUsed(originalNxJson)
       ) {
         output.success({
@@ -1548,15 +1692,13 @@ function showConnectToCloudMessage() {
   }
 }
 
-function runInstall(nxWorkspaceRoot?: string) {
-  let packageManager: PackageManager;
-  let pmCommands: PackageManagerCommands;
-  if (nxWorkspaceRoot) {
-    packageManager = detectPackageManager(nxWorkspaceRoot);
-    pmCommands = getPackageManagerCommand(packageManager, nxWorkspaceRoot);
-  } else {
-    pmCommands = getPackageManagerCommand();
-  }
+function runInstall(
+  nxWorkspaceRoot?: string,
+  phase: MigrationInstallPhase = 'pre-migration'
+): Promise<void> {
+  const cwd = nxWorkspaceRoot ?? process.cwd();
+  const packageManager = detectPackageManager(cwd);
+  const pmCommands = getPackageManagerCommand(packageManager, cwd);
 
   const installCommand = `${pmCommands.install} ${
     pmCommands.ignoreScriptsFlag ?? ''
@@ -1564,11 +1706,124 @@ function runInstall(nxWorkspaceRoot?: string) {
   output.log({
     title: `Running '${installCommand}' to make sure necessary packages are installed`,
   });
-  execSync(installCommand, {
-    stdio: [0, 1, 2],
-    windowsHide: true,
-    cwd: nxWorkspaceRoot ?? process.cwd(),
+
+  return new Promise<void>((resolve, reject) => {
+    // For npm, pipe stderr so we can detect peer dependency errors while still
+    // mirroring it live to the user's terminal. Other package managers inherit
+    // stderr directly since we don't need to inspect their output.
+    const shouldCaptureStderr = packageManager === 'npm';
+    const child = spawn(installCommand, {
+      shell: true,
+      stdio: ['inherit', 'inherit', shouldCaptureStderr ? 'pipe' : 'inherit'],
+      windowsHide: true,
+      cwd,
+    });
+
+    const stderrChunks: Buffer[] = [];
+    child.stderr?.on('data', (chunk: Buffer) => {
+      process.stderr.write(chunk);
+      stderrChunks.push(chunk);
+    });
+
+    child.on('error', reject);
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+        return;
+      }
+
+      if (shouldCaptureStderr) {
+        const stderr = Buffer.concat(stderrChunks).toString().trim();
+        if (isNpmPeerDepsError(stderr)) {
+          // Log the remediation guidance here so every caller of `runInstall`
+          // (CLI migrate, `nx repair`, single-migration runner, etc.) surfaces
+          // it consistently. Top-level callers catch `NpmPeerDepsInstallError`
+          // and return a non-zero exit code without re-logging.
+          logNpmPeerDepsError(phase);
+          reject(new NpmPeerDepsInstallError());
+          return;
+        }
+      }
+
+      reject(new Error(`Command failed: ${installCommand}`));
+    });
   });
+}
+
+type MigrationInstallPhase = 'pre-migration' | 'post-migration';
+
+class NpmPeerDepsInstallError extends Error {
+  constructor() {
+    super('npm install failed due to peer dependency conflicts.');
+    this.name = 'NpmPeerDepsInstallError';
+  }
+}
+
+/**
+ * Detects npm peer-dependency resolution failures. Keyed on the `ERESOLVE`
+ * error code, which npm consistently emits for this class of failure across
+ * v7+ (`npm ERR! code ERESOLVE` / `npm error code ERESOLVE`). Falls back to a
+ * small set of stable phrases in case the code line is missing from the
+ * captured output.
+ */
+export function isNpmPeerDepsError(stderr: string): boolean {
+  if (/\bERESOLVE\b/.test(stderr)) {
+    return true;
+  }
+  const lowerStderr = stderr.toLowerCase();
+  return (
+    lowerStderr.includes('unable to resolve dependency tree') ||
+    lowerStderr.includes('could not resolve dependency') ||
+    lowerStderr.includes('conflicting peer dependency')
+  );
+}
+
+function logNpmPeerDepsError(phase: MigrationInstallPhase): void {
+  const peerDepsResolutionSteps = [
+    'Recommended approaches (in order of preference):',
+    '',
+    '1. Use "overrides" in package.json to force compatible versions across the dependency tree.',
+    '   See https://docs.npmjs.com/cli/configuring-npm/package-json#overrides',
+    '2. Persist legacy peer deps resolution in the project ".npmrc":',
+    '   npm config set legacy-peer-deps=true --location=project',
+    '   (bypasses peer dependency resolution; use with caution)',
+    '3. As a last resort, force the installation by running "npm install --force".',
+    '   (does not persist and may produce broken installs)',
+  ];
+  const manualInstallHint = [
+    'If you installed the dependencies manually, pass "--skip-install" to avoid re-installing them:',
+    '   nx migrate --run-migrations --skip-install',
+  ];
+
+  if (phase === 'pre-migration') {
+    output.error({
+      title:
+        'You need to resolve the peer dependency conflicts before the migration can continue',
+      bodyLines: [
+        ...peerDepsResolutionSteps,
+        '',
+        'Once the conflicts are resolved, re-run the migrations:',
+        '   nx migrate --run-migrations',
+        '',
+        ...manualInstallHint,
+      ],
+    });
+  } else {
+    output.error({
+      title:
+        'Some migrations have been applied, but installing the updated dependencies failed',
+      bodyLines: [
+        ...peerDepsResolutionSteps,
+        '',
+        'Once the conflicts are resolved, run "npm install" to install the updated dependencies.',
+        'If the migration was interrupted before completing, re-run the remaining migrations:',
+        '   nx migrate --run-migrations',
+        '',
+        ...manualInstallHint,
+      ],
+    });
+  }
 }
 
 export async function executeMigrations(
@@ -1581,9 +1836,10 @@ export async function executeMigrations(
   }[],
   isVerbose: boolean,
   shouldCreateCommits: boolean,
-  commitPrefix: string
+  commitPrefix: string,
+  shouldSkipInstall = false
 ) {
-  const changedDepInstaller = new ChangedDepInstaller(root);
+  const changedDepInstaller = new ChangedDepInstaller(root, shouldSkipInstall);
 
   const migrationsWithNoChanges: typeof migrations = [];
   const sortedMigrations = migrations.sort((a, b) => {
@@ -1623,15 +1879,21 @@ export async function executeMigrations(
       }
       logger.info(`---------------------------------------------------------`);
     } catch (e) {
-      output.error({
-        title: `Failed to run ${m.name} from ${m.package}. This workspace is NOT up to date!`,
-      });
+      if (!(e instanceof NpmPeerDepsInstallError)) {
+        output.error({
+          title: `Failed to run ${m.name} from ${m.package}. This workspace is NOT up to date!`,
+        });
+      }
       throw e;
     }
   }
 
   if (!shouldCreateCommits) {
-    changedDepInstaller.installDepsIfChanged();
+    await changedDepInstaller.installDepsIfChanged();
+  }
+
+  if (changedDepInstaller.skippedInstall) {
+    logSkippedPostMigrationInstall(root);
   }
 
   return { migrationsWithNoChanges, nextSteps: allNextSteps };
@@ -1639,18 +1901,39 @@ export async function executeMigrations(
 
 class ChangedDepInstaller {
   private initialDeps: string;
+  private _skippedInstall = false;
 
-  constructor(private readonly root: string) {
+  constructor(
+    private readonly root: string,
+    private readonly shouldSkipInstall = false
+  ) {
     this.initialDeps = getStringifiedPackageJsonDeps(root);
   }
 
-  public installDepsIfChanged() {
+  public get skippedInstall(): boolean {
+    return this._skippedInstall;
+  }
+
+  public async installDepsIfChanged(): Promise<void> {
     const currentDeps = getStringifiedPackageJsonDeps(this.root);
     if (this.initialDeps !== currentDeps) {
-      runInstall(this.root);
+      if (this.shouldSkipInstall) {
+        this._skippedInstall = true;
+      } else {
+        await runInstall(this.root, 'post-migration');
+      }
     }
     this.initialDeps = currentDeps;
   }
+}
+
+function logSkippedPostMigrationInstall(root: string): void {
+  const packageManager = detectPackageManager(root);
+  const installCommand = getPackageManagerCommand(packageManager, root).install;
+  output.warn({
+    title: 'Migrations updated your dependencies, but the install was skipped',
+    bodyLines: [`Run "${installCommand}" to install the updated dependencies.`],
+  });
 }
 
 export async function runNxOrAngularMigration(
@@ -1664,7 +1947,7 @@ export async function runNxOrAngularMigration(
   isVerbose: boolean,
   shouldCreateCommits: boolean,
   commitPrefix: string,
-  installDepsIfChanged?: () => void,
+  installDepsIfChanged?: () => Promise<void>,
   handleInstallDeps = false
 ): Promise<{ changes: FileChange[]; nextSteps: string[] }> {
   if (!installDepsIfChanged) {
@@ -1682,7 +1965,8 @@ export async function runNxOrAngularMigration(
       root,
       collectionPath,
       collection,
-      migration.name
+      migration.name,
+      migration.version
     ));
 
     logger.info(`Ran ${migration.name} from ${migration.package}`);
@@ -1720,7 +2004,7 @@ export async function runNxOrAngularMigration(
   }
 
   if (shouldCreateCommits) {
-    installDepsIfChanged();
+    await installDepsIfChanged();
 
     const commitMessage = `${commitPrefix}${migration.name}`;
     try {
@@ -1740,7 +2024,7 @@ export async function runNxOrAngularMigration(
     }
     // if we are running this function alone, we need to install deps internally
   } else if (handleInstallDeps) {
-    installDepsIfChanged();
+    await installDepsIfChanged();
   }
 
   return { changes, nextSteps };
@@ -1752,23 +2036,29 @@ async function runMigrations(
   args: string[],
   isVerbose: boolean,
   shouldCreateCommits = false,
-  commitPrefix: string
+  commitPrefix: string,
+  shouldSkipInstall = false
 ) {
-  if (!process.env.NX_MIGRATE_SKIP_INSTALL) {
-    runInstall();
+  if (!shouldSkipInstall && !process.env.NX_MIGRATE_SKIP_INSTALL) {
+    await runInstall();
   }
 
   if (!__dirname.startsWith(workspaceRoot)) {
     // we are running from a temp installation with nx latest, switch to running
     // from local installation
-    runNxSync(`migrate ${args.join(' ')}`, {
-      stdio: ['inherit', 'inherit', 'inherit'],
-      env: {
-        ...process.env,
-        NX_MIGRATE_SKIP_INSTALL: 'true',
-        NX_MIGRATE_USE_LOCAL: 'true',
-      },
-    });
+    const exitCode = runOrReturnExitCode(() =>
+      runNxSync(`migrate ${args.join(' ')}`, {
+        stdio: ['inherit', 'inherit', 'inherit'],
+        env: {
+          ...process.env,
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      })
+    );
+    if (exitCode !== 0) {
+      return exitCode;
+    }
     return;
   }
 
@@ -1802,7 +2092,8 @@ async function runMigrations(
     migrations,
     isVerbose,
     shouldCreateCommits,
-    commitPrefix
+    commitPrefix,
+    shouldSkipInstall
   );
 
   if (migrationsWithNoChanges.length < migrations.length) {
@@ -1840,12 +2131,14 @@ async function runNxMigration(
   root: string,
   collectionPath: string,
   collection: MigrationsJson,
-  name: string
+  name: string,
+  migrationVersion?: string
 ) {
   const { path: implPath, fnSymbol } = getImplementationPath(
     collection,
     collectionPath,
-    name
+    name,
+    migrationVersion
   );
   const fn = require(implPath)[fnSymbol];
   const host = new FsTree(
@@ -1879,32 +2172,47 @@ export async function migrate(
     if (opts.type === 'generateMigrations') {
       await generateMigrationsJsonAndUpdatePackageJson(root, opts);
     } else {
-      await runMigrations(
-        root,
-        opts,
-        rawArgs,
-        args['verbose'],
-        args['createCommits'],
-        args['commitPrefix']
-      );
+      try {
+        return await runMigrations(
+          root,
+          opts,
+          rawArgs,
+          args['verbose'],
+          args['createCommits'],
+          args['commitPrefix'],
+          args['skipInstall']
+        );
+      } catch (e) {
+        // The remediation guidance is already logged by `runInstall`; swallow
+        // the error here so `handleErrors` doesn't print a noisy stack after
+        // the friendly output.
+        if (e instanceof NpmPeerDepsInstallError) {
+          return 1;
+        }
+        throw e;
+      }
     }
   });
 }
 
 export async function runMigration() {
-  const runLocalMigrate = () => {
-    runNxSync(`_migrate ${process.argv.slice(3).join(' ')}`, {
-      stdio: ['inherit', 'inherit', 'inherit'],
-    });
-  };
-  if (
-    process.env.NX_USE_LOCAL !== 'true' &&
-    process.env.NX_MIGRATE_USE_LOCAL === undefined
-  ) {
-    const p = await nxCliPath();
-    if (p === null) {
-      runLocalMigrate();
-    } else {
+  return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
+    const runLocalMigrate = () =>
+      runOrReturnExitCode(() =>
+        runNxSync(`_migrate ${process.argv.slice(3).join(' ')}`, {
+          stdio: ['inherit', 'inherit', 'inherit'],
+        })
+      );
+
+    if (
+      process.env.NX_USE_LOCAL !== 'true' &&
+      process.env.NX_MIGRATE_USE_LOCAL === undefined
+    ) {
+      const p = await nxCliPath();
+      if (p === null) {
+        return runLocalMigrate();
+      }
+
       // ensure local registry from process is not interfering with the install
       // when we start the process from temp folder the local registry would override the custom registry
       if (
@@ -1915,14 +2223,16 @@ export async function runMigration() {
       ) {
         delete process.env.npm_config_registry;
       }
-      execSync(`${p} _migrate ${process.argv.slice(3).join(' ')}`, {
-        stdio: ['inherit', 'inherit', 'inherit'],
-        windowsHide: true,
-      });
+      return runOrReturnExitCode(() =>
+        execSync(`${p} _migrate ${process.argv.slice(3).join(' ')}`, {
+          stdio: ['inherit', 'inherit', 'inherit'],
+          windowsHide: true,
+        })
+      );
     }
-  } else {
-    runLocalMigrate();
-  }
+
+    return runLocalMigrate();
+  });
 }
 
 export function readMigrationCollection(packageName: string, root: string) {
@@ -1941,12 +2251,15 @@ export function readMigrationCollection(packageName: string, root: string) {
 export function getImplementationPath(
   collection: MigrationsJson,
   collectionPath: string,
-  name: string
+  name: string,
+  migrationVersion?: string
 ): { path: string; fnSymbol: string } {
   const g = collection.generators?.[name] || collection.schematics?.[name];
   if (!g) {
-    throw new Error(
-      `Unable to determine implementation path for "${collectionPath}:${name}"`
+    throw new MigrationImplementationMissingError(
+      `Unable to determine implementation path for "${collectionPath}:${name}"`,
+      collectionPath,
+      migrationVersion
     );
   }
   const implRelativePathAndMaybeSymbol = g.implementation || g.factory;
@@ -1960,13 +2273,93 @@ export function getImplementationPath(
       paths: [dirname(collectionPath)],
     });
   } catch (e) {
-    // workaround for a bug in node 12
-    implPath = require.resolve(
-      `${dirname(collectionPath)}/${implRelativePath}`
-    );
+    try {
+      // workaround for a bug in node 12
+      implPath = require.resolve(
+        `${dirname(collectionPath)}/${implRelativePath}`
+      );
+    } catch {
+      throw new MigrationImplementationMissingError(
+        `Could not resolve implementation for migration "${name}" from "${collectionPath}"`,
+        collectionPath,
+        migrationVersion ?? g.version
+      );
+    }
   }
 
   return { path: implPath, fnSymbol };
+}
+
+class MigrationImplementationMissingError extends Error {
+  constructor(
+    baseMessage: string,
+    collectionPath: string,
+    migrationVersion: string | undefined
+  ) {
+    super(
+      buildMigrationMissingMessage(
+        baseMessage,
+        collectionPath,
+        migrationVersion
+      )
+    );
+    this.name = 'MigrationImplementationMissingError';
+  }
+}
+
+function buildMigrationMissingMessage(
+  baseMessage: string,
+  collectionPath: string,
+  migrationVersion: string | undefined
+): string {
+  if (!migrationVersion) {
+    return baseMessage;
+  }
+
+  try {
+    const packageJsonPath = join(dirname(collectionPath), 'package.json');
+    if (!existsSync(packageJsonPath)) {
+      return baseMessage;
+    }
+    const packageJson = readJsonFile<PackageJson>(packageJsonPath);
+    const installedVersion = packageJson.version;
+
+    if (
+      installedVersion &&
+      lt(normalizeVersion(installedVersion), normalizeVersion(migrationVersion))
+    ) {
+      const packageManager = detectPackageManager();
+      const pmc = getPackageManagerCommand(packageManager);
+      const overrideFieldName = getOverrideFieldName(packageManager);
+
+      return (
+        `${baseMessage}\n\n` +
+        `The installed version of "${packageJson.name}" is ${installedVersion}, ` +
+        `but this migration requires version ${migrationVersion}. ` +
+        `This likely means the package version is being held back by an ${overrideFieldName} ` +
+        `in your package.json. ` +
+        `Remove the ${overrideFieldName} and run "${pmc.install}" to install the correct version.`
+      );
+    }
+  } catch {
+    // Fall through to return the base message if we can't read package info
+  }
+
+  return baseMessage;
+}
+
+function getOverrideFieldName(
+  packageManager: ReturnType<typeof detectPackageManager>
+): string {
+  switch (packageManager) {
+    case 'pnpm':
+      return '"pnpm.overrides"';
+    case 'yarn':
+      return '"resolutions"';
+    case 'npm':
+    case 'bun':
+      return '"overrides"';
+  }
 }
 
 export async function nxCliPath(nxWorkspaceRoot?: string) {

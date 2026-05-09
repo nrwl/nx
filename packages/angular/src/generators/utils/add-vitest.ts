@@ -50,7 +50,7 @@ export async function addVitestAngular(
     : '@angular/build:unit-test';
   const project = readProjectConfiguration(tree, options.name);
   project.targets ??= {};
-  project.targets.test = { executor, options: {} };
+  project.targets.test = { executor, options: { watch: false } };
   updateProjectConfiguration(tree, options.name, project);
 
   const nxJson = readNxJson(tree);

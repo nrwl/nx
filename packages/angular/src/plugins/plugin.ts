@@ -1,4 +1,9 @@
 import {
+  calculateHashForCreateNodes,
+  getNamedInputs,
+  PluginCache,
+} from '@nx/devkit/internal';
+import {
   type CreateNodesContextV2,
   createNodesFromFiles,
   type CreateNodesResult,
@@ -9,10 +14,7 @@ import {
   readJsonFile,
   type Target,
   type TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName } from '@nx/js';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative } from 'node:path';
@@ -80,19 +82,6 @@ const knownExecutors = {
   ]),
 };
 
-const pmc = getPackageManagerCommand();
-
-function readProjectsCache(cachePath: string): Record<string, AngularProjects> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
-
-function writeProjectsToCache(
-  cachePath: string,
-  results: Record<string, AngularProjects>
-) {
-  writeJsonFile(cachePath, results);
-}
-
 export const createNodesV2: CreateNodesV2<AngularPluginOptions> = [
   '**/angular.json',
   async (configFiles, options, context) => {
@@ -101,17 +90,27 @@ export const createNodesV2: CreateNodesV2<AngularPluginOptions> = [
       workspaceDataDirectory,
       `angular-${optionsHash}.hash`
     );
-    const projectsCache = readProjectsCache(cachePath);
+    const projectsCache = new PluginCache<AngularProjects>(cachePath);
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, projectsCache),
+          createNodesInternal(
+            configFile,
+            options,
+            context,
+            projectsCache,
+            pmc,
+            lockFileName
+          ),
         configFiles,
         options,
         context
       );
     } finally {
-      writeProjectsToCache(cachePath, projectsCache);
+      projectsCache.writeToDisk();
     }
   },
 ];
@@ -120,7 +119,9 @@ async function createNodesInternal(
   configFilePath: string,
   options: {} | undefined,
   context: CreateNodesContextV2,
-  projectsCache: Record<string, AngularProjects>
+  projectsCache: PluginCache<AngularProjects>,
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  lockFileName: string
 ): Promise<CreateNodesResult> {
   const angularWorkspaceRoot = dirname(configFilePath);
 
@@ -136,24 +137,31 @@ async function createNodesInternal(
     angularWorkspaceRoot,
     options,
     context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    [lockFileName]
   );
 
-  projectsCache[hash] ??= await buildAngularProjects(
-    configFilePath,
-    options,
-    angularWorkspaceRoot,
-    context
-  );
+  if (!projectsCache.has(hash)) {
+    projectsCache.set(
+      hash,
+      await buildAngularProjects(
+        configFilePath,
+        options,
+        angularWorkspaceRoot,
+        context,
+        pmc
+      )
+    );
+  }
 
-  return { projects: projectsCache[hash] };
+  return { projects: projectsCache.get(hash) };
 }
 
 async function buildAngularProjects(
   configFilePath: string,
   options: AngularPluginOptions,
   angularWorkspaceRoot: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<AngularProjects> {
   const projects: Record<string, AngularProjects[string] & { root: string }> =
     {};

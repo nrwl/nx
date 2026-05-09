@@ -1,4 +1,4 @@
-import type { ProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import type { ProjectNameAndRootOptions } from '@nx/devkit/internal';
 // nx-ignore-next-line
 const { Linter, LinterType } = require('@nx/eslint'); // use require to import to avoid circular dependency
 import type { ProjectPackageManagerWorkspaceState } from '../../utils/package-manager-workspaces';

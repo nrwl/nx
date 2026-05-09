@@ -1,4 +1,10 @@
 import {
+  getNamedInputs,
+  calculateHashForCreateNodes,
+  loadConfigFile,
+  PluginCache,
+} from '@nx/devkit/internal';
+import {
   CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesResult,
@@ -8,16 +14,12 @@ import {
   NxJsonConfiguration,
   readJsonFile,
   TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
 import { dirname, join } from 'path';
 import { getLockFileName } from '@nx/js';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync } from 'fs';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import { readdirSync } from 'fs';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { hashObject } from 'nx/src/devkit-internals';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 export interface ExpoPluginOptions {
@@ -33,45 +35,36 @@ export interface ExpoPluginOptions {
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
 }
-const pmc = getPackageManagerCommand();
 
-function readTargetsCache(
-  cachePath: string
-): Record<string, Record<string, TargetConfiguration<ExpoPluginOptions>>> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
-
-function writeTargetsToCache(
-  cachePath: string,
-  targetsCache: Record<
-    string,
-    Record<string, TargetConfiguration<ExpoPluginOptions>>
-  >
-) {
-  const oldCache = readTargetsCache(cachePath);
-  writeJsonFile(cachePath, {
-    ...oldCache,
-    targetsCache,
-  });
-}
+type ExpoTargets = Record<string, TargetConfiguration<ExpoPluginOptions>>;
 
 export const createNodes: CreateNodesV2<ExpoPluginOptions> = [
   '**/app.{json,config.js,config.ts}',
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `expo-${optionsHash}.hash`);
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<ExpoTargets>(cachePath);
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
 
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+          createNodesInternal(
+            configFile,
+            options,
+            context,
+            targetsCache,
+            pmc,
+            lockFileName
+          ),
         configFiles,
         options,
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk();
     }
   },
 ];
@@ -82,10 +75,9 @@ async function createNodesInternal(
   configFile: string,
   options: ExpoPluginOptions,
   context: CreateNodesContextV2,
-  targetsCache: Record<
-    string,
-    Record<string, TargetConfiguration<ExpoPluginOptions>>
-  >
+  targetsCache: PluginCache<ExpoTargets>,
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  lockFileName: string
 ): Promise<CreateNodesResult> {
   options = normalizeOptions(options);
   const projectRoot = dirname(configFile);
@@ -116,15 +108,20 @@ async function createNodesInternal(
     projectRoot,
     options,
     context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    [lockFileName]
   );
 
-  targetsCache[hash] ??= buildExpoTargets(projectRoot, options, context);
+  if (!targetsCache.has(hash)) {
+    targetsCache.set(
+      hash,
+      buildExpoTargets(projectRoot, options, context, pmc)
+    );
+  }
 
   return {
     projects: {
       [projectRoot]: {
-        targets: targetsCache[hash],
+        targets: targetsCache.get(hash),
       },
     },
   };
@@ -133,7 +130,8 @@ async function createNodesInternal(
 function buildExpoTargets(
   projectRoot: string,
   options: ExpoPluginOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
 

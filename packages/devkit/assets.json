@@ -1,5 +1,5 @@
 {
-  "outDir": "dist/packages/devkit",
+  "outDir": "packages/devkit/dist",
   "assets": [
     {
       "glob": "**/files/**"
@@ -8,15 +8,7 @@
       "glob": "**/files/**/.gitkeep"
     },
     {
-      "glob": "**/*.json",
-      "ignore": ["tsconfig*.json", "project.json", ".eslintrc.json"]
-    },
-    {
-      "glob": "**/*.js",
-      "ignore": ["**/jest.config.js"]
-    },
-    {
-      "glob": "**/*.d.ts"
+      "glob": "src/**/schema.d.ts"
     },
     "LICENSE"
   ]

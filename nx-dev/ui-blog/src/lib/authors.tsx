@@ -20,7 +20,7 @@ export function BlogAuthors({
             width="48"
             height="48"
             decoding="async"
-            src={`/documentation/blog/images/authors/${author.name}.jpeg`}
+            src={`/images/authors/${author.name}.jpeg`}
             className="relative inline-block h-6 w-6 rounded-full ring-1 ring-white grayscale dark:ring-zinc-900"
           />
           {showAuthorDetails && <AuthorDetail author={author} />}

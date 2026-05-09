@@ -1,10 +1,18 @@
 import {
+  determineProjectNameAndRootOptions,
+  ensureRootProjectName,
+  promptWhenInteractive,
+  addBuildTargetDefaults,
+  logShowProjectCommand,
+} from '@nx/devkit/internal';
+import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  getDependencyVersionFromPackageJson,
   installPackagesTask,
   joinPathFragments,
   names,
@@ -20,13 +28,6 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import {
-  determineProjectNameAndRootOptions,
-  ensureRootProjectName,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
@@ -501,7 +502,14 @@ export async function addLint(
           );
         }
         if (options.unitTestRunner === 'vitest') {
-          ignoredFiles.add('{projectRoot}/vite.config.{js,ts,mjs,mts}');
+          // When bundler is 'vite', vite.config holds both build and test config
+          // (added above). Otherwise, @nx/vitest:configuration generates a
+          // dedicated vitest.config file for non-framework JS libraries.
+          ignoredFiles.add(
+            options.bundler === 'vite'
+              ? '{projectRoot}/vite.config.{js,ts,mjs,mts}'
+              : '{projectRoot}/vitest.config.{js,ts,mjs,mts}'
+          );
         }
 
         if (ignoredFiles.size) {
@@ -944,7 +952,9 @@ function addProjectDependencies(
       {
         '@nx/esbuild': nxVersion,
         '@types/node': typesNodeVersion,
-        esbuild: esbuildVersion,
+        esbuild:
+          getDependencyVersionFromPackageJson(tree, 'esbuild') ??
+          esbuildVersion,
       }
     );
   } else if (options.bundler == 'rollup') {

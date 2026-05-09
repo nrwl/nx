@@ -1,0 +1,13 @@
+{
+  "name": "MsbuildAnalyzer",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "build": {
+      "executor": "nx:noop",
+      "dependsOn": ["build:dotnet"]
+    },
+    "run": {
+      "executor": "nx:noop"
+    }
+  }
+}

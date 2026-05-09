@@ -44,7 +44,6 @@ export interface NormalizedSchema<T extends Schema = Schema> extends T {
   importPath: string;
   parsedTags: string[];
   fileName: string;
-  styledModule: null | SupportedStyles;
   hasStyles: boolean;
   unitTestRunner: 'jest' | 'vitest' | 'none';
   addPlugin?: boolean;

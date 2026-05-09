@@ -43,37 +43,6 @@ describe('next library', () => {
     expect(tsconfigTypes).toContain('@nx/next/typings/image.d.ts');
   });
 
-  it('should add jsxImportSource in tsconfig.json for @emotion/styled', async () => {
-    const baseOptions: Schema = {
-      directory: '',
-      linter: 'eslint',
-      skipFormat: false,
-      skipTsConfig: false,
-      unitTestRunner: 'jest',
-      style: 'css',
-      component: true,
-    };
-
-    const appTree = createTreeWithEmptyWorkspace();
-
-    await libraryGenerator(appTree, {
-      ...baseOptions,
-      directory: 'my-lib',
-    });
-    await libraryGenerator(appTree, {
-      ...baseOptions,
-      directory: 'my-lib2',
-      style: '@emotion/styled',
-    });
-
-    expect(
-      readJson(appTree, 'my-lib/tsconfig.json').compilerOptions.jsxImportSource
-    ).not.toBeDefined();
-    expect(
-      readJson(appTree, 'my-lib2/tsconfig.json').compilerOptions.jsxImportSource
-    ).toEqual('@emotion/react');
-  });
-
   it('should generate a buildable library', async () => {
     const appTree = createTreeWithEmptyWorkspace();
     await libraryGenerator(appTree, {
@@ -142,8 +111,8 @@ describe('next library', () => {
     expect(
       readJson(appTree, 'tsconfig.base.json').compilerOptions.paths
     ).toMatchObject({
-      '@proj/my-lib': ['my-lib/src/index.ts'],
-      '@proj/my-lib/server': ['my-lib/src/server.ts'],
+      '@proj/my-lib': ['./my-lib/src/index.ts'],
+      '@proj/my-lib/server': ['./my-lib/src/server.ts'],
     });
   });
 

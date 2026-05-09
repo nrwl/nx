@@ -1,3 +1,4 @@
+import { resolveImportPath, promptWhenInteractive } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -19,8 +20,6 @@ import {
   workspaceRoot,
   writeJson,
 } from '@nx/devkit';
-import { resolveImportPath } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { normalizeLinterOption } from '@nx/js/src/utils/generator-prompts';
 import {
@@ -29,6 +28,7 @@ import {
 } from '@nx/js/src/utils/package-manager-workspaces';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { warnPlaywrightExecutorGenerating } from '../../utils/deprecation';
 import { execSync } from 'child_process';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
@@ -197,6 +197,7 @@ export async function configurationGeneratorInternal(
   );
 
   if (!hasPlugin) {
+    warnPlaywrightExecutorGenerating();
     addE2eTarget(tree, options);
     setupE2ETargetDefaults(tree);
   }

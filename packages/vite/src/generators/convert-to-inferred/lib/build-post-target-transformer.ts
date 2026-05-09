@@ -1,3 +1,4 @@
+import { processTargetOutputs } from '@nx/devkit/internal';
 import {
   joinPathFragments,
   type TargetConfiguration,
@@ -10,7 +11,6 @@ import {
   getViteConfigPath,
   toProjectRelativePath,
 } from './utils';
-import { processTargetOutputs } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
 
 export function buildPostTargetTransformer(
   target: TargetConfiguration,

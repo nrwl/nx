@@ -110,7 +110,7 @@ export function MultiSelect({
   return (
     <div className={`relative ${className}`} ref={containerRef}>
       <div
-        className="shadow-xs flex min-h-[40px] w-full cursor-pointer items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+        className="flex min-h-[40px] w-full cursor-pointer items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-xs hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="flex min-h-[24px] flex-1 flex-wrap items-center gap-1">
@@ -128,7 +128,7 @@ export function MultiSelect({
               return (
                 <div
                   key={selectedValue}
-                  className="inline-flex items-center gap-1 rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/50 dark:text-blue-200"
+                  className="inline-flex items-center gap-1 rounded-sm bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/50 dark:text-blue-200"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <span>{option?.label || selectedValue}</span>
@@ -163,7 +163,7 @@ export function MultiSelect({
               placeholder="Search targets..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded border border-slate-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300"
+              className="w-full rounded-sm border border-slate-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300"
               onClick={(e) => e.stopPropagation()}
             />
           </div>
@@ -173,7 +173,7 @@ export function MultiSelect({
               className="flex cursor-pointer items-center px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700"
               onClick={handleSelectAll}
             >
-              <div className="mr-3 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border border-slate-300 dark:border-slate-600">
+              <div className="mr-3 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-sm border border-slate-300 dark:border-slate-600">
                 {(() => {
                   const filteredValues = filteredOptions.map(
                     (opt) => opt.value
@@ -191,7 +191,7 @@ export function MultiSelect({
                     );
                   } else if (someFilteredSelected) {
                     return (
-                      <div className="h-2 w-2 rounded-sm bg-blue-500 dark:bg-sky-500" />
+                      <div className="h-2 w-2 rounded-xs bg-blue-500 dark:bg-sky-500" />
                     );
                   }
                   return null;
@@ -229,7 +229,7 @@ export function MultiSelect({
                     className="flex cursor-pointer items-center px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700"
                     onClick={() => handleOptionToggle(option.value)}
                   >
-                    <div className="mr-3 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border border-slate-300 dark:border-slate-600">
+                    <div className="mr-3 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-sm border border-slate-300 dark:border-slate-600">
                       {isSelected && (
                         <CheckIcon className="h-3 w-3 text-blue-500 dark:text-sky-500" />
                       )}

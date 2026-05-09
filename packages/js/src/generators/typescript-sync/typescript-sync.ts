@@ -28,6 +28,7 @@ interface Tsconfig {
   nx?: {
     sync?: {
       ignoredReferences?: string[];
+      ignoredDependencies?: string[];
     };
   };
 }
@@ -392,6 +393,9 @@ function updateTsConfigReferences(
   );
   const tsConfig = parseJson<Tsconfig>(stringifiedJsonContents);
   const ignoredReferences = new Set(tsConfig.nx?.sync?.ignoredReferences ?? []);
+  const ignoredDependencies = new Set(
+    tsConfig.nx?.sync?.ignoredDependencies ?? []
+  );
 
   // We have at least one dependency so we can safely set it to an empty array if not already set
   const references = [];
@@ -448,6 +452,12 @@ function updateTsConfigReferences(
   }
 
   for (const dep of dependencies) {
+    if (ignoredDependencies.has(dep.name)) {
+      // The user has explicitly opted out of this dependency edge, typically
+      // to break a circular project reference graph that the project graph
+      // intentionally allows.
+      continue;
+    }
     // Ensure the project reference for the target is set if we can find the
     // relevant tsconfig file
     let referencePath: string;

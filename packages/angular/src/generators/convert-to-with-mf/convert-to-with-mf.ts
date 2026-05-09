@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   formatFiles,
   joinPathFragments,
   logger,
@@ -7,6 +8,7 @@ import {
 } from '@nx/devkit';
 import type { Schema } from './schema';
 import { getMFProjects } from '../../utils/get-mf-projects';
+import { nxVersion } from '../../utils/versions';
 import {
   checkOutputNameMatchesProjectName,
   checkSharedNpmPackagesMatchExpected,
@@ -58,9 +60,17 @@ export async function convertToWithMF(tree: Tree, schema: Schema) {
     mfConfig
   );
 
+  const installTask = addDependenciesToPackageJson(
+    tree,
+    {},
+    { '@nx/module-federation': nxVersion }
+  );
+
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
+
+  return installTask;
 }
 
 export default convertToWithMF;

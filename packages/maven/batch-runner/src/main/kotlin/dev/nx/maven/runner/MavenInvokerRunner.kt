@@ -75,63 +75,84 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
       // Submit worker tasks that pull from the queue
       repeat(numWorkers) {
         executor.submit {
-          while (true) {
-            val taskId = taskQueue.poll() ?: break
+            while (completionLatch.count > 0L) {
+              // take() blocks until a task is available. If all tasks complete while
+              // a worker is blocked here, shutdownNow() will interrupt it.
+              val taskId = try {
+                taskQueue.take()
+              } catch (_: InterruptedException) { break }
 
-            if (taskStates.containsKey(taskId)) {
-              completionLatch.countDown()
-              continue
-            }
+              if (taskStates.containsKey(taskId)) {
+                completionLatch.countDown()
+                continue
+              }
 
-            val result = executeSingleTask(taskId, results)
+              val result = executeSingleTask(taskId, results)
 
-            // Record build state for all batch projects BEFORE emitting result.
-            // emitResult() triggers Nx to cache task outputs, so nx-build-state.json
-            // must be written first to ensure the cached outputs include fresh build state.
-            recordBuildStatesForBatchProjects(taskId)
+              // Record build state for all batch projects BEFORE emitting result.
+              // emitResult() triggers Nx to cache task outputs, so nx-build-state.json
+              // must be written first to ensure the cached outputs include fresh build state.
+              recordBuildStatesForBatchProjects(taskId)
 
-            // Emit result to stderr for streaming to Nx
-            emitResult(taskId, result)
+              // Emit result to stderr for streaming to Nx
+              emitResult(taskId, result)
 
-            // Record task state
-            val success = results[taskId]?.success == true
-            taskStates[taskId] = if (success) TaskState.SUCCEEDED else TaskState.FAILED
+              // Record task state
+              val success = results[taskId]?.success == true
+              taskStates[taskId] = if (success) TaskState.SUCCEEDED else TaskState.FAILED
 
-            // Update graph and find newly available tasks
-            synchronized(graphRef) {
-              val currentGraph = graphRef.get()
-              val newGraph = removeTasksFromTaskGraph(
-                currentGraph,
-                if (success) listOf(taskId) else emptyList(),
-                if (!success) listOf(taskId) else emptyList()
-              )
-              graphRef.set(newGraph)
+              // Skipped-task results collected under the graph lock, emitted
+              // after the lock is released (see comment at the emit site).
+              val pendingSkipEmits = mutableListOf<TaskResult>()
 
-              // Add newly available root tasks to queue
-              val previousRoots = currentGraph.roots.toSet()
-              val newRoots = newGraph.roots.filter { it !in previousRoots && !taskStates.containsKey(it) }
-              newRoots.forEach { newTaskId ->
-                if (!taskStates.containsKey(newTaskId)) {
-                  taskQueue.offer(newTaskId)
-                  log.debug("Added newly available task to queue: $newTaskId")
+              // Update graph and find newly available tasks
+              synchronized(graphRef) {
+                val currentGraph = graphRef.get()
+                val newGraph = removeTasksFromTaskGraph(
+                  currentGraph,
+                  if (success) listOf(taskId) else emptyList(),
+                  if (!success) listOf(taskId) else emptyList()
+                )
+                graphRef.set(newGraph)
+
+                // Add newly available root tasks to queue
+                val previousRoots = currentGraph.roots.toSet()
+                val newRoots = newGraph.roots.filter { it !in previousRoots && !taskStates.containsKey(it) }
+                newRoots.forEach { newTaskId ->
+                  if (!taskStates.containsKey(newTaskId)) {
+                    taskQueue.offer(newTaskId)
+                    log.debug("Added newly available task to queue: $newTaskId")
+                  }
+                }
+
+                // Mark skipped tasks (those removed due to a failed dependency)
+                // under the graph lock, but defer emit + latch I/O until after
+                // the lock — emitResult does JSON serialization and stderr
+                // writes that don't need the graph monitor and would otherwise
+                // stall every other worker on cascading failures.
+                val oldTasks = currentGraph.tasks.keys
+                val newTasks = newGraph.tasks.keys
+                val skippedTasks = oldTasks - newTasks - taskStates.keys
+                val nowMs = System.currentTimeMillis()
+                skippedTasks.forEach { skippedTaskId ->
+                  log.debug("Task $skippedTaskId was skipped due to a failed dependency")
+                  taskStates[skippedTaskId] = TaskState.SKIPPED
+                  val skippedResult =
+                      TaskResult.skipped(
+                          taskId = skippedTaskId, startTime = nowMs, endTime = nowMs)
+                  results[skippedTaskId] = skippedResult
+                  pendingSkipEmits += skippedResult
                 }
               }
-
-              // Mark skipped tasks (those removed due to failed dependencies)
-              // Skipped tasks are omitted from results, not marked as failed
-              val oldTasks = currentGraph.tasks.keys
-              val newTasks = newGraph.tasks.keys
-              val skippedTasks = oldTasks - newTasks - taskStates.keys
-              skippedTasks.forEach { skippedTaskId ->
-                log.debug("Task $skippedTaskId was skipped due to a failed dependency")
-                taskStates[skippedTaskId] = TaskState.SKIPPED
-                // IMPORTANT: Count down skipped tasks too, or latch will never reach zero
+              pendingSkipEmits.forEach { skipped ->
+                emitResult(skipped.taskId, skipped)
+                // Count down skipped tasks too — otherwise the latch never reaches zero.
                 completionLatch.countDown()
               }
-            }
+              pendingSkipEmits.clear()
 
-            completionLatch.countDown()
-          }
+              completionLatch.countDown()
+            }
         }
       }
 
@@ -189,15 +210,12 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     // If task has no goals, return success immediately
     if (mavenBatchTask.goals.isEmpty()) {
       val endTime = System.currentTimeMillis()
-      return TaskResult(
-        taskId = taskId,
-        success = true,
-        terminalOutput = "",
-        startTime = startTime,
-        endTime = endTime
-      ).also {
-        results[taskId] = it
-      }
+      return TaskResult.success(
+              taskId = taskId,
+              terminalOutput = "",
+              startTime = startTime,
+              endTime = endTime)
+          .also { results[taskId] = it }
     }
     val goals = mavenBatchTask.goals
     val arguments = buildArguments(mavenBatchTask)
@@ -238,13 +256,13 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
         }
       }
 
-      val result = TaskResult(
-        taskId = taskId,
-        success = success,
-        terminalOutput = outputText,
-        startTime = startTime,
-        endTime = endTime
-      )
+      val result =
+          TaskResult.fromBoolean(
+              taskId = taskId,
+              success = success,
+              terminalOutput = outputText,
+              startTime = startTime,
+              endTime = endTime)
       results[taskId] = result
       result
     } catch (e: Exception) {
@@ -257,13 +275,12 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
         log.error("Maven output before exception for task $taskId:\n$outputText")
       }
 
-      val result = TaskResult(
-        taskId = taskId,
-        success = false,
-        terminalOutput = "$outputText\nError: $errorMsg",
-        startTime = startTime,
-        endTime = endTime
-      )
+      val result =
+          TaskResult.failure(
+              taskId = taskId,
+              terminalOutput = "$outputText\nError: $errorMsg",
+              startTime = startTime,
+              endTime = endTime)
       results[taskId] = result
       result
     }
@@ -278,6 +295,7 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
       "task" to taskId,
       "result" to mapOf(
         "success" to result.success,
+        "status" to result.status,
         "terminalOutput" to result.terminalOutput,
         "startTime" to result.startTime,
         "endTime" to result.endTime

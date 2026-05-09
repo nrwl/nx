@@ -1,3 +1,4 @@
+import { getNamedInputs } from '@nx/devkit/internal';
 import {
   createNodesFromFiles,
   detectPackageManager,
@@ -13,7 +14,6 @@ import {
   type ProjectConfiguration,
   type TargetConfiguration,
 } from '@nx/devkit';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import {
   existsSync,
   readdirSync,
@@ -111,7 +111,6 @@ interface ConfigContext {
 }
 
 let ts: typeof import('typescript');
-const pmc = getPackageManagerCommand();
 
 const TSCONFIG_CACHE_VERSION = 2;
 const TS_CONFIG_CACHE_PATH = join(
@@ -269,6 +268,9 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
     initializeTsConfigCache(configFilePaths, context.workspaceRoot, cache);
 
     const normalizedOptions = normalizePluginOptions(options);
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
 
     const {
       configFilePaths: validConfigFilePaths,
@@ -279,7 +281,8 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
       normalizedOptions,
       optionsHash,
       context,
-      cache
+      cache,
+      lockFileName
     );
 
     try {
@@ -301,7 +304,8 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
             options,
             context,
             validConfigFilePaths,
-            cache
+            cache,
+            pmc
           );
 
           const { targets } = targetsCache[targetsCacheKey];
@@ -341,19 +345,15 @@ async function resolveValidConfigFilesAndHashes(
   options: NormalizedPluginOptions,
   optionsHash: string,
   context: CreateNodesContextV2,
-  cache: InvocationCache
+  cache: InvocationCache,
+  lockFileName: string
 ): Promise<{
   configFilePaths: string[];
   hashes: string[];
   projectRoots: string[];
 }> {
   const lockFileHash =
-    hashFile(
-      join(
-        context.workspaceRoot,
-        getLockFileName(detectPackageManager(context.workspaceRoot))
-      )
-    ) ?? '';
+    hashFile(join(context.workspaceRoot, lockFileName)) ?? '';
 
   const validConfigFilePaths: string[] = [];
   const hashes: string[] = [];
@@ -512,7 +512,8 @@ function buildTscTargets(
   options: NormalizedPluginOptions,
   context: CreateNodesContextV2,
   configFiles: readonly string[],
-  cache: InvocationCache
+  cache: InvocationCache,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const targets: Record<string, TargetConfiguration> = {};
   const namedInputs = getNamedInputs(config.project.root, context);
@@ -869,18 +870,19 @@ function getInputs(
     );
   }
 
-  // tsc --build reads .d.ts and .tsbuildinfo files from dependent tasks, not
-  // the source files of dependencies. This correctly tracks build outputs from
-  // both external project references and same-project task dependencies (e.g.
-  // build-native producing .d.ts files that may be excluded from file watching
-  // via .nxignore. "*.d.ts" are also read from the deps projects sources.
+  // tsc --build reads .d.ts/.d.cts/.d.mts and .tsbuildinfo files from dependent
+  // tasks, not the source files of dependencies. This correctly tracks build
+  // outputs from both external project references and same-project task
+  // dependencies (e.g. build-native producing .d.ts files that may be excluded
+  // from file watching via .nxignore). Declaration files are also read from
+  // the deps projects sources.
 
   inputs.push({
-    dependentTasksOutputFiles: '**/*.{d.ts,tsbuildinfo}',
+    dependentTasksOutputFiles: '**/*.{d.ts,d.cts,d.mts,tsbuildinfo}',
     transitive: true,
   });
   inputs.push({
-    fileset: '{projectRoot}/**/*.d.ts',
+    fileset: '{projectRoot}/**/*.{d.ts,d.cts,d.mts}',
     dependencies: true,
   });
 
@@ -957,7 +959,10 @@ function getOutputs(
       if (emitDeclarationOnly) {
         outputs.add(
           pathToInputOrOutput(
-            joinPathFragments(tsConfig.options.outDir, '**/*.d.ts'),
+            joinPathFragments(
+              tsConfig.options.outDir,
+              '**/*.{d.ts,d.cts,d.mts}'
+            ),
             workspaceRoot,
             config.project
           )
@@ -965,7 +970,10 @@ function getOutputs(
         if (tsConfig.options.declarationMap) {
           outputs.add(
             pathToInputOrOutput(
-              joinPathFragments(tsConfig.options.outDir, '**/*.d.ts.map'),
+              joinPathFragments(
+                tsConfig.options.outDir,
+                '**/*.{d.ts,d.cts,d.mts}.map'
+              ),
               workspaceRoot,
               config.project
             )
@@ -1211,9 +1219,9 @@ function resolveShallowExternalProjectReferences(
 
 /**
  * Collects unique tsconfig paths (relative to their project root) from the
- * project reference chain and returns them as `^{projectRoot}/...` input
- * patterns. We only need to discover the full set of distinct relative paths
- * from the reference chain.
+ * project reference chain — including any `extends` chains within those refs —
+ * and returns them as `^{projectRoot}/...` input patterns. We only need to
+ * discover the full set of distinct relative paths.
  */
 function getExternalProjectReferenceTsconfigPatterns(
   tsConfig: ParsedTsconfigData,
@@ -1271,7 +1279,47 @@ function getExternalProjectReferenceTsconfigPatterns(
 
     const wsRelPath = posixRelative(workspaceRoot, configPath);
     const tsConfigData = tsConfigCacheData[wsRelPath]?.data;
-    if (!tsConfigData?.projectReferences?.length) {
+    if (!tsConfigData) {
+      continue;
+    }
+
+    // Walk `extends` chains for the visited tsconfig. tsc reads extended
+    // configs while resolving project references, so the rel paths must be
+    // emitted as inputs. Workspace-root files (no owning project) are skipped
+    // — those are covered by the local project's own extends walk.
+    if (tsConfigData.extendedConfigFiles?.length) {
+      for (const extended of tsConfigData.extendedConfigFiles) {
+        if (!extended.filePath || visited.has(extended.filePath)) {
+          continue;
+        }
+        const extendedWsRelPath = posixRelative(
+          workspaceRoot,
+          extended.filePath
+        );
+        if (!tsConfigCacheData[extendedWsRelPath]) {
+          continue;
+        }
+        const extendedContext = getConfigContext(
+          extended.filePath,
+          workspaceRoot,
+          cache
+        );
+        if (
+          extendedContext.project.root &&
+          extendedContext.project.root !== '.'
+        ) {
+          uniqueRelPaths.add(
+            posixRelative(extendedContext.project.absolute, extended.filePath)
+          );
+          worklist.push({
+            configPath: extended.filePath,
+            ownerProject: extendedContext.project,
+          });
+        }
+      }
+    }
+
+    if (!tsConfigData.projectReferences?.length) {
       continue;
     }
 

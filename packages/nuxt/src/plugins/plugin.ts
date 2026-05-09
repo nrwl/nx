@@ -1,3 +1,9 @@
+import {
+  loadConfigFile,
+  getNamedInputs,
+  calculateHashForCreateNodes,
+  PluginCache,
+} from '@nx/devkit/internal';
 import type { NuxtOptions } from '@nuxt/schema';
 import {
   CreateDependencies,
@@ -6,40 +12,21 @@ import {
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
-  readJsonFile,
+  joinPathFragments,
   TargetConfiguration,
   workspaceRoot,
-  writeJsonFile,
 } from '@nx/devkit';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { dirname, isAbsolute, join, relative } from 'path';
-import { existsSync, readdirSync } from 'fs';
+import { readdirSync } from 'fs';
 import { loadNuxtKitDynamicImport } from '../utils/executor-utils';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
+type NuxtTargets = Record<string, TargetConfiguration>;
+
 const cachePath = join(workspaceDataDirectory, 'nuxt.hash');
-const targetsCache = readTargetsCache();
-
-const pmc = getPackageManagerCommand();
-
-function readTargetsCache(): Record<
-  string,
-  Record<string, TargetConfiguration>
-> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
-
-function writeTargetsToCache() {
-  const oldCache = readTargetsCache();
-  writeJsonFile(cachePath, {
-    ...oldCache,
-    ...targetsCache,
-  });
-}
+const targetsCache = new PluginCache<NuxtTargets>(cachePath);
 
 export interface NuxtPluginOptions {
   buildTargetName?: string;
@@ -54,13 +41,17 @@ export const createNodes: CreateNodesV2<NuxtPluginOptions> = [
   '**/nuxt.config.{js,ts,mjs,mts,cjs,cts}',
   async (files, options, context) => {
     //TODO(@nrwl/nx-vue-reviewers): This should batch hashing like our other plugins.
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
     const result = await createNodesFromFiles(
-      createNodesInternal,
+      (configFile, opts, ctx) =>
+        createNodesInternal(configFile, opts, ctx, pmc, lockFileName),
       files,
       options,
       context
     );
-    writeTargetsToCache();
+    targetsCache.writeToDisk();
     return result;
   },
 ];
@@ -70,7 +61,9 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFilePath: string,
   options: NuxtPluginOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  lockFileName: string
 ) {
   const projectRoot = dirname(configFilePath);
   // Do not create a project if package.json and project.json isn't there.
@@ -88,20 +81,20 @@ async function createNodesInternal(
     projectRoot,
     options,
     context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    [lockFileName]
   );
-  targetsCache[hash] ??= await buildNuxtTargets(
-    configFilePath,
-    projectRoot,
-    options,
-    context
-  );
+  if (!targetsCache.has(hash)) {
+    targetsCache.set(
+      hash,
+      await buildNuxtTargets(configFilePath, projectRoot, options, context, pmc)
+    );
+  }
 
   return {
     projects: {
       [projectRoot]: {
         root: projectRoot,
-        targets: targetsCache[hash],
+        targets: targetsCache.get(hash),
       },
     },
   };
@@ -111,7 +104,8 @@ async function buildNuxtTargets(
   configFilePath: string,
   projectRoot: string,
   options: NuxtPluginOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const nuxtConfig: {
     buildDir: string;
@@ -291,9 +285,9 @@ function normalizeOutputPath(
       return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
     } else {
       if (outputPath.startsWith('..')) {
-        return join('{workspaceRoot}', join(projectRoot, outputPath));
+        return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);
       } else {
-        return join('{projectRoot}', outputPath);
+        return joinPathFragments('{projectRoot}', outputPath);
       }
     }
   }

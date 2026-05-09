@@ -1,9 +1,9 @@
+import { loadConfigFile } from '@nx/devkit/internal';
 import {
   getPackageManagerCommand,
   output,
   type ExecutorContext,
 } from '@nx/devkit';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';

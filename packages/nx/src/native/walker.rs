@@ -86,6 +86,10 @@ where
             return None;
         };
 
+        if !is_hashable_file(&metadata.file_type()) {
+            return None;
+        }
+
         Some(NxFile {
             full_path: String::from(dir_entry.path().to_string_lossy()),
             normalized_path: file_path.to_normalized_string(),
@@ -138,6 +142,11 @@ where
                 return Continue;
             };
 
+            if !is_hashable_file(&metadata.file_type()) {
+                trace!(path = ?dir_entry.path(), "skipping non-regular file");
+                return Continue;
+            }
+
             tx.send(NxFile {
                 full_path: String::from(dir_entry.path().to_string_lossy()),
                 normalized_path: file_path.to_normalized_string(),
@@ -153,6 +162,14 @@ where
     let receiver_thread = thread::spawn(move || receiver.into_iter());
     drop(sender);
     receiver_thread.join().unwrap()
+}
+
+/// Returns true when the entry should be hashed as a workspace file.
+/// Excludes anything that is not a regular file or a symlink (e.g. named
+/// pipes/FIFOs, sockets, block/char devices) because `std::fs::read` can
+/// block indefinitely on such paths (FIFOs wait for a writer).
+fn is_hashable_file(file_type: &std::fs::FileType) -> bool {
+    file_type.is_file() || file_type.is_symlink()
 }
 
 /// Hardcoded ignore patterns used by both the walker and the watcher.
@@ -434,5 +451,55 @@ nested/child-two/
 
         // All files should be ignored by parent .gitignore since no git repo was found
         assert!(files.is_empty());
+    }
+
+    // FIFOs only exist on unix-like systems. This is the primary hazard the
+    // `is_hashable_file` filter has to guard against: opening a FIFO and
+    // calling `std::fs::read` on it blocks the reader indefinitely waiting
+    // for a writer.
+    #[cfg(all(unix, not(target_arch = "wasm32")))]
+    #[test]
+    fn skips_named_pipes() {
+        use nix::sys::stat::Mode;
+        use nix::unistd::mkfifo;
+
+        let temp_dir = setup_fs();
+        let fifo_path = temp_dir.path().join("a-named-pipe");
+        mkfifo(&fifo_path, Mode::S_IRUSR | Mode::S_IWUSR).expect("mkfifo");
+
+        let mut files: Vec<_> = nx_walker(temp_dir.path(), true)
+            .map(|f| f.normalized_path)
+            .collect();
+        files.sort();
+
+        assert!(
+            !files.iter().any(|f| f == "a-named-pipe"),
+            "FIFO should be skipped, got: {:?}",
+            files
+        );
+    }
+
+    // Unix sockets are another non-regular file type the walker should
+    // skip. Reading from one wouldn't block the way a FIFO does, but the
+    // contents aren't meaningful for hashing either.
+    #[cfg(all(unix, not(target_arch = "wasm32")))]
+    #[test]
+    fn skips_unix_sockets() {
+        use std::os::unix::net::UnixListener;
+
+        let temp_dir = setup_fs();
+        let socket_path = temp_dir.path().join("a-unix-socket");
+        let _listener = UnixListener::bind(&socket_path).expect("bind unix socket");
+
+        let mut files: Vec<_> = nx_walker(temp_dir.path(), true)
+            .map(|f| f.normalized_path)
+            .collect();
+        files.sort();
+
+        assert!(
+            !files.iter().any(|f| f == "a-unix-socket"),
+            "unix socket should be skipped, got: {:?}",
+            files
+        );
     }
 }

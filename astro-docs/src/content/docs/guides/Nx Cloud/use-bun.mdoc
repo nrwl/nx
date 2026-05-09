@@ -128,10 +128,10 @@ Add `.nx/workflows/agents.yaml` to your workspace:
 // .nx/workflows/agents.yaml
 common-init-steps: &common-init-steps
   - name: Checkout
-    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml'
 
   - name: Setup toolchains
-    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-mise/main.yaml'
+    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-mise/main.yaml'
 
   - name: Install dependencies
     script: |
@@ -140,7 +140,7 @@ common-init-steps: &common-init-steps
 launch-templates:
   linux-large:
     resource-class: 'docker_linux_amd64/large'
-    image: 'ubuntu22.04-node20.19-v2'
+    image: 'ubuntu22.04-node24.14-v1'
     init-steps: *common-init-steps
 ```
 

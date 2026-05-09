@@ -1,5 +1,5 @@
 import { names } from '@nx/devkit';
-import type { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
+import type { AggregatedLog } from '@nx/devkit/internal';
 
 /**
  * Logic copied from `packages/react-native/src/utils/get-cli-options.ts`,

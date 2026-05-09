@@ -1,9 +1,9 @@
-import { Task } from '../config/task-graph';
 import { config as loadDotEnvFile } from 'dotenv';
 import { expand } from 'dotenv-expand';
-import { workspaceRoot } from '../utils/workspace-root';
 import { join } from 'node:path';
 import { ProjectGraph } from '../config/project-graph';
+import { Task } from '../config/task-graph';
+import { workspaceRoot } from '../utils/workspace-root';
 import { getEnvPathsForTask } from './task-env-paths';
 
 export function getEnvVariablesForBatchProcess(
@@ -22,13 +22,31 @@ export function getEnvVariablesForBatchProcess(
   };
 }
 
+// The orchestrator now calls this eagerly during the coordinator pre-hash
+// in addition to processTask (and again in hashBatchTasks), so the same
+// task hits this function multiple times per run. Each call reads 3+ .env
+// files from disk — memoize by task.id to skip the repeat work.
+//
+// Cache lifetime is the current Nx invocation: the function is only called
+// from CLI/orchestrator code (not the long-lived daemon), so the map is
+// scoped to a single run. Callers must not mutate the returned env — they
+// already spread it into new objects before adding task-specific overrides
+// (see getEnvVariablesForTask).
+const taskSpecificEnvCache = new Map<string, NodeJS.ProcessEnv>();
+
 export function getTaskSpecificEnv(task: Task, graph: ProjectGraph) {
+  const cached = taskSpecificEnvCache.get(task.id);
+  if (cached) return cached;
+
   // Unload any dot env files at the root of the workspace that were loaded on init of Nx.
   const taskEnv = unloadDotEnvFiles({ ...process.env });
-  return process.env.NX_LOAD_DOT_ENV_FILES === 'true'
-    ? loadDotEnvFilesForTask(task, graph, taskEnv)
-    : // If not loading dot env files, ensure env vars created by system are still loaded
-      taskEnv;
+  const env =
+    process.env.NX_LOAD_DOT_ENV_FILES === 'true'
+      ? loadDotEnvFilesForTask(task, graph, taskEnv)
+      : // If not loading dot env files, ensure env vars created by system are still loaded
+        taskEnv;
+  taskSpecificEnvCache.set(task.id, env);
+  return env;
 }
 
 export function getEnvVariablesForTask(
@@ -112,6 +130,10 @@ function getNxEnvVariablesForTask(
     env.NX_TERMINAL_CAPTURE_STDERR = 'true';
   }
 
+  // Pass the root Nx process PID to nested processes for DB-based loop detection.
+  // The root PID is used as a key in the task_invocations table to track which tasks
+  // have been invoked across nested Nx processes.
+
   return {
     ...getNxEnvVariablesForForkedProcess(
       forceColor,
@@ -123,17 +145,23 @@ function getNxEnvVariablesForTask(
     ...env,
     // Ensure the TUI does not get spawned within the TUI if ever tasks invoke Nx again
     NX_TUI: 'false',
+    // tracks the root PID for child nx tasks, used to verify nx is infinitely recursing through the same tasks
+    NX_INVOCATION_ROOT_PID:
+      process.env.NX_INVOCATION_ROOT_PID ?? String(process.pid),
   };
 }
 
 /**
- * This function loads a .env file and expands the variables in it.
- * @param filename the .env file to load
+ * This function loads one or more .env files and expands the variables in them.
+ * When multiple files are provided, all files are loaded first, then variable
+ * expansion happens once with the complete set of variables. This ensures
+ * cross-file variable references resolve correctly.
+ * @param filename the .env file(s) to load
  * @param environmentVariables the object to load environment variables into
  * @param override whether to override existing environment variables
  */
 export function loadAndExpandDotEnvFile(
-  filename: string,
+  filename: string | string[],
   environmentVariables: NodeJS.ProcessEnv,
   override = false
 ) {
@@ -206,9 +234,10 @@ function loadDotEnvFilesForTask(
   environmentVariables: NodeJS.ProcessEnv
 ) {
   const dotEnvFiles = getEnvFilesForTask(task, graph);
-  for (const file of dotEnvFiles) {
-    loadAndExpandDotEnvFile(join(workspaceRoot, file), environmentVariables);
-  }
+  loadAndExpandDotEnvFile(
+    dotEnvFiles.map((file) => join(workspaceRoot, file)),
+    environmentVariables
+  );
   return environmentVariables;
 }
 

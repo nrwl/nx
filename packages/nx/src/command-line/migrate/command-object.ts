@@ -10,10 +10,10 @@ export const yargsMigrateCommand: CommandModule = {
   - Run migrations (e.g., nx migrate --run-migrations=migrations.json). Use flag --if-exists to run migrations only if the migrations file exists.`,
   builder: (yargs) =>
     linkToNxDevAndExamples(withMigrationOptions(yargs), 'migrate'),
-  handler: async () => {
-    await (await handleImport('./migrate.js', __dirname)).runMigration();
-    process.exit(0);
-  },
+  handler: async () =>
+    process.exit(
+      await (await handleImport('./migrate.js', __dirname)).runMigration()
+    ),
 };
 
 export const yargsInternalMigrateCommand: CommandModule = {
@@ -75,6 +75,12 @@ function withMigrationOptions(yargs: Argv) {
     .option('excludeAppliedMigrations', {
       describe:
         'Exclude migrations that should have been applied on previous updates. To be used with --from.',
+      type: 'boolean',
+      default: false,
+    })
+    .option('skipInstall', {
+      describe:
+        'Skip installing packages before running migrations. Useful when the installation needs to be performed manually (e.g., to resolve peer dependency conflicts).',
       type: 'boolean',
       default: false,
     })
