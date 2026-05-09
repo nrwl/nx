@@ -116,13 +116,20 @@ export function getLockFileNodesForName(
   lockFile: string,
   contents: string,
   lockFileHash: string,
-  packageJson: PackageJson = {} as PackageJson
+  packageJson?: PackageJson
 ): {
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, any>;
 } {
   if (lockFile === YARN_LOCK_FILE || lockFile === BUN_LOCK_FILE) {
-    return getYarnLockfileNodes(contents, lockFileHash, packageJson);
+    // yarn-parser only reads optional fields plus an unused `name` for the
+    // synthetic root workspace node, which is identical across base/head and
+    // therefore irrelevant for affected diffing.
+    return getYarnLockfileNodes(
+      contents,
+      lockFileHash,
+      packageJson ?? ({} as PackageJson)
+    );
   }
   if (lockFile === PNPM_LOCK_FILE || lockFile === PNPM_LOCK_FILE_LEGACY) {
     return getPnpmLockfileNodes(contents, lockFileHash);

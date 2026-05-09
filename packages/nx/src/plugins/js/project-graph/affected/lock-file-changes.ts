@@ -14,6 +14,7 @@ import {
 } from '../../../../config/project-graph';
 import { hashArray } from '../../../../hasher/file-hasher';
 import { output } from '../../../../utils/output';
+import { PackageJson } from '../../../../utils/package-json';
 import {
   AUTO_AFFECTED_LOCK_FILES,
   getLockFileNodesForName,
@@ -68,7 +69,7 @@ function getAutoAffected(
   changedLockFile: FileChange<WholeFileChange | LockFileChange> | undefined,
   projectGraphNodes: Record<string, ProjectGraphProjectNode>,
   projectGraph: ProjectGraph,
-  packageJson: any
+  packageJson: PackageJson | undefined
 ): string[] {
   const allProjectNames = Object.values(projectGraphNodes).map((p) => p.name);
 
@@ -102,9 +103,11 @@ function getAutoAffected(
   // Look up the changed packages in the project graph's external nodes
   // and return the external node names. The graph reversal in
   // filterAffected walks from these nodes to workspace projects.
-  const externalNodes = projectGraph?.externalNodes ?? {};
   const { touchedNodeNames, missingPackageNames } =
-    findExternalNodesByPackageName(changedPackageNames, externalNodes);
+    findExternalNodesByPackageName(
+      changedPackageNames,
+      projectGraph.externalNodes ?? {}
+    );
 
   if (missingPackageNames.size > 0) {
     return allProjectNames;
@@ -123,10 +126,13 @@ function getAutoAffected(
 function getChangedPackageNames(
   file: string,
   changes: LockFileChange[],
-  packageJson: any
+  packageJson: PackageJson | undefined
 ): Set<string> | null {
   try {
     const changed = new Set<string>();
+    // calculateFileChanges emits a single LockFileChange per lock file, but
+    // the iteration keeps the contract open in case multiple ranges are ever
+    // emitted for the same file.
     for (const change of changes) {
       const baseFingerprints = collectPackageFingerprints(
         getLockFileNodesForName(
