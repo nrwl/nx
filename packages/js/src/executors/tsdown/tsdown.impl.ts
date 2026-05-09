@@ -18,8 +18,8 @@ function getTsdownCmd(
     const entries = Array.isArray(options.entry)
       ? options.entry
       : options.entry
-      ? [options.entry]
-      : ['src/index.ts'];
+        ? [options.entry]
+        : ['src/index.ts'];
     args.push(...entries);
 
     if (options.outDir) {

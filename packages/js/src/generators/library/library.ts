@@ -756,8 +756,8 @@ async function addJest(
     compiler: options.shouldUseSwcJest
       ? 'swc'
       : options.bundler === 'tsc'
-      ? 'tsc'
-      : undefined,
+        ? 'tsc'
+        : undefined,
     runtimeTsconfigFileName: 'tsconfig.lib.json',
   });
 }
