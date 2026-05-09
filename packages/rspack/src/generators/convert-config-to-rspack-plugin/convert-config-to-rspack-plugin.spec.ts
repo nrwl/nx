@@ -77,11 +77,7 @@ describe('convertConfigToRspackPluginGenerator', () => {
       // Nx plugins for rspack.
       module.exports = composePlugins(
         withNx(),
-        withReact({
-          // Uncomment this line if you don't want to use SVGR
-          // See: https://react-svgr.com/
-          // svgr: false
-        }),
+        withReact(),
         (config) => {
           return config;
         }
@@ -98,11 +94,7 @@ describe('convertConfigToRspackPluginGenerator', () => {
       // Nx plugins for rspack.
       module.exports = composePlugins(
         withNx(),
-        withReact({
-          // Uncomment this line if you don't want to use SVGR
-          // See: https://react-svgr.com/
-          // svgr: false
-        }),
+        withReact(),
         (config) => {
           return config;
         }
@@ -129,11 +121,7 @@ describe('convertConfigToRspackPluginGenerator', () => {
       module.exports = async () => ({
         plugins: [
           new NxAppRspackPlugin(),
-          new NxReactRspackPlugin({
-            // Uncomment this line if you don't want to use SVGR
-            // See: https://react-svgr.com/
-            // svgr: false
-          }),
+          new NxReactRspackPlugin(),
           // NOTE: useLegacyNxPlugin ensures that the non-standard Rspack configuration file previously used still works.
           // To remove its usage, move options such as "plugins" into this file as standard Rspack configuration options.
           // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \\\`apply\\\` method.
@@ -161,17 +149,9 @@ describe('convertConfigToRspackPluginGenerator', () => {
       const { withReact } = require('@nx/rspack');
 
       // Nx plugins for rspack.
-      module.exports = composePlugins(
-        withNx(),
-        withReact({
-          // Uncomment this line if you don't want to use SVGR
-          // See: https://react-svgr.com/
-          // svgr: false
-        }),
-        (config) => {
-          return config;
-        },
-      );
+      module.exports = composePlugins(withNx(), withReact(), (config) => {
+        return config;
+      });
       "
     `);
 
@@ -194,11 +174,7 @@ describe('convertConfigToRspackPluginGenerator', () => {
       // Nx plugins for rspack.
       module.exports = composePlugins(
         withNx(),
-        withReact({
-          // Uncomment this line if you don't want to use SVGR
-          // See: https://react-svgr.com/
-          // svgr: false
-        }),
+        withReact(),
         (config) => {
           return config;
         }
@@ -371,11 +347,7 @@ describe('convertConfigToRspackPluginGenerator', () => {
             }
           ]
         }),
-        withReact({
-          // Uncomment this line if you don't want to use SVGR
-          // See: https://react-svgr.com/
-          // svgr: false
-        }),
+        withReact(),
         (config) => {
           return config;
         }
@@ -418,11 +390,7 @@ describe('convertConfigToRspackPluginGenerator', () => {
       module.exports = async () => ({
         plugins: [
           new NxAppRspackPlugin(options),
-          new NxReactRspackPlugin({
-            // Uncomment this line if you don't want to use SVGR
-            // See: https://react-svgr.com/
-            // svgr: false
-          }),
+          new NxReactRspackPlugin(),
           // NOTE: useLegacyNxPlugin ensures that the non-standard Rspack configuration file previously used still works.
           // To remove its usage, move options such as "plugins" into this file as standard Rspack configuration options.
           // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \\\`apply\\\` method.

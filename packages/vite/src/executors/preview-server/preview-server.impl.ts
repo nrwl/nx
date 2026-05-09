@@ -15,11 +15,14 @@ import { VitePreviewServerExecutorOptions } from './schema';
 import { relative } from 'path';
 import { getBuildExtraArgs } from '../build/build.impl';
 import { loadViteDynamicImport } from '../../utils/executor-utils';
+import { warnVitePreviewServerExecutorDeprecation } from '../../utils/deprecation';
 
 export async function* vitePreviewServerExecutor(
   options: VitePreviewServerExecutorOptions,
   context: ExecutorContext
 ) {
+  warnVitePreviewServerExecutorDeprecation();
+
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
   const { mergeConfig, preview, resolveConfig } = await loadViteDynamicImport();

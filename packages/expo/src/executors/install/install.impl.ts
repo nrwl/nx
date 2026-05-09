@@ -8,6 +8,7 @@ import {
   displayNewlyAddedDepsMessage,
   syncDeps,
 } from '../sync-deps/sync-deps.impl';
+import { warnExpoExecutorDeprecation } from '../../utils/deprecation';
 
 export interface ExpoInstallOutput {
   success: boolean;
@@ -19,6 +20,8 @@ export default async function* installExecutor(
   options: ExpoInstallOptions,
   context: ExecutorContext
 ): AsyncGenerator<ExpoInstallOutput> {
+  warnExpoExecutorDeprecation('install');
+
   try {
     await installAndUpdatePackageJson(context, options);
     yield {

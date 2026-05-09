@@ -6,6 +6,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { execSync, fork } from 'child_process';
+import { warnPlaywrightExecutorDeprecation } from '../../utils/deprecation';
 
 export interface PlaywrightExecutorSchema {
   /*
@@ -64,6 +65,8 @@ export async function playwrightExecutor(
   options: PlaywrightExecutorSchema,
   context: ExecutorContext
 ) {
+  warnPlaywrightExecutorDeprecation();
+
   const projectRoot =
     context.projectGraph?.nodes?.[context?.projectName]?.data?.root;
 

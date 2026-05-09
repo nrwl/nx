@@ -75,28 +75,28 @@ describe('Convert webpack', () => {
       expect(tree.exists('demo/rspack.config.js')).toBeTruthy();
       expect(tree.read('demo/rspack.config.js', 'utf-8'))
         .toMatchInlineSnapshot(`
-              "const { withReact } = require('@nx/rspack');
-              const { withNx } = require('@nx/rspack');
-              const { composePlugins } = require('@nx/rspack');
+        "const { withReact } = require('@nx/rspack');
+        const { withNx } = require('@nx/rspack');
+        const { composePlugins } = require('@nx/rspack');
 
-              // Nx plugins for webpack.
-              module.exports = composePlugins(
-                withNx(),
-                withReact({
-                  useLegacyHtmlPlugin: true,
-                  // Uncomment this line if you don't want to use SVGR
-                  // See: https://react-svgr.com/
-                  // svgr: false
-                }),
-                (config) => {
-                  // Update the webpack config as needed here.
-                  // e.g. \`config.plugins.push(new MyPlugin())\`
-                  config.output.clean = true;
-                  return config;
-                },
-              );
-              "
-          `);
+        // Nx plugins for webpack.
+        module.exports = composePlugins(
+          withNx(),
+          withReact({
+            useLegacyHtmlPlugin: true,
+            // Uncomment this line if you don't want to use SVGR
+            // See: https://react-svgr.com/
+            // svgr: false
+          }),
+          (config) => {
+            // Update the webpack config as needed here.
+            // e.g. \`config.plugins.push(new MyPlugin())\`
+            config.output.clean = true;
+            return config;
+          },
+        );
+        "
+      `);
       expect(project.targets.build).toMatchInlineSnapshot(`
               {
                 "configurations": {

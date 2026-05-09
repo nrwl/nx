@@ -10,6 +10,7 @@ import {
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { nextVersion } from '../../../utils/versions';
+import { warnNextExecutorGenerating } from '../../../utils/deprecation';
 import { reactDomVersion, reactVersion } from '@nx/react';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
@@ -27,6 +28,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
   );
 
   if (!hasPlugin) {
+    warnNextExecutorGenerating();
     addBuildTargetDefaults(host, '@nx/next:build');
 
     targets.build = {

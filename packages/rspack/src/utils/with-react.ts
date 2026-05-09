@@ -2,15 +2,8 @@ import { Configuration } from '@rspack/core';
 import { NxRspackExecutionContext } from './config';
 import { withWeb, WithWebOptions } from './with-web';
 import { applyReactConfig } from '../plugins/utils/apply-react-config';
-import { SvgrOptions } from '../plugins/utils/models';
 
-export interface WithReactOptions extends WithWebOptions {
-  /**
-   * @deprecated SVGR support is deprecated and will be removed in Nx 23.
-   * TODO(v23): Remove SVGR support
-   */
-  svgr?: boolean | SvgrOptions;
-}
+export interface WithReactOptions extends WithWebOptions {}
 
 export function withReact(opts: WithReactOptions = {}) {
   return function makeConfig(
@@ -22,7 +15,7 @@ export function withReact(opts: WithReactOptions = {}) {
       context,
     });
 
-    applyReactConfig(opts, config);
+    applyReactConfig({}, config);
     return config;
   };
 }

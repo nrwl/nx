@@ -17,6 +17,12 @@
       "version": "22.0.0-beta.1",
       "description": "Remove deprecated deleteOutputPath and sassImplementation options from rspack configurations.",
       "factory": "./src/migrations/update-22-0-0/remove-deprecated-options"
+    },
+    "update-23-0-0-add-svgr-to-rspack-config": {
+      "cli": "nx",
+      "version": "23.0.0-beta.9",
+      "description": "Updates rspack configs using React to use the new withSvgr composable function instead of the svgr option in withReact or NxReactRspackPlugin.",
+      "factory": "./src/migrations/update-23-0-0/add-svgr-to-rspack-config"
     }
   },
   "packageJsonUpdates": {

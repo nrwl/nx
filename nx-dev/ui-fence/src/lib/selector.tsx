@@ -27,7 +27,7 @@ export function Selector<T = {}>(props: SelectorProps<T>): JSX.Element {
           <div className="relative">
             <ListboxButton
               className={
-                'relative w-full cursor-pointer border border-zinc-200 py-2 pl-3 pr-10 text-left font-medium focus:outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-300 sm:text-sm dark:border-zinc-700' +
+                'focus-visible:ring-opacity-75 relative w-full cursor-pointer border border-zinc-200 py-2 pr-10 pl-3 text-left font-medium focus:outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-blue-300 sm:text-sm dark:border-zinc-700' +
                 (props.className ? ` ${props.className}` : '')
               }
             >
@@ -56,13 +56,13 @@ export function Selector<T = {}>(props: SelectorProps<T>): JSX.Element {
             >
               <ListboxOptions
                 static
-                className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-sm bg-white py-1 pl-0 text-base shadow-md focus:outline-none sm:text-sm dark:bg-zinc-800/60 dark:focus-within:ring-blue-500"
+                className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-xs bg-white py-1 pl-0 text-base shadow-md focus:outline-none sm:text-sm dark:bg-zinc-800/60 dark:focus-within:ring-blue-500"
               >
                 {props.items.map((item, personIdx) => (
                   <ListboxOption
                     key={personIdx}
                     className={() =>
-                      `relative cursor-pointer select-none list-none px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800`
+                      `relative cursor-pointer list-none px-3 py-2 select-none hover:bg-zinc-50 dark:hover:bg-zinc-800`
                     }
                     value={item}
                   >

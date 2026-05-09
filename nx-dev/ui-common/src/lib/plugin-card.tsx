@@ -28,9 +28,9 @@ export function PluginCard({
   nxVersion,
 }: PluginCardProps): JSX.Element {
   return (
-    <div className="focus-within:ring-focus-within:ring-blue-500 relative flex w-full rounded-lg border border-zinc-200 bg-white shadow-sm transition hover:bg-zinc-50 dark:border-zinc-900 dark:bg-zinc-800/60 dark:focus-within:ring-blue-500 dark:hover:bg-zinc-800">
+    <div className="focus-within:ring-focus-within:ring-blue-500 relative flex w-full rounded-lg border border-zinc-200 bg-white shadow-xs transition hover:bg-zinc-50 dark:border-zinc-900 dark:bg-zinc-800/60 dark:focus-within:ring-blue-500 dark:hover:bg-zinc-800">
       <div className="flex w-full flex-col px-4 py-3">
-        <h3 className="mb-4 flex items-center font-semibold leading-tight">
+        <h3 className="mb-4 flex items-center leading-tight font-semibold">
           <svg
             className="mr-3 h-5 w-5"
             role="img"
@@ -76,7 +76,7 @@ export function PluginCard({
                 <div
                   data-tooltip="Maintained by the Nx Team"
                   data-tooltip-align-right
-                  className="my-1 ml-1 inline-block rounded-full border border-green-300 bg-green-50 px-3 py-0.5 text-xs font-medium capitalize text-green-600 dark:border-green-900 dark:bg-green-900/30 dark:text-green-400"
+                  className="my-1 ml-1 inline-block rounded-full border border-green-300 bg-green-50 px-3 py-0.5 text-xs font-medium text-green-600 capitalize dark:border-green-900 dark:bg-green-900/30 dark:text-green-400"
                 >
                   Nx Open Source
                 </div>
@@ -84,7 +84,7 @@ export function PluginCard({
                 <div
                   data-tooltip="Maintained by the Nx Team"
                   data-tooltip-align-right
-                  className="my-1 ml-1 inline-block rounded-full border border-green-300 bg-green-50 px-3 py-0.5 text-xs font-medium capitalize text-green-600 dark:border-green-900 dark:bg-green-900/30 dark:text-green-400"
+                  className="my-1 ml-1 inline-block rounded-full border border-green-300 bg-green-50 px-3 py-0.5 text-xs font-medium text-green-600 capitalize dark:border-green-900 dark:bg-green-900/30 dark:text-green-400"
                 >
                   Nx Powerpack
                 </div>

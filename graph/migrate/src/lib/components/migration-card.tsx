@@ -245,7 +245,7 @@ export const MigrationCard = forwardRef<
           )}
           {onRunMigration && !isStopped && (
             <span
-              className={`rounded-md p-1 text-sm ring-1 ring-inset transition-colors ${
+              className={`rounded-md p-1 text-sm ring-1 transition-colors ring-inset ${
                 isSucceeded
                   ? 'bg-green-50 text-green-700 ring-green-200 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-500 dark:ring-green-900/30 dark:hover:bg-green-900/30'
                   : isFailed
@@ -295,14 +295,14 @@ export const MigrationCard = forwardRef<
       <div className="mt-4 flex justify-end gap-2">
         <button
           onClick={() => onViewImplementation()}
-          className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+          className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-xs transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
         >
           <CodeBracketIcon className="h-4 w-4" />
           View Source
         </button>
         {isFailed && (
           <button
-            className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+            className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-xs transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
             onClick={() => {
               setIsExpanded(!isExpanded);
             }}
@@ -313,7 +313,7 @@ export const MigrationCard = forwardRef<
         )}
         {isSucceeded && hasChanges && (
           <button
-            className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+            className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-xs transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
             onClick={() => {
               setIsExpanded(!isExpanded);
             }}
