@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { joinPathFragments, names, readJson } from '@nx/devkit';
-import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
+import { checkAndCleanWithSemver } from '@nx/devkit/internal';
 import { dirname } from 'path';
 import { major } from 'semver';
 import { rxjsVersion as defaultRxjsVersion } from '../../../utils/versions';

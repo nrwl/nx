@@ -13,11 +13,6 @@ import {
 
 import { builtinModules } from 'node:module';
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  workspaceRoot: '/root',
-}));
-
 jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));

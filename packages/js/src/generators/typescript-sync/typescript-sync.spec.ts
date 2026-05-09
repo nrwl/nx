@@ -482,6 +482,40 @@ describe('syncGenerator()', () => {
       `);
     });
 
+    it('should skip dependencies listed in `nx.sync.ignoredDependencies` and prune existing references for them', async () => {
+      // b depends on both a and c, but its tsconfig opts out of c via
+      // ignoredDependencies. The reference to c should not be added (and an
+      // existing stale one should be pruned).
+      addProject('c');
+      projectGraph.dependencies['b'].push({
+        type: 'static',
+        source: 'b',
+        target: 'c',
+      });
+      writeJson(tree, 'packages/b/tsconfig.json', {
+        compilerOptions: {
+          composite: true,
+        },
+        references: [{ path: '../c' }],
+        nx: {
+          sync: {
+            ignoredDependencies: ['c'],
+          },
+        },
+      });
+
+      await syncGenerator(tree);
+
+      expect(readJson(tree, 'packages/b/tsconfig.json').references)
+        .toMatchInlineSnapshot(`
+        [
+          {
+            "path": "../a",
+          },
+        ]
+      `);
+    });
+
     it('should not prune stale project references from projects included in `nx.sync.ignoredReferences`', async () => {
       writeJson(tree, 'packages/b/tsconfig.json', {
         compilerOptions: {

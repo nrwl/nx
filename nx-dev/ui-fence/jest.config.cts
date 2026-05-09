@@ -1,4 +1,3 @@
-/* eslint-disable */
 module.exports = {
   displayName: 'nx-dev-ui-fence',
   preset: '../../jest.preset.js',

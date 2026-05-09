@@ -6,12 +6,12 @@ export interface Schema {
   directory: string;
   name?: string;
   bundler?: 'webpack' | 'rspack';
+  port?: number;
   remotes?: string[];
   dynamic?: boolean;
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
   skipPostInstall?: boolean;
-  addTailwind?: boolean;
   prefix?: string;
   style?: Styles;
   skipTests?: boolean;

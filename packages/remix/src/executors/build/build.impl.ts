@@ -12,6 +12,7 @@ import { copySync, mkdir, writeFileSync } from 'fs-extra';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { type RemixBuildSchema } from './schema';
+import { warnRemixBuildExecutorDeprecation } from '../../utils/deprecation';
 
 function buildRemixBuildArgs(options: RemixBuildSchema) {
   const args = ['build'];
@@ -46,6 +47,8 @@ export default async function buildExecutor(
   options: RemixBuildSchema,
   context: ExecutorContext
 ) {
+  warnRemixBuildExecutorDeprecation();
+
   const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
 
   try {

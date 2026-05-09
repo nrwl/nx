@@ -78,6 +78,12 @@ function withMigrationOptions(yargs: Argv) {
       type: 'boolean',
       default: false,
     })
+    .option('skipInstall', {
+      describe:
+        'Skip installing packages before running migrations. Useful when the installation needs to be performed manually (e.g., to resolve peer dependency conflicts).',
+      type: 'boolean',
+      default: false,
+    })
     .check(
       ({ createCommits, commitPrefix, from, excludeAppliedMigrations }) => {
         if (!createCommits && commitPrefix !== defaultCommitPrefix) {

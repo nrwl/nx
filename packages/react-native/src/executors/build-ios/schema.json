@@ -5,6 +5,7 @@
   "title": "React Native Build iOS executor",
   "description": "Build iOS app.",
   "type": "object",
+  "x-deprecated": "The `@nx/react-native:build-ios` executor is deprecated and will be removed in Nx v24. Run `nx g @nx/react-native:convert-to-inferred` to migrate to the `@nx/react-native/plugin` inferred plugin. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.",
   "presets": [
     {
       "name": "Build iOS for a simulator",

@@ -214,6 +214,72 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
       `);
     });
 
+    it('should not print headers or mark the run as cancelled for skipped batch peers', async () => {
+      const target = {
+        id: 'test:test',
+      } as Partial<Task> as Task;
+      const dep = {
+        id: 'test:pre-test',
+      } as Partial<Task> as Task;
+
+      const { lifeCycle, printSummary } = getTuiTerminalSummaryLifeCycle({
+        args: {
+          targets: ['test'],
+        },
+        taskGraph: {
+          tasks: { dep, target },
+          dependencies: {},
+          continuousDependencies: {},
+          roots: [],
+        },
+        initiatingProject: 'test',
+        initiatingTasks: [],
+        overrides: {},
+        projectNames: ['test'],
+        tasks: [target, dep],
+        resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
+      });
+
+      lifeCycle.startTasks?.([dep, target], null as unknown as TaskMetadata);
+      // The dep ran and failed.
+      lifeCycle.appendTaskOutput?.(dep.id, 'boom', true);
+      lifeCycle.endTasks?.(
+        [
+          {
+            code: 1,
+            status: 'failure',
+            task: dep,
+            terminalOutput: 'boom',
+          },
+        ],
+        null as unknown as TaskMetadata
+      );
+      lifeCycle.printTaskTerminalOutput?.(dep, 'failure', 'boom');
+      // Target was skipped because dep failed in the same batch.
+      lifeCycle.setTaskStatus?.(target.id, NativeTaskStatus.Skipped);
+      lifeCycle.printTaskTerminalOutput?.(target, 'skipped', '');
+      lifeCycle.endCommand?.();
+
+      const lines = getOutputLines(printSummary);
+
+      // The skipped target should not get a `> nx run test:test` header, and
+      // the run summary should report a real failure (not Cancelled), since
+      // the skipped task is no longer treated as still-in-progress.
+      expect(lines.join('\n')).toMatchInlineSnapshot(`
+        "
+        > nx run test:pre-test
+
+        boom
+        ———————————————————————————————————————————————————————————————————————————————
+
+         NX   Ran target test for project test and 1 task(s) they depend on (37w)
+
+           ✖  1/1 failed
+           ✔  0/1 succeeded [0 read from cache]
+        "
+      `);
+    });
+
     it('should display cancelled for single continuous task', async () => {
       const target = {
         id: 'test:dev',

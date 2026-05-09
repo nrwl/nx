@@ -1,3 +1,4 @@
+import { addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -6,7 +7,6 @@ import {
   readNxJson,
   Tree,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { createNodesV2 } from '../../plugins/plugin';
 import { nxVersion, webpackCliVersion } from '../../utils/versions';
 import { Schema } from './schema';

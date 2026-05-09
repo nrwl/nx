@@ -1,3 +1,4 @@
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import {
   formatFiles,
   getProjects,
@@ -7,7 +8,6 @@ import {
   updateProjectConfiguration,
   ProjectConfiguration,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { RspackExecutorSchema } from '../../executors/rspack/schema';
 import { extractRspackOptions } from './lib/extract-rspack-options';
 import { normalizePathOptions } from './lib/normalize-path-options';
@@ -105,11 +105,7 @@ export async function convertConfigToRspackPluginGenerator(
                 ${
                   withReactConfig
                     ? `new NxReactRspackPlugin(${withReactConfig.getText()})`
-                    : `new NxReactRspackPlugin({
-                  // Uncomment this line if you don't want to use SVGR
-                  // See: https://react-svgr.com/
-                  // svgr: false
-                  })`
+                    : `new NxReactRspackPlugin()`
                 },
                 // NOTE: useLegacyNxPlugin ensures that the non-standard Rspack configuration file previously used still works.
                 // To remove its usage, move options such as "plugins" into this file as standard Rspack configuration options.

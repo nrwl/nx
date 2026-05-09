@@ -14,9 +14,9 @@
     "dist/plugins",
     "dist/presets",
     "dist/release",
-    "dist/schemas",
     "dist/src",
     "dist/tasks-runners",
+    "schemas",
     "migrations.json",
     "executors.json",
     "generators.json"
@@ -54,7 +54,7 @@
     "@napi-rs/wasm-runtime": "0.2.4",
     "@yarnpkg/lockfile": "^1.1.0",
     "@zkochan/js-yaml": "catalog:",
-    "axios": "1.15.0",
+    "axios": "1.16.0",
     "picocolors": "catalog:",
     "cli-cursor": "3.1.0",
     "cli-spinners": "2.6.1",
@@ -170,6 +170,7 @@
   "napi": {
     "binaryName": "nx",
     "packageName": "@nx/nx",
+    "dtsHeaderFile": "packages/nx/src/native/dts-header.d.ts",
     "wasm": {
       "initialMemory": 1024,
       "maximumMemory": 32768
@@ -243,6 +244,9 @@
       "src/utils/catalog": [
         "dist/src/utils/catalog/index.d.ts"
       ],
+      "src/internal-testing-utils/*": [
+        "src/internal-testing-utils/*.ts"
+      ],
       "src/*.js": [
         "dist/src/*.d.ts"
       ],
@@ -283,8 +287,8 @@
     "./generators": "./generators.json",
     "./executors.json": "./executors.json",
     "./executors": "./executors.json",
-    "./schemas/*": "./dist/schemas/*.json",
-    "./schemas/*.json": "./dist/schemas/*.json",
+    "./schemas/*": "./schemas/*.json",
+    "./schemas/*.json": "./schemas/*.json",
     "./presets/*": {
       "@nx/nx-source": "./presets/*.json",
       "default": "./dist/presets/*.json"
@@ -410,6 +414,10 @@
     "./src/native/*.mjs": {
       "@nx/nx-source": "./src/native/*.mjs",
       "default": "./dist/src/native/*.mjs"
+    },
+    "./src/internal-testing-utils/*": {
+      "types": "./src/internal-testing-utils/*.ts",
+      "default": "./src/internal-testing-utils/*.ts"
     },
     "./src/*.js": {
       "@nx/nx-source": "./src/*.ts",

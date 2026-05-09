@@ -1,14 +1,29 @@
 import '../../internal-testing-utils/mock-fs';
 
+import { join } from 'node:path';
 import { vol } from 'memfs';
 import { createNodeFromPackageJson, createNodesV2 } from './create-nodes';
+import { workspaceDataDirectory } from '../../utils/cache-directory';
 import { PluginCache } from '../../utils/plugin-cache-utils';
+
+const packageJsonCachePath = join(workspaceDataDirectory, 'package-json.hash');
 
 describe('nx package.json workspaces plugin', () => {
   const context = {
     workspaceRoot: '/root',
     nxJsonConfiguration: {},
   };
+
+  const packageManagerCommand = {
+    run: (script: string) => `npm run ${script}`,
+  } as any;
+
+  beforeEach(() => {
+    // Ensure deterministic package manager detection: without a lockfile the
+    // detector falls back to npm_config_user_agent, which makes test output
+    // depend on whoever invoked jest (npm vs pnpm vs yarn).
+    vol.fromJSON({ 'package-lock.json': '{}' }, '/root');
+  });
 
   afterEach(() => {
     vol.reset();
@@ -52,8 +67,9 @@ describe('nx package.json workspaces plugin', () => {
       createNodeFromPackageJson(
         'package.json',
         '/root',
-        new PluginCache(),
-        false
+        new PluginCache(packageJsonCachePath),
+        false,
+        packageManagerCommand
       )
     ).toMatchInlineSnapshot(`
       {
@@ -106,8 +122,9 @@ describe('nx package.json workspaces plugin', () => {
       createNodeFromPackageJson(
         'packages/lib-a/package.json',
         '/root',
-        new PluginCache(),
-        false
+        new PluginCache(packageJsonCachePath),
+        false,
+        packageManagerCommand
       )
     ).toMatchInlineSnapshot(`
       {
@@ -160,8 +177,9 @@ describe('nx package.json workspaces plugin', () => {
       createNodeFromPackageJson(
         'packages/lib-b/package.json',
         '/root',
-        new PluginCache(),
-        false
+        new PluginCache(packageJsonCachePath),
+        false,
+        packageManagerCommand
       )
     ).toMatchInlineSnapshot(`
       {
@@ -804,8 +822,9 @@ describe('nx package.json workspaces plugin', () => {
       createNodeFromPackageJson(
         'apps/myapp/package.json',
         '/root',
-        new PluginCache(),
-        false
+        new PluginCache(packageJsonCachePath),
+        false,
+        packageManagerCommand
       ).projects['apps/myapp'].projectType
     ).toEqual('application');
 
@@ -813,8 +832,9 @@ describe('nx package.json workspaces plugin', () => {
       createNodeFromPackageJson(
         'packages/mylib/package.json',
         '/root',
-        new PluginCache(),
-        false
+        new PluginCache(packageJsonCachePath),
+        false,
+        packageManagerCommand
       ).projects['packages/mylib'].projectType
     ).toEqual('library');
   });
@@ -840,8 +860,9 @@ describe('nx package.json workspaces plugin', () => {
       createNodeFromPackageJson(
         'package.json',
         '/root',
-        new PluginCache(),
-        false
+        new PluginCache(packageJsonCachePath),
+        false,
+        packageManagerCommand
       ).projects['.'].projectType
     ).toEqual('library');
   });
@@ -870,16 +891,18 @@ describe('nx package.json workspaces plugin', () => {
       createNodeFromPackageJson(
         'packages/mylib/package.json',
         '/root',
-        new PluginCache(),
-        false
+        new PluginCache(packageJsonCachePath),
+        false,
+        packageManagerCommand
       ).projects['packages/mylib'].projectType
     ).toEqual('library');
     expect(
       createNodeFromPackageJson(
         'example/package.json',
         '/root',
-        new PluginCache(),
-        false
+        new PluginCache(packageJsonCachePath),
+        false,
+        packageManagerCommand
       ).projects['example'].projectType
     ).toBeUndefined();
   });

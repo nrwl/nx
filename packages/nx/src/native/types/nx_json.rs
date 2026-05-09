@@ -4,5 +4,8 @@ use std::collections::HashMap;
 #[napi(object)]
 /// Stripped version of the NxJson interface for use in rust
 pub struct NxJson {
+    #[napi(
+        ts_type = "Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput>>"
+    )]
     pub named_inputs: Option<HashMap<String, Vec<JsInputs>>>,
 }

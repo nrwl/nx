@@ -11,10 +11,10 @@ common-env-vars: &common-env-vars
 
 common-init-steps: &common-init-steps
   - name: Checkout
-    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml'
 
   - name: Cache restore
-    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
     inputs:
       key: 'pnpm-lock.yaml'
       paths: ~/.local/share/pnpm/store
@@ -22,7 +22,7 @@ common-init-steps: &common-init-steps
 
   # reads mise.toml and installs toolchains needed for repo
   - name: Setup toolchains
-    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-mise/main.yaml'
+    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-mise/main.yaml'
 
   - name: Verify toolchain versions
     script: |
@@ -36,6 +36,17 @@ common-init-steps: &common-init-steps
 
   - name: Install system deps
     script: |
+      # apt mirror+file failover: tab-separated; printf preserves \t (YAML heredocs don't).
+      printf 'https://archive.ubuntu.com/ubuntu/\tpriority:1\n'       | sudo tee /etc/apt/apt-mirrors.txt > /dev/null
+      printf 'https://security.ubuntu.com/ubuntu/\tpriority:2\n'      | sudo tee -a /etc/apt/apt-mirrors.txt > /dev/null
+      printf 'http://azure.archive.ubuntu.com/ubuntu/\tpriority:3\n'  | sudo tee -a /etc/apt/apt-mirrors.txt > /dev/null
+      # Retries=0: mirror+file already retries via failover; apt-level retries multiply stall on a dead mirror.
+      sudo tee /etc/apt/apt.conf.d/80-nx-mirror-failover > /dev/null <<'EOF'
+      Acquire::http::Timeout "5";
+      Acquire::https::Timeout "5";
+      Acquire::Retries "0";
+      EOF
+      sudo sed -i 's|http://archive.ubuntu.com/ubuntu|mirror+file:/etc/apt/apt-mirrors.txt|g; s|http://security.ubuntu.com/ubuntu|mirror+file:/etc/apt/apt-mirrors.txt|g' /etc/apt/sources.list
       sudo apt-get update
       sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev zip unzip
 
@@ -60,6 +71,10 @@ common-init-steps: &common-init-steps
     script: |
       ./gradlew wrapper
       ./gradlew --version
+
+  - name: Restore .NET analyzer projects
+    script: |
+      dotnet restore packages/dotnet/analyzer.Tests/MsbuildAnalyzer.Tests.csproj
 
   - name: Configure git metadata (needed for lerna smoke tests)
     script: |

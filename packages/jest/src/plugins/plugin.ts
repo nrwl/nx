@@ -1,4 +1,11 @@
 import {
+  calculateHashesForCreateNodes,
+  clearRequireCache,
+  loadConfigFile,
+  getNamedInputs,
+  PluginCache,
+} from '@nx/devkit/internal';
+import {
   CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
@@ -8,16 +15,8 @@ import {
   normalizePath,
   NxJsonConfiguration,
   ProjectConfiguration,
-  readJsonFile,
   TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import {
-  clearRequireCache,
-  loadConfigFile,
-} from '@nx/devkit/src/utils/config-utils';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { minimatch } from 'minimatch';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import {
@@ -77,19 +76,6 @@ type IsolatedModulesResult = {
 
 type JestTargets = Awaited<ReturnType<typeof buildJestTargets>>;
 
-function readTargetsCache(cachePath: string): Record<string, JestTargets> {
-  return process.env.NX_CACHE_PROJECT_GRAPH !== 'false' && existsSync(cachePath)
-    ? readJsonFile(cachePath)
-    : {};
-}
-
-function writeTargetsToCache(
-  cachePath: string,
-  results: Record<string, JestTargets>
-) {
-  writeJsonFile(cachePath, results);
-}
-
 const jestConfigGlob = '**/jest.config.{cjs,mjs,js,cts,mts,ts}';
 
 export const createNodes: CreateNodesV2<JestPluginOptions> = [
@@ -97,7 +83,7 @@ export const createNodes: CreateNodesV2<JestPluginOptions> = [
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `jest-${optionsHash}.hash`);
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<JestTargets>(cachePath);
     // Cache jest preset(s) to avoid penalties of module load times. Most of jest configs will use the same preset.
     const presetCache: Record<string, unknown> = {};
     // Cache tsconfig reads + isolatedModules resolution. Many projects share
@@ -143,41 +129,48 @@ export const createNodes: CreateNodesV2<JestPluginOptions> = [
 
     const lockFilePattern = getLockFileName(packageManager);
 
+    // Load configs in parallel. `loadConfigFile` calls `registerTsProject`,
+    // whose transpiler dedup is refcounted: serial register/unregister cycles
+    // drop refCount to 0 between iterations and recreate a fresh ts-node
+    // service each time (ts-node has no cleanup — see
+    // packages/nx/src/plugins/js/utils/register.js), stacking N services in
+    // `require.extensions` and OOM'ing under NX_PREFER_TS_NODE. Parallel
+    // loads keep all registrations alive concurrently so the dedup holds and
+    // a single transpiler instance is shared.
     let requireCacheCleared = false;
-    const loadedConfigs: Array<{
-      rawConfig: any;
-      externalFiles: string[];
-      needsDtsInputs: boolean;
-    }> = [];
-    for (let i = 0; i < validConfigFiles.length; i++) {
-      const configFilePath = validConfigFiles[i];
-      const projectRoot = projectRoots[i];
-      const absConfigFilePath = resolve(context.workspaceRoot, configFilePath);
-      if (!requireCacheCleared && require.cache[absConfigFilePath]) {
-        clearRequireCache();
-        requireCacheCleared = true;
-      }
-      const rawConfig = await loadConfigFile(absConfigFilePath, [
-        'tsconfig.spec.json',
-        'tsconfig.test.json',
-        'tsconfig.jest.json',
-        'tsconfig.json',
-      ]);
-      const { externalFiles, needsDtsInputs } =
-        await collectExternalFileReferences(
-          rawConfig,
-          absConfigFilePath,
-          projectRoot,
+    const loadedConfigs = await Promise.all(
+      validConfigFiles.map(async (configFilePath, i) => {
+        const projectRoot = projectRoots[i];
+        const absConfigFilePath = resolve(
           context.workspaceRoot,
-          {
-            presetCache,
-            tsconfigJsonCache,
-            tsconfigExistsCache,
-            isolatedModulesCache,
-          }
+          configFilePath
         );
-      loadedConfigs.push({ rawConfig, externalFiles, needsDtsInputs });
-    }
+        if (!requireCacheCleared && require.cache[absConfigFilePath]) {
+          clearRequireCache();
+          requireCacheCleared = true;
+        }
+        const rawConfig = await loadConfigFile(absConfigFilePath, [
+          'tsconfig.spec.json',
+          'tsconfig.test.json',
+          'tsconfig.jest.json',
+          'tsconfig.json',
+        ]);
+        const { externalFiles, needsDtsInputs } =
+          await collectExternalFileReferences(
+            rawConfig,
+            absConfigFilePath,
+            projectRoot,
+            context.workspaceRoot,
+            {
+              presetCache,
+              tsconfigJsonCache,
+              tsconfigExistsCache,
+              isolatedModulesCache,
+            }
+          );
+        return { rawConfig, externalFiles, needsDtsInputs };
+      })
+    );
 
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
@@ -196,18 +189,23 @@ export const createNodes: CreateNodesV2<JestPluginOptions> = [
           const hash = hashes[idx];
           const { rawConfig, needsDtsInputs } = loadedConfigs[idx];
 
-          targetsCache[hash] ??= await buildJestTargets(
-            rawConfig,
-            needsDtsInputs,
-            configFilePath,
-            projectRoot,
-            options,
-            context,
-            presetCache,
-            pmc
-          );
+          if (!targetsCache.has(hash)) {
+            targetsCache.set(
+              hash,
+              await buildJestTargets(
+                rawConfig,
+                needsDtsInputs,
+                configFilePath,
+                projectRoot,
+                options,
+                context,
+                presetCache,
+                pmc
+              )
+            );
+          }
 
-          const { targets, metadata } = targetsCache[hash];
+          const { targets, metadata } = targetsCache.get(hash);
 
           return {
             projects: {
@@ -224,7 +222,7 @@ export const createNodes: CreateNodesV2<JestPluginOptions> = [
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk();
     }
   },
 ];

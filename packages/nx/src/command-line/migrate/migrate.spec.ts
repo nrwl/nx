@@ -10,6 +10,7 @@ import * as packageMgrUtils from '../../utils/package-manager';
 
 import {
   formatCommandFailure,
+  isNpmPeerDepsError,
   Migrator,
   normalizeVersion,
   parseMigrationsOptions,
@@ -2092,6 +2093,54 @@ describe('Migration', () => {
         parent: { version: '2.0.0', addToPackageJson: false },
         child: { version: '2.0.0', addToPackageJson: false },
       });
+    });
+  });
+
+  describe('isNpmPeerDepsError', () => {
+    it('should detect the npm 7-9 ERESOLVE code line', () => {
+      const stderr = [
+        'npm ERR! code ERESOLVE',
+        'npm ERR! ERESOLVE unable to resolve dependency tree',
+      ].join('\n');
+      expect(isNpmPeerDepsError(stderr)).toBe(true);
+    });
+
+    it('should detect the npm 10+ ERESOLVE code line', () => {
+      const stderr = [
+        'npm error code ERESOLVE',
+        'npm error ERESOLVE could not resolve',
+      ].join('\n');
+      expect(isNpmPeerDepsError(stderr)).toBe(true);
+    });
+
+    it('should fall back to phrase matching when ERESOLVE is absent', () => {
+      expect(
+        isNpmPeerDepsError('npm ERR! Unable to resolve dependency tree')
+      ).toBe(true);
+      expect(
+        isNpmPeerDepsError('Could not resolve dependency: peer react@"^18"')
+      ).toBe(true);
+      expect(
+        isNpmPeerDepsError('Conflicting peer dependency: typescript@5.0.0')
+      ).toBe(true);
+    });
+
+    it('should not match unrelated npm errors', () => {
+      expect(
+        isNpmPeerDepsError('npm ERR! code ENOENT\nnpm ERR! path ./missing')
+      ).toBe(false);
+      expect(
+        isNpmPeerDepsError(
+          'network timeout fetching https://registry.npmjs.org'
+        )
+      ).toBe(false);
+      expect(isNpmPeerDepsError('')).toBe(false);
+    });
+
+    it('should not match substrings of unrelated words', () => {
+      // `\bERESOLVE\b` must not match arbitrary identifiers that merely contain
+      // the letters (e.g. a hypothetical "PREERESOLVED" token).
+      expect(isNpmPeerDepsError('some PREERESOLVED cache entry')).toBe(false);
     });
   });
 });

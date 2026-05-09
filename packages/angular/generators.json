@@ -81,13 +81,6 @@
       "description": "Generate a Remote Angular Module Federation Application.",
       "aliases": ["producer"]
     },
-    "move": {
-      "factory": "./src/generators/move/move#angularMoveGenerator",
-      "schema": "./src/generators/move/schema.json",
-      "aliases": ["mv"],
-      "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration.",
-      "x-deprecated": "Use the `@nx/workspace:move` generator instead. This generator will be removed in Nx v22."
-    },
     "convert-to-with-mf": {
       "factory": "./src/generators/convert-to-with-mf/convert-to-with-mf",
       "schema": "./src/generators/convert-to-with-mf/schema.json",
@@ -105,12 +98,6 @@
       "schema": "./src/generators/ng-add/schema.json",
       "description": "Migrates an Angular CLI workspace to Nx or adds the Angular plugin to an Nx workspace.",
       "hidden": true
-    },
-    "ngrx": {
-      "factory": "./src/generators/ngrx/ngrx",
-      "schema": "./src/generators/ngrx/schema.json",
-      "description": "Adds NgRx support to an application or library.",
-      "x-deprecated": "Use the 'ngrx-root-store' and 'ngrx-feature-store' generators instead. It will be removed in Nx v22."
     },
     "ngrx-feature-store": {
       "factory": "./src/generators/ngrx-feature-store/ngrx-feature-store",
@@ -157,12 +144,6 @@
       "factory": "./src/generators/setup-ssr/setup-ssr",
       "schema": "./src/generators/setup-ssr/schema.json",
       "description": "Generate Angular Universal (SSR) setup for an Angular application."
-    },
-    "setup-tailwind": {
-      "factory": "./src/generators/setup-tailwind/setup-tailwind",
-      "schema": "./src/generators/setup-tailwind/schema.json",
-      "description": "Configures Tailwind CSS for an application or a buildable/publishable library.",
-      "x-deprecated": "Generating Tailwind configuration is no longer maintained. This generator will be removed in Nx 23."
     },
     "stories": {
       "factory": "./src/generators/stories/stories",

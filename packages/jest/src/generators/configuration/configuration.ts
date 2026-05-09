@@ -16,6 +16,7 @@ import {
   getPresetExt,
 } from '../../utils/config/config-file';
 import { jestInitGenerator } from '../init/init';
+import { warnJestExecutorGenerating } from '../../utils/deprecation';
 import { checkForTestTarget } from './lib/check-for-test-target';
 import { createFiles } from './lib/create-files';
 import { createJestConfig } from './lib/create-jest-config';
@@ -128,6 +129,7 @@ export async function configurationGeneratorInternal(
   });
 
   if (!hasPlugin || options.addExplicitTargets) {
+    warnJestExecutorGenerating();
     updateWorkspace(tree, options);
   }
 

@@ -27,24 +27,31 @@ interface PluginCacheData<T> {
 export class PluginCache<T> {
   private entries: Record<string, T>;
   private accessOrder: Set<string>;
+  private cachePath: string;
 
-  constructor(cachePath: string);
+  /**
+   * Constructs a `PluginCache`. The `cachePath` is the single source of truth
+   * for both reading and writing — `writeToDisk()` writes to it.
+   *
+   * If `entries` is omitted, the cache is loaded from `cachePath` on disk.
+   * If `entries` is provided, those entries are used as the in-memory state
+   * and the on-disk file is not read (useful for tests or for seeding the
+   * cache with known state).
+   */
   constructor(
+    cachePath: string,
     entries?: Record<string, T>,
     accessOrder?: string[] | Set<string>
-  );
-  constructor(
-    cachePathOrEntries?: string | Record<string, T>,
-    accessOrder?: string[] | Set<string>
   ) {
-    if (typeof cachePathOrEntries === 'string') {
-      const loaded = loadFromDisk<T>(cachePathOrEntries);
-      this.entries = loaded.entries;
-      this.accessOrder = loaded.accessOrder;
-    } else {
-      this.entries = cachePathOrEntries ?? {};
+    this.cachePath = cachePath;
+    if (entries !== undefined) {
+      this.entries = entries;
       this.accessOrder =
         accessOrder instanceof Set ? accessOrder : new Set(accessOrder ?? []);
+    } else {
+      const loaded = loadFromDisk<T>(cachePath);
+      this.entries = loaded.entries;
+      this.accessOrder = loaded.accessOrder;
     }
   }
 
@@ -94,7 +101,7 @@ export class PluginCache<T> {
   }
 
   /**
-   * Safely writes this cache to disk.
+   * Safely writes this cache to the path it was constructed with.
    *
    * Strategy:
    * 1. Serialize to JSON
@@ -105,9 +112,8 @@ export class PluginCache<T> {
    * 3. On total serialization failure (even after eviction),
    *    write an empty cache so the file is valid
    */
-
-  writeToDisk(cachePath: string): void {
-    mkdirSync(dirname(cachePath), { recursive: true });
+  writeToDisk(): void {
+    mkdirSync(dirname(this.cachePath), { recursive: true });
 
     let content: string | undefined;
 
@@ -139,10 +145,10 @@ export class PluginCache<T> {
 
     // Attempt to write the serialized content to disk
     try {
-      writeFileSync(cachePath, content);
+      writeFileSync(this.cachePath, content);
     } catch {
       // Filesystem error — wipe cache so a corrupted file doesn't persist
-      tryRemoveFile(cachePath);
+      tryRemoveFile(this.cachePath);
     }
   }
 

@@ -116,14 +116,16 @@ nx g @nx/vitest:configuration my-project
 
 ## Backward compatibility
 
-The old `@nx/vite:vitest` generator and `@nx/vite:test` executor still work but are deprecated. They will be removed in Nx 23. Please migrate before upgrading to Nx 23.
+**Nx 23 removed all vitest support from `@nx/vite`.** The `@nx/vite:test` executor, the `@nx/vite:vitest` generator, and vitest target inference in `@nx/vite/plugin` no longer exist in v23. Everything is now provided exclusively by `@nx/vitest`.
 
-When you use the deprecated generators/executors, you'll see a warning message:
+If you are upgrading to Nx 23, the `ensure-vitest-package-migration` migration runs automatically via `nx migrate` and handles the conversion for you:
 
-```text
-The '@nx/vite:vitest' generator is deprecated. Please use '@nx/vitest:configuration' instead.
-This generator will be removed in Nx 23.
-```
+- Installs `@nx/vitest` when vitest usage is detected in the workspace.
+- Swaps every `@nx/vite:test` reference (project targets and `targetDefaults`) to `@nx/vitest:test`.
+- Splits vitest options out of `@nx/vite/plugin` registrations into dedicated `@nx/vitest` plugin entries.
+- Adds an `@nx/vitest` plugin entry alongside any default-config `@nx/vite/plugin` registration.
+
+See the [migration reference](/docs/technologies/build-tools/vite/migrations#ensure-vitest-package-migration-23) for full details on what the automated migration does. For manual steps, follow the guide above.
 
 ## No changes required for these files
 

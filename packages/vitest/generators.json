@@ -13,6 +13,11 @@
       "factory": "./src/generators/configuration/configuration",
       "schema": "./src/generators/configuration/schema.json",
       "description": "Add Vitest configuration to a project."
+    },
+    "convert-to-inferred": {
+      "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
+      "schema": "./src/generators/convert-to-inferred/schema.json",
+      "description": "Convert a project to use the `@nx/vitest` inferred plugin."
     }
   }
 }

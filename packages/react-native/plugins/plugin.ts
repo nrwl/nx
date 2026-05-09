@@ -1,4 +1,10 @@
 import {
+  getNamedInputs,
+  calculateHashForCreateNodes,
+  loadConfigFile,
+  PluginCache,
+} from '@nx/devkit/internal';
+import {
   CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesResult,
@@ -8,15 +14,11 @@ import {
   NxJsonConfiguration,
   readJsonFile,
   TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
 import { dirname, join } from 'path';
 import { getLockFileName } from '@nx/js';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync } from 'fs';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import { readdirSync } from 'fs';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { hashObject } from 'nx/src/devkit-internals';
 
 export interface ReactNativePluginOptions {
@@ -31,28 +33,10 @@ export interface ReactNativePluginOptions {
   upgradeTargetName?: string;
 }
 
-function readTargetsCache(
-  cachePath: string
-): Record<
+type ReactNativeTargets = Record<
   string,
-  Record<string, TargetConfiguration<ReactNativePluginOptions>>
-> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
-
-function writeTargetsToCache(
-  cachePath: string,
-  targetsCache: Record<
-    string,
-    Record<string, TargetConfiguration<ReactNativePluginOptions>>
-  >
-) {
-  const oldCache = readTargetsCache(cachePath);
-  writeJsonFile(cachePath, {
-    ...oldCache,
-    targetsCache,
-  });
-}
+  TargetConfiguration<ReactNativePluginOptions>
+>;
 
 export const createNodes: CreateNodesV2<ReactNativePluginOptions> = [
   '**/app.{json,config.js,config.ts}',
@@ -62,18 +46,27 @@ export const createNodes: CreateNodesV2<ReactNativePluginOptions> = [
       workspaceDataDirectory,
       `react-native-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<ReactNativeTargets>(cachePath);
+    const lockFileName = getLockFileName(
+      detectPackageManager(context.workspaceRoot)
+    );
 
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+          createNodesInternal(
+            configFile,
+            options,
+            context,
+            targetsCache,
+            lockFileName
+          ),
         configFiles,
         options,
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk();
     }
   },
 ];
@@ -84,10 +77,8 @@ async function createNodesInternal(
   configFile: string,
   options: ReactNativePluginOptions,
   context: CreateNodesContextV2,
-  targetsCache: Record<
-    string,
-    Record<string, TargetConfiguration<ReactNativePluginOptions>>
-  >
+  targetsCache: PluginCache<ReactNativeTargets>,
+  lockFileName: string
 ): Promise<CreateNodesResult> {
   options = normalizeOptions(options);
   const projectRoot = dirname(configFile);
@@ -118,15 +109,20 @@ async function createNodesInternal(
     projectRoot,
     options,
     context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    [lockFileName]
   );
 
-  targetsCache[hash] ??= buildReactNativeTargets(projectRoot, options, context);
+  if (!targetsCache.has(hash)) {
+    targetsCache.set(
+      hash,
+      buildReactNativeTargets(projectRoot, options, context)
+    );
+  }
 
   return {
     projects: {
       [projectRoot]: {
-        targets: targetsCache[hash],
+        targets: targetsCache.get(hash),
       },
     },
   };

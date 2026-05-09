@@ -105,6 +105,7 @@ class Maven4AdapterInvoker(
         }
     }
 
+    @Synchronized
     override fun recordBuildStates(projectSelectors: Set<String>) {
         val nxMaven = invoker.getNxMaven()
         if (nxMaven == null) {

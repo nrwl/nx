@@ -1,4 +1,4 @@
-import { addUpdatedAndDeletedFiles } from './project-graph-incremental-recomputation';
+import { scheduleProjectGraphRecomputation } from './project-graph-incremental-recomputation';
 import type { HandlerResult } from './server';
 
 export async function handleUpdateWorkspaceContext(
@@ -6,7 +6,7 @@ export async function handleUpdateWorkspaceContext(
   updatedFiles: string[],
   deletedFiles: string[]
 ): Promise<HandlerResult> {
-  addUpdatedAndDeletedFiles(createdFiles, updatedFiles, deletedFiles);
+  scheduleProjectGraphRecomputation(createdFiles, updatedFiles, deletedFiles);
 
   return {
     response: '{}',

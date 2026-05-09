@@ -3,10 +3,22 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/devkit",
   "projectType": "library",
+  "release": {
+    "version": {
+      "generator": "@nx/js:release-version",
+      "preserveLocalDependencyProtocols": true,
+      "manifestRootsToUpdate": ["packages/{projectName}"]
+    }
+  },
   "targets": {
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "packages/{projectName}"
+      }
+    },
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/devkit/README.md"],
-      "command": "node ./scripts/copy-readme.js devkit",
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js devkit packages/devkit/readme-template.md packages/devkit/README.md",
       "inputs": ["copyReadme"],
       "dependsOn": ["^build", "build-base"]
     }

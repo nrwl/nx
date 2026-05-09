@@ -1,3 +1,4 @@
+import { getNamedInputs, PluginCache } from '@nx/devkit/internal';
 import {
   CreateDependencies,
   CreateNodesContextV2,
@@ -7,9 +8,7 @@ import {
   ProjectConfiguration,
   readJsonFile,
   workspaceRoot,
-  writeJsonFile,
 } from '@nx/devkit';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { existsSync, readdirSync } from 'fs';
@@ -32,23 +31,6 @@ export interface RspackPluginOptions {
 
 type RspackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
-function readTargetsCache(cachePath: string): Record<string, RspackTargets> {
-  try {
-    return process.env.NX_CACHE_PROJECT_GRAPH !== 'false'
-      ? readJsonFile(cachePath)
-      : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeTargetsToCache(
-  cachePath: string,
-  results?: Record<string, RspackTargets>
-) {
-  writeJsonFile(cachePath, results);
-}
-
 export const createDependencies: CreateDependencies = () => {
   return [];
 };
@@ -63,11 +45,11 @@ export const createNodesV2: CreateNodesV2<RspackPluginOptions> = [
       workspaceDataDirectory,
       `rspack-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<RspackTargets>(cachePath);
     const isTsSolutionSetup = isUsingTsSolutionSetup();
-    const pmc = getPackageManagerCommand(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -77,14 +59,15 @@ export const createNodesV2: CreateNodesV2<RspackPluginOptions> = [
             context,
             targetsCache,
             isTsSolutionSetup,
-            pmc
+            pmc,
+            lockFileName
           ),
         configFilePaths,
         options,
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk();
     }
   },
 ];
@@ -93,9 +76,10 @@ async function createNodesInternal(
   configFilePath: string,
   options: RspackPluginOptions,
   context: CreateNodesContextV2,
-  targetsCache: Record<string, RspackTargets>,
+  targetsCache: PluginCache<RspackTargets>,
   isTsSolutionSetup: boolean,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  lockFileName: string
 ) {
   const projectRoot = dirname(configFilePath);
   // Do not create a project if package.json and project.json isn't there.
@@ -117,12 +101,7 @@ async function createNodesInternal(
   const normalizedOptions = normalizeOptions(options);
 
   const lockFileHash =
-    hashFile(
-      join(
-        context.workspaceRoot,
-        getLockFileName(detectPackageManager(context.workspaceRoot))
-      )
-    ) ?? '';
+    hashFile(join(context.workspaceRoot, lockFileName)) ?? '';
 
   const nodeHash = hashArray([
     hashFile(join(context.workspaceRoot, configFilePath)),
@@ -134,16 +113,21 @@ async function createNodesInternal(
   // to prevent vite/vitest files overwriting the target cache created by the other
   const hash = `${nodeHash}_${configFilePath}`;
 
-  targetsCache[hash] ??= await createRspackTargets(
-    configFilePath,
-    projectRoot,
-    normalizedOptions,
-    context,
-    isTsSolutionSetup,
-    pmc
-  );
+  if (!targetsCache.has(hash)) {
+    targetsCache.set(
+      hash,
+      await createRspackTargets(
+        configFilePath,
+        projectRoot,
+        normalizedOptions,
+        context,
+        isTsSolutionSetup,
+        pmc
+      )
+    );
+  }
 
-  const { targets, metadata } = targetsCache[hash];
+  const { targets, metadata } = targetsCache.get(hash);
 
   return {
     projects: {
