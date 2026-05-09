@@ -53,7 +53,9 @@ import { notifyProjectGraphListenerSockets } from './project-graph-listener-sock
 import { flushPendingWorkspaceChanges } from './watcher';
 import { serverLogger } from '../logger';
 import {
-  captureInputsSnapshot,
+  capturePluginInputs,
+  capturePreComputeInputs,
+  combineInputsSnapshot,
   describeInputsDrift,
   detectInputsDrift,
   type InputsSnapshot,
@@ -124,6 +126,27 @@ let cachedInputsSnapshot: InputsSnapshot | undefined;
 function kickOffRecompute() {
   let myPromise: Promise<SerializedProjectGraph>;
   myPromise = (async () => {
+    // Workspace-level inputs (nx.json, root package.json, plugin
+    // sources) MUST be captured BEFORE getPluginsSeparated reads disk.
+    // If we captured after compute, a write that happened during
+    // compute would be reflected in the snapshot but not the cached
+    // graph — drift check would falsely match and we'd serve a graph
+    // computed against the older state. Capturing first ensures the
+    // snapshot reflects "what the compute is about to see," matching
+    // the cached graph's actual inputs.
+    let preComputeInputs: Awaited<
+      ReturnType<typeof capturePreComputeInputs>
+    > | null = null;
+    try {
+      preComputeInputs = await capturePreComputeInputs();
+    } catch (e) {
+      serverLogger.log(
+        `Failed to capture pre-compute inputs: ${
+          e instanceof Error ? e.message : String(e)
+        }. Recompute will proceed; snapshot will be skipped.`
+      );
+    }
+
     const plugins = await getPluginsSeparated();
     const result = await processFilesAndCreateAndSerializeProjectGraph(plugins);
     if (
@@ -136,23 +159,28 @@ function kickOffRecompute() {
         result.error
       );
       persistProjectGraphToDisk(result);
-      // Snapshot inputs only when we are still the latest compute. A
-      // newer kickOff would have already replaced the cached promise,
-      // so capturing here would associate this snapshot with a stale
-      // graph and either spurious-recompute or mask drift on the
-      // newer one.
-      try {
-        cachedInputsSnapshot = await captureInputsSnapshot(plugins);
-      } catch (e) {
-        // A failed snapshot drops us back to "no snapshot" — the next
-        // request will trigger a recompute via the !snapshot branch
-        // rather than serving an uncovered cache.
+      // Stitch the pre-compute workspace inputs together with the
+      // plugin glob inputs (which need the loaded plugins). Only
+      // store the combined snapshot when this compute is still the
+      // latest — a newer kickOff would otherwise associate this
+      // snapshot with the wrong cached graph.
+      if (preComputeInputs) {
+        try {
+          const pluginInputs = await capturePluginInputs(plugins);
+          cachedInputsSnapshot = combineInputsSnapshot(
+            preComputeInputs,
+            pluginInputs
+          );
+        } catch (e) {
+          cachedInputsSnapshot = undefined;
+          serverLogger.log(
+            `Failed to capture plugin-input snapshot: ${
+              e instanceof Error ? e.message : String(e)
+            }. Next request will recompute.`
+          );
+        }
+      } else {
         cachedInputsSnapshot = undefined;
-        serverLogger.log(
-          `Failed to snapshot project graph inputs: ${
-            e instanceof Error ? e.message : String(e)
-          }. Next request will recompute.`
-        );
       }
     }
     return result;

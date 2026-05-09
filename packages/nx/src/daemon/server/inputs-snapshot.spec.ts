@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { writeFileSync, utimesSync, mkdirSync } from 'node:fs';
+import { writeFileSync, utimesSync, mkdirSync, unlinkSync } from 'node:fs';
 
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 import type { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
@@ -14,7 +14,12 @@ jest.mock('../logger', () => ({
 }));
 
 import { globWithWorkspaceContext } from '../../utils/workspace-context';
-import { captureInputsSnapshot, detectInputsDrift } from './inputs-snapshot';
+import {
+  capturePluginInputs,
+  capturePreComputeInputs,
+  combineInputsSnapshot,
+  detectInputsDrift,
+} from './inputs-snapshot';
 
 const mockedGlob = globWithWorkspaceContext as jest.MockedFunction<
   typeof globWithWorkspaceContext
@@ -38,6 +43,17 @@ function plugin(name: string, glob: string | null = null): LoadedNxPlugin {
 
 function separated(...plugins: LoadedNxPlugin[]): SeparatedPlugins {
   return { specifiedPlugins: plugins, defaultPlugins: [] };
+}
+
+/**
+ * Convenience wrapper that mirrors the pre+post phases the daemon does.
+ * The daemon captures `capturePreComputeInputs()` BEFORE
+ * `getPluginsSeparated`; the test harness simulates that ordering.
+ */
+async function snapshot(plugins: SeparatedPlugins) {
+  const pre = await capturePreComputeInputs();
+  const pluginInputs = await capturePluginInputs(plugins);
+  return combineInputsSnapshot(pre, pluginInputs);
 }
 
 function bumpMtime(absPath: string, deltaMs = 2000) {
@@ -65,7 +81,7 @@ describe('inputs-snapshot', () => {
       'nx.json': JSON.stringify({ plugins: [] }),
       'package.json': JSON.stringify({ name: 'root' }),
     });
-    const snap = await captureInputsSnapshot(separated());
+    const snap = await snapshot(separated());
     expect(await detectInputsDrift(snap)).toBeNull();
   });
 
@@ -74,7 +90,7 @@ describe('inputs-snapshot', () => {
       'nx.json': JSON.stringify({ plugins: [], a: 1 }),
       'package.json': JSON.stringify({ name: 'root' }),
     });
-    const snap = await captureInputsSnapshot(separated());
+    const snap = await snapshot(separated());
 
     // Same length, different value — defeats stat+size-only checks.
     const before = JSON.stringify({ plugins: [], a: 1 });
@@ -92,7 +108,7 @@ describe('inputs-snapshot', () => {
       'nx.json': JSON.stringify({ plugins: [] }),
       'package.json': JSON.stringify({ name: 'root', version: '1.0.0' }),
     });
-    const snap = await captureInputsSnapshot(separated());
+    const snap = await snapshot(separated());
 
     writeFileSync(
       join(fs.tempDir, 'package.json'),
@@ -109,7 +125,7 @@ describe('inputs-snapshot', () => {
       'package.json': JSON.stringify({ name: 'root' }),
       'tools/plugin-foo.js': 'module.exports = { name: "foo" };',
     });
-    const snap = await captureInputsSnapshot(separated(plugin('foo')));
+    const snap = await snapshot(separated(plugin('foo')));
     expect(snap.pluginSources.size).toBe(1);
 
     bumpMtime(join(fs.tempDir, 'tools/plugin-foo.js'));
@@ -124,9 +140,9 @@ describe('inputs-snapshot', () => {
       'package.json': JSON.stringify({ name: 'root' }),
       'tools/plugin-foo.js': 'module.exports = { name: "foo" };',
     });
-    const snap = await captureInputsSnapshot(separated(plugin('foo')));
+    const snap = await snapshot(separated(plugin('foo')));
 
-    require('node:fs').unlinkSync(join(fs.tempDir, 'tools/plugin-foo.js'));
+    unlinkSync(join(fs.tempDir, 'tools/plugin-foo.js'));
 
     const drift = await detectInputsDrift(snap);
     expect(drift?.kind).toBe('plugin-source');
@@ -137,7 +153,7 @@ describe('inputs-snapshot', () => {
       'nx.json': JSON.stringify({ plugins: ['@nx/eslint'] }),
       'package.json': JSON.stringify({ name: 'root' }),
     });
-    const snap = await captureInputsSnapshot(separated(plugin('@nx/eslint')));
+    const snap = await snapshot(separated(plugin('@nx/eslint')));
     expect(snap.pluginSources.size).toBe(0);
   });
 
@@ -153,7 +169,7 @@ describe('inputs-snapshot', () => {
       'libs/b/project.json',
     ]);
 
-    const snap = await captureInputsSnapshot(
+    const snap = await snapshot(
       separated(plugin('@nx/foo', 'libs/*/project.json'))
     );
     expect(snap.pluginInputs.size).toBe(2);
@@ -173,11 +189,11 @@ describe('inputs-snapshot', () => {
     });
     mockedGlob.mockResolvedValue(['libs/a/project.json']);
 
-    const snap = await captureInputsSnapshot(
+    const snap = await snapshot(
       separated(plugin('@nx/foo', 'libs/*/project.json'))
     );
 
-    require('node:fs').unlinkSync(join(fs.tempDir, 'libs/a/project.json'));
+    unlinkSync(join(fs.tempDir, 'libs/a/project.json'));
 
     const drift = await detectInputsDrift(snap);
     expect(drift?.kind).toBe('plugin-input');
@@ -189,9 +205,7 @@ describe('inputs-snapshot', () => {
       'package.json': JSON.stringify({ name: 'root' }),
     });
 
-    const snap = await captureInputsSnapshot(
-      separated(plugin('@nx/no-glob', null))
-    );
+    const snap = await snapshot(separated(plugin('@nx/no-glob', null)));
     expect(snap.pluginInputs.size).toBe(0);
     expect(mockedGlob).not.toHaveBeenCalled();
   });
@@ -200,8 +214,7 @@ describe('inputs-snapshot', () => {
     fs.createFilesSync({
       'package.json': JSON.stringify({ name: 'root' }),
     });
-    // nx.json absent on purpose — readNxJson returns {}.
-    const snap = await captureInputsSnapshot(separated());
+    const snap = await snapshot(separated());
     expect(snap.nxJsonHash).toBeNull();
     expect(await detectInputsDrift(snap)).toBeNull();
   });
@@ -209,9 +222,8 @@ describe('inputs-snapshot', () => {
   it('treats reappearance of a previously-missing file as drift', async () => {
     fs.createFilesSync({
       'package.json': JSON.stringify({ name: 'root' }),
-      // nx.json absent
     });
-    const snap = await captureInputsSnapshot(separated());
+    const snap = await snapshot(separated());
     expect(snap.nxJsonHash).toBeNull();
 
     writeFileSync(join(fs.tempDir, 'nx.json'), JSON.stringify({ plugins: [] }));
@@ -237,9 +249,46 @@ describe('inputs-snapshot', () => {
       'package.json': JSON.stringify({ name: 'root' }),
     });
 
-    const snap = await captureInputsSnapshot(
-      separated(plugin('cjs'), plugin('mjs'))
-    );
+    const snap = await snapshot(separated(plugin('cjs'), plugin('mjs')));
     expect(snap.pluginSources.size).toBe(2);
+  });
+
+  // Regression for the timing bug: capturing a snapshot AFTER compute
+  // would mean a write that happened DURING compute is recorded in the
+  // snapshot — masking drift on the next request even though the
+  // cached graph reflects the pre-write state. The fix is to capture
+  // workspace-level inputs (nx.json, root package.json, plugin
+  // sources) BEFORE the compute reads them. This test simulates the
+  // race: pre-compute snapshot taken, then nx.json is rewritten as if
+  // a test mutated it during compute, then drift check must report
+  // drift against the pre-compute baseline.
+  it('detects nx.json drift when capture happens before disk is mutated', async () => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({ plugins: [] }),
+      'package.json': JSON.stringify({ name: 'root' }),
+    });
+
+    // Step 1: pre-compute capture, simulating what kickOffRecompute
+    // does BEFORE getPluginsSeparated reads disk.
+    const pre = await capturePreComputeInputs();
+
+    // Step 2: simulate the test writing nx.json mid-compute (the
+    // watcher-race scenario the daemon fix is for).
+    writeFileSync(
+      join(fs.tempDir, 'nx.json'),
+      JSON.stringify({ plugins: ['./tools/plugin-foo'] })
+    );
+
+    // Step 3: post-compute plugin-input capture sees an empty plugin
+    // list because the compute used the pre-write plugin set ([]).
+    const pluginInputs = await capturePluginInputs(separated());
+
+    const snap = combineInputsSnapshot(pre, pluginInputs);
+
+    // The pre-compute snapshot's nx.json hash is from the pre-write
+    // state, so a drift check now correctly detects the post-write
+    // disk content.
+    const drift = await detectInputsDrift(snap);
+    expect(drift?.kind).toBe('nx-json');
   });
 });

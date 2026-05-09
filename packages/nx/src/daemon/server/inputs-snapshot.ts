@@ -184,47 +184,70 @@ async function buildPluginSourcesMap(
 }
 
 /**
- * Capture a fresh snapshot of every input the cached graph depends on.
- * Called immediately after a successful project graph compute and before
- * the cache becomes serveable. Errors surface as `null`/empty fields so
- * a partial snapshot still drives correct drift detection on the parts
- * we did capture.
+ * Workspace-level inputs that are READ by `getPluginsSeparated` to
+ * determine the plugin set: nx.json itself, root package.json, and any
+ * workspace plugin source files that the loader will resolve. Capture
+ * happens BEFORE `getPluginsSeparated` runs so the snapshot reflects
+ * the disk state the compute will use, not whatever disk shows after
+ * compute finishes (which can already be the next test's write).
  */
-export async function captureInputsSnapshot(
-  separatedPlugins: SeparatedPlugins
-): Promise<InputsSnapshot> {
-  const allPlugins: LoadedNxPlugin[] = [
-    ...separatedPlugins.specifiedPlugins,
-    ...separatedPlugins.defaultPlugins,
-  ];
+export interface PreComputeInputs {
+  nxJsonHash: string | null;
+  rootPackageJsonHash: string | null;
+  pluginSources: Map<string, string>;
+}
 
+export async function capturePreComputeInputs(): Promise<PreComputeInputs> {
   let pluginsConfig: PluginConfiguration[] = [];
   try {
     pluginsConfig = readNxJson(workspaceRoot).plugins ?? [];
   } catch (e) {
     serverLogger.log(
-      `[input-drift] readNxJson failed during snapshot: ${
+      `[input-drift] readNxJson failed during pre-compute snapshot: ${
         e instanceof Error ? e.message : String(e)
       }`
     );
   }
 
-  const [nxJsonHash, rootPackageJsonHash, pluginSources, pluginInputs] =
-    await Promise.all([
-      Promise.resolve(readHashSafe(join(workspaceRoot, NX_JSON_PATH))),
-      Promise.resolve(
-        readHashSafe(join(workspaceRoot, ROOT_PACKAGE_JSON_PATH))
-      ),
-      buildPluginSourcesMap(pluginsConfig),
-      buildPluginInputsMap(allPlugins),
-    ]);
+  const [nxJsonHash, rootPackageJsonHash, pluginSources] = await Promise.all([
+    Promise.resolve(readHashSafe(join(workspaceRoot, NX_JSON_PATH))),
+    Promise.resolve(readHashSafe(join(workspaceRoot, ROOT_PACKAGE_JSON_PATH))),
+    buildPluginSourcesMap(pluginsConfig),
+  ]);
 
-  return {
-    nxJsonHash,
-    rootPackageJsonHash,
-    pluginSources,
-    pluginInputs,
-  };
+  return { nxJsonHash, rootPackageJsonHash, pluginSources };
+}
+
+/**
+ * Plugin-level inputs: the union of files matched by every loaded
+ * plugin's createNodesV2 glob. Must be captured AFTER plugin loading
+ * because the glob list comes from the loaded plugins themselves.
+ * There is a small race window between `getPluginsSeparated` reading
+ * disk and this capture running — if a test edits a plugin-watched
+ * file in that window, we'd record the post-edit signature and miss
+ * drift on the next request. The window is microseconds and the
+ * fallout is at most one stale serve, after which the workspace-level
+ * pre-compute snapshot or the watcher would force a recompute.
+ */
+export async function capturePluginInputs(
+  separatedPlugins: SeparatedPlugins
+): Promise<Map<string, string>> {
+  const allPlugins: LoadedNxPlugin[] = [
+    ...separatedPlugins.specifiedPlugins,
+    ...separatedPlugins.defaultPlugins,
+  ];
+  return buildPluginInputsMap(allPlugins);
+}
+
+/**
+ * Stitch the pre-compute and post-compute halves into the canonical
+ * `InputsSnapshot` consumed by `detectInputsDrift`.
+ */
+export function combineInputsSnapshot(
+  pre: PreComputeInputs,
+  pluginInputs: Map<string, string>
+): InputsSnapshot {
+  return { ...pre, pluginInputs };
 }
 
 /**
