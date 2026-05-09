@@ -76,7 +76,7 @@ export default async function migrate(tree: Tree) {
               e.target === target &&
               e.executor === undefined &&
               e.projects === undefined &&
-              e.source === undefined
+              e.plugin === undefined
           );
           if (idx >= 0) {
             nxJson.targetDefaults[idx].cache ??= true;
