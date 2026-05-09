@@ -13,7 +13,7 @@ export default async function (tree: Tree) {
       e.executor === executor &&
       e.target === undefined &&
       e.projects === undefined &&
-      e.source === undefined
+      e.plugin === undefined
   );
 
   if (!existing?.inputs) {

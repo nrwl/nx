@@ -173,7 +173,7 @@ function findExistingTestDefault(
       (e) =>
         e.target === targetName &&
         e.projects === undefined &&
-        e.source === undefined
+        e.plugin === undefined
     );
   }
   return td[targetName];

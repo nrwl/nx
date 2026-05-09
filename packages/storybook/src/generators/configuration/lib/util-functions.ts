@@ -530,7 +530,7 @@ export function addStorybookToTargetDefaults(tree: Tree, setCache = true) {
       e.target === 'build-storybook' &&
       e.executor === undefined &&
       e.projects === undefined &&
-      e.source === undefined
+      e.plugin === undefined
   );
 
   const inputs = existing?.inputs

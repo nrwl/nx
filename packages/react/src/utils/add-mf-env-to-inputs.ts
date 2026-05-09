@@ -18,7 +18,7 @@ export function addMfEnvToTargetDefaultInputs(
       e.executor === executor &&
       e.target === undefined &&
       e.projects === undefined &&
-      e.source === undefined
+      e.plugin === undefined
   );
 
   const inputs = [...(existing?.inputs ?? ['production', '^production'])];

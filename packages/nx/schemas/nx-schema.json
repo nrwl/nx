@@ -840,7 +840,7 @@
           ],
           "description": "Restrict the default to matching projects. Uses findMatchingProjects syntax."
         },
-        "source": {
+        "plugin": {
           "type": "string",
           "description": "Restrict the default to targets originated by a specific plugin (e.g. '@nx/vite')."
         },

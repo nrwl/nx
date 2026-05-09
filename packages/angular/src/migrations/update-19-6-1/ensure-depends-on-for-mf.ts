@@ -47,7 +47,7 @@ export default async function (tree: Tree) {
       e.executor === webpackExecutor &&
       e.target === undefined &&
       e.projects === undefined &&
-      e.source === undefined
+      e.plugin === undefined
   );
 
   if (!existing) {

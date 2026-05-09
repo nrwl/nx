@@ -37,7 +37,7 @@ function setupE2ETargetDefaults(tree: Tree) {
   const existing = findExistingE2eDefault(nxJson.targetDefaults);
   const patch: Partial<TargetConfiguration> = {};
   if (existing?.cache === undefined) patch.cache = true;
-  if (!existing?.inputs) {
+  if (existing?.inputs === undefined) {
     patch.inputs = ['default', productionFileSet ? '^production' : '^default'];
   }
   if (Object.keys(patch).length > 0) {
@@ -53,7 +53,7 @@ function findExistingE2eDefault(
   if (Array.isArray(td)) {
     return td.find(
       (e) =>
-        e.target === 'e2e' && e.projects === undefined && e.source === undefined
+        e.target === 'e2e' && e.projects === undefined && e.plugin === undefined
     );
   }
   return td['e2e'];

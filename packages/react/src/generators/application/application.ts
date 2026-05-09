@@ -258,7 +258,7 @@ function findBuildDefault(
       (e) =>
         e.target === 'build' &&
         e.projects === undefined &&
-        e.source === undefined
+        e.plugin === undefined
     );
   }
   return td['build'];

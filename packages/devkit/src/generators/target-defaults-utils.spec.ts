@@ -68,14 +68,14 @@ describe('target-defaults-utils', () => {
 
       upsertTargetDefault(tree, nxJson, {
         target: 'test',
-        source: '@nx/vite',
+        plugin: '@nx/vite',
         inputs: ['vite'],
       });
       updateNxJson(tree, nxJson);
 
       expect(readNxJson(tree).targetDefaults).toEqual([
         { target: 'test', cache: true },
-        { target: 'test', source: '@nx/vite', inputs: ['vite'] },
+        { target: 'test', plugin: '@nx/vite', inputs: ['vite'] },
       ]);
     });
 
@@ -260,7 +260,7 @@ describe('target-defaults-utils', () => {
           e.target === target &&
           e.executor === undefined &&
           e.projects === undefined &&
-          e.source === undefined
+          e.plugin === undefined
       );
     }
 

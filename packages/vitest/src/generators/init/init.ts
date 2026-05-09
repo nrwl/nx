@@ -78,7 +78,7 @@ export function updateNxJsonSettings(tree: Tree) {
         e.executor === '@nx/vitest:test' &&
         e.target === undefined &&
         e.projects === undefined &&
-        e.source === undefined
+        e.plugin === undefined
     );
     upsertTargetDefault(tree, nxJson, {
       executor: '@nx/vitest:test',

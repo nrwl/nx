@@ -146,7 +146,7 @@ function findLintTargetDefault(
       (e) =>
         e.target === 'lint' &&
         e.projects === undefined &&
-        e.source === undefined
+        e.plugin === undefined
     );
   }
   return td['lint'];

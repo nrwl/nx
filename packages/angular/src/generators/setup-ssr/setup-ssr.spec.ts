@@ -20,10 +20,10 @@ function getDefault(
       (e) =>
         e.target === target &&
         e.projects === undefined &&
-        e.source === undefined
+        e.plugin === undefined
     );
     if (!found) return undefined;
-    const { target: _t, projects: _p, source: _s, ...rest } = found;
+    const { target: _t, projects: _p, plugin: _pl, ...rest } = found;
     return rest;
   }
   return td[target];

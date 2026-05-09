@@ -165,7 +165,7 @@ function findWebpackEntry(tree: Tree) {
       e.executor === WEBPACK_EXECUTOR &&
       e.target === undefined &&
       e.projects === undefined &&
-      e.source === undefined
+      e.plugin === undefined
   );
 }
 

@@ -91,7 +91,7 @@ function findExistingJestDefault(
       (e) =>
         e.executor === '@nx/jest:jest' &&
         e.projects === undefined &&
-        e.source === undefined
+        e.plugin === undefined
     );
   }
   return td['@nx/jest:jest'];

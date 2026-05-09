@@ -251,7 +251,7 @@ function buildSyntheticTargetForRoot(
  * or the legacy record shape (devkit support).
  *
  * When called without project context, entries that require a `projects`
- * filter or a `source` filter are skipped.
+ * filter or a `plugin` filter are skipped.
  *
  * The normalized entries are cached per `targetDefaults` reference so
  * repeated reads against the same nx.json don't re-normalize (and don't
@@ -314,16 +314,16 @@ interface Candidate {
  * Find the highest-specificity `targetDefaults` entry that applies to the
  * given (target, project, sourcePlugin) tuple. Ties are broken by match
  * kind, then by later array index. Returns the config slice with filter
- * keys (`target`, `projects`, `source`) stripped.
+ * keys (`target`, `projects`, `plugin`) stripped.
  *
  * Tier = (1 if a target/executor locator matched, else 0) + 1 per
- * applied filter (`projects`, `source`). So locator-bearing entries:
- *   - tier 3: target/executor + projects + source
- *   - tier 2: target/executor + projects, or target/executor + source
+ * applied filter (`projects`, `plugin`). So locator-bearing entries:
+ *   - tier 3: target/executor + projects + plugin
+ *   - tier 2: target/executor + projects, or target/executor + plugin
  *   - tier 1: target/executor alone
  * And filter-only entries (no `target` and no `executor`):
- *   - tier 2: projects + source
- *   - tier 1: projects alone, or source alone
+ *   - tier 2: projects + plugin
+ *   - tier 1: projects alone, or plugin alone
  *
  * `executor` matching contributes to matchKind only, not to tier — it's
  * not a filter, it's a refinement of the match. Within the same tier,
@@ -384,7 +384,7 @@ export function findBestTargetDefault(
 
 /**
  * Test a single `targetDefaults` entry against the (target, executor,
- * project, source, command) tuple of the target being resolved. Returns
+ * project, plugin, command) tuple of the target being resolved. Returns
  * a `Candidate` with its tier and match kind, or null when the entry
  * doesn't apply.
  *
@@ -409,13 +409,13 @@ function matchEntry(
 ): Candidate | null {
   if (!entry) return null;
   // Reject entries with no constraints whatsoever — without a locator
-  // (`target`/`executor`) or a filter (`projects`/`source`) the entry
+  // (`target`/`executor`) or a filter (`projects`/`plugin`) the entry
   // would broadcast to every (root, target) in the workspace.
   if (
     entry.target === undefined &&
     entry.executor === undefined &&
     entry.projects === undefined &&
-    entry.source === undefined
+    entry.plugin === undefined
   ) {
     return null;
   }
@@ -454,8 +454,12 @@ function matchEntry(
 
   if (entry.projects !== undefined) {
     if (!projectName || !projectNode) return null;
+    // Copy the array — `findMatchingProjects` prepends '*' when the first
+    // pattern is a negation, mutating its input. Without the copy, every
+    // call corrupts the original `entry.projects` (and therefore the
+    // shared nxJson.targetDefaults entry) with a leading wildcard.
     const patterns = Array.isArray(entry.projects)
-      ? entry.projects
+      ? [...entry.projects]
       : [entry.projects];
     const matched = findMatchingProjects(patterns, {
       [projectName]: projectNode,
@@ -464,8 +468,8 @@ function matchEntry(
     tier++;
   }
 
-  if (entry.source !== undefined) {
-    if (entry.source !== sourcePlugin) return null;
+  if (entry.plugin !== undefined) {
+    if (entry.plugin !== sourcePlugin) return null;
     tier++;
   }
 
@@ -493,7 +497,7 @@ function matchEntry(
  * wins because the more specific entry is the one the user most likely
  * wrote to override a broader rule.
  *
- * 1. Tier — entries with `projects` or `source` filters are scoped
+ * 1. Tier — entries with `projects` or `plugin` filters are scoped
  *    narrower than unfiltered entries, so they outrank.
  * 2. Match kind — within the same tier, more locator slots is more
  *    specific: `target+executor` > `executor-only` > `exactTarget` >
@@ -501,9 +505,9 @@ function matchEntry(
  *    `exactTarget`: a workspace-wide rule keyed on a specific executor
  *    is treated as more intentional than a target-name rule that might
  *    accidentally catch unrelated executors. `filterOnly` (no `target`
- *    and no `executor`, just `projects` and/or `source`) sits at the
+ *    and no `executor`, just `projects` and/or `plugin`) sits at the
  *    bottom — it's the explicit "least specific" tier that lets a bare
- *    `source: '@nx/jest/plugin'` apply to every jest-attributed target
+ *    `plugin: '@nx/jest/plugin'` apply to every jest-attributed target
  *    while still losing to any entry that names the target or executor.
  * 3. Tie-break — later array index wins, so users can append an entry
  *    to override earlier ones without rewriting them.
@@ -535,7 +539,7 @@ function matchKindRank(kind: MatchKind): number {
 function stripFilterKeys(
   entry: TargetDefaultEntry
 ): Partial<TargetConfiguration> {
-  const { target, projects, source, ...rest } = entry;
+  const { target, projects, plugin, ...rest } = entry;
   return rest;
 }
 
@@ -645,7 +649,7 @@ function warnAboutLegacyRecordShapeOnce() {
     'NX  nx.json uses the legacy record-shape `targetDefaults`'
   );
   const bodyLines = [
-    'The object/record form of `targetDefaults` is deprecated. Nx still reads it for now, but the array form is required to use the new `projects` and `source` filters.',
+    'The object/record form of `targetDefaults` is deprecated. Nx still reads it for now, but the array form is required to use the new `projects` and `plugin` filters.',
     'Run `nx repair` to automatically convert `targetDefaults` to the array shape.',
   ];
   process.stderr.write(
@@ -664,11 +668,11 @@ function resolveSourcePlugin(
   // Default plugins (nx's baked-in inference of per-project config files
   // like package.json, tsconfig.json) always overwrite specified-plugin
   // attribution in the merge. Their attribution is what survives, so it
-  // takes precedence here when matching `source:` filters.
+  // takes precedence here when matching `plugin:` filters.
   //
   // We only consult the executor/command source-map keys — the top-level
   // `targets.<name>` key tracks only the last writer, not the originator,
-  // and is unreliable for source attribution.
+  // and is unreliable for plugin attribution.
   const executorKey = targetOptionSourceMapKey(targetName, 'executor');
   const commandKey = targetOptionSourceMapKey(targetName, 'command');
   const candidates: (string | undefined)[] = [

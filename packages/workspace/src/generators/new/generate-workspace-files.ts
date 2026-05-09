@@ -259,7 +259,7 @@ function createNxJson(
             e.target === 'build' &&
             e.executor === undefined &&
             e.projects === undefined &&
-            e.source === undefined
+            e.plugin === undefined
         );
         if (buildIdx >= 0) {
           td[buildIdx] = {

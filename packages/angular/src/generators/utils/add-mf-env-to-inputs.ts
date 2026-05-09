@@ -20,7 +20,7 @@ export function addMfEnvToTargetDefaultInputs(tree: Tree) {
       e.executor === webpackExecutor &&
       e.target === undefined &&
       e.projects === undefined &&
-      e.source === undefined
+      e.plugin === undefined
   );
 
   const inputs = [...(existing?.inputs ?? defaultInputs)];

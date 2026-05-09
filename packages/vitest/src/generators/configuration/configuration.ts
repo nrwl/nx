@@ -535,7 +535,7 @@ function findTestDefault(
       (e) =>
         e.target === target &&
         e.projects === undefined &&
-        e.source === undefined
+        e.plugin === undefined
     );
   }
   return td[target];

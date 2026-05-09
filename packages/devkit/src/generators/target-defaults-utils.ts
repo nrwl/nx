@@ -35,7 +35,7 @@ const SUPPORTS_ARRAY_TARGET_DEFAULTS =
  *
  * Always writes the array shape — if the underlying value still uses
  * the legacy record shape, it is upgraded in place. Finds a matching
- * entry by the `(target, executor, projects, source)` tuple and merges
+ * entry by the `(target, executor, projects, plugin)` tuple and merges
  * the given config into it, or appends a new entry. The entry must set
  * at least one of `target` / `executor`.
  */
@@ -50,7 +50,7 @@ export function upsertTargetDefault(
     );
   }
 
-  const { target, executor, projects, source, ...config } = options;
+  const { target, executor, projects, plugin, ...config } = options;
   const originalShape = nxJson.targetDefaults;
   const entries = normalizeTargetDefaults(originalShape);
   const matchIndex = entries.findIndex(
@@ -58,7 +58,7 @@ export function upsertTargetDefault(
       e.target === target &&
       e.executor === executor &&
       projectsEqual(e.projects, projects) &&
-      e.source === source
+      e.plugin === plugin
   );
 
   if (matchIndex >= 0) {
@@ -67,19 +67,19 @@ export function upsertTargetDefault(
       target: et,
       executor: ee,
       projects: ep,
-      source: es,
+      plugin: ep2,
       ...existingRest
     } = existing;
     entries[matchIndex] = buildTargetDefaultEntry(
       target ?? et,
       projects ?? ep,
-      source ?? es,
+      plugin ?? ep2,
       executor ?? ee,
       { ...existingRest, ...config }
     );
   } else {
     entries.push(
-      buildTargetDefaultEntry(target, projects, source, executor, config)
+      buildTargetDefaultEntry(target, projects, plugin, executor, config)
     );
   }
 
@@ -92,7 +92,7 @@ export function upsertTargetDefault(
 
 /**
  * Find a `targetDefaults` entry by its locator tuple
- * `(target, executor, projects, source)`. Locator keys default to
+ * `(target, executor, projects, plugin)`. Locator keys default to
  * `undefined`, matching only entries that also leave them unset — same
  * semantics as `upsertTargetDefault`. Accepts either array or legacy
  * record shape.
@@ -101,7 +101,7 @@ export function findTargetDefault(
   targetDefaults: TargetDefaults | undefined,
   locator: Pick<
     TargetDefaultEntry,
-    'target' | 'executor' | 'projects' | 'source'
+    'target' | 'executor' | 'projects' | 'plugin'
   >
 ): TargetDefaultEntry | undefined {
   return normalizeTargetDefaults(targetDefaults).find(
@@ -109,27 +109,27 @@ export function findTargetDefault(
       e.target === locator.target &&
       e.executor === locator.executor &&
       projectsEqual(e.projects, locator.projects) &&
-      e.source === locator.source
+      e.plugin === locator.plugin
   );
 }
 
 /**
  * Construct a `TargetDefaultEntry` with the canonical key order
- * `target → projects → source → executor → ...rest`. Locators land first
+ * `target → projects → plugin → executor → ...rest`. Locators land first
  * so an entry's filter shape is obvious at a glance; `executor` follows
  * because it doubles as a payload field.
  */
 function buildTargetDefaultEntry(
   target: string | undefined,
   projects: string | string[] | undefined,
-  source: string | undefined,
+  plugin: string | undefined,
   executor: string | undefined,
   rest: Partial<TargetConfiguration>
 ): TargetDefaultEntry {
   return {
     ...(target !== undefined ? { target } : {}),
     ...(projects !== undefined ? { projects } : {}),
-    ...(source !== undefined ? { source } : {}),
+    ...(plugin !== undefined ? { plugin } : {}),
     ...(executor !== undefined ? { executor } : {}),
     ...rest,
   };

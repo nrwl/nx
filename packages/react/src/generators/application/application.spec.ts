@@ -1196,13 +1196,13 @@ describe('app', () => {
           (e) =>
             e.target === 'build' &&
             e.projects === undefined &&
-            e.source === undefined
+            e.plugin === undefined
         )
       : td.build;
     const {
       target: _t,
       projects: _p,
-      source: _s,
+      plugin: _pl,
       ...buildConfig
     } = (buildEntry as any) ?? {};
     expect(buildConfig).toMatchInlineSnapshot(`

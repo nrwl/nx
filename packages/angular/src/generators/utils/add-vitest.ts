@@ -63,7 +63,7 @@ export async function addVitestAngular(
       entry.executor === executor &&
       entry.target === undefined &&
       entry.projects === undefined &&
-      entry.source === undefined
+      entry.plugin === undefined
   );
   if (!existing) {
     upsertTargetDefault(tree, nxJson, {

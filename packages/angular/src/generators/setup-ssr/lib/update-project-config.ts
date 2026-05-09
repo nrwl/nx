@@ -177,7 +177,7 @@ function findServerDefault(
       (e) =>
         e.target === 'server' &&
         e.projects === undefined &&
-        e.source === undefined
+        e.plugin === undefined
     );
   }
   return td['server'];

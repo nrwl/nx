@@ -23,14 +23,14 @@ function getDefault(
       (e) =>
         (e.target === target || e.executor === target) &&
         e.projects === undefined &&
-        e.source === undefined
+        e.plugin === undefined
     );
     if (!found) return undefined;
     const {
       target: _t,
       executor: _e,
       projects: _p,
-      source: _s,
+      plugin: _pl,
       ...rest
     } = found;
     return rest;

@@ -162,7 +162,7 @@ describe('findBestTargetDefault', () => {
   it('target+source beats target only', () => {
     const entries: TargetDefaultEntry[] = [
       { target: 'test', cache: true },
-      { target: 'test', source: '@nx/vite', inputs: ['vite'] },
+      { target: 'test', plugin: '@nx/vite', inputs: ['vite'] },
     ];
     expect(
       findBestTargetDefault(
@@ -178,7 +178,7 @@ describe('findBestTargetDefault', () => {
 
   it('target+projects beats target+source', () => {
     const entries: TargetDefaultEntry[] = [
-      { target: 'test', source: '@nx/vite', inputs: ['vite'] },
+      { target: 'test', plugin: '@nx/vite', inputs: ['vite'] },
       { target: 'test', projects: 'web', inputs: ['byproject'] },
     ];
     expect(
@@ -196,12 +196,12 @@ describe('findBestTargetDefault', () => {
   it('target+projects+source beats all', () => {
     const entries: TargetDefaultEntry[] = [
       { target: 'test', cache: true },
-      { target: 'test', source: '@nx/vite', inputs: ['vite'] },
+      { target: 'test', plugin: '@nx/vite', inputs: ['vite'] },
       { target: 'test', projects: 'web', inputs: ['byproject'] },
       {
         target: 'test',
         projects: 'web',
-        source: '@nx/vite',
+        plugin: '@nx/vite',
         inputs: ['both'],
       },
     ];
@@ -317,7 +317,7 @@ describe('findBestTargetDefault', () => {
 
   it('skips entries requiring source when sourcePlugin is unknown', () => {
     const entries: TargetDefaultEntry[] = [
-      { target: 'test', source: '@nx/vite', inputs: ['vite'] },
+      { target: 'test', plugin: '@nx/vite', inputs: ['vite'] },
     ];
     expect(
       findBestTargetDefault(
@@ -350,13 +350,13 @@ describe('findBestTargetDefault', () => {
   // Filter-only entries (no `target`/`executor` locator, only `projects`
   // and/or `source`) intentionally rank below every locator-bearing
   // match at the same tier. The motivating case is a bare
-  // `{ source: '@nx/jest/plugin', cache: false }` — "for everything the
+  // `{ plugin: '@nx/jest/plugin', cache: false }` — "for everything the
   // jest plugin contributes, turn caching off" — which previously was
   // silently rejected because the matcher required a locator.
   describe('filter-only entries', () => {
     it('matches a target by `source` alone with no other locator', () => {
       const entries: TargetDefaultEntry[] = [
-        { source: '@nx/jest/plugin', cache: false },
+        { plugin: '@nx/jest/plugin', cache: false },
       ];
       expect(
         findBestTargetDefault(
@@ -372,7 +372,7 @@ describe('findBestTargetDefault', () => {
 
     it('skips a `source`-only entry when the source plugin does not match', () => {
       const entries: TargetDefaultEntry[] = [
-        { source: '@nx/jest/plugin', cache: false },
+        { plugin: '@nx/jest/plugin', cache: false },
       ];
       expect(
         findBestTargetDefault(
@@ -422,7 +422,7 @@ describe('findBestTargetDefault', () => {
       // `target` alone is tier 1, `source` alone is tier 1. Tie broken by
       // matchKind: exactTarget (rank 2) > filterOnly (rank 0).
       const entries: TargetDefaultEntry[] = [
-        { source: '@nx/jest/plugin', cache: false },
+        { plugin: '@nx/jest/plugin', cache: false },
         { target: 'test', cache: true },
       ];
       expect(
@@ -444,12 +444,12 @@ describe('findBestTargetDefault', () => {
       const entries: TargetDefaultEntry[] = [
         {
           target: 'test',
-          source: '@nx/jest/plugin',
+          plugin: '@nx/jest/plugin',
           inputs: ['target+source'],
         },
         {
           projects: 'web',
-          source: '@nx/jest/plugin',
+          plugin: '@nx/jest/plugin',
           inputs: ['filters-only'],
         },
       ];
@@ -467,8 +467,8 @@ describe('findBestTargetDefault', () => {
 
     it('among two filter-only entries at the same tier, later index wins', () => {
       const entries: TargetDefaultEntry[] = [
-        { source: '@nx/jest/plugin', inputs: ['first'] },
-        { source: '@nx/jest/plugin', inputs: ['second'] },
+        { plugin: '@nx/jest/plugin', inputs: ['first'] },
+        { plugin: '@nx/jest/plugin', inputs: ['second'] },
       ];
       expect(
         findBestTargetDefault(
@@ -484,10 +484,10 @@ describe('findBestTargetDefault', () => {
 
     it('projects+source (filter-only, tier 2) beats source alone (filter-only, tier 1)', () => {
       const entries: TargetDefaultEntry[] = [
-        { source: '@nx/jest/plugin', inputs: ['source-only'] },
+        { plugin: '@nx/jest/plugin', inputs: ['source-only'] },
         {
           projects: 'web',
-          source: '@nx/jest/plugin',
+          plugin: '@nx/jest/plugin',
           inputs: ['both-filters'],
         },
       ];
@@ -616,7 +616,7 @@ describe('findBestTargetDefault', () => {
     it('target+source still beats target+executor-match', () => {
       const entries: TargetDefaultEntry[] = [
         { target: 'build', executor: '@nx/js:tsc', inputs: ['executor-match'] },
-        { target: 'build', source: '@nx/js', inputs: ['source-match'] },
+        { target: 'build', plugin: '@nx/js', inputs: ['source-match'] },
       ];
       expect(
         findBestTargetDefault(

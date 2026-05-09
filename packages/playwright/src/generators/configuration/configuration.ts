@@ -382,10 +382,10 @@ function setupE2ETargetDefaults(tree: Tree) {
   const existingInputs =
     existingForTarget?.inputs ?? existingForExecutor?.inputs;
   const patch: Partial<TargetConfiguration> = {};
-  if (!existingCache) {
+  if (existingCache === undefined) {
     patch.cache = true;
   }
-  if (!existingInputs) {
+  if (existingInputs === undefined) {
     patch.inputs = ['default', productionFileSet ? '^production' : '^default'];
   }
   if (Object.keys(patch).length > 0) {

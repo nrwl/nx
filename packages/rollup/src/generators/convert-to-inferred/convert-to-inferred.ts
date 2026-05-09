@@ -43,14 +43,14 @@ export async function convertToInferred(tree: Tree, options: Schema) {
           e.executor === '@nx/rollup:rollup' &&
           e.target === undefined &&
           e.projects === undefined &&
-          e.source === undefined
+          e.plugin === undefined
       );
       if (defaults) {
         const {
           target: _t,
           executor: _e,
           projects: _p,
-          source: _s,
+          plugin: _pl,
           ...rest
         } = defaults;
         for (const [key, value] of Object.entries(rest)) {

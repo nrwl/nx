@@ -56,7 +56,7 @@ function isExecutorLikeKey(key: string): boolean {
  *
  * Each entry's key is its `target` (if set) or `executor`. Entries that
  * have both keep the locator role on `target` and retain `executor` as
- * a value field. Entries with `projects` or `source` filters cannot be
+ * a value field. Entries with `projects` or `plugin` filters cannot be
  * represented in the legacy shape — they are dropped from the output
  * so the caller can decide whether the loss is acceptable.
  */
@@ -65,8 +65,8 @@ export function downgradeTargetDefaults(
 ): TargetDefaultsRecord {
   const out: TargetDefaultsRecord = {};
   for (const entry of entries) {
-    if (entry.projects !== undefined || entry.source !== undefined) continue;
-    const { target, executor, projects, source, ...rest } = entry;
+    if (entry.projects !== undefined || entry.plugin !== undefined) continue;
+    const { target, executor, projects, plugin, ...rest } = entry;
     const key = target ?? executor;
     if (key === undefined) continue;
     const value: Partial<TargetDefaultEntry> = { ...rest };

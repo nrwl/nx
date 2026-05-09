@@ -56,7 +56,7 @@ export type TargetDefaultEntry = {
    * (e.g. `@nx/vite`). Matches against the plugin that wrote the target's
    * `executor` or `command`.
    */
-  source?: string;
+  plugin?: string;
 } & Partial<TargetConfiguration>;
 
 /**

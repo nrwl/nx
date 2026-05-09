@@ -62,7 +62,7 @@ export function createNxJsonFile(
       (e) =>
         e.target === target &&
         e.projects === undefined &&
-        e.source === undefined
+        e.plugin === undefined
     );
     if (idx >= 0) entries[idx].cache ??= true;
     else entries.push({ target, cache: true });
@@ -94,7 +94,7 @@ export function upsertTargetDefaultEntry(
 ): void {
   const idx = entries.findIndex(
     (e) =>
-      e.target === target && e.projects === undefined && e.source === undefined
+      e.target === target && e.projects === undefined && e.plugin === undefined
   );
   if (idx >= 0) entries[idx] = { target, ...entries[idx], ...patch };
   else entries.push({ target, ...patch });
