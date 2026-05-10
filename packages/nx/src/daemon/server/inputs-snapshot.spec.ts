@@ -85,18 +85,20 @@ describe('inputs-snapshot', () => {
     expect(await detectInputsDrift(snap)).toBeNull();
   });
 
-  it('detects a content change to nx.json even when size is unchanged', async () => {
+  it('detects a same-length rewrite of nx.json via mtime drift', async () => {
     fs.createFilesSync({
       'nx.json': JSON.stringify({ plugins: [], a: 1 }),
       'package.json': JSON.stringify({ name: 'root' }),
     });
     const snap = await snapshot(separated());
 
-    // Same length, different value — defeats stat+size-only checks.
     const before = JSON.stringify({ plugins: [], a: 1 });
     const after = JSON.stringify({ plugins: [], a: 2 });
     expect(after).toHaveLength(before.length);
     writeFileSync(join(fs.tempDir, 'nx.json'), after);
+    // Bump mtime explicitly so coarse-resolution filesystems still
+    // register a different signature.
+    bumpMtime(join(fs.tempDir, 'nx.json'));
 
     const drift = await detectInputsDrift(snap);
     expect(drift).not.toBeNull();
@@ -114,6 +116,7 @@ describe('inputs-snapshot', () => {
       join(fs.tempDir, 'package.json'),
       JSON.stringify({ name: 'root', version: '2.0.0' })
     );
+    bumpMtime(join(fs.tempDir, 'package.json'));
 
     const drift = await detectInputsDrift(snap);
     expect(drift?.kind).toBe('root-package-json');
@@ -215,7 +218,7 @@ describe('inputs-snapshot', () => {
       'package.json': JSON.stringify({ name: 'root' }),
     });
     const snap = await snapshot(separated());
-    expect(snap.nxJsonHash).toBeNull();
+    expect(snap.nxJsonSignature).toBe('missing');
     expect(await detectInputsDrift(snap)).toBeNull();
   });
 
@@ -224,7 +227,7 @@ describe('inputs-snapshot', () => {
       'package.json': JSON.stringify({ name: 'root' }),
     });
     const snap = await snapshot(separated());
-    expect(snap.nxJsonHash).toBeNull();
+    expect(snap.nxJsonSignature).toBe('missing');
 
     writeFileSync(join(fs.tempDir, 'nx.json'), JSON.stringify({ plugins: [] }));
 

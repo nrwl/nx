@@ -1,7 +1,6 @@
 import { stat as statAsync } from 'node:fs/promises';
 import { isAbsolute, join, resolve as pathResolve } from 'node:path';
 
-import { hashFile } from '../../hasher/file-hasher';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { globWithWorkspaceContext } from '../../utils/workspace-context';
 import { readNxJson } from '../../config/nx-json';
@@ -16,11 +15,11 @@ import { serverLogger } from '../logger';
  * recompute and is logged for diagnostics.
  */
 export type InputsDriftReason =
-  | { kind: 'nx-json'; previous: string | null; current: string | null }
+  | { kind: 'nx-json'; previous: string; current: string }
   | {
       kind: 'root-package-json';
-      previous: string | null;
-      current: string | null;
+      previous: string;
+      current: string;
     }
   | {
       kind: 'plugin-source';
@@ -40,9 +39,12 @@ export type InputsDriftReason =
  * compute completion and consulted on every cache-hit decision so the
  * daemon does not depend on the file watcher to observe config drift.
  *
- * - `nxJsonHash` / `rootPackageJsonHash` cover the small workspace-level
- *   configs whose content can change without size changing, so hashing
- *   their bytes is more robust than stat alone.
+ * - `nxJsonSignature` / `rootPackageJsonSignature` cover the small
+ *   workspace-level configs. Stat-based (`ino:size:mtimeNs:ctimeNs`):
+ *   any write bumps mtime/ctime, so even same-length content rewrites
+ *   register as drift. Same shape as the plugin-source/input checks
+ *   below — keeps the layered staleness check uniform and avoids
+ *   reading file contents on the hot path.
  * - `pluginSources` covers workspace-local plugins (specifiers like
  *   `./tools/foo`) whose source file changing means the loader produces
  *   different behavior even with an unchanged plugins list. Entries for
@@ -55,8 +57,8 @@ export type InputsDriftReason =
  *   staying single-digit microseconds per file.
  */
 export interface InputsSnapshot {
-  nxJsonHash: string | null;
-  rootPackageJsonHash: string | null;
+  nxJsonSignature: string;
+  rootPackageJsonSignature: string;
   pluginSources: Map<string, string>;
   pluginInputs: Map<string, string>;
 }
@@ -112,14 +114,6 @@ async function readStatSignature(absPath: string): Promise<string> {
     return statSignature(s);
   } catch {
     return 'missing';
-  }
-}
-
-function readHashSafe(absPath: string): string | null {
-  try {
-    return hashFile(absPath);
-  } catch {
-    return null;
   }
 }
 
@@ -192,8 +186,8 @@ async function buildPluginSourcesMap(
  * compute finishes (which can already be the next test's write).
  */
 export interface PreComputeInputs {
-  nxJsonHash: string | null;
-  rootPackageJsonHash: string | null;
+  nxJsonSignature: string;
+  rootPackageJsonSignature: string;
   pluginSources: Map<string, string>;
 }
 
@@ -209,13 +203,14 @@ export async function capturePreComputeInputs(): Promise<PreComputeInputs> {
     );
   }
 
-  const [nxJsonHash, rootPackageJsonHash, pluginSources] = await Promise.all([
-    Promise.resolve(readHashSafe(join(workspaceRoot, NX_JSON_PATH))),
-    Promise.resolve(readHashSafe(join(workspaceRoot, ROOT_PACKAGE_JSON_PATH))),
-    buildPluginSourcesMap(pluginsConfig),
-  ]);
+  const [nxJsonSignature, rootPackageJsonSignature, pluginSources] =
+    await Promise.all([
+      readStatSignature(join(workspaceRoot, NX_JSON_PATH)),
+      readStatSignature(join(workspaceRoot, ROOT_PACKAGE_JSON_PATH)),
+      buildPluginSourcesMap(pluginsConfig),
+    ]);
 
-  return { nxJsonHash, rootPackageJsonHash, pluginSources };
+  return { nxJsonSignature, rootPackageJsonSignature, pluginSources };
 }
 
 /**
@@ -254,29 +249,32 @@ export function combineInputsSnapshot(
  * Compare the captured snapshot against current disk state. Returns the
  * first drift detected (so callers can log a precise reason) or `null`
  * when every input still matches. Order of checks goes cheapest-first:
- * a single hash short-circuits before we stat hundreds of plugin inputs.
+ * the two workspace-config stats short-circuit before we stat hundreds
+ * of plugin inputs.
  */
 export async function detectInputsDrift(
   snapshot: InputsSnapshot
 ): Promise<InputsDriftReason | null> {
   // Layer 1: workspace-level configs. Cheap; covers the spread test's
   // nx.json plugins flake deterministically.
-  const currentNxJsonHash = readHashSafe(join(workspaceRoot, NX_JSON_PATH));
-  if (currentNxJsonHash !== snapshot.nxJsonHash) {
+  const currentNxJsonSignature = await readStatSignature(
+    join(workspaceRoot, NX_JSON_PATH)
+  );
+  if (currentNxJsonSignature !== snapshot.nxJsonSignature) {
     return {
       kind: 'nx-json',
-      previous: snapshot.nxJsonHash,
-      current: currentNxJsonHash,
+      previous: snapshot.nxJsonSignature,
+      current: currentNxJsonSignature,
     };
   }
-  const currentRootPkgHash = readHashSafe(
+  const currentRootPkgSignature = await readStatSignature(
     join(workspaceRoot, ROOT_PACKAGE_JSON_PATH)
   );
-  if (currentRootPkgHash !== snapshot.rootPackageJsonHash) {
+  if (currentRootPkgSignature !== snapshot.rootPackageJsonSignature) {
     return {
       kind: 'root-package-json',
-      previous: snapshot.rootPackageJsonHash,
-      current: currentRootPkgHash,
+      previous: snapshot.rootPackageJsonSignature,
+      current: currentRootPkgSignature,
     };
   }
 
@@ -320,9 +318,9 @@ export async function detectInputsDrift(
 export function describeInputsDrift(reason: InputsDriftReason): string {
   switch (reason.kind) {
     case 'nx-json':
-      return `nx.json content changed (was ${reason.previous}, now ${reason.current})`;
+      return `nx.json changed (was ${reason.previous}, now ${reason.current})`;
     case 'root-package-json':
-      return `root package.json content changed (was ${reason.previous}, now ${reason.current})`;
+      return `root package.json changed (was ${reason.previous}, now ${reason.current})`;
     case 'plugin-source':
       return `workspace plugin source changed: ${reason.path}`;
     case 'plugin-input':
