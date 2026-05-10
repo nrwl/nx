@@ -1,4 +1,5 @@
 import { formatFiles, Tree } from '@nx/devkit';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import {
   addFiles,
   addPathMapping,
@@ -11,6 +12,7 @@ export async function librarySecondaryEntryPointGenerator(
   tree: Tree,
   rawOptions: GeneratorOptions
 ) {
+  assertSupportedAngularVersion(tree);
   const options = normalizeOptions(tree, rawOptions);
 
   addFiles(tree, options);

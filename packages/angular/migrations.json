@@ -368,9 +368,6 @@
     },
     "update-unit-test-runner-option": {
       "version": "22.3.0-beta.0",
-      "requires": {
-        "@angular/core": ">=21.0.0"
-      },
       "description": "Update 'vitest' unit test runner option to 'vitest-analog' in generator defaults.",
       "factory": "./src/migrations/update-22-3-0/update-unit-test-runner-option"
     },
@@ -1049,6 +1046,9 @@
     },
     "20.2.0-module-federation": {
       "version": "20.2.0-beta.3",
+      "requires": {
+        "@module-federation/enhanced": ">=0.6.0 <0.7.0"
+      },
       "packages": {
         "@module-federation/enhanced": {
           "version": "0.7.6",
@@ -1988,6 +1988,9 @@
     },
     "22.2.0": {
       "version": "22.2.0-beta.0",
+      "requires": {
+        "@module-federation/enhanced": ">=0.7.0 <0.21.0"
+      },
       "packages": {
         "@module-federation/enhanced": {
           "version": "^0.21.2",
@@ -2413,6 +2416,9 @@
     "22.6.0-module-federation": {
       "version": "22.6.0-beta.10",
       "x-prompt": "Bump @module-federation packages to v2.x to resolve koa CVE-2026-27959 (via dts-plugin)",
+      "requires": {
+        "@module-federation/enhanced": ">=0.21.0 <2.0.0"
+      },
       "packages": {
         "@module-federation/enhanced": {
           "version": "^2.1.0",

@@ -1,5 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { formatFiles, GeneratorCallback } from '@nx/devkit';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import type { Schema } from './schema';
 import {
   addExportsToBarrel,
@@ -11,6 +12,7 @@ import {
 } from './lib';
 
 export async function ngrxFeatureStoreGenerator(tree: Tree, schema: Schema) {
+  assertSupportedAngularVersion(tree);
   validateOptions(tree, schema);
   const options = normalizeOptions(tree, schema);
 
