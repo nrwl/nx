@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`vue:component-story default setup component with other syntax of props defined should create a story with controls 1`] = `
 "import type { Meta, StoryObj } from '@storybook/vue3-vite';
