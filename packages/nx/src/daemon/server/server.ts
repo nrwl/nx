@@ -1,4 +1,4 @@
-import { existsSync, statSync } from 'fs';
+import { existsSync } from 'fs';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
 import { deserialize, serialize } from 'v8';
@@ -93,6 +93,7 @@ import {
   killSocketOrPath,
 } from '../socket-utils';
 import { registerFileChangeListener } from './file-watching/file-change-events';
+import { routeWorkspaceChanges } from './file-watching/route-workspace-changes';
 import {
   hasRegisteredFileWatcherSockets,
   registeredFileWatcherSockets,
@@ -622,58 +623,7 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
     }
 
     serverLogger.watcherLog(convertChangeEventsToLogMessage(changeEvents));
-
-    const updatedFilesToHash = [];
-    const createdFilesToHash = [];
-    const deletedFiles = [];
-
-    for (const event of changeEvents) {
-      if (event.type === 'delete') {
-        deletedFiles.push(event.path);
-      } else {
-        try {
-          const s = statSync(join(workspaceRoot, event.path));
-          if (s.isFile()) {
-            if (event.type === 'update') {
-              updatedFilesToHash.push(event.path);
-            } else {
-              createdFilesToHash.push(event.path);
-            }
-          }
-        } catch (e) {
-          // this can happen when the update file was deleted right after
-        }
-      }
-    }
-
-    const cap = 10;
-    const summarize = (files: string[]) =>
-      files.length === 0
-        ? '(none)'
-        : files.length <= cap
-          ? files.map((f) => `  - ${f}`).join('\n')
-          : files
-              .slice(0, cap)
-              .map((f) => `  - ${f}`)
-              .join('\n') + `\n  ... and ${files.length - cap} more`;
-    if (
-      createdFilesToHash.length ||
-      updatedFilesToHash.length ||
-      deletedFiles.length
-    ) {
-      serverLogger.watcherLog(
-        `File changes detected:\n` +
-          `Created:\n${summarize(createdFilesToHash)}\n` +
-          `Updated:\n${summarize(updatedFilesToHash)}\n` +
-          `Deleted:\n${summarize(deletedFiles)}`
-      );
-    }
-
-    scheduleProjectGraphRecomputation(
-      createdFilesToHash,
-      updatedFilesToHash,
-      deletedFiles
-    );
+    routeWorkspaceChanges(changeEvents);
   } catch (err) {
     serverLogger.watcherLog(`Unexpected workspace error`, err.message);
     console.error(err);

@@ -33,29 +33,23 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
       const { storeWatcherInstance } = require('./shutdown-utils');
       const {
         getCachedSerializedProjectGraphPromise,
-        scheduleProjectGraphRecomputation,
       } = require('./project-graph-incremental-recomputation');
+      const {
+        routeWorkspaceChanges,
+      } = require('./file-watching/route-workspace-changes');
       const { serverLogger } = require('../logger');
 
-      // Mirror the production callback (`handleWorkspaceChanges` in
-      // server.ts) — categorise events and route them into the
-      // recomputation queue. Anything less than this would mean we're
-      // testing the daemon with a watcher that doesn't actually drive
-      // the real `collected*` state.
+      // Use the real production routing helper. The daemon's
+      // handleWorkspaceChanges wraps this with inactivity-timer +
+      // error-tracking bookkeeping that's irrelevant here; calling
+      // the helper directly avoids those side effects while
+      // exercising the same routing logic.
       const fakeServer = {} as unknown as import('net').Server;
       const watcher = await watchWorkspace(
         fakeServer,
         async (err: unknown, events: { type: string; path: string }[]) => {
           if (err || !events) return;
-          const created: string[] = [];
-          const updated: string[] = [];
-          const deleted: string[] = [];
-          for (const e of events) {
-            if (e.type === 'delete') deleted.push(e.path);
-            else if (e.type === 'update') updated.push(e.path);
-            else created.push(e.path);
-          }
-          scheduleProjectGraphRecomputation(created, updated, deleted);
+          routeWorkspaceChanges(events);
         }
       );
       storeWatcherInstance(watcher);
