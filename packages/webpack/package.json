@@ -33,7 +33,7 @@
   "dependencies": {
     "@babel/core": "^7.23.2",
     "@phenomnomnominal/tsquery": "catalog:typescript",
-    "ajv": "^8.12.0",
+    "ajv": "catalog:",
     "autoprefixer": "catalog:css",
     "babel-loader": "^9.1.2",
     "browserslist": "^4.26.0",
@@ -51,7 +51,7 @@
     "postcss": "catalog:css",
     "postcss-import": "~14.1.0",
     "postcss-loader": "catalog:css",
-    "rxjs": "^7.8.0",
+    "rxjs": "catalog:",
     "sass": "catalog:css",
     "sass-embedded": "catalog:css",
     "sass-loader": "^16.0.7",

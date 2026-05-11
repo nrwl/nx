@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "@phenomnomnominal/tsquery": "catalog:typescript",
-    "@svgr/webpack": "^8.0.1",
+    "@svgr/webpack": "catalog:",
     "minimatch": "catalog:",
     "tslib": "catalog:typescript",
     "@nx/devkit": "workspace:*",

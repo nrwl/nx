@@ -19,14 +19,19 @@ onlyBuiltDependencies:
 patchedDependencies:
   '@astrojs/starlight': 'patches/@astrojs__starlight.patch'
 catalog:
+  '@playwright/test': '^1.36.0'
+  '@svgr/webpack': '^8.0.1'
   '@zkochan/js-yaml': '0.0.7'
+  ajv: '^8.0.0'
   chalk: '^4.1.0'
   enquirer: '~2.3.6'
   minimatch: '10.2.5'
   picomatch: '4.0.4'
   picocolors: '^1.1.0'
+  rxjs: '^7.8.0'
   semver: '^7.6.3'
   tinyglobby: '^0.2.12'
+  tmp: '~0.2.1'
   yargs: '^17.6.2'
   yargs-parser: '21.1.1'
 catalogs:
@@ -72,7 +77,10 @@ catalogs:
     '@angular-eslint/eslint-plugin': '^21.3.1'
     '@angular-eslint/eslint-plugin-template': '^21.3.1'
     '@angular-eslint/template-parser': '^21.3.1'
+    '@typescript-eslint/type-utils': '^8.0.0'
+    '@typescript-eslint/utils': '^8.0.0'
     angular-eslint: '^21.3.1'
+    eslint-config-prettier: '^10.0.0'
   jest:
     '@jest/reporters': '^30.0.2'
     '@jest/test-result': '^30.0.2'
