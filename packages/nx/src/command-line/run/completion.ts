@@ -6,7 +6,7 @@ import {
 
 // `nx run <project>:<target>` — single positional.
 registerCompletion('run', {
-  positionals: [{ complete: (current) => completeProjectTarget(current) }],
+  positionals: [{ complete: completeProjectTarget }],
 });
 
 // Infix notation: `nx <target> <project>` — e.g. `nx build my-app`. Each

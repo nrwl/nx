@@ -5,7 +5,7 @@ import { completeGenerator } from '../completion/completion-providers';
 // generator is chosen, generator-specific flags are owned by the generator's
 // own schema, so we fall through past positional 0.
 const generateCompletion = {
-  positionals: [{ complete: (current: string) => completeGenerator(current) }],
+  positionals: [{ complete: completeGenerator }],
 };
 registerCompletion('generate', generateCompletion);
 registerCompletion('g', generateCompletion); // alias

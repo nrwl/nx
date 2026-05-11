@@ -85,3 +85,43 @@ export function findFlagCompletion(
 ): CompletionFn | null {
   return metadata?.flags?.[flag] ?? null;
 }
+
+/**
+ * Shared positional/flag-value dispatch. Used by both entry points in
+ * value-completions.ts (the bin-level `tryValueCompletion` and the
+ * yargs-fallback `getValueCompletions`).
+ *
+ * Returns `null` when no registered completion applies — the caller falls
+ * through to its next strategy (command/option-name enumeration, yargs
+ * defaults).
+ *
+ * `previousToken` is the user's last fully-typed token, i.e. the one before
+ * the partial they're currently typing. Callers pass it explicitly so each
+ * argv-extraction quirk stays at its own call site.
+ */
+export function resolveCompletion(
+  args: string[],
+  current: string,
+  previousToken: string
+): string[] | null {
+  if (args.length === 0) return null;
+
+  const match = findCompletionMetadata(args);
+  const meta = match?.metadata ?? null;
+
+  if (previousToken && previousToken.startsWith('-')) {
+    const handler = findFlagCompletion(meta, previousToken.replace(/^-+/, ''));
+    if (handler) return handler(current, args);
+  }
+
+  if (match) {
+    const positional = match.metadata.positionals?.[match.positionalIndex];
+    if (positional?.complete) return positional.complete(current, args);
+    if (positional?.choices) {
+      return positional.choices.filter((c) => c.startsWith(current));
+    }
+    return null;
+  }
+
+  return null;
+}

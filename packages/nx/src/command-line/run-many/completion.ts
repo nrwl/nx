@@ -8,8 +8,10 @@ import {
 // flags. If yargs's alias declarations change, update the duplicates here.
 registerCompletion('run-many', {
   flags: {
-    projects: (current) => getProjectNameCompletions(current),
-    p: (current) => getProjectNameCompletions(current),
+    projects: getProjectNameCompletions,
+    p: getProjectNameCompletions,
+    // wrapper lambdas because getTargetNameCompletions takes an optional
+    // projectName whose type collides with the dispatcher's args parameter.
     targets: (current) => getTargetNameCompletions(current),
     target: (current) => getTargetNameCompletions(current),
     t: (current) => getTargetNameCompletions(current),

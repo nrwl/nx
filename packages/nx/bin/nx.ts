@@ -45,14 +45,16 @@ async function main() {
     // perf-logging consumes an `init-local` mark; set it before requiring
     // nx-commands so the measurement doesn't error on missing mark.
     performance.mark('init-local');
-    // Fast path: if the user's TAB lands in a registered metadata path
-    // (project/target names, generators, flag values), serve the
-    // completion without loading the full yargs command surface.
-    const { tryFastCompletion } = await import(
-      'nx/src/command-line/completion/fast-path'
+    // Value completions (project/target/generator names, flag values)
+    // are served from registered metadata without loading the full yargs
+    // command surface. Falls through when the TAB lands outside that
+    // surface — e.g. top-level command names, which are handled below.
+    const { tryValueCompletion } = await import(
+      'nx/src/command-line/completion/value-completions'
     );
-    if (tryFastCompletion()) return;
-    // Slow path: top-level command enumeration, unmigrated commands.
+    if (tryValueCompletion()) return;
+    // Fallback: yargs default completion handles command-name enumeration
+    // and command/option-name completion via `command-completions`.
     (await import('nx/src/command-line/nx-commands')).commandsObject.argv;
     return;
   }
