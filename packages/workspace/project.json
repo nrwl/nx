@@ -3,12 +3,18 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/workspace/src",
   "projectType": "library",
+  "release": {
+    "version": {
+      "generator": "@nx/js:release-version",
+      "preserveLocalDependencyProtocols": true,
+      "manifestRootsToUpdate": ["packages/{projectName}"]
+    }
+  },
   "targets": {
-    "build": {
-      "dependsOn": ["build-base"],
-      "outputs": ["{workspaceRoot}/dist/packages/workspace/README.md"],
-      "command": "node ./scripts/copy-readme.js workspace",
-      "inputs": ["copyReadme"]
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "packages/{projectName}"
+      }
     },
     "build-base": {
       "dependsOn": [
@@ -16,6 +22,12 @@
         "build-native",
         "copy-assets"
       ]
+    },
+    "build": {
+      "dependsOn": ["build-base"],
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js workspace packages/workspace/readme-template.md packages/workspace/README.md",
+      "inputs": ["copyReadme"]
     },
     "add-extra-dependencies": {
       "command": "node ./scripts/add-dependency-to-build.js workspace nx"

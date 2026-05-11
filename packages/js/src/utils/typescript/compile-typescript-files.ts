@@ -3,7 +3,7 @@ import {
   compileTypeScript,
   compileTypeScriptWatcher,
   TypeScriptCompilationOptions,
-} from '@nx/workspace/src/utilities/typescript/compilation';
+} from './compilation';
 import type { Diagnostic } from 'typescript';
 import { NormalizedExecutorOptions } from '../schema';
 

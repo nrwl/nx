@@ -80,6 +80,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     'packages/dotnet',
     'packages/maven',
     'packages/nx',
+    'packages/workspace',
   ];
 
   const packageSnapshots: { [key: string]: string } = {};

@@ -18,3 +18,5 @@ export {
 } from './nx-devkit/ast-utils';
 
 export { addRoute, addProviderToRoute } from './nx-devkit/route-utils';
+
+export { angularDevkitVersion } from './versions';
