@@ -44,7 +44,7 @@
       "implementation": "./src/migrations/update-21-3-0/replace-removed-matcher-aliases"
     },
     "update-snapshot-guide-link": {
-      "version": "23.0.0-beta.6",
+      "version": "23.0.0-beta.10",
       "requires": {
         "jest": ">=30.0.0"
       },
