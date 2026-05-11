@@ -295,10 +295,27 @@ impl WatchPipeline {
                             replies.push(extra);
                         }
                         let mut fatal: Option<String> = None;
-                        while let Ok(event) = self.notify_rx.try_recv() {
+
+                        // The notify-crate thread may have just read from
+                        // inotify and be mid-send when our force_flush
+                        // request arrives. A plain try_recv would miss
+                        // that in-flight event and we'd snapshot an
+                        // incomplete picture. Give in-flight events a
+                        // brief window to land before proceeding.
+                        if let Ok(event) =
+                            self.notify_rx.recv_timeout(Duration::from_millis(5))
+                        {
                             if let Err(msg) = self.ingest_event(event) {
                                 fatal = Some(msg);
-                                break;
+                            }
+                        }
+
+                        if fatal.is_none() {
+                            while let Ok(event) = self.notify_rx.try_recv() {
+                                if let Err(msg) = self.ingest_event(event) {
+                                    fatal = Some(msg);
+                                    break;
+                                }
                             }
                         }
                         let watch_events = self.snapshot_events();
@@ -701,6 +718,36 @@ mod tests {
                 matches!(evt.r#type, EventType::create),
                 "{name} should classify as Create; got {:?}",
                 evt.r#type
+            );
+        }
+    }
+
+    #[test]
+    fn force_flush_pending_captures_in_flight_writes() {
+        // Regression for the watcher-race that drove the spread test
+        // flake. Without recv_timeout in the force-flush handler, a
+        // write made and immediately followed by force_flush_pending
+        // can miss the event: the notify-crate thread may have read
+        // the inotify event but not yet finished sending it on
+        // notify_rx when our try_recv runs. recv_timeout gives that
+        // in-flight send a brief window to land before we snapshot.
+        let dir = tempdir().expect("tempdir");
+        let target = dir.path().join("nx.json");
+        fs::write(&target, "v1").expect("initial write");
+
+        let (watcher, _captured) = start_watcher(dir.path());
+
+        // Hammer the race: each iteration writes and IMMEDIATELY
+        // force-flushes with no sleep in between. Even a single failure
+        // here would mean the daemon could serve stale data; the loop
+        // tightens the window to catch flakiness.
+        for i in 0..20 {
+            fs::write(&target, format!("v{i}")).expect("rewrite");
+            let events = watcher.force_flush_pending();
+            assert!(
+                events.iter().any(|e| e.path == "nx.json"),
+                "iteration {i}: force_flush_pending returned no nx.json event \
+                 — got {events:?}"
             );
         }
     }
