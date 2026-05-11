@@ -13,9 +13,13 @@ jest.mock('./hash-plan-inspector', () => ({
   HashPlanInspector: jest.fn(),
 }));
 
-jest.mock('../tasks-runner/utils', () => ({
-  getOutputsForTargetAndConfiguration: jest.fn(),
-}));
+jest.mock('../tasks-runner/utils', () => {
+  const actual = jest.requireActual('../tasks-runner/utils');
+  return {
+    ...actual,
+    getOutputsForTargetAndConfiguration: jest.fn(),
+  };
+});
 
 jest.mock('../tasks-runner/create-task-graph', () => ({
   createTaskGraph: jest.fn(),
@@ -27,15 +31,10 @@ jest.mock('./task-hasher', () => ({
 
 // ── Imports (after mocks) ────────────────────────────────────────────────────
 
-// eslint-disable-next-line import/order
 import { HashPlanInspector } from './hash-plan-inspector';
-// eslint-disable-next-line import/order
 import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
-// eslint-disable-next-line import/order
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
-// eslint-disable-next-line import/order
 import { getInputs as mockedGetInputs } from './task-hasher';
-// eslint-disable-next-line import/order
 import { createTaskFileResolver } from './task-file-resolver';
 
 const MockHashPlanInspector = jest.mocked(HashPlanInspector);

@@ -2,6 +2,7 @@ import {
   createTaskFileResolver,
   type TaskFileResolver,
 } from '../../../hasher/task-file-resolver';
+import { createTaskId } from '../../../tasks-runner/utils';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import type { ShowTargetOutputsOptions } from '../command-object';
 import {
@@ -20,9 +21,7 @@ export async function showTargetOutputsHandler(
 ): Promise<void> {
   const t = await resolveTarget(args);
 
-  const taskId = t.configuration
-    ? `${t.projectName}:${t.targetName}:${t.configuration}`
-    : `${t.projectName}:${t.targetName}`;
+  const taskId = createTaskId(t.projectName, t.targetName, t.configuration);
 
   const resolver = await createTaskFileResolver({
     projectGraph: t.graph,

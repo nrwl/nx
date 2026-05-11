@@ -4,7 +4,10 @@ import type { ProjectGraph } from '../config/project-graph';
 import type { Task, TaskGraph } from '../config/task-graph';
 import type { HashInputs } from '../native';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
-import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
+import {
+  createTaskId,
+  getOutputsForTargetAndConfiguration,
+} from '../tasks-runner/utils';
 import { splitByColons } from '../utils/split-target';
 import { workspaceRoot as defaultWorkspaceRoot } from '../utils/workspace-root';
 import { HashPlanInspector } from './hash-plan-inspector';
@@ -85,20 +88,19 @@ export async function createTaskFileResolver(options: {
       return null;
     }
 
-    // The result key is usually the same as taskId but may include a
-    // defaultConfiguration suffix when none was explicitly given.
-    let inputs: HashInputs | undefined = planResult[taskId];
-    if (!inputs) {
-      const prefix = `${project}:${target}`;
-      for (const [key, val] of Object.entries(planResult)) {
-        if (key === prefix || key.startsWith(prefix + ':')) {
-          inputs = val;
-          break;
-        }
-      }
-    }
-
-    const result = inputs ?? null;
+    // When no configuration was specified, the inspector may key the result
+    // under the target's defaultConfiguration. Use createTaskId with
+    // defaultConfiguration to build the expected key directly.
+    const defaultConfig =
+      options.projectGraph.nodes[project]?.data?.targets?.[target]
+        ?.defaultConfiguration;
+    const canonicalId = createTaskId(
+      project,
+      target,
+      configuration ?? defaultConfig
+    );
+    const result =
+      planResult[canonicalId] ?? planResult[createTaskId(project, target, undefined)] ?? null;
     hashInputsCache.set(taskId, result);
     return result;
   }
@@ -113,9 +115,14 @@ export async function createTaskFileResolver(options: {
 
     const { project, target, configuration } = parseTaskId(taskId);
     const node = options.projectGraph.nodes[project];
-    const outputs = node?.data?.targets?.[target]
+    const targetData = node?.data?.targets?.[target];
+    // Fall back to the target's defaultConfiguration when none was specified so
+    // configuration-specific output interpolations are resolved correctly.
+    const effectiveConfig =
+      configuration ?? targetData?.defaultConfiguration;
+    const outputs = targetData
       ? getOutputsForTargetAndConfiguration(
-          { project, target, configuration },
+          { project, target, configuration: effectiveConfig },
           {},
           node
         )
@@ -153,9 +160,12 @@ export async function createTaskFileResolver(options: {
   function findCanonicalTaskId(taskId: string, tg: TaskGraph): string | null {
     if (tg.tasks[taskId]) return taskId;
     const { project, target } = parseTaskId(taskId);
-    const prefix = `${project}:${target}`;
-    for (const id of Object.keys(tg.tasks)) {
-      if (id === prefix || id.startsWith(prefix + ':')) return id;
+    const defaultConfig =
+      options.projectGraph.nodes[project]?.data?.targets?.[target]
+        ?.defaultConfiguration;
+    if (defaultConfig) {
+      const withDefault = createTaskId(project, target, defaultConfig);
+      if (tg.tasks[withDefault]) return withDefault;
     }
     return null;
   }
@@ -163,21 +173,23 @@ export async function createTaskFileResolver(options: {
   function getDepsOutputs(taskId: string): ExpandedDepsOutput[] {
     if (depsOutputsCache.has(taskId)) return depsOutputsCache.get(taskId)!;
 
-    const tg = getTaskGraphFor(taskId);
-    if (!tg) {
+    const { project, target } = parseTaskId(taskId);
+    const node = options.projectGraph.nodes[project];
+    if (!node?.data?.targets?.[target]) {
       depsOutputsCache.set(taskId, []);
       return [];
     }
-    const canonical = findCanonicalTaskId(taskId, tg);
-    if (!canonical) {
-      depsOutputsCache.set(taskId, []);
-      return [];
-    }
-    const task = tg.tasks[canonical] as Task;
+
+    // getInputs only reads task.target.project and task.target.target, so we
+    // don't need to build a full TaskGraph to obtain the Task object.
     let result: ExpandedDepsOutput[] = [];
     try {
       result =
-        getInputs(task, options.projectGraph, getNxJson()).depsOutputs ?? [];
+        getInputs(
+          { target: { project, target } } as Task,
+          options.projectGraph,
+          getNxJson()
+        ).depsOutputs ?? [];
     } catch {
       result = [];
     }
@@ -190,11 +202,11 @@ export async function createTaskFileResolver(options: {
     if (!tg) return [];
     const canonical = findCanonicalTaskId(taskId, tg);
     if (!canonical) return [];
-    const direct = tg.dependencies[canonical] ?? [];
-    if (!transitive) return [...direct];
+    if (!transitive) return [...(tg.dependencies[canonical] ?? [])];
+    // BFS over the task graph to collect all transitive upstream task IDs.
     const visited = new Set<string>();
-    const queue = [...direct];
-    while (queue.length) {
+    const queue = [...(tg.dependencies[canonical] ?? [])];
+    while (queue.length > 0) {
       const id = queue.shift()!;
       if (visited.has(id)) continue;
       visited.add(id);
@@ -203,6 +215,9 @@ export async function createTaskFileResolver(options: {
     return [...visited];
   }
 
+  // No dedicated cross-codebase utility exists for matching a path against an
+  // output pattern (exact, directory-prefix, or glob). The native expandOutputs
+  // requires files to already exist on disk, which precludes static analysis.
   function pathMatchesOutputPattern(
     normalizedPath: string,
     pattern: string
@@ -215,7 +230,7 @@ export async function createTaskFileResolver(options: {
     );
   }
 
-  function isOutputImpl(taskId: string, path: string): boolean {
+  function isOutput(taskId: string, path: string): boolean {
     const normalized = path.replace(/\\/g, '/');
     return getOutputs(taskId).some((p) =>
       pathMatchesOutputPattern(normalized, p)
@@ -232,7 +247,7 @@ export async function createTaskFileResolver(options: {
       }
       const upstreamIds = getUpstreamTaskIds(taskId, !!transitive);
       for (const upstreamId of upstreamIds) {
-        if (isOutputImpl(upstreamId, normalized)) return true;
+        if (isOutput(upstreamId, normalized)) return true;
       }
     }
     return false;
@@ -259,6 +274,6 @@ export async function createTaskFileResolver(options: {
       }
       return matchesDependentTaskOutputs(taskId, normalized);
     },
-    isOutput: isOutputImpl,
+    isOutput,
   };
 }
