@@ -15,7 +15,6 @@ import {
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 
 jest.mock('nx/src/utils/workspace-root', () => ({
-  ...jest.requireActual('nx/src/utils/workspace-root'),
   workspaceRoot: '/root',
 }));
 

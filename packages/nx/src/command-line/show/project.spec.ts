@@ -23,7 +23,6 @@ jest.mock('../../project-graph/project-graph', () => ({
 }));
 
 jest.mock('../../utils/workspace-root', () => ({
-  ...jest.requireActual('../../utils/workspace-root'),
   workspaceRoot: '/workspace',
 }));
 

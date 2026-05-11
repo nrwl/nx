@@ -12,7 +12,6 @@ import {
 jest.mock('../utils/exec-command');
 jest.mock('../utils/git');
 jest.mock('../../../utils/workspace-root', () => ({
-  ...jest.requireActual('../../../utils/workspace-root'),
   workspaceRoot: '/',
 }));
 

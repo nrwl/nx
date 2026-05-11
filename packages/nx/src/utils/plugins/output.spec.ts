@@ -6,7 +6,6 @@ import {
 } from './output';
 
 jest.mock('../workspace-root', () => ({
-  ...jest.requireActual('../workspace-root'),
   workspaceRoot: '/workspace',
 }));
 

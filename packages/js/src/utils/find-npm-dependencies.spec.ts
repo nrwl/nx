@@ -8,7 +8,6 @@ jest.mock('@nx/devkit', () => ({
 }));
 
 jest.mock('nx/src/utils/workspace-root', () => ({
-  ...jest.requireActual('nx/src/utils/workspace-root'),
   workspaceRoot: '/root',
 }));
 
