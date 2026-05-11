@@ -1,5 +1,6 @@
 import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
-import { clean, coerce, major } from 'semver';
+import { getDeclaredPackageVersion } from '@nx/devkit/internal';
+import { coerce, major } from 'semver';
 import {
   backwardCompatibleVersions,
   type PackageCompatVersions,
@@ -20,22 +21,7 @@ export function getInstalledAngularDevkitVersion(tree: Tree): string | null {
 }
 
 export function getInstalledAngularVersion(tree: Tree): string {
-  const installedAngularVersion = getDependencyVersionFromPackageJson(
-    tree,
-    '@angular/core'
-  );
-
-  if (
-    !installedAngularVersion ||
-    installedAngularVersion === 'latest' ||
-    installedAngularVersion === 'next'
-  ) {
-    return clean(angularVersion) ?? coerce(angularVersion).version;
-  }
-
-  return (
-    clean(installedAngularVersion) ?? coerce(installedAngularVersion).version
-  );
+  return getDeclaredPackageVersion(tree, '@angular/core', angularVersion)!;
 }
 
 export function getInstalledAngularMajorVersion(tree: Tree): number {
