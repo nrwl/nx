@@ -12,7 +12,6 @@ import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import { serverLogger } from '../daemon/logger';
 import { workspaceDataDirectory } from '../utils/cache-directory';
-import { onWorkspaceRootChanged } from '../utils/workspace-root';
 import {
   directoryExists,
   fileExists,
@@ -38,17 +37,13 @@ export interface FileMapCache {
   externalNodesHash?: string;
 }
 
-// `let` so the workspace-root listener below can refresh these when
-// tests re-pin the workspace root. Production sets them once.
-export let nxProjectGraph = join(workspaceDataDirectory, 'project-graph.json');
-export let nxFileMap = join(workspaceDataDirectory, 'file-map.json');
-export let nxSourceMaps = join(workspaceDataDirectory, 'source-maps.json');
+export const nxProjectGraph = join(
+  workspaceDataDirectory,
+  'project-graph.json'
+);
+export const nxFileMap = join(workspaceDataDirectory, 'file-map.json');
 
-onWorkspaceRootChanged(() => {
-  nxProjectGraph = join(workspaceDataDirectory, 'project-graph.json');
-  nxFileMap = join(workspaceDataDirectory, 'file-map.json');
-  nxSourceMaps = join(workspaceDataDirectory, 'source-maps.json');
-});
+export const nxSourceMaps = join(workspaceDataDirectory, 'source-maps.json');
 
 export function ensureCacheDirectory(): void {
   try {

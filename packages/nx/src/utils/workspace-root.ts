@@ -6,24 +6,9 @@ import { fileExists } from './fileutils';
  */
 export let workspaceRoot = workspaceRootInner(process.cwd(), process.cwd());
 
-const workspaceRootListeners: Array<() => void> = [];
-
-/**
- * Register a callback that fires whenever `workspaceRoot` is reassigned.
- * Lets downstream modules (cache-directory, nx-deps-cache, tmp-dir, …)
- * refresh paths derived from the root without each consumer having to
- * call a function. In production this only fires at startup or never;
- * tests use it to swap the workspace root cleanly without a fresh
- * module graph.
- */
-export function onWorkspaceRootChanged(listener: () => void): void {
-  workspaceRootListeners.push(listener);
-}
-
 // Required for integration tests in projects which depend on Nx at runtime, such as lerna and angular-eslint
 export function setWorkspaceRoot(root: string): void {
   workspaceRoot = root;
-  for (const listener of workspaceRootListeners) listener();
 }
 
 export function workspaceRootInner(
