@@ -61,13 +61,9 @@ export async function writeTaskRunsToHistory(
 
 export let taskHistoryFile = join(workspaceDataDirectory, 'task-history.csv');
 
-// Guard: jest.mock of workspace-root in unrelated specs replaces the
-// whole module and loses this export. See cache-directory.ts.
-if (typeof onWorkspaceRootChanged === 'function') {
-  onWorkspaceRootChanged(() => {
-    taskHistoryFile = join(workspaceDataDirectory, 'task-history.csv');
-  });
-}
+onWorkspaceRootChanged(() => {
+  taskHistoryFile = join(workspaceDataDirectory, 'task-history.csv');
+});
 
 function loadTaskHistoryFromDisk() {
   taskHashToIndicesMap.clear();

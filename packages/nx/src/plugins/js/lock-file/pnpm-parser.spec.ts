@@ -31,6 +31,7 @@ function loadJsonFixture(path: string) {
 }
 
 jest.mock('../../../utils/workspace-root', () => ({
+  ...jest.requireActual('../../../utils/workspace-root'),
   workspaceRoot: '/root',
 }));
 

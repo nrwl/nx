@@ -44,15 +44,11 @@ export let nxProjectGraph = join(workspaceDataDirectory, 'project-graph.json');
 export let nxFileMap = join(workspaceDataDirectory, 'file-map.json');
 export let nxSourceMaps = join(workspaceDataDirectory, 'source-maps.json');
 
-// Guard: jest.mock of workspace-root in unrelated specs replaces the
-// whole module and loses this export. See cache-directory.ts.
-if (typeof onWorkspaceRootChanged === 'function') {
-  onWorkspaceRootChanged(() => {
-    nxProjectGraph = join(workspaceDataDirectory, 'project-graph.json');
-    nxFileMap = join(workspaceDataDirectory, 'file-map.json');
-    nxSourceMaps = join(workspaceDataDirectory, 'source-maps.json');
-  });
-}
+onWorkspaceRootChanged(() => {
+  nxProjectGraph = join(workspaceDataDirectory, 'project-graph.json');
+  nxFileMap = join(workspaceDataDirectory, 'file-map.json');
+  nxSourceMaps = join(workspaceDataDirectory, 'source-maps.json');
+});
 
 export function ensureCacheDirectory(): void {
   try {

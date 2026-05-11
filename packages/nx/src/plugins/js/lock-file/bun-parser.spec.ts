@@ -30,6 +30,7 @@ jest.mock('node:fs', () => {
 });
 
 jest.mock('../../../utils/workspace-root', () => ({
+  ...jest.requireActual('../../../utils/workspace-root'),
   workspaceRoot: '/root',
 }));
 

@@ -18,17 +18,10 @@ export let DAEMON_OUTPUT_LOG_FILE = join(
   'daemon.log'
 );
 
-// Guard: jest.mock of workspace-root in unrelated specs replaces the
-// whole module and loses this export. See cache-directory.ts.
-if (typeof onWorkspaceRootChanged === 'function') {
-  onWorkspaceRootChanged(() => {
-    DAEMON_DIR_FOR_CURRENT_WORKSPACE = join(workspaceDataDirectory, 'd');
-    DAEMON_OUTPUT_LOG_FILE = join(
-      DAEMON_DIR_FOR_CURRENT_WORKSPACE,
-      'daemon.log'
-    );
-  });
-}
+onWorkspaceRootChanged(() => {
+  DAEMON_DIR_FOR_CURRENT_WORKSPACE = join(workspaceDataDirectory, 'd');
+  DAEMON_OUTPUT_LOG_FILE = join(DAEMON_DIR_FOR_CURRENT_WORKSPACE, 'daemon.log');
+});
 
 export const getDaemonSocketDir = () =>
   join(
