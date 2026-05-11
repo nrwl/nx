@@ -8,17 +8,20 @@ import { join } from 'path';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import { createHash } from 'crypto';
 import { tmpdir } from 'tmp';
-import { workspaceRoot } from '../utils/workspace-root';
+import { onWorkspaceRootChanged, workspaceRoot } from '../utils/workspace-root';
 
-export const DAEMON_DIR_FOR_CURRENT_WORKSPACE = join(
-  workspaceDataDirectory,
-  'd'
-);
-
-export const DAEMON_OUTPUT_LOG_FILE = join(
+// `let` so tests that re-pin the workspace root see refreshed paths;
+// production sets these once at module load.
+export let DAEMON_DIR_FOR_CURRENT_WORKSPACE = join(workspaceDataDirectory, 'd');
+export let DAEMON_OUTPUT_LOG_FILE = join(
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   'daemon.log'
 );
+
+onWorkspaceRootChanged(() => {
+  DAEMON_DIR_FOR_CURRENT_WORKSPACE = join(workspaceDataDirectory, 'd');
+  DAEMON_OUTPUT_LOG_FILE = join(DAEMON_DIR_FOR_CURRENT_WORKSPACE, 'daemon.log');
+});
 
 export const getDaemonSocketDir = () =>
   join(

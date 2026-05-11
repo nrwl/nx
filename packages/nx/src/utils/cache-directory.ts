@@ -3,7 +3,7 @@ import { isAbsolute, join } from 'path';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { getMainWorktreeRoot } from '../native';
 import { readJsonFile } from './fileutils';
-import { workspaceRoot } from './workspace-root';
+import { onWorkspaceRootChanged, workspaceRoot } from './workspace-root';
 
 function readCacheDirectoryProperty(root: string): string | undefined {
   try {
@@ -69,8 +69,11 @@ function defaultWorkspaceDataDirectory(root: string) {
  * Path to the directory where Nx stores its cache and daemon-related files.
  * In a git worktree this resolves to the main repo's cache dir so all
  * worktrees share the same cache.
+ *
+ * Reassigned by the workspace-root listener when tests swap the root.
+ * In production this value is set once at module load and never moves.
  */
-export const cacheDir = sharedCacheDirectory(workspaceRoot);
+export let cacheDir = sharedCacheDirectory(workspaceRoot);
 
 export function cacheDirectoryForWorkspace(root: string) {
   return cacheDirectory(root, readCacheDirectoryProperty(root));
@@ -88,7 +91,11 @@ function sharedCacheDirectory(root: string): string {
   return cacheDirectoryForWorkspace(root);
 }
 
-export const workspaceDataDirectory =
+/**
+ * Same lifecycle note as `cacheDir`: a `let` so tests can re-pin the
+ * workspace root without a fresh module graph; production assigns once.
+ */
+export let workspaceDataDirectory =
   workspaceDataDirectoryForWorkspace(workspaceRoot);
 
 export function workspaceDataDirectoryForWorkspace(workspaceRoot: string) {
@@ -99,3 +106,8 @@ export function workspaceDataDirectoryForWorkspace(workspaceRoot: string) {
       defaultWorkspaceDataDirectory(workspaceRoot)
   );
 }
+
+onWorkspaceRootChanged(() => {
+  cacheDir = sharedCacheDirectory(workspaceRoot);
+  workspaceDataDirectory = workspaceDataDirectoryForWorkspace(workspaceRoot);
+});

@@ -598,7 +598,7 @@ async function createAndSerializeProjectGraph({
   }
 }
 
-async function resetInternalState() {
+export async function resetInternalState() {
   cachedSerializedProjectGraphPromise = undefined;
   fileMapWithFiles = undefined;
   currentProjectFileMapCache = undefined;
@@ -606,6 +606,8 @@ async function resetInternalState() {
   currentSourceMaps = undefined;
   collectedUpdatedFiles.clear();
   collectedDeletedFiles.clear();
+  storedWorkspaceConfigHash = undefined;
+  knownExternalNodes = {};
   cacheHasBeenPersisted = false;
   resetWorkspaceContext();
 }

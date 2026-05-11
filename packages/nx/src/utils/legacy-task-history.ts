@@ -1,6 +1,7 @@
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { workspaceDataDirectory } from './cache-directory';
+import { onWorkspaceRootChanged } from './workspace-root';
 
 const taskRunKeys = [
   'project',
@@ -58,7 +59,11 @@ export async function writeTaskRunsToHistory(
   appendFileSync(taskHistoryFile, serializedLines.join('\n') + '\n');
 }
 
-export const taskHistoryFile = join(workspaceDataDirectory, 'task-history.csv');
+export let taskHistoryFile = join(workspaceDataDirectory, 'task-history.csv');
+
+onWorkspaceRootChanged(() => {
+  taskHistoryFile = join(workspaceDataDirectory, 'task-history.csv');
+});
 
 function loadTaskHistoryFromDisk() {
   taskHashToIndicesMap.clear();
