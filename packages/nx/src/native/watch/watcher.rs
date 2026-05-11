@@ -296,12 +296,8 @@ impl WatchPipeline {
                         }
                         let mut fatal: Option<String> = None;
 
-                        // The notify-crate thread may have just read from
-                        // inotify and be mid-send when our force_flush
-                        // request arrives. A plain try_recv would miss
-                        // that in-flight event and we'd snapshot an
-                        // incomplete picture. Give in-flight events a
-                        // brief window to land before proceeding.
+                        // Wait briefly for notify-crate sends that are
+                        // mid-flight — a bare try_recv would miss them.
                         match self
                             .notify_rx
                             .recv_timeout(Duration::from_millis(5))
@@ -311,16 +307,10 @@ impl WatchPipeline {
                                     fatal = Some(msg);
                                 }
                             }
-                            Err(crossbeam_channel::RecvTimeoutError::Timeout) => {
-                                // Expected — nothing in flight.
-                            }
+                            Err(crossbeam_channel::RecvTimeoutError::Timeout) => {}
                             Err(
                                 crossbeam_channel::RecvTimeoutError::Disconnected,
                             ) => {
-                                // Match the main select arm: a dead
-                                // notify_rx means the watcher is gone;
-                                // surface that instead of replying with
-                                // a possibly-stale snapshot.
                                 fatal = Some(
                                     "watcher channel disconnected".to_string(),
                                 );
@@ -741,30 +731,19 @@ mod tests {
 
     #[test]
     fn force_flush_pending_captures_in_flight_writes() {
-        // Regression for the watcher-race that drove the spread test
-        // flake. Without recv_timeout in the force-flush handler, a
-        // write made and immediately followed by force_flush_pending
-        // can miss the event: the notify-crate thread may have read
-        // the inotify event but not yet finished sending it on
-        // notify_rx when our try_recv runs. recv_timeout gives that
-        // in-flight send a brief window to land before we snapshot.
+        // Write + immediate flush, hammered to surface the race.
         let dir = tempdir().expect("tempdir");
         let target = dir.path().join("nx.json");
         fs::write(&target, "v1").expect("initial write");
 
         let (watcher, _captured) = start_watcher(dir.path());
 
-        // Hammer the race: each iteration writes and IMMEDIATELY
-        // force-flushes with no sleep in between. Even a single failure
-        // here would mean the daemon could serve stale data; the loop
-        // tightens the window to catch flakiness.
         for i in 0..20 {
             fs::write(&target, format!("v{i}")).expect("rewrite");
             let events = watcher.force_flush_pending();
             assert!(
                 events.iter().any(|e| e.path == "nx.json"),
-                "iteration {i}: force_flush_pending returned no nx.json event \
-                 — got {events:?}"
+                "iteration {i}: missed nx.json event — got {events:?}"
             );
         }
     }
