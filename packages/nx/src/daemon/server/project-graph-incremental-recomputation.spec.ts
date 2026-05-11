@@ -14,21 +14,11 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
     fs.cleanup();
   });
 
-  // Reproduces the spread-test flake shape end-to-end. Real native
-  // Watcher, real production callback that routes events into
-  // `collected*` via `scheduleProjectGraphRecomputation`. The test
-  // writes nx.json and IMMEDIATELY makes the next request — no
-  // sleeps, no awaits in between — so the watcher pipeline has to
-  // either deliver the event before the request is served or the
-  // daemon serves stale.
-  //
-  // On master (no fixes): this test is flaky because the watcher
-  // pipeline can lose the race (notify thread mid-send, callback
-  // queued behind the request handler).
-  //
-  // With `setImmediate` in `flushPendingWorkspaceChanges` and
-  // `recv_timeout(5ms)` in the native force-flush handler, both
-  // race windows close and the test is deterministic.
+  // Reproduces the spread-test flake shape end-to-end: write nx.json
+  // then immediately request the graph with no awaits in between.
+  // The race is closed in native code by `recv_timeout` in the
+  // force-flush handler; without that fix this test would be flaky
+  // because the notify thread can be mid-send when force-flush runs.
   it('catches a write that lands just before the next request', async () => {
     fs.createFilesSync({
       'nx.json': JSON.stringify({ plugins: [] }),

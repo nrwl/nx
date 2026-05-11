@@ -302,11 +302,28 @@ impl WatchPipeline {
                         // that in-flight event and we'd snapshot an
                         // incomplete picture. Give in-flight events a
                         // brief window to land before proceeding.
-                        if let Ok(event) =
-                            self.notify_rx.recv_timeout(Duration::from_millis(5))
+                        match self
+                            .notify_rx
+                            .recv_timeout(Duration::from_millis(5))
                         {
-                            if let Err(msg) = self.ingest_event(event) {
-                                fatal = Some(msg);
+                            Ok(event) => {
+                                if let Err(msg) = self.ingest_event(event) {
+                                    fatal = Some(msg);
+                                }
+                            }
+                            Err(crossbeam_channel::RecvTimeoutError::Timeout) => {
+                                // Expected — nothing in flight.
+                            }
+                            Err(
+                                crossbeam_channel::RecvTimeoutError::Disconnected,
+                            ) => {
+                                // Match the main select arm: a dead
+                                // notify_rx means the watcher is gone;
+                                // surface that instead of replying with
+                                // a possibly-stale snapshot.
+                                fatal = Some(
+                                    "watcher channel disconnected".to_string(),
+                                );
                             }
                         }
 
