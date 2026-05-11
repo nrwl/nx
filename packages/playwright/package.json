@@ -38,7 +38,8 @@
     "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
     "tslib": "catalog:typescript",
-    "minimatch": "catalog:"
+    "minimatch": "catalog:",
+    "semver": "catalog:"
   },
   "devDependencies": {
     "nx": "workspace:*"

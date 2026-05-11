@@ -1,8 +1,11 @@
 import { workspaceRoot } from '@nx/devkit';
+import { getInstalledPackageVersion } from '@nx/devkit/internal';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { defineConfig } from '@playwright/test';
 import { lstatSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
+import { lt } from 'semver';
+import { minPlaywrightVersionForBlobReports } from './versions';
 
 export interface NxPlaywrightOptions {
   /**
@@ -72,6 +75,14 @@ export function nxE2EPreset(
       open: options?.openHtmlReport ?? 'on-failure',
     },
   ]);
+  if (options?.generateBlobReports === true) {
+    const installed = getInstalledPackageVersion('@playwright/test');
+    if (installed && lt(installed, minPlaywrightVersionForBlobReports)) {
+      throw new Error(
+        `The "blob" reporter requires "@playwright/test" version ${minPlaywrightVersionForBlobReports} or greater. You are currently using version ${installed}. Either upgrade "@playwright/test" or set "generateBlobReports" to false.`
+      );
+    }
+  }
   const shouldGenerateBlobReports =
     options?.generateBlobReports ?? !!process.env['CI'];
   if (shouldGenerateBlobReports) {
