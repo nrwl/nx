@@ -56,7 +56,7 @@ describe('application generator', () => {
     expect(tree.read('test/.eslintrc.json', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/src/app/App.spec.ts', 'utf-8')).toMatchSnapshot();
     expect(
-      tree.read('test-e2e/playwright.config.ts', 'utf-8')
+      tree.read('test-e2e/playwright.config.cts', 'utf-8')
     ).toMatchSnapshot();
     expect(listFiles(tree)).toMatchSnapshot();
   });
@@ -188,16 +188,9 @@ describe('application generator', () => {
         `null`
       );
 
-      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
-        [
-          {
-            "path": "./test-e2e",
-          },
-          {
-            "path": "./test",
-          },
-        ]
-      `);
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(
+        `[]`
+      );
       const packageJson = readJson(tree, 'test/package.json');
       expect(packageJson.name).toBe('@proj/test');
       expect(packageJson.nx).toBeUndefined();

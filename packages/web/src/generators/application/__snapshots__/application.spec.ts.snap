@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`app not nested should generate files if bundler is vite 1`] = `
-"import { defineConfig, devices } from '@playwright/test';
-import { nxE2EPreset } from '@nx/playwright/preset';
-import { workspaceRoot } from '@nx/devkit';
+"const { defineConfig, devices } = require('@playwright/test');
+const { nxE2EPreset } = require('@nx/playwright/preset');
+const { workspaceRoot } = require('@nx/devkit');
 
 // For CI, you may want to set BASE_URL to the deployed application.
 const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
@@ -16,8 +16,16 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
+ *
+ * Generated as a .cts file so Node forces CommonJS regardless of workspace
+ * \`type: "module"\`. Keeps the file loadable under both Nx's native TS strip
+ * and Playwright's pirates-based runtime loader (which compiles ESM-shape
+ * \`.ts\` configs to CJS but leaves \`import.meta\` intact, causing Node to
+ * re-detect ESM and explode with \`exports is not defined\`). Playwright
+ * auto-discovers \`playwright.config.cts\` via its configLoader extension
+ * list (.ts/.js/.mts/.mjs/.cts/.cjs).
  */
-export default defineConfig({
+module.exports = defineConfig({
   ...nxE2EPreset(__filename, { testDir: './src' }),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
@@ -73,9 +81,9 @@ export default defineConfig({
 `;
 
 exports[`app not nested should setup playwright e2e project correctly for webpack 1`] = `
-"import { defineConfig, devices } from '@playwright/test';
-import { nxE2EPreset } from '@nx/playwright/preset';
-import { workspaceRoot } from '@nx/devkit';
+"const { defineConfig, devices } = require('@playwright/test');
+const { nxE2EPreset } = require('@nx/playwright/preset');
+const { workspaceRoot } = require('@nx/devkit');
 
 // For CI, you may want to set BASE_URL to the deployed application.
 const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
@@ -88,8 +96,16 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
+ *
+ * Generated as a .cts file so Node forces CommonJS regardless of workspace
+ * \`type: "module"\`. Keeps the file loadable under both Nx's native TS strip
+ * and Playwright's pirates-based runtime loader (which compiles ESM-shape
+ * \`.ts\` configs to CJS but leaves \`import.meta\` intact, causing Node to
+ * re-detect ESM and explode with \`exports is not defined\`). Playwright
+ * auto-discovers \`playwright.config.cts\` via its configLoader extension
+ * list (.ts/.js/.mts/.mjs/.cts/.cjs).
  */
-export default defineConfig({
+module.exports = defineConfig({
   ...nxE2EPreset(__filename, { testDir: './src' }),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
@@ -145,9 +161,9 @@ export default defineConfig({
 `;
 
 exports[`app not nested should use serve target and port if bundler=vite, e2eTestRunner=playwright, addPlugin=false 1`] = `
-"import { defineConfig, devices } from '@playwright/test';
-import { nxE2EPreset } from '@nx/playwright/preset';
-import { workspaceRoot } from '@nx/devkit';
+"const { defineConfig, devices } = require('@playwright/test');
+const { nxE2EPreset } = require('@nx/playwright/preset');
+const { workspaceRoot } = require('@nx/devkit');
 
 // For CI, you may want to set BASE_URL to the deployed application.
 const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
@@ -160,8 +176,16 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
+ *
+ * Generated as a .cts file so Node forces CommonJS regardless of workspace
+ * \`type: "module"\`. Keeps the file loadable under both Nx's native TS strip
+ * and Playwright's pirates-based runtime loader (which compiles ESM-shape
+ * \`.ts\` configs to CJS but leaves \`import.meta\` intact, causing Node to
+ * re-detect ESM and explode with \`exports is not defined\`). Playwright
+ * auto-discovers \`playwright.config.cts\` via its configLoader extension
+ * list (.ts/.js/.mts/.mjs/.cts/.cjs).
  */
-export default defineConfig({
+module.exports = defineConfig({
   ...nxE2EPreset(__filename, { testDir: './src' }),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {

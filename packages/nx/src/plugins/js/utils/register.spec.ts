@@ -1,5 +1,9 @@
 import { JsxEmit, ModuleKind, ScriptTarget } from 'typescript';
-import { getTsNodeCompilerOptions, isNativeTypeStripError } from './register';
+import {
+  getTsNodeCompilerOptions,
+  isCjsSyntaxError,
+  isNativeTypeStripError,
+} from './register';
 
 describe('getTsNodeCompilerOptions', () => {
   it('should replace enum value with enum key for module', () => {
@@ -61,5 +65,39 @@ describe('isNativeTypeStripError', () => {
     expect(isNativeTypeStripError(undefined)).toBe(false);
     expect(isNativeTypeStripError('boom')).toBe(false);
     expect(isNativeTypeStripError(new Error('no code'))).toBe(false);
+  });
+});
+
+describe('isCjsSyntaxError', () => {
+  it('returns true for SyntaxError thrown while parsing a .cts file', () => {
+    expect(
+      isCjsSyntaxError(
+        new SyntaxError("Unexpected token 'export'"),
+        '/abs/path/jest.config.cts'
+      )
+    ).toBe(true);
+  });
+
+  it('returns true for SyntaxError thrown while parsing a .cjs file', () => {
+    expect(
+      isCjsSyntaxError(
+        new SyntaxError("Unexpected token 'export'"),
+        '/abs/path/jest.config.cjs'
+      )
+    ).toBe(true);
+  });
+
+  it('returns false for non-CJS extensions (.ts/.mts/.js/.mjs)', () => {
+    const err = new SyntaxError("Unexpected token 'export'");
+    expect(isCjsSyntaxError(err, '/abs/jest.config.ts')).toBe(false);
+    expect(isCjsSyntaxError(err, '/abs/jest.config.mts')).toBe(false);
+    expect(isCjsSyntaxError(err, '/abs/jest.config.js')).toBe(false);
+    expect(isCjsSyntaxError(err, '/abs/jest.config.mjs')).toBe(false);
+  });
+
+  it('returns false for non-SyntaxError inputs', () => {
+    expect(isCjsSyntaxError(new Error('boom'), '/x.cts')).toBe(false);
+    expect(isCjsSyntaxError(null, '/x.cts')).toBe(false);
+    expect(isCjsSyntaxError('boom', '/x.cts')).toBe(false);
   });
 });

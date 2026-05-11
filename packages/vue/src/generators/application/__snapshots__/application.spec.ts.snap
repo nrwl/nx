@@ -82,11 +82,11 @@ describe('App', () => {
 `;
 
 exports[`application generator should set up project correctly for cypress 5`] = `
-"import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+"import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset.js';
 import { defineConfig } from 'cypress';
 export default defineConfig({
   e2e: {
-    ...nxE2EPreset(__filename, {
+    ...nxE2EPreset(import.meta.dirname, {
       cypressDir: 'src',
       bundler: 'vite',
       webServerCommands: {
@@ -144,7 +144,7 @@ exports[`application generator should set up project correctly for rsbuild 3`] =
   "nx.json",
   "package.json",
   "test-e2e/.eslintrc.json",
-  "test-e2e/playwright.config.ts",
+  "test-e2e/playwright.config.cts",
   "test-e2e/project.json",
   "test-e2e/src/example.spec.ts",
   "test-e2e/tsconfig.json",
@@ -249,9 +249,9 @@ describe('App', () => {
 `;
 
 exports[`application generator should set up project correctly with given options 5`] = `
-"import { defineConfig, devices } from '@playwright/test';
-import { nxE2EPreset } from '@nx/playwright/preset';
-import { workspaceRoot } from '@nx/devkit';
+"const { defineConfig, devices } = require('@playwright/test');
+const { nxE2EPreset } = require('@nx/playwright/preset');
+const { workspaceRoot } = require('@nx/devkit');
 
 // For CI, you may want to set BASE_URL to the deployed application.
 const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
@@ -264,8 +264,16 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
+ *
+ * Generated as a .cts file so Node forces CommonJS regardless of workspace
+ * \`type: "module"\`. Keeps the file loadable under both Nx's native TS strip
+ * and Playwright's pirates-based runtime loader (which compiles ESM-shape
+ * \`.ts\` configs to CJS but leaves \`import.meta\` intact, causing Node to
+ * re-detect ESM and explode with \`exports is not defined\`). Playwright
+ * auto-discovers \`playwright.config.cts\` via its configLoader extension
+ * list (.ts/.js/.mts/.mjs/.cts/.cjs).
  */
-export default defineConfig({
+module.exports = defineConfig({
   ...nxE2EPreset(__filename, { testDir: './src' }),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
@@ -331,7 +339,7 @@ exports[`application generator should set up project correctly with given option
   "nx.json",
   "package.json",
   "test-e2e/.eslintrc.json",
-  "test-e2e/playwright.config.ts",
+  "test-e2e/playwright.config.cts",
   "test-e2e/project.json",
   "test-e2e/src/example.spec.ts",
   "test-e2e/tsconfig.json",

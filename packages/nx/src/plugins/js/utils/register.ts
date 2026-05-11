@@ -220,20 +220,26 @@ export function registerTsProject(
     return () => {};
   }
 
-  // Native strip handles .ts files directly - skip transpiler AND tsconfig-paths
-  // registration. Workspaces using package manager workspaces don't need path
-  // mapping. Callers needing fallback for unsupported syntax (enum, runtime
-  // namespace, legacy decorators, etc.) should use `loadTsFile` instead, which
-  // registers swc/ts-node + tsconfig-paths on demand.
+  const tsConfigPath = configFilename ? join(path, configFilename) : path;
+
+  // Under native strip we skip the transpiler (Node handles `.ts` directly)
+  // but still register tsconfig-paths. Path mapping is orthogonal to
+  // transpilation: code calling `registerTsProject` for path aliases
+  // (e.g. test setup files requiring `@my-org/lib`) gets nothing back if
+  // both are skipped. Package-manager-workspace symlinks aren't a
+  // universal substitute - explicit tsconfig `paths` configs still need
+  // runtime alias resolution. Callers needing the transpiler for
+  // unsupported syntax (enum, runtime namespace, legacy decorators, etc.)
+  // should use `loadTsFile` instead, which registers swc/ts-node +
+  // tsconfig-paths on demand.
   if (preferNodeStripTypes) {
-    return () => {};
+    return registerTsConfigPaths(tsConfigPath);
   }
 
   // Legacy path: prior to v23, Nx always registered swc-node/ts-node and
   // tsconfig-paths to load .ts config files. v23+ prefers Node's built-in
   // type stripping; this branch only runs when the user opted out via
   // NX_PREFER_NODE_STRIP_TYPES=false or when strip is unavailable.
-  const tsConfigPath = configFilename ? join(path, configFilename) : path;
   const { compilerOptions, tsConfigRaw } = readCompilerOptions(tsConfigPath);
 
   const cleanupFunctions: ((...args: unknown[]) => unknown)[] = [
@@ -486,6 +492,20 @@ function isModuleNotFoundError(err: unknown): boolean {
 }
 
 /**
+ * A SyntaxError thrown while parsing a forced-CJS file (`.cts`/`.cjs`) as
+ * CommonJS - typically ESM syntax in a CJS file (e.g. `export default` in
+ * `.cts`). Pre-v23 this worked because swc-node's CJS hook compiled away the
+ * ESM syntax; under native strip swc-node isn't registered, so the file
+ * reaches Node's strict CJS parser. swc-node tolerates ESM syntax in `.cts`
+ * (`register()` forces `module: commonjs` regardless of extension), so
+ * escalating to the swc/ts-node fallback recovers the legacy behavior.
+ */
+export function isCjsSyntaxError(err: unknown, filePath: string): boolean {
+  if (!(err instanceof SyntaxError)) return false;
+  return filePath.endsWith('.cts') || filePath.endsWith('.cjs');
+}
+
+/**
  * Hint appended to errors that the lazy fallback couldn't recover from.
  * Points users at the env opt-out for cases native strip can't reach (e.g.
  * ESM with top-level await + unsupported TS syntax, where swc-node's CJS
@@ -614,10 +634,16 @@ export function loadTsFile<T = any>(
         }
 
         // Heavy fallback: register swc/ts-node (+ paths) and retry. Triggered
-        // by either a strip-types failure or a module resolution failure that
-        // tsconfig-paths alone can't fix (extensionless `./foo` -> `./foo.ts`).
+        // by:
+        //   - strip-types failure (`ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX`)
+        //   - module resolution failure that tsconfig-paths alone can't fix
+        //     (extensionless `./foo` -> `./foo.ts`)
+        //   - SyntaxError in a `.cts`/`.cjs` file (ESM syntax in a forced-CJS
+        //     file). swc-node compiles ESM->CJS regardless of extension.
         if (
-          (isNativeTypeStripError(err) || isModuleNotFoundError(err)) &&
+          (isNativeTypeStripError(err) ||
+            isModuleNotFoundError(err) ||
+            isCjsSyntaxError(err, filePath)) &&
           !transpilerRegistered
         ) {
           logFallback(
@@ -625,7 +651,9 @@ export function loadTsFile<T = any>(
             err,
             isNativeTypeStripError(err)
               ? 'Native Node.js TypeScript stripping failed; falling back to swc/ts-node + tsconfig-paths.'
-              : 'Module not found after tsconfig-paths; falling back to swc/ts-node + tsconfig-paths.'
+              : isCjsSyntaxError(err, filePath)
+                ? 'ESM syntax in forced-CJS file; falling back to swc/ts-node + tsconfig-paths.'
+                : 'Module not found after tsconfig-paths; falling back to swc/ts-node + tsconfig-paths.'
           );
           registerTranspilerFallback(err);
           continue;
@@ -713,6 +741,18 @@ export function registerTsConfigPaths(tsConfigPath): () => void {
      * can be imported and used within project
      */
     if (tsConfigResult.resultType === 'success') {
+      // Short-circuit when the tsconfig has no `paths` entries. Installing
+      // tsconfig-paths' resolver hook adds a per-require cost on every
+      // module load; in package-manager-workspace setups (which resolve via
+      // symlinks instead of TS path mappings), the hook never has anything
+      // to do. Avoid paying that overhead on workspaces that don't use
+      // `paths`.
+      if (
+        !tsConfigResult.paths ||
+        Object.keys(tsConfigResult.paths).length === 0
+      ) {
+        return () => {};
+      }
       return tsconfigPaths.register({
         baseUrl: resolvePathsBaseUrl(tsConfigPath),
         paths: tsConfigResult.paths,
