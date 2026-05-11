@@ -107,7 +107,7 @@ rg "@nx/vitest:test|@nx/vite:test" --type json
 
 ### 4. Type Resolution Under `moduleResolution: "node"`
 
-Vite 8 ships its types as `.d.mts` files, which TypeScript cannot resolve under `moduleResolution: "node"`. Symptoms include type errors on `defineConfig`, `UserConfig`, or plugin return types.
+Vite 8 ships its types only via conditional `exports` (it dropped the top-level `types` field that Vite 7 carried), which TypeScript cannot resolve under `moduleResolution: "node"`. Symptoms include type errors on `defineConfig`, `UserConfig`, or plugin return types.
 
 **Action Items**:
 
@@ -191,7 +191,7 @@ nx prepush
 
 ### Issue: `Cannot find name 'rollupOptions'` or build options ignored
 
-**Solution**: Rename to `rolldownOptions`. Vite 8 ignores `rollupOptions` silently in some paths.
+**Solution**: Rename to `rolldownOptions`. Vite 8 still accepts `rollupOptions` as a deprecated alias (it copies the value to `rolldownOptions` and logs a deprecation warning), but mixing both at the same level may cause precedence surprises (`rolldownOptions` wins).
 
 ### Issue: Babel plugin no longer applied (e.g., styled-components classNames missing)
 
