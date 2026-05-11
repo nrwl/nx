@@ -10,12 +10,12 @@ export function warnCypressExecutorDeprecation(): void {
 }
 
 // Fired when the @nx/cypress:configuration or :component-configuration
-// generator is about to scaffold a target that uses the deprecated executor —
+// generator is about to generate a target that uses the deprecated executor —
 // i.e. when @nx/cypress/plugin isn't registered in nx.json. Surfaces the
-// deprecation at scaffold time rather than only when the user later runs the
+// deprecation at generation time rather than only when the user later runs the
 // generated target.
-export function warnCypressExecutorScaffolding(): void {
+export function warnCypressExecutorGenerating(): void {
   logger.warn(
-    'Scaffolding a target that uses the deprecated `@nx/cypress:cypress` executor. The executor will be removed in Nx v24. Run `nx g @nx/cypress:convert-to-inferred` after this scaffold to migrate the generated target to the `@nx/cypress/plugin` inferred plugin. To skip emitting executor targets entirely on future scaffolds, register `@nx/cypress/plugin` in `nx.json` first (`nx add @nx/cypress` or a manual plugin entry). See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
+    'Generating a target that uses the deprecated `@nx/cypress:cypress` executor. The executor will be removed in Nx v24. Run `nx g @nx/cypress:convert-to-inferred` next to migrate this target to the `@nx/cypress/plugin` inferred plugin and prevent future generators from emitting executor targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
   );
 }

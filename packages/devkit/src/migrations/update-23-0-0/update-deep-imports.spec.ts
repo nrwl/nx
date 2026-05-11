@@ -140,6 +140,80 @@ describe('update-deep-imports migration', () => {
     });
   });
 
+  // These tests guard against an earlier implementation that string-replaced
+  // every `'@nx/devkit/src/...'` literal in the file. That over-eager rewrite
+  // mangled test fixtures inside template literals, type queries, comments,
+  // and other non-runtime usages. The current AST-based pass must leave them
+  // alone.
+  describe('non-runtime string literals', () => {
+    it('does not rewrite deep-import paths inside template literals', () => {
+      const input = `const fixture = \`import { dasherize } from '@nx/devkit/src/utils/string-utils';\\n\`;\n`;
+      expect(rewriteDevkitDeepImports(input)).toBe(input);
+    });
+
+    it('does not rewrite deep-import paths inside `typeof import(...)` type queries', () => {
+      const input = `type Devkit = typeof import('@nx/devkit/src/executors/parse-target-string');\n`;
+      expect(rewriteDevkitDeepImports(input)).toBe(input);
+    });
+
+    it('does not rewrite deep-import paths inside block comments', () => {
+      const input = `/* see @nx/devkit/src/utils/foo */\nconst x = 1;\n`;
+      expect(rewriteDevkitDeepImports(input)).toBe(input);
+    });
+
+    it('does not rewrite deep-import paths inside line comments', () => {
+      const input = `// see '@nx/devkit/src/utils/foo'\nconst x = 1;\n`;
+      expect(rewriteDevkitDeepImports(input)).toBe(input);
+    });
+
+    it('does not rewrite arbitrary string-literal arguments to unrelated calls', () => {
+      const input = `someUnrelatedFn('@nx/devkit/src/utils/foo');\n`;
+      expect(rewriteDevkitDeepImports(input)).toBe(input);
+    });
+  });
+
+  describe('mock helper calls', () => {
+    it('rewrites jest.mock(...) targets', () => {
+      const input = `jest.mock('@nx/devkit/src/utils/foo');\n`;
+      expect(rewriteDevkitDeepImports(input)).toBe(
+        `jest.mock('@nx/devkit/internal');\n`
+      );
+    });
+
+    it('rewrites jest.requireActual(...) targets', () => {
+      const input = `const real = jest.requireActual('@nx/devkit/src/utils/foo');\n`;
+      expect(rewriteDevkitDeepImports(input)).toBe(
+        `const real = jest.requireActual('@nx/devkit/internal');\n`
+      );
+    });
+
+    it('rewrites vi.mock(...) targets', () => {
+      const input = `vi.mock('@nx/devkit/src/utils/foo');\n`;
+      expect(rewriteDevkitDeepImports(input)).toBe(
+        `vi.mock('@nx/devkit/internal');\n`
+      );
+    });
+
+    it('rewrites vi.importActual(...) targets', () => {
+      const input = `const real = await vi.importActual('@nx/devkit/src/utils/foo');\n`;
+      expect(rewriteDevkitDeepImports(input)).toBe(
+        `const real = await vi.importActual('@nx/devkit/internal');\n`
+      );
+    });
+
+    it('rewrites paired import + jest.mock together', () => {
+      const input =
+        `import * as cfg from '@nx/devkit/src/utils/config-utils';\n` +
+        `jest.mock('@nx/devkit/src/utils/config-utils', () => ({\n` +
+        `  ...jest.requireActual('@nx/devkit/src/utils/config-utils'),\n` +
+        `}));\n`;
+      const output = rewriteDevkitDeepImports(input);
+      expect(output).toContain(`import * as cfg from '@nx/devkit/internal';`);
+      expect(output).toContain(`jest.mock('@nx/devkit/internal',`);
+      expect(output).toContain(`jest.requireActual('@nx/devkit/internal')`);
+    });
+  });
+
   describe('migration runner', () => {
     it('rewrites deep imports across .ts/.tsx/.cts/.mts files', async () => {
       tree.write(

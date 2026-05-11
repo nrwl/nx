@@ -26,7 +26,7 @@ export const tsNodeVersion = '10.9.1';
 export const lessVersion = '^4.3.0';
 
 export const jestPresetAngularVersion = '~16.0.0';
-export const typesNodeVersion = '20.19.9';
+export const typesNodeVersion = '^22.0.0';
 export const jasmineMarblesVersion = '^0.9.2';
 
 export const vitestVersion = '^4.0.8';

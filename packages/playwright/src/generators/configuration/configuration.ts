@@ -28,6 +28,7 @@ import {
 } from '@nx/js/src/utils/package-manager-workspaces';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { warnPlaywrightExecutorGenerating } from '../../utils/deprecation';
 import { execSync } from 'child_process';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
@@ -196,6 +197,7 @@ export async function configurationGeneratorInternal(
   );
 
   if (!hasPlugin) {
+    warnPlaywrightExecutorGenerating();
     addE2eTarget(tree, options);
     setupE2ETargetDefaults(tree);
   }

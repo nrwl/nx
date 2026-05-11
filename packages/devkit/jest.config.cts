@@ -4,6 +4,7 @@ module.exports = {
   globals: {},
   displayName: 'cli',
   preset: '../../jest.preset.js',
+  modulePathIgnorePatterns: ['<rootDir>/dist/'],
   moduleNameMapper: {
     // Map Angular schematics to node_modules
     '^@schematics/angular/collection.json$':

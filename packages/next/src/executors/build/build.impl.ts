@@ -20,6 +20,7 @@ import { ChildProcess, fork } from 'child_process';
 import { createCliOptions } from '../../utils/create-cli-options';
 import { signalToCode, checkAndCleanWithSemver } from '@nx/devkit/internal';
 import { getInstalledNextVersionRuntime } from '../../utils/runtime-version-utils';
+import { warnNextBuildExecutorDeprecation } from '../../utils/deprecation';
 
 let childProcess: ChildProcess;
 
@@ -27,6 +28,8 @@ export default async function buildExecutor(
   options: NextBuildBuilderOptions,
   context: ExecutorContext
 ) {
+  warnNextBuildExecutorDeprecation();
+
   // Cast to any to overwrite NODE_ENV
   (process.env as any).NODE_ENV ||= 'production';
 

@@ -19,6 +19,7 @@ import {
 import type { Configuration, Stats } from 'webpack';
 import { isNxWebpackComposablePlugin } from '../../utils/config';
 import { resolveUserDefinedWebpackConfig } from '../../utils/webpack/resolve-user-defined-webpack-config';
+import { warnWebpackExecutorDeprecation } from '../../utils/deprecation';
 import { normalizeOptions } from './lib/normalize-options';
 import { runWebpack } from './lib/run-webpack';
 import type {
@@ -85,6 +86,8 @@ export async function* webpackExecutor(
   _options: WebpackExecutorOptions,
   context: ExecutorContext
 ): AsyncGenerator<WebpackExecutorEvent, WebpackExecutorEvent, undefined> {
+  warnWebpackExecutorDeprecation();
+
   // Default to production build.
   process.env['NODE_ENV'] ||= 'production';
 

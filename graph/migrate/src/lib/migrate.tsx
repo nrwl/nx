@@ -216,7 +216,7 @@ export function MigrateUI(props: MigrateUIProps) {
         <button
           onClick={props.onCancel}
           type="button"
-          className="flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+          className="flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-xs hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
         >
           Cancel
         </button>
@@ -240,7 +240,7 @@ export function MigrateUI(props: MigrateUIProps) {
               type="button"
               title={primaryAction}
               disabled={isNeedReview}
-              className="whitespace-nowrap rounded-l-md border border-blue-700 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm enabled:hover:bg-blue-600 disabled:cursor-not-allowed disabled:border-blue-400 disabled:bg-blue-400 disabled:opacity-50 dark:border-blue-700 dark:bg-blue-600 dark:text-white enabled:hover:dark:bg-blue-700"
+              className="rounded-l-md border border-blue-700 bg-blue-500 px-4 py-2 text-sm font-medium whitespace-nowrap text-white shadow-xs enabled:hover:bg-blue-600 disabled:cursor-not-allowed disabled:border-blue-400 disabled:bg-blue-400 disabled:opacity-50 dark:border-blue-700 dark:bg-blue-600 dark:text-white enabled:hover:dark:bg-blue-700"
             >
               {primaryAction}
             </button>
@@ -249,7 +249,7 @@ export function MigrateUI(props: MigrateUIProps) {
                 type="button"
                 disabled={isNeedReview}
                 onClick={() => setIsOpen((prev) => !prev)}
-                className="border-l-1 flex items-center rounded-r-md border border-blue-700 bg-blue-500 px-2 py-2 text-sm font-medium text-white shadow-sm enabled:hover:bg-blue-700 disabled:cursor-not-allowed disabled:border-blue-400 disabled:bg-blue-400 disabled:opacity-50 dark:border-blue-700 dark:bg-blue-700 dark:text-white enabled:hover:dark:bg-blue-800"
+                className="flex items-center rounded-r-md border border-l-1 border-blue-700 bg-blue-500 px-2 py-2 text-sm font-medium text-white shadow-xs enabled:hover:bg-blue-700 disabled:cursor-not-allowed disabled:border-blue-400 disabled:bg-blue-400 disabled:opacity-50 dark:border-blue-700 dark:bg-blue-700 dark:text-white enabled:hover:dark:bg-blue-800"
               >
                 <ChevronDownIcon className="h-4 w-4" />
               </button>

@@ -36,6 +36,7 @@ describe('normalizeOptions', () => {
       allowJs: false,
       assets: [],
       babelUpwardRootMode: false,
+      buildLibsFromSource: true,
       compiler: 'babel',
       deleteOutputPath: true,
       extractCss: true,
@@ -43,6 +44,40 @@ describe('normalizeOptions', () => {
       javascriptEnabled: false,
       skipTypeCheck: false,
       skipTypeField: false,
+    });
+  });
+
+  describe('buildLibsFromSource', () => {
+    it('should default to true to match the executor schema default', () => {
+      const result = normalizeOptions('pkg', 'pkg', {
+        main: './src/main.ts',
+        tsConfig: './tsconfig.json',
+        outputPath: '../dist/pkg',
+      });
+
+      expect(result.buildLibsFromSource).toBe(true);
+    });
+
+    it('should preserve an explicit false', () => {
+      const result = normalizeOptions('pkg', 'pkg', {
+        main: './src/main.ts',
+        tsConfig: './tsconfig.json',
+        outputPath: '../dist/pkg',
+        buildLibsFromSource: false,
+      });
+
+      expect(result.buildLibsFromSource).toBe(false);
+    });
+
+    it('should preserve an explicit true', () => {
+      const result = normalizeOptions('pkg', 'pkg', {
+        main: './src/main.ts',
+        tsConfig: './tsconfig.json',
+        outputPath: '../dist/pkg',
+        buildLibsFromSource: true,
+      });
+
+      expect(result.buildLibsFromSource).toBe(true);
     });
   });
 

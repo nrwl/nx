@@ -28,7 +28,11 @@ import { NxArgs } from '../utils/command-line-utils';
 import { handleErrors } from '../utils/handle-errors';
 import { isCI } from '../utils/is-ci';
 import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
-import { printNxKey } from '../utils/nx-key';
+import { logger } from '../utils/logger';
+import {
+  createNxKeyLicenseeInformation,
+  getNxKeyInformation,
+} from '../utils/nx-key';
 import { output } from '../utils/output';
 import {
   collectEnabledTaskSyncGeneratorsFromTaskGraph,
@@ -505,6 +509,11 @@ export async function runCommandForTasks(
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
   extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
 ): Promise<{ taskResults: TaskResults; completed: boolean }> {
+  // Kick off the license lookup in the background so it overlaps with task
+  // execution. The log itself is deferred to the print site below so it
+  // never lands in the middle of task output.
+  const nxKeyPromise = getNxKeyInformation().catch(() => null);
+
   const projectNames = projectsToRun.map((t) => t.name);
   const projectNameSet = new Set(projectNames);
 
@@ -559,7 +568,8 @@ export async function runCommandForTasks(
 
     await printConfigureAiAgentsDisclaimer();
 
-    await printNxKey();
+    const nxKey = await nxKeyPromise;
+    if (nxKey) logger.log(createNxKeyLicenseeInformation(nxKey));
 
     return {
       taskResults,

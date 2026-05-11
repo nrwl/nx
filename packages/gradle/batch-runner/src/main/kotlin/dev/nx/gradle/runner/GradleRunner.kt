@@ -132,14 +132,19 @@ fun runBuildLauncher(
     errorStream.close()
   }
 
-  // The last task in the build has no successor TaskStartEvent to drain it; flush here. Tasks
-  // Gradle never ran (excluded, configuration error, never realized) aren't in taskResults at
-  // all — gradle-batch.impl.ts's post-loop fallback yields a result for them on the TS side.
+  // The last task has no successor TaskStartEvent to drain it; flush here.
   pendingEmit.keys.toList().forEach { taskPath ->
     emitForTaskPath(taskPath, capture.getOutput(taskPath))
   }
 
   val globalEnd = System.currentTimeMillis()
+  taskResults.putAll(
+      emitSkippedForUnreachedTasks(
+          requestedNxTaskIds = tasks.keys,
+          reportedNxTaskIds = taskResults.keys,
+          startTime = globalStart,
+          endTime = globalEnd,
+      ))
   val maxEndTime = taskResults.values.map { it.endTime }.maxOrNull() ?: globalEnd
   val minStartTime = taskResults.values.map { it.startTime }.minOrNull() ?: globalStart
   logger.info(
@@ -149,6 +154,23 @@ fun runBuildLauncher(
 
   logger.info("\u2705 Finished build tasks")
   return taskResults
+}
+
+private fun emitSkippedForUnreachedTasks(
+    requestedNxTaskIds: Set<String>,
+    reportedNxTaskIds: Set<String>,
+    startTime: Long,
+    endTime: Long,
+): Map<String, TaskResult> {
+  val skippedResults = mutableMapOf<String, TaskResult>()
+  requestedNxTaskIds.forEach { nxTaskId ->
+    if (nxTaskId !in reportedNxTaskIds) {
+      val skipped = TaskResult.skipped(startTime, endTime)
+      skippedResults[nxTaskId] = skipped
+      ResultEmitter.emit(nxTaskId, skipped)
+    }
+  }
+  return skippedResults
 }
 
 fun runTestLauncher(
@@ -194,7 +216,7 @@ fun runTestLauncher(
       val success = testTaskStatus[nxTaskId] ?: false
       val startTime = testStartTimes[nxTaskId] ?: globalStart
       val endTime = testEndTimes[nxTaskId] ?: System.currentTimeMillis()
-      ResultEmitter.emit(nxTaskId, TaskResult(success, startTime, endTime, captured))
+      ResultEmitter.emit(nxTaskId, TaskResult.fromBoolean(success, startTime, endTime, captured))
     }
   }
 
@@ -236,14 +258,17 @@ fun runTestLauncher(
   val taskResults = mutableMapOf<String, TaskResult>()
   tasks.forEach { (nxTaskId, taskConfig) ->
     if (taskConfig.testClassName != null) {
+      val ranTask = testTaskStatus.containsKey(nxTaskId)
       val success = testTaskStatus[nxTaskId] ?: false
       val startTime = testStartTimes[nxTaskId] ?: globalStart
       val endTime = testEndTimes[nxTaskId] ?: globalEnd
-      val result = TaskResult(success, startTime, endTime, capturedFor(nxTaskId))
+      // No test events fired → mark as skipped (peer compile failed, etc.) rather than failure.
+      val result =
+          if (!ranTask) TaskResult.skipped(startTime, endTime)
+          else TaskResult.fromBoolean(success, startTime, endTime, capturedFor(nxTaskId))
       taskResults[nxTaskId] = result
-      // Streamed tasks are deduped; this emits the ones whose capturedFor was empty when
-      // emitTestTask fired during the build (e.g. test tasks Gradle skipped before producing
-      // any stdout).
+      // ResultEmitter dedupes by task id; this catches tests whose captured output was empty
+      // when emitTestTask fired during the build.
       ResultEmitter.emit(nxTaskId, result)
     }
   }

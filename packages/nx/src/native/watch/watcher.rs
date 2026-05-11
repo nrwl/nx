@@ -495,7 +495,9 @@ mod tests {
             }
         });
         w.watch_inner(callback).expect("start watch");
-        std::thread::sleep(Duration::from_millis(150));
+        // Drop any startup events FSEvents leaks from before the watch began.
+        std::thread::sleep(Duration::from_millis(300));
+        captured.lock().unwrap().clear();
         (w, captured)
     }
 

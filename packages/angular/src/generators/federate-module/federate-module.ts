@@ -5,6 +5,7 @@ import {
   stripIndents,
   type Tree,
 } from '@nx/devkit';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import {
@@ -16,6 +17,7 @@ import {
 import type { Schema } from './schema';
 
 export async function federateModuleGenerator(tree: Tree, schema: Schema) {
+  assertSupportedAngularVersion(tree);
   if (!tree.exists(schema.path)) {
     throw new Error(stripIndents`The "path" provided  does not exist. Please verify the path is correct and pointing to a file that exists in the workspace.
     

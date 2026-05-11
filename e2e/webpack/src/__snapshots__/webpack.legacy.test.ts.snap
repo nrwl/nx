@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Webpack Plugin (legacy) ConvertConfigToWebpackPlugin, should convert withNx webpack config to a standard config using NxWebpackPlugin 1`] = `
 "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');

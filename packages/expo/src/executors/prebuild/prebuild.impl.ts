@@ -5,6 +5,7 @@ import { join } from 'path';
 
 import { podInstall } from '../../utils/pod-install-task';
 import { ExpoPrebuildOptions } from './schema';
+import { warnExpoExecutorDeprecation } from '../../utils/deprecation';
 
 export interface ExpoPrebuildOutput {
   success: boolean;
@@ -16,6 +17,8 @@ export default async function* prebuildExecutor(
   options: ExpoPrebuildOptions,
   context: ExecutorContext
 ): AsyncGenerator<ExpoPrebuildOutput> {
+  warnExpoExecutorDeprecation('prebuild');
+
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 

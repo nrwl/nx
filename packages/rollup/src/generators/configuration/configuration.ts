@@ -28,6 +28,7 @@ import { RollupExecutorOptions } from '../../executors/rollup/schema';
 import { RollupWithNxPluginOptions } from '../../plugins/with-nx/with-nx-options';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { hasPlugin } from '../../utils/has-plugin';
+import { warnRollupExecutorGenerating } from '../../utils/deprecation';
 import { rollupInitGenerator } from '../init/init';
 import { RollupProjectSchema } from './schema';
 
@@ -55,6 +56,7 @@ export async function configurationGenerator(
   if (hasPlugin(tree)) {
     outputConfig = createRollupConfig(tree, options, isTsSolutionSetup);
   } else {
+    warnRollupExecutorGenerating();
     options.buildTarget ??= 'build';
     checkForTargetConflicts(tree, options);
     addBuildTarget(tree, options, isTsSolutionSetup);

@@ -7,7 +7,7 @@
 }
 
 body .DocSearch-Container {
-  @apply fixed left-0 top-0 z-[50] flex h-screen w-screen cursor-auto flex-col bg-black/10 p-4 backdrop-blur-sm sm:p-6 md:p-[10vh] lg:p-[12vh] dark:bg-white/10;
+  @apply fixed top-0 left-0 z-[50] flex h-screen w-screen cursor-auto flex-col bg-black/10 p-4 backdrop-blur-xs sm:p-6 md:p-[10vh] lg:p-[12vh] dark:bg-white/10;
 }
 
 .DocSearch-LoadingIndicator svg {
@@ -188,7 +188,7 @@ body .DocSearch-Container {
   background-repeat: no-repeat;
   background-position: center center;
 
-  @apply bg-white shadow-sm ring-1 ring-slate-900/5 dark:ring-slate-100/5;
+  @apply bg-white shadow-xs ring-1 ring-slate-900/5 dark:ring-slate-100/5;
 }
 
 .DocSearch-Hit-content-wrapper {
@@ -338,7 +338,7 @@ body .DocSearch-Container {
 }
 
 .DocSearch-NoResults {
-  @apply px-4 pb-8 pt-10;
+  @apply px-4 pt-10 pb-8;
 }
 
 .DocSearch-NoResults .DocSearch-Title {
@@ -347,7 +347,7 @@ body .DocSearch-Container {
 }
 
 .DocSearch-NoResults-Prefill-List .DocSearch-Help {
-  @apply mb-3 text-sm font-semibold leading-6 text-slate-900 dark:text-slate-200;
+  @apply mb-3 text-sm leading-6 font-semibold text-slate-900 dark:text-slate-200;
 }
 
 .DocSearch-NoResults-Prefill-List ul {

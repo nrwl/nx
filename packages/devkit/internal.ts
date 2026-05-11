@@ -3,6 +3,7 @@ export {
   createProjectRootMappingsFromProjectConfigurations,
   PluginCache,
   safeWriteFileCache,
+  emitPluginWorkerLog,
 } from 'nx/src/devkit-internals';
 
 // Generators
@@ -41,6 +42,7 @@ export {
 
 // Utils
 export { addPlugin } from './src/utils/add-plugin';
+export { throwForUnsupportedVersion } from './src/utils/version-floor';
 export {
   createAsyncIterable,
   combineAsyncIterables,

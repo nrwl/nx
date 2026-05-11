@@ -130,6 +130,7 @@ jobs:
           - host: windows-latest
             setup: |-
               choco install openjdk --version=21.0.0 -y
+              choco install dotnet-9.0-sdk -y
               rustup target add aarch64-pc-windows-msvc
             build: |
               export JAVA_HOME="C:\Program Files\OpenJDK\jdk-21"
@@ -148,22 +149,23 @@ jobs:
             build: |
               set -e
               apt-get update
+              apt-get install -y curl ca-certificates git xz-utils gpg
 
-              # Install Java 21
-              apt-get install -y openjdk-21-jdk
-              export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-              export PATH="$JAVA_HOME/bin:$PATH"
-              java --version
+              # Install mise from the signed apt repo
+              install -dm 755 /etc/apt/keyrings
+              curl -fsSL https://mise.jdx.dev/gpg-key.pub | gpg --dearmor -o /etc/apt/keyrings/mise-archive-keyring.gpg
+              echo "deb [signed-by=/etc/apt/keyrings/mise-archive-keyring.gpg arch=$(dpkg --print-architecture)] https://mise.jdx.dev/deb stable main" > /etc/apt/sources.list.d/mise.list
+              apt-get update
+              apt-get install -y mise
 
-              curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
-              apt-get install -y nodejs=22.16.0-1nodesource1
+              # Provision Node, Java, .NET, Maven, corepack from mise.toml
+              cd /build
+              mise trust mise.toml
+              mise install
+              eval "$(mise env -s bash)"
 
-              export PATH="/usr/local/bin:$PATH"
-              node --version
-              npm --version
-
-              npm i -g pnpm@${PNPM_VERSION} --force
-              pnpm --version
+              corepack enable
+              corepack prepare --activate
 
               pnpm install --frozen-lockfile
               rustup target add x86_64-unknown-linux-gnu
@@ -174,32 +176,32 @@ jobs:
             build: |
               bash -c "
                 set -e
+                # mise's core node/java backends don't ship musl binaries and fall back to
+                # compile-from-source on Alpine, which fails. Install via apk + tarball instead.
                 echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
-                apk add --no-cache curl xz openjdk21 build-base lld
+                apk add --no-cache curl xz openjdk21 build-base lld dotnet9-sdk
 
-                # Set up Java 21
+                # Java 21
                 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
                 export PATH=\"\$JAVA_HOME/bin:\$PATH\"
                 java --version
 
+                # .NET 9 SDK (needed by @nx/dotnet plugin)
+                dotnet --version
+
+                # Node.js musl build from unofficial-builds.nodejs.org
                 curl -fsSL https://unofficial-builds.nodejs.org/download/release/v22.16.0/node-v22.16.0-linux-x64-musl.tar.xz -o node.tar.xz
                 tar -xJf node.tar.xz
                 mv node-v22.16.0-linux-x64-musl /usr/local/node
-
                 export PATH=\"/usr/local/node/bin:\$PATH\"
+                node --version
 
-                echo Node: \$(node -v)
-                echo NPM: \$(npm -v)
-
-                # Install PNPM
-                npm i -g pnpm@${PNPM_VERSION} --force
-                pnpm --version
+                npm i -g pnpm@\${PNPM_VERSION} --force
 
                 # Help clang find GCC runtime (crtbeginS.o, libgcc) and use lld for jemalloc build
                 GCC_DIR=\$(dirname \$(find /usr/lib/gcc -name crtbeginS.o | head -1))
                 export CFLAGS=\"\${CFLAGS} -fuse-ld=lld --gcc-install-dir=\${GCC_DIR}\"
 
-                # Install deps and run native build
                 pnpm install --frozen-lockfile
                 rustup target add x86_64-unknown-linux-musl
                 pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-musl
@@ -221,19 +223,20 @@ jobs:
             build: |
               set -e
               apt-get update
+              apt-get install -y curl ca-certificates git xz-utils gpg
 
-              # Install Java 21
-              apt-get install -y openjdk-21-jdk
-              export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-              export PATH="$JAVA_HOME/bin:$PATH"
-              java --version
+              # Install mise from the signed apt repo
+              install -dm 755 /etc/apt/keyrings
+              curl -fsSL https://mise.jdx.dev/gpg-key.pub | gpg --dearmor -o /etc/apt/keyrings/mise-archive-keyring.gpg
+              echo "deb [signed-by=/etc/apt/keyrings/mise-archive-keyring.gpg arch=$(dpkg --print-architecture)] https://mise.jdx.dev/deb stable main" > /etc/apt/sources.list.d/mise.list
+              apt-get update
+              apt-get install -y mise
 
-              curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
-              apt-get install -y nodejs=22.16.0-1nodesource1
-
-              export PATH="/usr/local/bin:$PATH"
-              node --version
-              npm --version
+              # Provision Node, Java, .NET, Maven, corepack from mise.toml
+              cd /build
+              mise trust mise.toml
+              mise install
+              eval "$(mise env -s bash)"
 
               # Help clang find GCC runtime (crtbeginS.o, libgcc) and use lld for jemalloc build
               export CFLAGS="${CFLAGS} -fuse-ld=lld --gcc-toolchain=/usr/aarch64-unknown-linux-gnu"
@@ -242,8 +245,8 @@ jobs:
               # Linux kernels with 4K/16K/64K pages (Asahi, Ampere, Graviton, etc.).
               export JEMALLOC_SYS_WITH_LG_PAGE=16
 
-              npm i -g pnpm@${PNPM_VERSION} --force
-              pnpm --version
+              corepack enable
+              corepack prepare --activate
 
               pnpm install --frozen-lockfile
               rustup target add aarch64-unknown-linux-gnu
@@ -271,26 +274,29 @@ jobs:
             build: |
               bash -c "
                 set -e
+                # mise's core node/java backends don't ship musl binaries and fall back to
+                # compile-from-source on Alpine, which fails. Install via apk + tarball instead.
                 echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
-                apk add --no-cache curl xz openjdk21 build-base lld
+                apk add --no-cache curl xz openjdk21 build-base lld dotnet9-sdk
 
-                # Set up Java 21
+                # Java 21
                 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
                 export PATH=\"\$JAVA_HOME/bin:\$PATH\"
                 java --version
 
+                # .NET 9 SDK (needed by @nx/dotnet plugin)
+                dotnet --version
+
+                # Node.js musl build from unofficial-builds.nodejs.org. Container is x64;
+                # rust cross-compiles to aarch64-unknown-linux-musl, so the host node binary
+                # is x64-musl regardless of the build target.
                 curl -fsSL https://unofficial-builds.nodejs.org/download/release/v22.16.0/node-v22.16.0-linux-x64-musl.tar.xz -o node.tar.xz
                 tar -xJf node.tar.xz
                 mv node-v22.16.0-linux-x64-musl /usr/local/node
-
                 export PATH=\"/usr/local/node/bin:\$PATH\"
+                node --version
 
-                echo Node: \$(node -v)
-                echo NPM: \$(npm -v)
-
-                # Install PNPM
-                npm i -g pnpm@${PNPM_VERSION} --force
-                pnpm --version
+                npm i -g pnpm@\${PNPM_VERSION} --force
 
                 # Help clang find GCC runtime (crtbeginS.o, libgcc) and use lld for jemalloc build
                 GCC_DIR=\$(dirname \$(find /aarch64-linux-musl-cross/lib/gcc -name crtbeginS.o | head -1))
@@ -300,7 +306,6 @@ jobs:
                 # Linux kernels with 4K/16K/64K pages (Asahi, Ampere, Graviton, etc.).
                 export JEMALLOC_SYS_WITH_LG_PAGE=16
 
-                # Install deps and run native build
                 pnpm install --frozen-lockfile
                 rustup target add aarch64-unknown-linux-musl
                 pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-musl
@@ -309,6 +314,7 @@ jobs:
             target: aarch64-pc-windows-msvc
             setup: |-
               choco install openjdk --version=21.0.0 -y
+              choco install dotnet-9.0-sdk -y
               rustup target add aarch64-pc-windows-msvc
             build: |
               export JAVA_HOME="C:\Program Files\OpenJDK\jdk-21"
@@ -348,11 +354,6 @@ jobs:
             target/
           key: ${{ matrix.settings.target }}-cargo-registry
 
-      - uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2.2.1
-        if: ${{ matrix.settings.target == 'armv7-unknown-linux-gnueabihf' }}
-        with:
-          version: 0.10.0
-
       - name: Setup toolchain
         run: ${{ matrix.settings.setup }}
         if: ${{ matrix.settings.setup }}
@@ -387,6 +388,7 @@ jobs:
           echo "$BUILD_SCRIPT" > "$SCRIPT_FILE"
           docker run --rm \
             --user 0:0 \
+            -e NODE_VERSION \
             -e PNPM_VERSION \
             -e NX_GRADLE_PROJECT_GRAPH_TIMEOUT \
             -e NX_VERBOSE_LOGGING \
@@ -435,12 +437,13 @@ jobs:
           PLAYWRIGHT_BROWSERS_PATH: 0
           NODE_VERSION: 22.16.0
           NX_GRADLE_DISABLE: 'true'
+          NX_DOTNET_DISABLE: 'true'
           NODE_OPTIONS: '--max-old-space-size=4096'
         with:
           operating_system: freebsd
           version: '14.0'
           architecture: x86-64
-          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE NODE_OPTIONS
+          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE NX_DOTNET_DISABLE NODE_OPTIONS
           shell: bash
           run: |
             env

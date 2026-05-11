@@ -6,6 +6,7 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import {
   moduleFederationEnhancedVersion,
   nxVersion,
@@ -35,6 +36,7 @@ import {
 import type { Schema } from './schema';
 
 export async function setupMf(tree: Tree, rawOptions: Schema) {
+  assertSupportedAngularVersion(tree);
   const options = normalizeOptions(tree, rawOptions);
   const projectConfig = readProjectConfiguration(tree, options.appName);
 

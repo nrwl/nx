@@ -16,11 +16,14 @@ import { createCompiler, isMultiCompiler } from '../../utils/create-compiler';
 import { isMode } from '../../utils/mode-utils';
 import { normalizeOptions } from './lib/normalize-options';
 import { RspackExecutorSchema } from './schema';
+import { warnRspackExecutorDeprecation } from '../../utils/deprecation';
 
 export default async function* runExecutor(
   options: RspackExecutorSchema,
   context: ExecutorContext
 ) {
+  warnRspackExecutorDeprecation();
+
   process.env.NODE_ENV ??= options.mode ?? 'production';
   options.target ??= 'web';
 

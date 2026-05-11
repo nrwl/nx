@@ -1,5 +1,6 @@
 exclude-reads:
   - packages/nx/src/native/*.node
+  - packages/nx/dist/src/native/*.node
   - 'dist/target/**'
 exclude-writes:
   - '**/.swc/**'
@@ -19,10 +20,7 @@ task-exclusions:
       - '**'
     exclude-writes:
       - '**'
-  # Webpack snapshots context dirs registered by postcss-loader via tailwind's
-  # dir-dependency emission, so it hashes stories/specs siblings of declared
-  # content even though they never enter the bundle and are intentionally
-  # excluded from inputs.
+
   - project: graph-client
     target: build-client
     exclude-reads:

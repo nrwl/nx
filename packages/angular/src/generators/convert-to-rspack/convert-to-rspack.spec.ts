@@ -8,10 +8,10 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
-import * as _configUtils from '@nx/devkit/src/utils/config-utils';
+import * as _configUtils from '@nx/devkit/internal';
 
-jest.mock('@nx/devkit/src/utils/config-utils', () => ({
-  ...jest.requireActual('@nx/devkit/src/utils/config-utils'),
+jest.mock('@nx/devkit/internal', () => ({
+  ...jest.requireActual('@nx/devkit/internal'),
   loadConfigFile: jest.fn().mockImplementation(async (path) => {
     return () => {
       return {};
