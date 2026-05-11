@@ -62,6 +62,12 @@ catalogs:
     ng-packagr: '>= 19.0.0 < 22.0.0'
     rxjs: '^6.5.3 || ^7.5.0'
     zone.js: '~0.15.0 || ~0.16.0'
+  css:
+    autoprefixer: '^10.4.9'
+    postcss: '^8.4.38'
+    postcss-loader: '^8.1.1'
+    sass: '^1.97.2'
+    sass-embedded: '^1.97.2'
   eslint:
     '@angular-eslint/eslint-plugin': '^21.3.1'
     '@angular-eslint/eslint-plugin-template': '^21.3.1'
@@ -109,3 +115,8 @@ catalogs:
     '@swc/helpers': '0.5.18'
     '@swc/cli': '0.8.0'
     '@swc-node/register': '^1.11.1'
+  tailwind:
+    '@tailwindcss/postcss': '^4.1.5'
+    tailwind-merge: '^2.4.0'
+  vite:
+    vitest: '^4.0.0'

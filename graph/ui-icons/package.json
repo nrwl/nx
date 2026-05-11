@@ -6,6 +6,6 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "dependencies": {
-    "tailwind-merge": "^2.4.0"
+    "tailwind-merge": "catalog:tailwind"
   }
 }
