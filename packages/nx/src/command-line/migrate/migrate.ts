@@ -96,6 +96,14 @@ import {
   MULTI_MAJOR_MODE_FLAG,
   type MultiMajorMode,
 } from './multi-major';
+import {
+  AI_MIGRATIONS_DIR,
+  extractPromptFilesFromTarball,
+  promptContentKey,
+  readPromptFilesFromInstall,
+  validateMigrationEntries,
+  writePromptMigrationFiles,
+} from './prompt-files';
 import { filterDowngradedUpdates } from './update-filters';
 import {
   DIST_TAGS,
@@ -110,6 +118,8 @@ export { normalizeVersion };
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
+  /** Prompt file contents keyed by the `prompt` value as it appears on the migration entry. */
+  resolvedPromptFiles?: Record<string, string>;
 }
 
 const execAsync = promisify(exec);
@@ -258,15 +268,17 @@ export class Migrator {
     });
     this.applyModeFilter();
 
-    const migrations = await this.createMigrateJson();
+    const { migrations, promptContents } = await this.createMigrateJson();
     return {
       packageUpdates: this.packageUpdates,
       migrations,
+      ...(Object.keys(promptContents).length > 0 ? { promptContents } : {}),
       minVersionWithSkippedUpdates: this.minVersionWithSkippedUpdates,
     };
   }
 
   private async createMigrateJson() {
+    const promptContents: Record<string, string> = {};
     const migrations = await Promise.all(
       Object.keys(this.packageUpdates).map(async (packageName) => {
         if (this.packageUpdates[packageName].ignoreMigrations) {
@@ -277,14 +289,20 @@ export class Migrator {
         if (currentVersion === null) return [];
 
         const { version } = this.packageUpdates[packageName];
-        const { generators } = await this.fetchMigrationConfig(
-          packageName,
-          version
-        );
+        const { generators: migrationEntries, resolvedPromptFiles } =
+          await this.fetchMigrationConfig(packageName, version);
 
-        if (!generators) return [];
+        if (!migrationEntries) return [];
 
-        return Object.entries(generators)
+        if (resolvedPromptFiles) {
+          for (const [promptPath, content] of Object.entries(
+            resolvedPromptFiles
+          )) {
+            promptContents[promptContentKey(packageName, promptPath)] = content;
+          }
+        }
+
+        return Object.entries(migrationEntries)
           .filter(
             ([, migration]) =>
               migration.version &&
@@ -300,7 +318,7 @@ export class Migrator {
       })
     );
 
-    return migrations.flat();
+    return { migrations: migrations.flat(), promptContents };
   }
 
   private async buildPackageJsonUpdates(
@@ -1538,17 +1556,38 @@ async function downloadPackageMigrationsFromRegistry(
       packageVersion
     );
 
-    const migrations = await extractFileFromTarball(
-      join(dir, tarballPath),
-      joinPathFragments('package', migrationsFilePath),
-      join(dir, migrationsFilePath)
-    ).then((path) => readJsonFile<MigrationsJson>(path));
+    const fullTarballPath = join(dir, tarballPath);
 
-    result = { ...migrations, packageGroup, version: packageVersion };
-  } catch {
-    throw new Error(
-      `Failed to find migrations file "${migrationsFilePath}" in package "${packageName}@${packageVersion}".`
+    let migrations: MigrationsJson;
+    try {
+      migrations = await extractFileFromTarball(
+        fullTarballPath,
+        joinPathFragments('package', migrationsFilePath),
+        join(dir, migrationsFilePath)
+      ).then((path) => readJsonFile<MigrationsJson>(path));
+    } catch {
+      throw new Error(
+        `Failed to find migrations file "${migrationsFilePath}" in package "${packageName}@${packageVersion}".`
+      );
+    }
+
+    validateMigrationEntries(packageName, packageVersion, migrations);
+
+    const resolvedPromptFiles = await extractPromptFilesFromTarball(
+      packageName,
+      packageVersion,
+      migrations,
+      migrationsFilePath,
+      fullTarballPath,
+      dir
     );
+
+    result = {
+      ...migrations,
+      packageGroup,
+      version: packageVersion,
+      ...(resolvedPromptFiles ? { resolvedPromptFiles } : {}),
+    };
   } finally {
     await cleanup();
   }
@@ -1630,11 +1669,24 @@ async function getPackageMigrationsUsingInstallImpl(
     } = readPackageMigrationConfig(packageName, dir);
 
     let migrations: MigrationsJson = undefined;
+    let resolvedPromptFiles: Record<string, string> | undefined;
     if (migrationsFilePath) {
       migrations = readJsonFile<MigrationsJson>(migrationsFilePath);
+      validateMigrationEntries(packageName, packageVersion, migrations);
+      resolvedPromptFiles = await readPromptFilesFromInstall(
+        packageName,
+        packageVersion,
+        migrations,
+        migrationsFilePath
+      );
     }
 
-    result = { ...migrations, packageGroup, version: packageJson.version };
+    result = {
+      ...migrations,
+      packageGroup,
+      version: packageJson.version,
+      ...(resolvedPromptFiles ? { resolvedPromptFiles } : {}),
+    };
   } catch (e) {
     const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
 
@@ -1949,8 +2001,12 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       firstPartyPackages,
     });
 
-    const { migrations, packageUpdates, minVersionWithSkippedUpdates } =
-      await migrator.migrate(walkedTargetPackage, opts.targetVersion);
+    const {
+      migrations,
+      packageUpdates,
+      promptContents,
+      minVersionWithSkippedUpdates,
+    } = await migrator.migrate(walkedTargetPackage, opts.targetVersion);
 
     // The cascade collects packageJsonUpdates entries against the cascade
     // root's installed version, but inner per-package pins are only gated
@@ -1969,6 +2025,12 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     const wroteNxJsonInstallation = await updateInstallationDetails(
       root,
       writableUpdates
+    );
+
+    const promptMigrationFiles = writePromptMigrationFiles(
+      root,
+      migrations,
+      promptContents ?? {}
     );
 
     if (migrations.length > 0) {
@@ -2014,6 +2076,11 @@ async function generateMigrationsJsonAndUpdatePackageJson(
         migrations.length > 0
           ? `- migrations.json has been generated.`
           : `- There are no migrations to run, so migrations.json has not been created.`,
+        ...(promptMigrationFiles.length > 0
+          ? [
+              `- ${promptMigrationFiles.length} AI migration prompt(s) have been written to ${AI_MIGRATIONS_DIR}/. You can review and tweak them before running migrations.`,
+            ]
+          : []),
       ],
     });
 
