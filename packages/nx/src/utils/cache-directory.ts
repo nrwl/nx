@@ -107,7 +107,12 @@ export function workspaceDataDirectoryForWorkspace(workspaceRoot: string) {
   );
 }
 
-onWorkspaceRootChanged(() => {
-  cacheDir = sharedCacheDirectory(workspaceRoot);
-  workspaceDataDirectory = workspaceDataDirectoryForWorkspace(workspaceRoot);
-});
+// Guard: jest.mock of workspace-root in unrelated specs replaces the
+// whole module and loses this export. Tests that mock workspace-root
+// don't call setWorkspaceRoot so the subscription wouldn't fire anyway.
+if (typeof onWorkspaceRootChanged === 'function') {
+  onWorkspaceRootChanged(() => {
+    cacheDir = sharedCacheDirectory(workspaceRoot);
+    workspaceDataDirectory = workspaceDataDirectoryForWorkspace(workspaceRoot);
+  });
+}
