@@ -12,11 +12,54 @@ pub struct ScrollMetrics {
     pub viewport_height: usize,
 }
 
+/// Selection state of the task manager.
+///
+/// Invariants the render loop relies on:
+/// - `Explicit` is sticky — never replaced by the auto-select logic.
+/// - `AwaitingNextAllocation` is sticky until an in-progress entry appears;
+///   the render loop never falls back to first-available from it.
+/// - `InitialPlaceholder` is replaced by the first in-progress entry as
+///   soon as one appears.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SelectionState {
+    Empty,
+    InitialPlaceholder(SelectionEntry),
+    Explicit(SelectionEntry),
+    AwaitingNextAllocation,
+}
+
+impl SelectionState {
+    pub fn entry(&self) -> Option<&SelectionEntry> {
+        match self {
+            SelectionState::InitialPlaceholder(entry) | SelectionState::Explicit(entry) => {
+                Some(entry)
+            }
+            SelectionState::Empty | SelectionState::AwaitingNextAllocation => None,
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        matches!(self, SelectionState::Empty)
+    }
+
+    pub fn is_initial_placeholder(&self) -> bool {
+        matches!(self, SelectionState::InitialPlaceholder(_))
+    }
+
+    pub fn is_explicit(&self) -> bool {
+        matches!(self, SelectionState::Explicit(_))
+    }
+
+    pub fn is_awaiting_next_allocation(&self) -> bool {
+        matches!(self, SelectionState::AwaitingNextAllocation)
+    }
+}
+
 pub struct TaskSelectionManager {
     // The list of entries (tasks and batch groups) in their current visual order, None represents empty rows
     entries: Vec<Option<SelectionEntry>>,
-    // The current selection state (Some = selected, None = no selection)
-    selection_state: Option<SelectionEntry>,
+    /// The current selection state. See [`SelectionState`].
+    selection_state: SelectionState,
     // Scroll offset for viewport management
     scroll_offset: usize,
     // Viewport height for visible area calculations
@@ -81,7 +124,7 @@ impl TaskSelectionManager {
     pub fn new(viewport_height: usize) -> Self {
         Self {
             entries: Vec::new(),
-            selection_state: None,
+            selection_state: SelectionState::Empty,
             scroll_offset: 0,
             viewport_height: viewport_height.max(1),
             selection_mode: SelectionMode::TrackByName,
@@ -147,71 +190,119 @@ impl TaskSelectionManager {
         }
     }
 
-    /// Updates entries while trying to preserve the selected task by name
+    /// Preserves the [`SelectionState`] variant across re-sorts. A placeholder
+    /// stays a placeholder, an explicit selection stays explicit; waiting /
+    /// empty states pass through untouched.
     fn update_entries_track_by_name(
         &mut self,
         entries: Vec<Option<SelectionEntry>>,
         in_progress_size: Option<usize>,
     ) {
-        // Keep track of current selection state
         let previous_state = self.selection_state.clone();
 
-        // Update the entries
         self.entries = entries;
-        // Invalidate all caches since entries have changed
         self.invalidate_all_caches();
 
-        // Update section size - use provided size if available, otherwise compute from entries
         if let Some(size) = in_progress_size {
             self.in_progress_section_size = size;
         } else {
             self.update_in_progress_section_size();
         }
 
-        // Update selection state based on previous state
-        // If we had a selection, try to find same item or fall back to first available
-        let new_selection = previous_state.and_then(|selection| {
-            let selected_id = selection.id();
-            self.entries
-                .iter()
-                .find_map(|e| e.as_ref().filter(|entry| entry.id() == selected_id))
-                .or_else(|| self.entries.iter().find_map(|e| e.as_ref()))
-                .cloned()
-        });
-        self.select(new_selection);
+        let new_state = match previous_state {
+            SelectionState::Empty => SelectionState::Empty,
+            SelectionState::AwaitingNextAllocation => SelectionState::AwaitingNextAllocation,
+            SelectionState::Explicit(entry) => {
+                self.resolve_entry_by_name(&entry, SelectionState::Explicit)
+            }
+            SelectionState::InitialPlaceholder(entry) => {
+                self.resolve_entry_by_name(&entry, SelectionState::InitialPlaceholder)
+            }
+        };
+        self.set_state(new_state);
     }
 
-    /// Updates entries while trying to preserve the selected position in the list
+    /// Preserves the [`SelectionState`] variant across re-sorts, using the
+    /// pre-update entry index to find the nearest entry.
     fn update_entries_track_by_position(
         &mut self,
         entries: Vec<Option<SelectionEntry>>,
         in_progress_size: Option<usize>,
     ) {
-        // Get the current selection index
         let selection_index = self.get_selected_index();
+        let previous_state = self.selection_state.clone();
 
-        // Update the entries
         self.entries = entries;
-        // Invalidate all caches since entries have changed
         self.invalidate_all_caches();
 
-        // Update section size - use provided size if available, otherwise compute from entries
         if let Some(size) = in_progress_size {
             self.in_progress_section_size = size;
         } else {
             self.update_in_progress_section_size();
         }
 
-        // Update selection state based on position
-        let new_selection = selection_index.and_then(|idx| self.find_nearest_entry(idx).cloned());
-        self.select(new_selection);
+        let new_state = match previous_state {
+            SelectionState::Empty => SelectionState::Empty,
+            SelectionState::AwaitingNextAllocation => SelectionState::AwaitingNextAllocation,
+            SelectionState::Explicit(_) => {
+                self.resolve_entry_by_position(selection_index, SelectionState::Explicit)
+            }
+            SelectionState::InitialPlaceholder(_) => {
+                self.resolve_entry_by_position(selection_index, SelectionState::InitialPlaceholder)
+            }
+        };
+        self.set_state(new_state);
     }
 
-    /// Selects an item, clears selection if None
-    pub fn select(&mut self, selection: Option<SelectionEntry>) {
-        self.selection_state = selection;
+    fn resolve_entry_by_name(
+        &self,
+        previous: &SelectionEntry,
+        variant: fn(SelectionEntry) -> SelectionState,
+    ) -> SelectionState {
+        let selected_id = previous.id();
+        self.entries
+            .iter()
+            .find_map(|e| e.as_ref().filter(|entry| entry.id() == selected_id))
+            .or_else(|| self.entries.iter().find_map(|e| e.as_ref()))
+            .cloned()
+            .map_or(SelectionState::Empty, variant)
+    }
+
+    fn resolve_entry_by_position(
+        &self,
+        position: Option<usize>,
+        variant: fn(SelectionEntry) -> SelectionState,
+    ) -> SelectionState {
+        position
+            .and_then(|idx| self.find_nearest_entry(idx).cloned())
+            .map_or(SelectionState::Empty, variant)
+    }
+
+    fn set_state(&mut self, state: SelectionState) {
+        self.selection_state = state;
         self.invalidate_selection_cache();
         self.ensure_selected_visible();
+    }
+
+    /// Explicit selection. `None` resets to `Empty`. The render loop never
+    /// auto-overrides the resulting state.
+    pub fn select(&mut self, selection: Option<SelectionEntry>) {
+        self.set_state(selection.map_or(SelectionState::Empty, SelectionState::Explicit));
+    }
+
+    /// Anchor a placeholder selection on the first selectable entry. The
+    /// render loop replaces it with the first in-progress entry once one
+    /// appears, unless the user navigates first (which promotes the
+    /// selection to `Explicit`).
+    pub fn select_first_available_as_initial_placeholder(&mut self) {
+        let first = self.entries.iter().find_map(|e| e.as_ref()).cloned();
+        self.set_state(first.map_or(SelectionState::Empty, SelectionState::InitialPlaceholder));
+    }
+
+    /// Wait for the next in-progress allocation. Distinct from `Empty` so
+    /// the render loop's initial-loading fallback does not fire.
+    pub fn await_next_allocation(&mut self) {
+        self.set_state(SelectionState::AwaitingNextAllocation);
     }
 
     /// Convenience: selects a task by ID
@@ -249,21 +340,21 @@ impl TaskSelectionManager {
     }
 
     pub fn next(&mut self) {
-        if self.selection_state.is_none() {
-            self.select_first_available();
-            self.ensure_selected_visible();
+        if self.selection_state.entry().is_none() {
+            // Anchor on the top of the current viewport so navigation begins
+            // where the user is looking, not at entry 0.
+            self.select(self.first_in_viewport_or_available());
             return;
         }
 
         if let Some(current_idx) = self.get_selected_index() {
-            // Find next non-empty entry
             for idx in (current_idx + 1)..self.entries.len() {
                 if let Some(entry) = &self.entries[idx] {
                     self.select(Some(entry.clone()));
                     return;
                 }
             }
-            // No next selectable found - scroll to reveal trailing entries (extended scroll)
+            // No next selectable - extended scroll to reveal trailing spacer rows.
             if self.can_scroll_down() {
                 self.scroll_down(1);
             }
@@ -271,9 +362,8 @@ impl TaskSelectionManager {
     }
 
     pub fn previous(&mut self) {
-        if self.selection_state.is_none() {
-            self.select_first_available();
-            self.ensure_selected_visible();
+        if self.selection_state.entry().is_none() {
+            self.select(self.first_in_viewport_or_available());
             return;
         }
 
@@ -350,9 +440,26 @@ impl TaskSelectionManager {
         self.entries[start..end].to_vec()
     }
 
-    /// Gets the currently selected item as a SelectionEntry enum
+    /// Returns the selected entry, regardless of whether it's a placeholder
+    /// or explicit. `None` for `Empty` and `AwaitingNextAllocation`.
     pub fn get_selection(&self) -> Option<&SelectionEntry> {
-        self.selection_state.as_ref()
+        self.selection_state.entry()
+    }
+
+    pub fn is_awaiting_next_allocation(&self) -> bool {
+        self.selection_state.is_awaiting_next_allocation()
+    }
+
+    pub fn is_initial_placeholder(&self) -> bool {
+        self.selection_state.is_initial_placeholder()
+    }
+
+    pub fn is_explicit(&self) -> bool {
+        self.selection_state.is_explicit()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.selection_state.is_empty()
     }
 
     /// Get total number of entries
@@ -409,7 +516,7 @@ impl TaskSelectionManager {
     /// This represents progress through tasks only, ignoring None spacer entries (which are never selected)
     pub fn get_selected_task_index(&mut self) -> Option<usize> {
         // Extract selected item from state, or return None if not selected
-        let selection = match &self.selection_state {
+        let selection = match self.selection_state.entry() {
             Some(sel) => sel,
             _ => return None,
         };
@@ -449,6 +556,31 @@ impl TaskSelectionManager {
         self.select(first);
     }
 
+    /// Returns the first selectable entry inside the current viewport, falling
+    /// back to the first selectable entry overall when the viewport contains
+    /// only spacer rows.
+    fn first_in_viewport_or_available(&self) -> Option<SelectionEntry> {
+        let start = self.scroll_offset.min(self.entries.len());
+        let end = (start + self.viewport_height).min(self.entries.len());
+        self.entries[start..end]
+            .iter()
+            .find_map(|e| e.as_ref())
+            .or_else(|| self.entries.iter().find_map(|e| e.as_ref()))
+            .cloned()
+    }
+
+    pub fn has_in_progress(&self) -> bool {
+        self.in_progress_section_size > 0
+    }
+
+    /// Returns the first selectable entry in the in-progress section.
+    /// Avoids the `Vec` allocation that `get_in_progress_items()` would
+    /// incur when only the head entry is needed (called per render).
+    pub fn first_in_progress_entry(&self) -> Option<SelectionEntry> {
+        let safe_size = self.in_progress_section_size.min(self.entries.len());
+        self.entries[..safe_size].iter().find_map(|e| e.clone())
+    }
+
     /// Validate and adjust scroll offset to ensure it's within bounds
     fn validate_scroll_offset(&mut self) {
         let max_scroll = self.entries.len().saturating_sub(self.viewport_height);
@@ -462,7 +594,7 @@ impl TaskSelectionManager {
     }
 
     pub fn get_selected_index(&self) -> Option<usize> {
-        let id = self.selection_state.as_ref()?.id();
+        let id = self.selection_state.entry()?.id();
         self.entries
             .iter()
             .position(|entry| entry.as_ref().map(|e| e.id()) == Some(id))
@@ -505,7 +637,7 @@ impl TaskSelectionManager {
     /// Returns None for batch groups (they don't have sections)
     pub fn get_selected_task_section(&self) -> Option<TaskSection> {
         self.selection_state
-            .as_ref()
+            .entry()
             .and_then(|sel| self.determine_task_section(sel))
     }
 
@@ -549,7 +681,7 @@ impl TaskSelectionManager {
         // Check if in-progress section is empty but there are pending tasks
         if in_progress_items.is_empty() {
             // Wait for next allocation - enter "waiting state"
-            self.select(None);
+            self.await_next_allocation();
             return;
         }
 
@@ -588,32 +720,28 @@ impl TaskSelectionManager {
         new_is_in_progress: bool,
         has_pending_tasks: bool,
     ) {
-        // Only process if this is the selected task OR we're waiting for a task
-        match &self.selection_state {
-            Some(SelectionEntry::Task(selected_task)) if selected_task != &task_id => {
+        let task_finishing = old_in_progress_index.is_some() && !new_is_in_progress;
+        let task_starting = old_in_progress_index.is_none() && new_is_in_progress;
+
+        if task_finishing {
+            // Only switch selection when the finished task is the currently
+            // selected task. A batch group selection is never affected by an
+            // individual task finishing.
+            let is_selected_task = matches!(
+                self.selection_state.entry(),
+                Some(SelectionEntry::Task(name)) if name == &task_id
+            );
+            if !is_selected_task {
                 return;
             }
-            Some(SelectionEntry::BatchGroup(_)) => return,
-            None => return,
-            _ => {} // Allow Selected(matching task) to continue
-        }
-
-        // Handle two lifecycle transitions:
-
-        // 1. Task finishing: was in-progress → not in-progress
-        if old_in_progress_index.is_some() && !new_is_in_progress {
             self.handle_in_progress_task_finished(
                 task_id,
                 old_in_progress_index,
                 has_pending_tasks,
             );
-        }
-        // 2. Task starting: was NOT in-progress → now in-progress
-        else if old_in_progress_index.is_none() && new_is_in_progress {
-            // Clear waiting state if we're in NoSelection
-            if self.selection_state.is_none() {
-                self.select(Some(SelectionEntry::Task(task_id)));
-            }
+        } else if task_starting && self.selection_state.is_awaiting_next_allocation() {
+            // Exit the waiting state by latching on to the newly started task.
+            self.select(Some(SelectionEntry::Task(task_id)));
         }
     }
 }
@@ -884,15 +1012,181 @@ mod tests {
         ];
         manager.update_entries_with_size(entries, 0);
 
-        // Now handle the status change - should enter NoSelection state
+        // Now handle the status change - should enter the AwaitingNextAllocation state
         manager.handle_task_status_change("task1".to_string(), Some(0), false, true);
 
-        // Should be in NoSelection state
-        assert!(matches!(manager.selection_state, None));
+        // Should be in AwaitingNextAllocation state (intentional wait — not Empty).
+        assert!(manager.is_awaiting_next_allocation());
+        assert!(manager.get_selection().is_none());
 
-        // Navigation should exit waiting state
+        // Navigation exits the waiting state and lands on a selectable entry.
         manager.next();
-        assert!(matches!(manager.selection_state, Some(_)));
+        assert!(manager.get_selection().is_some());
+    }
+
+    #[test]
+    fn test_navigate_from_none_anchors_on_viewport_top() {
+        // Viewport-anchored navigation: when nothing is selected (waiting state)
+        // and the user has scrolled, navigation must select the first selectable
+        // entry visible in the current viewport — not yank back to entry 0.
+        let mut manager = TaskSelectionManager::new(2);
+        manager.update_entries(vec![
+            Some(SelectionEntry::Task("Task 1".to_string())),
+            Some(SelectionEntry::Task("Task 2".to_string())),
+            Some(SelectionEntry::Task("Task 3".to_string())),
+            Some(SelectionEntry::Task("Task 4".to_string())),
+        ]);
+
+        manager.scroll_down(2);
+        assert!(manager.get_selection().is_none());
+
+        manager.next();
+        assert_eq!(
+            manager.get_selection(),
+            Some(&SelectionEntry::Task("Task 3".to_string()))
+        );
+
+        // previous() from waiting state behaves the same way (anchored to the
+        // top of the viewport rather than the top of the entire list).
+        manager.select(None);
+        manager.previous();
+        assert_eq!(
+            manager.get_selection(),
+            Some(&SelectionEntry::Task("Task 3".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_navigate_from_none_falls_back_when_viewport_has_only_spacers() {
+        // If the viewport happens to contain only None spacers (e.g. user
+        // scrolled into placeholder rows), navigation should still produce
+        // a selection by falling back to the first selectable entry overall.
+        let mut manager = TaskSelectionManager::new(2);
+        manager.update_entries(vec![
+            None,
+            None,
+            Some(SelectionEntry::Task("Task 1".to_string())),
+            Some(SelectionEntry::Task("Task 2".to_string())),
+        ]);
+        // scroll_offset stays 0; viewport [0..2] is all None.
+        manager.next();
+        assert_eq!(
+            manager.get_selection(),
+            Some(&SelectionEntry::Task("Task 1".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_selection_state_transitions() {
+        // Full state-machine walkthrough.
+        let mut manager = TaskSelectionManager::new(5);
+        manager.update_entries(vec![
+            Some(SelectionEntry::Task("a".to_string())),
+            Some(SelectionEntry::Task("b".to_string())),
+        ]);
+
+        // Start: Empty.
+        assert!(manager.is_empty());
+        assert!(!manager.is_initial_placeholder());
+        assert!(!manager.is_awaiting_next_allocation());
+
+        // Empty -> InitialPlaceholder.
+        manager.select_first_available_as_initial_placeholder();
+        assert!(manager.is_initial_placeholder());
+        assert!(!manager.is_empty());
+        assert_eq!(
+            manager.get_selection(),
+            Some(&SelectionEntry::Task("a".to_string()))
+        );
+
+        // InitialPlaceholder preserved across update_entries re-sort.
+        manager.update_entries(vec![
+            Some(SelectionEntry::Task("b".to_string())),
+            Some(SelectionEntry::Task("a".to_string())),
+        ]);
+        assert!(
+            manager.is_initial_placeholder(),
+            "placeholder should survive re-sort"
+        );
+
+        // InitialPlaceholder -> Explicit via select.
+        manager.select_task("b");
+        assert!(!manager.is_initial_placeholder());
+        assert!(!manager.is_empty());
+        assert!(!manager.is_awaiting_next_allocation());
+        assert_eq!(
+            manager.get_selection(),
+            Some(&SelectionEntry::Task("b".to_string()))
+        );
+
+        // Explicit preserved across re-sort.
+        manager.update_entries(vec![
+            Some(SelectionEntry::Task("a".to_string())),
+            Some(SelectionEntry::Task("b".to_string())),
+        ]);
+        assert!(!manager.is_initial_placeholder());
+        assert_eq!(
+            manager.get_selection(),
+            Some(&SelectionEntry::Task("b".to_string()))
+        );
+
+        // Explicit -> AwaitingNextAllocation.
+        manager.await_next_allocation();
+        assert!(manager.is_awaiting_next_allocation());
+        assert!(manager.get_selection().is_none());
+
+        // AwaitingNextAllocation preserved across re-sort (no fallback).
+        manager.update_entries(vec![
+            Some(SelectionEntry::Task("a".to_string())),
+            Some(SelectionEntry::Task("b".to_string())),
+        ]);
+        assert!(manager.is_awaiting_next_allocation());
+        assert!(manager.get_selection().is_none());
+
+        // AwaitingNextAllocation -> Explicit via navigation.
+        manager.next();
+        assert!(!manager.is_awaiting_next_allocation());
+        assert!(manager.get_selection().is_some());
+    }
+
+    #[test]
+    fn test_initial_placeholder_downgrades_to_empty_when_entries_drain() {
+        let mut manager = TaskSelectionManager::new(5);
+        manager.update_entries(vec![Some(SelectionEntry::Task("a".to_string()))]);
+        manager.select_first_available_as_initial_placeholder();
+        assert!(manager.is_initial_placeholder());
+
+        // Drain all entries — placeholder has nothing to point at, so the
+        // resolver downgrades to Empty.
+        manager.update_entries(Vec::new());
+        assert!(manager.is_empty());
+        assert!(manager.get_selection().is_none());
+    }
+
+    #[test]
+    fn test_has_in_progress() {
+        let mut manager = TaskSelectionManager::new(5);
+        assert!(!manager.has_in_progress());
+
+        manager.update_entries_with_size(
+            vec![
+                Some(SelectionEntry::Task("in-progress".to_string())),
+                None,
+                Some(SelectionEntry::Task("pending".to_string())),
+            ],
+            1,
+        );
+        assert!(manager.has_in_progress());
+
+        manager.update_entries_with_size(
+            vec![
+                None,
+                Some(SelectionEntry::Task("pending".to_string())),
+                Some(SelectionEntry::Task("done".to_string())),
+            ],
+            0,
+        );
+        assert!(!manager.has_in_progress());
     }
 
     #[test]
