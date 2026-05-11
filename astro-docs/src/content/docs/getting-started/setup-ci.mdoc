@@ -1,0 +1,115 @@
+---
+title: Setting Up CI
+description: Connect your Nx workspace to Nx Cloud to enable remote caching and self-healing CI in minutes.
+sidebar:
+  order: 7
+  label: Setting Up CI
+filter: 'type:Guides'
+---
+
+{% llm_copy_prompt title="Set up CI with Nx Cloud" %}
+Help me set up CI for my Nx workspace with remote caching.
+
+Use the terminal-only flow so we stay inside the agent loop. `nx connect` is the browser-based flow and drops us out of the agentic flow, so do not run it. Use `nx-cloud onboard connect-workspace` instead.
+
+Before touching anything, verify the workspace state:
+
+**A. Is Nx installed?**
+
+- Check for `nx.json` and `nx` in `package.json` devDeps.
+- Confirm `node_modules` exists. If not, install deps using the package manager that matches my lockfile (`pnpm install`, `npm install`, or `yarn`).
+- If `nx.json` is missing entirely, ask me before running `npx nx@latest init`.
+
+**B. Do I have common tasks configured?** (sanity check for new workspaces)
+Run `nx show projects` and `nx show project <name>` for one project. If common tasks like `test`, `build`, or `lint` are missing, this is probably a brand-new workspace. Walk me through [Configuring tasks](/docs/getting-started/tutorials/configuring-tasks) before continuing. In an established Nx repo this is almost always fine and you can move on.
+
+**C. Is there an existing CI workflow?**
+
+- **Yes, and it already calls `nx run` or `nx run-many`**: Likely already set up. Confirm with me before changing anything.
+- **Yes, but it calls raw commands** (`npm test`, `npm run build`, `npx jest`, etc.): Work with me to update it. Propose minimal edits swapping raw commands for `nx run-many -t <task>` or `nx run <project>:<task>`, and add a final `npx nx fix-ci` step. Show me the diff and wait for approval before writing.
+- **No**: Run `nx g @nx/workspace:ci-workflow --ci=<provider>`. Detect the provider from `git remote -v` (github.com -> `github`, gitlab.com -> `gitlab`, etc.). Ask me if it is still ambiguous. The generator wires up the CI task runner, remote caching, and `nx fix-ci`.
+
+Then connect to Nx Cloud:
+
+1. Run `npx nx-cloud onboard connect-workspace` and parse the JSON.
+2. If the response includes an `actionRequired` payload (typically GitHub authorization), surface the message and any URLs to me and stop. Do not retry blindly.
+3. Confirm `nxCloudId` is written to `nx.json`. If it is not, surface the JSON error to me instead of retrying.
+
+Stage the generated or edited files but do not commit on my behalf. Stay on topic: this page is about getting remote cache running in CI. For deeper coverage link to {pageUrl} and to [/docs/features/ci-features/remote-cache](/docs/features/ci-features/remote-cache).
+
+Page: {pageUrl}
+{% /llm_copy_prompt %}
+
+Local cache speeds up your machine. Remote cache speeds up everyone's machine, including CI. Connecting your workspace to Nx Cloud is the fastest way to keep CI fast as your repo grows.
+
+## Why connect to Nx Cloud
+
+Most CI runs spend a lot of time with runners sitting half-idle. Nx Cloud uses your task graph to keep them busier, so the same job finishes in less time. For the deeper theory, see [mental model](/docs/concepts/mental-model).
+
+Once connected you get:
+
+- **Cache hits across machines.** Results computed by a teammate or by an earlier CI run are replayed instead of recomputed.
+- **Higher runner utilization.** The orchestrator stacks tasks so big jobs don't strand half a runner idle.
+- **Self-healing CI.** Nx Cloud analyzes failures and proposes fixes you can apply from your editor.
+- **Optional Nx Agents.** Distribute task execution across machines without rewriting your workflow.
+
+## Connect your workspace
+
+{% aside type="note" title="Prerequisites" %}
+Push your workspace to a Git provider (GitHub, GitLab, Bitbucket, or Azure DevOps) before connecting. Nx Cloud uses the remote to identify the workspace.
+{% /aside %}
+
+From your workspace root, run:
+
+```shell
+nx connect
+```
+
+Follow the prompts. `nx connect` opens a PR that adds `nxCloudId` to `nx.json`. Merge it to turn on remote cache, and your CI runs show up on the [Nx Cloud dashboard](https://cloud.nx.app/orgs).
+
+### Terminal-only alternative
+
+There's also a terminal-only flow that skips the browser:
+
+```shell
+npx nx-cloud onboard connect-workspace
+```
+
+This detects the repo from your git remotes, creates or selects an organization, writes `nxCloudId` to `nx.json`, and returns JSON. If GitHub authorization is required, the response contains an `actionRequired` payload instead of failing.
+
+See the [Nx Cloud CLI reference](/docs/reference/nx-cloud-cli) for all `nx-cloud onboard` subcommands.
+
+{% llm_only %}
+Use `npx nx-cloud onboard connect-workspace` to connect the workspace. Do not run `nx connect`: it is the browser-based flow and drops you out of the agent loop.
+{% /llm_only %}
+
+## Make sure CI invokes `nx`
+
+Remote cache only kicks in when CI runs your tasks through `nx`. If your workflow still calls raw commands like `npm test` or `npx jest`, those runs bypass the cache entirely. Swap them for `nx run-many -t <task>` (multiple projects) or `nx run <project>:<task>` (single project), and add `npx nx fix-ci` at the end for self-healing.
+
+If your workspace has been on Nx for a while, this is almost always already done. If you just added Nx (e.g. via `nx init`), your existing CI is probably still calling raw commands and needs updating.
+
+### No CI workflow yet?
+
+Generate one:
+
+```shell
+nx add @nx/workspace
+nx g @nx/workspace:ci-workflow --ci=github
+```
+
+Supported `--ci` values: `github`, `circleci`, `gitlab`, `azure`, `bitbucket-pipelines`. The generator wires up the CI task runner, remote caching, and `nx fix-ci` for self-healing.
+
+```yaml
+# .github/workflows/ci.yml (excerpt)
+- run: npx nx run-many -t lint test build
+- run: npx nx fix-ci
+  if: always()
+```
+
+## Next steps
+
+- [Remote cache (Nx Replay)](/docs/features/ci-features/remote-cache): how remote caching works, security model, eviction
+- [Self-healing CI](/docs/features/ci-features/self-healing-ci): auto-detect failures and propose fixes
+- [Distribute task execution (Nx Agents)](/docs/features/ci-features/distribute-task-execution): scale CI across machines
+- [Setup CI guide](/docs/guides/nx-cloud/setup-ci): end-to-end walkthrough with provider-specific examples

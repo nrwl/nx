@@ -83,6 +83,11 @@ to = "/docs/technologies/angular/migration/angular"
 from = "/docs/getting-started/nx-cloud"
 to = "/docs/features/ci-features"
 
+# DOC-503: CI page moved out of tutorials to top-level Getting Started
+[[redirects]]
+from = "/docs/getting-started/tutorials/self-healing-ci-tutorial"
+to = "/docs/getting-started/setup-ci"
+
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]
 from = "/docs/*"
