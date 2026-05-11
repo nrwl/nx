@@ -58,9 +58,8 @@ describe('cypress-component-configuration generator', () => {
       "import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';
       import { defineConfig } from 'cypress';
       export default defineConfig({
-        component: nxComponentTestingPreset(__filename),
-      });
-      "
+          component: nxComponentTestingPreset(__filename)
+      });"
     `);
     expect(tree.read('demo/cypress/support/component.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
@@ -84,16 +83,15 @@ describe('cypress-component-configuration generator', () => {
       import './commands';
       // add component testing only related command here, such as mount
       declare global {
-        // eslint-disable-next-line @typescript-eslint/no-namespace
-        namespace Cypress {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          interface Chainable<Subject> {
-            mount: typeof mount;
+          // eslint-disable-next-line @typescript-eslint/no-namespace
+          namespace Cypress {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              interface Chainable<Subject> {
+                  mount: typeof mount;
+              }
           }
-        }
       }
-      Cypress.Commands.add('mount', mount);
-      "
+      Cypress.Commands.add('mount', mount);"
     `);
     expect(tree.exists('demo/pages/index.cy.ts')).toBeFalsy();
     expect(
@@ -142,16 +140,15 @@ describe('cypress-component-configuration generator', () => {
       import './commands';
       // add component testing only related command here, such as mount
       declare global {
-        // eslint-disable-next-line @typescript-eslint/no-namespace
-        namespace Cypress {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          interface Chainable<Subject> {
-            mount: typeof mount;
+          // eslint-disable-next-line @typescript-eslint/no-namespace
+          namespace Cypress {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              interface Chainable<Subject> {
+                  mount: typeof mount;
+              }
           }
-        }
       }
-      Cypress.Commands.add('mount', mount);
-      "
+      Cypress.Commands.add('mount', mount);"
     `);
   });
 
@@ -191,9 +188,8 @@ describe('cypress-component-configuration generator', () => {
       "import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';
       import { defineConfig } from 'cypress';
       export default defineConfig({
-        component: nxComponentTestingPreset(__filename),
-      });
-      "
+          component: nxComponentTestingPreset(__filename)
+      });"
     `);
     expect(tree.exists('demo/pages/index.cy.ts')).toBeFalsy();
   });
