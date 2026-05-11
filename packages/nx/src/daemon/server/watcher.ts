@@ -62,17 +62,20 @@ export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
  * a cached project graph so we never return data that the watcher has
  * already seen invalidated but hasn't flushed yet.
  *
- * The leading setImmediate yields one macrotask boundary so any watcher
- * callbacks the native worker has queued on the JS event loop run before
- * we inspect what the watcher has. Without it, a request that arrives
- * while a callback is queued behind us would consult pre-callback state
- * and miss the change.
+ * Drains native first, then yields one macrotask boundary so any TSFN
+ * callbacks queued on the JS event loop (events that left the native
+ * side via napi but haven't been dispatched yet, including ones that
+ * arrived while forceFlushPending was blocking) get to run before the
+ * caller inspects collected*.
  */
 export async function flushPendingWorkspaceChanges() {
-  await new Promise(setImmediate);
   const watcher = getWatcherInstance();
-  if (!watcher) return;
+  if (!watcher) {
+    await new Promise(setImmediate);
+    return;
+  }
   const events = watcher.forceFlushPending();
+  await new Promise(setImmediate);
   if (events.length === 0) return;
   await dispatchWorkspaceChanges(events);
 }
