@@ -61,8 +61,15 @@ export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
  * it through the normal change-handling pipeline. Call this before serving
  * a cached project graph so we never return data that the watcher has
  * already seen invalidated but hasn't flushed yet.
+ *
+ * The leading setImmediate yields one macrotask boundary so any watcher
+ * callbacks the native worker has queued on the JS event loop run before
+ * we inspect what the watcher has. Without it, a request that arrives
+ * while a callback is queued behind us would consult pre-callback state
+ * and miss the change.
  */
 export async function flushPendingWorkspaceChanges() {
+  await new Promise(setImmediate);
   const watcher = getWatcherInstance();
   if (!watcher) return;
   const events = watcher.forceFlushPending();
