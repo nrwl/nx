@@ -1,0 +1,136 @@
+---
+title: 'Setting Up CI'
+description: Configure CI for your Nx workspace with remote caching, affected, distributed task execution, and self-healing.
+sidebar:
+  order: 7
+  label: 'Setting Up CI'
+filter: 'type:Guides'
+---
+
+{% llm_copy_prompt title="Set up CI with Nx Cloud" %}
+Help me set up CI for my Nx workspace with remote caching.
+
+Before touching anything, verify the workspace state:
+
+**A. Is Nx installed?**
+
+- Check for `nx.json` and `nx` in `package.json` devDeps.
+- Confirm `node_modules` exists. If not, install deps using the package manager that matches my lockfile (`pnpm install`, `npm install`, or `yarn`).
+- If `nx.json` is missing entirely, ask me before running `npx nx@latest init`.
+
+**B. Is there an existing CI workflow?**
+
+- **Yes, and it already calls `nx run` or `nx run-many`**: likely already set up. Confirm with me before changing anything.
+- **Yes, but it calls raw tooling directly** (`jest`, `tsc`, `eslint`, etc.): work with me to update it. Propose minimal edits swapping the raw calls for `nx run-many -t <task>` or `nx run <project>:<task>`, and add a final `npx nx fix-ci` step. Show me the diff and wait for approval before writing.
+- **No**: run `nx g @nx/workspace:ci-workflow --ci=<provider>`. Detect the provider from `git remote -v` (github.com -> `github`, gitlab.com -> `gitlab`, etc.). Ask me if it's ambiguous.
+
+Then connect to Nx Cloud:
+
+1. Run `npx nx-cloud onboard connect-workspace` and parse the JSON.
+2. If the response includes an `actionRequired` payload (typically GitHub authorization), surface the message and any URLs to me and stop. Do not retry blindly.
+3. Confirm `nxCloudId` is written to `nx.json`. If it is not, surface the JSON error to me instead of retrying.
+
+Stage the generated or edited files but do not commit on my behalf. Stay on topic: getting remote cache running in CI. For deeper coverage link to {pageUrl} and to [/docs/features/ci-features/remote-cache](/docs/features/ci-features/remote-cache).
+
+Page: {pageUrl}
+{% /llm_copy_prompt %}
+
+Connect your workspace to Nx Cloud and run your CI tasks through `nx`. That turns on remote caching, affected, distribution, and self-healing CI.
+
+## Make sure you have Nx
+
+If you don't have Nx in your repo yet, add it first.
+
+For existing repos, run the init command and follow the prompts:
+
+```shell
+npx nx@latest init
+```
+
+Or, start fresh with a new repo:
+
+```shell
+npx create-nx-workspace@latest
+```
+
+## Make sure CI invokes Nx CLI
+
+Remote caching, affected, distribution, and self-healing only kick in when `nx` runs your tasks. `nx test` is fine, and so is `npm test` if it wraps `nx test`. Direct calls to `jest`, `tsc`, or `eslint` bypass Nx Cloud.
+
+If you have a workflow file, swap raw tool invocations for `nx run-many` or `nx affected`:
+
+```yaml
+# .github/workflows/ci.yml
+- run: npx nx run-many -t lint test build
+```
+
+Use `nx run-many -t <task>` for multiple projects or `nx run <project>:<task>` for a single project.
+
+{% aside type="note" title="No CI workflow yet?" %}
+Generate one:
+
+```shell
+nx add @nx/workspace
+nx g @nx/workspace:ci-workflow --ci=github
+```
+
+Supported `--ci` values: `github`, `circleci`, `gitlab`, `azure`, `bitbucket-pipelines`. The generator wires up the CI task runner, remote caching, and `nx fix-ci`.
+{% /aside %}
+
+## Remote caching
+
+Remote cache allows your CI runs to benefit from previous runs. It takes less than 5 minutes to set up and is free for small teams.
+
+{% call_to_action variant="default" title="Connect your workspace" url="https://cloud.nx.app/setup/connect-workspace/guide?utm_source=nx-dev&utm_medium=ci-tutorial&utm_campaign=try-nx-cloud" description="Setup takes less than 5 minutes" /%}
+
+See [Remote Caching](/docs/features/ci-features/remote-cache) for details on the security model and eviction. For more granular control in CI, with separate read-only and read-write tokens and branch-scoped permissions, see [CI access tokens](/docs/guides/nx-cloud/access-tokens).
+
+## Running only affected tasks
+
+Use `nx affected` to run tasks only for projects impacted by the PR's changes:
+
+```yaml {% meta="{5}" %}
+# .github/workflows/ci.yml
+- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0
+- run: npx nx affected -t lint test build
+```
+
+Nx uses `NX_BASE` and `NX_HEAD` to determine the comparison range. `fetch-depth: 0` gives Nx access to the full git history. On a PR, Nx compares the branch against `main` (or whatever `defaultBase` is set to in `nx.json`). On a push to `main`, it compares against the previous commit.
+
+See [Affected](/docs/features/ci-features/affected) for more information.
+
+## Distributing tasks across machines
+
+With [Nx Agents](/docs/features/ci-features/distribute-task-execution), you can distribute tasks across multiple machines with a single line of code in your CI workflow. No complicated configuration required.
+
+```yaml {% meta="{2}" %}
+# .github/workflows/ci.yml
+- run: npx nx start-ci-run --distribute-on="3 linux-medium-js"
+- run: npx nx affected -t lint test build
+```
+
+It works seamlessly with [remote caching](#remote-caching) and enables [task splitting](/docs/features/ci-features/split-e2e-tasks) for Playwright, Vitest, etc. across machines.
+
+## Self-healing CI
+
+Add `npx nx fix-ci` as the final step in your workflow. When a task fails, Nx Cloud analyzes the failure and proposes a fix you can apply from GitHub or the Nx Cloud UI.
+
+```yaml {% meta="{3-4}" %}
+# .github/workflows/ci.yml
+- run: npx nx affected -t lint test build
+- run: npx nx fix-ci
+  if: always()
+```
+
+The `if: always()` ensures `fix-ci` runs even when prior steps fail. It catches flaky tests, configuration drift, and other issues Nx Cloud can fix without manual debugging.
+
+See [Self-healing CI](/docs/features/ci-features/self-healing-ci) for the trigger model.
+
+## Resources
+
+- [Remote cache (Nx Replay)](/docs/features/ci-features/remote-cache): how remote caching works
+- [Affected](/docs/features/ci-features/affected): how Nx determines what changed
+- [Distribute task execution (Nx Agents)](/docs/features/ci-features/distribute-task-execution): run tasks across multiple machines
+- [Self-healing CI](/docs/features/ci-features/self-healing-ci): automatic failure detection and fixes

@@ -34,6 +34,7 @@ const learnGroups: SidebarItems = [
         link: 'getting-started/start-with-existing-project',
       },
       { label: 'AI integrations', link: 'getting-started/ai-setup' },
+      { label: 'CI setup', link: 'getting-started/setup-ci' },
       { label: 'Editor setup', link: 'getting-started/editor-setup' },
       {
         label: 'Tutorials',
@@ -66,10 +67,6 @@ const learnGroups: SidebarItems = [
           {
             label: 'Reducing boilerplate',
             link: 'getting-started/tutorials/reducing-configuration-boilerplate',
-          },
-          {
-            label: 'Setting up CI',
-            link: 'getting-started/tutorials/self-healing-ci-tutorial',
           },
           {
             label: 'Gradle monorepo',
