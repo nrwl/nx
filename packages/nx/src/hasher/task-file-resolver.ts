@@ -100,7 +100,9 @@ export async function createTaskFileResolver(options: {
       configuration ?? defaultConfig
     );
     const result =
-      planResult[canonicalId] ?? planResult[createTaskId(project, target, undefined)] ?? null;
+      planResult[canonicalId] ??
+      planResult[createTaskId(project, target, undefined)] ??
+      null;
     hashInputsCache.set(taskId, result);
     return result;
   }
@@ -118,8 +120,7 @@ export async function createTaskFileResolver(options: {
     const targetData = node?.data?.targets?.[target];
     // Fall back to the target's defaultConfiguration when none was specified so
     // configuration-specific output interpolations are resolved correctly.
-    const effectiveConfig =
-      configuration ?? targetData?.defaultConfiguration;
+    const effectiveConfig = configuration ?? targetData?.defaultConfiguration;
     const outputs = targetData
       ? getOutputsForTargetAndConfiguration(
           { project, target, configuration: effectiveConfig },
