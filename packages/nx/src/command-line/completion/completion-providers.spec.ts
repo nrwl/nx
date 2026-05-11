@@ -63,10 +63,7 @@ describe('completion/completion-providers', () => {
   }
 
   function writeRootPackageJson(pkg: object): void {
-    writeFileSync(
-      join(workspaceRoot, 'package.json'),
-      JSON.stringify(pkg)
-    );
+    writeFileSync(join(workspaceRoot, 'package.json'), JSON.stringify(pkg));
   }
 
   describe('project completions', () => {

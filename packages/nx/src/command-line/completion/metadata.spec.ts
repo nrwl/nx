@@ -38,12 +38,14 @@ describe('completion/metadata', () => {
     });
 
     it('returns the positional index relative to the typed-past tokens', () => {
-      registerCompletion('meta-test-pos', { positionals: [{ choices: ['a'] }] });
+      registerCompletion('meta-test-pos', {
+        positionals: [{ choices: ['a'] }],
+      });
 
       // args = [cmd, partial] → 0 typed past the path → positional 0.
-      expect(findCompletionMetadata(['meta-test-pos', ''])?.positionalIndex).toBe(
-        0
-      );
+      expect(
+        findCompletionMetadata(['meta-test-pos', ''])?.positionalIndex
+      ).toBe(0);
       // args = [cmd, first, partial] → 1 typed past → positional 1.
       expect(
         findCompletionMetadata(['meta-test-pos', 'first', ''])?.positionalIndex
@@ -179,11 +181,7 @@ describe('completion/metadata', () => {
 
       // Two typed-past tokens means positional index 1, which is undeclared.
       expect(
-        resolveCompletion(
-          ['meta-test-resolve-past', 'only', ''],
-          '',
-          'only'
-        )
+        resolveCompletion(['meta-test-resolve-past', 'only', ''], '', 'only')
       ).toBeNull();
     });
   });

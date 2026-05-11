@@ -1,8 +1,5 @@
 import { registerCompletion } from './metadata';
-import {
-  getValueCompletions,
-  tryValueCompletion,
-} from './value-completions';
+import { getValueCompletions, tryValueCompletion } from './value-completions';
 
 describe('completion/value-completions', () => {
   let originalArgv: string[];
@@ -123,13 +120,7 @@ describe('completion/value-completions', () => {
     function setArgv(...tokens: string[]) {
       // Slow-path argv layout includes the marker and the shell tokens; the
       // dispatcher only cares about the trailing-1 entry for `previousToken`.
-      process.argv = [
-        'node',
-        'nx',
-        '--get-yargs-completions',
-        'nx',
-        ...tokens,
-      ];
+      process.argv = ['node', 'nx', '--get-yargs-completions', 'nx', ...tokens];
     }
 
     it('delegates to the positional dispatcher when no flag precedes current', () => {
@@ -138,9 +129,9 @@ describe('completion/value-completions', () => {
       });
       setArgv('value-callback-pos', 'in');
 
-      expect(
-        getValueCompletions('in', ['value-callback-pos', 'in'])
-      ).toEqual(['inputs']);
+      expect(getValueCompletions('in', ['value-callback-pos', 'in'])).toEqual([
+        'inputs',
+      ]);
     });
 
     it('reads previousToken from process.argv to dispatch flag handlers', () => {
@@ -165,9 +156,7 @@ describe('completion/value-completions', () => {
 
     it('returns null when nothing in the metadata registry matches', () => {
       setArgv('unregistered-callback', '');
-      expect(
-        getValueCompletions('', ['unregistered-callback', ''])
-      ).toBeNull();
+      expect(getValueCompletions('', ['unregistered-callback', ''])).toBeNull();
     });
   });
 });
