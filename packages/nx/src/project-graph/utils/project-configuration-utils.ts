@@ -362,6 +362,26 @@ export function mergeCreateNodesResults(
     );
   };
 
+  // [debug-watcher] gated diagnostic — logs the build target on each
+  // libs/lib<N> after each merge stage so we can pin which stage drops
+  // it in the spread.test.ts flake. Intentionally compact and prefixed
+  // for grep-ability in the daemon log.
+  const DEBUG_MERGE = process.env.NX_DAEMON_DEBUG_WATCHER === '1';
+  const dumpStage = (stage: string) => {
+    if (!DEBUG_MERGE) return;
+    const main = nodesManager.getRootMap();
+    for (const root of Object.keys(main)) {
+      if (!root.startsWith('libs/lib')) continue;
+      const build = main[root].targets?.build;
+      // eslint-disable-next-line no-console
+      console.error(
+        `[debug-merge] ${stage} ${root} build=${
+          build === undefined ? 'UNDEFINED' : JSON.stringify(build)
+        }`
+      );
+    }
+  };
+
   for (const pluginResults of specifiedResults) {
     mergeCreateNodesResultsFromSinglePlugin(
       pluginResults,
@@ -372,6 +392,7 @@ export function mergeCreateNodesResults(
       errors
     );
   }
+  dumpStage('after-specified');
 
   for (const pluginResults of defaultResults) {
     mergeCreateNodesResultsFromSinglePlugin(
@@ -400,6 +421,7 @@ export function mergeCreateNodesResults(
       errors
     );
   }
+  dumpStage('after-target-defaults');
 
   // Apply the intermediate default rootMap as a single layer. Preserved
   // spread sentinels resolve here against the real specified + TD base.
@@ -420,6 +442,19 @@ export function mergeCreateNodesResults(
       );
     }
   }
+  if (DEBUG_MERGE) {
+    for (const root of Object.keys(intermediateDefaultRootMap)) {
+      if (!root.startsWith('libs/lib')) continue;
+      const build = intermediateDefaultRootMap[root].targets?.build;
+      // eslint-disable-next-line no-console
+      console.error(
+        `[debug-merge] intermediate ${root} build=${
+          build === undefined ? 'UNDEFINED' : JSON.stringify(build)
+        }`
+      );
+    }
+  }
+  dumpStage('after-intermediate-overlay');
 
   // The intermediate apply may have rebuilt dependsOn / inputs arrays
   // via spread merges, leaving sentinels inserted against the
@@ -454,12 +489,14 @@ export function mergeCreateNodesResults(
 
   try {
     nodesManager.applySubstitutions();
+    dumpStage('after-apply-substitutions');
     validateAndNormalizeProjectRootMap(
       workspaceRoot,
       projectRootMap,
       nxJsonConfiguration,
       configurationSourceMaps
     );
+    dumpStage('after-normalize');
   } catch (error) {
     let _errors = error instanceof AggregateError ? error.errors : [error];
     for (const e of _errors) {
