@@ -69,7 +69,9 @@ export async function addLinterToPlaywrightProject(
       ? addDependenciesToPackageJson(
           tree,
           {},
-          { 'eslint-plugin-playwright': eslintPluginPlaywrightVersion }
+          { 'eslint-plugin-playwright': eslintPluginPlaywrightVersion },
+          undefined,
+          true
         )
       : () => {}
   );

@@ -42,7 +42,11 @@ export {
 
 // Utils
 export { addPlugin } from './src/utils/add-plugin';
-export { throwForUnsupportedVersion } from './src/utils/version-floor';
+export {
+  getDeclaredPackageVersion,
+  getInstalledPackageVersion,
+} from './src/utils/installed-version';
+export { assertSupportedPackageVersion } from './src/utils/version-floor';
 export {
   createAsyncIterable,
   combineAsyncIterables,

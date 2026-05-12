@@ -33,6 +33,7 @@ import { execSync } from 'child_process';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
 import { addLinterToPlaywrightProject } from '../../utils/add-linter';
+import { assertSupportedPlaywrightVersion } from '../../utils/assert-supported-playwright-version';
 import { nxVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
 import type {
@@ -52,6 +53,8 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   rawOptions: ConfigurationGeneratorSchema
 ) {
+  assertSupportedPlaywrightVersion(tree);
+
   const options = await normalizeOptions(tree, rawOptions);
 
   const tasks: GeneratorCallback[] = [];
