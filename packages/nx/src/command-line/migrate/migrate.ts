@@ -2078,7 +2078,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
           : `- There are no migrations to run, so migrations.json has not been created.`,
         ...(promptMigrationFiles.length > 0
           ? [
-              `- ${promptMigrationFiles.length} AI migration prompt(s) have been written to ${AI_MIGRATIONS_DIR}/. You can review and tweak them before running migrations.`,
+              `- ${promptMigrationFiles.length} AI migration prompt(s) have been written to ${AI_MIGRATIONS_DIR}/.`,
             ]
           : []),
       ],
@@ -2119,6 +2119,11 @@ async function generateMigrationsJsonAndUpdatePackageJson(
         ]
       : [
           `- Make sure package.json changes make sense and then run '${pmc.install}',`,
+          ...(promptMigrationFiles.length > 0
+            ? [
+                `- Review and tweak the AI migration prompts in ${AI_MIGRATIONS_DIR}/ as needed.`,
+              ]
+            : []),
           ...(migrations.length > 0
             ? [`- Run '${pmc.exec} nx migrate --run-migrations'`]
             : []),
