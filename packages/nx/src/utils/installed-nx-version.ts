@@ -1,26 +1,82 @@
 import Module, { createRequire } from 'node:module';
 import { readJsonFile } from './fileutils';
-import type { PackageJson } from './package-json';
+import {
+  normalizePackageGroup,
+  readModulePackageJson,
+  type PackageGroup,
+  type PackageJson,
+} from './package-json';
 import { workspaceRoot } from './workspace-root';
 import { getNxRequirePaths } from './installation-directory';
 
+type InstalledNxPackageJson = PackageJson & {
+  'ng-update'?: { packageGroup?: PackageGroup };
+  'nx-migrations'?: { packageGroup?: PackageGroup };
+};
+
 /**
- * Resolve the workspace's installed `nx` version, or `null` if no installed
- * `nx` can be located. Routed through a cache-shielded, self-reference-free
- * `require.resolve` so the answer always reflects the workspace's
- * `node_modules`/PnP store rather than whichever `nx` package happens to be
- * loaded in the current process. See nrwl/nx#35444.
+ * Read the installed `nx` package.json via the cache-shielded resolver. The
+ * resolver always reflects the workspace's `node_modules`/PnP store rather
+ * than whichever `nx` package happens to be loaded in the current process
+ * (e.g. the temp `nx@latest` install used by the migrate bootstrap). See
+ * nrwl/nx#35444 and `resolvePackageJsonWithoutCachePollution` below.
  */
-export function getInstalledNxVersion(): string | null {
-  const nxPackageJsonPath = resolvePackageJsonWithoutCachePollution(
+function readInstalledNxPackageJson(): InstalledNxPackageJson | null {
+  const path = resolvePackageJsonWithoutCachePollution(
     'nx',
     getNxRequirePaths(workspaceRoot)
   );
-  if (!nxPackageJsonPath) {
+  if (!path) {
     return null;
   }
   try {
-    return readJsonFile<PackageJson>(nxPackageJsonPath).version ?? null;
+    return readJsonFile<InstalledNxPackageJson>(path);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Resolve the workspace's installed `nx` version, or `null` if no installed
+ * `nx` can be located.
+ */
+export function getInstalledNxVersion(): string | null {
+  return readInstalledNxPackageJson()?.version ?? null;
+}
+
+/**
+ * Return the package names declared in the installed `nx` package's
+ * `ng-update.packageGroup` (or `nx-migrations.packageGroup`), plus `'nx'`
+ * itself. Returns a set containing only `'nx'` when nx isn't installed or
+ * the metadata is missing.
+ */
+export function getInstalledNxPackageGroup(): Set<string> {
+  const set = new Set<string>(['nx']);
+  const pkg = readInstalledNxPackageJson();
+  if (!pkg) {
+    return set;
+  }
+  const declared =
+    pkg['ng-update']?.packageGroup ?? pkg['nx-migrations']?.packageGroup;
+  if (declared) {
+    for (const entry of normalizePackageGroup(declared)) {
+      set.add(entry.package);
+    }
+  }
+  return set;
+}
+
+/**
+ * Resolve the workspace's installed `@nrwl/workspace` version (legacy-era
+ * fallback for `nx migrate --mode=third-party` targeting `< 14.0.0-beta.0`),
+ * or `null` if it cannot be resolved from the workspace require paths.
+ */
+export function getInstalledLegacyNrwlWorkspaceVersion(): string | null {
+  try {
+    return (
+      readModulePackageJson('@nrwl/workspace', getNxRequirePaths(workspaceRoot))
+        .packageJson.version ?? null
+    );
   } catch {
     return null;
   }
