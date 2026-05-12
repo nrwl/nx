@@ -11,6 +11,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { createNodesV2, type CypressPluginOptions } from '../../plugins/plugin';
+import { assertSupportedCypressVersion } from '../../utils/assert-supported-cypress-version';
 import { addDevServerTargetToConfig } from './lib/add-dev-server-target-to-config';
 import { addExcludeSpecPattern } from './lib/add-exclude-spec-pattern';
 import { targetOptionsToCliMap } from './lib/target-options-map';
@@ -23,6 +24,8 @@ interface Schema {
 }
 
 export async function convertToInferred(tree: Tree, options: Schema) {
+  assertSupportedCypressVersion(tree);
+
   const projectGraph = await createProjectGraphAsync();
   const migratedProjects =
     await migrateProjectExecutorsToPlugin<CypressPluginOptions>(

@@ -16,6 +16,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { assertSupportedCypressVersion } from '../../utils/assert-supported-cypress-version';
 import { warnCypressExecutorGenerating } from '../../utils/deprecation';
 import {
   getInstalledCypressMajorVersion,
@@ -41,6 +42,8 @@ export async function componentConfigurationGeneratorInternal(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
+  assertSupportedCypressVersion(tree);
+
   assertNotUsingTsSolutionSetup(tree, 'cypress', 'component-configuration');
 
   const tasks: GeneratorCallback[] = [];

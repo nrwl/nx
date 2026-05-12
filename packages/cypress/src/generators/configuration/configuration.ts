@@ -34,6 +34,7 @@ import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-
 import { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { addLinterToCyProject } from '../../utils/add-linter';
+import { assertSupportedCypressVersion } from '../../utils/assert-supported-cypress-version';
 import { addDefaultE2EConfig } from '../../utils/config';
 import { warnCypressExecutorGenerating } from '../../utils/deprecation';
 import {
@@ -80,6 +81,8 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   options: CypressE2EConfigSchema
 ) {
+  assertSupportedCypressVersion(tree);
+
   const opts = await normalizeOptions(tree, options);
   const tasks: GeneratorCallback[] = [];
 
