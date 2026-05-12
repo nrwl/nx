@@ -337,6 +337,13 @@ describe('@nx/vite:configuration', () => {
         json.workspaces = ['packages/*', 'apps/*'];
         return json;
       });
+      // detectPackageManager() resolves to pnpm in the test env, so
+      // isWorkspacesEnabled requires pnpm-workspace.yaml to recognise this
+      // tree as using package-manager workspaces.
+      tree.write(
+        'pnpm-workspace.yaml',
+        `packages:\n  - 'packages/*'\n  - 'apps/*'\n`
+      );
       writeJson(tree, 'tsconfig.base.json', {
         compilerOptions: {
           composite: true,
