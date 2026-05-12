@@ -25,6 +25,18 @@ const IDLE_WINDOW: Duration = Duration::from_millis(100);
 /// Starvation cap from the start of a burst — flush even if events keep
 /// arriving faster than IDLE_WINDOW.
 const MAX_WAIT: Duration = Duration::from_millis(500);
+/// After force-flush handles a new-directory create — which synchronously
+/// walks and backfills the dir — wait this long for inotify events on the
+/// freshly-registered watch to land. Without this, files the generator was
+/// still writing during the walk (so missed by the walk) and whose inotify
+/// events haven't propagated yet (so missed by try_recv) get dropped from
+/// the snapshot.
+///
+/// Only paid when a backfill actually happened in this force-flush, so
+/// quiet-workspace flushes are unaffected. We exit early as soon as a
+/// timeout elapses with no event, so a burst is drained but a true lull is
+/// not punished.
+const POST_BACKFILL_SETTLE_WAIT: Duration = Duration::from_millis(15);
 
 #[cfg(not(target_os = "macos"))]
 fn build_ignore_glob_set() -> Arc<NxGlobSet> {
@@ -221,21 +233,32 @@ impl WatchPipeline {
 
     /// Returns Err if the loop should exit and surface the message via
     /// the JS callback (e.g. inotify watch-limit reached).
-    fn ingest_event(&mut self, event: NotifyResult) -> std::result::Result<(), String> {
+    ///
+    /// Returns Ok(true) when this event registered a new directory watch
+    /// (the new-dir backfill path on Linux/Windows). The force-flush
+    /// handler uses this signal to wait briefly for in-flight events on
+    /// the just-registered watch — files the generator was still writing
+    /// during the synchronous walk wouldn't be in the accumulator yet
+    /// and their inotify events haven't reached `notify_rx` yet either.
+    fn ingest_event(&mut self, event: NotifyResult) -> std::result::Result<bool, String> {
         let event = match event {
             Ok(e) => e,
             Err(err) => {
                 tracing::warn!("notify error: {:?}", err);
-                return Ok(());
+                return Ok(false);
             }
         };
 
         let raw = RawWatchEvent::new(event);
 
         if !self.filterer.check_event(&raw) {
-            return Ok(());
+            return Ok(false);
         }
 
+        // On macOS the watcher is recursive (FSEvents), so there is no
+        // backfill path and `registered_new_watch` stays false.
+        #[allow(unused_mut)]
+        let mut registered_new_watch = false;
         #[cfg(not(target_os = "macos"))]
         {
             let new_dirs = self.new_directories_from_event(&raw);
@@ -246,6 +269,7 @@ impl WatchPipeline {
                     .map_err(|e| {
                         format!("inotify_add_watch failed registering new directory watch: {e}")
                     })?;
+                registered_new_watch = true;
             }
         }
 
@@ -261,7 +285,7 @@ impl WatchPipeline {
         let now = Instant::now();
         let bs = *self.burst_start.get_or_insert(now);
         self.flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
-        Ok(())
+        Ok(registered_new_watch)
     }
 
     /// Drives the pipeline until force_flush_rx disconnects.
@@ -295,6 +319,7 @@ impl WatchPipeline {
                             replies.push(extra);
                         }
                         let mut fatal: Option<String> = None;
+                        let mut backfilled = false;
 
                         // Wait briefly for notify-crate sends that are
                         // mid-flight — a bare try_recv would miss them.
@@ -302,11 +327,10 @@ impl WatchPipeline {
                             .notify_rx
                             .recv_timeout(Duration::from_millis(5))
                         {
-                            Ok(event) => {
-                                if let Err(msg) = self.ingest_event(event) {
-                                    fatal = Some(msg);
-                                }
-                            }
+                            Ok(event) => match self.ingest_event(event) {
+                                Ok(did_backfill) => backfilled |= did_backfill,
+                                Err(msg) => fatal = Some(msg),
+                            },
                             Err(crossbeam_channel::RecvTimeoutError::Timeout) => {}
                             Err(
                                 crossbeam_channel::RecvTimeoutError::Disconnected,
@@ -319,9 +343,66 @@ impl WatchPipeline {
 
                         if fatal.is_none() {
                             while let Ok(event) = self.notify_rx.try_recv() {
-                                if let Err(msg) = self.ingest_event(event) {
-                                    fatal = Some(msg);
+                                match self.ingest_event(event) {
+                                    Ok(did_backfill) => backfilled |= did_backfill,
+                                    Err(msg) => {
+                                        fatal = Some(msg);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        // If a new-directory backfill ran during this flush,
+                        // wait briefly for inotify events on the freshly-
+                        // registered watch to land. The generator may still
+                        // be writing files into the new dir; the synchronous
+                        // walk caught the ones present at that instant, but
+                        // any in-flight writes need a short settle window
+                        // before the snapshot reflects them.
+                        //
+                        // `deadline` is fixed: nested backfills inside the
+                        // loop set `backfilled` again but do NOT extend the
+                        // window. This bounds wall-clock at
+                        // POST_BACKFILL_SETTLE_WAIT and prevents starvation
+                        // under a sustained CREATE storm.
+                        if fatal.is_none() && backfilled {
+                            let deadline =
+                                Instant::now() + POST_BACKFILL_SETTLE_WAIT;
+                            loop {
+                                let remaining = deadline
+                                    .saturating_duration_since(Instant::now());
+                                if remaining.is_zero() {
                                     break;
+                                }
+                                match self.notify_rx.recv_timeout(remaining) {
+                                    Ok(event) => match self.ingest_event(event) {
+                                        Ok(did_backfill) => {
+                                            backfilled |= did_backfill;
+                                        }
+                                        Err(msg) => {
+                                            // Surfaced below the reply, after
+                                            // snapshotting; this `break` exits
+                                            // the settle loop, not the driver
+                                            // loop.
+                                            fatal = Some(msg);
+                                            break;
+                                        }
+                                    },
+                                    Err(crossbeam_channel::RecvTimeoutError::Timeout) => break,
+                                    Err(
+                                        crossbeam_channel::RecvTimeoutError::Disconnected,
+                                    ) => {
+                                        // Match the phase-1 recv_timeout
+                                        // handling — a dropped sender is
+                                        // fatal and must surface, not be
+                                        // swallowed as a clean timeout.
+                                        fatal = Some(
+                                            "watcher channel disconnected"
+                                                .to_string(),
+                                        );
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -673,6 +754,144 @@ mod tests {
             matches!(evt.r#type, EventType::create),
             "fresh write should classify as Create; got {:?}",
             evt.r#type
+        );
+    }
+
+    #[test]
+    #[cfg(not(target_os = "macos"))]
+    fn force_flush_pending_captures_writes_into_freshly_created_dir() {
+        // Regression: when a new directory is created and a generator
+        // keeps writing files into it, force_flush_pending used to miss
+        // the late writes. The dir-create event triggers a synchronous
+        // walk (register_and_backfill_new_dirs), but anything written
+        // after that walk but before the snapshot landed in notify_rx
+        // a few ms later — outside the 5ms in-flight wait and after the
+        // try_recv drain.
+        //
+        // The post-backfill settle window catches them.
+        let dir = tempdir().expect("tempdir");
+        let new_dir = dir.path().join("late_lib");
+
+        let (watcher, _captured) = start_watcher(dir.path());
+
+        let trailing = new_dir.join("trailing.txt");
+        let trailing_for_writer = trailing.clone();
+        let writer = std::thread::spawn(move || {
+            fs::create_dir(&new_dir).expect("mkdir");
+            // The dir-create event needs to reach the watcher first;
+            // the post-backfill window catches this trailing file.
+            std::thread::sleep(Duration::from_millis(8));
+            fs::write(&trailing_for_writer, "post-backfill").expect("write");
+        });
+
+        // Tight enough that the dir-create event is in flight when we
+        // call: we're racing the writer's thread spawn + mkdir.
+        std::thread::sleep(Duration::from_millis(2));
+        let events = watcher.force_flush_pending();
+        writer.join().expect("writer join");
+
+        assert!(
+            events.iter().any(|e| e.path.ends_with("trailing.txt")),
+            "post-backfill settle should have captured trailing.txt; got {events:?}"
+        );
+    }
+
+    #[test]
+    #[cfg(not(target_os = "macos"))]
+    fn force_flush_pending_settle_cleanly_caps_when_no_trailing_writes() {
+        // Guard against a future regression that turns the settle loop's
+        // `recv_timeout(remaining)` into `recv()` or miscomputes
+        // `saturating_duration_since`. An empty-dir CREATE triggers
+        // backfilled=true but produces no further events; the settle
+        // must hit POST_BACKFILL_SETTLE_WAIT cleanly without hanging.
+        //
+        // Ceiling: in-flight wait (5ms) + settle window (15ms) + napi
+        // overhead, with slack for CI. If the loop hangs the test would
+        // exceed force_flush_pending's internal 500ms timeout.
+        let dir = tempdir().expect("tempdir");
+        let new_dir = dir.path().join("empty_lib");
+
+        let (watcher, _captured) = start_watcher(dir.path());
+
+        let writer = std::thread::spawn(move || {
+            fs::create_dir(&new_dir).expect("mkdir");
+        });
+
+        std::thread::sleep(Duration::from_millis(2));
+        let start = std::time::Instant::now();
+        let events = watcher.force_flush_pending();
+        let elapsed = start.elapsed();
+        writer.join().expect("writer join");
+
+        // The dir-create itself may or may not be in the snapshot — what
+        // matters is the call returns promptly and doesn't hang.
+        assert!(
+            elapsed < Duration::from_millis(150),
+            "settle loop should cap at POST_BACKFILL_SETTLE_WAIT; took {elapsed:?}; events={events:?}"
+        );
+    }
+
+    #[test]
+    #[cfg(not(target_os = "macos"))]
+    fn force_flush_pending_captures_multi_dir_backfill_in_one_flush() {
+        // Guard against a future regression that rewrites
+        // `backfilled |= did_backfill` as `backfilled = did_backfill`.
+        // With assignment, a second new-dir event arriving in the same
+        // settle iteration would clobber a previous true with false,
+        // and any trailing writes for the *first* dir's watch would be
+        // dropped from the snapshot.
+        let dir = tempdir().expect("tempdir");
+        let dir_a = dir.path().join("a_lib");
+        let dir_b = dir.path().join("b_lib");
+
+        let (watcher, _captured) = start_watcher(dir.path());
+
+        let dir_a_for_writer = dir_a.clone();
+        let dir_b_for_writer = dir_b.clone();
+        let writer = std::thread::spawn(move || {
+            fs::create_dir(&dir_a_for_writer).expect("mkdir a");
+            fs::create_dir(&dir_b_for_writer).expect("mkdir b");
+            std::thread::sleep(Duration::from_millis(8));
+            fs::write(dir_a_for_writer.join("trail_a.txt"), "a").expect("write a");
+            fs::write(dir_b_for_writer.join("trail_b.txt"), "b").expect("write b");
+        });
+
+        std::thread::sleep(Duration::from_millis(2));
+        let events = watcher.force_flush_pending();
+        writer.join().expect("writer join");
+
+        assert!(
+            events.iter().any(|e| e.path.ends_with("trail_a.txt")),
+            "expected trail_a.txt; got {events:?}"
+        );
+        assert!(
+            events.iter().any(|e| e.path.ends_with("trail_b.txt")),
+            "expected trail_b.txt; got {events:?}"
+        );
+    }
+
+    #[test]
+    fn force_flush_pending_returns_quickly_when_nothing_pending() {
+        // Guard that the post-backfill settle does NOT fire on a quiet
+        // workspace — the bool gate is the whole point of the surgical
+        // approach. Without the gate this would block for
+        // POST_BACKFILL_SETTLE_WAIT on every cold flush.
+        //
+        // Ceiling = the 5ms in-flight recv_timeout plus channel + napi
+        // round-trip overhead. 100ms absorbs CI scheduling jitter while
+        // still failing loudly if the settle path were taken (which
+        // would push elapsed past 5+15 = 20ms minimum).
+        let dir = tempdir().expect("tempdir");
+        let (watcher, _captured) = start_watcher(dir.path());
+
+        let start = std::time::Instant::now();
+        let events = watcher.force_flush_pending();
+        let elapsed = start.elapsed();
+
+        assert!(events.is_empty(), "expected no events; got {events:?}");
+        assert!(
+            elapsed < Duration::from_millis(100),
+            "force_flush_pending on quiet workspace took {elapsed:?}"
         );
     }
 
