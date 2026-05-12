@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@angular/build": "catalog:angular-supported-versions",
-    "sass-embedded": "^1.97.2",
+    "sass-embedded": "catalog:css",
     "semver": "catalog:",
     "ts-morph": "catalog:typescript",
     "tslib": "catalog:typescript",
@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "jsonc-eslint-parser": "^2.4.0",
-    "vitest": "^4.0.8",
+    "vitest": "catalog:vite",
     "memfs": "^4.17.0"
   },
   "peerDependencies": {

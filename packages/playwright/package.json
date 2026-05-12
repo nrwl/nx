@@ -45,7 +45,7 @@
     "nx": "workspace:*"
   },
   "peerDependencies": {
-    "@playwright/test": "^1.36.0"
+    "@playwright/test": "catalog:"
   },
   "peerDependenciesMeta": {
     "@playwright/test": {

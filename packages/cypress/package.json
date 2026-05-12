@@ -43,7 +43,7 @@
     "@phenomnomnominal/tsquery": "catalog:typescript",
     "detect-port": "^2.1.0",
     "semver": "catalog:",
-    "tree-kill": "1.2.2",
+    "tree-kill": "catalog:",
     "tslib": "catalog:typescript"
   },
   "devDependencies": {
