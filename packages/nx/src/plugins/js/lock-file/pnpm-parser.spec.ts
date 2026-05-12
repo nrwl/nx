@@ -2833,4 +2833,43 @@ snapshots: {}`;
       );
     });
   });
+
+  describe('missing .modules.yaml', () => {
+    beforeEach(() => {
+      vol.fromJSON(
+        { 'node_modules/lodash/package.json': '{"version": "4.17.21"}' },
+        '/root'
+      );
+    });
+
+    it('should resolve nodes without throwing when node_modules/.modules.yaml is absent', () => {
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+
+snapshots:
+
+  lodash@4.17.21: {}`;
+
+      expect(() =>
+        getPnpmLockfileNodes(lockFile, '__missing_modules_yaml__')
+      ).not.toThrow();
+      const { nodes } = getPnpmLockfileNodes(
+        lockFile,
+        '__missing_modules_yaml__'
+      );
+      expect(nodes['npm:lodash']).toBeDefined();
+    });
+  });
 });

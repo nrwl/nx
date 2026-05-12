@@ -46,9 +46,11 @@ export function loadPnpmHoistedDepsDefinition() {
     const content = readFileSync(fullPath, 'utf-8');
     const { load } = require('@zkochan/js-yaml');
     return load(content)?.hoistedDependencies ?? {};
-  } else {
-    throw new Error(`Could not find ".modules.yaml" at "${fullPath}"`);
   }
+  // `.modules.yaml` is only written by `pnpm install`. It can be absent when a
+  // different package manager populated `node_modules` (e.g. `npm ci` in CI),
+  // in which case we still want the rest of the graph to resolve.
+  return {};
 }
 
 /**
