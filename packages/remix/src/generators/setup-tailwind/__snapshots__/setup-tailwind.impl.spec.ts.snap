@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`setup-tailwind generator should add a tailwind config to an application correctly 1`] = `
 "import type { Config } from 'tailwindcss';

@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`setupTailwind generator application should add tailwind styles to "apps/app1/src/styles.css" when not provided 1`] = `
 "@tailwind base;
