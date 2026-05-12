@@ -41,12 +41,13 @@ export async function runMavenAnalysis(
   workspaceRoot: string,
   options: MavenPluginOptions
 ): Promise<MavenAnalysisData> {
-  console.log(`[Maven Analyzer] Starting analysis with options:`, options);
-
   const outputFile = join(workspaceDataDirectory, 'nx-maven-projects.json');
   const isVerbose =
     options.verbose || process.env.NX_VERBOSE_LOGGING === 'true';
 
+  logger.verbose(
+    `[Maven Analyzer] Starting analysis with options: ${JSON.stringify(options)}`
+  );
   logger.verbose(`[Maven Analyzer] Output file: ${outputFile}`);
   logger.verbose(`[Maven Analyzer] Verbose mode: ${isVerbose}`);
   logger.verbose(`[Maven Analyzer] Workspace root: ${workspaceRoot}`);

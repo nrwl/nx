@@ -14,6 +14,7 @@ import {
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { VitestExecutorOptions } from '../executors/test/schema';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
+import { warnVitestExecutorGenerating } from './deprecation';
 import { nxVersion } from './versions';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
@@ -67,6 +68,7 @@ export function addOrChangeTestTarget(
   if (project.targets[target]) {
     throw new Error(`Target "${target}" already exists in the project.`);
   } else {
+    warnVitestExecutorGenerating();
     project.targets[target] = {
       executor: '@nx/vitest:test',
       outputs: ['{options.reportsDirectory}'],

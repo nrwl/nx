@@ -1,4 +1,8 @@
 import {
+  determineProjectNameAndRootOptions,
+  logShowProjectCommand,
+} from '@nx/devkit/internal';
+import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   formatFiles,
@@ -14,7 +18,6 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { lintProjectGenerator } from '@nx/eslint';
 import {
   javaScriptOverride,
@@ -28,7 +31,6 @@ import {
   isEslintConfigSupported,
   replaceOverridesInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { findRootJestPreset } from '@nx/jest/src/utils/config/config-file';
 import { getInstalledJestMajorVersion } from '@nx/jest/src/utils/versions';
 import {

@@ -406,7 +406,7 @@ export class ReleaseGroupProcessor {
           if (!this.bumpedProjects.has(project)) {
             await this.bumpVersionForProject(
               project,
-              'patch',
+              this.applyPreidToBumpType('patch', project),
               'OTHER_PROJECT_IN_FIXED_GROUP_WAS_BUMPED_DUE_TO_DEPENDENCY',
               {}
             );
@@ -894,7 +894,7 @@ export class ReleaseGroupProcessor {
         if (!this.bumpedProjects.has(dependent)) {
           await this.bumpVersionForProject(
             dependent,
-            'patch',
+            this.applyPreidToBumpType('patch', dependent),
             'DEPENDENCY_WAS_BUMPED',
             {}
           );
@@ -960,8 +960,44 @@ export class ReleaseGroupProcessor {
     releaseGroup: ReleaseGroupWithName,
     dependencyBumpType: SemverBumpType
   ): SemverBumpType {
-    const sideEffectBump = 'patch';
-    return sideEffectBump as SemverBumpType;
+    // Any project in the group can be used to resolve the applyPreidToDependents
+    // setting, since it is a group/workspace level option.
+    const anyProject = releaseGroup.projects[0];
+    return this.applyPreidToBumpType('patch', anyProject);
+  }
+
+  /**
+   * When a preid is set (e.g. --preid rc) and the project has opted in via
+   * `applyPreidToDependents`, convert a "patch" side-effect bump into a
+   * "prepatch" so that semver.inc() actually applies the preid.
+   * semver.inc('1.0.0', 'patch', 'rc') ignores preid and returns '1.0.1'.
+   * semver.inc('1.0.0', 'prepatch', 'rc') returns '1.0.1-rc.0' as expected.
+   */
+  private applyPreidToBumpType(
+    bumpType: SemverBumpType,
+    projectName: string
+  ): SemverBumpType {
+    if (
+      !this.options.preid ||
+      bumpType === 'none' ||
+      bumpType.startsWith('pre')
+    ) {
+      return bumpType;
+    }
+    const finalConfig = this.getCachedFinalConfigForProject(projectName);
+    if (!finalConfig.applyPreidToDependents) {
+      return bumpType;
+    }
+    switch (bumpType) {
+      case 'major':
+        return 'premajor';
+      case 'minor':
+        return 'preminor';
+      case 'patch':
+        return 'prepatch';
+      default:
+        return bumpType;
+    }
   }
 
   private getProjectDependents(project: string): Set<string> {

@@ -456,7 +456,18 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
         };
       }
 
-      const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
+      // stdout is not guaranteed to be JSON (e.g. lifecycle script failures).
+      // If parsing fails, print raw stderr/stdout so the underlying error is visible to the user.
+      let stdoutData;
+      try {
+        stdoutData = JSON.parse(err.stdout?.toString() || '{}');
+      } catch {
+        console.error(err.stderr?.toString() || '');
+        console.error(err.stdout?.toString() || '');
+        return {
+          success: false,
+        };
+      }
 
       console.error(`${pm} publish error:`);
       // npm returns error.summary and error.detail

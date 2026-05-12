@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`workspace move to nx layout should create a root eslint config 1`] = `
 {
@@ -103,9 +103,11 @@ exports[`workspace move to nx layout should create nx.json 1`] = `
       "cache": true,
       "inputs": [
         "default",
+        "^default",
         "{workspaceRoot}/.eslintrc.json",
         "{workspaceRoot}/.eslintignore",
         "{workspaceRoot}/eslint.config.mjs",
+        "{workspaceRoot}/tools/eslint-rules/**/*",
       ],
     },
     "build": {
@@ -148,7 +150,6 @@ exports[`workspace move to nx layout should create nx.json 1`] = `
 exports[`workspace move to nx layout should update tsconfig.base.json if present 1`] = `
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {},
     "rootDir": ".",
   },
@@ -162,7 +163,6 @@ exports[`workspace move to nx layout should update tsconfig.base.json if present
 exports[`workspace move to nx layout should work if angular-cli workspace had tsconfig.base.json 1`] = `
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {},
     "rootDir": ".",
   },

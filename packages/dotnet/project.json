@@ -21,7 +21,11 @@
       "command": "node ./scripts/run-native-target.js _build-analyzer dotnet",
       "cache": true,
       "outputs": ["{workspaceRoot}/dist/msbuild-analyzer"],
-      "inputs": ["{projectRoot}/analyzer/**", { "env": "SKIP_ANALYZER_BUILD" }]
+      "inputs": [
+        "{projectRoot}/analyzer/**",
+        "{workspaceRoot}/scripts/run-native-target.js",
+        { "env": "SKIP_ANALYZER_BUILD" }
+      ]
     },
     "_build-analyzer": {
       "executor": "nx:run-commands",

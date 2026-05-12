@@ -15,7 +15,7 @@ export interface Champion {
 
 export function ChampionCard({ data }: { data: Champion }): JSX.Element {
   return (
-    <figure className="relative flex flex-col justify-between rounded-lg border border-zinc-200 bg-white/40 p-4 text-sm shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-white dark:border-zinc-800/40 dark:bg-zinc-800/60 dark:hover:bg-zinc-800">
+    <figure className="relative flex flex-col justify-between rounded-lg border border-zinc-200 bg-white/40 p-4 text-sm shadow-xs transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-white dark:border-zinc-800/40 dark:bg-zinc-800/60 dark:hover:bg-zinc-800">
       <figcaption className="flex items-center space-x-4">
         <img
           src={data.imageUrl}

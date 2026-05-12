@@ -29,11 +29,6 @@ jest.mock('node:fs', () => {
   };
 });
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  workspaceRoot: '/root',
-}));
-
 jest.mock('../../../utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));

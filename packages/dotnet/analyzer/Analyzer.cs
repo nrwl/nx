@@ -121,6 +121,7 @@ public static class Analyzer
 
                     // Build targets
                     var projectName = ProjectUtilities.GetProjectName(primaryNode.ProjectInstance);
+                    var projectDirectory = Path.GetDirectoryName(projectPath)!;
                     var targets = TargetBuilder.BuildTargets(
                         projectName,
                         Path.GetFileName(projectPath),
@@ -128,6 +129,7 @@ public static class Analyzer
                         isExe,
                         packageRefs,
                         properties,
+                        projectDirectory,
                         workspaceRoot,
                         pluginOptions,
                         nxJson

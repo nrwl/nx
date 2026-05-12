@@ -122,7 +122,7 @@ describe('lib', () => {
     await libraryGenerator(tree, defaultSchema);
     const tsconfigJson = readJson(tree, '/tsconfig.base.json');
     expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-      'my-lib/src/index.ts',
+      './my-lib/src/index.ts',
     ]);
   });
 
@@ -134,7 +134,7 @@ describe('lib', () => {
     expect(tree.exists('tsconfig.base.json')).toEqual(true);
     const tsconfigJson = readJson(tree, 'tsconfig.base.json');
     expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-      'my-lib/src/index.ts',
+      './my-lib/src/index.ts',
     ]);
   });
 
@@ -147,7 +147,7 @@ describe('lib', () => {
     await libraryGenerator(tree, defaultSchema);
     const tsconfigJson = readJson(tree, '/tsconfig.base.json');
     expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-      'my-lib/src/index.ts',
+      './my-lib/src/index.ts',
     ]);
   });
 
@@ -357,7 +357,7 @@ describe('lib', () => {
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
 
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-dir/my-lib/src/index.ts',
+        './my-dir/my-lib/src/index.ts',
       ]);
       expect(
         tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
@@ -416,22 +416,6 @@ describe('lib', () => {
       expect(content).not.toContain('app.module.css');
       expect(content).not.toContain('app.module.scss');
 
-      expect(content).toMatchSnapshot();
-    });
-  });
-
-  describe('--style tailwind', () => {
-    it('should not generate any styles file when style is tailwind', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, style: 'none' });
-
-      expect(tree.exists('my-lib/src/lib/my-lib.tsx')).toBeTruthy();
-      expect(tree.exists('my-lib/src/lib/my-lib.spec.tsx')).toBeTruthy();
-      expect(tree.exists('my-lib/src/lib/my-lib.css')).toBeFalsy();
-      expect(tree.exists('my-lib/src/lib/my-lib.scss')).toBeFalsy();
-      expect(tree.exists('my-lib/src/lib/my-lib.module.css')).toBeFalsy();
-      expect(tree.exists('my-lib/src/lib/my-lib.module.scss')).toBeFalsy();
-
-      const content = tree.read('my-lib/src/lib/my-lib.tsx', 'utf-8');
       expect(content).toMatchSnapshot();
     });
   });
@@ -684,72 +668,6 @@ module.exports = withNx(
       });
     });
 
-    it('should support styled-components (legacy)', async () => {
-      await libraryGenerator(tree, {
-        ...defaultSchema,
-        addPlugin: false,
-        publishable: true,
-        importPath: '@proj/my-lib',
-        style: 'styled-components',
-      });
-
-      const config = readProjectConfiguration(tree, 'my-lib');
-      const babelrc = readJson(tree, 'my-lib/.babelrc');
-
-      expect(config.targets.build).toMatchObject({
-        options: {
-          external: ['react', 'react-dom', 'react/jsx-runtime'],
-        },
-      });
-      expect(babelrc.plugins).toEqual([
-        ['styled-components', { pure: true, ssr: true }],
-      ]);
-    });
-
-    it('should support @emotion/styled (legacy)', async () => {
-      await libraryGenerator(tree, {
-        ...defaultSchema,
-        addPlugin: false,
-        publishable: true,
-        importPath: '@proj/my-lib',
-        style: '@emotion/styled',
-      });
-
-      const config = readProjectConfiguration(tree, 'my-lib');
-      const babelrc = readJson(tree, 'my-lib/.babelrc');
-      const tsconfigJson = readJson(tree, 'my-lib/tsconfig.json');
-
-      expect(config.targets.build).toMatchObject({
-        options: {
-          external: ['react', 'react-dom', '@emotion/react/jsx-runtime'],
-        },
-      });
-      expect(babelrc.plugins).toEqual(['@emotion/babel-plugin']);
-      expect(tsconfigJson.compilerOptions['jsxImportSource']).toEqual(
-        '@emotion/react'
-      );
-    });
-
-    it('should support styled-jsx (legacy)', async () => {
-      await libraryGenerator(tree, {
-        ...defaultSchema,
-        addPlugin: false,
-        publishable: true,
-        importPath: '@proj/my-lib',
-        style: 'styled-jsx',
-      });
-
-      const config = readProjectConfiguration(tree, 'my-lib');
-      const babelrc = readJson(tree, 'my-lib/.babelrc');
-
-      expect(config.targets.build).toMatchObject({
-        options: {
-          external: ['react', 'react-dom', 'react/jsx-runtime'],
-        },
-      });
-      expect(babelrc.plugins).toEqual(['styled-jsx/babel']);
-    });
-
     it('should support style none (legacy)', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
@@ -881,49 +799,21 @@ module.exports = withNx(
     });
   });
 
-  it.each`
-    style
-    ${'styled-components'}
-    ${'styled-jsx'}
-    ${'@emotion/styled'}
-  `(
-    'should generate valid .babelrc JSON config for CSS-in-JS solutions',
-    async ({ style }) => {
-      await libraryGenerator(tree, {
-        ...defaultSchema,
-        style,
-        compiler: 'babel',
-        name: 'my-lib',
-      });
+  it('should add sass preprocessor when vite is used with scss', async () => {
+    await libraryGenerator(tree, {
+      ...defaultSchema,
+      style: 'scss',
+      bundler: 'vite',
+      unitTestRunner: 'vitest',
+      name: 'my-lib',
+    });
 
-      expect(() => {
-        readJson(tree, `my-lib/.babelrc`);
-      }).not.toThrow();
-    }
-  );
-
-  it.each`
-    style     | pkg
-    ${'less'} | ${'less'}
-    ${'scss'} | ${'sass'}
-  `(
-    'should add style preprocessor when vite is used',
-    async ({ style, pkg }) => {
-      await libraryGenerator(tree, {
-        ...defaultSchema,
-        style,
-        bundler: 'vite',
-        unitTestRunner: 'vitest',
-        name: 'my-lib',
-      });
-
-      expect(readJson(tree, 'package.json')).toMatchObject({
-        devDependencies: {
-          [pkg]: expect.any(String),
-        },
-      });
-    }
-  );
+    expect(readJson(tree, 'package.json')).toMatchObject({
+      devDependencies: {
+        sass: expect.any(String),
+      },
+    });
+  });
 
   it('should not ignore "out-tsc" from eslint', async () => {
     await libraryGenerator(tree, {

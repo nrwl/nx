@@ -1,3 +1,4 @@
+import { camelize, dasherize } from '@nx/devkit/internal';
 import {
   formatFiles,
   joinPathFragments,
@@ -5,8 +6,8 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { camelize, dasherize } from '@nx/devkit/src/utils/string-utils';
 import { lintProjectGenerator } from '@nx/eslint';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import {
   javaScriptOverride,
   typeScriptOverride,
@@ -27,6 +28,7 @@ export async function addLintingGenerator(
   tree: Tree,
   options: AddLintingGeneratorSchema
 ): Promise<GeneratorCallback> {
+  assertSupportedAngularVersion(tree);
   const tasks: GeneratorCallback[] = [];
   const rootProject = options.projectRoot === '.' || options.projectRoot === '';
   const lintTask = await lintProjectGenerator(tree, {

@@ -7,9 +7,7 @@ import {
 } from '@nx/devkit';
 import { createTree } from '@nx/devkit/testing';
 import Ajv from 'ajv';
-import { mkdirSync, writeFileSync } from 'fs';
 import * as nxSchema from 'nx/schemas/nx-schema.json';
-import { join } from 'path';
 import { Preset } from '../utils/presets';
 import { generateWorkspaceFiles } from './generate-workspace-files';
 
@@ -95,12 +93,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
               workspaces: true,
             });
             await formatFiles(tree);
-            const dir = join(__dirname, 'tmp', `${preset}-${nxCloud}`);
-            mkdirSync(dir, { recursive: true });
-            writeFileSync(
-              join(dir, 'README.md'),
-              tree.read('proj/README.md', 'utf-8')
-            );
             expect(tree.read('proj/README.md', 'utf-8')).toMatchSnapshot();
           }
         );

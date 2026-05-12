@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   formatFiles,
   joinPathFragments,
   logger,
@@ -6,7 +7,9 @@ import {
   Tree,
 } from '@nx/devkit';
 import type { Schema } from './schema';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { getMFProjects } from '../../utils/get-mf-projects';
+import { nxVersion } from '../../utils/versions';
 import {
   checkOutputNameMatchesProjectName,
   checkSharedNpmPackagesMatchExpected,
@@ -17,6 +20,7 @@ import {
 } from './lib';
 
 export async function convertToWithMF(tree: Tree, schema: Schema) {
+  assertSupportedAngularVersion(tree);
   const projects = new Set(getMFProjects(tree, { legacy: true }));
 
   if (!projects.has(schema.project)) {
@@ -58,9 +62,17 @@ export async function convertToWithMF(tree: Tree, schema: Schema) {
     mfConfig
   );
 
+  const installTask = addDependenciesToPackageJson(
+    tree,
+    {},
+    { '@nx/module-federation': nxVersion }
+  );
+
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
+
+  return installTask;
 }
 
 export default convertToWithMF;

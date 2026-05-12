@@ -1,4 +1,3 @@
-/* eslint-disable */
 // nx-ignore-next-line
 const nxPreset = require('@nx/jest/preset').default;
 

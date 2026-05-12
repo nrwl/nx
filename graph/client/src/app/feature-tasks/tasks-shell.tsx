@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type {
   GraphError,
@@ -7,7 +6,6 @@ import type {
 } from 'nx/src/command-line/graph/graph';
 import type { ProjectGraphProjectNode } from '@nx/devkit';
 
-/* eslint-enable @nx/enforce-module-boundaries */
 import { useTaskGraphContext, NxGraphTaskGraphProvider } from '@nx/graph/tasks';
 import {
   getExternalApiService,

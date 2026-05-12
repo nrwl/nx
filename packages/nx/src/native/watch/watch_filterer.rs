@@ -1,14 +1,13 @@
 use ignore::Match;
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
+use notify::EventKind;
+use notify::event::{CreateKind, ModifyKind, RemoveKind};
 use std::path::PathBuf;
 use tracing::trace;
-use watchexec::error::RuntimeError;
-use watchexec::filter::Filterer;
-use watchexec_events::filekind::{CreateKind, FileEventKind, ModifyKind, RemoveKind};
 
 use crate::native::watch::git_utils::get_gitignore_files;
-use crate::native::watch::utils::{get_nx_ignore, transform_event};
-use watchexec_events::{Event, FileType, Priority, Source, Tag};
+use crate::native::watch::types::{RawWatchEvent, meta_is_dir};
+use crate::native::watch::utils::get_nx_ignore;
 
 #[derive(Debug)]
 pub struct WatchFilterer {
@@ -20,135 +19,100 @@ pub struct WatchFilterer {
 }
 
 impl WatchFilterer {
-    fn filter_event(&self, event: &Event) -> bool {
-        let mut pass = true;
-        for (path, file_type) in event.paths() {
-            let path = dunce::simplified(path);
-            let is_dir = file_type.is_some_and(|t| matches!(t, FileType::Dir));
-            let nx_ignore_match_type = if let Some(nx_ignore) = &self.nx_ignore {
-                if path.starts_with(&self.origin) {
-                    nx_ignore.matched_path_or_any_parents(path, is_dir)
-                } else {
-                    Match::None
-                }
-            } else {
-                Match::None
-            };
+    fn filter_path(&self, path: &std::path::Path, is_dir: bool) -> bool {
+        let path = dunce::simplified(path);
 
-            // if the nxignore file contains this file as a whitelist,
-            // we do not want gitignore to filter it out, so it will always pass as true
-            if matches!(nx_ignore_match_type, Match::Whitelist(_)) {
+        // .nxignore takes precedence over .gitignore. Only consult it for
+        // paths under the origin — gitignore-style matchers are scoped to
+        // the directory the ignore file lives in, so external symlink
+        // targets shouldn't be matched against workspace rules.
+        let nx_match = if let Some(ig) = &self.nx_ignore
+            && path.starts_with(&self.origin)
+        {
+            ig.matched_path_or_any_parents(path, is_dir)
+        } else {
+            Match::None
+        };
+
+        match nx_match {
+            Match::Whitelist(_) => {
                 trace!(?path, "nxignore whitelist match, ignoring gitignore");
-                pass &= true;
-            // If the nxignore file contains this file as an ignore,
-            // then there's no point in checking the gitignore file
-            } else if matches!(nx_ignore_match_type, Match::Ignore(_)) {
+                return true;
+            }
+            Match::Ignore(_) => {
                 trace!(?path, "nxignore ignore match, ignoring gitignore");
-                pass &= false;
-            } else {
-                // Check gitignores deepest-first; first match wins
-                let git_match = self
-                    .git_ignores
-                    .iter()
-                    .filter(|(dir, _)| path.starts_with(dir))
-                    .find_map(|(_, gitignore)| {
-                        match gitignore.matched_path_or_any_parents(path, is_dir) {
-                            Match::None => None,
-                            m => Some(m),
-                        }
-                    });
-
-                match git_match {
-                    Some(Match::Ignore(_)) => {
-                        trace!(?path, "gitignore match - blocked");
-                        pass &= false;
-                    }
-                    Some(Match::Whitelist(_)) => {
-                        trace!(?path, "gitignore whitelist match - allowed");
-                        pass &= true;
-                    }
-                    _ => {
-                        // No gitignore matched — allow through
-                        pass &= true;
-                    }
-                }
+                return false;
             }
+            Match::None => {}
         }
 
-        pass
+        // Check gitignores deepest-first; first non-None match wins.
+        let git_match = self
+            .git_ignores
+            .iter()
+            .filter(|(dir, _)| path.starts_with(dir))
+            .map(|(_, ig)| ig.matched_path_or_any_parents(path, is_dir))
+            .find(|m| !matches!(m, Match::None));
+
+        match git_match {
+            Some(Match::Ignore(_)) => {
+                trace!(?path, "gitignore match - blocked");
+                false
+            }
+            Some(Match::Whitelist(_)) => {
+                trace!(?path, "gitignore whitelist match - allowed");
+                true
+            }
+            _ => true,
+        }
     }
-}
 
-/// Used to filter out events that that come from watchexec
-impl Filterer for WatchFilterer {
-    fn check_event(&self, watch_event: &Event, _priority: Priority) -> Result<bool, RuntimeError> {
-        let transformed = transform_event(watch_event);
-        let event = transformed.as_ref().unwrap_or(watch_event);
+    /// Check whether a watch event should be passed through.
+    pub fn check_event(&self, event: &RawWatchEvent) -> bool {
+        trace!(event = ?event.event, "checking if event is valid");
 
-        trace!(?event, "checking if event is valid");
-        if !self.filter_event(event) {
-            return Ok(false);
-        }
+        // Check event kind — only allow file-relevant event types.
+        match event.kind() {
+            EventKind::Modify(ModifyKind::Name(_)) => {}
+            EventKind::Modify(ModifyKind::Data(_)) => {}
+            EventKind::Create(CreateKind::File) => {}
+            EventKind::Remove(RemoveKind::File) => {}
 
-        // Tags will be a Vec that contains multiple types of information for a given event
-        // We are only interested if:
-        // 1) A `FileEventKind` is modified, created, removed, or renamed
-        // 2) A Path that is a FileType::File
-        // 3) Deleted files do not have a FileType::File (because they're deleted..), check if a path is valid
-        // 4) Only FileSystem sources are valid
-        // If there's a tag that doesnt confine to this criteria, we `return` early, otherwise we `continue`.
-        for tag in &event.tags {
-            match tag {
-                // Tag::Source(Source::Keyboard) => continue,
-                // Tag::Keyboard(Keyboard::Eof) => continue,
-                Tag::FileEventKind(file_event) => match file_event {
-                    FileEventKind::Modify(ModifyKind::Name(_)) => continue,
-                    FileEventKind::Modify(ModifyKind::Data(_)) => continue,
-                    FileEventKind::Create(CreateKind::File) => continue,
-                    FileEventKind::Remove(RemoveKind::File) => continue,
+            #[cfg(target_os = "linux")]
+            EventKind::Create(CreateKind::Folder)
+            | EventKind::Create(CreateKind::Any)
+            | EventKind::Remove(RemoveKind::Any)
+            | EventKind::Modify(ModifyKind::Any) => {}
 
-                    #[cfg(target_os = "linux")]
-                    FileEventKind::Create(CreateKind::Folder)
-                    | FileEventKind::Create(CreateKind::Any)
-                    | FileEventKind::Remove(RemoveKind::Any)
-                    | FileEventKind::Modify(ModifyKind::Any) => continue,
+            #[cfg(target_os = "macos")]
+            EventKind::Create(CreateKind::Folder) | EventKind::Modify(ModifyKind::Metadata(_)) => {}
 
-                    #[cfg(target_os = "macos")]
-                    FileEventKind::Create(CreateKind::Folder)
-                    | FileEventKind::Modify(ModifyKind::Metadata(_)) => continue,
+            #[cfg(windows)]
+            EventKind::Modify(ModifyKind::Any)
+            | EventKind::Create(CreateKind::Any)
+            | EventKind::Remove(RemoveKind::Any) => {}
 
-                    #[cfg(windows)]
-                    FileEventKind::Modify(ModifyKind::Any)
-                    | FileEventKind::Create(CreateKind::Any)
-                    | FileEventKind::Remove(RemoveKind::Any) => continue,
-
-                    _ => return Ok(false),
-                },
-                // Deleted files do not have a file_type + we don't want directory changes + we dont want files that end with `~`
-                Tag::Path {
-                    path,
-                    file_type: Some(FileType::File) | None,
-                } if !path.display().to_string().ends_with('~') => continue,
-
-                // Allow directory events through on Linux, Windows, and macOS so that the
-                // action handler can dynamically register watches for new directories.
-                #[cfg(any(target_os = "linux", target_os = "macos", windows))]
-                Tag::Path {
-                    path: _,
-                    file_type: Some(FileType::Dir),
-                } => continue,
-
-                Tag::Source(Source::Filesystem) => continue,
-                _ => {
-                    trace!(?tag, "tag rejected event");
-                    return Ok(false);
-                }
+            other => {
+                trace!(?other, "event kind rejected");
+                return false;
             }
         }
 
-        trace!(?event, "event passed all checks");
+        // Check each path against ignore rules.
+        for (path, metadata) in event.paths() {
+            // Reject paths ending with ~ (editor backup files)
+            if path.display().to_string().ends_with('~') {
+                trace!(?path, "path ends with ~ - rejected");
+                return false;
+            }
 
-        Ok(true)
+            if !self.filter_path(path, meta_is_dir(metadata)) {
+                return false;
+            }
+        }
+
+        trace!(event = ?event.event, "event passed all checks");
+        true
     }
 }
 

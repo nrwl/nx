@@ -35,14 +35,12 @@
       "type": "android.apk",
       "build": "cd <%= offsetFromRoot %><%= appRoot %>/android && ./gradlew assembleRelease assembleAndroidTest -DtestBuildType=release",
       "binaryPath": "<%= offsetFromRoot %><%= appRoot %>/android/app/build/outputs/apk/release/app-release.apk"
-    },
-<% if (framework === 'expo') { %>
+    }<% if (framework === 'expo') { %>,
     "android.local": {
       "type": "android.apk",
       "build": "<%= exec %> nx run <%= appFileName %>:build --platform android --profile preview --wait --local --no-interactive --output=<%= offsetFromRoot %><%= appRoot %>/dist/<%= appExpoName %>.apk",
       "binaryPath": "<%= offsetFromRoot %><%= appRoot %>/dist/<%= appExpoName %>.apk"
-    },
-<% } %>
+    }<% } %>
   },
   "devices": {
     "simulator": {
@@ -80,12 +78,10 @@
     "android.emu.debug": {
       "device": "emulator",
       "app": "android.debug"
-    },
-<% if (framework === 'expo') { %>
+    }<% if (framework === 'expo') { %>,
     "android.emu.local": {
       "device": "emulator",
       "app": "android.local"
-    },
-<% } %>
+    }<% } %>
   }
 }

@@ -1,8 +1,6 @@
 module.exports = {
   plugins: {
-    tailwindcss: {
-      config: './graph/ui-render-config/tailwind.config.js',
-    },
+    '@tailwindcss/postcss': {},
     autoprefixer: {},
   },
 };

@@ -15,6 +15,20 @@ import org.gradle.api.internal.provider.ProviderInternal
 import org.gradle.api.internal.provider.TransformBackedProvider
 import org.gradle.api.internal.tasks.DefaultTaskDependency
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.bundling.AbstractArchiveTask
+import org.gradle.api.tasks.compile.AbstractCompile
+import org.gradle.api.tasks.testing.Test as GradleTest
+
+private val kotlinCompileToolClass: Class<*>? by lazy {
+  try {
+    Class.forName("org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool")
+  } catch (e: Throwable) {
+    null
+  }
+}
+
+private fun isKotlinCompileTask(task: Task): Boolean =
+    kotlinCompileToolClass?.isInstance(task) == true
 
 /**
  * Process a task and convert it into target Going to populate:
@@ -148,6 +162,42 @@ fun getGradleFilesInputs(workspaceRoot: String): List<String> {
 }
 
 /**
+ * Infer file extensions consumed by a task from its dependents' outputs using task type checks.
+ *
+ * Test tasks consume .class + .jar (compiled code and library jars on the test classpath). Compile
+ * tasks consume .class from upstream compile tasks (e.g. compileTestKotlin → compileKotlin).
+ * Archive dependents declare their own extension (jar, war, etc).
+ *
+ * Works at configuration time without requiring files to exist on disk.
+ */
+fun inferExtensionsFromInputProperties(task: Task, dependentTasks: Set<Task>): Set<String> {
+  val extensions = mutableSetOf<String>()
+
+  when {
+    task is GradleTest -> {
+      extensions.add("class")
+      extensions.add("jar")
+    }
+    task is AbstractCompile || isKotlinCompileTask(task) -> extensions.add("class")
+  }
+
+  dependentTasks.forEach { depTask ->
+    if (depTask is AbstractArchiveTask) {
+      try {
+        depTask.archiveExtension.get().takeIf { it.isNotEmpty() }?.let { extensions.add(it) }
+      } catch (e: Exception) {
+        task.logger.debug("Could not read archiveExtension for ${depTask.path}: ${e.message}")
+      }
+    }
+    if (depTask is AbstractCompile || isKotlinCompileTask(depTask)) {
+      extensions.add("class")
+    }
+  }
+
+  return extensions.toSet()
+}
+
+/**
  * Parse task and get inputs for this task
  *
  * @param dependsOnTasks set of tasks this task depends on
@@ -230,6 +280,10 @@ private fun getInputsForTaskImpl(
         }
       }
     }
+
+    // Supplement with extensions inferred from Gradle metadata (handles clean builds where
+    // output directories exist but are empty, so file-based extension discovery misses them)
+    dependentTaskOutputExtensions.addAll(inferExtensionsFromInputProperties(task, tasksToProcess))
 
     // Add consolidated dependentTasksOutputFiles entries using glob patterns by extension
     dependentTaskOutputExtensions.forEach { extension ->

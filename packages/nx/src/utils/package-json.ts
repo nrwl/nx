@@ -16,6 +16,7 @@ import { readJson } from '../generators/utils/json';
 import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration/target-merging';
 import { getCatalogManager } from './catalog';
 import { readJsonFile } from './fileutils';
+import { hasNxJsPlugin } from './has-nx-js-plugin';
 import { getNxRequirePaths } from './installation-directory';
 import {
   createTempNpmDirectory,
@@ -186,8 +187,6 @@ export function buildTargetFromScript(
   };
 }
 
-let packageManagerCommand: PackageManagerCommands | undefined;
-
 export function getMetadataFromPackageJson(
   packageJson: PackageJson,
   isInPackageManagerWorkspaces: boolean
@@ -225,20 +224,25 @@ export function readTargetsFromPackageJson(
   packageJson: PackageJson,
   nxJson: NxJsonConfiguration,
   projectRoot: string,
-  workspaceRoot: string
+  workspaceRoot: string,
+  packageManagerCommand: PackageManagerCommands
 ) {
   const { scripts, nx, private: isPrivate } = packageJson ?? {};
   const res: Record<string, TargetConfiguration> = {};
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
   for (const script of includedScripts) {
-    packageManagerCommand ??= getPackageManagerCommand();
     res[script] = buildTargetFromScript(script, scripts, packageManagerCommand);
   }
   for (const targetName in nx?.targets) {
-    res[targetName] = mergeTargetConfigurations(
-      nx?.targets[targetName],
-      res[targetName]
-    );
+    const nxTarget = nx.targets[targetName];
+    // If the nx target specifies how to run (via executor or command shorthand),
+    // it's incompatible with the inferred nx:run-script target from scripts,
+    // so overwrite instead of merge.
+    if (res[targetName] && (nxTarget.executor || nxTarget.command)) {
+      res[targetName] = nxTarget;
+    } else {
+      res[targetName] = mergeTargetConfigurations(nxTarget, res[targetName]);
+    }
   }
 
   /**
@@ -271,18 +275,6 @@ export function readTargetsFromPackageJson(
   }
 
   return res;
-}
-
-function hasNxJsPlugin(projectRoot: string, workspaceRoot: string) {
-  try {
-    // nx-ignore-next-line
-    require.resolve('@nx/js/package.json', {
-      paths: [projectRoot, ...getNxRequirePaths(workspaceRoot), __dirname],
-    });
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 /**
@@ -378,12 +370,12 @@ function preparePackageInstallation(pkg: string, requiredVersion: string) {
   };
 
   console.log(`Fetching ${pkg}...`);
-  const packageManager = detectPackageManager();
+  const packageManager = detectPackageManager(workspaceRoot);
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
   generatePackageManagerFiles(tempDir, packageManager);
 
-  const preInstallCommand = getPackageManagerCommand(packageManager).preInstall;
   const pmCommands = getPackageManagerCommand(packageManager);
+  const preInstallCommand = pmCommands.preInstall;
   let addCommand = pmCommands.addDev;
   if (packageManager === 'pnpm') {
     addCommand = 'pnpm add -D'; // we need to ensure that we are not using workspace command
@@ -397,6 +389,12 @@ function preparePackageInstallation(pkg: string, requiredVersion: string) {
     cwd: tempDir,
     stdio: isVerbose ? 'inherit' : 'ignore',
     windowsHide: true,
+    // Yarn Berry requires an environment variable (not a CLI flag) to disable lifecycle scripts.
+    // Apply this defensively for all package managers when pulling nx@latest to tmp.
+    env: {
+      ...process.env,
+      YARN_ENABLE_SCRIPTS: 'false',
+    },
   } as const;
 
   return {

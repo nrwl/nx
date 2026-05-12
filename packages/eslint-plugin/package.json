@@ -42,7 +42,7 @@
     "@typescript-eslint/utils": "^8.0.0",
     "chalk": "catalog:",
     "confusing-browser-globals": "^1.0.9",
-    "globals": "^15.9.0",
+    "globals": "^17.0.0",
     "jsonc-eslint-parser": "^2.1.0",
     "semver": "catalog:",
     "tslib": "catalog:typescript"

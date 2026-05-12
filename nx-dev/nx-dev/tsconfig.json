@@ -38,64 +38,22 @@
   ],
   "references": [
     {
-      "path": "../ui-resources"
-    },
-    {
-      "path": "../ui-blog"
-    },
-    {
-      "path": "../ui-fence"
-    },
-    {
-      "path": "../ui-references"
-    },
-    {
-      "path": "../feature-search"
-    },
-    {
-      "path": "../ui-animations"
-    },
-    {
-      "path": "../feature-ai"
-    },
-    {
-      "path": "../ui-theme"
-    },
-    {
-      "path": "../feature-feedback"
-    },
-    {
       "path": "../ui-primitives"
-    },
-    {
-      "path": "../feature-analytics"
-    },
-    {
-      "path": "../ui-markdoc"
-    },
-    {
-      "path": "../ui-icons"
     },
     {
       "path": "../ui-common"
     },
     {
-      "path": "../data-access-courses"
+      "path": "../feature-ai"
     },
     {
       "path": "../data-access-documents"
     },
     {
-      "path": "../models-package"
+      "path": "../data-access-courses"
     },
     {
       "path": "../util-ai"
-    },
-    {
-      "path": "../ui-pricing"
-    },
-    {
-      "path": "../ui-podcast"
     },
     {
       "path": "../ui-video-courses"

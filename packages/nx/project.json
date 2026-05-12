@@ -107,6 +107,9 @@
       }
     },
     "test-native": {},
+    "test": {
+      "inputs": ["...", "{workspaceRoot}/scripts/patched-jest-resolver.js"]
+    },
     "format-native": {
       "command": "cargo fmt",
       "cache": true,
@@ -120,6 +123,9 @@
           "args": ["--all"]
         }
       }
+    },
+    "expand-deps": {
+      "command": "ts-node scripts/expand-deps.ts nx"
     },
     "lint-native": {
       "command": "cargo clippy",

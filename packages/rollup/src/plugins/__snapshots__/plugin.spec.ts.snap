@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`@nx/rollup/plugin non-root project should create nodes 1`] = `
 [
@@ -22,6 +22,14 @@ exports[`@nx/rollup/plugin non-root project should create nodes 1`] = `
                   "externalDependencies": [
                     "rollup",
                   ],
+                },
+                {
+                  "fields": [
+                    "extends",
+                    "files",
+                    "include",
+                  ],
+                  "json": "{workspaceRoot}/tsconfig.json",
                 },
               ],
               "metadata": {
@@ -90,6 +98,14 @@ exports[`@nx/rollup/plugin non-root project should create nodes 2`] = `
                     "rollup",
                   ],
                 },
+                {
+                  "fields": [
+                    "extends",
+                    "files",
+                    "include",
+                  ],
+                  "json": "{workspaceRoot}/tsconfig.json",
+                },
               ],
               "metadata": {
                 "description": "Run Rollup",
@@ -157,6 +173,14 @@ exports[`@nx/rollup/plugin root project should create nodes 1`] = `
                     "rollup",
                   ],
                 },
+                {
+                  "fields": [
+                    "extends",
+                    "files",
+                    "include",
+                  ],
+                  "json": "{workspaceRoot}/tsconfig.json",
+                },
               ],
               "metadata": {
                 "description": "Run Rollup",
@@ -222,6 +246,14 @@ exports[`@nx/rollup/plugin root project should create nodes 2`] = `
                   "externalDependencies": [
                     "rollup",
                   ],
+                },
+                {
+                  "fields": [
+                    "extends",
+                    "files",
+                    "include",
+                  ],
+                  "json": "{workspaceRoot}/tsconfig.json",
                 },
               ],
               "metadata": {

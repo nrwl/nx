@@ -1,3 +1,4 @@
+import { addBuildTargetDefaults } from '@nx/devkit/internal';
 import {
   formatFiles,
   GeneratorCallback,
@@ -12,13 +13,13 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { getUpdatedPackageJsonContent, readTsConfig } from '@nx/js';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import {
   getDefinedCustomConditionName,
   isUsingTsSolutionSetup,
+  TS_SOLUTION_SETUP_TSCONFIG_INPUT,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { dirname, join, relative } from 'node:path/posix';
 import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
@@ -27,6 +28,7 @@ import { RollupExecutorOptions } from '../../executors/rollup/schema';
 import { RollupWithNxPluginOptions } from '../../plugins/with-nx/with-nx-options';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { hasPlugin } from '../../utils/has-plugin';
+import { warnRollupExecutorGenerating } from '../../utils/deprecation';
 import { rollupInitGenerator } from '../init/init';
 import { RollupProjectSchema } from './schema';
 
@@ -54,6 +56,7 @@ export async function configurationGenerator(
   if (hasPlugin(tree)) {
     outputConfig = createRollupConfig(tree, options, isTsSolutionSetup);
   } else {
+    warnRollupExecutorGenerating();
     options.buildTarget ??= 'build';
     checkForTargetConflicts(tree, options);
     addBuildTarget(tree, options, isTsSolutionSetup);
@@ -215,7 +218,9 @@ function addBuildTarget(
   options: RollupProjectSchema,
   isTsSolutionSetup: boolean
 ) {
-  addBuildTargetDefaults(tree, '@nx/rollup:rollup', options.buildTarget);
+  addBuildTargetDefaults(tree, '@nx/rollup:rollup', options.buildTarget, [
+    TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+  ]);
   const project = readProjectConfiguration(tree, options.project);
   const prevBuildOptions = project.targets?.[options.buildTarget]?.options;
 

@@ -60,7 +60,7 @@ describe('federate-module', () => {
       const tsconfig = JSON.parse(tree.read('tsconfig.base.json', 'utf-8'));
       expect(
         tsconfig.compilerOptions.paths['myremote/my-federated-module']
-      ).toEqual(['myremote/src/my-federated-module.ts']);
+      ).toEqual(['./myremote/src/my-federated-module.ts']);
     });
 
     it('should error when invalid path is provided', async () => {
@@ -117,7 +117,7 @@ describe('federate-module', () => {
       const tsconfig = JSON.parse(tree.read('tsconfig.base.json', 'utf-8'));
       expect(
         tsconfig.compilerOptions.paths[`${schema.remote}/my-federated-module`]
-      ).toEqual(['myremote/src/my-federated-module.ts']);
+      ).toEqual(['./myremote/src/my-federated-module.ts']);
     });
   });
 });

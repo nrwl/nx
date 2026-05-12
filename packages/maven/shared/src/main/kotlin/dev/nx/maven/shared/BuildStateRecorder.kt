@@ -169,22 +169,32 @@ object BuildStateRecorder {
 
     private fun captureAttachedArtifacts(project: MavenProject, basedir: File): List<ArtifactInfo> {
         return project.attachedArtifacts.mapNotNull { artifact: Artifact ->
+            // In Maven 4, accessing artifact.file may invoke TransformedArtifact.getFile(),
+            // which lazily materializes the file (e.g. touching mtime on the consumer POM).
+            // That can throw if the target dir was just cleaned. Treat a throw the same as
+            // a missing file: log and skip.
+            val file = try {
+                artifact.file
+            } catch (e: Exception) {
+                log.debug("Skipping attached artifact ${artifact.groupId}:${artifact.artifactId}:${artifact.version} — file not available: ${e.message}")
+                return@mapNotNull null
+            }
             when {
-                artifact.file == null -> {
+                file == null -> {
                     log.debug("Attached artifact has no file: ${artifact.groupId}:${artifact.artifactId}:${artifact.version}")
                     null
                 }
-                !artifact.file.exists() -> {
-                    log.debug("Attached artifact file does not exist: ${artifact.file.absolutePath}")
+                !file.exists() -> {
+                    log.debug("Attached artifact file does not exist: ${file.absolutePath}")
                     null
                 }
                 // Skip temporary files (consumer POMs with random hash names)
-                artifact.file.name.startsWith("consumer-") && artifact.file.name.matches(Regex("consumer-\\d+\\.pom")) -> {
-                    log.debug("Skipping temporary consumer POM: ${artifact.file.name}")
+                file.name.startsWith("consumer-") && file.name.matches(Regex("consumer-\\d+\\.pom")) -> {
+                    log.debug("Skipping temporary consumer POM: ${file.name}")
                     null
                 }
                 else -> ArtifactInfo(
-                    file = toRelativePathCached(artifact.file.absolutePath, basedir),
+                    file = toRelativePathCached(file.absolutePath, basedir),
                     type = artifact.type,
                     classifier = artifact.classifier,
                     groupId = artifact.groupId,

@@ -1,5 +1,5 @@
 {
-  "outDir": "dist/packages/devkit",
+  "outDir": "packages/devkit/dist",
   "assets": [
     {
       "glob": "**/files/**"

@@ -1,3 +1,4 @@
+import { ensureRootProjectName } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -15,7 +16,6 @@ import {
 } from '@nx/devkit';
 import { join } from 'path';
 
-import { ensureRootProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { isValidVariable } from '@nx/js';
 import {
   getProjectSourceRoot,

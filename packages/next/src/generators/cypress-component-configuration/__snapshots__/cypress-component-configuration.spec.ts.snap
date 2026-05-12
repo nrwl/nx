@@ -1,18 +1,6 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`cypress-component-configuration generator should setup nextjs app: 
-    {
-      "compilerOptions": {
-        "allowJs": true,
-        "module": "commonjs",
-        "outDir": "../dist/out-tsc",
-        "sourceMap": false,
-        "types": [
-          "cypress",
-          "node",
-        ],
-      }
-    } 1`] = `
+exports[`cypress-component-configuration generator should setup nextjs app 1`] = `
 {
   "compilerOptions": {
     "allowJs": true,
@@ -39,19 +27,7 @@ exports[`cypress-component-configuration generator should setup nextjs app:
 }
 `;
 
-exports[`cypress-component-configuration generator should setup nextjs lib: 
-    {
-      "compilerOptions": {
-        "allowJs": true,
-        "module": "commonjs",
-        "outDir": "../dist/out-tsc",
-        "sourceMap": false,
-        "types": [
-          "cypress",
-          "node",
-        ],
-      }
-    } 1`] = `
+exports[`cypress-component-configuration generator should setup nextjs lib 1`] = `
 {
   "compilerOptions": {
     "allowJs": true,
