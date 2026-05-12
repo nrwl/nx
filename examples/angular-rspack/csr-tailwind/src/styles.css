@@ -1,1 +1,2 @@
 @import 'tailwindcss';
+@source not "../eslint.config.mjs";
