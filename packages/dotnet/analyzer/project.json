@@ -6,6 +6,19 @@
       "executor": "nx:noop",
       "dependsOn": ["build:dotnet"]
     },
+    "publish": {
+      "outputs": ["{workspaceRoot}/packages/dotnet/dist/msbuild-analyzer"],
+      "options": {
+        "args": [
+          "-c",
+          "Release",
+          "-o",
+          "../dist/msbuild-analyzer",
+          "--self-contained",
+          "false"
+        ]
+      }
+    },
     "run": {
       "executor": "nx:noop"
     }
