@@ -283,13 +283,15 @@ impl WatchPipeline {
 
         let raw = RawWatchEvent::new(event);
 
-        // Diagnostic: how stale is this event when it reaches us? The
-        // mtime is `now` if the kernel + notify-crate + crossbeam path is
-        // microseconds; a large `age_ms` means upstream sat on the event.
-        // We log every path inside the event (notify-crate batches multi-
-        // path events for renames etc.) so post-mortem correlation can
-        // line up specific files with the test's writes.
-        if std::env::var("NX_DAEMON_DEBUG_WATCHER").as_deref() == Ok("1") {
+        // Diagnostic: how stale is this event when it reaches us? `age_ms`
+        // is only meaningful for write-like kinds where mtime ≈ event time.
+        // We skip `Access(...)` entirely — those are reads (plugin workers
+        // opening package.json etc. during graph compute), which fire in
+        // floods and whose mtime is the *original write*, not the read,
+        // making age_ms misleading and the volume drown the signal.
+        if std::env::var("NX_DAEMON_DEBUG_WATCHER").as_deref() == Ok("1")
+            && !matches!(raw.kind(), notify::EventKind::Access(_))
+        {
             let ts = debug_ts();
             for (path, metadata) in raw.paths() {
                 eprintln!(
