@@ -157,6 +157,30 @@ module.exports = { plugins: [new NxAppWebpackPlugin()] };
     `);
   });
 
+  it('rewrites multiple matching imports/requires in the same file', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      'apps/my-app/webpack.config.js',
+      `import { NxTsconfigPathsWebpackPlugin } from '@nx/webpack';
+const { NxTsconfigPathsWebpackPlugin: P2 } = require('@nx/webpack');
+import { NxTsconfigPathsWebpackPlugin as P3, NxAppWebpackPlugin } from '@nx/webpack';
+`
+    );
+
+    await removeNxTsconfigPathsWebpackPluginImport(tree);
+
+    expect(tree.read('apps/my-app/webpack.config.js', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { NxTsconfigPathsWebpackPlugin as P3 } from '@nx/webpack/tsconfig-paths-plugin';
+      import { NxTsconfigPathsWebpackPlugin } from '@nx/webpack/tsconfig-paths-plugin';
+      const {
+        NxTsconfigPathsWebpackPlugin: P2,
+      } = require('@nx/webpack/tsconfig-paths-plugin');
+      import { NxAppWebpackPlugin } from '@nx/webpack';
+      "
+    `);
+  });
+
   it('does not modify files already using the correct sub-path import', async () => {
     const tree = createTreeWithEmptyWorkspace();
     // Use the already-prettier-formatted form so formatFiles does not change it

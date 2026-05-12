@@ -149,6 +149,28 @@ module.exports = { plugins: [new NxAppWebpackPlugin()] };
     `);
   });
 
+  it('rewrites multiple matching imports/requires in the same file', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      'apps/my-app/webpack.config.js',
+      `import { NxReactWebpackPlugin } from '@nx/react';
+const { NxReactWebpackPlugin: P2 } = require('@nx/react');
+import { NxReactWebpackPlugin as P3, withReact } from '@nx/react';
+`
+    );
+
+    await removeNxReactWebpackPluginImport(tree);
+
+    expect(tree.read('apps/my-app/webpack.config.js', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { NxReactWebpackPlugin as P3 } from '@nx/react/webpack-plugin';
+      import { NxReactWebpackPlugin } from '@nx/react/webpack-plugin';
+      const { NxReactWebpackPlugin: P2 } = require('@nx/react/webpack-plugin');
+      import { withReact } from '@nx/react';
+      "
+    `);
+  });
+
   it('does not modify files already using the correct sub-path import', async () => {
     const tree = createTreeWithEmptyWorkspace();
     const original = `const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
