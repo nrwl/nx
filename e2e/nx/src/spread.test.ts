@@ -49,18 +49,15 @@ describe('Spread Token Merging', () => {
       );
       if (existsSync(daemonLog)) {
         const contents = readFileSync(daemonLog, 'utf-8');
-        // eslint-disable-next-line no-console
         console.log(
           `\n========== daemon.log for "${
             expect.getState().currentTestName ?? 'unknown'
           }" ==========\n${contents}\n========== end daemon.log ==========\n`
         );
       } else {
-        // eslint-disable-next-line no-console
         console.log(`[spread-debug] no daemon log at ${daemonLog}`);
       }
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.log(`[spread-debug] failed to read daemon log: ${e}`);
     }
 
