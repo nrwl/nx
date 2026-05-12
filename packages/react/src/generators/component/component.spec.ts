@@ -80,6 +80,18 @@ describe('component', () => {
     );
   });
 
+  it('should generate jsx when path has .jsx extension', async () => {
+    await componentGenerator(appTree, {
+      name: 'hello',
+      style: 'css',
+      path: `${projectName}/src/lib/hello/hello.jsx`,
+    });
+
+    expect(appTree.exists('my-lib/src/lib/hello/hello.jsx')).toBeTruthy();
+    expect(appTree.exists('my-lib/src/lib/hello/hello.spec.jsx')).toBeTruthy();
+    expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeFalsy();
+  });
+
   it('should generate files with global CSS', async () => {
     await componentGenerator(appTree, {
       name: 'hello',

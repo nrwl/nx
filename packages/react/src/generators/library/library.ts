@@ -246,7 +246,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     const path = joinPathFragments(
       options.projectRoot,
       'src/lib',
-      options.fileName
+      options.js ? `${options.fileName}.js` : options.fileName
     );
     const componentTask = await componentGenerator(host, {
       path: relativeCwd ? relative(relativeCwd, path) : path,
@@ -256,7 +256,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         (options.unitTestRunner === 'vitest' && options.inSourceTests == true),
       export: true,
       routing: options.routing,
-      js: options.js,
       name: options.name,
       inSourceTests: options.inSourceTests,
       skipFormat: true,
