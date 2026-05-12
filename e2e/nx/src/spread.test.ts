@@ -16,6 +16,11 @@ import { join } from 'node:path';
 // captures it as part of the test output.
 process.env.NX_DAEMON_DEBUG_WATCHER = '1';
 
+// Cache-bust marker — bump to force Nx Cloud to re-run the e2e instead
+// of replaying a cached pass. We need real runs to capture the
+// [debug-watcher] diagnostic output when the flake reproduces.
+// bust: 2026-05-12-1
+
 describe('Spread Token Merging', () => {
   let proj: string;
   beforeAll(
