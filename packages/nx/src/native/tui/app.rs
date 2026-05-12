@@ -34,6 +34,7 @@ use super::components::hint_popup::HintPopup;
 use super::components::layout_manager::{
     LayoutAreas, LayoutManager, PaneArrangement, TaskListVisibility,
 };
+use super::components::status_bar::{StatusBar, StatusCounts};
 use super::components::task_selection_manager::{
     SelectionEntry, SelectionMode, TaskSelectionManager,
 };
@@ -106,6 +107,9 @@ pub struct App {
     frame_area: Option<Rect>,
     // Cached result of layout manager's calculate_layout, only updated when necessary (e.g. terminal resize, task list visibility change etc)
     layout_areas: Option<LayoutAreas>,
+    // Cached area reserved for the global status bar (and cloud row above it
+    // when present). Calculated alongside `layout_areas`.
+    status_bar_area: Option<Rect>,
     terminal_pane_data: [TerminalPaneData; 2],
     dependency_view_states: [Option<DependencyViewState>; 2],
     spacebar_mode: bool,
@@ -253,11 +257,17 @@ impl App {
         let countdown_popup = CountdownPopup::new();
         let hint_popup = HintPopup::new();
 
+        // Re-seed StatusBar with any persisted cloud message so mode switches
+        // (inline ↔ fullscreen) don't drop it from the bar.
+        let initial_cloud_message = state.lock().get_cloud_message().map(|s| s.to_string());
+        let status_bar = StatusBar::new(initial_cloud_message);
+
         let components: Vec<Box<dyn Component>> = vec![
             Box::new(tasks_list),
             Box::new(help_popup),
             Box::new(countdown_popup),
             Box::new(hint_popup),
+            Box::new(status_bar),
         ];
 
         let main_terminal_pane_data = TerminalPaneData::new();
@@ -300,6 +310,7 @@ impl App {
             layout_manager,
             frame_area: None,
             layout_areas: None,
+            status_bar_area: None,
             terminal_pane_data: [main_terminal_pane_data, TerminalPaneData::new()],
             dependency_view_states: [None, None],
             spacebar_mode: saved_spacebar_mode,
@@ -1345,6 +1356,33 @@ impl App {
                         physical_idx += 1;
                     }
 
+                    // Draw the global status bar (and cloud row above it when
+                    // present) at the bottom of the frame. Renders regardless
+                    // of task list visibility so it survives `b`-toggle.
+                    if let Some(status_bar_area) = self.status_bar_area {
+                        // Snapshot run state from tasks_list into StatusBar
+                        // before drawing. Counts are O(N) but N is bounded by
+                        // task count; per-frame is fine.
+                        let counts = self
+                            .components
+                            .iter()
+                            .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+                            .map(|tl| {
+                                StatusCounts::from_iter(tl.task_lookup.values().map(|t| t.status))
+                            })
+                            .unwrap_or_default();
+                        let task_list_hidden = self.is_task_list_hidden();
+
+                        if let Some(status_bar) = self
+                            .components
+                            .iter_mut()
+                            .find_map(|c| c.as_any_mut().downcast_mut::<StatusBar>())
+                        {
+                            status_bar.set_state(counts, task_list_hidden);
+                            let _ = status_bar.draw(f, status_bar_area);
+                        }
+                    }
+
                     // Draw the popups (help, countdown, interstitial)
                     // Draw each popup sequentially to avoid multiple mutable borrows
                     if let Some(help_popup) = self
@@ -1436,10 +1474,23 @@ impl App {
     pub fn set_cloud_message(&mut self, message: Option<String>) {
         // Store in state (for mode switching persistence)
         self.core.state().lock().set_cloud_message(message.clone());
-        // Dispatch to TasksList component for UI rendering
+        // Synchronously propagate to the StatusBar so its required_height()
+        // reflects the new cloud state before we recalculate layout areas
+        // below. (Action dispatch below remains for other consumers.)
+        if let Some(status_bar) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<StatusBar>())
+        {
+            status_bar.set_cloud_message(message.clone());
+        }
+        // Dispatch to other UI components.
         if let Some(message) = message {
             self.dispatch_action(Action::UpdateCloudMessage(message));
         }
+        // Cloud message presence changes the status bar's required height,
+        // so recompute layout areas immediately rather than waiting for resize.
+        self.recalculate_layout_areas();
     }
 
     /// Dispatches an action to the action tx for other components to handle however they see fit
@@ -1449,8 +1500,39 @@ impl App {
 
     fn recalculate_layout_areas(&mut self) {
         if let Some(frame_area) = self.frame_area {
-            self.layout_areas = Some(self.layout_manager.calculate_layout(frame_area));
+            let bar_height = self.required_status_bar_height();
+            let usable_height = frame_area.height.saturating_sub(bar_height);
+            let usable_area = Rect {
+                x: frame_area.x,
+                y: frame_area.y,
+                width: frame_area.width,
+                height: usable_height,
+            };
+            let bar_area = if bar_height > 0 && frame_area.height >= bar_height {
+                Some(Rect {
+                    x: frame_area.x,
+                    y: frame_area.y + usable_height,
+                    width: frame_area.width,
+                    height: bar_height,
+                })
+            } else {
+                None
+            };
+
+            self.layout_areas = Some(self.layout_manager.calculate_layout(usable_area));
+            self.status_bar_area = bar_area;
         }
+    }
+
+    /// Height (in rows) the status bar needs at the bottom of the frame:
+    /// 1 row for the bar itself, plus 1 more for the cloud message row
+    /// when one is present. Reads the bar's own state via downcast.
+    fn required_status_bar_height(&self) -> u16 {
+        self.components
+            .iter()
+            .find_map(|c| c.as_any().downcast_ref::<StatusBar>())
+            .map(|bar| bar.required_height())
+            .unwrap_or(1)
     }
 
     /// Checks if the current view has any visible output panes.

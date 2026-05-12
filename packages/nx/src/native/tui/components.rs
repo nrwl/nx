@@ -12,9 +12,9 @@ use super::{
 pub mod countdown_popup;
 pub mod dependency_view;
 pub mod help_popup;
-pub mod help_text;
 pub mod hint_popup;
 pub mod layout_manager;
+pub mod status_bar;
 pub mod task_selection_manager;
 pub mod tasks_list;
 pub mod terminal_pane;

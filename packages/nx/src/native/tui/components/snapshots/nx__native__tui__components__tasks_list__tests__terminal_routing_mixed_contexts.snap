@@ -1,5 +1,6 @@
 ---
 source: packages/nx/src/native/tui/components/tasks_list.rs
+assertion_line: 4606
 expression: terminal.backend()
 ---
 "                                                                                                                        "
@@ -21,4 +22,4 @@ expression: terminal.backend()
 "                                                                                                                        "
 "                                                                                                                        "
 "                                                                                                                        "
-"                                    quit: q  help: ?  navigate: ↑ ↓  filter: /  pin output: 1 or 2  show output: <enter>"
+"                                                                                                                        "

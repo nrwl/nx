@@ -1,10 +1,11 @@
 ---
 source: packages/nx/src/native/tui/components/tasks_list.rs
+assertion_line: 3711
 expression: terminal.backend()
 ---
 "                                        "
 " NX    Running Deep Scroll   Duration   "
 "                                       ↑"
 "                                       █"
-"> ·    app100:test                ...  ↓"
-"                        quit: q  help: ?"
+"> ·    app100:test                ...  ║"
+"  ·    app10:test                 ...  ↓"

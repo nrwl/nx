@@ -1,5 +1,6 @@
 ---
 source: packages/nx/src/native/tui/components/tasks_list.rs
+assertion_line: 4166
 expression: terminal.backend()
 ---
 "                                                                                                                        "
@@ -13,7 +14,7 @@ expression: terminal.backend()
 "                                                                                                                        "
 "                                                                                                                        "
 "                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
 "  Filter: xyz                                                                                                           "
 "  -> 3 tasks filtered out. Press / to persist, <esc> to clear                                                           "
-"                                                                                                                        "
-"                                    quit: q  help: ?  navigate: ↑ ↓  filter: /  pin output: 1 or 2  show output: <enter>"

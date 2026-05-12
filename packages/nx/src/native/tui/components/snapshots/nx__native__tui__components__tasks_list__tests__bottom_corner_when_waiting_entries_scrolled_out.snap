@@ -1,5 +1,6 @@
 ---
 source: packages/nx/src/native/tui/components/tasks_list.rs
+assertion_line: 3549
 expression: terminal.backend()
 ---
 "                                                                                "
@@ -7,8 +8,8 @@ expression: terminal.backend()
 "                                                                               ↑"
 "                                                                               ║"
 "> ·    app10:test                                              ...        ...  █"
-"  ·    app1:test                                               ...        ...  ║"
+"  ·    app1:test                                               ...        ...  █"
 "  ·    app2:test                                               ...        ...  ║"
 "  ·    app3:test                                               ...        ...  ║"
-"  ·    app4:test                                               ...        ...  ↓"
-"                                                                quit: q  help: ?"
+"  ·    app4:test                                               ...        ...  ║"
+"  ·    app5:test                                               ...        ...  ↓"

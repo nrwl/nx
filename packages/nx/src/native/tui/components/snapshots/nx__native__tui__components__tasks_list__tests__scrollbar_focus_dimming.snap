@@ -1,5 +1,6 @@
 ---
 source: packages/nx/src/native/tui/components/tasks_list.rs
+assertion_line: 4213
 expression: terminal.backend()
 ---
 "                                                                                "
@@ -20,5 +21,5 @@ expression: terminal.backend()
 "  ·    app20:build                                             ...        ...  ║"
 "  ·    app21:lint                                              ...        ...  ║"
 "  ·    app22:test                                              ...        ...  ║"
-"  ·    app23:build                                             ...        ...  ↓"
-"                                                                quit: q  help: ?"
+"  ·    app23:build                                             ...        ...  ║"
+"  ·    app24:lint                                              ...        ...  ↓"
