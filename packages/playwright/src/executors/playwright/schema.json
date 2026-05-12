@@ -3,6 +3,7 @@
   "version": 2,
   "title": "Playwright executor",
   "description": "Run Playwright tests.",
+  "x-deprecated": "The `@nx/playwright:playwright` executor is deprecated and will be removed in Nx v24. Run `nx g @nx/playwright:convert-to-inferred` to migrate to the `@nx/playwright/plugin` inferred targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.",
   "type": "object",
   "properties": {
     "browser": {
