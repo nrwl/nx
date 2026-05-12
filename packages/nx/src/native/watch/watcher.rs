@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use std::path::{MAIN_SEPARATOR, Path, PathBuf};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use crossbeam_channel::{Receiver, Sender, bounded, select, unbounded};
 use napi::bindgen_prelude::*;
@@ -19,6 +19,39 @@ use crate::native::watch::types::{
     EventType, RawWatchEvent, WatchEvent, WatchEventInternal, transform_event_to_watch_events,
 };
 use crate::native::watch::watch_filterer;
+
+/// Cheap wall-clock formatter for `[debug-watcher]` correlation with the
+/// daemon's JS-side log (which prefixes lines with `HH:MM:SS.mmmZ`). UTC.
+/// Lives behind the same `NX_DAEMON_DEBUG_WATCHER=1` gate as the rest of
+/// the diagnostic eprintln output.
+#[inline]
+fn debug_ts() -> String {
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default();
+    let secs = now.as_secs();
+    let ms = now.subsec_millis();
+    let h = (secs / 3600) % 24;
+    let m = (secs / 60) % 60;
+    let s = secs % 60;
+    format!("{:02}:{:02}:{:02}.{:03}", h, m, s, ms)
+}
+
+/// Age of an event in milliseconds = now − mtime of the affected path.
+/// Surfaces upstream delivery delay (kernel → inotify queue → notify-crate
+/// worker → notify_rx) that's invisible from inside the pipeline. A large
+/// age means the file was written well before our code saw the event.
+/// `-1` means we couldn't read mtime (path gone, stat error, ENOENT).
+#[inline]
+fn event_age_ms(metadata: &std::io::Result<std::fs::Metadata>) -> i128 {
+    metadata
+        .as_ref()
+        .ok()
+        .and_then(|m| m.modified().ok())
+        .and_then(|mtime| SystemTime::now().duration_since(mtime).ok())
+        .map(|d| d.as_millis() as i128)
+        .unwrap_or(-1)
+}
 
 /// Trailing-edge debounce: emit accumulated events after this much silence.
 const IDLE_WINDOW: Duration = Duration::from_millis(100);
@@ -250,6 +283,25 @@ impl WatchPipeline {
 
         let raw = RawWatchEvent::new(event);
 
+        // Diagnostic: how stale is this event when it reaches us? The
+        // mtime is `now` if the kernel + notify-crate + crossbeam path is
+        // microseconds; a large `age_ms` means upstream sat on the event.
+        // We log every path inside the event (notify-crate batches multi-
+        // path events for renames etc.) so post-mortem correlation can
+        // line up specific files with the test's writes.
+        if std::env::var("NX_DAEMON_DEBUG_WATCHER").as_deref() == Ok("1") {
+            let ts = debug_ts();
+            for (path, metadata) in raw.paths() {
+                eprintln!(
+                    "[debug-watcher] {} ingest path={:?} kind={:?} age_ms={}",
+                    ts,
+                    path,
+                    raw.kind(),
+                    event_age_ms(metadata)
+                );
+            }
+        }
+
         if !self.filterer.check_event(&raw) {
             return Ok(());
         }
@@ -314,25 +366,51 @@ impl WatchPipeline {
                         }
                         let mut fatal: Option<String> = None;
 
+                        let debug =
+                            std::env::var("NX_DAEMON_DEBUG_WATCHER").as_deref() == Ok("1");
+                        let handler_started_at = if debug {
+                            let ts = debug_ts();
+                            eprintln!(
+                                "[debug-watcher] {} force-flush START replies={}",
+                                ts,
+                                replies.len()
+                            );
+                            Some(Instant::now())
+                        } else {
+                            None
+                        };
+
                         // Wait briefly for notify-crate sends that are
                         // mid-flight — a bare try_recv would miss them.
+                        let recv_label;
                         match self
                             .notify_rx
                             .recv_timeout(Duration::from_millis(5))
                         {
                             Ok(event) => {
+                                recv_label = "Ok(event)";
                                 if let Err(msg) = self.ingest_event(event) {
                                     fatal = Some(msg);
                                 }
                             }
-                            Err(crossbeam_channel::RecvTimeoutError::Timeout) => {}
+                            Err(crossbeam_channel::RecvTimeoutError::Timeout) => {
+                                recv_label = "Timeout";
+                            }
                             Err(
                                 crossbeam_channel::RecvTimeoutError::Disconnected,
                             ) => {
+                                recv_label = "Disconnected";
                                 fatal = Some(
                                     "watcher channel disconnected".to_string(),
                                 );
                             }
+                        }
+                        if debug {
+                            eprintln!(
+                                "[debug-watcher] {} force-flush recv_timeout(5ms)={}",
+                                debug_ts(),
+                                recv_label
+                            );
                         }
 
                         if fatal.is_none() {
@@ -351,6 +429,14 @@ impl WatchPipeline {
                         );
                         for e in &watch_events {
                             debug!("  [{:?}] {}", e.r#type, e.path);
+                        }
+                        if let Some(start) = handler_started_at {
+                            eprintln!(
+                                "[debug-watcher] {} force-flush END count={} duration_ms={}",
+                                debug_ts(),
+                                watch_events.len(),
+                                start.elapsed().as_millis()
+                            );
                         }
                         let mut any_delivered = false;
                         for r in replies {
