@@ -222,6 +222,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       {
         "dependencies": {},
         "devDependencies": {
+          "@nx/workspace": "0.0.1",
           "nx": "0.0.1",
         },
         "license": "MIT",
@@ -251,6 +252,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       {
         "dependencies": {},
         "devDependencies": {
+          "@nx/workspace": "0.0.1",
           "nx": "0.0.1",
         },
         "license": "MIT",
@@ -302,6 +304,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       {
         "dependencies": {},
         "devDependencies": {
+          "@nx/workspace": "0.0.1",
           "nx": "0.0.1",
         },
         "license": "MIT",
