@@ -148,6 +148,14 @@ export async function getCachedSerializedProjectGraphPromise(
 
     await resetInternalStateIfNxDepsMissing();
 
+    // Yield one macrotask boundary so any TSFN-queued watcher callbacks
+    // run before we read collected*. Without this, an event that left
+    // the native side but is still queued in libuv's I/O queue (behind
+    // our request handler) would be invisible here and we'd serve a
+    // stale graph. Placed right before the read so no microtask gap
+    // separates them.
+    await new Promise(setImmediate);
+
     // If no compute exists or events are still in collected*, kick one off.
     // Otherwise reuse whatever is already in flight or cached.
     const needsRecompute =

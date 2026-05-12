@@ -41,19 +41,7 @@ describe('cypress-component-configuration generator', () => {
         '**/*.cy.jsx',
       ])
     );
-    expect(readJson(tree, 'demo/cypress/tsconfig.json')).toMatchSnapshot(`
-    {
-      "compilerOptions": {
-        "allowJs": true,
-        "module": "commonjs",
-        "outDir": "../dist/out-tsc",
-        "sourceMap": false,
-        "types": [
-          "cypress",
-          "node",
-        ],
-      }
-    }`);
+    expect(readJson(tree, 'demo/cypress/tsconfig.json')).toMatchSnapshot();
     expect(tree.read('demo/cypress.config.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';
       import { defineConfig } from 'cypress';
@@ -174,19 +162,7 @@ describe('cypress-component-configuration generator', () => {
         },
       ])
     );
-    expect(readJson(tree, 'demo/cypress/tsconfig.json')).toMatchSnapshot(`
-    {
-      "compilerOptions": {
-        "allowJs": true,
-        "module": "commonjs",
-        "outDir": "../dist/out-tsc",
-        "sourceMap": false,
-        "types": [
-          "cypress",
-          "node",
-        ],
-      }
-    }`);
+    expect(readJson(tree, 'demo/cypress/tsconfig.json')).toMatchSnapshot();
     expect(tree.read('demo/cypress.config.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';
       import { defineConfig } from 'cypress';

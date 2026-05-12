@@ -205,23 +205,7 @@ export function normalizeTargetDependencyWithStringProjects(
   dependencyConfig: TargetDependencyConfig
 ): Omit<TargetDependencyConfig, 'projects'> & { projects: string[] } {
   if (typeof dependencyConfig.projects === 'string') {
-    /** LERNA SUPPORT START - Remove in v20 */
-    // Lerna uses `dependencies` in `prepNxOptions`, so we need to maintain
-    // support for it until lerna can be updated to use the syntax.
-    //
-    // This should have been removed in v17, but the updates to lerna had not
-    // been made yet.
-    //
-    // TODO(@agentender): Remove this part in v20
-    if (dependencyConfig.projects === 'self') {
-      delete dependencyConfig.projects;
-    } else if (dependencyConfig.projects === 'dependencies') {
-      dependencyConfig.dependencies = true;
-      delete dependencyConfig.projects;
-      /** LERNA SUPPORT END - Remove in v20 */
-    } else {
-      dependencyConfig.projects = [dependencyConfig.projects];
-    }
+    dependencyConfig.projects = [dependencyConfig.projects];
   }
   return dependencyConfig as Omit<TargetDependencyConfig, 'projects'> & {
     projects: string[];
