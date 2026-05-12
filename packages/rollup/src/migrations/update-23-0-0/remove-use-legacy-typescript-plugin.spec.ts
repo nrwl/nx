@@ -1,6 +1,8 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   Tree,
+  readJson,
+  updateJson,
   readProjectConfiguration,
   readNxJson,
   updateNxJson,
@@ -586,5 +588,20 @@ module.exports = withNx({
         }
       `);
     });
+  });
+
+  it('should remove rollup-plugin-typescript2 from devDependencies', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = {
+        ...json.devDependencies,
+        'rollup-plugin-typescript2': '^0.36.0',
+      };
+      return json;
+    });
+
+    await migration(tree);
+
+    const pkg = readJson(tree, 'package.json');
+    expect(pkg.devDependencies?.['rollup-plugin-typescript2']).toBeUndefined();
   });
 });

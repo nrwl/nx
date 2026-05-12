@@ -325,7 +325,7 @@ export interface ViteConfigFileOptions {
   includeVitest?: boolean;
   inSourceTests?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
-  rollupOptionsExternal?: string[];
+  rolldownOptionsExternal?: string[];
   imports?: string[];
   plugins?: string[];
   coverageProvider?: 'v8' | 'istanbul' | 'custom';
@@ -377,9 +377,9 @@ export function createOrEditViteConfig(
       // Don't forget to update your package.json as well.
       formats: ['es' as const]
     },
-    rollupOptions: {
+    rolldownOptions: {
       // External packages that should not be bundled into your library.
-      external: [${options.rollupOptionsExternal ?? ''}]
+      external: [${options.rolldownOptionsExternal ?? ''}]
     },
   },`
       : `  build: {
@@ -704,8 +704,8 @@ function handleViteConfigFileExists(
           fileName: 'index',
           formats: ['es'],
         },
-        rollupOptions: {
-          external: options.rollupOptionsExternal ?? [],
+        rolldownOptions: {
+          external: options.rolldownOptionsExternal ?? [],
         },
         outDir: buildOutDir,
         reportCompressedSize: true,

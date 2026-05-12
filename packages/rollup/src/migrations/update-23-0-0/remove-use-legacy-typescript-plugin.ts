@@ -3,6 +3,7 @@ import {
   getProjects,
   readNxJson,
   readProjectConfiguration,
+  removeDependenciesFromPackageJson,
   Tree,
   updateNxJson,
   updateProjectConfiguration,
@@ -110,6 +111,10 @@ export default async function (tree: Tree) {
       updateNxJson(tree, nxJson);
     }
   }
+
+  // Strip orphan devDep — rollup-plugin-typescript2 is only needed when
+  // useLegacyTypescriptPlugin is active; after migration it's dead weight.
+  removeDependenciesFromPackageJson(tree, [], ['rollup-plugin-typescript2']);
 
   await formatFiles(tree);
 }
