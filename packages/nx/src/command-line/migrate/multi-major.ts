@@ -1,5 +1,5 @@
 import { prompt } from 'enquirer';
-import { gt, lt, major, valid } from 'semver';
+import { gt, lt, major, minor, valid } from 'semver';
 import { isCI } from '../../utils/is-ci';
 import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import { output } from '../../utils/output';
@@ -64,16 +64,20 @@ async function promptMultiMajorMigration(args: {
   latestInNext: string | null;
 }): Promise<string> {
   const choices: { name: string; message: string }[] = [];
+  let recommendedMarked = false;
   if (args.latestInCurrent) {
     choices.push({
       name: args.latestInCurrent,
-      message: `Migrate to ${args.targetPackage}@${args.latestInCurrent} (latest in current major)`,
+      message: `Migrate to ${args.targetPackage}@${args.latestInCurrent} (latest in current major) [recommended]`,
     });
+    recommendedMarked = true;
   }
   if (args.latestInNext) {
     choices.push({
       name: args.latestInNext,
-      message: `Migrate to ${args.targetPackage}@${args.latestInNext} (next major)`,
+      message: `Migrate to ${args.targetPackage}@${args.latestInNext} (next major)${
+        recommendedMarked ? '' : ' [recommended]'
+      }`,
     });
   }
   choices.push({
@@ -144,8 +148,13 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
       resolveLatestStableInMajor(targetPackage, installedMajor),
       resolveLatestStableInMajor(targetPackage, installedMajor + 1),
     ]);
+    // Only suggest the current-major latest when there's at least a minor
+    // delta — a same-minor patch bump isn't a meaningful "step" in stepwise
+    // migration framing.
     const showCurrent =
-      latestInCurrent && gt(latestInCurrent, installed)
+      latestInCurrent &&
+      gt(latestInCurrent, installed) &&
+      minor(latestInCurrent) > minor(installed)
         ? latestInCurrent
         : null;
     if (showCurrent || latestInNext) {

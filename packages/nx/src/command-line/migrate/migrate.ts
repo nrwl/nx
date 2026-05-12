@@ -908,12 +908,21 @@ export async function resolveMode(
     return 'all';
   }
   const choices: { name: string; message: string }[] = [
-    { name: 'first-party', message: 'First-party only' },
+    {
+      name: 'first-party',
+      message: 'First-party only (Nx and its official packages)',
+    },
   ];
   if (!context.hasFrom && !context.hasExcludeAppliedMigrations) {
-    choices.push({ name: 'third-party', message: 'Third-party only' });
+    choices.push({
+      name: 'third-party',
+      message: 'Third-party only (deps managed by Nx)',
+    });
   }
-  choices.push({ name: 'all', message: 'All' });
+  choices.push({
+    name: 'all',
+    message: 'All (first-party and third-party)',
+  });
   const { mode: selected } = await prompt<{
     mode: 'first-party' | 'third-party' | 'all';
   }>({

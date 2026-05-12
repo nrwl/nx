@@ -3037,6 +3037,26 @@ describe('Migration', () => {
       expect(choices.map((c) => c.name)).toEqual(['22.5.3', '23.1.0']);
     });
 
+    it('should not include the current-major option when installed is on the latest minor of the current major but behind on patch', async () => {
+      setTty(true);
+      mockGetInstalledNxVersion.mockReturnValue('21.5.0');
+      mockRegistry({
+        latest: '23.1.0',
+        '21': '21.5.3',
+        '22': '22.5.3',
+      });
+      mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
+
+      await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+      });
+
+      const promptArgs = mockPrompt.mock.calls[0][0];
+      const choices = promptArgs.choices as { name: string }[];
+      expect(choices.map((c) => c.name)).toEqual(['22.5.3', '23.1.0']);
+    });
+
     it('should prompt (not warn) when target was explicitly typed as numeric semver', async () => {
       setTty(true);
       mockRegistry({
