@@ -194,10 +194,15 @@ impl WatchPipeline {
     ) -> std::result::Result<(), notify::Error> {
         use crate::native::walker::nx_walker_sync;
 
+        let debug = std::env::var("NX_DAEMON_DEBUG_WATCHER").as_deref() == Ok("1");
+        if debug {
+            eprintln!("[debug-watcher] register_and_backfill_new_dirs dirs={dirs:?}");
+        }
         debug!(?dirs, "registering watches for new directories");
         register_watches(&mut self.watcher, dirs)?;
 
         let mut nested_dirs: HashSet<PathBuf> = HashSet::new();
+        let mut backfilled: Vec<PathBuf> = Vec::new();
         for dir in dirs {
             for rel_path in nx_walker_sync(dir, None) {
                 let full_path = dir.join(&rel_path);
@@ -207,13 +212,26 @@ impl WatchPipeline {
                     let path = full_path
                         .strip_prefix(&self.origin_path)
                         .map(Path::to_path_buf)
-                        .unwrap_or(full_path);
+                        .unwrap_or(full_path.clone());
+                    if debug {
+                        backfilled.push(path.clone());
+                    }
                     self.merge_event(WatchEventInternal {
                         path,
                         r#type: EventType::create,
                     });
                 }
             }
+        }
+
+        if debug {
+            eprintln!(
+                "[debug-watcher] backfilled {} files, {} nested dirs: files={:?} nested={:?}",
+                backfilled.len(),
+                nested_dirs.len(),
+                backfilled,
+                nested_dirs
+            );
         }
 
         register_watches(&mut self.watcher, &nested_dirs)

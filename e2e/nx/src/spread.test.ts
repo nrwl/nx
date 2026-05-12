@@ -3,10 +3,18 @@ import {
   newProject,
   readJson,
   runCLI,
+  tmpProjPath,
   uniq,
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+// Diagnostic capture for the daemon log. Enables `[debug-watcher]`
+// lines in the daemon log; the afterEach hook prints the log so CI
+// captures it as part of the test output.
+process.env.NX_DAEMON_DEBUG_WATCHER = '1';
 
 describe('Spread Token Merging', () => {
   let proj: string;
@@ -22,6 +30,35 @@ describe('Spread Token Merging', () => {
     existingNxJson = readJson('nx.json');
   });
   afterEach(() => {
+    // Print the daemon log into the test's stdout BEFORE reset (which
+    // stops the daemon and may rotate the file). CI captures stdout
+    // per test so the [debug-watcher] lines end up alongside the
+    // failure assertion in the build output.
+    try {
+      const daemonLog = join(
+        tmpProjPath(),
+        '.nx',
+        'workspace-data',
+        'd',
+        'daemon.log'
+      );
+      if (existsSync(daemonLog)) {
+        const contents = readFileSync(daemonLog, 'utf-8');
+        // eslint-disable-next-line no-console
+        console.log(
+          `\n========== daemon.log for "${
+            expect.getState().currentTestName ?? 'unknown'
+          }" ==========\n${contents}\n========== end daemon.log ==========\n`
+        );
+      } else {
+        // eslint-disable-next-line no-console
+        console.log(`[spread-debug] no daemon log at ${daemonLog}`);
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.log(`[spread-debug] failed to read daemon log: ${e}`);
+    }
+
     updateFile('nx.json', JSON.stringify(existingNxJson, null, 2));
     // Reset daemon cache so the next test does not see stale plugin-inferred
     // project graph data.  The PR enabling NX_DAEMON=true in runCLI means the
