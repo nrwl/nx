@@ -149,7 +149,9 @@ module.exports = { plugins: [new NxAppWebpackPlugin()] };
 
     expect(tree.read('apps/my-app/webpack.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const { NxTsconfigPathsWebpackPlugin: Plugin } = require('@nx/webpack/tsconfig-paths-plugin');
+      "const {
+        NxTsconfigPathsWebpackPlugin: Plugin,
+      } = require('@nx/webpack/tsconfig-paths-plugin');
       const { NxAppWebpackPlugin } = require('@nx/webpack');
       "
     `);
