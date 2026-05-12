@@ -25,6 +25,16 @@ const IDLE_WINDOW: Duration = Duration::from_millis(100);
 /// Starvation cap from the start of a burst — flush even if events keep
 /// arriving faster than IDLE_WINDOW.
 const MAX_WAIT: Duration = Duration::from_millis(500);
+/// How long the force-flush handler waits for an in-flight notify-thread
+/// send to land before draining and snapshotting. inotify and
+/// ReadDirectoryChangesW forward in microseconds; FSEvents dispatches
+/// callbacks via a Core Foundation runloop with 5–50ms+ jitter, so macOS
+/// needs a longer wait or `force_flush_pending` snapshots a stale
+/// accumulator after a write.
+#[cfg(target_os = "macos")]
+const FORCE_FLUSH_INFLIGHT_WAIT: Duration = Duration::from_millis(50);
+#[cfg(not(target_os = "macos"))]
+const FORCE_FLUSH_INFLIGHT_WAIT: Duration = Duration::from_millis(5);
 
 #[cfg(not(target_os = "macos"))]
 fn build_ignore_glob_set() -> Arc<NxGlobSet> {
@@ -298,10 +308,7 @@ impl WatchPipeline {
 
                         // Wait briefly for notify-crate sends that are
                         // mid-flight — a bare try_recv would miss them.
-                        match self
-                            .notify_rx
-                            .recv_timeout(Duration::from_millis(5))
-                        {
+                        match self.notify_rx.recv_timeout(FORCE_FLUSH_INFLIGHT_WAIT) {
                             Ok(event) => {
                                 if let Err(msg) = self.ingest_event(event) {
                                     fatal = Some(msg);
