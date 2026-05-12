@@ -90,11 +90,11 @@ function withMigrationOptions(yargs: Argv) {
       type: 'string',
       choices: ['first-party', 'third-party', 'all'],
     })
-    .option('acceptMultiMajorUpdate', {
+    .option('multiMajorMode', {
       describe:
-        'Skip the multi-major migration prompt/warning and migrate directly to the target version even when it crosses more than one major boundary. The recommended process is to update one major version at a time. Equivalent env var: NX_ACCEPT_MULTI_MAJOR_UPDATE=true.',
-      type: 'boolean',
-      default: false,
+        "Skip the multi-major migration prompt/warning and pick how to handle the jump. 'direct' migrates straight to the requested target. 'gradual' migrates to the smallest recommended step (re-run `nx migrate` to continue toward the original target). Equivalent env var: NX_MULTI_MAJOR_MODE=direct|gradual.",
+      type: 'string',
+      choices: ['direct', 'gradual'],
     })
     .check(
       ({

@@ -13,7 +13,9 @@ import {
 
 const STEPWISE_DOC_URL =
   'https://nx.dev/docs/guides/tips-n-tricks/advanced-update#one-major-version-at-a-time-small-steps';
-const ACCEPT_MULTI_MAJOR_UPDATE_ENV = 'NX_ACCEPT_MULTI_MAJOR_UPDATE';
+const MULTI_MAJOR_MODE_ENV = 'NX_MULTI_MAJOR_MODE';
+
+export type MultiMajorMode = 'direct' | 'gradual';
 
 // Caret-major (`^X.0.0`) excludes prereleases per semver, so
 // `resolvePackageVersionUsingRegistry` returns the highest stable in major X.
@@ -49,7 +51,20 @@ function warnMultiMajorMigration(
     title: multiMajorHeader(targetPackage, installed, target),
     bodyLines: [
       ...multiMajorBodyLines,
-      `Pass --accept-multi-major-update or set ${ACCEPT_MULTI_MAJOR_UPDATE_ENV}=true to silence this warning.`,
+      `Pass --multi-major-mode=direct (or =gradual) or set ${MULTI_MAJOR_MODE_ENV} to silence this warning.`,
+    ],
+  });
+}
+
+function logGradualStep(
+  targetPackage: string,
+  step: string,
+  target: string
+): void {
+  output.log({
+    title: `Migrating to ${targetPackage}@${step} (one step toward ${targetPackage}@${target}).`,
+    bodyLines: [
+      `Re-run \`nx migrate\` after this completes to continue toward ${targetPackage}@${target}.`,
     ],
   });
 }
@@ -97,25 +112,32 @@ async function promptMultiMajorMigration(args: {
   return chosen;
 }
 
-// Flag wins over env var; both default to off.
-function isMultiMajorUpdateAccepted(options: {
-  acceptMultiMajorUpdate?: boolean;
-}): boolean {
-  if (options.acceptMultiMajorUpdate === true) return true;
-  const env = process.env[ACCEPT_MULTI_MAJOR_UPDATE_ENV];
-  return env === 'true' || env === '1';
+// Flag wins over env var; only the two literal values are honoured.
+function resolveMultiMajorMode(options: {
+  multiMajorMode?: MultiMajorMode;
+}): MultiMajorMode | undefined {
+  if (
+    options.multiMajorMode === 'direct' ||
+    options.multiMajorMode === 'gradual'
+  ) {
+    return options.multiMajorMode;
+  }
+  const env = process.env[MULTI_MAJOR_MODE_ENV];
+  if (env === 'direct' || env === 'gradual') return env;
+  return undefined;
 }
 
 export async function maybePromptOrWarnMultiMajorMigration(args: {
   mode: 'first-party' | 'third-party' | 'all';
-  options: { acceptMultiMajorUpdate?: boolean };
+  options: { multiMajorMode?: MultiMajorMode };
   targetPackage: string;
   targetVersion: string;
 }): Promise<string> {
   const { mode, options, targetPackage } = args;
   let { targetVersion } = args;
   if (mode === 'third-party') return targetVersion;
-  if (isMultiMajorUpdateAccepted(options)) return targetVersion;
+  const multiMajorMode = resolveMultiMajorMode(options);
+  if (multiMajorMode === 'direct') return targetVersion;
   if (!isNxEquivalentTarget(targetPackage, targetVersion)) return targetVersion;
   // Bare-package-name positionals (e.g. `nx migrate nx`, `nx migrate
   // @nx/workspace`) leave `targetVersion` as the literal `'latest'` because
@@ -143,29 +165,46 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
   if (major(targetVersion) - installedMajor < 2) return targetVersion;
 
   const interactive = !!process.stdin.isTTY && !isCI();
-  if (interactive) {
-    const [latestInCurrent, latestInNext] = await Promise.all([
-      resolveLatestStableInMajor(targetPackage, installedMajor),
-      resolveLatestStableInMajor(targetPackage, installedMajor + 1),
-    ]);
-    // Only suggest the current-major latest when there's at least a minor
-    // delta — a same-minor patch bump isn't a meaningful "step" in stepwise
-    // migration framing.
-    const showCurrent =
-      latestInCurrent &&
-      gt(latestInCurrent, installed) &&
-      minor(latestInCurrent) > minor(installed)
-        ? latestInCurrent
-        : null;
-    if (showCurrent || latestInNext) {
-      return promptMultiMajorMigration({
-        targetPackage,
-        installed,
-        target: targetVersion,
-        latestInCurrent: showCurrent,
-        latestInNext,
-      });
+  // Non-TTY without gradual opt-in stays on the warn-only path; avoid the
+  // registry round-trip used to resolve stepwise options.
+  if (!interactive && multiMajorMode !== 'gradual') {
+    warnMultiMajorMigration(targetPackage, installed, targetVersion);
+    return targetVersion;
+  }
+
+  const [latestInCurrent, latestInNext] = await Promise.all([
+    resolveLatestStableInMajor(targetPackage, installedMajor),
+    resolveLatestStableInMajor(targetPackage, installedMajor + 1),
+  ]);
+  // Only suggest the current-major latest when there's at least a minor
+  // delta — a same-minor patch bump isn't a meaningful "step" in stepwise
+  // migration framing.
+  const showCurrent =
+    latestInCurrent &&
+    gt(latestInCurrent, installed) &&
+    minor(latestInCurrent) > minor(installed)
+      ? latestInCurrent
+      : null;
+
+  if (multiMajorMode === 'gradual') {
+    const step = showCurrent ?? latestInNext;
+    if (step) {
+      logGradualStep(targetPackage, step, targetVersion);
+      return step;
     }
+    // No stepwise option resolved → the requested target is effectively the
+    // stepwise pick. Honour `gradual` silently.
+    return targetVersion;
+  }
+
+  if (interactive && (showCurrent || latestInNext)) {
+    return promptMultiMajorMigration({
+      targetPackage,
+      installed,
+      target: targetVersion,
+      latestInCurrent: showCurrent,
+      latestInNext,
+    });
   }
   warnMultiMajorMigration(targetPackage, installed, targetVersion);
   return targetVersion;
