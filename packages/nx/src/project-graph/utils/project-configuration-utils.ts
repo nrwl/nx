@@ -122,7 +122,6 @@ export async function createProjectConfigurationsWithPlugins(
     ...projectFiles.defaultPluginFiles,
   ];
   const specifiedCount = specifiedCreateNodesPlugins.length;
-
   spinner = new DelayedSpinner(getSpinnerText(), {
     progressTopic: ProgressTopics.GraphConstruction,
   });
