@@ -193,14 +193,17 @@ export async function getCachedSerializedProjectGraphPromise(
       !cachedSerializedProjectGraphPromise ||
       collectedUpdatedFiles.size > 0 ||
       collectedDeletedFiles.size > 0;
-    serverLogger.log(
-      `[watcher] decision: needsRecompute=${needsRecompute} ` +
-        `hasCache=${!!cachedSerializedProjectGraphPromise} ` +
-        `updated=${collectedUpdatedFiles.size}[${[...collectedUpdatedFiles.keys()].slice(0, 10).join(',')}] ` +
-        `deleted=${collectedDeletedFiles.size}[${[...collectedDeletedFiles.keys()].slice(0, 10).join(',')}]`
-    );
     if (needsRecompute) {
+      serverLogger.log(
+        cachedSerializedProjectGraphPromise
+          ? `Recomputing project graph because of ${collectedUpdatedFiles.size} updated and ${collectedDeletedFiles.size} deleted files.`
+          : 'No in-memory cached project graph found. Recomputing it...'
+      );
       kickOffRecompute();
+    } else {
+      serverLogger.log(
+        'Reusing in-memory cached project graph because no files changed.'
+      );
     }
 
     // A stale compute returns cachedSerializedProjectGraphPromise (the
