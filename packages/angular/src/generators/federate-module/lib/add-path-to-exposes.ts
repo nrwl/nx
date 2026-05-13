@@ -7,7 +7,7 @@ import type {
   Visitor,
 } from 'typescript';
 import { joinPathFragments, type Tree } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 
 let tsModule: typeof import('typescript');
 

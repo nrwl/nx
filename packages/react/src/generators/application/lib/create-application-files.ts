@@ -22,7 +22,7 @@ import {
   getNxCloudAppOnBoardingUrl,
 } from 'nx/src/nx-cloud/utilities/onboarding';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import {
   reactDomVersion,
   reactRouterIsBotVersion,

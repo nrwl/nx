@@ -1,5 +1,5 @@
 import { ProjectGraph } from '@nx/devkit';
-import { AssetGlob } from '@nx/js/src/utils/assets/assets';
+import { AssetGlob } from '@nx/js/internal';
 
 export interface AssetGlobPattern {
   glob: string;

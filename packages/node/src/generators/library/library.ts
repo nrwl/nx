@@ -23,8 +23,8 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
-import { addSwcConfig } from '@nx/js/src/utils/swc/add-swc-config';
-import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
+import { addSwcConfig } from '@nx/js/internal';
+import { addSwcDependencies } from '@nx/js/internal';
 import { join } from 'path';
 import { tslibVersion, typesNodeVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
@@ -33,8 +33,8 @@ import {
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
   shouldConfigureTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+} from '@nx/js/internal';
+import { sortPackageJsonFields } from '@nx/js/internal';
 
 export interface NormalizedSchema extends Schema {
   fileName: string;

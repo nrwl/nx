@@ -34,8 +34,8 @@ import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+} from '@nx/js/internal';
+import { sortPackageJsonFields } from '@nx/js/internal';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { addRollupBuildTarget } from '@nx/react/src/generators/library/lib/add-rollup-build-target';
 import { relative } from 'path';
@@ -44,7 +44,7 @@ import {
   addReleaseConfigForNonTsSolution,
   addReleaseConfigForTsSolution,
   releaseTasks,
-} from '@nx/js/src/generators/library/utils/add-release-config';
+} from '@nx/js/internal';
 
 export async function reactNativeLibraryGenerator(
   host: Tree,

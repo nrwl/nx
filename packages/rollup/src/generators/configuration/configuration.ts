@@ -17,13 +17,13 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { getUpdatedPackageJsonContent, readTsConfig } from '@nx/js';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { getImportPath } from '@nx/js/internal';
+import { ensureTypescript } from '@nx/js/internal';
 import {
   getDefinedCustomConditionName,
   isUsingTsSolutionSetup,
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+} from '@nx/js/internal';
 import { dirname, join, relative } from 'node:path/posix';
 import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
 import type { PackageJson } from 'nx/src/utils/package-json';

@@ -1,6 +1,6 @@
 import { workspaceRoot } from '@nx/devkit';
 import { loadConfigFile } from '@nx/devkit/internal';
-import { registerTsProject } from '@nx/js/src/internal';
+import { registerTsProject } from '@nx/js/internal';
 import type { TSESLint } from '@typescript-eslint/utils';
 import { existsSync } from 'fs';
 import { dirname, isAbsolute, join, normalize, resolve, sep } from 'path';

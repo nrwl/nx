@@ -1,4 +1,4 @@
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 import type * as ts from 'typescript';
 import { parseComponentPropsInfo } from './ast-utils';
 

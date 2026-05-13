@@ -9,7 +9,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { releaseTasks } from '@nx/js/src/generators/library/utils/add-release-config';
+import { releaseTasks } from '@nx/js/internal';
 import init from '../../generators/init/init';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { UnitTestRunner } from '../../utils/test-runners';

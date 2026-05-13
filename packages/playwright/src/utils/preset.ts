@@ -1,6 +1,6 @@
 import { workspaceRoot } from '@nx/devkit';
 import { getInstalledPackageVersion } from '@nx/devkit/internal';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { defineConfig } from '@playwright/test';
 import { lstatSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';

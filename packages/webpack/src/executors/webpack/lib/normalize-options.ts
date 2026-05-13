@@ -8,7 +8,7 @@ import type {
   NormalizedWebpackExecutorOptions,
   WebpackExecutorOptions,
 } from '../schema';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export function normalizeOptions(
   options: WebpackExecutorOptions,

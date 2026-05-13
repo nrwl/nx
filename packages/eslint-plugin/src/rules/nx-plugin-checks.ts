@@ -10,7 +10,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { getRootTsConfigPath } from '@nx/js';
-import { registerTsProject } from '@nx/js/src/internal';
+import { registerTsProject } from '@nx/js/internal';
 import * as path from 'path';
 import { valid } from 'semver';
 import { readProjectGraph } from '../utils/project-graph-utils';

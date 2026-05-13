@@ -10,7 +10,7 @@ import {
   updateProjectConfiguration,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { componentTestGenerator } from '@nx/react';
 import { isComponent } from '@nx/react/src/utils/ct-utils';
 import { relative } from 'path';

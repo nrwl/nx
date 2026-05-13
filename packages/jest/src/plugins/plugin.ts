@@ -38,7 +38,7 @@ import { getLockFileName } from '@nx/js';
 import {
   walkTsconfigExtendsChain,
   type RawTsconfigJsonCache,
-} from '@nx/js/src/internal';
+} from '@nx/js/internal';
 import { getInstalledJestMajorVersion } from '../utils/versions';
 
 const REPORTER_BUILTINS = new Set(['default', 'github-actions', 'summary']);

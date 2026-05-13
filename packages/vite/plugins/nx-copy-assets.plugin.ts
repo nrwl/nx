@@ -1,8 +1,8 @@
 import { join, relative } from 'node:path';
 import type { Plugin, ResolvedConfig } from 'vite';
 import { isDaemonEnabled, joinPathFragments, workspaceRoot } from '@nx/devkit';
-import { AssetGlob } from '@nx/js/src/utils/assets/assets';
-import { CopyAssetsHandler } from '@nx/js/src/utils/assets/copy-assets-handler';
+import { AssetGlob } from '@nx/js/internal';
+import { CopyAssetsHandler } from '@nx/js/internal';
 
 export function nxCopyAssetsPlugin(_assets: (string | AssetGlob)[]): Plugin {
   let config: ResolvedConfig;

@@ -10,7 +10,7 @@ import {
   writeJson,
   type Tree,
 } from '@nx/devkit';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { join } from 'node:path';
 import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
 import { getArtifactMetadataDirectory } from '../../utils/paths';

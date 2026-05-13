@@ -6,11 +6,8 @@ import {
   Tree,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import {
-  getProjectSourceRoot,
-  getProjectType,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { ensureTypescript } from '@nx/js/internal';
+import { getProjectSourceRoot, getProjectType } from '@nx/js/internal';
 import { minimatch } from 'minimatch';
 import { basename, join } from 'path';
 import {

@@ -3,13 +3,13 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
-import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
-import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nx/js/src/generators/library/schema';
+import { getNpmScope } from '@nx/js/internal';
+import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nx/js/internal';
 import type { LibraryGeneratorOptions, NormalizedOptions } from '../schema';
 import {
   isUsingTsSolutionSetup,
   shouldConfigureTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+} from '@nx/js/internal';
 
 export async function normalizeOptions(
   tree: Tree,

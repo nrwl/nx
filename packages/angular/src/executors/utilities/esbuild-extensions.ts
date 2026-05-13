@@ -1,5 +1,5 @@
 import type { buildApplication } from '@angular/build';
-import { registerTsProject } from '@nx/js/src/internal';
+import { registerTsProject } from '@nx/js/internal';
 import { loadModule } from './module-loader';
 
 // This is a workaround to make sure we use the same esbuild version as the

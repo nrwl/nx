@@ -1,7 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import { names, readProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { applicationGenerator } from '../application/application';
 import type { Schema as ApplicationOptions } from '../application/schema';

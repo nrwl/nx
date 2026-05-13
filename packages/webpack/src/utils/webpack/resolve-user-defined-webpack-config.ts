@@ -1,5 +1,5 @@
 import { clearRequireCache } from '@nx/devkit/internal';
-import { registerTsProject } from '@nx/js/src/internal';
+import { registerTsProject } from '@nx/js/internal';
 
 export function resolveUserDefinedWebpackConfig(
   path: string,

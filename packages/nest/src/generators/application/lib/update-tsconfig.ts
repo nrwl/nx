@@ -1,7 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import { joinPathFragments, updateJson } from '@nx/devkit';
 import type { NormalizedOptions } from '../schema';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export function updateTsConfig(tree: Tree, options: NormalizedOptions): void {
   updateJson(

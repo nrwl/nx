@@ -1,8 +1,8 @@
 import { isAbsolute, join, relative } from 'node:path';
 import type { Plugin } from 'rollup';
 import { isDaemonEnabled, workspaceRoot } from '@nx/devkit';
-import { AssetGlob } from '@nx/js/src/utils/assets/assets';
-import { CopyAssetsHandler } from '@nx/js/src/utils/assets/copy-assets-handler';
+import { AssetGlob } from '@nx/js/internal';
+import { CopyAssetsHandler } from '@nx/js/internal';
 
 export interface NxCopyAssetsPluginOptions {
   assets: (string | AssetGlob)[];

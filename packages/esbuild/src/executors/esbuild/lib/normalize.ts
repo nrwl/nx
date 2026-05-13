@@ -1,6 +1,6 @@
 import { joinPathFragments, logger, type ExecutorContext } from '@nx/devkit';
 import { readTsConfig } from '@nx/js';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import * as esbuild from 'esbuild';
 import * as fs from 'fs';
 import * as path from 'path';

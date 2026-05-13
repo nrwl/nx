@@ -1,6 +1,6 @@
 import type { buildEsbuildBrowser as buildEsbuildBrowserFn } from '@angular-devkit/build-angular/src/builders/browser-esbuild';
 import type { ExecutorContext } from '@nx/devkit';
-import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
+import type { DependentBuildableProjectNode } from '@nx/js/internal';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import { loadPlugins } from '../utilities/esbuild-extensions';

@@ -1,6 +1,6 @@
 import { NX_VERSION, normalizePath, workspaceRoot } from '@nx/devkit';
 import { getCatalogManager } from '@nx/devkit/internal';
-import { findNpmDependencies } from '@nx/js/src/utils/find-npm-dependencies';
+import { findNpmDependencies } from '@nx/js/internal';
 import { ESLintUtils } from '@typescript-eslint/utils';
 import { AST } from 'jsonc-eslint-parser';
 import { type JSONLiteral } from 'jsonc-eslint-parser/lib/parser/ast';

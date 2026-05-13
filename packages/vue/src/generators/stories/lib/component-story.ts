@@ -5,8 +5,8 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { ensureTypescript } from '@nx/js/internal';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { StorybookStoriesSchema } from '../stories';
 import {
   camelCase,

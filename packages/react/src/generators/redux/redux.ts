@@ -11,11 +11,8 @@ import {
   Tree,
 } from '@nx/devkit';
 import { getRootTsConfigPathInTree } from '@nx/js';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import {
-  getProjectSourceRoot,
-  getProjectType,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { ensureTypescript } from '@nx/js/internal';
+import { getProjectSourceRoot, getProjectType } from '@nx/js/internal';
 import * as path from 'path';
 import {
   addImport,

@@ -5,7 +5,7 @@ import {
   addProviderToAppConfig,
   addProviderToBootstrapApplication,
 } from '../../../utils/nx-devkit/ast-utils';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 import { insertImport } from '@nx/js';
 import { NormalizedNgRxRootStoreGeneratorOptions } from './normalize-options';
 

@@ -19,7 +19,7 @@ import { NxTsconfigPathsRspackPlugin } from './plugins/nx-tsconfig-paths-rspack-
 import { getTerserEcmaVersion } from './get-terser-ecma-version';
 import nodeExternals = require('webpack-node-externals');
 import { NormalizedNxAppRspackPluginOptions } from './models';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { getNonBuildableLibs } from './get-non-buildable-libs';
 
 const IGNORED_RSPACK_WARNINGS = [

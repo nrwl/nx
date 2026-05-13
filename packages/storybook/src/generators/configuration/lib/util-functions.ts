@@ -37,7 +37,7 @@ import {
   findRuntimeTsConfigName,
   getProjectType,
   isUsingTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+} from '@nx/js/internal';
 
 const DEFAULT_PORT = 4400;
 

@@ -8,11 +8,8 @@ import {
   Tree,
   updateJson,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import {
-  getProjectSourceRoot,
-  isUsingTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { ensureTypescript } from '@nx/js/internal';
+import { getProjectSourceRoot, isUsingTsSolutionSetup } from '@nx/js/internal';
 import {
   addRemoteRoute,
   addRemoteToConfig,

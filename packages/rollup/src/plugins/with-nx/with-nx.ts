@@ -7,18 +7,15 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { isAbsolute, resolve } from 'path';
-import { typeDefinitions } from '@nx/js/src/plugins/rollup/type-definitions';
+import { typeDefinitions } from '@nx/js/internal';
 import {
   calculateProjectBuildableDependencies,
   computeCompilerOptionsPaths,
   createTmpTsConfig,
   DependentBuildableProjectNode,
-} from '@nx/js/src/utils/buildable-libs-utils';
-import {
-  getProjectSourceRoot,
-  isUsingTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { resolvePathsBaseUrl } from '@nx/js/src/utils/typescript/ts-config';
+} from '@nx/js/internal';
+import { getProjectSourceRoot, isUsingTsSolutionSetup } from '@nx/js/internal';
+import { resolvePathsBaseUrl } from '@nx/js';
 import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import autoprefixer from 'autoprefixer';

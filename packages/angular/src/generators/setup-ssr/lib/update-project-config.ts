@@ -16,7 +16,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { upsertTargetDefault } from '@nx/devkit/internal';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import type { NormalizedGeneratorOptions } from '../schema';
 import {
   DEFAULT_BROWSER_DIR,

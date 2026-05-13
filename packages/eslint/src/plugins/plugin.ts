@@ -15,7 +15,7 @@ import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
 import {
   walkTsconfigExtendsChain,
   type RawTsconfigJsonCache,
-} from '@nx/js/src/internal';
+} from '@nx/js/internal';
 import type { ESLint as ESLintType } from 'eslint';
 import { existsSync } from 'node:fs';
 import { relative as nativeRelative, sep as nativeSep } from 'node:path';

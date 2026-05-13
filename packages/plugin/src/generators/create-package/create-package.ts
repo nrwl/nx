@@ -13,12 +13,9 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
-import { addTsLibDependencies } from '@nx/js/src/utils/typescript/add-tslib-dependencies';
-import {
-  getProjectSourceRoot,
-  isUsingTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { tsLibVersion } from '@nx/js/src/utils/versions';
+import { addTsLibDependencies } from '@nx/js';
+import { getProjectSourceRoot, isUsingTsSolutionSetup } from '@nx/js/internal';
+import { tsLibVersion } from '@nx/js/internal';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { nxVersion } from 'nx/src/utils/versions';
 import { join } from 'path';

@@ -13,7 +13,7 @@ import { getDevServerOptions } from './lib/get-dev-server-config';
 import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
-} from '@nx/js/src/utils/buildable-libs-utils';
+} from '@nx/js/internal';
 import { runWebpackDevServer } from '../../utils/run-webpack';
 import { resolveUserDefinedWebpackConfig } from '../../utils/webpack/resolve-user-defined-webpack-config';
 import { warnWebpackDevServerExecutorDeprecation } from '../../utils/deprecation';

@@ -3,7 +3,7 @@ import {
   getOutputsForTargetAndConfiguration,
   parseTargetString,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import type { WorkspaceLibrary } from './models';
 import { readTsPathMappings } from './typescript';
 

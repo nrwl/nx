@@ -12,7 +12,7 @@ import {
 } from '@nx/devkit';
 import { upsertTargetDefault } from '@nx/devkit/internal';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { JestPluginOptions } from '../../plugins/plugin';
 import {
   findRootJestPreset,

@@ -16,7 +16,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/internal';
 import { assertSupportedCypressVersion } from '../../utils/assert-supported-cypress-version';
 import { warnCypressExecutorGenerating } from '../../utils/deprecation';
 import {

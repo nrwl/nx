@@ -5,7 +5,7 @@ import {
   type ProjectGraph,
   ProjectGraphProjectNode,
 } from '@nx/devkit';
-import { registerTsProject } from '@nx/js/src/internal';
+import { registerTsProject } from '@nx/js/internal';
 import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import * as pc from 'picocolors';
 import { join } from 'path';

@@ -11,7 +11,7 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { join } from 'node:path';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { hasGenerator } from '../../utils/has-generator';

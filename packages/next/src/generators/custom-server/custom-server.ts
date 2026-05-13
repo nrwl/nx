@@ -13,7 +13,7 @@ import {
 import { CustomServerSchema } from './schema';
 import { join } from 'path';
 import { configureForSwc } from '../../utils/add-swc-to-custom-server';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export async function customServerGenerator(
   host: Tree,

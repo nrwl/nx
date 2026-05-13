@@ -8,7 +8,7 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { nextVersion } from '../../../utils/versions';
 import { warnNextExecutorGenerating } from '../../../utils/deprecation';
 import { reactDomVersion, reactVersion } from '@nx/react';

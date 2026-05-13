@@ -22,7 +22,7 @@ import {
 } from '../../utils/generator-utils';
 import rspackInitGenerator from '../init/init';
 import { ConfigurationSchema } from './schema';
-import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectType } from '@nx/js/internal';
 import { Framework } from '../init/schema';
 import { warnRspackExecutorGenerating } from '../../utils/deprecation';
 import { assertSupportedRspackVersion } from '../../utils/assert-supported-rspack-version';
@@ -37,7 +37,7 @@ function editTsConfig(
   framework: Framework,
   relativePathToRootTsConfig: string
 ) {
-  const shared = require('@nx/js/src/utils/typescript/create-ts-config');
+  const shared = require('@nx/js');
 
   if (framework === 'react') {
     const json = {
