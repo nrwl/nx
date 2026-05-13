@@ -165,29 +165,31 @@ function effectiveTargetForLookup(
     ? resolveCommandSyntacticSugar(defaultTarget, root)
     : undefined;
 
-  if (!resolvedSpecified && !resolvedDefault) return undefined;
-  if (!resolvedSpecified) {
+  if (resolvedSpecified && resolvedDefault) {
+    if (!isCompatibleTarget(resolvedSpecified, resolvedDefault)) {
+      return {
+        executor: resolvedDefault.executor,
+        command: resolvedDefault.command,
+      };
+    }
     return {
-      executor: resolvedDefault!.executor,
-      command: resolvedDefault!.command,
+      executor: resolvedDefault.executor ?? resolvedSpecified.executor,
+      command: resolvedDefault.command ?? resolvedSpecified.command,
     };
   }
-  if (!resolvedDefault) {
+  if (resolvedSpecified) {
     return {
       executor: resolvedSpecified.executor,
       command: resolvedSpecified.command,
     };
   }
-  if (!isCompatibleTarget(resolvedSpecified, resolvedDefault)) {
+  if (resolvedDefault) {
     return {
       executor: resolvedDefault.executor,
       command: resolvedDefault.command,
     };
   }
-  return {
-    executor: resolvedDefault.executor ?? resolvedSpecified.executor,
-    command: resolvedDefault.command ?? resolvedSpecified.command,
-  };
+  return undefined;
 }
 
 /**
