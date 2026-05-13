@@ -2,7 +2,6 @@ import Module, { createRequire } from 'node:module';
 import { readJsonFile } from './fileutils';
 import {
   normalizePackageGroup,
-  readModulePackageJson,
   type PackageGroup,
   type PackageJson,
 } from './package-json';
@@ -72,11 +71,15 @@ export function getInstalledNxPackageGroup(): Set<string> {
  * or `null` if it cannot be resolved from the workspace require paths.
  */
 export function getInstalledLegacyNrwlWorkspaceVersion(): string | null {
+  const path = resolvePackageJsonWithoutCachePollution(
+    '@nrwl/workspace',
+    getNxRequirePaths(workspaceRoot)
+  );
+  if (!path) {
+    return null;
+  }
   try {
-    return (
-      readModulePackageJson('@nrwl/workspace', getNxRequirePaths(workspaceRoot))
-        .packageJson.version ?? null
-    );
+    return readJsonFile<PackageJson>(path).version ?? null;
   } catch {
     return null;
   }

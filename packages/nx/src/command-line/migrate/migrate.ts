@@ -96,6 +96,7 @@ import { filterDowngradedUpdates } from './update-filters';
 import {
   DIST_TAGS,
   type DistTag,
+  isLegacyEra,
   isNxEquivalentTarget,
   normalizeVersion,
   normalizeVersionWithTagCheck,
@@ -168,6 +169,8 @@ function normalizeSlashes(packageName: string): string {
   return packageName.replace(/\\/g, '/');
 }
 
+export type MigrateMode = 'first-party' | 'third-party' | 'all';
+
 export interface MigratorOptions {
   packageJson?: PackageJson;
   nxInstallation?: NxJsonConfiguration['installation'];
@@ -189,7 +192,7 @@ export interface MigratorOptions {
    * - 'third-party' keeps only packages NOT in `firstPartyPackages`
    * - 'all' / undefined keeps all packages (no filtering)
    */
-  mode?: 'first-party' | 'third-party' | 'all';
+  mode?: MigrateMode;
   /** First-party package names used by `mode` for filtering. */
   firstPartyPackages?: ReadonlySet<string>;
 }
@@ -501,7 +504,7 @@ export class Migrator {
     }
 
     const packageGroup: ArrayPackageGroup =
-      packageName === '@nrwl/workspace' && lt(targetVersion, '14.0.0-beta.0')
+      packageName === '@nrwl/workspace' && isLegacyEra(targetVersion)
         ? LEGACY_NRWL_PACKAGE_GROUP
         : (migrationConfig.packageGroup ?? []);
 
@@ -884,20 +887,18 @@ function resolveFirstPartyPackages(
 export function resolveCanonicalNxPackage(
   targetVersion: string
 ): 'nx' | '@nrwl/workspace' {
-  return valid(targetVersion) && lt(targetVersion, '14.0.0-beta.0')
-    ? '@nrwl/workspace'
-    : 'nx';
+  return isLegacyEra(targetVersion) ? '@nrwl/workspace' : 'nx';
 }
 
 export async function resolveMode(
-  mode: 'first-party' | 'third-party' | 'all' | undefined,
+  mode: MigrateMode | undefined,
   targetPackage: string,
   targetVersion: string,
   context: { hasFrom: boolean; hasExcludeAppliedMigrations: boolean } = {
     hasFrom: false,
     hasExcludeAppliedMigrations: false,
   }
-): Promise<'first-party' | 'third-party' | 'all'> {
+): Promise<MigrateMode> {
   if (mode) {
     return mode;
   }
@@ -924,7 +925,7 @@ export async function resolveMode(
     message: 'All (first-party and third-party)',
   });
   const { mode: selected } = await prompt<{
-    mode: 'first-party' | 'third-party' | 'all';
+    mode: MigrateMode;
   }>({
     type: 'select',
     name: 'mode',
@@ -999,10 +1000,9 @@ async function parseTargetPackageAndVersion(args: string): Promise<{
     // on the registry
     const targetVersion = await normalizeVersionWithTagCheck('nx', args);
     const isDistTag = DIST_TAGS.includes(args as DistTag);
-    const targetPackage =
-      !isDistTag && lt(targetVersion, '14.0.0-beta.0')
-        ? '@nrwl/workspace'
-        : 'nx';
+    const targetPackage = isDistTag
+      ? 'nx'
+      : resolveCanonicalNxPackage(targetVersion);
     return { targetPackage, targetVersion };
   }
 
@@ -1017,7 +1017,7 @@ type GenerateMigrations = {
   to: { [k: string]: string };
   interactive?: boolean;
   excludeAppliedMigrations?: boolean;
-  mode: 'first-party' | 'third-party' | 'all';
+  mode: MigrateMode;
 };
 
 type RunMigrations = {
@@ -1036,6 +1036,11 @@ export async function parseMigrationsOptions(options: {
   if (options.mode && options.runMigrations) {
     throw new Error(
       `Error: '--mode' cannot be combined with '--run-migrations'.`
+    );
+  }
+  if (options.multiMajorMode && options.runMigrations) {
+    throw new Error(
+      `Error: '--multi-major-mode' cannot be combined with '--run-migrations'.`
     );
   }
 
@@ -1120,13 +1125,13 @@ async function resolveTargetAndMode(args: {
   positional: string | undefined;
   from: Record<string, string>;
   options: {
-    mode?: 'first-party' | 'third-party' | 'all';
+    mode?: MigrateMode;
     excludeAppliedMigrations?: boolean;
   };
 }): Promise<{
   targetPackage: string;
   targetVersion: string;
-  mode: 'first-party' | 'third-party' | 'all';
+  mode: MigrateMode;
   installedNxVersion: string | null | undefined;
 }> {
   const { positional, from, options } = args;
@@ -1181,8 +1186,7 @@ async function resolveTargetAndMode(args: {
   }
 
   if (options.mode && !isNxEquivalentTarget(targetPackage!, targetVersion!)) {
-    const isLegacy =
-      valid(targetVersion!) && lt(targetVersion!, '14.0.0-beta.0');
+    const isLegacy = isLegacyEra(targetVersion!);
     const validTargets = isLegacy
       ? `'@nrwl/workspace'`
       : `'nx' or '@nx/workspace'`;
@@ -1261,10 +1265,10 @@ function resolveInstalledCanonical(): {
 } | null {
   const installedNx = getInstalledNxVersion();
   if (installedNx) {
-    if (lt(installedNx, '14.0.0-beta.0')) {
-      return { canonical: '@nrwl/workspace', version: installedNx };
-    }
-    return { canonical: 'nx', version: installedNx };
+    return {
+      canonical: resolveCanonicalNxPackage(installedNx),
+      version: installedNx,
+    };
   }
   const installedLegacy = getInstalledLegacyNrwlWorkspaceVersion();
   if (installedLegacy) {
@@ -1901,8 +1905,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       // third-party filter must mirror that set or first-party `@nrwl/*`
       // plugins slip past it.
       const packageGroup =
-        sourcePackage === '@nrwl/workspace' &&
-        lt(opts.targetVersion, '14.0.0-beta.0')
+        sourcePackage === '@nrwl/workspace' && isLegacyEra(opts.targetVersion)
           ? LEGACY_NRWL_PACKAGE_GROUP
           : rootMetadata.packageGroup;
       firstPartyPackages = resolveFirstPartyPackages(

@@ -4,6 +4,15 @@ import { resolvePackageVersionUsingRegistry } from '../../utils/package-manager'
 export const DIST_TAGS = ['latest', 'next', 'canary'] as const;
 export type DistTag = (typeof DIST_TAGS)[number];
 
+const LEGACY_ERA_BOUNDARY = '14.0.0-beta.0';
+
+// Pre-14 (legacy) installs used `@nrwl/workspace` as the canonical Nx package.
+// Non-semver values (e.g. dist-tags or the literal `'latest'` sentinel before
+// tag resolution) are treated as modern era.
+export function isLegacyEra(targetVersion: string): boolean {
+  return valid(targetVersion) && lt(targetVersion, LEGACY_ERA_BOUNDARY);
+}
+
 export function normalizeVersion(version: string) {
   const [semver, ...prereleaseTagParts] = version.split('-');
   // Handle versions like 1.0.0-beta-next.2
@@ -55,9 +64,7 @@ export function isNxEquivalentTarget(
   targetPackage: string,
   targetVersion: string
 ): boolean {
-  // Non-semver values (e.g., the literal `'latest'` sentinel used during bare
-  // invocation before tag resolution, or in tests) are treated as modern era.
-  if (valid(targetVersion) && lt(targetVersion, '14.0.0-beta.0')) {
+  if (isLegacyEra(targetVersion)) {
     return targetPackage === '@nrwl/workspace';
   }
   return targetPackage === 'nx' || targetPackage === '@nx/workspace';

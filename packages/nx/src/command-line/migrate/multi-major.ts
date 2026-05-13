@@ -1,18 +1,21 @@
 import { prompt } from 'enquirer';
-import { gt, lt, major, minor, valid } from 'semver';
+import { gt, major, minor, valid } from 'semver';
 import { isCI } from '../../utils/is-ci';
 import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import { output } from '../../utils/output';
 import { resolvePackageVersionUsingRegistry } from '../../utils/package-manager';
+import type { MigrateMode } from './migrate';
 import {
   DIST_TAGS,
   type DistTag,
+  isLegacyEra,
   isNxEquivalentTarget,
   normalizeVersionWithTagCheck,
 } from './version-utils';
 
-const STEPWISE_DOC_URL =
+const INCREMENTAL_UPDATE_GUIDE_URL =
   'https://nx.dev/docs/guides/tips-n-tricks/advanced-update#one-major-version-at-a-time-small-steps';
+const MULTI_MAJOR_MODE_FLAG = '--multi-major-mode';
 const MULTI_MAJOR_MODE_ENV = 'NX_MULTI_MAJOR_MODE';
 
 export type MultiMajorMode = 'direct' | 'gradual';
@@ -39,7 +42,7 @@ const multiMajorHeader = (pkg: string, installed: string, target: string) =>
 
 const multiMajorBodyLines = [
   `The recommended process is to update one major version at a time, in small steps.`,
-  `See ${STEPWISE_DOC_URL}`,
+  `See ${INCREMENTAL_UPDATE_GUIDE_URL}`,
 ];
 
 function warnMultiMajorMigration(
@@ -51,7 +54,7 @@ function warnMultiMajorMigration(
     title: multiMajorHeader(targetPackage, installed, target),
     bodyLines: [
       ...multiMajorBodyLines,
-      `Pass --multi-major-mode=direct (or =gradual) or set ${MULTI_MAJOR_MODE_ENV} to silence this warning.`,
+      `Pass ${MULTI_MAJOR_MODE_FLAG}=direct (or =gradual) or set ${MULTI_MAJOR_MODE_ENV} to silence this warning.`,
     ],
   });
 }
@@ -66,6 +69,17 @@ function logGradualStep(
     bodyLines: [
       `Re-run \`nx migrate\` after this completes to continue toward ${targetPackage}@${target}.`,
     ],
+  });
+}
+
+function warnGradualUnavailable(
+  targetPackage: string,
+  target: string,
+  reason: string
+): void {
+  output.warn({
+    title: `Could not look up incremental migration options for ${MULTI_MAJOR_MODE_FLAG}=gradual. Proceeding directly to ${targetPackage}@${target}.`,
+    bodyLines: [reason],
   });
 }
 
@@ -128,7 +142,7 @@ function resolveMultiMajorMode(options: {
 }
 
 export async function maybePromptOrWarnMultiMajorMigration(args: {
-  mode: 'first-party' | 'third-party' | 'all';
+  mode: MigrateMode;
   options: { multiMajorMode?: MultiMajorMode };
   targetPackage: string;
   targetVersion: string;
@@ -151,22 +165,29 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
         targetVersion
       );
     } catch {
+      if (multiMajorMode === 'gradual') {
+        warnGradualUnavailable(
+          targetPackage,
+          targetVersion,
+          `Failed to resolve the '${targetVersion}' dist-tag against the registry.`
+        );
+      }
       return targetVersion;
     }
   }
-  if (!valid(targetVersion) || lt(targetVersion, '14.0.0-beta.0')) {
+  if (!valid(targetVersion) || isLegacyEra(targetVersion)) {
     return targetVersion;
   }
   const installed = getInstalledNxVersion();
   if (!installed || !valid(installed)) return targetVersion;
   // Legacy-era installs are out of scope for the multi-major check.
-  if (lt(installed, '14.0.0-beta.0')) return targetVersion;
+  if (isLegacyEra(installed)) return targetVersion;
   const installedMajor = major(installed);
   if (major(targetVersion) - installedMajor < 2) return targetVersion;
 
   const interactive = !!process.stdin.isTTY && !isCI();
   // Non-TTY without gradual opt-in stays on the warn-only path; avoid the
-  // registry round-trip used to resolve stepwise options.
+  // registry round-trip used to look up incremental migration options.
   if (!interactive && multiMajorMode !== 'gradual') {
     warnMultiMajorMigration(targetPackage, installed, targetVersion);
     return targetVersion;
@@ -177,8 +198,7 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
     resolveLatestStableInMajor(targetPackage, installedMajor + 1),
   ]);
   // Only suggest the current-major latest when there's at least a minor
-  // delta — a same-minor patch bump isn't a meaningful "step" in stepwise
-  // migration framing.
+  // delta — a same-minor patch bump isn't a meaningful incremental step.
   const showCurrent =
     latestInCurrent &&
     gt(latestInCurrent, installed) &&
@@ -192,8 +212,17 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
       logGradualStep(targetPackage, step, targetVersion);
       return step;
     }
-    // No stepwise option resolved → the requested target is effectively the
-    // stepwise pick. Honour `gradual` silently.
+    // Registry returned no eligible incremental version (or the lookup
+    // failed); without a step to land on, gradual silently degrades to direct.
+    // Surface that explicitly so the safety rail the user opted into isn't
+    // invisibly disabled.
+    warnGradualUnavailable(
+      targetPackage,
+      targetVersion,
+      `Could not find an eligible version in major ${installedMajor} or ${
+        installedMajor + 1
+      } (registry lookup returned no result or failed).`
+    );
     return targetVersion;
   }
 

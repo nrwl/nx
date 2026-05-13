@@ -86,7 +86,7 @@ function withMigrationOptions(yargs: Argv) {
     })
     .option('mode', {
       describe:
-        "Restrict which packages to migrate. Only applies when migrating Nx itself. 'first-party' processes only Nx and its plugins (the target package plus its nx.packageGroup); 'third-party' processes only the third-party dependencies referenced by Nx packageJsonUpdates entries, catching up on any updates that may have been skipped previously; 'all' processes everything. Defaults to 'all' (or prompts in an interactive terminal when targeting Nx).",
+        "Restrict which packages to migrate. Only applies when migrating Nx itself. 'first-party' processes only Nx and its plugins (the target package plus its nx.packageGroup); 'third-party' processes only the third-party dependencies referenced by Nx packageJsonUpdates entries, catching up on any updates that may have been skipped previously; 'all' processes everything. When targeting Nx in an interactive terminal, prompts for the value if not provided; otherwise defaults to 'all'.",
       type: 'string',
       choices: ['first-party', 'third-party', 'all'],
     })
