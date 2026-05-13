@@ -13,12 +13,13 @@ import { createNodesV2 } from '../../../plugin';
 import {
   lessLoaderVersion,
   reactRefreshVersion,
-  rspackCoreVersion,
-  rspackDevServerVersion,
-  rspackPluginReactRefreshVersion,
   sassEmbeddedVersion,
   sassLoaderVersion,
 } from '../../utils/versions';
+import {
+  getInstalledRspackMajorVersion,
+  getRspackVersionsForInstalledMajor,
+} from '../../utils/version-utils';
 import { InitGeneratorSchema } from './schema';
 
 export async function rspackInitGenerator(
@@ -89,12 +90,20 @@ export async function rspackInitGenerator(
 
   tasks.push(jsInitTask);
 
+  // Detect the installed @rspack/core major (throws on unsupported versions)
+  // so we honor the workspace's existing pin rather than overwriting it.
+  const installedRspackMajor = getInstalledRspackMajorVersion(tree);
+  const rspackVersions = getRspackVersionsForInstalledMajor(tree);
+  const keepExistingVersions =
+    installedRspackMajor !== undefined ? true : schema.keepExistingVersions;
+
   const devDependencies = {
-    '@rspack/core': rspackCoreVersion,
-    '@rspack/cli': rspackCoreVersion,
+    '@rspack/core': rspackVersions.rspackCoreVersion,
+    '@rspack/cli': rspackVersions.rspackCoreVersion,
     ...(!schema.framework || schema.framework === 'react'
       ? {
-          '@rspack/plugin-react-refresh': rspackPluginReactRefreshVersion,
+          '@rspack/plugin-react-refresh':
+            rspackVersions.rspackPluginReactRefreshVersion,
           'react-refresh': reactRefreshVersion,
         }
       : {}),
@@ -115,7 +124,8 @@ export async function rspackInitGenerator(
   }
 
   if (schema.framework !== 'none' || schema.devServer) {
-    devDependencies['@rspack/dev-server'] = rspackDevServerVersion;
+    devDependencies['@rspack/dev-server'] =
+      rspackVersions.rspackDevServerVersion;
   }
 
   const installTask = addDependenciesToPackageJson(
@@ -123,7 +133,7 @@ export async function rspackInitGenerator(
     {},
     devDependencies,
     undefined,
-    schema.keepExistingVersions
+    keepExistingVersions
   );
   tasks.push(installTask);
 
