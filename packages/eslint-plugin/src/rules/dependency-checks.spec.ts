@@ -200,7 +200,15 @@ describe('Dependency checks (eslint)', () => {
             data: {
               root: 'libs/liba',
               targets: {
-                build: {},
+                build: {
+                  // Simulate the graph construction merging targetDefaults into target data.
+                  // The PR removed targetDefaults lookup from getTargetInputs, relying on
+                  // graph construction to pre-merge them before the hasher runs.
+                  inputs: [
+                    '{projectRoot}/**/*',
+                    '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
+                  ],
+                },
               },
             },
           },
