@@ -561,7 +561,7 @@
   },
   {
     "name": "@anarchitects/nx-typeorm",
-    "description": "Nx plugin for TypeORM integration in Nx backend applications and libraries. ",
+    "description": "Nx plugin for TypeORM integration in Nx backend applications and libraries.",
     "url": "https://github.com/anarchitects/anarchitecture-plugins/tree/main/packages/typeorm"
   }
 ]
