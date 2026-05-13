@@ -19,6 +19,7 @@ export default async function renameRollupOptionsToRolldownOptions(tree: Tree) {
     }
 
     const contents = tree.read(filePath, 'utf-8');
+    if (!contents) return;
     if (!contents.includes('rollupOptions')) {
       return;
     }
