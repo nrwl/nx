@@ -8,11 +8,21 @@ import {
 
 const RSPACK_CORE_PACKAGE = '@rspack/core';
 
-function throwUnsupportedRspackVersion(installedMajor: number): never {
+function throwBelowFloor(installedMajor: number): never {
   throw new Error(
-    `@nx/rspack requires ${RSPACK_CORE_PACKAGE}@>=1.0.0, but found ` +
-      `version ${installedMajor}.x installed. Please upgrade ${RSPACK_CORE_PACKAGE} ` +
-      `to a supported major (1.x or 2.x).`
+    `@nx/rspack requires ${RSPACK_CORE_PACKAGE}@>=1.0.0, but found version ` +
+      `${installedMajor}.x installed. Please upgrade ${RSPACK_CORE_PACKAGE} ` +
+      `to a supported major (1.x).`
+  );
+}
+
+function throwAboveWindow(installedMajor: number): never {
+  throw new Error(
+    `@nx/rspack does not yet support ${RSPACK_CORE_PACKAGE}@${installedMajor}.x. ` +
+      `${RSPACK_CORE_PACKAGE}@2 ships as pure ESM and the plugin needs ` +
+      `architectural work before it can load it; tracked in NXC-4460 ` +
+      `(https://linear.app/nxdev/issue/NXC-4460). Pin ${RSPACK_CORE_PACKAGE}@^1 ` +
+      `until that work lands.`
   );
 }
 
@@ -23,8 +33,8 @@ function cleanVersion(version: string): string | undefined {
 /**
  * Returns the installed @rspack/core major version from the workspace's
  * package.json, or `undefined` when @rspack/core is not yet installed
- * (fresh-install path). Throws when an unsupported (below-floor) version
- * is detected.
+ * (fresh-install path). Throws when an unsupported version is detected
+ * (below floor or above window).
  */
 export function getInstalledRspackMajorVersion(
   tree: Tree
@@ -41,46 +51,42 @@ export function getInstalledRspackMajorVersion(
 
   const installedMajor = major(cleaned);
   if (installedMajor < 1) {
-    throwUnsupportedRspackVersion(installedMajor);
+    throwBelowFloor(installedMajor);
   }
-  if (installedMajor === 1 || installedMajor === 2) {
-    return installedMajor;
+  if (installedMajor > 1) {
+    throwAboveWindow(installedMajor);
   }
-  // Unknown future major — fall through to `undefined` so callers treat it
-  // as "no map entry; use latest". A follow-up adds the new major to the map.
-  return undefined;
+  return 1;
 }
 
 /**
  * Returns the installed @rspack/core major version resolved at runtime via
  * `require.resolve`. For use in executors and runtime code where no Tree is
  * available. Returns `null` when @rspack/core can't be resolved. Throws when
- * an unsupported (below-floor) version is detected.
+ * an unsupported version is detected.
  */
 export function getInstalledRspackVersionRuntime(): SupportedRspackMajorVersion | null {
+  let packageJsonPath: string;
   try {
-    const packageJsonPath = require.resolve(
-      `${RSPACK_CORE_PACKAGE}/package.json`,
-      {
-        paths: [process.cwd()],
-      }
-    );
-    const { version } = require(packageJsonPath) as { version: string };
-    const cleaned = cleanVersion(version);
-    if (!cleaned) {
-      return null;
-    }
-    const installedMajor = major(cleaned);
-    if (installedMajor < 1) {
-      throwUnsupportedRspackVersion(installedMajor);
-    }
-    if (installedMajor === 1 || installedMajor === 2) {
-      return installedMajor;
-    }
-    return null;
+    packageJsonPath = require.resolve(`${RSPACK_CORE_PACKAGE}/package.json`, {
+      paths: [process.cwd()],
+    });
   } catch {
     return null;
   }
+  const { version } = require(packageJsonPath) as { version: string };
+  const cleaned = cleanVersion(version);
+  if (!cleaned) {
+    return null;
+  }
+  const installedMajor = major(cleaned);
+  if (installedMajor < 1) {
+    throwBelowFloor(installedMajor);
+  }
+  if (installedMajor > 1) {
+    throwAboveWindow(installedMajor);
+  }
+  return 1;
 }
 
 /**
