@@ -11,16 +11,6 @@ import {
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-// Diagnostic capture for the daemon log. Enables `[debug-watcher]`
-// lines in the daemon log; the afterEach hook prints the log so CI
-// captures it as part of the test output.
-process.env.NX_DAEMON_DEBUG_WATCHER = '1';
-
-// Cache-bust marker — bump to force Nx Cloud to re-run the e2e instead
-// of replaying a cached pass. We need real runs to capture the
-// [debug-watcher] diagnostic output when the flake reproduces.
-// bust: 2026-05-12-1
-
 describe('Spread Token Merging', () => {
   let proj: string;
   beforeAll(
@@ -37,8 +27,8 @@ describe('Spread Token Merging', () => {
   afterEach(() => {
     // Print the daemon log into the test's stdout BEFORE reset (which
     // stops the daemon and may rotate the file). CI captures stdout
-    // per test so the [debug-watcher] lines end up alongside the
-    // failure assertion in the build output.
+    // per test so the [watcher] lines end up alongside the failure
+    // assertion in the build output.
     try {
       const daemonLog = join(
         tmpProjPath(),
