@@ -8,7 +8,7 @@ use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use notify::{RecursiveMode, Watcher as NotifyWatcher};
 use parking_lot::Mutex;
-use tracing::{Level, debug, enabled, trace};
+use tracing::{debug, trace};
 
 #[cfg(not(target_os = "macos"))]
 use crate::native::glob::{NxGlobSet, build_glob_set};
@@ -263,7 +263,7 @@ impl WatchPipeline {
 
         // Skip Access — they're reads, fire in floods, and their mtime is
         // the prior write, making age_ms misleading.
-        if enabled!(Level::TRACE) && !matches!(raw.kind(), notify::EventKind::Access(_)) {
+        if !matches!(raw.kind(), notify::EventKind::Access(_)) {
             for (path, metadata) in raw.paths() {
                 trace!(
                     ?path,
@@ -338,36 +338,21 @@ impl WatchPipeline {
                         }
                         let mut fatal: Option<String> = None;
 
-                        debug!(replies = replies.len(), "force-flush START");
                         let handler_started_at = Instant::now();
 
                         // Wait briefly for notify-crate sends that are
                         // mid-flight — a bare try_recv would miss them.
-                        let recv_label;
                         match self.notify_rx.recv_timeout(FORCE_FLUSH_GRACE) {
                             Ok(event) => {
-                                recv_label = "Ok(event)";
                                 if let Err(msg) = self.ingest_event(event) {
                                     fatal = Some(msg);
                                 }
                             }
-                            Err(crossbeam_channel::RecvTimeoutError::Timeout) => {
-                                recv_label = "Timeout";
-                            }
-                            Err(
-                                crossbeam_channel::RecvTimeoutError::Disconnected,
-                            ) => {
-                                recv_label = "Disconnected";
-                                fatal = Some(
-                                    "watcher channel disconnected".to_string(),
-                                );
+                            Err(crossbeam_channel::RecvTimeoutError::Timeout) => {}
+                            Err(crossbeam_channel::RecvTimeoutError::Disconnected) => {
+                                fatal = Some("watcher channel disconnected".to_string());
                             }
                         }
-                        debug!(
-                            result = recv_label,
-                            grace_ms = FORCE_FLUSH_GRACE.as_millis() as u64,
-                            "force-flush recv_timeout"
-                        );
 
                         if fatal.is_none() {
                             while let Ok(event) = self.notify_rx.try_recv() {
@@ -385,7 +370,7 @@ impl WatchPipeline {
                             "force-flush END"
                         );
                         for e in &watch_events {
-                            trace!("  [{:?}] {}", e.r#type, e.path);
+                            debug!("  [{:?}] {}", e.r#type, e.path);
                         }
                         let mut any_delivered = false;
                         for r in replies {
@@ -409,7 +394,7 @@ impl WatchPipeline {
                         let events = self.snapshot_events();
                         debug!(count = events.len(), "idle-window emitting events");
                         for e in &events {
-                            trace!("  [{:?}] {}", e.r#type, e.path);
+                            debug!("  [{:?}] {}", e.r#type, e.path);
                         }
                         callback(Ok(events));
                     }

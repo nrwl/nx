@@ -105,21 +105,34 @@ let cacheHasBeenPersisted = false;
  * (see spread.test.ts "middle plugin" flake).
  */
 function kickOffRecompute() {
-  const myPluginsHash = currentNxJsonPluginsHash();
+  let myPluginsHash: string | null = null;
+  try {
+    myPluginsHash = readNxJsonPluginsHash();
+  } catch (e) {
+    serverLogger.log(
+      `Failed to snapshot nx.json plugins for freshness gate; gate disabled this round: ${
+        e instanceof Error ? e.message : String(e)
+      }`
+    );
+  }
 
   let myPromise: Promise<SerializedProjectGraph>;
   myPromise = (async () => {
     const plugins = await getPluginsSeparated();
 
-    // Plugin set we just loaded may already be stale vs disk.
-    const stalePlugins = bailIfStale(myPluginsHash, myPromise);
-    if (stalePlugins) return stalePlugins;
+    if (myPluginsHash !== null) {
+      // Plugin set we just loaded may already be stale vs disk.
+      const stalePlugins = bailIfStale(myPluginsHash, myPromise);
+      if (stalePlugins) return stalePlugins;
+    }
 
     const result = await processFilesAndCreateAndSerializeProjectGraph(plugins);
 
-    // Compute may have run against plugins that are now stale.
-    const staleGraph = bailIfStale(myPluginsHash, myPromise);
-    if (staleGraph) return staleGraph;
+    if (myPluginsHash !== null) {
+      // Compute may have run against plugins that are now stale.
+      const staleGraph = bailIfStale(myPluginsHash, myPromise);
+      if (staleGraph) return staleGraph;
+    }
 
     if (
       cachedSerializedProjectGraphPromise === myPromise &&
@@ -139,22 +152,30 @@ function kickOffRecompute() {
 
 /**
  * Re-reads nx.json; returns the cached pointer (so awaiters chain to the
- * successor) if disk diverged from `currentPluginsHash`. Called at two points
- * in `kickOffRecompute` — after getPluginsSeparated to skip the expensive
+ * successor) if disk diverged from `expectedHash`. Called at two points in
+ * `kickOffRecompute` — after getPluginsSeparated to skip the expensive
  * compute when we already know we're stale, and after the compute to catch
  * a disk change that happened during it.
  */
 function bailIfStale(
-  currentPluginsHash: string | undefined,
+  expectedHash: string,
   myPromise: Promise<SerializedProjectGraph>
 ): Promise<SerializedProjectGraph> | null {
-  // Either hash being undefined means we couldn't read nx.json. Treat as
-  // "can't verify staleness" and proceed (matches pre-fix behavior). The
-  // alternative — bailing on a transient read failure — would discard a
-  // valid compute when there's no actual disk change.
-  const diskHash = currentNxJsonPluginsHash();
-  if (currentPluginsHash === undefined || diskHash === undefined) return null;
-  if (diskHash === currentPluginsHash) return null;
+  let diskHash: string;
+  try {
+    diskHash = readNxJsonPluginsHash();
+  } catch (e) {
+    // Transient read failure (e.g. mid-write rename). Can't verify
+    // staleness this round — proceed without bailing rather than throw
+    // away a compute that may well be correct.
+    serverLogger.log(
+      `Failed to re-read nx.json for freshness check; proceeding without bail: ${
+        e instanceof Error ? e.message : String(e)
+      }`
+    );
+    return null;
+  }
+  if (diskHash === expectedHash) return null;
   serverLogger.log(
     'Discarding stale recompute result (nx.json plugins changed mid-compute).'
   );
@@ -164,21 +185,8 @@ function bailIfStale(
   return cachedSerializedProjectGraphPromise;
 }
 
-function currentNxJsonPluginsHash(): string | undefined {
-  try {
-    const nxJson = readNxJson(workspaceRoot);
-    return hashObject(nxJson.plugins ?? []);
-  } catch (e) {
-    // Transient read failure (mid-write rename) — undefined disables the
-    // gate for this IIFE, matching pre-fix behavior. Log so persistent
-    // failures don't go silent.
-    serverLogger.log(
-      `Failed to read nx.json for freshness gate (disabling gate this round): ${
-        e instanceof Error ? e.message : String(e)
-      }`
-    );
-    return undefined;
-  }
+function readNxJsonPluginsHash(): string {
+  return hashObject(readNxJson(workspaceRoot).plugins ?? []);
 }
 
 export async function getCachedSerializedProjectGraphPromise(
