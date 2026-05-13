@@ -86,6 +86,11 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
   // the gate, cachedSerializedProjectGraphPromise was last-kickoff-wins
   // and could return a stale graph (see spread.test.ts middle-plugin
   // flake).
+  //
+  // Mocks getPluginsSeparated only to park the first IIFE between its
+  // synchronous hash snapshot and its commit — that gap is the window
+  // the bug lives in. The mock controls timing, not logic; the real
+  // gate + real currentNxJsonPluginsHash run.
   it('discards stale recompute when nx.json plugins change mid-compute', async () => {
     fs.createFilesSync({
       'nx.json': JSON.stringify({ plugins: ['./tools/plugin-a'] }),
@@ -96,8 +101,6 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
       const { setWorkspaceRoot } = require('../../utils/workspace-root');
       setWorkspaceRoot(fs.tempDir);
 
-      // Hold the first IIFE between its kickoff (sync hash snapshot) and
-      // the rest of its compute, so we can rewrite nx.json in the gap.
       let resolveFirstPlugins: () => void;
       const firstPluginsGate = new Promise<void>((resolve) => {
         resolveFirstPlugins = resolve;
@@ -130,8 +133,7 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
         getCachedSerializedProjectGraphPromise,
       } = require('./project-graph-incremental-recomputation');
 
-      // Synchronously: kick off compute #1. The snapshot of nx.json's
-      // plugins hash is captured before this call returns.
+      // Kick off compute #1 — snapshot captured synchronously here.
       scheduleProjectGraphRecomputation([], ['__trigger.txt'], []);
 
       // Rewrite nx.json so disk diverges from the snapshot. The IIFE is
@@ -141,9 +143,8 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
         JSON.stringify({ plugins: ['./tools/plugin-b'] })
       );
 
-      // Let the first IIFE proceed. It will compute, then hit the gate,
-      // see disk-hash != snapshot-hash, log the discard, and kick a
-      // successor that snapshots the new state.
+      // Let compute #1 proceed. It computes, hits the gate, sees disk
+      // hash != snapshot hash, logs the discard, and kicks a successor.
       resolveFirstPlugins!();
 
       await getCachedSerializedProjectGraphPromise();
