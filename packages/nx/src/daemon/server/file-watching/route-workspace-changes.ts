@@ -64,23 +64,24 @@ export function routeWorkspaceChanges(events: WatchEvent[]): void {
     }
   }
 
-  if (droppedDirs.length || droppedStatErrors.length) {
-    serverLogger.watcherLog(
-      `[watcher] route dropped: dirs=[${droppedDirs.join(', ')}] ` +
-        `stat-errors=[${droppedStatErrors.join('; ')}]`
-    );
-  }
-
   if (
     createdFilesToHash.length ||
     updatedFilesToHash.length ||
-    deletedFiles.length
+    deletedFiles.length ||
+    droppedDirs.length ||
+    droppedStatErrors.length
   ) {
     serverLogger.watcherLog(
       `File changes detected:\n` +
         `Created:\n${summarize(createdFilesToHash)}\n` +
         `Updated:\n${summarize(updatedFilesToHash)}\n` +
-        `Deleted:\n${summarize(deletedFiles)}`
+        `Deleted:\n${summarize(deletedFiles)}` +
+        (droppedDirs.length
+          ? `\nDropped (dirs):\n${summarize(droppedDirs)}`
+          : '') +
+        (droppedStatErrors.length
+          ? `\nDropped (stat errors):\n${summarize(droppedStatErrors)}`
+          : '')
     );
   }
 
