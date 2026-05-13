@@ -409,7 +409,7 @@ impl WatchPipeline {
                         let events = self.snapshot_events();
                         debug!(count = events.len(), "idle-window emitting events");
                         for e in &events {
-                            debug!("  [{:?}] {}", e.r#type, e.path);
+                            trace!("  [{:?}] {}", e.r#type, e.path);
                         }
                         callback(Ok(events));
                     }
