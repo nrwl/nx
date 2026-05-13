@@ -1,5 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { formatFiles, getProjects, joinPathFragments } from '@nx/devkit';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import type { Schema } from './schema';
 import {
   convertScamToStandalone,
@@ -15,6 +16,7 @@ export async function scamToStandalone(
   tree: Tree,
   { component, project: projectName, skipFormat }: Schema
 ) {
+  assertSupportedAngularVersion(tree);
   const projects = getProjects(tree);
   let project = getTargetProject(projectName, projects);
 

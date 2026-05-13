@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`updateRootJestConfig should delete lib project ref from root jest config 1`] = `
 "module.exports = {

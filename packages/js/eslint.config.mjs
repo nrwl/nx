@@ -46,6 +46,10 @@ export default [
           buildTargets: ['build-base'],
           ignoredDependencies: [
             'nx',
+            // Install-graph dep only: keeps @nx/workspace resolvable in
+            // created workspaces so `nx g @nx/workspace:preset` works.
+            // No code-level import in @nx/js.
+            '@nx/workspace',
             'prettier',
             'typescript',
             'eslint',

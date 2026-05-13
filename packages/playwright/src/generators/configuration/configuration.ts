@@ -28,10 +28,12 @@ import {
 } from '@nx/js/src/utils/package-manager-workspaces';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { warnPlaywrightExecutorGenerating } from '../../utils/deprecation';
 import { execSync } from 'child_process';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
 import { addLinterToPlaywrightProject } from '../../utils/add-linter';
+import { assertSupportedPlaywrightVersion } from '../../utils/assert-supported-playwright-version';
 import { nxVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
 import type {
@@ -51,6 +53,8 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   rawOptions: ConfigurationGeneratorSchema
 ) {
+  assertSupportedPlaywrightVersion(tree);
+
   const options = await normalizeOptions(tree, rawOptions);
 
   const tasks: GeneratorCallback[] = [];
@@ -196,6 +200,7 @@ export async function configurationGeneratorInternal(
   );
 
   if (!hasPlugin) {
+    warnPlaywrightExecutorGenerating();
     addE2eTarget(tree, options);
     setupE2ETargetDefaults(tree);
   }

@@ -95,18 +95,6 @@ export default async function* gradleBatch(
         };
       }
     }
-    return;
-  }
-
-  // Any tasks the batch runner did not report on are treated as failed so Nx
-  // does not hang waiting for results.
-  for (const taskId of taskIds) {
-    if (!yielded.has(taskId)) {
-      yield {
-        task: taskId,
-        result: { success: false, terminalOutput: `Gradlew batch failed` },
-      };
-    }
   }
 }
 
@@ -230,6 +218,7 @@ async function* streamTasksInBatch(
         task: data.task,
         result: {
           success: data.result.success ?? false,
+          status: data.result.status,
           terminalOutput: data.result.terminalOutput ?? '',
           startTime: data.result.startTime,
           endTime: data.result.endTime,

@@ -5,6 +5,7 @@
   "description": "Run @rspack/dev-server to serve a project.",
   "continuous": true,
   "type": "object",
+  "x-deprecated": "The `@nx/rspack:dev-server` executor is deprecated and will be removed in Nx v24. Run `nx g @nx/rspack:convert-to-inferred` to migrate to the `@nx/rspack/plugin` inferred plugin. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.",
   "properties": {
     "buildTarget": {
       "type": "string",

@@ -7,6 +7,6 @@
   "dependencies": {
     "nx": "workspace:*",
     "@nx/devkit": "workspace:*",
-    "@nx/workspace": "workspace:*"
+    "@nx/angular": "workspace:*"
   }
 }

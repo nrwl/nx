@@ -5,6 +5,7 @@ import { ChildProcess, fork } from 'child_process';
 import { resolve as pathResolve } from 'path';
 
 import { ExpoStartOptions } from './schema';
+import { warnExpoExecutorDeprecation } from '../../utils/deprecation';
 
 export interface ExpoStartOutput {
   baseUrl?: string;
@@ -17,6 +18,8 @@ export default async function* startExecutor(
   options: ExpoStartOptions,
   context: ExecutorContext
 ): AsyncGenerator<ExpoStartOutput> {
+  warnExpoExecutorDeprecation('start');
+
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 

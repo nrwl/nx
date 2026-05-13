@@ -7,11 +7,14 @@ import {
   getInstalledStorybookVersion,
 } from '../../utils/utilities';
 import { gte } from 'semver';
+import { warnStorybookBuildExecutorDeprecation } from '../../utils/deprecation';
 
 export default async function buildStorybookExecutor(
   options: CLIOptions,
   context: ExecutorContext
 ) {
+  warnStorybookBuildExecutorDeprecation();
+
   storybookConfigExistsCheck(options.configDir, context.projectName);
   const storybookMajor = storybookMajorVersion();
   if (storybookMajor > 0 && storybookMajor <= 7) {

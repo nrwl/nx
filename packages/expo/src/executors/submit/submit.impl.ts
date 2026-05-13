@@ -6,6 +6,7 @@ import { ChildProcess, fork } from 'child_process';
 import { resolveEas } from '../../utils/resolve-eas';
 
 import { SubmitExecutorSchema } from './schema';
+import { warnExpoExecutorDeprecation } from '../../utils/deprecation';
 
 export interface ReactNativeSubmitOutput {
   success: boolean;
@@ -17,6 +18,8 @@ export default async function* submitExecutor(
   options: SubmitExecutorSchema,
   context: ExecutorContext
 ): AsyncGenerator<ReactNativeSubmitOutput> {
+  warnExpoExecutorDeprecation('submit');
+
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 

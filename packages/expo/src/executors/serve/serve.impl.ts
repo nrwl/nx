@@ -4,6 +4,7 @@ import { ChildProcess, fork } from 'child_process';
 import { resolve as pathResolve } from 'path';
 import { isPackagerRunning } from './lib/is-packager-running';
 import { ExpoServeExecutorSchema } from './schema';
+import { warnExpoExecutorDeprecation } from '../../utils/deprecation';
 
 export interface ExpoServeOutput {
   port?: number;
@@ -15,6 +16,8 @@ export default async function* serveExecutor(
   options: ExpoServeExecutorSchema,
   context: ExecutorContext
 ): AsyncGenerator<ExpoServeOutput> {
+  warnExpoExecutorDeprecation('serve');
+
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 

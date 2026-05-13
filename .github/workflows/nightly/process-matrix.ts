@@ -76,13 +76,17 @@ const matrixData: MatrixData = {
       os_name: 'Linux',
       os_timeout: 60,
       package_managers: ['npm', 'pnpm', 'yarn'],
-      node_versions: ['22.13.0', '24.0.0', '26.0.0'],
+      // TODO: re-add '26.0.0' once playwright ships the yauzl fix for node 26 extract hang.
+      // See https://github.com/microsoft/playwright/issues/40724
+      node_versions: ['22.13.0', '24.0.0'],
       excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo']
     },
     // Docker is not supported on ARM-based macOS runners (no nested virtualization)
     // See: https://github.com/docker/setup-docker-action and https://github.com/douglascamata/setup-docker-macos-action
     // We may want to look into adding intel only for this docker case, at least until vm-in-vm works on latest macos
-    { os: 'macos-latest', os_name: 'MacOS', os_timeout: 90, package_managers: ['npm'], node_versions: ['24.0.0', '26.0.0'], excluded: ['e2e-docker'] }
+    // TODO: re-add '26.0.0' once playwright ships the yauzl fix for node 26 extract hang.
+    // See https://github.com/microsoft/playwright/issues/40724
+    { os: 'macos-latest', os_name: 'MacOS', os_timeout: 90, package_managers: ['npm'], node_versions: ['24.0.0'], excluded: ['e2e-docker'] }
     // TODO (Jack): Fix Windows support as gradle fails when running nx build https://staging.nx.app/runs/LgD4vxGn8w?utm_source=pull-request&utm_medium=comment
     // { os: 'windows-latest', os_name: 'WinOS', os_timeout: 180, package_managers: ['npm'], node_versions: ['24.0.0'], excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo'] }
   ]

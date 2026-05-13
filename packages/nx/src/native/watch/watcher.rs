@@ -295,10 +295,34 @@ impl WatchPipeline {
                             replies.push(extra);
                         }
                         let mut fatal: Option<String> = None;
-                        while let Ok(event) = self.notify_rx.try_recv() {
-                            if let Err(msg) = self.ingest_event(event) {
-                                fatal = Some(msg);
-                                break;
+
+                        // Wait briefly for notify-crate sends that are
+                        // mid-flight — a bare try_recv would miss them.
+                        match self
+                            .notify_rx
+                            .recv_timeout(Duration::from_millis(5))
+                        {
+                            Ok(event) => {
+                                if let Err(msg) = self.ingest_event(event) {
+                                    fatal = Some(msg);
+                                }
+                            }
+                            Err(crossbeam_channel::RecvTimeoutError::Timeout) => {}
+                            Err(
+                                crossbeam_channel::RecvTimeoutError::Disconnected,
+                            ) => {
+                                fatal = Some(
+                                    "watcher channel disconnected".to_string(),
+                                );
+                            }
+                        }
+
+                        if fatal.is_none() {
+                            while let Ok(event) = self.notify_rx.try_recv() {
+                                if let Err(msg) = self.ingest_event(event) {
+                                    fatal = Some(msg);
+                                    break;
+                                }
                             }
                         }
                         let watch_events = self.snapshot_events();
@@ -701,6 +725,25 @@ mod tests {
                 matches!(evt.r#type, EventType::create),
                 "{name} should classify as Create; got {:?}",
                 evt.r#type
+            );
+        }
+    }
+
+    #[test]
+    fn force_flush_pending_captures_in_flight_writes() {
+        // Write + immediate flush, hammered to surface the race.
+        let dir = tempdir().expect("tempdir");
+        let target = dir.path().join("nx.json");
+        fs::write(&target, "v1").expect("initial write");
+
+        let (watcher, _captured) = start_watcher(dir.path());
+
+        for i in 0..20 {
+            fs::write(&target, format!("v{i}")).expect("rewrite");
+            let events = watcher.force_flush_pending();
+            assert!(
+                events.iter().any(|e| e.path == "nx.json"),
+                "iteration {i}: missed nx.json event — got {events:?}"
             );
         }
     }

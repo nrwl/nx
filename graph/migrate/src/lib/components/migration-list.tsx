@@ -131,7 +131,7 @@ export function MigrationList(props: {
           </label>
           {anySelected && (
             <button
-              className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-2 py-0.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+              className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-2 py-0.5 text-sm font-medium text-slate-700 shadow-xs hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
               onClick={handleRunMany}
             >
               <PlayIcon className="h-5 w-5"></PlayIcon>
@@ -140,7 +140,7 @@ export function MigrationList(props: {
           )}
           {numberFailed > 0 && (
             <button
-              className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-2 py-0.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+              className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-2 py-0.5 text-sm font-medium text-slate-700 shadow-xs hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
               onClick={handleRerunFailed}
             >
               <PlayIcon className="h-5 w-5"></PlayIcon>

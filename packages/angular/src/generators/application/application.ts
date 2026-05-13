@@ -12,6 +12,7 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { convertToRspack } from '../convert-to-rspack/convert-to-rspack';
 import { angularInitGenerator } from '../init/init';
 import { setupSsr } from '../setup-ssr/setup-ssr';
@@ -41,6 +42,7 @@ export async function applicationGenerator(
   tree: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertSupportedAngularVersion(tree);
   assertNotUsingTsSolutionSetup(tree, 'application');
   validateOptions(tree, schema);
 

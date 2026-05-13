@@ -38,7 +38,7 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@babel/plugin-proposal-decorators": "^7.22.7",
-    "@svgr/webpack": "^8.1.0",
+    "@svgr/webpack": "catalog:",
     "copy-webpack-plugin": "^14.0.0",
     "ignore": "^7.0.5",
     "semver": "catalog:",

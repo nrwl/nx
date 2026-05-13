@@ -64,6 +64,14 @@
       },
       "description": "For Angular component testing projects below v18, switches to the fallback `@cypress/angular` harness required by Cypress v15.",
       "implementation": "./src/migrations/update-22-1-0/update-angular-component-testing-support"
+    },
+    "remove-experimental-prompt-command": {
+      "version": "23.0.0-beta.10",
+      "requires": {
+        "cypress": ">=15.13.0"
+      },
+      "description": "Removes the `experimentalPromptCommand` flag from `cypress.config.{ts,js,mjs,cjs}`. The flag was removed in Cypress 15.13.0; `cy.prompt` is now in beta without configuration.",
+      "implementation": "./src/migrations/update-23-0-0/remove-experimental-prompt-command"
     }
   },
   "packageJsonUpdates": {
@@ -121,6 +129,30 @@
         },
         "@cypress/webpack-dev-server": {
           "version": "^5.4.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.0.0": {
+      "version": "23.0.0-beta.10",
+      "requires": {
+        "cypress": ">=15.0.0 <15.14.0"
+      },
+      "packages": {
+        "cypress": {
+          "version": "^15.14.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.0.0-vite-dev-server": {
+      "version": "23.0.0-beta.10",
+      "requires": {
+        "@cypress/vite-dev-server": ">=7.0.0 <7.3.1"
+      },
+      "packages": {
+        "@cypress/vite-dev-server": {
+          "version": "^7.3.1",
           "alwaysAddToPackageJson": false
         }
       }

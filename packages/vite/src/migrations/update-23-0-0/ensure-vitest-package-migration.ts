@@ -11,7 +11,7 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import { nxVersion } from '../../utils/versions';
 
 type PluginEntry = ExpandedPluginConfiguration<Record<string, unknown>>;

@@ -16,6 +16,7 @@ import {
 } from '@nx/js/src/utils/buildable-libs-utils';
 import { runWebpackDevServer } from '../../utils/run-webpack';
 import { resolveUserDefinedWebpackConfig } from '../../utils/webpack/resolve-user-defined-webpack-config';
+import { warnWebpackDevServerExecutorDeprecation } from '../../utils/deprecation';
 import { normalizeOptions } from '../webpack/lib/normalize-options';
 import { WebpackExecutorOptions } from '../webpack/schema';
 import { WebDevServerOptions } from './schema';
@@ -26,6 +27,8 @@ export async function* devServerExecutor(
   serveOptions: WebDevServerOptions,
   context: ExecutorContext
 ) {
+  warnWebpackDevServerExecutorDeprecation();
+
   // Default to dev mode so builds are faster and HMR mode works better.
   (process.env as any).NODE_ENV ??= 'development';
 

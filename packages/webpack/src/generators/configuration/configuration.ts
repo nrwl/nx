@@ -16,6 +16,7 @@ import { webpackInitGenerator } from '../init/init';
 import { ConfigurationGeneratorSchema } from './schema';
 import { WebpackExecutorOptions } from '../../executors/webpack/schema';
 import { hasPlugin } from '../../utils/has-plugin';
+import { warnWebpackExecutorGenerating } from '../../utils/deprecation';
 import { TS_SOLUTION_SETUP_TSCONFIG_INPUT } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 
@@ -51,6 +52,7 @@ export async function configurationGeneratorInternal(
   checkForTargetConflicts(tree, options);
 
   if (!hasPlugin(tree)) {
+    warnWebpackExecutorGenerating();
     addBuildTarget(tree, options);
     if (options.devServer) {
       addServeTarget(tree, options);

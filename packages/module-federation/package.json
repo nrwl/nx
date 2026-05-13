@@ -24,7 +24,7 @@
   "main": "index.js",
   "executors": "./executors.json",
   "dependencies": {
-    "@module-federation/enhanced": "^2.3.3",
+    "@module-federation/enhanced": "catalog:",
     "@module-federation/node": "^2.7.21",
     "@module-federation/sdk": "^2.1.0",
     "@nx/devkit": "workspace:*",
@@ -32,10 +32,10 @@
     "@nx/web": "workspace:*",
     "@rspack/core": "catalog:rspack",
     "express": "^4.21.2",
-    "http-proxy-middleware": "^3.0.5",
+    "http-proxy-middleware": "catalog:",
     "picocolors": "catalog:",
     "tslib": "catalog:typescript",
-    "webpack": "^5.101.3"
+    "webpack": "catalog:"
   },
   "devDependencies": {
     "nx": "workspace:*"

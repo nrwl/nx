@@ -11,6 +11,7 @@ import {
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { releaseTasks } from '@nx/js/src/generators/library/utils/add-release-config';
 import init from '../../generators/init/init';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { UnitTestRunner } from '../../utils/test-runners';
 import addLintingGenerator from '../add-linting/add-linting';
 import { addJest } from '../utils/add-jest';
@@ -35,6 +36,7 @@ export async function libraryGenerator(
   tree: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertSupportedAngularVersion(tree);
   assertNotUsingTsSolutionSetup(tree, 'library');
   validateOptions(tree, schema);
 

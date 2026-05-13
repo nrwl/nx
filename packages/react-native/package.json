@@ -31,7 +31,7 @@
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/react": "workspace:*",
-    "ajv": "^8.12.0",
+    "ajv": "catalog:",
     "enhanced-resolve": "^5.8.3",
     "ignore": "^7.0.5",
     "picocolors": "catalog:",

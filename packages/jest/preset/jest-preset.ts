@@ -25,6 +25,7 @@ export const nxPreset: Config = {
     ],
   },
   testEnvironment: 'jsdom',
+  modulePathIgnorePatterns: ['<rootDir>/dist/', '<rootDir>/out-tsc/'],
   /**
    * manually set the exports names to load in common js, to mimic the behaviors of jest 27
    * before jest didn't fully support package exports and would load in common js code (typically via main field). now jest 28+ will load in the browser esm code, but jest esm support is not fully supported.

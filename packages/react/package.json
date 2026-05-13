@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "@phenomnomnominal/tsquery": "catalog:typescript",
-    "@svgr/webpack": "^8.0.1",
+    "@svgr/webpack": "catalog:",
     "minimatch": "catalog:",
     "tslib": "catalog:typescript",
     "@nx/devkit": "workspace:*",
@@ -44,7 +44,7 @@
     "@nx/module-federation": "workspace:*",
     "@nx/rollup": "workspace:*",
     "express": "^4.21.2",
-    "http-proxy-middleware": "^3.0.5",
+    "http-proxy-middleware": "catalog:",
     "semver": "catalog:"
   },
   "devDependencies": {

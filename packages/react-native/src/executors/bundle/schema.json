@@ -7,6 +7,7 @@
   "title": "Offline JS Bundle for React Native",
   "description": "JS Bundle target options.",
   "type": "object",
+  "x-deprecated": "The `@nx/react-native:bundle` executor is deprecated and will be removed in Nx v24. Run `nx g @nx/react-native:convert-to-inferred` to migrate to the `@nx/react-native/plugin` inferred plugin. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.",
   "presets": [
     {
       "name": "Bundle for a specific platform",

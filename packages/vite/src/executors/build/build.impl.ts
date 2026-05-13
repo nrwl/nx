@@ -29,6 +29,7 @@ import {
   loadViteDynamicImport,
   validateTypes,
 } from '../../utils/executor-utils';
+import { warnViteBuildExecutorDeprecation } from '../../utils/deprecation';
 import { type Plugin } from 'vite';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
@@ -36,6 +37,8 @@ export async function* viteBuildExecutor(
   options: Record<string, any> & ViteBuildExecutorOptions,
   context: ExecutorContext
 ) {
+  warnViteBuildExecutorDeprecation();
+
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
   const { mergeConfig, build, resolveConfig, createBuilder } =
