@@ -108,7 +108,19 @@
     },
     "test-native": {},
     "test": {
-      "inputs": ["...", "{workspaceRoot}/scripts/patched-jest-resolver.js"]
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/jest.preset.js",
+        "{workspaceRoot}/scripts/jest-mocks/chalk.js",
+        "{workspaceRoot}/scripts/jest-mocks/ora.js",
+        "{workspaceRoot}/scripts/jest-mocks/prettier.js",
+        "{workspaceRoot}/scripts/jest-mocks/yargs-parser.js",
+        "{workspaceRoot}/scripts/patched-jest-resolver.js",
+        "{workspaceRoot}/scripts/unit-test-setup.js",
+        { "externalDependencies": ["jest", "ts-jest", "@swc/jest"] },
+        { "dependentTasksOutputFiles": "**/*.d.ts", "transitive": true }
+      ]
     },
     "format-native": {
       "command": "cargo fmt",

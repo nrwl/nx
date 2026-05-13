@@ -2680,7 +2680,16 @@ mod tests {
     use std::collections::HashMap;
 
     fn create_test_app() -> App {
-        let tasks = vec![Task::new("app1:build", "build").with_project_root("/tmp/app1")];
+        let tasks = vec![Task {
+            id: "app1:build".to_string(),
+            target: crate::native::tasks::types::TaskTarget {
+                project: "app1".to_string(),
+                target: "build".to_string(),
+                configuration: None,
+            },
+            project_root: Some("/tmp/app1".to_string()),
+            ..Default::default()
+        }];
         let task_graph = TaskGraph {
             tasks: HashMap::new(),
             dependencies: HashMap::new(),
