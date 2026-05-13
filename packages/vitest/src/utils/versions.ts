@@ -2,6 +2,7 @@ import { join } from 'path';
 
 export const nxVersion = require(join('@nx/vitest', 'package.json')).version;
 
+export const minSupportedVitestVersion = '2.0.0';
 export const viteVersion = '^8.0.0';
 export const viteV7Version = '^7.0.0';
 export const viteV6Version = '^6.0.0';
