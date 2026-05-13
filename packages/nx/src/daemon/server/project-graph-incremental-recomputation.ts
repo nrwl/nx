@@ -145,8 +145,10 @@ function isStale(expectedHash: string): boolean {
 }
 
 /**
- * Only the latest stale IIFE kicks a successor — older stale IIFEs whose
- * pointer has already been replaced shouldn't kick again.
+ * Starts a successor recompute only when this IIFE is still the cached one.
+ * If a newer recompute already replaced the cached pointer, that newer
+ * recompute will produce the fresh result and we just need to return the
+ * pointer so awaiters chain onto it.
  */
 function chainToSuccessor(
   myPromise: Promise<SerializedProjectGraph>
