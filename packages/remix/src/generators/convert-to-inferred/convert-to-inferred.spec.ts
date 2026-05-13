@@ -12,7 +12,7 @@ import {
   detectPackageManager,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { getRelativeProjectJsonSchemaPath } from 'nx/src/generators/utils/project-configuration';
 import { join } from 'path';
 import { convertToInferred } from './convert-to-inferred';

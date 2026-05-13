@@ -11,7 +11,7 @@ import { PackageJson } from 'nx/src/utils/package-json';
 import pluginGenerator from '../plugin/plugin';
 import { createPackageGenerator } from './create-package';
 import { CreatePackageSchema } from './schema';
-import { setCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { setCwd } from '@nx/devkit/internal-testing-utils';
 import { tsLibVersion } from '@nx/js/src/utils/versions';
 import { nxVersion } from 'nx/src/utils/versions';
 

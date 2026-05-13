@@ -10,7 +10,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { pluginGenerator } from '../plugin/plugin';
 import { generatorGenerator } from './generator';
-import { setCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { setCwd } from '@nx/devkit/internal-testing-utils';
 
 describe('NxPlugin Generator Generator', () => {
   let tree: Tree;

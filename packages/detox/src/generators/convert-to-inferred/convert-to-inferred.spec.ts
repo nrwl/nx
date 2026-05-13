@@ -8,7 +8,7 @@ import {
   type Tree,
   writeJson,
 } from '@nx/devkit';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { join } from 'node:path';
 import { getRelativeProjectJsonSchemaPath } from 'nx/src/generators/utils/project-configuration';

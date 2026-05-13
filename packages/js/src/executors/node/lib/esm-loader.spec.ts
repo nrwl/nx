@@ -1,6 +1,6 @@
 import { resolve } from './esm-loader';
 import { pathToFileURL } from 'node:url';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { setupWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 describe('ESM Loader', () => {

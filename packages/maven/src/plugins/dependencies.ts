@@ -1,6 +1,6 @@
 import { CreateDependencies, logger } from '@nx/devkit';
 import { getCurrentMavenData } from './maven-data-cache';
-import { createProjectRootMappingsFromProjectConfigurations } from 'nx/src/devkit-internals';
+import { createProjectRootMappingsFromProjectConfigurations } from '@nx/devkit/internal';
 
 /**
  * Create dependencies between Maven projects by analyzing the createNodesResults

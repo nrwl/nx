@@ -1,5 +1,5 @@
 import { detectPackageManager, type CreateNodesContextV2 } from '@nx/devkit';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import picomatch = require('picomatch');
 import { mkdirSync, rmSync } from 'node:fs';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports

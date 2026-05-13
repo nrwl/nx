@@ -1,5 +1,5 @@
 import { CreateNodesContextV2 } from '@nx/devkit';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodesV2 } from './plugin-v1';
 import { type GradleReport } from './src/plugin-v1/utils/get-gradle-report';
 

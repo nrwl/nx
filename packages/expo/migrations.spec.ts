@@ -1,6 +1,6 @@
 import json = require('./migrations.json');
 
-import { assertValidMigrationPaths } from 'nx/src/internal-testing-utils/assert-valid-migrations';
+import { assertValidMigrationPaths } from '@nx/devkit/internal-testing-utils';
 import { MigrationsJson } from '@nx/devkit';
 
 describe('expo migrations', () => {

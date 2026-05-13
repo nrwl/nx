@@ -16,7 +16,7 @@ import {
   updateNxJson,
   writeJson,
 } from '@nx/devkit';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { join } from 'node:path';
 import type { VitePluginOptions } from '../../plugins/plugin';
 

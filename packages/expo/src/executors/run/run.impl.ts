@@ -1,5 +1,5 @@
 import { ExecutorContext, names } from '@nx/devkit';
-import { signalToCode } from 'nx/src/devkit-internals';
+import { signalToCode } from '@nx/devkit/internal';
 import { ChildProcess, fork } from 'child_process';
 import { existsSync } from 'node:fs';
 import { platform } from 'os';
