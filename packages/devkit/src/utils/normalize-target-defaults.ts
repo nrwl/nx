@@ -56,19 +56,41 @@ function isExecutorLikeKey(key: string): boolean {
  *
  * Each entry's key is its `target` (if set) or `executor`. Entries that
  * have both keep the locator role on `target` and retain `executor` as
- * a value field. Entries with `projects` or `plugin` filters cannot be
- * represented in the legacy shape — they are dropped from the output
- * so the caller can decide whether the loss is acceptable.
+ * a value field.
+ *
+ * Throws when the input contains entries that the record shape cannot
+ * represent — `projects`/`plugin` filters, two entries that would collapse
+ * to the same key, or entries with neither `target` nor `executor`. The
+ * caller must keep array shape in those cases (or refuse to write the
+ * change). Silently dropping these entries would corrupt nx.json without
+ * the user noticing.
  */
 export function downgradeTargetDefaults(
   entries: TargetDefaultEntry[]
 ): TargetDefaultsRecord {
   const out: TargetDefaultsRecord = {};
   for (const entry of entries) {
-    if (entry.projects !== undefined || entry.plugin !== undefined) continue;
+    if (entry.projects !== undefined || entry.plugin !== undefined) {
+      throw new Error(
+        `Cannot downgrade targetDefaults to legacy record shape: entry ${JSON.stringify(
+          entry
+        )} uses a \`projects\`/\`plugin\` filter, which is only supported in the array shape.`
+      );
+    }
     const { target, executor, projects, plugin, ...rest } = entry;
     const key = target ?? executor;
-    if (key === undefined) continue;
+    if (key === undefined) {
+      throw new Error(
+        `Cannot downgrade targetDefaults to legacy record shape: entry ${JSON.stringify(
+          entry
+        )} has neither \`target\` nor \`executor\` to use as the record key.`
+      );
+    }
+    if (Object.prototype.hasOwnProperty.call(out, key)) {
+      throw new Error(
+        `Cannot downgrade targetDefaults to legacy record shape: two entries collapse to the same key \`${key}\`. Keep the array shape so both can coexist.`
+      );
+    }
     const value: Partial<TargetDefaultEntry> = { ...rest };
     if (target && executor) value.executor = executor;
     out[key] = value;

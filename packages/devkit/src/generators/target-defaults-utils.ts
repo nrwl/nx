@@ -52,7 +52,11 @@ export function upsertTargetDefault(
 
   const { target, executor, projects, plugin, ...config } = options;
   const originalShape = nxJson.targetDefaults;
-  const entries = normalizeTargetDefaults(originalShape);
+  // Copy — `normalizeTargetDefaults` returns the input array as-is when
+  // it's already array shape. Without the spread, `entries[matchIndex] = ...`
+  // and `entries.push(...)` would mutate the user's array reference (and
+  // any other holders of the same `nxJson.targetDefaults` reference).
+  const entries = [...normalizeTargetDefaults(originalShape)];
   const matchIndex = entries.findIndex(
     (e) =>
       e.target === target &&
@@ -83,10 +87,19 @@ export function upsertTargetDefault(
     );
   }
 
-  nxJson.targetDefaults =
-    SUPPORTS_ARRAY_TARGET_DEFAULTS || Array.isArray(originalShape)
-      ? entries
-      : downgradeTargetDefaults(entries);
+  // On pre-v23 nx with a record-shape on-disk value, try to preserve the
+  // record shape; if any entry can't be represented (filters, key
+  // collisions, missing key), force-promote to array shape rather than
+  // drop data — pre-v23 nx will warn but still read it.
+  if (SUPPORTS_ARRAY_TARGET_DEFAULTS || Array.isArray(originalShape)) {
+    nxJson.targetDefaults = entries;
+  } else {
+    try {
+      nxJson.targetDefaults = downgradeTargetDefaults(entries);
+    } catch {
+      nxJson.targetDefaults = entries;
+    }
+  }
   return nxJson;
 }
 
@@ -96,6 +109,12 @@ export function upsertTargetDefault(
  * `undefined`, matching only entries that also leave them unset — same
  * semantics as `upsertTargetDefault`. Accepts either array or legacy
  * record shape.
+ *
+ * Throws when called with an empty locator (no `target`, `executor`,
+ * `projects`, or `plugin`). An empty locator is almost always a bug —
+ * the caller intended to find a specific entry but forgot to populate
+ * the lookup. Returning the first matching entry (or `undefined`) would
+ * silently mask the mistake.
  */
 export function findTargetDefault(
   targetDefaults: TargetDefaults | undefined,
@@ -104,6 +123,16 @@ export function findTargetDefault(
     'target' | 'executor' | 'projects' | 'plugin'
   >
 ): TargetDefaultEntry | undefined {
+  if (
+    locator.target === undefined &&
+    locator.executor === undefined &&
+    locator.projects === undefined &&
+    locator.plugin === undefined
+  ) {
+    throw new Error(
+      'findTargetDefault requires at least one of `target`, `executor`, `projects`, or `plugin` on the locator.'
+    );
+  }
   return normalizeTargetDefaults(targetDefaults).find(
     (e) =>
       e.target === locator.target &&
@@ -135,6 +164,11 @@ function buildTargetDefaultEntry(
   };
 }
 
+// Set-based equality so `['a','b']` and `['b','a']` are treated as the
+// same locator. Positional comparison would silently create a second
+// entry on re-upsert when the caller passes the same patterns in a
+// different order — an easy mistake when patterns are produced by
+// generated code or assembled from configuration.
 function projectsEqual(
   a: string | string[] | undefined,
   b: string | string[] | undefined
@@ -144,7 +178,14 @@ function projectsEqual(
   const bArr = b === undefined ? undefined : Array.isArray(b) ? b : [b];
   if (!aArr || !bArr) return false;
   if (aArr.length !== bArr.length) return false;
-  for (let i = 0; i < aArr.length; i++) if (aArr[i] !== bArr[i]) return false;
+  const aSet = new Set(aArr);
+  if (aSet.size !== aArr.length) {
+    // Duplicates inside one array — fall back to positional comparison so
+    // we don't silently merge `['a','a']` with `['a']`.
+    for (let i = 0; i < aArr.length; i++) if (aArr[i] !== bArr[i]) return false;
+    return true;
+  }
+  for (const item of bArr) if (!aSet.has(item)) return false;
   return true;
 }
 
@@ -156,7 +197,18 @@ export function addBuildTargetDefaults(
 ): void {
   const nxJson = readNxJson(tree) ?? {};
   const entries = normalizeTargetDefaults(nxJson.targetDefaults);
-  if (entries.some((e) => e.executor === executorName)) {
+  // Only skip when an *unfiltered* entry already covers this executor.
+  // A filtered entry (`projects:` or `plugin:`) only applies to a subset
+  // of targets, so it doesn't satisfy the workspace-wide default this
+  // helper writes — we still need to add the unfiltered baseline.
+  if (
+    entries.some(
+      (e) =>
+        e.executor === executorName &&
+        e.projects === undefined &&
+        e.plugin === undefined
+    )
+  ) {
     return;
   }
   upsertTargetDefault(tree, nxJson, {
