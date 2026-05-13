@@ -157,7 +157,7 @@ describe('convert-target-defaults-to-array migration', () => {
       ]);
     });
 
-    it('falls back to the `:` heuristic when no project matches the key', async () => {
+    it('drops entries when no project matches the key', async () => {
       const nxJson = readNxJson(tree);
       nxJson.targetDefaults = {
         '@nx/unused:executor': { cache: true },
@@ -168,10 +168,7 @@ describe('convert-target-defaults-to-array migration', () => {
         app: { build: { executor: '@nx/something-else:build' } },
       });
       await convertTargetDefaultsToArray(tree, graph);
-      expect(readNxJson(tree).targetDefaults).toEqual([
-        { executor: '@nx/unused:executor', cache: true },
-        { target: 'unused', inputs: ['default'] },
-      ]);
+      expect(readNxJson(tree).targetDefaults).toEqual([]);
     });
   });
 });

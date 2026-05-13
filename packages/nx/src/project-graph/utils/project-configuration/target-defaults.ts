@@ -488,6 +488,12 @@ function matchEntry(
     tier++;
   }
 
+  // Safety net for callers (e.g. direct unit-test calls) that bypass
+  // `normalizeTargetDefaults`: an entry with no locator and no real
+  // filter has tier 0 after processing — it would broadcast to every
+  // (root, target) in the workspace.
+  if (!hasLocator && tier === 0) return null;
+
   const matchKind: MatchKind =
     targetKind !== null && executorMatched
       ? 'targetAndExecutor'
