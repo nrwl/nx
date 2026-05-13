@@ -1,14 +1,14 @@
 use std::collections::{HashMap, HashSet};
 use std::path::{MAIN_SEPARATOR, Path, PathBuf};
 use std::sync::Arc;
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime};
 
 use crossbeam_channel::{Receiver, Sender, bounded, select, unbounded};
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use notify::{RecursiveMode, Watcher as NotifyWatcher};
 use parking_lot::Mutex;
-use tracing::debug;
+use tracing::{Level, debug, enabled, trace};
 
 #[cfg(not(target_os = "macos"))]
 use crate::native::glob::{NxGlobSet, build_glob_set};
@@ -20,28 +20,8 @@ use crate::native::watch::types::{
 };
 use crate::native::watch::watch_filterer;
 
-/// Cheap wall-clock formatter for `[watcher]` correlation with the
-/// daemon's JS-side log (which prefixes lines with `HH:MM:SS.mmmZ`). UTC.
-/// Lives behind the same `NX_DAEMON_DEBUG_WATCHER=1` gate as the rest of
-/// the diagnostic eprintln output.
-#[inline]
-fn debug_ts() -> String {
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default();
-    let secs = now.as_secs();
-    let ms = now.subsec_millis();
-    let h = (secs / 3600) % 24;
-    let m = (secs / 60) % 60;
-    let s = secs % 60;
-    format!("{:02}:{:02}:{:02}.{:03}", h, m, s, ms)
-}
-
-/// Age of an event in milliseconds = now − mtime of the affected path.
-/// Surfaces upstream delivery delay (kernel → inotify queue → notify-crate
-/// worker → notify_rx) that's invisible from inside the pipeline. A large
-/// age means the file was written well before our code saw the event.
-/// `-1` means we couldn't read mtime (path gone, stat error, ENOENT).
+/// now − mtime in ms; `-1` if mtime is unreadable. Surfaces upstream
+/// delivery delay (kernel → inotify → notify worker → notify_rx).
 #[inline]
 fn event_age_ms(metadata: &std::io::Result<std::fs::Metadata>) -> i128 {
     metadata
@@ -227,15 +207,13 @@ impl WatchPipeline {
     ) -> std::result::Result<(), notify::Error> {
         use crate::native::walker::nx_walker_sync;
 
-        let debug = std::env::var("NX_DAEMON_DEBUG_WATCHER").as_deref() == Ok("1");
-        if debug {
-            eprintln!("[watcher] register_and_backfill_new_dirs dirs={dirs:?}");
-        }
         debug!(?dirs, "registering watches for new directories");
         register_watches(&mut self.watcher, dirs)?;
 
+        let collect_paths = enabled!(Level::TRACE);
         let mut nested_dirs: HashSet<PathBuf> = HashSet::new();
-        let mut backfilled: Vec<PathBuf> = Vec::new();
+        let mut backfilled_count: usize = 0;
+        let mut backfilled_paths: Vec<PathBuf> = Vec::new();
         for dir in dirs {
             for rel_path in nx_walker_sync(dir, None) {
                 let full_path = dir.join(&rel_path);
@@ -246,8 +224,9 @@ impl WatchPipeline {
                         .strip_prefix(&self.origin_path)
                         .map(Path::to_path_buf)
                         .unwrap_or(full_path.clone());
-                    if debug {
-                        backfilled.push(path.clone());
+                    backfilled_count += 1;
+                    if collect_paths {
+                        backfilled_paths.push(path.clone());
                     }
                     self.merge_event(WatchEventInternal {
                         path,
@@ -257,14 +236,13 @@ impl WatchPipeline {
             }
         }
 
-        if debug {
-            eprintln!(
-                "[watcher] backfilled {} files, {} nested dirs: files={:?} nested={:?}",
-                backfilled.len(),
-                nested_dirs.len(),
-                backfilled,
-                nested_dirs
-            );
+        debug!(
+            backfilled = backfilled_count,
+            nested = nested_dirs.len(),
+            "backfilled new directories"
+        );
+        if collect_paths {
+            trace!(files = ?backfilled_paths, nested = ?nested_dirs, "backfill detail");
         }
 
         register_watches(&mut self.watcher, &nested_dirs)
@@ -283,23 +261,15 @@ impl WatchPipeline {
 
         let raw = RawWatchEvent::new(event);
 
-        // Diagnostic: how stale is this event when it reaches us? `age_ms`
-        // is only meaningful for write-like kinds where mtime ≈ event time.
-        // We skip `Access(...)` entirely — those are reads (plugin workers
-        // opening package.json etc. during graph compute), which fire in
-        // floods and whose mtime is the *original write*, not the read,
-        // making age_ms misleading and the volume drown the signal.
-        if std::env::var("NX_DAEMON_DEBUG_WATCHER").as_deref() == Ok("1")
-            && !matches!(raw.kind(), notify::EventKind::Access(_))
-        {
-            let ts = debug_ts();
+        // Skip Access — they're reads, fire in floods, and their mtime is
+        // the prior write, making age_ms misleading.
+        if enabled!(Level::TRACE) && !matches!(raw.kind(), notify::EventKind::Access(_)) {
             for (path, metadata) in raw.paths() {
-                eprintln!(
-                    "[watcher] {} ingest path={:?} kind={:?} age_ms={}",
-                    ts,
-                    path,
-                    raw.kind(),
-                    event_age_ms(metadata)
+                trace!(
+                    ?path,
+                    kind = ?raw.kind(),
+                    age_ms = event_age_ms(metadata),
+                    "ingest"
                 );
             }
         }
@@ -368,19 +338,8 @@ impl WatchPipeline {
                         }
                         let mut fatal: Option<String> = None;
 
-                        let debug =
-                            std::env::var("NX_DAEMON_DEBUG_WATCHER").as_deref() == Ok("1");
-                        let handler_started_at = if debug {
-                            let ts = debug_ts();
-                            eprintln!(
-                                "[watcher] {} force-flush START replies={}",
-                                ts,
-                                replies.len()
-                            );
-                            Some(Instant::now())
-                        } else {
-                            None
-                        };
+                        debug!(replies = replies.len(), "force-flush START");
+                        let handler_started_at = Instant::now();
 
                         // Wait briefly for notify-crate sends that are
                         // mid-flight — a bare try_recv would miss them.
@@ -407,13 +366,7 @@ impl WatchPipeline {
                                 );
                             }
                         }
-                        if debug {
-                            eprintln!(
-                                "[watcher] {} force-flush recv_timeout(5ms)={}",
-                                debug_ts(),
-                                recv_label
-                            );
-                        }
+                        debug!(result = recv_label, "force-flush recv_timeout(5ms)");
 
                         if fatal.is_none() {
                             while let Ok(event) = self.notify_rx.try_recv() {
@@ -427,18 +380,11 @@ impl WatchPipeline {
                         debug!(
                             count = watch_events.len(),
                             replies = replies.len(),
-                            "force-flush emitting events"
+                            duration_ms = handler_started_at.elapsed().as_millis() as u64,
+                            "force-flush END"
                         );
                         for e in &watch_events {
-                            debug!("  [{:?}] {}", e.r#type, e.path);
-                        }
-                        if let Some(start) = handler_started_at {
-                            eprintln!(
-                                "[watcher] {} force-flush END count={} duration_ms={}",
-                                debug_ts(),
-                                watch_events.len(),
-                                start.elapsed().as_millis()
-                            );
+                            trace!("  [{:?}] {}", e.r#type, e.path);
                         }
                         let mut any_delivered = false;
                         for r in replies {

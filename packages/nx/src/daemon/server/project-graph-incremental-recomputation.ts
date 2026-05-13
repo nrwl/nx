@@ -97,28 +97,14 @@ let recomputationGeneration = 0;
 let cacheHasBeenPersisted = false;
 
 /**
- * Start a fresh project graph computation, in parallel with any in-flight
- * one. The new promise becomes `cachedSerializedProjectGraphPromise`; any
- * older compute will detect itself as stale at its next `isStale()` check
- * and chain to the cached pointer, so consumers awaiting the cached pointer
- * always end up on the latest compute.
- *
- * Notify + persist fire only when this IIFE is still the latest — older
- * IIFEs that chained their result through us have already had their side
- * effects fired by the IIFE that actually produced the result.
- *
- * Freshness gate: each IIFE snapshots the nx.json `plugins` hash at
- * kickoff time and re-reads it before committing. If a concurrent kickoff
- * loaded a different plugin set (because nx.json was rewritten mid-flight),
- * the stale IIFE bails and kicks a successor instead of clobbering the
- * winner with stale data. Without this, `cachedSerializedProjectGraphPromise`
- * is last-kickoff-wins, which can return a graph computed against an older
- * plugin set (see spread.test.ts "middle plugin" flake).
+ * Freshness-gated recompute. Each IIFE snapshots the nx.json `plugins`
+ * hash at kickoff and re-reads at commit; if it changed mid-flight, bail
+ * and kick a successor instead of clobbering the winner. Without this,
+ * `cachedSerializedProjectGraphPromise` is last-kickoff-wins and can
+ * return a graph built against a stale plugin set
+ * (see spread.test.ts "middle plugin" flake).
  */
 function kickOffRecompute() {
-  // Snapshot synchronously so we capture the disk state at the moment
-  // this kickoff was triggered, not the later state the IIFE happens
-  // to read inside getPluginsSeparated().
   const myPluginsHash = currentNxJsonPluginsHash();
 
   let myPromise: Promise<SerializedProjectGraph>;
@@ -126,9 +112,6 @@ function kickOffRecompute() {
     const plugins = await getPluginsSeparated();
     const result = await processFilesAndCreateAndSerializeProjectGraph(plugins);
 
-    // If nx.json was rewritten between our snapshot and now, a concurrent
-    // IIFE will have read the newer state. Don't commit our stale result;
-    // force a successor that reads fresh.
     const isStaleVsDisk =
       myPluginsHash !== undefined &&
       currentNxJsonPluginsHash() !== myPluginsHash;
@@ -138,8 +121,6 @@ function kickOffRecompute() {
         'Discarding stale recompute result (nx.json plugins changed mid-compute).'
       );
       if (cachedSerializedProjectGraphPromise === myPromise) {
-        // Only the latest stale IIFE needs to kick a successor; older
-        // stale IIFEs already chained via cachedSerializedProjectGraphPromise.
         kickOffRecompute();
       }
       return cachedSerializedProjectGraphPromise;
@@ -166,9 +147,8 @@ function currentNxJsonPluginsHash(): string | undefined {
     const nxJson = readNxJson(workspaceRoot);
     return hashObject(nxJson.plugins ?? []);
   } catch {
-    // nx.json read can transiently fail (mid-write rename window). Returning
-    // undefined disables the freshness gate for this IIFE — same behavior as
-    // before the fix. Better than crashing the daemon.
+    // Transient read failure (mid-write rename) — undefined disables the
+    // gate for this IIFE, matching pre-fix behavior.
     return undefined;
   }
 }
