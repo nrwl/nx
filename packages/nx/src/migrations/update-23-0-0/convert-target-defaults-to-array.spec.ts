@@ -74,7 +74,10 @@ describe('convert-target-defaults-to-array migration', () => {
       test: { inputs: ['default', '^production'] },
     };
     updateNxJson(tree, nxJson);
-    await convertTargetDefaultsToArray(tree);
+    const graph = graphWithTargets({
+      app: { build: { command: 'echo build' }, test: { command: 'echo test' } },
+    });
+    await convertTargetDefaultsToArray(tree, graph);
     expect(readNxJson(tree).targetDefaults).toEqual([
       { target: 'build', cache: true, dependsOn: ['^build'] },
       { target: 'test', inputs: ['default', '^production'] },
@@ -88,7 +91,13 @@ describe('convert-target-defaults-to-array migration', () => {
       'nx:run-commands': { cache: true },
     };
     updateNxJson(tree, nxJson);
-    await convertTargetDefaultsToArray(tree);
+    const graph = graphWithTargets({
+      app: {
+        test: { executor: '@nx/vite:test' },
+        run: { executor: 'nx:run-commands' },
+      },
+    });
+    await convertTargetDefaultsToArray(tree, graph);
     expect(readNxJson(tree).targetDefaults).toEqual([
       { executor: '@nx/vite:test', inputs: ['default'] },
       { executor: 'nx:run-commands', cache: true },
