@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, isAbsolute, join, posix, relative, sep } from 'path';
 import {
   MigrationsJson,
@@ -144,32 +144,55 @@ export function writePromptMigrationFiles(
     version: string;
     prompt?: string;
   }[],
-  promptContents: Record<string, string>
+  promptContents: Record<string, string>,
+  targetVersion: string
 ): string[] {
-  const writtenPaths = new Set<string>();
+  const sourceToChosen = new Map<string, string>();
   const result: string[] = [];
 
   for (const migration of migrations) {
     if (!migration.prompt) continue;
-    const content =
-      promptContents[promptContentKey(migration.package, migration.prompt)];
+    const sourceKey = promptContentKey(migration.package, migration.prompt);
+    const content = promptContents[sourceKey];
     if (content === undefined) continue;
 
-    const relPath = joinPathFragments(
-      AI_MIGRATIONS_DIR,
-      migration.package,
-      migration.prompt
-    );
-
-    if (!writtenPaths.has(relPath)) {
-      writtenPaths.add(relPath);
-      const absPath = join(root, relPath);
-      mkdirSync(dirname(absPath), { recursive: true });
-      writeFileSync(absPath, content);
-      result.push(relPath);
+    const cached = sourceToChosen.get(sourceKey);
+    if (cached !== undefined) {
+      migration.prompt = cached;
+      continue;
     }
 
-    migration.prompt = relPath;
+    const baseName = posix.basename(migration.prompt);
+    const ext = posix.extname(baseName);
+    const stem = ext ? baseName.slice(0, -ext.length) : baseName;
+    const destDir = joinPathFragments(
+      AI_MIGRATIONS_DIR,
+      migration.package,
+      targetVersion
+    );
+
+    let chosenPath!: string;
+    for (let n = 0; ; n++) {
+      const candidate = joinPathFragments(
+        destDir,
+        n === 0 ? baseName : `${stem}-${n}${ext}`
+      );
+      const absCandidate = join(root, candidate);
+      if (!existsSync(absCandidate)) {
+        mkdirSync(dirname(absCandidate), { recursive: true });
+        writeFileSync(absCandidate, content);
+        result.push(candidate);
+        chosenPath = candidate;
+        break;
+      }
+      if (readFileSync(absCandidate, 'utf-8') === content) {
+        chosenPath = candidate;
+        break;
+      }
+    }
+
+    sourceToChosen.set(sourceKey, chosenPath);
+    migration.prompt = chosenPath;
   }
 
   return result;

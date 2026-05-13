@@ -2030,7 +2030,8 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     const promptMigrationFiles = writePromptMigrationFiles(
       root,
       migrations,
-      promptContents ?? {}
+      promptContents ?? {},
+      packageUpdates[walkedTargetPackage].version
     );
 
     if (migrations.length > 0) {
