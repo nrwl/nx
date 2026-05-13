@@ -383,6 +383,28 @@ export function findBestTargetDefault(
 }
 
 /**
+ * Classify the runtime intent of an entry's `projects:` value:
+ *   - `none`: filter is absent — the entry is unscoped on the projects axis.
+ *   - `empty`: filter is `[]` — matches no project, so the whole entry is
+ *     dead. Treated as a never-match by the matcher rather than allowing
+ *     the entry to silently apply nowhere (which is almost always a bug).
+ *   - `wildcard`: filter is exactly `'*'` or `['*']` (or any combination of
+ *     pure-wildcard patterns) — matches every project, equivalent to no
+ *     filter at all. Doesn't count toward the broadcast guard or the
+ *     specificity tier so the entry doesn't outrank a real, narrower one.
+ *   - `filter`: a real pattern set the matcher needs to evaluate.
+ */
+function classifyProjectsFilter(
+  projects: string | string[] | undefined
+): 'none' | 'empty' | 'wildcard' | 'filter' {
+  if (projects === undefined) return 'none';
+  const arr = Array.isArray(projects) ? projects : [projects];
+  if (arr.length === 0) return 'empty';
+  if (arr.every((p) => p === '*')) return 'wildcard';
+  return 'filter';
+}
+
+/**
  * Test a single `targetDefaults` entry against the (target, executor,
  * project, plugin, command) tuple of the target being resolved. Returns
  * a `Candidate` with its tier and match kind, or null when the entry
@@ -408,13 +430,20 @@ function matchEntry(
   targetCommand: string | undefined
 ): Candidate | null {
   if (!entry) return null;
+  // Classify `projects:` first so the broadcast guard below can treat
+  // pure-wildcard patterns (`'*'`, `['*']`) the same as no filter, and
+  // empty arrays as a never-match (rather than silently slipping past
+  // both guards as a "filter" that matches nothing).
+  const projectsKind = classifyProjectsFilter(entry.projects);
+  if (projectsKind === 'empty') return null;
   // Reject entries with no constraints whatsoever — without a locator
   // (`target`/`executor`) or a filter (`projects`/`plugin`) the entry
-  // would broadcast to every (root, target) in the workspace.
+  // would broadcast to every (root, target) in the workspace. Pure
+  // wildcard `projects:` patterns count as "no filter" here.
   if (
     entry.target === undefined &&
     entry.executor === undefined &&
-    entry.projects === undefined &&
+    projectsKind !== 'filter' &&
     entry.plugin === undefined
   ) {
     return null;
@@ -452,15 +481,15 @@ function matchEntry(
   const hasLocator = targetKind !== null || executorMatched;
   let tier = hasLocator ? 1 : 0;
 
-  if (entry.projects !== undefined) {
+  if (projectsKind === 'filter') {
     if (!projectName || !projectNode) return null;
     // Copy the array — `findMatchingProjects` prepends '*' when the first
     // pattern is a negation, mutating its input. Without the copy, every
     // call corrupts the original `entry.projects` (and therefore the
     // shared nxJson.targetDefaults entry) with a leading wildcard.
     const patterns = Array.isArray(entry.projects)
-      ? [...entry.projects]
-      : [entry.projects];
+      ? [...entry.projects!]
+      : [entry.projects!];
     const matched = findMatchingProjects(patterns, {
       [projectName]: projectNode,
     });

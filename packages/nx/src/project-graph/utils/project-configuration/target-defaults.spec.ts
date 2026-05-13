@@ -482,6 +482,66 @@ describe('findBestTargetDefault', () => {
       ).toEqual({ inputs: ['second'] });
     });
 
+    it('an empty `projects: []` filter never matches (treated as never-match, not silent broadcast)', () => {
+      // `[]` would otherwise sit in `findMatchingProjects` as "match no
+      // projects" — silently dropping the entire entry. We surface that
+      // intent as an explicit never-match so the entry is skipped in
+      // matching but its presence is still validated by the schema.
+      const entries: TargetDefaultEntry[] = [
+        { target: 'test', projects: [], cache: false },
+      ];
+      expect(
+        findBestTargetDefault(
+          'test',
+          undefined,
+          'web',
+          node('web'),
+          undefined,
+          entries
+        )
+      ).toBeNull();
+    });
+
+    it('a wildcard-only `projects: "*"` is equivalent to no filter and rejected when there is no other locator', () => {
+      // `'*'` matches everything, so a `{ projects: '*' }` entry would
+      // broadcast just like an entry with no constraints. The broadcast
+      // guard treats wildcard-only `projects` as "no filter".
+      const entries: TargetDefaultEntry[] = [
+        { projects: '*', cache: false },
+        { projects: ['*'], inputs: ['noop-filter'] },
+      ];
+      expect(
+        findBestTargetDefault(
+          'test',
+          undefined,
+          'web',
+          node('web'),
+          undefined,
+          entries
+        )
+      ).toBeNull();
+    });
+
+    it('a wildcard `projects: "*"` does not bump the specificity tier', () => {
+      // `target` alone is tier 1; `target + projects:'*'` should also be
+      // tier 1 (wildcard is "no filter"), so a later wildcard entry wins
+      // on array index, not on tier.
+      const entries: TargetDefaultEntry[] = [
+        { target: 'test', cache: true },
+        { target: 'test', projects: '*', cache: false },
+      ];
+      expect(
+        findBestTargetDefault(
+          'test',
+          undefined,
+          'web',
+          node('web'),
+          undefined,
+          entries
+        )
+      ).toEqual({ cache: false });
+    });
+
     it('projects+source (filter-only, tier 2) beats source alone (filter-only, tier 1)', () => {
       const entries: TargetDefaultEntry[] = [
         { plugin: '@nx/jest/plugin', inputs: ['source-only'] },

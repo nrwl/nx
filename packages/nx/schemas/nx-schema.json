@@ -819,8 +819,13 @@
     },
     "targetDefaultEntry": {
       "type": "object",
-      "description": "A single target defaults entry. At least one of `target` or `executor` must be set.",
-      "anyOf": [{ "required": ["target"] }, { "required": ["executor"] }],
+      "description": "A single target defaults entry. At least one of `target`, `executor`, `projects`, or `plugin` must be set — an entry with neither a locator nor a filter would broadcast to every target in the workspace and is ignored at runtime.",
+      "anyOf": [
+        { "required": ["target"] },
+        { "required": ["executor"] },
+        { "required": ["projects"] },
+        { "required": ["plugin"] }
+      ],
       "properties": {
         "target": {
           "type": "string",
@@ -846,6 +851,12 @@
         },
         "executor": {
           "$ref": "#/definitions/targetDefaultsConfig/properties/executor"
+        },
+        "command": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/command"
+        },
+        "metadata": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/metadata"
         },
         "options": {
           "$ref": "#/definitions/targetDefaultsConfig/properties/options"
@@ -887,6 +898,15 @@
         "executor": {
           "description": "The function that Nx will invoke when you run this target",
           "type": "string"
+        },
+        "command": {
+          "description": "Shorthand for `nx:run-commands` — the shell command to run.",
+          "type": "string"
+        },
+        "metadata": {
+          "description": "Free-form metadata about the target (description, technologies, help text, etc.).",
+          "type": "object",
+          "additionalProperties": true
         },
         "options": {
           "type": "object"
