@@ -46,9 +46,13 @@ const loadingMethod = (
  * Specified plugins come first, followed by default plugins.
  */
 export async function getPlugins(
+  nxJson: NxJsonConfiguration,
   root = workspaceRoot
 ): Promise<LoadedNxPlugin[]> {
-  const { specifiedPlugins, defaultPlugins } = await getPluginsSeparated(root);
+  const { specifiedPlugins, defaultPlugins } = await getPluginsSeparated(
+    nxJson,
+    root
+  );
   return specifiedPlugins.concat(defaultPlugins);
 }
 
@@ -58,16 +62,15 @@ export async function getPlugins(
  * two-phase project configuration processing where target defaults are
  * applied between specified and default plugin results.
  *
- * `nxJson` can be passed by callers (e.g. the daemon's freshness-gated
- * recompute) that need their snapshot of nx.json to match the one the
- * plugin loader uses. Without it, this function reads nx.json itself —
- * fine for callers that don't care about that consistency.
+ * `nxJson` is required so callers control the snapshot of nx.json the plugin
+ * loader uses. This matters for the daemon's freshness-gated recompute, where
+ * the snap hash and the plugin set must reflect the same disk state.
  */
 export async function getPluginsSeparated(
-  root = workspaceRoot,
-  nxJson?: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
+  root = workspaceRoot
 ): Promise<SeparatedPlugins> {
-  const pluginsConfiguration = (nxJson ?? readNxJson(root)).plugins ?? [];
+  const pluginsConfiguration = nxJson.plugins ?? [];
   const pluginsConfigurationHash = hashObject(pluginsConfiguration);
 
   // If the plugins configuration has not changed, reuse the current plugins

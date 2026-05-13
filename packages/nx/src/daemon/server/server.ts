@@ -13,6 +13,7 @@ import '../../utils/perf-logging';
 import { nxVersion } from '../../utils/versions';
 import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { readNxJson } from '../../config/nx-json';
 import { getPlugins } from '../../project-graph/plugins/get-plugins';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
 import { isNxVersionMismatch } from '../is-nx-version-mismatch';
@@ -775,7 +776,7 @@ export async function startServer(): Promise<Server> {
   });
 }
 function forwardEnvToPluginWorkers(env: Record<string, string>) {
-  getPlugins()
+  getPlugins(readNxJson(workspaceRoot))
     .then((plugins) => {
       for (const plugin of plugins) {
         plugin.setWorkerEnv?.(env)?.catch((e) => {

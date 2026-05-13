@@ -118,7 +118,7 @@ export async function retrieveProjectConfigurationsWithAngularProjects(
     pluginsToLoad.push(join(__dirname, '../../adapter/angular-json'));
   }
 
-  const separatedPlugins = await getPluginsSeparated(workspaceRoot);
+  const separatedPlugins = await getPluginsSeparated(nxJson, workspaceRoot);
 
   const res = await retrieveProjectConfigurations(
     separatedPlugins,

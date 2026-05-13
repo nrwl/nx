@@ -114,7 +114,7 @@ function kickOffRecompute() {
     const nxJson = readNxJson(workspaceRoot);
     const myPluginsHash = hashObject(nxJson.plugins ?? []);
 
-    const plugins = await getPluginsSeparated(workspaceRoot, nxJson);
+    const plugins = await getPluginsSeparated(nxJson, workspaceRoot);
 
     // Plugin set we just loaded may already be stale vs disk.
     if (isStale(myPluginsHash)) return chainToSuccessor(myPromise);
@@ -592,7 +592,7 @@ async function createAndSerializeProjectGraph({
         fileMap,
         rustReferences,
         currentProjectFileMapCache || readFileMapCache(),
-        await getPlugins(),
+        await getPlugins(readNxJson(workspaceRoot)),
         sourceMaps
       );
 
