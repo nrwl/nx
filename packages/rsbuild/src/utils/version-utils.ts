@@ -8,11 +8,21 @@ import {
 
 const RSBUILD_CORE_PACKAGE = '@rsbuild/core';
 
-function throwUnsupportedRsbuildVersion(installedMajor: number): never {
+function throwBelowFloor(installedMajor: number): never {
   throw new Error(
-    `@nx/rsbuild requires ${RSBUILD_CORE_PACKAGE}@>=1.0.0, but found ` +
-      `version ${installedMajor}.x installed. Please upgrade ${RSBUILD_CORE_PACKAGE} ` +
-      `to a supported major (1.x or 2.x).`
+    `@nx/rsbuild requires ${RSBUILD_CORE_PACKAGE}@>=1.0.0, but found version ` +
+      `${installedMajor}.x installed. Please upgrade ${RSBUILD_CORE_PACKAGE} ` +
+      `to a supported major (1.x).`
+  );
+}
+
+function throwAboveWindow(installedMajor: number): never {
+  throw new Error(
+    `@nx/rsbuild does not yet support ${RSBUILD_CORE_PACKAGE}@${installedMajor}.x. ` +
+      `${RSBUILD_CORE_PACKAGE}@2 ships as pure ESM and the plugin needs ` +
+      `architectural work before it can load it; tracked in NXC-4460 ` +
+      `(https://linear.app/nxdev/issue/NXC-4460). Pin ${RSBUILD_CORE_PACKAGE}@^1 ` +
+      `until that work lands.`
   );
 }
 
@@ -23,8 +33,8 @@ function cleanVersion(version: string): string | undefined {
 /**
  * Returns the installed @rsbuild/core major version from the workspace's
  * package.json, or `undefined` when @rsbuild/core is not yet installed
- * (fresh-install path). Throws when an unsupported (below-floor) version
- * is detected.
+ * (fresh-install path). Throws when an unsupported version is detected
+ * (below floor or above window).
  */
 export function getInstalledRsbuildMajorVersion(
   tree: Tree
@@ -41,44 +51,42 @@ export function getInstalledRsbuildMajorVersion(
 
   const installedMajor = major(cleaned);
   if (installedMajor < 1) {
-    throwUnsupportedRsbuildVersion(installedMajor);
+    throwBelowFloor(installedMajor);
   }
-  if (installedMajor === 1 || installedMajor === 2) {
-    return installedMajor;
+  if (installedMajor > 1) {
+    throwAboveWindow(installedMajor);
   }
-  return undefined;
+  return 1;
 }
 
 /**
  * Returns the installed @rsbuild/core major version resolved at runtime via
  * `require.resolve`. For use in executors and runtime code where no Tree is
  * available. Returns `null` when @rsbuild/core can't be resolved. Throws
- * when an unsupported (below-floor) version is detected.
+ * when an unsupported version is detected.
  */
 export function getInstalledRsbuildVersionRuntime(): SupportedRsbuildMajorVersion | null {
+  let packageJsonPath: string;
   try {
-    const packageJsonPath = require.resolve(
-      `${RSBUILD_CORE_PACKAGE}/package.json`,
-      {
-        paths: [process.cwd()],
-      }
-    );
-    const { version } = require(packageJsonPath) as { version: string };
-    const cleaned = cleanVersion(version);
-    if (!cleaned) {
-      return null;
-    }
-    const installedMajor = major(cleaned);
-    if (installedMajor < 1) {
-      throwUnsupportedRsbuildVersion(installedMajor);
-    }
-    if (installedMajor === 1 || installedMajor === 2) {
-      return installedMajor;
-    }
-    return null;
+    packageJsonPath = require.resolve(`${RSBUILD_CORE_PACKAGE}/package.json`, {
+      paths: [process.cwd()],
+    });
   } catch {
     return null;
   }
+  const { version } = require(packageJsonPath) as { version: string };
+  const cleaned = cleanVersion(version);
+  if (!cleaned) {
+    return null;
+  }
+  const installedMajor = major(cleaned);
+  if (installedMajor < 1) {
+    throwBelowFloor(installedMajor);
+  }
+  if (installedMajor > 1) {
+    throwAboveWindow(installedMajor);
+  }
+  return 1;
 }
 
 /**

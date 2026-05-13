@@ -1,6 +1,9 @@
 export const nxVersion = require('../../package.json').version;
 
-export const supportedRsbuildMajorVersions = [2, 1] as const;
+// Supported `@rsbuild/core` majors. Currently v1 only — v2 ships as pure
+// ESM, which @nx/rsbuild (CommonJS) cannot consume without a deeper
+// refactor; tracked separately.
+export const supportedRsbuildMajorVersions = [1] as const;
 export type SupportedRsbuildMajorVersion =
   (typeof supportedRsbuildMajorVersions)[number];
 
@@ -12,25 +15,17 @@ type RsbuildVersionMap = {
 };
 
 export const latestRsbuildVersions: RsbuildVersionMap = {
-  rsbuildVersion: '^2.0.6',
-  rsbuildPluginReactVersion: '^2.0.0',
-  // plugin-vue and plugin-sass remain on 1.x but declare compatibility with
-  // rsbuild ^1.0.0 || ^2.0.0-0, so the same range works on both majors.
-  rsbuildPluginVueVersion: '^1.2.8',
-  rsbuildPluginSassVersion: '^1.5.2',
+  rsbuildVersion: '^1.1.10',
+  rsbuildPluginReactVersion: '^1.1.0',
+  rsbuildPluginVueVersion: '^1.0.5',
+  rsbuildPluginSassVersion: '^1.1.2',
 };
 
 export const backwardCompatibleRsbuildVersions: Record<
   SupportedRsbuildMajorVersion,
   RsbuildVersionMap
 > = {
-  2: latestRsbuildVersions,
-  1: {
-    rsbuildVersion: '^1.1.10',
-    rsbuildPluginReactVersion: '^1.1.0',
-    rsbuildPluginVueVersion: '^1.0.5',
-    rsbuildPluginSassVersion: '^1.1.2',
-  },
+  1: latestRsbuildVersions,
 };
 
 /**
