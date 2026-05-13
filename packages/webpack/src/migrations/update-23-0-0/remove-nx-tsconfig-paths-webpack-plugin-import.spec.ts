@@ -181,6 +181,42 @@ import { NxTsconfigPathsWebpackPlugin as P3, NxAppWebpackPlugin } from '@nx/webp
     `);
   });
 
+  it('consumes whitespace before the trailing comma in ES imports', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      'apps/my-app/webpack.config.ts',
+      `import { NxTsconfigPathsWebpackPlugin , NxAppWebpackPlugin } from '@nx/webpack';`
+    );
+
+    await removeNxTsconfigPathsWebpackPluginImport(tree);
+
+    expect(tree.read('apps/my-app/webpack.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { NxTsconfigPathsWebpackPlugin } from '@nx/webpack/tsconfig-paths-plugin';
+      import { NxAppWebpackPlugin } from '@nx/webpack';
+      "
+    `);
+  });
+
+  it('consumes whitespace before the trailing comma in CJS requires', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      'apps/my-app/webpack.config.js',
+      `const { NxTsconfigPathsWebpackPlugin , NxAppWebpackPlugin } = require('@nx/webpack');`
+    );
+
+    await removeNxTsconfigPathsWebpackPluginImport(tree);
+
+    expect(tree.read('apps/my-app/webpack.config.js', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "const {
+        NxTsconfigPathsWebpackPlugin,
+      } = require('@nx/webpack/tsconfig-paths-plugin');
+      const { NxAppWebpackPlugin } = require('@nx/webpack');
+      "
+    `);
+  });
+
   it('does not modify files already using the correct sub-path import', async () => {
     const tree = createTreeWithEmptyWorkspace();
     // Use the already-prettier-formatted form so formatFiles does not change it

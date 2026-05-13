@@ -171,6 +171,40 @@ import { NxReactWebpackPlugin as P3, withReact } from '@nx/react';
     `);
   });
 
+  it('consumes whitespace before the trailing comma in ES imports', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      'apps/my-app/webpack.config.ts',
+      `import { NxReactWebpackPlugin , withReact } from '@nx/react';`
+    );
+
+    await removeNxReactWebpackPluginImport(tree);
+
+    expect(tree.read('apps/my-app/webpack.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { NxReactWebpackPlugin } from '@nx/react/webpack-plugin';
+      import { withReact } from '@nx/react';
+      "
+    `);
+  });
+
+  it('consumes whitespace before the trailing comma in CJS requires', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      'apps/my-app/webpack.config.js',
+      `const { NxReactWebpackPlugin , withReact } = require('@nx/react');`
+    );
+
+    await removeNxReactWebpackPluginImport(tree);
+
+    expect(tree.read('apps/my-app/webpack.config.js', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
+      const { withReact } = require('@nx/react');
+      "
+    `);
+  });
+
   it('does not modify files already using the correct sub-path import', async () => {
     const tree = createTreeWithEmptyWorkspace();
     const original = `const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');

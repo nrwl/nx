@@ -17,6 +17,17 @@ const CJS_BINDING_ELEMENTS_SELECTOR = `ObjectBindingPattern > BindingElement`;
 const CJS_TARGET_BINDING_SELECTOR = `ObjectBindingPattern > BindingElement > Identifier[name=${DEPRECATED_SYMBOL}]`;
 const CJS_REQUIRE_PATH_SELECTOR = `CallExpression:has(Identifier[name=require]) > StringLiteral[value=${DEPRECATED_PACKAGE}]`;
 
+// Walk past whitespace from `fromIndex` to find a trailing comma. Returns the
+// position AFTER the comma if found, otherwise the original index. Handles
+// the `Foo , withReact` shape where the user wrote whitespace before the
+// comma — `node.getEnd()` stops at the identifier and the comma sits one
+// character past the whitespace.
+function endAfterTrailingComma(text: string, fromIndex: number): number {
+  let i = fromIndex;
+  while (i < text.length && /\s/.test(text.charAt(i))) i++;
+  return text.charAt(i) === ',' ? i + 1 : fromIndex;
+}
+
 export default async function removeNxTsconfigPathsWebpackPluginImport(
   tree: Tree
 ) {
@@ -81,10 +92,7 @@ export default async function removeNxTsconfigPathsWebpackPluginImport(
             }
           } else {
             // Extract target spec verbatim (preserves alias)
-            const end =
-              contents.charAt(targetSpec.getEnd()) === ','
-                ? targetSpec.getEnd() + 1
-                : targetSpec.getEnd();
+            const end = endAfterTrailingComma(contents, targetSpec.getEnd());
             contents =
               `import { ${targetSpec.getText()} } from '${NEW_PACKAGE}';\n` +
               contents.slice(0, targetSpec.getStart()) +
@@ -122,10 +130,7 @@ export default async function removeNxTsconfigPathsWebpackPluginImport(
             }
           } else {
             // Extract target binding verbatim (preserves alias)
-            const end =
-              contents.charAt(targetBinding.getEnd()) === ','
-                ? targetBinding.getEnd() + 1
-                : targetBinding.getEnd();
+            const end = endAfterTrailingComma(contents, targetBinding.getEnd());
             contents =
               `const { ${targetBinding.getText()} } = require('${NEW_PACKAGE}');\n` +
               contents.slice(0, targetBinding.getStart()) +
