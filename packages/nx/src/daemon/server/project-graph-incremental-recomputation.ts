@@ -105,34 +105,25 @@ let cacheHasBeenPersisted = false;
  * (see spread.test.ts "middle plugin" flake).
  */
 function kickOffRecompute() {
-  let myPluginsHash: string | null = null;
-  try {
-    myPluginsHash = readNxJsonPluginsHash();
-  } catch (e) {
-    serverLogger.log(
-      `Failed to snapshot nx.json plugins for freshness gate; gate disabled this round: ${
-        e instanceof Error ? e.message : String(e)
-      }`
-    );
-  }
-
   let myPromise: Promise<SerializedProjectGraph>;
   myPromise = (async () => {
+    // Snapshot synchronously (before the first await) so we capture the
+    // disk state at the moment of kickoff. Any read failure here also
+    // dooms the compute (getPluginsSeparated reads nx.json too), so we
+    // let it propagate as a recompute error rather than try to limp on.
+    const myPluginsHash = readNxJsonPluginsHash();
+
     const plugins = await getPluginsSeparated();
 
-    if (myPluginsHash !== null) {
-      // Plugin set we just loaded may already be stale vs disk.
-      const stalePlugins = bailIfStale(myPluginsHash, myPromise);
-      if (stalePlugins) return stalePlugins;
-    }
+    // Plugin set we just loaded may already be stale vs disk.
+    const stalePlugins = bailIfStale(myPluginsHash, myPromise);
+    if (stalePlugins) return stalePlugins;
 
     const result = await processFilesAndCreateAndSerializeProjectGraph(plugins);
 
-    if (myPluginsHash !== null) {
-      // Compute may have run against plugins that are now stale.
-      const staleGraph = bailIfStale(myPluginsHash, myPromise);
-      if (staleGraph) return staleGraph;
-    }
+    // Compute may have run against plugins that are now stale.
+    const staleGraph = bailIfStale(myPluginsHash, myPromise);
+    if (staleGraph) return staleGraph;
 
     if (
       cachedSerializedProjectGraphPromise === myPromise &&
@@ -161,20 +152,7 @@ function bailIfStale(
   expectedHash: string,
   myPromise: Promise<SerializedProjectGraph>
 ): Promise<SerializedProjectGraph> | null {
-  let diskHash: string;
-  try {
-    diskHash = readNxJsonPluginsHash();
-  } catch (e) {
-    // Transient read failure (e.g. mid-write rename). Can't verify
-    // staleness this round — proceed without bailing rather than throw
-    // away a compute that may well be correct.
-    serverLogger.log(
-      `Failed to re-read nx.json for freshness check; proceeding without bail: ${
-        e instanceof Error ? e.message : String(e)
-      }`
-    );
-    return null;
-  }
+  const diskHash = readNxJsonPluginsHash();
   if (diskHash === expectedHash) return null;
   serverLogger.log(
     'Discarding stale recompute result (nx.json plugins changed mid-compute).'
