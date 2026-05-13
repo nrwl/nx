@@ -17,14 +17,9 @@ import {
   normalizeTargetDefaults,
 } from '../utils/normalize-target-defaults';
 
-// devkit supports `nx` at major +/- 1; on nx<23 the array shape doesn't
-// exist yet, so writing array would produce an nx.json the installed nx
-// can't validate. Promote-to-array only when nx is new enough; otherwise
-// preserve a legacy record on disk. Treat unknown / placeholder versions
-// (e.g. workspace dev "0.0.1" before publish replacement) as modern —
-// the alternative would silently downgrade every monorepo dev test.
-// Compare on major so beta/rc pre-release tags (`23.0.0-beta.8`) count
-// as nx 23 — `gte` would treat them as less than `23.0.0`.
+// Only write the array shape on nx >= 23 (workspace placeholder "0.0.1"
+// counts as modern); older nx can't validate it. Major-only compare so
+// pre-release tags like `23.0.0-beta.8` count as nx 23.
 const SUPPORTS_ARRAY_TARGET_DEFAULTS =
   !valid(NX_VERSION) || NX_VERSION === '0.0.1' || major(NX_VERSION) >= 23;
 
@@ -87,10 +82,8 @@ export function upsertTargetDefault(
     );
   }
 
-  // On pre-v23 nx with a record-shape on-disk value, try to preserve the
-  // record shape; if any entry can't be represented (filters, key
-  // collisions, missing key), force-promote to array shape rather than
-  // drop data — pre-v23 nx will warn but still read it.
+  // Preserve the record shape on pre-v23 nx when possible; promote to
+  // array if any entry can't be represented in record form.
   if (SUPPORTS_ARRAY_TARGET_DEFAULTS || Array.isArray(originalShape)) {
     nxJson.targetDefaults = entries;
   } else {
@@ -164,11 +157,8 @@ function buildTargetDefaultEntry(
   };
 }
 
-// Set-based equality so `['a','b']` and `['b','a']` are treated as the
-// same locator. Positional comparison would silently create a second
-// entry on re-upsert when the caller passes the same patterns in a
-// different order — an easy mistake when patterns are produced by
-// generated code or assembled from configuration.
+// Order-insensitive equality so re-upserts with reordered patterns
+// merge into the same entry rather than appending a duplicate.
 function projectsEqual(
   a: string | string[] | undefined,
   b: string | string[] | undefined

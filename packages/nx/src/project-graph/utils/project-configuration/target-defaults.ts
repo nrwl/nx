@@ -149,13 +149,10 @@ export function createTargetDefaultsResults(
   ];
 }
 
-// Returns the executor/command pair the real merge will end up with at
-// `(root, targetName)`. We don't reproduce the full per-target merge
-// here — only the fields the matcher cares about. For incompatible
-// pairs (e.g. specified `nx:run-commands` vs default `@nx/jest:jest`)
-// the default replaces the specified target wholesale, so we mirror
-// that behavior by returning the default. For compatible pairs, the
-// default's executor wins where set, otherwise the specified's.
+// Returns the (executor, command) pair the real merge will land on at
+// `(root, targetName)` — only the fields the matcher needs. Incompatible
+// pairs wholesale-replace specified with default; compatible pairs let
+// the default's executor win, otherwise the specified's.
 function effectiveTargetForLookup(
   specifiedTarget: TargetConfiguration | undefined,
   defaultTarget: TargetConfiguration | undefined,
@@ -234,11 +231,8 @@ function buildSyntheticTargetForRoot(
     root
   );
 
-  // Stamp executor/command from the effective shape. For entries that
-  // already specify these, this is a no-op (the matcher only returned
-  // compatible candidates). For entries that don't, this pre-aligns the
-  // synthetic with both layers so neither can incompatible-replace it
-  // during the real merge.
+  // Pre-stamp executor/command from the effective shape so the
+  // synthetic can't be incompatible-replaced during the real merge.
   if (effective.executor !== undefined) synthetic.executor = effective.executor;
   if (effective.command !== undefined) synthetic.command = effective.command;
 
@@ -438,24 +432,11 @@ function matchEntry(
   targetCommand: string | undefined
 ): Candidate | null {
   if (!entry) return null;
-  // Classify `projects:` first so the broadcast guard below can treat
-  // pure-wildcard patterns (`'*'`, `['*']`) the same as no filter, and
-  // empty arrays as a never-match (rather than silently slipping past
-  // both guards as a "filter" that matches nothing).
+  // `normalizeTargetDefaults` already drops entries with neither locator
+  // nor real filter. Empty-array `projects:` is an explicit never-match
+  // shape — kept by the normalizer because it's named, rejected here.
   const projectsKind = classifyProjectsFilter(entry.projects);
   if (projectsKind === 'empty') return null;
-  // Reject entries with no constraints whatsoever — without a locator
-  // (`target`/`executor`) or a filter (`projects`/`plugin`) the entry
-  // would broadcast to every (root, target) in the workspace. Pure
-  // wildcard `projects:` patterns count as "no filter" here.
-  if (
-    entry.target === undefined &&
-    entry.executor === undefined &&
-    projectsKind !== 'filter' &&
-    entry.plugin === undefined
-  ) {
-    return null;
-  }
 
   let targetKind: 'exact' | 'glob' | null = null;
   if (entry.target !== undefined) {
@@ -470,11 +451,8 @@ function matchEntry(
     if (executor && executor === entry.executor) {
       executorMatched = true;
     } else if (targetKind !== null && !executor && !targetCommand) {
-      // Injection: the entry's `target` locator already narrowed the match
-      // to a specific name, so it's safe to inject the entry's executor
-      // into a bare target. An executor-only entry (no `target` locator)
-      // never reaches this branch — without targeting, it would broadcast
-      // the executor to every executor-less target in the workspace.
+      // Bare target with no executor — safe to inject the entry's
+      // executor because the target locator has already narrowed the match.
       executorMatched = true;
     } else {
       return null;
@@ -491,17 +469,12 @@ function matchEntry(
 
   if (projectsKind === 'filter') {
     if (!projectName || !projectNode) return null;
-    // Copy the array — `findMatchingProjects` prepends '*' when the first
-    // pattern is a negation, mutating its input. Without the copy, every
-    // call corrupts the original `entry.projects` (and therefore the
-    // shared nxJson.targetDefaults entry) with a leading wildcard.
+    // Copy — `findMatchingProjects` prepends `*` for a leading negation
+    // and would otherwise mutate the shared nxJson entry.
     const patterns = Array.isArray(entry.projects)
       ? [...entry.projects!]
       : [entry.projects!];
     const matched = findMatchingProjects(patterns, {
-      // `findMatchingProjects` only reads `.name`, `.data.root`, and
-      // `.data.tags` — the keys our narrowed `projectNode` already
-      // satisfies — but its signature wants the full graph node.
       [projectName]: projectNode as ProjectGraphProjectNode,
     });
     if (!matched.includes(projectName)) return null;
@@ -606,14 +579,31 @@ export function normalizeTargetDefaults(
   raw: TargetDefaults | undefined
 ): NormalizedTargetDefaults {
   if (!raw) return [];
-  if (Array.isArray(raw)) return raw;
+  const entries = Array.isArray(raw) ? raw : recordToEntries(raw);
+  return entries.filter(isWellFormedEntry);
+}
+
+function recordToEntries(raw: TargetDefaultsRecord): TargetDefaultEntry[] {
   warnAboutLegacyRecordShapeOnce();
   const out: TargetDefaultEntry[] = [];
   for (const key of Object.keys(raw)) {
-    const value = (raw as TargetDefaultsRecord)[key] ?? {};
+    const value = raw[key] ?? {};
     out.push(...syntacticallyClassifyLegacyKey(key, value));
   }
   return out;
+}
+
+/**
+ * An entry is well-formed when it has at least one locator (`target` /
+ * `executor`) or a real filter (`projects` resolving to something other
+ * than empty/wildcard, or `plugin`). Pre-filtering here lets the matcher
+ * trust its inputs and skip the per-entry broadcast guard.
+ */
+function isWellFormedEntry(entry: TargetDefaultEntry): boolean {
+  if (entry.target !== undefined) return true;
+  if (entry.executor !== undefined) return true;
+  if (entry.plugin !== undefined) return true;
+  return classifyProjectsFilter(entry.projects) === 'filter';
 }
 
 /**
@@ -705,14 +695,9 @@ function resolveSourcePlugin(
   specifiedSourceMaps: ConfigurationSourceMaps | undefined,
   defaultSourceMaps: ConfigurationSourceMaps | undefined
 ): string | undefined {
-  // Default plugins (nx's baked-in inference of per-project config files
-  // like package.json, tsconfig.json) always overwrite specified-plugin
-  // attribution in the merge. Their attribution is what survives, so it
-  // takes precedence here when matching `plugin:` filters.
-  //
-  // We only consult the executor/command source-map keys — the top-level
-  // `targets.<name>` key tracks only the last writer, not the originator,
-  // and is unreliable for plugin attribution.
+  // Default-plugin attribution overrides specified-plugin attribution in
+  // the merge, so we check it first. Only the executor/command keys are
+  // reliable — the top-level `targets.<name>` key tracks the last writer.
   const executorKey = targetOptionSourceMapKey(targetName, 'executor');
   const commandKey = targetOptionSourceMapKey(targetName, 'command');
   const candidates: (string | undefined)[] = [

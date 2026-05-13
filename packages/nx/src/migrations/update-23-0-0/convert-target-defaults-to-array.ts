@@ -6,10 +6,7 @@ import type {
   TargetDefaultsRecord,
 } from '../../config/nx-json';
 import type { ProjectGraph } from '../../config/project-graph';
-import {
-  createProjectGraphAsync,
-  readCachedProjectGraph,
-} from '../../project-graph/project-graph';
+import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { isGlobPattern } from '../../utils/globs';
 
 /**
@@ -23,8 +20,9 @@ import { isGlobPattern } from '../../utils/globs';
  *    the key matches a target name and/or an executor string anywhere in
  *    the workspace. Emit one entry, or both when it matches both
  *    (genuinely ambiguous; safer to duplicate than drop a default).
- * 3. No graph or no match found: fall back to the syntactic heuristic —
- *    `:` (and not a glob) → executor; otherwise target.
+ *    If neither matches, the default is dead and we drop the entry.
+ * 3. No graph: fall back to the syntactic heuristic — `:` (and not a
+ *    glob) → executor; otherwise target.
  */
 export default async function convertTargetDefaultsToArray(
   tree: Tree,
@@ -90,10 +88,12 @@ function legacyKeyToEntries(
     }
     if (matchesTargetName) return [{ target: key, ...value }];
     if (matchesExecutor) return [{ executor: key, ...value }];
-    // Fall through to the syntactic heuristic when the workspace has
-    // neither a target named `key` nor a target using executor `key`.
+    // Graph evidence said no target and no executor in the workspace
+    // uses this key — the default is dead. Drop it rather than guess.
+    return [];
   }
 
+  // No graph available; fall back to the syntactic heuristic.
   return isExecutorLikeKey(key)
     ? [{ executor: key, ...value }]
     : [{ target: key, ...value }];
@@ -122,21 +122,9 @@ function classifyKeyAgainstGraph(
 async function tryCreateProjectGraph(
   nextSteps: string[]
 ): Promise<ProjectGraph | undefined> {
-  // Prefer a cached graph so we don't pay the build cost twice when one
-  // already exists (e.g. earlier migrations in the same run that built
-  // it themselves). `readCachedProjectGraph` throws if no cache is
-  // available — fall through to building one in that case.
-  try {
-    return readCachedProjectGraph();
-  } catch {}
-
-  // The graph may fail to build mid-migration (e.g. another change
-  // earlier in the same migrate run left the workspace transiently
-  // inconsistent). Falling back to the syntactic heuristic is safer
-  // than aborting, but surface a follow-up note so users know `:` keys
-  // are being disambiguated by shape rather than by graph evidence —
-  // returned as a next-step rather than a logger.warn so it isn't
-  // drowned in the per-migration log stream.
+  // Build fresh — earlier migrations in this run may have mutated files
+  // the cached graph was computed from, so a cache hit could classify
+  // record keys against a stale workspace.
   try {
     return await createProjectGraphAsync();
   } catch (err) {
