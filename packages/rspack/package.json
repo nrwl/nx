@@ -31,9 +31,6 @@
     "@nx/module-federation": "workspace:*",
     "@nx/web": "workspace:*",
     "@phenomnomnominal/tsquery": "catalog:typescript",
-    "@rspack/core": "catalog:rspack",
-    "@rspack/dev-server": "catalog:rspack",
-    "@rspack/plugin-react-refresh": "catalog:rspack",
     "autoprefixer": "catalog:css",
     "browserslist": "^4.26.0",
     "css-loader": "^6.4.0",
@@ -63,7 +60,11 @@
     "nx": "workspace:*",
     "@nx/nest": "workspace:*"
   },
-  "peerDependencies": {},
+  "peerDependencies": {
+    "@rspack/core": "^1.0.0",
+    "@rspack/dev-server": "^1.0.0",
+    "@rspack/plugin-react-refresh": "^1.0.0"
+  },
   "nx-migrations": {
     "migrations": "./migrations.json"
   },
