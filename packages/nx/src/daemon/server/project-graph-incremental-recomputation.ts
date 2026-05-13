@@ -108,23 +108,35 @@ function kickOffRecompute() {
   const myPluginsHash = currentNxJsonPluginsHash();
 
   let myPromise: Promise<SerializedProjectGraph>;
-  myPromise = (async () => {
-    const plugins = await getPluginsSeparated();
-    const result = await processFilesAndCreateAndSerializeProjectGraph(plugins);
-
+  // Re-reads nx.json; returns the cached pointer (so awaiters chain to
+  // the successor) if disk diverged from `myPluginsHash`. Called at two
+  // points: after getPluginsSeparated to skip the expensive compute when
+  // we already know we're stale, and after the compute to catch a disk
+  // change that happened during it.
+  const bailIfStale = (): Promise<SerializedProjectGraph> | null => {
     const isStaleVsDisk =
       myPluginsHash !== undefined &&
       currentNxJsonPluginsHash() !== myPluginsHash;
-
-    if (isStaleVsDisk) {
-      serverLogger.log(
-        'Discarding stale recompute result (nx.json plugins changed mid-compute).'
-      );
-      if (cachedSerializedProjectGraphPromise === myPromise) {
-        kickOffRecompute();
-      }
-      return cachedSerializedProjectGraphPromise;
+    if (!isStaleVsDisk) return null;
+    serverLogger.log(
+      'Discarding stale recompute result (nx.json plugins changed mid-compute).'
+    );
+    if (cachedSerializedProjectGraphPromise === myPromise) {
+      kickOffRecompute();
     }
+    return cachedSerializedProjectGraphPromise;
+  };
+
+  myPromise = (async () => {
+    const plugins = await getPluginsSeparated();
+
+    const earlyStale = bailIfStale();
+    if (earlyStale) return earlyStale;
+
+    const result = await processFilesAndCreateAndSerializeProjectGraph(plugins);
+
+    const lateStale = bailIfStale();
+    if (lateStale) return lateStale;
 
     if (
       cachedSerializedProjectGraphPromise === myPromise &&
