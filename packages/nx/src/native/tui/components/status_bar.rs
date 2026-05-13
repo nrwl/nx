@@ -9,7 +9,7 @@ use ratatui::{
     widgets::Paragraph,
 };
 
-use crate::native::tui::{action::Action, theme::THEME};
+use crate::native::tui::theme::THEME;
 
 use super::Component;
 use super::tasks_list::TaskStatus;
@@ -146,6 +146,18 @@ impl BarItem {
         }
     }
 
+    /// Whether this item is contextually applicable given the current
+    /// task-list visibility. `ShowTaskListHelp` only appears when hidden;
+    /// `FilterHelp` only appears when visible (its target is the list).
+    /// All other items are unconditionally applicable.
+    pub fn applies_when(self, hidden_task_list: bool) -> bool {
+        match self {
+            BarItem::ShowTaskListHelp => hidden_task_list,
+            BarItem::FilterHelp => !hidden_task_list,
+            _ => true,
+        }
+    }
+
     /// Drop priority (rung number). Sticky items return `u8::MAX` since
     /// they're never considered by the greedy drop walk.
     pub fn priority(self) -> u8 {
@@ -274,6 +286,37 @@ fn drop_order() -> [BarItem; 9] {
     ]
 }
 
+/// Rendered width of one side (summary or help) given the kept items in
+/// display order. `CachedBracket` is treated as attached: it contributes
+/// its width but no preceding separator (the renderer glues it onto
+/// `PassedChip` directly, and `CachedBracket.width(counts)` already
+/// accounts for the joining space).
+fn side_width(side: BarSide, items: &[BarItem], counts: &StatusCounts) -> u16 {
+    if items.is_empty() {
+        return 0;
+    }
+    let sep = match side {
+        BarSide::Summary => SUMMARY_CHIP_SEP,
+        BarSide::Help => HELP_SHORTCUT_SEP,
+    };
+    let content: u16 = items.iter().map(|i| i.width(counts)).sum();
+    let sep_count = items
+        .iter()
+        .filter(|i| !matches!(i, BarItem::CachedBracket))
+        .count() as u16;
+    content + sep * sep_count.saturating_sub(1)
+}
+
+/// Total rendered width of a bar layout (summary + inter-side gap + help).
+/// Shared between the fit pass (deciding whether a candidate set fits) and
+/// the parity test (verifying it matches what the renderer actually emits).
+fn layout_total_width(summary: &[BarItem], help: &[BarItem], counts: &StatusCounts) -> u16 {
+    let s = side_width(BarSide::Summary, summary, counts);
+    let h = side_width(BarSide::Help, help, counts);
+    let gap = if s > 0 && h > 0 { SUMMARY_HELP_GAP } else { 0 };
+    s + h + gap
+}
+
 /// Compute the bar layout for a given terminal width.
 ///
 /// Algorithm:
@@ -287,13 +330,15 @@ fn drop_order() -> [BarItem; 9] {
 /// 5. **Compress sticky** (rung 14): set the flag if step 4 still
 ///    overflows. Renderer will shrink sticky text to fit.
 pub fn fit_bar_layout(width: u16, counts: &StatusCounts, hidden_task_list: bool) -> BarLayout {
-    // Start by collecting every renderable item (positive width).
+    // Start by collecting every renderable item: contextually applicable
+    // (see `BarItem::applies_when`) and with positive width (eager
+    // zero-drop at rung 1).
     let mut kept: std::collections::HashSet<BarItem> = std::collections::HashSet::new();
     for item in summary_display_order()
         .iter()
         .chain(help_display_order().iter())
     {
-        if *item == BarItem::ShowTaskListHelp && !hidden_task_list {
+        if !item.applies_when(hidden_task_list) {
             continue;
         }
         if item.width(counts) > 0 {
@@ -303,32 +348,15 @@ pub fn fit_bar_layout(width: u16, counts: &StatusCounts, hidden_task_list: bool)
 
     // Helper: total width if `kept` were rendered as-is.
     let total_width = |kept: &std::collections::HashSet<BarItem>| -> u16 {
-        let side_width = |side: BarSide, order: &[BarItem]| -> u16 {
-            let items: Vec<BarItem> = order
-                .iter()
-                .copied()
-                .filter(|i| i.side() == side && kept.contains(i))
-                .collect();
-            if items.is_empty() {
-                return 0;
-            }
-            let sep = match side {
-                BarSide::Summary => SUMMARY_CHIP_SEP,
-                BarSide::Help => HELP_SHORTCUT_SEP,
-            };
-            let content: u16 = items.iter().map(|i| i.width(counts)).sum();
-            content + sep * (items.len() as u16 - 1)
-        };
-
-        let summary = side_width(BarSide::Summary, &summary_display_order());
-        let help = side_width(BarSide::Help, &help_display_order());
-        // Gap between sides only counts when both have content.
-        let gap = if summary > 0 && help > 0 {
-            SUMMARY_HELP_GAP
-        } else {
-            0
-        };
-        summary + help + gap
+        let summary: Vec<BarItem> = summary_display_order()
+            .into_iter()
+            .filter(|i| kept.contains(i))
+            .collect();
+        let help: Vec<BarItem> = help_display_order()
+            .into_iter()
+            .filter(|i| kept.contains(i))
+            .collect();
+        layout_total_width(&summary, &help, counts)
     };
 
     // Greedy drop until it fits or we run out of droppable items.
@@ -388,23 +416,22 @@ pub fn fit_bar_layout(width: u16, counts: &StatusCounts, hidden_task_list: bool)
 /// before any chip. See `NXC-3076-IMPLEMENTATION-PLAN.md` and
 /// `tmp/nxc-3076/prototypes.html` (round 13) for the full ladder.
 pub struct StatusBar {
-    cloud_message: Option<String>,
     is_dimmed: bool,
-    /// Snapshot of run-wide status counts. App writes this each frame
-    /// before calling `draw`.
+    /// Frame snapshot — App writes this each frame before `draw` via
+    /// `set_state`. Cloud message lives in TuiState (single source of
+    /// truth); this field is just the most recent read for rendering.
     counts: StatusCounts,
-    /// Whether the task list is currently hidden. Drives `show task list: b`
-    /// help visibility.
     task_list_hidden: bool,
+    cloud_message: Option<String>,
 }
 
 impl StatusBar {
-    pub fn new(cloud_message: Option<String>) -> Self {
+    pub fn new() -> Self {
         Self {
-            cloud_message,
             is_dimmed: false,
             counts: StatusCounts::default(),
             task_list_hidden: false,
+            cloud_message: None,
         }
     }
 
@@ -412,24 +439,16 @@ impl StatusBar {
         self.is_dimmed = dimmed;
     }
 
-    pub fn set_cloud_message(&mut self, message: Option<String>) {
-        self.cloud_message = message;
-    }
-
     /// Snapshot of run state — caller (App) writes this before `draw`.
-    pub fn set_state(&mut self, counts: StatusCounts, task_list_hidden: bool) {
+    pub fn set_state(
+        &mut self,
+        counts: StatusCounts,
+        task_list_hidden: bool,
+        cloud_message: Option<String>,
+    ) {
         self.counts = counts;
         self.task_list_hidden = task_list_hidden;
-    }
-
-    pub fn has_cloud_message(&self) -> bool {
-        self.cloud_message.is_some()
-    }
-
-    /// Total bottom-area height required: 1 row for the bar itself,
-    /// plus 1 row for the cloud message when present.
-    pub fn required_height(&self) -> u16 {
-        if self.cloud_message.is_some() { 2 } else { 1 }
+        self.cloud_message = cloud_message;
     }
 
     /// Outcome state of the run — drives the progress text color.
@@ -784,14 +803,13 @@ fn truncate_to_width(s: &str, max: usize) -> String {
     out
 }
 
-impl Component for StatusBar {
-    fn update(&mut self, action: Action) -> Result<Option<Action>> {
-        if let Action::UpdateCloudMessage(message) = action {
-            self.cloud_message = Some(message);
-        }
-        Ok(None)
+impl Default for StatusBar {
+    fn default() -> Self {
+        Self::new()
     }
+}
 
+impl Component for StatusBar {
     fn draw(&mut self, f: &mut Frame, area: Rect) -> Result<()> {
         if area.width == 0
             || area.height == 0
@@ -1068,8 +1086,8 @@ mod tests {
         let height: u16 = if cloud.is_some() { 2 } else { 1 };
         let backend = TestBackend::new(width, height);
         let mut terminal = Terminal::new(backend).unwrap();
-        let mut bar = StatusBar::new(cloud.map(|s| s.to_string()));
-        bar.set_state(counts, hidden);
+        let mut bar = StatusBar::new();
+        bar.set_state(counts, hidden, cloud.map(|s| s.to_string()));
         terminal
             .draw(|f| {
                 let area = Rect::new(0, 0, width, height);
@@ -1354,6 +1372,100 @@ mod tests {
     fn visible_task_list_omits_show_task_list_help() {
         let layout = fit_bar_layout(160, &sample_counts(), false);
         assert!(!contains(&layout, BarItem::ShowTaskListHelp));
+    }
+
+    #[test]
+    fn hidden_task_list_drops_filter_help() {
+        // Filter targets the task list. When the list is hidden, the
+        // shortcut has no useful effect — it should be elided regardless of
+        // available width.
+        let layout = fit_bar_layout(200, &sample_counts(), true);
+        assert!(!contains(&layout, BarItem::FilterHelp));
+        // Sanity: filter is still present when the list is visible.
+        let layout = fit_bar_layout(200, &sample_counts(), false);
+        assert!(contains(&layout, BarItem::FilterHelp));
+    }
+
+    /// Invariant: the width the fit pass computes for a chosen layout must
+    /// equal the width the renderer actually emits. Would have caught the
+    /// CachedBracket separator over-charge (fix carried in this branch)
+    /// before snapshots locked it in. Exercises every interesting width ×
+    /// counts × hidden combination to keep coverage broad.
+    #[test]
+    fn fit_pass_width_matches_rendered_width() {
+        let mut completed = sample_counts();
+        completed.cached = 6;
+        let stopped = StatusCounts {
+            passed: 11,
+            cached: 0,
+            failed: 3,
+            skipped: 0,
+            stopped: 2,
+            running: 0,
+            pending: 13,
+        };
+
+        let scenarios: Vec<(u16, StatusCounts, bool)> = vec![
+            // Width sweep with sample state (cached=0).
+            (160, sample_counts(), false),
+            (120, sample_counts(), false),
+            (100, sample_counts(), false),
+            (80, sample_counts(), false),
+            (65, sample_counts(), false),
+            (50, sample_counts(), false),
+            (45, sample_counts(), false),
+            (40, sample_counts(), false),
+            (35, sample_counts(), false),
+            // Cached present — exercises the separator-attachment path.
+            (200, completed, false),
+            (160, completed, false),
+            (140, completed, false),
+            (120, completed, false),
+            (100, completed, false),
+            // Full counts — every chip non-zero, including SkipStopChips.
+            (200, full_counts(), false),
+            (140, full_counts(), false),
+            (120, full_counts(), false),
+            (80, full_counts(), false),
+            // Stopped variant — ensures inner SkipStopChips with only one
+            // sub-chip renders identically to fit-pass expectation.
+            (140, stopped, false),
+            (100, stopped, false),
+            // Hidden task list — drops `filter:`, adds `show task list: b`.
+            (200, sample_counts(), true),
+            (120, sample_counts(), true),
+            (80, sample_counts(), true),
+            // Empty run — only sticky help, no chips.
+            (100, StatusCounts::default(), false),
+            (40, StatusCounts::default(), false),
+        ];
+
+        for (w, counts, hidden) in scenarios {
+            let layout = fit_bar_layout(w, &counts, hidden);
+
+            let mut bar = StatusBar::new();
+            bar.set_state(counts, hidden, None);
+            let outcome = bar.run_outcome();
+            let summary_spans = bar.build_summary_spans(&layout, &counts, outcome);
+            let help_spans = bar.build_help_spans(&layout, &counts);
+
+            let summary_w = visual_width(&summary_spans);
+            let help_w = visual_width(&help_spans);
+            let gap = if summary_w > 0 && help_w > 0 {
+                SUMMARY_HELP_GAP
+            } else {
+                0
+            };
+            let rendered = summary_w + gap + help_w;
+
+            let computed = layout_total_width(&layout.summary, &layout.help, &counts);
+
+            assert_eq!(
+                computed, rendered,
+                "fit-pass width != rendered width at W={} hidden={} counts={:?} layout={:?}",
+                w, hidden, counts, layout
+            );
+        }
     }
 
     #[test]

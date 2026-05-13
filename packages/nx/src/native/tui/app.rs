@@ -257,10 +257,10 @@ impl App {
         let countdown_popup = CountdownPopup::new();
         let hint_popup = HintPopup::new();
 
-        // Re-seed StatusBar with any persisted cloud message so mode switches
-        // (inline ↔ fullscreen) don't drop it from the bar.
-        let initial_cloud_message = state.lock().get_cloud_message().map(|s| s.to_string());
-        let status_bar = StatusBar::new(initial_cloud_message);
+        // StatusBar pulls cloud message (and other state) from TuiState
+        // via set_state every frame, so mode-switch persistence comes for
+        // free — no initial seed needed here.
+        let status_bar = StatusBar::new();
 
         let components: Vec<Box<dyn Component>> = vec![
             Box::new(tasks_list),
@@ -1360,9 +1360,11 @@ impl App {
                     // present) at the bottom of the frame. Renders regardless
                     // of task list visibility so it survives `b`-toggle.
                     if let Some(status_bar_area) = self.status_bar_area {
-                        // Snapshot run state from tasks_list into StatusBar
-                        // before drawing. Counts are O(N) but N is bounded by
-                        // task count; per-frame is fine.
+                        // Snapshot run state into StatusBar before drawing.
+                        // Counts are O(N) but N is bounded by task count;
+                        // per-frame is fine. Cloud message comes off the
+                        // shared state lock — same source set_cloud_message
+                        // writes to.
                         let counts = self
                             .components
                             .iter()
@@ -1372,13 +1374,19 @@ impl App {
                             })
                             .unwrap_or_default();
                         let task_list_hidden = self.is_task_list_hidden();
+                        let cloud_message = self
+                            .core
+                            .state()
+                            .lock()
+                            .get_cloud_message()
+                            .map(|s| s.to_string());
 
                         if let Some(status_bar) = self
                             .components
                             .iter_mut()
                             .find_map(|c| c.as_any_mut().downcast_mut::<StatusBar>())
                         {
-                            status_bar.set_state(counts, task_list_hidden);
+                            status_bar.set_state(counts, task_list_hidden, cloud_message);
                             let _ = status_bar.draw(f, status_bar_area);
                         }
                     }
@@ -1472,25 +1480,17 @@ impl App {
     }
 
     pub fn set_cloud_message(&mut self, message: Option<String>) {
-        // Store in state (for mode switching persistence)
-        self.core.state().lock().set_cloud_message(message.clone());
-        // Synchronously propagate to the StatusBar so its required_height()
-        // reflects the new cloud state before we recalculate layout areas
-        // below. (Action dispatch below remains for other consumers.)
-        if let Some(status_bar) = self
-            .components
-            .iter_mut()
-            .find_map(|c| c.as_any_mut().downcast_mut::<StatusBar>())
-        {
-            status_bar.set_cloud_message(message.clone());
-        }
-        // Dispatch to other UI components.
-        if let Some(message) = message {
-            self.dispatch_action(Action::UpdateCloudMessage(message));
-        }
+        // Single source of truth lives in TuiState. The status bar reads it
+        // each frame via set_state. Required-height reads it directly off
+        // the lock during layout recalculation below.
+        self.core.state().lock().set_cloud_message(message);
         // Cloud message presence changes the status bar's required height,
         // so recompute layout areas immediately rather than waiting for resize.
         self.recalculate_layout_areas();
+        // The bar height change shrinks/grows the area available to terminal
+        // panes; resync PTY dimensions so running output doesn't wrap against
+        // stale row counts until the next user-driven resize.
+        let _ = self.handle_pty_resize();
     }
 
     /// Dispatches an action to the action tx for other components to handle however they see fit
@@ -1526,13 +1526,15 @@ impl App {
 
     /// Height (in rows) the status bar needs at the bottom of the frame:
     /// 1 row for the bar itself, plus 1 more for the cloud message row
-    /// when one is present. Reads the bar's own state via downcast.
+    /// when one is present. Reads cloud presence from TuiState (single
+    /// source of truth) so callers don't have to keep the bar's snapshot
+    /// in sync ahead of layout recalculation.
     fn required_status_bar_height(&self) -> u16 {
-        self.components
-            .iter()
-            .find_map(|c| c.as_any().downcast_ref::<StatusBar>())
-            .map(|bar| bar.required_height())
-            .unwrap_or(1)
+        if self.core.state().lock().get_cloud_message().is_some() {
+            2
+        } else {
+            1
+        }
     }
 
     /// Checks if the current view has any visible output panes.
