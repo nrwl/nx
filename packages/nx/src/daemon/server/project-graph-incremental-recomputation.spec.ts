@@ -101,6 +101,10 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
       const { setWorkspaceRoot } = require('../../utils/workspace-root');
       setWorkspaceRoot(fs.tempDir);
 
+      // Park the first IIFE between its synchronous hash snapshot and
+      // its commit — that gap is the bug window. Real getPluginsSeparated
+      // resolves too fast to rewrite nx.json in between, so we gate it
+      // here to control timing only.
       let resolveFirstPlugins: () => void;
       const firstPluginsGate = new Promise<void>((resolve) => {
         resolveFirstPlugins = resolve;
@@ -118,15 +122,8 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
         }),
       }));
 
-      const logSpy = jest.fn();
-      jest.doMock('../logger', () => ({
-        __esModule: true,
-        serverLogger: {
-          log: logSpy,
-          watcherLog: jest.fn(),
-          requestLog: jest.fn(),
-        },
-      }));
+      const { serverLogger } = require('../logger');
+      const logSpy = jest.spyOn(serverLogger, 'log');
 
       const {
         scheduleProjectGraphRecomputation,
