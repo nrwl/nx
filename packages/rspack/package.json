@@ -24,6 +24,8 @@
   "generators": "./generators.json",
   "executors": "./executors.json",
   "dependencies": {
+    "@module-federation/enhanced": "catalog:",
+    "@module-federation/node": "^2.7.21",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/module-federation": "workspace:*",
@@ -60,10 +62,7 @@
     "nx": "workspace:*",
     "@nx/nest": "workspace:*"
   },
-  "peerDependencies": {
-    "@module-federation/enhanced": "catalog:",
-    "@module-federation/node": "^2.7.21"
-  },
+  "peerDependencies": {},
   "nx-migrations": {
     "migrations": "./migrations.json"
   },
