@@ -107,13 +107,14 @@ let cacheHasBeenPersisted = false;
 function kickOffRecompute() {
   let myPromise: Promise<SerializedProjectGraph>;
   myPromise = (async () => {
-    // Snapshot synchronously (before the first await) so we capture the
-    // disk state at the moment of kickoff. Any read failure here also
-    // dooms the compute (getPluginsSeparated reads nx.json too), so we
-    // let it propagate as a recompute error rather than try to limp on.
-    const myPluginsHash = readNxJsonPluginsHash();
+    // Single read shared with getPluginsSeparated below. This collapses
+    // what would otherwise be two independent nx.json reads (our snap +
+    // the plugin loader's) into one, so the snap hash and the plugin
+    // set the compute uses always reflect the same disk state.
+    const nxJson = readNxJson(workspaceRoot);
+    const myPluginsHash = hashObject(nxJson.plugins ?? []);
 
-    const plugins = await getPluginsSeparated();
+    const plugins = await getPluginsSeparated(workspaceRoot, nxJson);
 
     // Plugin set we just loaded may already be stale vs disk.
     const stalePlugins = bailIfStale(myPluginsHash, myPromise);

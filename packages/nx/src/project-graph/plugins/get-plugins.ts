@@ -1,7 +1,11 @@
 import { join } from 'node:path';
 
 import { shouldMergeAngularProjects } from '../../adapter/angular-json';
-import { PluginConfiguration, readNxJson } from '../../config/nx-json';
+import {
+  NxJsonConfiguration,
+  PluginConfiguration,
+  readNxJson,
+} from '../../config/nx-json';
 import { hashObject } from '../../hasher/file-hasher';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { loadNxPlugin } from './in-process-loader';
@@ -53,11 +57,17 @@ export async function getPlugins(
  * package.json, etc.) as separate arrays. This separation is needed for
  * two-phase project configuration processing where target defaults are
  * applied between specified and default plugin results.
+ *
+ * `nxJson` can be passed by callers (e.g. the daemon's freshness-gated
+ * recompute) that need their snapshot of nx.json to match the one the
+ * plugin loader uses. Without it, this function reads nx.json itself —
+ * fine for callers that don't care about that consistency.
  */
 export async function getPluginsSeparated(
-  root = workspaceRoot
+  root = workspaceRoot,
+  nxJson?: NxJsonConfiguration
 ): Promise<SeparatedPlugins> {
-  const pluginsConfiguration = readNxJson(root).plugins ?? [];
+  const pluginsConfiguration = (nxJson ?? readNxJson(root)).plugins ?? [];
   const pluginsConfigurationHash = hashObject(pluginsConfiguration);
 
   // If the plugins configuration has not changed, reuse the current plugins
