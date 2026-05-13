@@ -208,7 +208,7 @@ function buildSyntheticTargetForRoot(
   targetName: string,
   root: string,
   effective: { executor: string | undefined; command: string | undefined },
-  entries: NormalizedTargetDefaults,
+  targetDefaults: NormalizedTargetDefaults,
   projectName: string | undefined,
   projectNode: ProjectGraphProjectNode | undefined,
   sourcePlugin: string | undefined
@@ -219,7 +219,7 @@ function buildSyntheticTargetForRoot(
     projectName,
     projectNode,
     sourcePlugin,
-    entries,
+    targetDefaults,
     effective.command,
     (candidate) =>
       isCompatibleTarget(
@@ -348,7 +348,9 @@ export function findBestTargetDefault(
   targetName: string,
   executor: string | undefined,
   projectName: string | undefined,
-  projectNode: ProjectGraphProjectNode | undefined,
+  projectNode:
+    | Pick<ProjectGraphProjectNode, 'name' | 'tags' | 'root'>
+    | undefined,
   sourcePlugin: string | undefined,
   entries: NormalizedTargetDefaults,
   targetCommand?: string | undefined,
@@ -425,7 +427,9 @@ function matchEntry(
   targetName: string,
   executor: string | undefined,
   projectName: string | undefined,
-  projectNode: ProjectGraphProjectNode | undefined,
+  projectNode:
+    | Pick<ProjectGraphProjectNode, 'name' | 'tags' | 'root'>
+    | undefined,
   sourcePlugin: string | undefined,
   targetCommand: string | undefined
 ): Candidate | null {

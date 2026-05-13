@@ -42,7 +42,7 @@ describe('convert-target-defaults-to-array migration', () => {
 
   it('is a no-op when nx.json does not exist', async () => {
     tree.delete('nx.json');
-    await expect(convertTargetDefaultsToArray(tree)).resolves.toBeUndefined();
+    await expect(convertTargetDefaultsToArray(tree)).resolves.toEqual([]);
   });
 
   it('is a no-op when targetDefaults is absent', async () => {

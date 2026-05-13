@@ -11,7 +11,6 @@ import {
   readCachedProjectGraph,
 } from '../../project-graph/project-graph';
 import { isGlobPattern } from '../../utils/globs';
-import { logger } from '../../utils/logger';
 
 /**
  * Converts the legacy record-shape `targetDefaults` in nx.json to the new
@@ -30,19 +29,20 @@ import { logger } from '../../utils/logger';
 export default async function convertTargetDefaultsToArray(
   tree: Tree,
   projectGraph?: ProjectGraph
-): Promise<void> {
+): Promise<string[]> {
   if (!tree.exists('nx.json')) {
-    return;
+    return [];
   }
 
   const nxJson = readNxJson(tree);
-  if (!nxJson) return;
+  if (!nxJson) return [];
 
   const { targetDefaults } = nxJson;
-  if (!targetDefaults) return;
-  if (Array.isArray(targetDefaults)) return;
+  if (!targetDefaults) return [];
+  if (Array.isArray(targetDefaults)) return [];
 
-  const graph = projectGraph ?? (await tryCreateProjectGraph());
+  const nextSteps: string[] = [];
+  const graph = projectGraph ?? (await tryCreateProjectGraph(nextSteps));
 
   const legacy = targetDefaults as TargetDefaultsRecord;
   const entries: TargetDefaultEntry[] = [];
@@ -55,6 +55,7 @@ export default async function convertTargetDefaultsToArray(
   updateNxJson(tree, nxJson);
 
   await formatChangedFilesWithPrettierIfAvailable(tree);
+  return nextSteps;
 }
 
 /**
@@ -118,7 +119,9 @@ function classifyKeyAgainstGraph(
   return { matchesTargetName, matchesExecutor };
 }
 
-async function tryCreateProjectGraph(): Promise<ProjectGraph | undefined> {
+async function tryCreateProjectGraph(
+  nextSteps: string[]
+): Promise<ProjectGraph | undefined> {
   // Prefer a cached graph so we don't pay the build cost twice when one
   // already exists (e.g. earlier migrations in the same run that built
   // it themselves). `readCachedProjectGraph` throws if no cache is
@@ -130,12 +133,14 @@ async function tryCreateProjectGraph(): Promise<ProjectGraph | undefined> {
   // The graph may fail to build mid-migration (e.g. another change
   // earlier in the same migrate run left the workspace transiently
   // inconsistent). Falling back to the syntactic heuristic is safer
-  // than aborting, but warn so users know `:` keys are being
-  // disambiguated by shape rather than by graph evidence.
+  // than aborting, but surface a follow-up note so users know `:` keys
+  // are being disambiguated by shape rather than by graph evidence —
+  // returned as a next-step rather than a logger.warn so it isn't
+  // drowned in the per-migration log stream.
   try {
     return await createProjectGraphAsync();
   } catch (err) {
-    logger.warn(
+    nextSteps.push(
       'convert-target-defaults-to-array: project graph could not be built; ' +
         'falling back to syntactic disambiguation for `:` keys in nx.json `targetDefaults`. ' +
         'If a key happens to match both a target name and an executor in your workspace, ' +

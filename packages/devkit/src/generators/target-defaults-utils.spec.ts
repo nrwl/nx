@@ -12,22 +12,12 @@ jest.mock(
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import { readNxJson, updateNxJson, type Tree } from 'nx/src/devkit-exports';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { gte, valid } from 'semver';
-import { NX_VERSION } from '../utils/package-json';
 import {
   addBuildTargetDefaults,
   addE2eCiTargetDefaults,
   upsertTargetDefault,
 } from './target-defaults-utils';
 
-// Devkit supports `nx` at major +/- 1; the array-shape `targetDefaults`
-// only exists in nx >= 23. Tests that assume promotion-to-array are
-// gated behind this so they're skipped when the test runner pulls an
-// older nx peer. The workspace placeholder version "0.0.1" is treated
-// as modern — same exception as in target-defaults-utils.ts.
-const supportsArrayTargetDefaults =
-  !valid(NX_VERSION) || NX_VERSION === '0.0.1' || gte(NX_VERSION, '23.0.0');
-const itArrayShape = supportsArrayTargetDefaults ? it : it.skip;
 describe('target-defaults-utils', () => {
   describe('upsertTargetDefault', () => {
     let tree: Tree;
@@ -79,7 +69,7 @@ describe('target-defaults-utils', () => {
       ]);
     });
 
-    itArrayShape('upgrades a legacy record to array on any upsert', () => {
+    it('upgrades a legacy record to array on any upsert', () => {
       const nxJson = readNxJson(tree);
       (nxJson as any).targetDefaults = {
         build: { cache: true },

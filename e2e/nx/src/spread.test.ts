@@ -109,9 +109,6 @@ describe('Spread Token Merging', () => {
         return json;
       });
 
-      // Force the daemon to reload with the freshly registered plugins so
-      // getResolvedProject does not read a stale cached graph.
-      runCLI('reset');
       const project = getResolvedProject(lib);
       // plugin-b merges on top of plugin-a: overwrites
       expect(project.targets.build.inputs).toEqual(['second-plugin']);
@@ -171,9 +168,6 @@ describe('Spread Token Merging', () => {
         return json;
       });
 
-      // Force the daemon to reload with the freshly registered plugins so
-      // getResolvedProject does not read a stale cached graph.
-      runCLI('reset');
       const project = getResolvedProject(lib);
       // last plugin wins (no spread), replaces everything
       expect(project.targets.build.inputs).toEqual(['from-last']);
@@ -216,9 +210,6 @@ describe('Spread Token Merging', () => {
         return json;
       });
 
-      // Force the daemon to reload with the freshly registered plugins so
-      // getResolvedProject does not read a stale cached graph.
-      runCLI('reset');
       const project = getResolvedProject(lib);
       // last plugin spreads: includes base plugin values
       expect(project.targets.build.inputs).toEqual([

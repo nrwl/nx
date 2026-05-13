@@ -305,12 +305,6 @@ export function getTargetInputs(
   const namedInputs = getNamedInputs(nxJson, projectNode);
 
   const targetData = projectNode.data.targets[target];
-  // No target-defaults lookup here — graph construction's synthesis pass
-  // (`createTargetDefaultsResults`) already merges any matching default's
-  // `inputs` onto `targetData.inputs` before the hasher runs. Reading
-  // `nx.json.targetDefaults` again would either reproduce that work
-  // (wasteful) or silently diverge from the graph (a cache-invalidation
-  // bug surface). The graph is the single source of truth.
   const inputs = splitInputsIntoSelfAndDependencies(
     targetData.inputs || DEFAULT_INPUTS,
     namedInputs
