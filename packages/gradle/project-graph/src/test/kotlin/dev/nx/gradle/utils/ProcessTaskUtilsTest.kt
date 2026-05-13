@@ -160,7 +160,12 @@ class ProcessTaskUtilsTest {
       assertNotNull(result)
 
       // Should contain consolidated dependentTasksOutputFiles glob pattern for jar extension
-      assertTrue(result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" })
+      assertTrue(
+          result!!.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.jar" &&
+                it["transitive"] == true
+          })
 
       // Should contain the non-conflicting input file
       assertTrue(result.any { it == Path("{projectRoot}", "src", "main.kt").toString() })
@@ -187,8 +192,18 @@ class ProcessTaskUtilsTest {
       assertNotNull(result)
 
       // Should have consolidated glob patterns by extension
-      assertTrue(result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" })
-      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" })
+      assertTrue(
+          result!!.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.jar" &&
+                it["transitive"] == true
+          })
+      assertTrue(
+          result.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.class" &&
+                it["transitive"] == true
+          })
 
       // Should only have 2 dependentTasksOutputFiles entries (one per extension)
       val dependentTasksOutputFilesCount =
@@ -238,11 +253,15 @@ class ProcessTaskUtilsTest {
       // Should contain consolidated dependentTasksOutputFiles glob pattern
       assertTrue(
           resultWithPreComputed.any {
-            it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar"
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.jar" &&
+                it["transitive"] == true
           })
       assertTrue(
           resultWithoutPreComputed.any {
-            it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar"
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.jar" &&
+                it["transitive"] == true
           })
 
       // Should contain the input file
@@ -335,9 +354,24 @@ class ProcessTaskUtilsTest {
       assertNotNull(result)
 
       // Should have consolidated glob patterns by extension
-      assertTrue(result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" })
-      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" })
-      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.xml" })
+      assertTrue(
+          result!!.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.jar" &&
+                it["transitive"] == true
+          })
+      assertTrue(
+          result.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.class" &&
+                it["transitive"] == true
+          })
+      assertTrue(
+          result.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.xml" &&
+                it["transitive"] == true
+          })
 
       // Should contain regular input files
       assertTrue(result.any { it == Path("{projectRoot}", "src", "main.kt").toString() })
@@ -398,10 +432,20 @@ class ProcessTaskUtilsTest {
       assertTrue(result.any { it == Path("{projectRoot}", "config", "app.properties").toString() })
 
       // Build file (class extension) should be consolidated into dependentTasksOutputFiles glob
-      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" })
+      assertTrue(
+          result.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.class" &&
+                it["transitive"] == true
+          })
 
       // Log file should be consolidated into dependentTasksOutputFiles glob
-      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.log" })
+      assertTrue(
+          result.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.log" &&
+                it["transitive"] == true
+          })
     }
 
     @Test
@@ -439,9 +483,19 @@ class ProcessTaskUtilsTest {
       assertTrue(result!!.any { it == Path("{projectRoot}", "src", "Main.java").toString() })
 
       // Both ignored files should be consolidated into glob patterns by extension
-      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" })
+      assertTrue(
+          result.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.class" &&
+                it["transitive"] == true
+          })
 
-      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" })
+      assertTrue(
+          result.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.jar" &&
+                it["transitive"] == true
+          })
     }
   }
 
@@ -496,7 +550,12 @@ class ProcessTaskUtilsTest {
     val inputs = result["inputs"] as? List<*>
     assertNotNull(inputs)
     assertTrue(inputs!!.any { it == Path("{projectRoot}", "src", "test.kt").toString() })
-    assertTrue(inputs.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" })
+    assertTrue(
+        inputs.any {
+          it is Map<*, *> &&
+              it["dependentTasksOutputFiles"] == "**/*.class" &&
+              it["transitive"] == true
+        })
   }
 
   @Nested
