@@ -38,6 +38,13 @@ const IDLE_WINDOW: Duration = Duration::from_millis(100);
 /// Starvation cap from the start of a burst — flush even if events keep
 /// arriving faster than IDLE_WINDOW.
 const MAX_WAIT: Duration = Duration::from_millis(500);
+/// Grace given to the kernel→notify-crate hop on a force-flush so an event
+/// the caller just produced isn't missed. macOS FSEvents coalesces with
+/// noticeably more latency than Linux inotify, so it needs more room.
+#[cfg(target_os = "macos")]
+const FORCE_FLUSH_GRACE: Duration = Duration::from_millis(50);
+#[cfg(not(target_os = "macos"))]
+const FORCE_FLUSH_GRACE: Duration = Duration::from_millis(10);
 
 #[cfg(not(target_os = "macos"))]
 fn build_ignore_glob_set() -> Arc<NxGlobSet> {
@@ -344,10 +351,7 @@ impl WatchPipeline {
                         // Wait briefly for notify-crate sends that are
                         // mid-flight — a bare try_recv would miss them.
                         let recv_label;
-                        match self
-                            .notify_rx
-                            .recv_timeout(Duration::from_millis(5))
-                        {
+                        match self.notify_rx.recv_timeout(FORCE_FLUSH_GRACE) {
                             Ok(event) => {
                                 recv_label = "Ok(event)";
                                 if let Err(msg) = self.ingest_event(event) {
@@ -366,7 +370,11 @@ impl WatchPipeline {
                                 );
                             }
                         }
-                        debug!(result = recv_label, "force-flush recv_timeout(5ms)");
+                        debug!(
+                            result = recv_label,
+                            grace_ms = FORCE_FLUSH_GRACE.as_millis() as u64,
+                            "force-flush recv_timeout"
+                        );
 
                         if fatal.is_none() {
                             while let Ok(event) = self.notify_rx.try_recv() {
