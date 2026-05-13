@@ -13,10 +13,6 @@ import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { workspaceRoot } from '../utils/workspace-root';
 import { HashInputs, NxWorkspaceFilesExternals } from '../native';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
-import {
-  findBestTargetDefault,
-  normalizeTargetDefaults,
-} from '../project-graph/utils/project-configuration/target-defaults';
 
 // Re-export HashInputs from native module for public API
 export { HashInputs };
@@ -309,24 +305,14 @@ export function getTargetInputs(
   const namedInputs = getNamedInputs(nxJson, projectNode);
 
   const targetData = projectNode.data.targets[target];
-  // Fallback path: synthesis already merges any matching target-default's
-  // `inputs` onto the target during graph construction, so this lookup
-  // is only consulted when `targetData.inputs` is unset post-merge. We
-  // pass `sourcePlugin = undefined` deliberately — synth-time attribution
-  // isn't available here and any `source:`-filtered entry that mattered
-  // for this target would already have written its inputs onto it.
-  const targetDefaults = findBestTargetDefault(
-    target,
-    targetData?.executor,
-    projectNode.name,
-    projectNode,
-    undefined,
-    normalizeTargetDefaults(nxJson.targetDefaults),
-    targetData?.command
-  );
-
+  // No target-defaults lookup here — graph construction's synthesis pass
+  // (`createTargetDefaultsResults`) already merges any matching default's
+  // `inputs` onto `targetData.inputs` before the hasher runs. Reading
+  // `nx.json.targetDefaults` again would either reproduce that work
+  // (wasteful) or silently diverge from the graph (a cache-invalidation
+  // bug surface). The graph is the single source of truth.
   const inputs = splitInputsIntoSelfAndDependencies(
-    targetData.inputs || targetDefaults?.inputs || DEFAULT_INPUTS,
+    targetData.inputs || DEFAULT_INPUTS,
     namedInputs
   );
 
@@ -360,21 +346,13 @@ export function getInputs(
   const projectNode = projectGraph.nodes[task.target.project];
   const namedInputs = getNamedInputs(nxJson, projectNode);
   const targetData = projectNode.data.targets[task.target.target];
-  // See note on the matching call in `getTargetInputs`. Same rationale:
-  // this is a fallback only reached when `targetData.inputs` is unset
-  // post-synthesis. `sourcePlugin = undefined` here is deliberate.
-  const targetDefaults = findBestTargetDefault(
-    task.target.target,
-    targetData?.executor,
-    projectNode.name,
-    projectNode,
-    undefined,
-    normalizeTargetDefaults(nxJson.targetDefaults),
-    targetData?.command
-  );
+  // See `getTargetInputs` — graph construction already merged any
+  // matching target-default's `inputs` onto `targetData.inputs`, so a
+  // separate `targetDefaults` lookup here would either repeat that
+  // work or drift from it.
   const { selfInputs, depsInputs, depsOutputs, projectInputs, depsFilesets } =
     splitInputsIntoSelfAndDependencies(
-      targetData.inputs || targetDefaults?.inputs || (DEFAULT_INPUTS as any),
+      targetData.inputs || (DEFAULT_INPUTS as any),
       namedInputs
     );
   return { selfInputs, depsInputs, depsOutputs, projectInputs, depsFilesets };
