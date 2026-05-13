@@ -187,14 +187,6 @@ export async function getCachedSerializedProjectGraphPromise(
       !cachedSerializedProjectGraphPromise ||
       collectedUpdatedFiles.size > 0 ||
       collectedDeletedFiles.size > 0;
-    if (process.env.NX_DAEMON_DEBUG_WATCHER === '1') {
-      serverLogger.log(
-        `[watcher] decision: needsRecompute=${needsRecompute} ` +
-          `hasCache=${!!cachedSerializedProjectGraphPromise} ` +
-          `updated=${collectedUpdatedFiles.size}[${[...collectedUpdatedFiles.keys()].slice(0, 10).join(',')}] ` +
-          `deleted=${collectedDeletedFiles.size}[${[...collectedDeletedFiles.keys()].slice(0, 10).join(',')}]`
-      );
-    }
     if (needsRecompute) {
       serverLogger.log(
         cachedSerializedProjectGraphPromise
@@ -335,19 +327,6 @@ async function processCollectedUpdatedAndDeletedFiles(
 ): Promise<FileMapUpdate> {
   try {
     const configHash = computeWorkspaceConfigHash(projects);
-
-    if (process.env.NX_DAEMON_DEBUG_WATCHER === '1') {
-      const projectKeys = Object.keys(projects);
-      serverLogger.log(
-        `[watcher] processCollectedUpdatedAndDeletedFiles: ` +
-          `projects=${projectKeys.length}[${projectKeys.slice(0, 15).join(',')}] ` +
-          `configHash=${configHash} ` +
-          `storedHash=${storedWorkspaceConfigHash} ` +
-          `match=${configHash === storedWorkspaceConfigHash} ` +
-          `updatedHashes=${Object.keys(updatedFileHashes).length} ` +
-          `deletedFiles=${deletedFiles.length}`
-      );
-    }
 
     // Config changed → can't incrementally update; refetch the file map
     // from disk. Returning instead of mutating module state lets the caller

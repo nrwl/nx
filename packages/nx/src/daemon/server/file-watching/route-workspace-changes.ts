@@ -7,7 +7,6 @@ import { serverLogger } from '../../logger';
 import { scheduleProjectGraphRecomputation } from '../project-graph-incremental-recomputation';
 
 const SUMMARY_CAP = 10;
-const DEBUG = process.env.NX_DAEMON_DEBUG_WATCHER === '1';
 
 function summarize(files: string[]): string {
   if (files.length === 0) return '(none)';
@@ -28,24 +27,11 @@ function summarize(files: string[]): string {
  * updated paths are stat'd to skip directories (the project graph only
  * cares about files). A stat error means the file was unlinked between
  * the watcher firing and us looking — drop the event.
- *
- * Extracted from `handleWorkspaceChanges` so tests can exercise the
- * same routing logic without standing up the daemon's inactivity timer
- * and error-tracking state.
  */
 export function routeWorkspaceChanges(events: WatchEvent[]): void {
-  if (DEBUG) {
-    serverLogger.watcherLog(
-      `[watcher] routeWorkspaceChanges batch: ${events.length} events: ` +
-        events.map((e) => `${e.type}:${e.path}`).join(', ')
-    );
-  }
-
   const updatedFilesToHash: string[] = [];
   const createdFilesToHash: string[] = [];
   const deletedFiles: string[] = [];
-  const droppedDirs: string[] = [];
-  const droppedStatErrors: string[] = [];
 
   for (const event of events) {
     if (event.type === 'delete') {
@@ -54,29 +40,15 @@ export function routeWorkspaceChanges(events: WatchEvent[]): void {
     }
     try {
       const s = statSync(join(workspaceRoot, event.path));
-      if (!s.isFile()) {
-        if (DEBUG) droppedDirs.push(event.path);
-        continue;
-      }
+      if (!s.isFile()) continue;
       if (event.type === 'update') {
         updatedFilesToHash.push(event.path);
       } else {
         createdFilesToHash.push(event.path);
       }
-    } catch (e) {
-      if (DEBUG)
-        droppedStatErrors.push(
-          `${event.path} (${e instanceof Error ? e.message : String(e)})`
-        );
+    } catch {
       // File deleted between watcher emit and stat — drop it.
     }
-  }
-
-  if (DEBUG && (droppedDirs.length || droppedStatErrors.length)) {
-    serverLogger.watcherLog(
-      `[watcher] route dropped: dirs=[${droppedDirs.join(', ')}] ` +
-        `stat-errors=[${droppedStatErrors.join('; ')}]`
-    );
   }
 
   if (

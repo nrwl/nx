@@ -123,17 +123,6 @@ export async function createProjectConfigurationsWithPlugins(
   ];
   const specifiedCount = specifiedCreateNodesPlugins.length;
 
-  if (process.env.NX_DAEMON_DEBUG_WATCHER === '1') {
-    console.error(
-      `[plugins] createProjectConfigurationsWithPlugins ` +
-        `specifiedIn=${plugins.specifiedPlugins.length}[${plugins.specifiedPlugins.map((p) => p.name).join(',')}] ` +
-        `specifiedWithCN=${specifiedCreateNodesPlugins.length}[${specifiedCreateNodesPlugins.map((p) => p.name).join(',')}] ` +
-        `defaultWithCN=${defaultCreateNodesPlugins.length}[${defaultCreateNodesPlugins.map((p) => p.name).join(',')}] ` +
-        `specifiedFiles=${projectFiles.specifiedPluginFiles.map((arr) => arr.length).join(',')} ` +
-        `defaultFiles=${projectFiles.defaultPluginFiles.map((arr) => arr.length).join(',')}`
-    );
-  }
-
   spinner = new DelayedSpinner(getSpinnerText(), {
     progressTopic: ProgressTopics.GraphConstruction,
   });
