@@ -111,13 +111,15 @@ function kickOffRecompute() {
   myPromise = (async () => {
     const plugins = await getPluginsSeparated();
 
-    const earlyStale = bailIfStale(myPluginsHash, myPromise);
-    if (earlyStale) return earlyStale;
+    // Plugin set we just loaded may already be stale vs disk.
+    const stalePlugins = bailIfStale(myPluginsHash, myPromise);
+    if (stalePlugins) return stalePlugins;
 
     const result = await processFilesAndCreateAndSerializeProjectGraph(plugins);
 
-    const lateStale = bailIfStale(myPluginsHash, myPromise);
-    if (lateStale) return lateStale;
+    // Compute may have run against plugins that are now stale.
+    const staleGraph = bailIfStale(myPluginsHash, myPromise);
+    if (staleGraph) return staleGraph;
 
     if (
       cachedSerializedProjectGraphPromise === myPromise &&
@@ -146,10 +148,13 @@ function bailIfStale(
   currentPluginsHash: string | undefined,
   myPromise: Promise<SerializedProjectGraph>
 ): Promise<SerializedProjectGraph> | null {
-  const isStaleVsDisk =
-    currentPluginsHash !== undefined &&
-    currentNxJsonPluginsHash() !== currentPluginsHash;
-  if (!isStaleVsDisk) return null;
+  // Either hash being undefined means we couldn't read nx.json. Treat as
+  // "can't verify staleness" and proceed (matches pre-fix behavior). The
+  // alternative — bailing on a transient read failure — would discard a
+  // valid compute when there's no actual disk change.
+  const diskHash = currentNxJsonPluginsHash();
+  if (currentPluginsHash === undefined || diskHash === undefined) return null;
+  if (diskHash === currentPluginsHash) return null;
   serverLogger.log(
     'Discarding stale recompute result (nx.json plugins changed mid-compute).'
   );
