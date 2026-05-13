@@ -117,14 +117,18 @@ function kickOffRecompute() {
     const plugins = await getPluginsSeparated(workspaceRoot, nxJson);
 
     // Plugin set we just loaded may already be stale vs disk.
-    const stalePlugins = bailIfStale(myPluginsHash, myPromise);
-    if (stalePlugins) return stalePlugins;
+    if (isStale(myPluginsHash)) {
+      if (cachedSerializedProjectGraphPromise === myPromise) kickOffRecompute();
+      return cachedSerializedProjectGraphPromise;
+    }
 
     const result = await processFilesAndCreateAndSerializeProjectGraph(plugins);
 
     // Compute may have run against plugins that are now stale.
-    const staleGraph = bailIfStale(myPluginsHash, myPromise);
-    if (staleGraph) return staleGraph;
+    if (isStale(myPluginsHash)) {
+      if (cachedSerializedProjectGraphPromise === myPromise) kickOffRecompute();
+      return cachedSerializedProjectGraphPromise;
+    }
 
     if (
       cachedSerializedProjectGraphPromise === myPromise &&
@@ -143,25 +147,17 @@ function kickOffRecompute() {
 }
 
 /**
- * Re-reads nx.json; returns the cached pointer (so awaiters chain to the
- * successor) if disk diverged from `expectedHash`. Called at two points in
- * `kickOffRecompute` — after getPluginsSeparated to skip the expensive
- * compute when we already know we're stale, and after the compute to catch
- * a disk change that happened during it.
+ * Returns true if disk's nx.json plugins hash diverged from `expectedHash`.
+ * Logs the discard on the stale path so persistent gate firings are visible
+ * in the daemon log. Caller decides how to bail (kick successor + return
+ * the cached pointer).
  */
-function bailIfStale(
-  expectedHash: string,
-  myPromise: Promise<SerializedProjectGraph>
-): Promise<SerializedProjectGraph> | null {
-  const diskHash = readNxJsonPluginsHash();
-  if (diskHash === expectedHash) return null;
+function isStale(expectedHash: string): boolean {
+  if (readNxJsonPluginsHash() === expectedHash) return false;
   serverLogger.log(
     'Discarding stale recompute result (nx.json plugins changed mid-compute).'
   );
-  if (cachedSerializedProjectGraphPromise === myPromise) {
-    kickOffRecompute();
-  }
-  return cachedSerializedProjectGraphPromise;
+  return true;
 }
 
 function readNxJsonPluginsHash(): string {
