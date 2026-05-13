@@ -1454,15 +1454,15 @@ importers:
 
   e2e/angular:
     dependencies:
+      '@nx/angular':
+        specifier: workspace:*
+        version: link:../../packages/angular
       '@nx/devkit':
         specifier: workspace:*
         version: link:../../packages/devkit
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
       nx:
         specifier: workspace:*
         version: link:../../packages/nx
@@ -1673,21 +1673,18 @@ importers:
       '@nx/storybook':
         specifier: workspace:*
         version: link:../../packages/storybook
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
       nx:
         specifier: workspace:*
         version: link:../../packages/nx
 
   e2e/utils:
     dependencies:
+      '@nx/angular':
+        specifier: workspace:*
+        version: link:../../packages/angular
       '@nx/devkit':
         specifier: workspace:*
         version: link:../../packages/devkit
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../../packages/workspace
       nx:
         specifier: workspace:*
         version: link:../../packages/nx
@@ -3646,9 +3643,6 @@ importers:
       '@nx/react':
         specifier: workspace:*
         version: link:../react
-      '@nx/workspace':
-        specifier: workspace:*
-        version: link:../workspace
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
         version: 6.2.0(typescript@5.9.2)

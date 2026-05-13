@@ -19,7 +19,7 @@
   "include": ["**/*.ts", "**/*.js"],
   "references": [
     {
-      "path": "../../packages/workspace/tsconfig.lib.json"
+      "path": "../../packages/angular/tsconfig.lib.json"
     },
     {
       "path": "../../packages/devkit/tsconfig.lib.json"
