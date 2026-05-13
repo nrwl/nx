@@ -12,7 +12,7 @@ import { type Schema } from './schema';
 import { normalizeOptions } from './lib';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { initGenerator } from '../init/init';
-import { rsbuildVersion } from '../../utils/versions';
+import { getRsbuildVersionsForInstalledMajor } from '../../utils/version-utils';
 import { join } from 'path';
 
 export async function configurationGenerator(tree: Tree, schema: Schema) {
@@ -54,8 +54,13 @@ export async function configurationGenerator(tree: Tree, schema: Schema) {
     }
   }
 
+  const rsbuildVersions = getRsbuildVersionsForInstalledMajor(tree);
   tasks.push(
-    addDependenciesToPackageJson(tree, {}, { '@rsbuild/core': rsbuildVersion })
+    addDependenciesToPackageJson(
+      tree,
+      {},
+      { '@rsbuild/core': rsbuildVersions.rsbuildVersion }
+    )
   );
 
   generateFiles(tree, join(__dirname, 'files'), options.projectRoot, {

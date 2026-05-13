@@ -10,18 +10,29 @@ import {
 } from '@nx/devkit';
 import { InitGeneratorSchema } from './schema';
 import { createNodesV2 } from '../../plugins/plugin';
-import { nxVersion, rsbuildVersion } from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
+import {
+  getInstalledRsbuildMajorVersion,
+  getRsbuildVersionsForInstalledMajor,
+} from '../../utils/version-utils';
 
 export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
+  // Detect the installed @rsbuild/core major (throws on unsupported versions)
+  // so we honor the workspace's existing pin rather than overwriting it.
+  const installedRsbuildMajor = getInstalledRsbuildMajorVersion(tree);
+  const rsbuildVersions = getRsbuildVersionsForInstalledMajor(tree);
+  const keepExistingVersions =
+    installedRsbuildMajor !== undefined ? true : schema.keepExistingVersions;
+
   return addDependenciesToPackageJson(
     tree,
     {},
     {
       '@nx/rsbuild': nxVersion,
-      '@rsbuild/core': rsbuildVersion,
+      '@rsbuild/core': rsbuildVersions.rsbuildVersion,
     },
     undefined,
-    schema.keepExistingVersions
+    keepExistingVersions
   );
 }
 
