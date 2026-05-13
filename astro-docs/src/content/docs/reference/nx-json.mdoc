@@ -213,16 +213,17 @@ Additionally, if there is not a match for either of the above, we look for other
 
 Target defaults matching the executor takes precedence over those matching the target name. If we find a target default for a given target, we use it as the base for that target's configuration.
 
-`targetDefaults` is an array of entries. Each entry **must** specify a `target` (name, glob, or executor string). Optional `projects` and `source` filters let you scope a default to a subset of projects or targets inferred by a particular plugin.
+`targetDefaults` is an array of entries. Each entry must specify at least one of `target` (name or glob), `executor`, `projects`, or `plugin`. Optional `projects` and `plugin` filters let you scope a default to a subset of projects or targets inferred by a particular plugin.
 
 | Field      | Type                                                                         | Description                                                                                                                                                                                                         |
 | ---------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `target`   | `string`                                                                     | Required. Target name (e.g. `test`), glob (e.g. `e2e-ci--*`), or executor string (e.g. `@nx/vite:test`).                                                                                                            |
+| `target`   | `string`                                                                     | Target name (e.g. `test`) or glob (e.g. `e2e-ci--*`). Required if `executor` is not set (and vice versa) when not using filter-only entries.                                                                        |
+| `executor` | `string`                                                                     | Executor identifier (e.g. `@nx/vite:test`). Matches targets that resolve to this executor. May be set alongside `target` to require both.                                                                           |
 | `projects` | `string` \| `string[]`                                                       | Optional. Restricts the default to matching projects. Accepts project names, globs, directory patterns, tags (`tag:foo`), and negation (`!foo`) — anything `findMatchingProjects` understands.                      |
-| `source`   | `string`                                                                     | Optional. Restricts the default to targets originated by a specific plugin (e.g. `@nx/vite`). Useful when two plugins expose a target with the same name (e.g. `@nx/vite:test` and `@nx/jest:test` both as `test`). |
+| `plugin`   | `string`                                                                     | Optional. Restricts the default to targets originated by a specific plugin (e.g. `@nx/vite`). Useful when two plugins expose a target with the same name (e.g. `@nx/vite:test` and `@nx/jest:test` both as `test`). |
 | other      | any field from [Target Configuration](/docs/reference/project-configuration) | The defaults applied when the filter matches.                                                                                                                                                                       |
 
-When multiple entries match a given `(target, project)` tuple, the **most specific** entry wins (`target + projects + source` > `target + projects` > `target + source` > `target` alone). Within the same specificity tier, an exact `target` match beats a glob match, and later entries in the array beat earlier ones.
+When multiple entries match a given `(target, project)` tuple, the **most specific** entry wins (`target + projects + plugin` > `target + projects` > `target + plugin` > `target` alone). Within the same specificity tier, an exact `target` match beats a glob match, and later entries in the array beat earlier ones.
 
 ```json
 // nx.json — polyglot example
@@ -231,7 +232,7 @@ When multiple entries match a given `(target, project)` tuple, the **most specif
     { "target": "test", "cache": true },
     {
       "target": "test",
-      "source": "@nx/vite",
+      "plugin": "@nx/vite",
       "inputs": ["default", "^production"]
     },
     {
@@ -244,7 +245,7 @@ When multiple entries match a given `(target, project)` tuple, the **most specif
 ```
 
 {% aside type="caution" title="Beware" %}
-When an entry has no `projects` or `source` filter, Nx matches by target name (or executor) alone. Make sure all targets with that name use the same executor, or that the defaults you're setting make sense to all of them. Anything set in a target default will also override the configuration of [tasks inferred by plugins](/docs/concepts/inferred-tasks).
+When an entry has no `projects` or `plugin` filter, Nx matches by target name (or executor) alone. Make sure all targets with that name use the same executor, or that the defaults you're setting make sense to all of them. Anything set in a target default will also override the configuration of [tasks inferred by plugins](/docs/concepts/inferred-tasks).
 {% /aside %}
 
 Some common scenarios for this follow.
@@ -426,7 +427,7 @@ You can also provide defaults for [inferred targets](/docs/concepts/inferred-tas
 }
 ```
 
-If two plugins expose a target with the same name (e.g. both `@nx/vite` and `@nx/jest` infer `test`), use the `source` filter to scope per-plugin defaults:
+If two plugins expose a target with the same name (e.g. both `@nx/vite` and `@nx/jest` infer `test`), use the `plugin` filter to scope per-plugin defaults:
 
 ```json
 // nx.json
@@ -434,12 +435,12 @@ If two plugins expose a target with the same name (e.g. both `@nx/vite` and `@nx
   "targetDefaults": [
     {
       "target": "test",
-      "source": "@nx/vite",
+      "plugin": "@nx/vite",
       "inputs": ["default", "^production"]
     },
     {
       "target": "test",
-      "source": "@nx/jest",
+      "plugin": "@nx/jest",
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
     }
   ]

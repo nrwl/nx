@@ -103,7 +103,7 @@ export default async function (tree: Tree) {
           k !== 'target' &&
           k !== 'executor' &&
           k !== 'projects' &&
-          k !== 'source'
+          k !== 'plugin'
       );
       if (empty && onlyKeys.length === 0) continue;
       remaining.push(entry);

@@ -67,7 +67,7 @@ export default async function (tree: Tree) {
           k !== 'target' &&
           k !== 'executor' &&
           k !== 'projects' &&
-          k !== 'source'
+          k !== 'plugin'
       );
       if (meaningfulKeys.length === 0) continue;
       remaining.push(entry);

@@ -43,7 +43,7 @@
       }
     },
     "targetDefaults": {
-      "description": "Target defaults. The recommended form is an array of entries; each entry matches by `target` (name or glob), `executor`, or both, and optionally narrows by `projects` and `source`. The legacy record/object form (keyed by target name or executor) is still read but deprecated; run `nx repair` to convert it.",
+      "description": "Target defaults. The recommended form is an array of entries; each entry matches by `target` (name or glob), `executor`, or both, and optionally narrows by `projects` and `plugin`. The legacy record/object form (keyed by target name or executor) is still read but deprecated; run `nx repair` to convert it.",
       "oneOf": [
         {
           "type": "array",
@@ -54,7 +54,7 @@
         {
           "type": "object",
           "deprecated": true,
-          "deprecationMessage": "The record-shape `targetDefaults` is deprecated and will be removed in a future major. Run `nx repair` to convert this nx.json to the new array-shape `targetDefaults`, which also unlocks the `projects` and `source` filters.",
+          "deprecationMessage": "The record-shape `targetDefaults` is deprecated and will be removed in a future major. Run `nx repair` to convert this nx.json to the new array-shape `targetDefaults`, which also unlocks the `projects` and `plugin` filters.",
           "description": "Deprecated: the record-shape `targetDefaults` is still read for backwards compatibility, but new workspaces should use the array form. Run `nx repair` to convert.",
           "additionalProperties": {
             "$ref": "#/definitions/targetDefaultsConfig"

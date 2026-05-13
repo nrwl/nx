@@ -553,7 +553,7 @@ describe('Nx Running Tests', () => {
       });
     });
 
-    describe('target defaults filtering by projects and source', () => {
+    describe('target defaults filtering by projects and plugin', () => {
       it('scopes a target-default to a single project name via the `projects` filter', () => {
         const target = uniq('target');
         const libA = uniq('liba');
