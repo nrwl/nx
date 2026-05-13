@@ -238,7 +238,7 @@ impl WatchPipeline {
             }
         }
 
-        debug!(
+        trace!(
             files = ?backfilled_paths,
             nested = ?nested_dirs,
             "backfilled {} files, {} nested dirs",
