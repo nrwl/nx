@@ -3412,5 +3412,152 @@ describe('Migration', () => {
       expect(warnSpy).toHaveBeenCalled();
       expect(r).toMatchObject({ targetVersion: '23.1.0' });
     });
+
+    it('should set originalTargetVersion when gradual mode redirects to an incremental step', async () => {
+      setTty(true);
+      mockRegistry({
+        latest: '23.1.0',
+        '21': '21.5.3',
+        '22': '22.5.3',
+      });
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+        multiMajorMode: 'gradual',
+      });
+
+      expect(r).toMatchObject({
+        targetVersion: '21.5.3',
+        originalTargetVersion: '23.1.0',
+      });
+    });
+
+    it('should set originalTargetVersion when the interactive prompt picks an incremental step', async () => {
+      setTty(true);
+      mockRegistry({
+        latest: '23.1.0',
+        '21': '21.5.3',
+        '22': '22.5.3',
+      });
+      mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+      });
+
+      expect(r).toMatchObject({
+        targetVersion: '22.5.3',
+        originalTargetVersion: '23.1.0',
+      });
+    });
+
+    it('should leave originalTargetVersion undefined when the interactive prompt picks the requested target', async () => {
+      setTty(true);
+      mockRegistry({
+        latest: '23.1.0',
+        '21': '21.5.3',
+        '22': '22.5.3',
+      });
+      mockPrompt.mockResolvedValue({ chosen: '23.1.0' });
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+      });
+
+      expect(r).toMatchObject({ targetVersion: '23.1.0' });
+      expect(
+        (r as { originalTargetVersion?: string }).originalTargetVersion
+      ).toBeUndefined();
+    });
+
+    it('should leave originalTargetVersion undefined under --multi-major-mode=direct', async () => {
+      setTty(true);
+      mockRegistry({
+        latest: '23.1.0',
+        '21': '21.5.3',
+        '22': '22.5.3',
+      });
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+        multiMajorMode: 'direct',
+      });
+
+      expect(r).toMatchObject({ targetVersion: '23.1.0' });
+      expect(
+        (r as { originalTargetVersion?: string }).originalTargetVersion
+      ).toBeUndefined();
+    });
+
+    it('should leave originalTargetVersion undefined for bare invocations within a single-major delta', async () => {
+      // Regression guard: dist-tag resolution alone (target == installed
+      // after resolving 'latest') must not be treated as a redirect, or
+      // Next Steps would suggest re-running toward the version the user
+      // already landed on.
+      setTty(true);
+      mockGetInstalledNxVersion.mockReturnValue('22.5.3');
+      mockRegistry({ latest: '22.5.3' });
+
+      const bare = await parseMigrationsOptions({ mode: 'all' });
+      expect(bare).toMatchObject({ targetVersion: '22.5.3' });
+      expect(
+        (bare as { originalTargetVersion?: string }).originalTargetVersion
+      ).toBeUndefined();
+
+      const barePkg = await parseMigrationsOptions({
+        packageAndVersion: 'nx',
+        mode: 'all',
+      });
+      expect(barePkg).toMatchObject({ targetVersion: '22.5.3' });
+      expect(
+        (barePkg as { originalTargetVersion?: string }).originalTargetVersion
+      ).toBeUndefined();
+    });
+
+    it('should propagate gradual to multiMajorMode when gradual mode redirects', async () => {
+      setTty(true);
+      mockRegistry({
+        latest: '23.1.0',
+        '21': '21.5.3',
+        '22': '22.5.3',
+      });
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+        multiMajorMode: 'gradual',
+      });
+
+      expect(r).toMatchObject({
+        targetVersion: '21.5.3',
+        originalTargetVersion: '23.1.0',
+        multiMajorMode: 'gradual',
+      });
+    });
+
+    it('should NOT propagate gradual to multiMajorMode when the interactive prompt picks an incremental step', async () => {
+      setTty(true);
+      mockRegistry({
+        latest: '23.1.0',
+        '21': '21.5.3',
+        '22': '22.5.3',
+      });
+      mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+      });
+
+      expect(r).toMatchObject({
+        targetVersion: '22.5.3',
+        originalTargetVersion: '23.1.0',
+      });
+      expect((r as { multiMajorMode?: string }).multiMajorMode).toBeUndefined();
+    });
   });
 });

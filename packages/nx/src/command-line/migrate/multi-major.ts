@@ -15,7 +15,7 @@ import {
 
 const INCREMENTAL_UPDATE_GUIDE_URL =
   'https://nx.dev/docs/guides/tips-n-tricks/advanced-update#one-major-version-at-a-time-small-steps';
-const MULTI_MAJOR_MODE_FLAG = '--multi-major-mode';
+export const MULTI_MAJOR_MODE_FLAG = '--multi-major-mode';
 const MULTI_MAJOR_MODE_ENV = 'NX_MULTI_MAJOR_MODE';
 
 export type MultiMajorMode = 'direct' | 'gradual';
@@ -64,11 +64,12 @@ function logGradualStep(
   step: string,
   target: string
 ): void {
+  // Status-only announcement. The follow-up instruction ("re-run `nx migrate`
+  // to continue toward the original target") lives in the Next Steps block at
+  // the end of the run, where it's adjacent to the other re-run guidance and
+  // not scrolled out of view by the migration output.
   output.log({
     title: `Migrating to ${targetPackage}@${step} (one step toward ${targetPackage}@${target}).`,
-    bodyLines: [
-      `Re-run \`nx migrate\` after this completes to continue toward ${targetPackage}@${target}.`,
-    ],
   });
 }
 
@@ -141,18 +142,40 @@ function resolveMultiMajorMode(options: {
   return undefined;
 }
 
+/**
+ * Result of running the multi-major check.
+ *
+ * - `chosen`: the version to actually migrate to (always concrete semver when
+ *   the function ran past the dist-tag resolution; otherwise the input value).
+ * - `originalTarget`: set only when an actual redirect happened (gradual mode
+ *   auto-picked a smaller step, OR the interactive prompt returned a version
+ *   different from the resolved target). Holds the concrete resolved target
+ *   so callers can suggest re-running toward it.
+ * - `gradual`: set only when the redirect came from gradual mode (flag or
+ *   env). Tells callers it's safe to propagate `--multi-major-mode=gradual`
+ *   to a continuation command; left unset when the redirect came from the
+ *   interactive prompt so the user isn't silently locked into gradual.
+ */
+export type MultiMajorResult = {
+  chosen: string;
+  originalTarget?: string;
+  gradual?: boolean;
+};
+
 export async function maybePromptOrWarnMultiMajorMigration(args: {
   mode: MigrateMode;
   options: { multiMajorMode?: MultiMajorMode };
   targetPackage: string;
   targetVersion: string;
-}): Promise<string> {
+}): Promise<MultiMajorResult> {
   const { mode, options, targetPackage } = args;
   let { targetVersion } = args;
-  if (mode === 'third-party') return targetVersion;
+  if (mode === 'third-party') return { chosen: targetVersion };
   const multiMajorMode = resolveMultiMajorMode(options);
-  if (multiMajorMode === 'direct') return targetVersion;
-  if (!isNxEquivalentTarget(targetPackage, targetVersion)) return targetVersion;
+  if (multiMajorMode === 'direct') return { chosen: targetVersion };
+  if (!isNxEquivalentTarget(targetPackage, targetVersion)) {
+    return { chosen: targetVersion };
+  }
   // Bare-package-name positionals (e.g. `nx migrate nx`, `nx migrate
   // @nx/workspace`) leave `targetVersion` as the literal `'latest'` because
   // `parseTargetPackageAndVersion` only resolves dist-tags via the registry
@@ -172,25 +195,27 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
           `Failed to resolve the '${targetVersion}' dist-tag against the registry.`
         );
       }
-      return targetVersion;
+      return { chosen: targetVersion };
     }
   }
   if (!valid(targetVersion) || isLegacyEra(targetVersion)) {
-    return targetVersion;
+    return { chosen: targetVersion };
   }
   const installed = getInstalledNxVersion();
-  if (!installed || !valid(installed)) return targetVersion;
+  if (!installed || !valid(installed)) return { chosen: targetVersion };
   // Legacy-era installs are out of scope for the multi-major check.
-  if (isLegacyEra(installed)) return targetVersion;
+  if (isLegacyEra(installed)) return { chosen: targetVersion };
   const installedMajor = major(installed);
-  if (major(targetVersion) - installedMajor < 2) return targetVersion;
+  if (major(targetVersion) - installedMajor < 2) {
+    return { chosen: targetVersion };
+  }
 
   const interactive = !!process.stdin.isTTY && !isCI();
   // Non-TTY without gradual opt-in stays on the warn-only path; avoid the
   // registry round-trip used to look up incremental migration options.
   if (!interactive && multiMajorMode !== 'gradual') {
     warnMultiMajorMigration(targetPackage, installed, targetVersion);
-    return targetVersion;
+    return { chosen: targetVersion };
   }
 
   const [latestInCurrent, latestInNext] = await Promise.all([
@@ -210,7 +235,7 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
     const step = showCurrent ?? latestInNext;
     if (step) {
       logGradualStep(targetPackage, step, targetVersion);
-      return step;
+      return { chosen: step, originalTarget: targetVersion, gradual: true };
     }
     // Registry returned no eligible incremental version (or the lookup
     // failed); without a step to land on, gradual silently degrades to direct.
@@ -223,18 +248,21 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
         installedMajor + 1
       } (registry lookup returned no result or failed).`
     );
-    return targetVersion;
+    return { chosen: targetVersion };
   }
 
   if (interactive && (showCurrent || latestInNext)) {
-    return promptMultiMajorMigration({
+    const chosen = await promptMultiMajorMigration({
       targetPackage,
       installed,
       target: targetVersion,
       latestInCurrent: showCurrent,
       latestInNext,
     });
+    return chosen !== targetVersion
+      ? { chosen, originalTarget: targetVersion }
+      : { chosen };
   }
   warnMultiMajorMigration(targetPackage, installed, targetVersion);
-  return targetVersion;
+  return { chosen: targetVersion };
 }

@@ -91,7 +91,11 @@ import {
   getNxPackageGroup,
 } from '../../utils/provenance';
 import { type CatalogManager, getCatalogManager } from '../../utils/catalog';
-import { maybePromptOrWarnMultiMajorMigration } from './multi-major';
+import {
+  maybePromptOrWarnMultiMajorMigration,
+  MULTI_MAJOR_MODE_FLAG,
+  type MultiMajorMode,
+} from './multi-major';
 import { filterDowngradedUpdates } from './update-filters';
 import {
   DIST_TAGS,
@@ -1018,6 +1022,18 @@ type GenerateMigrations = {
   interactive?: boolean;
   excludeAppliedMigrations?: boolean;
   mode: MigrateMode;
+  /**
+   * Set when multi-major redirected `targetVersion` to an incremental step
+   * (gradual mode or the interactive prompt picking a smaller jump). Holds
+   * the concrete resolved target so Next Steps can suggest re-running toward
+   * it.
+   */
+  originalTargetVersion?: string;
+  /**
+   * The `--multi-major-mode` value to propagate to a continuation command,
+   * or undefined to omit it. See `MultiMajorResult.gradual` for when it's set.
+   */
+  multiMajorMode?: MultiMajorMode;
 };
 
 type RunMigrations = {
@@ -1071,12 +1087,13 @@ export async function parseMigrationsOptions(options: {
   // Spec §10: prompt or warn when crossing more than one major boundary.
   // Each major's metadata may have pruned migrations from much-older versions,
   // so jumping multiple majors at once can silently skip migrations.
-  targetVersion = await maybePromptOrWarnMultiMajorMigration({
+  const multiMajorResult = await maybePromptOrWarnMultiMajorMigration({
     mode,
     options,
     targetPackage,
     targetVersion,
   });
+  targetVersion = multiMajorResult.chosen;
 
   if (mode === 'third-party') {
     assertThirdPartyTargetBounds({
@@ -1096,6 +1113,8 @@ export async function parseMigrationsOptions(options: {
     interactive: options.interactive,
     excludeAppliedMigrations: options.excludeAppliedMigrations,
     mode,
+    originalTargetVersion: multiMajorResult.originalTarget,
+    multiMajorMode: multiMajorResult.gradual ? 'gradual' : undefined,
   };
 }
 
@@ -2035,6 +2054,15 @@ async function generateMigrationsJsonAndUpdatePackageJson(
           `- Make sure package.json changes make sense and then run '${pmc.install}',`,
           ...(migrations.length > 0
             ? [`- Run '${pmc.exec} nx migrate --run-migrations'`]
+            : []),
+          ...(opts.originalTargetVersion
+            ? [
+                `- After applying these migrations, run '${pmc.exec} nx migrate ${opts.targetPackage}@${opts.originalTargetVersion} --mode=${opts.mode}${
+                  opts.multiMajorMode === 'gradual'
+                    ? ` ${MULTI_MAJOR_MODE_FLAG}=gradual`
+                    : ''
+                }' to continue toward your original target.`,
+              ]
             : []),
           ...(opts.interactive && minVersionWithSkippedUpdates
             ? [
