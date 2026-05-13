@@ -20,7 +20,7 @@ use crate::native::watch::types::{
 };
 use crate::native::watch::watch_filterer;
 
-/// Cheap wall-clock formatter for `[debug-watcher]` correlation with the
+/// Cheap wall-clock formatter for `[watcher]` correlation with the
 /// daemon's JS-side log (which prefixes lines with `HH:MM:SS.mmmZ`). UTC.
 /// Lives behind the same `NX_DAEMON_DEBUG_WATCHER=1` gate as the rest of
 /// the diagnostic eprintln output.
@@ -229,7 +229,7 @@ impl WatchPipeline {
 
         let debug = std::env::var("NX_DAEMON_DEBUG_WATCHER").as_deref() == Ok("1");
         if debug {
-            eprintln!("[debug-watcher] register_and_backfill_new_dirs dirs={dirs:?}");
+            eprintln!("[watcher] register_and_backfill_new_dirs dirs={dirs:?}");
         }
         debug!(?dirs, "registering watches for new directories");
         register_watches(&mut self.watcher, dirs)?;
@@ -259,7 +259,7 @@ impl WatchPipeline {
 
         if debug {
             eprintln!(
-                "[debug-watcher] backfilled {} files, {} nested dirs: files={:?} nested={:?}",
+                "[watcher] backfilled {} files, {} nested dirs: files={:?} nested={:?}",
                 backfilled.len(),
                 nested_dirs.len(),
                 backfilled,
@@ -295,7 +295,7 @@ impl WatchPipeline {
             let ts = debug_ts();
             for (path, metadata) in raw.paths() {
                 eprintln!(
-                    "[debug-watcher] {} ingest path={:?} kind={:?} age_ms={}",
+                    "[watcher] {} ingest path={:?} kind={:?} age_ms={}",
                     ts,
                     path,
                     raw.kind(),
@@ -373,7 +373,7 @@ impl WatchPipeline {
                         let handler_started_at = if debug {
                             let ts = debug_ts();
                             eprintln!(
-                                "[debug-watcher] {} force-flush START replies={}",
+                                "[watcher] {} force-flush START replies={}",
                                 ts,
                                 replies.len()
                             );
@@ -409,7 +409,7 @@ impl WatchPipeline {
                         }
                         if debug {
                             eprintln!(
-                                "[debug-watcher] {} force-flush recv_timeout(5ms)={}",
+                                "[watcher] {} force-flush recv_timeout(5ms)={}",
                                 debug_ts(),
                                 recv_label
                             );
@@ -434,7 +434,7 @@ impl WatchPipeline {
                         }
                         if let Some(start) = handler_started_at {
                             eprintln!(
-                                "[debug-watcher] {} force-flush END count={} duration_ms={}",
+                                "[watcher] {} force-flush END count={} duration_ms={}",
                                 debug_ts(),
                                 watch_events.len(),
                                 start.elapsed().as_millis()

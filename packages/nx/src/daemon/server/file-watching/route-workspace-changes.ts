@@ -36,7 +36,7 @@ function summarize(files: string[]): string {
 export function routeWorkspaceChanges(events: WatchEvent[]): void {
   if (DEBUG) {
     serverLogger.watcherLog(
-      `[debug-watcher] routeWorkspaceChanges batch: ${events.length} events: ` +
+      `[watcher] routeWorkspaceChanges batch: ${events.length} events: ` +
         events.map((e) => `${e.type}:${e.path}`).join(', ')
     );
   }
@@ -74,7 +74,7 @@ export function routeWorkspaceChanges(events: WatchEvent[]): void {
 
   if (DEBUG && (droppedDirs.length || droppedStatErrors.length)) {
     serverLogger.watcherLog(
-      `[debug-watcher] route dropped: dirs=[${droppedDirs.join(', ')}] ` +
+      `[watcher] route dropped: dirs=[${droppedDirs.join(', ')}] ` +
         `stat-errors=[${droppedStatErrors.join('; ')}]`
     );
   }
