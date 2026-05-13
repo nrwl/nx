@@ -118,6 +118,9 @@ function kickOffRecompute() {
 
     // Plugin set we just loaded may already be stale vs disk.
     if (isStale(myPluginsHash)) {
+      serverLogger.log(
+        'Discarding stale recompute result (nx.json plugins changed mid-compute).'
+      );
       if (cachedSerializedProjectGraphPromise === myPromise) kickOffRecompute();
       return cachedSerializedProjectGraphPromise;
     }
@@ -126,6 +129,9 @@ function kickOffRecompute() {
 
     // Compute may have run against plugins that are now stale.
     if (isStale(myPluginsHash)) {
+      serverLogger.log(
+        'Discarding stale recompute result (nx.json plugins changed mid-compute).'
+      );
       if (cachedSerializedProjectGraphPromise === myPromise) kickOffRecompute();
       return cachedSerializedProjectGraphPromise;
     }
@@ -146,18 +152,8 @@ function kickOffRecompute() {
   cachedSerializedProjectGraphPromise = myPromise;
 }
 
-/**
- * Returns true if disk's nx.json plugins hash diverged from `expectedHash`.
- * Logs the discard on the stale path so persistent gate firings are visible
- * in the daemon log. Caller decides how to bail (kick successor + return
- * the cached pointer).
- */
 function isStale(expectedHash: string): boolean {
-  if (readNxJsonPluginsHash() === expectedHash) return false;
-  serverLogger.log(
-    'Discarding stale recompute result (nx.json plugins changed mid-compute).'
-  );
-  return true;
+  return readNxJsonPluginsHash() !== expectedHash;
 }
 
 function readNxJsonPluginsHash(): string {
