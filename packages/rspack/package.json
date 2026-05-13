@@ -51,6 +51,7 @@
     "sass": "catalog:css",
     "sass-embedded": "catalog:css",
     "sass-loader": "catalog:css",
+    "semver": "catalog:",
     "source-map-loader": "^5.0.0",
     "style-loader": "^3.3.0",
     "ts-checker-rspack-plugin": "catalog:rspack",
