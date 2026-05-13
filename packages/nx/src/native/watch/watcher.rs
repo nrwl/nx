@@ -217,9 +217,7 @@ impl WatchPipeline {
         debug!(?dirs, "registering watches for new directories");
         register_watches(&mut self.watcher, dirs)?;
 
-        let collect_paths = enabled!(Level::TRACE);
         let mut nested_dirs: HashSet<PathBuf> = HashSet::new();
-        let mut backfilled_count: usize = 0;
         let mut backfilled_paths: Vec<PathBuf> = Vec::new();
         for dir in dirs {
             for rel_path in nx_walker_sync(dir, None) {
@@ -231,10 +229,7 @@ impl WatchPipeline {
                         .strip_prefix(&self.origin_path)
                         .map(Path::to_path_buf)
                         .unwrap_or(full_path.clone());
-                    backfilled_count += 1;
-                    if collect_paths {
-                        backfilled_paths.push(path.clone());
-                    }
+                    backfilled_paths.push(path.clone());
                     self.merge_event(WatchEventInternal {
                         path,
                         r#type: EventType::create,
@@ -244,13 +239,11 @@ impl WatchPipeline {
         }
 
         debug!(
-            backfilled = backfilled_count,
+            backfilled = backfilled_paths.len(),
             nested = nested_dirs.len(),
             "backfilled new directories"
         );
-        if collect_paths {
-            trace!(files = ?backfilled_paths, nested = ?nested_dirs, "backfill detail");
-        }
+        trace!(files = ?backfilled_paths, nested = ?nested_dirs, "backfill detail");
 
         register_watches(&mut self.watcher, &nested_dirs)
     }

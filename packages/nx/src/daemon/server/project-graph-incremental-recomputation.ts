@@ -146,9 +146,15 @@ function currentNxJsonPluginsHash(): string | undefined {
   try {
     const nxJson = readNxJson(workspaceRoot);
     return hashObject(nxJson.plugins ?? []);
-  } catch {
+  } catch (e) {
     // Transient read failure (mid-write rename) — undefined disables the
-    // gate for this IIFE, matching pre-fix behavior.
+    // gate for this IIFE, matching pre-fix behavior. Log so persistent
+    // failures don't go silent.
+    serverLogger.log(
+      `Failed to read nx.json for freshness gate (disabling gate this round): ${
+        e instanceof Error ? e.message : String(e)
+      }`
+    );
     return undefined;
   }
 }
@@ -194,16 +200,7 @@ export async function getCachedSerializedProjectGraphPromise(
         `deleted=${collectedDeletedFiles.size}[${[...collectedDeletedFiles.keys()].slice(0, 10).join(',')}]`
     );
     if (needsRecompute) {
-      serverLogger.log(
-        cachedSerializedProjectGraphPromise
-          ? `Recomputing project graph because of ${collectedUpdatedFiles.size} updated and ${collectedDeletedFiles.size} deleted files.`
-          : 'No in-memory cached project graph found. Recomputing it...'
-      );
       kickOffRecompute();
-    } else {
-      serverLogger.log(
-        'Reusing in-memory cached project graph because no files changed.'
-      );
     }
 
     // A stale compute returns cachedSerializedProjectGraphPromise (the
