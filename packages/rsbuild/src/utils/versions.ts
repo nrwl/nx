@@ -1,5 +1,46 @@
 export const nxVersion = require('../../package.json').version;
-export const rsbuildVersion = '1.1.10';
-export const rsbuildPluginReactVersion = '1.1.0';
-export const rsbuildPluginVueVersion = '1.0.5';
-export const rsbuildPluginSassVersion = '1.1.2';
+
+export const supportedRsbuildMajorVersions = [2, 1] as const;
+export type SupportedRsbuildMajorVersion =
+  (typeof supportedRsbuildMajorVersions)[number];
+
+type RsbuildVersionMap = {
+  rsbuildVersion: string;
+  rsbuildPluginReactVersion: string;
+  rsbuildPluginVueVersion: string;
+  rsbuildPluginSassVersion: string;
+};
+
+export const latestRsbuildVersions: RsbuildVersionMap = {
+  rsbuildVersion: '^2.0.6',
+  rsbuildPluginReactVersion: '^2.0.0',
+  // plugin-vue and plugin-sass remain on 1.x but declare compatibility with
+  // rsbuild ^1.0.0 || ^2.0.0-0, so the same range works on both majors.
+  rsbuildPluginVueVersion: '^1.2.8',
+  rsbuildPluginSassVersion: '^1.5.2',
+};
+
+export const backwardCompatibleRsbuildVersions: Record<
+  SupportedRsbuildMajorVersion,
+  RsbuildVersionMap
+> = {
+  2: latestRsbuildVersions,
+  1: {
+    rsbuildVersion: '^1.1.10',
+    rsbuildPluginReactVersion: '^1.1.0',
+    rsbuildPluginVueVersion: '^1.0.5',
+    rsbuildPluginSassVersion: '^1.1.2',
+  },
+};
+
+/**
+ * Kept for backward compatibility with code paths that don't yet branch on
+ * the detected installed major. Points at the latest supported major.
+ */
+export const rsbuildVersion = latestRsbuildVersions.rsbuildVersion;
+export const rsbuildPluginReactVersion =
+  latestRsbuildVersions.rsbuildPluginReactVersion;
+export const rsbuildPluginVueVersion =
+  latestRsbuildVersions.rsbuildPluginVueVersion;
+export const rsbuildPluginSassVersion =
+  latestRsbuildVersions.rsbuildPluginSassVersion;
