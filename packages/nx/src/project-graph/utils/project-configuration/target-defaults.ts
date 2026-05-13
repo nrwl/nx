@@ -349,7 +349,9 @@ export function findBestTargetDefault(
   executor: string | undefined,
   projectName: string | undefined,
   projectNode:
-    | Pick<ProjectGraphProjectNode, 'name' | 'tags' | 'root'>
+    | (Pick<ProjectGraphProjectNode, 'name'> & {
+        data: Pick<ProjectConfiguration, 'root' | 'tags'>;
+      })
     | undefined,
   sourcePlugin: string | undefined,
   entries: NormalizedTargetDefaults,
@@ -428,7 +430,9 @@ function matchEntry(
   executor: string | undefined,
   projectName: string | undefined,
   projectNode:
-    | Pick<ProjectGraphProjectNode, 'name' | 'tags' | 'root'>
+    | (Pick<ProjectGraphProjectNode, 'name'> & {
+        data: Pick<ProjectConfiguration, 'root' | 'tags'>;
+      })
     | undefined,
   sourcePlugin: string | undefined,
   targetCommand: string | undefined
@@ -495,7 +499,10 @@ function matchEntry(
       ? [...entry.projects!]
       : [entry.projects!];
     const matched = findMatchingProjects(patterns, {
-      [projectName]: projectNode,
+      // `findMatchingProjects` only reads `.name`, `.data.root`, and
+      // `.data.tags` — the keys our narrowed `projectNode` already
+      // satisfies — but its signature wants the full graph node.
+      [projectName]: projectNode as ProjectGraphProjectNode,
     });
     if (!matched.includes(projectName)) return null;
     tier++;
