@@ -12,8 +12,9 @@ import {
   getOutputsForTargetAndConfiguration,
 } from '../tasks-runner/utils';
 import { getMatchingStringsWithCache } from '../utils/find-matching-projects';
+import { normalizePath } from '../utils/path';
 import { projectHasTargetAndConfiguration } from '../utils/project-graph-utils';
-import { splitByColons } from '../utils/split-target';
+import { splitTarget } from '../utils/split-target';
 import { workspaceRoot as defaultWorkspaceRoot } from '../utils/workspace-root';
 import { HashPlanInspector } from './hash-plan-inspector';
 import { type ExpandedDepsOutput, getInputs } from './task-hasher';
@@ -69,7 +70,7 @@ function resolveIdentity(
   const cached = identityCache.get(taskId);
   if (cached) return cached;
 
-  const [project, target, configuration] = splitByColons(taskId);
+  const [project, target, configuration] = splitTarget(taskId, projectGraph);
   if (!project || !target) {
     throw new Error(
       `Invalid taskId "${taskId}" — expected "project:target[:configuration]"`
@@ -97,7 +98,7 @@ function resolveIdentity(
   return identity;
 }
 
-function getRawInputsSync(
+function getRawInputs(
   taskId: string,
   { projectGraph, inspector }: LoadedContext
 ): HashInputs | null {
@@ -127,7 +128,7 @@ function getRawInputsSync(
   return result;
 }
 
-function getOutputsSync(taskId: string, projectGraph: ProjectGraph): string[] {
+function getOutputs(taskId: string, projectGraph: ProjectGraph): string[] {
   const cached = outputsCache.get(taskId);
   if (cached !== undefined) return cached;
 
@@ -148,7 +149,7 @@ function getOutputsSync(taskId: string, projectGraph: ProjectGraph): string[] {
   return outputs;
 }
 
-function getTaskGraphSync(
+function getTaskGraph(
   taskId: string,
   projectGraph: ProjectGraph
 ): TaskGraph | null {
@@ -181,7 +182,7 @@ function getTaskGraphSync(
   return tg;
 }
 
-function getDepsOutputsSync(
+function getDepsOutputs(
   taskId: string,
   { projectGraph, nxJson }: LoadedContext
 ): ExpandedDepsOutput[] {
@@ -232,41 +233,44 @@ function collectUpstreamTaskIds(
  * True if `path` is covered by `pattern`. Two cases:
  *   1. Directory containment — `path` lives inside `pattern` as a directory prefix.
  *   2. Exact / glob match via cached minimatch regex (getMatchingStringsWithCache).
+ *
+ * No canonical helper exists that combines directory-prefix containment with
+ * glob matching; `getMatchingStringsWithCache` handles globs only.
  */
 function pathMatchesPattern(normalizedPath: string, pattern: string): boolean {
-  const np = pattern.replace(/\\/g, '/');
+  const np = normalizePath(pattern);
   if (normalizedPath.startsWith(np + '/')) return true;
   return getMatchingStringsWithCache(np, [normalizedPath]).length > 0;
 }
 
-function isOutputSync(
+function isOutput(
   taskId: string,
   path: string,
   projectGraph: ProjectGraph
 ): boolean {
-  const normalized = path.replace(/\\/g, '/');
-  return getOutputsSync(taskId, projectGraph).some((p) =>
+  const normalized = normalizePath(path);
+  return getOutputs(taskId, projectGraph).some((p) =>
     pathMatchesPattern(normalized, p)
   );
 }
 
-function matchesDependentTaskOutputsSync(
+function matchesDependentTaskOutputs(
   taskId: string,
   path: string,
   ctx: LoadedContext
 ): boolean {
-  const normalized = path.replace(/\\/g, '/');
-  const depsOutputs = getDepsOutputsSync(taskId, ctx);
+  const normalized = normalizePath(path);
+  const depsOutputs = getDepsOutputs(taskId, ctx);
   if (depsOutputs.length === 0) return false;
 
-  const taskGraph = getTaskGraphSync(taskId, ctx.projectGraph);
+  const taskGraph = getTaskGraph(taskId, ctx.projectGraph);
   if (!taskGraph) return false;
 
   const { canonicalTaskId } = resolveIdentity(taskId, ctx.projectGraph);
   if (!taskGraph.tasks[canonicalTaskId]) return false;
 
   for (const { dependentTasksOutputFiles, transitive } of depsOutputs) {
-    const glob = dependentTasksOutputFiles.replace(/\\/g, '/');
+    const glob = normalizePath(dependentTasksOutputFiles);
     if (getMatchingStringsWithCache(glob, [normalized]).length === 0) continue;
     const upstreamIds = collectUpstreamTaskIds(
       taskGraph,
@@ -274,25 +278,20 @@ function matchesDependentTaskOutputsSync(
       !!transitive
     );
     for (const upstreamId of upstreamIds) {
-      if (isOutputSync(upstreamId, normalized, ctx.projectGraph)) return true;
+      if (isOutput(upstreamId, normalized, ctx.projectGraph)) return true;
     }
   }
   return false;
 }
 
-function isInputSync(
-  taskId: string,
-  path: string,
-  ctx: LoadedContext
-): boolean {
-  const normalized = path.replace(/\\/g, '/');
-  const raw = getRawInputsSync(taskId, ctx);
+function isInput(taskId: string, path: string, ctx: LoadedContext): boolean {
+  const normalized = normalizePath(path);
+  const raw = getRawInputs(taskId, ctx);
   if (raw) {
-    if (raw.files.includes(path) || raw.files.includes(normalized)) return true;
-    if (raw.depOutputs.includes(path) || raw.depOutputs.includes(normalized))
-      return true;
+    if (raw.files.includes(normalized)) return true;
+    if (raw.depOutputs.includes(normalized)) return true;
   }
-  return matchesDependentTaskOutputsSync(taskId, normalized, ctx);
+  return matchesDependentTaskOutputs(taskId, normalized, ctx);
 }
 
 // ── Public API ───────────────────────────────────────────────────────────────
@@ -318,7 +317,7 @@ export async function checkFilesAreInputs(
   const matched: string[] = [];
   const unmatched: string[] = [];
   for (const file of files) {
-    if (isInputSync(taskId, file, ctx)) {
+    if (isInput(taskId, file, ctx)) {
       matched.push(file);
     } else {
       unmatched.push(file);
@@ -343,7 +342,7 @@ export async function checkFilesAreOutputs(
   const matched: string[] = [];
   const unmatched: string[] = [];
   for (const file of files) {
-    if (isOutputSync(taskId, file, ctx.projectGraph)) {
+    if (isOutput(taskId, file, ctx.projectGraph)) {
       matched.push(file);
     } else {
       unmatched.push(file);
@@ -362,7 +361,7 @@ export async function getTaskRawInputs(
   taskId: string
 ): Promise<HashInputs | null> {
   const ctx = await getContext();
-  return getRawInputsSync(taskId, ctx);
+  return getRawInputs(taskId, ctx);
 }
 
 /**
@@ -371,7 +370,7 @@ export async function getTaskRawInputs(
  */
 export async function getTaskOutputPatterns(taskId: string): Promise<string[]> {
   const ctx = await getContext();
-  return getOutputsSync(taskId, ctx.projectGraph);
+  return getOutputs(taskId, ctx.projectGraph);
 }
 
 // ── Test utilities ───────────────────────────────────────────────────────────
