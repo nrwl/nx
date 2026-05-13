@@ -78,4 +78,81 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
       }
     });
   });
+
+  // Covers the freshness-gate path inside kickOffRecompute: if nx.json's
+  // `plugins` field changes between kickoff and commit, the in-flight
+  // IIFE must discard its result (built against the older plugin set)
+  // and let a successor recompute against the new disk state. Without
+  // the gate, cachedSerializedProjectGraphPromise was last-kickoff-wins
+  // and could return a stale graph (see spread.test.ts middle-plugin
+  // flake).
+  it('discards stale recompute when nx.json plugins change mid-compute', async () => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({ plugins: ['./tools/plugin-a'] }),
+      'package.json': JSON.stringify({ name: 'root' }),
+    });
+
+    await jest.isolateModulesAsync(async () => {
+      const { setWorkspaceRoot } = require('../../utils/workspace-root');
+      setWorkspaceRoot(fs.tempDir);
+
+      // Hold the first IIFE between its kickoff (sync hash snapshot) and
+      // the rest of its compute, so we can rewrite nx.json in the gap.
+      let resolveFirstPlugins: () => void;
+      const firstPluginsGate = new Promise<void>((resolve) => {
+        resolveFirstPlugins = resolve;
+      });
+      let pluginsCallCount = 0;
+      jest.doMock('../../project-graph/plugins/get-plugins', () => ({
+        __esModule: true,
+        getPlugins: jest.fn(async () => []),
+        getPluginsSeparated: jest.fn(async () => {
+          pluginsCallCount++;
+          if (pluginsCallCount === 1) {
+            await firstPluginsGate;
+          }
+          return { specifiedPlugins: [], defaultPlugins: [] };
+        }),
+      }));
+
+      const logSpy = jest.fn();
+      jest.doMock('../logger', () => ({
+        __esModule: true,
+        serverLogger: {
+          log: logSpy,
+          watcherLog: jest.fn(),
+          requestLog: jest.fn(),
+        },
+      }));
+
+      const {
+        scheduleProjectGraphRecomputation,
+        getCachedSerializedProjectGraphPromise,
+      } = require('./project-graph-incremental-recomputation');
+
+      // Synchronously: kick off compute #1. The snapshot of nx.json's
+      // plugins hash is captured before this call returns.
+      scheduleProjectGraphRecomputation([], ['__trigger.txt'], []);
+
+      // Rewrite nx.json so disk diverges from the snapshot. The IIFE is
+      // still parked on firstPluginsGate, so it hasn't yet read plugins.
+      writeFileSync(
+        join(fs.tempDir, 'nx.json'),
+        JSON.stringify({ plugins: ['./tools/plugin-b'] })
+      );
+
+      // Let the first IIFE proceed. It will compute, then hit the gate,
+      // see disk-hash != snapshot-hash, log the discard, and kick a
+      // successor that snapshots the new state.
+      resolveFirstPlugins!();
+
+      await getCachedSerializedProjectGraphPromise();
+
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Discarding stale recompute result')
+      );
+      // First IIFE bailed → kicked successor → at least two getPlugins calls.
+      expect(pluginsCallCount).toBeGreaterThanOrEqual(2);
+    });
+  });
 });
