@@ -239,11 +239,12 @@ impl WatchPipeline {
         }
 
         debug!(
-            backfilled = backfilled_paths.len(),
-            nested = nested_dirs.len(),
-            "backfilled new directories"
+            files = ?backfilled_paths,
+            nested = ?nested_dirs,
+            "backfilled {} files, {} nested dirs",
+            backfilled_paths.len(),
+            nested_dirs.len()
         );
-        trace!(files = ?backfilled_paths, nested = ?nested_dirs, "backfill detail");
 
         register_watches(&mut self.watcher, &nested_dirs)
     }
@@ -366,7 +367,7 @@ impl WatchPipeline {
                         debug!(
                             count = watch_events.len(),
                             replies = replies.len(),
-                            duration_ms = handler_started_at.elapsed().as_millis() as u64,
+                            elapsed = ?handler_started_at.elapsed(),
                             "force-flush END"
                         );
                         for e in &watch_events {
