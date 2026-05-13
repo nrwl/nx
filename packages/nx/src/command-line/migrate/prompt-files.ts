@@ -155,36 +155,22 @@ export function writePromptMigrationFiles(
       promptContents[promptContentKey(migration.package, migration.prompt)];
     if (content === undefined) continue;
 
-    const namespace = packageNameToWorkspaceNamespace(migration.package);
-    const fileName = `${migration.version}-${posix.basename(migration.prompt)}`;
     const relPath = joinPathFragments(
       AI_MIGRATIONS_DIR,
-      ...namespace,
-      fileName
+      migration.package,
+      migration.prompt
     );
 
-    if (writtenPaths.has(relPath)) {
-      throw new Error(
-        `Conflicting AI migration prompt destination "${relPath}" for migration "${migration.name}" in package "${migration.package}". Two migrations target the same workspace path (same package + version + filename).`
-      );
+    if (!writtenPaths.has(relPath)) {
+      writtenPaths.add(relPath);
+      const absPath = join(root, relPath);
+      mkdirSync(dirname(absPath), { recursive: true });
+      writeFileSync(absPath, content);
+      result.push(relPath);
     }
-    writtenPaths.add(relPath);
-
-    const absPath = join(root, relPath);
-    mkdirSync(dirname(absPath), { recursive: true });
-    writeFileSync(absPath, content);
 
     migration.prompt = relPath;
-    result.push(relPath);
   }
 
   return result;
-}
-
-function packageNameToWorkspaceNamespace(packageName: string): string[] {
-  if (packageName.startsWith('@')) {
-    const [scope, name] = packageName.slice(1).split('/');
-    return [scope, name];
-  }
-  return [packageName];
 }

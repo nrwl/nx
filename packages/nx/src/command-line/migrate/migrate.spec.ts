@@ -3737,7 +3737,7 @@ describe('Migration', () => {
       rmSync(tmpRoot, { recursive: true, force: true });
     });
 
-    it('should write prompt files using scoped namespace and version-prefixed filenames', () => {
+    it('should write prompt files preserving the relative path under the package directory', () => {
       const migrations = [
         {
           package: '@nx/expo',
@@ -3759,15 +3759,15 @@ describe('Migration', () => {
       );
 
       expect(written).toEqual([
-        'tools/ai-migrations/nx/expo/22.2.0-beta.3-ai-instructions-for-expo-54.md',
+        'tools/ai-migrations/@nx/expo/src/migrations/update-22-2-0/files/ai-instructions-for-expo-54.md',
       ]);
       expect(migrations[0].prompt).toBe(
-        'tools/ai-migrations/nx/expo/22.2.0-beta.3-ai-instructions-for-expo-54.md'
+        'tools/ai-migrations/@nx/expo/src/migrations/update-22-2-0/files/ai-instructions-for-expo-54.md'
       );
       expect(readFileSync(join(tmpRoot, written[0]), 'utf-8')).toBe('EXPO');
     });
 
-    it('should namespace unscoped packages without a scope directory', () => {
+    it('should write under the package directory when unscoped', () => {
       const migrations = [
         {
           package: 'mypackage',
@@ -3784,10 +3784,10 @@ describe('Migration', () => {
         promptContents
       );
 
-      expect(written).toEqual(['tools/ai-migrations/mypackage/1.0.0-foo.md']);
+      expect(written).toEqual(['tools/ai-migrations/mypackage/files/foo.md']);
     });
 
-    it('should write two distinct files when two entries reference the same source .md', () => {
+    it('should write a single file when two entries reference the same source .md', () => {
       const migrations = [
         {
           package: '@nx/vitest',
@@ -3812,37 +3812,12 @@ describe('Migration', () => {
         promptContents
       );
 
-      expect(written).toEqual([
-        'tools/ai-migrations/nx/vitest/22.1.0-beta.8-ai-instructions-for-vitest-4.md',
-        'tools/ai-migrations/nx/vitest/22.3.2-beta.0-ai-instructions-for-vitest-4.md',
-      ]);
-      expect(readFileSync(join(tmpRoot, written[0]), 'utf-8')).toBe('V');
-      expect(readFileSync(join(tmpRoot, written[1]), 'utf-8')).toBe('V');
-    });
-
-    it('should throw when two entries collide on the destination path', () => {
-      const migrations = [
-        {
-          package: '@nx/vitest',
-          name: 'a',
-          version: '22.1.0-beta.8',
-          prompt: './files/ai-instructions-for-vitest-4.md',
-        },
-        {
-          package: '@nx/vitest',
-          name: 'b',
-          version: '22.1.0-beta.8',
-          prompt: './other-dir/ai-instructions-for-vitest-4.md',
-        },
-      ];
-      const promptContents = {
-        '@nx/vitest::./files/ai-instructions-for-vitest-4.md': 'V1',
-        '@nx/vitest::./other-dir/ai-instructions-for-vitest-4.md': 'V2',
-      };
-
-      expect(() =>
-        writePromptMigrationFiles(tmpRoot, migrations, promptContents)
-      ).toThrow(/Conflicting AI migration prompt destination/);
+      const expectedPath =
+        'tools/ai-migrations/@nx/vitest/files/ai-instructions-for-vitest-4.md';
+      expect(written).toEqual([expectedPath]);
+      expect(migrations[0].prompt).toBe(expectedPath);
+      expect(migrations[1].prompt).toBe(expectedPath);
+      expect(readFileSync(join(tmpRoot, expectedPath), 'utf-8')).toBe('V');
     });
 
     it('should ignore entries whose prompt content is missing from the map', () => {
@@ -3868,7 +3843,7 @@ describe('Migration', () => {
         migrations,
         promptContents
       );
-      expect(written).toEqual(['tools/ai-migrations/pkg/1.0.0-x.md']);
+      expect(written).toEqual(['tools/ai-migrations/pkg/x.md']);
     });
   });
 });
