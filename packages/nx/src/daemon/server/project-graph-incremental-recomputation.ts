@@ -187,6 +187,12 @@ export async function getCachedSerializedProjectGraphPromise(
       !cachedSerializedProjectGraphPromise ||
       collectedUpdatedFiles.size > 0 ||
       collectedDeletedFiles.size > 0;
+    serverLogger.log(
+      `[watcher] decision: needsRecompute=${needsRecompute} ` +
+        `hasCache=${!!cachedSerializedProjectGraphPromise} ` +
+        `updated=${collectedUpdatedFiles.size}[${[...collectedUpdatedFiles.keys()].slice(0, 10).join(',')}] ` +
+        `deleted=${collectedDeletedFiles.size}[${[...collectedDeletedFiles.keys()].slice(0, 10).join(',')}]`
+    );
     if (needsRecompute) {
       serverLogger.log(
         cachedSerializedProjectGraphPromise

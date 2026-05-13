@@ -29,9 +29,16 @@ function summarize(files: string[]): string {
  * the watcher firing and us looking — drop the event.
  */
 export function routeWorkspaceChanges(events: WatchEvent[]): void {
+  serverLogger.watcherLog(
+    `[watcher] routeWorkspaceChanges batch: ${events.length} events: ` +
+      events.map((e) => `${e.type}:${e.path}`).join(', ')
+  );
+
   const updatedFilesToHash: string[] = [];
   const createdFilesToHash: string[] = [];
   const deletedFiles: string[] = [];
+  const droppedDirs: string[] = [];
+  const droppedStatErrors: string[] = [];
 
   for (const event of events) {
     if (event.type === 'delete') {
@@ -40,15 +47,28 @@ export function routeWorkspaceChanges(events: WatchEvent[]): void {
     }
     try {
       const s = statSync(join(workspaceRoot, event.path));
-      if (!s.isFile()) continue;
+      if (!s.isFile()) {
+        droppedDirs.push(event.path);
+        continue;
+      }
       if (event.type === 'update') {
         updatedFilesToHash.push(event.path);
       } else {
         createdFilesToHash.push(event.path);
       }
-    } catch {
+    } catch (e) {
+      droppedStatErrors.push(
+        `${event.path} (${e instanceof Error ? e.message : String(e)})`
+      );
       // File deleted between watcher emit and stat — drop it.
     }
+  }
+
+  if (droppedDirs.length || droppedStatErrors.length) {
+    serverLogger.watcherLog(
+      `[watcher] route dropped: dirs=[${droppedDirs.join(', ')}] ` +
+        `stat-errors=[${droppedStatErrors.join('; ')}]`
+    );
   }
 
   if (
