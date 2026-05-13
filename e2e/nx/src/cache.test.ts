@@ -212,13 +212,11 @@ describe('cache', () => {
     // Create a file in the dist that does not match output glob
     updateFile('dist/apps/c.ts', '');
 
-    // Rerun. c.ts does not match the output glob, so the glob-aware
-    // outputs-hash check still sees the tracked outputs as unchanged →
-    // "existing outputs match the cache" no-op path (no full restore needed).
+    // Rerun. Outputs were modified (extra file in dist), so the daemon's
+    // outputs-hash check fails and nx restores from cache → "[local cache]"
+    // rather than the "existing outputs match" no-op path.
     const rerunWithNewUnrelatedFile = runCLI(`build ${mylib}`);
-    expect(rerunWithNewUnrelatedFile).toContain(
-      'existing outputs match the cache'
-    );
+    expect(rerunWithNewUnrelatedFile).toContain('local cache');
     const outputsAfterAddingUntouchedFileAndRerunning = [
       ...listFiles('dist/apps'),
       ...listFiles('dist/.next').map((f) => `.next/${f}`),
