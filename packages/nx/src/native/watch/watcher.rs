@@ -262,21 +262,21 @@ impl WatchPipeline {
 
         let raw = RawWatchEvent::new(event);
 
-        // Skip Access — they're reads, fire in floods, and their mtime is
-        // the prior write, making age_ms misleading.
-        if !matches!(raw.kind(), notify::EventKind::Access(_)) {
-            for (path, metadata) in raw.paths() {
-                trace!(
-                    ?path,
-                    kind = ?raw.kind(),
-                    age_ms = event_age_ms(metadata),
-                    "ingest"
-                );
-            }
-        }
-
         if !self.filterer.check_event(&raw) {
             return Ok(());
+        }
+
+        // Trace only events that survive the filter — Access reads and
+        // other floods are dropped above, so we don't pollute the log
+        // with their misleading age_ms (mtime there is the prior write,
+        // not the event).
+        for (path, metadata) in raw.paths() {
+            trace!(
+                ?path,
+                kind = ?raw.kind(),
+                age_ms = event_age_ms(metadata),
+                "ingest"
+            );
         }
 
         #[cfg(not(target_os = "macos"))]
