@@ -137,18 +137,18 @@ function kickOffRecompute() {
 
 /**
  * Re-reads nx.json; returns the cached pointer (so awaiters chain to the
- * successor) if disk diverged from `snapPluginsHash`. Called at two points
+ * successor) if disk diverged from `currentPluginsHash`. Called at two points
  * in `kickOffRecompute` — after getPluginsSeparated to skip the expensive
  * compute when we already know we're stale, and after the compute to catch
  * a disk change that happened during it.
  */
 function bailIfStale(
-  snapPluginsHash: string | undefined,
+  currentPluginsHash: string | undefined,
   myPromise: Promise<SerializedProjectGraph>
 ): Promise<SerializedProjectGraph> | null {
   const isStaleVsDisk =
-    snapPluginsHash !== undefined &&
-    currentNxJsonPluginsHash() !== snapPluginsHash;
+    currentPluginsHash !== undefined &&
+    currentNxJsonPluginsHash() !== currentPluginsHash;
   if (!isStaleVsDisk) return null;
   serverLogger.log(
     'Discarding stale recompute result (nx.json plugins changed mid-compute).'
