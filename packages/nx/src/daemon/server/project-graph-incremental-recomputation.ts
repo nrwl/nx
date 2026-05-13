@@ -145,10 +145,8 @@ function isStale(expectedHash: string): boolean {
 }
 
 /**
- * Bail action: log the discard, ensure a successor compute exists, and
- * return the cached pointer so awaiters chain to the successor. Kicks
- * a successor only if this IIFE is still the cached one — older stale
- * IIFEs whose pointer has already been replaced shouldn't kick again.
+ * Only the latest stale IIFE kicks a successor — older stale IIFEs whose
+ * pointer has already been replaced shouldn't kick again.
  */
 function chainToSuccessor(
   myPromise: Promise<SerializedProjectGraph>
