@@ -117,24 +117,12 @@ function kickOffRecompute() {
     const plugins = await getPluginsSeparated(workspaceRoot, nxJson);
 
     // Plugin set we just loaded may already be stale vs disk.
-    if (isStale(myPluginsHash)) {
-      serverLogger.log(
-        'Discarding stale recompute result (nx.json plugins changed mid-compute).'
-      );
-      if (cachedSerializedProjectGraphPromise === myPromise) kickOffRecompute();
-      return cachedSerializedProjectGraphPromise;
-    }
+    if (isStale(myPluginsHash)) return chainToSuccessor(myPromise);
 
     const result = await processFilesAndCreateAndSerializeProjectGraph(plugins);
 
     // Compute may have run against plugins that are now stale.
-    if (isStale(myPluginsHash)) {
-      serverLogger.log(
-        'Discarding stale recompute result (nx.json plugins changed mid-compute).'
-      );
-      if (cachedSerializedProjectGraphPromise === myPromise) kickOffRecompute();
-      return cachedSerializedProjectGraphPromise;
-    }
+    if (isStale(myPluginsHash)) return chainToSuccessor(myPromise);
 
     if (
       cachedSerializedProjectGraphPromise === myPromise &&
@@ -154,6 +142,22 @@ function kickOffRecompute() {
 
 function isStale(expectedHash: string): boolean {
   return readNxJsonPluginsHash() !== expectedHash;
+}
+
+/**
+ * Bail action: log the discard, ensure a successor compute exists, and
+ * return the cached pointer so awaiters chain to the successor. Kicks
+ * a successor only if this IIFE is still the cached one — older stale
+ * IIFEs whose pointer has already been replaced shouldn't kick again.
+ */
+function chainToSuccessor(
+  myPromise: Promise<SerializedProjectGraph>
+): Promise<SerializedProjectGraph> {
+  serverLogger.log(
+    'Discarding stale recompute result (nx.json plugins changed mid-compute).'
+  );
+  if (cachedSerializedProjectGraphPromise === myPromise) kickOffRecompute();
+  return cachedSerializedProjectGraphPromise;
 }
 
 function readNxJsonPluginsHash(): string {
