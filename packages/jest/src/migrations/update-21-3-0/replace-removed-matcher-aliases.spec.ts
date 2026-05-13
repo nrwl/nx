@@ -1,5 +1,5 @@
 import { logger, type Tree } from '@nx/devkit';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './replace-removed-matcher-aliases';
 

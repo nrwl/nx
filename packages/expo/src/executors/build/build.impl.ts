@@ -7,7 +7,7 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '@nx/devkit';
-import { signalToCode } from '@nx/devkit/internal';
+import { signalToCode } from 'nx/src/devkit-internals';
 import { getLockFileName } from '@nx/js';
 import { ChildProcess, fork } from 'child_process';
 import { copyFileSync, existsSync, rmSync, writeFileSync } from 'node:fs';

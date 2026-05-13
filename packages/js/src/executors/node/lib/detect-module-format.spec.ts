@@ -1,7 +1,7 @@
 import { detectModuleFormat } from './detect-module-format';
 import { readTsConfig } from '../../../utils/typescript/ts-config';
 import * as ts from 'typescript';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { join } from 'path';
 
 jest.mock('../../../utils/typescript/ts-config');

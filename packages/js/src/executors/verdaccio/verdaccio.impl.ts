@@ -1,5 +1,5 @@
 import { ExecutorContext, logger } from '@nx/devkit';
-import { signalToCode } from '@nx/devkit/internal';
+import { signalToCode } from 'nx/src/devkit-internals';
 import { ChildProcess, execSync, fork } from 'child_process';
 import detectPort from 'detect-port';
 import { existsSync, rmSync } from 'node:fs';

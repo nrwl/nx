@@ -1,4 +1,4 @@
-import { signalToCode } from '@nx/devkit/internal';
+import { signalToCode } from 'nx/src/devkit-internals';
 import { execSync, fork } from 'child_process';
 
 /**

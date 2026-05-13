@@ -1,5 +1,5 @@
 import { ExecutorContext } from '@nx/devkit';
-import { signalToCode } from '@nx/devkit/internal';
+import { signalToCode } from 'nx/src/devkit-internals';
 import { join, resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 import { ReactNativeBuildAndroidOptions } from './schema';

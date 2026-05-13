@@ -4,7 +4,7 @@ import {
   logger,
   workspaceRoot,
 } from '@nx/devkit';
-import { signalToCode } from '@nx/devkit/internal';
+import { signalToCode } from 'nx/src/devkit-internals';
 import { exec } from 'child_process';
 import type { DockerReleasePublishSchema } from './schema';
 import { existsSync, readFileSync } from 'fs';

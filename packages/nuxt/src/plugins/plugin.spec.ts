@@ -2,8 +2,8 @@ import { CreateNodesContextV2 } from '@nx/devkit';
 import { createNodes } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 
-jest.mock('@nx/devkit/internal', () => ({
-  ...jest.requireActual('@nx/devkit/internal'),
+jest.mock('@nx/devkit/src/utils/config-utils', () => ({
+  ...jest.requireActual('@nx/devkit/src/utils/config-utils'),
   loadConfigFile: jest.fn().mockImplementation(() => {
     return Promise.resolve({
       buildDir: '../dist/my-app/.nuxt',

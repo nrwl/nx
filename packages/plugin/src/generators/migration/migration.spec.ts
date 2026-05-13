@@ -4,7 +4,7 @@ import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { migrationGenerator } from './migration';
 import { pluginGenerator } from '../plugin/plugin';
-import { setCwd } from '@nx/devkit/internal-testing-utils';
+import { setCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
 describe('NxPlugin migration generator', () => {
   let tree: Tree;

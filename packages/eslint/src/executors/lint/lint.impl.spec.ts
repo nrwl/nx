@@ -1,5 +1,5 @@
 import type { ExecutorContext } from '@nx/devkit';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import * as fs from 'fs';
 import { resolve } from 'path';
 

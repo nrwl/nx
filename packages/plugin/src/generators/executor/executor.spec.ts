@@ -5,7 +5,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { executorGenerator } from './executor';
 import { pluginGenerator } from '../plugin/plugin';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
-import { setCwd } from '@nx/devkit/internal-testing-utils';
+import { setCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
 describe('NxPlugin Executor Generator', () => {
   let tree: Tree;

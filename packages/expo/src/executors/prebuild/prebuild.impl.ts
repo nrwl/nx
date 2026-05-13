@@ -1,5 +1,5 @@
 import { ExecutorContext, names, workspaceRoot } from '@nx/devkit';
-import { signalToCode } from '@nx/devkit/internal';
+import { signalToCode } from 'nx/src/devkit-internals';
 import { ChildProcess, fork } from 'child_process';
 import { join } from 'path';
 

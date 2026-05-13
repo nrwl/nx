@@ -9,7 +9,7 @@ import {
   readCachedAnalysisResult,
   isAnalysisErrorResult,
 } from '../analyzer/analyzer-client';
-import { createProjectRootMappingsFromProjectConfigurations } from '@nx/devkit/internal';
+import { createProjectRootMappingsFromProjectConfigurations } from 'nx/src/devkit-internals';
 
 export const createDependencies: CreateDependencies<
   DotNetPluginOptions
