@@ -365,6 +365,9 @@ function flushLegacyDependsOnViolations(
     // at upgrading that plugin.
     const fromFile = sharedFile ? ` from ${sharedFile}` : '';
     title = `The ${sharedPlugin} plugin inferred ${project}:${ownerTarget} with ${annotated.length} invalid dependsOn ${entryWord} using ${valuePhrase}${fromFile}. This is deprecated and will be removed in Nx v24 — please upgrade ${sharedPlugin} to a version that doesn't emit this.`;
+  } else if (sharedPlugin && isInternal(sharedPlugin) && sharedFile) {
+    // Hand-authored entries from a single config file — lead with the file.
+    title = `${sharedFile} defines ${project}:${ownerTarget} with ${annotated.length} dependsOn ${entryWord} using ${valuePhrase}. This is deprecated and will be removed in Nx v24 — run 'nx repair' to fix this.`;
   } else {
     // Mixed sources, or only internal/hand-authored sources — `nx repair`
     // handles hand-authored entries; any external plugins still need an
