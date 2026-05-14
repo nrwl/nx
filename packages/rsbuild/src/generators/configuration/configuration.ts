@@ -13,9 +13,12 @@ import { normalizeOptions } from './lib';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { initGenerator } from '../init/init';
 import { getRsbuildVersionsForInstalledMajor } from '../../utils/version-utils';
+import { assertSupportedRsbuildVersion } from '../../utils/assert-supported-rsbuild-version';
 import { join } from 'path';
 
 export async function configurationGenerator(tree: Tree, schema: Schema) {
+  assertSupportedRsbuildVersion(tree);
+
   const projectGraph = await createProjectGraphAsync();
   const projects = readProjectsConfigurationFromProjectGraph(projectGraph);
   let project = projects.projects[schema.project];
@@ -59,7 +62,9 @@ export async function configurationGenerator(tree: Tree, schema: Schema) {
     addDependenciesToPackageJson(
       tree,
       {},
-      { '@rsbuild/core': rsbuildVersions.rsbuildVersion }
+      { '@rsbuild/core': rsbuildVersions.rsbuildVersion },
+      undefined,
+      true
     )
   );
 

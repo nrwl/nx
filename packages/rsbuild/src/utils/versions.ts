@@ -1,5 +1,7 @@
 export const nxVersion = require('../../package.json').version;
 
+export const minSupportedRsbuildVersion = '1.0.0';
+
 // Supported `@rsbuild/core` majors. Currently v1 only — v2 ships as pure
 // ESM, which @nx/rsbuild (CommonJS) cannot consume without a deeper
 // refactor; tracked separately.

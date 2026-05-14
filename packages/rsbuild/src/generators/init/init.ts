@@ -11,18 +11,11 @@ import {
 import { InitGeneratorSchema } from './schema';
 import { createNodesV2 } from '../../plugins/plugin';
 import { nxVersion } from '../../utils/versions';
-import {
-  getInstalledRsbuildMajorVersion,
-  getRsbuildVersionsForInstalledMajor,
-} from '../../utils/version-utils';
+import { getRsbuildVersionsForInstalledMajor } from '../../utils/version-utils';
+import { assertSupportedRsbuildVersion } from '../../utils/assert-supported-rsbuild-version';
 
 export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
-  // Detect the installed @rsbuild/core major (throws on unsupported versions)
-  // so we honor the workspace's existing pin rather than overwriting it.
-  const installedRsbuildMajor = getInstalledRsbuildMajorVersion(tree);
   const rsbuildVersions = getRsbuildVersionsForInstalledMajor(tree);
-  const keepExistingVersions =
-    installedRsbuildMajor !== undefined ? true : schema.keepExistingVersions;
 
   return addDependenciesToPackageJson(
     tree,
@@ -32,7 +25,7 @@ export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
       '@rsbuild/core': rsbuildVersions.rsbuildVersion,
     },
     undefined,
-    keepExistingVersions
+    schema.keepExistingVersions ?? true
   );
 }
 
@@ -44,6 +37,8 @@ export async function initGeneratorInternal(
   tree: Tree,
   schema: InitGeneratorSchema
 ) {
+  assertSupportedRsbuildVersion(tree);
+
   const nxJson = readNxJson(tree);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&

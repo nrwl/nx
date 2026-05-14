@@ -8,30 +8,15 @@ import {
 
 const RSBUILD_CORE_PACKAGE = '@rsbuild/core';
 
-function throwBelowFloor(installedMajor: number): never {
-  throw new Error(
-    `@nx/rsbuild requires ${RSBUILD_CORE_PACKAGE}@>=1.0.0, but found version ` +
-      `${installedMajor}.x installed. Please upgrade ${RSBUILD_CORE_PACKAGE} ` +
-      `to a supported major (1.x).`
-  );
-}
-
-function throwAboveWindow(installedMajor: number): never {
-  throw new Error(
-    `@nx/rsbuild does not yet support ${RSBUILD_CORE_PACKAGE}@${installedMajor}.x. ` +
-      `Pin ${RSBUILD_CORE_PACKAGE} to a supported major (currently 1.x).`
-  );
-}
-
 function cleanVersion(version: string): string | undefined {
   return clean(version) ?? coerce(version)?.version ?? undefined;
 }
 
 /**
  * Returns the installed @rsbuild/core major version from the workspace's
- * package.json, or `undefined` when @rsbuild/core is not yet installed
- * (fresh-install path). Throws when an unsupported version is detected
- * (below floor or above window).
+ * package.json when it matches a supported major, or `undefined` otherwise
+ * (fresh install, dist tag, unknown major). Below-floor enforcement is
+ * handled at generator entry points via `assertSupportedRsbuildVersion`.
  */
 export function getInstalledRsbuildMajorVersion(
   tree: Tree
@@ -47,20 +32,17 @@ export function getInstalledRsbuildMajorVersion(
   }
 
   const installedMajor = major(cleaned);
-  if (installedMajor < 1) {
-    throwBelowFloor(installedMajor);
+  if (installedMajor in backwardCompatibleRsbuildVersions) {
+    return installedMajor as SupportedRsbuildMajorVersion;
   }
-  if (installedMajor > 1) {
-    throwAboveWindow(installedMajor);
-  }
-  return 1;
+  return undefined;
 }
 
 /**
  * Returns the installed @rsbuild/core major version resolved at runtime via
  * `require.resolve`. For use in executors and runtime code where no Tree is
- * available. Returns `null` when @rsbuild/core can't be resolved. Throws
- * when an unsupported version is detected.
+ * available. Returns `null` when @rsbuild/core can't be resolved or the
+ * installed major isn't supported.
  */
 export function getInstalledRsbuildVersionRuntime(): SupportedRsbuildMajorVersion | null {
   let packageJsonPath: string;
@@ -77,18 +59,16 @@ export function getInstalledRsbuildVersionRuntime(): SupportedRsbuildMajorVersio
     return null;
   }
   const installedMajor = major(cleaned);
-  if (installedMajor < 1) {
-    throwBelowFloor(installedMajor);
+  if (installedMajor in backwardCompatibleRsbuildVersions) {
+    return installedMajor as SupportedRsbuildMajorVersion;
   }
-  if (installedMajor > 1) {
-    throwAboveWindow(installedMajor);
-  }
-  return 1;
+  return null;
 }
 
 /**
  * Returns the version-map entry for the installed major, falling back to the
- * latest supported map when no installed version is detected (fresh install).
+ * latest supported map when no installed version is detected (fresh install)
+ * or the detected major is outside the supported window.
  */
 export function getRsbuildVersionsForInstalledMajor(tree: Tree) {
   const installed = getInstalledRsbuildMajorVersion(tree);
