@@ -266,37 +266,31 @@ export function normalizeTargetDependencyWithStringProjects(
 }
 
 const warnedLegacyDependsOnMagicStrings = new Set<string>();
+
 function warnLegacyDependsOnMagicString(
   value: 'self' | 'dependencies',
   currentProject: string | undefined,
   dependencyConfig: TargetDependencyConfig,
   location: DependsOnEntryLocation | undefined
 ): void {
-  // If a collector is provided, defer — `getDependencyConfigs` emits a single
-  // consolidated warning per target after all entries are processed.
+  const violation: LegacyDependsOnViolation = {
+    value,
+    index: location?.index ?? -1,
+    originalEntry: { ...dependencyConfig },
+  };
+  // Collector-aware caller (`getDependencyConfigs`) batches violations so the
+  // warning can group all offending entries for a single target. External
+  // callers without a collector fall through to an immediate per-entry warning.
   if (location?.legacyViolations) {
-    location.legacyViolations.push({
-      value,
-      index: location.index ?? -1,
-      originalEntry: { ...dependencyConfig },
-    });
+    location.legacyViolations.push(violation);
     return;
   }
-  // Fallback path: external callers without a collector get a per-entry warning.
-  const project = currentProject ?? '<unknown>';
-  const ownerTarget = location?.ownerTarget ?? '<unknown>';
-  const index = location?.index ?? -1;
-  const depTarget = dependencyConfig.target ?? '<unknown>';
-  const key = `${project}::${ownerTarget}::${index}::${value}`;
-  if (warnedLegacyDependsOnMagicStrings.has(key)) return;
-  warnedLegacyDependsOnMagicStrings.add(key);
-  const indexLabel = index >= 0 ? `[${index}]` : '';
-  output.warn({
-    title: `\`${project}:${ownerTarget}\` \`dependsOn${indexLabel}\` uses the legacy \`projects: '${value}'\` value, which will be removed in Nx v24.`,
-    bodyLines: [
-      `The entry targets \`${depTarget}\`. To fix, run \`nx repair\`.`,
-    ],
-  });
+  flushLegacyDependsOnViolations(
+    currentProject ?? '<unknown>',
+    location?.ownerTarget ?? '<unknown>',
+    [violation],
+    undefined
+  );
 }
 
 let cachedSourceMaps:
@@ -314,20 +308,24 @@ function getSourceMapsLazy() {
   return cachedSourceMaps;
 }
 
-function flushLegacyDependsOnViolations(
-  project: string,
+interface AnnotatedLegacyDependsOnViolation extends LegacyDependsOnViolation {
+  plugin?: string;
+  file?: string;
+}
+
+function isInternalPlugin(plugin: string | undefined): boolean {
+  return !plugin || plugin.startsWith('nx/');
+}
+
+function annotateLegacyViolations(
   ownerTarget: string,
-  violations: LegacyDependsOnViolation[],
-  projectRoot: string | undefined
-): void {
-  if (violations.length === 0) return;
-  const key = `${project}::${ownerTarget}`;
-  if (warnedLegacyDependsOnMagicStrings.has(key)) return;
-  warnedLegacyDependsOnMagicStrings.add(key);
+  projectRoot: string | undefined,
+  violations: LegacyDependsOnViolation[]
+): AnnotatedLegacyDependsOnViolation[] {
   const sourceMaps = getSourceMapsLazy();
   const projectSourceMap =
     projectRoot && sourceMaps ? sourceMaps[projectRoot] : undefined;
-  const annotated = violations.map((v) => {
+  return violations.map((v) => {
     const sourceInfo =
       projectSourceMap?.[`targets.${ownerTarget}.dependsOn.${v.index}`] ??
       projectSourceMap?.[`targets.${ownerTarget}.dependsOn`];
@@ -337,77 +335,117 @@ function flushLegacyDependsOnViolations(
       file: sourceInfo?.[0] ?? undefined,
     };
   });
+}
 
-  const sharedValue = annotated.every((v) => v.value === annotated[0].value)
-    ? annotated[0].value
-    : null;
-  const sharedPlugin = annotated.every((v) => v.plugin === annotated[0].plugin)
-    ? annotated[0].plugin
-    : null;
-  const sharedFile = annotated.every((v) => v.file === annotated[0].file)
-    ? annotated[0].file
-    : null;
+// Returns the value shared by every annotated violation, or `null` if values
+// differ. Used to collapse repeated information into the title.
+function sharedField<T, K extends keyof T>(items: T[], key: K): T[K] | null {
+  const first = items[0][key];
+  return items.every((item) => item[key] === first) ? first : null;
+}
 
-  const isInternal = (p: string | undefined) => !p || p.startsWith('nx/');
+function describeLegacyValuePhrase(
+  annotated: AnnotatedLegacyDependsOnViolation[]
+): string {
+  const sharedValue = sharedField(annotated, 'value');
+  if (sharedValue) return `projects: '${sharedValue}'`;
+  const selfCount = annotated.filter((v) => v.value === 'self').length;
+  const depCount = annotated.length - selfCount;
+  return `legacy projects values (${selfCount} 'self', ${depCount} 'dependencies')`;
+}
+
+function buildLegacyDependsOnWarning(
+  project: string,
+  ownerTarget: string,
+  annotated: AnnotatedLegacyDependsOnViolation[]
+): { title: string; suppressBody: boolean } {
+  const sharedPlugin = sharedField(annotated, 'plugin');
+  const sharedFile = sharedField(annotated, 'file');
+  const valuePhrase = describeLegacyValuePhrase(annotated);
   const entryWord = annotated.length === 1 ? 'entry' : 'entries';
-  let valuePhrase: string;
-  if (sharedValue) {
-    valuePhrase = `projects: '${sharedValue}'`;
-  } else {
-    const selfCount = annotated.filter((v) => v.value === 'self').length;
-    const depCount = annotated.length - selfCount;
-    valuePhrase = `legacy projects values (${selfCount} 'self', ${depCount} 'dependencies')`;
+  const deprecation = 'This is deprecated and will be removed in Nx v24 —';
+
+  // Single external plugin: the same plugin typically emits the same legacy
+  // value on every project it touches, so a single workspace-wide warning is
+  // more useful than one per target.
+  if (sharedPlugin && !isInternalPlugin(sharedPlugin)) {
+    return {
+      title: `The ${sharedPlugin} plugin infers dependsOn entries using ${valuePhrase}. ${deprecation} please upgrade ${sharedPlugin} to a version that doesn't emit this.`,
+      suppressBody: true,
+    };
   }
 
-  let title: string;
-  // When a single external plugin is the source, the user can't fix entries
-  // individually — only upgrading the plugin helps. Skip the per-entry body
-  // listing to avoid drowning them in noise (some plugins emit dozens).
-  let suppressBody = false;
-  if (sharedPlugin && !isInternal(sharedPlugin)) {
-    // Single external plugin inferred all offending entries — point the user
-    // at upgrading that plugin.
-    const fromFile = sharedFile ? ` from ${sharedFile}` : '';
-    title = `The ${sharedPlugin} plugin inferred ${project}:${ownerTarget} with ${annotated.length} invalid dependsOn ${entryWord} using ${valuePhrase}${fromFile}. This is deprecated and will be removed in Nx v24 — please upgrade ${sharedPlugin} to a version that doesn't emit this.`;
-    suppressBody = true;
-  } else if (sharedPlugin && isInternal(sharedPlugin) && sharedFile) {
-    // Hand-authored entries from a single config file — lead with the file.
-    title = `${sharedFile} defines ${project}:${ownerTarget} with ${annotated.length} dependsOn ${entryWord} using ${valuePhrase}. This is deprecated and will be removed in Nx v24 — run 'nx repair' to fix this.`;
-  } else {
-    // Mixed sources, or only internal/hand-authored sources — `nx repair`
-    // handles hand-authored entries; any external plugins still need an
-    // upgrade.
-    const offendingPlugins = Array.from(
-      new Set(
-        annotated
-          .filter((v) => v.plugin && !isInternal(v.plugin))
-          .map((v) => v.plugin as string)
-      )
-    );
-    const origin = sharedPlugin
-      ? ` (set by ${sharedPlugin}${sharedFile ? ` in ${sharedFile}` : ''})`
-      : '';
-    let advice: string;
-    if (offendingPlugins.length === 0) {
-      advice = `run 'nx repair' to fix`;
-    } else {
-      advice = `run 'nx repair' for hand-authored entries and upgrade ${offendingPlugins.join(
-        ', '
-      )} for plugin-inferred entries`;
-    }
-    title = `${project}:${ownerTarget} has ${annotated.length} dependsOn ${entryWord} using ${valuePhrase}${origin}. This is deprecated and will be removed in Nx v24 — ${advice}.`;
+  // Single hand-authored config file — lead with the file path.
+  if (sharedPlugin && isInternalPlugin(sharedPlugin) && sharedFile) {
+    return {
+      title: `${sharedFile} defines ${project}:${ownerTarget} with ${annotated.length} dependsOn ${entryWord} using ${valuePhrase}. ${deprecation} run 'nx repair' to fix this.`,
+      suppressBody: false,
+    };
   }
 
+  // Mixed sources, or no source-map info — tailor advice to what's offending.
+  const offendingPlugins = Array.from(
+    new Set(
+      annotated
+        .filter((v) => v.plugin && !isInternalPlugin(v.plugin))
+        .map((v) => v.plugin as string)
+    )
+  );
+  const origin = sharedPlugin
+    ? ` (set by ${sharedPlugin}${sharedFile ? ` in ${sharedFile}` : ''})`
+    : '';
+  const advice = offendingPlugins.length
+    ? `run 'nx repair' for hand-authored entries and upgrade ${offendingPlugins.join(', ')} for plugin-inferred entries`
+    : `run 'nx repair' to fix`;
+  return {
+    title: `${project}:${ownerTarget} has ${annotated.length} dependsOn ${entryWord} using ${valuePhrase}${origin}. ${deprecation} ${advice}.`,
+    suppressBody: false,
+  };
+}
+
+function formatLegacyDependsOnBodyLine(
+  v: AnnotatedLegacyDependsOnViolation,
+  sharedPlugin: string | null
+): string {
+  const showSource = v.plugin && !sharedPlugin;
+  const sourcePart = showSource
+    ? ` from ${v.plugin}${v.file ? ` in ${v.file}` : ''}`
+    : '';
+  return `  - ${JSON.stringify(v.originalEntry)} (${v.index}${sourcePart})`;
+}
+
+function flushLegacyDependsOnViolations(
+  project: string,
+  ownerTarget: string,
+  violations: LegacyDependsOnViolation[],
+  projectRoot: string | undefined
+): void {
+  if (violations.length === 0) return;
+  const annotated = annotateLegacyViolations(
+    ownerTarget,
+    projectRoot,
+    violations
+  );
+  const sharedPlugin = sharedField(annotated, 'plugin');
+  // External-plugin warnings are workspace-wide (the plugin's behavior, not a
+  // specific config): dedupe per (plugin, value) so the user sees one warning
+  // per offending plugin, not one per affected target.
+  const sharedValue = sharedField(annotated, 'value');
+  const dedupeKey =
+    sharedPlugin && !isInternalPlugin(sharedPlugin) && sharedValue
+      ? `plugin::${sharedPlugin}::${sharedValue}`
+      : `target::${project}::${ownerTarget}`;
+  if (warnedLegacyDependsOnMagicStrings.has(dedupeKey)) return;
+  warnedLegacyDependsOnMagicStrings.add(dedupeKey);
+
+  const { title, suppressBody } = buildLegacyDependsOnWarning(
+    project,
+    ownerTarget,
+    annotated
+  );
   const bodyLines = suppressBody
     ? []
-    : annotated.map((v) => {
-        const sourcePart = v.plugin
-          ? sharedPlugin
-            ? ''
-            : ` from ${v.plugin}${v.file ? ` in ${v.file}` : ''}`
-          : '';
-        return `  - ${JSON.stringify(v.originalEntry)} (${v.index}${sourcePart})`;
-      });
+    : annotated.map((v) => formatLegacyDependsOnBodyLine(v, sharedPlugin));
 
   output.warn({ title, bodyLines });
 }
