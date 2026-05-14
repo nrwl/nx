@@ -42,28 +42,36 @@ export function getDependencyConfigs(
     // This is passed into `run-command` from programmatic invocations
     extraTargetDependencies[target] ??
     []
-  ).flatMap((config) =>
+  ).flatMap((config, index) =>
     normalizeDependencyConfigDefinition(
       config,
       project,
       projectGraph,
-      allTargetNames
+      allTargetNames,
+      { ownerTarget: target, index }
     )
   );
   return dependencyConfigs;
+}
+
+export interface DependsOnEntryLocation {
+  ownerTarget?: string;
+  index?: number;
 }
 
 export function normalizeDependencyConfigDefinition(
   definition: string | TargetDependencyConfig,
   currentProject: string,
   graph: ProjectGraph,
-  allTargetNames: string[]
+  allTargetNames: string[],
+  location?: DependsOnEntryLocation
 ): NormalizedTargetDependencyConfig[] {
   return expandWildcardTargetConfiguration(
     normalizeDependencyConfigProjects(
       expandDependencyConfigSyntaxSugar(definition, graph, currentProject),
       currentProject,
-      graph
+      graph,
+      location
     ),
     allTargetNames
   );
@@ -72,11 +80,13 @@ export function normalizeDependencyConfigDefinition(
 export function normalizeDependencyConfigProjects(
   dependencyConfig: TargetDependencyConfig,
   currentProject: string,
-  graph: ProjectGraph
+  graph: ProjectGraph,
+  location?: DependsOnEntryLocation
 ): NormalizedTargetDependencyConfig {
   const noStringConfig = normalizeTargetDependencyWithStringProjects(
     dependencyConfig,
-    currentProject
+    currentProject,
+    location
   );
 
   if (noStringConfig.projects) {
@@ -206,20 +216,27 @@ export function getOutputs(
 
 export function normalizeTargetDependencyWithStringProjects(
   dependencyConfig: TargetDependencyConfig,
-  currentProject?: string
+  currentProject?: string,
+  location?: DependsOnEntryLocation
 ): Omit<TargetDependencyConfig, 'projects'> & { projects: string[] } {
   if (typeof dependencyConfig.projects === 'string') {
     // TODO(v24): Remove the `self` / `dependencies` magic-string shim.
     // The v16 `update-depends-on-to-tokens` migration already rewrites
     // these to the modern shape, and `nx repair` will re-run it on demand.
     if (dependencyConfig.projects === 'self') {
-      warnLegacyDependsOnMagicString('self', currentProject, dependencyConfig);
+      warnLegacyDependsOnMagicString(
+        'self',
+        currentProject,
+        dependencyConfig,
+        location
+      );
       delete dependencyConfig.projects;
     } else if (dependencyConfig.projects === 'dependencies') {
       warnLegacyDependsOnMagicString(
         'dependencies',
         currentProject,
-        dependencyConfig
+        dependencyConfig,
+        location
       );
       dependencyConfig.dependencies = true;
       delete dependencyConfig.projects;
@@ -236,17 +253,21 @@ const warnedLegacyDependsOnMagicStrings = new Set<string>();
 function warnLegacyDependsOnMagicString(
   value: 'self' | 'dependencies',
   currentProject: string | undefined,
-  dependencyConfig: TargetDependencyConfig
+  dependencyConfig: TargetDependencyConfig,
+  location: DependsOnEntryLocation | undefined
 ): void {
-  const target = dependencyConfig.target ?? '<unknown>';
   const project = currentProject ?? '<unknown>';
-  const key = `${project}::${target}::${value}`;
+  const ownerTarget = location?.ownerTarget ?? '<unknown>';
+  const index = location?.index ?? -1;
+  const depTarget = dependencyConfig.target ?? '<unknown>';
+  const key = `${project}::${ownerTarget}::${index}::${value}`;
   if (warnedLegacyDependsOnMagicStrings.has(key)) return;
   warnedLegacyDependsOnMagicStrings.add(key);
+  const indexLabel = index >= 0 ? ` at index ${index}` : '';
   output.warn({
     title: `\`dependsOn\` entry uses the legacy \`projects: '${value}'\` value, which will be removed in Nx v24.`,
     bodyLines: [
-      `Found on project \`${project}\` in a \`dependsOn\` entry targeting \`${target}\`.`,
+      `Found on \`${project}:${ownerTarget}\` — \`dependsOn\`${indexLabel} (targeting \`${depTarget}\`).`,
       `To fix, run \`nx repair\`.`,
     ],
   });
