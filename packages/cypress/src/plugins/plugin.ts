@@ -455,7 +455,6 @@ async function buildCypressTargets(
         };
         dependsOn.push({
           target: targetName,
-          projects: 'self',
           params: 'forward',
           options: 'forward',
         });
@@ -605,7 +604,6 @@ async function buildCypressTargets(
         };
         dependsOn.push({
           target: targetName,
-          projects: 'self',
           params: 'forward',
           options: 'forward',
         });
