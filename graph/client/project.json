@@ -50,7 +50,37 @@
     "typecheck": {
       "dependsOn": ["^typecheck", "nx:build-native"],
       "inputs": [
-        "...",
+        "{projectRoot}/package.json",
+        "{workspaceRoot}/tsconfig.base.json",
+        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/tsconfig.app.json",
+        "{projectRoot}/src/**/*.js",
+        "{projectRoot}/src/**/*.jsx",
+        "{projectRoot}/src/**/*.ts",
+        "{projectRoot}/src/**/*.tsx",
+        "!{projectRoot}/**/*.spec.ts",
+        "!{projectRoot}/**/*.test.ts",
+        "!{projectRoot}/**/*.spec.tsx",
+        "!{projectRoot}/**/*.test.tsx",
+        "!{projectRoot}/**/*.spec.js",
+        "!{projectRoot}/**/*.test.js",
+        "!{projectRoot}/**/*.spec.jsx",
+        "!{projectRoot}/**/*.test.jsx",
+        "!{projectRoot}/jest.config.ts",
+        "!{projectRoot}/**/*.stories.ts",
+        "!{projectRoot}/**/*.stories.js",
+        "!{projectRoot}/**/*.stories.jsx",
+        "!{projectRoot}/**/*.stories.tsx",
+        {
+          "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
+          "transitive": true
+        },
+        {
+          "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
+          "dependencies": true
+        },
+        "^{projectRoot}/tsconfig.lib.json",
+        "^{projectRoot}/tsconfig.json",
         "{workspaceRoot}/packages/devkit/tsconfig.lib.json",
         "{workspaceRoot}/packages/nx/tsconfig.lib.json"
       ]

@@ -49,7 +49,38 @@
         { "projects": ["devkit"], "target": "build-base" }
       ],
       "inputs": [
-        "...",
+        "{projectRoot}/package.json",
+        "{workspaceRoot}/tsconfig.base.json",
+        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/tsconfig.lib.json",
+        "{projectRoot}/src/**/*.js",
+        "{projectRoot}/src/**/*.jsx",
+        "{projectRoot}/src/**/*.ts",
+        "{projectRoot}/src/**/*.tsx",
+        "!{projectRoot}/jest.config.ts",
+        "!{projectRoot}/src/**/*.spec.ts",
+        "!{projectRoot}/src/**/*.test.ts",
+        "!{projectRoot}/src/**/*.spec.tsx",
+        "!{projectRoot}/src/**/*.test.tsx",
+        "!{projectRoot}/src/**/*.spec.js",
+        "!{projectRoot}/src/**/*.test.js",
+        "!{projectRoot}/src/**/*.spec.jsx",
+        "!{projectRoot}/src/**/*.test.jsx",
+        "!{projectRoot}/**/*.stories.ts",
+        "!{projectRoot}/**/*.stories.js",
+        "!{projectRoot}/**/*.stories.jsx",
+        "!{projectRoot}/**/*.stories.tsx",
+        "!{projectRoot}/node_modules",
+        {
+          "dependentTasksOutputFiles": "**/*.{d.ts,d.cts,d.mts,tsbuildinfo}",
+          "transitive": true
+        },
+        {
+          "fileset": "{projectRoot}/**/*.{d.ts,d.cts,d.mts}",
+          "dependencies": true
+        },
+        "^{projectRoot}/tsconfig.lib.json",
+        "^{projectRoot}/tsconfig.json",
         "{workspaceRoot}/packages/devkit/tsconfig.lib.json",
         "{workspaceRoot}/packages/nx/tsconfig.lib.json"
       ]
