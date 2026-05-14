@@ -396,9 +396,7 @@ function flushLegacyDependsOnViolations(
         ? ''
         : ` from ${v.plugin}${v.file ? ` in ${v.file}` : ''}`
       : '';
-    return `  - dependsOn[${v.index}] = ${JSON.stringify(
-      dependsOnEntries[v.index]
-    )}${sourcePart}`;
+    return `  - ${JSON.stringify(dependsOnEntries[v.index])} (${v.index}${sourcePart})`;
   });
 
   output.warn({ title, bodyLines });
