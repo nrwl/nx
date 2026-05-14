@@ -360,15 +360,15 @@ function flushLegacyDependsOnViolations(
   // `nx repair` only rewrites hand-authored config (nx.json/project.json). For
   // plugin-inferred entries, the user needs to upgrade the plugin.
   const allFromCore = annotated.every(
-    (v) => !v.plugin || v.plugin.startsWith('nx/core/')
+    (v) => !v.plugin || v.plugin.startsWith('nx/')
   );
   const anyFromCore = annotated.some(
-    (v) => !v.plugin || v.plugin.startsWith('nx/core/')
+    (v) => !v.plugin || v.plugin.startsWith('nx/')
   );
   const offendingPlugins = Array.from(
     new Set(
       annotated
-        .filter((v) => v.plugin && !v.plugin.startsWith('nx/core/'))
+        .filter((v) => v.plugin && !v.plugin.startsWith('nx/'))
         .map((v) => v.plugin as string)
     )
   );
