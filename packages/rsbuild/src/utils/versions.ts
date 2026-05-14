@@ -17,10 +17,10 @@ type RsbuildVersionMap = {
 };
 
 export const latestRsbuildVersions: RsbuildVersionMap = {
-  rsbuildVersion: '^1.1.10',
-  rsbuildPluginReactVersion: '^1.1.0',
-  rsbuildPluginVueVersion: '^1.0.5',
-  rsbuildPluginSassVersion: '^1.1.2',
+  rsbuildVersion: '1.1.10',
+  rsbuildPluginReactVersion: '1.1.0',
+  rsbuildPluginVueVersion: '1.0.5',
+  rsbuildPluginSassVersion: '1.1.2',
 };
 
 export const backwardCompatibleRsbuildVersions: Record<

@@ -21,7 +21,7 @@ type RspackVersionMap = {
 };
 
 export const latestRspackVersions: RspackVersionMap = {
-  rspackCoreVersion: '^1.6.8',
+  rspackCoreVersion: '1.6.8',
   rspackDevServerVersion: '^1.1.4',
   rspackPluginReactRefreshVersion: '^1.0.0',
 };
