@@ -6,9 +6,12 @@ import {
 } from '@nx/devkit/internal';
 import type { NuxtOptions } from '@nuxt/schema';
 import {
+  AggregateCreateNodesError,
   CreateDependencies,
   CreateNodesContextV2,
   createNodesFromFiles,
+  CreateNodesResult,
+  CreateNodesResultV2,
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
@@ -45,45 +48,49 @@ export const createNodes: CreateNodesV2<NuxtPluginOptions> = [
     const lockFileName = getLockFileName(packageManager);
     const normalizedOptions = normalizeOptions(options);
 
-    const validConfigFiles: string[] = [];
-    const projectRoots: string[] = [];
-    for (const configFile of files) {
-      const projectRoot = dirname(configFile);
-      const siblingFiles = readdirSync(
-        join(context.workspaceRoot, projectRoot)
+    try {
+      const { entries, preErrors } = await filterNuxtConfigs(files, context);
+
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.projectRoot),
+        normalizedOptions,
+        context,
+        entries.map(() => [lockFileName])
       );
-      if (
-        !siblingFiles.includes('package.json') &&
-        !siblingFiles.includes('project.json')
-      ) {
-        continue;
+
+      let results: CreateNodesResultV2 = [];
+      let nodeErrors: Array<[string | null, Error]> = [];
+      try {
+        results = await createNodesFromFiles(
+          (configFile, _, ctx, idx) =>
+            createNodesInternal(
+              configFile,
+              normalizedOptions,
+              ctx,
+              pmc,
+              projectHashes[idx]
+            ),
+          entries.map((e) => e.configFile),
+          options,
+          context
+        );
+      } catch (e) {
+        if (e instanceof AggregateCreateNodesError) {
+          results = e.partialResults ?? [];
+          nodeErrors = e.errors;
+        } else {
+          throw e;
+        }
       }
-      validConfigFiles.push(configFile);
-      projectRoots.push(projectRoot);
+
+      const allErrors = [...preErrors, ...nodeErrors];
+      if (allErrors.length > 0) {
+        throw new AggregateCreateNodesError(allErrors, results);
+      }
+      return results;
+    } finally {
+      targetsCache.writeToDisk();
     }
-
-    const projectHashes = await calculateHashesForCreateNodes(
-      projectRoots,
-      normalizedOptions,
-      context,
-      projectRoots.map(() => [lockFileName])
-    );
-
-    const result = await createNodesFromFiles(
-      (configFile, _, ctx, idx) =>
-        createNodesInternal(
-          configFile,
-          normalizedOptions,
-          ctx,
-          pmc,
-          projectHashes[idx]
-        ),
-      validConfigFiles,
-      options,
-      context
-    );
-    targetsCache.writeToDisk();
-    return result;
   },
 ];
 
@@ -305,6 +312,45 @@ function normalizeOutputPath(
       }
     }
   }
+}
+
+interface NuxtEntry {
+  configFile: string;
+  projectRoot: string;
+}
+
+async function filterNuxtConfigs(
+  configFiles: readonly string[],
+  context: CreateNodesContextV2
+): Promise<{
+  entries: NuxtEntry[];
+  preErrors: Array<[string, Error]>;
+}> {
+  const preErrors: Array<[string, Error]> = [];
+  const candidates = await Promise.all(
+    configFiles.map(async (configFile): Promise<NuxtEntry | null> => {
+      try {
+        const projectRoot = dirname(configFile);
+        const siblingFiles = readdirSync(
+          join(context.workspaceRoot, projectRoot)
+        );
+        if (
+          !siblingFiles.includes('package.json') &&
+          !siblingFiles.includes('project.json')
+        ) {
+          return null;
+        }
+        return { configFile, projectRoot };
+      } catch (e) {
+        preErrors.push([configFile, e as Error]);
+        return null;
+      }
+    })
+  );
+  return {
+    entries: candidates.filter((c): c is NuxtEntry => c !== null),
+    preErrors,
+  };
 }
 
 function normalizeOptions(options: NuxtPluginOptions): NuxtPluginOptions {

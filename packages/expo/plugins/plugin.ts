@@ -5,9 +5,11 @@ import {
   PluginCache,
 } from '@nx/devkit/internal';
 import {
+  AggregateCreateNodesError,
   CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesResult,
+  CreateNodesResultV2,
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
@@ -49,58 +51,50 @@ export const createNodes: CreateNodesV2<ExpoPluginOptions> = [
     const lockFileName = getLockFileName(packageManager);
     const normalizedOptions = normalizeOptions(options);
 
-    const validConfigFiles: string[] = [];
-    const projectRoots: string[] = [];
-    for (const configFile of configFiles) {
-      const projectRoot = dirname(configFile);
-      const siblingFiles = readdirSync(
-        join(context.workspaceRoot, projectRoot)
-      );
-      if (
-        !siblingFiles.includes('package.json') ||
-        !siblingFiles.includes('metro.config.js')
-      ) {
-        continue;
-      }
-
-      const packageJson = readJsonFile(
-        join(context.workspaceRoot, projectRoot, 'package.json')
-      );
-      const appConfig = await getAppConfig(configFile, context);
-      if (
-        !appConfig.expo &&
-        !packageJson.dependencies?.['expo'] &&
-        !packageJson.devDependencies?.['expo']
-      ) {
-        continue;
-      }
-
-      validConfigFiles.push(configFile);
-      projectRoots.push(projectRoot);
-    }
-
-    const projectHashes = await calculateHashesForCreateNodes(
-      projectRoots,
-      normalizedOptions,
-      context,
-      projectRoots.map(() => [lockFileName])
-    );
-
     try {
-      return await createNodesFromFiles(
-        (configFile, _, context, idx) =>
-          createNodesInternal(
-            configFile,
-            normalizedOptions,
-            context,
-            targetsCache,
-            pmc,
-            projectHashes[idx]
-          ),
-        validConfigFiles,
-        options,
+      const { entries, preErrors } = await filterExpoConfigs(
+        configFiles,
         context
       );
+
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.projectRoot),
+        normalizedOptions,
+        context,
+        entries.map(() => [lockFileName])
+      );
+
+      let results: CreateNodesResultV2 = [];
+      let nodeErrors: Array<[string | null, Error]> = [];
+      try {
+        results = await createNodesFromFiles(
+          (configFile, _, ctx, idx) =>
+            createNodesInternal(
+              configFile,
+              normalizedOptions,
+              ctx,
+              targetsCache,
+              pmc,
+              projectHashes[idx]
+            ),
+          entries.map((e) => e.configFile),
+          options,
+          context
+        );
+      } catch (e) {
+        if (e instanceof AggregateCreateNodesError) {
+          results = e.partialResults ?? [];
+          nodeErrors = e.errors;
+        } else {
+          throw e;
+        }
+      }
+
+      const allErrors = [...preErrors, ...nodeErrors];
+      if (allErrors.length > 0) {
+        throw new AggregateCreateNodesError(allErrors, results);
+      }
+      return results;
     } finally {
       targetsCache.writeToDisk();
     }
@@ -204,6 +198,55 @@ function getAppConfig(
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
   return loadConfigFile(resolvedPath);
+}
+
+async function filterExpoConfigs(
+  configFiles: readonly string[],
+  context: CreateNodesContextV2
+): Promise<{
+  entries: Array<{ configFile: string; projectRoot: string }>;
+  preErrors: Array<[string, Error]>;
+}> {
+  const preErrors: Array<[string, Error]> = [];
+  const candidates = await Promise.all(
+    configFiles.map(
+      async (
+        configFile
+      ): Promise<{ configFile: string; projectRoot: string } | null> => {
+        try {
+          const projectRoot = dirname(configFile);
+          const siblingFiles = readdirSync(
+            join(context.workspaceRoot, projectRoot)
+          );
+          if (
+            !siblingFiles.includes('package.json') ||
+            !siblingFiles.includes('metro.config.js')
+          ) {
+            return null;
+          }
+          const packageJson = readJsonFile(
+            join(context.workspaceRoot, projectRoot, 'package.json')
+          );
+          const appConfig = await getAppConfig(configFile, context);
+          if (
+            !appConfig.expo &&
+            !packageJson.dependencies?.['expo'] &&
+            !packageJson.devDependencies?.['expo']
+          ) {
+            return null;
+          }
+          return { configFile, projectRoot };
+        } catch (e) {
+          preErrors.push([configFile, e as Error]);
+          return null;
+        }
+      }
+    )
+  );
+  return {
+    entries: candidates.filter((c): c is NonNullable<typeof c> => c !== null),
+    preErrors,
+  };
 }
 
 function getInputs(

@@ -40,21 +40,21 @@ export const createNodes: CreateNodesV2<DetoxPluginOptions> = [
     const lockFileName = getLockFileName(packageManager);
     const normalizedOptions = normalizeOptions(options);
 
-    const projectRoots = configFiles.map((f) => dirname(f));
-    const projectHashes = await calculateHashesForCreateNodes(
-      projectRoots,
-      normalizedOptions,
-      context,
-      projectRoots.map(() => [lockFileName])
-    );
-
     try {
+      const projectRoots = configFiles.map((f) => dirname(f));
+      const projectHashes = await calculateHashesForCreateNodes(
+        projectRoots,
+        normalizedOptions,
+        context,
+        projectRoots.map(() => [lockFileName])
+      );
+
       return await createNodesFromFiles(
-        (configFile, _, context, idx) =>
+        (configFile, _, ctx, idx) =>
           createNodesInternal(
             configFile,
             normalizedOptions,
-            context,
+            ctx,
             targetsCache,
             pmc,
             projectHashes[idx]

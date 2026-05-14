@@ -5,9 +5,12 @@ import {
   PluginCache,
 } from '@nx/devkit/internal';
 import {
+  AggregateCreateNodesError,
   CreateDependencies,
   CreateNodesContextV2,
   createNodesFromFiles,
+  CreateNodesResult,
+  CreateNodesResultV2,
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
@@ -57,46 +60,51 @@ export const createNodes: CreateNodesV2<NextPluginOptions> = [
     const lockFileName = getLockFileName(packageManager);
     const normalizedOptions = normalizeOptions(options);
 
-    const validConfigFiles: string[] = [];
-    const projectRoots: string[] = [];
-    for (const configFile of configFiles) {
-      const projectRoot = dirname(configFile);
-      const siblingFiles = readdirSync(
-        join(context.workspaceRoot, projectRoot)
-      );
-      if (
-        !siblingFiles.includes('package.json') &&
-        !siblingFiles.includes('project.json')
-      ) {
-        continue;
-      }
-      validConfigFiles.push(configFile);
-      projectRoots.push(projectRoot);
-    }
-
-    const projectHashes = await calculateHashesForCreateNodes(
-      projectRoots,
-      normalizedOptions,
-      context,
-      projectRoots.map(() => [lockFileName])
-    );
-
     try {
-      return await createNodesFromFiles(
-        (configFile, _, context, idx) =>
-          createNodesInternal(
-            configFile,
-            normalizedOptions,
-            context,
-            targetsCache,
-            isTsSolutionSetup,
-            pmc,
-            projectHashes[idx]
-          ),
-        validConfigFiles,
-        options,
+      const { entries, preErrors } = await filterNextConfigs(
+        configFiles,
         context
       );
+
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.projectRoot),
+        normalizedOptions,
+        context,
+        entries.map(() => [lockFileName])
+      );
+
+      let results: CreateNodesResultV2 = [];
+      let nodeErrors: Array<[string | null, Error]> = [];
+      try {
+        results = await createNodesFromFiles(
+          (configFile, _, ctx, idx) =>
+            createNodesInternal(
+              configFile,
+              normalizedOptions,
+              ctx,
+              targetsCache,
+              isTsSolutionSetup,
+              pmc,
+              projectHashes[idx]
+            ),
+          entries.map((e) => e.configFile),
+          options,
+          context
+        );
+      } catch (e) {
+        if (e instanceof AggregateCreateNodesError) {
+          results = e.partialResults ?? [];
+          nodeErrors = e.errors;
+        } else {
+          throw e;
+        }
+      }
+
+      const allErrors = [...preErrors, ...nodeErrors];
+      if (allErrors.length > 0) {
+        throw new AggregateCreateNodesError(allErrors, results);
+      }
+      return results;
     } finally {
       targetsCache.writeToDisk();
     }
@@ -272,6 +280,45 @@ function getNextConfig(
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
   return loadConfigFile(resolvedPath);
+}
+
+interface NextEntry {
+  configFile: string;
+  projectRoot: string;
+}
+
+async function filterNextConfigs(
+  configFiles: readonly string[],
+  context: CreateNodesContextV2
+): Promise<{
+  entries: NextEntry[];
+  preErrors: Array<[string, Error]>;
+}> {
+  const preErrors: Array<[string, Error]> = [];
+  const candidates = await Promise.all(
+    configFiles.map(async (configFile): Promise<NextEntry | null> => {
+      try {
+        const projectRoot = dirname(configFile);
+        const siblingFiles = readdirSync(
+          join(context.workspaceRoot, projectRoot)
+        );
+        if (
+          !siblingFiles.includes('package.json') &&
+          !siblingFiles.includes('project.json')
+        ) {
+          return null;
+        }
+        return { configFile, projectRoot };
+      } catch (e) {
+        preErrors.push([configFile, e as Error]);
+        return null;
+      }
+    })
+  );
+  return {
+    entries: candidates.filter((c): c is NextEntry => c !== null),
+    preErrors,
+  };
 }
 
 function normalizeOptions(options: NextPluginOptions): NextPluginOptions {

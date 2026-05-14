@@ -133,6 +133,11 @@ export const makeCreateNodesForGradleConfigFile =
         options ?? {},
         context
       );
+      if (computed === undefined) {
+        throw new Error(
+          `Failed to compute hash for gradle project at ${projectRoot}`
+        );
+      }
       hash = computed;
     }
 

@@ -7,9 +7,12 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { basename, dirname, join } from 'path';
 import { readdirSync } from 'fs';
 import {
+  AggregateCreateNodesError,
   type CreateDependencies,
   CreateNodesContextV2,
   createNodesFromFiles,
+  CreateNodesResult,
+  CreateNodesResultV2,
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
@@ -57,46 +60,51 @@ export const createNodes: CreateNodesV2<RollupPluginOptions> = [
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
 
-    const validConfigFiles: string[] = [];
-    const projectRoots: string[] = [];
-    for (const configFile of configFilePaths) {
-      const projectRoot = dirname(configFile);
-      const siblingFiles = readdirSync(
-        join(context.workspaceRoot, projectRoot)
-      );
-      if (
-        !siblingFiles.includes('package.json') &&
-        !siblingFiles.includes('project.json')
-      ) {
-        continue;
-      }
-      validConfigFiles.push(configFile);
-      projectRoots.push(projectRoot);
-    }
-
-    const projectHashes = await calculateHashesForCreateNodes(
-      projectRoots,
-      normalizedOptions,
-      context,
-      projectRoots.map(() => [lockFileName])
-    );
-
     try {
-      return await createNodesFromFiles(
-        (configFile, _, context, idx) =>
-          createNodesInternal(
-            configFile,
-            normalizedOptions,
-            context,
-            targetsCache,
-            isTsSolutionSetup,
-            pmc,
-            projectHashes[idx]
-          ),
-        validConfigFiles,
-        normalizedOptions,
+      const { entries, preErrors } = await filterRollupConfigs(
+        configFilePaths,
         context
       );
+
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.projectRoot),
+        normalizedOptions,
+        context,
+        entries.map(() => [lockFileName])
+      );
+
+      let results: CreateNodesResultV2 = [];
+      let nodeErrors: Array<[string | null, Error]> = [];
+      try {
+        results = await createNodesFromFiles(
+          (configFile, _, ctx, idx) =>
+            createNodesInternal(
+              configFile,
+              normalizedOptions,
+              ctx,
+              targetsCache,
+              isTsSolutionSetup,
+              pmc,
+              projectHashes[idx]
+            ),
+          entries.map((e) => e.configFile),
+          normalizedOptions,
+          context
+        );
+      } catch (e) {
+        if (e instanceof AggregateCreateNodesError) {
+          results = e.partialResults ?? [];
+          nodeErrors = e.errors;
+        } else {
+          throw e;
+        }
+      }
+
+      const allErrors = [...preErrors, ...nodeErrors];
+      if (allErrors.length > 0) {
+        throw new AggregateCreateNodesError(allErrors, results);
+      }
+      return results;
     } finally {
       targetsCache.writeToDisk();
     }
@@ -266,6 +274,45 @@ function getOutputs(
     }
   }
   return Array.from(outputs);
+}
+
+interface RollupEntry {
+  configFile: string;
+  projectRoot: string;
+}
+
+async function filterRollupConfigs(
+  configFiles: readonly string[],
+  context: CreateNodesContextV2
+): Promise<{
+  entries: RollupEntry[];
+  preErrors: Array<[string, Error]>;
+}> {
+  const preErrors: Array<[string, Error]> = [];
+  const candidates = await Promise.all(
+    configFiles.map(async (configFile): Promise<RollupEntry | null> => {
+      try {
+        const projectRoot = dirname(configFile);
+        const siblingFiles = readdirSync(
+          join(context.workspaceRoot, projectRoot)
+        );
+        if (
+          !siblingFiles.includes('package.json') &&
+          !siblingFiles.includes('project.json')
+        ) {
+          return null;
+        }
+        return { configFile, projectRoot };
+      } catch (e) {
+        preErrors.push([configFile, e as Error]);
+        return null;
+      }
+    })
+  );
+  return {
+    entries: candidates.filter((c): c is RollupEntry => c !== null),
+    preErrors,
+  };
 }
 
 function normalizeOptions(
