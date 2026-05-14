@@ -192,7 +192,6 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                       {
                         "options": "forward",
                         "params": "forward",
-                        "projects": "self",
                         "target": "test-ci--src/unit.spec.ts",
                       },
                     ],
@@ -500,7 +499,6 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                         {
                           "options": "forward",
                           "params": "forward",
-                          "projects": "self",
                           "target": "test-ci--src/unit.spec.ts",
                         },
                       ],
@@ -655,7 +653,6 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                         {
                           "options": "forward",
                           "params": "forward",
-                          "projects": "self",
                           "target": "test-ci--src/unit.spec.ts",
                         },
                       ],
@@ -810,7 +807,6 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                         {
                           "options": "forward",
                           "params": "forward",
-                          "projects": "self",
                           "target": "testci--src/unit.spec.ts",
                         },
                       ],

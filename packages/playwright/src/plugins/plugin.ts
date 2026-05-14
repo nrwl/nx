@@ -319,7 +319,6 @@ async function buildPlaywrightTargets(
 
       dependsOn.push({
         target: targetName,
-        projects: 'self',
         params: 'forward',
         options: 'forward',
       });

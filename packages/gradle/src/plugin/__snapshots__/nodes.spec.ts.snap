@@ -110,52 +110,42 @@ exports[`@nx/gradle/plugin/nodes should create nodes with atomized tests targets
               "dependsOn": [
                 {
                   "params": "forward",
-                  "projects": "self",
                   "target": "ci--DemoApplicationTest10",
                 },
                 {
                   "params": "forward",
-                  "projects": "self",
                   "target": "ci--DemoApplicationTest7",
                 },
                 {
                   "params": "forward",
-                  "projects": "self",
                   "target": "ci--DemoApplicationTest6",
                 },
                 {
                   "params": "forward",
-                  "projects": "self",
                   "target": "ci--DemoApplicationTest3",
                 },
                 {
                   "params": "forward",
-                  "projects": "self",
                   "target": "ci--DemoApplicationTest2",
                 },
                 {
                   "params": "forward",
-                  "projects": "self",
                   "target": "ci--DemoApplicationTest9",
                 },
                 {
                   "params": "forward",
-                  "projects": "self",
                   "target": "ci--DemoApplicationTest",
                 },
                 {
                   "params": "forward",
-                  "projects": "self",
                   "target": "ci--DemoApplicationTest5",
                 },
                 {
                   "params": "forward",
-                  "projects": "self",
                   "target": "ci--DemoApplicationTest4",
                 },
                 {
                   "params": "forward",
-                  "projects": "self",
                   "target": "ci--DemoApplicationTest8",
                 },
               ],
@@ -529,52 +519,42 @@ exports[`@nx/gradle/plugin/nodes should not create nodes with atomized tests tar
               "dependsOn": [
                 {
                   "params": "forward",
-                  "projects": "self",
                   "target": "ci--DemoApplicationTest10",
                 },
                 {
                   "params": "forward",
-                  "projects": "self",
                   "target": "ci--DemoApplicationTest7",
                 },
                 {
                   "params": "forward",
-                  "projects": "self",
                   "target": "ci--DemoApplicationTest6",
                 },
                 {
                   "params": "forward",
-                  "projects": "self",
                   "target": "ci--DemoApplicationTest3",
                 },
                 {
                   "params": "forward",
-                  "projects": "self",
                   "target": "ci--DemoApplicationTest2",
                 },
                 {
                   "params": "forward",
-                  "projects": "self",
                   "target": "ci--DemoApplicationTest9",
                 },
                 {
                   "params": "forward",
-                  "projects": "self",
                   "target": "ci--DemoApplicationTest",
                 },
                 {
                   "params": "forward",
-                  "projects": "self",
                   "target": "ci--DemoApplicationTest5",
                 },
                 {
                   "params": "forward",
-                  "projects": "self",
                   "target": "ci--DemoApplicationTest4",
                 },
                 {
                   "params": "forward",
-                  "projects": "self",
                   "target": "ci--DemoApplicationTest8",
                 },
               ],

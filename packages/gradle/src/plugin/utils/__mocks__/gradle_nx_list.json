@@ -195,12 +195,10 @@
       "dependsOn": [
         {
           "target": "ci--LinkedListTest",
-          "projects": "self",
           "params": "forward"
         },
         {
           "target": "ci--LinkedList2Test",
-          "projects": "self",
           "params": "forward"
         }
       ],

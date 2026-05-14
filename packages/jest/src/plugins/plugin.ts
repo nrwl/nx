@@ -415,7 +415,6 @@ async function buildJestTargets(
         const targetName = `${options.ciTargetName}--${relativePath}`;
         dependsOn.push({
           target: targetName,
-          projects: 'self',
           params: 'forward',
           options: 'forward',
         });
@@ -556,7 +555,6 @@ async function buildJestTargets(
           const targetName = `${options.ciTargetName}--${relativePath}`;
           dependsOn.push({
             target: targetName,
-            projects: 'self',
             params: 'forward',
             options: 'forward',
           });
