@@ -31,8 +31,8 @@ import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
+  sortPackageJsonFields,
 } from '@nx/js/internal';
-import { sortPackageJsonFields } from '@nx/js/internal';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { addRollupBuildTarget } from '@nx/react/src/generators/library/lib/add-rollup-build-target';
 import { expoComponentGenerator } from '../component/component';

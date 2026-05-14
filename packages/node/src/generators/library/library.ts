@@ -23,19 +23,18 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
-import { addSwcConfig } from '@nx/js/internal';
-import { addSwcDependencies } from '@nx/js/internal';
+import {
+  addSwcConfig,
+  addSwcDependencies,
+  addProjectToTsSolutionWorkspace,
+  isUsingTsSolutionSetup,
+  shouldConfigureTsSolutionSetup,
+  sortPackageJsonFields,
+} from '@nx/js/internal';
 import { join } from 'path';
 import { tslibVersion, typesNodeVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
 import { Schema } from './schema';
-import {
-  addProjectToTsSolutionWorkspace,
-  isUsingTsSolutionSetup,
-  shouldConfigureTsSolutionSetup,
-} from '@nx/js/internal';
-import { sortPackageJsonFields } from '@nx/js/internal';
-
 export interface NormalizedSchema extends Schema {
   fileName: string;
   projectName: string;

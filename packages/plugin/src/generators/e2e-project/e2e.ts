@@ -24,11 +24,10 @@ import {
   configurationGenerator,
   findJestConfig,
 } from '@nx/jest';
-import { getRelativePathToRootTsConfig } from '@nx/js';
-import { setupVerdaccio } from '@nx/js';
-import { addLocalRegistryScripts } from '@nx/js/internal';
-import { normalizeLinterOption } from '@nx/js/internal';
+import { getRelativePathToRootTsConfig, setupVerdaccio } from '@nx/js';
 import {
+  addLocalRegistryScripts,
+  normalizeLinterOption,
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';

@@ -20,6 +20,7 @@ import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
+  sortPackageJsonFields,
 } from '@nx/js/internal';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import reactInitGenerator from '../init/init';
@@ -44,8 +45,6 @@ import {
   setupVitestConfiguration,
 } from './lib/bundlers/add-vite';
 import { Schema } from './schema';
-import { sortPackageJsonFields } from '@nx/js/internal';
-
 export async function applicationGenerator(
   tree: Tree,
   schema: Schema

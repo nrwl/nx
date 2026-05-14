@@ -16,8 +16,10 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
-import { addSwcRegisterDependencies } from '@nx/js/internal';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
+import {
+  addSwcRegisterDependencies,
+  isUsingTsSolutionSetup,
+} from '@nx/js/internal';
 import { join } from 'path';
 import { nxVersion } from '../../utils/versions';
 import { getTypeScriptEslintVersionToInstall } from '../../utils/version-utils';

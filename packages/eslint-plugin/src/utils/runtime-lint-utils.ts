@@ -9,8 +9,7 @@ import {
   ProjectGraphProjectNode,
   workspaceRoot,
 } from '@nx/devkit';
-import { getRootTsConfigFileName } from '@nx/js';
-import { resolveModuleByImport } from '@nx/js';
+import { getRootTsConfigFileName, resolveModuleByImport } from '@nx/js';
 import { TargetProjectLocator } from '@nx/js/internal';
 import { AST_NODE_TYPES, TSESLint, TSESTree } from '@typescript-eslint/utils';
 import * as path from 'node:path';

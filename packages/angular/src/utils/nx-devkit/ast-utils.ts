@@ -12,8 +12,7 @@ import {
   removeChange,
   replaceChange,
 } from '@nx/js';
-import { ensureTypescript } from '@nx/js/internal';
-import { getProjectSourceRoot } from '@nx/js/internal';
+import { ensureTypescript, getProjectSourceRoot } from '@nx/js/internal';
 import { dirname, join } from 'path';
 import type * as ts from 'typescript';
 

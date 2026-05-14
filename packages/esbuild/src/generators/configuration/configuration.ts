@@ -13,8 +13,8 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { getOutputDir, getUpdatedPackageJsonContent } from '@nx/js';
-import { getImportPath } from '@nx/js/internal';
 import {
+  getImportPath,
   getDefinedCustomConditionName,
   getProjectSourceRoot,
   isUsingTsSolutionSetup,

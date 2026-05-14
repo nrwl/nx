@@ -13,8 +13,8 @@ import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
+  sortPackageJsonFields,
 } from '@nx/js/internal';
-import { sortPackageJsonFields } from '@nx/js/internal';
 import { updateDependencies } from '../utils/update-dependencies';
 
 export async function remixLibraryGenerator(

@@ -11,13 +11,15 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
+import {
+  libraryGenerator as jsLibraryGenerator,
+  addTsLibDependencies,
+} from '@nx/js';
 import {
   addSwcDependencies,
   addSwcRegisterDependencies,
+  getProjectSourceRoot,
 } from '@nx/js/internal';
-import { addTsLibDependencies } from '@nx/js';
-import { getProjectSourceRoot } from '@nx/js/internal';
 import * as path from 'path';
 import { e2eProjectGenerator } from '../e2e-project/e2e';
 import pluginLintCheckGenerator from '../lint-checks/generator';

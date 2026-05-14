@@ -23,9 +23,10 @@ import { type AppConfig } from '@remix-run/dev';
 import { dirname, join } from 'path';
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import { loadViteDynamicImport } from '../utils/executor-utils';
-import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
-import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/internal';
-
+import {
+  addBuildAndWatchDepsTargets,
+  isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
+} from '@nx/js/internal';
 export interface RemixPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;

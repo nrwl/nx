@@ -6,8 +6,7 @@ import {
   normalizePath,
   Tree,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/internal';
-import { getProjectSourceRoot } from '@nx/js/internal';
+import { ensureTypescript, getProjectSourceRoot } from '@nx/js/internal';
 import type * as ts from 'typescript';
 import {
   findExportDeclarationsForJsx,

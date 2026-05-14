@@ -5,8 +5,7 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/internal';
-import { getProjectSourceRoot } from '@nx/js/internal';
+import { ensureTypescript, getProjectSourceRoot } from '@nx/js/internal';
 import { basename, dirname, extname, join, relative } from 'path';
 import {
   findExportDeclarationsForJsx,

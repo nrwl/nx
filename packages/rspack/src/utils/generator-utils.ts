@@ -8,8 +8,7 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/internal';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
+import { ensureTypescript, isUsingTsSolutionSetup } from '@nx/js/internal';
 import { type RspackExecutorSchema } from '../executors/rspack/schema';
 import { type ConfigurationSchema } from '../generators/configuration/schema';
 import { type Framework } from '../generators/init/schema';

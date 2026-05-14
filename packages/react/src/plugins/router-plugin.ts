@@ -21,9 +21,10 @@ import { readdirSync } from 'fs';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { hashObject } from 'nx/src/devkit-internals';
-import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
-import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/internal';
-
+import {
+  addBuildAndWatchDepsTargets,
+  isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
+} from '@nx/js/internal';
 export interface ReactRouterPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;

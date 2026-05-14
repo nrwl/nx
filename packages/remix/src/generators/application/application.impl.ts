@@ -14,8 +14,7 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { initGenerator as jsInitGenerator } from '@nx/js';
-import { extractTsConfigBase } from '@nx/js';
+import { initGenerator as jsInitGenerator, extractTsConfigBase } from '@nx/js';
 import {
   createNxCloudOnboardingURLForWelcomeApp,
   getNxCloudAppOnBoardingUrl,
@@ -46,9 +45,8 @@ import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
+  sortPackageJsonFields,
 } from '@nx/js/internal';
-import { sortPackageJsonFields } from '@nx/js/internal';
-
 export function remixApplicationGenerator(
   tree: Tree,
   options: NxRemixGeneratorSchema

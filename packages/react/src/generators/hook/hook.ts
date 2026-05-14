@@ -13,12 +13,10 @@ import {
   names,
   Tree,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/internal';
+import { ensureTypescript, getProjectType } from '@nx/js/internal';
 import { join } from 'path';
 import { addImport } from '../../utils/ast-utils';
 import { Schema } from './schema';
-import { getProjectType } from '@nx/js/internal';
-
 interface NormalizedSchema extends Omit<Schema, 'js'> {
   projectSourceRoot: string;
   hookName: string;

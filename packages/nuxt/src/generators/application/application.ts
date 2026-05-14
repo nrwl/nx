@@ -36,8 +36,8 @@ import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
+  sortPackageJsonFields,
 } from '@nx/js/internal';
-import { sortPackageJsonFields } from '@nx/js/internal';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {

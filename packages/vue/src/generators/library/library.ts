@@ -18,9 +18,7 @@ import {
   addReleaseConfigForNonTsSolution,
   addReleaseConfigForTsSolution,
   releaseTasks,
-} from '@nx/js/internal';
-import { sortPackageJsonFields } from '@nx/js/internal';
-import {
+  sortPackageJsonFields,
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,

@@ -17,9 +17,9 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { getUpdatedPackageJsonContent, readTsConfig } from '@nx/js';
-import { getImportPath } from '@nx/js/internal';
-import { ensureTypescript } from '@nx/js/internal';
 import {
+  getImportPath,
+  ensureTypescript,
   getDefinedCustomConditionName,
   isUsingTsSolutionSetup,
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,

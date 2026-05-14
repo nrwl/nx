@@ -7,8 +7,6 @@ import type { LinterType } from '@nx/eslint';
 import {
   normalizeLinterOption,
   normalizeUnitTestRunnerOption,
-} from '@nx/js/internal';
-import {
   isUsingTsSolutionSetup,
   shouldConfigureTsSolutionSetup,
 } from '@nx/js/internal';

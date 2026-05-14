@@ -3,14 +3,13 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
-import { getNpmScope } from '@nx/js/internal';
-import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nx/js/internal';
-import type { LibraryGeneratorOptions, NormalizedOptions } from '../schema';
 import {
+  getNpmScope,
   isUsingTsSolutionSetup,
   shouldConfigureTsSolutionSetup,
 } from '@nx/js/internal';
-
+import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nx/js/internal';
+import type { LibraryGeneratorOptions, NormalizedOptions } from '../schema';
 export async function normalizeOptions(
   tree: Tree,
   options: LibraryGeneratorOptions

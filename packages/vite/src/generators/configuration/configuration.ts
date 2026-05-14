@@ -15,8 +15,8 @@ import {
   getUpdatedPackageJsonContent,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
-import { getImportPath } from '@nx/js/internal';
 import {
+  getImportPath,
   getDefinedCustomConditionName,
   getProjectType,
   isUsingTsSolutionSetup,

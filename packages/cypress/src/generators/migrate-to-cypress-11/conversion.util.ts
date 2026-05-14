@@ -8,8 +8,7 @@ import {
   updateJson,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/internal';
-import { getProjectSourceRoot } from '@nx/js/internal';
+import { ensureTypescript, getProjectSourceRoot } from '@nx/js/internal';
 import { basename, dirname, extname, relative } from 'path';
 import type { StringLiteral } from 'typescript';
 

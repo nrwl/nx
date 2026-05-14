@@ -34,18 +34,15 @@ import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
-} from '@nx/js/internal';
-import { sortPackageJsonFields } from '@nx/js/internal';
-import { PackageJson } from 'nx/src/utils/package-json';
-import { addRollupBuildTarget } from '@nx/react/src/generators/library/lib/add-rollup-build-target';
-import { relative } from 'path';
-import { reactNativeVersion, reactVersion } from '../../utils/versions';
-import {
+  sortPackageJsonFields,
   addReleaseConfigForNonTsSolution,
   addReleaseConfigForTsSolution,
   releaseTasks,
 } from '@nx/js/internal';
-
+import { PackageJson } from 'nx/src/utils/package-json';
+import { addRollupBuildTarget } from '@nx/react/src/generators/library/lib/add-rollup-build-target';
+import { relative } from 'path';
+import { reactNativeVersion, reactVersion } from '../../utils/versions';
 export async function reactNativeLibraryGenerator(
   host: Tree,
   schema: Schema

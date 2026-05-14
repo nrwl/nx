@@ -25,12 +25,12 @@ import {
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
-import { normalizeLinterOption } from '@nx/js/internal';
 import {
+  normalizeLinterOption,
   getProjectPackageManagerWorkspaceState,
   getProjectPackageManagerWorkspaceStateWarningTask,
+  isUsingTsSolutionSetup,
 } from '@nx/js/internal';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { addLinterToCyProject } from '../../utils/add-linter';

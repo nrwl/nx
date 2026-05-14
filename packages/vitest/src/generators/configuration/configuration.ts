@@ -19,8 +19,11 @@ import {
 } from '@nx/devkit';
 import { upsertTargetDefault } from '@nx/devkit/internal';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { getProjectType, isUsingTsSolutionSetup } from '@nx/js/internal';
-import { typesNodeVersion } from '@nx/js/internal';
+import {
+  getProjectType,
+  isUsingTsSolutionSetup,
+  typesNodeVersion,
+} from '@nx/js/internal';
 import { join } from 'path';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import {
