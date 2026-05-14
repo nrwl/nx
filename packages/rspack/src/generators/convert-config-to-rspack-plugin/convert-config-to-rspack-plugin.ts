@@ -13,6 +13,7 @@ import { extractRspackOptions } from './lib/extract-rspack-options';
 import { normalizePathOptions } from './lib/normalize-path-options';
 import { parse } from 'path';
 import { validateProject } from './lib/validate-project';
+import { assertSupportedRspackVersion } from '../../utils/assert-supported-rspack-version';
 
 interface Schema {
   project?: string;
@@ -32,6 +33,8 @@ export async function convertConfigToRspackPluginGenerator(
   tree: Tree,
   options: Schema
 ) {
+  assertSupportedRspackVersion(tree);
+
   let migrated = 0;
 
   const projects = getProjects(tree);

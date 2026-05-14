@@ -16,8 +16,11 @@ import {
 import { transformEsmConfigFile } from './lib/transform-esm';
 import { transformCjsConfigFile } from './lib/transform-cjs';
 import { transformPluginConfig } from './lib/transform-plugin-config';
+import { assertSupportedRspackVersion } from '../../utils/assert-supported-rspack-version';
 
 export default async function (tree: Tree, options: Schema) {
+  assertSupportedRspackVersion(tree);
+
   const projects = getProjects(tree);
   if (!projects.has(options.project)) {
     throw new Error(
@@ -161,7 +164,9 @@ export default async function (tree: Tree, options: Schema) {
     {
       '@rspack/core': rspackCoreVersion,
       '@rspack/dev-server': rspackDevServerVersion,
-    }
+    },
+    undefined,
+    true
   );
 
   if (!options.skipFormat) {

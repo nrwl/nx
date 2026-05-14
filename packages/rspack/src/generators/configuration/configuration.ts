@@ -25,6 +25,7 @@ import { ConfigurationSchema } from './schema';
 import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { Framework } from '../init/schema';
 import { warnRspackExecutorGenerating } from '../../utils/deprecation';
+import { assertSupportedRspackVersion } from '../../utils/assert-supported-rspack-version';
 
 function projectIsRootProjectInStandaloneWorkspace(projectRoot: string) {
   return relative(workspaceRoot, projectRoot).length === 0;
@@ -76,6 +77,8 @@ export async function configurationGenerator(
   tree: Tree,
   options: ConfigurationSchema
 ) {
+  assertSupportedRspackVersion(tree);
+
   const task = await rspackInitGenerator(tree, {
     ...options,
   });

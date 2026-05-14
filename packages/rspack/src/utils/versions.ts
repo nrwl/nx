@@ -1,5 +1,7 @@
 export const nxVersion = require('../../package.json').version;
 
+export const minSupportedRspackVersion = '1.0.0';
+
 export const lessLoaderVersion = '~11.1.3';
 export const sassLoaderVersion = '^16.0.7';
 export const sassEmbeddedVersion = '^1.97.2';

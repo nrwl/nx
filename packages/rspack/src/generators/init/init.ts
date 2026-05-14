@@ -16,16 +16,16 @@ import {
   sassEmbeddedVersion,
   sassLoaderVersion,
 } from '../../utils/versions';
-import {
-  getInstalledRspackMajorVersion,
-  getRspackVersionsForInstalledMajor,
-} from '../../utils/version-utils';
+import { getRspackVersionsForInstalledMajor } from '../../utils/version-utils';
+import { assertSupportedRspackVersion } from '../../utils/assert-supported-rspack-version';
 import { InitGeneratorSchema } from './schema';
 
 export async function rspackInitGenerator(
   tree: Tree,
   schema: InitGeneratorSchema
 ) {
+  assertSupportedRspackVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
 
   const nxJson = readNxJson(tree);
@@ -90,12 +90,8 @@ export async function rspackInitGenerator(
 
   tasks.push(jsInitTask);
 
-  // Detect the installed @rspack/core major (throws on unsupported versions)
-  // so we honor the workspace's existing pin rather than overwriting it.
-  const installedRspackMajor = getInstalledRspackMajorVersion(tree);
   const rspackVersions = getRspackVersionsForInstalledMajor(tree);
-  const keepExistingVersions =
-    installedRspackMajor !== undefined ? true : schema.keepExistingVersions;
+  const keepExistingVersions = schema.keepExistingVersions ?? true;
 
   const devDependencies = {
     '@rspack/core': rspackVersions.rspackCoreVersion,

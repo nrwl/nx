@@ -21,6 +21,7 @@ import {
   type MigrationContext,
 } from './utils';
 import { logger as devkitLogger } from 'nx/src/devkit-exports';
+import { assertSupportedRspackVersion } from '../../utils/assert-supported-rspack-version';
 
 interface Schema {
   project?: string;
@@ -28,6 +29,8 @@ interface Schema {
 }
 
 export async function convertToInferred(tree: Tree, options: Schema) {
+  assertSupportedRspackVersion(tree);
+
   const projectGraph = await createProjectGraphAsync();
   const migrationContext: MigrationContext = {
     logger: new AggregatedLog(),
