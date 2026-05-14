@@ -79,6 +79,9 @@
     },
     "21.3.0-module-federation-node": {
       "version": "21.3.0-beta.8",
+      "requires": {
+        "@module-federation/node": "<2.7.9"
+      },
       "packages": {
         "@module-federation/node": {
           "version": "^2.7.9",
@@ -146,6 +149,9 @@
     },
     "22.2.0-module-federation-node": {
       "version": "22.2.0-beta.0",
+      "requires": {
+        "@module-federation/node": "<2.7.21"
+      },
       "packages": {
         "@module-federation/node": {
           "version": "^2.7.21",
