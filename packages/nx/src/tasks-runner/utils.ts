@@ -52,7 +52,12 @@ export function getDependencyConfigs(
       { ownerTarget: target, index, legacyViolations }
     )
   );
-  flushLegacyDependsOnViolations(project, target, legacyViolations);
+  flushLegacyDependsOnViolations(
+    project,
+    target,
+    legacyViolations,
+    projectGraph.nodes[project]?.data?.root
+  );
   return dependencyConfigs;
 }
 
@@ -292,19 +297,45 @@ function warnLegacyDependsOnMagicString(
   });
 }
 
+let cachedSourceMaps:
+  | import('../project-graph/utils/project-configuration/source-maps').ConfigurationSourceMaps
+  | null
+  | undefined = undefined;
+function getSourceMapsLazy() {
+  if (cachedSourceMaps !== undefined) return cachedSourceMaps;
+  try {
+    const { readSourceMapsCache } = require('../project-graph/nx-deps-cache');
+    cachedSourceMaps = readSourceMapsCache();
+  } catch {
+    cachedSourceMaps = null;
+  }
+  return cachedSourceMaps;
+}
+
 function flushLegacyDependsOnViolations(
   project: string,
   ownerTarget: string,
-  violations: LegacyDependsOnViolation[]
+  violations: LegacyDependsOnViolation[],
+  projectRoot: string | undefined
 ): void {
   if (violations.length === 0) return;
   const key = `${project}::${ownerTarget}`;
   if (warnedLegacyDependsOnMagicStrings.has(key)) return;
   warnedLegacyDependsOnMagicStrings.add(key);
-  const bodyLines = violations.map(
-    (v) =>
-      `  - \`dependsOn[${v.index}]\` (\`projects: '${v.value}'\`, targets \`${v.depTarget}\`)`
-  );
+  const sourceMaps = getSourceMapsLazy();
+  const projectSourceMap =
+    projectRoot && sourceMaps ? sourceMaps[projectRoot] : undefined;
+  const bodyLines = violations.map((v) => {
+    const sourceInfo =
+      projectSourceMap?.[`targets.${ownerTarget}.dependsOn.${v.index}`] ??
+      projectSourceMap?.[`targets.${ownerTarget}.dependsOn`];
+    const origin = sourceInfo
+      ? ` — set by \`${sourceInfo[1]}\`${
+          sourceInfo[0] ? ` (\`${sourceInfo[0]}\`)` : ''
+        }`
+      : '';
+    return `  - \`dependsOn[${v.index}]\` (\`projects: '${v.value}'\`, targets \`${v.depTarget}\`)${origin}`;
+  });
   bodyLines.push(`To fix, run \`nx repair\`.`);
   output.warn({
     title: `\`${project}:${ownerTarget}\` has \`dependsOn\` entries using legacy \`projects: 'self' | 'dependencies'\` values, which will be removed in Nx v24.`,
