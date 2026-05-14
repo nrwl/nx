@@ -64,7 +64,6 @@ export function getDependencyConfigs(
 interface LegacyDependsOnViolation {
   value: 'self' | 'dependencies';
   index: number;
-  depTarget: string;
   // Snapshot of the entry as authored, before normalization rewrites
   // `projects` / `dependencies`. Used to display the user-facing form.
   originalEntry: TargetDependencyConfig;
@@ -279,7 +278,6 @@ function warnLegacyDependsOnMagicString(
     location.legacyViolations.push({
       value,
       index: location.index ?? -1,
-      depTarget: dependencyConfig.target ?? '<unknown>',
       originalEntry: { ...dependencyConfig },
     });
     return;
