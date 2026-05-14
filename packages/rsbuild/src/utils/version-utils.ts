@@ -19,10 +19,7 @@ function throwBelowFloor(installedMajor: number): never {
 function throwAboveWindow(installedMajor: number): never {
   throw new Error(
     `@nx/rsbuild does not yet support ${RSBUILD_CORE_PACKAGE}@${installedMajor}.x. ` +
-      `${RSBUILD_CORE_PACKAGE}@2 ships as pure ESM and the plugin needs ` +
-      `architectural work before it can load it; tracked in NXC-4460 ` +
-      `(https://linear.app/nxdev/issue/NXC-4460). Pin ${RSBUILD_CORE_PACKAGE}@^1 ` +
-      `until that work lands.`
+      `Pin ${RSBUILD_CORE_PACKAGE} to a supported major (currently 1.x).`
   );
 }
 
