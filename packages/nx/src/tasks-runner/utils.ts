@@ -74,8 +74,10 @@ export function normalizeDependencyConfigProjects(
   currentProject: string,
   graph: ProjectGraph
 ): NormalizedTargetDependencyConfig {
-  const noStringConfig =
-    normalizeTargetDependencyWithStringProjects(dependencyConfig);
+  const noStringConfig = normalizeTargetDependencyWithStringProjects(
+    dependencyConfig,
+    currentProject
+  );
 
   if (noStringConfig.projects) {
     dependencyConfig.projects = findMatchingProjects(
@@ -203,17 +205,22 @@ export function getOutputs(
 }
 
 export function normalizeTargetDependencyWithStringProjects(
-  dependencyConfig: TargetDependencyConfig
+  dependencyConfig: TargetDependencyConfig,
+  currentProject?: string
 ): Omit<TargetDependencyConfig, 'projects'> & { projects: string[] } {
   if (typeof dependencyConfig.projects === 'string') {
     // TODO(v24): Remove the `self` / `dependencies` magic-string shim.
     // The v16 `update-depends-on-to-tokens` migration already rewrites
     // these to the modern shape, and `nx repair` will re-run it on demand.
     if (dependencyConfig.projects === 'self') {
-      warnLegacyDependsOnMagicString('self');
+      warnLegacyDependsOnMagicString('self', currentProject, dependencyConfig);
       delete dependencyConfig.projects;
     } else if (dependencyConfig.projects === 'dependencies') {
-      warnLegacyDependsOnMagicString('dependencies');
+      warnLegacyDependsOnMagicString(
+        'dependencies',
+        currentProject,
+        dependencyConfig
+      );
       dependencyConfig.dependencies = true;
       delete dependencyConfig.projects;
     } else {
@@ -226,9 +233,16 @@ export function normalizeTargetDependencyWithStringProjects(
 }
 
 const warnedLegacyDependsOnMagicStrings = new Set<string>();
-function warnLegacyDependsOnMagicString(value: 'self' | 'dependencies'): void {
-  if (warnedLegacyDependsOnMagicStrings.has(value)) return;
-  warnedLegacyDependsOnMagicStrings.add(value);
+function warnLegacyDependsOnMagicString(
+  value: 'self' | 'dependencies',
+  currentProject: string | undefined,
+  dependencyConfig: TargetDependencyConfig
+): void {
+  const target = dependencyConfig.target ?? '<unknown>';
+  const project = currentProject ?? '<unknown>';
+  const key = `${project}::${target}::${value}`;
+  if (warnedLegacyDependsOnMagicStrings.has(key)) return;
+  warnedLegacyDependsOnMagicStrings.add(key);
   const replacement =
     value === 'self'
       ? 'omit the `projects` field (the current project is the default)'
@@ -236,6 +250,7 @@ function warnLegacyDependsOnMagicString(value: 'self' | 'dependencies'): void {
   output.warn({
     title: `\`dependsOn\` entry uses the legacy \`projects: '${value}'\` value, which will be removed in Nx v24.`,
     bodyLines: [
+      `Found on project \`${project}\` in a \`dependsOn\` entry targeting \`${target}\`.`,
       `To fix: ${replacement}, or run \`nx repair\` to update your configuration automatically.`,
     ],
   });
