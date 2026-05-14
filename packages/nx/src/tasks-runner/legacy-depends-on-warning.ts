@@ -3,6 +3,8 @@
 // v16 `update-depends-on-to-tokens` migration already rewrites these to the
 // modern shape, and `nx repair` will re-run it on demand.
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
+import { readSourceMapsCache } from '../project-graph/nx-deps-cache';
+import { ConfigurationSourceMaps } from '../project-graph/utils/project-configuration/source-maps';
 import { output } from '../utils/output';
 
 export interface LegacyDependsOnViolation {
@@ -83,14 +85,10 @@ export function flushLegacyDependsOnViolations(
 
 const warnedLegacyDependsOnMagicStrings = new Set<string>();
 
-let cachedSourceMaps:
-  | import('../project-graph/utils/project-configuration/source-maps').ConfigurationSourceMaps
-  | null
-  | undefined = undefined;
-function getSourceMapsLazy() {
+let cachedSourceMaps: ConfigurationSourceMaps | null | undefined = undefined;
+function getSourceMapsLazy(): ConfigurationSourceMaps | null {
   if (cachedSourceMaps !== undefined) return cachedSourceMaps;
   try {
-    const { readSourceMapsCache } = require('../project-graph/nx-deps-cache');
     cachedSourceMaps = readSourceMapsCache();
   } catch {
     cachedSourceMaps = null;
