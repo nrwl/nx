@@ -243,15 +243,11 @@ function warnLegacyDependsOnMagicString(
   const key = `${project}::${target}::${value}`;
   if (warnedLegacyDependsOnMagicStrings.has(key)) return;
   warnedLegacyDependsOnMagicStrings.add(key);
-  const replacement =
-    value === 'self'
-      ? 'omit the `projects` field (the current project is the default)'
-      : 'use `{ dependencies: true }`';
   output.warn({
     title: `\`dependsOn\` entry uses the legacy \`projects: '${value}'\` value, which will be removed in Nx v24.`,
     bodyLines: [
       `Found on project \`${project}\` in a \`dependsOn\` entry targeting \`${target}\`.`,
-      `To fix: ${replacement}, or run \`nx repair\` to update your configuration automatically.`,
+      `To fix, run \`nx repair\`.`,
     ],
   });
 }
