@@ -38,12 +38,12 @@ export function getDependencyConfigs(
   allTargetNames: string[]
 ): NormalizedTargetDependencyConfig[] | undefined {
   const legacyViolations: LegacyDependsOnViolation[] = [];
-  const dependencyConfigs = (
+  const dependsOnEntries =
     projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
     // This is passed into `run-command` from programmatic invocations
     extraTargetDependencies[target] ??
-    []
-  ).flatMap((config, index) =>
+    [];
+  const dependencyConfigs = dependsOnEntries.flatMap((config, index) =>
     normalizeDependencyConfigDefinition(
       config,
       project,
@@ -56,7 +56,8 @@ export function getDependencyConfigs(
     project,
     target,
     legacyViolations,
-    projectGraph.nodes[project]?.data?.root
+    projectGraph.nodes[project]?.data?.root,
+    dependsOnEntries
   );
   return dependencyConfigs;
 }
@@ -65,7 +66,6 @@ interface LegacyDependsOnViolation {
   value: 'self' | 'dependencies';
   index: number;
   depTarget: string;
-  entry: TargetDependencyConfig;
 }
 
 export interface DependsOnEntryLocation {
@@ -274,13 +274,10 @@ function warnLegacyDependsOnMagicString(
   // If a collector is provided, defer — `getDependencyConfigs` emits a single
   // consolidated warning per target after all entries are processed.
   if (location?.legacyViolations) {
-    // Snapshot before the caller mutates `dependencyConfig` (deletes `projects`,
-    // sets `dependencies`) so the warning can show the original entry as authored.
     location.legacyViolations.push({
       value,
       index: location.index ?? -1,
       depTarget: dependencyConfig.target ?? '<unknown>',
-      entry: { ...dependencyConfig },
     });
     return;
   }
@@ -320,7 +317,8 @@ function flushLegacyDependsOnViolations(
   project: string,
   ownerTarget: string,
   violations: LegacyDependsOnViolation[],
-  projectRoot: string | undefined
+  projectRoot: string | undefined,
+  dependsOnEntries: ReadonlyArray<string | TargetDependencyConfig>
 ): void {
   if (violations.length === 0) return;
   const key = `${project}::${ownerTarget}`;
@@ -398,7 +396,9 @@ function flushLegacyDependsOnViolations(
         ? ''
         : ` from ${v.plugin}${v.file ? ` in ${v.file}` : ''}`
       : '';
-    return `  - ${JSON.stringify(v.entry)} (dependsOn[${v.index}]${sourcePart})`;
+    return `  - dependsOn[${v.index}] = ${JSON.stringify(
+      dependsOnEntries[v.index]
+    )}${sourcePart}`;
   });
 
   output.warn({ title, bodyLines });
