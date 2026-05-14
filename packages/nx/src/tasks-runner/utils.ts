@@ -19,6 +19,7 @@ import {
 } from '../native';
 import { isRelativePath } from '../utils/fileutils';
 import { findMatchingProjects } from '../utils/find-matching-projects';
+import { output } from '../utils/output';
 import { isGlobPattern } from '../utils/globs';
 import { joinPathFragments } from '../utils/path';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
@@ -205,11 +206,39 @@ export function normalizeTargetDependencyWithStringProjects(
   dependencyConfig: TargetDependencyConfig
 ): Omit<TargetDependencyConfig, 'projects'> & { projects: string[] } {
   if (typeof dependencyConfig.projects === 'string') {
-    dependencyConfig.projects = [dependencyConfig.projects];
+    // TODO(v24): Remove the `self` / `dependencies` magic-string shim.
+    // The v16 `update-depends-on-to-tokens` migration already rewrites
+    // these to the modern shape, and `nx repair` will re-run it on demand.
+    if (dependencyConfig.projects === 'self') {
+      warnLegacyDependsOnMagicString('self');
+      delete dependencyConfig.projects;
+    } else if (dependencyConfig.projects === 'dependencies') {
+      warnLegacyDependsOnMagicString('dependencies');
+      dependencyConfig.dependencies = true;
+      delete dependencyConfig.projects;
+    } else {
+      dependencyConfig.projects = [dependencyConfig.projects];
+    }
   }
   return dependencyConfig as Omit<TargetDependencyConfig, 'projects'> & {
     projects: string[];
   };
+}
+
+const warnedLegacyDependsOnMagicStrings = new Set<string>();
+function warnLegacyDependsOnMagicString(value: 'self' | 'dependencies'): void {
+  if (warnedLegacyDependsOnMagicStrings.has(value)) return;
+  warnedLegacyDependsOnMagicStrings.add(value);
+  const replacement =
+    value === 'self'
+      ? 'omit the `projects` field (the current project is the default)'
+      : 'use `{ dependencies: true }`';
+  output.warn({
+    title: `\`dependsOn\` entry uses the legacy \`projects: '${value}'\` value, which will be removed in Nx v24.`,
+    bodyLines: [
+      `To fix: ${replacement}, or run \`nx repair\` to update your configuration automatically.`,
+    ],
+  });
 }
 
 class InvalidOutputsError extends Error {
