@@ -360,11 +360,16 @@ function flushLegacyDependsOnViolations(
   }
 
   let title: string;
+  // When a single external plugin is the source, the user can't fix entries
+  // individually — only upgrading the plugin helps. Skip the per-entry body
+  // listing to avoid drowning them in noise (some plugins emit dozens).
+  let suppressBody = false;
   if (sharedPlugin && !isInternal(sharedPlugin)) {
     // Single external plugin inferred all offending entries — point the user
     // at upgrading that plugin.
     const fromFile = sharedFile ? ` from ${sharedFile}` : '';
     title = `The ${sharedPlugin} plugin inferred ${project}:${ownerTarget} with ${annotated.length} invalid dependsOn ${entryWord} using ${valuePhrase}${fromFile}. This is deprecated and will be removed in Nx v24 — please upgrade ${sharedPlugin} to a version that doesn't emit this.`;
+    suppressBody = true;
   } else if (sharedPlugin && isInternal(sharedPlugin) && sharedFile) {
     // Hand-authored entries from a single config file — lead with the file.
     title = `${sharedFile} defines ${project}:${ownerTarget} with ${annotated.length} dependsOn ${entryWord} using ${valuePhrase}. This is deprecated and will be removed in Nx v24 — run 'nx repair' to fix this.`;
@@ -393,14 +398,16 @@ function flushLegacyDependsOnViolations(
     title = `${project}:${ownerTarget} has ${annotated.length} dependsOn ${entryWord} using ${valuePhrase}${origin}. This is deprecated and will be removed in Nx v24 — ${advice}.`;
   }
 
-  const bodyLines = annotated.map((v) => {
-    const sourcePart = v.plugin
-      ? sharedPlugin
-        ? ''
-        : ` from ${v.plugin}${v.file ? ` in ${v.file}` : ''}`
-      : '';
-    return `  - ${JSON.stringify(v.originalEntry)} (${v.index}${sourcePart})`;
-  });
+  const bodyLines = suppressBody
+    ? []
+    : annotated.map((v) => {
+        const sourcePart = v.plugin
+          ? sharedPlugin
+            ? ''
+            : ` from ${v.plugin}${v.file ? ` in ${v.file}` : ''}`
+          : '';
+        return `  - ${JSON.stringify(v.originalEntry)} (${v.index}${sourcePart})`;
+      });
 
   output.warn({ title, bodyLines });
 }
