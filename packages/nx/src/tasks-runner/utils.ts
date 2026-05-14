@@ -263,12 +263,11 @@ function warnLegacyDependsOnMagicString(
   const key = `${project}::${ownerTarget}::${index}::${value}`;
   if (warnedLegacyDependsOnMagicStrings.has(key)) return;
   warnedLegacyDependsOnMagicStrings.add(key);
-  const indexLabel = index >= 0 ? ` at index ${index}` : '';
+  const indexLabel = index >= 0 ? `[${index}]` : '';
   output.warn({
-    title: `\`dependsOn\` entry uses the legacy \`projects: '${value}'\` value, which will be removed in Nx v24.`,
+    title: `\`${project}:${ownerTarget}\` \`dependsOn${indexLabel}\` uses the legacy \`projects: '${value}'\` value, which will be removed in Nx v24.`,
     bodyLines: [
-      `Found on \`${project}:${ownerTarget}\` — \`dependsOn\`${indexLabel} (targeting \`${depTarget}\`).`,
-      `To fix, run \`nx repair\`.`,
+      `The entry targets \`${depTarget}\`. To fix, run \`nx repair\`.`,
     ],
   });
 }
