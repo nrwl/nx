@@ -348,47 +348,47 @@ function flushLegacyDependsOnViolations(
     ? annotated[0].file
     : null;
 
-  let titleValue: string;
+  const isInternal = (p: string | undefined) => !p || p.startsWith('nx/');
+  const entryWord = annotated.length === 1 ? 'entry' : 'entries';
+  let valuePhrase: string;
   if (sharedValue) {
-    titleValue = `projects: '${sharedValue}'`;
+    valuePhrase = `projects: '${sharedValue}'`;
   } else {
     const selfCount = annotated.filter((v) => v.value === 'self').length;
     const depCount = annotated.length - selfCount;
-    titleValue = `legacy projects values (${selfCount} 'self', ${depCount} 'dependencies')`;
+    valuePhrase = `legacy projects values (${selfCount} 'self', ${depCount} 'dependencies')`;
   }
-  const origin = sharedPlugin
-    ? ` (set by ${sharedPlugin}${sharedFile ? ` in ${sharedFile}` : ''})`
-    : '';
-  // `nx repair` only rewrites hand-authored config (nx.json/project.json). For
-  // plugin-inferred entries, the user needs to upgrade the plugin.
-  const allFromCore = annotated.every(
-    (v) => !v.plugin || v.plugin.startsWith('nx/')
-  );
-  const anyFromCore = annotated.some(
-    (v) => !v.plugin || v.plugin.startsWith('nx/')
-  );
-  const offendingPlugins = Array.from(
-    new Set(
-      annotated
-        .filter((v) => v.plugin && !v.plugin.startsWith('nx/'))
-        .map((v) => v.plugin as string)
-    )
-  );
-  let advice: string;
-  if (allFromCore) {
-    advice = `run 'nx repair' to fix`;
-  } else if (anyFromCore) {
-    advice = `run 'nx repair' for hand-authored entries and upgrade ${offendingPlugins.join(
-      ', '
-    )} for plugin-inferred entries`;
+
+  let title: string;
+  if (sharedPlugin && !isInternal(sharedPlugin)) {
+    // Single external plugin inferred all offending entries — point the user
+    // at upgrading that plugin.
+    const fromFile = sharedFile ? ` from ${sharedFile}` : '';
+    title = `The ${sharedPlugin} plugin inferred ${project}:${ownerTarget} with ${annotated.length} invalid dependsOn ${entryWord} using ${valuePhrase}${fromFile}. This is deprecated and will be removed in Nx v24 — please upgrade ${sharedPlugin} to a version that doesn't emit this.`;
   } else {
-    advice = `upgrade ${offendingPlugins.join(
-      ', '
-    )} to a version that doesn't emit this`;
+    // Mixed sources, or only internal/hand-authored sources — `nx repair`
+    // handles hand-authored entries; any external plugins still need an
+    // upgrade.
+    const offendingPlugins = Array.from(
+      new Set(
+        annotated
+          .filter((v) => v.plugin && !isInternal(v.plugin))
+          .map((v) => v.plugin as string)
+      )
+    );
+    const origin = sharedPlugin
+      ? ` (set by ${sharedPlugin}${sharedFile ? ` in ${sharedFile}` : ''})`
+      : '';
+    let advice: string;
+    if (offendingPlugins.length === 0) {
+      advice = `run 'nx repair' to fix`;
+    } else {
+      advice = `run 'nx repair' for hand-authored entries and upgrade ${offendingPlugins.join(
+        ', '
+      )} for plugin-inferred entries`;
+    }
+    title = `${project}:${ownerTarget} has ${annotated.length} dependsOn ${entryWord} using ${valuePhrase}${origin}. This is deprecated and will be removed in Nx v24 — ${advice}.`;
   }
-  const title = `${project}:${ownerTarget} has ${annotated.length} dependsOn ${
-    annotated.length === 1 ? 'entry' : 'entries'
-  } using ${titleValue}${origin}. This will be removed in Nx v24 — ${advice}.`;
 
   const bodyLines = annotated.map((v) => {
     const sourcePart = v.plugin
