@@ -3,8 +3,6 @@ import type { OutputBundle } from 'rollup'; // only used  for types
 import { relative } from 'path';
 import { stripIndents } from '@nx/devkit';
 
-//NOTE: This is here so we can share between `@nx/rollup` and `@nx/vite`.
-
 /*
  * This plugin takes all entry-points from the generated bundle and creates a
  * bundled version of corresponding d.ts files.

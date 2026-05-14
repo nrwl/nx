@@ -8,7 +8,6 @@ import {
 } from '@nx/devkit';
 import { isAbsolute, resolve } from 'path';
 import {
-  typeDefinitions,
   calculateProjectBuildableDependencies,
   computeCompilerOptionsPaths,
   createTmpTsConfig,
@@ -16,6 +15,7 @@ import {
   getProjectSourceRoot,
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
+import { typeDefinitions } from './type-definitions';
 import { resolvePathsBaseUrl } from '@nx/js';
 import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import nodeResolve from '@rollup/plugin-node-resolve';

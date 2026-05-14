@@ -82,7 +82,6 @@ export {
   addBuildAndWatchDepsTargets,
   isValidPackageJsonBuildConfig,
 } from './src/plugins/typescript/util';
-export { typeDefinitions } from './src/plugins/rollup/type-definitions';
 
 // Generator helpers
 export {
