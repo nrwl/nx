@@ -358,12 +358,13 @@ function flushLegacyDependsOnViolations(
   } using ${titleValue}${origin}. This will be removed in Nx v24 — run 'nx repair' to fix.`;
 
   const bodyLines = annotated.map((v) => {
-    const valuePart = sharedValue ? '' : ` projects '${v.value}',`;
-    const perOrigin =
-      !sharedPlugin && v.plugin
-        ? ` — set by ${v.plugin}${v.file ? ` in ${v.file}` : ''}`
-        : '';
-    return `  - dependsOn[${v.index}]:${valuePart} targets '${v.depTarget}'${perOrigin}`;
+    const sourcePart = v.plugin
+      ? sharedPlugin
+        ? ''
+        : ` from ${v.plugin}${v.file ? ` in ${v.file}` : ''}`
+      : '';
+    const valuePrefix = sharedValue ? '' : `'${v.value}' — `;
+    return `  - ${valuePrefix}${v.depTarget} (dependsOn[${v.index}]${sourcePart})`;
   });
 
   output.warn({ title, bodyLines });
