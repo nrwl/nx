@@ -325,22 +325,48 @@ function flushLegacyDependsOnViolations(
   const sourceMaps = getSourceMapsLazy();
   const projectSourceMap =
     projectRoot && sourceMaps ? sourceMaps[projectRoot] : undefined;
-  const bodyLines = violations.map((v) => {
+  const annotated = violations.map((v) => {
     const sourceInfo =
       projectSourceMap?.[`targets.${ownerTarget}.dependsOn.${v.index}`] ??
       projectSourceMap?.[`targets.${ownerTarget}.dependsOn`];
-    const origin = sourceInfo
-      ? ` — set by \`${sourceInfo[1]}\`${
-          sourceInfo[0] ? ` (\`${sourceInfo[0]}\`)` : ''
-        }`
+    return {
+      ...v,
+      plugin: sourceInfo?.[1],
+      file: sourceInfo?.[0] ?? undefined,
+    };
+  });
+
+  const sharedValue = annotated.every((v) => v.value === annotated[0].value)
+    ? annotated[0].value
+    : null;
+  const sharedPlugin = annotated.every((v) => v.plugin === annotated[0].plugin)
+    ? annotated[0].plugin
+    : null;
+  const sharedFile = annotated.every((v) => v.file === annotated[0].file)
+    ? annotated[0].file
+    : null;
+
+  const titleValue = sharedValue
+    ? `projects: '${sharedValue}'`
+    : `legacy projects values`;
+  const origin =
+    sharedPlugin && sharedValue
+      ? ` (set by ${sharedPlugin}${sharedFile ? ` in ${sharedFile}` : ''})`
       : '';
-    return `  - \`dependsOn[${v.index}]\` (\`projects: '${v.value}'\`, targets \`${v.depTarget}\`)${origin}`;
+  const title = `${project}:${ownerTarget} has ${annotated.length} dependsOn ${
+    annotated.length === 1 ? 'entry' : 'entries'
+  } using ${titleValue}${origin}. This will be removed in Nx v24 — run 'nx repair' to fix.`;
+
+  const bodyLines = annotated.map((v) => {
+    const valuePart = sharedValue ? '' : ` projects '${v.value}',`;
+    const perOrigin =
+      !sharedPlugin && v.plugin
+        ? ` — set by ${v.plugin}${v.file ? ` in ${v.file}` : ''}`
+        : '';
+    return `  - dependsOn[${v.index}]:${valuePart} targets '${v.depTarget}'${perOrigin}`;
   });
-  bodyLines.push(`To fix, run \`nx repair\`.`);
-  output.warn({
-    title: `\`${project}:${ownerTarget}\` has \`dependsOn\` entries using legacy \`projects: 'self' | 'dependencies'\` values, which will be removed in Nx v24.`,
-    bodyLines,
-  });
+
+  output.warn({ title, bodyLines });
 }
 
 class InvalidOutputsError extends Error {
