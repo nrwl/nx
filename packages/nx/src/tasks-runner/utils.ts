@@ -38,12 +38,12 @@ export function getDependencyConfigs(
   allTargetNames: string[]
 ): NormalizedTargetDependencyConfig[] | undefined {
   const legacyViolations: LegacyDependsOnViolation[] = [];
-  const dependsOnEntries =
+  const dependencyConfigs = (
     projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
     // This is passed into `run-command` from programmatic invocations
     extraTargetDependencies[target] ??
-    [];
-  const dependencyConfigs = dependsOnEntries.flatMap((config, index) =>
+    []
+  ).flatMap((config, index) =>
     normalizeDependencyConfigDefinition(
       config,
       project,
@@ -56,8 +56,7 @@ export function getDependencyConfigs(
     project,
     target,
     legacyViolations,
-    projectGraph.nodes[project]?.data?.root,
-    dependsOnEntries
+    projectGraph.nodes[project]?.data?.root
   );
   return dependencyConfigs;
 }
@@ -66,6 +65,9 @@ interface LegacyDependsOnViolation {
   value: 'self' | 'dependencies';
   index: number;
   depTarget: string;
+  // Snapshot of the entry as authored, before normalization rewrites
+  // `projects` / `dependencies`. Used to display the user-facing form.
+  originalEntry: TargetDependencyConfig;
 }
 
 export interface DependsOnEntryLocation {
@@ -278,6 +280,7 @@ function warnLegacyDependsOnMagicString(
       value,
       index: location.index ?? -1,
       depTarget: dependencyConfig.target ?? '<unknown>',
+      originalEntry: { ...dependencyConfig },
     });
     return;
   }
@@ -317,8 +320,7 @@ function flushLegacyDependsOnViolations(
   project: string,
   ownerTarget: string,
   violations: LegacyDependsOnViolation[],
-  projectRoot: string | undefined,
-  dependsOnEntries: ReadonlyArray<string | TargetDependencyConfig>
+  projectRoot: string | undefined
 ): void {
   if (violations.length === 0) return;
   const key = `${project}::${ownerTarget}`;
@@ -396,7 +398,7 @@ function flushLegacyDependsOnViolations(
         ? ''
         : ` from ${v.plugin}${v.file ? ` in ${v.file}` : ''}`
       : '';
-    return `  - ${JSON.stringify(dependsOnEntries[v.index])} (${v.index}${sourcePart})`;
+    return `  - ${JSON.stringify(v.originalEntry)} (${v.index}${sourcePart})`;
   });
 
   output.warn({ title, bodyLines });
