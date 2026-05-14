@@ -20,6 +20,7 @@ import {
 import { isRelativePath } from '../utils/fileutils';
 import { findMatchingProjects } from '../utils/find-matching-projects';
 import {
+  LegacyDependsOnLocation,
   LegacyDependsOnViolation,
   flushLegacyDependsOnViolations,
   warnLegacyDependsOnMagicString,
@@ -56,20 +57,18 @@ export function getDependencyConfigs(
       { ownerTarget: target, index, legacyViolations }
     )
   );
-  flushLegacyDependsOnViolations(
-    project,
-    target,
-    legacyViolations,
-    projectGraph.nodes[project]?.data?.root
-  );
+  if (legacyViolations.length) {
+    flushLegacyDependsOnViolations(
+      project,
+      target,
+      legacyViolations,
+      projectGraph.nodes[project]?.data?.root
+    );
+  }
   return dependencyConfigs;
 }
 
-export interface DependsOnEntryLocation {
-  ownerTarget?: string;
-  index?: number;
-  legacyViolations?: LegacyDependsOnViolation[];
-}
+export type DependsOnEntryLocation = LegacyDependsOnLocation;
 
 export function normalizeDependencyConfigDefinition(
   definition: string | TargetDependencyConfig,
@@ -237,17 +236,17 @@ export function normalizeTargetDependencyWithStringProjects(
     // these to the modern shape, and `nx repair` will re-run it on demand.
     if (dependencyConfig.projects === 'self') {
       warnLegacyDependsOnMagicString(
-        'self',
         currentProject,
-        dependencyConfig,
+        dependencyConfig as TargetDependencyConfig & { projects: 'self' },
         location
       );
       delete dependencyConfig.projects;
     } else if (dependencyConfig.projects === 'dependencies') {
       warnLegacyDependsOnMagicString(
-        'dependencies',
         currentProject,
-        dependencyConfig,
+        dependencyConfig as TargetDependencyConfig & {
+          projects: 'dependencies';
+        },
         location
       );
       dependencyConfig.dependencies = true;
