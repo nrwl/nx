@@ -811,6 +811,10 @@ const knowledgeBaseGroups: SidebarItems = [
         collapsed: true,
         items: [
           { label: 'Setup CI', link: 'guides/nx-cloud/setup-ci' },
+          {
+            label: 'Fix sandbox violations',
+            link: 'guides/nx-cloud/fix-sandbox-violations',
+          },
           { label: 'Access tokens', link: 'guides/nx-cloud/access-tokens' },
           {
             label: 'Personal access tokens',
