@@ -7,13 +7,17 @@ import { readSourceMapsCache } from '../project-graph/nx-deps-cache';
 import { readArrayItemSourceInfo } from '../project-graph/utils/project-configuration/source-maps';
 import { output } from '../utils/output';
 
+type LegacyValue = 'self' | 'dependencies';
+
+type LegacyDependsOnEntry = TargetDependencyConfig & {
+  projects: LegacyValue;
+};
+
 export interface LegacyDependsOnViolation {
   index: number;
   // Snapshot of the entry as authored, before normalization rewrites
   // `projects` / `dependencies`. Used to display the user-facing form.
-  originalEntry: TargetDependencyConfig & {
-    projects: 'self' | 'dependencies';
-  };
+  originalEntry: LegacyDependsOnEntry;
 }
 
 export interface LegacyDependsOnLocation {
@@ -22,16 +26,16 @@ export interface LegacyDependsOnLocation {
   legacyViolations?: LegacyDependsOnViolation[];
 }
 
+// Callers gate this on `dependencyConfig.projects` already being a legacy
+// value; the cast snapshots that runtime guarantee into the type system.
 export function warnLegacyDependsOnMagicString(
   currentProject: string | undefined,
-  dependencyConfig: TargetDependencyConfig & {
-    projects: 'self' | 'dependencies';
-  },
+  dependencyConfig: TargetDependencyConfig,
   location: LegacyDependsOnLocation | undefined
 ): void {
   const violation: LegacyDependsOnViolation = {
     index: location?.index ?? -1,
-    originalEntry: { ...dependencyConfig },
+    originalEntry: { ...dependencyConfig } as LegacyDependsOnEntry,
   };
   // Collector-aware caller (`getDependencyConfigs`) batches violations so the
   // warning can group all offending entries for a single target. External
@@ -94,9 +98,17 @@ export function __resetForTests(): void {
 const warnedLegacyDependsOnMagicStrings = new Set<string>();
 
 interface AnnotatedLegacyDependsOnViolation extends LegacyDependsOnViolation {
-  value: 'self' | 'dependencies';
+  value: LegacyValue;
   plugin?: string;
   file?: string;
+}
+
+// Each `Shared*` field is the value that every annotated violation agrees on,
+// or `null` if values differ.
+interface SharedFields {
+  sharedValue: LegacyValue | null;
+  sharedPlugin: string | undefined | null;
+  sharedFile: string | undefined | null;
 }
 
 function isInternalPlugin(plugin: string | undefined): boolean {
@@ -135,15 +147,13 @@ function annotateLegacyViolations(
 
 // Single pass over the annotated violations to find any field that's
 // uniform across every entry (or `null` if values differ).
-function computeSharedFields(annotated: AnnotatedLegacyDependsOnViolation[]): {
-  sharedValue: 'self' | 'dependencies' | null;
-  sharedPlugin: string | undefined | null;
-  sharedFile: string | undefined | null;
-} {
+function computeSharedFields(
+  annotated: AnnotatedLegacyDependsOnViolation[]
+): SharedFields {
   const first = annotated[0];
-  let sharedValue: 'self' | 'dependencies' | null = first.value;
-  let sharedPlugin: string | undefined | null = first.plugin;
-  let sharedFile: string | undefined | null = first.file;
+  let sharedValue: SharedFields['sharedValue'] = first.value;
+  let sharedPlugin: SharedFields['sharedPlugin'] = first.plugin;
+  let sharedFile: SharedFields['sharedFile'] = first.file;
   for (let i = 1; i < annotated.length; i++) {
     const v = annotated[i];
     if (sharedValue !== null && v.value !== sharedValue) sharedValue = null;
@@ -155,7 +165,7 @@ function computeSharedFields(annotated: AnnotatedLegacyDependsOnViolation[]): {
 
 function describeLegacyValuePhrase(
   annotated: AnnotatedLegacyDependsOnViolation[],
-  sharedValue: 'self' | 'dependencies' | null
+  sharedValue: LegacyValue | null
 ): string {
   if (sharedValue) return `projects: '${sharedValue}'`;
   const selfCount = annotated.filter((v) => v.value === 'self').length;
@@ -167,11 +177,7 @@ function buildLegacyDependsOnWarning(
   project: string,
   ownerTarget: string,
   annotated: AnnotatedLegacyDependsOnViolation[],
-  shared: {
-    sharedValue: 'self' | 'dependencies' | null;
-    sharedPlugin: string | undefined | null;
-    sharedFile: string | undefined | null;
-  }
+  shared: SharedFields
 ): { title: string; suppressBody: boolean } {
   const { sharedPlugin, sharedFile, sharedValue } = shared;
   const valuePhrase = describeLegacyValuePhrase(annotated, sharedValue);

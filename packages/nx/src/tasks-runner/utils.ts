@@ -237,16 +237,14 @@ export function normalizeTargetDependencyWithStringProjects(
     if (dependencyConfig.projects === 'self') {
       warnLegacyDependsOnMagicString(
         currentProject,
-        dependencyConfig as TargetDependencyConfig & { projects: 'self' },
+        dependencyConfig,
         location
       );
       delete dependencyConfig.projects;
     } else if (dependencyConfig.projects === 'dependencies') {
       warnLegacyDependsOnMagicString(
         currentProject,
-        dependencyConfig as TargetDependencyConfig & {
-          projects: 'dependencies';
-        },
+        dependencyConfig,
         location
       );
       dependencyConfig.dependencies = true;
