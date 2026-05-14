@@ -3,5 +3,9 @@ import { assertSupportedPackageVersion } from '@nx/devkit/internal';
 import { minSupportedRspackVersion } from './versions';
 
 export function assertSupportedRspackVersion(tree: Tree): void {
-  assertSupportedPackageVersion(tree, '@rspack/core', minSupportedRspackVersion);
+  assertSupportedPackageVersion(
+    tree,
+    '@rspack/core',
+    minSupportedRspackVersion
+  );
 }
