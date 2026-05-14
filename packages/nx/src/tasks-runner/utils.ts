@@ -346,13 +346,17 @@ function flushLegacyDependsOnViolations(
     ? annotated[0].file
     : null;
 
-  const titleValue = sharedValue
-    ? `projects: '${sharedValue}'`
-    : `legacy projects values`;
-  const origin =
-    sharedPlugin && sharedValue
-      ? ` (set by ${sharedPlugin}${sharedFile ? ` in ${sharedFile}` : ''})`
-      : '';
+  let titleValue: string;
+  if (sharedValue) {
+    titleValue = `projects: '${sharedValue}'`;
+  } else {
+    const selfCount = annotated.filter((v) => v.value === 'self').length;
+    const depCount = annotated.length - selfCount;
+    titleValue = `legacy projects values (${selfCount} 'self', ${depCount} 'dependencies')`;
+  }
+  const origin = sharedPlugin
+    ? ` (set by ${sharedPlugin}${sharedFile ? ` in ${sharedFile}` : ''})`
+    : '';
   const title = `${project}:${ownerTarget} has ${annotated.length} dependsOn ${
     annotated.length === 1 ? 'entry' : 'entries'
   } using ${titleValue}${origin}. This will be removed in Nx v24 — run 'nx repair' to fix.`;
