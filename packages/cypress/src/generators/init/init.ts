@@ -58,7 +58,7 @@ function updateDependencies(tree: Tree, options: Schema) {
       {},
       devDependencies,
       undefined,
-      options.keepExistingVersions
+      options.keepExistingVersions ?? true
     )
   );
 
