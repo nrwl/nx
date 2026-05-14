@@ -37,6 +37,7 @@ export function getDependencyConfigs(
   projectGraph: ProjectGraph,
   allTargetNames: string[]
 ): NormalizedTargetDependencyConfig[] | undefined {
+  const legacyViolations: LegacyDependsOnViolation[] = [];
   const dependencyConfigs = (
     projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
     // This is passed into `run-command` from programmatic invocations
@@ -48,15 +49,23 @@ export function getDependencyConfigs(
       project,
       projectGraph,
       allTargetNames,
-      { ownerTarget: target, index }
+      { ownerTarget: target, index, legacyViolations }
     )
   );
+  flushLegacyDependsOnViolations(project, target, legacyViolations);
   return dependencyConfigs;
+}
+
+interface LegacyDependsOnViolation {
+  value: 'self' | 'dependencies';
+  index: number;
+  depTarget: string;
 }
 
 export interface DependsOnEntryLocation {
   ownerTarget?: string;
   index?: number;
+  legacyViolations?: LegacyDependsOnViolation[];
 }
 
 export function normalizeDependencyConfigDefinition(
@@ -256,6 +265,17 @@ function warnLegacyDependsOnMagicString(
   dependencyConfig: TargetDependencyConfig,
   location: DependsOnEntryLocation | undefined
 ): void {
+  // If a collector is provided, defer — `getDependencyConfigs` emits a single
+  // consolidated warning per target after all entries are processed.
+  if (location?.legacyViolations) {
+    location.legacyViolations.push({
+      value,
+      index: location.index ?? -1,
+      depTarget: dependencyConfig.target ?? '<unknown>',
+    });
+    return;
+  }
+  // Fallback path: external callers without a collector get a per-entry warning.
   const project = currentProject ?? '<unknown>';
   const ownerTarget = location?.ownerTarget ?? '<unknown>';
   const index = location?.index ?? -1;
@@ -269,6 +289,26 @@ function warnLegacyDependsOnMagicString(
     bodyLines: [
       `The entry targets \`${depTarget}\`. To fix, run \`nx repair\`.`,
     ],
+  });
+}
+
+function flushLegacyDependsOnViolations(
+  project: string,
+  ownerTarget: string,
+  violations: LegacyDependsOnViolation[]
+): void {
+  if (violations.length === 0) return;
+  const key = `${project}::${ownerTarget}`;
+  if (warnedLegacyDependsOnMagicStrings.has(key)) return;
+  warnedLegacyDependsOnMagicStrings.add(key);
+  const bodyLines = violations.map(
+    (v) =>
+      `  - \`dependsOn[${v.index}]\` (\`projects: '${v.value}'\`, targets \`${v.depTarget}\`)`
+  );
+  bodyLines.push(`To fix, run \`nx repair\`.`);
+  output.warn({
+    title: `\`${project}:${ownerTarget}\` has \`dependsOn\` entries using legacy \`projects: 'self' | 'dependencies'\` values, which will be removed in Nx v24.`,
+    bodyLines,
   });
 }
 
