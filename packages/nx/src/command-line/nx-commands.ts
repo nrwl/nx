@@ -57,60 +57,14 @@ import { yargsShowCommand } from './show/command-object';
 import { yargsSyncCheckCommand, yargsSyncCommand } from './sync/command-object';
 import { yargsWatchCommand } from './watch/command-object';
 import { yargsCompletionCommand } from './completion/command-object';
-import { getValueCompletions } from './completion/value-completions';
-import { getCommandCompletions } from './completion/command-completions';
+import { isCompletionRequest } from './completion/trigger';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
 
-// Yargs's `.completion(...)` flag check looks for the dashed key in argv during
-// parse. When `strip-dashed: true` removes it, yargs falls through to normal
-// command matching and fires handlers instead of the completion callback. Opt
-// out of strip-dashed for completion runs only — handlers don't run during
-// completion, so nothing else is affected.
-const isCompletionRequest = process.argv.includes('--get-yargs-completions');
-
 export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
-  'strip-dashed': !isCompletionRequest,
+  'strip-dashed': true,
 };
-
-function fallbackCompletion(
-  current: string,
-  argv: { _?: Array<string | number> },
-  defaultCompletions: (
-    cb: (err: Error | null, defaults: string[]) => void
-  ) => void,
-  done: (completions: ReadonlyArray<string>) => void
-): void {
-  try {
-    const positional = (argv?._ ?? []).map(String);
-    // yargs may include the script name in argv._; drop it so callers see
-    // just the command tokens (e.g. ['show', 'project']).
-    const args = positional[0] === 'nx' ? positional.slice(1) : positional;
-
-    // Value completions first (project/target/generator names, flag values).
-    const dynamic = getValueCompletions(current, args);
-    if (dynamic !== null) {
-      done(dynamic);
-      return;
-    }
-
-    // Subcommand + option-name completion for matched top-level commands. Walks
-    // manually instead of letting yargs's defaultCompletion recurse (its
-    // reset() wipes our boolean-flag declaration and causes help text to
-    // leak into stdout for some commands like run-many/affected).
-    const matched = getCommandCompletions(current, args);
-    if (matched !== null) {
-      done(matched);
-      return;
-    }
-  } catch {
-    // Fall through to defaults — completion must never surface errors to the shell.
-  }
-  defaultCompletions((err, defaults) => {
-    done(err ? [] : defaults);
-  });
-}
 
 /**
  * Exposing the Yargs commands object so the documentation generator can
@@ -171,20 +125,12 @@ export const commandsObject = yargs
   .command(yargsCompletionCommand)
   .command(resolveConformanceCommandObject())
   .command(resolveConformanceCheckCommandObject())
-  // Declare --get-yargs-completions as a boolean so yargs's parser doesn't
-  // consume the next arg (the script name from the shell shim) as its value.
-  .boolean('get-yargs-completions')
-  // 4-arg fallback callback: yargs auto-enumerates commands/subcommands/options
-  // via `defaultCompletions`; we layer project/target completions on top for
-  // known nx subcommands (run, run-many, show project/target, infix targets).
-  // The 4-arg form isn't in @types/yargs but the runtime treats any callback
-  // with `function.length > 3` as the fallback variant — see node_modules/yargs/
-  // build/lib/completion.js (`isFallbackCompletionFunction`).
-  .completion('--get-yargs-completions', false, fallbackCompletion as any)
   .scriptName('nx')
   .middleware((args) => {
-    // Skip analytics during shell completion
-    if (process.argv.includes('--get-yargs-completions')) {
+    // Skip analytics during shell completion (defensive — bin/nx.ts exits
+    // before yargs runs for completion requests, but `NX_COMPLETE` could
+    // leak in if something unusual invokes commandsObject.argv directly).
+    if (isCompletionRequest()) {
       return;
     }
     const context = (commandsObject as any).getInternalMethods().getContext();

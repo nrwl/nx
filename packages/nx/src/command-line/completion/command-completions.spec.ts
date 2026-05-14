@@ -1,9 +1,10 @@
 import { formatDescription, isZshShell } from './command-completions';
 
-// `getCommandCompletions` itself isn't unit-tested: it lazy-requires the
-// full nx-commands surface (35+ command-objects), which defeats the point
-// of having a value-completion fast path it lives alongside. The behavior
-// is exercised end-to-end in shell integration runs.
+// `getCommandCompletions` and `getTopLevelCommands` aren't unit-tested:
+// both lazy-require the full nx-commands surface (35+ command-objects),
+// which defeats the point of having a value-completion fast path they
+// live alongside. The behavior is exercised end-to-end in shell
+// integration runs.
 
 describe('completion/command-completions', () => {
   describe('formatDescription', () => {
@@ -30,40 +31,33 @@ describe('completion/command-completions', () => {
   });
 
   describe('isZshShell', () => {
-    let originalShell: string | undefined;
-    let originalZshName: string | undefined;
+    let originalNxComplete: string | undefined;
 
     beforeEach(() => {
-      originalShell = process.env.SHELL;
-      originalZshName = process.env.ZSH_NAME;
+      originalNxComplete = process.env.NX_COMPLETE;
     });
 
     afterEach(() => {
-      restoreEnv('SHELL', originalShell);
-      restoreEnv('ZSH_NAME', originalZshName);
+      restoreEnv('NX_COMPLETE', originalNxComplete);
     });
 
-    it('returns true when SHELL contains zsh', () => {
-      process.env.SHELL = '/usr/bin/zsh';
-      delete process.env.ZSH_NAME;
+    it('returns true when NX_COMPLETE is zsh', () => {
+      process.env.NX_COMPLETE = 'zsh';
       expect(isZshShell()).toBe(true);
     });
 
-    it('returns true when ZSH_NAME contains zsh', () => {
-      delete process.env.SHELL;
-      process.env.ZSH_NAME = 'zsh';
-      expect(isZshShell()).toBe(true);
-    });
-
-    it('returns false when neither env var indicates zsh', () => {
-      process.env.SHELL = '/bin/bash';
-      delete process.env.ZSH_NAME;
+    it('returns false when NX_COMPLETE is a different shell', () => {
+      process.env.NX_COMPLETE = 'bash';
       expect(isZshShell()).toBe(false);
     });
 
-    it('returns false when both env vars are unset', () => {
-      delete process.env.SHELL;
-      delete process.env.ZSH_NAME;
+    it('returns false when NX_COMPLETE is unset', () => {
+      delete process.env.NX_COMPLETE;
+      expect(isZshShell()).toBe(false);
+    });
+
+    it('returns false when NX_COMPLETE is an unknown shell', () => {
+      process.env.NX_COMPLETE = 'nushell';
       expect(isZshShell()).toBe(false);
     });
   });

@@ -37,25 +37,31 @@ const isTsExt = extname(__filename).endsWith('.ts');
 const pathToPkgJson = isTsExt ? '../package.json' : '../../package.json';
 
 async function main() {
-  // Shell tab-completion: skip workspace init (analytics, native module,
-  // dotenv, initLocal, daemon client). Yargs's `.completion()` callback in
-  // `nx-commands` handles the request by reading the cached project graph
-  // directly — no workspace state is needed.
-  if (process.argv.includes('--get-yargs-completions')) {
+  // Shell tab-completion: triggered by the `NX_COMPLETE=<shell>` env var that
+  // the bash/zsh/fish/powershell wrappers set before invoking nx. Skips the
+  // full workspace bootstrap (analytics, native module, dotenv, initLocal,
+  // daemon client) — completion reads the cached project graph directly.
+  const { isCompletionRequest } = await import(
+    'nx/src/command-line/completion/trigger'
+  );
+  if (isCompletionRequest()) {
     // perf-logging consumes an `init-local` mark; set it before requiring
-    // nx-commands so the measurement doesn't error on missing mark.
+    // any heavy modules so the measurement doesn't error on missing mark.
     performance.mark('init-local');
-    // Value completions (project/target/generator names, flag values)
-    // are served from registered metadata without loading the full yargs
-    // command surface. Falls through when the TAB lands outside that
-    // surface — e.g. top-level command names, which are handled below.
+    // Fast path: value completions (project/target/generator names, flag
+    // values) served from registered metadata without loading the full
+    // yargs command surface.
     const { tryValueCompletion } = await import(
       'nx/src/command-line/completion/value-completions'
     );
     if (tryValueCompletion()) return;
-    // Fallback: yargs default completion handles command-name enumeration
-    // and command/option-name completion via `command-completions`.
-    (await import('nx/src/command-line/nx-commands')).commandsObject.argv;
+    // Slow path: command-surface completion (top-level commands,
+    // subcommands of a matched command, flag names). Loads `nx-commands`
+    // to walk the yargs command tree.
+    const { tryCommandSurfaceCompletion } = await import(
+      'nx/src/command-line/completion/command-completions'
+    );
+    tryCommandSurfaceCompletion();
     return;
   }
 
@@ -297,7 +303,7 @@ function warnIfUsingOutdatedGlobalInstall(
   localNxVersion?: string
 ) {
   // Never display during shell completion — stdout is captured as suggestions.
-  if (process.argv.includes('--get-yargs-completions')) {
+  if (process.env.NX_COMPLETE) {
     return;
   }
   // Never display this warning if Nx is already running via Nx

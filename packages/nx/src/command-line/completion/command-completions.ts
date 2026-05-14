@@ -1,14 +1,72 @@
 /**
- * Command-name + option-flag-name completion for matched top-level commands.
+ * Command-surface completion: top-level command names, subcommand names,
+ * and flag names. Used as the slow-path fallback after the metadata-driven
+ * fast path (`tryValueCompletion`) returns null.
  *
- * Bypasses yargs's defaultCompletion because its recursion (`reset()` +
- * `builder(y, true)` + `y.argv`) wipes our `.boolean('get-yargs-completions')`
- * declaration on the inner instance, which can break the inner parse and
- * cause yargs to print help text instead of emitting completions (observed
- * for `run-many` and `affected`).
- *
- * Returns null when no top-level command name is matched in `args` — yargs's
- * defaultCompletion handles top-level command-name completion (no recursion).
+ * Two entry points are exported:
+ *   - `tryCommandSurfaceCompletion()` — bin-entry: parses argv, dispatches
+ *     between matched-command and top-level enumeration, writes stdout.
+ *   - `getCommandCompletions(current, args)` — programmatic entry: returns
+ *     completions for a matched top-level command (subcommands + options).
+ */
+
+import { getCompletionShell } from './trigger';
+import { parseCompletionArgs } from './argv-layout';
+
+/**
+ * Bin entry point for command-surface (slow path) completion. Returns true
+ * if it emitted anything, false if there was nothing to suggest.
+ */
+export function tryCommandSurfaceCompletion(): boolean {
+  const parsed = parseCompletionArgs();
+  if (parsed === null) return false;
+
+  const matched = getCommandCompletions(parsed.current, parsed.tokens);
+  const completions =
+    matched !== null
+      ? matched
+      : getTopLevelCommands(parsed.current, isZshShell());
+
+  if (completions === null || completions.length === 0) return false;
+
+  for (const line of completions) {
+    process.stdout.write(line + '\n');
+  }
+  return true;
+}
+
+/**
+ * Top-level command enumeration. Walks the registered top-level command
+ * handlers and emits the matching names (with descriptions in zsh).
+ * Replaces what yargs's `defaultCompletions` used to do for `nx <TAB>`.
+ */
+export function getTopLevelCommands(
+  current: string,
+  isZsh: boolean
+): string[] | null {
+  const { commandsObject } = require('../nx-commands') as {
+    commandsObject: any;
+  };
+  const handlers = commandsObject
+    .getInternalMethods()
+    .getCommandInstance()
+    .getCommandHandlers();
+
+  const completions: string[] = [];
+  for (const name of Object.keys(handlers)) {
+    if (name === '$0' || name.startsWith('_')) continue;
+    if (current && !name.startsWith(current)) continue;
+    const handler = handlers[name];
+    if (handler?.description === false) continue; // hidden
+    const desc = isZsh ? formatDescription(handler?.description) : '';
+    completions.push(desc ? `${name}:${desc}` : name);
+  }
+  return completions;
+}
+
+/**
+ * Enumerates subcommands + options of a matched top-level command. Returns
+ * null when no top-level command name is matched in `args`.
  */
 export function getCommandCompletions(
   current: string,
@@ -97,7 +155,5 @@ export function formatDescription(raw: string | undefined): string {
 }
 
 export function isZshShell(): boolean {
-  return Boolean(
-    process.env.SHELL?.includes('zsh') || process.env.ZSH_NAME?.includes('zsh')
-  );
+  return getCompletionShell() === 'zsh';
 }

@@ -4,13 +4,17 @@ import { handleImport } from '../../utils/handle-import';
 export const yargsCompletionCommand: CommandModule = {
   command: 'completion',
   describe:
-    'Output shell completion script for bash, zsh, or fish. Run `nx completion --help` for installation instructions.',
+    'Output shell completion script for bash, zsh, fish, or powershell. Run `nx completion --help` for installation instructions.',
   builder: (yargs) =>
     yargs
       .command(bashCompletionCommand)
       .command(zshCompletionCommand)
       .command(fishCompletionCommand)
-      .demandCommand(1, 'Please specify a shell: bash, zsh, or fish.')
+      .command(powershellCompletionCommand)
+      .demandCommand(
+        1,
+        'Please specify a shell: bash, zsh, fish, or powershell.'
+      )
       .option('force', {
         type: 'boolean',
         default: false,
@@ -22,6 +26,10 @@ export const yargsCompletionCommand: CommandModule = {
       .example(
         '$0 completion fish > ~/.config/fish/completions/nx.fish',
         'Enable fish completion'
+      )
+      .example(
+        '$0 completion powershell | Out-File -Append $PROFILE',
+        'Enable PowerShell completion'
       ),
   handler: async () => {},
 };
@@ -55,6 +63,17 @@ const fishCompletionCommand: CommandModule = {
     await (
       await handleImport('./scripts.js', __dirname)
     ).printCompletionScript('fish', args);
+    process.exit(0);
+  },
+};
+
+const powershellCompletionCommand: CommandModule = {
+  command: 'powershell',
+  describe: 'Output PowerShell completion script.',
+  handler: async (args) => {
+    await (
+      await handleImport('./scripts.js', __dirname)
+    ).printCompletionScript('powershell', args);
     process.exit(0);
   },
 };

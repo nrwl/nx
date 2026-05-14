@@ -36,10 +36,7 @@ export async function initLocal(workspace: WorkspaceTypeAndRoot) {
 
     // Ensure NxConsole is installed if the user has it configured.
     // Skip during shell completion and the completion command to avoid interactive prompts.
-    if (
-      process.argv[2] !== 'completion' &&
-      !process.argv.includes('--get-yargs-completions')
-    ) {
+    if (process.argv[2] !== 'completion' && !process.env.NX_COMPLETE) {
       try {
         await ensureNxConsoleInstalledViaDaemon();
       } catch {}
