@@ -65,6 +65,7 @@ interface LegacyDependsOnViolation {
   value: 'self' | 'dependencies';
   index: number;
   depTarget: string;
+  entry: TargetDependencyConfig;
 }
 
 export interface DependsOnEntryLocation {
@@ -273,10 +274,13 @@ function warnLegacyDependsOnMagicString(
   // If a collector is provided, defer — `getDependencyConfigs` emits a single
   // consolidated warning per target after all entries are processed.
   if (location?.legacyViolations) {
+    // Snapshot before the caller mutates `dependencyConfig` (deletes `projects`,
+    // sets `dependencies`) so the warning can show the original entry as authored.
     location.legacyViolations.push({
       value,
       index: location.index ?? -1,
       depTarget: dependencyConfig.target ?? '<unknown>',
+      entry: { ...dependencyConfig },
     });
     return;
   }
@@ -394,8 +398,7 @@ function flushLegacyDependsOnViolations(
         ? ''
         : ` from ${v.plugin}${v.file ? ` in ${v.file}` : ''}`
       : '';
-    const valuePrefix = sharedValue ? '' : `'${v.value}' — `;
-    return `  - ${valuePrefix}${v.depTarget} (dependsOn[${v.index}]${sourcePart})`;
+    return `  - ${JSON.stringify(v.entry)} (dependsOn[${v.index}]${sourcePart})`;
   });
 
   output.warn({ title, bodyLines });
