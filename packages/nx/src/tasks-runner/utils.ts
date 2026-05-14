@@ -229,7 +229,7 @@ export function normalizeTargetDependencyWithStringProjects(
   dependencyConfig: TargetDependencyConfig,
   currentProject?: string,
   location?: DependsOnEntryLocation
-): Omit<TargetDependencyConfig, 'projects'> & { projects: string[] } {
+): Omit<TargetDependencyConfig, 'projects'> & { projects?: string[] } {
   if (typeof dependencyConfig.projects === 'string') {
     // TODO(v24): Remove the `self` / `dependencies` magic-string shim.
     // The v16 `update-depends-on-to-tokens` migration already rewrites
@@ -254,7 +254,7 @@ export function normalizeTargetDependencyWithStringProjects(
     }
   }
   return dependencyConfig as Omit<TargetDependencyConfig, 'projects'> & {
-    projects: string[];
+    projects?: string[];
   };
 }
 
