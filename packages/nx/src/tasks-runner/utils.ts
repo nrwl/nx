@@ -357,9 +357,36 @@ function flushLegacyDependsOnViolations(
   const origin = sharedPlugin
     ? ` (set by ${sharedPlugin}${sharedFile ? ` in ${sharedFile}` : ''})`
     : '';
+  // `nx repair` only rewrites hand-authored config (nx.json/project.json). For
+  // plugin-inferred entries, the user needs to upgrade the plugin.
+  const allFromCore = annotated.every(
+    (v) => !v.plugin || v.plugin.startsWith('nx/core/')
+  );
+  const anyFromCore = annotated.some(
+    (v) => !v.plugin || v.plugin.startsWith('nx/core/')
+  );
+  const offendingPlugins = Array.from(
+    new Set(
+      annotated
+        .filter((v) => v.plugin && !v.plugin.startsWith('nx/core/'))
+        .map((v) => v.plugin as string)
+    )
+  );
+  let advice: string;
+  if (allFromCore) {
+    advice = `run 'nx repair' to fix`;
+  } else if (anyFromCore) {
+    advice = `run 'nx repair' for hand-authored entries and upgrade ${offendingPlugins.join(
+      ', '
+    )} for plugin-inferred entries`;
+  } else {
+    advice = `upgrade ${offendingPlugins.join(
+      ', '
+    )} to a version that doesn't emit this`;
+  }
   const title = `${project}:${ownerTarget} has ${annotated.length} dependsOn ${
     annotated.length === 1 ? 'entry' : 'entries'
-  } using ${titleValue}${origin}. This will be removed in Nx v24 — run 'nx repair' to fix.`;
+  } using ${titleValue}${origin}. This will be removed in Nx v24 — ${advice}.`;
 
   const bodyLines = annotated.map((v) => {
     const sourcePart = v.plugin
