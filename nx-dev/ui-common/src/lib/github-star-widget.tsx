@@ -38,7 +38,7 @@ export function GitHubStarWidget({
   };
 
   return (
-    <div className="relative mx-2 flex items-center justify-center gap-2 rounded-md bg-zinc-950 p-2 text-xs text-white transition hover:bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white print:hidden">
+    <div className="relative mx-2 flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white p-2 text-xs text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 print:hidden">
       <div className="flex items-center gap-2">
         <GithubIcon aria-hidden="true" className="h-4 w-4" />
         <span className="font-semibold">{formatStars(starsCount)}</span>
@@ -47,7 +47,7 @@ export function GitHubStarWidget({
         href="https://github.com/nrwl/nx"
         target="_blank"
         rel="noreferrer noopener"
-        className="flex items-center gap-2 border-transparent font-bold text-white no-underline dark:text-zinc-950"
+        className="flex items-center gap-2 border-transparent font-bold text-slate-700 no-underline dark:text-slate-200"
         onClick={() => handleClick('githubstars_buttonclick')}
       >
         <span className="absolute inset-0" />

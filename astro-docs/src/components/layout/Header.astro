@@ -472,14 +472,14 @@ const currentVersion = versions.find((v) => v.current);
         Contact
       </a>
       <a
-        id="header-try-nx-cloud-btn"
+        id="header-get-started-btn"
         href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=documentation-header&utm_campaign=try-nx-cloud"
         target="_blank"
         rel="noopener noreferrer"
-        class="inline-flex items-center justify-center px-2.5 py-1.5 text-sm font-medium rounded-md transition no-underline bg-blue-500 dark:bg-sky-500 text-white hover:bg-blue-600 dark:hover:bg-sky-600 shadow-sm"
-        title="Try Nx Cloud for free"
+        class="inline-flex items-center justify-center px-2.5 py-1.5 text-sm font-medium rounded-md transition no-underline bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 hover:bg-zinc-900 dark:hover:bg-white shadow-sm"
+        title="Get started"
       >
-        Try Nx Cloud for free
+        Get started
       </a>
     </div>
     <!-- Social Icons - Hide on screens smaller than 2xl (1536px) -->
@@ -505,7 +505,7 @@ const currentVersion = versions.find((v) => v.current);
     const pricingLink = document.getElementById('header-pricing-link');
     const enterpriseLink = document.getElementById('header-enterprise-link');
     const contactBtn = document.getElementById('header-contact-btn');
-    const tryNxCloudBtn = document.getElementById('header-try-nx-cloud-btn');
+    const getStartedBtn = document.getElementById('header-get-started-btn');
 
     docsHomeLink?.addEventListener('click', () => {
       sendCustomEventViaGtm(
@@ -555,7 +555,7 @@ const currentVersion = versions.find((v) => v.current);
       );
     });
 
-    tryNxCloudBtn?.addEventListener('click', () => {
+    getStartedBtn?.addEventListener('click', () => {
       sendCustomEventViaGtm(
         'login-click',
         'header-cta',
