@@ -18,7 +18,9 @@ Follow the steps from this guide exactly: {pageUrl}
 4. For each unexpected read or write, classify into one of three categories and fix:
    - (a) Nx config issue - the task legitimately needs the access. Inspect resolved config with `npx nx show target <project>:<target> --json`, then extend `inputs`/`outputs` in `project.json`, declare a `dependsOn`, or use `dependentTasksOutputFiles`. On Nx 23+ prefer the spread token `"..."` to append to plugin-inferred config without re-listing it.
    - (b) Task or app bug - the unexpected read/write reflects a problem in the script, build tool, or application code itself. Fix the offending code, not the Nx config.
-   - (c) Benign access, last resort - exclude the path in `.nx/workflows/sandboxing-config.yaml` (`exclude-reads`/`exclude-writes` or `task-exclusions`). Use sparingly, like a `tsc-ignore`.
+
+   - (c) Benign access, last resort - exclude the path in `.nx/workflows/sandboxing-config.yaml` (`exclude-reads`/`exclude-writes` or `task-exclusions`). Use sparingly, like a `ts-ignore` - excluded paths are not tracked...
+
 5. After editing, run `npx nx reset` then re-validate the same per-task report. Once it reports `ok: true`, go back to step 2 to pick the next task. Loop until every task in `index.json` is clean.
 6. Commit and push. After CI runs, re-download with `--since 1h` and re-validate to catch tasks that did not run locally. Print the **Sandbox violations dashboard** URL for the branch to the user (you cannot open it yourself) so they can confirm fixed tasks no longer appear - cache hits will not regenerate reports, so a clean local validate is not enough on its own.
 
