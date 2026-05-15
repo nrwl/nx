@@ -8,14 +8,8 @@ import type {
   RspackOptionsNormalized,
   Output,
 } from '@rspack/core';
-function getRspackMajorVersion(
-  rspackCore: typeof import('@rspack/core')
-): number {
-  const v = rspackCore.rspackVersion ?? '1.0.0';
-  const m = /^(\d+)\./.exec(v);
-  return m ? parseInt(m[1], 10) : 1;
-}
 import { getRootTsConfigPath } from '@nx/js';
+import { getRspackCoreMajorVersion } from '../../utils/version-utils';
 
 import { StatsJsonPlugin } from './plugins/stats-json-plugin';
 import { GeneratePackageJsonPlugin } from './plugins/generate-package-json-plugin';
@@ -151,7 +145,7 @@ function applyNxIndependentConfig(
   // existing `libraryTarget` (whether from the spread of `config.output`
   // or the user's own input) so it doesn't survive into the merged
   // output — rspack v2 rejects it outright.
-  const installedRspackMajor = getRspackMajorVersion(rspackCore);
+  const installedRspackMajor = getRspackCoreMajorVersion(rspackCore);
   const existingLibrary =
     typeof config.output?.library === 'object' ? config.output.library : {};
   const libraryOutput: { libraryTarget?: string; library?: any } =

@@ -49,6 +49,18 @@ export function getInstalledRspackVersionRuntime(): SupportedRspackMajorVersion 
 }
 
 /**
+ * Returns the major version of an already-resolved `@rspack/core` module
+ * instance (e.g. `compiler.rspack`). Use when runtime code holds the module
+ * and needs the version of that exact instance to branch on v1 vs v2.
+ * Defaults to 1 when the version can't be read.
+ */
+export function getRspackCoreMajorVersion(
+  rspackCore: typeof import('@rspack/core')
+): number {
+  return major(rspackCore.rspackVersion ?? '1.0.0');
+}
+
+/**
  * Returns the version-map entry for the installed major, falling back to the
  * latest supported map when no installed version is detected (fresh install)
  * or the detected major is outside the supported window.
