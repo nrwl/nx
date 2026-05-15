@@ -1,5 +1,4 @@
 import { type Compiler, type Configuration, javascript } from '@rspack/core';
-import { logger } from '@nx/devkit';
 import { join, resolve } from 'node:path';
 import {
   JS_ALL_EXT_REGEX,
@@ -199,20 +198,13 @@ export async function getCommonConfig(
   };
   // Top-level `profile` was removed in @rspack/core@2 — not just from the
   // type, but from the runtime. On v1 we set the flag so `stats.json`
-  // includes build-timing data; on v2 it is gone. `statsJson` still emits
-  // `stats.json` either way — only the timing enrichment differs.
+  // includes build-timing data; v2 has no equivalent (Rsdoctor covers
+  // build performance analysis). `statsJson` still emits `stats.json` on
+  // both majors, so this only affects the timing enrichment.
   // TODO: remove this branch once @rspack/core v1 is dropped from the
   // supported version window — `statsJson` itself stays.
-  if (normalizedOptions.statsJson) {
-    if (isRspackV2()) {
-      logger.info(
-        '`statsJson` emits `stats.json` as usual, but it no longer ' +
-          'includes rspack build-timing data on @rspack/core@2. For build ' +
-          'performance analysis, see Rsdoctor: https://rsdoctor.dev'
-      );
-    } else {
-      (defaultConfig as { profile?: boolean }).profile = true;
-    }
+  if (normalizedOptions.statsJson && !isRspackV2()) {
+    (defaultConfig as { profile?: boolean }).profile = true;
   }
   return defaultConfig;
 }
