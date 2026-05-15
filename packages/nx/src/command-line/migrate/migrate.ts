@@ -105,12 +105,6 @@ import {
   writePromptMigrationFiles,
 } from './prompt-files';
 import type { AgenticArg } from './agentic/select';
-import { resolveAgentic } from './agentic/select';
-import { initRunDir, stepHandoffPath, stepIdFor } from './agentic/handoff';
-import { runAgentic } from './agentic/runner';
-import { getAgentDefinition } from './agentic/registry';
-import { buildSystemPrompt } from './agentic/prompts/system-prompt';
-import { buildPromptMigrationUserPrompt } from './agentic/prompts/prompt-migration';
 import type { HandoffOutcome, ResolvedAgentic } from './agentic/types';
 import { filterDowngradedUpdates } from './update-filters';
 import {
@@ -2415,6 +2409,8 @@ export async function executeMigrations(
   const agenticOn = !!agentic?.agenticEnabled && !agentic.skipAllAgentic;
   let runDir: string | undefined;
   if (agenticOn && sortedMigrations.length > 0) {
+    const { initRunDir } =
+      require('./agentic/handoff') as typeof import('./agentic/handoff');
     runDir = initRunDir(root, resolveAgenticRunId(sortedMigrations));
   }
 
@@ -2465,9 +2461,6 @@ export async function executeMigrations(
         const generatorMadeChanges = changes.length > 0;
 
         if (agenticOn) {
-          // Install generator-produced dep changes before handing off to the
-          // agent so it sees a consistent workspace state.
-          await changedDepInstaller.installDepsIfChanged();
           await runAgenticPromptStep(
             root,
             m,
@@ -2542,6 +2535,17 @@ async function runAgenticPromptStep(
   runDir: string,
   changedDepInstaller: ChangedDepInstaller
 ): Promise<void> {
+  const { stepHandoffPath, stepIdFor } =
+    require('./agentic/handoff') as typeof import('./agentic/handoff');
+  const { runAgentic } =
+    require('./agentic/runner') as typeof import('./agentic/runner');
+  const { getAgentDefinition } =
+    require('./agentic/registry') as typeof import('./agentic/registry');
+  const { buildSystemPrompt } =
+    require('./agentic/prompts/system-prompt') as typeof import('./agentic/prompts/system-prompt');
+  const { buildPromptMigrationUserPrompt } =
+    require('./agentic/prompts/prompt-migration') as typeof import('./agentic/prompts/prompt-migration');
+
   const stepId = stepIdFor(migration);
   const handoffFilePath = stepHandoffPath(runDir, stepId);
   const systemContext = buildSystemPrompt({
@@ -2732,24 +2736,13 @@ export async function runNxOrAngularMigration(
   }
 
   if (shouldCreateCommits) {
-    await installDepsIfChanged();
-
-    const commitMessage = `${commitPrefix}${migration.name}`;
-    try {
-      const committedSha = commitChanges(commitMessage, root);
-
-      if (committedSha) {
-        logger.info(pc.dim(`- Commit created for changes: ${committedSha}`));
-      } else {
-        logger.info(
-          pc.red(
-            `- A commit could not be created/retrieved for an unknown reason`
-          )
-        );
-      }
-    } catch (e) {
-      logger.info(pc.red(`- ${e.message}`));
-    }
+    await commitMigrationIfRequested(
+      root,
+      migration,
+      shouldCreateCommits,
+      commitPrefix,
+      installDepsIfChanged
+    );
     // if we are running this function alone, we need to install deps internally
   } else if (handleInstallDeps) {
     await installDepsIfChanged();
@@ -2817,6 +2810,8 @@ async function runMigrations(
     join(root, opts.runMigrations)
   ).migrations;
 
+  const { resolveAgentic } =
+    require('./agentic/select') as typeof import('./agentic/select');
   const agentic = await resolveAgentic({
     agentic: opts.agentic,
     migrations,

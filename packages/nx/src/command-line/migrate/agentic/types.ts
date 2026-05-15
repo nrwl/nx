@@ -1,11 +1,5 @@
-/**
- * Identifier for an agent supported by the `nx migrate` agentic flow in v1.
- *
- * Distinct from the broader `Agent` union in `packages/nx/src/ai/utils.ts`, which
- * also lists agents that are configured via `nx configure-ai-agents` but cannot
- * be spawned as a CLI child here.
- */
-export type AgentId = 'claude-code' | 'codex' | 'opencode';
+import type { AgentId } from './agent-ids';
+export type { AgentId };
 
 /**
  * A coding agent that was found on the user's machine, ready to be spawned.

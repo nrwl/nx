@@ -2,7 +2,8 @@ import { Argv, CommandModule } from 'yargs';
 import { handleImport } from '../../utils/handle-import';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { withVerbose } from '../yargs-utils/shared-options';
-import { coerceAgenticArg } from './agentic/select';
+import { AGENT_IDS } from './agentic/agent-ids';
+import { coerceAgenticArg } from './agentic/coerce-arg';
 
 export const yargsMigrateCommand: CommandModule = {
   command: 'migrate [packageAndVersion]',
@@ -121,15 +122,15 @@ function withMigrationOptions(yargs: Argv) {
             'Error: Excluding migrations that should have been previously applied requires --from to be set'
           );
         }
-        if (typeof agentic === 'string') {
-          const valid = ['claude-code', 'codex', 'opencode'];
-          if (!valid.includes(agentic)) {
-            throw new Error(
-              `Error: Invalid --agentic value "${agentic}". Allowed: ${valid.join(
-                ', '
-              )}, true, false.`
-            );
-          }
+        if (
+          typeof agentic === 'string' &&
+          !(AGENT_IDS as readonly string[]).includes(agentic)
+        ) {
+          throw new Error(
+            `Error: Invalid --agentic value "${agentic}". Allowed: ${AGENT_IDS.join(
+              ', '
+            )}, true, false.`
+          );
         }
         return true;
       }

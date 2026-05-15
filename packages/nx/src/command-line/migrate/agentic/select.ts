@@ -13,25 +13,6 @@ import {
 /** Possible values for `--agentic` after yargs normalization. */
 export type AgenticArg = undefined | boolean | AgentId;
 
-/**
- * Normalizes the raw yargs value for `--agentic` to the shape downstream code
- * expects. Validation of agent-id strings happens upstream in the yargs
- * `.check()` chain so this function only handles shape.
- */
-export function coerceAgenticArg(value: unknown): AgenticArg {
-  if (value === undefined) return undefined;
-  if (value === true || value === '' || value === 'true' || value === 'yes') {
-    return true;
-  }
-  if (value === false || value === 'false' || value === 'no') {
-    return false;
-  }
-  if (typeof value === 'string') {
-    return value as AgentId;
-  }
-  return undefined;
-}
-
 export interface ResolveAgenticInput {
   agentic: AgenticArg;
   migrations: ReadonlyArray<{ prompt?: string }>;
@@ -106,12 +87,6 @@ function requireInteractiveOrAbort(isInteractive: boolean): void {
   throw new Error('Agentic flow requires an interactive terminal.');
 }
 
-/**
- * In v1, the predicate fires only when the queue has prompt-based migrations.
- * NXC-4357 (agentic review) extends this with the review-eligibility check so
- * the prompt also fires when there is review-worthy work, without changing the
- * wording or the resolution shape.
- */
 function shouldPromptForAgentic(
   migrations: ReadonlyArray<{ prompt?: string }>
 ): boolean {

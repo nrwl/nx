@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, rmSync } from 'fs';
+import { mkdirSync, readFileSync, rmSync } from 'fs';
 import { join } from 'path';
 import { HandoffFile } from './types';
 
@@ -50,9 +50,6 @@ export function stepHandoffPath(runDir: string, stepId: string): string {
  * proceed.
  */
 export function readHandoff(filePath: string): HandoffFile | null {
-  if (!existsSync(filePath)) {
-    return null;
-  }
   let parsed: unknown;
   try {
     parsed = JSON.parse(readFileSync(filePath, 'utf-8'));
@@ -67,11 +64,10 @@ export function readHandoff(filePath: string): HandoffFile | null {
   ) {
     return null;
   }
-  const status = (parsed as Record<string, unknown>).status;
+  const { status, summary, ...extras } = parsed as Record<string, unknown>;
   if (status !== 'success' && status !== 'failed') {
     return null;
   }
-  const { status: _s, summary, ...extras } = parsed as Record<string, unknown>;
   const result: HandoffFile = { status, summary: summary as string };
   if (Object.keys(extras).length > 0) {
     result.extras = extras;

@@ -74,18 +74,11 @@ async function resolveFromHandoffOrPrompt(
   if (handoff === null) {
     return promptAmbiguous();
   }
-  if (handoff.status === 'success') {
-    return handoff.extras
-      ? {
-          kind: 'success',
-          summary: handoff.summary,
-          extras: handoff.extras,
-        }
-      : { kind: 'success', summary: handoff.summary };
-  }
-  return handoff.extras
-    ? { kind: 'failed', summary: handoff.summary, extras: handoff.extras }
-    : { kind: 'failed', summary: handoff.summary };
+  return {
+    kind: handoff.status,
+    summary: handoff.summary,
+    extras: handoff.extras,
+  };
 }
 
 async function promptAmbiguous(): Promise<HandoffOutcome> {
