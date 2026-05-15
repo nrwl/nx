@@ -2,15 +2,96 @@ jest.mock('./deduce-default-base', () => ({
   deduceDefaultBase: jest.fn(() => 'main'),
 }));
 
-import { NxJsonConfiguration } from '../../../config/nx-json';
+import { mkdtempSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import {
+  NxJsonConfiguration,
+  TargetDefaultEntry,
+} from '../../../config/nx-json';
+import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
+import {
+  createNxJsonFile,
   createNxJsonFromTurboJson,
   extractErrorName,
   readErrorStderr,
   toErrorString,
+  upsertTargetDefaultEntry,
 } from './utils';
 
 describe('utils', () => {
+  describe('createNxJsonFile', () => {
+    it('reuses the same unfiltered target entry across topological and cacheable passes', () => {
+      const repoRoot = mkdtempSync(join(tmpdir(), 'nx-init-utils-'));
+      try {
+        writeJsonFile(join(repoRoot, 'nx.json'), {
+          $schema: './node_modules/nx/schemas/nx-schema.json',
+          targetDefaults: [
+            { target: 'build', projects: 'tag:web', dependsOn: ['^filtered'] },
+          ],
+        });
+
+        createNxJsonFile(repoRoot, ['build'], ['build'], {});
+
+        expect(
+          readJsonFile<NxJsonConfiguration>(join(repoRoot, 'nx.json'))
+        ).toMatchObject({
+          targetDefaults: [
+            { target: 'build', projects: 'tag:web', dependsOn: ['^filtered'] },
+            { target: 'build', dependsOn: ['^build'], cache: true },
+          ],
+        });
+      } finally {
+        rmSync(repoRoot, { recursive: true, force: true });
+      }
+    });
+
+    it('preserves an explicit cache setting on an existing unfiltered target entry', () => {
+      const repoRoot = mkdtempSync(join(tmpdir(), 'nx-init-utils-'));
+      try {
+        writeJsonFile(join(repoRoot, 'nx.json'), {
+          $schema: './node_modules/nx/schemas/nx-schema.json',
+          targetDefaults: [{ target: 'build', cache: false }],
+        });
+
+        createNxJsonFile(repoRoot, [], ['build'], {});
+
+        expect(
+          readJsonFile<NxJsonConfiguration>(join(repoRoot, 'nx.json'))
+        ).toMatchObject({
+          targetDefaults: [{ target: 'build', cache: false }],
+        });
+      } finally {
+        rmSync(repoRoot, { recursive: true, force: true });
+      }
+    });
+  });
+
+  describe('upsertTargetDefaultEntry', () => {
+    it('merges into an existing unfiltered target entry', () => {
+      const entries: TargetDefaultEntry[] = [{ target: 'build', cache: true }];
+
+      upsertTargetDefaultEntry(entries, 'build', { dependsOn: ['^build'] });
+
+      expect(entries).toEqual([
+        { target: 'build', cache: true, dependsOn: ['^build'] },
+      ]);
+    });
+
+    it('appends a new unfiltered entry instead of merging into a filtered one', () => {
+      const entries: TargetDefaultEntry[] = [
+        { target: 'build', projects: 'tag:web', cache: true },
+      ];
+
+      upsertTargetDefaultEntry(entries, 'build', { dependsOn: ['^build'] });
+
+      expect(entries).toEqual([
+        { target: 'build', projects: 'tag:web', cache: true },
+        { target: 'build', dependsOn: ['^build'] },
+      ]);
+    });
+  });
+
   describe('createNxJsonFromTurboJson', () => {
     test.each<{
       description: string;

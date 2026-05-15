@@ -10,11 +10,17 @@ jest.mock(
 );
 
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
-import { readNxJson, updateNxJson, type Tree } from 'nx/src/devkit-exports';
+import {
+  addProjectConfiguration,
+  readNxJson,
+  updateNxJson,
+  type Tree,
+} from 'nx/src/devkit-exports';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import {
   addBuildTargetDefaults,
   addE2eCiTargetDefaults,
+  readTargetDefaultsForTarget,
   upsertTargetDefault,
 } from './target-defaults-utils';
 
@@ -104,6 +110,29 @@ describe('target-defaults-utils', () => {
       expect(readNxJson(tree).targetDefaults).toEqual([
         { target: 'build', cache: true },
         { target: 'test', projects: 'tag:dotnet', inputs: ['x'] },
+      ]);
+    });
+
+    it('uses workspace targets to preserve colon target keys during upserts', () => {
+      addProjectConfiguration(tree, 'app', {
+        root: 'app',
+        targets: {
+          'serve:dev': {
+            executor: '@nx/js:node',
+          },
+        },
+      });
+      const nxJson = readNxJson(tree);
+      (nxJson as any).targetDefaults = {
+        'serve:dev': { cache: true },
+      };
+
+      upsertTargetDefault(tree, nxJson, { target: 'build', cache: true });
+      updateNxJson(tree, nxJson);
+
+      expect(readNxJson(tree).targetDefaults).toEqual([
+        { target: 'serve:dev', cache: true },
+        { target: 'build', cache: true },
       ]);
     });
   });
@@ -224,6 +253,47 @@ describe('target-defaults-utils', () => {
         executor: '@nx/example:build',
         cache: true,
         inputs: ['custom'],
+      });
+    });
+  });
+
+  describe('readTargetDefaultsForTarget', () => {
+    it('preserves exact legacy record-key reads for colon target names', () => {
+      expect(
+        readTargetDefaultsForTarget('vite:serve', {
+          'vite:serve': {
+            options: {
+              port: 4400,
+            },
+          },
+        })
+      ).toEqual({
+        options: {
+          port: 4400,
+        },
+      });
+    });
+
+    it('still supports array-shaped reads', () => {
+      expect(
+        readTargetDefaultsForTarget(
+          'build',
+          [
+            {
+              target: 'build',
+              executor: '@nx/js:tsc',
+              options: {
+                outputPath: 'dist/libs/demo',
+              },
+            },
+          ],
+          '@nx/js:tsc'
+        )
+      ).toEqual({
+        executor: '@nx/js:tsc',
+        options: {
+          outputPath: 'dist/libs/demo',
+        },
       });
     });
   });

@@ -58,13 +58,8 @@ export function createNxJsonFile(
   }
 
   for (const target of cacheableOperations) {
-    const idx = entries.findIndex(
-      (e) =>
-        e.target === target &&
-        e.projects === undefined &&
-        e.plugin === undefined
-    );
-    if (idx >= 0) entries[idx].cache ??= true;
+    const existing = findUnfilteredTargetEntry(entries, target);
+    if (existing) existing.cache ??= true;
     else entries.push({ target, cache: true });
   }
 
@@ -92,12 +87,19 @@ export function upsertTargetDefaultEntry(
   target: string,
   patch: Partial<TargetDefaultEntry>
 ): void {
-  const idx = entries.findIndex(
+  const existing = findUnfilteredTargetEntry(entries, target);
+  if (existing) Object.assign(existing, patch, { target });
+  else entries.push({ ...patch, target });
+}
+
+function findUnfilteredTargetEntry(
+  entries: TargetDefaultEntry[],
+  target: string
+): TargetDefaultEntry | undefined {
+  return entries.find(
     (e) =>
       e.target === target && e.projects === undefined && e.plugin === undefined
   );
-  if (idx >= 0) entries[idx] = { target, ...entries[idx], ...patch };
-  else entries.push({ target, ...patch });
 }
 
 export function createNxJsonFromTurboJson(

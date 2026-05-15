@@ -1,4 +1,7 @@
-import { addBuildTargetDefaults } from '@nx/devkit/internal';
+import {
+  addBuildTargetDefaults,
+  readTargetDefaultsForTarget,
+} from '@nx/devkit/internal';
 import {
   formatFiles,
   GeneratorCallback,
@@ -180,9 +183,11 @@ function updatePackageJson(
       const nxJson = readNxJson(tree);
       const mergedTarget = mergeTargetConfigurations(
         projectTarget,
-        (projectTarget.executor
-          ? nxJson.targetDefaults?.[projectTarget.executor]
-          : undefined) ?? nxJson.targetDefaults?.[options.buildTarget]
+        readTargetDefaultsForTarget(
+          options.buildTarget,
+          nxJson.targetDefaults,
+          projectTarget.executor
+        )
       );
       ({ main, outputPath } = mergedTarget.options);
     }

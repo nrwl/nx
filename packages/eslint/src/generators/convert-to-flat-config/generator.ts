@@ -118,6 +118,30 @@ function isEslintTarget(target: { executor?: string; command?: string }) {
   );
 }
 
+function hasMatchingEslintTargetDefault(
+  projectConfig: ProjectConfiguration,
+  targetDefaults: NxJsonConfiguration['targetDefaults']
+): boolean {
+  if (!projectConfig.targets || !targetDefaults) {
+    return false;
+  }
+
+  if (Array.isArray(targetDefaults)) {
+    return targetDefaults.some(
+      (entry) =>
+        entry.target !== undefined &&
+        projectConfig.targets[entry.target] !== undefined &&
+        (entry.target === ESLINT_LINT_EXECUTOR || isEslintTarget(entry))
+    );
+  }
+
+  return Object.entries(targetDefaults).some(
+    ([targetName, targetConfig]) =>
+      projectConfig.targets[targetName] !== undefined &&
+      (targetName === ESLINT_LINT_EXECUTOR || isEslintTarget(targetConfig))
+  );
+}
+
 function convertProjectToFlatConfig(
   tree: Tree,
   project: string,
@@ -150,14 +174,10 @@ function convertProjectToFlatConfig(
   if (eslintTargets.length > 0) {
     updateProjectConfiguration(tree, project, projectConfig);
   }
-  const hasEslintTargetDefaults =
-    projectConfig.targets &&
-    Object.keys(nxJson.targetDefaults || {}).some(
-      (t) =>
-        (t === ESLINT_LINT_EXECUTOR ||
-          isEslintTarget(nxJson.targetDefaults[t])) &&
-        projectConfig.targets[t]
-    );
+  const hasEslintTargetDefaults = hasMatchingEslintTargetDefault(
+    projectConfig,
+    nxJson.targetDefaults
+  );
 
   if (
     eslintTargets.length === 0 &&

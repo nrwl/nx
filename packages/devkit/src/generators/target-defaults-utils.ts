@@ -2,16 +2,21 @@ import {
   type CreateNodesV2,
   type NxJsonConfiguration,
   type PluginConfiguration,
+  type ProjectConfiguration,
   type TargetConfiguration,
   type TargetDefaultEntry,
   type TargetDefaults,
+  type TargetDefaultsRecord,
   type Tree,
+  getProjects,
   readNxJson,
   updateNxJson,
 } from 'nx/src/devkit-exports';
 import { findMatchingConfigFiles } from 'nx/src/devkit-internals';
 import { major, valid } from 'semver';
 import { NX_VERSION } from '../utils/package-json';
+import { readTargetDefaultsForTarget as readTargetDefaultsForTargetFromNx } from 'nx/src/project-graph/utils/project-configuration-utils';
+import { normalizeTargetDefaultsAgainstRootMaps } from 'nx/src/project-graph/utils/project-configuration/target-defaults';
 import {
   downgradeTargetDefaults,
   normalizeTargetDefaults,
@@ -51,7 +56,7 @@ export function upsertTargetDefault(
   // it's already array shape. Without the spread, `entries[matchIndex] = ...`
   // and `entries.push(...)` would mutate the user's array reference (and
   // any other holders of the same `nxJson.targetDefaults` reference).
-  const entries = [...normalizeTargetDefaults(originalShape)];
+  const entries = [...normalizeTargetDefaultsForUpsert(tree, originalShape)];
   const matchIndex = entries.findIndex(
     (e) =>
       e.target === target &&
@@ -132,6 +137,53 @@ export function findTargetDefault(
       e.executor === locator.executor &&
       projectsEqual(e.projects, locator.projects) &&
       e.plugin === locator.plugin
+  );
+}
+
+export function readTargetDefaultsForTarget(
+  targetName: string,
+  targetDefaults: TargetDefaults | undefined,
+  executor?: string,
+  opts?: Parameters<typeof readTargetDefaultsForTargetFromNx>[3]
+): Partial<TargetConfiguration> | null {
+  if (
+    targetDefaults &&
+    !Array.isArray(targetDefaults) &&
+    Object.prototype.hasOwnProperty.call(targetDefaults, targetName)
+  ) {
+    return (targetDefaults as TargetDefaultsRecord)[targetName] ?? null;
+  }
+
+  return readTargetDefaultsForTargetFromNx(
+    targetName,
+    targetDefaults,
+    executor,
+    opts
+  );
+}
+
+function normalizeTargetDefaultsForUpsert(
+  tree: Tree,
+  targetDefaults: TargetDefaults | undefined
+): TargetDefaultEntry[] {
+  if (!targetDefaults) {
+    return [];
+  }
+  if (Array.isArray(targetDefaults)) {
+    return targetDefaults;
+  }
+
+  return normalizeTargetDefaultsAgainstRootMaps(
+    targetDefaults,
+    buildProjectRootMap(getProjects(tree))
+  );
+}
+
+function buildProjectRootMap(
+  projects: Map<string, ProjectConfiguration>
+): Record<string, ProjectConfiguration> {
+  return Object.fromEntries(
+    [...projects.values()].map((project) => [project.root, project])
   );
 }
 
