@@ -202,6 +202,8 @@ export async function getCommonConfig(
   // Rsdoctor (https://rsdoctor.dev). On v1 we set the flag as before; on
   // v2 setting it would silently do nothing, so warn the user that their
   // `--stats-json` profile won't include rspack timing data.
+  // TODO: remove this branch (and the warning) once @rspack/core v1 is
+  // dropped from the supported version window — `statsJson` itself stays.
   if (normalizedOptions.statsJson) {
     if (isRspackV2()) {
       logger.warn(
