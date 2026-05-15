@@ -145,7 +145,7 @@ describe('@nx/rsbuild', () => {
                     },
                   },
                   "watch-deps": {
-                    "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+                    "command": "npx nx watch --projects my-app --includeDependencies -- npx nx build-deps my-app",
                     "continuous": true,
                     "dependsOn": [
                       "build-deps",

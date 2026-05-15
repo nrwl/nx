@@ -130,7 +130,7 @@ function createFileWatcher(
     {
       watchProjects: project ? [project] : 'all',
       includeGlobalWorkspaceFiles: true,
-      includeDependentProjects: true,
+      includeDependencies: true,
     },
     async (error, val) => {
       if (error === 'reconnecting') {

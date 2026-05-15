@@ -322,7 +322,7 @@ export async function* nodeExecutor(
         additionalExitHandler = await daemonClient.registerFileWatcher(
           {
             watchProjects: [context.projectName],
-            includeDependentProjects: true,
+            includeDependencies: true,
           },
           async (err, data) => {
             if (err === 'reconnecting') {

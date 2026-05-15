@@ -6,6 +6,14 @@ import { output } from '../../utils/output';
 export interface WatchArguments {
   projects?: string[];
   all?: boolean;
+  includeDependencies?: boolean;
+  /**
+   * @deprecated Renamed to {@link WatchArguments.includeDependencies}; will be
+   * removed in Nx 24. The original name was misleading: this flag includes
+   * the watched project's dependencies, not its dependents. The new property
+   * is functionally identical — only the name changed.
+   */
+  // TODO(v24): remove this property
   includeDependentProjects?: boolean;
   includeGlobalWorkspaceFiles?: boolean;
   verbose?: boolean;
@@ -207,7 +215,8 @@ export async function watch(args: WatchArguments) {
   await daemonClient.registerFileWatcher(
     {
       watchProjects: whatToWatch,
-      includeDependentProjects: args.includeDependentProjects,
+      includeDependencies:
+        args.includeDependencies ?? args.includeDependentProjects,
       includeGlobalWorkspaceFiles: args.includeGlobalWorkspaceFiles,
     },
     async (err, data) => {
