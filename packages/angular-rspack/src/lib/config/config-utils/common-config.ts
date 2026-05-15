@@ -198,18 +198,17 @@ export async function getCommonConfig(
     ],
   };
   // Top-level `profile` was removed in @rspack/core@2 — not just from the
-  // type, but from the runtime. v2 redirects performance analysis to
-  // Rsdoctor (https://rsdoctor.dev). On v1 we set the flag as before; on
-  // v2 setting it would silently do nothing, so warn the user that their
-  // `--stats-json` profile won't include rspack timing data.
-  // TODO: remove this branch (and the warning) once @rspack/core v1 is
-  // dropped from the supported version window — `statsJson` itself stays.
+  // type, but from the runtime. On v1 we set the flag so `stats.json`
+  // includes build-timing data; on v2 it is gone. `statsJson` still emits
+  // `stats.json` either way — only the timing enrichment differs.
+  // TODO: remove this branch once @rspack/core v1 is dropped from the
+  // supported version window — `statsJson` itself stays.
   if (normalizedOptions.statsJson) {
     if (isRspackV2()) {
-      logger.warn(
-        'The `statsJson` output no longer includes rspack build profiling ' +
-          'data on @rspack/core@2. Use Rsdoctor for performance analysis: ' +
-          'https://rsdoctor.dev'
+      logger.info(
+        '`statsJson` emits `stats.json` as usual, but it no longer ' +
+          'includes rspack build-timing data on @rspack/core@2. For build ' +
+          'performance analysis, see Rsdoctor: https://rsdoctor.dev'
       );
     } else {
       (defaultConfig as { profile?: boolean }).profile = true;
