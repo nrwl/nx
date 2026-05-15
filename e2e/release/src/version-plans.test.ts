@@ -96,12 +96,12 @@ describe('nx release version plans', () => {
         groups: {
           'fixed-group': {
             projects: [pkg1, pkg2],
-            releaseTagPattern: 'v{version}',
+            releaseTag: { pattern: 'v{version}' },
           },
           'independent-group': {
             projects: [pkg3, pkg4, pkg5],
             projectsRelationship: 'independent',
-            releaseTagPattern: '{projectName}@{version}',
+            releaseTag: { pattern: '{projectName}@{version}' },
           },
         },
         version: {
@@ -416,12 +416,12 @@ Update packages in both groups with a mix #2
         groups: {
           'fixed-group': {
             projects: [pkg1, pkg2],
-            releaseTagPattern: 'v{version}',
+            releaseTag: { pattern: 'v{version}' },
           },
           'independent-group': {
             projects: [pkg3, pkg4, pkg5],
             projectsRelationship: 'independent',
-            releaseTagPattern: '{projectName}@{version}',
+            releaseTag: { pattern: '{projectName}@{version}' },
           },
         },
         version: {
@@ -804,7 +804,7 @@ Update packages in both groups with a mix #2
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       nxJson.release = {
         projects: [pkg1, pkg2],
-        releaseTagPattern: 'v{version}',
+        releaseTag: { pattern: 'v{version}' },
         changelog: {
           projectChangelogs: true,
         },
@@ -878,12 +878,12 @@ Update packages in both groups with a mix #2
         groups: {
           'fixed-group': {
             projects: [pkg1, pkg2],
-            releaseTagPattern: 'v{version}',
+            releaseTag: { pattern: 'v{version}' },
           },
           'independent-group': {
             projects: [pkg3, pkg4, pkg5],
             projectsRelationship: 'independent',
-            releaseTagPattern: '{projectName}@{version}',
+            releaseTag: { pattern: '{projectName}@{version}' },
           },
         },
         version: {

@@ -610,7 +610,7 @@ describe('nx release - independent projects', () => {
               fixed: {
                 projects: [pkg3],
                 projectsRelationship: 'fixed',
-                releaseTagPattern: `${pkg3}@{version}`,
+                releaseTag: { pattern: `${pkg3}@{version}` },
               },
             },
           },
@@ -1097,7 +1097,7 @@ describe('nx release - independent projects', () => {
         return {
           release: {
             projectsRelationship: 'independent',
-            releaseTagPattern: '{projectName}@v{version}',
+            releaseTag: { pattern: '{projectName}@v{version}' },
             version: {
               currentVersionResolver: 'git-tag',
             },
@@ -1151,7 +1151,7 @@ describe('nx release - independent projects', () => {
         return {
           release: {
             projectsRelationship: 'independent',
-            releaseTagPattern: '{projectName}@v{version}',
+            releaseTag: { pattern: '{projectName}@v{version}' },
             version: {
               specifierSource: 'conventional-commits',
               currentVersionResolver: 'git-tag',

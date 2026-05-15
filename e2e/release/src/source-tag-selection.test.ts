@@ -57,11 +57,11 @@ describe('nx release source tag selection', () => {
 
   afterEach(() => cleanupProject());
 
-  describe('when releaseTagPatternStrictPreid is undefined', () => {
+  describe('when releaseTag.strictPreid is undefined', () => {
     beforeEach(() => {
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
-          releaseTagPattern: 'v{version}',
+          releaseTag: { pattern: 'v{version}' },
           version: {
             conventionalCommits: true,
           },
@@ -105,12 +105,11 @@ describe('nx release source tag selection', () => {
     });
   });
 
-  describe('when releaseTagPatternStrictPreid is false', () => {
+  describe('when releaseTag.strictPreid is false', () => {
     beforeEach(() => {
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
-          releaseTagPattern: 'v{version}',
-          releaseTagPatternStrictPreid: false,
+          releaseTag: { pattern: 'v{version}', strictPreid: false },
           version: {
             conventionalCommits: true,
           },
@@ -154,12 +153,11 @@ describe('nx release source tag selection', () => {
     });
   });
 
-  describe('when releaseTagPatternStrictPreid is true', () => {
+  describe('when releaseTag.strictPreid is true', () => {
     beforeEach(() => {
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
-          releaseTagPattern: 'v{version}',
-          releaseTagPatternStrictPreid: true,
+          releaseTag: { pattern: 'v{version}', strictPreid: true },
           version: {
             conventionalCommits: true,
           },
