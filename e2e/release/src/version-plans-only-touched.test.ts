@@ -85,12 +85,12 @@ describe('nx release version plans only touched', () => {
         groups: {
           'fixed-group': {
             projects: [pkg1, pkg2],
-            releaseTagPattern: 'v{version}',
+            releaseTag: { pattern: 'v{version}' },
           },
           'independent-group': {
             projects: [pkg3, pkg4, pkg5],
             projectsRelationship: 'independent',
-            releaseTagPattern: '{projectName}@{version}',
+            releaseTag: { pattern: '{projectName}@{version}' },
           },
         },
         version: {

@@ -195,14 +195,13 @@ export interface NxReleaseVersionConfiguration {
    * of local dependencies when updating them during versioning.
    */
   preserveLocalDependencyProtocols?: boolean;
-  // TODO(v22): change the default value of this to true
   /**
    * Whether to preserve matching dependency ranges when updating them during versioning.
    * e.g.
    *  The new version will be "1.2.0" and the current version range in dependents is already "^1.0.0"
    *  Therefore, the manifest file is not updated.
    *
-   * This is false by default.
+   * This is true by default. Set to false to always rewrite dependent manifests with the new version.
    */
   preserveMatchingDependencyRanges?:
     | boolean
@@ -212,7 +211,6 @@ export interface NxReleaseVersionConfiguration {
         | 'peerDependencies'
         | 'optionalDependencies'
       >;
-  // TODO(v23): change the default value of this to true
   /**
    * Whether to strictly follow SemVer V2 spec for 0.x versions where breaking changes
    * bump the minor version (instead of major), and new features bump the patch version
@@ -226,7 +224,7 @@ export interface NxReleaseVersionConfiguration {
    *
    * Versions 1.0.0 and above are unaffected.
    *
-   * This is false by default for backward compatibility.
+   * This is true by default. Set to false to opt out and treat all bumps the same regardless of major version.
    */
   adjustSemverBumpsForZeroMajorVersion?: boolean;
   /**
@@ -247,7 +245,7 @@ export interface NxReleaseChangelogConfiguration {
    * Optionally create a release containing all relevant changes on a supported version control system, it
    * is false by default.
    *
-   * NOTE: if createRelease is set on a group of projects, it will cause the default releaseTagPattern of
+   * NOTE: if createRelease is set on a group of projects, it will cause the default releaseTag.pattern of
    * "{projectName}@{version}" to be used for those projects, even when versioning everything together.
    */
   createRelease?:
@@ -475,7 +473,7 @@ export interface NxReleaseConfiguration {
          */
         pattern?: string;
         /**
-         * By default, we will try and resolve the latest match for the releaseTagPattern from the current branch,
+         * By default, we will try and resolve the latest match for the releaseTag.pattern from the current branch,
          * falling back to all branches if no match is found on the current branch.
          *
          * - Setting this to true will cause us to ALWAYS check all branches for the latest match.
@@ -517,36 +515,10 @@ export interface NxReleaseConfiguration {
          * If "strictPreid" is set to false, the git tag "my-lib@1.2.4-beta.1" will always be resolved as the latest tag that matches the pattern,
          * regardless of any preid which gets passed to nx release.
          *
-         * NOTE: This feature was added in a minor version and is therefore set to false by default, but this may change in a future major version.
+         * This is true by default. Set to false to always resolve the latest matching tag regardless of preid.
          */
         strictPreid?: boolean;
       };
-      /**
-       * @deprecated Use `releaseTag.pattern` instead. Will be removed in Nx 23.
-       * Optionally override the git/release tag pattern to use for this group.
-       */
-      // TODO(v23): remove this property
-      releaseTagPattern?: string;
-      /**
-       * @deprecated Use `releaseTag.checkAllBranchesWhen` instead. Will be removed in Nx 23.
-       */
-      // TODO(v23): remove this property
-      releaseTagPatternCheckAllBranchesWhen?: boolean | string[];
-      /**
-       * @deprecated Use `releaseTag.requireSemver` instead. Will be removed in Nx 23.
-       */
-      // TODO(v23): remove this property
-      releaseTagPatternRequireSemver?: boolean;
-      /**
-       * @deprecated Use `releaseTag.preferDockerVersion` instead. Will be removed in Nx 23.
-       */
-      // TODO(v23): remove this property
-      releaseTagPatternPreferDockerVersion?: boolean | 'both';
-      /**
-       * @deprecated Use `releaseTag.strictPreid` instead. Will be removed in Nx 23.
-       */
-      // TODO(v23): remove this property
-      releaseTagPatternStrictPreid?: boolean;
       /**
        * Enables using version plans as a specifier source for versioning and
        * to determine changes for changelog generation.
@@ -653,43 +625,10 @@ export interface NxReleaseConfiguration {
      * If "strictPreid" is set to false, the git tag "my-lib@1.2.4-beta.1" will always be resolved as the latest tag that matches the pattern,
      * regardless of any preid which gets passed to nx release.
      *
-     * NOTE: This feature was added in a minor version and is therefore set to false by default, but this may change in a future major version.
+     * This is true by default. Set to false to always resolve the latest matching tag regardless of preid.
      */
     strictPreid?: boolean;
   };
-  /**
-   * @deprecated Use `releaseTag.pattern` instead. Will be removed in Nx 23.
-   * Optionally override the git/release tag pattern to use. This field is the source of truth
-   * for changelog generation and release tagging, as well as for conventional commits parsing.
-   *
-   * It supports interpolating the version as {version} and (if releasing independently or forcing
-   * project level version control system releases) the project name as {projectName} within the string.
-   *
-   * The default releaseTagPattern for fixed/unified releases is: "v{version}"
-   * The default releaseTagPattern for independent releases at the project level is: "{projectName}@{version}"
-   */
-  // TODO(v23): remove this property
-  releaseTagPattern?: string;
-  /**
-   * @deprecated Use `releaseTag.checkAllBranchesWhen` instead. Will be removed in Nx 23.
-   */
-  // TODO(v23): remove this property
-  releaseTagPatternCheckAllBranchesWhen?: boolean | string[];
-  /**
-   * @deprecated Use `releaseTag.requireSemver` instead. Will be removed in Nx 23.
-   */
-  // TODO(v23): remove this property
-  releaseTagPatternRequireSemver?: boolean;
-  /**
-   * @deprecated Use `releaseTag.preferDockerVersion` instead. Will be removed in Nx 23.
-   */
-  // TODO(v23): remove this property
-  releaseTagPatternPreferDockerVersion?: boolean | 'both';
-  /**
-   * @deprecated Use `releaseTag.strictPreid` instead. Will be removed in Nx 23.
-   */
-  // TODO(v23): remove this property
-  releaseTagPatternStrictPreid?: boolean;
   /**
    * Enable and configure automatic git operations as part of the release
    */

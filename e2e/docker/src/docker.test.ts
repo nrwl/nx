@@ -172,7 +172,7 @@ function addDockerReleaseConfiguration(name: string) {
     nxJson.release = {
       projects: [name],
       projectsRelationship: 'independent',
-      releaseTagPattern: 'release/{projectName}/{version}',
+      releaseTag: { pattern: 'release/{projectName}/{version}' },
       docker: {
         registryUrl: 'localhost:5000',
         skipVersionActions: true,

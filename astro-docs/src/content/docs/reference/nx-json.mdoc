@@ -455,12 +455,8 @@ The `projectsRelationship` property tells Nx whether to release projects indepen
 
 The `releaseTag` property controls how git tags are parsed and generated. By default tags conform to semantic version and are validated as such.
 
-{% aside type="note" title="Nx 22 Changes" %}
-Release tag configuration now uses a nested `releaseTag` object. Old flat properties (`releaseTagPattern`, etc.) are deprecated but work until Nx 23.
-
-**Nx 22+:** `releaseTag.pattern`, `releaseTag.requireSemver`, `releaseTag.strictPreid`
-
-**Nx < 22:** `releaseTagPattern`, `releaseTagPatternRequireSemver`, `releaseTagPatternStrictPreid`
+{% aside type="note" title="Nx 23 Changes" %}
+The legacy flat properties (`releaseTagPattern`, `releaseTagPatternRequireSemver`, `releaseTagPatternStrictPreid`, `releaseTagPatternPreferDockerVersion`, `releaseTagPatternCheckAllBranchesWhen`) were removed in Nx 23. Use the nested `releaseTag` object below. An automated migration in Nx 22 moved configuration to the new shape.
 {% /aside %}
 
 #### Configuration options
@@ -469,7 +465,7 @@ Release tag configuration now uses a nested `releaseTag` object. Old flat proper
 | ------------------------ | ------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **pattern**              | string              | `v{version}` for fixed, `{projectName}@{version}` for independent | The git tag pattern to use. Supports interpolation of `{version}`, `{projectName}`, and `{releaseGroupName}`                                                                                                                                                                                          |
 | **requireSemver**        | boolean             | `false`                                                           | Whether to require that all tags match semantic versioning                                                                                                                                                                                                                                            |
-| **strictPreid**          | boolean             | `false` for independent, `true` for fixed release groups          | Whether to ensure prerelease IDs are consistent across packages                                                                                                                                                                                                                                       |
+| **strictPreid**          | boolean             | `true`                                                            | Whether to ensure prerelease IDs are consistent across packages                                                                                                                                                                                                                                       |
 | **preferDockerVersion**  | boolean             | `false`                                                           | Whether to prefer Docker-compatible version format in git tags                                                                                                                                                                                                                                        |
 | **checkAllBranchesWhen** | boolean \| string[] | undefined                                                         | Controls whether to check all branches or only merged branches when resolving current versions from git tags. `true` = always check all branches, `false` = only check the current branch, `string[]` = check all branches when the current branch matches any of the provided names or glob patterns |
 
@@ -504,9 +500,6 @@ Example patterns and their results:
 
 #### Example configuration
 
-{% tabs syncKey="nx-release-configuration" %}
-{% tabitem label="Nx 22+" %}
-
 ```jsonc
 // nx.json
 {
@@ -521,25 +514,6 @@ Example patterns and their results:
   },
 }
 ```
-
-{% /tabitem %}
-{% tabitem label="Nx < 22" %}
-
-```jsonc
-// nx.json
-{
-  "release": {
-    "releaseTagPattern": "{releaseGroupName}-v{version}",
-    "releaseTagPatternRequireSemver": true,
-    "releaseTagPatternStrictPreid": true,
-    "releaseTagPatternPreferDockerVersion": false,
-    "releaseTagPatternCheckAllBranchesWhen": ["main", "release/*"],
-  },
-}
-```
-
-{% /tabitem %}
-{% /tabs %}
 
 ### Version
 
@@ -587,9 +561,13 @@ Some important changes in Nx 22:
   - `"always"`: Update dependents wherever they exist in the graph, regardless of filter selection
   - `"auto"`: Update dependents only if they're within the selected projects or release groups
   - `"never"`: Never update dependents
-- `releaseTag*` properties such as `releaseTagPattern` and `releaseTagPatternStrictPreid` have been coalesced into a single `releaseTag` object. (`releaseTagPattern` -> `releaseTag.pattern`, `releaseTagPatternStrictPreid` -> `releaseTag.strictPreid`)
 - `releaseTag.strictPreid` now defaults to `true`
 - Fixed Release Group Release Tag Pattern now defaults to `{releaseGroupName}-v{version}`
+
+Some important changes in Nx 23:
+
+- `version.adjustSemverBumpsForZeroMajorVersion` now defaults to `true`. For 0.x versions, breaking changes bump the minor and new features bump the patch (instead of major/minor respectively). Set to `false` to preserve the prior behavior of treating all bumps the same regardless of major version.
+- The deprecated `releaseTag*` flat properties (`releaseTagPattern`, `releaseTagPatternRequireSemver`, `releaseTagPatternStrictPreid`, `releaseTagPatternPreferDockerVersion`, `releaseTagPatternCheckAllBranchesWhen`) were removed in favor of the nested `releaseTag` object introduced in Nx 22.
 
 #### Propagating `--preid` to dependent bumps
 
