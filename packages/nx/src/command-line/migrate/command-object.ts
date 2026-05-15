@@ -2,6 +2,7 @@ import { Argv, CommandModule } from 'yargs';
 import { handleImport } from '../../utils/handle-import';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { withVerbose } from '../yargs-utils/shared-options';
+import { coerceAgenticArg } from './agentic/select';
 
 export const yargsMigrateCommand: CommandModule = {
   command: 'migrate [packageAndVersion]',
@@ -96,6 +97,11 @@ function withMigrationOptions(yargs: Argv) {
       type: 'string',
       choices: ['direct', 'gradual'],
     })
+    .option('agentic', {
+      describe:
+        'Enable the agentic flow for prompt-based migrations and AI-driven review. Pass `--agentic=<agent>` to pin a specific agent (claude-code, codex, or opencode). Pass `--agentic=false` or `--no-agentic` to disable.',
+      coerce: coerceAgenticArg,
+    })
     .check(
       ({
         createCommits,
@@ -103,6 +109,7 @@ function withMigrationOptions(yargs: Argv) {
         from,
         excludeAppliedMigrations,
         mode,
+        agentic,
       }) => {
         if (!createCommits && commitPrefix !== defaultCommitPrefix) {
           throw new Error(
@@ -113,6 +120,16 @@ function withMigrationOptions(yargs: Argv) {
           throw new Error(
             'Error: Excluding migrations that should have been previously applied requires --from to be set'
           );
+        }
+        if (typeof agentic === 'string') {
+          const valid = ['claude-code', 'codex', 'opencode'];
+          if (!valid.includes(agentic)) {
+            throw new Error(
+              `Error: Invalid --agentic value "${agentic}". Allowed: ${valid.join(
+                ', '
+              )}, true, false.`
+            );
+          }
         }
         return true;
       }

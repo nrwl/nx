@@ -13,6 +13,25 @@ import {
 /** Possible values for `--agentic` after yargs normalization. */
 export type AgenticArg = undefined | boolean | AgentId;
 
+/**
+ * Normalizes the raw yargs value for `--agentic` to the shape downstream code
+ * expects. Validation of agent-id strings happens upstream in the yargs
+ * `.check()` chain so this function only handles shape.
+ */
+export function coerceAgenticArg(value: unknown): AgenticArg {
+  if (value === undefined) return undefined;
+  if (value === true || value === '' || value === 'true' || value === 'yes') {
+    return true;
+  }
+  if (value === false || value === 'false' || value === 'no') {
+    return false;
+  }
+  if (typeof value === 'string') {
+    return value as AgentId;
+  }
+  return undefined;
+}
+
 export interface ResolveAgenticInput {
   agentic: AgenticArg;
   migrations: ReadonlyArray<{ prompt?: string }>;

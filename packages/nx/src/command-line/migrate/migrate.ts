@@ -104,6 +104,7 @@ import {
   validateMigrationEntries,
   writePromptMigrationFiles,
 } from './prompt-files';
+import type { AgenticArg } from './agentic/select';
 import { filterDowngradedUpdates } from './update-filters';
 import {
   DIST_TAGS,
@@ -1058,6 +1059,7 @@ type RunMigrations = {
   type: 'runMigrations';
   runMigrations: string;
   ifExists: boolean;
+  agentic: AgenticArg;
 };
 
 export async function parseMigrationsOptions(options: {
@@ -1083,6 +1085,7 @@ export async function parseMigrationsOptions(options: {
       type: 'runMigrations',
       runMigrations: options.runMigrations as string,
       ifExists: options.ifExists as boolean,
+      agentic: options.agentic as AgenticArg,
     };
   }
 
@@ -2544,7 +2547,11 @@ export async function runNxOrAngularMigration(
 
 async function runMigrations(
   root: string,
-  opts: { runMigrations: string; ifExists: boolean },
+  opts: {
+    runMigrations: string;
+    ifExists: boolean;
+    agentic: AgenticArg;
+  },
   args: string[],
   isVerbose: boolean,
   shouldCreateCommits = false,

@@ -2075,8 +2075,31 @@ describe('Migration', () => {
         type: 'runMigrations',
         runMigrations: 'migrations.json',
         ifExists: true,
+        agentic: undefined,
       });
     });
+
+    it.each([
+      ['true (boolean)', true, true],
+      ['false (boolean)', false, false],
+      ['claude-code (string)', 'claude-code', 'claude-code'],
+      ['codex (string)', 'codex', 'codex'],
+      ['opencode (string)', 'opencode', 'opencode'],
+      ['undefined', undefined, undefined],
+    ])(
+      'should propagate the agentic value (%s) when running migrations',
+      async (_label, input, expected) => {
+        const r = await parseMigrationsOptions({
+          runMigrations: '',
+          ifExists: true,
+          agentic: input,
+        });
+        expect(r).toMatchObject({
+          type: 'runMigrations',
+          agentic: expected,
+        });
+      }
+    );
 
     it('should default to nx@latest when no packageAndVersion is provided', async () => {
       jest
