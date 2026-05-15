@@ -4,10 +4,7 @@ import {
   readJsonFile,
   TargetConfiguration,
 } from '@nx/devkit';
-import {
-  getAssetOutputPath,
-  normalizeAssets,
-} from '@nx/js/src/utils/assets/copy-assets-handler';
+import { getAssetOutputPath, normalizeAssets } from '@nx/js/internal';
 import { dirname, join, relative } from 'node:path';
 
 interface AssetEntry {
