@@ -1,9 +1,4 @@
-import {
-  rspackVersion,
-  type Compiler,
-  type Configuration,
-  javascript,
-} from '@rspack/core';
+import { type Compiler, type Configuration, javascript } from '@rspack/core';
 import { logger } from '@nx/devkit';
 import { join, resolve } from 'node:path';
 import {
@@ -22,6 +17,7 @@ import { configureSourceMap } from './sourcemap-utils';
 import { StatsJsonPlugin } from '../../plugins/stats-json-plugin';
 import { WatchFilesLogsPlugin } from '../../plugins/watch-file-logs-plugin';
 import { getIndexInputFile } from '../../utils/index-file/get-index-input-file';
+import { isRspackV2 } from '../../utils/rspack-version';
 
 export async function getCommonConfig(
   normalizedOptions: NormalizedAngularRspackPluginOptions,
@@ -207,7 +203,7 @@ export async function getCommonConfig(
   // v2 setting it would silently do nothing, so warn the user that their
   // `--stats-json` profile won't include rspack timing data.
   if (normalizedOptions.statsJson) {
-    if (parseInt(rspackVersion ?? '1', 10) >= 2) {
+    if (isRspackV2()) {
       logger.warn(
         '`profile: true` is no longer supported in @rspack/core@2. ' +
           'Use Rsdoctor for performance analysis: https://rsdoctor.dev'

@@ -1,5 +1,6 @@
 import { TS_ALL_EXT_REGEX } from '@nx/angular-rspack-compiler';
 import type { Configuration } from '@rspack/core';
+import { isRspackV2 } from '../../utils/rspack-version';
 import type {
   HashFormat,
   I18nOptions,
@@ -63,13 +64,13 @@ export async function getBrowserConfig(
           }),
     },
     // `experiments.outputModule` was removed in @rspack/core@2 (folded
-    // into top-level `output.module`, which we set above). On v1 the
-    // property still gates module output and needs to be set; on v2 the
-    // field is silently ignored. Launder through `unknown` to the
-    // destination type so both majors' typings accept the literal.
-    experiments: isDevServer
-      ? {}
-      : ({ outputModule: true } as unknown as Configuration['experiments']),
+    // into top-level `output.module`, which we set above). It is only set
+    // on v1, where it still gates module output; on v2 it is omitted
+    // entirely. The cast launders the v1-only literal past the v2 typings.
+    experiments:
+      isDevServer || isRspackV2()
+        ? {}
+        : ({ outputModule: true } as unknown as Configuration['experiments']),
     resolve: {
       ...defaultConfig.resolve,
       mainFields: ['es2020', 'es2015', 'browser', 'module', 'main'],
