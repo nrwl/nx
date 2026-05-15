@@ -106,6 +106,7 @@ describe('nx release version plans', () => {
         },
         version: {
           specifierSource: 'version-plans',
+          adjustSemverBumpsForZeroMajorVersion: false,
         },
         changelog: {
           projectChangelogs: true,
@@ -426,6 +427,7 @@ Update packages in both groups with a mix #2
         },
         version: {
           specifierSource: 'version-plans',
+          adjustSemverBumpsForZeroMajorVersion: false,
         },
         changelog: {
           projectChangelogs: true,
@@ -805,6 +807,9 @@ Update packages in both groups with a mix #2
       nxJson.release = {
         projects: [pkg1, pkg2],
         releaseTag: { pattern: 'v{version}' },
+        version: {
+          adjustSemverBumpsForZeroMajorVersion: false,
+        },
         changelog: {
           projectChangelogs: true,
         },
@@ -888,6 +893,7 @@ Update packages in both groups with a mix #2
         },
         version: {
           specifierSource: 'version-plans',
+          adjustSemverBumpsForZeroMajorVersion: false,
         },
         changelog: {
           projectChangelogs: true,

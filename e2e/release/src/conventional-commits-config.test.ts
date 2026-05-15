@@ -103,6 +103,7 @@ describe('nx release conventional commits config', () => {
         ...json.release,
         version: {
           conventionalCommits: true,
+          adjustSemverBumpsForZeroMajorVersion: false,
         },
         changelog: {
           projectChangelogs: {
@@ -458,6 +459,7 @@ describe('nx release conventional commits config', () => {
         ...json.release,
         version: {
           conventionalCommits: true,
+          adjustSemverBumpsForZeroMajorVersion: false,
         },
         changelog: {
           projectChangelogs: {
