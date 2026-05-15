@@ -36,6 +36,7 @@ export default [
             'nx',
             'typescript',
             'postcss-loader',
+            '@rspack/cli',
             '@module-federation/node',
             '@nx/workspace',
             '@nx/react',
