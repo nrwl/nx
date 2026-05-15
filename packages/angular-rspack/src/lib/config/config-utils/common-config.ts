@@ -1,4 +1,10 @@
-import { type Compiler, type Configuration, javascript } from '@rspack/core';
+import {
+  rspackVersion,
+  type Compiler,
+  type Configuration,
+  javascript,
+} from '@rspack/core';
+import { logger } from '@nx/devkit';
 import { join, resolve } from 'node:path';
 import {
   JS_ALL_EXT_REGEX,
@@ -43,9 +49,11 @@ export async function getCommonConfig(
     },
   };
 
+  // `profile` was removed as a top-level RspackOptions field in
+  // @rspack/core@2 — Rsdoctor replaces it. Keep the value (so the v1
+  // path still picks it up) by attaching after the typed object literal.
   const defaultConfig: Configuration = {
     context: normalizedOptions.root,
-    profile: normalizedOptions.statsJson,
     mode:
       normalizedOptions.optimization.scripts ||
       normalizedOptions.optimization.styles.minify
@@ -193,5 +201,20 @@ export async function getCommonConfig(
       ...stylesConfig.plugins,
     ],
   };
+  // Top-level `profile` was removed in @rspack/core@2 — not just from the
+  // type, but from the runtime. v2 redirects performance analysis to
+  // Rsdoctor (https://rsdoctor.dev). On v1 we set the flag as before; on
+  // v2 setting it would silently do nothing, so warn the user that their
+  // `--stats-json` profile won't include rspack timing data.
+  if (normalizedOptions.statsJson) {
+    if (parseInt(rspackVersion ?? '1', 10) >= 2) {
+      logger.warn(
+        '`profile: true` is no longer supported in @rspack/core@2. ' +
+          'Use Rsdoctor for performance analysis: https://rsdoctor.dev'
+      );
+    } else {
+      (defaultConfig as { profile?: boolean }).profile = true;
+    }
+  }
   return defaultConfig;
 }

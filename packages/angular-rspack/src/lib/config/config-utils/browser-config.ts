@@ -62,11 +62,14 @@ export async function getBrowserConfig(
             workerChunkLoading: 'import',
           }),
     },
+    // `experiments.outputModule` was removed in @rspack/core@2 (folded
+    // into top-level `output.module`, which we set above). On v1 the
+    // property still gates module output and needs to be set; on v2 the
+    // field is silently ignored. Launder through `unknown` to the
+    // destination type so both majors' typings accept the literal.
     experiments: isDevServer
       ? {}
-      : {
-          outputModule: true,
-        },
+      : ({ outputModule: true } as unknown as Configuration['experiments']),
     resolve: {
       ...defaultConfig.resolve,
       mainFields: ['es2020', 'es2015', 'browser', 'module', 'main'],

@@ -270,28 +270,23 @@ export async function getStylesConfig(
     },
   ];
 
+  // Each language gets an outer `oneOf` so every branch has its own
+  // matcher (`resourceQuery` for the two tagged paths, no-matcher
+  // fallthrough for the bare `use`). v1 and v2 both accept this shape,
+  // and v2's tightened `RuleSetRule` type (which requires a matcher on
+  // entries inside a nested `rules` array) is satisfied without a cast.
   return {
     loaderRules: styleLanguages.map(({ extensions, use }) => ({
       test: new RegExp(`\\.(?:${extensions.join('|')})$`, 'i'),
-      rules: [
-        // Setup processing rules for global and component styles
-        {
-          oneOf: [
-            // Global styles are only defined global styles
-            {
-              use: globalStyleLoaders,
-              resourceQuery: /\?ngGlobalStyle/,
-            },
-            // Component styles are all styles except defined global styles
-            {
-              use: componentStyleLoaders,
-              resourceQuery: /\?ngResource/,
-            },
-          ],
-        },
+      oneOf: [
+        // Global styles are only defined global styles
+        { resourceQuery: /\?ngGlobalStyle/, use: globalStyleLoaders },
+        // Component styles are all styles except defined global styles
+        { resourceQuery: /\?ngResource/, use: componentStyleLoaders },
+        // Fallthrough for anything not query-tagged
         { use },
       ],
-    })),
+    })) satisfies RuleSetRules,
     plugins: extraPlugins,
   };
 }
