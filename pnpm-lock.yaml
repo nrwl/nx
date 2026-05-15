@@ -198,6 +198,9 @@ catalogs:
     webpack-dev-server:
       specifier: ^5.2.1
       version: 5.2.3
+    which:
+      specifier: ^3.0.1
+      version: 3.0.1
     yargs:
       specifier: ^17.6.2
       version: 17.7.2
@@ -3377,6 +3380,9 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+      which:
+        specifier: 'catalog:'
+        version: 3.0.1
       yaml:
         specifier: ^2.8.3
         version: 2.9.0

@@ -56,6 +56,7 @@ catalog:
   verdaccio: '^6.3.2'
   webpack: '^5.101.3'
   webpack-dev-server: '^5.2.1'
+  which: '^3.0.1'
   yargs: '^17.6.2'
   yargs-parser: '21.1.1'
 catalogs:
