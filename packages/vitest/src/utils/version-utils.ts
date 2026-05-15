@@ -10,9 +10,6 @@ import {
   vitestV3CoverageIstanbulVersion,
   vitestV3CoverageV8Version,
   vitestV3Version,
-  vitestV2CoverageIstanbulVersion,
-  vitestV2CoverageV8Version,
-  vitestV2Version,
   vitestVersion,
 } from './versions';
 
@@ -33,15 +30,7 @@ export async function getVitestDependenciesVersionsToInstall(
       vitestCoverageV8: vitestV3CoverageV8Version,
       vitestCoverageIstanbul: vitestV3CoverageIstanbulVersion,
     };
-  } else if (await isVitestV2(tree)) {
-    return {
-      vitest: vitestV2Version,
-      vitestUi: vitestV2Version,
-      vitestCoverageV8: vitestV2CoverageV8Version,
-      vitestCoverageIstanbul: vitestV2CoverageIstanbulVersion,
-    };
   } else {
-    // Default to latest (v3)
     return {
       vitest: vitestVersion,
       vitestUi: vitestVersion,
@@ -57,14 +46,6 @@ export async function isVitestV3(tree: Tree) {
     installedVitestVersion = getInstalledVitestVersion(tree);
   }
   return major(installedVitestVersion) === 3;
-}
-
-export async function isVitestV2(tree: Tree) {
-  let installedVitestVersion = await getInstalledVitestVersionFromGraph();
-  if (!installedVitestVersion) {
-    installedVitestVersion = getInstalledVitestVersion(tree);
-  }
-  return major(installedVitestVersion) === 2;
 }
 
 export function getInstalledVitestVersion(tree: Tree): string {

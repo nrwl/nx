@@ -5,6 +5,6 @@ describe('@nx/vitest generators enforce supported version floor', () => {
   assertGeneratorsEnforceVersionFloor({
     packageRoot: join(__dirname, '..', '..'),
     packageName: 'vitest',
-    subFloorVersion: '~1.6.0',
+    subFloorVersion: '~2.1.8',
   });
 });
