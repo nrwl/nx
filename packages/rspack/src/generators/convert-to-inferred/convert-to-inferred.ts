@@ -91,7 +91,13 @@ export async function convertToInferred(tree: Tree, options: Schema) {
   const installCallback = addDependenciesToPackageJson(
     tree,
     {},
-    { '@rspack/core': rspackCoreVersion },
+    {
+      '@rspack/core': rspackCoreVersion,
+      // The inferred plugin's targets run the `rspack` CLI. Since
+      // @rspack/cli is an optional peer dependency of @nx/rspack, install
+      // it explicitly so the converted targets can execute.
+      '@rspack/cli': rspackCoreVersion,
+    },
     undefined,
     true
   );
