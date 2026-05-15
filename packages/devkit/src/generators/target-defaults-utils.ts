@@ -12,11 +12,13 @@ import {
   readNxJson,
   updateNxJson,
 } from 'nx/src/devkit-exports';
-import { findMatchingConfigFiles } from 'nx/src/devkit-internals';
+import {
+  findMatchingConfigFiles,
+  normalizeTargetDefaultsAgainstRootMaps,
+  readTargetDefaultsForTarget as readTargetDefaultsForTargetFromNx,
+} from 'nx/src/devkit-internals';
 import { major, valid } from 'semver';
 import { NX_VERSION } from '../utils/package-json';
-import { readTargetDefaultsForTarget as readTargetDefaultsForTargetFromNx } from 'nx/src/project-graph/utils/project-configuration-utils';
-import { normalizeTargetDefaultsAgainstRootMaps } from 'nx/src/project-graph/utils/project-configuration/target-defaults';
 import {
   downgradeTargetDefaults,
   normalizeTargetDefaults,
