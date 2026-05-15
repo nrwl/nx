@@ -50,7 +50,7 @@ Here is a sample `libs/storybook-host/.storybook/main.ts` file:
 ```javascript {% meta="{6}" %}
 // libs/storybook-host/.storybook/main.ts
 import type { StorybookConfig } from '@storybook/react-vite';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import tsconfigPaths from 'vite-tsconfig-paths';
 import { mergeConfig } from 'vite';
 
 const config: StorybookConfig = {
@@ -63,7 +63,7 @@ const config: StorybookConfig = {
 
   viteFinal: async (config) =>
     mergeConfig(config, {
-      plugins: [nxViteTsPaths()],
+      plugins: [tsconfigPaths()],
     }),
 };
 
