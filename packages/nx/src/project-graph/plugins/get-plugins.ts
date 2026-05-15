@@ -26,6 +26,17 @@ let loadedPlugins: LoadedNxPlugin[];
 let cachedSeparatedPlugins: SeparatedPlugins;
 let pendingPluginsPromise: Promise<LoadedNxPlugin[]> | undefined;
 let cleanupSpecifiedPlugins: () => void | undefined;
+// In-flight `getPluginsSeparated` call paired with the plugin-config hash
+// it's loading for. Lets a concurrent caller arriving with the same new
+// config dedupe onto the existing load instead of either (a) hitting the
+// cache check after `currentPluginsConfigurationHash` was bumped but
+// before `cachedSeparatedPlugins` was replaced — that race served the
+// previous load's stale result and surfaced as the spread.test.ts
+// middle-plugin flake — or (b) racing a parallel reload that thrashes
+// workers.
+let pendingSeparatedPluginsLoad:
+  | { hash: string; promise: Promise<SeparatedPlugins> }
+  | undefined;
 
 export interface SeparatedPlugins {
   specifiedPlugins: LoadedNxPlugin[];
@@ -81,6 +92,21 @@ export async function getPluginsSeparated(
     return cachedSeparatedPlugins;
   }
 
+  // A load for this exact plugin set is already in flight (e.g. the
+  // watcher kicked off a recompute and a `nx show` request landed
+  // before it finished). Dedupe onto it instead of starting a parallel
+  // reload that thrashes workers — and, more importantly, instead of
+  // falling through to the cache check after a concurrent caller bumps
+  // `currentPluginsConfigurationHash` to the new hash but hasn't yet
+  // replaced `cachedSeparatedPlugins` (which was the spread.test.ts
+  // middle-plugin flake).
+  if (
+    pendingSeparatedPluginsLoad &&
+    pendingSeparatedPluginsLoad.hash === pluginsConfigurationHash
+  ) {
+    return pendingSeparatedPluginsLoad.promise;
+  }
+
   // Plugins config changed (e.g. `nx add @nx/maven` updated nx.json). The
   // cached SeparatedPlugins is invalidated by the early-return above, but
   // pendingPluginsPromise — the in-flight load — would otherwise be reused
@@ -88,36 +114,63 @@ export async function getPluginsSeparated(
   // down the old workers and force a fresh load.
   cleanupSpecifiedPlugins?.();
   pendingPluginsPromise = undefined;
-  currentPluginsConfigurationHash = pluginsConfigurationHash;
-  const results = await Promise.allSettled([
-    getOnlyDefaultPlugins(root),
-    (pendingPluginsPromise ??= loadSpecifiedNxPlugins(
-      pluginsConfiguration,
-      root
-    )),
-  ]);
 
-  const errors: Error[] = [];
-  const defaultPlugins: LoadedNxPlugin[] = [];
-  const specifiedPlugins: LoadedNxPlugin[] = [];
+  const myHash = pluginsConfigurationHash;
+  const myPromise = (async (): Promise<SeparatedPlugins> => {
+    try {
+      const results = await Promise.allSettled([
+        getOnlyDefaultPlugins(root),
+        (pendingPluginsPromise ??= loadSpecifiedNxPlugins(
+          pluginsConfiguration,
+          root
+        )),
+      ]);
 
-  for (let i = 0; i < results.length; i++) {
-    const result = results[i];
-    if (result.status === 'fulfilled') {
-      (i === 0 ? defaultPlugins : specifiedPlugins).push(...result.value);
-    } else {
-      errors.push(reasonToError(result.reason));
+      const errors: Error[] = [];
+      const defaultPlugins: LoadedNxPlugin[] = [];
+      const specifiedPlugins: LoadedNxPlugin[] = [];
+
+      for (let i = 0; i < results.length; i++) {
+        const result = results[i];
+        if (result.status === 'fulfilled') {
+          (i === 0 ? defaultPlugins : specifiedPlugins).push(...result.value);
+        } else {
+          errors.push(reasonToError(result.reason));
+        }
+      }
+
+      if (errors.length > 0) {
+        throw new AggregateError(
+          errors,
+          errors.map((e) => e.message).join('\n')
+        );
+      }
+
+      const newCache: SeparatedPlugins = { specifiedPlugins, defaultPlugins };
+
+      // Only commit the cache + hash if we're still the most recent
+      // in-flight load. A newer config arrived during our load → that
+      // newer load will commit its own (correct) result; we must not
+      // overwrite it with our older one.
+      if (pendingSeparatedPluginsLoad?.promise === myPromise) {
+        cachedSeparatedPlugins = newCache;
+        currentPluginsConfigurationHash = myHash;
+        loadedPlugins = specifiedPlugins.concat(defaultPlugins);
+      }
+
+      return newCache;
+    } finally {
+      // Always drop the in-flight marker for our promise — on success
+      // the cache is committed above, on error we want the next caller
+      // to fall through and retry rather than be handed our rejection.
+      if (pendingSeparatedPluginsLoad?.promise === myPromise) {
+        pendingSeparatedPluginsLoad = undefined;
+      }
     }
-  }
+  })();
 
-  if (errors.length > 0) {
-    throw new AggregateError(errors, errors.map((e) => e.message).join('\n'));
-  }
-
-  cachedSeparatedPlugins = { specifiedPlugins, defaultPlugins };
-  loadedPlugins = specifiedPlugins.concat(defaultPlugins);
-
-  return cachedSeparatedPlugins;
+  pendingSeparatedPluginsLoad = { hash: myHash, promise: myPromise };
+  return myPromise;
 }
 
 /**
