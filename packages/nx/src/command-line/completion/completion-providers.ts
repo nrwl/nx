@@ -100,15 +100,20 @@ export function completeGenerator(current: string): string[] {
 }
 
 /**
- * Returns plugin package names (with at least one generator) matching the prefix.
+ * Returns plugin collection names (with at least one generator) matching
+ * the prefix. Covers both installed npm plugins and workspace-local plugin
+ * projects (e.g. a `libs/my-plugin` with its own `generators.json`).
  */
 export function getGeneratorPluginCompletions(current: string): string[] {
-  const workspaceRoot = process.env.NX_WORKSPACE_ROOT_PATH || process.cwd();
-  const plugins = listPluginsWithGenerators(workspaceRoot);
-  if (!current) {
-    return plugins;
+  const dirs = collectPluginDirs();
+  const result: string[] = [];
+  for (const [name, dir] of dirs) {
+    if (current && !name.startsWith(current)) continue;
+    if (readGeneratorNames(dir).length > 0) {
+      result.push(name);
+    }
   }
-  return plugins.filter((p) => p.startsWith(current));
+  return result;
 }
 
 /**
@@ -118,74 +123,85 @@ export function getGeneratorsForPlugin(
   pluginName: string,
   current: string
 ): string[] {
-  const workspaceRoot = process.env.NX_WORKSPACE_ROOT_PATH || process.cwd();
-  const generators = readGeneratorsJson(workspaceRoot, pluginName);
+  const dir = collectPluginDirs().get(pluginName);
+  if (!dir) {
+    return [];
+  }
+  const generators = readGeneratorNames(dir);
   if (!current) {
     return generators;
   }
   return generators.filter((g) => g.startsWith(current));
 }
 
-function listPluginsWithGenerators(workspaceRoot: string): string[] {
-  const pkgPath = join(workspaceRoot, 'package.json');
-  if (!existsSync(pkgPath)) {
-    return [];
-  }
-  let pkg: any;
-  try {
-    pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
-  } catch {
-    return [];
-  }
-  const deps = {
-    ...(pkg.dependencies ?? {}),
-    ...(pkg.devDependencies ?? {}),
-  };
-  const result: string[] = [];
-  for (const dep of Object.keys(deps)) {
-    if (readGeneratorsJson(workspaceRoot, dep).length > 0) {
-      result.push(dep);
+/**
+ * Builds a map of collection name → directory containing the plugin's
+ * `package.json`. Two sources:
+ *   - installed npm plugins — root `package.json` deps, resolved under
+ *     `node_modules/<name>`
+ *   - workspace-local plugin projects — any project in the cached graph
+ *     whose `package.json` declares a `generators`/`schematics` collection
+ *
+ * A local definition wins over a same-named installed package (the local
+ * one is what the user is developing).
+ */
+function collectPluginDirs(): Map<string, string> {
+  const workspaceRoot = process.env.NX_WORKSPACE_ROOT_PATH || process.cwd();
+  const dirs = new Map<string, string>();
+
+  const rootPkg = readJsonSafe(join(workspaceRoot, 'package.json'));
+  if (rootPkg) {
+    const deps = {
+      ...(rootPkg.dependencies ?? {}),
+      ...(rootPkg.devDependencies ?? {}),
+    };
+    for (const dep of Object.keys(deps)) {
+      dirs.set(dep, join(workspaceRoot, 'node_modules', dep));
     }
   }
-  return result;
+
+  const graph = getCachedProjectGraph();
+  for (const node of Object.values(graph?.nodes ?? {})) {
+    const root = (node as any)?.data?.root;
+    if (typeof root !== 'string' || !root) continue;
+    const projectDir = join(workspaceRoot, root);
+    const pkg = readJsonSafe(join(projectDir, 'package.json'));
+    const collectionField = pkg?.generators ?? pkg?.schematics;
+    if (pkg?.name && typeof collectionField === 'string') {
+      dirs.set(pkg.name, projectDir);
+    }
+  }
+
+  return dirs;
 }
 
-function readGeneratorsJson(
-  workspaceRoot: string,
-  pluginName: string
-): string[] {
-  try {
-    const depPkgPath = join(
-      workspaceRoot,
-      'node_modules',
-      pluginName,
-      'package.json'
-    );
-    if (!existsSync(depPkgPath)) {
-      return [];
-    }
-    const depPkg = JSON.parse(readFileSync(depPkgPath, 'utf-8'));
-    const field = depPkg.generators ?? depPkg.schematics;
-    if (typeof field !== 'string') {
-      return [];
-    }
-    const generatorsJsonPath = join(
-      workspaceRoot,
-      'node_modules',
-      pluginName,
-      field
-    );
-    if (!existsSync(generatorsJsonPath)) {
-      return [];
-    }
-    const generatorsJson = JSON.parse(
-      readFileSync(generatorsJsonPath, 'utf-8')
-    );
-    const collection =
-      generatorsJson.generators ?? generatorsJson.schematics ?? {};
-    return Object.keys(collection).filter((k) => !collection[k]?.hidden);
-  } catch {
+/**
+ * Reads the non-hidden generator names from the `generators`/`schematics`
+ * JSON referenced by the plugin's `package.json` in `pluginDir`.
+ */
+function readGeneratorNames(pluginDir: string): string[] {
+  const pkg = readJsonSafe(join(pluginDir, 'package.json'));
+  const field = pkg?.generators ?? pkg?.schematics;
+  if (typeof field !== 'string') {
     return [];
+  }
+  const generatorsJson = readJsonSafe(join(pluginDir, field));
+  if (!generatorsJson) {
+    return [];
+  }
+  const collection =
+    generatorsJson.generators ?? generatorsJson.schematics ?? {};
+  return Object.keys(collection).filter((k) => !collection[k]?.hidden);
+}
+
+function readJsonSafe(path: string): any | null {
+  try {
+    if (!existsSync(path)) {
+      return null;
+    }
+    return JSON.parse(readFileSync(path, 'utf-8'));
+  } catch {
+    return null;
   }
 }
 

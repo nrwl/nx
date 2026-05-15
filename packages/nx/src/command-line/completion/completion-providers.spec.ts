@@ -262,6 +262,52 @@ describe('completion/completion-providers', () => {
       );
       expect(getGeneratorsForPlugin('plain-plugin', '')).toEqual([]);
     });
+
+    describe('workspace-local plugins', () => {
+      function writeLocalPlugin(
+        projectRoot: string,
+        name: string,
+        generators: Record<string, { hidden?: boolean }>
+      ): void {
+        const dir = join(workspaceRoot, projectRoot);
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(
+          join(dir, 'package.json'),
+          JSON.stringify({ name, generators: './generators.json' })
+        );
+        writeFileSync(
+          join(dir, 'generators.json'),
+          JSON.stringify({ generators })
+        );
+      }
+
+      it('discovers plugins from project-graph nodes, not just node_modules', () => {
+        writeLocalPlugin('libs/my-plugin', '@org/my-plugin', {
+          feature: {},
+          secret: { hidden: true },
+        });
+        // A non-plugin project (no generators field) must be ignored.
+        const appDir = join(workspaceRoot, 'apps/my-app');
+        mkdirSync(appDir, { recursive: true });
+        writeFileSync(
+          join(appDir, 'package.json'),
+          JSON.stringify({ name: '@org/my-app' })
+        );
+        writeProjectGraph({
+          nodes: {
+            'my-plugin': { data: { root: 'libs/my-plugin' } },
+            'my-app': { data: { root: 'apps/my-app' } },
+          },
+        });
+
+        expect(getGeneratorPluginCompletions('@org')).toEqual([
+          '@org/my-plugin',
+        ]);
+        expect(getGeneratorsForPlugin('@org/my-plugin', '')).toEqual([
+          'feature',
+        ]);
+      });
+    });
   });
 });
 
