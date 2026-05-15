@@ -42,6 +42,11 @@
   "peerDependencies": {
     "@rsbuild/core": "^1.0.0"
   },
+  "peerDependenciesMeta": {
+    "@rsbuild/core": {
+      "optional": true
+    }
+  },
   "nx-migrations": {
     "migrations": "./migrations.json"
   },

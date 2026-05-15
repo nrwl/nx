@@ -1,5 +1,9 @@
-import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
-import { clean, coerce, major } from 'semver';
+import { type Tree } from '@nx/devkit';
+import {
+  getDeclaredPackageVersion,
+  getInstalledPackageVersion,
+} from '@nx/devkit/internal';
+import { major } from 'semver';
 import {
   backwardCompatibleRsbuildVersions,
   latestRsbuildVersions,
@@ -8,12 +12,8 @@ import {
 
 const RSBUILD_CORE_PACKAGE = '@rsbuild/core';
 
-function cleanVersion(version: string): string | undefined {
-  return clean(version) ?? coerce(version)?.version ?? undefined;
-}
-
 /**
- * Returns the installed @rsbuild/core major version from the workspace's
+ * Returns the declared @rsbuild/core major version from the workspace's
  * package.json when it matches a supported major, or `undefined` otherwise
  * (fresh install, dist tag, unknown major). Below-floor enforcement is
  * handled at generator entry points via `assertSupportedRsbuildVersion`.
@@ -21,48 +21,31 @@ function cleanVersion(version: string): string | undefined {
 export function getInstalledRsbuildMajorVersion(
   tree: Tree
 ): SupportedRsbuildMajorVersion | undefined {
-  const raw = getDependencyVersionFromPackageJson(tree, RSBUILD_CORE_PACKAGE);
-  if (!raw || raw === 'latest' || raw === 'beta') {
+  const declared = getDeclaredPackageVersion(tree, RSBUILD_CORE_PACKAGE);
+  if (!declared) {
     return undefined;
   }
-
-  const cleaned = cleanVersion(raw);
-  if (!cleaned) {
-    return undefined;
-  }
-
-  const installedMajor = major(cleaned);
-  if (installedMajor in backwardCompatibleRsbuildVersions) {
-    return installedMajor as SupportedRsbuildMajorVersion;
-  }
-  return undefined;
+  const installedMajor = major(declared);
+  return installedMajor in backwardCompatibleRsbuildVersions
+    ? (installedMajor as SupportedRsbuildMajorVersion)
+    : undefined;
 }
 
 /**
- * Returns the installed @rsbuild/core major version resolved at runtime via
- * `require.resolve`. For use in executors and runtime code where no Tree is
+ * Returns the installed @rsbuild/core major version resolved at runtime from
+ * node_modules. For use in executors and runtime code where no Tree is
  * available. Returns `null` when @rsbuild/core can't be resolved or the
  * installed major isn't supported.
  */
 export function getInstalledRsbuildVersionRuntime(): SupportedRsbuildMajorVersion | null {
-  let packageJsonPath: string;
-  try {
-    packageJsonPath = require.resolve(`${RSBUILD_CORE_PACKAGE}/package.json`, {
-      paths: [process.cwd()],
-    });
-  } catch {
+  const version = getInstalledPackageVersion(RSBUILD_CORE_PACKAGE);
+  if (!version) {
     return null;
   }
-  const { version } = require(packageJsonPath) as { version: string };
-  const cleaned = cleanVersion(version);
-  if (!cleaned) {
-    return null;
-  }
-  const installedMajor = major(cleaned);
-  if (installedMajor in backwardCompatibleRsbuildVersions) {
-    return installedMajor as SupportedRsbuildMajorVersion;
-  }
-  return null;
+  const installedMajor = major(version);
+  return installedMajor in backwardCompatibleRsbuildVersions
+    ? (installedMajor as SupportedRsbuildMajorVersion)
+    : null;
 }
 
 /**

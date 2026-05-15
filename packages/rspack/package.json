@@ -61,9 +61,24 @@
     "@nx/nest": "workspace:*"
   },
   "peerDependencies": {
+    "@rspack/cli": "^1.0.0",
     "@rspack/core": "^1.0.0",
     "@rspack/dev-server": "^1.0.0",
     "@rspack/plugin-react-refresh": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@rspack/cli": {
+      "optional": true
+    },
+    "@rspack/core": {
+      "optional": true
+    },
+    "@rspack/dev-server": {
+      "optional": true
+    },
+    "@rspack/plugin-react-refresh": {
+      "optional": true
+    }
   },
   "nx-migrations": {
     "migrations": "./migrations.json"
