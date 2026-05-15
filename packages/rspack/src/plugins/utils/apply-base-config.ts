@@ -1,15 +1,20 @@
 import * as path from 'path';
-import { type ExecutorContext } from '@nx/devkit';
+import { logger, type ExecutorContext } from '@nx/devkit';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import {
+import type {
+  Compiler,
   Configuration,
-  ProgressPlugin,
   RspackPluginInstance,
-  SwcJsMinimizerRspackPlugin,
-  CopyRspackPlugin,
   RspackOptionsNormalized,
   Output,
 } from '@rspack/core';
+function getRspackMajorVersion(
+  rspackCore: typeof import('@rspack/core')
+): number {
+  const v = rspackCore.rspackVersion ?? '1.0.0';
+  const m = /^(\d+)\./.exec(v);
+  return m ? parseInt(m[1], 10) : 1;
+}
 import { getRootTsConfigPath } from '@nx/js';
 
 import { StatsJsonPlugin } from './plugins/stats-json-plugin';
@@ -42,11 +47,13 @@ export function applyBaseConfig(
   config: Partial<RspackOptionsNormalized | Configuration> = {},
   {
     useNormalizedEntry,
+    compiler,
   }: {
     // rspack.Configuration allows arrays to be set on a single entry
     // rspack then normalizes them to { import: "..." } objects
     // This option allows use to preserve existing composePlugins behavior where entry.main is an array.
     useNormalizedEntry?: boolean;
+    compiler?: Compiler;
   } = {}
 ): void {
   // Defaults that was applied from executor schema previously.
@@ -57,18 +64,29 @@ export function applyBaseConfig(
   options.progress ??= true;
   options.outputHashing ??= 'all';
 
-  applyNxIndependentConfig(options, config);
+  // Prefer compiler.rspack when available (sync, no Jest constraint).
+  // Otherwise lazy-require @rspack/core — works on Node 22.12+ via
+  // require(esm) since Nx 23's minimum is documented as Node 22.12+, and
+  // the inline require avoids loading rspack at module-load time so Jest
+  // can still parse this file.
+  const rspackCore: typeof import('@rspack/core') = compiler
+    ? (compiler.rspack as unknown as typeof import('@rspack/core'))
+    : require('@rspack/core');
+
+  applyNxIndependentConfig(options, config, rspackCore);
 
   // Some of the options only work during actual tasks, not when reading the rspack config during CreateNodes.
   if (global.NX_GRAPH_CREATION) return;
 
-  applyNxDependentConfig(options, config, { useNormalizedEntry });
+  applyNxDependentConfig(options, config, { useNormalizedEntry }, rspackCore);
 }
 
 function applyNxIndependentConfig(
   options: NormalizedNxAppRspackPluginOptions,
-  config: Partial<RspackOptionsNormalized | Configuration>
+  config: Partial<RspackOptionsNormalized | Configuration>,
+  rspackCore: typeof import('@rspack/core')
 ): void {
+  const { SwcJsMinimizerRspackPlugin } = rspackCore;
   const isProd =
     process.env.NODE_ENV === 'production' || options.mode === 'production';
   const isDevServer = process.env['WEBPACK_SERVE'];
@@ -106,32 +124,55 @@ function applyNxIndependentConfig(
   config.devtool =
     options.sourceMap === true ? 'source-map' : options.sourceMap;
 
+  const existingOutputConfig = config.output as Output;
+  const existingLibraryTarget = existingOutputConfig?.libraryTarget;
+  const existingLibraryType =
+    typeof existingOutputConfig?.library === 'object' &&
+    'type' in existingOutputConfig?.library
+      ? existingOutputConfig?.library?.type
+      : undefined;
+
+  // What type the library output should be set to, expressed as a string.
+  // `undefined` means "no Nx-provided default", but a user-provided
+  // library.type already on the config is still respected.
+  const computedLibraryType: string | undefined = (() => {
+    // If user is using modern library.type, don't override
+    if (existingLibraryType !== undefined) return undefined;
+    // If user has set libraryTarget explicitly, use it
+    if (existingLibraryTarget !== undefined) return existingLibraryTarget;
+    // Defaults based on target when user hasn't configured anything
+    if (options.target === 'node') return 'commonjs';
+    if (options.target === 'async-node') return 'commonjs-module';
+    return undefined;
+  })();
+
+  // v1 supports both `output.libraryTarget` and `output.library.type`;
+  // v2 removed the legacy `libraryTarget` field. On v2, always clear any
+  // existing `libraryTarget` (whether from the spread of `config.output`
+  // or the user's own input) so it doesn't survive into the merged
+  // output — rspack v2 rejects it outright.
+  const installedRspackMajor = getRspackMajorVersion(rspackCore);
+  const existingLibrary =
+    typeof config.output?.library === 'object' ? config.output.library : {};
+  const libraryOutput: { libraryTarget?: string; library?: any } =
+    computedLibraryType === undefined
+      ? {}
+      : installedRspackMajor >= 2
+        ? {
+            library: { ...existingLibrary, type: computedLibraryType },
+            libraryTarget: undefined,
+          }
+        : { libraryTarget: computedLibraryType };
+  // When the user has set `library.type`, the legacy `libraryTarget` field
+  // is ambiguous and v1 picks the modern form anyway; v2 rejects it
+  // outright. Clear it in either case.
+  if (existingLibraryType !== undefined) {
+    libraryOutput.libraryTarget = undefined;
+  }
+
   config.output = {
     ...(config.output ?? {}),
-    libraryTarget: (() => {
-      const existingOutputConfig = config.output as Output;
-      const existingLibraryTarget = existingOutputConfig?.libraryTarget;
-      const existingLibraryType =
-        typeof existingOutputConfig?.library === 'object' &&
-        'type' in existingOutputConfig?.library
-          ? existingOutputConfig?.library?.type
-          : undefined;
-
-      // If user is using modern library.type, don't set the deprecated libraryTarget
-      if (existingLibraryType !== undefined) {
-        return undefined;
-      }
-
-      // If user has set libraryTarget explicitly, use it
-      if (existingLibraryTarget !== undefined) {
-        return existingLibraryTarget;
-      }
-
-      // Set defaults based on target when user hasn't configured anything
-      if (options.target === 'node') return 'commonjs';
-      if (options.target === 'async-node') return 'commonjs-module';
-      return undefined;
-    })(),
+    ...libraryOutput,
     path:
       config.output?.path ??
       (options.outputPath
@@ -159,7 +200,22 @@ function applyNxIndependentConfig(
     poll: options.poll,
   };
 
-  config.profile = options.statsJson;
+  // Top-level `profile` was removed in @rspack/core@2 — it no longer
+  // controls anything at runtime. On v1 it adds per-module timing data
+  // to the emitted stats.json; on v2 setting it is a silent no-op, so
+  // warn that `--stats-json` output won't include rspack timing data.
+  // The structural stats.json is still emitted by StatsJsonPlugin.
+  if (options.statsJson) {
+    if (installedRspackMajor >= 2) {
+      logger.warn(
+        '`profile` is no longer supported in @rspack/core@2, so the ' +
+          'stats.json from `--stats-json` will not include build timing ' +
+          'data. Use Rsdoctor for performance analysis: https://rsdoctor.dev'
+      );
+    } else {
+      config.profile = true;
+    }
+  }
 
   config.performance = {
     ...config.performance,
@@ -252,8 +308,11 @@ function applyNxIndependentConfig(
 function applyNxDependentConfig(
   options: NormalizedNxAppRspackPluginOptions,
   config: Partial<RspackOptionsNormalized | Configuration>,
-  { useNormalizedEntry }: { useNormalizedEntry?: boolean } = {}
+  { useNormalizedEntry }: { useNormalizedEntry?: boolean } = {},
+  rspackCore: typeof import('@rspack/core')
 ): void {
+  const { ProgressPlugin, SwcJsMinimizerRspackPlugin, CopyRspackPlugin } =
+    rspackCore;
   const tsConfig = options.tsConfig ?? getRootTsConfigPath();
   const plugins: RspackPluginInstance[] = [];
 

@@ -1,9 +1,9 @@
 import { ExecutorContext } from '@nx/devkit';
 import {
-  Compiler,
-  type Configuration,
-  MultiCompiler,
   rspack,
+  type Compiler,
+  type Configuration,
+  type MultiCompiler,
 } from '@rspack/core';
 
 import { NormalizedRspackExecutorSchema } from '../executors/rspack/schema';
