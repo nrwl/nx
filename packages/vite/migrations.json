@@ -58,6 +58,22 @@
       },
       "description": "Create AI Instructions to help migrate users workspaces past breaking changes for Vite 8.",
       "prompt": "./dist/src/migrations/update-23-0-0/ai-instructions-for-vite-8.md"
+    },
+    "create-ai-instructions-for-vitest-3": {
+      "version": "23.0.0-beta.13",
+      "requires": {
+        "vitest": ">=3.0.0"
+      },
+      "description": "Provide AI Instructions to help migrate users workspaces past breaking changes for Vitest 3.",
+      "prompt": "./src/migrations/update-23-0-0/ai-instructions-for-vitest-3.md"
+    },
+    "create-ai-instructions-for-vitest-4": {
+      "version": "23.0.0-beta.13",
+      "requires": {
+        "vitest": ">=4.0.0"
+      },
+      "description": "Provide AI Instructions to help migrate users workspaces past breaking changes for Vitest 4.",
+      "prompt": "./src/migrations/update-23-0-0/ai-instructions-for-vitest-4.md"
     }
   },
   "packageJsonUpdates": {
@@ -185,6 +201,54 @@
       },
       "incompatibleWith": {
         "@remix-run/dev": "*"
+      }
+    },
+    "23.0.0-vitest-v3-floor": {
+      "version": "23.0.0-beta.13",
+      "requires": {
+        "vitest": "<3.0.0"
+      },
+      "packages": {
+        "vitest": {
+          "version": "^3.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-v8": {
+          "version": "^3.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-istanbul": {
+          "version": "^3.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/ui": {
+          "version": "^3.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.0.0-vitest-v4": {
+      "version": "23.0.0-beta.13",
+      "requires": {
+        "vitest": ">=3.0.0 <4.0.0"
+      },
+      "packages": {
+        "vitest": {
+          "version": "^4.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-v8": {
+          "version": "^4.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-istanbul": {
+          "version": "^4.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/ui": {
+          "version": "^4.0.0",
+          "alwaysAddToPackageJson": false
+        }
       }
     }
   }
