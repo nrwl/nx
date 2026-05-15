@@ -207,8 +207,9 @@ export async function getCommonConfig(
   if (normalizedOptions.statsJson) {
     if (isRspackV2()) {
       logger.warn(
-        '`profile: true` is no longer supported in @rspack/core@2. ' +
-          'Use Rsdoctor for performance analysis: https://rsdoctor.dev'
+        'The `statsJson` output no longer includes rspack build profiling ' +
+          'data on @rspack/core@2. Use Rsdoctor for performance analysis: ' +
+          'https://rsdoctor.dev'
       );
     } else {
       (defaultConfig as { profile?: boolean }).profile = true;
