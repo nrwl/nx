@@ -173,6 +173,15 @@ Add these sections:
 
 Do **not** override `build-base.outputs` in `project.json`. The `@nx/js/typescript` plugin reads `outDir` and `tsBuildInfoFile` from `tsconfig.lib.json` and infers the correct outputs (including the tsbuildinfo and the full set of file extensions). A hand-written override is almost always less complete than the inferred set.
 
+If the package already has a hand-written `build-base.outputs` array, **delete it** — don't try to patch it. An incomplete override that omits `dist/tsconfig.tsbuildinfo` causes a sandbox violation in _every consumer_ that has a TypeScript project reference to this package: their `tsc --build` reads the referenced project's `.tsbuildinfo`, but `dependentTasksOutputFiles` can only collect it if this package declares it as an output.
+
+Verify the inferred outputs include the tsbuildinfo:
+
+```bash
+pnpm nx show project <name> --json | jq '.targets["build-base"].outputs'
+# Must include "{projectRoot}/dist/tsconfig.tsbuildinfo"
+```
+
 Update the existing `build` target's `outputs` if they reference `{workspaceRoot}/dist/packages/<name>` — they should now reference `{projectRoot}/dist/`.
 
 Also update `dependsOn` in the `build` target: replace `"^build"` with `"^build"` if it isn't already, and make sure `"build-base"` is listed.
