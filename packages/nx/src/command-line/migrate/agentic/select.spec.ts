@@ -1,0 +1,244 @@
+jest.mock('../../../native', () => ({
+  isAiAgent: jest.fn(() => false),
+}));
+jest.mock('enquirer', () => ({
+  prompt: jest.fn(),
+}));
+jest.mock('./detect-installed', () => ({
+  detectInstalledAgents: jest.fn(),
+}));
+jest.mock('../../../utils/output', () => ({
+  output: {
+    log: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  },
+}));
+
+import { isAiAgent } from '../../../native';
+import { prompt } from 'enquirer';
+import { detectInstalledAgents } from './detect-installed';
+import { output } from '../../../utils/output';
+import { resolveAgentic } from './select';
+import { DetectedInstalledAgent } from './types';
+
+const mockIsAiAgent = isAiAgent as unknown as jest.Mock;
+const mockPrompt = prompt as unknown as jest.Mock;
+const mockDetect = detectInstalledAgents as unknown as jest.Mock;
+const mockOutputLog = output.log as unknown as jest.Mock;
+const mockOutputWarn = output.warn as unknown as jest.Mock;
+const mockOutputError = output.error as unknown as jest.Mock;
+
+function detected(
+  id: 'claude-code' | 'codex' | 'opencode'
+): DetectedInstalledAgent {
+  return {
+    id,
+    displayName: id === 'claude-code' ? 'Claude Code' : id,
+    binary: `/usr/local/bin/${id}`,
+    source: 'path',
+  };
+}
+
+const originalStdinTty = process.stdin.isTTY;
+const originalStdoutTty = process.stdout.isTTY;
+const originalCodexThreadId = process.env.CODEX_THREAD_ID;
+
+function setTty(enabled: boolean): void {
+  Object.defineProperty(process.stdin, 'isTTY', {
+    configurable: true,
+    value: enabled,
+  });
+  Object.defineProperty(process.stdout, 'isTTY', {
+    configurable: true,
+    value: enabled,
+  });
+}
+
+describe('resolveAgentic', () => {
+  beforeEach(() => {
+    mockIsAiAgent.mockReset();
+    mockIsAiAgent.mockReturnValue(false);
+    mockPrompt.mockReset();
+    mockDetect.mockReset();
+    mockOutputLog.mockReset();
+    mockOutputWarn.mockReset();
+    mockOutputError.mockReset();
+    setTty(true);
+    delete process.env.CODEX_THREAD_ID;
+  });
+
+  afterAll(() => {
+    Object.defineProperty(process.stdin, 'isTTY', {
+      configurable: true,
+      value: originalStdinTty,
+    });
+    Object.defineProperty(process.stdout, 'isTTY', {
+      configurable: true,
+      value: originalStdoutTty,
+    });
+    if (originalCodexThreadId === undefined) {
+      delete process.env.CODEX_THREAD_ID;
+    } else {
+      process.env.CODEX_THREAD_ID = originalCodexThreadId;
+    }
+  });
+
+  it('skips everything when running inside another AI agent (native detection)', async () => {
+    mockIsAiAgent.mockReturnValue(true);
+    const result = await resolveAgentic({
+      agentic: true,
+      migrations: [{ prompt: 'x.md' }],
+    });
+    expect(result).toEqual({ skipAllAgentic: true, agenticEnabled: false });
+    expect(mockDetect).not.toHaveBeenCalled();
+    expect(mockPrompt).not.toHaveBeenCalled();
+  });
+
+  it('skips everything when running inside Codex (TS-side env fallback)', async () => {
+    mockIsAiAgent.mockReturnValue(false);
+    process.env.CODEX_THREAD_ID = 'thread-abc';
+    const result = await resolveAgentic({
+      agentic: true,
+      migrations: [{ prompt: 'x.md' }],
+    });
+    expect(result).toEqual({ skipAllAgentic: true, agenticEnabled: false });
+  });
+
+  it('returns disabled when --agentic=false, without detection or prompts', async () => {
+    const result = await resolveAgentic({
+      agentic: false,
+      migrations: [{ prompt: 'x.md' }],
+    });
+    expect(result).toEqual({ skipAllAgentic: false, agenticEnabled: false });
+    expect(mockDetect).not.toHaveBeenCalled();
+    expect(mockPrompt).not.toHaveBeenCalled();
+  });
+
+  it('returns disabled silently when --agentic is undefined and no prompt migrations are queued', async () => {
+    const result = await resolveAgentic({
+      agentic: undefined,
+      migrations: [{}, {}],
+    });
+    expect(result.agenticEnabled).toBe(false);
+    expect(mockPrompt).not.toHaveBeenCalled();
+  });
+
+  it('fires the up-front prompt when --agentic is undefined and prompt migrations are queued', async () => {
+    mockPrompt.mockResolvedValueOnce({ enable: false });
+    const result = await resolveAgentic({
+      agentic: undefined,
+      migrations: [{ prompt: 'x.md' }],
+    });
+    expect(mockPrompt).toHaveBeenCalledTimes(1);
+    expect(result.agenticEnabled).toBe(false);
+  });
+
+  it('enables the agentic flow when the up-front prompt is accepted', async () => {
+    mockPrompt.mockResolvedValueOnce({ enable: true });
+    mockDetect.mockResolvedValue([detected('claude-code')]);
+    const result = await resolveAgentic({
+      agentic: undefined,
+      migrations: [{ prompt: 'x.md' }],
+    });
+    expect(result.agenticEnabled).toBe(true);
+    expect(result.selectedAgent?.id).toBe('claude-code');
+  });
+
+  it('uses the single detected agent without firing a picker', async () => {
+    mockDetect.mockResolvedValue([detected('claude-code')]);
+    const result = await resolveAgentic({
+      agentic: true,
+      migrations: [{ prompt: 'x.md' }],
+    });
+    expect(result.selectedAgent?.id).toBe('claude-code');
+    expect(mockPrompt).not.toHaveBeenCalled();
+  });
+
+  it('fires the picker when multiple agents are detected', async () => {
+    mockDetect.mockResolvedValue([detected('claude-code'), detected('codex')]);
+    mockPrompt.mockResolvedValueOnce({ id: 'codex' });
+    const result = await resolveAgentic({
+      agentic: true,
+      migrations: [{ prompt: 'x.md' }],
+    });
+    expect(mockPrompt).toHaveBeenCalledTimes(1);
+    expect(result.selectedAgent?.id).toBe('codex');
+  });
+
+  it('uses the explicit agent id when it is installed', async () => {
+    mockDetect.mockResolvedValue([
+      detected('claude-code'),
+      detected('opencode'),
+    ]);
+    const result = await resolveAgentic({
+      agentic: 'opencode',
+      migrations: [{ prompt: 'x.md' }],
+    });
+    expect(result.selectedAgent?.id).toBe('opencode');
+    expect(mockPrompt).not.toHaveBeenCalled();
+  });
+
+  it('warns and falls back to the picker when the explicit agent id is not installed', async () => {
+    mockDetect.mockResolvedValue([detected('claude-code'), detected('codex')]);
+    mockPrompt.mockResolvedValueOnce({ id: 'codex' });
+    const result = await resolveAgentic({
+      agentic: 'opencode',
+      migrations: [{ prompt: 'x.md' }],
+    });
+    expect(mockOutputWarn).toHaveBeenCalled();
+    expect(result.selectedAgent?.id).toBe('codex');
+  });
+
+  it('warns then auto-selects when the explicit agent is missing but only one other agent is installed', async () => {
+    mockDetect.mockResolvedValue([detected('codex')]);
+    const result = await resolveAgentic({
+      agentic: 'opencode',
+      migrations: [{ prompt: 'x.md' }],
+    });
+    expect(mockOutputWarn).toHaveBeenCalled();
+    expect(result.selectedAgent?.id).toBe('codex');
+    expect(mockPrompt).not.toHaveBeenCalled();
+  });
+
+  it('aborts when agentic is enabled but no agents are installed', async () => {
+    mockDetect.mockResolvedValue([]);
+    await expect(
+      resolveAgentic({
+        agentic: true,
+        migrations: [{ prompt: 'x.md' }],
+      })
+    ).rejects.toThrow(/No installed AI agent/);
+    expect(mockOutputError).toHaveBeenCalled();
+  });
+
+  it('aborts when --agentic=true is passed in a non-TTY environment', async () => {
+    setTty(false);
+    await expect(
+      resolveAgentic({
+        agentic: true,
+        migrations: [{ prompt: 'x.md' }],
+      })
+    ).rejects.toThrow(/interactive terminal/);
+  });
+
+  it('aborts when --agentic=<id> is passed in a non-TTY environment', async () => {
+    setTty(false);
+    await expect(
+      resolveAgentic({
+        agentic: 'claude-code',
+        migrations: [{ prompt: 'x.md' }],
+      })
+    ).rejects.toThrow(/interactive terminal/);
+  });
+
+  it('resolves silently to disabled when --agentic is undefined in a non-TTY environment', async () => {
+    setTty(false);
+    const result = await resolveAgentic({
+      agentic: undefined,
+      migrations: [{ prompt: 'x.md' }],
+    });
+    expect(result.agenticEnabled).toBe(false);
+    expect(mockPrompt).not.toHaveBeenCalled();
+  });
+});
