@@ -3,10 +3,13 @@ import {
   newProject,
   readJson,
   runCLI,
+  tmpProjPath,
   uniq,
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 describe('Spread Token Merging', () => {
   let proj: string;
@@ -22,6 +25,32 @@ describe('Spread Token Merging', () => {
     existingNxJson = readJson('nx.json');
   });
   afterEach(() => {
+    // Print the daemon log into the test's stdout BEFORE reset (which
+    // stops the daemon and may rotate the file). CI captures stdout
+    // per test so the [watcher] lines end up alongside the failure
+    // assertion in the build output.
+    try {
+      const daemonLog = join(
+        tmpProjPath(),
+        '.nx',
+        'workspace-data',
+        'd',
+        'daemon.log'
+      );
+      if (existsSync(daemonLog)) {
+        const contents = readFileSync(daemonLog, 'utf-8');
+        console.log(
+          `\n========== daemon.log for "${
+            expect.getState().currentTestName ?? 'unknown'
+          }" ==========\n${contents}\n========== end daemon.log ==========\n`
+        );
+      } else {
+        console.log(`[spread-debug] no daemon log at ${daemonLog}`);
+      }
+    } catch (e) {
+      console.log(`[spread-debug] failed to read daemon log: ${e}`);
+    }
+
     updateFile('nx.json', JSON.stringify(existingNxJson, null, 2));
     // Reset daemon cache so the next test does not see stale plugin-inferred
     // project graph data.  The PR enabling NX_DAEMON=true in runCLI means the
@@ -923,6 +952,152 @@ describe('Spread Token Merging', () => {
 
       const project = getResolvedProject(lib);
       expect(project.targets.echo.dependsOn).toEqual(['prebuild', '^build']);
+    });
+  });
+
+  /**
+   * Race-condition stress.
+   *
+   * These tests deliberately mutate nx.json (and tools/*) in tight loops
+   * with no settle time between the write and the `show project` query,
+   * and without a `reset` in between — so the long-lived daemon must pick
+   * up every change through its file watcher before it serves the graph.
+   *
+   * If the daemon answers from a stale cached graph (the watcher event
+   * for the latest nx.json write has not landed yet), the resolved
+   * build.inputs will not match the expectation and the test fails.
+   * Each loop iteration is a fresh chance to hit that window, so a flake
+   * that shows up ~1-in-20 in a single-shot test shows up far more often
+   * here. The restored daemon.log dump (afterEach) captures the
+   * [watcher]/recompute lines so a failure is diagnosable on CI.
+   */
+  describe('rapid reconfiguration (race-condition stress)', () => {
+    it('reflects the latest specified plugin after rapid nx.json swaps', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {};
+        return c;
+      });
+
+      // Pre-create a pool of plugins, each stamping a distinct input.
+      const pluginCount = 6;
+      for (let i = 0; i < pluginCount; i++) {
+        createPlugin(
+          `race-plugin-${i}`,
+          `{
+          build: {
+            executor: 'nx:run-commands',
+            options: { command: 'echo build' },
+            inputs: ['from-plugin-${i}'],
+          }
+        }`
+        );
+      }
+
+      // Swap the active plugin and query immediately, no settle time.
+      // A stale daemon graph surfaces as the previous iteration's input.
+      for (let i = 0; i < pluginCount; i++) {
+        updateJson('nx.json', (json) => {
+          json.plugins = [`./tools/race-plugin-${i}`];
+          return json;
+        });
+        const project = getResolvedProject(lib);
+        expect(project.targets.build.inputs).toEqual([`from-plugin-${i}`]);
+      }
+    });
+
+    it('reflects plugin-list growth and shrink across rapid nx.json edits', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {};
+        return c;
+      });
+
+      createPlugin(
+        'race-base',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo build' },
+          inputs: ['base'],
+        }
+      }`
+      );
+      createPlugin(
+        'race-spread',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo build' },
+          inputs: ['spread', '...'],
+        }
+      }`
+      );
+
+      // Alternate between one plugin and two (with spread). The resolved
+      // inputs differ each step, so a stale graph is caught immediately.
+      const steps: { plugins: string[]; inputs: string[] }[] = [
+        { plugins: ['./tools/race-base'], inputs: ['base'] },
+        {
+          plugins: ['./tools/race-base', './tools/race-spread'],
+          inputs: ['spread', 'base'],
+        },
+        { plugins: ['./tools/race-spread'], inputs: ['spread'] },
+        {
+          plugins: ['./tools/race-base', './tools/race-spread'],
+          inputs: ['spread', 'base'],
+        },
+        { plugins: ['./tools/race-base'], inputs: ['base'] },
+      ];
+      for (const { plugins, inputs } of steps) {
+        updateJson('nx.json', (json) => {
+          json.plugins = plugins;
+          return json;
+        });
+        const project = getResolvedProject(lib);
+        expect(project.targets.build.inputs).toEqual(inputs);
+      }
+    });
+
+    it('reflects rapid project.json edits against a stable plugin base', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      createPlugin(
+        'race-infer',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo build' },
+          inputs: ['inferred'],
+        }
+      }`
+      );
+      updateJson('nx.json', (json) => {
+        json.plugins = ['./tools/race-infer'];
+        return json;
+      });
+
+      // Plugin set is fixed; only project.json changes each round. The
+      // daemon must observe that file change before answering — a stale
+      // graph surfaces as a previous iteration's project input.
+      for (let i = 0; i < 6; i++) {
+        updateJson(`libs/${lib}/project.json`, (c) => {
+          c.targets = {
+            build: {
+              inputs: [`project-${i}`, '...'],
+            },
+          };
+          return c;
+        });
+        const project = getResolvedProject(lib);
+        expect(project.targets.build.inputs).toEqual([
+          `project-${i}`,
+          'inferred',
+        ]);
+      }
     });
   });
 });
