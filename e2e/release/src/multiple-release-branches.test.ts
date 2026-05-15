@@ -84,6 +84,7 @@ describe('nx release multiple release branches', () => {
             tag: true,
           },
           currentVersionResolver: 'git-tag',
+          adjustSemverBumpsForZeroMajorVersion: false,
         },
       };
 
@@ -271,6 +272,7 @@ describe('nx release multiple release branches', () => {
             tag: true,
           },
           currentVersionResolver: 'git-tag',
+          adjustSemverBumpsForZeroMajorVersion: false,
         },
       };
 
