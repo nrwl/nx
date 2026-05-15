@@ -96,6 +96,7 @@ export async function rspackInitGenerator(
   const devDependencies = {
     '@rspack/core': rspackVersions.rspackCoreVersion,
     '@rspack/cli': rspackVersions.rspackCoreVersion,
+    '@rspack/dev-server': rspackVersions.rspackDevServerVersion,
     ...(!schema.framework || schema.framework === 'react'
       ? {
           '@rspack/plugin-react-refresh':
