@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { logger, type ExecutorContext } from '@nx/devkit';
+import { type ExecutorContext } from '@nx/devkit';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import type {
   Compiler,
@@ -195,20 +195,14 @@ function applyNxIndependentConfig(
   };
 
   // Top-level `profile` was removed in @rspack/core@2 — it no longer
-  // controls anything at runtime. On v1 it adds per-module timing data
-  // to the emitted stats.json; on v2 setting it is a silent no-op, so
-  // warn that `--stats-json` output won't include rspack timing data.
-  // The structural stats.json is still emitted by StatsJsonPlugin.
-  if (options.statsJson) {
-    if (installedRspackMajor >= 2) {
-      logger.warn(
-        '`profile` is no longer supported in @rspack/core@2, so the ' +
-          'stats.json from `--stats-json` will not include build timing ' +
-          'data. Use Rsdoctor for performance analysis: https://rsdoctor.dev'
-      );
-    } else {
-      config.profile = true;
-    }
+  // controls anything at runtime. On v1 it adds per-module timing data to
+  // the emitted stats.json; v2 has no equivalent (Rsdoctor covers build
+  // performance analysis). The structural stats.json is still emitted by
+  // StatsJsonPlugin regardless.
+  // TODO: remove this branch once @rspack/core v1 is dropped from the
+  // supported version window — `statsJson` itself stays.
+  if (options.statsJson && installedRspackMajor < 2) {
+    config.profile = true;
   }
 
   config.performance = {
