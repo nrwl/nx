@@ -73,18 +73,21 @@ export type HandoffOutcome =
 /**
  * Result of the up-front resolution phase that runs once per `--run-migrations`
  * invocation, before the migration loop. Cached and consulted for every entry.
+ *
+ * - `inside-agent`: nx detected it is itself running inside another agent;
+ *   every agentic step is skipped and prompt migrations go to `nextSteps`.
+ * - `disabled`: the user opted out (explicit `--agentic=false`, declined the
+ *   up-front prompt, or non-TTY without the flag).
+ * - `enabled`: the agentic flow runs and `selectedAgent` is the agent it
+ *   dispatches to.
  */
-export interface ResolvedAgentic {
-  /**
-   * True when nx detected it is itself running inside another agent (inception)
-   * — all agentic steps are skipped and prompt migrations go to `nextSteps`.
-   */
-  skipAllAgentic: boolean;
-  /**
-   * True when the agentic flow should fire for eligible entries. Always false
-   * when `skipAllAgentic` is true.
-   */
-  agenticEnabled: boolean;
-  /** Picked agent for the run. Only present when `agenticEnabled` is true. */
-  selectedAgent?: DetectedInstalledAgent;
-}
+export type ResolvedAgentic =
+  | { kind: 'inside-agent' }
+  | { kind: 'disabled' }
+  | { kind: 'enabled'; selectedAgent: DetectedInstalledAgent };
+
+/** The `enabled` variant, useful for narrowed function signatures. */
+export type EnabledResolvedAgentic = Extract<
+  ResolvedAgentic,
+  { kind: 'enabled' }
+>;

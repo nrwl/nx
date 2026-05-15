@@ -83,7 +83,7 @@ describe('resolveAgentic', () => {
       agentic: true,
       migrations: [{ prompt: 'x.md' }],
     });
-    expect(result).toEqual({ skipAllAgentic: true, agenticEnabled: false });
+    expect(result).toEqual({ kind: 'inside-agent' });
     expect(mockDetect).not.toHaveBeenCalled();
     expect(mockPrompt).not.toHaveBeenCalled();
   });
@@ -93,7 +93,7 @@ describe('resolveAgentic', () => {
       agentic: false,
       migrations: [{ prompt: 'x.md' }],
     });
-    expect(result).toEqual({ skipAllAgentic: false, agenticEnabled: false });
+    expect(result).toEqual({ kind: 'disabled' });
     expect(mockDetect).not.toHaveBeenCalled();
     expect(mockPrompt).not.toHaveBeenCalled();
   });
@@ -103,7 +103,7 @@ describe('resolveAgentic', () => {
       agentic: undefined,
       migrations: [{}, {}],
     });
-    expect(result.agenticEnabled).toBe(false);
+    expect(result.kind).toBe('disabled');
     expect(mockPrompt).not.toHaveBeenCalled();
   });
 
@@ -114,7 +114,7 @@ describe('resolveAgentic', () => {
       migrations: [{ prompt: 'x.md' }],
     });
     expect(mockPrompt).toHaveBeenCalledTimes(1);
-    expect(result.agenticEnabled).toBe(false);
+    expect(result.kind).toBe('disabled');
   });
 
   it('enables the agentic flow when the up-front prompt is accepted', async () => {
@@ -124,8 +124,10 @@ describe('resolveAgentic', () => {
       agentic: undefined,
       migrations: [{ prompt: 'x.md' }],
     });
-    expect(result.agenticEnabled).toBe(true);
-    expect(result.selectedAgent?.id).toBe('claude-code');
+    expect(result).toMatchObject({
+      kind: 'enabled',
+      selectedAgent: { id: 'claude-code' },
+    });
   });
 
   it('uses the single detected agent without firing a picker', async () => {
@@ -134,7 +136,10 @@ describe('resolveAgentic', () => {
       agentic: true,
       migrations: [{ prompt: 'x.md' }],
     });
-    expect(result.selectedAgent?.id).toBe('claude-code');
+    expect(result).toMatchObject({
+      kind: 'enabled',
+      selectedAgent: { id: 'claude-code' },
+    });
     expect(mockPrompt).not.toHaveBeenCalled();
   });
 
@@ -146,7 +151,10 @@ describe('resolveAgentic', () => {
       migrations: [{ prompt: 'x.md' }],
     });
     expect(mockPrompt).toHaveBeenCalledTimes(1);
-    expect(result.selectedAgent?.id).toBe('codex');
+    expect(result).toMatchObject({
+      kind: 'enabled',
+      selectedAgent: { id: 'codex' },
+    });
   });
 
   it('uses the explicit agent id when it is installed', async () => {
@@ -158,7 +166,10 @@ describe('resolveAgentic', () => {
       agentic: 'opencode',
       migrations: [{ prompt: 'x.md' }],
     });
-    expect(result.selectedAgent?.id).toBe('opencode');
+    expect(result).toMatchObject({
+      kind: 'enabled',
+      selectedAgent: { id: 'opencode' },
+    });
     expect(mockPrompt).not.toHaveBeenCalled();
   });
 
@@ -170,7 +181,10 @@ describe('resolveAgentic', () => {
       migrations: [{ prompt: 'x.md' }],
     });
     expect(mockOutputWarn).toHaveBeenCalled();
-    expect(result.selectedAgent?.id).toBe('codex');
+    expect(result).toMatchObject({
+      kind: 'enabled',
+      selectedAgent: { id: 'codex' },
+    });
   });
 
   it('warns then auto-selects when the explicit agent is missing but only one other agent is installed', async () => {
@@ -180,7 +194,10 @@ describe('resolveAgentic', () => {
       migrations: [{ prompt: 'x.md' }],
     });
     expect(mockOutputWarn).toHaveBeenCalled();
-    expect(result.selectedAgent?.id).toBe('codex');
+    expect(result).toMatchObject({
+      kind: 'enabled',
+      selectedAgent: { id: 'codex' },
+    });
     expect(mockPrompt).not.toHaveBeenCalled();
   });
 
@@ -221,7 +238,7 @@ describe('resolveAgentic', () => {
       agentic: undefined,
       migrations: [{ prompt: 'x.md' }],
     });
-    expect(result.agenticEnabled).toBe(false);
+    expect(result.kind).toBe('disabled');
     expect(mockPrompt).not.toHaveBeenCalled();
   });
 });

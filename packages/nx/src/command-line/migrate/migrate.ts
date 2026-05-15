@@ -105,7 +105,11 @@ import {
   writePromptMigrationFiles,
 } from './prompt-files';
 import type { AgenticArg } from './agentic/select';
-import type { HandoffOutcome, ResolvedAgentic } from './agentic/types';
+import type {
+  EnabledResolvedAgentic,
+  HandoffOutcome,
+  ResolvedAgentic,
+} from './agentic/types';
 import { filterDowngradedUpdates } from './update-filters';
 import {
   DIST_TAGS,
@@ -2406,12 +2410,16 @@ export async function executeMigrations(
       : 1;
   });
 
-  const agenticOn = !!agentic?.agenticEnabled && !agentic.skipAllAgentic;
-  let runDir: string | undefined;
-  if (agenticOn && sortedMigrations.length > 0) {
+  let agenticRun:
+    | { agentic: EnabledResolvedAgentic; runDir: string }
+    | undefined;
+  if (agentic?.kind === 'enabled' && sortedMigrations.length > 0) {
     const { initRunDir } =
       require('./agentic/handoff') as typeof import('./agentic/handoff');
-    runDir = initRunDir(root, resolveAgenticRunId(sortedMigrations));
+    agenticRun = {
+      agentic,
+      runDir: initRunDir(root, resolveAgenticRunId(sortedMigrations)),
+    };
   }
 
   logger.info(`Running the following migrations:`);
@@ -2426,12 +2434,12 @@ export async function executeMigrations(
     logger.info(`Running migration ${m.package}: ${m.name}`);
     try {
       if (isPromptOnlyMigration(m)) {
-        if (agenticOn) {
+        if (agenticRun) {
           await runAgenticPromptStep(
             root,
             m,
-            agentic!,
-            runDir!,
+            agenticRun.agentic,
+            agenticRun.runDir,
             changedDepInstaller
           );
           await commitMigrationIfRequested(
@@ -2460,12 +2468,12 @@ export async function executeMigrations(
         allNextSteps.push(...nextSteps);
         const generatorMadeChanges = changes.length > 0;
 
-        if (agenticOn) {
+        if (agenticRun) {
           await runAgenticPromptStep(
             root,
             m,
-            agentic!,
-            runDir!,
+            agenticRun.agentic,
+            agenticRun.runDir,
             changedDepInstaller
           );
           await commitMigrationIfRequested(
@@ -2531,7 +2539,7 @@ export async function executeMigrations(
 async function runAgenticPromptStep(
   root: string,
   migration: ExecutableMigration,
-  agentic: ResolvedAgentic,
+  agentic: EnabledResolvedAgentic,
   runDir: string,
   changedDepInstaller: ChangedDepInstaller
 ): Promise<void> {
@@ -2561,15 +2569,15 @@ async function runAgenticPromptStep(
     handoffFileAbsolutePath: handoffFilePath,
   });
 
-  const definition = getAgentDefinition(agentic.selectedAgent!.id);
+  const definition = getAgentDefinition(agentic.selectedAgent.id);
   if (!definition) {
     throw new Error(
-      `No agent definition registered for "${agentic.selectedAgent!.id}".`
+      `No agent definition registered for "${agentic.selectedAgent.id}".`
     );
   }
 
   const outcome: HandoffOutcome = await runAgentic({
-    detected: agentic.selectedAgent!,
+    detected: agentic.selectedAgent,
     definition,
     invocationContext: {
       systemContext,

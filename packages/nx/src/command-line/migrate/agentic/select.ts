@@ -30,24 +30,20 @@ export async function resolveAgentic(
       title:
         'Agentic flow skipped: nx detected this run is invoked from inside an AI agent.',
     });
-    return { skipAllAgentic: true, agenticEnabled: false };
+    return { kind: 'inside-agent' };
   }
 
   const isInteractive = !!process.stdin.isTTY && !!process.stdout.isTTY;
   const { enabled, explicitId } = await resolveFlag(input, isInteractive);
 
   if (!enabled) {
-    return { skipAllAgentic: false, agenticEnabled: false };
+    return { kind: 'disabled' };
   }
 
   const detected = await detectInstalledAgents(AGENT_DEFINITIONS);
   const selected = await selectAgent(detected, explicitId, isInteractive);
 
-  return {
-    skipAllAgentic: false,
-    agenticEnabled: true,
-    selectedAgent: selected,
-  };
+  return { kind: 'enabled', selectedAgent: selected };
 }
 
 async function resolveFlag(
