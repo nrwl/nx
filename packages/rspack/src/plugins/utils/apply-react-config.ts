@@ -28,8 +28,6 @@ export function applyReactConfig(
 }
 
 export function applyReactConfigSync(config: RspackConfigShape): void {
-  if (global.NX_GRAPH_CREATION) return;
-
   // enable rspack node api
   config.node = {
     __dirname: true,
