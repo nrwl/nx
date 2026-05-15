@@ -1,7 +1,7 @@
 import type { TSESLint } from '@typescript-eslint/utils';
 import { ESLintUtils } from '@typescript-eslint/utils';
 import type { AST } from 'jsonc-eslint-parser';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { query } from '@phenomnomnominal/tsquery';
 
 import {
@@ -52,6 +52,7 @@ export type MessageIds =
   | 'invalidImplementationPath'
   | 'invalidImplementationModule'
   | 'unableToReadImplementationExports'
+  | 'invalidPromptPath'
   | 'invalidVersion'
   | 'missingVersion'
   | 'noGeneratorsOrSchematicsFound'
@@ -123,6 +124,7 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
       missingRequiredSchema: '{{ key }}: Missing required property - `schema`',
       missingImplementation:
         '{{ key }}: Missing required property - `implementation`',
+      invalidPromptPath: '{{ key }}: Prompt path should point to a valid file',
       missingVersion: '{{ key }}: Missing required property - `version`',
     },
   },
@@ -379,7 +381,10 @@ export function validateEntry(
       x.key.type === 'JSONLiteral' &&
       (x.key.value === 'implementation' || x.key.value === 'factory')
   );
-  if (!implementationNode) {
+  const promptNode = baseNode.properties.find(
+    (x) => x.key.type === 'JSONLiteral' && x.key.value === 'prompt'
+  );
+  if (!implementationNode && !(mode === 'migration' && promptNode)) {
     context.report({
       messageId: 'missingImplementation',
       data: {
@@ -387,8 +392,11 @@ export function validateEntry(
       },
       node: baseNode as any,
     });
-  } else {
+  } else if (implementationNode) {
     validateImplementationNode(implementationNode, key, context, options);
+  }
+  if (mode === 'migration' && promptNode) {
+    validatePromptNode(promptNode, key, context, options);
   }
 
   if (mode === 'migration') {
@@ -500,6 +508,51 @@ export function validateImplementationNode(
           },
         });
       }
+    }
+  }
+}
+
+export function validatePromptNode(
+  promptNode: AST.JSONProperty,
+  key: string,
+  context: TSESLint.RuleContext<MessageIds, Options>,
+  options: NormalizedOptions
+) {
+  if (
+    promptNode.value.type !== 'JSONLiteral' ||
+    typeof promptNode.value.value !== 'string'
+  ) {
+    context.report({
+      messageId: 'invalidPromptPath',
+      data: {
+        key,
+      },
+      node: promptNode.value as any,
+    });
+  } else {
+    const promptPath = path.join(
+      path.dirname(context.filename ?? context.getFilename()),
+      promptNode.value.value
+    );
+    let resolvedPath: string;
+
+    if (existsSync(promptPath)) {
+      resolvedPath = promptPath;
+    } else if (options.outDir && options.rootDir) {
+      const mapped = promptPath.replace(options.outDir, options.rootDir);
+      if (existsSync(mapped)) {
+        resolvedPath = mapped;
+      }
+    }
+
+    if (!resolvedPath) {
+      context.report({
+        messageId: 'invalidPromptPath',
+        data: {
+          key,
+        },
+        node: promptNode.value as any,
+      });
     }
   }
 }
