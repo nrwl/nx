@@ -1,4 +1,3 @@
-import { DefinePlugin } from '@rspack/core';
 import {
   ModuleFederationConfig,
   normalizeProjectName,
@@ -20,6 +19,9 @@ export async function withModuleFederationForSSR(
     getModuleFederationConfig(options, {
       isServer: true,
     });
+  // CLI-only path. Plain require works on Node 22.12+ via require(esm).
+  const { DefinePlugin } =
+    require('@rspack/core') as typeof import('@rspack/core');
 
   return (config, { context }) => {
     config.target = 'async-node';

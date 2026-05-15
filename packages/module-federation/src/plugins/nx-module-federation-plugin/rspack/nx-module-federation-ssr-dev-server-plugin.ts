@@ -1,9 +1,4 @@
-import {
-  Compilation,
-  Compiler,
-  DefinePlugin,
-  RspackPluginInstance,
-} from '@rspack/core';
+import type { Compilation, Compiler, RspackPluginInstance } from '@rspack/core';
 import * as pc from 'picocolors';
 import {
   logger,
@@ -85,7 +80,7 @@ export class NxModuleFederationSSRDevServerPlugin
               this._options.devServerConfig.host
             );
 
-            new DefinePlugin({
+            new compiler.rspack.DefinePlugin({
               'process.env.NX_MF_DEV_REMOTES': process.env.NX_MF_DEV_REMOTES,
             }).apply(compiler);
 

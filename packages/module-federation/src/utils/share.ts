@@ -21,7 +21,22 @@ import {
 } from '@nx/devkit';
 import { existsSync } from 'fs';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { NormalModuleReplacementPlugin as RspackNormalModuleReplacementPlugin } from '@rspack/core';
+
+/**
+ * Lazily resolve a `NormalModuleReplacementPlugin` constructor for the
+ * chosen bundler. Deferred to call time so `share.ts` itself stays
+ * loadable in Jest's CJS Runtime — a top-level import of `@rspack/core`
+ * would crash test-file loads even when the test doesn't exercise this
+ * code path.
+ */
+function loadNormalModuleReplacementPlugin(
+  bundler: 'rspack' | 'webpack'
+): new (...args: any[]) => any {
+  if (bundler === 'rspack') {
+    return require('@rspack/core').NormalModuleReplacementPlugin;
+  }
+  return require('webpack').NormalModuleReplacementPlugin;
+}
 
 /**
  * Checks if a version string is a workspace protocol version that needs normalization.
@@ -141,11 +156,6 @@ export function shareWorkspaceLibraries(
     }
   }
 
-  const normalModuleReplacementPluginImpl =
-    bundler === 'rspack'
-      ? RspackNormalModuleReplacementPlugin
-      : require('webpack').NormalModuleReplacementPlugin;
-
   return {
     getAliases: () =>
       pathMappings.reduce(
@@ -248,7 +258,7 @@ export function shareWorkspaceLibraries(
       return libraries as Record<string, SharedLibraryConfig>;
     },
     getReplacementPlugin: () =>
-      new normalModuleReplacementPluginImpl(/./, (req) => {
+      new (loadNormalModuleReplacementPlugin(bundler))(/./, (req) => {
         if (!req.request.startsWith('.')) {
           return;
         }
@@ -446,14 +456,10 @@ function addStringDependencyToSharedConfig(
 function getEmptySharedLibrariesConfig(
   bundler: 'rspack' | 'webpack' = 'rspack'
 ) {
-  const normalModuleReplacementPluginImpl =
-    bundler === 'rspack'
-      ? RspackNormalModuleReplacementPlugin
-      : require('webpack').NormalModuleReplacementPlugin;
   return {
     getAliases: () => ({}),
     getLibraries: () => ({}),
     getReplacementPlugin: () =>
-      new normalModuleReplacementPluginImpl(/./, () => {}),
+      new (loadNormalModuleReplacementPlugin(bundler))(/./, () => {}),
   };
 }

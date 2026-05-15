@@ -1,4 +1,4 @@
-import { Compiler, RspackPluginInstance } from '@rspack/core';
+import type { Compiler, RspackPluginInstance } from '@rspack/core';
 import {
   ModuleFederationConfig,
   NxModuleFederationConfigOverride,
@@ -56,8 +56,12 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
       // Ensure ESM output is enabled when using library type 'module'.
       // Without these, remoteEntry.js emits `export` statements but the
       // runtime loads it as a classic script, causing "Unexpected token 'export'".
+      // `experiments.outputModule` was removed in @rspack/core@2 and folded
+      // into the top-level `output.module` — set both for cross-major support.
       compiler.options.experiments ??= {};
-      compiler.options.experiments.outputModule = true;
+      (
+        compiler.options.experiments as { outputModule?: boolean }
+      ).outputModule = true;
       compiler.options.output.module = true;
     }
 
