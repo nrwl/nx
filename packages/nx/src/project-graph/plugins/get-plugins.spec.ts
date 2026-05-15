@@ -24,7 +24,7 @@ describe('getPluginsSeparated — concurrent load of same new config', () => {
 
       let specifiedLoadCount = 0;
       const makeFakePlugin = (name: string) =>
-        ({ name } as unknown as import('./loaded-nx-plugin').LoadedNxPlugin);
+        ({ name }) as unknown as import('./loaded-nx-plugin').LoadedNxPlugin;
 
       // Only specified plugins (paths starting with "./") are gated;
       // default plugin loads (absolute paths from getDefaultPlugins)
@@ -35,7 +35,7 @@ describe('getPluginsSeparated — concurrent load of same new config', () => {
           const name =
             typeof config === 'string'
               ? config
-              : (config as { plugin: string }).plugin ?? 'unknown';
+              : ((config as { plugin: string }).plugin ?? 'unknown');
           const isSpecifiedPlugin = name.startsWith('./');
           let parkThis = false;
           if (isSpecifiedPlugin) {
