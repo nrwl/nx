@@ -13,7 +13,10 @@ import {
 } from '../config/workspace-json-project-json';
 import type { Tree } from '../generators/tree';
 import { readJson } from '../generators/utils/json';
-import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration/target-merging';
+import {
+  mergeMetadata,
+  mergeTargetConfigurations,
+} from '../project-graph/utils/project-configuration/target-merging';
 import { getCatalogManager } from './catalog';
 import { readJsonFile } from './fileutils';
 import { hasNxJsPlugin } from './has-nx-js-plugin';
@@ -194,7 +197,7 @@ export function getMetadataFromPackageJson(
   const { scripts, nx, description, name, exports, main, version } =
     packageJson;
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
-  return {
+  const inferredMetadata: ProjectMetadata = {
     targetGroups: {
       ...(includedScripts.length ? { 'NPM Scripts': includedScripts } : {}),
     },
@@ -207,6 +210,7 @@ export function getMetadataFromPackageJson(
       isInPackageManagerWorkspaces,
     },
   };
+  return mergeMetadata(null, null, null, nx?.metadata ?? {}, inferredMetadata);
 }
 
 export function getTagsFromPackageJson(packageJson: PackageJson): string[] {
