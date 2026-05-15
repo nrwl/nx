@@ -24,8 +24,6 @@
   "generators": "./generators.json",
   "executors": "./executors.json",
   "dependencies": {
-    "@module-federation/enhanced": "catalog:",
-    "@module-federation/node": "^2.7.21",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/module-federation": "workspace:*",
