@@ -19,10 +19,6 @@ The `@nx/rsbuild` plugin supports the following package versions.
 
 [Nx generators](/docs/features/generate-code) install the latest supported version automatically when scaffolding new projects. When `@rsbuild/core` is already installed in your workspace, generators detect the installed version and keep it in place rather than overwriting it.
 
-{% aside type="note" title="Migrating from @rsbuild/core v1 to v2" %}
-`@rsbuild/core@2` ships as a pure-ESM package on top of `@rspack/core@2`. Run `nx migrate latest` to opt into v2 — the migration bumps `@rsbuild/core` (and `@rsbuild/plugin-react`) to the v2 range. Review the [rsbuild 2 changelog](https://rsbuild.rs/blog) for any config-shape changes that affect your `rsbuild.config.ts`.
-{% /aside %}
-
 ## Setting up @nx/rsbuild
 
 ### Installation
