@@ -204,9 +204,6 @@
       "src/native": [
         "dist/src/native/index.d.ts"
       ],
-      "src": [
-        "dist/src/index.d.ts"
-      ],
       "src/analytics": [
         "dist/src/analytics/index.d.ts"
       ],
@@ -315,11 +312,6 @@
       "@nx/nx-source": "./plugins/*.ts",
       "types": "./dist/plugins/*.d.ts",
       "default": "./dist/plugins/*.js"
-    },
-    "./src": {
-      "@nx/nx-source": "./src/index.ts",
-      "types": "./dist/src/index.d.ts",
-      "default": "./dist/src/index.js"
     },
     "./src/analytics": {
       "@nx/nx-source": "./src/analytics/index.ts",
