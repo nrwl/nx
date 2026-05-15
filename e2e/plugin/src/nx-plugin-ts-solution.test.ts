@@ -269,9 +269,12 @@ describe('Nx Plugin (TS solution)', () => {
   it('should load local plugins registered via subpath imports', async () => {
     const plugin = uniq('plugin');
     runCLI(`generate @nx/plugin:plugin packages/${plugin}`);
+    const sourceCondition =
+      readJson('tsconfig.base.json').compilerOptions.customConditions[0];
+    expect(sourceCondition).not.toBe('development');
 
     // expose a subpath plugin from a non-default location to ensure resolution
-    // goes through the package.json exports condition rather than any heuristic
+    // goes through the workspace custom condition rather than any heuristic
     updateFile(
       `packages/${plugin}/src/plugins/cypress/plugin.ts`,
       NX_PLUGIN_V2_CONTENTS
@@ -281,7 +284,7 @@ describe('Nx Plugin (TS solution)', () => {
       pkg.exports = {
         ...pkg.exports,
         './cypress': {
-          development: './src/plugins/cypress/plugin.ts',
+          [sourceCondition]: './src/plugins/cypress/plugin.ts',
           default: './dist/plugins/cypress/plugin.js',
         },
       };
@@ -311,6 +314,80 @@ describe('Nx Plugin (TS solution)', () => {
       runCLI(`show project ${inferredProject} --json`)
     );
     expect(configuration.tags).toContain('cypress-tag');
+  });
+
+  it('should not load local plugin subpath imports from dist', async () => {
+    const plugin = uniq('plugin');
+    runCLI(`generate @nx/plugin:plugin packages/${plugin}`);
+
+    updateFile(
+      `packages/${plugin}/src/plugins/cypress/plugin.ts`,
+      NX_PLUGIN_V2_CONTENTS
+    );
+    createFile(
+      `packages/${plugin}/dist/plugins/cypress/plugin.js`,
+      `const { basename, dirname } = require("path");
+
+exports.createNodesV2 = [
+  "**/my-project-file",
+  (files, options) =>
+    files.map((f) => {
+      const root = dirname(f);
+      const name = basename(root);
+      return [
+        f,
+        {
+          projects: {
+            [root]: {
+              root,
+              name,
+              targets: {
+                build: {
+                  executor: "nx:run-commands",
+                  options: {
+                    command: "echo 'dist registered target'",
+                  },
+                },
+              },
+              tags: options.inferredTags,
+            },
+          },
+        },
+      ];
+    }),
+];
+`
+    );
+
+    updateJson(`packages/${plugin}/package.json`, (pkg) => {
+      pkg.exports = {
+        ...pkg.exports,
+        './cypress': {
+          default: './dist/plugins/cypress/plugin.js',
+        },
+      };
+      return pkg;
+    });
+
+    updateJson(`nx.json`, (nxJson) => {
+      nxJson.plugins ??= [];
+      nxJson.plugins.push({
+        plugin: `@${workspaceName}/${plugin}/cypress`,
+        options: { inferredTags: ['cypress-tag'] },
+      });
+      return nxJson;
+    });
+
+    const inferredProject = uniq('subpath-inferred');
+    createFile(
+      `packages/${inferredProject}/package.json`,
+      JSON.stringify({ name: inferredProject, version: '0.0.1' })
+    );
+    createFile(`packages/${inferredProject}/my-project-file`);
+
+    expect(() => runCLI(`show project ${inferredProject} --json`)).toThrow(
+      /resolvable source-pointing condition/
+    );
   });
 
   it('should respect and support generating plugins with a name different than the import path', async () => {

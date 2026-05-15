@@ -95,6 +95,13 @@ function isWorkspaceLocalResolution(
   );
 }
 
+function isPackageResolutionError(e: unknown): boolean {
+  const code = (e as { code?: string }).code;
+  return (
+    code === 'MODULE_NOT_FOUND' || code === 'ERR_PACKAGE_PATH_NOT_EXPORTED'
+  );
+}
+
 function readPluginMainFromProjectConfiguration(
   plugin: ProjectConfiguration
 ): string | null {
@@ -141,12 +148,18 @@ export function getPluginPathAndName(
     : null;
   if (localPlugin) {
     pluginPath = tryResolveLocalPluginFromSource(moduleName, localPlugin, root);
+    if (!pluginPath && getSubpathOfLocalPackage(moduleName, localPlugin)) {
+      throwUnresolvableLocalPluginError(moduleName, localPlugin, root);
+    }
   }
 
   if (!pluginPath) {
     try {
       pluginPath = require.resolve(moduleName, { paths });
     } catch (e) {
+      if (localPlugin && isPackageResolutionError(e)) {
+        throwUnresolvableLocalPluginError(moduleName, localPlugin, root);
+      }
       if (e.code !== 'MODULE_NOT_FOUND') {
         throw e;
       }
@@ -222,9 +235,8 @@ function throwUnresolvableLocalPluginError(
       `Unable to resolve local plugin "${moduleName}". The import targets ` +
         `the subpath "${subpath}" of the local package "${packageName}", but ` +
         `the package's "exports" entry for "${subpath}" does not declare a ` +
-        `source-pointing condition recognized by Nx and Node could not ` +
-        `resolve it either. Add a custom condition pointing to the source ` +
-        `file for that subpath in ` +
+        `resolvable source-pointing condition recognized by Nx. Add a custom ` +
+        `condition pointing to the source file for that subpath in ` +
         `"${path.relative(root, path.join(plugin.path, 'package.json'))}", ` +
         `e.g. "${subpath}": { "${exampleCondition}": "<path/to/source>" }, and ` +
         `ensure the condition name is listed in ` +
