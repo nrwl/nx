@@ -20,7 +20,7 @@ import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
 import { join, dirname, isAbsolute, relative } from 'path';
 import { minimatch } from 'minimatch';
-import { loadConfig, type RsbuildConfig } from '@rsbuild/core';
+import type { RsbuildConfig } from '@rsbuild/core';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 export interface RsbuildPluginOptions {
@@ -144,6 +144,11 @@ async function createRsbuildTargets(
     configFilePath
   );
 
+  // Required lazily: `@rsbuild/core` is an optional peer dependency, so it
+  // may be absent when the plugin is loaded in a workspace that doesn't use
+  // Rsbuild yet (e.g. before a generator installs it).
+  const { loadConfig } =
+    require('@rsbuild/core') as typeof import('@rsbuild/core');
   const rsbuildConfig = await loadConfig({
     path: absoluteConfigFilePath,
   });
