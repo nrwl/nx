@@ -4,6 +4,7 @@ import {
   PluginCache,
 } from '@nx/devkit/internal';
 import {
+  AggregateCreateNodesError,
   CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesResult,
@@ -42,12 +43,22 @@ export const createNodes: CreateNodesV2<DetoxPluginOptions> = [
 
     try {
       const projectRoots = configFiles.map((f) => dirname(f));
-      const projectHashes = await calculateHashesForCreateNodes(
-        projectRoots,
-        normalizedOptions,
-        context,
-        projectRoots.map(() => [lockFileName])
-      );
+      let projectHashes: string[];
+      try {
+        projectHashes = await calculateHashesForCreateNodes(
+          projectRoots,
+          normalizedOptions,
+          context,
+          projectRoots.map(() => [lockFileName])
+        );
+      } catch (err) {
+        throw new AggregateCreateNodesError(
+          configFiles.map(
+            (configFile) => [configFile, err as Error] as [string, Error]
+          ),
+          []
+        );
+      }
 
       return await createNodesFromFiles(
         (configFile, _, ctx, idx) =>

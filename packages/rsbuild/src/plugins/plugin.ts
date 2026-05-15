@@ -5,7 +5,6 @@ import {
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
-  type CreateNodesResult,
   CreateNodesResultV2,
   type ProjectConfiguration,
   type TargetConfiguration,
@@ -61,12 +60,25 @@ export const createNodesV2: CreateNodesV2<RsbuildPluginOptions> = [
         context
       );
 
-      const projectHashes = await calculateHashesForCreateNodes(
-        entries.map((e) => e.projectRoot),
-        { ...normalizedOptions, isUsingTsSolutionSetup },
-        context,
-        entries.map(() => [lockFileName])
-      );
+      let projectHashes: string[];
+      try {
+        projectHashes = await calculateHashesForCreateNodes(
+          entries.map((e) => e.projectRoot),
+          { ...normalizedOptions, isUsingTsSolutionSetup },
+          context,
+          entries.map(() => [lockFileName])
+        );
+      } catch (err) {
+        throw new AggregateCreateNodesError(
+          [
+            ...preErrors,
+            ...entries.map(
+              (entry) => [entry.configFile, err as Error] as [string, Error]
+            ),
+          ],
+          []
+        );
+      }
 
       let results: CreateNodesResultV2 = [];
       let nodeErrors: Array<[string | null, Error]> = [];

@@ -7,7 +7,6 @@ import {
   AggregateCreateNodesError,
   createNodesFromFiles,
   type CreateNodesContextV2,
-  type CreateNodesResult,
   CreateNodesResultV2,
   type CreateNodesV2,
   detectPackageManager,
@@ -64,12 +63,25 @@ export const createNodes: CreateNodesV2<PlaywrightPluginOptions> = [
         context
       );
 
-      const projectHashes = await calculateHashesForCreateNodes(
-        entries.map((e) => e.projectRoot),
-        { ...normalizedOptions, CI: process.env.CI },
-        context,
-        entries.map((e) => [lockFileName, ...e.externalTsconfigInputs])
-      );
+      let projectHashes: string[];
+      try {
+        projectHashes = await calculateHashesForCreateNodes(
+          entries.map((e) => e.projectRoot),
+          { ...normalizedOptions, CI: process.env.CI },
+          context,
+          entries.map((e) => [lockFileName, ...e.externalTsconfigInputs])
+        );
+      } catch (err) {
+        throw new AggregateCreateNodesError(
+          [
+            ...preErrors,
+            ...entries.map(
+              (entry) => [entry.configFile, err as Error] as [string, Error]
+            ),
+          ],
+          []
+        );
+      }
 
       let results: CreateNodesResultV2 = [];
       let nodeErrors: Array<[string | null, Error]> = [];

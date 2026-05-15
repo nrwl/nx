@@ -6,6 +6,7 @@ import {
   PluginCache,
 } from '@nx/devkit/internal';
 import {
+  AggregateCreateNodesError,
   type CreateNodesV2,
   type CreateNodesContextV2,
   detectPackageManager,
@@ -76,12 +77,22 @@ export const createNodesV2: CreateNodesV2<ReactRouterPluginOptions> = [
     const lockfile = getLockFileName(
       detectPackageManager(context.workspaceRoot)
     );
-    const hashes = await calculateHashesForCreateNodes(
-      projectRoots,
-      { ...normalizedOptions, isUsingTsSolutionSetup },
-      context,
-      projectRoots.map((_) => [lockfile])
-    );
+    let hashes: string[];
+    try {
+      hashes = await calculateHashesForCreateNodes(
+        projectRoots,
+        { ...normalizedOptions, isUsingTsSolutionSetup },
+        context,
+        projectRoots.map((_) => [lockfile])
+      );
+    } catch (err) {
+      throw new AggregateCreateNodesError(
+        validConfigFiles.map(
+          (configFile) => [configFile, err as Error] as [string, Error]
+        ),
+        []
+      );
+    }
 
     try {
       return await createNodesFromFiles(

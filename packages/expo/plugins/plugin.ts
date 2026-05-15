@@ -57,12 +57,25 @@ export const createNodes: CreateNodesV2<ExpoPluginOptions> = [
         context
       );
 
-      const projectHashes = await calculateHashesForCreateNodes(
-        entries.map((e) => e.projectRoot),
-        normalizedOptions,
-        context,
-        entries.map(() => [lockFileName])
-      );
+      let projectHashes: string[];
+      try {
+        projectHashes = await calculateHashesForCreateNodes(
+          entries.map((e) => e.projectRoot),
+          normalizedOptions,
+          context,
+          entries.map(() => [lockFileName])
+        );
+      } catch (err) {
+        throw new AggregateCreateNodesError(
+          [
+            ...preErrors,
+            ...entries.map(
+              (entry) => [entry.configFile, err as Error] as [string, Error]
+            ),
+          ],
+          []
+        );
+      }
 
       let results: CreateNodesResultV2 = [];
       let nodeErrors: Array<[string | null, Error]> = [];

@@ -220,6 +220,11 @@ export const makeCreateNodesForGradleConfigFile =
     let hash: string;
     if (hashes && idx !== undefined) {
       hash = hashes[idx];
+      if (hash === undefined) {
+        throw new Error(
+          `Failed to compute hash for gradle project at ${projectRoot}`
+        );
+      }
     } else {
       const [computed] = await calculateHashesForCreateNodes(
         [projectRoot],
