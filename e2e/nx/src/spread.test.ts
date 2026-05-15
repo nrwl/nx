@@ -1099,5 +1099,48 @@ describe('Spread Token Merging', () => {
         ]);
       }
     });
+
+    /**
+     * Mirrors the shape of the flaky single-shot test
+     * ("...with target defaults overriding"): per iteration a plugin
+     * file, nx.json (plugins + targetDefaults) and project.json all
+     * change together, then a single `show project` query. A stale
+     * daemon graph here surfaces as build being undefined entirely —
+     * the plugin set the graph was built against never ran.
+     */
+    it('reflects a plugin + nx.json + project.json change applied together, repeatedly', () => {
+      for (let i = 0; i < 4; i++) {
+        const lib = uniq('lib');
+        runCLI(`generate @nx/js:lib libs/${lib}`);
+
+        createPlugin(
+          `combo-infer-${i}`,
+          `{
+          build: {
+            executor: 'nx:run-commands',
+            options: { command: 'echo build' },
+            inputs: ['inferred-${i}'],
+          }
+        }`
+        );
+        updateJson('nx.json', (json) => {
+          json.plugins = [`./tools/combo-infer-${i}`];
+          json.targetDefaults = { build: { inputs: [`defaults-${i}`] } };
+          return json;
+        });
+        updateJson(`libs/${lib}/project.json`, (c) => {
+          c.targets = { build: { inputs: [`project-${i}`, '...'] } };
+          return c;
+        });
+
+        const project = getResolvedProject(lib);
+        // Target defaults (no spread) replace the inferred inputs, then
+        // project.json spreads against the resolved defaults.
+        expect(project.targets.build.inputs).toEqual([
+          `project-${i}`,
+          `defaults-${i}`,
+        ]);
+      }
+    });
   });
 });
