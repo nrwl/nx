@@ -4,6 +4,11 @@ import { join } from 'path';
 /**
  * Lightweight cache reader that avoids importing heavy nx modules.
  * Reads project-graph.json directly from the workspace data directory.
+ *
+ * Intentionally tolerates a stale graph: completion runs on every TAB press
+ * and must stay fast, so we never refresh the graph here. A just-added
+ * project missing for one keystroke is an acceptable trade — do not "fix"
+ * this by triggering a graph recompute.
  */
 function getCachedProjectGraph(): any | null {
   try {
@@ -200,11 +205,11 @@ export function getTargetNameCompletions(
 
   let targets: string[];
   if (projectName && graph.nodes[projectName]) {
-    targets = Object.keys(graph.nodes[projectName].data.targets ?? {});
+    targets = Object.keys(graph.nodes[projectName]?.data?.targets ?? {});
   } else {
     const targetSet = new Set<string>();
     for (const node of Object.values(graph.nodes)) {
-      for (const target of Object.keys((node as any).data.targets ?? {})) {
+      for (const target of Object.keys((node as any)?.data?.targets ?? {})) {
         targetSet.add(target);
       }
     }

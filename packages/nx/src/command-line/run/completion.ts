@@ -13,6 +13,10 @@ registerCompletion('run', {
 // target name is its own completion path. Suggestions filter to projects
 // that actually have the target so e.g. `nx build <TAB>` skips projects
 // without a build target.
+//
+// Best-effort list of the conventional target names. Custom target names
+// (`compile`, `deploy`, `storybook`, ...) won't get infix completion — a
+// future improvement could derive this from the project graph.
 const INFIX_TARGETS = [
   'build',
   'serve',

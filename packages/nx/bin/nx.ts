@@ -45,23 +45,32 @@ async function main() {
     'nx/src/command-line/completion/trigger'
   );
   if (isCompletionRequest()) {
-    // perf-logging consumes an `init-local` mark; set it before requiring
-    // any heavy modules so the measurement doesn't error on missing mark.
-    performance.mark('init-local');
-    // Fast path: value completions (project/target/generator names, flag
-    // values) served from registered metadata without loading the full
-    // yargs command surface.
-    const { tryValueCompletion } = await import(
-      'nx/src/command-line/completion/value-completions'
-    );
-    if (tryValueCompletion()) return;
-    // Slow path: command-surface completion (top-level commands,
-    // subcommands of a matched command, flag names). Loads `nx-commands`
-    // to walk the yargs command tree.
-    const { tryCommandSurfaceCompletion } = await import(
-      'nx/src/command-line/completion/command-completions'
-    );
-    tryCommandSurfaceCompletion();
+    // Any throw inside this block must NOT reach the top-level
+    // `main().catch` handler — that prints the error and exits 1, which
+    // the shell would splice into its completion buffer (partial list +
+    // stack trace). Swallowing here is deliberate and correct: a broken
+    // completion should produce *no* suggestions, never corrupt the line.
+    try {
+      // perf-logging consumes an `init-local` mark; set it before requiring
+      // any heavy modules so the measurement doesn't error on missing mark.
+      performance.mark('init-local');
+      // Fast path: value completions (project/target/generator names, flag
+      // values) served from registered metadata without loading the full
+      // yargs command surface.
+      const { tryValueCompletion } = await import(
+        'nx/src/command-line/completion/value-completions'
+      );
+      if (tryValueCompletion()) return;
+      // Slow path: command-surface completion (top-level commands,
+      // subcommands of a matched command, flag names). Loads `nx-commands`
+      // to walk the yargs command tree.
+      const { tryCommandSurfaceCompletion } = await import(
+        'nx/src/command-line/completion/command-completions'
+      );
+      tryCommandSurfaceCompletion();
+    } catch {
+      // Emit nothing; exit cleanly so the shell shows no suggestions.
+    }
     return;
   }
 

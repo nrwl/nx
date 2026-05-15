@@ -48,8 +48,9 @@ export function registerCompletion(
  * args. Returns the metadata together with the user's positional index
  * (i.e., how many positional values they've already typed past the path).
  *
- * Yargs includes the partial token being typed in argv._, so the trailing
- * arg is the user's `current`. Subtract one to get the true positional index.
+ * `args` is the token list parsed in argv-layout.ts; its trailing element is
+ * the partial the user is typing (`current`). Subtract one for that partial
+ * to get the true positional index.
  */
 export function findCompletionMetadata(
   args: string[]

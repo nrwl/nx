@@ -1,3 +1,6 @@
+import { existsSync } from 'fs';
+import { delimiter, join } from 'path';
+
 type Shell = 'bash' | 'zsh' | 'fish' | 'powershell';
 
 interface PrintCompletionScriptArgs {
@@ -8,24 +11,37 @@ export async function printCompletionScript(
   shell: Shell,
   args: PrintCompletionScriptArgs
 ): Promise<void> {
-  if (!args.force && !isRunningAsGlobalNx()) {
+  // The generated POSIX scripts resolve a workspace-local nx at TAB time
+  // (walk-up) and only fall back to a bare `nx` from PATH outside a
+  // workspace. So the script always works inside a workspace; the bare-PATH
+  // fallback is the only part that needs `nx` reachable by name. Warn (to
+  // stderr, non-fatal) when it isn't, but still emit the script — `--force`
+  // suppresses the warning entirely.
+  if (!args.force && !isNxOnPath()) {
     warnNxNotOnPath(shell);
-    process.exit(1);
   }
   process.stdout.write(generateScript(shell));
 }
 
 /**
- * The generated completion scripts invoke `nx` at every tab press with
- * `NX_COMPLETE=<shell>` set, so they only work when `nx` resolves globally.
- * `bin/nx.ts` records whether the current process was launched via a global
- * nx (set during `determineNxVersions`); reuse that instead of probing PATH
- * with a subprocess.
+ * True if a bare `nx` executable resolves on the current PATH. Correctly
+ * covers a global install and an `npx nx ...` invocation (npx prepends the
+ * package's `.bin` to PATH). A raw `./node_modules/.bin/nx` invocation does
+ * not put `.bin` on PATH and will report false — that's fine, the warning
+ * is advisory and the script still works inside a workspace via walk-up.
  */
-function isRunningAsGlobalNx(): boolean {
-  return Boolean(
-    (globalThis as { GLOBAL_NX_VERSION?: string }).GLOBAL_NX_VERSION
-  );
+function isNxOnPath(): boolean {
+  const pathEnv = process.env.PATH;
+  if (!pathEnv) return false;
+  const names =
+    process.platform === 'win32' ? ['nx.cmd', 'nx.exe', 'nx'] : ['nx'];
+  for (const dir of pathEnv.split(delimiter)) {
+    if (!dir) continue;
+    for (const name of names) {
+      if (existsSync(join(dir, name))) return true;
+    }
+  }
+  return false;
 }
 
 function warnNxNotOnPath(shell: Shell): void {
@@ -37,12 +53,13 @@ function warnNxNotOnPath(shell: Shell): void {
   }[shell];
   process.stderr.write(
     [
-      `nx: cannot install ${shell} completion — \`nx\` is not on your PATH.`,
-      `    The generated script invokes \`nx\` at every tab press, which only`,
-      `    works when \`nx\` resolves globally. Install nx globally`,
-      `    (e.g. \`pnpm add -g nx\` or \`npm i -g nx\`), then re-run:`,
+      `nx: \`nx\` is not on your PATH.`,
+      `    The generated ${shell} script resolves a workspace-local nx when`,
+      `    you tab-complete inside a project, but outside any workspace it`,
+      `    falls back to a bare \`nx\`. Install nx globally for completion to`,
+      `    work everywhere (e.g. \`pnpm add -g nx\` or \`npm i -g nx\`):`,
       `        ${installCommand}`,
-      `    Or pass --force to emit the script anyway.`,
+      `    The script has still been emitted. Pass --force to skip this notice.`,
       ``,
     ].join('\n')
   );
@@ -61,12 +78,12 @@ function generateScript(shell: Shell): string {
   }
 }
 
-// Emit a PATH-resolved `nx` so the script works from any cwd or worktree.
-// Baking in an absolute path ties completion to the install location that
-// happened to be active when `nx completion <shell>` was run — bad when
-// users have multiple worktrees or move/delete the original workspace.
-// At TAB time the POSIX wrappers prefer the workspace's local nx so
-// completions reflect the installed version.
+// Fallback command name. At TAB time the POSIX wrappers first walk up from
+// the cwd to find a workspace-local nx (so completions reflect the installed
+// version); this bare `nx` is used only when no local install is found —
+// e.g. outside any workspace. We deliberately don't bake in an absolute path:
+// that would tie completion to whatever install happened to be active when
+// `nx completion <shell>` ran, breaking across worktrees or after a move.
 const NX_COMMAND = 'nx';
 
 function generateBashScript(): string {

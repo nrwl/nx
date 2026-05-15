@@ -1,14 +1,18 @@
 /**
- * Shared argv parsing for the completion entry points. The shell-script
- * wrappers invoke `nx` with `NX_COMPLETE=<shell>` set and pass the user's
- * partial command (including the trailing partial token) as the binary's
- * arguments. argv at TAB time is:
+ * Shared argv parsing for the completion entry points.
+ *
+ * This is the contract between every shell wrapper (see scripts.ts) and the
+ * TS side: each wrapper — however it assembles the tokens internally — MUST
+ * invoke `nx` with `NX_COMPLETE=<shell>` set and produce this exact argv:
  *
  *   [node, nx-bin, ...shellTokens, currentPartial]
  *
  * `shellTokens[0]` is the command name as the shell sees it (typically
- * literally `'nx'`), so we strip that too. The remainder are the user-typed
- * tokens plus the empty/partial token for the position being completed.
+ * literally `'nx'`), which we strip. `currentPartial` is the token at the
+ * cursor (often empty). The wrappers build it differently — bash/zsh pass
+ * `COMP_WORDS`/`words` (which already include the partial), fish appends
+ * `(commandline -ct)`, PowerShell appends `''` when the cursor is past the
+ * last AST element — but the resulting argv is identical.
  */
 
 export interface ParsedCompletionArgs {
