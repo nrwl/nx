@@ -76,7 +76,6 @@ function detected(
 
 const originalStdinTty = process.stdin.isTTY;
 const originalStdoutTty = process.stdout.isTTY;
-const originalCodexThreadId = process.env.CODEX_THREAD_ID;
 
 function setTty(enabled: boolean): void {
   Object.defineProperty(process.stdin, 'isTTY', {
@@ -99,7 +98,6 @@ describe('resolveAgentic', () => {
     mockOutputWarn.mockReset();
     mockOutputError.mockReset();
     setTty(true);
-    delete process.env.CODEX_THREAD_ID;
   });
 
   afterAll(() => {
@@ -111,11 +109,6 @@ describe('resolveAgentic', () => {
       configurable: true,
       value: originalStdoutTty,
     });
-    if (originalCodexThreadId === undefined) {
-      delete process.env.CODEX_THREAD_ID;
-    } else {
-      process.env.CODEX_THREAD_ID = originalCodexThreadId;
-    }
   });
 
   it('skips everything when running inside another AI agent (native detection)', async () => {
@@ -127,16 +120,6 @@ describe('resolveAgentic', () => {
     expect(result).toEqual({ skipAllAgentic: true, agenticEnabled: false });
     expect(mockDetect).not.toHaveBeenCalled();
     expect(mockPrompt).not.toHaveBeenCalled();
-  });
-
-  it('skips everything when running inside Codex (TS-side env fallback)', async () => {
-    mockIsAiAgent.mockReturnValue(false);
-    process.env.CODEX_THREAD_ID = 'thread-abc';
-    const result = await resolveAgentic({
-      agentic: true,
-      migrations: [{ prompt: 'x.md' }],
-    });
-    expect(result).toEqual({ skipAllAgentic: true, agenticEnabled: false });
   });
 
   it('returns disabled when --agentic=false, without detection or prompts', async () => {
