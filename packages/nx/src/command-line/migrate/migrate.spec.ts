@@ -24,11 +24,15 @@ import * as packageMgrUtils from '../../utils/package-manager';
 import {
   filterDowngradedUpdates,
   formatCommandFailure,
+  formatSkippedPromptsNextStep,
+  isHybridMigration,
   isNpmPeerDepsError,
+  isPromptOnlyMigration,
   Migrator,
   normalizeVersion,
   parseMigrationsOptions,
   ResolvedMigrationConfiguration,
+  resolveAgenticRunId,
   resolveCanonicalNxPackage,
   resolveMode,
 } from './migrate';
@@ -4017,6 +4021,117 @@ describe('Migration', () => {
         '1.0.0'
       );
       expect(written).toEqual(['tools/ai-migrations/pkg/1.0.0/x.md']);
+    });
+  });
+
+  describe('agentic helpers', () => {
+    describe('isPromptOnlyMigration', () => {
+      it('is true when only `prompt` is set', () => {
+        expect(
+          isPromptOnlyMigration({
+            package: 'p',
+            name: 'n',
+            version: '1.0.0',
+            prompt: 'x.md',
+          })
+        ).toBe(true);
+      });
+
+      it('is false when both `prompt` and `implementation` are set', () => {
+        expect(
+          isPromptOnlyMigration({
+            package: 'p',
+            name: 'n',
+            version: '1.0.0',
+            prompt: 'x.md',
+            implementation: './impl.js',
+          })
+        ).toBe(false);
+      });
+
+      it('is false when `prompt` is missing', () => {
+        expect(
+          isPromptOnlyMigration({
+            package: 'p',
+            name: 'n',
+            version: '1.0.0',
+            implementation: './impl.js',
+          })
+        ).toBe(false);
+      });
+    });
+
+    describe('isHybridMigration', () => {
+      it('is true only when both `prompt` and `implementation` are set', () => {
+        expect(
+          isHybridMigration({
+            package: 'p',
+            name: 'n',
+            version: '1.0.0',
+            prompt: 'x.md',
+            implementation: './impl.js',
+          })
+        ).toBe(true);
+        expect(
+          isHybridMigration({
+            package: 'p',
+            name: 'n',
+            version: '1.0.0',
+            prompt: 'x.md',
+          })
+        ).toBe(false);
+        expect(
+          isHybridMigration({
+            package: 'p',
+            name: 'n',
+            version: '1.0.0',
+            implementation: './impl.js',
+          })
+        ).toBe(false);
+      });
+    });
+
+    describe('resolveAgenticRunId', () => {
+      it('returns the semver-max version across the queue', () => {
+        expect(
+          resolveAgenticRunId([
+            { package: 'a', name: 'a1', version: '22.5.0' },
+            { package: 'a', name: 'a2', version: '23.0.0' },
+            { package: 'b', name: 'b1', version: '22.0.1' },
+          ])
+        ).toBe('23.0.0');
+      });
+
+      it('returns the only version when the queue has a single entry', () => {
+        expect(
+          resolveAgenticRunId([{ package: 'a', name: 'a1', version: '21.2.0' }])
+        ).toBe('21.2.0');
+      });
+    });
+
+    describe('formatSkippedPromptsNextStep', () => {
+      it('renders a parent instruction line and an indented bullet per skipped path', () => {
+        const result = formatSkippedPromptsNextStep([
+          {
+            package: '@nx/storybook',
+            name: 'migrate-css',
+            version: '9.2.0',
+            prompt: 'tools/ai-migrations/@nx/storybook/9.2.0/migrate-css.md',
+          },
+          {
+            package: '@nx/rspack',
+            name: 'perf-options',
+            version: '2.0.0',
+            prompt: 'tools/ai-migrations/@nx/rspack/2.0.0/perf-options.md',
+          },
+        ]);
+
+        expect(result).toBe(
+          'Some prompt migrations were skipped. Review and apply each of the following prompt files to the workspace, in the listed order:\n' +
+            '  - tools/ai-migrations/@nx/storybook/9.2.0/migrate-css.md\n' +
+            '  - tools/ai-migrations/@nx/rspack/2.0.0/perf-options.md'
+        );
+      });
     });
   });
 });

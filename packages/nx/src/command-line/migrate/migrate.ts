@@ -105,6 +105,13 @@ import {
   writePromptMigrationFiles,
 } from './prompt-files';
 import type { AgenticArg } from './agentic/select';
+import { resolveAgentic } from './agentic/select';
+import { initRunDir, stepHandoffPath, stepIdFor } from './agentic/handoff';
+import { runAgentic } from './agentic/runner';
+import { getAgentDefinition } from './agentic/registry';
+import { buildSystemPrompt } from './agentic/prompts/system-prompt';
+import { buildPromptMigrationUserPrompt } from './agentic/prompts/prompt-migration';
+import type { HandoffOutcome, ResolvedAgentic } from './agentic/types';
 import { filterDowngradedUpdates } from './update-filters';
 import {
   DIST_TAGS,
@@ -2341,22 +2348,56 @@ function logNpmPeerDepsError(phase: MigrationInstallPhase): void {
   }
 }
 
+type ExecutableMigration = {
+  package: string;
+  name: string;
+  description?: string;
+  version: string;
+  implementation?: string;
+  prompt?: string;
+};
+
+export function isPromptOnlyMigration(m: ExecutableMigration): boolean {
+  return !!m.prompt && !m.implementation;
+}
+
+export function isHybridMigration(m: ExecutableMigration): boolean {
+  return !!m.prompt && !!m.implementation;
+}
+
+export function resolveAgenticRunId(migrations: ExecutableMigration[]): string {
+  const versions = migrations.map((m) => normalizeVersion(m.version));
+  let max = versions[0]!;
+  for (const v of versions.slice(1)) {
+    if (gt(v, max)) {
+      max = v;
+    }
+  }
+  return max;
+}
+
+export function formatSkippedPromptsNextStep(
+  skipped: ExecutableMigration[]
+): string {
+  const lines = [
+    'Some prompt migrations were skipped. Review and apply each of the following prompt files to the workspace, in the listed order:',
+    ...skipped.map((m) => `  - ${m.prompt}`),
+  ];
+  return lines.join('\n');
+}
+
 export async function executeMigrations(
   root: string,
-  migrations: {
-    package: string;
-    name: string;
-    description?: string;
-    version: string;
-  }[],
+  migrations: ExecutableMigration[],
   isVerbose: boolean,
   shouldCreateCommits: boolean,
   commitPrefix: string,
-  shouldSkipInstall = false
+  shouldSkipInstall = false,
+  agentic?: ResolvedAgentic
 ) {
   const changedDepInstaller = new ChangedDepInstaller(root, shouldSkipInstall);
 
-  const migrationsWithNoChanges: typeof migrations = [];
+  const migrationsWithNoChanges: ExecutableMigration[] = [];
   const sortedMigrations = migrations.sort((a, b) => {
     // special case for the split configuration migration to run first
     if (a.name === '15-7-0-split-configuration-into-project-json-files') {
@@ -2371,26 +2412,102 @@ export async function executeMigrations(
       : 1;
   });
 
+  const agenticOn = !!agentic?.agenticEnabled && !agentic.skipAllAgentic;
+  let runDir: string | undefined;
+  if (agenticOn && sortedMigrations.length > 0) {
+    runDir = initRunDir(root, resolveAgenticRunId(sortedMigrations));
+  }
+
   logger.info(`Running the following migrations:`);
   sortedMigrations.forEach((m) =>
     logger.info(`- ${m.package}: ${m.name} (${m.description})`)
   );
   logger.info(`---------------------------------------------------------\n`);
   const allNextSteps: string[] = [];
+  const skippedPrompts: ExecutableMigration[] = [];
+
   for (const m of sortedMigrations) {
     logger.info(`Running migration ${m.package}: ${m.name}`);
     try {
-      const { changes, nextSteps } = await runNxOrAngularMigration(
-        root,
-        m,
-        isVerbose,
-        shouldCreateCommits,
-        commitPrefix,
-        () => changedDepInstaller.installDepsIfChanged()
-      );
-      allNextSteps.push(...nextSteps);
-      if (changes.length === 0) {
-        migrationsWithNoChanges.push(m);
+      if (isPromptOnlyMigration(m)) {
+        if (agenticOn) {
+          await runAgenticPromptStep(
+            root,
+            m,
+            agentic!,
+            runDir!,
+            changedDepInstaller
+          );
+          await commitMigrationIfRequested(
+            root,
+            m,
+            shouldCreateCommits,
+            commitPrefix,
+            () => changedDepInstaller.installDepsIfChanged()
+          );
+        } else {
+          logger.info(
+            `Skipping prompt migration (agentic flow disabled). Listed in next steps.`
+          );
+          skippedPrompts.push(m);
+          migrationsWithNoChanges.push(m);
+        }
+      } else if (isHybridMigration(m)) {
+        const { changes, nextSteps } = await runNxOrAngularMigration(
+          root,
+          m,
+          isVerbose,
+          /* shouldCreateCommits: */ false,
+          commitPrefix,
+          () => changedDepInstaller.installDepsIfChanged()
+        );
+        allNextSteps.push(...nextSteps);
+        const generatorMadeChanges = changes.length > 0;
+
+        if (agenticOn) {
+          // Install generator-produced dep changes before handing off to the
+          // agent so it sees a consistent workspace state.
+          await changedDepInstaller.installDepsIfChanged();
+          await runAgenticPromptStep(
+            root,
+            m,
+            agentic!,
+            runDir!,
+            changedDepInstaller
+          );
+          await commitMigrationIfRequested(
+            root,
+            m,
+            shouldCreateCommits,
+            commitPrefix,
+            () => changedDepInstaller.installDepsIfChanged()
+          );
+        } else {
+          skippedPrompts.push(m);
+          if (!generatorMadeChanges) {
+            migrationsWithNoChanges.push(m);
+          }
+          await commitMigrationIfRequested(
+            root,
+            m,
+            shouldCreateCommits,
+            commitPrefix,
+            () => changedDepInstaller.installDepsIfChanged()
+          );
+        }
+      } else {
+        const { changes, nextSteps } = await runNxOrAngularMigration(
+          root,
+          m,
+          isVerbose,
+          shouldCreateCommits,
+          commitPrefix,
+          () => changedDepInstaller.installDepsIfChanged()
+        );
+        allNextSteps.push(...nextSteps);
+        if (changes.length === 0) {
+          migrationsWithNoChanges.push(m);
+        }
       }
       logger.info(`---------------------------------------------------------`);
     } catch (e) {
@@ -2411,7 +2528,103 @@ export async function executeMigrations(
     logSkippedPostMigrationInstall(root);
   }
 
+  if (skippedPrompts.length > 0) {
+    allNextSteps.push(formatSkippedPromptsNextStep(skippedPrompts));
+  }
+
   return { migrationsWithNoChanges, nextSteps: allNextSteps };
+}
+
+async function runAgenticPromptStep(
+  root: string,
+  migration: ExecutableMigration,
+  agentic: ResolvedAgentic,
+  runDir: string,
+  changedDepInstaller: ChangedDepInstaller
+): Promise<void> {
+  const stepId = stepIdFor(migration);
+  const handoffFilePath = stepHandoffPath(runDir, stepId);
+  const systemContext = buildSystemPrompt({
+    workspaceRoot: root,
+    handoffFileAbsolutePath: handoffFilePath,
+  });
+  const userPrompt = buildPromptMigrationUserPrompt({
+    package: migration.package,
+    name: migration.name,
+    version: migration.version,
+    description: migration.description,
+    promptPath: migration.prompt!,
+    handoffFileAbsolutePath: handoffFilePath,
+  });
+
+  const definition = getAgentDefinition(agentic.selectedAgent!.id);
+  if (!definition) {
+    throw new Error(
+      `No agent definition registered for "${agentic.selectedAgent!.id}".`
+    );
+  }
+
+  const outcome: HandoffOutcome = await runAgentic({
+    detected: agentic.selectedAgent!,
+    definition,
+    invocationContext: {
+      systemContext,
+      userPrompt,
+      workspaceRoot: root,
+    },
+    handoffFilePath,
+  });
+
+  await changedDepInstaller.installDepsIfChanged();
+
+  switch (outcome.kind) {
+    case 'success':
+      logger.info(`Prompt migration applied: ${outcome.summary}`);
+      return;
+    case 'ambiguous-continue':
+      logger.info(
+        `Prompt migration marked complete by user (no handoff file was written).`
+      );
+      return;
+    case 'failed':
+      output.error({
+        title: `Prompt migration ${migration.package}: ${migration.name} reported a failure.`,
+        bodyLines: [outcome.summary],
+      });
+      throw new Error(
+        `Prompt migration ${migration.package}: ${migration.name} failed.`
+      );
+    case 'ambiguous-abort':
+      throw new Error(
+        `Prompt migration ${migration.package}: ${migration.name} was aborted by user.`
+      );
+  }
+}
+
+async function commitMigrationIfRequested(
+  root: string,
+  migration: { name: string },
+  shouldCreateCommits: boolean,
+  commitPrefix: string,
+  installDepsIfChanged: () => Promise<void>
+): Promise<void> {
+  if (!shouldCreateCommits) return;
+  await installDepsIfChanged();
+  const commitMessage = `${commitPrefix}${migration.name}`;
+  try {
+    const committedSha = commitChanges(commitMessage, root);
+    if (committedSha) {
+      logger.info(pc.dim(`- Commit created for changes: ${committedSha}`));
+    } else {
+      logger.info(
+        pc.red(
+          `- A commit could not be created/retrieved for an unknown reason`
+        )
+      );
+    }
+  } catch (e: any) {
+    logger.info(pc.red(`- ${e.message}`));
+  }
 }
 
 class ChangedDepInstaller {
@@ -2600,11 +2813,14 @@ async function runMigrations(
       (shouldCreateCommits ? ', with each applied in a dedicated commit' : ''),
   });
 
-  const migrations: {
-    package: string;
-    name: string;
-    version: string;
-  }[] = readJsonFile(join(root, opts.runMigrations)).migrations;
+  const migrations: ExecutableMigration[] = readJsonFile(
+    join(root, opts.runMigrations)
+  ).migrations;
+
+  const agentic = await resolveAgentic({
+    agentic: opts.agentic,
+    migrations,
+  });
 
   const { migrationsWithNoChanges, nextSteps } = await executeMigrations(
     root,
@@ -2612,7 +2828,8 @@ async function runMigrations(
     isVerbose,
     shouldCreateCommits,
     commitPrefix,
-    shouldSkipInstall
+    shouldSkipInstall,
+    agentic
   );
 
   if (migrationsWithNoChanges.length < migrations.length) {
