@@ -28,6 +28,7 @@ import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { readWebpackOptions } from '../utils/webpack/read-webpack-options';
 import { resolveUserDefinedWebpackConfig } from '../utils/webpack/resolve-user-defined-webpack-config';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
+import { gte } from 'semver';
 
 export interface WebpackPluginOptions {
   buildTargetName?: string;
@@ -167,10 +168,14 @@ async function createWebpackTargets(
   }
 
   const targets: Record<string, TargetConfiguration> = {};
+  const webpackCliVersion: string = require('webpack-cli/package.json').version;
+  const nodeEnvParam = gte(webpackCliVersion, '7.0.0')
+    ? '--config-node-env'
+    : '--node-env';
 
   targets[options.buildTargetName] = {
     command: `webpack-cli build`,
-    options: { cwd: projectRoot, args: ['--node-env=production'] },
+    options: { cwd: projectRoot, args: [`${nodeEnvParam}=production`] },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
     inputs:
@@ -212,7 +217,7 @@ async function createWebpackTargets(
     command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
-      args: ['--node-env=development'],
+      args: [`${nodeEnvParam}=development`],
     },
     metadata: {
       technologies: ['webpack'],
@@ -233,7 +238,7 @@ async function createWebpackTargets(
     command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
-      args: ['--node-env=production'],
+      args: [`${nodeEnvParam}=production`],
     },
     metadata: {
       technologies: ['webpack'],
