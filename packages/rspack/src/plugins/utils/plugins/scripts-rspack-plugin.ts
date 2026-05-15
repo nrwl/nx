@@ -63,71 +63,67 @@ export class ScriptsRspackPlugin {
       .filter((script) => !!script)
       .map((script) => path.resolve(this.options.basePath || '', script));
 
-    hook(compiler, async (compilation: Compilation, callback) => {
-      try {
-        const rspackSources = compiler.rspack.sources;
-        const EntryPluginCtor = compiler.rspack.EntryPlugin;
+    hook(compiler, (compilation: Compilation, callback) => {
+      const rspackSources = compiler.rspack.sources;
+      const EntryPluginCtor = compiler.rspack.EntryPlugin;
 
-        const sourceGetters = scripts.map((fullPath) => {
-          return new Promise<sources.Source>((resolve, reject) => {
-            compilation.inputFileSystem.readFile(
-              fullPath,
-              (err: Error, data: Buffer) => {
-                if (err) {
-                  reject(err);
-                  return;
-                }
-
-                const content = data.toString();
-
-                let source;
-                if (this.options.sourceMap) {
-                  // TODO: Look for source map file (for '.min' scripts, etc.)
-
-                  let adjustedPath = fullPath;
-                  if (this.options.basePath) {
-                    adjustedPath = path.relative(
-                      this.options.basePath,
-                      fullPath
-                    );
-                  }
-                  source = new rspackSources.OriginalSource(
-                    content,
-                    adjustedPath
-                  );
-                } else {
-                  source = new rspackSources.RawSource(content);
-                }
-
-                resolve(source);
+      const sourceGetters = scripts.map((fullPath) => {
+        return new Promise<sources.Source>((resolve, reject) => {
+          compilation.inputFileSystem.readFile(
+            fullPath,
+            (err: Error, data: Buffer) => {
+              if (err) {
+                reject(err);
+                return;
               }
-            );
+
+              const content = data.toString();
+
+              let source;
+              if (this.options.sourceMap) {
+                // TODO: Look for source map file (for '.min' scripts, etc.)
+
+                let adjustedPath = fullPath;
+                if (this.options.basePath) {
+                  adjustedPath = path.relative(this.options.basePath, fullPath);
+                }
+                source = new rspackSources.OriginalSource(
+                  content,
+                  adjustedPath
+                );
+              } else {
+                source = new rspackSources.RawSource(content);
+              }
+
+              resolve(source);
+            }
+          );
+        });
+      });
+
+      Promise.all(sourceGetters)
+        .then((_sources) => {
+          const concatSource = new rspackSources.ConcatSource();
+          _sources.forEach((source) => {
+            concatSource.add(source);
+            concatSource.add('\n;');
           });
-        });
 
-        const _sources = await Promise.all(sourceGetters);
-        const concatSource = new rspackSources.ConcatSource();
-        _sources.forEach((source) => {
-          concatSource.add(source);
-          concatSource.add('\n;');
-        });
+          const combinedSource = new rspackSources.CachedSource(concatSource);
+          const filename = interpolateName(
+            { resourcePath: 'scripts.js' },
+            this.options.filename as string,
+            { content: combinedSource.source() }
+          );
 
-        const combinedSource = new rspackSources.CachedSource(concatSource);
-        const filename = interpolateName(
-          { resourcePath: 'scripts.js' },
-          this.options.filename as string,
-          { content: combinedSource.source() }
-        );
+          const output = { filename, source: combinedSource };
+          this._insertOutput(compiler, compilation, output, EntryPluginCtor);
+          this._cachedOutput = output;
+          addDependencies(compilation, scripts);
 
-        const output = { filename, source: combinedSource };
-        this._insertOutput(compiler, compilation, output, EntryPluginCtor);
-        this._cachedOutput = output;
-        addDependencies(compilation, scripts);
-
-        callback();
-      } catch (err) {
-        callback(err as Error);
-      }
+          callback();
+        })
+        .catch((err: Error) => callback(err));
     });
   }
 }
