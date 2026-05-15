@@ -4,7 +4,6 @@ import {
   PluginCache,
 } from '@nx/devkit/internal';
 import {
-  AggregateCreateNodesError,
   CreateDependencies,
   CreateNodesContextV2,
   createNodesFromFiles,
@@ -100,25 +99,15 @@ export const createNodes: CreateNodesV2<VitestPluginOptions> = [
       projectRoots,
       context.workspaceRoot
     );
-    let hashes: string[];
-    try {
-      hashes = await calculateHashesForCreateNodes(
-        projectRoots,
-        normalizedOptions,
-        context,
-        projectRoots.map((root) => [
-          lockfile,
-          ...(tsconfigChainsByProjectRoot.get(root) ?? []),
-        ])
-      );
-    } catch (err) {
-      throw new AggregateCreateNodesError(
-        validConfigFiles.map(
-          (configFile) => [configFile, err as Error] as [string, Error]
-        ),
-        []
-      );
-    }
+    const hashes = await calculateHashesForCreateNodes(
+      projectRoots,
+      normalizedOptions,
+      context,
+      projectRoots.map((root) => [
+        lockfile,
+        ...(tsconfigChainsByProjectRoot.get(root) ?? []),
+      ])
+    );
 
     try {
       return await createNodesFromFiles(

@@ -50,25 +50,12 @@ export const createNodes: CreateNodesV2<NuxtPluginOptions> = [
     try {
       const { entries, preErrors } = await filterNuxtConfigs(files, context);
 
-      let projectHashes: string[];
-      try {
-        projectHashes = await calculateHashesForCreateNodes(
-          entries.map((e) => e.projectRoot),
-          normalizedOptions,
-          context,
-          entries.map(() => [lockFileName])
-        );
-      } catch (err) {
-        throw new AggregateCreateNodesError(
-          [
-            ...preErrors,
-            ...entries.map(
-              (entry) => [entry.configFile, err as Error] as [string, Error]
-            ),
-          ],
-          []
-        );
-      }
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.projectRoot),
+        normalizedOptions,
+        context,
+        entries.map(() => [lockFileName])
+      );
 
       let results: CreateNodesResultV2 = [];
       let nodeErrors: Array<[string | null, Error]> = [];

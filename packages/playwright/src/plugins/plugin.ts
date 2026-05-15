@@ -63,25 +63,12 @@ export const createNodes: CreateNodesV2<PlaywrightPluginOptions> = [
         context
       );
 
-      let projectHashes: string[];
-      try {
-        projectHashes = await calculateHashesForCreateNodes(
-          entries.map((e) => e.projectRoot),
-          { ...normalizedOptions, CI: process.env.CI },
-          context,
-          entries.map((e) => [lockFileName, ...e.externalTsconfigInputs])
-        );
-      } catch (err) {
-        throw new AggregateCreateNodesError(
-          [
-            ...preErrors,
-            ...entries.map(
-              (entry) => [entry.configFile, err as Error] as [string, Error]
-            ),
-          ],
-          []
-        );
-      }
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.projectRoot),
+        { ...normalizedOptions, CI: process.env.CI },
+        context,
+        entries.map((e) => [lockFileName, ...e.externalTsconfigInputs])
+      );
 
       let results: CreateNodesResultV2 = [];
       let nodeErrors: Array<[string | null, Error]> = [];

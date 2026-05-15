@@ -1,9 +1,4 @@
-import {
-  AggregateCreateNodesError,
-  CreateNodesResultV2,
-  CreateNodesV2,
-  hashArray,
-} from '@nx/devkit';
+import { CreateNodesResultV2, CreateNodesV2, hashArray } from '@nx/devkit';
 import { calculateHashesForCreateNodes } from '@nx/devkit/internal';
 import { dirname, relative } from 'path';
 import { DEFAULT_OPTIONS, MavenPluginOptions } from './types';
@@ -49,17 +44,11 @@ export const createNodes: CreateNodesV2<MavenPluginOptions> = [
 
     // Calculate hashes for all pom.xml directories
     const projectRoots = configFiles.map((file) => dirname(file));
-    let hashes: string[];
-    try {
-      hashes = await calculateHashesForCreateNodes(projectRoots, opts, context);
-    } catch (err) {
-      throw new AggregateCreateNodesError(
-        configFiles.map(
-          (configFile) => [configFile, err as Error] as [string, Error]
-        ),
-        []
-      );
-    }
+    const hashes = await calculateHashesForCreateNodes(
+      projectRoots,
+      opts,
+      context
+    );
     // Combine all hashes into a single hash for the cache key
     const hash = hashArray(hashes);
 

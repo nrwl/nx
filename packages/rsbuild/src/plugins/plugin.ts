@@ -60,25 +60,12 @@ export const createNodesV2: CreateNodesV2<RsbuildPluginOptions> = [
         context
       );
 
-      let projectHashes: string[];
-      try {
-        projectHashes = await calculateHashesForCreateNodes(
-          entries.map((e) => e.projectRoot),
-          { ...normalizedOptions, isUsingTsSolutionSetup },
-          context,
-          entries.map(() => [lockFileName])
-        );
-      } catch (err) {
-        throw new AggregateCreateNodesError(
-          [
-            ...preErrors,
-            ...entries.map(
-              (entry) => [entry.configFile, err as Error] as [string, Error]
-            ),
-          ],
-          []
-        );
-      }
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.projectRoot),
+        { ...normalizedOptions, isUsingTsSolutionSetup },
+        context,
+        entries.map(() => [lockFileName])
+      );
 
       let results: CreateNodesResultV2 = [];
       let nodeErrors: Array<[string | null, Error]> = [];
