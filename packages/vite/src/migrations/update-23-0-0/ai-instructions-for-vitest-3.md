@@ -25,8 +25,9 @@ Work systematically through each breaking change category.
 
 3. **Locate all Vitest configuration files**:
    - Search for `vitest.config.{ts,js,mjs}`
-   - Search for `vitest.workspace.{ts,js,mjs}` (no longer supported in newer Vitest — see workspace section below)
-   - Check `project.json` files for inline Vitest configuration
+   - Search for `vitest.workspace.{ts,js,mjs}` (deprecated in Vitest 3.2 — see "v3.2 Workspace File Deprecation" below)
+   - Check `project.json` files for `@nx/vitest:test` / `@nx/vite:test` executor options
+   - For workspaces relying on the inferred plugin (`@nx/vitest/plugin`), targets come from inference — inspect them with `nx show project <name> --json | jq .targets`
 
 4. **Identify affected code**:
    - Test files: `**/*.{spec,test}.{ts,js,tsx,jsx}`
@@ -34,6 +35,15 @@ Work systematically through each breaking change category.
    - Coverage configuration references
    - Browser mode configurations
    - Custom reporters, sequencers, and snapshot-related imports
+
+---
+
+## Nx-Specific Notes (read first)
+
+- **Inferred plugin targets**: modern Nx workspaces use `@nx/vitest/plugin` (or `@nx/vite/plugin` historically) to _infer_ the test target from the presence of a `vitest.config.*` file. `project.json` may have no `test` target at all. Renaming or moving `vitest.config.*` invalidates inference. After config edits, run `nx reset && nx show project <name>` on a sample project to confirm the target is still present.
+- **Shared base config pattern**: many Nx workspaces extend a workspace-root `vitest.config.base.ts` via `mergeConfig`. Apply transforms to the BASE config first, then per-project overrides. Otherwise a migrated base may conflict with un-migrated children.
+- **Angular projects using AnalogJS** (`@analogjs/vitest-angular`, `@analogjs/vite-plugin-angular`): the Analog packages are bumped automatically by Nx's `packageJsonUpdates`. Review the Analog-specific setup file (typically `src/test-setup.ts`) and any plugin invocations in the per-project `vitest.config.ts` for changes between Analog `~1.x` and `~2.x` lines.
+- **CI configuration**: when `@nx/vitest/plugin` is configured with `ciTargetName`, per-test-file targets are inferred — your `.github/workflows/*.yml` doesn't need direct reporter changes. CI-side reporter config matters only if you bypass the plugin.
 
 ---
 
@@ -151,9 +161,15 @@ export default defineConfig({
 });
 ```
 
+**Pattern Semantics Note**: `server.watch.ignored` uses **chokidar** patterns, while Vitest 1.x's `watchExclude` accepted simpler relative-path matchers. A literal find-and-replace may over- or under-ignore. Treat each entry as manual review:
+
+- A bare directory name like `'node_modules'` typically needs `'**/node_modules/**'` to match nested occurrences.
+- Glob patterns ending in `/**` are usually portable as-is.
+- After the rewrite, verify watch mode picks up the right files with `nx test <project> --watch`.
+
 **Action Items**:
 
-- [ ] Move every `test.watchExclude` entry to `server.watch.ignored`.
+- [ ] Move every `test.watchExclude` entry to `server.watch.ignored`, adjusting pattern syntax to chokidar conventions.
 - [ ] Remove `watchExclude` from `vitest.config.*`.
 
 ### 1.6 `--segfault-retry` CLI Flag Removed
@@ -285,7 +301,7 @@ A numeric timeout value as the third argument is still accepted (`test('name', (
 
 **Search Pattern**: `browser.name`, `browser.providerOptions` in `vitest.config.*`
 
-**What Changed**: `browser.name` and `browser.providerOptions` are deprecated. Use `browser.instances` instead.
+**What Changed**: `browser.name` and `browser.providerOptions` are **deprecated in v3** (still work, emit warnings) and **removed in v4**. Use `browser.instances` instead. Migrating now silences the v3 warnings and is required before reaching v4.
 
 ```typescript
 // ❌ BEFORE (Vitest 2.x)
@@ -365,7 +381,7 @@ vi.isMockFunction(fooService.foo);
 
 **Search Pattern**: `vi.useFakeTimers()` usages and `fakeTimers.toFake` config
 
-**What Changed**: Vitest no longer ships default `fakeTimers.toFake` values. All timer-related globals (including `performance.now()`) are mocked, except `nextTick`.
+**What Changed**: Vitest now mocks **all** timer-related APIs by default (the previously-restricted built-in subset is gone). This includes `performance.now()`. Only `nextTick` is left unmocked. To restore the prior, narrower subset, configure `fakeTimers.toFake` explicitly.
 
 ```typescript
 // To restore the prior subset:
@@ -443,7 +459,7 @@ expect(() => {
 
 **Action Items**:
 
-- [ ] Replace `import { Custom } from 'vitest'` with `import { RunnerCustomCase, RunnerTestCase } from 'vitest'`.
+- [ ] Replace `import { Custom } from 'vitest'`: most usages should become `RunnerTestCase` (the regular test case type — `Custom` was an alias for `Test`). Only use `RunnerCustomCase` if the workspace explicitly creates tasks via `getCurrentSuite().custom()`.
 - [ ] Replace `WorkspaceSpec` references with `TestSpecification`.
 
 ### 2.10 `resolveConfig()` API Shape Changed
@@ -486,6 +502,39 @@ expect(() => {
 
 - [ ] Most workspaces have nothing to do here. If you maintain custom snapshot tooling against `@vitest/snapshot`, review your usage against the v3 API.
 
+### 2.14 Workspace → Projects (v3.2 option rename, v4 file removal)
+
+**Applies when**: Workspace has `vitest.workspace.{ts,js,mjs}` files, uses `defineWorkspace`, or has `test.workspace` set in `vitest.config.*`.
+
+**What Changed**:
+
+- **Vitest 3.2**: introduced `test.projects` as the config option, with `test.workspace` deprecated in favor of it (the option emits a deprecation warning).
+- **Vitest 4**: the external file form (`vitest.workspace.*` + `defineWorkspace`) is **removed entirely**. Projects must be inlined in the root `vitest.config.*`.
+
+Migrating now (while still on v3) clears the v3.2 deprecation warning and is required before reaching v4.
+
+```typescript
+// ❌ DEPRECATED (Vitest 3.2+)
+// vitest.workspace.ts
+import { defineWorkspace } from 'vitest/config';
+export default defineWorkspace(['apps/*', 'libs/*']);
+
+// ✅ AFTER (inline in root vitest.config.ts)
+import { defineConfig } from 'vitest/config';
+export default defineConfig({
+  test: {
+    projects: ['apps/*', 'libs/*'],
+  },
+});
+```
+
+**Action Items**:
+
+- [ ] Move project list from `vitest.workspace.*` into `test.projects` in the root `vitest.config.*`.
+- [ ] Delete the `vitest.workspace.*` file once migration is complete.
+- [ ] If you import `defineWorkspace` anywhere, replace with `defineConfig` and the inlined shape above.
+- [ ] If you continue to Vitest 4, this step is required, not optional.
+
 ---
 
 ## Post-Migration Verification
@@ -520,4 +569,5 @@ expect(() => {
 
 - Vitest 2.0 migration guide: https://v2.vitest.dev/guide/migration
 - Vitest 3.0 migration guide: https://v3.vitest.dev/guide/migration
+- Vitest 4.0 migration guide (for cascading bumps): https://vitest.dev/guide/migration
 - Vitest releases: https://github.com/vitest-dev/vitest/releases

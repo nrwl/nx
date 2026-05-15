@@ -4,6 +4,22 @@
 
 These instructions guide you through migrating an Nx workspace containing multiple Vitest projects from Vitest 3.x to Vitest 4.0. Work systematically through each breaking change category.
 
+## Prerequisites
+
+Vitest 4 has hard runtime requirements. Verify these BEFORE editing any config:
+
+- **Vite ≥ 6.0.0** (Vite 5 is unsupported). Check with `npx vite --version`. If on Vite 5, apply the Vite 6 / 7 / 8 migration guides first.
+- **Node.js ≥ 20.0.0** (Node 18 support dropped). Check with `node --version`. Update CI `actions/setup-node` versions, `.nvmrc`, `engines` in `package.json`, and Docker base images.
+
+If either prerequisite is unmet, **stop and resolve them before continuing** — config-level migration on an unsupported runtime will produce confusing errors.
+
+## Nx-Specific Notes (read first)
+
+- **Inferred plugin targets**: modern Nx workspaces use `@nx/vitest/plugin` (or historically `@nx/vite/plugin`) to _infer_ test targets from `vitest.config.*` presence. `project.json` may have no `test` target. Inspect inferred targets with `nx show project <name> --json | jq .targets`. Renaming/moving `vitest.config.*` invalidates inference; run `nx reset` after structural moves.
+- **`@nx/vitest:test` / `@nx/vite:test` executor options**: when present in `project.json`, the relevant options are `configFile`, `reportsDirectory`, `mode`, `testFiles`, `watch`. Most option-level breaking changes in v4 are inside `vitest.config.*`, not these. The exception: any `--segfault-retry` in the executor `args` is now invalid and must be removed.
+- **Shared base config**: apply transforms to a workspace-root `vitest.config.base.ts` (extended via `mergeConfig`) BEFORE per-project overrides. Otherwise inherited options may shadow the migrated ones.
+- **Angular projects using AnalogJS** (`@analogjs/vitest-angular` / `@analogjs/vite-plugin-angular`): the Analog packages are bumped automatically by Nx's `packageJsonUpdates` (to the `~2.2.x` line). Review `src/test-setup.ts` and Analog plugin invocations in per-project `vitest.config.ts`.
+
 ## Pre-Migration Checklist
 
 1. **Identify all Vitest projects**:
@@ -14,8 +30,9 @@ These instructions guide you through migrating an Nx workspace containing multip
 
 2. **Locate all Vitest configuration files**:
    - Search for `vitest.config.{ts,js,mjs}`
-   - Search for `vitest.workspace.{ts,js,mjs}`
-   - Check `project.json` files for inline Vitest configuration
+   - Search for `vitest.workspace.{ts,js,mjs}` (removed in Vitest 4 — migrate to inline `test.projects`; see section 1.3 below)
+   - Check `project.json` files for `@nx/vitest:test` / `@nx/vite:test` executor options
+   - For workspaces relying on the inferred plugin (`@nx/vitest/plugin`), targets come from inference — inspect them with `nx show project <name> --json | jq .targets`
 
 3. **Identify affected code**:
    - Test files: `**/*.{spec,test}.{ts,js,tsx,jsx}`
@@ -73,13 +90,17 @@ export default defineConfig({
 **Changes Required**:
 
 ```typescript
-// ❌ BEFORE (Vitest 3.x)
+// ❌ BEFORE (Vitest 3.x — pool serialized via singleThread/singleFork)
 export default defineConfig({
   test: {
     maxThreads: 4,
     maxForks: 2,
-    singleThread: false,
+    singleFork: true,
     poolOptions: {
+      forks: {
+        execArgv: ['--expose-gc'],
+        isolate: false,
+      },
       threads: {
         useAtomics: true,
       },
@@ -90,24 +111,29 @@ export default defineConfig({
   },
 });
 
-// ✅ AFTER (Vitest 4.0)
+// ✅ AFTER (Vitest 4.0 — top-level pool config)
 export default defineConfig({
   test: {
-    maxWorkers: 4, // Consolidates maxThreads and maxForks
-    isolate: true, // Replaces singleThread: false
-    // Remove: poolOptions, threads.useAtomics
-    vmMemoryLimit: '512MB', // Moved to top-level
+    maxWorkers: 1, // singleFork: true => maxWorkers: 1, isolate: false
+    isolate: false,
+    execArgv: ['--expose-gc'], // moved from poolOptions.forks
+    vmMemoryLimit: '512MB', // moved from poolOptions.vmThreads.memoryLimit
+    // Remove: poolOptions, threads.useAtomics, minWorkers (also removed in v4)
   },
 });
 ```
 
 **Action Items**:
 
-- [ ] Replace `maxThreads` and `maxForks` with single `maxWorkers` option
-- [ ] Replace `singleThread: true` or `singleFork: true` with `maxWorkers: 1, isolate: false`
-- [ ] Move all `poolOptions.*` nested options to top-level (e.g., `poolOptions.vmThreads.memoryLimit` → `vmMemoryLimit`)
-- [ ] Remove `threads.useAtomics` option
-- [ ] Update CI environment variables: `VITEST_MAX_THREADS` and `VITEST_MAX_FORKS` → `VITEST_MAX_WORKERS`
+- [ ] Replace `maxThreads` and `maxForks` with a single `maxWorkers` option. If both values were set with different numbers (one for threads pool, one for forks pool), pick the value matching the pool the project actually uses — `maxWorkers` is pool-agnostic in v4.
+- [ ] Replace `singleThread: true` or `singleFork: true` with `maxWorkers: 1, isolate: false`.
+- [ ] If `singleThread: false` or `singleFork: false` was set explicitly, just delete — it's the default.
+- [ ] Move `poolOptions.{forks,threads}.execArgv` → top-level `execArgv`.
+- [ ] Move `poolOptions.{forks,threads}.isolate` → top-level `isolate`.
+- [ ] Move `poolOptions.vmThreads.memoryLimit` → top-level `vmMemoryLimit`.
+- [ ] Remove `poolOptions.threads.useAtomics` (option removed).
+- [ ] Remove `minWorkers` if present (option removed; behaves as if set to 0 in non-watch mode).
+- [ ] Update CI environment variables: `VITEST_MAX_THREADS` and `VITEST_MAX_FORKS` → `VITEST_MAX_WORKERS`.
 
 #### 1.3 Workspace to Projects Rename
 
@@ -133,16 +159,19 @@ export default defineConfig({
 
 **Action Items**:
 
-- [ ] Rename `workspace` property to `projects` in all config files
-- [ ] Remove external workspace file references (must be inline in config)
-- [ ] Update `poolMatchGlobs` to use `projects` pattern matching instead
-- [ ] Update `environmentMatchGlobs` to use `projects` pattern matching instead
+- [ ] Rename `workspace` property to `projects` in all config files.
+- [ ] Inline any external `vitest.workspace.*` content into `test.projects` and delete the workspace file (external file references are no longer supported).
+- [ ] If projects need different pool/environment options, set them inside each project entry rather than via the (now-removed) `poolMatchGlobs` / `environmentMatchGlobs` — see section 1.5.
 
 #### 1.4 Browser Configuration
 
-**Search Pattern**: `browser.provider`, `browser.testerScripts`, imports from `@vitest/browser`
+**Search Pattern**: `browser.provider`, `browser.testerScripts`, imports from `@vitest/browser`, `@vitest/browser/context`, `@vitest/browser/utils`
 
-**Changes Required**:
+**Changes Required**: `browser.provider` is no longer a string. It's now the **return value of a provider function** imported from a per-provider package. Official packages:
+
+- `@vitest/browser-playwright` — exports `playwright(options?)`
+- `@vitest/browser-webdriverio` — exports `webdriverio(options?)`
+- `@vitest/browser-preview` — exports `preview(options?)` (dev-only)
 
 ```typescript
 // ❌ BEFORE (Vitest 3.x)
@@ -150,36 +179,41 @@ export default defineConfig({
   test: {
     browser: {
       enabled: true,
-      provider: 'playwright', // String value
-      testerScripts: ['./setup.js'],
+      provider: 'playwright', // string
+      testerScripts: ['./setup.js'], // array of scripts
     },
   },
 });
-
-// Import changes
-import { page } from '@vitest/browser';
+import { page } from '@vitest/browser/context';
+import { getElementError } from '@vitest/browser/utils';
 
 // ✅ AFTER (Vitest 4.0)
+import { defineConfig } from 'vitest/config';
+import { playwright } from '@vitest/browser-playwright';
+
 export default defineConfig({
   test: {
     browser: {
       enabled: true,
-      provider: { name: 'playwright' }, // Object value
-      testerHtmlPath: './test-setup.html', // Renamed from testerScripts
+      provider: playwright({
+        launchOptions: { slowMo: 100 },
+      }),
+      instances: [{ browser: 'chromium' }],
+      testerHtmlPath: './test-setup.html', // single HTML path replaces script array
     },
   },
 });
-
-// Import changes
-import { page } from 'vitest/browser';
+import { page, utils } from 'vitest/browser';
+const { getElementError } = utils;
 ```
 
 **Action Items**:
 
-- [ ] Convert `browser.provider` string values to object format: `{ name: 'provider-name' }`
-- [ ] Replace `browser.testerScripts` with `browser.testerHtmlPath`
-- [ ] Update all imports from `@vitest/browser` to `vitest/browser`
-- [ ] Remove `@vitest/browser` from dependencies if no longer needed
+- [ ] Install the appropriate provider package: `@vitest/browser-playwright`, `@vitest/browser-webdriverio`, or `@vitest/browser-preview`. Match whatever your `browser.provider` string was previously.
+- [ ] Remove `@vitest/browser` from `dependencies`/`devDependencies` — its public surface moved into the main `vitest` package and the per-provider packages.
+- [ ] Replace string `browser.provider: 'name'` with the function-call form: `provider: <providerFn>(<options>)`.
+- [ ] Replace `browser.testerScripts: [...]` with `browser.testerHtmlPath: '<single-file>.html'`. Note: this is a **semantic** change (array of scripts → one HTML file). Move the script contents into a `<script>` block of the HTML file, or load them with `<script src>` references inside it.
+- [ ] Update imports: `@vitest/browser/context` → `vitest/browser`; `@vitest/browser/utils` → `vitest/browser` (named export `utils`).
 
 #### 1.5 Deprecated Configuration Options
 
@@ -215,9 +249,69 @@ export default defineConfig({
 
 **Action Items**:
 
-- [ ] Move `deps.*` options under `server.deps` namespace
-- [ ] Remove `poolMatchGlobs` (use `projects` with conditions instead)
-- [ ] Remove `environmentMatchGlobs` (use `projects` with conditions instead)
+- [ ] Move `deps.*` options under `server.deps` namespace.
+- [ ] Rename `deps.optimizer.web` → `deps.optimizer.client` (separate rename, same area).
+- [ ] Remove `poolMatchGlobs` (use `projects` with conditions instead).
+- [ ] Remove `environmentMatchGlobs` (use `projects` with conditions instead).
+
+#### 1.6 Default Test File Exclusions Narrowed
+
+**Search Pattern**: workspaces that have non-test files in `dist/`, `cypress/`, `.idea/`, `.cache/`, `.output/`, `.temp/`, or root config files (`rollup.config.*`, `prettier.config.*`, etc.) that look like test files.
+
+**What Changed**: Vitest 4 excludes ONLY `node_modules` and `.git` by default. Previously, additional directories and root config files were excluded. Workspaces with `*.{spec,test}.*`-named files in those previously-excluded locations will see them picked up by the test runner in v4 unless an explicit exclusion is added.
+
+```typescript
+// To restore Vitest 3.x default exclusion behavior:
+import { configDefaults, defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    exclude: [
+      ...configDefaults.exclude,
+      '**/dist/**',
+      '**/cypress/**',
+      '**/.{idea,git,cache,output,temp}/**',
+      '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*',
+    ],
+  },
+});
+```
+
+**Recommendation**: prefer `test.dir` to scope discovery for performance, instead of relying on negative exclusions.
+
+**Action Items**:
+
+- [ ] After upgrading, run `nx test <project>` for each affected project. If new test files surface unexpectedly from `dist/`, `cypress/`, etc., apply the snippet above or add a narrower exclude pattern.
+- [ ] Consider setting `test.dir: './src'` (or equivalent) per project to scope discovery to source.
+
+#### 1.7 Custom Environments: `transformMode` → `viteEnvironment`
+
+**Applies when**: A project exports a custom Vitest environment (rare; check for files with `default export` of `{ name, setup, transformMode, ... }` consumed via `test.environment`).
+
+```typescript
+// ❌ BEFORE (Vitest 3.x)
+export default {
+  name: 'my-env',
+  setup() {
+    /* ... */
+  },
+  transformMode: 'ssr',
+};
+
+// ✅ AFTER (Vitest 4.0)
+export default {
+  name: 'my-env',
+  setup() {
+    /* ... */
+  },
+  viteEnvironment: 'custom-env',
+};
+```
+
+**Action Items**:
+
+- [ ] If a custom environment file exists, rename its `transformMode` property to `viteEnvironment`.
+- [ ] No change needed for workspaces using only built-in environments (`node`, `jsdom`, `happy-dom`, `edge-runtime`).
 
 ### 2. Test Code Updates
 
@@ -352,7 +446,7 @@ const spy = vi.spyOn({ method: mock }, 'method');
 
 #### 2.6 Automock Behavior Changes
 
-**Search Pattern**: `vi.mock()` with factory functions, `.mockRestore()` on automocks
+**Search Pattern**: `vi.mock()` factories with getters, instance methods on automocked classes, `vi.restoreAllMocks()` usage when modules are automocked.
 
 **Changes Required**:
 
@@ -361,15 +455,11 @@ const spy = vi.spyOn({ method: mock }, 'method');
 vi.mock('./utils', () => ({
   get value() {
     return 42;
-  }, // Would call getter
+  }, // getter executed
 }));
 
 import { value } from './utils';
-console.log(value); // Would execute getter logic
-
-// Restore might have worked
-const spy = vi.spyOn(obj, 'method');
-spy.mockRestore(); // Might work on automocks
+console.log(value); // executes getter, prints 42
 
 // ✅ AFTER (Vitest 4.0)
 vi.mock('./utils', () => ({
@@ -379,27 +469,40 @@ vi.mock('./utils', () => ({
 }));
 
 import { value } from './utils';
-console.log(value); // Returns undefined (doesn't call getter)
+console.log(value); // getter NOT executed; prints undefined
 
-// Explicitly return value if needed
-vi.mock('./utils', () => ({
-  value: 42, // Not a getter
-}));
+// To spy on the getter explicitly:
+vi.spyOn(utilsModule, 'value', 'get').mockReturnValue(42);
 
-// mockRestore no longer works on automocks
-const spy = vi.spyOn(obj, 'method');
-spy.mockRestore(); // Throws error if method is automocked
-
-// Use unmock instead
-vi.unmock('./module');
+// Or define as a plain property (not a getter):
+vi.mock('./utils', () => ({ value: 42 }));
 ```
+
+Additional behavior changes for automocked instance methods:
+
+```typescript
+// Each instance gets its own mock for the same method name
+const a = new AutoMockedClass();
+const b = new AutoMockedClass();
+a.method.mockReturnValue(42);
+expect(a.method()).toBe(42);
+expect(b.method()).toBeUndefined(); // independent per instance
+
+// But the prototype is shared: a method mocked on the prototype affects all
+// instances that don't have a per-instance mock.
+AutoMockedClass.prototype.method.mockReturnValue(100);
+b.method.mockReset(); // remove per-instance mock if any
+expect(b.method()).toBe(100);
+```
+
+`vi.restoreAllMocks()` no longer touches automocks. Use `vi.unmock(modulePath)` or `vi.resetModules()` to clear an automocked module. **`.mockRestore()` on a single spy still works** (resets its implementation and clears state) regardless of whether the underlying module is automocked.
 
 **Action Items**:
 
-- [ ] Convert automocked getters to plain property values where needed
-- [ ] Remove `.mockRestore()` calls on automocked methods
-- [ ] Use `vi.unmock()` to clear automocks instead
-- [ ] Test instance method isolation (they now share state with prototype)
+- [ ] Replace automocked **getters** that need to return values with plain property definitions, or add an explicit `vi.spyOn(obj, name, 'get').mockReturnValue(...)`.
+- [ ] If a test relied on `vi.restoreAllMocks()` clearing an automocked module, add explicit `vi.unmock('./module')` or `vi.resetModules()` calls.
+- [ ] Audit tests that mock instance methods of an automocked class; the per-instance independence may surface latent bugs.
+- [ ] Do NOT remove `.mockRestore()` calls on single spies — they still work correctly.
 
 #### 2.7 Settled Results Immediate Population
 
@@ -436,7 +539,13 @@ expect(asyncMock.mock.settledResults[0]).toEqual({
 
 #### 3.1 Reporter API Changes
 
-**Search Pattern**: Custom reporters, `onCollected`, `onTaskUpdate`, `onFinished`
+**Search Pattern**: custom reporter classes/objects implementing any of these removed callbacks:
+
+- `onCollected`
+- `onSpecsCollected`
+- `onPathsCollected`
+- `onTaskUpdate`
+- `onFinished`
 
 **Changes Required**:
 
@@ -444,25 +553,30 @@ expect(asyncMock.mock.settledResults[0]).toEqual({
 // ❌ BEFORE (Vitest 3.x)
 export default {
   onCollected(files) {
-    // Handle collected files
+    /* ... */
   },
   onTaskUpdate(task) {
-    // Handle task update
+    /* ... */
   },
   onFinished(files) {
-    // Handle completion
+    /* ... */
   },
 };
 
 // ✅ AFTER (Vitest 4.0)
-// Use new reporter API - consult Vitest 4 docs for replacement methods
+// Use the new test-module / test-case event API. See:
+// https://vitest.dev/api/advanced/reporters
+// Typical replacements:
+//   onCollected      → onTestModuleCollected
+//   onTaskUpdate     → onTestCaseResult / onTestModuleEnd
+//   onFinished       → onTestRunEnd
 ```
 
 **Action Items**:
 
-- [ ] Review custom reporters for removed API usage
-- [ ] Consult Vitest 4 documentation for new reporter API
-- [ ] Update or rewrite custom reporters to use new APIs
+- [ ] Audit every custom reporter file for any of the five removed callbacks listed above. Each one needs replacement.
+- [ ] Consult the v4 reporters API at https://vitest.dev/api/advanced/reporters for the exact replacement method name and signature.
+- [ ] After rewriting, run the reporter in isolation against a small project to verify event delivery before applying workspace-wide.
 
 #### 3.2 Built-in Reporter Changes
 
@@ -510,7 +624,9 @@ reporters: ['tree']; // Use 'tree' for hierarchical output
 // If you want old behavior (don't print shadow root):
 export default defineConfig({
   test: {
-    printShadowRoot: false,
+    snapshotFormat: {
+      printShadowRoot: false,
+    },
   },
 });
 ```
@@ -519,7 +635,44 @@ export default defineConfig({
 
 - [ ] Review snapshot tests for custom elements
 - [ ] Update snapshots if shadow root contents are now included
-- [ ] Add `printShadowRoot: false` if old behavior is required
+- [ ] Add `printShadowRoot: false` to `snapshotFormat` if old behavior is required
+
+#### 4.2 `vi.fn` Snapshot String Changed
+
+**Search Pattern**: `__snapshots__/**/*.snap` files containing `[MockFunction spy]`
+
+**What Changed**: The default rendered string for an unnamed mock function in snapshots changed from `[MockFunction spy]` to `[MockFunction]`. Snapshots of mock objects taken in v3 will mismatch on re-run.
+
+**Action Items**:
+
+- [ ] Run tests with `--update` for projects that snapshot mock objects, then review the diff to confirm only the mock-name string changed.
+- [ ] Where a specific mock name is asserted in snapshots, add explicit `.mockName('...')` calls.
+
+#### 4.3 Custom Snapshot Matchers: Import Path Change
+
+**Applies when**: A workspace defines custom snapshot matchers using `jest-snapshot`.
+
+**What Changed**: Vitest 4 expects custom snapshot matchers to import from `vitest` (the new `Snapshots` namespace), not `jest-snapshot`.
+
+```typescript
+// ❌ BEFORE (Vitest 3.x)
+const { toMatchSnapshot } = require('jest-snapshot');
+
+// ✅ AFTER (Vitest 4.0)
+import { Snapshots } from 'vitest';
+const { toMatchSnapshot } = Snapshots;
+
+expect.extend({
+  toMatchTrimmedSnapshot(received: string, length: number) {
+    return toMatchSnapshot.call(this, received.slice(0, length));
+  },
+});
+```
+
+**Action Items**:
+
+- [ ] Replace `require('jest-snapshot')` / `import 'jest-snapshot'` in custom matcher files with `import { Snapshots } from 'vitest'`.
+- [ ] Remove `jest-snapshot` from `dependencies`/`devDependencies` if it's no longer used elsewhere.
 
 ### 5. Environment Variable Updates
 
