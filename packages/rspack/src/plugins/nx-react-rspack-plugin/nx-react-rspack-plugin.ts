@@ -8,8 +8,6 @@ export class NxReactRspackPlugin {
   constructor(private options: Record<string, any> = {}) {}
 
   apply(compiler: Compiler) {
-    if (global.NX_GRAPH_CREATION) return;
-
     applyReactConfigSync(compiler.options);
     applyReactHotReloadToCompiler(compiler);
   }
