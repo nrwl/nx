@@ -9,7 +9,9 @@ import { existsSync, readFileSync } from 'fs';
 import { appendFileSync, createFileSync, writeFileSync } from 'fs-extra';
 import { join, resolve } from 'path';
 
-const kotlinVersion = '2.1.20';
+// Kotlin 2.2+ is required to target JVM 24 bytecode; older versions cap at
+// JVM 23 and cause an inconsistent-JVM-target build failure on JDK 24.
+const kotlinVersion = '2.3.21';
 
 export function createGradleProject(
   projectName: string,
@@ -57,7 +59,6 @@ export function createGradleProject(
     )
   );
 
-  // Update Kotlin version to 2.0.21 after project creation
   if (type === 'kotlin') {
     updateKotlinVersion(cwd, type);
     // The Kotlin Gradle Plugin writes session/IPC files under .kotlin/.
