@@ -1,5 +1,5 @@
 import { ExecutorContext, logger, workspaceRoot } from '@nx/devkit';
-import { CopyAssetsHandler } from '@nx/js/internal';
+import { CopyAssetsHandler } from '@nx/js/src/utils/assets/copy-assets-handler';
 import * as path from 'path';
 import * as fs from 'fs';
 

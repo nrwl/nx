@@ -90,6 +90,15 @@ describe('rewrite-internal-subpath-imports migration', () => {
       expect(rewriteSubpathImports(source)).toBe(source);
     });
 
+    it('preserves @nx/js/src/utils/assets/copy-assets-handler imports', () => {
+      const source = [
+        `import { CopyAssetsHandler } from '@nx/js/src/utils/assets/copy-assets-handler';`,
+        `const h = require('@nx/js/src/utils/assets/copy-assets-handler');`,
+        ``,
+      ].join('\n');
+      expect(rewriteSubpathImports(source)).toBe(source);
+    });
+
     it('leaves the top-level @nx/js entry alone', () => {
       const source = `import { readTsConfig } from '@nx/js';\n`;
       expect(rewriteSubpathImports(source)).toBe(source);

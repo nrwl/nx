@@ -45,6 +45,9 @@
       ],
       "src/release/version-actions": [
         "dist/src/release/version-actions.d.ts"
+      ],
+      "src/utils/assets/copy-assets-handler": [
+        "dist/src/utils/assets/copy-assets-handler.d.ts"
       ]
     }
   },
@@ -93,6 +96,11 @@
       "@nx/nx-source": "./src/release/version-actions.ts",
       "types": "./dist/src/release/version-actions.d.ts",
       "default": "./dist/src/release/version-actions.js"
+    },
+    "./src/utils/assets/copy-assets-handler": {
+      "@nx/nx-source": "./src/utils/assets/copy-assets-handler.ts",
+      "types": "./dist/src/utils/assets/copy-assets-handler.d.ts",
+      "default": "./dist/src/utils/assets/copy-assets-handler.js"
     }
   },
   "dependencies": {

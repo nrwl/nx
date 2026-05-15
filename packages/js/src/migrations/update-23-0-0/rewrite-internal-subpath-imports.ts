@@ -14,11 +14,16 @@ const TS_EXTENSIONS = ['.ts', '.tsx', '.cts', '.mts'] as const;
 const FROM_PREFIX = '@nx/js/src/';
 const TO_SPECIFIER = '@nx/js/internal';
 
-// `@nx/js/src/release/version-actions` stays as an explicit exports entry on
-// `@nx/js` so existing user `nx.json` files referencing the runtime string
-// default continue to resolve. Don't rewrite imports of it.
+// Subpaths kept as explicit (non-wildcard) exports entries on `@nx/js`, so
+// imports of them keep resolving. Don't rewrite these:
+// - `release/version-actions`: referenced by a runtime string default baked
+//   into existing user `nx.json` release configs.
+// - `utils/assets/copy-assets-handler`: consumed by project-graph plugins
+//   (e.g. nx's own `tools/workspace-plugin`) that load before any build and
+//   therefore can't resolve the source-only `@nx/js/internal` entry.
 const PRESERVED_SUBPATHS: ReadonlySet<string> = new Set([
   '@nx/js/src/release/version-actions',
+  '@nx/js/src/utils/assets/copy-assets-handler',
 ]);
 
 // Methods on `jest` and `vi` that take a module specifier as their first arg.

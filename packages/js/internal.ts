@@ -66,12 +66,7 @@ export {
 
 // Asset helpers
 export { type AssetGlob } from './src/utils/assets/assets';
-export {
-  CopyAssetsHandler,
-  normalizeAssets,
-  getAssetOutputPath,
-  type AssetEntry,
-} from './src/utils/assets/copy-assets-handler';
+export { CopyAssetsHandler } from './src/utils/assets/copy-assets-handler';
 
 // Package-manager / package.json helpers
 export { sortPackageJsonFields } from './src/utils/package-json/sort-fields';
