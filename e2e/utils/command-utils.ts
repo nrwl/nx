@@ -1,3 +1,6 @@
+// Cache-bust marker: bumping this forces every e2e project to re-run, since
+// they all depend on @nx/e2e-utils. Increment when a full e2e re-run is needed.
+// e2e-rerun: 1
 import {
   output,
   PackageManager,
