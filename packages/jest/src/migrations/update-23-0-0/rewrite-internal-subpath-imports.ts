@@ -29,7 +29,6 @@ const TO_INTERNAL = '@nx/jest/internal';
 // the public `@nx/jest` entry; everything else goes to `@nx/jest/internal`.
 const PUBLIC_SYMBOLS: ReadonlySet<string> = new Set([
   'configurationGenerator',
-  'jestProjectGenerator',
   'jestInitGenerator',
   'addPropertyToJestConfig',
   'removePropertyFromJestConfig',
