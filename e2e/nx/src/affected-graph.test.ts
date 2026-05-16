@@ -24,7 +24,10 @@ describe('Nx Affected and Graph Tests', () => {
     () =>
       (proj = newProject({
         packages: [
+          '@nx/eslint',
+          '@nx/jest',
           '@nx/js',
+          '@nx/playwright',
           '@nx/vite',
           '@nx/vitest',
           '@nx/web',
@@ -544,7 +547,15 @@ describe('show projects --affected', () => {
   beforeAll(
     () =>
       (proj = newProject({
-        packages: ['@nx/js', '@nx/vite', '@nx/vitest', '@nx/web'],
+        packages: [
+          '@nx/eslint',
+          '@nx/jest',
+          '@nx/js',
+          '@nx/playwright',
+          '@nx/vite',
+          '@nx/vitest',
+          '@nx/web',
+        ],
       }))
   );
   afterAll(() => cleanupProject());
