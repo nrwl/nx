@@ -1242,14 +1242,6 @@ export function getRunnerOptions(
   nxArgs: NxArgs,
   isCloudDefault: boolean
 ): any {
-  const defaultCacheableOperations = [];
-
-  for (const key in nxJson.targetDefaults) {
-    if (nxJson.targetDefaults[key].cache) {
-      defaultCacheableOperations.push(key);
-    }
-  }
-
   const result = {
     ...nxJson.tasksRunnerOptions?.[runner]?.options,
     ...nxArgs,
@@ -1281,13 +1273,6 @@ export function getRunnerOptions(
 
   if (nxJson.cacheDirectory) {
     result.cacheDirectory ??= nxJson.cacheDirectory;
-  }
-
-  if (defaultCacheableOperations.length) {
-    result.cacheableOperations ??= [];
-    result.cacheableOperations = result.cacheableOperations.concat(
-      defaultCacheableOperations
-    );
   }
 
   if (nxJson.useDaemonProcess !== undefined) {

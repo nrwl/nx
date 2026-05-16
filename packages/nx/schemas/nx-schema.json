@@ -43,11 +43,24 @@
       }
     },
     "targetDefaults": {
-      "type": "object",
-      "description": "Target defaults",
-      "additionalProperties": {
-        "$ref": "#/definitions/targetDefaultsConfig"
-      }
+      "description": "Target defaults. The recommended form is an array of entries; each entry matches by `target` (name or glob), `executor`, or both, and optionally narrows by `projects` and `plugin`. The legacy record/object form (keyed by target name or executor) is still read but deprecated; run `nx repair` to convert it.",
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/targetDefaultEntry"
+          }
+        },
+        {
+          "type": "object",
+          "deprecated": true,
+          "deprecationMessage": "The record-shape `targetDefaults` is deprecated and will be removed in a future major. Run `nx repair` to convert this nx.json to the new array-shape `targetDefaults`, which also unlocks the `projects` and `plugin` filters.",
+          "description": "Deprecated: the record-shape `targetDefaults` is still read for backwards compatibility, but new workspaces should use the array form. Run `nx repair` to convert.",
+          "additionalProperties": {
+            "$ref": "#/definitions/targetDefaultsConfig"
+          }
+        }
+      ]
     },
     "workspaceLayout": {
       "type": "object",
@@ -804,6 +817,80 @@
       },
       "additionalProperties": false
     },
+    "targetDefaultEntry": {
+      "type": "object",
+      "description": "A single target defaults entry. At least one of `target`, `executor`, `projects`, or `plugin` must be set — an entry with neither a locator nor a filter would broadcast to every target in the workspace and is ignored at runtime.",
+      "anyOf": [
+        { "required": ["target"] },
+        { "required": ["executor"] },
+        { "required": ["projects"] },
+        { "required": ["plugin"] }
+      ],
+      "properties": {
+        "target": {
+          "type": "string",
+          "description": "The target name or glob pattern (e.g. 'build', 'e2e-ci--*') this default applies to. When omitted, the entry matches by `executor` alone."
+        },
+        "projects": {
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "A project name, glob, or tag (e.g. 'tag:dotnet')."
+            },
+            {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "A list of project names, globs, or tags (e.g. ['apps/*', '!apps/legacy'])."
+            }
+          ],
+          "description": "Restrict the default to matching projects. Uses findMatchingProjects syntax."
+        },
+        "plugin": {
+          "type": "string",
+          "description": "Restrict the default to targets originated by a specific plugin (e.g. '@nx/vite')."
+        },
+        "executor": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/executor"
+        },
+        "command": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/command"
+        },
+        "metadata": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/metadata"
+        },
+        "options": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/options"
+        },
+        "outputs": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/outputs"
+        },
+        "defaultConfiguration": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/defaultConfiguration"
+        },
+        "configurations": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/configurations"
+        },
+        "continuous": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/continuous"
+        },
+        "parallelism": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/parallelism"
+        },
+        "inputs": {
+          "$ref": "#/definitions/inputs"
+        },
+        "dependsOn": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/dependsOn"
+        },
+        "cache": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/cache"
+        },
+        "syncGenerators": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/syncGenerators"
+        }
+      },
+      "additionalProperties": false
+    },
     "targetDefaultsConfig": {
       "type": "object",
       "description": "Target defaults",
@@ -811,6 +898,15 @@
         "executor": {
           "description": "The function that Nx will invoke when you run this target",
           "type": "string"
+        },
+        "command": {
+          "description": "Shorthand for `nx:run-commands` — the shell command to run.",
+          "type": "string"
+        },
+        "metadata": {
+          "description": "Free-form metadata about the target (description, technologies, help text, etc.).",
+          "type": "object",
+          "additionalProperties": true
         },
         "options": {
           "type": "object"

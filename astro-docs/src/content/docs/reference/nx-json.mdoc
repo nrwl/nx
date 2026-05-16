@@ -35,8 +35,9 @@ The following is an expanded example showing all options. Your `nx.json` will li
     "default": ["{projectRoot}/**/*"],
     "production": ["!{projectRoot}/**/*.spec.tsx"]
   },
-  "targetDefaults": {
-    "@nx/js:tsc": {
+  "targetDefaults": [
+    {
+      "executor": "@nx/js:tsc",
       "inputs": ["production", "^production"],
       "dependsOn": ["^build"],
       "options": {
@@ -44,13 +45,14 @@ The following is an expanded example showing all options. Your `nx.json` will li
       },
       "cache": true
     },
-    "test": {
+    {
+      "target": "test",
+      "executor": "@nx/jest:jest",
       "cache": true,
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "executor": "@nx/jest:jest"
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
     }
-  },
+  ],
   "release": {
     "version": {
       "conventionalCommits": true
@@ -211,8 +213,39 @@ Additionally, if there is not a match for either of the above, we look for other
 
 Target defaults matching the executor takes precedence over those matching the target name. If we find a target default for a given target, we use it as the base for that target's configuration.
 
+`targetDefaults` is an array of entries. Each entry must specify at least one of `target` (name or glob), `executor`, `projects`, or `plugin`. Optional `projects` and `plugin` filters let you scope a default to a subset of projects or targets inferred by a particular plugin.
+
+| Field      | Type                                                                         | Description                                                                                                                                                                                                         |
+| ---------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `target`   | `string`                                                                     | Target name (e.g. `test`) or glob (e.g. `e2e-ci--*`). Required if `executor` is not set (and vice versa) when not using filter-only entries.                                                                        |
+| `executor` | `string`                                                                     | Executor identifier (e.g. `@nx/vite:test`). Matches targets that resolve to this executor. May be set alongside `target` to require both.                                                                           |
+| `projects` | `string` \| `string[]`                                                       | Optional. Restricts the default to matching projects. Accepts project names, globs, directory patterns, tags (`tag:foo`), and negation (`!foo`) — anything `findMatchingProjects` understands.                      |
+| `plugin`   | `string`                                                                     | Optional. Restricts the default to targets originated by a specific plugin (e.g. `@nx/vite`). Useful when two plugins expose a target with the same name (e.g. `@nx/vite:test` and `@nx/jest:test` both as `test`). |
+| other      | any field from [Target Configuration](/docs/reference/project-configuration) | The defaults applied when the filter matches.                                                                                                                                                                       |
+
+When multiple entries match a given `(target, project)` tuple, the **most specific** entry wins (`target + projects + plugin` > `target + projects` > `target + plugin` > `target` alone). Within the same specificity tier, an exact `target` match beats a glob match, and later entries in the array beat earlier ones.
+
+```json
+// nx.json — polyglot example
+{
+  "targetDefaults": [
+    { "target": "test", "cache": true },
+    {
+      "target": "test",
+      "plugin": "@nx/vite",
+      "inputs": ["default", "^production"]
+    },
+    {
+      "target": "test",
+      "projects": "tag:dotnet",
+      "options": { "configuration": "Release" }
+    }
+  ]
+}
+```
+
 {% aside type="caution" title="Beware" %}
-When using a target name as the key of a target default, make sure all the targets with that name use the same executor or that the target defaults you're setting make sense to all targets regardless of the executor they use. Anything set in a target default will also override the configuration of [tasks inferred by plugins](/docs/concepts/inferred-tasks).
+When an entry has no `projects` or `plugin` filter, Nx matches by target name (or executor) alone. Make sure all targets with that name use the same executor, or that the defaults you're setting make sense to all of them. Anything set in a target default will also override the configuration of [tasks inferred by plugins](/docs/concepts/inferred-tasks).
 {% /aside %}
 
 Some common scenarios for this follow.
@@ -222,18 +255,19 @@ Some common scenarios for this follow.
 Named inputs defined in `nx.json` are merged with the named inputs defined in [project level configuration](/docs/reference/project-configuration). In other words, every project has a set of named inputs, and it's defined as: `{...namedInputsFromNxJson, ...namedInputsFromProjectsProjectJson}`.
 
 Defining `inputs` for a given target would replace the set of inputs for that target name defined in `nx.json`.
-Using pseudocode `inputs = projectJson.targets.build.inputs || nxJson.targetDefaults.build.inputs`.
+Using pseudocode `inputs = projectJson.targets.build.inputs || nxJsonTargetDefaults.build.inputs`.
 
 You can also define and redefine named inputs. This enables one key use case, where your `nx.json` can define things like this (which applies to every project):
 
 ```json
 // nx.json
 {
-  "targetDefaults": {
-    "test": {
+  "targetDefaults": [
+    {
+      "target": "test",
       "inputs": ["default", "^production"]
     }
-  }
+  ]
 }
 ```
 
@@ -267,11 +301,12 @@ defining `targetDefaults` in `nx.json` is helpful.
 ```json
 // nx.json
 {
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "dependsOn": ["^build"]
     }
-  }
+  ]
 }
 ```
 
@@ -289,11 +324,12 @@ Another target default you can configure is `outputs`:
 ```json
 // nx.json
 {
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "outputs": ["{projectRoot}/custom-dist"]
     }
-  }
+  ]
 }
 ```
 
@@ -302,8 +338,9 @@ When defining any options or configurations inside of a target default, you may 
 ```json
 // nx.json
 {
-  "targetDefaults": {
-    "@nx/js:tsc": {
+  "targetDefaults": [
+    {
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "{projectRoot}/src/index.ts"
       },
@@ -315,18 +352,19 @@ When defining any options or configurations inside of a target default, you may 
       "inputs": ["prod"],
       "outputs": ["{workspaceRoot}/{projectRoot}"]
     },
-    "build": {
+    {
+      "target": "build",
       "inputs": ["prod"],
       "outputs": ["{workspaceRoot}/{projectRoot}"],
       "cache": true
     }
-  }
+  ]
 }
 ```
 
 #### Target default priority
 
-Note that the inputs and outputs are specified on both the `@nx/js:tsc` and `build` default configurations. This is **required**, as when reading target defaults Nx will only ever look at one key. If there is a default configuration based on the executor used, it will be read first. If not, Nx will fall back to looking at the configuration based on target name. For instance, running `nx build project` will read the options from `targetDefaults[@nx/js:tsc]` if the target configuration for `build` uses the `@nx/js:tsc executor`. It **would not** read any of the configuration from the `build` target default configuration unless the executor does not match.
+Only one entry wins per `(target, project)` tuple — the most specific one (see the table above). In the example above, both entries can apply to a `build` target that uses `@nx/js:tsc`; the `executor`-keyed entry wins because executor matches outrank exact target-name matches at the same tier. Specify the full config on the winning entry — less-specific entries do not contribute when a more-specific entry matches.
 
 {% cardgrid %}
 {% linkcard title="Configure Outputs for Task Caching" description="This recipe walks you through how to set outputs" href="/docs/guides/tasks--caching/configure-outputs" /%}
@@ -339,11 +377,12 @@ In Nx 17 and higher, caching is configured by specifying `"cache": true` in a ta
 ```json
 // nx.json
 {
-  "targetDefaults": {
-    "test": {
+  "targetDefaults": [
+    {
+      "target": "test",
       "cache": true
     }
-  }
+  ]
 }
 ```
 
@@ -360,13 +399,14 @@ You can configure options specific to a target's executor. As an example, if you
 ```json
 // nx.json
 {
-  "targetDefaults": {
-    "@nx/js:tsc": {
+  "targetDefaults": [
+    {
+      "executor": "@nx/js:tsc",
       "options": {
         "generateExportsField": true
       }
     }
-  }
+  ]
 }
 ```
 
@@ -375,14 +415,51 @@ You can also provide defaults for [inferred targets](/docs/concepts/inferred-tas
 ```json
 // nx.json
 {
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "options": {
         "assetsInlineLimit": 2048,
         "assetsDir": "static/assets"
       }
     }
-  }
+  ]
+}
+```
+
+If two plugins expose a target with the same name (e.g. both `@nx/vite` and `@nx/jest` infer `test`), use the `plugin` filter to scope per-plugin defaults:
+
+```json
+// nx.json
+{
+  "targetDefaults": [
+    {
+      "target": "test",
+      "plugin": "@nx/vite",
+      "inputs": ["default", "^production"]
+    },
+    {
+      "target": "test",
+      "plugin": "@nx/jest",
+      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
+    }
+  ]
+}
+```
+
+Or use the `projects` filter — which accepts the same patterns as the `--projects` CLI flag (names, globs, `tag:foo`, `!exclude`) — to scope a default to a subset of projects:
+
+```json
+// nx.json
+{
+  "targetDefaults": [
+    {
+      "target": "build",
+      "projects": "tag:dotnet",
+      "options": { "configuration": "Release" }
+    },
+    { "target": "build", "projects": ["apps/*", "!apps/legacy"], "cache": true }
+  ]
 }
 ```
 
@@ -399,13 +476,14 @@ Task Atomizer plugins create several targets with a similar pattern. For example
 ```json
 // nx.json
 {
-  "targetDefaults": {
-    "e2e-ci--**/**": {
+  "targetDefaults": [
+    {
+      "target": "e2e-ci--**/**",
       "options": {
         "headless": true
       }
     }
-  }
+  ]
 }
 ```
 

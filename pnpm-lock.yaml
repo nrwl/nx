@@ -3730,11 +3730,14 @@ importers:
         specifier: catalog:typescript
         version: 6.2.0(typescript@5.9.2)
       '@rsbuild/core':
-        specifier: 1.1.8
+        specifier: ^1.0.0
         version: 1.1.8
       minimatch:
         specifier: 'catalog:'
         version: 10.2.5
+      semver:
+        specifier: 'catalog:'
+        version: 7.7.4
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
@@ -3745,12 +3748,6 @@ importers:
 
   packages/rspack:
     dependencies:
-      '@module-federation/enhanced':
-        specifier: 'catalog:'
-        version: 2.3.3(@rspack/core@1.6.8(@swc/helpers@0.5.18))(node-fetch@3.3.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.2)(webpack@5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(webpack-cli@5.1.4(webpack-dev-server@5.2.3)(webpack@5.105.2)))
-      '@module-federation/node':
-        specifier: ^2.7.21
-        version: 2.7.21(@rspack/core@1.6.8(@swc/helpers@0.5.18))(next@14.2.35(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.54.0)(babel-plugin-macros@3.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.97.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.2)(webpack@5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(webpack-cli@5.1.4(webpack-dev-server@5.2.3)(webpack@5.105.2)))
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
@@ -3766,14 +3763,17 @@ importers:
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
         version: 6.2.0(typescript@5.9.2)
+      '@rspack/cli':
+        specifier: ^1.0.0
+        version: 1.6.8(@rspack/core@1.6.8(@swc/helpers@0.5.18))(@types/express@4.17.25)(webpack-cli@5.1.4(webpack-dev-server@5.2.3)(webpack@5.105.2))(webpack@5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(webpack-cli@5.1.4(webpack-dev-server@5.2.3)(webpack@5.105.2)))
       '@rspack/core':
-        specifier: catalog:rspack
+        specifier: ^1.0.0
         version: 1.6.8(@swc/helpers@0.5.18)
       '@rspack/dev-server':
-        specifier: catalog:rspack
+        specifier: ^1.0.0
         version: 1.1.4(@rspack/core@1.6.8(@swc/helpers@0.5.18))(@types/express@4.17.25)(webpack-cli@5.1.4(webpack-dev-server@5.2.3)(webpack@5.105.2))(webpack@5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(webpack-cli@5.1.4(webpack-dev-server@5.2.3)(webpack@5.105.2)))
       '@rspack/plugin-react-refresh':
-        specifier: catalog:rspack
+        specifier: ^1.0.0
         version: 1.4.3(react-refresh@0.17.0)(webpack-hot-middleware@2.26.1)
       autoprefixer:
         specifier: catalog:css
@@ -3826,6 +3826,9 @@ importers:
       sass-loader:
         specifier: catalog:css
         version: 16.0.7(@rspack/core@1.6.8(@swc/helpers@0.5.18))(sass-embedded@1.97.2)(sass@1.97.3)(webpack@5.105.2)
+      semver:
+        specifier: 'catalog:'
+        version: 7.7.4
       source-map-loader:
         specifier: ^5.0.0
         version: 5.0.0(webpack@5.105.2)
@@ -32455,7 +32458,7 @@ snapshots:
       '@babel/plugin-transform-runtime': 7.29.0(@babel/core@7.29.0)
       '@babel/preset-env': 7.29.0(@babel/core@7.29.0)
       '@babel/preset-typescript': 7.27.1(@babel/core@7.29.0)
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       '@nx/devkit': 23.0.0-beta.4(nx@23.0.0-beta.12(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))
       '@nx/workspace': 23.0.0-beta.4(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18))
       '@zkochan/js-yaml': 0.0.7
@@ -34812,6 +34815,22 @@ snapshots:
       '@discoveryjs/json-ext': 0.5.7
       '@rspack/core': 1.6.8(@swc/helpers@0.5.18)
       '@rspack/dev-server': 1.1.4(@rspack/core@1.6.8(@swc/helpers@0.5.18))(@types/express@4.17.23)(webpack-cli@5.1.4(webpack-dev-server@5.2.3)(webpack@5.105.2))(webpack@5.105.2)
+      exit-hook: 4.0.0
+      webpack-bundle-analyzer: 4.10.2
+    transitivePeerDependencies:
+      - '@types/express'
+      - bufferutil
+      - debug
+      - supports-color
+      - utf-8-validate
+      - webpack
+      - webpack-cli
+
+  '@rspack/cli@1.6.8(@rspack/core@1.6.8(@swc/helpers@0.5.18))(@types/express@4.17.25)(webpack-cli@5.1.4(webpack-dev-server@5.2.3)(webpack@5.105.2))(webpack@5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(webpack-cli@5.1.4(webpack-dev-server@5.2.3)(webpack@5.105.2)))':
+    dependencies:
+      '@discoveryjs/json-ext': 0.5.7
+      '@rspack/core': 1.6.8(@swc/helpers@0.5.18)
+      '@rspack/dev-server': 1.1.4(@rspack/core@1.6.8(@swc/helpers@0.5.18))(@types/express@4.17.25)(webpack-cli@5.1.4(webpack-dev-server@5.2.3)(webpack@5.105.2))(webpack@5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(webpack-cli@5.1.4(webpack-dev-server@5.2.3)(webpack@5.105.2)))
       exit-hook: 4.0.0
       webpack-bundle-analyzer: 4.10.2
     transitivePeerDependencies:

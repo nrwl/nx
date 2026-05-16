@@ -3,7 +3,7 @@ import {
   calculateProjectDependencies,
   createTmpTsConfig,
   type DependentBuildableProjectNode,
-} from '@nx/js/src/utils/buildable-libs-utils';
+} from '@nx/js/internal';
 import { join } from 'path';
 
 export function createTmpTsConfigForBuildableLibs(

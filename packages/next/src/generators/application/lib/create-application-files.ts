@@ -16,7 +16,7 @@ import {
   createAppJsx,
   createStyleRules,
 } from './create-application-files.helpers';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { isNext16 } from '../../../utils/version-utils';
 
 export async function createApplicationFiles(

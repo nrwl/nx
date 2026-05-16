@@ -4,9 +4,30 @@ import {
   NxJsonConfiguration,
   readJson,
   readProjectConfiguration,
+  type TargetConfiguration,
+  type TargetDefaults,
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
+
+function getDefault(
+  td: TargetDefaults | undefined,
+  target: string
+): Partial<TargetConfiguration> | undefined {
+  if (!td) return undefined;
+  if (Array.isArray(td)) {
+    const found = td.find(
+      (e) =>
+        e.target === target &&
+        e.projects === undefined &&
+        e.plugin === undefined
+    );
+    if (!found) return undefined;
+    const { target: _t, projects: _p, plugin: _pl, ...rest } = found;
+    return rest;
+  }
+  return td[target];
+}
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
@@ -120,7 +141,7 @@ describe('setupSSR', () => {
         "
       `);
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-      expect(nxJson.targetDefaults.server).toBeUndefined();
+      expect(getDefault(nxJson.targetDefaults, 'server')).toBeUndefined();
     });
 
     it('should create the files correctly for ssr when app is standalone', async () => {
@@ -195,7 +216,7 @@ describe('setupSSR', () => {
         "
       `);
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-      expect(nxJson.targetDefaults.server).toBeUndefined();
+      expect(getDefault(nxJson.targetDefaults, 'server')).toBeUndefined();
     });
 
     it('should support object output option using a custom "outputPath.browser" and "outputPath.server" values', async () => {
@@ -401,7 +422,7 @@ describe('setupSSR', () => {
         "
       `);
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-      expect(nxJson.targetDefaults.server.cache).toBe(true);
+      expect(getDefault(nxJson.targetDefaults, 'server')?.cache).toBe(true);
     });
 
     it('should not import from `zone.js/node` in the server file even when the app is not zoneless', async () => {
@@ -483,7 +504,7 @@ describe('setupSSR', () => {
         "
       `);
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-      expect(nxJson.targetDefaults.server.cache).toEqual(true);
+      expect(getDefault(nxJson.targetDefaults, 'server')?.cache).toEqual(true);
     });
 
     it('should update build target output path', async () => {

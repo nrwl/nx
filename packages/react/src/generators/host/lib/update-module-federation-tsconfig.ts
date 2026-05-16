@@ -1,6 +1,6 @@
 import { joinPathFragments, type Tree, updateJson } from '@nx/devkit';
 import { NormalizedSchema } from '../schema';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export function updateModuleFederationTsconfig(
   host: Tree,

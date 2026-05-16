@@ -29,9 +29,6 @@
     "@nx/module-federation": "workspace:*",
     "@nx/web": "workspace:*",
     "@phenomnomnominal/tsquery": "catalog:typescript",
-    "@rspack/core": "catalog:rspack",
-    "@rspack/dev-server": "catalog:rspack",
-    "@rspack/plugin-react-refresh": "catalog:rspack",
     "autoprefixer": "catalog:css",
     "browserslist": "^4.26.0",
     "css-loader": "^6.4.0",
@@ -49,6 +46,7 @@
     "sass": "catalog:css",
     "sass-embedded": "catalog:css",
     "sass-loader": "catalog:css",
+    "semver": "catalog:",
     "source-map-loader": "^5.0.0",
     "style-loader": "^3.3.0",
     "ts-checker-rspack-plugin": "catalog:rspack",
@@ -61,8 +59,24 @@
     "@nx/nest": "workspace:*"
   },
   "peerDependencies": {
-    "@module-federation/enhanced": "catalog:",
-    "@module-federation/node": "^2.7.21"
+    "@rspack/cli": "^1.0.0",
+    "@rspack/core": "^1.0.0",
+    "@rspack/dev-server": "^1.0.0",
+    "@rspack/plugin-react-refresh": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@rspack/cli": {
+      "optional": true
+    },
+    "@rspack/core": {
+      "optional": true
+    },
+    "@rspack/dev-server": {
+      "optional": true
+    },
+    "@rspack/plugin-react-refresh": {
+      "optional": true
+    }
   },
   "nx-migrations": {
     "migrations": "./migrations.json"

@@ -12,7 +12,7 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { swcHelpersVersion } from '@nx/js/src/utils/versions';
+import { swcHelpersVersion } from '@nx/js/internal';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { E2eTestRunner } from '../../utils/test-runners';
 import { applicationGenerator } from '../application/application';

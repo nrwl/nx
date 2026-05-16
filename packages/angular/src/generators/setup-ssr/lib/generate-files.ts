@@ -5,7 +5,7 @@ import {
   joinPathFragments,
   readProjectConfiguration,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { join } from 'path';
 import { clean, coerce, gte } from 'semver';
 import { getAppComponentInfo } from '../../utils/app-components-info';

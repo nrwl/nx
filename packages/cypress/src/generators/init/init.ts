@@ -1,4 +1,7 @@
-import { addPlugin as _addPlugin } from '@nx/devkit/internal';
+import {
+  addPlugin as _addPlugin,
+  upsertTargetDefault,
+} from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -8,6 +11,8 @@ import {
   readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
+  type TargetConfiguration,
+  type TargetDefaults,
   Tree,
   updateNxJson,
 } from '@nx/devkit';
@@ -28,17 +33,30 @@ function setupE2ETargetDefaults(tree: Tree) {
   }
 
   // E2e targets depend on all their project's sources + production sources of dependencies
-  nxJson.targetDefaults ??= {};
-
   const productionFileSet = !!nxJson.namedInputs?.production;
-  nxJson.targetDefaults.e2e ??= {};
-  nxJson.targetDefaults.e2e.cache ??= true;
-  nxJson.targetDefaults.e2e.inputs ??= [
-    'default',
-    productionFileSet ? '^production' : '^default',
-  ];
+  const existing = findExistingE2eDefault(nxJson.targetDefaults);
+  const patch: Partial<TargetConfiguration> = {};
+  if (existing?.cache === undefined) patch.cache = true;
+  if (existing?.inputs === undefined) {
+    patch.inputs = ['default', productionFileSet ? '^production' : '^default'];
+  }
+  if (Object.keys(patch).length > 0) {
+    upsertTargetDefault(tree, nxJson, { target: 'e2e', ...patch });
+    updateNxJson(tree, nxJson);
+  }
+}
 
-  updateNxJson(tree, nxJson);
+function findExistingE2eDefault(
+  td: TargetDefaults | undefined
+): Partial<TargetConfiguration> | undefined {
+  if (!td) return undefined;
+  if (Array.isArray(td)) {
+    return td.find(
+      (e) =>
+        e.target === 'e2e' && e.projects === undefined && e.plugin === undefined
+    );
+  }
+  return td['e2e'];
 }
 
 function updateDependencies(tree: Tree, options: Schema) {

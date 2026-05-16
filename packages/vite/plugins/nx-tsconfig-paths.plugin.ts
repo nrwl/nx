@@ -6,9 +6,9 @@ import {
 import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
-} from '@nx/js/src/utils/buildable-libs-utils';
-import { resolvePathsBaseUrl } from '@nx/js/src/utils/typescript/ts-config';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+  isUsingTsSolutionSetup,
+} from '@nx/js/internal';
+import { resolvePathsBaseUrl } from '@nx/js';
 import { copyFileSync, existsSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import {

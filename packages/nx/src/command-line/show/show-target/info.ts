@@ -55,16 +55,11 @@ function resolveTargetInfoData(t: ResolvedTarget) {
     }
   }
 
-  const extraTargetDeps = Object.fromEntries(
-    Object.entries(nxJson.targetDefaults ?? {})
-      .filter(([, config]) => config.dependsOn)
-      .map(([name, config]) => [name, config.dependsOn])
-  );
-
   const depConfigs =
     getDependencyConfigs(
       { project: projectName, target: targetName },
-      extraTargetDeps,
+      // no programmatic extras — `dependsOn` is already merged into the graph node
+      {},
       graph,
       [...allTargetNames]
     ) ?? [];
@@ -92,7 +87,7 @@ function resolveTargetInfoData(t: ResolvedTarget) {
   const { dependsOn, depSourceIndices, transitiveTasks } =
     resolveTaskGraphDependencies(
       graph,
-      extraTargetDeps,
+      {},
       projectName,
       targetName,
       configuration,

@@ -2,6 +2,15 @@
   "name": "@nx/js",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "!dist/spec",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
   "description": "The JS plugin for Nx contains executors and generators that provide the best experience for developing JavaScript and TypeScript projects. ",
   "repository": {
     "type": "git",
@@ -18,9 +27,30 @@
     "Front-end",
     "Backend"
   ],
-  "main": "src/index.js",
-  "type": "commonjs",
-  "types": "src/index.d.ts",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "babel": [
+        "dist/babel.d.ts"
+      ],
+      "typescript": [
+        "dist/typescript.d.ts"
+      ],
+      "plugins/jest/local-registry": [
+        "dist/plugins/jest/local-registry.d.ts"
+      ],
+      "internal": [
+        "dist/internal.d.ts"
+      ],
+      "src/release/version-actions": [
+        "dist/src/release/version-actions.d.ts"
+      ],
+      "src/utils/assets/copy-assets-handler": [
+        "dist/src/utils/assets/copy-assets-handler.d.ts"
+      ]
+    }
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"
@@ -32,6 +62,47 @@
   },
   "generators": "./generators.json",
   "executors": "./executors.json",
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./src/index.ts",
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./babel": {
+      "@nx/nx-source": "./babel.ts",
+      "types": "./dist/babel.d.ts",
+      "default": "./dist/babel.js"
+    },
+    "./typescript": {
+      "@nx/nx-source": "./typescript.ts",
+      "types": "./dist/typescript.d.ts",
+      "default": "./dist/typescript.js"
+    },
+    "./plugins/jest/local-registry": {
+      "@nx/nx-source": "./plugins/jest/local-registry.ts",
+      "types": "./dist/plugins/jest/local-registry.d.ts",
+      "default": "./dist/plugins/jest/local-registry.js"
+    },
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
+    },
+    "./src/release/version-actions": {
+      "@nx/nx-source": "./src/release/version-actions.ts",
+      "types": "./dist/src/release/version-actions.d.ts",
+      "default": "./dist/src/release/version-actions.js"
+    },
+    "./src/utils/assets/copy-assets-handler": {
+      "@nx/nx-source": "./src/utils/assets/copy-assets-handler.ts",
+      "types": "./dist/src/utils/assets/copy-assets-handler.d.ts",
+      "default": "./dist/src/utils/assets/copy-assets-handler.js"
+    }
+  },
   "dependencies": {
     "@babel/core": "catalog:",
     "@babel/plugin-proposal-decorators": "^7.22.7",

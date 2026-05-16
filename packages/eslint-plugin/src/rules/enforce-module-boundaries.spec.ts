@@ -2,7 +2,7 @@ import 'nx/src/internal-testing-utils/mock-fs';
 
 import type { FileData, ProjectFileMap, ProjectGraph } from '@nx/devkit';
 import { DependencyType } from '@nx/devkit';
-import { TargetProjectLocator } from '@nx/js/src/internal';
+import { TargetProjectLocator } from '@nx/js/internal';
 import * as parser from '@typescript-eslint/parser';
 import { TSESLint } from '@typescript-eslint/utils';
 import { vol } from 'memfs';

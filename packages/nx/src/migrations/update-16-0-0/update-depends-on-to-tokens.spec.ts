@@ -38,13 +38,12 @@ describe('update-depends-on-to-tokens', () => {
     });
     await update(tree);
     const nxJson = readNxJson(tree);
-    const buildDependencyConfiguration = nxJson.targetDefaults.build
-      .dependsOn[0] as any;
-    const testDependencyConfiguration = nxJson.targetDefaults.test
-      .dependsOn[0] as any;
-    const buildInputConfiguration = nxJson.targetDefaults.build
-      .inputs[0] as any;
-    const testInputConfiguration = nxJson.targetDefaults.test.inputs[0] as any;
+    // Migration ran before targetDefaults supported the array shape.
+    const td = nxJson.targetDefaults as Record<string, any>;
+    const buildDependencyConfiguration = td.build.dependsOn[0] as any;
+    const testDependencyConfiguration = td.test.dependsOn[0] as any;
+    const buildInputConfiguration = td.build.inputs[0] as any;
+    const testInputConfiguration = td.test.inputs[0] as any;
     expect(buildDependencyConfiguration.projects).not.toBeDefined();
     expect(buildDependencyConfiguration.dependencies).not.toBeDefined();
     expect(buildInputConfiguration.projects).not.toBeDefined();
@@ -53,7 +52,7 @@ describe('update-depends-on-to-tokens', () => {
     expect(testInputConfiguration.dependencies).toEqual(true);
     expect(testDependencyConfiguration.projects).not.toBeDefined();
     expect(testDependencyConfiguration.dependencies).toEqual(true);
-    expect(nxJson.targetDefaults.other.dependsOn).toEqual(['^deps']);
+    expect(td.other.dependsOn).toEqual(['^deps']);
   });
 
   it('should update project configurations', async () => {
@@ -102,6 +101,43 @@ describe('update-depends-on-to-tokens', () => {
     expect(testInputConfiguration.dependencies).toEqual(true);
     expect(project.targets.other.dependsOn).toEqual(['^deps']);
     expect(project.targets.other.inputs).not.toBeDefined();
+  });
+
+  it('should update nx.json with array-shape targetDefaults', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'nx.json', (json) => {
+      json.targetDefaults = [
+        {
+          target: 'build',
+          dependsOn: [{ projects: 'self' }],
+          inputs: [{ projects: 'self', input: 'someInput' }],
+        },
+        {
+          target: 'test',
+          dependsOn: [{ projects: 'dependencies' }],
+          inputs: [{ projects: 'dependencies', input: 'someInput' }],
+        },
+        {
+          target: 'other',
+          dependsOn: ['^deps'],
+        },
+      ];
+      return json;
+    });
+    await update(tree);
+    const td = readNxJson(tree).targetDefaults as any[];
+    const buildEntry = td.find((e) => e.target === 'build');
+    const testEntry = td.find((e) => e.target === 'test');
+    const otherEntry = td.find((e) => e.target === 'other');
+    expect(buildEntry.dependsOn[0].projects).not.toBeDefined();
+    expect(buildEntry.dependsOn[0].dependencies).not.toBeDefined();
+    expect(buildEntry.inputs[0].projects).not.toBeDefined();
+    expect(buildEntry.inputs[0].dependencies).not.toBeDefined();
+    expect(testEntry.dependsOn[0].projects).not.toBeDefined();
+    expect(testEntry.dependsOn[0].dependencies).toEqual(true);
+    expect(testEntry.inputs[0].projects).not.toBeDefined();
+    expect(testEntry.inputs[0].dependencies).toEqual(true);
+    expect(otherEntry.dependsOn).toEqual(['^deps']);
   });
 
   it('should not throw on nulls', async () => {

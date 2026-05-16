@@ -30,7 +30,13 @@ import {
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
-import { swcCoreVersion } from '@nx/js/src/utils/versions';
+import {
+  swcCoreVersion,
+  getNpmScope,
+  addProjectToTsSolutionWorkspace,
+  isUsingTsSolutionSetup,
+  updateTsconfigFiles,
+} from '@nx/js/internal';
 import { join } from 'path';
 import {
   nxVersion,
@@ -40,14 +46,8 @@ import {
 } from '../../utils/versions';
 import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
-import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
 import staticServeConfiguration from '../static-serve/static-serve-configuration';
-import {
-  addProjectToTsSolutionWorkspace,
-  isUsingTsSolutionSetup,
-  updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 interface NormalizedSchema extends Schema {

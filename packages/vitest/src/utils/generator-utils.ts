@@ -11,7 +11,7 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { VitestExecutorOptions } from '../executors/test/schema';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
 import { warnVitestExecutorGenerating } from './deprecation';

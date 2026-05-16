@@ -4,11 +4,9 @@ import type { LinterType } from '@nx/eslint';
 import {
   normalizeLinterOption,
   normalizeUnitTestRunnerOption,
-} from '@nx/js/src/utils/generator-prompts';
-import {
   isUsingTsSolutionSetup,
   shouldConfigureTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+} from '@nx/js/internal';
 import { CreatePackageSchema } from '../schema';
 
 export interface NormalizedSchema extends CreatePackageSchema {

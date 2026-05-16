@@ -17,8 +17,8 @@ import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+  sortPackageJsonFields,
+} from '@nx/js/internal';
 import { nxVersion } from '../../utils/versions';
 import { e2eProjectGenerator } from '../e2e-project/e2e-project';
 import { initGenerator } from '../init/init';

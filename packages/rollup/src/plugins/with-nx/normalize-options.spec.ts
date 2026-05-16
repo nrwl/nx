@@ -9,8 +9,8 @@ jest.mock('@nx/js', () => ({
 // (where tsconfig.base.json doesn't exist). The global mock in
 // `scripts/unit-test-setup.js` short-circuits `isUsingTsSolutionSetup()` before
 // any fs read, so we override it here to explicitly express the intent.
-jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
-  ...jest.requireActual('@nx/js/src/utils/typescript/ts-solution-setup'),
+jest.mock('@nx/js/internal', () => ({
+  ...jest.requireActual('@nx/js/internal'),
   isUsingTsSolutionSetup: jest.fn(() => false),
 }));
 

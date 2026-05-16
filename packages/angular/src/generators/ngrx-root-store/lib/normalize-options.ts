@@ -9,7 +9,7 @@ import {
 import { rxjsVersion as defaultRxjsVersion } from '../../../utils/versions';
 import type { Schema } from '../schema';
 import { isNgStandaloneApp } from '../../../utils/nx-devkit/ast-utils';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 
 export type NormalizedNgRxRootStoreGeneratorOptions = Schema & {
   parent: string;

@@ -22,7 +22,7 @@ import { getLockFileName } from '@nx/js';
 import type { StorybookConfig } from 'storybook/internal/types';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { query } from '@phenomnomnominal/tsquery';
-import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
+import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
 
 export interface StorybookPluginOptions {
   buildStorybookTargetName?: string;

@@ -1,19 +1,28 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "../../dist/packages/js",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": "dist",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/js/tsconfig.tsbuildinfo"
+    "composite": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
   "exclude": [
+    "node_modules",
+    "dist",
     "**/*.spec.ts",
     "**/*.test.ts",
     "./src/**/test-fixtures/**/*",
     "jest.config.ts",
     "jest.config.cts"
   ],
-  "include": ["**/*.ts"],
+  "include": ["*.ts", "src/**/*.ts", "plugins/**/*.ts"],
   "references": [
     {
       "path": "../devkit/tsconfig.lib.json"

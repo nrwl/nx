@@ -19,8 +19,8 @@ jest.mock('@nx/devkit', () => ({
 }));
 
 // Mock isUsingTsSolutionSetup to ensure consistent test environment
-jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
-  ...jest.requireActual('@nx/js/src/utils/typescript/ts-solution-setup'),
+jest.mock('@nx/js/internal', () => ({
+  ...jest.requireActual('@nx/js/internal'),
   isUsingTsSolutionSetup: jest.fn(() => false),
 }));
 

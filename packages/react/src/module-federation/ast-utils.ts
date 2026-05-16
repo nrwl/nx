@@ -7,7 +7,7 @@ import {
   findElements,
   addImport,
 } from '../utils/ast-utils';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 
 let tsModule: typeof import('typescript');
 

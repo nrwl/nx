@@ -12,7 +12,7 @@ import type { CallExpression, Node, SourceFile } from 'typescript';
 
 const TS_EXTENSIONS = ['.ts', '.tsx', '.cts', '.mts'] as const;
 const FROM_SPECIFIER = '@nx/workspace/src/utilities/typescript/compilation';
-const TO_SPECIFIER = '@nx/js/src/utils/typescript/compilation';
+const TO_SPECIFIER = '@nx/js/internal';
 
 // Methods on `jest` and `vi` that take a module specifier as their first arg.
 // Calls like `jest.mock('@nx/workspace/src/utilities/typescript/compilation')`

@@ -173,6 +173,15 @@ Add these sections:
 
 Do **not** override `build-base.outputs` in `project.json`. The `@nx/js/typescript` plugin reads `outDir` and `tsBuildInfoFile` from `tsconfig.lib.json` and infers the correct outputs (including the tsbuildinfo and the full set of file extensions). A hand-written override is almost always less complete than the inferred set.
 
+If the package already has a hand-written `build-base.outputs` array, **delete it** — don't try to patch it. An incomplete override that omits `dist/tsconfig.tsbuildinfo` causes a sandbox violation in _every consumer_ that has a TypeScript project reference to this package: their `tsc --build` reads the referenced project's `.tsbuildinfo`, but `dependentTasksOutputFiles` can only collect it if this package declares it as an output.
+
+Verify the inferred outputs include the tsbuildinfo:
+
+```bash
+pnpm nx show project <name> --json | jq '.targets["build-base"].outputs'
+# Must include "{projectRoot}/dist/tsconfig.tsbuildinfo"
+```
+
 Update the existing `build` target's `outputs` if they reference `{workspaceRoot}/dist/packages/<name>` — they should now reference `{projectRoot}/dist/`.
 
 Also update `dependsOn` in the `build` target: replace `"^build"` with `"^build"` if it isn't already, and make sure `"build-base"` is listed.
@@ -270,6 +279,216 @@ Also check for imports in:
 - `tools/workspace-plugin/`
 - `astro-docs/`
 - `examples/`
+
+### 14b. (Optional) Lock down `./src/*` and route internal consumers through `./internal`
+
+When you ship the migration, the package's `exports` map exposes everything under `./src/*` if you keep the wildcard. That's a 100s-of-symbols-wide semi-private surface that pins the implementation layout forever — consumers (first-party and external) can reach into any source file. The cleaner long-term shape, matching `@nx/devkit`/`@nx/workspace`, is to drop the wildcard and route internal consumers through a single curated `./internal` entry. Skip this step if you'd rather defer (e.g. the package has very heavy internal usage and you'd prefer a smaller PR), but plan a follow-up.
+
+#### When to lock down vs defer
+
+- **Lock down in the same PR** if internal subpath imports number in the low hundreds AND the package isn't `workspace:*`-pinned by other not-yet-migrated packages whose dist code would crash at runtime against the older published version (see "Published-version mismatch" below).
+- **Defer to a follow-up PR** if the inventory is huge OR if dist-output code in other workspace packages depends on the OLD `./src/*` paths and those packages can't be migrated to local-dist yet. Lock down only once the immediate runtime-resolution surface is contained.
+
+#### Step-by-step
+
+**1. Inventory the subpath imports.** Scan for `from '@nx/<name>/src/...'`, plus runtime `require()`, dynamic `import()`, and `jest`/`vi.mock`-family calls:
+
+```bash
+grep -rEln "from ['\"]@nx/<name>/src/" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.mjs" packages/ e2e/ scripts/
+grep -rEln "(require|jest\.mock|jest\.requireActual)\(['\"]@nx/<name>/src/" packages/ e2e/ scripts/
+```
+
+Compile a `subpath → set-of-imported-symbols` map. About 30 distinct subpaths and 60 symbols is typical for a package the size of `@nx/js`.
+
+**2. Identify runtime-string-resolved subpaths.** Some subpaths are referenced by _string default values_ the nx runtime resolves later (not static imports). The classic example: `packages/nx/src/command-line/release/config/config.ts` has `DEFAULT_VERSION_ACTIONS_PATH = '@nx/js/src/release/version-actions'`. These strings are also baked into pre-existing user `nx.json` files and you cannot rewrite them via a migration. **Keep those exact subpaths as explicit non-wildcard entries in the exports map** (not under `./internal`), and have the migration skip rewriting them.
+
+```bash
+# Search for string-default usages of the subpath in nx core
+grep -rEn "['\"]@nx/<name>/src/[^'\"]+['\"]" packages/nx/src/ --include="*.ts"
+```
+
+**3. Build `packages/<name>/internal.ts` at the package ROOT** (not inside `src/`, to mirror `@nx/devkit/internal`). Re-export every symbol callers reach for via `@nx/<name>/src/*`, BUT only symbols not already exported from `packages/<name>/src/index.ts`. Anything already public stays public — the migration sends those callers to `@nx/<name>`, not `@nx/<name>/internal`.
+
+To compute the public set:
+
+```bash
+grep -E "^export " packages/<name>/src/index.ts
+```
+
+…and recursively expand any `export *` lines. The "public-export reachability" calculation is fiddly enough that a small Python script with a recursive expand is worth it (see PR #35538 commit history for an example).
+
+Curate the new file:
+
+```ts
+// Semi-private surface for first-party Nx packages.
+//
+// External plugins should NOT import from here — this entry is curated for
+// internal consumers and may change without semver protection. Mirrors
+// `@nx/devkit/internal`.
+
+// Re-exports of nx-source internals (need `no-restricted-imports` overrides).
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+export { ... } from 'nx/src/plugins/.../something';
+
+export { walkTsconfigExtendsChain, type RawTsconfigJsonCache } from './src/utils/typescript/raw-tsconfig';
+// ... and so on, grouping by area.
+```
+
+Delete any pre-existing `packages/<name>/src/internal.ts` once its exports have been folded in.
+
+**4. Update `packages/<name>/package.json`.** Drop wildcards, add `./internal`, keep runtime-string subpaths as explicit entries:
+
+```jsonc
+{
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./src/index.ts",
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js",
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    // Public side-channels (whatever you already had).
+    "./babel": {
+      "@nx/nx-source": "./babel.ts",
+      "types": "./dist/babel.d.ts",
+      "default": "./dist/babel.js",
+    },
+    // The new curated entry.
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js",
+    },
+    // Runtime-string-resolved subpath kept for back-compat.
+    "./src/release/version-actions": {
+      "@nx/nx-source": "./src/release/version-actions.ts",
+      "types": "./dist/src/release/version-actions.d.ts",
+      "default": "./dist/src/release/version-actions.js",
+    },
+    // DROPPED: "./src/*", "./src/*.js", "./src/*/schema", "./src/*/schema.json"
+  },
+}
+```
+
+Also strip `src/*` glob entries from `typesVersions`. Replace with explicit non-wildcard entries that mirror the kept exports.
+
+**5. Codemod consumers in two passes.** Mechanical sed-style first, then a smarter split:
+
+```bash
+# Pass 1: every `from '@nx/<name>/src/...'` → `from '@nx/<name>/internal'`,
+# except the preserved subpaths from step 2.
+# (Use a Python/TS script — sed is fine for the simple cases too.)
+```
+
+```bash
+# Pass 2: split mixed imports. Any line like
+#   import { libraryGenerator, ensureTypescript } from '@nx/<name>/internal';
+# where `libraryGenerator` is publicly exported from `src/index.ts` becomes:
+#   import { libraryGenerator } from '@nx/<name>';
+#   import { ensureTypescript } from '@nx/<name>/internal';
+```
+
+Also handle these non-static cases:
+
+- `jest.mock('@nx/<name>/src/...', ...)` and `jest.requireActual(...)` — same rewrite. The whole mock surface is now `@nx/<name>/internal`, so `...jest.requireActual('@nx/<name>/internal')` spreads more than the original site mocked, but that's fine in practice.
+- Runtime `require('@nx/<name>/src/...')` — same rewrite.
+- Template-string fixtures inside `.spec.ts` files — careful! Don't let your codemod rewrite literal `from "@nx/<name>/internal"` substrings that _test_ the migration (it'll flip quote style and break the test). Either skip `*.spec.ts` files containing fixtures, or operate at AST level.
+
+**6. Collapse duplicate imports.** After the two-pass codemod, many files end up with two `import { ... } from '@nx/<name>/internal'` lines (or two `from '@nx/<name>'`). Run a third pass to merge same-source-same-`type`-prefix imports:
+
+```python
+# Match lines (anchored): `^import [type ]{ ... } from '@nx/<name>[/internal]';$`
+# Group by (is_type_only, source). For each group with >1 entry: keep the first
+# occurrence's position, merge the named bindings (dedupe), delete the others.
+# Don't merge across type/non-type — the semantics differ.
+```
+
+**7. Public-symbol audit.** After splitting, `internal.ts` must not re-export anything already exported from `src/index.ts`. If it does, namespace consumers (`import * as shared from '@nx/<name>/internal'`) will see only the curated set and `shared.publiclyExportedSymbol` becomes `undefined`. Cross-check:
+
+```bash
+# Symbols in internal.ts that are ALSO in the recursive index.ts export set
+# are a bug. Remove them from internal.ts. The codemod from step 5 should
+# have already routed their callers to `@nx/<name>`, but verify nothing is
+# left pointing at `@nx/<name>/internal` for these.
+```
+
+The three load-bearing patterns to verify:
+
+- `import * as shared from '@nx/<name>/internal'` followed by `shared.publicSymbol` — fix by changing source to `@nx/<name>`.
+- Runtime `const shared = require('@nx/<name>/internal')` followed by `shared.publicSymbol` — same fix.
+- Named imports of public symbols from `@nx/<name>/internal` — already split by step 5; verify nothing slipped through.
+
+**8. Ship a migration.** Add `packages/<name>/src/migrations/update-<version>/rewrite-<name>-internal-subpath-imports.ts` based on the workspace `move-typescript-compilation-import` template. It needs to handle:
+
+- Static `import [type] { ... } from '@nx/<name>/src/<anything>'`
+- Dynamic `import('@nx/<name>/src/<anything>')`
+- `require('@nx/<name>/src/<anything>')`
+- `jest.mock|unmock|doMock|dontMock|requireActual|requireMock|importActual|importMock(...)` and the `vi.` equivalents
+
+Skip the preserved subpaths from step 2 (e.g. `@nx/<name>/src/release/version-actions`). Use `ts.createSourceFile` for AST-based detection so you don't rewrite literals inside comments, template strings, or `typeof import('...')` type queries.
+
+Register in `packages/<name>/migrations.json` with `version: <current beta>`. Include a description that names the public-symbol caveat: "if a rewritten import resolves to a symbol that lives on the public `@nx/<name>` entry, change the specifier to `@nx/<name>`."
+
+Add a spec covering: single-quoted, double-quoted, type-only, deep subpath, `.js` extension, `require()`, dynamic `import()`, jest mock family, vi mock family, preserved subpaths, non-`@nx/<name>` imports, `typeof import()` type queries, unrelated string literals inside comments.
+
+**9. Watch for the published-version-mismatch gotcha in example/test builds.**
+
+The workspace's root `node_modules/@nx/<name>` is the _published_ version (root `package.json` pins it to a real release tag, not `workspace:*`). When code at `dist/packages/<X>/...` does `require('@nx/<name>/internal')` at runtime, Node walks up from `dist/` and finds workspace-root `node_modules/@nx/<name>` — the published copy. If that version was released BEFORE this PR, it has no `internal.js` and resolution fails.
+
+Symptom:
+
+```
+Error: Cannot find module '@nx/<name>/internal'
+  requireStack: [
+    '/path/to/workspace/dist/packages/<X>/src/utils/foo.js',
+    ...
+  ]
+}
+```
+
+This bites specifically for examples or e2e flows that load `dist/packages/<other-package>/...` artifacts (e.g. an angular-rspack module-federation example that monkey-patches `Module._resolveFilename` to redirect `@nx/<other-package>` to dist). If the other-package's dist code does `require('@nx/<name>/internal')`, you'll hit this.
+
+Two fixes:
+
+- **(Preferred, if applicable.)** Migrate the _other_ package to local-dist too. Then its built code lives at `packages/<other>/dist/...`, walks up to `packages/<other>/node_modules/@nx/<name>` (a workspace symlink to source), and resolution finds the new `internal.js` because workspace source has it.
+- **(Band-aid for the in-between window.)** If migrating the other package is out of scope, extend the example's existing request-path patch to also redirect `@nx/<name>/internal` to the workspace source `packages/<name>/dist/internal`. Document it as a temporary measure tied to the same TODO that exists for the other-package redirect.
+
+Search aggressively for this pattern after step 8:
+
+```bash
+grep -rln "patchModuleFederationRequestPath\|Module._resolveFilename" examples/ e2e/ packages/
+```
+
+Any file that monkeypatches resolution is a candidate for needing the redirect.
+
+#### Validation
+
+After steps 1–9:
+
+```bash
+# Build the package (emits dist/internal.{js,d.ts})
+pnpm nx run <name>:build-base
+
+# Lint the package — @nx/dependency-checks may complain that the package
+# "uses itself" because of the dynamic self-reference in versions.ts. Add
+# `@nx/<name>` to `ignoredDependencies` in the dependency-checks rule config
+# (with a comment explaining: self-reference for require(join('@nx/<name>', 'package.json'))).
+pnpm nx run <name>:lint
+
+# Spec the migration
+pnpm nx test <name> -- --testPathPatterns=rewrite-<name>-internal-subpath-imports
+
+# Full affected — catches consumers, example monkey-patches, and any
+# missed split-mixed-imports.
+pnpm nx affected -t build,lint --base=<base-sha-before-migration>
+```
+
+If `nx affected` fails on a single example test with `Cannot find module '@nx/<name>/internal'`, that's step 9 — extend the example's request-path patch.
+
+If `nx affected` fails on a package with `TS2339: Property 'foo' does not exist on type 'typeof import(".../internal")'`, that's step 7 — a `shared.publicSymbol` call survived. Find it (`grep -rn 'shared\.<symbol>' packages/`) and rewrite the namespace source to `@nx/<name>`.
 
 ### 15. Audit `require('../../package.json')` (or similar relative paths to the package.json)
 

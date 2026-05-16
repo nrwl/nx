@@ -269,6 +269,57 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
     `);
   });
 
+  it('should sort atomized test target names regardless of test discovery order', async () => {
+    // Cover both branches via the parameterized describe.each:
+    //  - disableJestRuntime=true: discovery via globWithWorkspaceContext (Rust
+    //    glob, already sorted).
+    //  - disableJestRuntime=false: discovery via jest.SearchSource which walks
+    //    through jest-haste-map's parallel workers; ordering is not guaranteed.
+    // Create spec files in non-alphabetic creation order to surface any
+    // creation-time-vs-name ordering quirks in the discovery layer.
+    mockJestConfig(
+      {
+        testMatch: ['**/*.spec.ts'],
+        testPathIgnorePatterns: ['ignore.spec.ts'],
+      },
+      context
+    );
+    await tempFs.createFiles({
+      'proj/src/c.spec.ts': '',
+      'proj/src/a.spec.ts': '',
+      'proj/src/b.spec.ts': '',
+    });
+
+    const results = await createNodesFunction(
+      ['proj/jest.config.js'],
+      { targetName: 'test', ciTargetName: 'test-ci', disableJestRuntime },
+      context
+    );
+
+    const targets = results[0][1].projects!['proj'].targets!;
+    const atomizedTargetNames = Object.keys(targets).filter((name) =>
+      name.startsWith('test-ci--')
+    );
+    expect(atomizedTargetNames).toEqual([
+      'test-ci--src/a.spec.ts',
+      'test-ci--src/b.spec.ts',
+      'test-ci--src/c.spec.ts',
+      'test-ci--src/unit.spec.ts',
+    ]);
+
+    // dependsOn and target group ordering must match insertion order so that
+    // `nx graph`, CI workflow generators, and snapshots stay reproducible.
+    const dependsOnTargets = (
+      targets['test-ci'].dependsOn as Array<{ target: string }>
+    ).map((d) => d.target);
+    expect(dependsOnTargets).toEqual([
+      'test-ci--src/a.spec.ts',
+      'test-ci--src/b.spec.ts',
+      'test-ci--src/c.spec.ts',
+      'test-ci--src/unit.spec.ts',
+    ]);
+  });
+
   it('should add preset to the inputs', async () => {
     mockJestConfig(
       { coverageDirectory: '../coverage', preset: '../jest.preset.js' },

@@ -15,28 +15,28 @@ describe('move-typescript-compilation-import migration', () => {
     it('rewrites a single-quoted import declaration', () => {
       const source = `import { compileTypeScript } from '@nx/workspace/src/utilities/typescript/compilation';\n`;
       expect(rewriteCompilationImport(source)).toBe(
-        `import { compileTypeScript } from '@nx/js/src/utils/typescript/compilation';\n`
+        `import { compileTypeScript } from '@nx/js/internal';\n`
       );
     });
 
     it('rewrites a double-quoted type-only import', () => {
       const source = `import type { TypeScriptCompilationOptions } from "@nx/workspace/src/utilities/typescript/compilation";\n`;
       expect(rewriteCompilationImport(source)).toBe(
-        `import type { TypeScriptCompilationOptions } from "@nx/js/src/utils/typescript/compilation";\n`
+        `import type { TypeScriptCompilationOptions } from "@nx/js/internal";\n`
       );
     });
 
     it('rewrites a CommonJS require()', () => {
       const source = `const { compileTypeScript } = require('@nx/workspace/src/utilities/typescript/compilation');\n`;
       expect(rewriteCompilationImport(source)).toBe(
-        `const { compileTypeScript } = require('@nx/js/src/utils/typescript/compilation');\n`
+        `const { compileTypeScript } = require('@nx/js/internal');\n`
       );
     });
 
     it('rewrites a dynamic import()', () => {
       const source = `const mod = await import('@nx/workspace/src/utilities/typescript/compilation');\n`;
       expect(rewriteCompilationImport(source)).toBe(
-        `const mod = await import('@nx/js/src/utils/typescript/compilation');\n`
+        `const mod = await import('@nx/js/internal');\n`
       );
     });
 
@@ -48,8 +48,8 @@ describe('move-typescript-compilation-import migration', () => {
       ].join('\n');
       expect(rewriteCompilationImport(source)).toBe(
         [
-          `jest.mock('@nx/js/src/utils/typescript/compilation');`,
-          `const actual = jest.requireActual('@nx/js/src/utils/typescript/compilation');`,
+          `jest.mock('@nx/js/internal');`,
+          `const actual = jest.requireActual('@nx/js/internal');`,
           ``,
         ].join('\n')
       );
@@ -86,7 +86,7 @@ describe('move-typescript-compilation-import migration', () => {
       );
       await update(tree);
       const updated = tree.read('apps/my-app/src/main.ts', 'utf-8');
-      expect(updated).toContain('@nx/js/src/utils/typescript/compilation');
+      expect(updated).toContain('@nx/js/internal');
       expect(updated).not.toContain(
         '@nx/workspace/src/utilities/typescript/compilation'
       );

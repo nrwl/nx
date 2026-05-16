@@ -4,7 +4,7 @@ import {
   Tree,
   updateJson,
 } from '@nx/devkit';
-import { getDefinedCustomConditionName } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getDefinedCustomConditionName } from '@nx/js/internal';
 import { maybeJs } from '../../../utils/maybe-js';
 import { NormalizedSchema } from '../../application/schema';
 

@@ -1,6 +1,6 @@
 import type { BuilderOutput } from '@angular-devkit/architect';
 import type { ExecutorContext } from '@nx/devkit';
-import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
+import type { DependentBuildableProjectNode } from '@nx/js/internal';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
 import { getInstalledAngularVersionInfo } from '../utilities/angular-version-utils';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';

@@ -6,7 +6,7 @@ import {
 import { createNodesV2 as createNodes } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { loadViteDynamicImport } from '../utils/executor-utils';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { getLockFileName } from '@nx/js';
 
 jest.mock('../utils/executor-utils', () => ({
@@ -15,8 +15,8 @@ jest.mock('../utils/executor-utils', () => ({
   }),
 }));
 
-jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
-  ...jest.requireActual('@nx/js/src/utils/typescript/ts-solution-setup'),
+jest.mock('@nx/js/internal', () => ({
+  ...jest.requireActual('@nx/js/internal'),
   isUsingTsSolutionSetup: jest.fn(),
 }));
 

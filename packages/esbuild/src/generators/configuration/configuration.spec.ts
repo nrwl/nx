@@ -75,9 +75,14 @@ describe('configurationGenerator', () => {
     });
 
     const nxJson = readJson(tree, 'nx.json');
-    expect(nxJson.targetDefaults['@nx/esbuild:esbuild']).toEqual({
+    const td = nxJson.targetDefaults;
+    const esbuildEntry = Array.isArray(td)
+      ? td.find((e) => e.executor === '@nx/esbuild:esbuild')
+      : td['@nx/esbuild:esbuild'];
+    expect(esbuildEntry).toEqual({
       cache: true,
       dependsOn: ['^build'],
+      executor: '@nx/esbuild:esbuild',
       inputs: [
         'default',
         '^default',
@@ -110,7 +115,14 @@ describe('configurationGenerator', () => {
     });
 
     const nxJson = readJson(tree, 'nx.json');
-    expect(nxJson.targetDefaults['@nx/esbuild:esbuild'].inputs).toEqual([
+    const td = nxJson.targetDefaults;
+    // Generators now write the array shape with executor-keyed defaults
+    // surfaced as `executor`, not `target`. The legacy record-shape lookup
+    // is kept as a fallback for tests running against older fixtures.
+    const esbuildEntry = Array.isArray(td)
+      ? td.find((e) => e.executor === '@nx/esbuild:esbuild')
+      : td['@nx/esbuild:esbuild'];
+    expect(esbuildEntry.inputs).toEqual([
       'production',
       '^production',
       {
@@ -140,7 +152,11 @@ describe('configurationGenerator', () => {
     });
 
     const nxJson = readJson(tree, 'nx.json');
-    expect(nxJson.targetDefaults['@nx/esbuild:esbuild']).toEqual({
+    const td = nxJson.targetDefaults;
+    const esbuildEntry = Array.isArray(td)
+      ? td.find((e) => e.executor === '@nx/esbuild:esbuild')
+      : td['@nx/esbuild:esbuild'];
+    expect(esbuildEntry).toMatchObject({
       cache: true,
       inputs: ['custom-input'],
     });

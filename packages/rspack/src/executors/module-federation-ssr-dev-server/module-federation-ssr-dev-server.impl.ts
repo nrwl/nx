@@ -3,7 +3,7 @@ import {
   combineAsyncIterables,
   createAsyncIterable,
 } from '@nx/devkit/internal';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { existsSync } from 'fs';

@@ -131,23 +131,35 @@ describe('Angular Projects - Buildable Libraries', () => {
 
     // update the nx.json
     updateJson('nx.json', (config) => {
-      config.targetDefaults ??= {};
-      config.targetDefaults['@nx/angular:webpack-browser'] ??= {
+      const inputs =
+        config.namedInputs && 'production' in config.namedInputs
+          ? ['production', '^production']
+          : ['default', '^default'];
+      const defaults: Record<string, unknown> = {
         cache: true,
-        dependsOn: [`^build`],
-        inputs:
-          config.namedInputs && 'production' in config.namedInputs
-            ? ['production', '^production']
-            : ['default', '^default'],
+        dependsOn: ['^build'],
+        inputs,
       };
-      config.targetDefaults['@nx/angular:browser-esbuild'] ??= {
-        cache: true,
-        dependsOn: [`^build`],
-        inputs:
-          config.namedInputs && 'production' in config.namedInputs
-            ? ['production', '^production']
-            : ['default', '^default'],
-      };
+      const targets = [
+        '@nx/angular:webpack-browser',
+        '@nx/angular:browser-esbuild',
+      ];
+      if (Array.isArray(config.targetDefaults)) {
+        for (const target of targets) {
+          if (
+            !config.targetDefaults.some(
+              (e: { executor?: string }) => e.executor === target
+            )
+          ) {
+            config.targetDefaults.push({ executor: target, ...defaults });
+          }
+        }
+      } else {
+        config.targetDefaults ??= {};
+        for (const target of targets) {
+          config.targetDefaults[target] ??= defaults;
+        }
+      }
       return config;
     });
 

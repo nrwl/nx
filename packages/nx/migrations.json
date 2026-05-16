@@ -165,6 +165,12 @@
       "version": "23.0.0-beta.0",
       "description": "Consolidates any remaining legacy releaseTag* flat properties into the nested releaseTag object. The flat properties were removed in Nx 23.",
       "implementation": "./dist/src/migrations/update-23-0-0/consolidate-release-tag-config"
+    },
+    "23-0-0-convert-target-defaults-to-array": {
+      "cli": "nx",
+      "version": "23.0.0-beta.13",
+      "description": "Converts nx.json `targetDefaults` from the legacy record shape to the new filtered array shape.",
+      "implementation": "./dist/src/migrations/update-23-0-0/convert-target-defaults-to-array"
     }
   }
 }

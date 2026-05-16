@@ -13,8 +13,8 @@ import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+  sortPackageJsonFields,
+} from '@nx/js/internal';
 import { isExpoV54OrAbove } from '../../utils/expo-version-utils';
 
 export async function detoxApplicationGenerator(host: Tree, schema: Schema) {

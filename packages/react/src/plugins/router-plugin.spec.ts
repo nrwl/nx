@@ -1,7 +1,7 @@
 import { type CreateNodesContextV2 } from '@nx/devkit';
 import { createNodesV2 } from './router-plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { join } from 'path';
 
 jest.mock('nx/src/utils/cache-directory', () => ({
@@ -9,8 +9,8 @@ jest.mock('nx/src/utils/cache-directory', () => ({
   workspaceDataDirectory: 'tmp/project-graph-cache',
 }));
 
-jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
-  ...jest.requireActual('@nx/js/src/utils/typescript/ts-solution-setup'),
+jest.mock('@nx/js/internal', () => ({
+  ...jest.requireActual('@nx/js/internal'),
   isUsingTsSolutionSetup: jest.fn(),
 }));
 

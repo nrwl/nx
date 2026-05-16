@@ -11,8 +11,8 @@ import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-
+  sortPackageJsonFields,
+} from '@nx/js/internal';
 import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/jest/add-jest';
 
@@ -25,8 +25,6 @@ import { addE2e } from './lib/add-e2e';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { initRootBabelConfig } from '../../utils/init-root-babel-config';
-import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
-
 export async function expoApplicationGenerator(
   host: Tree,
   schema: Schema

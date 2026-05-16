@@ -13,11 +13,15 @@ The Nx Plugin for Rsbuild contains executors and generators that support buildin
 
 The `@nx/rsbuild` plugin supports the following package versions.
 
-| Package         | Supported Versions |
-| --------------- | ------------------ |
-| `@rsbuild/core` | ^1.1.0             |
+| Package         | Supported Versions | Default Installed |
+| --------------- | ------------------ | ----------------- |
+| `@rsbuild/core` | `^1.0.0`           | `1.1.10`          |
 
-[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+[Nx generators](/docs/features/generate-code) install the latest supported version automatically when scaffolding new projects. When `@rsbuild/core` is already installed in your workspace, generators detect the installed version and keep it in place rather than overwriting it.
+
+{% aside type="caution" title="@rsbuild/core v2 not yet supported" %}
+`@rsbuild/core@2` ships as a pure-ESM package, which `@nx/rsbuild` (CommonJS) cannot currently load synchronously. Support is tracked separately; until then, pin `@rsbuild/core` to `^1`.
+{% /aside %}
 
 ## Setting up @nx/rsbuild
 

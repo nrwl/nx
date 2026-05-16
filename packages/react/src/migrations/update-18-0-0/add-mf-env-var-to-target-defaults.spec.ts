@@ -22,12 +22,21 @@ describe('addMfEnvVarToTargetDefaults', () => {
     // ASSERT
     const nxJson = readNxJson(tree);
     expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
-      {
-        "@nx/webpack:webpack": {
+      [
+        {
+          "cache": true,
+          "target": "build",
+        },
+        {
+          "cache": true,
+          "target": "lint",
+        },
+        {
           "cache": true,
           "dependsOn": [
             "^build",
           ],
+          "executor": "@nx/webpack:webpack",
           "inputs": [
             "production",
             "^production",
@@ -36,13 +45,7 @@ describe('addMfEnvVarToTargetDefaults', () => {
             },
           ],
         },
-        "build": {
-          "cache": true,
-        },
-        "lint": {
-          "cache": true,
-        },
-      }
+      ]
     `);
   });
 
@@ -108,12 +111,21 @@ describe('addMfEnvVarToTargetDefaults', () => {
     // ASSERT
     nxJson = readNxJson(tree);
     expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
-      {
-        "@nx/webpack:webpack": {
+      [
+        {
+          "cache": true,
+          "target": "build",
+        },
+        {
+          "cache": true,
+          "target": "lint",
+        },
+        {
           "cache": true,
           "dependsOn": [
             "^build",
           ],
+          "executor": "@nx/webpack:webpack",
           "inputs": [
             "^build",
             {
@@ -121,13 +133,7 @@ describe('addMfEnvVarToTargetDefaults', () => {
             },
           ],
         },
-        "build": {
-          "cache": true,
-        },
-        "lint": {
-          "cache": true,
-        },
-      }
+      ]
     `);
   });
 });

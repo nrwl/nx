@@ -20,7 +20,7 @@ import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { hashObject } from 'nx/src/devkit-internals';
-import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
+import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
 
 export interface ExpoPluginOptions {
   startTargetName?: string;

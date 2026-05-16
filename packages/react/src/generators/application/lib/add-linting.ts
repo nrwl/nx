@@ -14,7 +14,7 @@ import {
 } from '@nx/eslint/src/generators/utils/eslint-file';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 import { addDependenciesToPackageJson, runTasksInSerial } from '@nx/devkit';
-import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
+import { addSwcDependencies } from '@nx/js/internal';
 import { extraEslintDependencies } from '../../../utils/lint';
 import { NormalizedSchema } from '../schema';
 import { nxVersion } from '../../../utils/versions';

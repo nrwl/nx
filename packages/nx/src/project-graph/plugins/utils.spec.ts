@@ -184,6 +184,84 @@ describe('createNodesFromFiles', () => {
     }
   });
 
+  it('should preserve input order when callbacks resolve out of order', async () => {
+    // Resolve later configFiles first to prove that ordering follows
+    // the input array, not the order in which promises settle.
+    const orderedConfigFiles = ['file1', 'file2', 'file3'] as const;
+    const delays: Record<string, number> = {
+      file1: 30,
+      file2: 0,
+      file3: 15,
+    };
+
+    const createNodes = [
+      '*/**/*',
+      async (file: string) => {
+        await new Promise((resolve) => setTimeout(resolve, delays[file]));
+        return {
+          projects: {
+            [file]: {
+              root: file,
+            },
+          },
+        };
+      },
+    ] as const;
+
+    const results = await createNodesFromFiles(
+      createNodes[1],
+      orderedConfigFiles,
+      {},
+      context
+    );
+
+    expect(results.map(([file]) => file)).toEqual(['file1', 'file2', 'file3']);
+  });
+
+  it('should preserve input order for partial errors when callbacks resolve out of order', async () => {
+    const orderedConfigFiles = ['file1', 'file2', 'file3', 'file4'] as const;
+    const delays: Record<string, number> = {
+      file1: 25,
+      file2: 0,
+      file3: 10,
+      file4: 5,
+    };
+
+    const createNodes = [
+      '*/**/*',
+      async (file: string) => {
+        await new Promise((resolve) => setTimeout(resolve, delays[file]));
+        if (file === 'file1' || file === 'file3') {
+          throw new Error(`Error ${file}`);
+        }
+        return {
+          projects: {
+            [file]: {
+              root: file,
+            },
+          },
+        };
+      },
+    ] as const;
+
+    let error;
+    await createNodesFromFiles(
+      createNodes[1],
+      orderedConfigFiles,
+      {},
+      context
+    ).catch((e) => (error = e));
+
+    expect(isAggregateCreateNodesError(error)).toBe(true);
+    if (isAggregateCreateNodesError(error)) {
+      expect(error.errors.map(([file]) => file)).toEqual(['file1', 'file3']);
+      expect(error.partialResults.map(([file]) => file)).toEqual([
+        'file2',
+        'file4',
+      ]);
+    }
+  });
+
   it('should filter out null results', async () => {
     const createNodes = [
       '**/*',

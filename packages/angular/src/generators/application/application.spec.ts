@@ -10,6 +10,7 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
+import { normalizeTargetDefaults } from '@nx/devkit/internal';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as enquirer from 'enquirer';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
@@ -868,12 +869,13 @@ describe('app', () => {
           },
         });
         const nxJson = readNxJson(appTree);
-        expect(nxJson.targetDefaults['@angular/build:unit-test']).toStrictEqual(
-          {
-            cache: true,
-            inputs: ['default', '^default'],
-          }
-        );
+        const unitTestDefault = normalizeTargetDefaults(
+          nxJson.targetDefaults
+        ).find((entry) => entry.executor === '@angular/build:unit-test');
+        expect(unitTestDefault).toMatchObject({
+          cache: true,
+          inputs: ['default', '^default'],
+        });
       });
 
       it('should install vitest, jsdom and @angular/build packages', async () => {

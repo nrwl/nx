@@ -4,7 +4,7 @@ import {
   ensureRootProjectName,
 } from '@nx/devkit/internal';
 import { NormalizedSchema, Schema } from '../schema';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { getNuxtDependenciesVersionsToInstall } from '../../../utils/version-utils';
 
 export async function normalizeOptions(

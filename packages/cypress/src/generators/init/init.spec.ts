@@ -1,11 +1,37 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { NxJsonConfiguration, readJson, Tree, updateJson } from '@nx/devkit';
+import {
+  NxJsonConfiguration,
+  readJson,
+  type TargetConfiguration,
+  type TargetDefaults,
+  Tree,
+  updateJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { cypressVersion } from '../../utils/versions';
 import { cypressInitGenerator } from './init';
 import { Schema } from './schema';
+
+function getDefault(
+  td: TargetDefaults | undefined,
+  target: string
+): Partial<TargetConfiguration> | undefined {
+  if (!td) return undefined;
+  if (Array.isArray(td)) {
+    const found = td.find(
+      (e) =>
+        e.target === target &&
+        e.projects === undefined &&
+        e.plugin === undefined
+    );
+    if (!found) return undefined;
+    const { target: _t, projects: _p, plugin: _pl, ...rest } = found;
+    return rest;
+  }
+  return td[target];
+}
 
 describe('init', () => {
   let tree: Tree;
@@ -49,7 +75,10 @@ describe('init', () => {
     await cypressInitGenerator(tree, { ...options, addPlugin: false });
 
     expect(
-      readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults.e2e
+      getDefault(
+        readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults,
+        'e2e'
+      )
     ).toEqual({
       cache: true,
       inputs: ['default', '^production'],

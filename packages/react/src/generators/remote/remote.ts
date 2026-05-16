@@ -17,10 +17,7 @@ import {
 import { join } from 'path';
 
 import { isValidVariable } from '@nx/js';
-import {
-  getProjectSourceRoot,
-  isUsingTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot, isUsingTsSolutionSetup } from '@nx/js/internal';
 import { updateModuleFederationProject } from '../../rules/update-module-federation-project';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { normalizeRemoteName } from '../../utils/normalize-remote';

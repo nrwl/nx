@@ -48,7 +48,7 @@ import {
 } from '../../utils/versions';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { editRootTsConfig } from './lib/edit-root-tsconfig';
-import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectType } from '@nx/js/internal';
 
 export function configurationGenerator(
   tree: Tree,

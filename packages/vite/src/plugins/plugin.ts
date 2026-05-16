@@ -18,9 +18,9 @@ import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
 import {
   walkTsconfigExtendsChain,
   type RawTsconfigJsonCache,
-} from '@nx/js/src/internal';
-import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
-import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+  addBuildAndWatchDepsTargets,
+  isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
+} from '@nx/js/internal';
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { hashObject } from 'nx/src/hasher/file-hasher';

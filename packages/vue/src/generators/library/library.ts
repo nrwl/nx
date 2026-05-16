@@ -18,13 +18,11 @@ import {
   addReleaseConfigForNonTsSolution,
   addReleaseConfigForTsSolution,
   releaseTasks,
-} from '@nx/js/src/generators/library/utils/add-release-config';
-import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
-import {
+  sortPackageJsonFields,
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+} from '@nx/js/internal';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { relative } from 'path';
 import { addLinting } from '../../utils/add-linting';

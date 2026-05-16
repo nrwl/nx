@@ -4,7 +4,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
   workspaceRoot,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { readNxJson } from 'nx/src/config/configuration';
 import { Configuration } from 'webpack';
 import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';

@@ -32,14 +32,21 @@
     "tslib": "catalog:typescript",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
-    "@rsbuild/core": "1.1.8",
     "minimatch": "catalog:",
+    "semver": "catalog:",
     "@phenomnomnominal/tsquery": "catalog:typescript"
   },
   "devDependencies": {
     "nx": "workspace:*"
   },
-  "peerDependencies": {},
+  "peerDependencies": {
+    "@rsbuild/core": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@rsbuild/core": {
+      "optional": true
+    }
+  },
   "nx-migrations": {
     "migrations": "./migrations.json"
   },

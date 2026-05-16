@@ -31,7 +31,46 @@ export interface NxAffectedConfig {
   defaultBase?: string;
 }
 
-export type TargetDefaults = Record<string, Partial<TargetConfiguration>>;
+/**
+ * A single entry in the array-shaped `targetDefaults` configuration.
+ * Supports filtering the default's applicability by project set and/or the
+ * plugin that originated the target.
+ *
+ * Either `target` or `executor` must be set. An entry with both narrows
+ * the match further (target name AND executor must agree).
+ */
+export type TargetDefaultEntry = {
+  /**
+   * Target name or glob pattern (e.g. `build`, `e2e-ci--*`). When omitted,
+   * the entry matches by `executor` alone.
+   */
+  target?: string;
+  /**
+   * Restrict the default to a subset of projects. Accepts any pattern
+   * supported by `findMatchingProjects` (project names, globs, `tag:foo`,
+   * directory globs, negation with `!`).
+   */
+  projects?: string | string[];
+  /**
+   * Restrict the default to targets originated by a specific plugin
+   * (e.g. `@nx/vite`). Matches against the plugin that wrote the target's
+   * `executor` or `command`.
+   */
+  plugin?: string;
+} & Partial<TargetConfiguration>;
+
+/**
+ * @deprecated Use the array-shaped {@link TargetDefaultEntry}[] form instead.
+ * Retained so devkit helpers can still read nx.json files that predate the
+ * migration.
+ * @todo(v24) Remove this type and all branches that read it.
+ */
+export type TargetDefaultsRecord = Record<string, Partial<TargetConfiguration>>;
+
+export type TargetDefaults = TargetDefaultEntry[] | TargetDefaultsRecord;
+
+/** Internal-only: the post-normalization shape consumed by the nx core matcher. */
+export type NormalizedTargetDefaults = TargetDefaultEntry[];
 
 export type TargetDependencies = Record<
   string,

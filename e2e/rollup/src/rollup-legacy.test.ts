@@ -247,10 +247,7 @@ describe('Rollup Plugin', () => {
           loadConfig,
           createMatchPath,
         } from 'tsconfig-paths';
-        import {
-          calculateProjectBuildableDependencies,
-          createTmpTsConfig,
-        } from '@nx/js/src/utils/buildable-libs-utils.js';
+        import { calculateProjectBuildableDependencies, createTmpTsConfig } from '@nx/js/internal';
         
         const __dirname = dirname(fileURLToPath(import.meta.url));
         

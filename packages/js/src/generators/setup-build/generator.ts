@@ -1,4 +1,7 @@
-import { addBuildTargetDefaults } from '@nx/devkit/internal';
+import {
+  addBuildTargetDefaults,
+  readTargetDefaultsForTarget,
+} from '@nx/devkit/internal';
 import {
   ensurePackage,
   formatFiles,
@@ -353,8 +356,10 @@ function mergeTargetDefaults(
 
   return mergeTargetConfigurations(
     projectTarget,
-    (projectTarget.executor
-      ? nxJson.targetDefaults?.[projectTarget.executor]
-      : undefined) ?? nxJson.targetDefaults?.[buildTarget]
+    readTargetDefaultsForTarget(
+      buildTarget,
+      nxJson.targetDefaults,
+      projectTarget.executor
+    )
   );
 }

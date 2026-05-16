@@ -21,8 +21,8 @@ import {
   mockWebAppGenerator,
 } from '../../utils/test-utils';
 
-import { libraryGenerator as jsLibraryGenerator } from '@nx/js/src/generators/library/library';
-import { LibraryGeneratorSchema } from '@nx/js/src/generators/library/schema';
+import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
+import { LibraryGeneratorSchema } from '@nx/js/internal';
 
 describe('@nx/vite:configuration', () => {
   let tree: Tree;

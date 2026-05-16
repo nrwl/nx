@@ -136,6 +136,7 @@ packages/maven/README.md
 packages/nx/README.md
 packages/devkit/README.md
 packages/workspace/README.md
+packages/js/README.md
 
 test-output
 test-results
