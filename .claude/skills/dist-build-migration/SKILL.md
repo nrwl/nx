@@ -424,15 +424,22 @@ The three load-bearing patterns to verify:
 **8. Ship a migration.** Add `packages/<name>/src/migrations/update-<version>/rewrite-<name>-internal-subpath-imports.ts` based on the workspace `move-typescript-compilation-import` template. It needs to handle:
 
 - Static `import [type] { ... } from '@nx/<name>/src/<anything>'`
+- `export [type] { ... } from '@nx/<name>/src/<anything>'`
 - Dynamic `import('@nx/<name>/src/<anything>')`
 - `require('@nx/<name>/src/<anything>')`
 - `jest.mock|unmock|doMock|dontMock|requireActual|requireMock|importActual|importMock(...)` and the `vi.` equivalents
 
+**Route by symbol, not blindly to `./internal`.** Some symbols reachable via `@nx/<name>/src/*` are _public_ — they're exported from `packages/<name>/src/index.ts` and ship on the main `@nx/<name>` entry. A migration that rewrites every `@nx/<name>/src/*` import to `@nx/<name>/internal` silently breaks any consumer importing a public symbol that way, because `internal.ts` deliberately does **not** re-export public symbols (step 7). Instead:
+
+- Hard-code the public symbol set (the recursively-expanded `export`s of `src/index.ts`) in the migration.
+- For a **named** `import`/`export` declaration, partition the named bindings: public symbols go to `@nx/<name>`, the rest to `@nx/<name>/internal`. Classify an `orig as alias` binding by `orig`. If both groups are non-empty, replace the single declaration with two — one per target — preserving any `import type` / `export type` modifier.
+- A **namespace** import (`import * as ns`), a **default** import, `export *`, and every **call expression** (`require`, dynamic `import`, `jest.mock` family) reference the module as a whole and can't be symbol-split — route them to `@nx/<name>/internal`.
+
 Skip the preserved subpaths from step 2 (e.g. `@nx/<name>/src/release/version-actions`). Use `ts.createSourceFile` for AST-based detection so you don't rewrite literals inside comments, template strings, or `typeof import('...')` type queries.
 
-Register in `packages/<name>/migrations.json` with `version: <current beta>`. Include a description that names the public-symbol caveat: "if a rewritten import resolves to a symbol that lives on the public `@nx/<name>` entry, change the specifier to `@nx/<name>`."
+Register in `packages/<name>/migrations.json` with `version: <current beta>`. The description should state the routing rule: named public-symbol imports/exports go to `@nx/<name>`, everything else to `@nx/<name>/internal`.
 
-Add a spec covering: single-quoted, double-quoted, type-only, deep subpath, `.js` extension, `require()`, dynamic `import()`, jest mock family, vi mock family, preserved subpaths, non-`@nx/<name>` imports, `typeof import()` type queries, unrelated string literals inside comments.
+Add a spec covering: public-symbol import (→ `@nx/<name>`), internal-symbol import (→ `@nx/<name>/internal`), mixed import split into two, aliased bindings classified by original name, type-only split, `export { ... } from` (public / internal / mixed), `export *`, namespace import, single-quoted, double-quoted, deep subpath, `.js` extension, `require()`, dynamic `import()`, jest mock family, vi mock family, a non-mock `jest.*` call left alone, an import + `jest.mock` in the same file, preserved subpaths, non-`@nx/<name>` imports, `typeof import()` type queries, unrelated string literals inside comments.
 
 **9. Watch for the published-version-mismatch gotcha in example/test builds.**
 
