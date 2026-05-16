@@ -19,11 +19,22 @@ assignment-rules:
       - agent: linux-extra-large
         parallelism: 1
 
+  # Module federation e2e tests build + serve a host and its remotes (several
+  # webpack/rspack builds at once) — each one saturates ~7 cores, so they get
+  # a machine to themselves. This rule must precede the general e2e-ci** rule.
+  - targets:
+      - e2e-ci--src/module-federation**
+    run-on:
+      - agent: linux-large
+        parallelism: 1
+      - agent: linux-extra-large
+        parallelism: 1
+
   - targets:
       - e2e-ci**
     run-on:
       - agent: linux-large
-        parallelism: 3
+        parallelism: 4
       - agent: linux-extra-large
         parallelism: 8
 
