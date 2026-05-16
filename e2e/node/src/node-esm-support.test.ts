@@ -18,6 +18,19 @@ import {
 } from '@nx/e2e-utils';
 import { execSync } from 'child_process';
 
+// Starts a built node server app, polls its output until it reports it is
+// listening (up to 30s), then kills it and returns everything it printed.
+// Polling for the "ready" line avoids a fixed `sleep` race that loses on a
+// loaded machine, where node boot + module evaluation can take several seconds.
+function runBuiltApp(appName: string): string {
+  return execSync(
+    `node dist/apps/${appName}/main.js > ${appName}-run.log 2>&1 & PID=$!; ` +
+      `for i in $(seq 1 30); do grep -q "server ready on port" ${appName}-run.log 2>/dev/null && break; sleep 1; done; ` +
+      `kill $PID 2>/dev/null || true; wait $PID 2>/dev/null || true; cat ${appName}-run.log`,
+    { cwd: tmpProjPath(), timeout: 60_000 }
+  ).toString();
+}
+
 function configureAsEsm(projectPath: string) {
   // Update project.json to configure build target for ESM
   const projectJsonPath = `${projectPath}/project.json`;
@@ -100,13 +113,7 @@ describe('Node.js Framework ESM Support', () => {
       await runCLIAsync(`build ${expressApp}`);
       checkFilesExist(`dist/apps/${expressApp}/main.js`);
 
-      const result = execSync(
-        `node dist/apps/${expressApp}/main.js & PID=$!; sleep 1; kill $PID 2>/dev/null || true; wait $PID 2>/dev/null || true`,
-        {
-          cwd: tmpProjPath(),
-          timeout: 10000,
-        }
-      ).toString();
+      const result = runBuiltApp(expressApp);
       expect(result).toContain('Express ESM app starting');
       expect(result).toContain('Express ESM server ready on port');
       expect(result).toContain('fetch type: function');
@@ -216,13 +223,7 @@ describe('Node.js Framework ESM Support', () => {
       await runCLIAsync(`build ${fastifyApp}`);
       checkFilesExist(`dist/apps/${fastifyApp}/main.js`);
 
-      const result = execSync(
-        `node dist/apps/${fastifyApp}/main.js & PID=$!; sleep 1; kill $PID 2>/dev/null || true; wait $PID 2>/dev/null || true`,
-        {
-          cwd: tmpProjPath(),
-          timeout: 10000,
-        }
-      ).toString();
+      const result = runBuiltApp(fastifyApp);
       expect(result).toContain('Fastify ESM app starting');
       expect(result).toContain('Fastify ESM server ready on port');
       expect(result).toContain('fetch type: function');
@@ -335,13 +336,7 @@ describe('Node.js Framework ESM Support', () => {
       await runCLIAsync(`build ${koaApp}`);
       checkFilesExist(`dist/apps/${koaApp}/main.js`);
 
-      const result = execSync(
-        `node dist/apps/${koaApp}/main.js & PID=$!; sleep 1; kill $PID 2>/dev/null || true; wait $PID 2>/dev/null || true`,
-        {
-          cwd: tmpProjPath(),
-          timeout: 10000,
-        }
-      ).toString();
+      const result = runBuiltApp(koaApp);
       expect(result).toContain('Koa ESM app starting');
       expect(result).toContain('Koa ESM server ready on port');
       expect(result).toContain('fetch type: function');
@@ -573,13 +568,7 @@ describe('Node.js Framework ESM Support', () => {
       await runCLIAsync(`build ${nodeApp}`);
       checkFilesExist(`dist/apps/${nodeApp}/main.js`);
 
-      const result = execSync(
-        `node dist/apps/${nodeApp}/main.js & PID=$!; sleep 1; kill $PID 2>/dev/null || true; wait $PID 2>/dev/null || true`,
-        {
-          cwd: tmpProjPath(),
-          timeout: 10000,
-        }
-      ).toString();
+      const result = runBuiltApp(nodeApp);
       expect(result).toContain('Mixed imports Node.js app starting');
       expect(result).toContain('Mixed imports server ready on port');
       expect(result).toContain('lodash.pick type: function');

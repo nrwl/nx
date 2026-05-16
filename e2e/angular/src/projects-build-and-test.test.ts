@@ -92,6 +92,9 @@ describe('Angular Projects - Build and Test', () => {
 
     // check e2e tests
     if (runE2ETests('playwright')) {
+      // the e2e's serve dep binds Angular's default port 4200 — free it first
+      // in case an earlier run leaked a dev server squatting on it
+      await killPort(4200);
       expect(() => runCLI(`e2e ${app1}-e2e`)).not.toThrow();
       expect(await killPort(4200)).toBeTruthy();
     }
@@ -126,6 +129,8 @@ describe('Angular Projects - Build and Test', () => {
     });
 
     if (runE2ETests()) {
+      // free Angular's default port 4200 before the e2e's serve dep binds it
+      await killPort(4200);
       expect(() => runCLI(`e2e ${app}-e2e`)).not.toThrow();
       expect(await killPort(4200)).toBeTruthy();
     }
@@ -159,6 +164,8 @@ describe('Angular Projects - Build and Test', () => {
     );
 
     if (runE2ETests('playwright')) {
+      // free Angular's default port 4200 before the e2e's serve dep binds it
+      await killPort(4200);
       expect(() => runCLI(`e2e ${app}-e2e`)).not.toThrow();
       expect(await killPort(4200)).toBeTruthy();
     }
