@@ -12,35 +12,105 @@ import * as path from 'path';
  * Starts at 6100 (outside the framework-default zone of 3000/4200/5173/8080/etc.)
  * so reserved ports never collide with parallel tests that generate apps
  * without explicitly pinning the dev-server port.
+ *
+ * Caveat: this reserves the port *number* against other `reservePort()`
+ * callers; it does not hold the OS socket open. A consumer that binds the
+ * port much later (e.g. after a long webpack compile) is still racing
+ * anything that does not participate in this scheme.
  */
 const LOCK_DIR = path.join(os.tmpdir(), 'nx-e2e-port-locks');
 fs.mkdirSync(LOCK_DIR, { recursive: true });
 
-export async function reservePort(start = 6100): Promise<number> {
-  for (let port = start; port < 65000; port++) {
-    const lock = path.join(LOCK_DIR, `${port}.lock`);
+const RANGE_FLOOR = 6100;
+const RANGE_CEILING = 65000;
+// Spread of the randomised scan origin (see reservePort).
+const SCAN_SPREAD = 4000;
+// A lock older than this is treated as abandoned even when its PID still
+// resolves (the PID may have been recycled). Comfortably above the longest
+// e2e test timeout so a legitimately long-held port is never stolen.
+const STALE_LOCK_MS = 60 * 60 * 1000;
+
+// Lock files held by THIS process. A single exit handler frees them all,
+// rather than registering one listener per reservePort() call.
+const heldLocks = new Set<string>();
+process.once('exit', () => {
+  for (const lock of heldLocks) {
     try {
-      fs.writeFileSync(lock, '', { flag: 'wx' });
+      fs.unlinkSync(lock);
+    } catch {}
+  }
+});
+
+function lockPath(port: number): string {
+  return path.join(LOCK_DIR, `${port}.lock`);
+}
+
+/**
+ * A lock is abandoned if its owning process is gone, or it is older than
+ * STALE_LOCK_MS. A SIGKILLed e2e process never runs its exit handler, so
+ * without this its locks would block those ports for every later run.
+ */
+function isAbandonedLock(lock: string): boolean {
+  let stat: fs.Stats;
+  let pid: number;
+  try {
+    stat = fs.statSync(lock);
+    pid = parseInt(fs.readFileSync(lock, 'utf8').trim(), 10);
+  } catch {
+    return true; // vanished between checks — treat as free
+  }
+  if (Date.now() - stat.mtimeMs > STALE_LOCK_MS) return true;
+  if (!pid) return false;
+  try {
+    process.kill(pid, 0); // signal 0: existence check, does not kill
+    return false; // owner still alive
+  } catch (err) {
+    // ESRCH: no such process → abandoned. EPERM: exists, not ours → alive.
+    return (err as NodeJS.ErrnoException).code === 'ESRCH';
+  }
+}
+
+/** Atomically claim the lock for `port`; returns true on success. */
+function claimLock(port: number): boolean {
+  const lock = lockPath(port);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      fs.writeFileSync(lock, String(process.pid), { flag: 'wx' });
+      heldLocks.add(lock);
+      return true;
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err;
-      continue;
     }
-    // Lock claimed; now verify the OS port is actually free. Another e2e test
-    // on the same agent may be using the OS port via the generator's default
-    // (i.e. without participating in the lock-file scheme), so an exclusive
-    // lock is not enough.
-    if (!(await isPortAvailable(port))) {
-      try {
-        fs.unlinkSync(lock);
-      } catch {}
-      continue;
+    // Lock exists — reclaim it once if abandoned, then retry the claim.
+    if (!isAbandonedLock(lock)) return false;
+    try {
+      fs.unlinkSync(lock);
+    } catch {}
+  }
+  return false;
+}
+
+function releaseLock(port: number): void {
+  const lock = lockPath(port);
+  heldLocks.delete(lock);
+  try {
+    fs.unlinkSync(lock);
+  } catch {}
+}
+
+export async function reservePort(start = RANGE_FLOOR): Promise<number> {
+  // Randomise the scan origin so parallel e2e processes spread across the
+  // range instead of all converging on — and fighting over — the low ports.
+  const first = start + Math.floor(Math.random() * SCAN_SPREAD);
+  for (let port = first; port < RANGE_CEILING; port++) {
+    if (!claimLock(port)) continue;
+    // Lock claimed; verify the OS port is actually free. Another e2e test on
+    // the same agent may be using it via a generator default (i.e. without
+    // participating in the lock scheme), so an exclusive lock is not enough.
+    if (await isPortAvailable(port)) {
+      return port;
     }
-    process.on('exit', () => {
-      try {
-        fs.unlinkSync(lock);
-      } catch {}
-    });
-    return port;
+    releaseLock(port);
   }
   throw new Error('No available ports');
 }
