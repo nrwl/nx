@@ -23,8 +23,8 @@ import {
 describe('Angular Projects - Build and Test', () => {
   let setup: ProjectsTestSetup;
 
-  beforeAll(() => {
-    setup = setupProjectsTest();
+  beforeAll(async () => {
+    setup = await setupProjectsTest();
   });
 
   afterEach(() => {
@@ -34,7 +34,7 @@ describe('Angular Projects - Build and Test', () => {
   afterAll(() => cleanupProjectsTest());
 
   it('should successfully generate apps and libs and work correctly', async () => {
-    const { proj, app1, esbuildApp, lib1 } = setup;
+    const { proj, app1, esbuildApp, lib1, app1Port } = setup;
     const standaloneApp = uniq('standalone-app');
     runCLI(
       `generate @nx/angular:app my-dir/${standaloneApp} --bundler=webpack --no-interactive`
@@ -92,11 +92,9 @@ describe('Angular Projects - Build and Test', () => {
 
     // check e2e tests
     if (runE2ETests('playwright')) {
-      // the e2e's serve dep binds Angular's default port 4200 — free it first
-      // in case an earlier run leaked a dev server squatting on it
-      await killPort(4200);
+      // app1 was generated with --port=app1Port, so its e2e serves there
       expect(() => runCLI(`e2e ${app1}-e2e`)).not.toThrow();
-      expect(await killPort(4200)).toBeTruthy();
+      expect(await killPort(app1Port)).toBeTruthy();
     }
 
     const appPort = await reservePort();
@@ -121,18 +119,17 @@ describe('Angular Projects - Build and Test', () => {
 
   it('should successfully work with rspack for build', async () => {
     const app = uniq('app');
+    const port = await reservePort();
     runCLI(
-      `generate @nx/angular:app my-dir/${app} --bundler=rspack --no-interactive`
+      `generate @nx/angular:app my-dir/${app} --port=${port} --bundler=rspack --no-interactive`
     );
     runCLI(`build ${app}`, {
       env: { NODE_ENV: 'production' },
     });
 
     if (runE2ETests()) {
-      // free Angular's default port 4200 before the e2e's serve dep binds it
-      await killPort(4200);
       expect(() => runCLI(`e2e ${app}-e2e`)).not.toThrow();
-      expect(await killPort(4200)).toBeTruthy();
+      expect(await killPort(port)).toBeTruthy();
     }
   }, 1000000);
 
@@ -158,16 +155,15 @@ describe('Angular Projects - Build and Test', () => {
 
   it('should successfully work with playwright for e2e tests', async () => {
     const app = uniq('app');
+    const port = await reservePort();
 
     runCLI(
-      `generate @nx/angular:app ${app} --e2eTestRunner=playwright --no-interactive`
+      `generate @nx/angular:app ${app} --port=${port} --e2eTestRunner=playwright --no-interactive`
     );
 
     if (runE2ETests('playwright')) {
-      // free Angular's default port 4200 before the e2e's serve dep binds it
-      await killPort(4200);
       expect(() => runCLI(`e2e ${app}-e2e`)).not.toThrow();
-      expect(await killPort(4200)).toBeTruthy();
+      expect(await killPort(port)).toBeTruthy();
     }
   }, 1000000);
 });

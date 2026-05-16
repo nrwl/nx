@@ -2,6 +2,7 @@ import {
   cleanupProject,
   newProject,
   readFile,
+  reservePort,
   runCLI,
   uniq,
   updateFile,
@@ -10,6 +11,7 @@ import {
 export interface ProjectsTestSetup {
   proj: string;
   app1: string;
+  app1Port: number;
   esbuildApp: string;
   lib1: string;
   app1DefaultModule: string;
@@ -19,7 +21,7 @@ export interface ProjectsTestSetup {
   esbuildAppDefaultProjectConfig: string;
 }
 
-export function setupProjectsTest(): ProjectsTestSetup {
+export async function setupProjectsTest(): Promise<ProjectsTestSetup> {
   const proj = newProject({
     packages: [
       '@nx/angular',
@@ -30,11 +32,14 @@ export function setupProjectsTest(): ProjectsTestSetup {
     ],
   });
   const app1 = uniq('app1');
+  // app1 gets an e2e run; pin its dev-server/e2e port to a reserved one so it
+  // does not collide on the shared default 4200.
+  const app1Port = await reservePort();
   const esbuildApp = uniq('esbuild-app');
   const lib1 = uniq('lib1');
 
   runCLI(
-    `generate @nx/angular:app ${app1} --no-standalone --bundler=webpack --no-interactive`
+    `generate @nx/angular:app ${app1} --port=${app1Port} --no-standalone --bundler=webpack --no-interactive`
   );
   runCLI(
     `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --no-standalone --no-interactive`
@@ -54,6 +59,7 @@ export function setupProjectsTest(): ProjectsTestSetup {
   return {
     proj,
     app1,
+    app1Port,
     esbuildApp,
     lib1,
     app1DefaultModule,
