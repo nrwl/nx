@@ -114,7 +114,11 @@
     "test": {
       "dependsOn": ["test-native", "build-native", "^build-native"],
       "options": {
-        "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
+        "args": [
+          "--passWithNoTests",
+          "--forceExit",
+          "--globalTeardown=<rootDir>/scripts/jest-handle-check.js"
+        ],
         "env": { "NODE_OPTIONS": "--experimental-vm-modules" }
       }
     },
