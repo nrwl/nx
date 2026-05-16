@@ -1,6 +1,5 @@
 import { logger, ProjectConfiguration } from '@nx/devkit';
-import { registerTsProject } from '@nx/js/src/internal';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { registerTsProject, getProjectSourceRoot } from '@nx/js/internal';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 

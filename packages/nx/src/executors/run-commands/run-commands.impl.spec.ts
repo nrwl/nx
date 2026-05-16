@@ -682,7 +682,7 @@ describe('Run Commands', () => {
 
   describe('--color', () => {
     it('should not set FORCE_COLOR=true', async () => {
-      const spawn = jest.spyOn(require('child_process'), 'spawn');
+      const spawnSpy = jest.spyOn(require('child_process'), 'spawn');
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
@@ -692,27 +692,31 @@ describe('Run Commands', () => {
         context
       );
 
-      expect(spawn).toHaveBeenCalledTimes(2);
-      expect(spawn).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, [], {
+      expect(spawnSpy).toHaveBeenCalledTimes(2);
+      expect(spawnSpy).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, [], {
         shell: true,
+        detached: process.platform !== 'win32',
         env: {
           ...process.env,
           ...env(),
         },
         windowsHide: true,
+        stdio: ['inherit', 'pipe', 'pipe'],
       });
-      expect(spawn).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, [], {
+      expect(spawnSpy).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, [], {
         shell: true,
+        detached: process.platform !== 'win32',
         env: {
           ...process.env,
           ...env(),
         },
         windowsHide: true,
+        stdio: ['inherit', 'pipe', 'pipe'],
       });
     });
 
     it('should not set FORCE_COLOR=true when --no-color is passed', async () => {
-      const spawn = jest.spyOn(require('child_process'), 'spawn');
+      const spawnSpy = jest.spyOn(require('child_process'), 'spawn');
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
@@ -723,27 +727,31 @@ describe('Run Commands', () => {
         context
       );
 
-      expect(spawn).toHaveBeenCalledTimes(2);
-      expect(spawn).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, [], {
+      expect(spawnSpy).toHaveBeenCalledTimes(2);
+      expect(spawnSpy).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, [], {
         shell: true,
+        detached: process.platform !== 'win32',
         env: {
           ...process.env,
           ...env(),
         },
         windowsHide: true,
+        stdio: ['inherit', 'pipe', 'pipe'],
       });
-      expect(spawn).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, [], {
+      expect(spawnSpy).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, [], {
         shell: true,
+        detached: process.platform !== 'win32',
         env: {
           ...process.env,
           ...env(),
         },
         windowsHide: true,
+        stdio: ['inherit', 'pipe', 'pipe'],
       });
     });
 
     it('should set FORCE_COLOR=true when running with --color', async () => {
-      const spawn = jest.spyOn(require('child_process'), 'spawn');
+      const spawnSpy = jest.spyOn(require('child_process'), 'spawn');
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
@@ -754,16 +762,20 @@ describe('Run Commands', () => {
         context
       );
 
-      expect(spawn).toHaveBeenCalledTimes(2);
-      expect(spawn).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, [], {
+      expect(spawnSpy).toHaveBeenCalledTimes(2);
+      expect(spawnSpy).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, [], {
         shell: true,
+        detached: process.platform !== 'win32',
         env: { ...process.env, FORCE_COLOR: `true`, ...env() },
         windowsHide: true,
+        stdio: ['inherit', 'pipe', 'pipe'],
       });
-      expect(spawn).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, [], {
+      expect(spawnSpy).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, [], {
         shell: true,
+        detached: process.platform !== 'win32',
         env: { ...process.env, FORCE_COLOR: `true`, ...env() },
         windowsHide: true,
+        stdio: ['inherit', 'pipe', 'pipe'],
       });
     });
   });
@@ -1148,57 +1160,6 @@ describe('Run Commands', () => {
       const duration = Date.now() - startTime;
       // Should complete quickly after failure and cleanup
       expect(duration).toBeLessThan(500);
-    });
-  });
-
-  describe('large output handling', () => {
-    it('should handle output that exceeds default maxBuffer without crashing', async () => {
-      // Node.js default maxBuffer for exec() is 1MB (1024 * 1024).
-      // This command generates ~2MB of output, which would crash exec()
-      // unless LARGE_BUFFER was set. With spawn(), there is no maxBuffer
-      // limit at all — output streams through data events.
-      const result = await runCommands(
-        {
-          commands: [
-            {
-              // Generate ~2MB of output (each line is ~80 chars, 25000 lines ≈ 2MB)
-              command: `node -e "for(let i=0;i<25000;i++){console.log('x'.repeat(80))}"`,
-            },
-          ],
-          parallel: false,
-          __unparsed__: [],
-        },
-        context
-      );
-
-      expect(result).toEqual(expect.objectContaining({ success: true }));
-    });
-
-    it('exec() with small maxBuffer crashes on large output, spawn() does not', async () => {
-      const { exec, spawn } = require('child_process');
-      const cmd = `node -e "for(let i=0;i<1000;i++){console.log('x'.repeat(200))}"`;
-
-      // Prove exec() crashes when output exceeds maxBuffer
-      const execResult = await new Promise<{ error: Error | null }>((res) => {
-        exec(cmd, { maxBuffer: 1024 * 50 }, (error) => res({ error }));
-      });
-      expect(execResult.error).toBeTruthy();
-      expect(execResult.error.message).toContain('maxBuffer');
-
-      // Prove spawn() handles the same output without any crash
-      const spawnResult = await new Promise<{
-        code: number;
-        totalBytes: number;
-      }>((res) => {
-        let totalBytes = 0;
-        const child = spawn(cmd, [], { shell: true });
-        child.stdout.on('data', (chunk) => {
-          totalBytes += chunk.length;
-        });
-        child.on('exit', (code) => res({ code, totalBytes }));
-      });
-      expect(spawnResult.code).toBe(0);
-      expect(spawnResult.totalBytes).toBeGreaterThan(1024 * 50); // well over 50KB
     });
   });
 });

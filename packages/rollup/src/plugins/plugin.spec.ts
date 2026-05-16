@@ -19,7 +19,8 @@ jest.mock('@nx/devkit', () => ({
 }));
 
 // Mock isUsingTsSolutionSetup to ensure consistent test environment
-jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
+jest.mock('@nx/js/internal', () => ({
+  ...jest.requireActual('@nx/js/internal'),
   isUsingTsSolutionSetup: jest.fn(() => false),
 }));
 
@@ -27,6 +28,19 @@ describe('@nx/rollup/plugin', () => {
   let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContextV2;
   let cwd = process.cwd();
+  let originalCacheProjectGraph = process.env.NX_CACHE_PROJECT_GRAPH;
+
+  beforeEach(() => {
+    process.env.NX_CACHE_PROJECT_GRAPH = 'false';
+  });
+
+  afterEach(() => {
+    if (originalCacheProjectGraph !== undefined) {
+      process.env.NX_CACHE_PROJECT_GRAPH = originalCacheProjectGraph;
+    } else {
+      delete process.env.NX_CACHE_PROJECT_GRAPH;
+    }
+  });
 
   describe.each(['js', 'ts'])('root project', (extname) => {
     const tempFs = new TempFs('test');

@@ -2,15 +2,14 @@ import { Tree, readNxJson } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
-import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nx/js/src/generators/library/schema';
-import type { LibraryGeneratorOptions, NormalizedOptions } from '../schema';
+} from '@nx/devkit/internal';
 import {
+  getNpmScope,
   isUsingTsSolutionSetup,
   shouldConfigureTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-
+} from '@nx/js/internal';
+import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nx/js/internal';
+import type { LibraryGeneratorOptions, NormalizedOptions } from '../schema';
 export async function normalizeOptions(
   tree: Tree,
   options: LibraryGeneratorOptions

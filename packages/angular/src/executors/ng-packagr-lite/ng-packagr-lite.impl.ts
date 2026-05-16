@@ -2,7 +2,7 @@ import type { ExecutorContext } from '@nx/devkit';
 import {
   createTmpTsConfig,
   DependentBuildableProjectNode,
-} from '@nx/js/src/utils/buildable-libs-utils';
+} from '@nx/js/internal';
 import { NgPackagr } from 'ng-packagr';
 import { join, resolve } from 'path';
 import { createLibraryExecutor } from '../package/package.impl';

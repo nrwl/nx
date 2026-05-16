@@ -6,7 +6,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { getRootTsConfigFileName } from '@nx/js';
-import { getNeededCompilerOptionOverrides } from '@nx/js/src/utils/typescript/configuration';
+import { getNeededCompilerOptionOverrides } from '@nx/js/internal';
 import { gte } from 'semver';
 import { getDefinedCompilerOption } from '../../utils/tsconfig-utils';
 import { updateAppEditorTsConfigExcludedFiles } from '../../utils/update-app-editor-tsconfig-excluded-files';

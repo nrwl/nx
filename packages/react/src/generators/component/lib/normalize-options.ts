@@ -1,10 +1,9 @@
 import { logger, names, readProjectConfiguration, Tree } from '@nx/devkit';
-
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
 
 import { assertValidStyle } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
-import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectType } from '@nx/js/internal';
 
 export async function normalizeOptions(
   tree: Tree,
@@ -24,8 +23,7 @@ export async function normalizeOptions(
     path: options.path,
     name: options.name,
     allowedFileExtensions: ['js', 'jsx', 'ts', 'tsx'],
-    fileExtension: options.js ? 'js' : 'tsx',
-    js: options.js,
+    fileExtension: 'tsx',
   });
 
   const project = readProjectConfiguration(tree, projectName);

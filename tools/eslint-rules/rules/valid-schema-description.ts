@@ -1,5 +1,5 @@
 import { ESLintUtils } from '@typescript-eslint/utils';
-import type { AST } from 'jsonc-eslint-parser';
+import type { AST } from 'jsonc-eslint-parser' with { 'resolution-mode': 'import' };
 
 // NOTE: The rule will be available in ESLint configs as "@nx/workspace/valid-schema-description"
 export const RULE_NAME = 'valid-schema-description';

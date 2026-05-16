@@ -7,7 +7,7 @@ import {
   type ProjectGraph,
   type Tree,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 import { ast, query, replace } from '@phenomnomnominal/tsquery';
 import { lt, valid } from 'semver';
 import type { ImportDeclaration, Printer } from 'typescript';

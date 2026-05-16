@@ -13,6 +13,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { relative } from 'path';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { isZonelessApp } from '../../utils/zoneless';
 import { nxVersion } from '../../utils/versions';
 import { componentTestGenerator } from '../component-test/component-test';
@@ -48,6 +49,7 @@ export async function cypressComponentConfiguration(
   tree: Tree,
   options: CypressComponentConfigSchema
 ): Promise<GeneratorCallback> {
+  assertSupportedAngularVersion(tree);
   const { componentConfigurationGenerator: baseCyCTConfig } = ensurePackage<
     typeof import('@nx/cypress')
   >('@nx/cypress', nxVersion);

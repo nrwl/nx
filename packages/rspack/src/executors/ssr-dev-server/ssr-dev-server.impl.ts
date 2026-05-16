@@ -1,10 +1,10 @@
+import { combineAsyncIterables } from '@nx/devkit/internal';
 import {
   ExecutorContext,
   parseTargetString,
   readTargetOptions,
   runExecutor,
 } from '@nx/devkit';
-import { combineAsyncIterables } from '@nx/devkit/src/utils/async-iterable';
 import * as pc from 'picocolors';
 
 import { RspackExecutorSchema } from '../rspack/schema';

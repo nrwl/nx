@@ -32,8 +32,8 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "detect-port": "^1.5.1",
-    "http-server": "^14.1.0",
+    "detect-port": "^2.1.0",
+    "http-server": "catalog:",
     "picocolors": "catalog:",
     "tslib": "catalog:typescript",
     "@nx/devkit": "workspace:*",

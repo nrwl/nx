@@ -1,4 +1,9 @@
 import {
+  AggregatedLog,
+  migrateProjectExecutorsToPlugin,
+  NoTargetsToMigrateError,
+} from '@nx/devkit/internal';
+import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
   formatFiles,
@@ -6,11 +11,6 @@ import {
   type ProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
-import {
-  migrateProjectExecutorsToPlugin,
-  NoTargetsToMigrateError,
-} from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import { ast, query } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import { createNodesV2, type RspackPluginOptions } from '../../plugins/plugin';
@@ -21,6 +21,7 @@ import {
   type MigrationContext,
 } from './utils';
 import { logger as devkitLogger } from 'nx/src/devkit-exports';
+import { assertSupportedRspackVersion } from '../../utils/assert-supported-rspack-version';
 
 interface Schema {
   project?: string;
@@ -28,6 +29,8 @@ interface Schema {
 }
 
 export async function convertToInferred(tree: Tree, options: Schema) {
+  assertSupportedRspackVersion(tree);
+
   const projectGraph = await createProjectGraphAsync();
   const migrationContext: MigrationContext = {
     logger: new AggregatedLog(),
@@ -88,7 +91,13 @@ export async function convertToInferred(tree: Tree, options: Schema) {
   const installCallback = addDependenciesToPackageJson(
     tree,
     {},
-    { '@rspack/core': rspackCoreVersion },
+    {
+      '@rspack/core': rspackCoreVersion,
+      // The inferred plugin's targets run the `rspack` CLI. Since
+      // @rspack/cli is an optional peer dependency of @nx/rspack, install
+      // it explicitly so the converted targets can execute.
+      '@rspack/cli': rspackCoreVersion,
+    },
     undefined,
     true
   );

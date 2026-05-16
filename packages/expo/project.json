@@ -10,5 +10,6 @@
       "inputs": ["copyReadme"]
     }
   },
+  "implicitDependencies": ["cypress", "jest", "playwright", "web"],
   "tags": []
 }

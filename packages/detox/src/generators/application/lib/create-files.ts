@@ -9,7 +9,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
-import { addSwcTestConfig } from '@nx/js/src/utils/swc/add-swc-config';
+import { addSwcTestConfig } from '@nx/js/internal';
 import { join } from 'path';
 import { NormalizedSchema } from './normalize-options';
 

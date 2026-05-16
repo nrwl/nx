@@ -84,7 +84,7 @@ bar
     });
   });
 
-  describe('v15 support', () => {
+  describe('v19 support', () => {
     let tree: Tree;
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
@@ -92,7 +92,7 @@ bar
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '~15.2.0',
+          '@angular/core': '~19.2.0',
         },
       }));
     });

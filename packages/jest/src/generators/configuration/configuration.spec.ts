@@ -594,7 +594,10 @@ describe('jestProject', () => {
       });
 
       const nxJson = readNxJson(tree);
-      expect(nxJson.targetDefaults.test.dependsOn).toStrictEqual(['^build']);
+      expect(nxJson.targetDefaults).toContainEqual({
+        target: 'test',
+        dependsOn: ['^build'],
+      });
     });
 
     it('should generate files with swc compiler', async () => {

@@ -1,6 +1,7 @@
 import {
   applyChangesToString,
   ChangeType,
+  names,
   parseJson,
   StringChange,
 } from '@nx/devkit';
@@ -1648,7 +1649,8 @@ export function generateFlatOverride(
   _override: Partial<Linter.ConfigOverride<Linter.RulesRecord>> & {
     ignores?: Linter.FlatConfig['ignores'];
   },
-  format: 'mjs' | 'cjs'
+  format: 'mjs' | 'cjs',
+  importsMap?: Map<string, string>
 ): ts.ObjectLiteralExpression | ts.SpreadElement {
   const override = mapFilePaths(_override);
 
@@ -1727,7 +1729,7 @@ export function generateFlatOverride(
         } else {
           // Change parser to import statement.
           return format === 'mjs'
-            ? generateESMParserImport(override)
+            ? generateESMParserImport(override, importsMap)
             : generateCJSParserImport(override);
         }
       },
@@ -1839,21 +1841,31 @@ export function generateFlatOverride(
 function generateESMParserImport(
   override: Partial<Linter.ConfigOverride<Linter.RulesRecord>> & {
     ignores?: Linter.FlatConfig['ignores'];
-  }
+  },
+  importsMap?: Map<string, string>
 ): ts.PropertyAssignment {
+  const parser =
+    override['languageOptions']?.['parserOptions']?.parser ??
+    override['languageOptions']?.parser ??
+    override.parser;
+  // Dynamic `await import()` doesn't expose top-level CJS exports (e.g. `parseForESLint`)
+  // because those are nested under `.default`. Use a hoisted static import instead so the
+  // resolved binding matches the parser's module.exports shape.
+  if (importsMap) {
+    const parserName = importsMap.get(parser) ?? names(parser).propertyName;
+    importsMap.set(parser, parserName);
+    return ts.factory.createPropertyAssignment(
+      'parser',
+      ts.factory.createIdentifier(parserName)
+    );
+  }
   return ts.factory.createPropertyAssignment(
     'parser',
     ts.factory.createAwaitExpression(
       ts.factory.createCallExpression(
         ts.factory.createIdentifier('import'),
         undefined,
-        [
-          ts.factory.createStringLiteral(
-            override['languageOptions']?.['parserOptions']?.parser ??
-              override['languageOptions']?.parser ??
-              override.parser
-          ),
-        ]
+        [ts.factory.createStringLiteral(parser)]
       )
     )
   );
@@ -1902,19 +1914,16 @@ export function mapFilePaths<
   const override: T = {
     ..._override,
   };
+  // Dedupe after mapping — both source-side duplicates and glob-mapping collisions collapse.
+  const normalize = (value: string | string[]): string[] =>
+    Array.from(
+      new Set((Array.isArray(value) ? value : [value]).map(mapFilePath))
+    );
   if (override.files) {
-    override.files = Array.isArray(override.files)
-      ? override.files
-      : [override.files];
-    override.files = override.files.map((file) => mapFilePath(file));
+    override.files = normalize(override.files);
   }
   if (override.excludedFiles) {
-    override.excludedFiles = Array.isArray(override.excludedFiles)
-      ? override.excludedFiles
-      : [override.excludedFiles];
-    override.excludedFiles = override.excludedFiles.map((file) =>
-      mapFilePath(file)
-    );
+    override.excludedFiles = normalize(override.excludedFiles);
   }
   return override;
 }

@@ -4,7 +4,7 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
-import { addSwcTestConfig } from '@nx/js/src/utils/swc/add-swc-config';
+import { addSwcTestConfig } from '@nx/js/internal';
 import { join } from 'path';
 import type { JestPresetExtension } from '../../../utils/config/config-file';
 import { getInstalledJestMajorVersion } from '../../../utils/versions';

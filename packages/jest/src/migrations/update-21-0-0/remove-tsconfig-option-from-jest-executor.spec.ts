@@ -132,63 +132,68 @@ describe('remove-tsconfig-option-from-jest-executor', () => {
 
   it('should remove tsConfig option in nx.json target defaults for a target with the jest executor', async () => {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      json.targetDefaults ??= {};
-      json.targetDefaults.test = {
-        executor: '@nx/jest:jest',
-        options: {
-          jestConfig: '{projectRoot}/jest.config.ts',
-          tsConfig: '{projectRoot}/tsconfig.json',
-        },
-        configurations: {
-          production: {
-            tsConfig: '{projectRoot}/tsconfig.prod.json',
-            codeCoverage: true,
+      json.targetDefaults = [
+        {
+          target: 'test',
+          executor: '@nx/jest:jest',
+          options: {
+            jestConfig: '{projectRoot}/jest.config.ts',
+            tsConfig: '{projectRoot}/tsconfig.json',
+          },
+          configurations: {
+            production: {
+              tsConfig: '{projectRoot}/tsconfig.prod.json',
+              codeCoverage: true,
+            },
           },
         },
-      };
+      ];
       return json;
     });
 
     await migration(tree);
 
     const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-    expect(nxJson.targetDefaults.test.options).toStrictEqual({
-      jestConfig: '{projectRoot}/jest.config.ts',
-    });
-    expect(nxJson.targetDefaults.test.configurations.production).toStrictEqual({
-      codeCoverage: true,
-    });
+    expect(nxJson.targetDefaults).toEqual([
+      {
+        target: 'test',
+        executor: '@nx/jest:jest',
+        options: { jestConfig: '{projectRoot}/jest.config.ts' },
+        configurations: { production: { codeCoverage: true } },
+      },
+    ]);
   });
 
   it('should remove tsConfig option in nx.json target defaults for the jest executor', async () => {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      json.targetDefaults ??= {};
-      json.targetDefaults['@nx/jest:jest'] = {
-        options: {
-          jestConfig: '{projectRoot}/jest.config.ts',
-          tsConfig: '{projectRoot}/tsconfig.json',
-        },
-        configurations: {
-          production: {
-            tsConfig: '{projectRoot}/tsconfig.prod.json',
-            codeCoverage: true,
+      json.targetDefaults = [
+        {
+          executor: '@nx/jest:jest',
+          options: {
+            jestConfig: '{projectRoot}/jest.config.ts',
+            tsConfig: '{projectRoot}/tsconfig.json',
+          },
+          configurations: {
+            production: {
+              tsConfig: '{projectRoot}/tsconfig.prod.json',
+              codeCoverage: true,
+            },
           },
         },
-      };
+      ];
       return json;
     });
 
     await migration(tree);
 
     const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-    expect(nxJson.targetDefaults['@nx/jest:jest'].options).toStrictEqual({
-      jestConfig: '{projectRoot}/jest.config.ts',
-    });
-    expect(
-      nxJson.targetDefaults['@nx/jest:jest'].configurations.production
-    ).toStrictEqual({
-      codeCoverage: true,
-    });
+    expect(nxJson.targetDefaults).toEqual([
+      {
+        executor: '@nx/jest:jest',
+        options: { jestConfig: '{projectRoot}/jest.config.ts' },
+        configurations: { production: { codeCoverage: true } },
+      },
+    ]);
   });
 
   it('should remove empty options and configurations objects from project configuration', async () => {

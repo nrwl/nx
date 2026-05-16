@@ -1,5 +1,5 @@
 import { glob, joinPathFragments, type Tree } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 import type {
   BinaryExpression,
   ExportAssignment,

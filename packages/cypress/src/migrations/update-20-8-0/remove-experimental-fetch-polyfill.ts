@@ -1,5 +1,5 @@
 import { formatFiles, type Tree } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 import { ast } from '@phenomnomnominal/tsquery';
 import type { Printer } from 'typescript';
 import { resolveCypressConfigObject } from '../../utils/config';

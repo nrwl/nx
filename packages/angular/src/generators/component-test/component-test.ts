@@ -9,6 +9,7 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { nxVersion } from '../../utils/versions';
 import {
   getArgsDefaultValue,
@@ -21,6 +22,7 @@ export async function componentTestGenerator(
   tree: Tree,
   options: ComponentTestSchema
 ) {
+  assertSupportedAngularVersion(tree);
   ensurePackage('@nx/cypress', nxVersion);
   const { root } = readProjectConfiguration(tree, options.project);
   const componentDirPath = joinPathFragments(root, options.componentDir);

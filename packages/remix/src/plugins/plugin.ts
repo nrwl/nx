@@ -1,3 +1,9 @@
+import {
+  calculateHashForCreateNodes,
+  getNamedInputs,
+  loadConfigFile,
+  PluginCache,
+} from '@nx/devkit/internal';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
@@ -11,19 +17,16 @@ import {
   ProjectConfiguration,
   readJsonFile,
   type TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { getLockFileName } from '@nx/js';
 import { type AppConfig } from '@remix-run/dev';
 import { dirname, join } from 'path';
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import { loadViteDynamicImport } from '../utils/executor-utils';
-import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
-import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-
+import {
+  addBuildAndWatchDepsTargets,
+  isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
+} from '@nx/js/internal';
 export interface RemixPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
@@ -35,19 +38,6 @@ export interface RemixPluginOptions {
 }
 
 type RemixTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
-
-function readTargetsCache(
-  cachePath: string
-): Record<string, Record<string, TargetConfiguration>> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
-
-function writeTargetsToCache(
-  cachePath: string,
-  results: Record<string, RemixTargets>
-) {
-  writeJsonFile(cachePath, results);
-}
 
 /**
  * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
@@ -63,10 +53,10 @@ export const createNodes: CreateNodesV2<RemixPluginOptions> = [
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `remix-${optionsHash}.hash`);
-    const targetsCache = readTargetsCache(cachePath);
-    const pmc = getPackageManagerCommand(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const targetsCache = new PluginCache<RemixTargets>(cachePath);
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -76,14 +66,15 @@ export const createNodes: CreateNodesV2<RemixPluginOptions> = [
             context,
             targetsCache,
             _isUsingTsSolutionSetup(),
-            pmc
+            pmc,
+            lockFileName
           ),
         configFilePaths,
         options,
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk();
     }
   },
 ];
@@ -94,9 +85,10 @@ async function createNodesInternal(
   configFilePath: string,
   options: RemixPluginOptions,
   context: CreateNodesContextV2,
-  targetsCache: Record<string, RemixTargets>,
+  targetsCache: PluginCache<RemixTargets>,
   isUsingTsSolutionSetup: boolean,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  lockFileName: string
 ) {
   const projectRoot = dirname(configFilePath);
   const fullyQualifiedProjectRoot = join(context.workspaceRoot, projectRoot);
@@ -125,21 +117,26 @@ async function createNodesInternal(
       projectRoot,
       { ...options, isUsingTsSolutionSetup },
       context,
-      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+      [lockFileName]
     )) + configFilePath;
 
-  targetsCache[hash] ??= await buildRemixTargets(
-    configFilePath,
-    projectRoot,
-    options,
-    context,
-    siblingFiles,
-    remixCompiler,
-    isUsingTsSolutionSetup,
-    pmc
-  );
+  if (!targetsCache.has(hash)) {
+    targetsCache.set(
+      hash,
+      await buildRemixTargets(
+        configFilePath,
+        projectRoot,
+        options,
+        context,
+        siblingFiles,
+        remixCompiler,
+        isUsingTsSolutionSetup,
+        pmc
+      )
+    );
+  }
 
-  const { targets, metadata } = targetsCache[hash];
+  const { targets, metadata } = targetsCache.get(hash);
 
   const project: ProjectConfiguration = {
     root: projectRoot,

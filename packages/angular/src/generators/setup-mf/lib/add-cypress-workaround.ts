@@ -10,7 +10,7 @@ import {
   readProjectConfiguration,
   stripIndents,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import type { Schema } from '../schema';
 
 export function addCypressOnErrorWorkaround(tree: Tree, schema: Schema) {

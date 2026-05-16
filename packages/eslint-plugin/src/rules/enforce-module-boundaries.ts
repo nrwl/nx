@@ -11,7 +11,7 @@ import {
   ESLintUtils,
   TSESTree,
 } from '@typescript-eslint/utils';
-import { isBuiltinModuleImport } from '@nx/js/src/internal';
+import { isBuiltinModuleImport } from '@nx/js/internal';
 import { isRelativePath } from 'nx/src/utils/fileutils';
 import { basename, dirname, join, relative, resolve } from 'path';
 import {

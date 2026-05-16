@@ -1,7 +1,7 @@
 import { ExecutorContext, logger } from '@nx/devkit';
-import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
+import { createAsyncIterable } from '@nx/devkit/internal';
 import { printDiagnostics, runTypeCheck } from '@nx/js';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import {
   Compiler,
   MultiCompiler,
@@ -16,11 +16,14 @@ import { createCompiler, isMultiCompiler } from '../../utils/create-compiler';
 import { isMode } from '../../utils/mode-utils';
 import { normalizeOptions } from './lib/normalize-options';
 import { RspackExecutorSchema } from './schema';
+import { warnRspackExecutorDeprecation } from '../../utils/deprecation';
 
 export default async function* runExecutor(
   options: RspackExecutorSchema,
   context: ExecutorContext
 ) {
+  warnRspackExecutorDeprecation();
+
   process.env.NODE_ENV ??= options.mode ?? 'production';
   options.target ??= 'web';
 

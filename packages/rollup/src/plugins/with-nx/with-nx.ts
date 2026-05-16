@@ -7,18 +7,16 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { isAbsolute, resolve } from 'path';
-import { typeDefinitions } from '@nx/js/src/plugins/rollup/type-definitions';
 import {
   calculateProjectBuildableDependencies,
   computeCompilerOptionsPaths,
   createTmpTsConfig,
   DependentBuildableProjectNode,
-} from '@nx/js/src/utils/buildable-libs-utils';
-import {
   getProjectSourceRoot,
   isUsingTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { resolvePathsBaseUrl } from '@nx/js/src/utils/typescript/ts-config';
+} from '@nx/js/internal';
+import { typeDefinitions } from './type-definitions';
+import { resolvePathsBaseUrl } from '@nx/js';
 import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import autoprefixer from 'autoprefixer';
@@ -254,43 +252,24 @@ export function withNx(
       }),
       image(),
       json(),
-      // TypeScript compilation and declaration generation
-      options.useLegacyTypescriptPlugin === true
-        ? (() => {
-            // TODO(v23): Remove in Nx 23
-            // Show deprecation warning
-            logger.warn(
-              `rollup-plugin-typescript2 is deprecated and will be removed in Nx 23. ` +
-                `You are explicitly using it with 'useLegacyTypescriptPlugin: true'. ` +
-                `Consider removing this option to use the official @rollup/plugin-typescript.`
-            );
-
-            return require('rollup-plugin-typescript2')({
-              check: !options.skipTypeCheck,
-              tsconfig: tsConfigPath,
-              tsconfigOverride: {
-                compilerOptions,
-              },
-            });
-          })()
-        : (() => {
-            // @rollup/plugin-typescript needs outDir and declarationDir to match Rollup's output directory
-            const { outDir, declarationDir, ...tsCompilerOptions } =
-              compilerOptions;
-            const rollupOutputDir = Array.isArray(finalConfig.output)
-              ? finalConfig.output[0].dir
-              : finalConfig.output.dir;
-            return require('@rollup/plugin-typescript')({
-              tsconfig: tsConfigPath,
-              compilerOptions: {
-                ...tsCompilerOptions,
-                composite: false,
-                outDir: rollupOutputDir,
-                declarationDir: rollupOutputDir,
-                noEmitOnError: !options.skipTypeCheck,
-              },
-            });
-          })(),
+      (() => {
+        // @rollup/plugin-typescript needs outDir and declarationDir to match Rollup's output directory
+        const { outDir, declarationDir, ...tsCompilerOptions } =
+          compilerOptions;
+        const rollupOutputDir = Array.isArray(finalConfig.output)
+          ? finalConfig.output[0].dir
+          : finalConfig.output.dir;
+        return require('@rollup/plugin-typescript')({
+          tsconfig: tsConfigPath,
+          compilerOptions: {
+            ...tsCompilerOptions,
+            composite: false,
+            outDir: rollupOutputDir,
+            declarationDir: rollupOutputDir,
+            noEmitOnError: !options.skipTypeCheck,
+          },
+        });
+      })(),
       typeDefinitions({
         projectRoot,
       }),

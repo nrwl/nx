@@ -42,7 +42,14 @@ const pages: Array<{ title: string; path: string }> = [
     title: '@nx/angular:ng-add',
     path: '/packages/angular/generators/ng-add',
   },
-  { title: '@nx/angular:ngrx', path: '/packages/angular/generators/ngrx' },
+  {
+    title: '@nx/angular:ngrx-root-store',
+    path: '/packages/angular/generators/ngrx-root-store',
+  },
+  {
+    title: '@nx/angular:ngrx-feature-store',
+    path: '/packages/angular/generators/ngrx-feature-store',
+  },
   { title: '@nx/angular:scam', path: '/packages/angular/generators/scam' },
   {
     title: '@nx/angular:scam-directive',

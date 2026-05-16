@@ -9,6 +9,7 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
+import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
 import { basename } from 'path';
 import type { Logger } from '../utilities/logger';
 import type {
@@ -104,14 +105,16 @@ export abstract class Migrator {
       return;
     }
 
-    const nxJson = readNxJson(this.tree);
-
-    nxJson.targetDefaults ??= {};
-    for (const target of targetNames) {
-      nxJson.targetDefaults[target] ??= {};
-      nxJson.targetDefaults[target].cache ??= true;
+    const nxJson = readNxJson(this.tree) ?? {};
+    for (const name of targetNames) {
+      const existing = findTargetDefault(nxJson.targetDefaults, {
+        target: name,
+      });
+      upsertTargetDefault(this.tree, nxJson, {
+        target: name,
+        cache: existing?.cache ?? true,
+      });
     }
-
     updateNxJson(this.tree, nxJson);
   }
 

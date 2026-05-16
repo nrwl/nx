@@ -1,4 +1,4 @@
-import { AssetGlob } from '@nx/js/src/utils/assets/assets';
+import { AssetGlob } from '@nx/js/internal';
 import * as esbuild from 'esbuild';
 
 type Compiler = 'babel' | 'swc';

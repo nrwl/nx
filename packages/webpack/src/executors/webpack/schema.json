@@ -5,6 +5,7 @@
   "description": "Build a project using webpack.",
   "cli": "nx",
   "type": "object",
+  "x-deprecated": "The `@nx/webpack:webpack` executor is deprecated and will be removed in Nx v24. Run `nx g @nx/webpack:convert-to-inferred` to migrate to the `@nx/webpack/plugin` inferred plugin. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.",
   "properties": {
     "crossOrigin": {
       "type": "string",

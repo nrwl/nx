@@ -1,5 +1,6 @@
 import {
   killProcessAndPorts,
+  reservePort,
   runCLI,
   runCommandUntil,
   runE2ETests,
@@ -27,10 +28,10 @@ describe('Angular Module Federation - Federated Libraries', () => {
     const module = uniq('module');
     const host = uniq('host');
 
-    const hostPort = 4200;
+    const hostPort = await reservePort();
 
     runCLI(
-      `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`
+      `generate @nx/angular:host ${host} --port=${hostPort} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`
     );
 
     runCLI(`generate @nx/js:lib ${lib} --no-interactive`);
@@ -101,10 +102,10 @@ describe('Angular Module Federation - Federated Libraries', () => {
     const childRemote = uniq('childremote');
     const module = uniq('module');
     const host = uniq('host');
-    const hostPort = 4200;
+    const hostPort = await reservePort();
 
     runCLI(
-      `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`
+      `generate @nx/angular:host ${host} --port=${hostPort} --remotes=${remote} --e2eTestRunner=cypress --no-interactive`
     );
 
     runCLI(`generate @nx/js:lib ${lib} --no-interactive`);

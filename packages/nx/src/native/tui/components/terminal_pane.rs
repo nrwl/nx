@@ -20,6 +20,7 @@ use crate::native::tui::theme::THEME;
 use crate::native::tui::utils::{
     format_duration_with_estimate, get_task_status_icon, get_task_status_style,
 };
+use crate::native::tui::vt100_adapter::Vt100CttScreen;
 use crate::native::tui::{action::Action, pty::PtyInstance};
 
 /// Configuration for terminal pane layout and display constants
@@ -685,7 +686,8 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                         ScrollbarState::default()
                     };
 
-                    let pseudo_term = PseudoTerminal::new(&*screen).block(block);
+                    let pseudo_term =
+                        PseudoTerminal::new(Vt100CttScreen::wrap(&screen)).block(block);
                     Widget::render(pseudo_term, safe_area, buf);
 
                     // Only render scrollbar if needed

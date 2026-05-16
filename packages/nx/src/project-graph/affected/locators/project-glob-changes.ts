@@ -1,5 +1,6 @@
 import { TouchedProjectLocator } from '../affected-project-graph-models';
 import { minimatch } from 'minimatch';
+import { readNxJson } from '../../../config/nx-json';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { join } from 'path';
 import { existsSync } from 'fs';
@@ -20,7 +21,9 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
           'package.json',
         ]);
       }
-      const plugins = (await getPlugins()).filter((p) => !!p.createNodes);
+      const plugins = (await getPlugins(readNxJson(workspaceRoot))).filter(
+        (p) => !!p.createNodes
+      );
       return combineGlobPatterns(getGlobPatternsOfPlugins(plugins));
     })();
 

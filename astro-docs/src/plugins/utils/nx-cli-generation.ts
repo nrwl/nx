@@ -110,23 +110,29 @@ function flattenCommands(
 ): FlattenedCommand[] {
   const allCommands: FlattenedCommand[] = [];
 
-  for (const [cmdName, cmd] of Object.entries(commands)) {
-    allCommands.push({ fullName: cmdName, cmd });
+  const visit = (
+    cmd: ParsedCliCommand,
+    fullName: string,
+    parentOptions?: ParsedCliCommand['options']
+  ) => {
+    allCommands.push({ fullName, cmd, parentOptions });
 
-    if (cmd.subcommands) {
-      for (const sub of cmd.subcommands) {
-        // For $0 (default command), use parent name; otherwise, combine parent and sub name
-        const subName =
-          sub.command?.startsWith('$0') || sub.name === '$0'
-            ? cmdName
-            : `${cmdName} ${sub.name}`;
-        allCommands.push({
-          fullName: subName,
-          cmd: sub,
-          parentOptions: cmd.options,
-        });
-      }
+    if (!cmd.subcommands) {
+      return;
     }
+
+    for (const sub of cmd.subcommands) {
+      // For $0 (default command), use parent name; otherwise, combine parent and sub name
+      const subName =
+        sub.command?.startsWith('$0') || sub.name === '$0'
+          ? fullName
+          : `${fullName} ${sub.name}`;
+      visit(sub, subName, cmd.options ?? []);
+    }
+  };
+
+  for (const [cmdName, cmd] of Object.entries(commands)) {
+    visit(cmd, cmdName);
   }
 
   return allCommands.sort((a, b) => a.fullName.localeCompare(b.fullName));

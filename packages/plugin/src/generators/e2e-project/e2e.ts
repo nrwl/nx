@@ -1,3 +1,4 @@
+import { determineProjectNameAndRootOptions } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   formatFiles,
@@ -17,21 +18,19 @@ import {
   type ProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { LinterType, lintProjectGenerator } from '@nx/eslint';
 import {
   addPropertyToJestConfig,
   configurationGenerator,
   findJestConfig,
 } from '@nx/jest';
-import { getRelativePathToRootTsConfig } from '@nx/js';
-import { setupVerdaccio } from '@nx/js/src/generators/setup-verdaccio/generator';
-import { addLocalRegistryScripts } from '@nx/js/src/utils/add-local-registry-scripts';
-import { normalizeLinterOption } from '@nx/js/src/utils/generator-prompts';
+import { getRelativePathToRootTsConfig, setupVerdaccio } from '@nx/js';
 import {
+  addLocalRegistryScripts,
+  normalizeLinterOption,
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+} from '@nx/js/internal';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { Schema } from './schema';

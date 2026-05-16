@@ -1,4 +1,8 @@
 import {
+  addBuildTargetDefaults,
+  readTargetDefaultsForTarget,
+} from '@nx/devkit/internal';
+import {
   ensurePackage,
   formatFiles,
   joinPathFragments,
@@ -13,7 +17,6 @@ import {
   type ProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { basename, dirname, join } from 'node:path/posix';
 import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
 import type { PackageJson } from 'nx/src/utils/package-json';
@@ -353,8 +356,10 @@ function mergeTargetDefaults(
 
   return mergeTargetConfigurations(
     projectTarget,
-    (projectTarget.executor
-      ? nxJson.targetDefaults?.[projectTarget.executor]
-      : undefined) ?? nxJson.targetDefaults?.[buildTarget]
+    readTargetDefaultsForTarget(
+      buildTarget,
+      nxJson.targetDefaults,
+      projectTarget.executor
+    )
   );
 }

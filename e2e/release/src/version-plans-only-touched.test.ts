@@ -85,12 +85,12 @@ describe('nx release version plans only touched', () => {
         groups: {
           'fixed-group': {
             projects: [pkg1, pkg2],
-            releaseTagPattern: 'v{version}',
+            releaseTag: { pattern: 'v{version}' },
           },
           'independent-group': {
             projects: [pkg3, pkg4, pkg5],
             projectsRelationship: 'independent',
-            releaseTagPattern: '{projectName}@{version}',
+            releaseTag: { pattern: '{projectName}@{version}' },
           },
         },
         version: {
@@ -108,6 +108,9 @@ describe('nx release version plans only touched', () => {
       'release plan minor -m "Should not happen due to no changed projects" --verbose',
       {
         silenceError: true,
+        // The "No version bumps were selected" message is emitted via
+        // output.warn (stderr); merge it into stdout for the snapshot.
+        redirectStderr: true,
       }
     );
 

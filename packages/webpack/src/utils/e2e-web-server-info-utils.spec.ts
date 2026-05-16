@@ -13,6 +13,7 @@ describe('getWebpackE2EWebServerInfo', () => {
 
     tree.write(`app/webpack.config.ts`, ``);
     tempFs.createFileSync(`app/webpack.config.ts`, ``);
+    tempFs.createFileSync('package-lock.json', '{}');
   });
 
   afterEach(() => {
@@ -46,6 +47,40 @@ describe('getWebpackE2EWebServerInfo', () => {
     `);
   });
 
+  it('should use array-shaped targetDefaults when no plugin is registered and plugins are not being used', async () => {
+    // ARRANGE
+    const nxJson = readNxJson(tree);
+    nxJson.plugins ??= [];
+    nxJson.targetDefaults = [
+      {
+        target: 'serve',
+        options: {
+          port: 4400,
+        },
+      },
+    ];
+    updateNxJson(tree, nxJson);
+
+    // ACT
+    const e2eWebServerInfo = await getWebpackE2EWebServerInfo(
+      tree,
+      'app',
+      'app/webpack.config.ts',
+      false
+    );
+
+    // ASSERT
+    expect(e2eWebServerInfo).toMatchInlineSnapshot(`
+      {
+        "e2eCiBaseUrl": "http://localhost:4400",
+        "e2eCiWebServerCommand": "npx nx run app:serve-static",
+        "e2eDevServerTarget": "app:serve",
+        "e2eWebServerAddress": "http://localhost:4400",
+        "e2eWebServerCommand": "npx nx run app:serve",
+      }
+    `);
+  });
+
   it('should use the default values of the plugin when the plugin is just a string', async () => {
     // ARRANGE
     const nxJson = readNxJson(tree);
@@ -67,6 +102,40 @@ describe('getWebpackE2EWebServerInfo', () => {
         "e2eCiWebServerCommand": "npx nx run app:serve-static",
         "e2eDevServerTarget": "app:serve",
         "e2eWebServerAddress": "http://localhost:4200",
+        "e2eWebServerCommand": "npx nx run app:serve",
+      }
+    `);
+  });
+
+  it('should use array-shaped targetDefaults when the plugin is just a string', async () => {
+    // ARRANGE
+    const nxJson = readNxJson(tree);
+    nxJson.plugins = ['@nx/webpack/plugin'];
+    nxJson.targetDefaults = [
+      {
+        target: 'serve',
+        options: {
+          port: 4500,
+        },
+      },
+    ];
+    updateNxJson(tree, nxJson);
+
+    // ACT
+    const e2eWebServerInfo = await getWebpackE2EWebServerInfo(
+      tree,
+      'app',
+      'app/webpack.config.ts',
+      true
+    );
+
+    // ASSERT
+    expect(e2eWebServerInfo).toMatchInlineSnapshot(`
+      {
+        "e2eCiBaseUrl": "http://localhost:4500",
+        "e2eCiWebServerCommand": "npx nx run app:serve-static",
+        "e2eDevServerTarget": "app:serve",
+        "e2eWebServerAddress": "http://localhost:4500",
         "e2eWebServerCommand": "npx nx run app:serve",
       }
     `);

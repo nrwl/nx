@@ -1,10 +1,10 @@
 import type { ExecutorContext } from '@nx/devkit';
-import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
+import { eachValueFrom } from '@nx/devkit/internal';
 import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
   type DependentBuildableProjectNode,
-} from '@nx/js/src/utils/buildable-libs-utils';
+} from '@nx/js/internal';
 import type { NgPackagr } from 'ng-packagr';
 import { join, resolve } from 'path';
 import { from } from 'rxjs';

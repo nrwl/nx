@@ -5,11 +5,13 @@ import {
   joinPathFragments,
   names,
 } from '@nx/devkit';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { addToNgModule, findModule } from '../utils';
 import { normalizeOptions } from './lib';
 import type { Schema } from './schema';
 
 export async function pipeGenerator(tree: Tree, rawOptions: Schema) {
+  assertSupportedAngularVersion(tree);
   const options = await normalizeOptions(tree, rawOptions);
 
   const pipeNames = names(options.name);

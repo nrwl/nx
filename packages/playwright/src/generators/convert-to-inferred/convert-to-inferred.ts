@@ -1,4 +1,8 @@
 import {
+  migrateProjectExecutorsToPlugin,
+  NoTargetsToMigrateError,
+} from '@nx/devkit/internal';
+import {
   createProjectGraphAsync,
   formatFiles,
   names,
@@ -6,10 +10,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { createNodesV2, PlaywrightPluginOptions } from '../../plugins/plugin';
-import {
-  migrateProjectExecutorsToPlugin,
-  NoTargetsToMigrateError,
-} from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
+import { assertSupportedPlaywrightVersion } from '../../utils/assert-supported-playwright-version';
 
 interface Schema {
   project?: string;
@@ -18,6 +19,8 @@ interface Schema {
 }
 
 export async function convertToInferred(tree: Tree, options: Schema) {
+  assertSupportedPlaywrightVersion(tree);
+
   const projectGraph = await createProjectGraphAsync();
   const migratedProjects =
     await migrateProjectExecutorsToPlugin<PlaywrightPluginOptions>(

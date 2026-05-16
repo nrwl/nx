@@ -83,7 +83,9 @@ export async function addLinterToCyProject(
       addDependenciesToPackageJson(
         tree,
         {},
-        { 'eslint-plugin-cypress': pkgVersions.eslintPluginCypressVersion }
+        { 'eslint-plugin-cypress': pkgVersions.eslintPluginCypressVersion },
+        undefined,
+        true
       )
     );
   }

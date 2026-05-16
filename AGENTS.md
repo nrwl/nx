@@ -86,6 +86,16 @@ If the prepush validation suite fails, please fix the issues before proceeding w
 code adheres to the project's standards and passes all tests. DO NOT make a new commit to fix these issues. Instead,
 amend the current commit.
 
+### Testing Changes in Other Repos
+
+To test a locally built Nx package in another repository (e.g., to verify a fix end-to-end):
+
+```bash
+pnpm copy-built-package --package nx --repo ../path/to/test-repo
+```
+
+This builds the package and copies it into the target repo's `node_modules`. It works for all packages including native Rust code.
+
 ### Testing Changes
 
 After code changes are made, first test the specific project where the changes were made:

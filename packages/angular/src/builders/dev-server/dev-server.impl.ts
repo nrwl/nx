@@ -9,7 +9,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { getRootTsConfigPath } from '@nx/js';
-import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
+import type { DependentBuildableProjectNode } from '@nx/js/internal';
 import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/src/plugins/webpack-nx-build-coordination-plugin';
 import { existsSync } from 'fs';
 import { readNxJson } from 'nx/src/config/configuration';

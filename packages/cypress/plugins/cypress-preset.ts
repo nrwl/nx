@@ -1,5 +1,5 @@
 import { workspaceRoot } from '@nx/devkit';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { execSync, spawn } from 'child_process';
 import { lstatSync } from 'fs';
 import { request as httpRequest } from 'http';

@@ -121,13 +121,34 @@ describe('js e2e', () => {
     });
     const originalNxJson = readFile('nx.json');
     updateJson('nx.json', (json) => {
-      json.targetDefaults.build = {
-        ...json.targetDefaults.build,
-        dependsOn: [
-          ...(json.targetDefaults.build?.dependsOn || []),
-          '^my-custom-build',
-        ],
-      };
+      if (Array.isArray(json.targetDefaults)) {
+        const idx = json.targetDefaults.findIndex(
+          (e) =>
+            e.target === 'build' &&
+            e.projects === undefined &&
+            e.source === undefined
+        );
+        const existing =
+          idx >= 0 ? json.targetDefaults[idx] : { target: 'build' };
+        const merged = {
+          ...existing,
+          dependsOn: [
+            ...((existing.dependsOn as string[] | undefined) ?? []),
+            '^my-custom-build',
+          ],
+        };
+        if (idx >= 0) json.targetDefaults[idx] = merged;
+        else json.targetDefaults.push(merged);
+      } else {
+        json.targetDefaults ??= {};
+        json.targetDefaults.build = {
+          ...json.targetDefaults.build,
+          dependsOn: [
+            ...(json.targetDefaults.build?.dependsOn || []),
+            '^my-custom-build',
+          ],
+        };
+      }
       return json;
     });
 

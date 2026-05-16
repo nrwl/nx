@@ -1,20 +1,32 @@
 import {
+  getInstalledPackageVersion,
+  loadConfigFile,
+} from '@nx/devkit/internal';
+import {
   getPackageManagerCommand,
   output,
   type ExecutorContext,
 } from '@nx/devkit';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { lt } from 'semver';
 import { getReporterOutputs } from '../../utils/reporters';
+import { minPlaywrightVersionForBlobReports } from '../../utils/versions';
 import type { Schema } from './schema';
 
 export async function mergeReportsExecutor(
   options: Schema,
   context: ExecutorContext
 ) {
+  const installed = getInstalledPackageVersion('@playwright/test');
+  if (installed && lt(installed, minPlaywrightVersionForBlobReports)) {
+    throw new Error(
+      `The "@nx/playwright:merge-reports" executor requires "@playwright/test" version ${minPlaywrightVersionForBlobReports} or greater (the version that introduced the "blob" reporter and the "merge-reports" CLI). You are currently using version ${installed}.`
+    );
+  }
+
   const { config, expectedSuites } = options;
 
   const projectRoot = join(

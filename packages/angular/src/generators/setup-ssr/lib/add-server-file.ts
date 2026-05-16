@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { generateFiles, readProjectConfiguration } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { join } from 'path';
 import { isZonelessApp } from '../../../utils/zoneless';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';

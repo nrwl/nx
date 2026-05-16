@@ -392,15 +392,13 @@ describe('React:CypressComponentTestConfiguration', () => {
     });
     await componentGenerator(tree, {
       name: 'some-cmp',
-      path: 'some-lib/src/lib/some-cmp',
+      path: 'some-lib/src/lib/some-cmp.js',
       style: 'scss',
-      js: true,
     });
     await componentGenerator(tree, {
       name: 'another-cmp',
-      path: 'some-lib/src/lib/another-cmp/another-cmp',
+      path: 'some-lib/src/lib/another-cmp/another-cmp.js',
       style: 'scss',
-      js: true,
     });
 
     useVite7ForCypressCT(tree);

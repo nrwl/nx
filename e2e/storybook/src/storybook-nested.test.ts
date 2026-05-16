@@ -4,6 +4,7 @@ import {
   getSelectedPackageManager,
   killPorts,
   readJson,
+  reservePort,
   runCLI,
   runCommandUntil,
   runCreateWorkspace,
@@ -49,11 +50,13 @@ describe('Storybook generators and executors for standalone workspaces - using R
   });
 
   describe('serve storybook', () => {
-    afterEach(() => killPorts(4400));
+    let storybookPort: number;
+    afterEach(() => storybookPort && killPorts(storybookPort));
 
     it('should serve a React based Storybook setup that uses Vite', async () => {
+      storybookPort = await reservePort();
       const p = await runCommandUntil(
-        `run ${appName}:storybook --port 4400`,
+        `run ${appName}:storybook --port ${storybookPort}`,
         (output) => {
           return /Storybook.*(started|ready)/gi.test(output);
         }

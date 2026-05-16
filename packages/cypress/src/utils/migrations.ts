@@ -5,7 +5,7 @@ import {
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 import { posix } from 'path';
 import type {
   Expression,

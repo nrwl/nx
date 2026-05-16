@@ -5,6 +5,7 @@ import {
   joinPathFragments,
   readProjectConfiguration,
 } from '@nx/devkit';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { isZonelessApp } from '../../utils/zoneless';
 import { addToNgModule } from '../utils';
 import { getInstalledAngularVersionInfo } from '../utils/version-utils';
@@ -17,6 +18,7 @@ import {
 import type { Schema } from './schema';
 
 export async function componentGenerator(tree: Tree, rawOptions: Schema) {
+  assertSupportedAngularVersion(tree);
   const options = await normalizeOptions(tree, rawOptions);
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);

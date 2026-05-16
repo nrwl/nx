@@ -1,3 +1,4 @@
+import { getCatalogManager } from '@nx/devkit/internal';
 import {
   detectPackageManager,
   PackageManager,
@@ -7,7 +8,6 @@ import {
   updateJson,
   workspaceRoot,
 } from '@nx/devkit';
-import { getCatalogManager } from '@nx/devkit/src/utils/catalog';
 import { exec } from 'node:child_process';
 import { join } from 'node:path';
 import { AfterAllProjectsVersioned, VersionActions } from 'nx/release';

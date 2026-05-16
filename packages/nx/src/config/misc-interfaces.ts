@@ -86,6 +86,7 @@ export interface MigrationsJsonEntry {
   description?: string;
   implementation?: string;
   factory?: string;
+  prompt?: string;
   requires?: Record<string, string>;
 }
 
@@ -97,7 +98,8 @@ export interface GeneratedMigrationDetails {
   version: string;
   package: string;
   description: string;
-  implementation: string;
+  implementation?: string;
+  prompt?: string;
 }
 
 export interface MigrationsJson {
@@ -177,6 +179,12 @@ export type TaskResult = {
   terminalOutput: string;
   startTime?: number;
   endTime?: number;
+  /**
+   * Explicit status. When set, takes precedence over `success`. Required for
+   * batch executors that need to distinguish `'skipped'` peers (tasks that
+   * never ran because a sibling failed) from real failures.
+   */
+  status?: 'success' | 'failure' | 'skipped';
 };
 export type BatchExecutorResult = Record<string, TaskResult>;
 export type BatchExecutorTaskResult = {

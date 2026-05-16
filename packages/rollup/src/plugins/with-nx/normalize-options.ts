@@ -7,7 +7,7 @@ import type {
   RollupWithNxPluginOptions,
 } from './with-nx-options';
 import { createEntryPoints } from '@nx/js';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export function normalizeOptions(
   projectRoot: string,
@@ -42,12 +42,7 @@ export function normalizeOptions(
     javascriptEnabled: options.javascriptEnabled ?? false,
     skipTypeCheck: options.skipTypeCheck ?? false,
     skipTypeField: options.skipTypeField ?? false,
-    /**
-     * TODO(v23): Update default to true
-     * This defaults to false for pure plugin usage to match what is the current behaviour for users
-     * However, this differs from the Rollup executor usage as it defaulted to `true` in the `schema.json`
-     */
-    buildLibsFromSource: options.buildLibsFromSource ?? false,
+    buildLibsFromSource: options.buildLibsFromSource ?? true,
   };
 }
 

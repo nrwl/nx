@@ -1,3 +1,4 @@
+import { createAsyncIterable } from '@nx/devkit/internal';
 import chalk from 'chalk';
 import { ChildProcess, fork } from 'child_process';
 import {
@@ -10,7 +11,6 @@ import {
   readTargetOptions,
   runExecutor,
 } from '@nx/devkit';
-import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { daemonClient } from 'nx/src/daemon/client/client';
 import { randomUUID } from 'crypto';
 import * as path from 'path';
@@ -25,6 +25,7 @@ import { fileExists } from 'nx/src/utils/fileutils';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import { detectModuleFormat } from './lib/detect-module-format';
 import { getOutputFileName } from './lib/output-file';
+import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
 
 interface ActiveTask {
   id: string;
@@ -321,7 +322,7 @@ export async function* nodeExecutor(
         additionalExitHandler = await daemonClient.registerFileWatcher(
           {
             watchProjects: [context.projectName],
-            includeDependentProjects: true,
+            includeDependencies: true,
           },
           async (err, data) => {
             if (err === 'reconnecting') {
@@ -487,16 +488,6 @@ function getFileToRun(
   }
 
   return join(context.root, buildOptions.outputPath, outputFileName);
-}
-
-function stripGlobToBaseDir(pathWithGlob: string): string {
-  const globIdx = pathWithGlob.search(/[*?[{(]/);
-  if (globIdx === -1) {
-    return pathWithGlob.replace(/[\\/]+$/, '');
-  }
-  const prefix = pathWithGlob.slice(0, globIdx);
-  const lastSep = Math.max(prefix.lastIndexOf('/'), prefix.lastIndexOf('\\'));
-  return lastSep === -1 ? '' : prefix.slice(0, lastSep);
 }
 
 function fileToRunCorrectPath(fileToRun: string): string {

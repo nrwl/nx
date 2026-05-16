@@ -1,4 +1,9 @@
 import {
+  calculateHashForCreateNodes,
+  loadConfigFile,
+  getNamedInputs,
+} from '@nx/devkit/internal';
+import {
   createNodesFromFiles,
   type CreateNodesContextV2,
   type CreateNodesV2,
@@ -10,11 +15,8 @@ import {
   type TargetConfiguration,
   type TargetDependencyConfig,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
-import { walkTsconfigExtendsChain } from '@nx/js/src/internal';
+import { walkTsconfigExtendsChain } from '@nx/js/internal';
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { minimatch } from 'minimatch';
 import { existsSync, readdirSync } from 'node:fs';
@@ -48,19 +50,26 @@ export const createNodes: CreateNodesV2<PlaywrightPluginOptions> = [
       `playwright-${optionsHash}.hash`
     );
     const pluginCache = new PluginCache<PlaywrightTargets>(cachePath);
-    const pmc = getPackageManagerCommand(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, pluginCache, pmc),
+          createNodesInternal(
+            configFile,
+            options,
+            context,
+            pluginCache,
+            pmc,
+            lockFileName
+          ),
         configFilePaths,
         options,
         context
       );
     } finally {
-      pluginCache.writeToDisk(cachePath);
+      pluginCache.writeToDisk();
     }
   },
 ];
@@ -72,7 +81,8 @@ async function createNodesInternal(
   options: PlaywrightPluginOptions,
   context: CreateNodesContextV2,
   pluginCache: PluginCache<PlaywrightTargets>,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  lockFileName: string
 ) {
   const projectRoot = dirname(configFilePath);
 
@@ -99,10 +109,7 @@ async function createNodesInternal(
       CI: process.env.CI,
     },
     context,
-    [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-      ...externalTsconfigInputs,
-    ]
+    [lockFileName, ...externalTsconfigInputs]
   );
 
   if (!pluginCache.has(hash)) {
@@ -312,7 +319,6 @@ async function buildPlaywrightTargets(
 
       dependsOn.push({
         target: targetName,
-        projects: 'self',
         params: 'forward',
         options: 'forward',
       });

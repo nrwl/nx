@@ -8,6 +8,8 @@ if (process.env.FORCE_COLOR === '0') {
   delete process.env.FORCE_COLOR;
 }
 
+// Must be the first import — see enable-compile-cache.ts.
+import '../src/utils/enable-compile-cache';
 import {
   findWorkspaceRoot,
   WorkspaceTypeAndRoot,
@@ -77,6 +79,7 @@ async function main() {
     process.argv[2] === '_migrate' ||
     process.argv[2] === 'init' ||
     process.argv[2] === 'configure-ai-agents' ||
+    process.argv[2] === 'mcp' ||
     (process.argv[2] === 'graph' && !workspace)
   ) {
     process.env.NX_DAEMON = 'false';

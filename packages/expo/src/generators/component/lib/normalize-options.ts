@@ -2,11 +2,11 @@ import { getProjects, logger, names, Tree } from '@nx/devkit';
 import {
   determineArtifactNameAndDirectoryOptions,
   type FileExtensionType,
-} from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+} from '@nx/devkit/internal';
 import { Schema } from '../schema';
-import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectType } from '@nx/js/internal';
 
-export interface NormalizedSchema extends Omit<Schema, 'js'> {
+export interface NormalizedSchema extends Schema {
   directory: string;
   projectSourceRoot: string;
   fileName: string;
@@ -34,8 +34,7 @@ export async function normalizeOptions(
     name: options.name,
     path: options.path,
     allowedFileExtensions: ['js', 'jsx', 'ts', 'tsx'],
-    fileExtension: options.js ? 'js' : 'tsx',
-    js: options.js,
+    fileExtension: 'tsx',
   });
 
   const { className } = names(name);

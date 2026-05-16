@@ -21,5 +21,5 @@
       "inputs": ["copyReadme"]
     }
   },
-  "implicitDependencies": ["vite", "storybook", "playwright"]
+  "implicitDependencies": ["vite", "storybook", "playwright", "jest"]
 }

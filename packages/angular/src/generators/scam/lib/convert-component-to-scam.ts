@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { insertImport } from '@nx/js';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 import type { NormalizedSchema } from '../schema';
 
 let tsModule: typeof import('typescript');

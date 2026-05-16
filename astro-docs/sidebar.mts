@@ -865,6 +865,10 @@ const knowledgeBaseGroups: SidebarItems = [
             label: 'Heartbeat and manual shutdown handling',
             link: 'concepts/ci-concepts/heartbeat-and-manual-shutdown-handling',
           },
+          {
+            label: 'Fix sandbox violations',
+            link: 'guides/nx-cloud/fix-sandbox-violations',
+          },
         ],
       },
       {

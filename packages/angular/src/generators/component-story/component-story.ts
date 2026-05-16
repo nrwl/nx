@@ -1,5 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { formatFiles, generateFiles, joinPathFragments } from '@nx/devkit';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { getComponentProps } from '../utils/storybook-ast/storybook-inputs';
 import type { ComponentStoryGeneratorOptions } from './schema';
 
@@ -7,6 +8,7 @@ export async function componentStoryGenerator(
   tree: Tree,
   options: ComponentStoryGeneratorOptions
 ): Promise<void> {
+  assertSupportedAngularVersion(tree);
   const { componentFileName, componentName, componentPath, projectPath } =
     options;
 

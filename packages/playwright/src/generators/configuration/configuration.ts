@@ -1,4 +1,10 @@
 import {
+  findTargetDefault,
+  resolveImportPath,
+  promptWhenInteractive,
+  upsertTargetDefault,
+} from '@nx/devkit/internal';
+import {
   addDependenciesToPackageJson,
   formatFiles,
   generateFiles,
@@ -11,6 +17,7 @@ import {
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
+  type TargetConfiguration,
   toJS,
   Tree,
   updateJson,
@@ -19,20 +26,20 @@ import {
   workspaceRoot,
   writeJson,
 } from '@nx/devkit';
-import { resolveImportPath } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { getRelativePathToRootTsConfig } from '@nx/js';
-import { normalizeLinterOption } from '@nx/js/src/utils/generator-prompts';
 import {
+  normalizeLinterOption,
   getProjectPackageManagerWorkspaceState,
   getProjectPackageManagerWorkspaceStateWarningTask,
-} from '@nx/js/src/utils/package-manager-workspaces';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+  ensureTypescript,
+  isUsingTsSolutionSetup,
+} from '@nx/js/internal';
+import { warnPlaywrightExecutorGenerating } from '../../utils/deprecation';
 import { execSync } from 'child_process';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
 import { addLinterToPlaywrightProject } from '../../utils/add-linter';
+import { assertSupportedPlaywrightVersion } from '../../utils/assert-supported-playwright-version';
 import { nxVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
 import type {
@@ -52,6 +59,8 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   rawOptions: ConfigurationGeneratorSchema
 ) {
+  assertSupportedPlaywrightVersion(tree);
+
   const options = await normalizeOptions(tree, rawOptions);
 
   const tasks: GeneratorCallback[] = [];
@@ -197,6 +206,7 @@ export async function configurationGeneratorInternal(
   );
 
   if (!hasPlugin) {
+    warnPlaywrightExecutorGenerating();
     addE2eTarget(tree, options);
     setupE2ETargetDefaults(tree);
   }
@@ -357,17 +367,31 @@ function setupE2ETargetDefaults(tree: Tree) {
   }
 
   // E2e targets depend on all their project's sources + production sources of dependencies
-  nxJson.targetDefaults ??= {};
-
   const productionFileSet = !!nxJson.namedInputs?.production;
-  nxJson.targetDefaults.e2e ??= {};
-  nxJson.targetDefaults.e2e.cache ??= true;
-  nxJson.targetDefaults.e2e.inputs ??= [
-    'default',
-    productionFileSet ? '^production' : '^default',
-  ];
-
-  updateNxJson(tree, nxJson);
+  // Either a `target: 'e2e'` default or a default keyed on the executor
+  // we're about to scaffold will apply to the new target — consider both
+  // before deciding to add cache/inputs. Target-keyed wins when both are
+  // present.
+  const existingForTarget = findTargetDefault(nxJson.targetDefaults, {
+    target: 'e2e',
+  });
+  const existingForExecutor = findTargetDefault(nxJson.targetDefaults, {
+    executor: '@nx/playwright:playwright',
+  });
+  const existingCache = existingForTarget?.cache ?? existingForExecutor?.cache;
+  const existingInputs =
+    existingForTarget?.inputs ?? existingForExecutor?.inputs;
+  const patch: Partial<TargetConfiguration> = {};
+  if (existingCache === undefined) {
+    patch.cache = true;
+  }
+  if (existingInputs === undefined) {
+    patch.inputs = ['default', productionFileSet ? '^production' : '^default'];
+  }
+  if (Object.keys(patch).length > 0) {
+    upsertTargetDefault(tree, nxJson, { target: 'e2e', ...patch });
+    updateNxJson(tree, nxJson);
+  }
 }
 
 function addE2eTarget(tree: Tree, options: ConfigurationGeneratorSchema) {

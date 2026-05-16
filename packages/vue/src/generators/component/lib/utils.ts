@@ -1,3 +1,4 @@
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
 import {
   applyChangesToString,
   getProjects,
@@ -7,13 +8,9 @@ import {
   Tree,
 } from '@nx/devkit';
 import { parse, relative, dirname } from 'path';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
-
+import { ensureTypescript, getProjectType } from '@nx/js/internal';
 import { NormalizedSchema, ComponentGeneratorSchema } from '../schema';
 import { addImport } from '../../../utils/ast-utils';
-import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
-
 let tsModule: typeof import('typescript');
 
 export async function normalizeOptions(

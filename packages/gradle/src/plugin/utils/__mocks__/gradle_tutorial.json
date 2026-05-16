@@ -276,52 +276,42 @@
           "dependsOn": [
             {
               "target": "ci--DemoApplicationTest10",
-              "projects": "self",
               "params": "forward"
             },
             {
               "target": "ci--DemoApplicationTest7",
-              "projects": "self",
               "params": "forward"
             },
             {
               "target": "ci--DemoApplicationTest6",
-              "projects": "self",
               "params": "forward"
             },
             {
               "target": "ci--DemoApplicationTest3",
-              "projects": "self",
               "params": "forward"
             },
             {
               "target": "ci--DemoApplicationTest2",
-              "projects": "self",
               "params": "forward"
             },
             {
               "target": "ci--DemoApplicationTest9",
-              "projects": "self",
               "params": "forward"
             },
             {
               "target": "ci--DemoApplicationTest",
-              "projects": "self",
               "params": "forward"
             },
             {
               "target": "ci--DemoApplicationTest5",
-              "projects": "self",
               "params": "forward"
             },
             {
               "target": "ci--DemoApplicationTest4",
-              "projects": "self",
               "params": "forward"
             },
             {
               "target": "ci--DemoApplicationTest8",
-              "projects": "self",
               "params": "forward"
             }
           ],

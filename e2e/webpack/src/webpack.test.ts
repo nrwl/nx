@@ -332,7 +332,7 @@ describe('Webpack Plugin', () => {
     const myPkg = uniq('my-pkg');
 
     runCLI(
-      `generate @nx/web:application ${appName} --directory=apps/${appName}`
+      `generate @nx/web:application ${appName} --directory=apps/${appName} --bundler=webpack`
     );
 
     runCLI(

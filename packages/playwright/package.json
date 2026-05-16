@@ -38,13 +38,14 @@
     "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
     "tslib": "catalog:typescript",
-    "minimatch": "catalog:"
+    "minimatch": "catalog:",
+    "semver": "catalog:"
   },
   "devDependencies": {
     "nx": "workspace:*"
   },
   "peerDependencies": {
-    "@playwright/test": "^1.36.0"
+    "@playwright/test": "catalog:"
   },
   "peerDependenciesMeta": {
     "@playwright/test": {

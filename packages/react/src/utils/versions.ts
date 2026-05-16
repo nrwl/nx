@@ -16,7 +16,7 @@ export const typesReactIsVersion = '^19.0.0';
 export const reactViteVersion = '^4.2.0';
 
 // Needed for React-Router
-export const typesNodeVersion = '^20.0.0';
+export const typesNodeVersion = '^22.0.0';
 
 export const babelPresetReactVersion = '^7.14.5';
 export const babelCoreVersion = '^7.14.5';
@@ -51,7 +51,7 @@ export const moduleFederationNodeVersion = '^2.7.21';
 export const moduleFederationEnhancedVersion = '^2.1.0';
 
 // style preprocessors
-export const sassVersion = '^1.55.0';
+export const sassVersion = '^1.97.2';
 
 // rollup plugins (if needed)
 export const rollupPluginUrlVersion = '^8.0.2';

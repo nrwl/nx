@@ -32,20 +32,20 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
+    "@phenomnomnominal/tsquery": "catalog:typescript",
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-image": "^3.0.3",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^12.1.0",
-    "autoprefixer": "^10.4.9",
+    "autoprefixer": "catalog:css",
     "concat-with-sourcemaps": "^1.1.0",
     "picocolors": "catalog:",
     "picomatch": "catalog:",
-    "postcss": "^8.4.38",
+    "postcss": "catalog:css",
     "postcss-modules": "^6.0.1",
     "rollup": "^4.14.0",
-    "rollup-plugin-typescript2": "^0.36.0",
     "tslib": "catalog:typescript"
   },
   "devDependencies": {

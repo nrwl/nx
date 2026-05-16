@@ -7,7 +7,7 @@ import {
   Tree,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { nxVersion } from 'nx/src/utils/versions';
 import { getActualBundler, isComponent } from '../../../utils/ct-utils';
 import { componentTestGenerator } from '../../component-test/component-test';

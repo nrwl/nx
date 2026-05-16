@@ -1,5 +1,5 @@
 import { merge } from 'webpack-merge';
-import { registerTsProject } from '@nx/js/src/internal';
+import { registerTsProject } from '@nx/js/internal';
 import { workspaceRoot } from '@nx/devkit';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';

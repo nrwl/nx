@@ -1,7 +1,11 @@
 import { join } from 'node:path';
 
 import { shouldMergeAngularProjects } from '../../adapter/angular-json';
-import { PluginConfiguration, readNxJson } from '../../config/nx-json';
+import {
+  NxJsonConfiguration,
+  PluginConfiguration,
+  readNxJson,
+} from '../../config/nx-json';
 import { hashObject } from '../../hasher/file-hasher';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { loadNxPlugin } from './in-process-loader';
@@ -42,9 +46,13 @@ const loadingMethod = (
  * Specified plugins come first, followed by default plugins.
  */
 export async function getPlugins(
+  nxJson: NxJsonConfiguration,
   root = workspaceRoot
 ): Promise<LoadedNxPlugin[]> {
-  const { specifiedPlugins, defaultPlugins } = await getPluginsSeparated(root);
+  const { specifiedPlugins, defaultPlugins } = await getPluginsSeparated(
+    nxJson,
+    root
+  );
   return specifiedPlugins.concat(defaultPlugins);
 }
 
@@ -53,11 +61,16 @@ export async function getPlugins(
  * package.json, etc.) as separate arrays. This separation is needed for
  * two-phase project configuration processing where target defaults are
  * applied between specified and default plugin results.
+ *
+ * `nxJson` is required so callers control the snapshot of nx.json the plugin
+ * loader uses. This matters for the daemon's freshness-gated recompute, where
+ * the snap hash and the plugin set must reflect the same disk state.
  */
 export async function getPluginsSeparated(
+  nxJson: NxJsonConfiguration,
   root = workspaceRoot
 ): Promise<SeparatedPlugins> {
-  const pluginsConfiguration = readNxJson(root).plugins ?? [];
+  const pluginsConfiguration = nxJson.plugins ?? [];
   const pluginsConfigurationHash = hashObject(pluginsConfiguration);
 
   // If the plugins configuration has not changed, reuse the current plugins
@@ -68,6 +81,13 @@ export async function getPluginsSeparated(
     return cachedSeparatedPlugins;
   }
 
+  // Plugins config changed (e.g. `nx add @nx/maven` updated nx.json). The
+  // cached SeparatedPlugins is invalidated by the early-return above, but
+  // pendingPluginsPromise — the in-flight load — would otherwise be reused
+  // by the `??=` below and serve the previous plugin set forever. Tear
+  // down the old workers and force a fresh load.
+  cleanupSpecifiedPlugins?.();
+  pendingPluginsPromise = undefined;
   currentPluginsConfigurationHash = pluginsConfigurationHash;
   const results = await Promise.allSettled([
     getOnlyDefaultPlugins(root),

@@ -6,6 +6,7 @@ import { platform } from 'os';
 
 import { runCliStart } from '../start/start.impl';
 import { getCliOptions } from '../../utils/get-cli-options';
+import { warnReactNativeExecutorDeprecation } from '../../utils/deprecation';
 
 import { ReactNativeRunIosOptions } from './schema';
 export interface ReactNativeRunIosOutput {
@@ -16,6 +17,8 @@ export default async function* runIosExecutor(
   options: ReactNativeRunIosOptions,
   context: ExecutorContext
 ): AsyncGenerator<ReactNativeRunIosOutput> {
+  warnReactNativeExecutorDeprecation('run-ios');
+
   if (platform() !== 'darwin') {
     throw new Error(`The run-ios build requires Mac to run`);
   }

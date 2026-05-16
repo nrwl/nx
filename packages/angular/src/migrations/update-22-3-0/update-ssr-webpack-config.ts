@@ -4,7 +4,7 @@ import {
   type Tree,
   updateJson,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 import { readCompilerOptionsFromTsConfig } from '../../generators/utils/tsconfig-utils';
 import { FileChangeRecorder } from '../../utils/file-change-recorder';
 import { allTargetOptions } from '../../utils/targets';

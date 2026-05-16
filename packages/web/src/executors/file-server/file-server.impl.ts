@@ -14,7 +14,8 @@ import { join, resolve } from 'path';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
 import { daemonClient } from 'nx/src/daemon/client/client';
 import { interpolate } from 'nx/src/tasks-runner/utils';
-const detectPort = require('detect-port');
+import { stripGlobToBaseDir } from '@nx/js/internal';
+import detectPort from 'detect-port';
 
 // platform specific command name
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
@@ -100,11 +101,13 @@ function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
       const project = context.projectGraph.nodes[context.projectName];
       const buildTarget = project.data.targets[target.target];
       outputPath = buildTarget.outputs?.[0];
-      if (outputPath)
+      if (outputPath) {
         outputPath = interpolate(outputPath, {
           projectName: project.data.name,
           projectRoot: project.data.root,
         });
+        outputPath = stripGlobToBaseDir(outputPath);
+      }
     }
   } catch (e) {
     throw new Error(`Invalid buildTarget: ${options.buildTarget}`);
@@ -127,7 +130,7 @@ function createFileWatcher(
     {
       watchProjects: project ? [project] : 'all',
       includeGlobalWorkspaceFiles: true,
-      includeDependentProjects: true,
+      includeDependencies: true,
     },
     async (error, val) => {
       if (error === 'reconnecting') {

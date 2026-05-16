@@ -1,14 +1,14 @@
 import {
+  determineProjectNameAndRootOptions,
+  ensureRootProjectName,
+} from '@nx/devkit/internal';
+import {
   addProjectConfiguration,
   formatFiles,
   generateFiles,
   Tree,
   writeJson,
 } from '@nx/devkit';
-import {
-  determineProjectNameAndRootOptions,
-  ensureRootProjectName,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { join } from 'path';
 
 export interface ProjectOptions {

@@ -15,20 +15,16 @@ public static partial class TargetBuilder
         string fileName,
         string projectName,
         Dictionary<string, string> properties,
+        string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
         string productionInput,
         string defaultConfiguration,
         string description)
     {
-        var outputPath = GetOutputPath(properties, projectName, workspaceRoot);
-        var intermediatePath = GetIntermediateOutputPath(properties, projectName, workspaceRoot);
+        var outputPath = GetOutputPath(properties, projectName, projectDirectory, workspaceRoot);
+        var intermediatePath = GetIntermediateOutputPath(properties, projectName, projectDirectory, workspaceRoot);
         string[] defaultFlags = ["--no-restore", "--no-dependencies"];
-
-        // For artifacts output, paths are relative to workspace root
-        // For traditional output, paths are relative to project root
-        var useWorkspaceRoot = UsesArtifactsOutput(properties);
-        var outputPrefix = useWorkspaceRoot ? "{workspaceRoot}" : "{projectRoot}";
 
         var defaultArgs = defaultConfiguration == "Release"
             ? [.. defaultFlags, "--configuration", "Release"]
@@ -55,12 +51,17 @@ public static partial class TargetBuilder
             },
             DependsOn = [$"^{targetName}"],
             Cache = true,
-            Inputs = [productionInput, $"^{productionInput}", new { workingDirectory = "absolute" }],
-            Outputs =
+            Inputs =
             [
-                $"{outputPrefix}/{outputPath}",
-                $"{outputPrefix}/{intermediatePath}"
+                productionInput,
+                $"^{productionInput}",
+                "{workspaceRoot}/.editorconfig",
+                new { workingDirectory = "absolute" },
+                new { dependentTasksOutputFiles = "**/*" },
             ],
+            Outputs = new[] { outputPath, intermediatePath }
+                .Where(p => p is not null)
+                .ToArray()!,
             Metadata = new TargetMetadata
             {
                 Description = description,
@@ -75,6 +76,7 @@ public static partial class TargetBuilder
         string fileName,
         bool isTest,
         Dictionary<string, string> properties,
+        string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
         string productionInput)
@@ -85,6 +87,7 @@ public static partial class TargetBuilder
             fileName,
             projectName,
             properties,
+            projectDirectory,
             workspaceRoot,
             options,
             productionInput,
@@ -98,6 +101,7 @@ public static partial class TargetBuilder
         string fileName,
         bool isTest,
         Dictionary<string, string> properties,
+        string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
         string productionInput)
@@ -108,6 +112,7 @@ public static partial class TargetBuilder
             fileName,
             projectName,
             properties,
+            projectDirectory,
             workspaceRoot,
             options,
             productionInput,

@@ -1,4 +1,4 @@
-import { existsSync, statSync } from 'fs';
+import { existsSync } from 'fs';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
 import { deserialize, serialize } from 'v8';
@@ -13,6 +13,7 @@ import '../../utils/perf-logging';
 import { nxVersion } from '../../utils/versions';
 import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { readNxJson } from '../../config/nx-json';
 import { getPlugins } from '../../project-graph/plugins/get-plugins';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
 import { isNxVersionMismatch } from '../is-nx-version-mismatch';
@@ -24,6 +25,7 @@ import {
   isHandleResetConfigureAiAgentsStatusMessage,
   RESET_CONFIGURE_AI_AGENTS_STATUS,
 } from '../message-types/configure-ai-agents';
+import { applyDaemonEnvFromClient } from '../client/daemon-environment';
 import { isDaemonMessage } from '../message-types/daemon-message';
 import {
   FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
@@ -92,6 +94,7 @@ import {
   killSocketOrPath,
 } from '../socket-utils';
 import { registerFileChangeListener } from './file-watching/file-change-events';
+import { routeWorkspaceChanges } from './file-watching/route-workspace-changes';
 import {
   hasRegisteredFileWatcherSockets,
   registeredFileWatcherSockets,
@@ -137,7 +140,7 @@ import {
   processFileChangesInOutputs,
 } from './outputs-tracking';
 import {
-  addUpdatedAndDeletedFiles,
+  scheduleProjectGraphRecomputation,
   registerProjectGraphRecomputationListener,
   invalidateGraphCache,
 } from './project-graph-incremental-recomputation';
@@ -254,15 +257,8 @@ async function handleMessage(socket: Socket, data: string) {
   serverLogger.log(`Received ${mode} message of type ${payload.type}`);
 
   if (isDaemonMessage(payload) && payload.env) {
-    let shouldRecomputeGraph = false;
-    for (const key in payload.env) {
-      if (process.env[key] !== payload.env[key]) {
-        serverLogger.log(`Refreshing env var ${key} from client connection.`);
-        process.env[key] = payload.env[key];
-        shouldRecomputeGraph = true;
-      }
-    }
-    if (shouldRecomputeGraph) {
+    const envChanged = applyDaemonEnvFromClient(payload.env);
+    if (envChanged) {
       serverLogger.log('Graph recompute necessary due to env variable refresh');
       forwardEnvToPluginWorkers(payload.env);
       invalidateGraphCache();
@@ -628,58 +624,7 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
     }
 
     serverLogger.watcherLog(convertChangeEventsToLogMessage(changeEvents));
-
-    const updatedFilesToHash = [];
-    const createdFilesToHash = [];
-    const deletedFiles = [];
-
-    for (const event of changeEvents) {
-      if (event.type === 'delete') {
-        deletedFiles.push(event.path);
-      } else {
-        try {
-          const s = statSync(join(workspaceRoot, event.path));
-          if (s.isFile()) {
-            if (event.type === 'update') {
-              updatedFilesToHash.push(event.path);
-            } else {
-              createdFilesToHash.push(event.path);
-            }
-          }
-        } catch (e) {
-          // this can happen when the update file was deleted right after
-        }
-      }
-    }
-
-    const cap = 10;
-    const summarize = (files: string[]) =>
-      files.length === 0
-        ? '(none)'
-        : files.length <= cap
-          ? files.map((f) => `  - ${f}`).join('\n')
-          : files
-              .slice(0, cap)
-              .map((f) => `  - ${f}`)
-              .join('\n') + `\n  ... and ${files.length - cap} more`;
-    if (
-      createdFilesToHash.length ||
-      updatedFilesToHash.length ||
-      deletedFiles.length
-    ) {
-      serverLogger.watcherLog(
-        `File changes detected:\n` +
-          `Created:\n${summarize(createdFilesToHash)}\n` +
-          `Updated:\n${summarize(updatedFilesToHash)}\n` +
-          `Deleted:\n${summarize(deletedFiles)}`
-      );
-    }
-
-    addUpdatedAndDeletedFiles(
-      createdFilesToHash,
-      updatedFilesToHash,
-      deletedFiles
-    );
+    routeWorkspaceChanges(changeEvents);
   } catch (err) {
     serverLogger.watcherLog(`Unexpected workspace error`, err.message);
     console.error(err);
@@ -808,7 +753,7 @@ export async function startServer(): Promise<Server> {
           // register file change listener to invalidate sync generator cache
           registerFileChangeListener(clearSyncGeneratorsCache);
           // trigger an initial project graph recomputation
-          addUpdatedAndDeletedFiles([], [], []);
+          scheduleProjectGraphRecomputation([], [], []);
 
           // Kick off Nx Console check in background to prime the cache
           handleGetNxConsoleStatus().catch(() => {
@@ -831,7 +776,7 @@ export async function startServer(): Promise<Server> {
   });
 }
 function forwardEnvToPluginWorkers(env: Record<string, string>) {
-  getPlugins()
+  getPlugins(readNxJson(workspaceRoot))
     .then((plugins) => {
       for (const plugin of plugins) {
         plugin.setWorkerEnv?.(env)?.catch((e) => {

@@ -116,7 +116,7 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   performance.mark('retrieve-project-configurations:start');
   let configurationResult: ConfigurationResult;
   let projectConfigurationsError: ProjectConfigurationsError;
-  const separatedPlugins = await getPluginsSeparated();
+  const separatedPlugins = await getPluginsSeparated(nxJson);
   const plugins = separatedPlugins.specifiedPlugins.concat(
     separatedPlugins.defaultPlugins
   );
