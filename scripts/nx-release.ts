@@ -78,6 +78,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     'packages/angular-rspack-compiler',
     'packages/devkit',
     'packages/dotnet',
+    'packages/jest',
     'packages/js',
     'packages/maven',
     'packages/nx',

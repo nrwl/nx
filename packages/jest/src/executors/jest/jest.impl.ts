@@ -70,7 +70,7 @@ export async function parseJestConfig(
 
   // support passing extra args to jest cli supporting 3rd party plugins
   // like 'jest-runner-groups' --group arg
-  const schema = await import('./schema.json');
+  const schema = (await import('./schema.json')).default;
   const extraArgs = getExtraArgs(options, schema);
 
   const config: Config.Argv = {

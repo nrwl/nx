@@ -1,8 +1,8 @@
 {
-  "outDir": "dist/packages/jest",
+  "outDir": "packages/jest/dist",
   "assets": [
     { "glob": "**/@(files|files-angular)/**" },
-    { "glob": "@(package|executors|generators|migrations).json" },
+    { "glob": "src/**/schema.json" },
     { "glob": "src/**/schema.d.ts" },
     { "glob": "PLUGIN.md" },
     "LICENSE"
