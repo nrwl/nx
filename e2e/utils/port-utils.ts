@@ -126,14 +126,40 @@ export async function reservePort(start = RANGE_FLOOR): Promise<number> {
 }
 
 /**
- * Reserves `count` ports.
+ * Reserves `count` *consecutive* ports and returns them in ascending order.
+ *
+ * The contiguity matters: module federation e2e tests pass `ports[0]` as the
+ * host's `--devServerPort`, and the generator then wires the host to its
+ * remotes at `ports[0] + 1`, `+ 2`, ... — so the reserved ports must be a
+ * contiguous run for the host and remotes to line up.
  */
 export async function reservePorts(count: number): Promise<number[]> {
-  const ports: number[] = [];
-  for (let i = 0; i < count; i++) {
-    ports.push(await reservePort());
+  if (count <= 1) {
+    return count === 1 ? [await reservePort()] : [];
   }
-  return ports;
+  // Randomise the scan origin (same rationale as reservePort), then look for
+  // the first window of `count` consecutive ports that are all claimable and
+  // actually free.
+  const first = RANGE_FLOOR + Math.floor(Math.random() * SCAN_SPREAD);
+  for (let start = first; start + count <= RANGE_CEILING; start++) {
+    const claimed: number[] = [];
+    for (let port = start; port < start + count; port++) {
+      if (!claimLock(port)) break;
+      if (!(await isPortAvailable(port))) {
+        releaseLock(port);
+        break;
+      }
+      claimed.push(port);
+    }
+    if (claimed.length === count) {
+      return claimed;
+    }
+    // Window failed partway — release whatever we managed to claim in it.
+    for (const port of claimed) {
+      releaseLock(port);
+    }
+  }
+  throw new Error(`No available run of ${count} consecutive ports`);
 }
 
 /**
