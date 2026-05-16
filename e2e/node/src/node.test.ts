@@ -7,9 +7,9 @@ import {
   createFile,
   detectPackageManager,
   getPackageManagerCommand,
-  getRandomPort,
   killPorts,
   newProject,
+  reservePort,
   packageInstall,
   packageManagerLockFile,
   promisifiedTreeKill,
@@ -71,7 +71,7 @@ describe('Node Applications', () => {
 
   it('should be able to generate an empty application', async () => {
     const nodeapp = uniq('nodeapp');
-    const port = getRandomPort();
+    const port = await reservePort();
     process.env.PORT = `${port}`;
     runCLI(
       `generate @nx/node:app apps/${nodeapp} --port=${port} --linter=eslint --unitTestRunner=jest`
@@ -109,7 +109,7 @@ describe('Node Applications', () => {
 
   it('should be able to generate an empty application with additional entries', async () => {
     const nodeapp = uniq('nodeapp');
-    const port = getRandomPort();
+    const port = await reservePort();
     process.env.PORT = `${port}`;
     runCLI(
       `generate @nx/node:app apps/${nodeapp} --port=${port} --linter=eslint --bundler=webpack --unitTestRunner=jest`
@@ -542,7 +542,7 @@ ${jslib}();
   it('should remove previous output before building with the --deleteOutputPath option set', async () => {
     const appName = uniq('app');
 
-    const port = getRandomPort();
+    const port = await reservePort();
     process.env.PORT = `${port}`;
 
     runCLI(
@@ -561,11 +561,11 @@ ${jslib}();
     checkFilesExist(`dist/apps/_should_not_remove.txt`);
   }, 120000);
 
-  it('should support generating projects with the new name and root format', () => {
+  it('should support generating projects with the new name and root format', async () => {
     const appName = uniq('app1');
     const libName = uniq('@my-org/lib1');
 
-    const port = getRandomPort();
+    const port = await reservePort();
     process.env.PORT = `${port}`;
 
     runCLI(

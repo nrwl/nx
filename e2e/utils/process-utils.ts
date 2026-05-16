@@ -60,6 +60,11 @@ export async function killProcessAndPorts(
 /**
  * Generates a random port number between 1024 and 9999.
  * Ports below 1024 are reserved for system services.
+ *
+ * @deprecated Use `reservePort` from `port-utils`. This returns a random port
+ * without checking availability or coordinating with parallel e2e processes —
+ * its range overlaps `reservePort`'s, so the two schemes can hand out the same
+ * port and cause EADDRINUSE.
  */
 export function getRandomPort() {
   return Math.floor(1024 + Math.random() * 8976);
