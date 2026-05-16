@@ -16,7 +16,7 @@
       "factory": "./dist/src/migrations/update-22-1-0/remove-redundant-ts-project-references"
     },
     "23-0-0-rewrite-internal-subpath-imports": {
-      "version": "23.0.0-beta.12",
+      "version": "23.0.0-beta.14",
       "description": "Rewrites `@nx/js/src/*` subpath imports to the new `@nx/js/internal` entry. The `./src/*` wildcard has been removed from `@nx/js`'s exports map; `@nx/js/src/release/version-actions` is preserved as a non-wildcard entry for back-compat with existing nx.json release configs. If a rewritten import resolves to a symbol that lives on the public `@nx/js` entry (e.g. `libraryGenerator`, `extractTsConfigBase`, `resolvePathsBaseUrl`), change the specifier to `@nx/js`.",
       "factory": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
     }
