@@ -8,11 +8,35 @@ import {
   type Tree,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
-import type { CallExpression, Node, SourceFile } from 'typescript';
+import type {
+  CallExpression,
+  ExportDeclaration,
+  ExportSpecifier,
+  ImportDeclaration,
+  ImportSpecifier,
+  Node,
+  SourceFile,
+  StringLiteral,
+} from 'typescript';
 
 const TS_EXTENSIONS = ['.ts', '.tsx', '.cts', '.mts'] as const;
 const FROM_PREFIX = '@nx/jest/src/';
-const TO_SPECIFIER = '@nx/jest/internal';
+const TO_PUBLIC = '@nx/jest';
+const TO_INTERNAL = '@nx/jest/internal';
+
+// Symbols exported from `@nx/jest`'s public entry (packages/jest/index.ts).
+// A named import/export of one of these from `@nx/jest/src/*` is routed to
+// the public `@nx/jest` entry; everything else goes to `@nx/jest/internal`.
+const PUBLIC_SYMBOLS: ReadonlySet<string> = new Set([
+  'configurationGenerator',
+  'jestProjectGenerator',
+  'jestInitGenerator',
+  'addPropertyToJestConfig',
+  'removePropertyFromJestConfig',
+  'jestConfigObjectAst',
+  'getJestProjectsAsync',
+  'findJestConfig',
+]);
 
 // Methods on `jest` and `vi` that take a module specifier as their first arg.
 const MOCK_HELPER_METHODS: ReadonlySet<string> = new Set([
@@ -50,7 +74,8 @@ export default async function rewriteInternalSubpathImports(
 
   if (touchedCount > 0) {
     logger.info(
-      `Rewrote @nx/jest/src/* imports to @nx/jest/internal in ${touchedCount} file(s).`
+      `Rewrote @nx/jest/src/* imports in ${touchedCount} file(s) ` +
+        `(public symbols to @nx/jest, internals to @nx/jest/internal).`
     );
   }
 
@@ -68,26 +93,135 @@ export function rewriteSubpathImports(source: string): string {
   );
 
   const changes: StringChange[] = [];
-  collectImportRewrites(sourceFile, changes);
+  for (const stmt of sourceFile.statements) {
+    if (ts.isImportDeclaration(stmt)) {
+      collectImportRewrite(sourceFile, stmt, changes);
+    } else if (ts.isExportDeclaration(stmt)) {
+      collectExportRewrite(sourceFile, stmt, changes);
+    }
+  }
   collectCallExpressionRewrites(sourceFile, changes);
 
   return changes.length > 0 ? applyChangesToString(source, changes) : source;
 }
 
-function shouldRewriteSpecifier(specifier: string): boolean {
-  return specifier.startsWith(FROM_PREFIX);
+function isSubpathSpecifier(node: Node): node is StringLiteral {
+  return ts!.isStringLiteral(node) && node.text.startsWith(FROM_PREFIX);
 }
 
-function collectImportRewrites(
+function collectImportRewrite(
   sourceFile: SourceFile,
+  stmt: ImportDeclaration,
   changes: StringChange[]
 ): void {
-  for (const stmt of sourceFile.statements) {
-    if (!ts!.isImportDeclaration(stmt)) continue;
-    if (!ts!.isStringLiteral(stmt.moduleSpecifier)) continue;
-    if (!shouldRewriteSpecifier(stmt.moduleSpecifier.text)) continue;
-    replaceSpecifier(sourceFile, stmt.moduleSpecifier, changes);
+  if (!isSubpathSpecifier(stmt.moduleSpecifier)) {
+    return;
   }
+  const clause = stmt.importClause;
+  // Pure named imports (`import { a, b } from '...'`) can be split by symbol.
+  // A default or namespace import grabs the whole module, so it can't be
+  // split — route it wholesale to the internal entry.
+  if (
+    clause &&
+    !clause.name &&
+    clause.namedBindings &&
+    ts!.isNamedImports(clause.namedBindings)
+  ) {
+    rewriteNamedDeclaration(
+      sourceFile,
+      stmt,
+      stmt.moduleSpecifier,
+      clause.isTypeOnly,
+      clause.namedBindings.elements,
+      'import',
+      changes
+    );
+    return;
+  }
+  replaceSpecifier(sourceFile, stmt.moduleSpecifier, TO_INTERNAL, changes);
+}
+
+function collectExportRewrite(
+  sourceFile: SourceFile,
+  stmt: ExportDeclaration,
+  changes: StringChange[]
+): void {
+  if (!stmt.moduleSpecifier || !isSubpathSpecifier(stmt.moduleSpecifier)) {
+    return;
+  }
+  // `export { a, b } from '...'` can be split; `export * from '...'` cannot.
+  if (stmt.exportClause && ts!.isNamedExports(stmt.exportClause)) {
+    rewriteNamedDeclaration(
+      sourceFile,
+      stmt,
+      stmt.moduleSpecifier,
+      stmt.isTypeOnly,
+      stmt.exportClause.elements,
+      'export',
+      changes
+    );
+    return;
+  }
+  replaceSpecifier(sourceFile, stmt.moduleSpecifier, TO_INTERNAL, changes);
+}
+
+/**
+ * Partition the named bindings of an import/export declaration into the ones
+ * that resolve to `@nx/jest`'s public entry and the ones that don't. If both
+ * groups are non-empty, the single declaration is split into two.
+ */
+function rewriteNamedDeclaration(
+  sourceFile: SourceFile,
+  decl: ImportDeclaration | ExportDeclaration,
+  specifier: StringLiteral,
+  isTypeOnly: boolean,
+  elements: readonly (ImportSpecifier | ExportSpecifier)[],
+  keyword: 'import' | 'export',
+  changes: StringChange[]
+): void {
+  const publicEls: (ImportSpecifier | ExportSpecifier)[] = [];
+  const internalEls: (ImportSpecifier | ExportSpecifier)[] = [];
+  for (const el of elements) {
+    // `propertyName` is the original name in `orig as alias`; fall back to
+    // `name` for the plain `orig` form.
+    const importedName = (el.propertyName ?? el.name).text;
+    (PUBLIC_SYMBOLS.has(importedName) ? publicEls : internalEls).push(el);
+  }
+
+  if (publicEls.length === 0) {
+    replaceSpecifier(sourceFile, specifier, TO_INTERNAL, changes);
+    return;
+  }
+  if (internalEls.length === 0) {
+    replaceSpecifier(sourceFile, specifier, TO_PUBLIC, changes);
+    return;
+  }
+
+  // Mixed — replace the whole declaration with one statement per target.
+  const quote = sourceFile.text.charAt(specifier.getStart(sourceFile));
+  const start = decl.getStart(sourceFile);
+  const end = decl.getEnd();
+  const semicolon = sourceFile.text.charAt(end - 1) === ';' ? ';' : '';
+  const prefix = isTypeOnly ? `${keyword} type` : keyword;
+  const render = (
+    els: (ImportSpecifier | ExportSpecifier)[],
+    target: string
+  ): string =>
+    `${prefix} { ${els
+      .map((el) => el.getText(sourceFile))
+      .join(', ')} } from ${quote}${target}${quote}${semicolon}`;
+
+  changes.push(
+    { type: ChangeType.Delete, start, length: end - start },
+    {
+      type: ChangeType.Insert,
+      index: start,
+      text: `${render(publicEls, TO_PUBLIC)}\n${render(
+        internalEls,
+        TO_INTERNAL
+      )}`,
+    }
+  );
 }
 
 function collectCallExpressionRewrites(
@@ -99,10 +233,17 @@ function collectCallExpressionRewrites(
       ts!.isCallExpression(node) &&
       shouldRewriteCallExpression(node) &&
       node.arguments.length >= 1 &&
-      ts!.isStringLiteral(node.arguments[0]) &&
-      shouldRewriteSpecifier(node.arguments[0].text)
+      isSubpathSpecifier(node.arguments[0])
     ) {
-      replaceSpecifier(sourceFile, node.arguments[0], changes);
+      // `require(...)`, dynamic `import(...)` and `jest.mock(...)` reference
+      // the module as a whole and can't be symbol-split, so they go to the
+      // internal entry.
+      replaceSpecifier(
+        sourceFile,
+        node.arguments[0] as StringLiteral,
+        TO_INTERNAL,
+        changes
+      );
     }
     ts!.forEachChild(node, visit);
   };
@@ -134,7 +275,8 @@ function shouldRewriteCallExpression(call: CallExpression): boolean {
 
 function replaceSpecifier(
   sourceFile: SourceFile,
-  literal: import('typescript').StringLiteral,
+  literal: StringLiteral,
+  target: string,
   changes: StringChange[]
 ): void {
   const start = literal.getStart(sourceFile);
@@ -145,7 +287,7 @@ function replaceSpecifier(
     {
       type: ChangeType.Insert,
       index: start,
-      text: `${quote}${TO_SPECIFIER}${quote}`,
+      text: `${quote}${target}${quote}`,
     }
   );
 }

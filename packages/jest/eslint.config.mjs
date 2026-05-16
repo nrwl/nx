@@ -43,8 +43,8 @@ export default [
           buildTargets: ['build-base'],
           ignoredDependencies: [
             'nx',
-            // Self-reference used only to resolve the package's own
-            // package.json at runtime (see src/utils/versions.ts).
+            // Self-reference: resolves the package's own package.json at
+            // runtime (see src/utils/versions.ts).
             '@nx/jest',
             'typescript',
             'prettier',

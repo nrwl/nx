@@ -12,10 +12,50 @@ describe('rewrite-internal-subpath-imports migration', () => {
   });
 
   describe('rewriteSubpathImports (pure)', () => {
-    it('rewrites a single-quoted import declaration', () => {
+    it('routes an internal-symbol import to @nx/jest/internal', () => {
       const source = `import { versions } from '@nx/jest/src/utils/versions';\n`;
       expect(rewriteSubpathImports(source)).toBe(
         `import { versions } from '@nx/jest/internal';\n`
+      );
+    });
+
+    it('routes a public-symbol import to @nx/jest', () => {
+      const source = `import { findJestConfig } from '@nx/jest/src/utils/config/config-file';\n`;
+      expect(rewriteSubpathImports(source)).toBe(
+        `import { findJestConfig } from '@nx/jest';\n`
+      );
+    });
+
+    it('splits a mixed public/internal import into two declarations', () => {
+      const source = `import { findJestConfig, findRootJestPreset } from '@nx/jest/src/utils/config/config-file';\n`;
+      expect(rewriteSubpathImports(source)).toBe(
+        [
+          `import { findJestConfig } from '@nx/jest';`,
+          `import { findRootJestPreset } from '@nx/jest/internal';`,
+          ``,
+        ].join('\n')
+      );
+    });
+
+    it('classifies aliased imports by their original name', () => {
+      const source = `import { findJestConfig as fjc, findRootJestPreset as frp } from '@nx/jest/src/utils/config/config-file';\n`;
+      expect(rewriteSubpathImports(source)).toBe(
+        [
+          `import { findJestConfig as fjc } from '@nx/jest';`,
+          `import { findRootJestPreset as frp } from '@nx/jest/internal';`,
+          ``,
+        ].join('\n')
+      );
+    });
+
+    it('preserves a type-only modifier when splitting', () => {
+      const source = `import type { findJestConfig, JestConfigExtension } from '@nx/jest/src/utils/config/config-file';\n`;
+      expect(rewriteSubpathImports(source)).toBe(
+        [
+          `import type { findJestConfig } from '@nx/jest';`,
+          `import type { JestConfigExtension } from '@nx/jest/internal';`,
+          ``,
+        ].join('\n')
       );
     });
 
@@ -26,21 +66,46 @@ describe('rewrite-internal-subpath-imports migration', () => {
       );
     });
 
-    it('rewrites a deep subpath import', () => {
-      const source = `import { findRootJestPreset } from '@nx/jest/src/utils/config/config-file';\n`;
+    it('routes a namespace import to @nx/jest/internal', () => {
+      const source = `import * as versions from '@nx/jest/src/utils/versions';\n`;
       expect(rewriteSubpathImports(source)).toBe(
-        `import { findRootJestPreset } from '@nx/jest/internal';\n`
+        `import * as versions from '@nx/jest/internal';\n`
       );
     });
 
-    it('rewrites a CommonJS require()', () => {
+    it('rewrites a public-symbol export-from to @nx/jest', () => {
+      const source = `export { findJestConfig } from '@nx/jest/src/utils/config/config-file';\n`;
+      expect(rewriteSubpathImports(source)).toBe(
+        `export { findJestConfig } from '@nx/jest';\n`
+      );
+    });
+
+    it('splits a mixed export-from declaration', () => {
+      const source = `export { findJestConfig, findRootJestPreset } from '@nx/jest/src/utils/config/config-file';\n`;
+      expect(rewriteSubpathImports(source)).toBe(
+        [
+          `export { findJestConfig } from '@nx/jest';`,
+          `export { findRootJestPreset } from '@nx/jest/internal';`,
+          ``,
+        ].join('\n')
+      );
+    });
+
+    it('routes export * to @nx/jest/internal', () => {
+      const source = `export * from '@nx/jest/src/utils/versions';\n`;
+      expect(rewriteSubpathImports(source)).toBe(
+        `export * from '@nx/jest/internal';\n`
+      );
+    });
+
+    it('rewrites a CommonJS require() to the internal entry', () => {
       const source = `const { versions } = require('@nx/jest/src/utils/versions');\n`;
       expect(rewriteSubpathImports(source)).toBe(
         `const { versions } = require('@nx/jest/internal');\n`
       );
     });
 
-    it('rewrites a dynamic import()', () => {
+    it('rewrites a dynamic import() to the internal entry', () => {
       const source = `const mod = await import('@nx/jest/src/utils/versions');\n`;
       expect(rewriteSubpathImports(source)).toBe(
         `const mod = await import('@nx/jest/internal');\n`
@@ -54,7 +119,7 @@ describe('rewrite-internal-subpath-imports migration', () => {
       );
     });
 
-    it('rewrites jest.mock() and jest.requireActual()', () => {
+    it('rewrites jest.mock() and jest.requireActual() to the internal entry', () => {
       const source = [
         `jest.mock('@nx/jest/src/utils/versions', () => ({`,
         `  ...jest.requireActual('@nx/jest/src/utils/versions'),`,
@@ -73,11 +138,43 @@ describe('rewrite-internal-subpath-imports migration', () => {
       );
     });
 
-    it('rewrites vi.mock() variants', () => {
-      const source = `vi.mock('@nx/jest/src/utils/versions');\n`;
+    it('rewrites the other mock helper methods (doMock, importActual)', () => {
+      const source = [
+        `jest.doMock('@nx/jest/src/utils/versions');`,
+        `vi.importActual('@nx/jest/src/utils/config/config-file');`,
+        ``,
+      ].join('\n');
       expect(rewriteSubpathImports(source)).toBe(
-        `vi.mock('@nx/jest/internal');\n`
+        [
+          `jest.doMock('@nx/jest/internal');`,
+          `vi.importActual('@nx/jest/internal');`,
+          ``,
+        ].join('\n')
       );
+    });
+
+    it('rewrites every specifier when an import and a jest.mock appear in the same file', () => {
+      const source = [
+        `import { versions } from '@nx/jest/src/utils/versions';`,
+        `import { something } from '@nx/devkit';`,
+        ``,
+        `jest.mock('@nx/jest/src/utils/config/config-file');`,
+        ``,
+      ].join('\n');
+      expect(rewriteSubpathImports(source)).toBe(
+        [
+          `import { versions } from '@nx/jest/internal';`,
+          `import { something } from '@nx/devkit';`,
+          ``,
+          `jest.mock('@nx/jest/internal');`,
+          ``,
+        ].join('\n')
+      );
+    });
+
+    it('leaves non-mock jest.* calls alone', () => {
+      const source = `jest.setTimeout('@nx/jest/src/utils/versions');\n`;
+      expect(rewriteSubpathImports(source)).toBe(source);
     });
 
     it('leaves the top-level @nx/jest entry alone', () => {
@@ -125,6 +222,17 @@ describe('rewrite-internal-subpath-imports migration', () => {
       const updated = tree.read('apps/my-app/src/main.ts', 'utf-8');
       expect(updated).toContain('@nx/jest/internal');
       expect(updated).not.toContain('@nx/jest/src/utils/versions');
+    });
+
+    it('routes public symbols to @nx/jest across files', async () => {
+      tree.write(
+        'apps/my-app/src/main.ts',
+        `import { findJestConfig } from '@nx/jest/src/utils/config/config-file';\n`
+      );
+      await update(tree);
+      expect(tree.read('apps/my-app/src/main.ts', 'utf-8')).toContain(
+        `from '@nx/jest'`
+      );
     });
 
     it('does not touch non-TS files', async () => {

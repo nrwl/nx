@@ -53,7 +53,7 @@
     },
     "rewrite-jest-internal-subpath-imports": {
       "version": "23.0.0-beta.12",
-      "description": "Rewrites `@nx/jest/src/*` subpath imports to the new `@nx/jest/internal` entry. The `./src/*` subpath is no longer exposed by `@nx/jest`'s exports map. If a rewritten import resolves to a symbol that lives on the public `@nx/jest` entry (e.g. `findJestConfig`), change the specifier to `@nx/jest`.",
+      "description": "Rewrites `@nx/jest/src/*` subpath imports now that the `./src/*` subpath is no longer exposed by `@nx/jest`'s exports map. Named imports/exports of public symbols are routed to `@nx/jest` and the rest to the new `@nx/jest/internal` entry; `require`, dynamic `import` and `jest.mock` calls reference the whole module and are routed to `@nx/jest/internal`.",
       "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
     }
   },
