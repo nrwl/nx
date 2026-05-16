@@ -114,7 +114,10 @@ describe('Federate Module', () => {
     if (runE2ETests()) {
       const hostE2eResults = await runCommandUntil(
         `e2e ${host}-e2e --no-watch --verbose`,
-        (output) => output.includes('All specs passed!')
+        (output) => output.includes('All specs passed!'),
+        // a module federation cypress e2e (build host + remotes, serve,
+        // run a browser) cannot finish in runCommandUntil's 30s default
+        { timeout: 120_000 }
       );
       await killProcessAndPorts(
         hostE2eResults.pid,
@@ -216,7 +219,10 @@ describe('Federate Module', () => {
     if (runE2ETests()) {
       const hostE2eResults = await runCommandUntil(
         `e2e ${host}-e2e --no-watch --verbose`,
-        (output) => output.includes('All specs passed!')
+        (output) => output.includes('All specs passed!'),
+        // a module federation cypress e2e (build host + remotes, serve,
+        // run a browser) cannot finish in runCommandUntil's 30s default
+        { timeout: 120_000 }
       );
       await killProcessAndPorts(
         hostE2eResults.pid,
