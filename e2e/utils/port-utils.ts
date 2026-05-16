@@ -23,8 +23,11 @@ fs.mkdirSync(LOCK_DIR, { recursive: true });
 
 const RANGE_FLOOR = 6100;
 const RANGE_CEILING = 65000;
-// Spread of the randomised scan origin (see reservePort).
-const SCAN_SPREAD = 4000;
+// Spread of the randomised scan origin (see reservePort). Wide enough that
+// reservations scatter thinly across nearly the whole range, so a squatter
+// (a leaked dev server, or anything binding a port mid-compile) is unlikely
+// to land on the specific port a test reserved.
+const SCAN_SPREAD = 55000;
 // A lock older than this is treated as abandoned even when its PID still
 // resolves (the PID may have been recycled). Comfortably above the longest
 // e2e test timeout so a legitimately long-held port is never stolen.
