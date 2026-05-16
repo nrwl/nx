@@ -73,7 +73,7 @@ export default defineConfig({
       .toMatchInlineSnapshot(`
       "cy.exec('echo 0')
         .then(() => {})
-        .its('exitCode')
+        .its("exitCode")
         .should('eq', 0);
       "
     `);
@@ -104,7 +104,7 @@ export default defineConfig({
         });
 
         it('second test', () => {
-          cy.exec('cmd2').its('exitCode').should('eq', 0);
+          cy.exec('cmd2').its("exitCode").should("eq", 0);
         });
       });
       "
@@ -184,7 +184,7 @@ export default defineConfig({
         });
 
         it('double quotes', () => {
-          cy.exec('cmd2').its('exitCode').should('eq', 0);
+          cy.exec("cmd2").its("exitCode").should("eq", 0);
         });
       });
       "

@@ -1,4 +1,4 @@
-import { ModuleFederationConfig } from '@nx/module-federation';
+import type { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: '<%= name %>',<% if(type === 'host') { %>

@@ -29,11 +29,9 @@ describe('set-inject-document-domain', () => {
     tree.write('apps/app1-e2e/cypress.config.ts', `export const foo = 'bar';`);
 
     await expect(migration(tree)).resolves.not.toThrow();
-    expect(tree.read('apps/app1-e2e/cypress.config.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "export const foo = 'bar';
-      "
-    `);
+    expect(
+      tree.read('apps/app1-e2e/cypress.config.ts', 'utf-8')
+    ).toMatchInlineSnapshot(`"export const foo = 'bar';"`);
   });
 
   it('should handle when the cypress config path in the executor is not valid', async () => {
@@ -88,20 +86,20 @@ export default defineConfig({
       import { defineConfig } from 'cypress';
 
       export default defineConfig({
-        ...nxE2EPreset(__filename, {
-          cypressDir: 'src',
-          bundler: 'vite',
-          webServerCommands: {
-            default: 'pnpm exec nx run app1:dev',
-            production: 'pnpm exec nx run app1:dev',
-          },
-          ciWebServerCommand: 'pnpm exec nx run app1:dev',
-          ciBaseUrl: 'http://localhost:4200',
-        }),
-        baseUrl: 'http://localhost:4200',
-        // Please ensure you use \`cy.origin()\` when navigating between domains and remove this option.
-        // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
-        injectDocumentDomain: true,
+          ...nxE2EPreset(__filename, {
+              cypressDir: 'src',
+              bundler: 'vite',
+              webServerCommands: {
+                  default: 'pnpm exec nx run app1:dev',
+                  production: 'pnpm exec nx run app1:dev',
+              },
+              ciWebServerCommand: 'pnpm exec nx run app1:dev',
+              ciBaseUrl: 'http://localhost:4200',
+          }),
+          baseUrl: 'http://localhost:4200',
+          // Please ensure you use \`cy.origin()\` when navigating between domains and remove this option.
+          // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
+          injectDocumentDomain: true
       });
       "
     `);
@@ -143,20 +141,20 @@ export default defineConfig({
       import { defineConfig } from 'cypress';
 
       export default defineConfig({
-        ...nxE2EPreset(__filename, {
-          cypressDir: 'src',
-          bundler: 'vite',
-          webServerCommands: {
-            default: 'pnpm exec nx run app1:dev',
-            production: 'pnpm exec nx run app1:dev',
-          },
-          ciWebServerCommand: 'pnpm exec nx run app1:dev',
-          ciBaseUrl: 'http://localhost:4200',
-        }),
-        baseUrl: 'http://localhost:4200',
-        // Please ensure you use \`cy.origin()\` when navigating between domains and remove this option.
-        // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
-        injectDocumentDomain: true,
+          ...nxE2EPreset(__filename, {
+              cypressDir: 'src',
+              bundler: 'vite',
+              webServerCommands: {
+                  default: 'pnpm exec nx run app1:dev',
+                  production: 'pnpm exec nx run app1:dev',
+              },
+              ciWebServerCommand: 'pnpm exec nx run app1:dev',
+              ciBaseUrl: 'http://localhost:4200',
+          }),
+          baseUrl: 'http://localhost:4200',
+          // Please ensure you use \`cy.origin()\` when navigating between domains and remove this option.
+          // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
+          injectDocumentDomain: true
       });
       "
     `);
@@ -200,22 +198,22 @@ export default defineConfig({
       import { defineConfig } from 'cypress';
 
       export default defineConfig({
-        e2e: {
-          ...nxE2EPreset(__filename, {
-            cypressDir: 'src',
-            bundler: 'vite',
-            webServerCommands: {
-              default: 'pnpm exec nx run app1:dev',
-              production: 'pnpm exec nx run app1:dev',
-            },
-            ciWebServerCommand: 'pnpm exec nx run app1:dev',
-            ciBaseUrl: 'http://localhost:4200',
-          }),
-          baseUrl: 'http://localhost:4200',
-        },
-        // Please ensure you use \`cy.origin()\` when navigating between domains and remove this option.
-        // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
-        injectDocumentDomain: true,
+          e2e: {
+              ...nxE2EPreset(__filename, {
+                  cypressDir: 'src',
+                  bundler: 'vite',
+                  webServerCommands: {
+                      default: 'pnpm exec nx run app1:dev',
+                      production: 'pnpm exec nx run app1:dev',
+                  },
+                  ciWebServerCommand: 'pnpm exec nx run app1:dev',
+                  ciBaseUrl: 'http://localhost:4200',
+              }),
+              baseUrl: 'http://localhost:4200',
+          },
+          // Please ensure you use \`cy.origin()\` when navigating between domains and remove this option.
+          // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
+          injectDocumentDomain: true
       });
       "
     `);
@@ -257,17 +255,17 @@ export default defineConfig({
       import { defineConfig } from 'cypress';
 
       export default defineConfig({
-        ...nxE2EPreset(__filename, {
-          cypressDir: 'src',
-          bundler: 'vite',
-          webServerCommands: {
-            default: 'pnpm exec nx run app1:dev',
-            production: 'pnpm exec nx run app1:dev',
-          },
-          ciWebServerCommand: 'pnpm exec nx run app1:dev',
-          ciBaseUrl: 'http://localhost:4200',
-        }),
-        baseUrl: 'http://localhost:4200',
+          ...nxE2EPreset(__filename, {
+              cypressDir: 'src',
+              bundler: 'vite',
+              webServerCommands: {
+                  default: 'pnpm exec nx run app1:dev',
+                  production: 'pnpm exec nx run app1:dev',
+              },
+              ciWebServerCommand: 'pnpm exec nx run app1:dev',
+              ciBaseUrl: 'http://localhost:4200',
+          }),
+          baseUrl: 'http://localhost:4200'
       });
       "
     `);
@@ -310,22 +308,22 @@ export default defineConfig({
       import { defineConfig } from 'cypress';
 
       export default defineConfig({
-        e2e: {
-          ...nxE2EPreset(__filename, {
-            cypressDir: 'src',
-            bundler: 'vite',
-            webServerCommands: {
-              default: 'pnpm exec nx run app1:dev',
-              production: 'pnpm exec nx run app1:dev',
-            },
-            ciWebServerCommand: 'pnpm exec nx run app1:dev',
-            ciBaseUrl: 'http://localhost:4200',
-          }),
-          baseUrl: 'http://localhost:4200',
-          // Please ensure you use \`cy.origin()\` when navigating between domains and remove this option.
-          // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
-          injectDocumentDomain: true,
-        },
+          e2e: {
+              ...nxE2EPreset(__filename, {
+                  cypressDir: 'src',
+                  bundler: 'vite',
+                  webServerCommands: {
+                      default: 'pnpm exec nx run app1:dev',
+                      production: 'pnpm exec nx run app1:dev',
+                  },
+                  ciWebServerCommand: 'pnpm exec nx run app1:dev',
+                  ciBaseUrl: 'http://localhost:4200',
+              }),
+              baseUrl: 'http://localhost:4200',
+              // Please ensure you use \`cy.origin()\` when navigating between domains and remove this option.
+              // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
+              injectDocumentDomain: true
+          }
       });
       "
     `);
@@ -365,21 +363,19 @@ export default defineConfig({
       import { defineConfig } from 'cypress';
 
       export default defineConfig({
-        e2e: {
-          ...nxE2EPreset(__filename, {
-            cypressDir: 'src',
-            bundler: 'vite',
-            webServerCommands: {
-              default: 'pnpm exec nx run app1:dev',
-              production: 'pnpm exec nx run app1:dev',
-            },
-            ciWebServerCommand: 'pnpm exec nx run app1:dev',
-            ciBaseUrl: 'http://localhost:4200',
-          }),
-          // Please ensure you use \`cy.origin()\` when navigating between domains and remove this option.
-          // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
-          injectDocumentDomain: true,
-        },
+          e2e: { ...nxE2EPreset(__filename, {
+                  cypressDir: 'src',
+                  bundler: 'vite',
+                  webServerCommands: {
+                      default: 'pnpm exec nx run app1:dev',
+                      production: 'pnpm exec nx run app1:dev',
+                  },
+                  ciWebServerCommand: 'pnpm exec nx run app1:dev',
+                  ciBaseUrl: 'http://localhost:4200',
+              }), 
+              // Please ensure you use \`cy.origin()\` when navigating between domains and remove this option.
+              // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
+              injectDocumentDomain: true }
       });
       "
     `);
@@ -423,22 +419,22 @@ export default defineConfig({
       import { defineConfig } from 'cypress';
 
       export default defineConfig({
-        e2e: {
-          ...nxE2EPreset(__filename, {
-            cypressDir: 'src',
-            bundler: 'vite',
-            webServerCommands: {
-              default: 'pnpm exec nx run app1:dev',
-              production: 'pnpm exec nx run app1:dev',
-            },
-            ciWebServerCommand: 'pnpm exec nx run app1:dev',
-            ciBaseUrl: 'http://localhost:4200',
-          }),
-          baseUrl: 'http://localhost:4200',
-          // Please ensure you use \`cy.origin()\` when navigating between domains and remove this option.
-          // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
-          injectDocumentDomain: true,
-        },
+          e2e: {
+              ...nxE2EPreset(__filename, {
+                  cypressDir: 'src',
+                  bundler: 'vite',
+                  webServerCommands: {
+                      default: 'pnpm exec nx run app1:dev',
+                      production: 'pnpm exec nx run app1:dev',
+                  },
+                  ciWebServerCommand: 'pnpm exec nx run app1:dev',
+                  ciBaseUrl: 'http://localhost:4200',
+              }),
+              baseUrl: 'http://localhost:4200',
+              // Please ensure you use \`cy.origin()\` when navigating between domains and remove this option.
+              // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
+              injectDocumentDomain: true
+          }
       });
       "
     `);
@@ -482,19 +478,19 @@ export default defineConfig({
       import { defineConfig } from 'cypress';
 
       export default defineConfig({
-        e2e: {
-          ...nxE2EPreset(__filename, {
-            cypressDir: 'src',
-            bundler: 'vite',
-            webServerCommands: {
-              default: 'pnpm exec nx run app1:dev',
-              production: 'pnpm exec nx run app1:dev',
-            },
-            ciWebServerCommand: 'pnpm exec nx run app1:dev',
-            ciBaseUrl: 'http://localhost:4200',
-          }),
-          baseUrl: 'http://localhost:4200',
-        },
+          e2e: {
+              ...nxE2EPreset(__filename, {
+                  cypressDir: 'src',
+                  bundler: 'vite',
+                  webServerCommands: {
+                      default: 'pnpm exec nx run app1:dev',
+                      production: 'pnpm exec nx run app1:dev',
+                  },
+                  ciWebServerCommand: 'pnpm exec nx run app1:dev',
+                  ciBaseUrl: 'http://localhost:4200',
+              }),
+              baseUrl: 'http://localhost:4200'
+          }
       });
       "
     `);
@@ -527,9 +523,9 @@ export default defineConfig({
       import { defineConfig } from 'cypress';
 
       export default defineConfig({
-        component: {
-          ...nxComponentTestingPreset(__filename, { bundler: 'vite' }),
-        },
+          component: {
+              ...nxComponentTestingPreset(__filename, { bundler: 'vite' }),
+          },
       });
       "
     `);
@@ -577,20 +573,20 @@ export default defineConfig({
       import { defineConfig } from 'cypress';
 
       export default defineConfig({
-        ...nxE2EPreset(__filename, {
-          cypressDir: 'src',
-          bundler: 'vite',
-          webServerCommands: {
-            default: 'pnpm exec nx run app1:dev',
-            production: 'pnpm exec nx run app1:dev',
-          },
-          ciWebServerCommand: 'pnpm exec nx run app1:dev',
-          ciBaseUrl: 'http://localhost:4200',
-        }),
-        baseUrl: 'http://localhost:4200',
-        // Please ensure you use \`cy.origin()\` when navigating between domains and remove this option.
-        // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
-        injectDocumentDomain: true,
+          ...nxE2EPreset(__filename, {
+              cypressDir: 'src',
+              bundler: 'vite',
+              webServerCommands: {
+                  default: 'pnpm exec nx run app1:dev',
+                  production: 'pnpm exec nx run app1:dev',
+              },
+              ciWebServerCommand: 'pnpm exec nx run app1:dev',
+              ciBaseUrl: 'http://localhost:4200',
+          }),
+          baseUrl: 'http://localhost:4200',
+          // Please ensure you use \`cy.origin()\` when navigating between domains and remove this option.
+          // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
+          injectDocumentDomain: true
       });
       "
     `);

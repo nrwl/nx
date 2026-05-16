@@ -29,11 +29,9 @@ describe('remove-experimental-fetch-polyfill', () => {
     tree.write('apps/app1-e2e/cypress.config.ts', `export const foo = 'bar';`);
 
     await expect(migration(tree)).resolves.not.toThrow();
-    expect(tree.read('apps/app1-e2e/cypress.config.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "export const foo = 'bar';
-      "
-    `);
+    expect(
+      tree.read('apps/app1-e2e/cypress.config.ts', 'utf-8')
+    ).toMatchInlineSnapshot(`"export const foo = 'bar';"`);
   });
 
   it('should handle when the cypress config path in the executor is not valid', async () => {
@@ -83,19 +81,19 @@ export default defineConfig({
 
     expect(tree.read('apps/app1-e2e/cypress.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-        "import { defineConfig } from 'cypress';
+      "import { defineConfig } from 'cypress';
 
-        export default defineConfig({
+      export default defineConfig({
           component: {
-            devServer: {
-              framework: 'vue',
-              bundler: 'vite',
-            },
+              devServer: {
+                  framework: 'vue',
+                  bundler: 'vite',
+              }
           },
-          e2e: {},
-        });
-        "
-      `);
+          e2e: {}
+      });
+      "
+    `);
   });
 
   it('should handle cypress config files in projects using the "@nx/cypress:cypress" executor', async () => {
@@ -141,17 +139,17 @@ export default defineConfig({
       import { defineConfig } from 'cypress';
 
       export default defineConfig({
-        ...nxE2EPreset(__filename, {
-          cypressDir: 'src',
-          bundler: 'vite',
-          webServerCommands: {
-            default: 'pnpm exec nx run app1:dev',
-            production: 'pnpm exec nx run app1:dev',
-          },
-          ciWebServerCommand: 'pnpm exec nx run app1:dev',
-          ciBaseUrl: 'http://localhost:4200',
-        }),
-        baseUrl: 'http://localhost:4200',
+          ...nxE2EPreset(__filename, {
+              cypressDir: 'src',
+              bundler: 'vite',
+              webServerCommands: {
+                  default: 'pnpm exec nx run app1:dev',
+                  production: 'pnpm exec nx run app1:dev',
+              },
+              ciWebServerCommand: 'pnpm exec nx run app1:dev',
+              ciBaseUrl: 'http://localhost:4200',
+          }),
+          baseUrl: 'http://localhost:4200'
       });
       "
     `);

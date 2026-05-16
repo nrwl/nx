@@ -22,7 +22,7 @@ export function createConfig(
         .join(',\n')
     : '';
 
-  const createConfigContents = `createConfig({ 
+  const createConfigContents = `createConfig({
     options: {
       root: __dirname,
       ${JSON.stringify(createConfigOptions, undefined, 2).slice(1, -1)}

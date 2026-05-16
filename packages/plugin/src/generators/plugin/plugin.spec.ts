@@ -473,6 +473,7 @@ describe('NxPlugin Plugin Generator', () => {
           "main": "./dist/index.js",
           "module": "./dist/index.js",
           "name": "@proj/my-plugin",
+          "type": "commonjs",
           "types": "./dist/index.d.ts",
           "version": "0.0.1",
         }

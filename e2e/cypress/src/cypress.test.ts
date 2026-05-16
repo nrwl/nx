@@ -91,14 +91,17 @@ describe('env vars', () => {
           `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
         );
         expect(run1).toContain('All specs passed!');
-        // tests should not fail because of a config change
+        // tests should not fail because of a config change. Stay in
+        // CJS syntax to match the workspace's `type` (apps preset is CJS
+        // by default) - Node's native TS strip detects ESM from `import`
+        // / `export default` and `__filename` is then undefined.
         updateFile(
           `apps/${myapp}-e2e/cypress.config.ts`,
           `
-import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+const { defineConfig } = require('cypress');
+const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
 
-export default defineConfig({
+module.exports = defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
       cypressDir: 'src',

@@ -226,7 +226,7 @@ describe('NxPlugin Executor Generator', () => {
       expect(
         tree.read('my-plugin/src/executors/my-executor/hasher.ts').toString()
       ).toMatchInlineSnapshot(`
-        "import { CustomHasher } from '@nx/devkit';
+        "import type { CustomHasher } from '@nx/devkit';
 
         /**
          * This is a boilerplate custom hasher that matches

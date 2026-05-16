@@ -253,6 +253,69 @@ Cypress.Commands.add('mount', customMount);
       "
     `);
   });
+
+  it('should prepend a CJS require when the config uses module.exports', async () => {
+    const actual = await addDefaultCTConfig(
+      `const { defineConfig } = require('cypress');
+module.exports = defineConfig({});
+`,
+      {},
+      '@nx/angular/plugins/component-testing'
+    );
+    expect(actual).toMatchInlineSnapshot(`
+      "const { nxComponentTestingPreset } = require('@nx/angular/plugins/component-testing');
+      const { defineConfig } = require('cypress');
+      module.exports = defineConfig({
+          component: nxComponentTestingPreset(__filename)
+      });"
+    `);
+  });
+
+  it('should prepend an ESM import when the config uses export default', async () => {
+    const actual = await addDefaultCTConfig(
+      `import { defineConfig } from 'cypress';
+export default defineConfig({});
+`,
+      {},
+      '@nx/react/plugins/component-testing'
+    );
+    expect(actual).toMatchInlineSnapshot(`
+      "import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
+      import { defineConfig } from 'cypress';
+      export default defineConfig({
+          component: nxComponentTestingPreset(__filename)
+      });"
+    `);
+  });
+
+  it('should pass presetImportPath through verbatim', async () => {
+    // No auto-suffixing: @nx/react and @nx/angular only export the bare
+    // `./plugins/component-testing` subpath; appending `.js` would break
+    // strict ESM resolution with ERR_PACKAGE_PATH_NOT_EXPORTED.
+    const actual = await addDefaultCTConfig(
+      `const { defineConfig } = require('cypress');
+module.exports = defineConfig({});
+`,
+      {},
+      '@nx/next/plugins/component-testing'
+    );
+    expect(actual).toMatch(
+      /^const \{ nxComponentTestingPreset \} = require\('@nx\/next\/plugins\/component-testing'\);/
+    );
+    expect(actual).not.toMatch(/component-testing\.js/);
+  });
+
+  it('should not prepend any import when presetImportPath is omitted', async () => {
+    const actual = await addDefaultCTConfig(
+      `const { defineConfig } = require('cypress');
+module.exports = defineConfig({});
+`,
+      {}
+    );
+    expect(actual).not.toMatch(
+      /nxComponentTestingPreset.*require|import.*nxComponentTestingPreset/
+    );
+  });
 });
 
 describe('resolveCypressConfigObject', () => {

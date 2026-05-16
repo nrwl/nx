@@ -92,7 +92,7 @@ describe('app', () => {
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
-      expect(tree.exists('my-app-e2e/playwright.config.ts')).toBeTruthy();
+      expect(tree.exists('my-app-e2e/playwright.config.mts')).toBeTruthy();
       const tsconfigE2E = readJson(tree, 'my-app-e2e/tsconfig.json');
       expect(tsconfigE2E).toMatchInlineSnapshot(`
         {
@@ -106,7 +106,7 @@ describe('app', () => {
           "include": [
             "**/*.ts",
             "**/*.js",
-            "playwright.config.ts",
+            "playwright.config.mts",
             "src/**/*.spec.ts",
             "src/**/*.spec.js",
             "src/**/*.test.ts",
@@ -161,7 +161,7 @@ describe('app', () => {
         unitTestRunner: 'none',
         addPlugin: true,
       });
-      expect(tree.exists('cool-app-e2e/playwright.config.ts')).toBeTruthy();
+      expect(tree.exists('cool-app-e2e/playwright.config.mts')).toBeTruthy();
     });
 
     it('should setup cypress e2e project correctly for vite', async () => {
@@ -174,9 +174,9 @@ describe('app', () => {
       });
       expect(tree.read('cool-app-e2e/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-        import { defineConfig } from 'cypress';
-        export default defineConfig({
+        "const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
+        const { defineConfig } = require('cypress');
+        module.exports = defineConfig({
           e2e: {
             ...nxE2EPreset(__filename, {
               cypressDir: 'src',
@@ -205,9 +205,9 @@ describe('app', () => {
       });
       expect(tree.read('cool-app-e2e/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-        import { defineConfig } from 'cypress';
-        export default defineConfig({
+        "const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
+        const { defineConfig } = require('cypress');
+        module.exports = defineConfig({
           e2e: {
             ...nxE2EPreset(__filename, {
               cypressDir: 'src',
@@ -234,7 +234,7 @@ describe('app', () => {
         addPlugin: true,
       });
       expect(
-        tree.read('cool-app-e2e/playwright.config.ts', 'utf-8')
+        tree.read('cool-app-e2e/playwright.config.mts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -271,7 +271,7 @@ describe('app', () => {
         },
       ]);
       expect(
-        tree.read('my-app-e2e/playwright.config.ts', 'utf-8')
+        tree.read('my-app-e2e/playwright.config.mts', 'utf-8')
       ).toMatchSnapshot();
       expect(tree.exists('my-app/index.html')).toBeTruthy();
       expect(tree.exists('my-app/vite.config.mts')).toBeTruthy();
@@ -288,7 +288,7 @@ describe('app', () => {
         e2eTestRunner: 'playwright',
       });
       expect(
-        tree.read('my-app-e2e/playwright.config.ts', 'utf-8')
+        tree.read('my-app-e2e/playwright.config.mts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -916,7 +916,7 @@ describe('app', () => {
           "include": [
             "**/*.ts",
             "**/*.js",
-            "playwright.config.ts",
+            "playwright.config.mts",
             "src/**/*.spec.ts",
             "src/**/*.spec.js",
             "src/**/*.test.ts",

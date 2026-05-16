@@ -193,32 +193,32 @@ describe('Convert webpack', () => {
       expect(tree.exists('demo/rspack.config.ts')).toBeTruthy();
       expect(tree.read('demo/rspack.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-              "import { withModuleFederation } from '@nx/module-federation/rspack.js';
-              import { withReact } from '@nx/rspack';
-              import { withNx } from '@nx/rspack';
-              import { composePlugins } from '@nx/rspack';
+        "import { withModuleFederation } from '@nx/module-federation/rspack';
+        import { withReact } from '@nx/rspack';
+        import { withNx } from '@nx/rspack';
+        import { composePlugins } from '@nx/rspack';
 
-              import { ModuleFederationConfig } from '@nx/module-federation';
+        import type { ModuleFederationConfig } from '@nx/module-federation';
 
-              import baseConfig from './module-federation.config';
+        import baseConfig from './module-federation.config';
 
-              const config: ModuleFederationConfig = {
-                ...baseConfig,
-              };
+        const config: ModuleFederationConfig = {
+          ...baseConfig,
+        };
 
-              // Nx plugins for webpack to build config object from Nx options and context.
-              /**
-               * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
-               * The DTS Plugin can be enabled by setting dts: true
-               * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
-               */
-              export default composePlugins(
-                withNx(),
-                withReact({ useLegacyHtmlPlugin: true }),
-                withModuleFederation(config, { dts: false }),
-              );
-              "
-          `);
+        // Nx plugins for webpack to build config object from Nx options and context.
+        /**
+         * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+         * The DTS Plugin can be enabled by setting dts: true
+         * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+         */
+        export default composePlugins(
+          withNx(),
+          withReact({ useLegacyHtmlPlugin: true }),
+          withModuleFederation(config, { dts: false }),
+        );
+        "
+      `);
       expect(project.targets.build).toMatchInlineSnapshot(`
               {
                 "configurations": {
@@ -295,30 +295,30 @@ describe('Convert webpack', () => {
       expect(tree.exists('remote1/rspack.config.ts')).toBeTruthy();
       expect(tree.read('remote1/rspack.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-              "import { withModuleFederation } from '@nx/module-federation/rspack.js';
-              import { withReact } from '@nx/rspack';
-              import { withNx } from '@nx/rspack';
-              import { composePlugins } from '@nx/rspack';
+        "import { withModuleFederation } from '@nx/module-federation/rspack';
+        import { withReact } from '@nx/rspack';
+        import { withNx } from '@nx/rspack';
+        import { composePlugins } from '@nx/rspack';
 
-              import baseConfig from './module-federation.config';
+        import baseConfig from './module-federation.config';
 
-              const config = {
-                ...baseConfig,
-              };
+        const config = {
+          ...baseConfig,
+        };
 
-              // Nx plugins for webpack to build config object from Nx options and context.
-              /**
-               * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
-               * The DTS Plugin can be enabled by setting dts: true
-               * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
-               */
-              export default composePlugins(
-                withNx(),
-                withReact({ useLegacyHtmlPlugin: true }),
-                withModuleFederation(config, { dts: false }),
-              );
-              "
-          `);
+        // Nx plugins for webpack to build config object from Nx options and context.
+        /**
+         * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
+         * The DTS Plugin can be enabled by setting dts: true
+         * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+         */
+        export default composePlugins(
+          withNx(),
+          withReact({ useLegacyHtmlPlugin: true }),
+          withModuleFederation(config, { dts: false }),
+        );
+        "
+      `);
       expect(tree.exists('remote1/rspack.config.prod.ts')).toBeTruthy();
       expect(tree.read('remote1/rspack.config.prod.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
@@ -401,30 +401,30 @@ describe('Convert webpack', () => {
       expect(tree.exists('remote2/rspack.config.ts')).toBeTruthy();
       expect(tree.read('remote2/rspack.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-              "import { withModuleFederation } from '@nx/module-federation/rspack.js';
-              import { withReact } from '@nx/rspack';
-              import { withNx } from '@nx/rspack';
-              import { composePlugins } from '@nx/rspack';
+        "import { withModuleFederation } from '@nx/module-federation/rspack';
+        import { withReact } from '@nx/rspack';
+        import { withNx } from '@nx/rspack';
+        import { composePlugins } from '@nx/rspack';
 
-              import baseConfig from './module-federation.config';
+        import baseConfig from './module-federation.config';
 
-              const config = {
-                ...baseConfig,
-              };
+        const config = {
+          ...baseConfig,
+        };
 
-              // Nx plugins for webpack to build config object from Nx options and context.
-              /**
-               * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
-               * The DTS Plugin can be enabled by setting dts: true
-               * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
-               */
-              export default composePlugins(
-                withNx(),
-                withReact({ useLegacyHtmlPlugin: true }),
-                withModuleFederation(config, { dts: false }),
-              );
-              "
-          `);
+        // Nx plugins for webpack to build config object from Nx options and context.
+        /**
+         * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
+         * The DTS Plugin can be enabled by setting dts: true
+         * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+         */
+        export default composePlugins(
+          withNx(),
+          withReact({ useLegacyHtmlPlugin: true }),
+          withModuleFederation(config, { dts: false }),
+        );
+        "
+      `);
       expect(tree.exists('remote2/rspack.config.prod.ts')).toBeTruthy();
       expect(tree.read('remote2/rspack.config.prod.ts', 'utf-8'))
         .toMatchInlineSnapshot(`

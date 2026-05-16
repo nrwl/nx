@@ -2,9 +2,13 @@ import { readJsonFile } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { readTsConfig } from '../../../utils/typescript/ts-config';
-import * as ts from 'typescript';
+import {
+  getPackageJsonModuleFormat,
+  getTsConfigModuleFormat,
+  type ModuleFormat,
+} from '../../../utils/module-format/module-format';
 
-export type ModuleFormat = 'cjs' | 'esm';
+export type { ModuleFormat };
 
 export interface ModuleFormatDetectionOptions {
   projectRoot: string;
@@ -45,13 +49,8 @@ export function detectModuleFormat(
   );
   if (existsSync(packageJsonPath)) {
     try {
-      const packageJson = readJsonFile(packageJsonPath);
-      if (packageJson.type === 'module') {
-        return 'esm';
-      }
-      if (packageJson.type === 'commonjs') {
-        return 'cjs';
-      }
+      const fmt = getPackageJsonModuleFormat(readJsonFile(packageJsonPath));
+      if (fmt) return fmt;
     } catch {
       // Continue to next detection method
     }
@@ -59,22 +58,10 @@ export function detectModuleFormat(
 
   if (options.tsConfig && existsSync(options.tsConfig)) {
     try {
-      const tsConfig = readTsConfig(options.tsConfig);
-      if (
-        tsConfig.options.module === ts.ModuleKind.ES2015 ||
-        tsConfig.options.module === ts.ModuleKind.ES2020 ||
-        tsConfig.options.module === ts.ModuleKind.ES2022 ||
-        tsConfig.options.module === ts.ModuleKind.ESNext ||
-        tsConfig.options.module === ts.ModuleKind.NodeNext
-      ) {
-        // For NodeNext, we need to check moduleResolution
-        if (tsConfig.options.module === ts.ModuleKind.NodeNext) {
-          // NodeNext uses package.json type field, which we already checked
-          // Default to CJS if no type field
-          return 'cjs';
-        }
-        return 'esm';
-      }
+      const fmt = getTsConfigModuleFormat(
+        readTsConfig(options.tsConfig).options
+      );
+      if (fmt) return fmt;
     } catch {
       // Continue to default
     }

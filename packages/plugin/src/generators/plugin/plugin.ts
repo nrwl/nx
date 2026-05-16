@@ -113,7 +113,14 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
       host,
       joinPathFragments(options.projectRoot, 'package.json'),
       (json) => {
-        delete json.type;
+        // Force CommonJS for the plugin package. `jsLibraryGenerator` sets
+        // `type: "module"` for TS-solution libs, but Nx-plugin generators
+        // and executors that get loaded by `nx generate` / `nx run` rely on
+        // CJS globals like `__dirname` (e.g. `path.join(__dirname, 'files')`
+        // in generator factories). Setting `type: "commonjs"` explicitly
+        // overrides Node's content-based ESM detection so the source TS
+        // files load as CJS at runtime.
+        json.type = 'commonjs';
         return json;
       }
     );

@@ -54,7 +54,7 @@ describe('Playwright e2e configuration', () => {
           "include": [
             "**/*.ts",
             "**/*.js",
-            "playwright.config.ts",
+            "playwright.config.mts",
             "src/**/*.spec.ts",
             "src/**/*.spec.js",
             "src/**/*.test.ts",
@@ -104,7 +104,7 @@ describe('Playwright e2e configuration', () => {
             "outDir": "out-tsc/playwright",
             "sourceMap": false
           },
-          "include": ["e2e/**/*.ts", "e2e/**/*.js", "playwright.config.ts"],
+          "include": ["e2e/**/*.ts", "e2e/**/*.js", "playwright.config.mts"],
           "exclude": ["out-tsc", "test-output"]
         }
         "

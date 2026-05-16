@@ -115,11 +115,12 @@ async function addFiles(
   );
 
   const cyFile = joinPathFragments(projectConfig.root, 'cypress.config.ts');
-  const updatedCyConfig = await addDefaultCTConfig(tree.read(cyFile, 'utf-8'));
-  tree.write(
-    cyFile,
-    `import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';\n${updatedCyConfig}`
+  const updatedCyConfig = await addDefaultCTConfig(
+    tree.read(cyFile, 'utf-8'),
+    undefined,
+    '@nx/next/plugins/component-testing'
   );
+  tree.write(cyFile, updatedCyConfig);
 
   const isUsingTailwind = ['js', 'cjs'].some((ext) =>
     tree.exists(joinPathFragments(projectConfig.root, `tailwind.config.${ext}`))

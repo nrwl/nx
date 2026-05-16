@@ -5,7 +5,7 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack and
   import { createConfig }from '@nx/angular-rspack';
   
   
-  export default createConfig({ 
+  export default createConfig({
     options: {
       root: __dirname,
       
@@ -160,7 +160,7 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack inc
   import { createConfig }from '@nx/angular-rspack';
   
   
-  export default createConfig({ 
+  export default createConfig({
     options: {
       root: __dirname,
       
