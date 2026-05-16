@@ -43,6 +43,9 @@
       "internal": [
         "dist/internal.d.ts"
       ],
+      "src/internal": [
+        "dist/src/internal.d.ts"
+      ],
       "src/release/version-actions": [
         "dist/src/release/version-actions.d.ts"
       ],
@@ -91,6 +94,11 @@
       "@nx/nx-source": "./internal.ts",
       "types": "./dist/internal.d.ts",
       "default": "./dist/internal.js"
+    },
+    "./src/internal": {
+      "@nx/nx-source": "./src/internal.ts",
+      "types": "./dist/src/internal.d.ts",
+      "default": "./dist/src/internal.js"
     },
     "./src/release/version-actions": {
       "@nx/nx-source": "./src/release/version-actions.ts",
