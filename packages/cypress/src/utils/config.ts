@@ -45,12 +45,16 @@ export async function addDefaultE2EConfig(
   let updatedConfigContents = cyConfigContents;
 
   if (testingTypeConfig.length === 0) {
-    // Cypress loads `cypress.config.ts` through its bundled tsx transformer in
-    // CJS mode (regardless of the workspace's `type` field), which provides
-    // `__filename` but leaves `import.meta.dirname` undefined. Always emit
-    // `__filename` so the config evaluates correctly under Cypress's loader -
-    // works inside both `module.exports = ...` and `export default ...` files.
-    const pathToConfig = '__filename';
+    // ESM-shape configs use `import.meta.url` (a `file://...` URL string)
+    // because it's the most universally available `import.meta` field:
+    // Node's native TS strip exposes it in ESM scope, and Cypress's bundled
+    // tsx CJS loader provides it too (unlike `import.meta.dirname`, which
+    // older tsx versions don't shim). CJS-shape configs use `__filename`
+    // since `import.meta` isn't defined in plain CJS scope. The base
+    // template is selected to match the workspace's `type` field, so the
+    // shape detected here is consistent with how the file will actually be
+    // evaluated at runtime. `nxBaseCypressPreset` normalizes either form.
+    const pathToConfig = isCommonJS ? '__filename' : 'import.meta.url';
     const configValue = `nxE2EPreset(${pathToConfig}, ${JSON.stringify(
       options,
       null,
@@ -124,8 +128,9 @@ export async function addDefaultCTConfig(
   let updatedConfigContents = cyConfigContents;
 
   if (testingTypeConfig.length === 0) {
-    // See addDefaultE2EConfig for why we always use `__filename` here.
-    const pathToConfig = '__filename';
+    // See addDefaultE2EConfig for the rationale on __filename vs
+    // import.meta.url.
+    const pathToConfig = isCommonJS ? '__filename' : 'import.meta.url';
     let configValue = `nxComponentTestingPreset(${pathToConfig})`;
     if (options) {
       if (options.bundler !== 'vite') {

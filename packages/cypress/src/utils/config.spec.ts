@@ -21,7 +21,7 @@ export default defineConfig({
       import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
       export default defineConfig({
           e2e: nxE2EPreset(__filename),
-          component: nxComponentTestingPreset(__filename)
+          component: nxComponentTestingPreset(import.meta.url)
       });"
     `);
   });
@@ -47,7 +47,7 @@ export default defineConfig({
       export default defineConfig({
           component: nxComponentTestingPreset(__filename),
           e2e: {
-              ...nxE2EPreset(__filename, {
+              ...nxE2EPreset(import.meta.url, {
                   "cypressDir": "cypress"
               })
           }
@@ -139,7 +139,7 @@ export default defineConfig({
       import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
       export default defineConfig({
           e2e: {
-              ...nxE2EPreset(__filename, {
+              ...nxE2EPreset(import.meta.url, {
                   "cypressDir": "cypress"
               }),
               baseUrl: 'https://example.com'
@@ -172,7 +172,7 @@ export default defineConfig({
       import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
       export default defineConfig({
           e2e: {
-              ...nxE2EPreset(__filename, {
+              ...nxE2EPreset(import.meta.url, {
                   "cypressDir": "cypress",
                   "webServerCommands": {
                       "default": "my-app:serve",
@@ -283,7 +283,7 @@ export default defineConfig({});
       "import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
       import { defineConfig } from 'cypress';
       export default defineConfig({
-          component: nxComponentTestingPreset(__filename)
+          component: nxComponentTestingPreset(import.meta.url)
       });"
     `);
   });

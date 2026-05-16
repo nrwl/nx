@@ -29,11 +29,9 @@ describe('replace-experimental-just-in-time-compile', () => {
     tree.write('apps/app1/cypress.config.ts', `export const foo = 'bar';`);
 
     await expect(migration(tree)).resolves.not.toThrow();
-    expect(tree.read('apps/app1/cypress.config.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "export const foo = 'bar';
-      "
-    `);
+    expect(
+      tree.read('apps/app1/cypress.config.ts', 'utf-8')
+    ).toMatchInlineSnapshot(`"export const foo = 'bar';"`);
   });
 
   it('should handle when the cypress config path in the executor is not valid', async () => {
@@ -232,16 +230,16 @@ export default defineConfig({
 
     expect(tree.read('apps/app1/cypress.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { defineConfig } from 'cypress';
+      "import { defineConfig } from "cypress";
 
       export default defineConfig({
-        component: {
-          devServer: {
-            framework: 'react',
-            bundler: 'webpack',
+          component: {
+              devServer: {
+                  framework: 'react',
+                  bundler: 'webpack',
+              },
           },
-        },
-        justInTimeCompile: false,
+          justInTimeCompile: false
       });
       "
     `);
@@ -302,16 +300,16 @@ export default defineConfig({
 
     expect(tree.read('apps/app1/cypress.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { defineConfig } from 'cypress';
+      "import { defineConfig } from "cypress";
 
       export default defineConfig({
-        component: {
-          devServer: {
-            framework: 'react',
-            bundler: 'webpack',
-          },
-          justInTimeCompile: false,
-        },
+          component: {
+              devServer: {
+                  framework: 'react',
+                  bundler: 'webpack',
+              },
+              justInTimeCompile: false
+          }
       });
       "
     `);

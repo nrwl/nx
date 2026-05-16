@@ -44,19 +44,18 @@ describe('Cypress e2e configuration', () => {
       "const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
       const { defineConfig } = require('cypress');
       module.exports = defineConfig({
-        e2e: {
-          ...nxE2EPreset(__filename, {
-            cypressDir: 'src',
-            webServerCommands: {
-              default: 'nx run my-app:serve',
-              production: 'nx run my-app:serve:production',
-            },
-            ciWebServerCommand: 'nx run my-app:serve-static',
-          }),
-          baseUrl: 'http://localhost:4200',
-        },
-      });
-      "
+          e2e: {
+              ...nxE2EPreset(__filename, {
+                  "cypressDir": "src",
+                  "webServerCommands": {
+                      "default": "nx run my-app:serve",
+                      "production": "nx run my-app:serve:production"
+                  },
+                  "ciWebServerCommand": "nx run my-app:serve-static"
+              }),
+              baseUrl: 'http://localhost:4200'
+          }
+      });"
     `);
     expect(
       readProjectConfiguration(tree, 'my-app').targets.e2e
@@ -102,13 +101,12 @@ describe('Cypress e2e configuration', () => {
       "const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
       const { defineConfig } = require('cypress');
       module.exports = defineConfig({
-        e2e: {
-          ...nxE2EPreset(__filename, {
-            cypressDir: 'src',
-          }),
-        },
-      });
-      "
+          e2e: {
+              ...nxE2EPreset(__filename, {
+                  "cypressDir": "src"
+              })
+          }
+      });"
     `);
     expect(readProjectConfiguration(tree, 'my-app').targets.e2e)
       .toMatchInlineSnapshot(`
@@ -170,18 +168,17 @@ describe('Cypress e2e configuration', () => {
       "const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
       const { defineConfig } = require('cypress');
       module.exports = defineConfig({
-        e2e: {
-          ...nxE2EPreset(__filename, {
-            cypressDir: 'cypress',
-            webServerCommands: {
-              default: 'nx run my-app:serve',
-              production: 'nx run my-app:serve:production',
-            },
-            ciWebServerCommand: 'nx run my-app:serve-static',
-          }),
-        },
-      });
-      "
+          e2e: {
+              ...nxE2EPreset(__filename, {
+                  "cypressDir": "cypress",
+                  "webServerCommands": {
+                      "default": "nx run my-app:serve",
+                      "production": "nx run my-app:serve:production"
+                  },
+                  "ciWebServerCommand": "nx run my-app:serve-static"
+              })
+          }
+      });"
     `);
     assertCypressFiles(tree, 'libs/my-lib/cypress');
   });
@@ -199,19 +196,18 @@ describe('Cypress e2e configuration', () => {
       "const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
       const { defineConfig } = require('cypress');
       module.exports = defineConfig({
-        e2e: {
-          ...nxE2EPreset(__filename, {
-            cypressDir: 'src',
-            webServerCommands: {
-              default: 'nx run my-app:serve',
-              production: 'nx run my-app:serve:production',
-            },
-            ciWebServerCommand: 'nx run my-app:serve-static',
-          }),
-          baseUrl: 'http://localhost:4200',
-        },
-      });
-      "
+          e2e: {
+              ...nxE2EPreset(__filename, {
+                  "cypressDir": "src",
+                  "webServerCommands": {
+                      "default": "nx run my-app:serve",
+                      "production": "nx run my-app:serve:production"
+                  },
+                  "ciWebServerCommand": "nx run my-app:serve-static"
+              }),
+              baseUrl: 'http://localhost:4200'
+          }
+      });"
     `);
   });
 
@@ -496,15 +492,14 @@ export default defineConfig({
       import { defineConfig } from 'cypress';
       import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
       export default defineConfig({
-        component: nxComponentTestingPreset(__filename),
-        e2e: {
-          ...nxE2EPreset(__filename, {
-            cypressDir: 'src',
-          }),
-          baseUrl: 'http://localhost:4200',
-        },
-      });
-      "
+          component: nxComponentTestingPreset(__filename),
+          e2e: {
+              ...nxE2EPreset(import.meta.url, {
+                  "cypressDir": "src"
+              }),
+              baseUrl: 'http://localhost:4200'
+          }
+      });"
     `);
     // these files are only added when there isn't already a cypress config
     expect(
@@ -536,7 +531,7 @@ export default defineConfig({
       "import { defineConfig } from 'cypress';
 
       export default defineConfig({
-        e2e: { exists: true },
+        e2e: {exists: true},
       });
       "
     `);
@@ -556,14 +551,13 @@ export default defineConfig({
       "const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
       const { defineConfig } = require('cypress');
       module.exports = defineConfig({
-        e2e: {
-          ...nxE2EPreset(__filename, {
-            cypressDir: 'src',
-          }),
-          baseUrl: 'http://localhost:4200',
-        },
-      });
-      "
+          e2e: {
+              ...nxE2EPreset(__filename, {
+                  "cypressDir": "src"
+              }),
+              baseUrl: 'http://localhost:4200'
+          }
+      });"
     `);
   });
 
@@ -587,23 +581,25 @@ export default defineConfig({
       "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
       import { defineConfig } from 'cypress';
       export default defineConfig({
-        e2e: {
-          ...nxE2EPreset(__filename, {
-            cypressDir: 'src',
-          }),
-          baseUrl: 'http://localhost:4200',
-        },
-      });
-      "
+          e2e: {
+              ...nxE2EPreset(import.meta.url, {
+                  "cypressDir": "src"
+              }),
+              baseUrl: 'http://localhost:4200'
+          }
+      });"
     `);
   });
 
   it('should emit ESM-shape cypress.config.ts in a type:module workspace', async () => {
     // In type:module workspaces, the .ts config is loaded as ESM by Nx's
     // plugin worker (native strip), so the module shape is `import` /
-    // `export default`. The first-arg path stays `__filename` because
-    // Cypress loads the config through its bundled tsx in CJS mode where
-    // tsx provides `__filename` but leaves `import.meta.dirname` undefined.
+    // `export default`. The first-arg uses `import.meta.url` because it's
+    // the most universally available `import.meta` field: Node's native TS
+    // strip exposes it in ESM scope, and Cypress's bundled tsx CJS loader
+    // also provides it (unlike `import.meta.dirname`, which older tsx
+    // versions don't shim). `nxBaseCypressPreset` converts the file:// URL
+    // back to a path.
     updateJson(tree, 'package.json', (json) => {
       json.type = 'module';
       return json;
@@ -621,14 +617,13 @@ export default defineConfig({
       "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
       import { defineConfig } from 'cypress';
       export default defineConfig({
-        e2e: {
-          ...nxE2EPreset(__filename, {
-            cypressDir: 'src',
-          }),
-          baseUrl: 'http://localhost:4200',
-        },
-      });
-      "
+          e2e: {
+              ...nxE2EPreset(import.meta.url, {
+                  "cypressDir": "src"
+              }),
+              baseUrl: 'http://localhost:4200'
+          }
+      });"
     `);
   });
 
@@ -654,10 +649,10 @@ export default defineConfig({
     it('should emit ESM-shape cypress.config.ts in TS solution workspaces', async () => {
       // Regression: in TS solution workspaces, per-project package.json
       // declares `"type": "module"`, so the generator emits an
-      // `import`/`export default` config to match Nx's plugin loader.
-      // The path-to-config arg stays `__filename` because Cypress loads
-      // the config through its bundled tsx in CJS mode, which provides
-      // `__filename` but leaves `import.meta.dirname` undefined.
+      // `import`/`export default` config. The path-to-config arg uses
+      // `import.meta.url` (a `file://...` URL) so the expression works
+      // under both Nx's native TS strip (ESM) and Cypress's bundled tsx
+      // CJS loader. `nxBaseCypressPreset` converts the URL back to a path.
       addProject(tree, { name: 'my-lib', type: 'libs' });
 
       await cypressE2EConfigurationGenerator(tree, {
@@ -670,14 +665,13 @@ export default defineConfig({
         "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
         import { defineConfig } from 'cypress';
         export default defineConfig({
-          e2e: {
-            ...nxE2EPreset(__filename, {
-              cypressDir: 'src',
-            }),
-            baseUrl: 'http://localhost:4200',
-          },
-        });
-        "
+            e2e: {
+                ...nxE2EPreset(import.meta.url, {
+                    "cypressDir": "src"
+                }),
+                baseUrl: 'http://localhost:4200'
+            }
+        });"
       `);
     });
 
