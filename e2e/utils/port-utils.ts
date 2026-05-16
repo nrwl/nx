@@ -32,6 +32,12 @@ const SCAN_SPREAD = 55000;
 // resolves (the PID may have been recycled). Comfortably above the longest
 // e2e test timeout so a legitimately long-held port is never stolen.
 const STALE_LOCK_MS = 60 * 60 * 1000;
+// Whether to reclaim abandoned lock files. In CI each agent is an ephemeral
+// container, so stale locks cannot carry across runs; combined with the wide
+// scan spread, the few a timeout-killed task may leave are immaterial. An
+// existing lock is simply treated as taken. Reclamation only earns its keep
+// on a developer's machine, where /tmp persists across runs.
+const RECLAIM_ABANDONED_LOCKS = !process.env.CI;
 
 // Lock files held by THIS process. A single exit handler frees them all,
 // rather than registering one listener per reservePort() call.
@@ -84,8 +90,9 @@ function claimLock(port: number): boolean {
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err;
     }
-    // Lock exists — reclaim it once if abandoned, then retry the claim.
-    if (!isAbandonedLock(lock)) return false;
+    // Lock exists. Outside CI, reclaim it once if abandoned then retry the
+    // claim; in CI an existing lock is simply treated as taken.
+    if (!RECLAIM_ABANDONED_LOCKS || !isAbandonedLock(lock)) return false;
     try {
       fs.unlinkSync(lock);
     } catch {}
