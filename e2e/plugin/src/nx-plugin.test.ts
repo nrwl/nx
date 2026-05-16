@@ -10,12 +10,14 @@ import {
   runCLI,
   runCLIAsync,
   runCommand,
+  tmpProjPath,
   uniq,
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'path';
 import {
   ASYNC_GENERATOR_EXECUTOR_CONTENTS,
@@ -29,7 +31,35 @@ describe('Nx Plugin', () => {
     workspaceName = newProject({ packages: ['@nx/plugin'] });
   });
 
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    // The whole suite shares one long-lived daemon (no `reset` between
+    // tests), so dump its log once before teardown. CI captures it, so a
+    // failure — e.g. a daemon crash on plugin load — is diagnosable;
+    // locate a given test by its `Run Command` / [REQUEST] lines.
+    try {
+      const daemonLog = join(
+        tmpProjPath(),
+        '.nx',
+        'workspace-data',
+        'd',
+        'daemon.log'
+      );
+      if (existsSync(daemonLog)) {
+        console.log(
+          `\n========== daemon.log ==========\n${readFileSync(
+            daemonLog,
+            'utf-8'
+          )}\n========== end daemon.log ==========\n`
+        );
+      } else {
+        console.log(`[plugin-debug] no daemon log at ${daemonLog}`);
+      }
+    } catch (e) {
+      console.log(`[plugin-debug] failed to read daemon log: ${e}`);
+    }
+
+    cleanupProject();
+  });
 
   it('should be able to generate a Nx Plugin ', async () => {
     const plugin = uniq('plugin');
