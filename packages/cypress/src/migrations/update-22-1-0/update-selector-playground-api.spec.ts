@@ -68,8 +68,9 @@ export default defineConfig({
     expect(tree.read('apps/web-e2e/src/support/selector.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "Cypress.ElementSelector.defaults({
-          selectorPriority: ['data-cy']
-      });"
+        selectorPriority: ['data-cy'],
+      });
+      "
     `);
   });
 
@@ -101,8 +102,9 @@ export default defineConfig({
     expect(tree.read('apps/web-e2e/src/support/string-key.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "Cypress.ElementSelector.defaults({
-          selectorPriority: ['data-test']
-      });"
+        selectorPriority: ['data-test'],
+      });
+      "
     `);
   });
 
@@ -126,11 +128,12 @@ Cypress.SelectorPlayground.defaults({
     expect(tree.read('apps/web-e2e/src/support/multiple.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "Cypress.ElementSelector.defaults({
-          selectorPriority: ['data-cy']
+        selectorPriority: ['data-cy'],
       });
       Cypress.ElementSelector.defaults({
-          selectorPriority: ['data-test']
-      });"
+        selectorPriority: ['data-test'],
+      });
+      "
     `);
   });
 
@@ -145,9 +148,11 @@ Cypress.SelectorPlayground.defaults({
 
     await migration(tree);
 
-    expect(
-      tree.read('apps/web-e2e/src/support/only.ts', 'utf-8')
-    ).toMatchInlineSnapshot(`"Cypress.ElementSelector.defaults({});"`);
+    expect(tree.read('apps/web-e2e/src/support/only.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "Cypress.ElementSelector.defaults({});
+      "
+    `);
   });
 
   it('should handle complex onElement function with multiple statements', async () => {
@@ -168,8 +173,9 @@ Cypress.SelectorPlayground.defaults({
     expect(tree.read('apps/web-e2e/src/support/complex.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "Cypress.ElementSelector.defaults({
-          selectorPriority: ['data-cy']
-      });"
+        selectorPriority: ['data-cy'],
+      });
+      "
     `);
   });
 });
