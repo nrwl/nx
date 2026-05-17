@@ -52,12 +52,12 @@
       "implementation": "./dist/src/migrations/update-23-0-0/update-snapshot-guide-link"
     },
     "rewrite-jest-internal-subpath-imports": {
-      "version": "23.0.0-beta.12",
+      "version": "23.0.0-beta.16",
       "description": "Rewrites `@nx/jest/src/*` subpath imports now that the `./src/*` subpath is no longer exposed by `@nx/jest`'s exports map. Named imports/exports of public symbols are routed to `@nx/jest` and the rest to the new `@nx/jest/internal` entry; `require`, dynamic `import` and `jest.mock` calls reference the whole module and are routed to `@nx/jest/internal`.",
       "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
     },
     "rewrite-jest-project-generator": {
-      "version": "23.0.0-beta.15",
+      "version": "23.0.0-beta.16",
       "description": "Replaces the removed `jestProjectGenerator` export from `@nx/jest` with its replacement `configurationGenerator`.",
       "implementation": "./dist/src/migrations/update-23-0-0/rewrite-jest-project-generator"
     }
