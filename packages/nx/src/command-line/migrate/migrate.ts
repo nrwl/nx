@@ -2689,7 +2689,11 @@ export async function runNxOrAngularMigration(
   commitPrefix: string,
   installDepsIfChanged?: () => Promise<void>,
   handleInstallDeps = false
-): Promise<{ changes: FileChange[]; nextSteps: string[] }> {
+): Promise<{
+  changes: FileChange[];
+  nextSteps: string[];
+  promptContext: string[];
+}> {
   if (!installDepsIfChanged) {
     const changedDepInstaller = new ChangedDepInstaller(root);
     installDepsIfChanged = () => changedDepInstaller.installDepsIfChanged();
@@ -2700,8 +2704,9 @@ export async function runNxOrAngularMigration(
   );
   let changes: FileChange[] = [];
   let nextSteps: string[] = [];
+  let promptContext: string[] = [];
   if (!isAngularMigration(collection, migration.name)) {
-    ({ nextSteps, changes } = await runNxMigration(
+    ({ nextSteps, changes, promptContext } = await runNxMigration(
       root,
       collectionPath,
       collection,
@@ -2713,7 +2718,7 @@ export async function runNxOrAngularMigration(
     logger.info(`  ${migration.description}\n`);
     if (changes.length < 1) {
       logger.info(`No changes were made\n`);
-      return { changes, nextSteps };
+      return { changes, nextSteps, promptContext };
     }
 
     logger.info('Changes:');
@@ -2735,7 +2740,7 @@ export async function runNxOrAngularMigration(
     logger.info(`  ${migration.description}\n`);
     if (!madeChanges) {
       logger.info(`No changes were made\n`);
-      return { changes, nextSteps };
+      return { changes, nextSteps, promptContext };
     }
 
     logger.info('Changes:');
@@ -2756,7 +2761,7 @@ export async function runNxOrAngularMigration(
     await installDepsIfChanged();
   }
 
-  return { changes, nextSteps };
+  return { changes, nextSteps, promptContext };
 }
 
 async function runMigrations(
@@ -2885,18 +2890,30 @@ async function runNxMigration(
     process.env.NX_VERBOSE_LOGGING === 'true',
     `migration ${collection.name}:${name}`
   );
-  let nextSteps = await fn(host, {});
-  // This accounts for migrations that mistakenly return a generator callback
-  // from a migration. We've never executed these, so its not a breaking change that
-  // we don't call them now... but currently shipping a migration with one wouldn't break
-  // the migrate flow, so we are being cautious.
-  if (!isStringArray(nextSteps)) {
-    nextSteps = [];
-  }
+  const result = await fn(host, {});
+  const { nextSteps, promptContext } = parseMigrationReturn(result);
   host.lock();
   const changes = host.listChanges();
   flushChanges(root, changes);
-  return { changes, nextSteps };
+  return { changes, nextSteps, promptContext };
+}
+
+export function parseMigrationReturn(value: unknown): {
+  nextSteps: string[];
+  promptContext: string[];
+} {
+  if (isStringArray(value)) {
+    return { nextSteps: value, promptContext: [] };
+  }
+  if (value && typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    return {
+      nextSteps: isStringArray(obj.nextSteps) ? obj.nextSteps : [],
+      promptContext: isStringArray(obj.promptContext) ? obj.promptContext : [],
+    };
+  }
+  // Catches `void`, mistakenly-returned generator callbacks, malformed values.
+  return { nextSteps: [], promptContext: [] };
 }
 
 export async function migrate(

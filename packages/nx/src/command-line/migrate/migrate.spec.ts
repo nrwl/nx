@@ -30,6 +30,7 @@ import {
   isPromptOnlyMigration,
   Migrator,
   normalizeVersion,
+  parseMigrationReturn,
   parseMigrationsOptions,
   ResolvedMigrationConfiguration,
   resolveAgenticRunId,
@@ -4106,6 +4107,73 @@ describe('Migration', () => {
         expect(
           resolveAgenticRunId([{ package: 'a', name: 'a1', version: '21.2.0' }])
         ).toBe('21.2.0');
+      });
+    });
+
+    describe('parseMigrationReturn', () => {
+      it('treats a string array as legacy workspace-wide nextSteps', () => {
+        expect(parseMigrationReturn(['a', 'b'])).toEqual({
+          nextSteps: ['a', 'b'],
+          promptContext: [],
+        });
+      });
+
+      it('treats undefined/void as empty buckets', () => {
+        expect(parseMigrationReturn(undefined)).toEqual({
+          nextSteps: [],
+          promptContext: [],
+        });
+      });
+
+      it('reads both buckets from the object shape', () => {
+        expect(
+          parseMigrationReturn({
+            nextSteps: ['a'],
+            promptContext: ['b', 'c'],
+          })
+        ).toEqual({ nextSteps: ['a'], promptContext: ['b', 'c'] });
+      });
+
+      it('tolerates partial object shape', () => {
+        expect(parseMigrationReturn({ promptContext: ['x'] })).toEqual({
+          nextSteps: [],
+          promptContext: ['x'],
+        });
+        expect(parseMigrationReturn({ nextSteps: ['y'] })).toEqual({
+          nextSteps: ['y'],
+          promptContext: [],
+        });
+      });
+
+      it('rejects non-string entries in either bucket', () => {
+        expect(
+          parseMigrationReturn({
+            nextSteps: ['ok', 1, null] as any,
+            promptContext: [true, 'ok'] as any,
+          })
+        ).toEqual({ nextSteps: [], promptContext: [] });
+      });
+
+      it('rejects arrays with non-string entries when treated as legacy', () => {
+        expect(parseMigrationReturn(['ok', 42] as any)).toEqual({
+          nextSteps: [],
+          promptContext: [],
+        });
+      });
+
+      it('returns empty buckets for unsupported return values', () => {
+        expect(parseMigrationReturn(() => undefined)).toEqual({
+          nextSteps: [],
+          promptContext: [],
+        });
+        expect(parseMigrationReturn('a string')).toEqual({
+          nextSteps: [],
+          promptContext: [],
+        });
+        expect(parseMigrationReturn(42)).toEqual({
+          nextSteps: [],
+          promptContext: [],
+        });
       });
     });
 
