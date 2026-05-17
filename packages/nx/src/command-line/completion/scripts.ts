@@ -119,9 +119,11 @@ _nx_completions()
 
     # Stderr is hidden so a stray warning never lands in the completion
     # buffer. Set NX_COMPLETE_DEBUG to surface it when completion misbehaves.
-    local err_to=/dev/null
-    [ -n "\$NX_COMPLETE_DEBUG" ] && err_to=/dev/stderr
-    type_list=$(NX_COMPLETE=bash "\$nx_cmd" "\${args[@]}" 2>"\$err_to")
+    if [ -n "\$NX_COMPLETE_DEBUG" ]; then
+      type_list=$(NX_COMPLETE=bash "\$nx_cmd" "\${args[@]}")
+    else
+      type_list=$(NX_COMPLETE=bash "\$nx_cmd" "\${args[@]}" 2>/dev/null)
+    fi
 
     COMPREPLY=( $(compgen -W "\${type_list}" -- \${cur_word}) )
 
@@ -174,9 +176,11 @@ if type compdef &>/dev/null; then
 
     # Stderr is hidden so a stray warning never lands in the completion
     # buffer. Set NX_COMPLETE_DEBUG to surface it when completion misbehaves.
-    local err_to=/dev/null
-    [[ -n "\$NX_COMPLETE_DEBUG" ]] && err_to=/dev/stderr
-    IFS=$'\\n' reply=($(NX_COMPLETE=zsh "\$nx_cmd" "\${words[@]}" 2>"\$err_to"))
+    if [[ -n "\$NX_COMPLETE_DEBUG" ]]; then
+      IFS=$'\\n' reply=($(NX_COMPLETE=zsh "\$nx_cmd" "\${words[@]}"))
+    else
+      IFS=$'\\n' reply=($(NX_COMPLETE=zsh "\$nx_cmd" "\${words[@]}" 2>/dev/null))
+    fi
     IFS=$si
 
     # Each line is either a bare value or \`value<TAB>description\`. Split into
@@ -243,9 +247,11 @@ function __nx_completions
   end
   # Stderr is hidden so a stray warning never lands in the completion buffer.
   # Set NX_COMPLETE_DEBUG to surface it when completion misbehaves.
-  set -l err_to /dev/null
-  test -n "\$NX_COMPLETE_DEBUG"; and set err_to /dev/stderr
-  NX_COMPLETE=fish \$nx_cmd \$tokens "\$current" 2>\$err_to
+  if test -n "\$NX_COMPLETE_DEBUG"
+    NX_COMPLETE=fish \$nx_cmd \$tokens "\$current"
+  else
+    NX_COMPLETE=fish \$nx_cmd \$tokens "\$current" 2>/dev/null
+  end
 end
 complete -c nx -f -a '(__nx_completions)'
 ###-end-nx-completions-###

@@ -108,6 +108,29 @@ describe('completion/completion-providers', () => {
       process.chdir(workspaceRoot);
       expect(resolveWorkspaceRoot()).toBe(realpathSync(workspaceRoot));
     });
+
+    it('drives project completion from a nested cwd, end-to-end', () => {
+      // End-to-end guard for Critical #1: prove the walk-up actually feeds
+      // the completion entry point, not just `resolveWorkspaceRoot` in
+      // isolation. Both env vars are unset so `getCachedProjectGraph` must
+      // derive the data directory from the resolved workspace root.
+      delete process.env.NX_WORKSPACE_ROOT_PATH;
+      delete process.env.NX_WORKSPACE_DATA_DIRECTORY;
+      writeFileSync(join(workspaceRoot, 'nx.json'), '{}');
+      writeProjectGraph({
+        nodes: {
+          'app-one': { data: { targets: {} } },
+          'lib-one': { data: { targets: {} } },
+        },
+      });
+      const nested = join(workspaceRoot, 'apps', 'app-one', 'src');
+      mkdirSync(nested, { recursive: true });
+      process.chdir(nested);
+      expect(getProjectNameCompletions('').sort()).toEqual([
+        'app-one',
+        'lib-one',
+      ]);
+    });
   });
 
   describe('project completions', () => {

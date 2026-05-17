@@ -54,9 +54,14 @@ describe('completion/scripts', () => {
         }
       });
 
-      it('honors NX_COMPLETE_DEBUG to unmask completion stderr', async () => {
+      it('gates the stderr discard on NX_COMPLETE_DEBUG', async () => {
         const script = await generate(shell);
+        // Both must be present: the debug var AND the default discard.
+        // Together they prove the discard is conditional, not hardcoded.
         expect(script).toContain('NX_COMPLETE_DEBUG');
+        expect(script).toContain(
+          shell === 'powershell' ? '2>$null' : '2>/dev/null'
+        );
       });
     });
   }
@@ -64,14 +69,21 @@ describe('completion/scripts', () => {
   describe('shell-specific invariants', () => {
     it('bash/zsh/fish wrappers walk up for a workspace-local nx', async () => {
       for (const shell of ['bash', 'zsh', 'fish'] as const) {
-        expect(await generate(shell)).toContain('node_modules/.bin/nx');
+        const script = await generate(shell);
+        // Assert the loop itself, not just a path mention — the
+        // `.nx/installation` fallback probe is emitted only inside the
+        // walk-up loop body, so its presence proves the loop is intact.
+        expect(script).toContain('while');
+        expect(script).toContain('node_modules/.bin/nx');
+        expect(script).toContain('.nx/installation/node_modules/.bin/nx');
       }
     });
 
     it('the PowerShell wrapper walks up for a workspace-local nx.cmd', async () => {
-      expect(await generate('powershell')).toContain(
-        'node_modules\\.bin\\nx.cmd'
-      );
+      const script = await generate('powershell');
+      expect(script).toContain('while');
+      expect(script).toContain('node_modules\\.bin\\nx.cmd');
+      expect(script).toContain('.nx\\installation\\node_modules\\.bin\\nx.cmd');
     });
 
     it('the zsh wrapper uses `compadd -d`, never invokes `_describe`', async () => {
