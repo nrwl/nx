@@ -337,9 +337,6 @@
     "@markdoc/markdoc": "0.2.2",
     "@napi-rs/canvas": "^0.1.52",
     "@nx/graph": "1.0.5",
-    "@react-spring/three": "^9.7.3",
-    "@react-three/drei": "^9.108.3",
-    "@react-three/fiber": "^8.16.8",
     "@tailwindcss/forms": "0.5.10",
     "@tailwindcss/postcss": "catalog:tailwind",
     "@tailwindcss/typography": "0.5.16",
@@ -373,7 +370,6 @@
     "string-width": "^4.2.3",
     "tailwind-merge": "catalog:tailwind",
     "tailwindcss": "4.1.11",
-    "three": "^0.166.1",
     "tinyglobby": "catalog:",
     "tslib": "catalog:typescript",
     "webpack-cli": "^5.1.4"
