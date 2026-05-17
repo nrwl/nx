@@ -22,15 +22,13 @@ import { lintProjectGenerator } from '@nx/eslint';
 import {
   javaScriptOverride,
   typeScriptOverride,
-} from '@nx/eslint/src/generators/init/global-eslint-config';
-import * as path from 'path';
-import { axiosVersion } from '../../utils/versions';
-import { Schema } from './schema';
-import {
   addPluginsToLintConfig,
   isEslintConfigSupported,
   replaceOverridesInLintConfig,
-} from '@nx/eslint/src/generators/utils/eslint-file';
+} from '@nx/eslint/internal';
+import * as path from 'path';
+import { axiosVersion } from '../../utils/versions';
+import { Schema } from './schema';
 import {
   findRootJestPreset,
   getInstalledJestMajorVersion,

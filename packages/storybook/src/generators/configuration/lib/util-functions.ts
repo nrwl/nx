@@ -27,8 +27,7 @@ import {
 import { StorybookConfigureSchema } from '../schema';
 import { UiFramework } from '../../../utils/models';
 import { nxVersion } from '../../../utils/versions';
-import { findEslintFile } from '@nx/eslint/src/generators/utils/eslint-file';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+import { findEslintFile, useFlatConfig } from '@nx/eslint/internal';
 import {
   normalizeTargetDefaults,
   upsertTargetDefault,

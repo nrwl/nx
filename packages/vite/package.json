@@ -32,6 +32,7 @@
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
+    "@nx/eslint": "workspace:*",
     "@phenomnomnominal/tsquery": "catalog:typescript",
     "enquirer": "catalog:",
     "@nx/js": "workspace:*",

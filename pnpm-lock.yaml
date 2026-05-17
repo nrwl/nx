@@ -3631,6 +3631,9 @@ importers:
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
+      '@nx/eslint':
+        specifier: workspace:*
+        version: link:../eslint
       '@nx/js':
         specifier: workspace:*
         version: link:../js
@@ -3891,6 +3894,9 @@ importers:
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
+      '@nx/eslint':
+        specifier: workspace:*
+        version: link:../eslint
       '@nx/js':
         specifier: workspace:*
         version: link:../js

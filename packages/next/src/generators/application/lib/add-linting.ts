@@ -15,13 +15,13 @@ import {
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
   updateOverrideInLintConfig,
-} from '@nx/eslint/src/generators/utils/eslint-file';
+  useFlatConfig,
+  addImportToFlatConfig,
+} from '@nx/eslint/internal';
 import {
   getEslintConfigNextDependenciesVersionsToInstall,
   isNext16,
 } from '../../../utils/version-utils';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
-import { addImportToFlatConfig } from '@nx/eslint/src/generators/utils/flat-config/ast-utils';
 
 export async function addLinting(
   host: Tree,
