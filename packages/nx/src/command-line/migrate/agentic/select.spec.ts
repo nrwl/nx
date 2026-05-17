@@ -46,10 +46,12 @@ const originalStdoutTty = process.stdout.isTTY;
 function setTty(enabled: boolean): void {
   Object.defineProperty(process.stdin, 'isTTY', {
     configurable: true,
+    writable: true,
     value: enabled,
   });
   Object.defineProperty(process.stdout, 'isTTY', {
     configurable: true,
+    writable: true,
     value: enabled,
   });
 }
@@ -69,10 +71,12 @@ describe('resolveAgentic', () => {
   afterAll(() => {
     Object.defineProperty(process.stdin, 'isTTY', {
       configurable: true,
+      writable: true,
       value: originalStdinTty,
     });
     Object.defineProperty(process.stdout, 'isTTY', {
       configurable: true,
+      writable: true,
       value: originalStdoutTty,
     });
   });

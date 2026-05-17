@@ -311,6 +311,7 @@ describe('runAgentic', () => {
     const originalComspec = process.env.comspec;
     Object.defineProperty(process, 'platform', {
       configurable: true,
+      writable: true,
       value: 'win32',
     });
     process.env.comspec = 'C:\\Windows\\System32\\cmd.exe';
@@ -363,6 +364,7 @@ describe('runAgentic', () => {
     } finally {
       Object.defineProperty(process, 'platform', {
         configurable: true,
+        writable: true,
         value: originalPlatform,
       });
       if (originalComspec === undefined) delete process.env.comspec;
@@ -413,6 +415,7 @@ describe('adaptSpawnForWindowsShim', () => {
   function setPlatform(value: NodeJS.Platform): void {
     Object.defineProperty(process, 'platform', {
       configurable: true,
+      writable: true,
       value,
     });
   }
@@ -420,6 +423,7 @@ describe('adaptSpawnForWindowsShim', () => {
   afterEach(() => {
     Object.defineProperty(process, 'platform', {
       configurable: true,
+      writable: true,
       value: originalPlatform,
     });
     if (originalComspec === undefined) delete process.env.comspec;
