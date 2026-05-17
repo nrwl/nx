@@ -31,8 +31,10 @@ import {
   isEslintConfigSupported,
   replaceOverridesInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
-import { findRootJestPreset } from '@nx/jest/src/utils/config/config-file';
-import { getInstalledJestMajorVersion } from '@nx/jest/src/utils/versions';
+import {
+  findRootJestPreset,
+  getInstalledJestMajorVersion,
+} from '@nx/jest/internal';
 import {
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
