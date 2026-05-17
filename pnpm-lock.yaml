@@ -445,9 +445,6 @@ importers:
       front-matter:
         specifier: ^4.0.2
         version: 4.0.2
-      glob:
-        specifier: 7.1.4
-        version: 7.1.4
       json-schema-to-typescript:
         specifier: ^10.1.5
         version: 10.1.5
@@ -4212,15 +4209,15 @@ importers:
       '@xmldom/xmldom':
         specifier: ^0.8.10
         version: 0.8.11
-      glob:
-        specifier: 7.1.4
-        version: 7.1.4
       semver:
         specifier: 'catalog:'
         version: 7.7.4
       shiki:
         specifier: ^4.0.2
         version: 4.0.2
+      tinyglobby:
+        specifier: 'catalog:'
+        version: 0.2.15
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
