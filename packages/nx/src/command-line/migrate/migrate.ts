@@ -2693,6 +2693,7 @@ export async function runNxOrAngularMigration(
   changes: FileChange[];
   nextSteps: string[];
   promptContext: string[];
+  logs: string;
 }> {
   if (!installDepsIfChanged) {
     const changedDepInstaller = new ChangedDepInstaller(root);
@@ -2705,8 +2706,9 @@ export async function runNxOrAngularMigration(
   let changes: FileChange[] = [];
   let nextSteps: string[] = [];
   let promptContext: string[] = [];
+  let logs = '';
   if (!isAngularMigration(collection, migration.name)) {
-    ({ nextSteps, changes, promptContext } = await runNxMigration(
+    ({ nextSteps, changes, promptContext, logs } = await runNxMigration(
       root,
       collectionPath,
       collection,
@@ -2718,7 +2720,7 @@ export async function runNxOrAngularMigration(
     logger.info(`  ${migration.description}\n`);
     if (changes.length < 1) {
       logger.info(`No changes were made\n`);
-      return { changes, nextSteps, promptContext };
+      return { changes, nextSteps, promptContext, logs };
     }
 
     logger.info('Changes:');
@@ -2735,12 +2737,13 @@ export async function runNxOrAngularMigration(
       isVerbose,
       migrationProjectGraph
     );
+    logs = loggingQueue.join('\n');
 
     logger.info(`Ran ${migration.name} from ${migration.package}`);
     logger.info(`  ${migration.description}\n`);
     if (!madeChanges) {
       logger.info(`No changes were made\n`);
-      return { changes, nextSteps, promptContext };
+      return { changes, nextSteps, promptContext, logs };
     }
 
     logger.info('Changes:');
@@ -2761,7 +2764,7 @@ export async function runNxOrAngularMigration(
     await installDepsIfChanged();
   }
 
-  return { changes, nextSteps, promptContext };
+  return { changes, nextSteps, promptContext, logs };
 }
 
 async function runMigrations(
@@ -2890,12 +2893,16 @@ async function runNxMigration(
     process.env.NX_VERBOSE_LOGGING === 'true',
     `migration ${collection.name}:${name}`
   );
-  const result = await fn(host, {});
+  const { withGeneratorOutputCapture } =
+    require('./agentic/capture-generator-output') as typeof import('./agentic/capture-generator-output');
+  const { result, logs } = await withGeneratorOutputCapture(() =>
+    fn(host, {})
+  );
   const { nextSteps, promptContext } = parseMigrationReturn(result);
   host.lock();
   const changes = host.listChanges();
   flushChanges(root, changes);
-  return { changes, nextSteps, promptContext };
+  return { changes, nextSteps, promptContext, logs };
 }
 
 export function parseMigrationReturn(value: unknown): {
