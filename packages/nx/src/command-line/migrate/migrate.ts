@@ -2352,15 +2352,22 @@ type ExecutableMigration = {
   description?: string;
   version: string;
   implementation?: string;
+  factory?: string;
   prompt?: string;
 };
 
+// `factory` is the legacy Angular schematics field; getImplementationPath
+// accepts either form. Treat them equivalently when classifying the entry.
+function hasDeterministicImplementation(m: ExecutableMigration): boolean {
+  return !!(m.implementation || m.factory);
+}
+
 export function isPromptOnlyMigration(m: ExecutableMigration): boolean {
-  return !!m.prompt && !m.implementation;
+  return !!m.prompt && !hasDeterministicImplementation(m);
 }
 
 export function isHybridMigration(m: ExecutableMigration): boolean {
-  return !!m.prompt && !!m.implementation;
+  return !!m.prompt && hasDeterministicImplementation(m);
 }
 
 export function resolveAgenticRunId(migrations: ExecutableMigration[]): string {

@@ -4061,10 +4061,22 @@ describe('Migration', () => {
           })
         ).toBe(false);
       });
+
+      it('is false when `prompt` is set alongside the legacy `factory` field', () => {
+        expect(
+          isPromptOnlyMigration({
+            package: 'p',
+            name: 'n',
+            version: '1.0.0',
+            prompt: 'x.md',
+            factory: './factory.js',
+          })
+        ).toBe(false);
+      });
     });
 
     describe('isHybridMigration', () => {
-      it('is true only when both `prompt` and `implementation` are set', () => {
+      it('is true only when `prompt` and an implementation (or factory) are set', () => {
         expect(
           isHybridMigration({
             package: 'p',
@@ -4072,6 +4084,15 @@ describe('Migration', () => {
             version: '1.0.0',
             prompt: 'x.md',
             implementation: './impl.js',
+          })
+        ).toBe(true);
+        expect(
+          isHybridMigration({
+            package: 'p',
+            name: 'n',
+            version: '1.0.0',
+            prompt: 'x.md',
+            factory: './factory.js',
           })
         ).toBe(true);
         expect(
