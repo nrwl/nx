@@ -10,9 +10,9 @@
     "@nx/js": "23.0.0-beta.4",
     "@nx/plugin": "23.0.0-beta.4",
     "@xmldom/xmldom": "^0.8.10",
-    "glob": "7.1.4",
     "semver": "catalog:",
     "shiki": "^4.0.2",
+    "tinyglobby": "catalog:",
     "tslib": "catalog:typescript"
   },
   "type": "commonjs",
