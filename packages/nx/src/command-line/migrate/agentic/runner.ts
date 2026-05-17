@@ -32,6 +32,7 @@ export async function runAgentic(
       stdio: 'inherit',
       cwd: spec.cwd ?? invocationContext.workspaceRoot,
       env: spec.env ? { ...process.env, ...spec.env } : process.env,
+      windowsHide: true,
     });
   } catch {
     return resolveFromHandoffOrPrompt(handoffFilePath);
