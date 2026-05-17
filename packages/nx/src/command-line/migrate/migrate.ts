@@ -2503,6 +2503,10 @@ export async function executeMigrations(
         const generatorMadeChanges = changes.length > 0;
 
         if (agenticRun) {
+          // Install any deps the deterministic phase added/bumped before the
+          // agent runs — the prompt half may depend on them being present in
+          // node_modules.
+          await changedDepInstaller.installDepsIfChanged();
           await runAgenticPromptStep(
             root,
             m,
@@ -2645,13 +2649,13 @@ async function runAgenticPromptStep(
     handoffFilePath,
   });
 
-  await changedDepInstaller.installDepsIfChanged();
-
   switch (outcome.kind) {
     case 'success':
+      await changedDepInstaller.installDepsIfChanged();
       logger.info(`Prompt migration applied: ${outcome.summary}`);
       return;
     case 'ambiguous-continue':
+      await changedDepInstaller.installDepsIfChanged();
       logger.info(
         `Prompt migration marked complete by user (no handoff file was written).`
       );
