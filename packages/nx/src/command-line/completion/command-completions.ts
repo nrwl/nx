@@ -159,10 +159,12 @@ export const DESC_SEPARATOR = '\t';
 
 // Yargs prefixes some descriptions with `__yargsString__:` (its i18n marker).
 // Strip that. Colons need no escaping — the value/description separator is a
-// TAB, so a colon inside a description is unambiguous.
+// TAB. A literal TAB inside a description WOULD break the split, so collapse
+// any to a space (defensive: nx's own descriptions have none, but a plugin's
+// command description is not under our control).
 export function formatDescription(raw: string | undefined): string {
   if (!raw) return '';
-  return raw.replace(/^__yargsString__:/, '');
+  return raw.replace(/^__yargsString__:/, '').replace(/\t/g, ' ');
 }
 
 export function isZshShell(): boolean {

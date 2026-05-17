@@ -117,7 +117,11 @@ _nx_completions()
       dir="\$(dirname "\$dir")"
     done
 
-    type_list=$(NX_COMPLETE=bash "\$nx_cmd" "\${args[@]}" 2>/dev/null)
+    # Stderr is hidden so a stray warning never lands in the completion
+    # buffer. Set NX_COMPLETE_DEBUG to surface it when completion misbehaves.
+    local err_to=/dev/null
+    [ -n "\$NX_COMPLETE_DEBUG" ] && err_to=/dev/stderr
+    type_list=$(NX_COMPLETE=bash "\$nx_cmd" "\${args[@]}" 2>"\$err_to")
 
     COMPREPLY=( $(compgen -W "\${type_list}" -- \${cur_word}) )
 
@@ -168,7 +172,11 @@ if type compdef &>/dev/null; then
       dir="\${dir:h}"
     done
 
-    IFS=$'\\n' reply=($(NX_COMPLETE=zsh "\$nx_cmd" "\${words[@]}" 2>/dev/null))
+    # Stderr is hidden so a stray warning never lands in the completion
+    # buffer. Set NX_COMPLETE_DEBUG to surface it when completion misbehaves.
+    local err_to=/dev/null
+    [[ -n "\$NX_COMPLETE_DEBUG" ]] && err_to=/dev/stderr
+    IFS=$'\\n' reply=($(NX_COMPLETE=zsh "\$nx_cmd" "\${words[@]}" 2>"\$err_to"))
     IFS=$si
 
     # Each line is either a bare value or \`value<TAB>description\`. Split into
@@ -233,7 +241,11 @@ function __nx_completions
     end
     set dir (dirname "\$dir")
   end
-  NX_COMPLETE=fish \$nx_cmd \$tokens "\$current" 2>/dev/null
+  # Stderr is hidden so a stray warning never lands in the completion buffer.
+  # Set NX_COMPLETE_DEBUG to surface it when completion misbehaves.
+  set -l err_to /dev/null
+  test -n "\$NX_COMPLETE_DEBUG"; and set err_to /dev/stderr
+  NX_COMPLETE=fish \$nx_cmd \$tokens "\$current" 2>\$err_to
 end
 complete -c nx -f -a '(__nx_completions)'
 ###-end-nx-completions-###
@@ -280,10 +292,18 @@ Register-ArgumentCompleter -Native -CommandName nx -ScriptBlock {
 
     $env:NX_COMPLETE = 'powershell'
     try {
+        # Stderr is hidden so a stray warning never lands in the completion
+        # buffer. Set NX_COMPLETE_DEBUG to surface it when completion
+        # misbehaves.
+        if ($env:NX_COMPLETE_DEBUG) {
+            $lines = & $nxCmd @tokens
+        } else {
+            $lines = & $nxCmd @tokens 2>$null
+        }
         # Note: PowerShell appends a space after each completion. Two-stage
         # 'project:' / 'plugin:' completion still works — the user deletes
         # the space or types ':' — but there is no per-result nospace API.
-        & $nxCmd @tokens 2>$null | ForEach-Object {
+        $lines | ForEach-Object {
             [System.Management.Automation.CompletionResult]::new($_)
         }
     } finally {

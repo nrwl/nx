@@ -1,4 +1,8 @@
-import { formatDescription, isZshShell } from './command-completions';
+import {
+  DESC_SEPARATOR,
+  formatDescription,
+  isZshShell,
+} from './command-completions';
 
 // `getCommandCompletions` and `getTopLevelCommands` aren't unit-tested:
 // both lazy-require the full nx-commands surface (35+ command-objects),
@@ -7,6 +11,15 @@ import { formatDescription, isZshShell } from './command-completions';
 // integration runs.
 
 describe('completion/command-completions', () => {
+  describe('DESC_SEPARATOR', () => {
+    // The zsh wrapper splits each completion line on this separator. It MUST
+    // be a TAB — completion values (`my-app:build`) and command names
+    // (`format:check`) contain colons, so a colon separator is ambiguous.
+    it('is a TAB', () => {
+      expect(DESC_SEPARATOR).toBe('\t');
+    });
+  });
+
   describe('formatDescription', () => {
     it('strips the yargs i18n marker prefix', () => {
       expect(formatDescription('__yargsString__:Run a target')).toBe(
@@ -27,6 +40,10 @@ describe('completion/command-completions', () => {
       expect(formatDescription('__yargsString__:Prefix: do thing')).toBe(
         'Prefix: do thing'
       );
+    });
+
+    it('collapses literal TABs so they cannot break the zsh value/desc split', () => {
+      expect(formatDescription('see\tthe\tdocs')).toBe('see the docs');
     });
   });
 

@@ -8,8 +8,10 @@ import { dirname, join } from 'path';
  * subdirectory the user pressed TAB in. Walk up from cwd to the nearest
  * `nx.json` so project/target/generator completion works everywhere in the
  * workspace, not only at the root.
+ *
+ * Exported only so it can be unit-tested.
  */
-function resolveWorkspaceRoot(): string {
+export function resolveWorkspaceRoot(): string {
   const fromEnv = process.env.NX_WORKSPACE_ROOT_PATH;
   if (fromEnv) {
     return fromEnv;

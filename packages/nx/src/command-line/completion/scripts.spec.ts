@@ -53,6 +53,35 @@ describe('completion/scripts', () => {
           expect(script).not.toContain(`NX_COMPLETE = '${other}'`);
         }
       });
+
+      it('honors NX_COMPLETE_DEBUG to unmask completion stderr', async () => {
+        const script = await generate(shell);
+        expect(script).toContain('NX_COMPLETE_DEBUG');
+      });
     });
   }
+
+  describe('shell-specific invariants', () => {
+    it('bash/zsh/fish wrappers walk up for a workspace-local nx', async () => {
+      for (const shell of ['bash', 'zsh', 'fish'] as const) {
+        expect(await generate(shell)).toContain('node_modules/.bin/nx');
+      }
+    });
+
+    it('the PowerShell wrapper walks up for a workspace-local nx.cmd', async () => {
+      expect(await generate('powershell')).toContain(
+        'node_modules\\.bin\\nx.cmd'
+      );
+    });
+
+    it('the zsh wrapper uses `compadd -d`, never invokes `_describe`', async () => {
+      // `_describe` colon-splits each entry, mangling values like
+      // `my-app:build`; `compadd -d` inserts the value literally. (The
+      // wrapper's comments may mention `_describe` — only the invocation,
+      // `_describe '...'`, is forbidden.)
+      const script = await generate('zsh');
+      expect(script).toContain('compadd -d');
+      expect(script).not.toContain("_describe '");
+    });
+  });
 });

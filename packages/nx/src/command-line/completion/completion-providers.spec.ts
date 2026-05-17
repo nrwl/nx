@@ -1,4 +1,10 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
@@ -10,6 +16,7 @@ import {
   getProjectNameCompletions,
   getProjectNamesWithTarget,
   getTargetNameCompletions,
+  resolveWorkspaceRoot,
 } from './completion-providers';
 
 describe('completion/completion-providers', () => {
@@ -65,6 +72,43 @@ describe('completion/completion-providers', () => {
   function writeRootPackageJson(pkg: object): void {
     writeFileSync(join(workspaceRoot, 'package.json'), JSON.stringify(pkg));
   }
+
+  describe('resolveWorkspaceRoot', () => {
+    let originalCwd: string;
+
+    beforeEach(() => {
+      originalCwd = process.cwd();
+    });
+
+    afterEach(() => {
+      process.chdir(originalCwd);
+    });
+
+    it('returns NX_WORKSPACE_ROOT_PATH verbatim when set', () => {
+      process.env.NX_WORKSPACE_ROOT_PATH = '/explicit/workspace/root';
+      expect(resolveWorkspaceRoot()).toBe('/explicit/workspace/root');
+    });
+
+    it('walks up from a nested cwd to the nearest nx.json', () => {
+      // This is the Critical-fix regression guard: completion runs without
+      // NX_WORKSPACE_ROOT_PATH set, from whatever subdirectory the user is
+      // in. Without the walk-up, project/target/generator completion only
+      // worked at the workspace root.
+      delete process.env.NX_WORKSPACE_ROOT_PATH;
+      writeFileSync(join(workspaceRoot, 'nx.json'), '{}');
+      const nested = join(workspaceRoot, 'apps', 'my-app', 'src');
+      mkdirSync(nested, { recursive: true });
+      process.chdir(nested);
+      expect(resolveWorkspaceRoot()).toBe(realpathSync(workspaceRoot));
+    });
+
+    it('falls back to cwd when no nx.json is found while walking up', () => {
+      delete process.env.NX_WORKSPACE_ROOT_PATH;
+      // The fixture root has no nx.json.
+      process.chdir(workspaceRoot);
+      expect(resolveWorkspaceRoot()).toBe(realpathSync(workspaceRoot));
+    });
+  });
 
   describe('project completions', () => {
     beforeEach(() => {
