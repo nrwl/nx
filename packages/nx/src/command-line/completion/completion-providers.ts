@@ -1,5 +1,32 @@
 import { existsSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { dirname, join } from 'path';
+
+/**
+ * Resolve the workspace root for completion. Completion runs without the
+ * normal workspace bootstrap (`bin/nx.ts` returns before `initLocal`), so
+ * `NX_WORKSPACE_ROOT_PATH` is usually unset and `process.cwd()` is whatever
+ * subdirectory the user pressed TAB in. Walk up from cwd to the nearest
+ * `nx.json` so project/target/generator completion works everywhere in the
+ * workspace, not only at the root.
+ */
+function resolveWorkspaceRoot(): string {
+  const fromEnv = process.env.NX_WORKSPACE_ROOT_PATH;
+  if (fromEnv) {
+    return fromEnv;
+  }
+  let dir = process.cwd();
+  while (true) {
+    if (existsSync(join(dir, 'nx.json'))) {
+      return dir;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) {
+      // Reached the filesystem root without finding nx.json.
+      return process.cwd();
+    }
+    dir = parent;
+  }
+}
 
 /**
  * Lightweight cache reader that avoids importing heavy nx modules.
@@ -12,7 +39,7 @@ import { join } from 'path';
  */
 function getCachedProjectGraph(): any | null {
   try {
-    const workspaceRoot = process.env.NX_WORKSPACE_ROOT_PATH || process.cwd();
+    const workspaceRoot = resolveWorkspaceRoot();
     const dataDir =
       process.env.NX_WORKSPACE_DATA_DIRECTORY ??
       process.env.NX_PROJECT_GRAPH_CACHE_DIRECTORY ??
@@ -146,7 +173,7 @@ export function getGeneratorsForPlugin(
  * one is what the user is developing).
  */
 function collectPluginDirs(): Map<string, string> {
-  const workspaceRoot = process.env.NX_WORKSPACE_ROOT_PATH || process.cwd();
+  const workspaceRoot = resolveWorkspaceRoot();
   const dirs = new Map<string, string>();
 
   const rootPkg = readJsonSafe(join(workspaceRoot, 'package.json'));

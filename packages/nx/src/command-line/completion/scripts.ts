@@ -170,18 +170,30 @@ if type compdef &>/dev/null; then
 
     IFS=$'\\n' reply=($(NX_COMPLETE=zsh "\$nx_cmd" "\${words[@]}" 2>/dev/null))
     IFS=$si
-    # When completions end with ':' (e.g. project names in \`nx show target\`
-    # or \`nx run\`), omit the trailing space so the user can TAB again for
-    # targets without having to delete a space and type ':' manually.
-    local has_colon_suffix=0
-    local r
+
+    # Each line is either a bare value or \`value<TAB>description\`. Split into
+    # parallel arrays and feed \`compadd -d\`: the value is inserted literally
+    # (values like \`my-app:build\` contain colons, so \`_describe\` — which
+    # splits on ':' — must not be used), the description is shown in the menu.
+    local -a values displays
+    local r value nospace=0
     for r in \$reply; do
-      if [[ "\$r" == *: ]]; then has_colon_suffix=1; break; fi
+      value="\${r%%\$'\\t'*}"
+      values+=("\$value")
+      if [[ "\$r" == *\$'\\t'* ]]; then
+        displays+=("\$value -- \${r#*\$'\\t'}")
+      else
+        displays+=("\$value")
+      fi
+      # A trailing ':' (project name before a target) means TAB-again;
+      # suppress the inserted space so the user can keep typing.
+      [[ "\$value" == *: ]] && nospace=1
     done
-    if (( has_colon_suffix )); then
-      compadd -S '' -a reply
+
+    if (( nospace )); then
+      compadd -S '' -d displays -a values
     else
-      _describe 'values' reply
+      compadd -d displays -a values
     fi
   }
   compdef _nx_completions nx
@@ -251,9 +263,27 @@ Register-ArgumentCompleter -Native -CommandName nx -ScriptBlock {
         $tokens += ''
     }
 
+    # Prefer the workspace's local nx over PATH, like the POSIX wrappers.
+    # Walks up from the cwd checking the standard and .nx-style layouts;
+    # uses nx.cmd, the executable PowerShell can invoke on Windows.
+    $nxCmd = '${NX_COMMAND}'
+    $dir = $PWD.Path
+    while ($dir) {
+        $standard = Join-Path $dir 'node_modules\\.bin\\nx.cmd'
+        $nxStyle = Join-Path $dir '.nx\\installation\\node_modules\\.bin\\nx.cmd'
+        if (Test-Path -LiteralPath $standard) { $nxCmd = $standard; break }
+        if (Test-Path -LiteralPath $nxStyle) { $nxCmd = $nxStyle; break }
+        $parent = Split-Path -Parent $dir
+        if ($parent -eq $dir) { break }
+        $dir = $parent
+    }
+
     $env:NX_COMPLETE = 'powershell'
     try {
-        & ${NX_COMMAND} @tokens 2>$null | ForEach-Object {
+        # Note: PowerShell appends a space after each completion. Two-stage
+        # 'project:' / 'plugin:' completion still works — the user deletes
+        # the space or types ':' — but there is no per-result nospace API.
+        & $nxCmd @tokens 2>$null | ForEach-Object {
             [System.Management.Automation.CompletionResult]::new($_)
         }
     } finally {

@@ -41,18 +41,17 @@ async function main() {
   // the bash/zsh/fish/powershell wrappers set before invoking nx. Skips the
   // full workspace bootstrap (analytics, native module, dotenv, initLocal,
   // daemon client) — completion reads the cached project graph directly.
-  const { isCompletionRequest } = await import(
-    'nx/src/command-line/completion/trigger'
-  );
-  if (isCompletionRequest()) {
-    // Any throw inside this block must NOT reach the top-level
-    // `main().catch` handler — that prints the error and exits 1, which
-    // the shell would splice into its completion buffer (partial list +
-    // stack trace). Swallowing here is deliberate and correct: a broken
-    // completion should produce *no* suggestions, never corrupt the line.
+  //
+  // The trigger is checked inline as a bare env-var read (not via the
+  // `isCompletionRequest` helper) so NOTHING — not even a dynamic import —
+  // runs before the try/catch below. A throw out here would reach
+  // `main().catch`, which prints the error and exits 1; the shell would
+  // splice that stack trace into its completion buffer.
+  if (process.env.NX_COMPLETE) {
     try {
-      // perf-logging consumes an `init-local` mark; set it before requiring
-      // any heavy modules so the measurement doesn't error on missing mark.
+      // Defensive: some nx modules pair an `init-local` mark with a later
+      // `performance.measure`. Setting the mark keeps any such measure
+      // well-formed if completion ever loads a module that emits one.
       performance.mark('init-local');
       // Fast path: value completions (project/target/generator names, flag
       // values) served from registered metadata without loading the full
@@ -69,7 +68,8 @@ async function main() {
       );
       tryCommandSurfaceCompletion();
     } catch {
-      // Emit nothing; exit cleanly so the shell shows no suggestions.
+      // A broken completion must produce NO suggestions — never a partial
+      // list or a stack trace in the user's command line. Swallow, exit 0.
     }
     return;
   }

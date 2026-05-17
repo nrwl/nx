@@ -3,11 +3,11 @@
  * and flag names. Used as the slow-path fallback after the metadata-driven
  * fast path (`tryValueCompletion`) returns null.
  *
- * Two entry points are exported:
- *   - `tryCommandSurfaceCompletion()` — bin-entry: parses argv, dispatches
- *     between matched-command and top-level enumeration, writes stdout.
- *   - `getCommandCompletions(current, args)` — programmatic entry: returns
- *     completions for a matched top-level command (subcommands + options).
+ * `tryCommandSurfaceCompletion()` is the bin entry point: it parses argv and
+ * dispatches between matched-command enumeration (`getCommandCompletions`)
+ * and top-level command enumeration (`getTopLevelCommands`), then writes the
+ * result to stdout. The latter two are internal helpers, exported only so
+ * they can be unit-tested.
  */
 
 import { getCompletionShell } from './trigger';
@@ -59,7 +59,7 @@ export function getTopLevelCommands(
     const handler = handlers[name];
     if (handler?.description === false) continue; // hidden
     const desc = isZsh ? formatDescription(handler?.description) : '';
-    completions.push(desc ? `${name}:${desc}` : name);
+    completions.push(desc ? `${name}${DESC_SEPARATOR}${desc}` : name);
   }
   return completions;
 }
@@ -104,9 +104,8 @@ export function getCommandCompletions(
 
   const completions: string[] = [];
   const isFlagPrefix = current.startsWith('-');
-  // Only zsh's `_describe` parses the `name:description` format. Bash's
-  // `compgen -W` would insert the whole `name:description` literal as the
-  // completion text — so omit descriptions when not running under zsh.
+  // Descriptions are emitted only for zsh (its wrapper renders them via
+  // `compadd -d`). bash/fish/powershell get bare names. See DESC_SEPARATOR.
   const isZsh = isZshShell();
 
   // Subcommands: only relevant when user isn't typing a flag.
@@ -117,7 +116,9 @@ export function getCommandCompletions(
       const subName = String(usagePattern).split(/\s+/)[0];
       if (subName === '$0') continue;
       const formatted = isZsh ? formatDescription(desc as string) : '';
-      completions.push(formatted ? `${subName}:${formatted}` : subName);
+      completions.push(
+        formatted ? `${subName}${DESC_SEPARATOR}${formatted}` : subName
+      );
     }
   }
 
@@ -130,7 +131,7 @@ export function getCommandCompletions(
   for (const k of Object.keys(opts.key ?? {})) {
     if ((opts.hiddenOptions ?? []).includes(k)) continue;
     const desc = isZsh ? formatDescription(descriptions[k]) : '';
-    completions.push(desc ? `--${k}:${desc}` : `--${k}`);
+    completions.push(desc ? `--${k}${DESC_SEPARATOR}${desc}` : `--${k}`);
   }
 
   // Filter by current prefix.
@@ -146,12 +147,22 @@ export function getCommandCompletions(
   });
 }
 
+/**
+ * Separator between a completion value and its description in zsh output.
+ * A TAB is used (not a colon) because command names and completion values
+ * can themselves contain colons (`format:check`, `my-app:build`) — a colon
+ * separator is ambiguous, a TAB is not (no name or description contains
+ * one). The zsh wrapper splits each line on this TAB and feeds the parts to
+ * `compadd -d` so values are inserted literally and descriptions displayed.
+ */
+export const DESC_SEPARATOR = '\t';
+
 // Yargs prefixes some descriptions with `__yargsString__:` (its i18n marker).
-// Strip that and any literal colons inside descriptions (which would confuse
-// the `name:description` shell-completion format).
+// Strip that. Colons need no escaping — the value/description separator is a
+// TAB, so a colon inside a description is unambiguous.
 export function formatDescription(raw: string | undefined): string {
   if (!raw) return '';
-  return raw.replace(/^__yargsString__:/, '').replace(/:/g, '\\:');
+  return raw.replace(/^__yargsString__:/, '');
 }
 
 export function isZshShell(): boolean {

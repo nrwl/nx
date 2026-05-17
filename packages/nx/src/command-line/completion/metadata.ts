@@ -88,13 +88,11 @@ export function findFlagCompletion(
 }
 
 /**
- * Shared positional/flag-value dispatch. Used by both entry points in
- * value-completions.ts (the bin-level `tryValueCompletion` and the
- * yargs-fallback `getValueCompletions`).
+ * Positional/flag-value dispatch. Called by `tryValueCompletion` in
+ * value-completions.ts (the bin-level fast path).
  *
  * Returns `null` when no registered completion applies — the caller falls
- * through to its next strategy (command/option-name enumeration, yargs
- * defaults).
+ * through to its next strategy (command/option-name enumeration).
  *
  * `previousToken` is the user's last fully-typed token, i.e. the one before
  * the partial they're currently typing. Callers pass it explicitly so each

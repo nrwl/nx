@@ -14,8 +14,8 @@ describe('completion/command-completions', () => {
       );
     });
 
-    it('escapes literal colons so they do not break the name:desc format', () => {
-      expect(formatDescription('See more: nx.dev')).toBe('See more\\: nx.dev');
+    it('leaves colons untouched (the value/description separator is a TAB)', () => {
+      expect(formatDescription('See more: nx.dev')).toBe('See more: nx.dev');
     });
 
     it('handles undefined and empty inputs', () => {
@@ -23,9 +23,9 @@ describe('completion/command-completions', () => {
       expect(formatDescription('')).toBe('');
     });
 
-    it('combines marker-strip and colon-escape', () => {
+    it('strips only the marker, keeping a colon in the description', () => {
       expect(formatDescription('__yargsString__:Prefix: do thing')).toBe(
-        'Prefix\\: do thing'
+        'Prefix: do thing'
       );
     });
   });
