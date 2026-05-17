@@ -106,9 +106,7 @@ describe('buildHybridPromptUserPrompt', () => {
         ],
       },
     });
-    expect(out).toContain(
-      'Context from the generator phase (advisory'
-    );
+    expect(out).toContain('Context from the generator phase (advisory');
     expect(out).toContain('  - Consumer X may need manual update');
     expect(out).toContain('  - Adapter Y left untouched');
   });

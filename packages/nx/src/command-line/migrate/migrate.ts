@@ -2405,7 +2405,7 @@ export function resolveCreateCommits(args: {
         effective: false,
         agenticHasDiffContext: false,
         warning:
-          '--no-create-commits was passed alongside --agentic. The agent will not receive the file-list context from the deterministic phase — per-migration commits are required to isolate each migration\'s diff.',
+          "--no-create-commits was passed alongside --agentic. The agent will not receive the file-list context from the deterministic phase — per-migration commits are required to isolate each migration's diff.",
       };
     }
     return { effective: true, agenticHasDiffContext: true };
@@ -2968,9 +2968,7 @@ async function runNxMigration(
   );
   const { withGeneratorOutputCapture } =
     require('./agentic/capture-generator-output') as typeof import('./agentic/capture-generator-output');
-  const { result, logs } = await withGeneratorOutputCapture(() =>
-    fn(host, {})
-  );
+  const { result, logs } = await withGeneratorOutputCapture(() => fn(host, {}));
   const { nextSteps, promptContext } = parseMigrationReturn(result);
   host.lock();
   const changes = host.listChanges();
