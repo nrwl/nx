@@ -388,6 +388,16 @@ exports.createNodesV2 = [
     expect(() => runCLI(`show project ${inferredProject} --json`)).toThrow(
       /resolvable source-pointing condition/
     );
+
+    // Clean up the broken plugin registration so subsequent tests are not affected
+    updateJson(`nx.json`, (nxJson) => {
+      nxJson.plugins = (nxJson.plugins ?? []).filter(
+        (p) =>
+          typeof p === 'string' ||
+          p.plugin !== `@${workspaceName}/${plugin}/cypress`
+      );
+      return nxJson;
+    });
   });
 
   it('should respect and support generating plugins with a name different than the import path', async () => {
