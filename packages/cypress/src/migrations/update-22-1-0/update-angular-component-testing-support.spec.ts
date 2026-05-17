@@ -82,12 +82,13 @@ describe('AppComponent', () => {
 
     expect(tree.read('apps/dashboard/src/app/app.component.cy.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { mount } from "@cypress/angular";
+      "import { mount } from '@cypress/angular';
       describe('AppComponent', () => {
-          it('renders', () => {
-              mount('<app-root></app-root>');
-          });
-      });"
+        it('renders', () => {
+          mount('<app-root></app-root>');
+        });
+      });
+      "
     `);
     expect(
       readJson(tree, 'package.json').devDependencies['@cypress/angular']

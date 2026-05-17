@@ -396,7 +396,7 @@ exports[`Remix Application Standalone Project Repo --e2eTestRunner should genera
 import { defineConfig } from 'cypress';
 export default defineConfig({
   e2e: {
-    ...nxE2EPreset(__filename, {
+    ...nxE2EPreset(import.meta.url, {
       cypressDir: 'src',
       webServerCommands: {
         default: 'npx nx run test:dev',

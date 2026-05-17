@@ -42,7 +42,7 @@ export default defineConfig({
       export default defineConfig({
         e2e: {
           baseUrl: 'http://localhost:4200',
-          
+
           setupNodeEvents(on, config) {},
         },
       });
@@ -74,7 +74,6 @@ export default defineConfig({
       export default defineConfig({
         e2e: {
           baseUrl: 'http://localhost:4200',
-          
         },
       });
       "
@@ -105,7 +104,6 @@ export default defineConfig({
       export default defineConfig({
         e2e: {
           baseUrl: 'http://localhost:4200',
-          
         },
       });
       "
@@ -165,7 +163,6 @@ export default defineConfig({
 
       export default defineConfig({
         e2e: {
-          
           baseUrl: 'http://localhost:4200',
         },
       });
