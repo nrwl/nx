@@ -119,9 +119,19 @@ async function selectAgent(
     if (match) {
       return match;
     }
-    output.warn({
-      title: `The agent "${explicitId}" was requested via --agentic but is not installed; falling back to picker.`,
+    const installedList =
+      detected.length > 0
+        ? detected.map((d) => `  - ${d.displayName} (${d.id})`)
+        : ['  (none detected)'];
+    output.error({
+      title: `The agent "${explicitId}" was requested via --agentic but is not installed.`,
+      bodyLines: [
+        'Install the requested agent and re-run, or pass --agentic without an explicit agent to choose from installed ones.',
+        'Currently installed agents:',
+        ...installedList,
+      ],
     });
+    throw new Error(`The requested agent "${explicitId}" is not installed.`);
   }
 
   if (detected.length === 0) {

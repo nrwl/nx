@@ -173,31 +173,39 @@ describe('resolveAgentic', () => {
     expect(mockPrompt).not.toHaveBeenCalled();
   });
 
-  it('warns and falls back to the picker when the explicit agent id is not installed', async () => {
+  it('aborts when the explicit agent id is not installed (other agents available)', async () => {
     mockDetect.mockResolvedValue([detected('claude-code'), detected('codex')]);
-    mockPrompt.mockResolvedValueOnce({ id: 'codex' });
-    const result = await resolveAgentic({
-      agentic: 'opencode',
-      migrations: [{ prompt: 'x.md' }],
-    });
-    expect(mockOutputWarn).toHaveBeenCalled();
-    expect(result).toMatchObject({
-      kind: 'enabled',
-      selectedAgent: { id: 'codex' },
-    });
+    await expect(
+      resolveAgentic({
+        agentic: 'opencode',
+        migrations: [{ prompt: 'x.md' }],
+      })
+    ).rejects.toThrow(/requested agent "opencode" is not installed/i);
+    expect(mockOutputError).toHaveBeenCalled();
+    expect(mockPrompt).not.toHaveBeenCalled();
   });
 
-  it('warns then auto-selects when the explicit agent is missing but only one other agent is installed', async () => {
+  it('aborts when the explicit agent id is not installed (only a different agent present)', async () => {
     mockDetect.mockResolvedValue([detected('codex')]);
-    const result = await resolveAgentic({
-      agentic: 'opencode',
-      migrations: [{ prompt: 'x.md' }],
-    });
-    expect(mockOutputWarn).toHaveBeenCalled();
-    expect(result).toMatchObject({
-      kind: 'enabled',
-      selectedAgent: { id: 'codex' },
-    });
+    await expect(
+      resolveAgentic({
+        agentic: 'opencode',
+        migrations: [{ prompt: 'x.md' }],
+      })
+    ).rejects.toThrow(/requested agent "opencode" is not installed/i);
+    expect(mockOutputError).toHaveBeenCalled();
+    expect(mockPrompt).not.toHaveBeenCalled();
+  });
+
+  it('aborts when the explicit agent id is not installed (no agents present)', async () => {
+    mockDetect.mockResolvedValue([]);
+    await expect(
+      resolveAgentic({
+        agentic: 'opencode',
+        migrations: [{ prompt: 'x.md' }],
+      })
+    ).rejects.toThrow(/requested agent "opencode" is not installed/i);
+    expect(mockOutputError).toHaveBeenCalled();
     expect(mockPrompt).not.toHaveBeenCalled();
   });
 
