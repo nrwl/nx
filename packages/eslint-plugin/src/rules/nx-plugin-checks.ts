@@ -9,8 +9,7 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
-import { getRootTsConfigPath } from '@nx/js';
-import { registerTsProject } from '@nx/js/internal';
+import { loadTsFile, requireWithTsconfigFallback } from '@nx/js/internal';
 import * as path from 'path';
 import { valid } from 'semver';
 import { readProjectGraph } from '../utils/project-graph-utils';
@@ -162,11 +161,6 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
       )
     ) {
       return {};
-    }
-
-    if (!(global as any).tsProjectRegistered) {
-      registerTsProject(getRootTsConfigPath());
-      (global as any).tsProjectRegistered = true;
     }
 
     return {
@@ -437,6 +431,26 @@ export function validateEntry(
   }
 }
 
+// Under Node's native TS strip, swc-node isn't registered, so `require.resolve`
+// no longer auto-tries `.ts` extensions. Try them explicitly before giving up.
+const TS_EXTENSIONS = ['.ts', '.tsx', '.cts', '.mts'];
+
+function tryResolveImplementation(modulePath: string): string | undefined {
+  try {
+    return require.resolve(modulePath);
+  } catch {
+    // fall through
+  }
+  for (const ext of TS_EXTENSIONS) {
+    try {
+      return require.resolve(`${modulePath}${ext}`);
+    } catch {
+      // try next
+    }
+  }
+  return undefined;
+}
+
 export function validateImplementationNode(
   implementationNode: AST.JSONProperty,
   key: string,
@@ -464,16 +478,11 @@ export function validateImplementationNode(
       implementationPath
     );
 
-    try {
-      resolvedPath = require.resolve(modulePath);
-    } catch {
-      try {
-        resolvedPath = require.resolve(
-          modulePath.replace(options.outDir, options.rootDir)
-        );
-      } catch {
-        // nothing, will be reported below
-      }
+    resolvedPath = tryResolveImplementation(modulePath);
+    if (!resolvedPath && options.outDir && options.rootDir) {
+      resolvedPath = tryResolveImplementation(
+        modulePath.replace(options.outDir, options.rootDir)
+      );
     }
 
     if (!resolvedPath) {
@@ -677,6 +686,8 @@ export function checkIfIdentifierIsFunction(
   }
 
   // Fallback to require()
-  const m = require(filePath);
+  const m = /\.[cm]?ts$/.test(filePath)
+    ? loadTsFile(filePath)
+    : requireWithTsconfigFallback(filePath);
   return identifier in m && typeof m[identifier] === 'function';
 }

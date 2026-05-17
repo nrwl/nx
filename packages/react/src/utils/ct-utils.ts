@@ -84,12 +84,10 @@ export async function configureCypressCT(
   );
   const updatedCyConfig = await addDefaultCTConfig(
     tree.read(cypressConfigFilePath, 'utf-8'),
-    ctConfigOptions
+    ctConfigOptions,
+    '@nx/react/plugins/component-testing'
   );
-  tree.write(
-    cypressConfigFilePath,
-    `import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';\n${updatedCyConfig}`
-  );
+  tree.write(cypressConfigFilePath, updatedCyConfig);
 
   return found;
 }

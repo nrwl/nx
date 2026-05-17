@@ -230,7 +230,7 @@ describe('app', () => {
       });
 
       expect(
-        appTree.exists('playwright-app-e2e/playwright.config.ts')
+        appTree.exists('playwright-app-e2e/playwright.config.mts')
       ).toBeTruthy();
       expect(
         appTree.exists('playwright-app-e2e/src/example.spec.ts')
@@ -1111,7 +1111,7 @@ describe('app', () => {
         e2eTestRunner: E2eTestRunner.Playwright,
         name: 'root-app',
       });
-      expect(appTree.exists('e2e/playwright.config.ts')).toBeTruthy();
+      expect(appTree.exists('e2e/playwright.config.mts')).toBeTruthy();
       expect(appTree.exists('e2e/src/example.spec.ts')).toBeTruthy();
     });
 

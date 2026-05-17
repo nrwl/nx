@@ -7,8 +7,11 @@
 // Re-exports of nx-source internals (need `no-restricted-imports` overrides).
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 export {
+  forceRegisterEsmLoader,
+  loadTsFile,
   registerTsProject,
   registerTsConfigPaths,
+  requireWithTsconfigFallback,
 } from 'nx/src/plugins/js/utils/register';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 export {
@@ -23,6 +26,10 @@ export {
   walkTsconfigExtendsChain,
   type RawTsconfigJsonCache,
 } from './src/utils/typescript/raw-tsconfig';
+
+// Module-format detection for generators (project package.json `type` field +
+// TS solution awareness; mirrors Node's nearest-package.json semantics).
+export { isEsmProject } from './src/utils/module-format/is-esm-project';
 
 // TS solution setup detection
 export {

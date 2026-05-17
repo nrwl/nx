@@ -97,7 +97,7 @@ describe('Jest', () => {
     updateFile(
       `libs/${mylib}/jest.config.cts`,
       stripIndents`
-        export default {
+        module.exports = {
           testEnvironment: 'node',
           displayName: "${mylib}",
           preset: "../../jest.preset.js",

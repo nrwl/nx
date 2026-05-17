@@ -9,7 +9,7 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
+import { isEsmProject, isUsingTsSolutionSetup } from '@nx/js/internal';
 import { join } from 'path';
 
 export interface CypressBaseSetupSchema {
@@ -76,26 +76,18 @@ export function addBaseCypressSetup(
     templateVars
   );
 
+  const isEsm = isEsmProject(tree, projectConfig.root);
   if (options.js) {
-    if (isEsmProject(tree, projectConfig.root)) {
-      generateFiles(
-        tree,
-        join(__dirname, 'files/config-js-esm'),
-        projectConfig.root,
-        templateVars
-      );
-    } else {
-      generateFiles(
-        tree,
-        join(__dirname, 'files/config-js-cjs'),
-        projectConfig.root,
-        templateVars
-      );
-    }
+    generateFiles(
+      tree,
+      join(__dirname, isEsm ? 'files/config-js-esm' : 'files/config-js-cjs'),
+      projectConfig.root,
+      templateVars
+    );
   } else {
     generateFiles(
       tree,
-      join(__dirname, 'files/config-ts'),
+      join(__dirname, isEsm ? 'files/config-ts-esm' : 'files/config-ts-cjs'),
       projectConfig.root,
       templateVars
     );
@@ -152,19 +144,6 @@ function normalizeOptions(
     offsetFromProjectRoot: `${offsetFromProjectRoot}/`,
     hasTsConfig,
   };
-}
-
-function isEsmProject(tree: Tree, projectRoot: string) {
-  let packageJson: any;
-  if (tree.exists(joinPathFragments(projectRoot, 'package.json'))) {
-    packageJson = readJson(
-      tree,
-      joinPathFragments(projectRoot, 'package.json')
-    );
-  } else {
-    packageJson = readJson(tree, 'package.json');
-  }
-  return packageJson.type === 'module';
 }
 
 function isEslintInstalled(tree: Tree): boolean {
