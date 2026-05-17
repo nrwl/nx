@@ -2384,6 +2384,38 @@ export function formatSkippedPromptsNextStep(
   return lines.join('\n');
 }
 
+/**
+ * Resolves the effective `--create-commits` state once the agentic flow has
+ * been resolved. The agent's outer prompt only embeds the impl-phase file list
+ * when per-migration commits isolate each migration's diff, so the diff-context
+ * flag returned here gates that section.
+ */
+export function resolveCreateCommits(args: {
+  createCommits: boolean | undefined;
+  agenticKind: ResolvedAgentic['kind'];
+}): {
+  effective: boolean;
+  agenticHasDiffContext: boolean;
+  warning?: string;
+} {
+  const { createCommits, agenticKind } = args;
+  if (agenticKind === 'enabled') {
+    if (createCommits === false) {
+      return {
+        effective: false,
+        agenticHasDiffContext: false,
+        warning:
+          '--no-create-commits was passed alongside --agentic. The agent will not receive the file-list context from the deterministic phase — per-migration commits are required to isolate each migration\'s diff.',
+      };
+    }
+    return { effective: true, agenticHasDiffContext: true };
+  }
+  return {
+    effective: createCommits === true,
+    agenticHasDiffContext: false,
+  };
+}
+
 export async function executeMigrations(
   root: string,
   migrations: ExecutableMigration[],
@@ -2391,7 +2423,9 @@ export async function executeMigrations(
   shouldCreateCommits: boolean,
   commitPrefix: string,
   shouldSkipInstall = false,
-  agentic?: ResolvedAgentic
+  agentic?: ResolvedAgentic,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- consumed in the hybrid-prompt wrapping commit
+  agenticHasDiffContext = false
 ) {
   const changedDepInstaller = new ChangedDepInstaller(root, shouldSkipInstall);
 
@@ -2776,7 +2810,7 @@ async function runMigrations(
   },
   args: string[],
   isVerbose: boolean,
-  shouldCreateCommits = false,
+  shouldCreateCommits: boolean | undefined,
   commitPrefix: string,
   shouldSkipInstall = false
 ) {
@@ -2816,12 +2850,6 @@ async function runMigrations(
     );
   }
 
-  output.log({
-    title:
-      `Running migrations from '${opts.runMigrations}'` +
-      (shouldCreateCommits ? ', with each applied in a dedicated commit' : ''),
-  });
-
   const migrations: ExecutableMigration[] = readJsonFile(
     join(root, opts.runMigrations)
   ).migrations;
@@ -2833,14 +2861,35 @@ async function runMigrations(
     migrations,
   });
 
+  const {
+    effective: effectiveCreateCommits,
+    agenticHasDiffContext,
+    warning: createCommitsWarning,
+  } = resolveCreateCommits({
+    createCommits: shouldCreateCommits,
+    agenticKind: agentic.kind,
+  });
+  if (createCommitsWarning) {
+    output.warn({ title: createCommitsWarning });
+  }
+
+  output.log({
+    title:
+      `Running migrations from '${opts.runMigrations}'` +
+      (effectiveCreateCommits
+        ? ', with each applied in a dedicated commit'
+        : ''),
+  });
+
   const { migrationsWithNoChanges, nextSteps } = await executeMigrations(
     root,
     migrations,
     isVerbose,
-    shouldCreateCommits,
+    effectiveCreateCommits,
     commitPrefix,
     shouldSkipInstall,
-    agentic
+    agentic,
+    agenticHasDiffContext
   );
 
   if (migrationsWithNoChanges.length < migrations.length) {

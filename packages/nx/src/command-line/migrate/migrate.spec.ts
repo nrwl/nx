@@ -35,6 +35,7 @@ import {
   ResolvedMigrationConfiguration,
   resolveAgenticRunId,
   resolveCanonicalNxPackage,
+  resolveCreateCommits,
   resolveMode,
 } from './migrate';
 import {
@@ -4107,6 +4108,68 @@ describe('Migration', () => {
         expect(
           resolveAgenticRunId([{ package: 'a', name: 'a1', version: '21.2.0' }])
         ).toBe('21.2.0');
+      });
+    });
+
+    describe('resolveCreateCommits', () => {
+      it('uses explicit createCommits value when agentic is not enabled', () => {
+        expect(
+          resolveCreateCommits({
+            createCommits: true,
+            agenticKind: 'disabled',
+          })
+        ).toEqual({ effective: true, agenticHasDiffContext: false });
+
+        expect(
+          resolveCreateCommits({
+            createCommits: false,
+            agenticKind: 'disabled',
+          })
+        ).toEqual({ effective: false, agenticHasDiffContext: false });
+      });
+
+      it('defaults to false when unset and agentic is not enabled', () => {
+        expect(
+          resolveCreateCommits({
+            createCommits: undefined,
+            agenticKind: 'disabled',
+          })
+        ).toEqual({ effective: false, agenticHasDiffContext: false });
+
+        expect(
+          resolveCreateCommits({
+            createCommits: undefined,
+            agenticKind: 'inside-agent',
+          })
+        ).toEqual({ effective: false, agenticHasDiffContext: false });
+      });
+
+      it('soft-forces createCommits=true when agentic is enabled and createCommits is unset', () => {
+        expect(
+          resolveCreateCommits({
+            createCommits: undefined,
+            agenticKind: 'enabled',
+          })
+        ).toEqual({ effective: true, agenticHasDiffContext: true });
+      });
+
+      it('honours createCommits=true when agentic is enabled', () => {
+        expect(
+          resolveCreateCommits({
+            createCommits: true,
+            agenticKind: 'enabled',
+          })
+        ).toEqual({ effective: true, agenticHasDiffContext: true });
+      });
+
+      it('warns and drops diff context when createCommits=false is explicit alongside agentic', () => {
+        const result = resolveCreateCommits({
+          createCommits: false,
+          agenticKind: 'enabled',
+        });
+        expect(result.effective).toBe(false);
+        expect(result.agenticHasDiffContext).toBe(false);
+        expect(result.warning).toMatch(/--no-create-commits/);
       });
     });
 
