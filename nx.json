@@ -78,7 +78,9 @@
   },
   "release": {
     "projects": ["packages/*", "packages/nx/native-packages/*"],
-    "releaseTagPattern": "{version}",
+    "releaseTag": {
+      "pattern": "{version}"
+    },
     "changelog": {
       "workspaceChangelog": {
         "createRelease": "github",

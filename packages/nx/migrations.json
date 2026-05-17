@@ -162,7 +162,7 @@
       "implementation": "./dist/src/migrations/update-22-2-0/add-self-healing-to-gitignore"
     },
     "23-0-0-consolidate-release-tag-config": {
-      "version": "23.0.0-beta.0",
+      "version": "23.0.0-beta.16",
       "description": "Consolidates any remaining legacy releaseTag* flat properties into the nested releaseTag object. The flat properties were removed in Nx 23.",
       "implementation": "./dist/src/migrations/update-23-0-0/consolidate-release-tag-config"
     },
