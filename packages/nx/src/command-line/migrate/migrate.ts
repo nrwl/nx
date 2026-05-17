@@ -2424,7 +2424,6 @@ export async function executeMigrations(
   commitPrefix: string,
   shouldSkipInstall = false,
   agentic?: ResolvedAgentic,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- consumed in the hybrid-prompt wrapping commit
   agenticHasDiffContext = false
 ) {
   const changedDepInstaller = new ChangedDepInstaller(root, shouldSkipInstall);
@@ -2491,14 +2490,15 @@ export async function executeMigrations(
           migrationsWithNoChanges.push(m);
         }
       } else if (isHybridMigration(m)) {
-        const { changes, nextSteps } = await runNxOrAngularMigration(
-          root,
-          m,
-          isVerbose,
-          /* shouldCreateCommits: */ false,
-          commitPrefix,
-          () => changedDepInstaller.installDepsIfChanged()
-        );
+        const { changes, nextSteps, promptContext, logs } =
+          await runNxOrAngularMigration(
+            root,
+            m,
+            isVerbose,
+            /* shouldCreateCommits: */ false,
+            commitPrefix,
+            () => changedDepInstaller.installDepsIfChanged()
+          );
         allNextSteps.push(...nextSteps);
         const generatorMadeChanges = changes.length > 0;
 
@@ -2508,7 +2508,13 @@ export async function executeMigrations(
             m,
             agenticRun.agentic,
             agenticRun.runDir,
-            changedDepInstaller
+            changedDepInstaller,
+            {
+              logs,
+              changes,
+              promptContext,
+              hasDiffContext: agenticHasDiffContext,
+            }
           );
           await commitMigrationIfRequested(
             root,
@@ -2518,6 +2524,7 @@ export async function executeMigrations(
             () => changedDepInstaller.installDepsIfChanged()
           );
         } else {
+          // `promptContext` is agent-only by contract; dropped here.
           skippedPrompts.push(m);
           if (!generatorMadeChanges) {
             migrationsWithNoChanges.push(m);
@@ -2570,12 +2577,20 @@ export async function executeMigrations(
   return { migrationsWithNoChanges, nextSteps: allNextSteps };
 }
 
+interface AgenticPromptImplContext {
+  logs: string;
+  changes: FileChange[];
+  promptContext: string[];
+  hasDiffContext: boolean;
+}
+
 async function runAgenticPromptStep(
   root: string,
   migration: ExecutableMigration,
   agentic: EnabledResolvedAgentic,
   runDir: string,
-  changedDepInstaller: ChangedDepInstaller
+  changedDepInstaller: ChangedDepInstaller,
+  implContext?: AgenticPromptImplContext
 ): Promise<void> {
   const { stepHandoffPath, stepIdFor } =
     require('./agentic/handoff') as typeof import('./agentic/handoff');
@@ -2585,8 +2600,6 @@ async function runAgenticPromptStep(
     require('./agentic/registry') as typeof import('./agentic/registry');
   const { buildSystemPrompt } =
     require('./agentic/prompts/system-prompt') as typeof import('./agentic/prompts/system-prompt');
-  const { buildPromptMigrationUserPrompt } =
-    require('./agentic/prompts/prompt-migration') as typeof import('./agentic/prompts/prompt-migration');
 
   const stepId = stepIdFor(migration);
   const handoffFilePath = stepHandoffPath(runDir, stepId);
@@ -2594,14 +2607,25 @@ async function runAgenticPromptStep(
     workspaceRoot: root,
     handoffFileAbsolutePath: handoffFilePath,
   });
-  const userPrompt = buildPromptMigrationUserPrompt({
+
+  const promptCtx = {
     package: migration.package,
     name: migration.name,
     version: migration.version,
     description: migration.description,
     promptPath: migration.prompt!,
     handoffFileAbsolutePath: handoffFilePath,
-  });
+  };
+  const userPrompt = implContext
+    ? (
+        require('./agentic/prompts/hybrid-prompt-migration') as typeof import('./agentic/prompts/hybrid-prompt-migration')
+      ).buildHybridPromptUserPrompt({
+        ...promptCtx,
+        impl: implContext,
+      })
+    : (
+        require('./agentic/prompts/prompt-migration') as typeof import('./agentic/prompts/prompt-migration')
+      ).buildPromptMigrationUserPrompt(promptCtx);
 
   const definition = getAgentDefinition(agentic.selectedAgent.id);
   if (!definition) {
