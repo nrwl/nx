@@ -9,7 +9,7 @@ describe('isEsmProject', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('returns true for TS solution workspaces even without project package.json', () => {
+  it('does not treat TS solution setup as ESM without a package.json type field', () => {
     updateJson(tree, 'package.json', (json) => {
       json.workspaces = ['packages/*'];
       return json;
@@ -22,6 +22,24 @@ describe('isEsmProject', () => {
       files: [],
       references: [],
     });
+
+    expect(isEsmProject(tree, 'packages/my-lib')).toBe(false);
+  });
+
+  it('returns true for TS solution projects when package.json declares "type": "module"', () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.workspaces = ['packages/*'];
+      return json;
+    });
+    writeJson(tree, 'tsconfig.base.json', {
+      compilerOptions: { composite: true, declaration: true },
+    });
+    writeJson(tree, 'tsconfig.json', {
+      extends: './tsconfig.base.json',
+      files: [],
+      references: [],
+    });
+    writeJson(tree, 'packages/my-lib/package.json', { type: 'module' });
 
     expect(isEsmProject(tree, 'packages/my-lib')).toBe(true);
   });

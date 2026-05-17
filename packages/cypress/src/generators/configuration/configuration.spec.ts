@@ -637,6 +637,13 @@ export default defineConfig({
 
   describe('TS Solution Setup', () => {
     beforeEach(() => {
+      tree.write(
+        'pnpm-workspace.yaml',
+        `packages:
+  - 'packages/*'
+  - 'apps/*'
+`
+      );
       updateJson(tree, 'package.json', (json) => {
         json.workspaces = ['packages/*', 'apps/*'];
         return json;
@@ -654,14 +661,12 @@ export default defineConfig({
       });
     });
 
-    it('should emit ESM-shape cypress.config.ts in TS solution workspaces', async () => {
-      // Regression: in TS solution workspaces, per-project package.json
-      // declares `"type": "module"`, so the generator emits an
-      // `import`/`export default` config. The path-to-config arg uses
-      // `import.meta.url` (a `file://...` URL) so the expression works
-      // under both Nx's native TS strip (ESM) and Cypress's bundled tsx
-      // CJS loader. `nxBaseCypressPreset` converts the URL back to a path.
+    it('should emit ESM-shape cypress.config.ts when the project is ESM', async () => {
       addProject(tree, { name: 'my-lib', type: 'libs' });
+      writeJson(tree, 'libs/my-lib/package.json', {
+        name: '@proj/my-lib',
+        type: 'module',
+      });
 
       await cypressE2EConfigurationGenerator(tree, {
         project: 'my-lib',
@@ -686,6 +691,10 @@ export default defineConfig({
 
     it('should handle existing tsconfig.json files', async () => {
       addProject(tree, { name: 'my-lib', type: 'libs' });
+      writeJson(tree, 'libs/my-lib/package.json', {
+        name: '@proj/my-lib',
+        type: 'module',
+      });
       writeJson(tree, 'libs/my-lib/tsconfig.json', {
         include: [],
         files: [],
