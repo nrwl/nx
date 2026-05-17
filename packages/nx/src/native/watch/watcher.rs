@@ -266,12 +266,13 @@ impl WatchPipeline {
             return Ok(());
         }
 
-        // Trace only events that survive the filter — Access reads and
+        // Log only events that survive the filter — Access reads and
         // other floods are dropped above, so we don't pollute the log
         // with their misleading age_ms (mtime there is the prior write,
-        // not the event).
+        // not the event). At debug so age_ms lands in the daemon log
+        // next to the idle-window/force-flush lines without needing trace.
         for (path, metadata) in raw.paths() {
-            trace!(
+            debug!(
                 ?path,
                 kind = ?raw.kind(),
                 age_ms = event_age_ms(metadata),
