@@ -2,6 +2,7 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
+import { isTypedLintingEnabled } from '@nx/eslint/src/generators/utils/eslint-file';
 import {
   formatFiles,
   getProjects,
@@ -102,8 +103,7 @@ export async function host(tree: Tree, schema: Schema) {
     prefix: options.prefix,
     typescriptConfiguration,
     standalone: options.standalone,
-    enableTypedLinting: options.enableTypedLinting,
-    setParserOptionsProject: options.setParserOptionsProject,
+    enableTypedLinting: isTypedLintingEnabled(options),
   });
 
   let installTasks = [appInstallTask];

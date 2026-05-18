@@ -40,6 +40,7 @@ export async function addLinting(
 ) {
   const tasks: GeneratorCallback[] = [];
   if (options.linter === 'eslint') {
+    const enableTypedLinting = isTypedLintingEnabled(options);
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
       project: options.projectName,
@@ -47,8 +48,7 @@ export async function addLinting(
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
       rootProject: options.rootProject,
-      enableTypedLinting: options.enableTypedLinting,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting,
       addPlugin: true,
     });
     tasks.push(lintTask);
@@ -64,7 +64,6 @@ export async function addLinting(
         : nuxtEslintConfigLegacyVersion,
     };
 
-    const enableTypedLinting = isTypedLintingEnabled(options);
     if (isEslintConfigSupported(host, options.projectRoot)) {
       if (isFlatConfig) {
         // For flat config: Generate eslint.config.mjs using createConfigForNuxt.

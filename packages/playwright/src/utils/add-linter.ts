@@ -27,7 +27,7 @@ export interface PlaywrightLinterOptions {
   /**
    * @deprecated Use `enableTypedLinting` instead. This option will be removed in v24.
    */
-  setParserOptionsProject: boolean;
+  setParserOptionsProject?: boolean;
   skipPackageJson: boolean;
   rootProject: boolean;
   js?: boolean;
@@ -57,8 +57,7 @@ export async function addLinterToPlaywrightProject(
         linter: options.linter,
         skipFormat: true,
         tsConfigPaths: [joinPathFragments(projectConfig.root, 'tsconfig.json')],
-        enableTypedLinting: options.enableTypedLinting,
-        setParserOptionsProject: options.setParserOptionsProject,
+        enableTypedLinting: isTypedLintingEnabled(options),
         skipPackageJson: options.skipPackageJson,
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,

@@ -1,5 +1,6 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
 import { E2EWebServerDetails } from '@nx/devkit/internal';
+import { isTypedLintingEnabled } from '@nx/eslint/src/generators/utils/eslint-file';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -115,8 +116,7 @@ export async function addE2e(
         jsx: true,
         // Cross-plugin: map new flag to `setParserOptionsProject` for the
         // published @nx/cypress.
-        setParserOptionsProject:
-          options.enableTypedLinting || options.setParserOptionsProject,
+        setParserOptionsProject: isTypedLintingEnabled(options),
         enableTypedLinting: undefined,
         webServerCommands: {
           default: e2eWebServerInfo.e2eWebServerCommand,
@@ -171,8 +171,7 @@ export async function addE2e(
         linter: options.linter,
         // Cross-plugin: map new flag to `setParserOptionsProject` for the
         // published @nx/playwright.
-        setParserOptionsProject:
-          options.enableTypedLinting || options.setParserOptionsProject,
+        setParserOptionsProject: isTypedLintingEnabled(options),
         enableTypedLinting: undefined,
         webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
         webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
