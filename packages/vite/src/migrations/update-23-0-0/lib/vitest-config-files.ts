@@ -31,17 +31,6 @@ export function visitVitestConfigFiles(
   });
 }
 
-export function visitVitestWorkspaceFiles(
-  tree: Tree,
-  callback: (filePath: string) => void
-): void {
-  visitNotIgnoredFiles(tree, '', (filePath) => {
-    if (isVitestWorkspaceFile(filePath)) {
-      callback(filePath);
-    }
-  });
-}
-
 const TS_JS_RE = /\.[cm]?[jt]sx?$/;
 export function isJsOrTsFile(filePath: string): boolean {
   return TS_JS_RE.test(filePath);

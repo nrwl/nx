@@ -279,11 +279,26 @@ function collectPoolOptionDetectLogs(
     'PropertyAssignment > Identifier[name=/^single(Thread|Fork)$/]'
   );
   for (const id of singleHits) {
-    unhandled.push(
-      `${filePath}: \`${id.text}\` is removed in Vitest 4. ` +
-        `When set to \`true\`, replace with \`maxWorkers: 1, isolate: false\` at the top of \`test\`. ` +
-        `When set to \`false\`, delete it.`
+    const literalValue = readBooleanLiteralValue(
+      id.parent as PropertyAssignment
     );
+    if (literalValue === true) {
+      unhandled.push(
+        `${filePath}: \`${id.text}: true\` is removed in Vitest 4. ` +
+          `Replace it with \`maxWorkers: 1, isolate: false\` at the top of the \`test\` block, then remove \`${id.text}\`.`
+      );
+    } else if (literalValue === false) {
+      unhandled.push(
+        `${filePath}: \`${id.text}: false\` is removed in Vitest 4 (it was already the default). ` +
+          `Delete the property.`
+      );
+    } else {
+      unhandled.push(
+        `${filePath}: \`${id.text}\` is removed in Vitest 4 and the value here is not a boolean literal. ` +
+          `If it evaluates to \`true\`, replace with \`maxWorkers: 1, isolate: false\` at the top of \`test\` and remove \`${id.text}\`. ` +
+          `If it evaluates to \`false\`, delete it.`
+      );
+    }
   }
 
   const maxHits = query<Identifier>(
@@ -292,9 +307,15 @@ function collectPoolOptionDetectLogs(
   );
   for (const id of maxHits) {
     if (!isImmediateChildOfTest(id)) continue;
+    const literalValue = readNumericLiteralValue(
+      id.parent as PropertyAssignment
+    );
+    const currentValueDescr =
+      literalValue !== undefined ? ` (current value: ${literalValue})` : '';
     unhandled.push(
-      `${filePath}: \`${id.text}\` is removed in Vitest 4. ` +
-        `Replace with the pool-agnostic \`maxWorkers\` option.`
+      `${filePath}: \`test.${id.text}\`${currentValueDescr} is removed in Vitest 4. ` +
+        `Replace with the pool-agnostic \`maxWorkers\` option. ` +
+        `If both \`maxThreads\` and \`maxForks\` are set with different values, pick the one matching the pool the project actually uses.`
     );
   }
 
@@ -304,15 +325,18 @@ function collectPoolOptionDetectLogs(
       `PropertyAssignment > Identifier[name=${optionName}]`
     );
     for (const id of ids) {
-      if (
-        isInsideChain(id, ['test', 'poolOptions', 'forks']) ||
-        isInsideChain(id, ['test', 'poolOptions', 'threads'])
-      ) {
-        unhandled.push(
-          `${filePath}: \`poolOptions.<pool>.${optionName}\` was flattened in Vitest 4. ` +
-            `Move it to the top-level \`test.${optionName}\`.`
-        );
-      }
+      const insideForks = isInsideChain(id, ['test', 'poolOptions', 'forks']);
+      const insideThreads = isInsideChain(id, [
+        'test',
+        'poolOptions',
+        'threads',
+      ]);
+      if (!insideForks && !insideThreads) continue;
+      const pool = insideForks ? 'forks' : 'threads';
+      unhandled.push(
+        `${filePath}: \`test.poolOptions.${pool}.${optionName}\` was flattened in Vitest 4. ` +
+          `Move it to the top-level \`test.${optionName}\` (one value for all pools).`
+      );
     }
   }
 
@@ -323,10 +347,27 @@ function collectPoolOptionDetectLogs(
   for (const id of memoryLimitIds) {
     if (!isInsideChain(id, ['test', 'poolOptions', 'vmThreads'])) continue;
     unhandled.push(
-      `${filePath}: \`poolOptions.vmThreads.memoryLimit\` was renamed and lifted in Vitest 4. ` +
+      `${filePath}: \`test.poolOptions.vmThreads.memoryLimit\` was renamed and lifted in Vitest 4. ` +
         `Move it to top-level \`test.vmMemoryLimit\`.`
     );
   }
+}
+
+function readBooleanLiteralValue(
+  property: PropertyAssignment
+): boolean | undefined {
+  const init = property.initializer;
+  if (init.kind === ts.SyntaxKind.TrueKeyword) return true;
+  if (init.kind === ts.SyntaxKind.FalseKeyword) return false;
+  return undefined;
+}
+
+function readNumericLiteralValue(
+  property: PropertyAssignment
+): number | undefined {
+  const init = property.initializer;
+  if (ts.isNumericLiteral(init)) return Number(init.text);
+  return undefined;
 }
 
 /**
@@ -486,19 +527,11 @@ function processImportsAndCustomCode(
   unhandled: string[]
 ): void {
   const contents = tree.read(filePath, 'utf-8');
-  const hasBrowserCtx = contents.includes('@vitest/browser/context');
-  const hasBrowserUtils = contents.includes('@vitest/browser/utils');
+  const hasBrowserPackage = contents.includes('@vitest/browser');
   const hasDefineWorkspace = contents.includes('defineWorkspace');
   const hasJestSnapshot = contents.includes('jest-snapshot');
 
-  if (
-    !hasBrowserCtx &&
-    !hasBrowserUtils &&
-    !hasDefineWorkspace &&
-    !hasJestSnapshot
-  ) {
-    return;
-  }
+  if (!hasBrowserPackage && !hasDefineWorkspace && !hasJestSnapshot) return;
 
   const sourceFile = ast(contents);
   const importDecls = query<ImportDeclaration>(sourceFile, 'ImportDeclaration');
@@ -520,6 +553,11 @@ function processImportsAndCustomCode(
       unhandled.push(
         `${filePath}: imports from '@vitest/browser/utils' moved into 'vitest/browser' under a named \`utils\` export in Vitest 4. ` +
           `Rewrite to \`import { utils } from 'vitest/browser'\` and rebind the used helpers.`
+      );
+    } else if (spec === '@vitest/browser') {
+      unhandled.push(
+        `${filePath}: bare \`@vitest/browser\` imports — the package's public surface moved into \`vitest/browser\` (and the per-provider packages) in Vitest 4. ` +
+          `Rewrite the import to \`vitest/browser\` and rebind any helpers that moved to the per-provider package.`
       );
     } else if (spec === 'jest-snapshot') {
       unhandled.push(

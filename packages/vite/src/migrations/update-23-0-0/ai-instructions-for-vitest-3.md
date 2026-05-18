@@ -9,7 +9,18 @@ These instructions guide you through migrating an Nx workspace containing multip
 
 Work systematically through each breaking change category.
 
-> **Note**: a deterministic pre-pass has already run before these instructions. It applied the AST-tractable subset of the changes below (e.g. `browser.provider: 'none'` → `'preview'`, `browser.indexScripts` → `orchestratorScripts`, `@vitest/coverage-c8` → `@vitest/coverage-v8`, `SnapshotEnvironment` import path, `--segfault-retry` removal, `vitest typecheck` → `vitest --typecheck`). Anything it could not handle was forwarded as advisory context (look for "Context from the generator phase" above). Skip the corresponding action items below if the pre-pass already covered them; verify the change is present rather than re-applying.
+> **Pre-pass already ran**: a deterministic generator ran before these instructions. It only handles a narrow set of purely-mechanical changes:
+>
+> - `--segfault-retry` removal from `package.json` scripts
+> - `@vitest/coverage-c8` → `@vitest/coverage-v8` package rename (preserving the user's pin)
+> - `vitest typecheck` → `vitest --typecheck` in scripts
+> - `SnapshotEnvironment` import path `'vitest'` → `'vitest/snapshot'` (only when it is the sole named binding)
+> - `browser.provider: 'none'` → `'preview'`
+> - `browser.indexScripts` → `orchestratorScripts`
+>
+> **The vast majority of action items below are NOT covered by the pre-pass** and still require your attention — every section other than the six items above.
+>
+> If a "Files modified by the generator phase" section appears in the prompt above, those files received the items the pre-pass handled — verify the new shape is in place before re-applying. If a "Context from the generator phase" section appears, **every entry there is pending work** the pre-pass detected but could not safely complete: address each one in addition to the relevant section below.
 
 ## Pre-Migration Checklist
 

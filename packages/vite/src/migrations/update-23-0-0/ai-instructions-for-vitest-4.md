@@ -4,7 +4,19 @@
 
 These instructions guide you through migrating an Nx workspace containing multiple Vitest projects from Vitest 3.x to Vitest 4.0. Work systematically through each breaking change category.
 
-> **Note**: a deterministic pre-pass has already run before these instructions. It applied the AST-tractable subset of the changes below (e.g. dead `coverage.*` option removal, `test.workspace` → `test.projects` rename, `@vitest/browser/context` → `vitest/browser` import path, `deps.optimizer.web` → `client`, `poolOptions.threads.useAtomics` and `test.minWorkers` removal, `'verbose'`/`'basic'` reporter renames, env-var renames in `package.json` scripts). Anything it could not handle was forwarded as advisory context (look for "Context from the generator phase" above) — focus your effort on those items and on the cross-cutting changes the pre-pass cannot perform safely (pool option flattening, `deps.* → server.deps.*` move, browser provider function-form rewrite, workspace file inlining, custom reporter callback updates).
+> **Pre-pass already ran**: a deterministic generator ran before these instructions. It only handles purely-mechanical changes:
+>
+> - dead `coverage.{all,extensions,ignoreEmptyLines,experimentalAstAwareRemapping}` removal
+> - `test.workspace` → `test.projects` rename (the property only — external `vitest.workspace.*` files are NOT inlined)
+> - `@vitest/browser/context` import-path rewrite to `vitest/browser`
+> - `deps.optimizer.web` → `deps.optimizer.client` rename
+> - `poolOptions.threads.useAtomics` and top-level `test.minWorkers` removal
+> - `'verbose'` → `'tree'` and `'basic'` → `['default', { summary: false }]` inside `test.reporters`
+> - `VITEST_MAX_{THREADS,FORKS}` → `VITEST_MAX_WORKERS` and `VITE_NODE_DEPS_MODULE_DIRECTORIES` → `VITEST_MODULE_DIRECTORIES` env-var renames in `package.json` scripts
+>
+> **The cross-cutting changes below still require your attention** — pool option flattening (`singleThread`/`singleFork`, `maxThreads`/`maxForks`, `poolOptions.<pool>.{execArgv,isolate}`, `poolOptions.vmThreads.memoryLimit`), `test.deps.{external,inline,fallbackCJS}` → `test.server.deps.*` move, `test.{poolMatchGlobs,environmentMatchGlobs}` projects rewrite, browser provider function-form rewrite, `browser.testerScripts` → `testerHtmlPath`, `vitest.workspace.*` file inlining + `defineWorkspace` removal, custom reporter callback API updates, and `@vitest/browser` package replacement with per-provider packages.
+>
+> If a "Files modified by the generator phase" section appears in the prompt above, those files received the items the pre-pass handled — verify the new shape is in place before re-applying. If a "Context from the generator phase" section appears, **every entry there is pending work** the pre-pass detected but could not safely complete: address each one in addition to the relevant section below.
 
 ## Prerequisites
 

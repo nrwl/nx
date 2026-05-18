@@ -270,19 +270,54 @@ export default defineConfig({
       const result = await migrateToVitest4(tree);
       const ctx = (result?.promptContext ?? []).join('\n');
 
-      expect(ctx).toMatch(/singleThread/);
-      expect(ctx).toMatch(/maxThreads/);
+      // singleThread: true → value-aware message including the literal.
+      expect(ctx).toMatch(/`singleThread: true`/);
+      // maxThreads: 4 → value-aware message including the literal.
+      expect(ctx).toMatch(/`test\.maxThreads` \(current value: 4\)/);
       expect(ctx).toMatch(/poolMatchGlobs/);
       expect(ctx).toMatch(/environmentMatchGlobs/);
       expect(ctx).toMatch(/test\.deps\.external/);
       expect(ctx).toMatch(/test\.deps\.inline/);
-      expect(ctx).toMatch(/poolOptions\.<pool>\.execArgv/);
-      expect(ctx).toMatch(/poolOptions\.<pool>\.isolate/);
-      expect(ctx).toMatch(/poolOptions\.vmThreads\.memoryLimit/);
-      expect(ctx).toMatch(/browser\.provider/);
+      // Pool name is resolved to the exact `forks`/`threads` source, not `<pool>`.
+      expect(ctx).toMatch(/test\.poolOptions\.forks\.execArgv/);
+      expect(ctx).toMatch(/test\.poolOptions\.forks\.isolate/);
+      expect(ctx).toMatch(/test\.poolOptions\.vmThreads\.memoryLimit/);
+      expect(ctx).toMatch(/browser\.provider.*current value: 'playwright'/);
       expect(ctx).toMatch(/browser\.testerScripts/);
       expect(ctx).toMatch(/onCollected/);
       expect(ctx).toMatch(/onFinished/);
+    });
+
+    it('preserves boolean value context for singleThread/singleFork', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'vitest.config.ts',
+        `import { defineConfig } from 'vitest/config';
+export default defineConfig({
+  test: { singleFork: false },
+});
+`
+      );
+
+      const result = await migrateToVitest4(tree);
+      const ctx = (result?.promptContext ?? []).join('\n');
+
+      // false-value emits a delete-only instruction.
+      expect(ctx).toMatch(/singleFork: false.*Delete the property/);
+    });
+
+    it('flags bare `@vitest/browser` imports', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'libs/lib/src/setup.ts',
+        `import { something } from '@vitest/browser';\nexport { something };\n`
+      );
+
+      const result = await migrateToVitest4(tree);
+
+      expect(
+        result?.promptContext?.some((s) => /bare `@vitest\/browser`/.test(s))
+      ).toBe(true);
     });
 
     it('logs @vitest/browser package.json dep but does not remove it', async () => {
