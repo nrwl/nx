@@ -182,7 +182,7 @@ export default defineConfig({
       const result = await migrateToVitest3(tree);
 
       expect(tree.read('libs/lib/src/snap.ts', 'utf-8')).toBe(before);
-      expect(result?.promptContext?.[0]).toMatch(
+      expect(result?.agentContext?.[0]).toMatch(
         /SnapshotEnvironment.*Split it into a separate/
       );
     });
@@ -391,7 +391,7 @@ export default defineConfig({
 
       const result = await migrateToVitest3(tree);
 
-      const ciEntry = result?.promptContext?.find((s) =>
+      const ciEntry = result?.agentContext?.find((s) =>
         s.startsWith('.github/workflows/test.yml')
       );
       expect(ciEntry).toBeDefined();
@@ -422,7 +422,7 @@ export default defineConfig({
 
       expect(tree.read('vitest.config.ts', 'utf-8')).toBe(before);
       expect(
-        result?.promptContext?.some((s) =>
+        result?.agentContext?.some((s) =>
           /vitest\.config\.ts.*'c8'.*resolves to c8/.test(s)
         )
       ).toBe(true);
@@ -445,7 +445,7 @@ export default defineConfig({
 
       expect(tree.read('vitest.config.ts', 'utf-8')).toBe(before);
       expect(
-        result?.promptContext?.some((s) =>
+        result?.agentContext?.some((s) =>
           /vitest\.config\.ts.*indexScripts.*orchestratorScripts/.test(s)
         )
       ).toBe(true);
@@ -453,7 +453,7 @@ export default defineConfig({
   });
 
   describe('no-op when nothing matches', () => {
-    it('leaves files untouched and returns no promptContext', async () => {
+    it('leaves files untouched and returns no agentContext', async () => {
       const tree = createTreeWithEmptyWorkspace();
       tree.write(
         'vitest.config.ts',

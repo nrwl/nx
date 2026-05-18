@@ -4,30 +4,45 @@
 
 These instructions guide you through migrating an Nx workspace containing multiple Vitest projects from Vitest 3.x to Vitest 4.0. Work systematically through each breaking change category.
 
-> **Pre-pass already ran**: a deterministic generator ran before these instructions. It only handles purely-mechanical changes:
->
-> - dead `coverage.{all,extensions,ignoreEmptyLines,experimentalAstAwareRemapping}` removal
-> - `test.workspace` → `test.projects` rename (the property only — external `vitest.workspace.*` files are NOT inlined)
-> - `@vitest/browser/context` import-path rewrite to `vitest/browser`
-> - `deps.optimizer.web` → `deps.optimizer.client` rename
-> - `poolOptions.threads.useAtomics` and top-level `test.minWorkers` removal
-> - `'verbose'` → `'tree'` and `'basic'` → `['default', { summary: false }]` inside `test.reporters`
-> - `VITEST_MAX_{THREADS,FORKS}` → `VITEST_MAX_WORKERS` and `VITE_NODE_DEPS_MODULE_DIRECTORIES` → `VITEST_MODULE_DIRECTORIES` renames in: `package.json` scripts, `.env` / `.env.*` files, `project.json` `options.env` keys, and inline `VAR=value` prefixes inside `project.json` `options.{args,command,commands}`
->
-> The pre-pass **skips the rename when both `VITEST_MAX_THREADS` and `VITEST_MAX_FORKS` appear in the same file/scope** (they collapse to a single `VITEST_MAX_WORKERS` whose value depends on which pool the project uses — a decision the pre-pass can't make safely). It also **does not** edit CI provider configs (`.github/workflows/*.yml`, `.gitlab-ci.yml`, `azure-pipelines.yml`, `.circleci/config.yml`, `bitbucket-pipelines.yml`) — YAML structure varies too much. Any conflicts and any CI matches are forwarded to you.
->
-> **The cross-cutting changes below still require your attention** — pool option flattening (`singleThread`/`singleFork`, `maxThreads`/`maxForks`, `poolOptions.<pool>.{execArgv,isolate}`, `poolOptions.vmThreads.memoryLimit`), `test.deps.{external,inline,fallbackCJS}` → `test.server.deps.*` move, `test.{poolMatchGlobs,environmentMatchGlobs}` projects rewrite, browser provider function-form rewrite, `browser.testerScripts` → `testerHtmlPath`, `vitest.workspace.*` file inlining + `defineWorkspace` removal, custom reporter callback API updates, and `@vitest/browser` package replacement with per-provider packages.
->
-> If a "Files modified by the generator phase" section appears in the prompt above, those files received the items the pre-pass handled — verify the new shape is in place before re-applying. If a "Context from the generator phase" section appears, **every entry there is pending work** the pre-pass detected but could not safely complete: address each one in addition to the relevant section below. A workspace-wide reminder is also emitted as a post-run "next step" about env vars set in CI provider dashboards — those can't be detected from the workspace tree.
+<pre_pass_summary note="a deterministic pre-pass already applied these specific edits; verify the new shape is in place rather than redoing them">
 
-## Prerequisites
+The pre-pass handled, mechanically:
 
-Vitest 4 has hard runtime requirements. Verify these BEFORE editing any config:
+- dead `coverage.{all,extensions,ignoreEmptyLines,experimentalAstAwareRemapping}` removal
+- `test.workspace` → `test.projects` rename (the property only — external `vitest.workspace.*` files are NOT inlined)
+- `@vitest/browser/context` import-path rewrite to `vitest/browser`
+- `deps.optimizer.web` → `deps.optimizer.client` rename
+- `poolOptions.threads.useAtomics` and top-level `test.minWorkers` removal
+- `'verbose'` → `'tree'` and `'basic'` → `['default', { summary: false }]` inside `test.reporters`
+- `VITEST_MAX_{THREADS,FORKS}` → `VITEST_MAX_WORKERS` and `VITE_NODE_DEPS_MODULE_DIRECTORIES` → `VITEST_MODULE_DIRECTORIES` renames in: `package.json` scripts, `.env` / `.env.*` files, `project.json` `options.env` keys, and inline `VAR=value` prefixes inside `project.json` `options.{args,command,commands}`
+
+The pre-pass **skips the rename when both `VITEST_MAX_THREADS` and `VITEST_MAX_FORKS` appear in the same file/scope** (they collapse to a single `VITEST_MAX_WORKERS` whose value depends on which pool the project uses — a decision the pre-pass can't make safely). It also **does not** edit CI provider configs (`.github/workflows/*.yml`, `.gitlab-ci.yml`, `azure-pipelines.yml`, `.circleci/config.yml`, `bitbucket-pipelines.yml`) — YAML structure varies too much. Any conflicts and any CI matches are forwarded to you in `<advisory_context>`.
+
+**The cross-cutting changes below still require your attention** — pool option flattening (`singleThread`/`singleFork`, `maxThreads`/`maxForks`, `poolOptions.<pool>.{execArgv,isolate}`, `poolOptions.vmThreads.memoryLimit`), `test.deps.{external,inline,fallbackCJS}` → `test.server.deps.*` move, `test.{poolMatchGlobs,environmentMatchGlobs}` projects rewrite, browser provider function-form rewrite, `browser.testerScripts` → `testerHtmlPath`, `vitest.workspace.*` file inlining + `defineWorkspace` removal, custom reporter callback API updates, and `@vitest/browser` package replacement with per-provider packages.
+
+How to read the wrapper sections above this file:
+
+- `<files_changed>` lists files the pre-pass already wrote to. Verify the new shape is in place; do not re-apply the same edit.
+- `<advisory_context>` lists detections the pre-pass forwarded because it could not safely complete them. **Every entry is pending work** — address each one in the relevant section below, not as a separate task.
+
+A workspace-wide reminder is also emitted as a post-run "next step" about env vars set in CI provider dashboards — those can't be detected from the workspace tree.
+
+</pre_pass_summary>
+
+<handoff_guidance>
+In your handoff `summary` (1–3 sentences per the system prompt), name the breaking-change categories you applied; explicitly call out any you skipped because they didn't apply (e.g., "no custom reporters in this workspace", "no browser-mode configs").
+</handoff_guidance>
+
+<prerequisites note="hard runtime requirements; do not edit any vitest config until these are satisfied">
+
+Vitest 4 has hard runtime requirements:
 
 - **Vite ≥ 6.0.0** (Vite 5 is unsupported). Check with `npx vite --version`. If on Vite 5, apply the Vite 6 / 7 / 8 migration guides first.
 - **Node.js ≥ 20.0.0** (Node 18 support dropped). Check with `node --version`. Update CI `actions/setup-node` versions, `.nvmrc`, `engines` in `package.json`, and Docker base images.
 
-If either prerequisite is unmet, **stop and resolve them before continuing** — config-level migration on an unsupported runtime will produce confusing errors.
+If either prerequisite is unmet, write status: failed with the unmet requirement in `summary` — config-level migration on an unsupported runtime will produce confusing errors.
+
+</prerequisites>
 
 ## Nx-Specific Notes (read first)
 
@@ -151,6 +166,10 @@ export default defineConfig({
 - [ ] Remove `minWorkers` if present (option removed; behaves as if set to 0 in non-watch mode).
 - [ ] Update CI environment variables: `VITEST_MAX_THREADS` and `VITEST_MAX_FORKS` → `VITEST_MAX_WORKERS`.
 
+<fail_if note="pool flattening is pool-agnostic in v4; picking the wrong value silently changes concurrency">
+Both `maxThreads` and `maxForks` are set with different numbers AND the project has no explicit `test.pool` you can use to decide which value `maxWorkers` should take. Do not guess. Write status: failed and ask the user which pool the project uses.
+</fail_if>
+
 #### 1.3 Workspace to Projects Rename
 
 **Search Pattern**: `workspace` property in Vitest config files
@@ -178,6 +197,10 @@ export default defineConfig({
 - [ ] Rename `workspace` property to `projects` in all config files.
 - [ ] Inline any external `vitest.workspace.*` content into `test.projects` and delete the workspace file (external file references are no longer supported).
 - [ ] If projects need different pool/environment options, set them inside each project entry rather than via the (now-removed) `poolMatchGlobs` / `environmentMatchGlobs` — see section 1.5.
+
+<fail_if note="inlining is a semantic merge, not a copy">
+The `vitest.workspace.*` file imports modules / calls functions / uses spreads that you cannot evaluate at edit time (dynamic project arrays, conditional imports). Write status: failed listing the file path and the dynamic shape that needs human resolution.
+</fail_if>
 
 #### 1.4 Browser Configuration
 
@@ -230,6 +253,10 @@ const { getElementError } = utils;
 - [ ] Replace string `browser.provider: 'name'` with the function-call form: `provider: <providerFn>(<options>)`.
 - [ ] Replace `browser.testerScripts: [...]` with `browser.testerHtmlPath: '<single-file>.html'`. Note: this is a **semantic** change (array of scripts → one HTML file). Move the script contents into a `<script>` block of the HTML file, or load them with `<script src>` references inside it.
 - [ ] Update imports: `@vitest/browser/context` → `vitest/browser`; `@vitest/browser/utils` → `vitest/browser` (named export `utils`).
+
+<fail_if note="provider package selection changes which browser tests actually run against">
+The previous `browser.provider` string is dynamic (variable reference, ternary, or constructed at runtime) so you cannot determine which per-provider package to install. Write status: failed and ask the user which provider the project targets.
+</fail_if>
 
 #### 1.5 Deprecated Configuration Options
 
@@ -328,6 +355,10 @@ export default {
 
 - [ ] If a custom environment file exists, rename its `transformMode` property to `viteEnvironment`.
 - [ ] No change needed for workspaces using only built-in environments (`node`, `jsdom`, `happy-dom`, `edge-runtime`).
+
+<fail_if note="viteEnvironment is not a value-for-value swap from transformMode">
+The custom environment's `transformMode` value is something other than `'ssr'` or `'web'` (or its replacement Vite-environment name isn't obvious from the workspace). Write status: failed listing the file and the current `transformMode` value.
+</fail_if>
 
 ### 2. Test Code Updates
 
@@ -594,6 +625,10 @@ export default {
 - [ ] Consult the v4 reporters API at https://vitest.dev/api/advanced/reporters for the exact replacement method name and signature.
 - [ ] After rewriting, run the reporter in isolation against a small project to verify event delivery before applying workspace-wide.
 
+<fail_if note="custom reporters carry external behavior the migration cannot deduce">
+A reporter callback receives or emits data whose v4 equivalent you can't determine from the v4 reporters API alone (e.g., uses internal task tree shapes, depends on event ordering that has no v4 analogue). Write status: failed naming the reporter file and the callback; do not stub.
+</fail_if>
+
 #### 3.2 Built-in Reporter Changes
 
 **Search Pattern**: `reporters: ['basic']`, `reporters: ['verbose']`
@@ -758,137 +793,25 @@ import { execute } from 'vitest/execute';
 
 ## Post-Migration Validation
 
-### 1. Run Tests Per Project
+1. Run tests per project: `nx test <project>`
+2. Run all affected: `nx affected -t test`
+3. Check coverage: `nx affected -t test --coverage`
+4. Validate CI pipeline: `nx prepush`
 
-```bash
-# Test each project individually
-nx run-many -t test -p PROJECT_NAME
-```
+Confirm:
 
-### 2. Run All Tests
+- All configuration files updated
+- All test files pass (or are flagged in your handoff `summary` if they remain failing — see `<test_integrity_guardrails>` below)
+- Coverage reports generate correctly
+- Environment variables updated
+- No deprecated API warnings in console
 
-```bash
-# Run tests across all affected projects
-nx affected -t test
-```
+<test_integrity_guardrails note="violating any of these masks regressions and defeats the migration's purpose">
 
-### 3. Check Coverage
+- Do NOT force tests to pass by replacing test logic with `expect(true).toBe(true)`.
+- Do NOT remove assertions to silence a failure.
+- Do NOT add mocks that exist solely to make a failing test pass.
 
-```bash
-# Verify coverage generation works with new config
-nx affected -t test --coverage
-```
+If a test cannot be made to pass within the scope of this migration, leave it failing and report it in your handoff `summary`.
 
-### 4. Validate CI Pipeline
-
-```bash
-# Run full CI validation
-nx prepush
-```
-
-### 5. Review Migration Checklist
-
-- [ ] All configuration files updated
-- [ ] All test files pass
-- [ ] Coverage reports generate correctly
-- [ ] CI/CD pipeline runs successfully
-- [ ] Environment variables updated
-- [ ] Documentation updated
-- [ ] No deprecated API warnings in console
-
-## Common Issues and Solutions
-
-### Issue: Coverage includes too many files
-
-**Solution**: Add explicit `coverage.include` patterns to match your source files
-
-### Issue: Tests fail with "arrow function constructors not supported"
-
-**Solution**: Convert arrow functions used as constructors to `function` keyword or `class` syntax
-
-### Issue: Automocks not resetting between tests
-
-**Solution**: Use `vi.unmock()` or `vi.resetModules()` instead of `vi.restoreAllMocks()`
-
-### Issue: Mock call order assertions failing
-
-**Solution**: Update to 1-based indexing for `invocationCallOrder`
-
-### Issue: Browser tests failing after upgrade
-
-**Solution**: Check browser provider is object format and imports use `vitest/browser`
-
-### Issue: TypeScript errors in test files
-
-**Solution**: Update to new type definitions and remove usage of deprecated types
-
-## Files to Review
-
-Create a checklist of all files that need review:
-
-```bash
-# Configuration files
-find . -name "vitest.config.*" -o -name "vitest.workspace.*"
-find . -name "project.json" -exec grep -l "vitest" {} \;
-
-# Test files
-find . -name "*.spec.*" -o -name "*.test.*"
-
-# Files with mock usage
-rg "vi\.(fn|spyOn|mock|restoreAllMocks)" --type ts --type tsx --type js
-
-# Files with coverage config
-rg "coverage\.(all|extensions|ignoreEmptyLines)" --type ts --type js
-
-# CI configuration
-find . -name ".github/workflows/*.yml" -o -name ".gitlab-ci.yml" -o -name "azure-pipelines.yml"
-```
-
-## Migration Strategy for Large Workspaces
-
-1. **Migrate in phases**: Start with a small project, validate, then expand
-2. **Use feature branches**: Create separate branches for different migration aspects
-3. **Run tests frequently**: After each configuration change, run affected tests
-4. **Document issues**: Keep track of project-specific issues and solutions
-5. **Automate where possible**: Create codemods for repetitive changes
-
-## Useful Commands During Migration
-
-```bash
-# Find all vitest configurations
-nx show projects --with-target test
-
-# Test specific project after changes
-nx test PROJECT_NAME
-
-# Test all affected
-nx affected -t test
-
-# View project details
-nx show project PROJECT_NAME --web
-
-# Clear Nx cache if needed
-nx reset
-```
-
-## Guard Rails
-
-DO NOT
-
-- Force tests to pass by removing test logic and replacing it with `expect(true).toBe(true)`
-- Remove assertions
-- Add additional mocks that force tests to pass
-
----
-
-## Notes for LLM Execution
-
-When executing this migration:
-
-1. **Work systematically**: Complete one category before moving to the next
-2. **Test after each change**: Don't batch all changes without validation
-3. **Keep user informed**: Report progress through each section
-4. **Handle errors promptly**: If tests fail, fix immediately before proceeding
-5. **Update documentation**: Note any workspace-specific patterns or issues
-6. **Create meaningful commits**: Group related changes together with clear messages
-7. **Use TodoWrite tool**: Track migration progress for visibility
+</test_integrity_guardrails>

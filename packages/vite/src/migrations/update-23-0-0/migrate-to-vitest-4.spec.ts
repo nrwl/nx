@@ -80,11 +80,11 @@ export default defineConfig({
       const result = await migrateToVitest4(tree);
 
       expect(
-        result?.promptContext?.some((s) => s.includes('vitest.workspace'))
+        result?.agentContext?.some((s) => s.includes('vitest.workspace'))
       ).toBe(true);
       // The defineWorkspace import is flagged separately.
       expect(
-        result?.promptContext?.some((s) => s.includes('defineWorkspace'))
+        result?.agentContext?.some((s) => s.includes('defineWorkspace'))
       ).toBe(true);
     });
   });
@@ -114,7 +114,7 @@ export default defineConfig({
       const result = await migrateToVitest4(tree);
 
       expect(
-        result?.promptContext?.some((s) => s.includes('@vitest/browser/utils'))
+        result?.agentContext?.some((s) => s.includes('@vitest/browser/utils'))
       ).toBe(true);
     });
   });
@@ -268,7 +268,7 @@ export default defineConfig({
       );
 
       const result = await migrateToVitest4(tree);
-      const ctx = (result?.promptContext ?? []).join('\n');
+      const ctx = (result?.agentContext ?? []).join('\n');
 
       // singleThread: true → value-aware message including the literal.
       expect(ctx).toMatch(/`singleThread: true`/);
@@ -300,7 +300,7 @@ export default defineConfig({
       );
 
       const result = await migrateToVitest4(tree);
-      const ctx = (result?.promptContext ?? []).join('\n');
+      const ctx = (result?.agentContext ?? []).join('\n');
 
       // false-value emits a delete-only instruction.
       expect(ctx).toMatch(/singleFork: false.*Delete the property/);
@@ -316,7 +316,7 @@ export default defineConfig({
       const result = await migrateToVitest4(tree);
 
       expect(
-        result?.promptContext?.some((s) => /bare `@vitest\/browser`/.test(s))
+        result?.agentContext?.some((s) => /bare `@vitest\/browser`/.test(s))
       ).toBe(true);
     });
 
@@ -336,7 +336,7 @@ export default defineConfig({
       const updated = JSON.parse(tree.read('package.json', 'utf-8'));
       expect(updated.devDependencies['@vitest/browser']).toBe('^3.0.0');
       expect(
-        result?.promptContext?.some((s) => s.includes('@vitest/browser'))
+        result?.agentContext?.some((s) => s.includes('@vitest/browser'))
       ).toBe(true);
     });
   });
@@ -427,7 +427,7 @@ export default defineConfig({
       expect(tree.read('vitest.config.ts', 'utf-8')).toBe(before);
       // nextSteps is always emitted — the CI-provider-dashboard reminder.
       expect(result?.nextSteps?.[0]).toMatch(/CI provider/);
-      expect(result?.promptContext).toBeUndefined();
+      expect(result?.agentContext).toBeUndefined();
     });
   });
 
@@ -471,7 +471,7 @@ export default defineConfig({
 
       expect(tree.read('.env', 'utf-8')).toBe(original);
       expect(
-        result?.promptContext?.some(
+        result?.agentContext?.some(
           (s) =>
             s.includes('.env') &&
             s.includes('VITEST_MAX_THREADS') &&
@@ -541,7 +541,7 @@ export default defineConfig({
         VITEST_MAX_FORKS: '2',
       });
       expect(
-        result?.promptContext?.some((s) => s.includes('target `testBoth`'))
+        result?.agentContext?.some((s) => s.includes('target `testBoth`'))
       ).toBe(true);
     });
 
@@ -598,7 +598,7 @@ export default defineConfig({
 
       const result = await migrateToVitest4(tree);
 
-      const ciEntry = result?.promptContext?.find((s) =>
+      const ciEntry = result?.agentContext?.find((s) =>
         s.startsWith('.github/workflows/test.yml')
       );
       expect(ciEntry).toBeDefined();

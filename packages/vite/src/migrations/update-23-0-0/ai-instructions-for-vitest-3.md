@@ -9,20 +9,31 @@ These instructions guide you through migrating an Nx workspace containing multip
 
 Work systematically through each breaking change category.
 
-> **Pre-pass already ran**: a deterministic generator ran before these instructions. It only handles a narrow set of purely-mechanical changes:
->
-> - `--segfault-retry` removal from `package.json` scripts AND `project.json` `options.{args,command,commands}`
-> - `@vitest/coverage-c8` → `@vitest/coverage-v8` package rename (preserving the user's pin)
-> - `vitest typecheck` → `vitest --typecheck` in `package.json` scripts AND `project.json` `options.{args,command,commands}`
-> - `SnapshotEnvironment` import path `'vitest'` → `'vitest/snapshot'` (only when it is the sole named binding)
-> - `browser.provider: 'none'` → `'preview'` (only when the value is a direct string literal under `test.browser.provider`)
-> - `browser.indexScripts` → `orchestratorScripts` (only as a direct property name)
->
-> The pre-pass **does not** edit CI provider configs (`.github/workflows/*.yml`, `.gitlab-ci.yml`, `azure-pipelines.yml`, `.circleci/config.yml`, `bitbucket-pipelines.yml`) — YAML structure varies too much. Any matches it finds there are forwarded to you to handle.
->
-> **The vast majority of action items below are NOT covered by the pre-pass** and still require your attention — every section other than the six items above.
->
-> If a "Files modified by the generator phase" section appears in the prompt above, those files received the items the pre-pass handled — verify the new shape is in place before re-applying. If a "Context from the generator phase" section appears, **every entry there is pending work** the pre-pass detected but could not safely complete: address each one in addition to the relevant section below.
+<pre_pass_summary note="a deterministic pre-pass already applied these specific edits; verify the new shape is in place rather than redoing them">
+
+The pre-pass handled, mechanically:
+
+- `--segfault-retry` removal from `package.json` scripts AND `project.json` `options.{args,command,commands}`
+- `@vitest/coverage-c8` → `@vitest/coverage-v8` package rename (preserving the user's pin)
+- `vitest typecheck` → `vitest --typecheck` in `package.json` scripts AND `project.json` `options.{args,command,commands}`
+- `SnapshotEnvironment` import path `'vitest'` → `'vitest/snapshot'` (only when it is the sole named binding)
+- `browser.provider: 'none'` → `'preview'` (only when the value is a direct string literal under `test.browser.provider`)
+- `browser.indexScripts` → `orchestratorScripts` (only as a direct property name)
+
+The pre-pass **does not** edit CI provider configs (`.github/workflows/*.yml`, `.gitlab-ci.yml`, `azure-pipelines.yml`, `.circleci/config.yml`, `bitbucket-pipelines.yml`) — YAML structure varies too much. Any matches it finds there are forwarded to you in `<advisory_context>`.
+
+**The vast majority of action items below are NOT covered by the pre-pass** and still require your attention — every section other than the six items above.
+
+How to read the wrapper sections above this file:
+
+- `<files_changed>` lists files the pre-pass already wrote to. Verify the new shape is in place; do not re-apply the same edit.
+- `<advisory_context>` lists detections the pre-pass forwarded because it could not safely complete them. **Every entry is pending work** — address each one in the relevant section below, not as a separate task.
+
+</pre_pass_summary>
+
+<handoff_guidance>
+In your handoff `summary` (1–3 sentences per the system prompt), name the breaking-change categories you applied; explicitly call out any you skipped because they didn't apply (e.g., "no browser-mode configs in this workspace").
+</handoff_guidance>
 
 ## Pre-Migration Checklist
 
@@ -97,6 +108,10 @@ export default defineConfig({
 - [ ] If a project relied on the implicit pool, decide whether to keep `threads` (set `pool: 'threads'` explicitly) or move options to `forks`.
 - [ ] Migrate `poolOptions.threads.singleThread` → `poolOptions.forks.singleFork` if switching.
 - [ ] Migrate `poolOptions.threads.maxThreads/minThreads` → `poolOptions.forks.maxForks/minForks` if switching.
+
+<fail_if note="this decision changes runtime semantics; if you can't determine the project's intent from the workspace, write status: failed and explain in summary">
+You cannot determine whether the workspace intended the v1.x implicit-`threads` behavior (e.g., the codebase uses worker-only APIs like `SharedArrayBuffer`) or expected the v2.x `forks` default. Do not guess.
+</fail_if>
 
 ### 1.2 Hook Execution Order: Now Serial (and Reverse for `after*`)
 
@@ -186,6 +201,10 @@ export default defineConfig({
 
 - [ ] Move every `test.watchExclude` entry to `server.watch.ignored`, adjusting pattern syntax to chokidar conventions.
 - [ ] Remove `watchExclude` from `vitest.config.*`.
+
+<fail_if note="pattern semantics differ between the two options; a blind copy can over- or under-ignore files">
+An existing `watchExclude` entry uses a pattern whose chokidar equivalent is ambiguous (e.g., a relative path without `**` wrapping, an entry that may need both `**/foo/**` and `foo/**`). Write status: failed with the specific patterns you're unsure about; the user should decide.
+</fail_if>
 
 ### 1.6 `--segfault-retry` CLI Flag Removed
 
@@ -554,31 +573,28 @@ export default defineConfig({
 
 ## Post-Migration Verification
 
-1. **Reinstall and rebuild**:
+1. Reinstall: `pnpm install` (or `npm install` / `yarn install`)
+2. Run affected tests: `nx affected -t test`
+3. Re-baseline coverage on key projects: `nx run <project>:test --coverage`
+4. Typecheck custom reporters / sequencers / snapshot tooling: `nx affected -t typecheck`
+5. Watch mode (if applicable): verify `server.watch.ignored` covers what `watchExclude` previously did.
 
-   ```bash
-   pnpm install # or npm install / yarn install
-   ```
+Confirm:
 
-2. **Run affected tests**:
+- All configuration files updated
+- All test files pass (or are flagged in your handoff `summary` if they remain failing — see `<test_integrity_guardrails>` below)
+- Coverage reports generate correctly
+- No deprecated API warnings in console
 
-   ```bash
-   nx affected -t test
-   ```
+<test_integrity_guardrails note="violating any of these masks regressions and defeats the migration's purpose">
 
-3. **Run coverage on key projects** to validate threshold drift:
+- Do NOT force tests to pass by replacing test logic with `expect(true).toBe(true)`.
+- Do NOT remove assertions to silence a failure.
+- Do NOT add mocks that exist solely to make a failing test pass.
 
-   ```bash
-   nx run my-project:test --coverage
-   ```
+If a test cannot be made to pass within the scope of this migration, leave it failing and report it in your handoff `summary`.
 
-4. **Check that custom reporters / sequencers / snapshot tooling** still type-check:
-
-   ```bash
-   nx affected -t typecheck
-   ```
-
-5. **Watch mode**: verify `server.watch.ignored` covers what `watchExclude` previously did (if applicable).
+</test_integrity_guardrails>
 
 ## References
 

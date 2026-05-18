@@ -26,7 +26,7 @@ let ts: typeof import('typescript');
 /**
  * Hybrid migration paired with `ai-instructions-for-vitest-3.md`. Applies the
  * deterministic, AST-tractable Vitest 1.x/2.x → 3.x changes mechanically and
- * returns a `promptContext` describing any shape it could not handle, so the
+ * returns an `agentContext` describing any shape it could not handle, so the
  * paired prompt's agent can finish those by hand.
  */
 export default async function migrateToVitest3(tree: Tree) {
@@ -55,10 +55,10 @@ export default async function migrateToVitest3(tree: Tree) {
 
   await formatFiles(tree);
 
-  // Hybrid migration return shape: `promptContext` (when populated) is
+  // Hybrid migration return shape: `agentContext` (when populated) is
   // forwarded to the paired prompt's agent. When no agent runs, the field is
   // dropped silently per the contract — safe on master and pre-agentic flows.
-  if (unhandled.length > 0) return { promptContext: unhandled };
+  if (unhandled.length > 0) return { agentContext: unhandled };
   return;
 }
 

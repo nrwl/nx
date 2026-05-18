@@ -30,7 +30,7 @@ let ts: typeof import('typescript');
 /**
  * Hybrid migration paired with `ai-instructions-for-vitest-4.md`. Applies the
  * deterministic, AST-tractable Vitest 3.x → 4.0 changes mechanically and
- * forwards a `promptContext` describing any shape it could not handle so the
+ * forwards an `agentContext` describing any shape it could not handle so the
  * paired prompt's agent can finish the rest.
  *
  * The "apply" set is intentionally narrow (renames, deletions of dead options,
@@ -82,10 +82,10 @@ export default async function migrateToVitest4(tree: Tree) {
     `If your CI provider stores Vitest env vars in its dashboard (GitHub Actions repo/org secrets, GitLab CI/CD variables, Vercel/Netlify env vars, etc.), rename \`VITEST_MAX_THREADS\` and \`VITEST_MAX_FORKS\` to \`VITEST_MAX_WORKERS\`, and \`VITE_NODE_DEPS_MODULE_DIRECTORIES\` to \`VITEST_MODULE_DIRECTORIES\`. The pre-pass only handles in-repo files.`,
   ];
 
-  const result: { nextSteps?: string[]; promptContext?: string[] } = {
+  const result: { nextSteps?: string[]; agentContext?: string[] } = {
     nextSteps,
   };
-  if (unhandled.length > 0) result.promptContext = unhandled;
+  if (unhandled.length > 0) result.agentContext = unhandled;
   return result;
 }
 
