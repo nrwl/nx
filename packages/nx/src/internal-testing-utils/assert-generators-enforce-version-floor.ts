@@ -38,7 +38,9 @@ export function assertGeneratorsEnforceVersionFloor(options: {
       const [factoryRelative, exportName] = def.factory
         .replace(/^\.\//, '')
         .split('#');
-      const factoryModule = require(join(packageRoot, factoryRelative));
+      // Local-dist plugins point factories at `./dist/src/...`; Jest loads from `./src/...`.
+      const sourceRelative = factoryRelative.replace(/^dist\//, '');
+      const factoryModule = require(join(packageRoot, sourceRelative));
       const factory = exportName
         ? factoryModule[exportName]
         : (factoryModule.default ?? factoryModule);

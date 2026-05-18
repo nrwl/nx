@@ -8,6 +8,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { join } from 'path';
+import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { swcHelpersVersion } from '../../utils/versions';
@@ -17,6 +18,8 @@ export async function convertToSwcGenerator(
   tree: Tree,
   schema: ConvertToSwcGeneratorSchema
 ) {
+  assertSupportedTypescriptVersion(tree);
+
   const options = normalizeOptions(schema);
   const projectConfiguration = readProjectConfiguration(tree, options.project);
 
@@ -99,7 +102,8 @@ function checkSwcDependencies(
       tree,
       { '@swc/helpers': swcHelpersVersion },
       {},
-      projectPackageJsonPath
+      projectPackageJsonPath,
+      true
     );
   }
 
