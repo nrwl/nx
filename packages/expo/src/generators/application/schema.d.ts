@@ -13,7 +13,7 @@ export interface Schema {
   linter: Linter | LinterType; // default is eslint
   enableTypedLinting?: boolean; // default is false
   /**
-   * @deprecated The `setParserOptionsProject` option is deprecated and will be removed in Nx v24. Use `enableTypedLinting` instead.
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in v24.
    */
   setParserOptionsProject?: boolean; // default is false
   e2eTestRunner: 'cypress' | 'playwright' | 'detox' | 'none'; // default is none
