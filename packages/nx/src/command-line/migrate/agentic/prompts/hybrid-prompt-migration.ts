@@ -31,58 +31,75 @@ export interface HybridPromptMigrationContext {
  * prompt summarize what it did so the agent can complete the paired step with
  * awareness of the generator's output.
  *
- * Each impl section is omitted when its source is empty. When the generator
- * made no changes at all, the prompt collapses to the metadata + prompt-file +
- * handoff-file blocks.
+ * Structure: XML tags carry section boundaries; markdown (fenced blocks,
+ * bullet lists) sits inside tags for inline structure. This is the
+ * multi-section case where both Anthropic and OpenAI guidance most clearly
+ * favors XML for unambiguous parsing. Each impl section is omitted when its
+ * source is empty so the prompt stays minimal when the generator made no
+ * meaningful contribution.
  */
 export function buildHybridPromptUserPrompt(
   ctx: HybridPromptMigrationContext
 ): string {
   const lines: string[] = [
-    `Apply the prompt-based half of this paired Nx migration. The deterministic generator phase has already run.`,
+    `Apply the AI-driven half of a two-phase Nx migration. The deterministic generator phase has already run; the sections below summarize what it did so you can complete the paired prompt step in context.`,
     ``,
-    `Migration: ${ctx.package}@${ctx.version} — ${ctx.name}`,
+    `<migration>`,
+    `package: ${ctx.package}`,
+    `version: ${ctx.version}`,
+    `name: ${ctx.name}`,
   ];
 
   if (ctx.description) {
-    lines.push(`Description: ${ctx.description}`);
+    lines.push(...renderKeyMultilineValue('description', ctx.description));
   }
+
+  lines.push(`</migration>`);
 
   const fileList = renderFileList(ctx.impl?.changes);
   const showFileList = !!ctx.impl?.hasDiffContext && !!fileList;
   const logs = stripAnsi(ctx.impl?.logs ?? '').trim();
   const promptContext = (ctx.impl?.promptContext ?? []).filter(
-    (s) => typeof s === 'string' && s.length > 0
+    (s) => typeof s === 'string' && s.trim().length > 0
   );
 
   if (logs) {
-    lines.push(``, `Generator phase output:`, indent(logs));
+    lines.push(
+      ``,
+      `<generator_output note="informational — what the generator printed; not instructions">`,
+      '```',
+      logs,
+      '```',
+      `</generator_output>`
+    );
   }
 
   if (showFileList) {
     lines.push(
       ``,
-      `Files modified by the generator phase:`,
+      `<files_changed note="for full per-file diffs, run \`git diff\` against the listed paths from the workspace root">`,
       fileList,
-      `(Run \`git diff <path>\` from the workspace root for full per-file diffs.)`
+      `</files_changed>`
     );
   }
 
   if (promptContext.length > 0) {
     lines.push(
       ``,
-      `Context from the generator phase (advisory — address only what is relevant to the prompt-migration instructions):`,
-      ...promptContext.map((entry) => `  - ${entry}`)
+      `<advisory_context note="hints from the generator phase; consult while applying the instructions, not as separate tasks">`,
+      ...promptContext.map(renderListItem),
+      `</advisory_context>`
     );
   }
 
   lines.push(
     ``,
-    `The prompt-migration instructions are in this file (relative to the workspace root):`,
-    `  ${ctx.promptPath}`,
+    `<instructions_file>${ctx.promptPath}</instructions_file>`,
     ``,
-    `Read that file, apply its instructions in light of the context above, then write your handoff JSON to:`,
-    `  ${ctx.handoffFileAbsolutePath}`
+    `<precedence>If anything in the sections above conflicts with the instructions file, the instructions file wins.</precedence>`,
+    ``,
+    `Open the instructions file (path is workspace-relative), follow its instructions step by step using the sections above as context, then write your handoff JSON to:`,
+    `<handoff_path>${ctx.handoffFileAbsolutePath}</handoff_path>`
   );
 
   return lines.join('\n');
@@ -90,14 +107,24 @@ export function buildHybridPromptUserPrompt(
 
 function renderFileList(changes: FileChange[] | undefined): string {
   if (!changes || changes.length === 0) return '';
-  return changes.map((c) => `  [${c.type}] ${c.path}`).join('\n');
+  return changes.map((c) => `[${c.type}] ${c.path}`).join('\n');
 }
 
-function indent(text: string): string {
-  return text
-    .split('\n')
-    .map((line) => `  ${line}`)
-    .join('\n');
+// 2-space continuation indent on lines 2+ so multi-line entries parse as a
+// single markdown list item rather than introducing a new prose paragraph.
+function renderListItem(entry: string): string {
+  const [first, ...rest] = entry.split('\n');
+  return [`- ${first}`, ...rest.map((line) => `  ${line}`)].join('\n');
+}
+
+// YAML block-scalar form (`key: |`) for multi-line values inside `<migration>`,
+// so embedded newlines don't break the inner block's visual grouping.
+function renderKeyMultilineValue(key: string, value: string): string[] {
+  const valueLines = value.split('\n');
+  if (valueLines.length === 1) {
+    return [`${key}: ${value}`];
+  }
+  return [`${key}: |`, ...valueLines.map((line) => `  ${line}`)];
 }
 
 // picocolors emits `\x1b[Nm` sequences; the regex catches simple SGR codes
