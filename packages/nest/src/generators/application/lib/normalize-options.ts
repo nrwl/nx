@@ -52,6 +52,7 @@ export function toNodeApplicationGeneratorOptions(
     tags: options.tags,
     unitTestRunner: options.unitTestRunner,
     e2eTestRunner: options.e2eTestRunner,
+    enableTypedLinting: options.enableTypedLinting,
     setParserOptionsProject: options.setParserOptionsProject,
     rootProject: options.rootProject,
     bundler: 'webpack', // Some features require webpack plugins such as TS transformers

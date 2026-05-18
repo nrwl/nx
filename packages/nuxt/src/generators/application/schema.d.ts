@@ -12,6 +12,10 @@ export interface Schema {
   js?: boolean;
   skipPackageJson?: boolean;
   rootProject?: boolean;
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated The `setParserOptionsProject` option is deprecated and will be removed in Nx v24. Use `enableTypedLinting` instead.
+   */
   setParserOptionsProject?: boolean;
   style?: 'css' | 'scss' | 'none';
   nxCloudToken?: string;

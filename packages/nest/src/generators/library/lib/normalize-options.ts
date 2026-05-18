@@ -85,6 +85,7 @@ export function toJsLibraryGeneratorOptions(
     tags: options.tags,
     testEnvironment: options.testEnvironment,
     unitTestRunner: options.unitTestRunner,
+    enableTypedLinting: options.enableTypedLinting,
     setParserOptionsProject: options.setParserOptionsProject,
     addPlugin: options.addPlugin,
     useProjectJson: options.useProjectJson,

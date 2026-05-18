@@ -92,6 +92,7 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
       importPath: schema.importPath,
       testEnvironment: 'node',
       skipFormat: true,
+      enableTypedLinting: schema.enableTypedLinting,
       setParserOptionsProject: schema.setParserOptionsProject,
       useProjectJson: options.useProjectJson,
     })

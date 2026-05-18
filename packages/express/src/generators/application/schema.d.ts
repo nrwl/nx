@@ -14,6 +14,10 @@ export interface Schema {
   /** @deprecated use `swcJest` instead */
   babelJest?: boolean;
   js: boolean;
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated The `setParserOptionsProject` option is deprecated and will be removed in Nx v24. Use `enableTypedLinting` instead.
+   */
   setParserOptionsProject?: boolean;
   addPlugin?: boolean;
   useProjectJson?: boolean;

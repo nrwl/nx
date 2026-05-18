@@ -7,6 +7,8 @@ import {
 import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
+  addTypedLintingToFlatConfig,
+  detectTypedLintingShape,
   findEslintFile,
   lintConfigHasOverride,
   replaceOverridesInLintConfig,
@@ -667,6 +669,107 @@ module.exports = [
           ],
         }
       `);
+    });
+  });
+
+  describe('detectTypedLintingShape', () => {
+    it('returns null when no typed linting is configured', () => {
+      expect(detectTypedLintingShape('module.exports = [];')).toBeNull();
+      expect(
+        detectTypedLintingShape('{"overrides": [{"files": ["*.ts"]}]}')
+      ).toBeNull();
+    });
+
+    it('detects project-service shape', () => {
+      expect(
+        detectTypedLintingShape(
+          'export default [{ languageOptions: { parserOptions: { projectService: true } } }];'
+        )
+      ).toBe('project-service');
+    });
+
+    it('detects parser-options-project shape (flat config)', () => {
+      expect(
+        detectTypedLintingShape(
+          'export default [{ languageOptions: { parserOptions: { project: ["./tsconfig.json"] } } }];'
+        )
+      ).toBe('parser-options-project');
+    });
+
+    it('detects parser-options-project shape (JSON)', () => {
+      expect(
+        detectTypedLintingShape(
+          '{"overrides": [{"parserOptions": {"project": ["./tsconfig.json"]}}]}'
+        )
+      ).toBe('parser-options-project');
+    });
+
+    it('ignores the word "project" in unrelated contexts', () => {
+      // The previous regex matched any `project:` after `parserOptions:`, even
+      // in comments — verify the tightened regex no longer false-positives.
+      expect(
+        detectTypedLintingShape(
+          `// configure parserOptions for your project: false\nexport default [];`
+        )
+      ).toBeNull();
+    });
+  });
+
+  describe('addTypedLintingToFlatConfig', () => {
+    let originalUseFlatConfig: string | undefined;
+    beforeEach(() => {
+      originalUseFlatConfig = process.env.ESLINT_USE_FLAT_CONFIG;
+      process.env.ESLINT_USE_FLAT_CONFIG = 'true';
+    });
+    afterEach(() => {
+      process.env.ESLINT_USE_FLAT_CONFIG = originalUseFlatConfig;
+    });
+
+    it('appends a projectService block with import.meta.dirname to an mjs flat config', () => {
+      tree.write(
+        'libs/test/eslint.config.mjs',
+        `export default [{ files: ['**/*.ts'], rules: {} }];\n`
+      );
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      const content = tree.read('libs/test/eslint.config.mjs', 'utf-8');
+      expect(content).toContain('projectService: true');
+      expect(content).toContain('tsconfigRootDir: import.meta.dirname');
+    });
+
+    it('appends a projectService block with __dirname to a cjs flat config', () => {
+      tree.write(
+        'libs/test/eslint.config.cjs',
+        `module.exports = [{ files: ['**/*.ts'], rules: {} }];\n`
+      );
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      const content = tree.read('libs/test/eslint.config.cjs', 'utf-8');
+      expect(content).toContain('projectService: true');
+      expect(content).toContain('tsconfigRootDir: __dirname');
+      expect(content).not.toContain('import.meta.dirname');
+    });
+
+    it('does not classify a cjs file with a commented `export default` as mjs', () => {
+      tree.write(
+        'libs/test/eslint.config.cjs',
+        `// example: export default [];\nmodule.exports = [{ files: ['**/*.ts'], rules: {} }];\n`
+      );
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      const content = tree.read('libs/test/eslint.config.cjs', 'utf-8');
+      expect(content).toContain('tsconfigRootDir: __dirname');
+      expect(content).not.toContain('import.meta.dirname');
+    });
+
+    it('is a no-op when no flat config file is present', () => {
+      tree.write('libs/test/.eslintrc.json', '{}');
+      // No flat config file at the project root; helper should silently return.
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+      expect(tree.read('libs/test/.eslintrc.json', 'utf-8')).toBe('{}');
     });
   });
 });

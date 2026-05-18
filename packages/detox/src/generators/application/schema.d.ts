@@ -9,6 +9,10 @@ export interface Schema {
   linter?: Linter | LinterType;
   js?: boolean;
   skipFormat?: boolean;
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated The `setParserOptionsProject` option is deprecated and will be removed in Nx v24. Use `enableTypedLinting` instead.
+   */
   setParserOptionsProject?: boolean;
   framework: 'react-native' | 'expo';
   addPlugin?: boolean;

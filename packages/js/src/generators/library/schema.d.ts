@@ -23,6 +23,10 @@ export interface LibraryGeneratorSchema {
   strict?: boolean;
   publishable?: boolean;
   buildable?: boolean;
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated The `setParserOptionsProject` option is deprecated and will be removed in Nx v24. Use `enableTypedLinting` instead.
+   */
   setParserOptionsProject?: boolean;
   config?: 'workspace' | 'project' | 'npm-scripts';
   compiler?: Compiler;

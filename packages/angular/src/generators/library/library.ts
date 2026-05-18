@@ -166,6 +166,7 @@ async function addLinting(
     projectRoot: options.projectRoot,
     prefix: options.prefix,
     unitTestRunner: options.unitTestRunner,
+    enableTypedLinting: options.enableTypedLinting,
     setParserOptionsProject: options.setParserOptionsProject,
     skipFormat: true,
     skipPackageJson: options.skipPackageJson,

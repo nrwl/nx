@@ -102,6 +102,7 @@ export async function host(tree: Tree, schema: Schema) {
     prefix: options.prefix,
     typescriptConfiguration,
     standalone: options.standalone,
+    enableTypedLinting: options.enableTypedLinting,
     setParserOptionsProject: options.setParserOptionsProject,
   });
 

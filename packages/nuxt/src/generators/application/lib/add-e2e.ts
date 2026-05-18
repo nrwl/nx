@@ -119,7 +119,11 @@ export async function addE2e(
       directory: 'src',
       js: false,
       linter: options.linter,
-      setParserOptionsProject: options.setParserOptionsProject,
+      // Cross-plugin: forward as `setParserOptionsProject` so the published
+      // @nx/playwright accepts the option (`enableTypedLinting` is not in its
+      // types yet).
+      setParserOptionsProject:
+        options.enableTypedLinting || options.setParserOptionsProject,
       webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
       webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
       addPlugin: true,

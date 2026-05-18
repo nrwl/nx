@@ -91,6 +91,7 @@ export async function remote(tree: Tree, schema: Schema) {
     standalone: options.standalone,
     prefix: options.prefix,
     typescriptConfiguration,
+    enableTypedLinting: options.enableTypedLinting,
     setParserOptionsProject: options.setParserOptionsProject,
   });
 

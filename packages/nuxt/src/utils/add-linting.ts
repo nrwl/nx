@@ -12,6 +12,7 @@ import {
   addIgnoresToLintConfig,
   findEslintFile,
   isEslintConfigSupported,
+  isTypedLintingEnabled,
   lintConfigHasOverride,
   replaceOverridesInLintConfig,
   updateOverrideInLintConfig,
@@ -30,6 +31,11 @@ export async function addLinting(
     projectRoot: string;
     unitTestRunner?: 'vitest' | 'none';
     rootProject?: boolean;
+    enableTypedLinting?: boolean;
+    /**
+     * @deprecated The `setParserOptionsProject` option is deprecated and will be removed in Nx v24. Use `enableTypedLinting` instead.
+     */
+    setParserOptionsProject?: boolean;
   }
 ) {
   const tasks: GeneratorCallback[] = [];
@@ -41,6 +47,8 @@ export async function addLinting(
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
       rootProject: options.rootProject,
+      enableTypedLinting: options.enableTypedLinting,
+      setParserOptionsProject: options.setParserOptionsProject,
       addPlugin: true,
     });
     tasks.push(lintTask);
@@ -56,10 +64,18 @@ export async function addLinting(
         : nuxtEslintConfigLegacyVersion,
     };
 
+    const enableTypedLinting = isTypedLintingEnabled(options);
     if (isEslintConfigSupported(host, options.projectRoot)) {
       if (isFlatConfig) {
-        // For flat config: Generate eslint.config.mjs using createConfigForNuxt
-        generateNuxtFlatEslintConfig(host, options.projectRoot);
+        // For flat config: Generate eslint.config.mjs using createConfigForNuxt.
+        // Pass `enableTypedLinting` so the projectService block is inlined into
+        // the template (the file's top-level export is a call expression chain,
+        // not an array literal, so post-hoc AST insertion doesn't work).
+        generateNuxtFlatEslintConfig(
+          host,
+          options.projectRoot,
+          enableTypedLinting
+        );
       } else {
         // For legacy: Use extends with the old @nuxt/eslint-config
         editEslintConfigFiles(host, options.projectRoot);
@@ -96,7 +112,11 @@ export async function addLinting(
  * Generates a flat ESLint config for Nuxt using createConfigForNuxt from @nuxt/eslint-config/flat.
  * This is the recommended approach for Nuxt v4+ and ESLint flat config.
  */
-function generateNuxtFlatEslintConfig(tree: Tree, projectRoot: string) {
+function generateNuxtFlatEslintConfig(
+  tree: Tree,
+  projectRoot: string,
+  enableTypedLinting: boolean
+) {
   const eslintFile = findEslintFile(tree, projectRoot);
   if (!eslintFile) return;
 
@@ -108,6 +128,19 @@ function generateNuxtFlatEslintConfig(tree: Tree, projectRoot: string) {
   const depth = projectRoot.split('/').filter(Boolean).length;
   const rootConfigRelativePath = depth > 0 ? '../'.repeat(depth) : './';
   let configContent: string;
+
+  const typedLintingBlock = enableTypedLinting
+    ? `
+    {
+      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+      languageOptions: {
+        parserOptions: {
+          projectService: true,
+          tsconfigRootDir: ${isCjs ? '__dirname' : 'import.meta.dirname'},
+        },
+      },
+    },`
+    : '';
 
   if (isCjs) {
     // CJS flat config
@@ -122,7 +155,7 @@ module.exports = createConfigForNuxt({
     typescript: true,
   },
 })${projectRoot !== '.' ? `\n  .prepend(...baseConfig)` : ''}
-  .append(
+  .append(${typedLintingBlock}
     {
       files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
       rules: {
@@ -149,7 +182,7 @@ export default createConfigForNuxt({
     typescript: true,
   },
 })${projectRoot !== '.' ? `\n  .prepend(...baseConfig)` : ''}
-  .append(
+  .append(${typedLintingBlock}
     {
       files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
       rules: {

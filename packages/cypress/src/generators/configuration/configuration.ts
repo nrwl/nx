@@ -52,6 +52,10 @@ export interface CypressE2EConfigSchema {
   directory?: string;
   js?: boolean;
   skipFormat?: boolean;
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated The `setParserOptionsProject` option is deprecated and will be removed in Nx v24. Use `enableTypedLinting` instead.
+   */
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
   bundler?: 'webpack' | 'vite' | 'none';

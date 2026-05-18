@@ -879,7 +879,12 @@ export function addBlockToFlatConfigExport(
     ts.ScriptKind.JS
   );
 
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  // AST-based format detection so `module.exports = [...]` files with a
+  // commented-out `export default` example aren't mis-routed to the ESM path.
+  const hasExportDefault = source.statements.some(
+    (statement) => ts.isExportAssignment(statement) && !statement.isExportEquals
+  );
+  const format: 'mjs' | 'cjs' = hasExportDefault ? 'mjs' : 'cjs';
 
   // find the export default array statement
   if (format === 'mjs') {
@@ -1917,6 +1922,82 @@ export function generateFlatPredefinedConfig(
   );
 
   return spread ? ts.factory.createSpreadElement(node) : node;
+}
+
+const DEFAULT_TYPED_LINTING_FILES = [
+  '**/*.ts',
+  '**/*.tsx',
+  '**/*.js',
+  '**/*.jsx',
+];
+
+/**
+ * Generates the AST for a `parserOptions` object that enables typed linting
+ * via typescript-eslint's project service (the recommended approach since
+ * typescript-eslint v8).
+ *
+ * Emits `tsconfigRootDir: import.meta.dirname` for `mjs` and
+ * `tsconfigRootDir: __dirname` for `cjs`.
+ */
+export function generateProjectServiceParserOptions(
+  format: 'mjs' | 'cjs'
+): ts.ObjectLiteralExpression {
+  return ts.factory.createObjectLiteralExpression(
+    [
+      ts.factory.createPropertyAssignment(
+        'projectService',
+        ts.factory.createTrue()
+      ),
+      ts.factory.createPropertyAssignment(
+        'tsconfigRootDir',
+        format === 'mjs'
+          ? ts.factory.createPropertyAccessExpression(
+              ts.factory.createMetaProperty(
+                ts.SyntaxKind.ImportKeyword,
+                ts.factory.createIdentifier('meta')
+              ),
+              ts.factory.createIdentifier('dirname')
+            )
+          : ts.factory.createIdentifier('__dirname')
+      ),
+    ],
+    true
+  );
+}
+
+/**
+ * Generates a flat-config override block enabling typed linting via the
+ * project service. Default files match the typed-linting block that
+ * generators historically emitted via `parserOptions.project`.
+ */
+export function generateTypedLintingFlatConfigOverride(
+  format: 'mjs' | 'cjs',
+  files: string[] = DEFAULT_TYPED_LINTING_FILES
+): ts.ObjectLiteralExpression {
+  return ts.factory.createObjectLiteralExpression(
+    [
+      ts.factory.createPropertyAssignment(
+        'files',
+        ts.factory.createArrayLiteralExpression(
+          files.map((f) => ts.factory.createStringLiteral(f)),
+          true
+        )
+      ),
+      ts.factory.createPropertyAssignment(
+        'languageOptions',
+        ts.factory.createObjectLiteralExpression(
+          [
+            ts.factory.createPropertyAssignment(
+              'parserOptions',
+              generateProjectServiceParserOptions(format)
+            ),
+          ],
+          true
+        )
+      ),
+    ],
+    true
+  );
 }
 
 export function mapFilePaths<

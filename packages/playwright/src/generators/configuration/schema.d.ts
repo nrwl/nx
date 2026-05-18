@@ -11,6 +11,10 @@ export interface ConfigurationGeneratorSchema {
   skipPackageJson?: boolean;
   skipInstall?: boolean;
   linter?: Linter | LinterType;
+  enableTypedLinting?: boolean; // default is false
+  /**
+   * @deprecated The `setParserOptionsProject` option is deprecated and will be removed in Nx v24. Use `enableTypedLinting` instead.
+   */
   setParserOptionsProject?: boolean; // default is false
   /**
    * command to give playwright to run the web server

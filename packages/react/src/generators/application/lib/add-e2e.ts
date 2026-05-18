@@ -173,6 +173,12 @@ export async function addE2e(
         baseUrl: e2eWebServerInfo.e2eWebServerAddress,
         jsx: true,
         rootProject: options.rootProject,
+        // Cross-plugin: map the new flag to `setParserOptionsProject` so the
+        // published @nx/cypress (which doesn't have `enableTypedLinting` in its
+        // types yet) still receives the signal.
+        setParserOptionsProject:
+          options.enableTypedLinting || options.setParserOptionsProject,
+        enableTypedLinting: undefined,
         webServerCommands: {
           default: e2eWebServerInfo.e2eWebServerCommand,
           production: e2eWebServerInfo.e2eCiWebServerCommand,
@@ -224,7 +230,11 @@ export async function addE2e(
         directory: 'src',
         js: false,
         linter: options.linter,
-        setParserOptionsProject: options.setParserOptionsProject,
+        // Cross-plugin: forward as `setParserOptionsProject` so the published
+        // @nx/playwright accepts the signal (`enableTypedLinting` is not in its
+        // types yet).
+        setParserOptionsProject:
+          options.enableTypedLinting || options.setParserOptionsProject,
         webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
         webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
         rootProject: options.rootProject,

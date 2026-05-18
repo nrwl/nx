@@ -136,7 +136,11 @@ export async function addE2e(
         directory: 'src',
         js: false,
         linter: options.linter,
-        setParserOptionsProject: options.setParserOptionsProject,
+        // Cross-plugin: forward as `setParserOptionsProject` so the published
+        // @nx/playwright accepts the option (`enableTypedLinting` is not in its
+        // types yet).
+        setParserOptionsProject:
+          options.enableTypedLinting || options.setParserOptionsProject,
         webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
         webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
         rootProject: options.rootProject,
@@ -157,6 +161,7 @@ export async function addE2e(
         appDisplayName: options.displayName,
         appName: options.simpleName,
         framework: 'expo',
+        enableTypedLinting: options.enableTypedLinting,
         setParserOptionsProject: options.setParserOptionsProject,
         skipFormat: true,
       });
