@@ -6,6 +6,7 @@ import {
   requireWithTsconfigFallback,
 } from '../plugins/js/utils/register';
 import { getWorkspacePackagesMetadata } from '../plugins/js/utils/packages';
+import { getRootTsConfigResolveExportsConditions } from '../plugins/js/utils/typescript';
 import { normalizePath } from '../utils/path';
 import type { ProjectConfiguration } from './workspace-json-project-json';
 
@@ -148,7 +149,7 @@ function tryResolveFromSource(
         exports: localProject.metadata!.js!.packageExports,
       },
       path,
-      { conditions: ['development'] }
+      { conditions: getRootTsConfigResolveExportsConditions() }
     );
     if (fromExports && fromExports.length) {
       for (const exportPath of fromExports) {
