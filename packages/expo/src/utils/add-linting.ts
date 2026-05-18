@@ -20,6 +20,10 @@ interface NormalizedSchema {
   linter?: Linter | LinterType;
   projectName: string;
   projectRoot: string;
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated The `setParserOptionsProject` option is deprecated and will be removed in Nx v24. Use `enableTypedLinting` instead.
+   */
   setParserOptionsProject?: boolean;
   tsConfigPaths: string[];
   skipPackageJson?: boolean;
@@ -40,6 +44,8 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     tsConfigPaths: options.tsConfigPaths,
     skipFormat: true,
     skipPackageJson: options.skipPackageJson,
+    enableTypedLinting: options.enableTypedLinting,
+    setParserOptionsProject: options.setParserOptionsProject,
     addPlugin: options.addPlugin,
     addPackageJsonDependencyChecks: options.buildable,
   });

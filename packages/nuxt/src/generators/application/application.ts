@@ -190,6 +190,8 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       linter: options.linter ?? 'eslint',
       unitTestRunner: options.unitTestRunner,
       rootProject: options.rootProject,
+      enableTypedLinting: options.enableTypedLinting,
+      setParserOptionsProject: options.setParserOptionsProject,
     })
   );
 

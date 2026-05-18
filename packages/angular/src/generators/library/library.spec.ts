@@ -1207,12 +1207,12 @@ describe('lib', () => {
         `);
       });
 
-      it('should set parserOptions.project when enabled (flat config)', async () => {
+      it('should enable typed linting via projectService (flat config)', async () => {
         tree.write('eslint.config.cjs', '');
 
         await runLibraryGeneratorWithOpts({
           linter: 'eslint',
-          setParserOptionsProject: true,
+          enableTypedLinting: true,
         });
 
         const eslintConfig = tree.read('my-lib/eslint.config.cjs', 'utf-8');
@@ -1233,9 +1233,8 @@ describe('lib', () => {
                   ],
                   languageOptions: {
                       parserOptions: {
-                          project: [
-                              "my-lib/tsconfig.*?.json"
-                          ]
+                          projectService: true,
+                          tsconfigRootDir: __dirname
                       }
                   }
               },

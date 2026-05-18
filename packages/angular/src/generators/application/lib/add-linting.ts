@@ -10,6 +10,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     projectName: options.name,
     projectRoot: options.appProjectRoot,
     prefix: options.prefix,
+    enableTypedLinting: options.enableTypedLinting,
     setParserOptionsProject: options.setParserOptionsProject,
     skipPackageJson: options.skipPackageJson,
     unitTestRunner: options.unitTestRunner,

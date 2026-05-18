@@ -31,6 +31,7 @@ import {
   generateFlatPredefinedConfig,
   generatePluginExtendsElement,
   generatePluginExtendsElementWithCompatFixup,
+  generateTypedLintingFlatConfigOverride,
   hasFlatConfigIgnoresBlock,
   hasOverride,
   overrideNeedsCompat,
@@ -210,6 +211,81 @@ export function determineEslintConfigFormat(content: string): 'mjs' | 'cjs' {
   );
 
   return hasExportDefault ? 'mjs' : 'cjs';
+}
+
+/**
+ * Returns whether typed linting was requested for a generator. Accepts both
+ * the new `enableTypedLinting` flag and the deprecated `setParserOptionsProject`
+ * flag (removed in Nx v24) — either set to a truthy value enables the feature.
+ */
+export function isTypedLintingEnabled(options: {
+  enableTypedLinting?: boolean;
+  setParserOptionsProject?: boolean;
+}): boolean {
+  return !!(options.enableTypedLinting || options.setParserOptionsProject);
+}
+
+export type TypedLintingShape = 'project-service' | 'parser-options-project';
+
+/**
+ * Detects whether an existing ESLint config file content has typed linting
+ * configured and which shape it uses, so callers can preserve the user's
+ * existing configuration when adding new overrides.
+ *
+ * - `'project-service'`: modern typescript-eslint v8 shape using
+ *   `parserOptions.projectService` (with `tsconfigRootDir`).
+ * - `'parser-options-project'`: legacy shape using `parserOptions.project`.
+ * - `null`: no typed-linting parser options detected.
+ */
+export function detectTypedLintingShape(
+  content: string
+): TypedLintingShape | null {
+  // Tolerate both JS/TS source (`projectService:`) and JSON (`"projectService":`).
+  if (/\bprojectService["']?\s*:\s*(?:true|\{)/.test(content)) {
+    return 'project-service';
+  }
+  // Match `parserOptions: { ... project: [` (or `: 'path'` / `: "path"`).
+  // The `[\['"]` anchor prevents false positives where `project` appears as a
+  // nested key name (e.g., `parserOptions: { project: { tsconfig: 'x' } }`)
+  // or in comments like `// configure for your project`.
+  if (
+    /\bparserOptions["']?\s*:\s*\{[\s\S]*?\bproject["']?\s*:\s*[\['"]/.test(
+      content
+    )
+  ) {
+    return 'parser-options-project';
+  }
+  return null;
+}
+
+/**
+ * Adds a typed-linting block (`parserOptions.projectService` + `tsconfigRootDir`)
+ * to a project's flat ESLint config. No-op for legacy `.eslintrc` configs since
+ * typescript-eslint v7 does not support the project service.
+ *
+ * Use after operations that strip existing overrides (e.g.
+ * `replaceOverridesInLintConfig`) to re-establish typed linting.
+ */
+export function addTypedLintingToFlatConfig(tree: Tree, root: string): void {
+  if (!useFlatConfig(tree)) {
+    return;
+  }
+  let fileName: string;
+  for (const f of eslintFlatConfigFilenames) {
+    if (tree.exists(joinPathFragments(root, f))) {
+      fileName = joinPathFragments(root, f);
+      break;
+    }
+  }
+  if (!fileName) {
+    return;
+  }
+  const content = tree.read(fileName, 'utf8');
+  // AST-based detection avoids string false-positives like `// export default ...`
+  // inside a `.cjs` config.
+  const format = determineEslintConfigFormat(content);
+  const block = generateTypedLintingFlatConfigOverride(format);
+  tree.write(fileName, addBlockToFlatConfigExport(content, block));
 }
 
 export function addOverrideToLintConfig(

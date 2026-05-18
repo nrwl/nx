@@ -32,6 +32,8 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       skipFormat: true,
       rootProject: options.rootProject,
       skipPackageJson: options.skipPackageJson,
+      enableTypedLinting: options.enableTypedLinting,
+      setParserOptionsProject: options.setParserOptionsProject,
       addPlugin: options.addPlugin,
     });
     tasks.push(lintTask);

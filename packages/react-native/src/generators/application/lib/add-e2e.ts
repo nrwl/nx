@@ -40,7 +40,11 @@ export async function addE2e(
         appDisplayName: options.displayName,
         appName: options.name,
         framework: 'react-native',
-        setParserOptionsProject: options.setParserOptionsProject,
+        // Cross-plugin: map new flag to `setParserOptionsProject` for the
+        // published @nx/detox.
+        setParserOptionsProject:
+          options.enableTypedLinting || options.setParserOptionsProject,
+        enableTypedLinting: undefined,
         skipFormat: true,
       });
     case 'none':

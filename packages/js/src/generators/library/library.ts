@@ -385,6 +385,7 @@ export type AddLintOptions = Pick<
   | 'projectRoot'
   | 'unitTestRunner'
   | 'js'
+  | 'enableTypedLinting'
   | 'setParserOptionsProject'
   | 'rootProject'
   | 'bundler'
@@ -406,7 +407,11 @@ export async function addLint(
       joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
     ],
     unitTestRunner: options.unitTestRunner,
-    setParserOptionsProject: options.setParserOptionsProject,
+    // Cross-plugin via `ensurePackage`: the installed @nx/eslint may not have
+    // `enableTypedLinting` in its types yet. Map to `setParserOptionsProject` so
+    // both releases honor the new flag.
+    setParserOptionsProject:
+      options.enableTypedLinting || options.setParserOptionsProject,
     rootProject: options.rootProject,
     addPlugin: options.addPlugin,
     // Since the build target is inferred now, we need to let the generator know to add @nx/dependency-checks regardless.

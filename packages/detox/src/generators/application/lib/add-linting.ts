@@ -29,6 +29,8 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       joinPathFragments(options.e2eProjectRoot, 'tsconfig.app.json'),
     ],
     skipFormat: true,
+    enableTypedLinting: options.enableTypedLinting,
+    setParserOptionsProject: options.setParserOptionsProject,
     addPlugin: options.addPlugin,
   });
   tasks.push(lintTask);

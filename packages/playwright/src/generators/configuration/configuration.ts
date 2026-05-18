@@ -229,6 +229,7 @@ export async function configurationGeneratorInternal(
       skipPackageJson: options.skipPackageJson,
       js: options.js,
       directory: options.directory,
+      enableTypedLinting: options.enableTypedLinting,
       setParserOptionsProject: options.setParserOptionsProject,
       rootProject: options.rootProject ?? projectConfig.root === '.',
       addPlugin: options.addPlugin,

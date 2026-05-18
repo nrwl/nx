@@ -134,6 +134,7 @@ export async function applicationGeneratorInternal(
         linter: options.linter ?? 'eslint',
         unitTestRunner: options.unitTestRunner,
         skipPackageJson: options.skipPackageJson,
+        enableTypedLinting: options.enableTypedLinting,
         setParserOptionsProject: options.setParserOptionsProject,
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,

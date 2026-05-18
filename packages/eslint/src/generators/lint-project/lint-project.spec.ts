@@ -398,14 +398,14 @@ describe('@nx/eslint:lint-project', () => {
     `);
   });
 
-  it('should set parserOptions.project in flat config when enabled', async () => {
+  it('should emit projectService for typed linting in flat config (mjs)', async () => {
     process.env.ESLINT_USE_FLAT_CONFIG = 'true';
 
     await lintProjectGenerator(tree, {
       ...defaultOptions,
       linter: 'eslint',
       project: 'test-lib',
-      setParserOptionsProject: true,
+      enableTypedLinting: true,
       skipFormat: true,
       eslintConfigFormat: 'mjs',
     });
@@ -425,15 +425,111 @@ describe('@nx/eslint:lint-project', () => {
               ],
               languageOptions: {
                   parserOptions: {
-                      project: [
-                          "libs/test-lib/tsconfig.*?.json"
-                      ]
+                      projectService: true,
+                      tsconfigRootDir: import.meta.dirname
                   }
               }
           }
       ];
       "
     `);
+  });
+
+  it('should emit projectService for typed linting in flat config (cjs)', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'true';
+
+    await lintProjectGenerator(tree, {
+      ...defaultOptions,
+      linter: 'eslint',
+      project: 'test-lib',
+      enableTypedLinting: true,
+      skipFormat: true,
+      eslintConfigFormat: 'cjs',
+    });
+
+    expect(tree.read('libs/test-lib/eslint.config.cjs', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "const baseConfig = require("../../eslint.config.cjs");
+
+      module.exports = [
+          ...baseConfig,
+          {
+              files: [
+                  "**/*.ts",
+                  "**/*.tsx",
+                  "**/*.js",
+                  "**/*.jsx"
+              ],
+              languageOptions: {
+                  parserOptions: {
+                      projectService: true,
+                      tsconfigRootDir: __dirname
+                  }
+              }
+          }
+      ];
+      "
+    `);
+  });
+
+  it('should treat the deprecated setParserOptionsProject as enableTypedLinting in flat config', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'true';
+
+    await lintProjectGenerator(tree, {
+      ...defaultOptions,
+      linter: 'eslint',
+      project: 'test-lib',
+      setParserOptionsProject: true,
+      skipFormat: true,
+      eslintConfigFormat: 'mjs',
+    });
+
+    const content = tree.read('libs/test-lib/eslint.config.mjs', 'utf-8');
+    expect(content).toContain('projectService: true');
+    expect(content).toContain('tsconfigRootDir: import.meta.dirname');
+  });
+
+  it('should honor the deprecated setParserOptionsProject when the new flag arrives with schema default `false`', async () => {
+    // Simulates the CLI path where nx's params parser fills in schema defaults,
+    // so `enableTypedLinting` arrives as `false` (not `undefined`) while a user
+    // explicitly passes the deprecated flag.
+    process.env.ESLINT_USE_FLAT_CONFIG = 'true';
+
+    await lintProjectGenerator(tree, {
+      ...defaultOptions,
+      linter: 'eslint',
+      project: 'test-lib',
+      enableTypedLinting: false,
+      setParserOptionsProject: true,
+      skipFormat: true,
+      eslintConfigFormat: 'mjs',
+    });
+
+    const content = tree.read('libs/test-lib/eslint.config.mjs', 'utf-8');
+    expect(content).toContain('projectService: true');
+  });
+
+  it('should still set parserOptions.project in legacy .eslintrc config when typed linting is enabled', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+
+    await lintProjectGenerator(tree, {
+      ...defaultOptions,
+      linter: 'eslint',
+      project: 'test-lib',
+      enableTypedLinting: true,
+      skipFormat: true,
+    });
+
+    const config = JSON.parse(
+      tree.read('libs/test-lib/.eslintrc.json', 'utf-8')
+    );
+    expect(config.overrides[0]).toEqual({
+      files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+      parserOptions: {
+        project: ['libs/test-lib/tsconfig.*?.json'],
+      },
+      rules: {},
+    });
   });
 
   it('should generate a eslint config (legacy)', async () => {

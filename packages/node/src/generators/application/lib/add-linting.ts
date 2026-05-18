@@ -14,6 +14,7 @@ export async function addLintingToApplication(
     ],
     unitTestRunner: options.unitTestRunner,
     skipFormat: true,
+    enableTypedLinting: options.enableTypedLinting,
     setParserOptionsProject: options.setParserOptionsProject,
     rootProject: options.rootProject,
     addPlugin: options.addPlugin,

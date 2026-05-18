@@ -11,6 +11,10 @@ export interface Schema {
   classComponent?: boolean;
   js?: boolean;
   linter: Linter | LinterType;
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated The `setParserOptionsProject` option is deprecated and will be removed in Nx v24. Use `enableTypedLinting` instead.
+   */
   setParserOptionsProject?: boolean;
   e2eTestRunner: 'cypress' | 'playwright' | 'detox' | 'none'; // default is cypress
   bundler: 'webpack' | 'vite'; // default is webpack

@@ -31,6 +31,10 @@ export async function addLinting(
     name: string;
     projectRoot: string;
     unitTestRunner?: 'vitest' | 'none';
+    enableTypedLinting?: boolean;
+    /**
+     * @deprecated The `setParserOptionsProject` option is deprecated and will be removed in Nx v24. Use `enableTypedLinting` instead.
+     */
     setParserOptionsProject?: boolean;
     skipPackageJson?: boolean;
     rootProject?: boolean;
@@ -49,6 +53,7 @@ export async function addLinting(
       ],
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
+      enableTypedLinting: options.enableTypedLinting,
       setParserOptionsProject: options.setParserOptionsProject,
       rootProject: options.rootProject,
       addPlugin: options.addPlugin,

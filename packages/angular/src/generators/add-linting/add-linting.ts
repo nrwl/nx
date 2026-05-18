@@ -13,6 +13,7 @@ import {
   typeScriptOverride,
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
+  detectTypedLintingShape,
   findEslintFile,
   isEslintConfigSupported,
   replaceOverridesInLintConfig,
@@ -36,6 +37,7 @@ export async function addLintingGenerator(
       joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
     ],
     unitTestRunner: options.unitTestRunner,
+    enableTypedLinting: options.enableTypedLinting,
     setParserOptionsProject: options.setParserOptionsProject,
     skipFormat: true,
     rootProject: rootProject,
@@ -47,10 +49,16 @@ export async function addLintingGenerator(
 
   if (isEslintConfigSupported(tree)) {
     const eslintFile = findEslintFile(tree, options.projectRoot);
-    // keep parser options if they exist
-    const hasParserOptions = tree
-      .read(joinPathFragments(options.projectRoot, eslintFile), 'utf8')
-      .includes(`${options.projectRoot}/tsconfig.*?.json`);
+    // Carry over typed linting config when it exists, regardless of the shape
+    // (modern `projectService` or legacy `parserOptions.project`). When no
+    // project-level config exists yet (e.g. only a root config), there's
+    // nothing to carry over.
+    const eslintFileContent = eslintFile
+      ? tree.read(joinPathFragments(options.projectRoot, eslintFile), 'utf8')
+      : null;
+    const hasTypedLinting =
+      !!eslintFileContent &&
+      detectTypedLintingShape(eslintFileContent) !== null;
 
     if (useFlatConfig(tree)) {
       addPredefinedConfigToFlatLintConfig(
@@ -95,7 +103,9 @@ export async function addLintingGenerator(
         ...(rootProject ? [typeScriptOverride, javaScriptOverride] : []),
         {
           files: ['*.ts'],
-          ...(hasParserOptions
+          // Legacy `.eslintrc` is on typescript-eslint v7, which only supports
+          // `parserOptions.project` (no `projectService`).
+          ...(hasTypedLinting
             ? {
                 parserOptions: {
                   project: [`${options.projectRoot}/tsconfig.*?.json`],
