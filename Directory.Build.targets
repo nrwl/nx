@@ -1,0 +1,6 @@
+<Project>
+  <Target Name="ShowSandboxFlags" BeforeTargets="Build">
+    <Message Importance="high"
+             Text="IOTrace experiment: UseSharedCompilation=$(UseSharedCompilation) BuildInParallel=$(BuildInParallel)" />
+  </Target>
+</Project>
