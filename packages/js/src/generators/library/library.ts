@@ -407,12 +407,10 @@ export async function addLint(
       joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
     ],
     unitTestRunner: options.unitTestRunner,
-    // Cross-plugin via `ensurePackage`: the installed @nx/eslint may not have
-    // `enableTypedLinting` in its types yet. Map to `setParserOptionsProject` so
-    // both releases honor the new flag. Inlined because `@nx/js` cannot import
-    // from `@nx/eslint` (the deep import would resolve to the installed
-    // published version, which lacks the helper).
-    setParserOptionsProject: !!(
+    // `@nx/js` cannot import `isTypedLintingEnabled` from `@nx/eslint` (the deep
+    // import would resolve to the installed published version, which lacks the
+    // helper), so the merge is inlined here.
+    enableTypedLinting: !!(
       options.enableTypedLinting || options.setParserOptionsProject
     ),
     rootProject: options.rootProject,

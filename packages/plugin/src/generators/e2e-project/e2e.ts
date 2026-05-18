@@ -352,7 +352,7 @@ async function addLintingToApplication(
     ],
     unitTestRunner: options.testRunner ?? 'jest',
     skipFormat: true,
-    setParserOptionsProject: false,
+    enableTypedLinting: false,
     addPlugin: options.addPlugin,
   });
 
