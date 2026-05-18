@@ -9,6 +9,8 @@ These instructions guide you through migrating an Nx workspace containing multip
 
 Work systematically through each breaking change category.
 
+> **Note**: a deterministic pre-pass has already run before these instructions. It applied the AST-tractable subset of the changes below (e.g. `browser.provider: 'none'` → `'preview'`, `browser.indexScripts` → `orchestratorScripts`, `@vitest/coverage-c8` → `@vitest/coverage-v8`, `SnapshotEnvironment` import path, `--segfault-retry` removal, `vitest typecheck` → `vitest --typecheck`). Anything it could not handle was forwarded as advisory context (look for "Context from the generator phase" above). Skip the corresponding action items below if the pre-pass already covered them; verify the change is present rather than re-applying.
+
 ## Pre-Migration Checklist
 
 1. **Identify the current Vitest version**:

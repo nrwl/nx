@@ -65,6 +65,7 @@
         "vitest": ">=3.0.0"
       },
       "description": "Migrate workspaces past breaking changes for Vitest 3.",
+      "implementation": "./src/migrations/update-23-0-0/migrate-to-vitest-3",
       "prompt": "./src/migrations/update-23-0-0/ai-instructions-for-vitest-3.md"
     },
     "migrate-to-vitest-4": {
