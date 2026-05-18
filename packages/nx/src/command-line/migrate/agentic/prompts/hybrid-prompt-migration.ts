@@ -15,8 +15,8 @@ export interface HybridPromptMigrationContext {
     logs?: string;
     /** Files the generator changed. Rendered as a `[TYPE] path` list. */
     changes?: FileChange[];
-    /** Strings the generator author put in `promptContext`. */
-    promptContext?: string[];
+    /** Strings the generator author put in `agentContext`. */
+    agentContext?: string[];
     /**
      * False when per-migration commits are disabled; the file-list section
      * is omitted because the diff boundary is meaningless without them.
@@ -59,7 +59,7 @@ export function buildHybridPromptUserPrompt(
   const fileList = renderFileList(ctx.impl?.changes);
   const showFileList = !!ctx.impl?.hasDiffContext && !!fileList;
   const logs = stripAnsi(ctx.impl?.logs ?? '').trim();
-  const promptContext = (ctx.impl?.promptContext ?? []).filter(
+  const agentContext = (ctx.impl?.agentContext ?? []).filter(
     (s) => typeof s === 'string' && s.trim().length > 0
   );
 
@@ -83,11 +83,11 @@ export function buildHybridPromptUserPrompt(
     );
   }
 
-  if (promptContext.length > 0) {
+  if (agentContext.length > 0) {
     lines.push(
       ``,
       `<advisory_context note="hints from the generator phase; consult while applying the instructions, not as separate tasks">`,
-      ...promptContext.map(renderListItem),
+      ...agentContext.map(renderListItem),
       `</advisory_context>`
     );
   }

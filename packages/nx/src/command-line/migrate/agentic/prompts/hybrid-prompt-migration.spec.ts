@@ -122,11 +122,11 @@ describe('buildHybridPromptUserPrompt', () => {
     expect(out).not.toContain('<files_changed');
   });
 
-  it('renders promptContext as advisory bullets inside the advisory_context tag', () => {
+  it('renders agentContext as advisory bullets inside the advisory_context tag', () => {
     const out = buildHybridPromptUserPrompt({
       ...baseCtx,
       impl: {
-        promptContext: [
+        agentContext: [
           'Consumer X may need manual update',
           'Adapter Y left untouched',
         ],
@@ -138,11 +138,11 @@ describe('buildHybridPromptUserPrompt', () => {
     expect(out).toContain('</advisory_context>');
   });
 
-  it('renders multi-line promptContext entries with continuation indent so each entry stays a single list item', () => {
+  it('renders multi-line agentContext entries with continuation indent so each entry stays a single list item', () => {
     const out = buildHybridPromptUserPrompt({
       ...baseCtx,
       impl: {
-        promptContext: [
+        agentContext: [
           'First entry header\nSecond line of first entry\nThird line of first entry',
           'Second entry, single line',
         ],
@@ -155,10 +155,10 @@ describe('buildHybridPromptUserPrompt', () => {
     expect(out).not.toContain('- Second line of first entry');
   });
 
-  it('drops empty / non-string promptContext entries', () => {
+  it('drops empty / non-string agentContext entries', () => {
     const out = buildHybridPromptUserPrompt({
       ...baseCtx,
-      impl: { promptContext: ['', 'valid', '   ', null as any] },
+      impl: { agentContext: ['', 'valid', '   ', null as any] },
     });
     expect(out).toContain('- valid');
     expect(out).not.toMatch(/^- $/m);
@@ -167,7 +167,7 @@ describe('buildHybridPromptUserPrompt', () => {
   it('omits all impl sections cleanly when the generator made no changes', () => {
     const out = buildHybridPromptUserPrompt({
       ...baseCtx,
-      impl: { hasDiffContext: true, changes: [], logs: '', promptContext: [] },
+      impl: { hasDiffContext: true, changes: [], logs: '', agentContext: [] },
     });
     expect(out).not.toContain('<generator_output');
     expect(out).not.toContain('<files_changed');

@@ -2491,7 +2491,7 @@ export async function executeMigrations(
           migrationsWithNoChanges.push(m);
         }
       } else if (isHybridMigration(m)) {
-        const { changes, nextSteps, promptContext, logs } =
+        const { changes, nextSteps, agentContext, logs } =
           await runNxOrAngularMigration(
             root,
             m,
@@ -2519,7 +2519,7 @@ export async function executeMigrations(
             {
               logs,
               changes,
-              promptContext,
+              agentContext,
               hasDiffContext: agenticHasDiffContext,
             }
           );
@@ -2531,7 +2531,7 @@ export async function executeMigrations(
             () => changedDepInstaller.installDepsIfChanged()
           );
         } else {
-          // `promptContext` is agent-only by contract; dropped here.
+          // `agentContext` is agent-only by contract; dropped here.
           skippedPrompts.push(m);
           if (!generatorMadeChanges) {
             migrationsWithNoChanges.push(m);
@@ -2587,7 +2587,7 @@ export async function executeMigrations(
 interface AgenticPromptImplContext {
   logs: string;
   changes: FileChange[];
-  promptContext: string[];
+  agentContext: string[];
   hasDiffContext: boolean;
 }
 
@@ -2758,7 +2758,7 @@ export async function runNxOrAngularMigration(
 ): Promise<{
   changes: FileChange[];
   nextSteps: string[];
-  promptContext: string[];
+  agentContext: string[];
   logs: string;
 }> {
   if (!installDepsIfChanged) {
@@ -2771,10 +2771,10 @@ export async function runNxOrAngularMigration(
   );
   let changes: FileChange[] = [];
   let nextSteps: string[] = [];
-  let promptContext: string[] = [];
+  let agentContext: string[] = [];
   let logs = '';
   if (!isAngularMigration(collection, migration.name)) {
-    ({ nextSteps, changes, promptContext, logs } = await runNxMigration(
+    ({ nextSteps, changes, agentContext, logs } = await runNxMigration(
       root,
       collectionPath,
       collection,
@@ -2787,7 +2787,7 @@ export async function runNxOrAngularMigration(
     logger.info(`  ${migration.description}\n`);
     if (changes.length < 1) {
       logger.info(`No changes were made\n`);
-      return { changes, nextSteps, promptContext, logs };
+      return { changes, nextSteps, agentContext, logs };
     }
 
     logger.info('Changes:');
@@ -2810,7 +2810,7 @@ export async function runNxOrAngularMigration(
     logger.info(`  ${migration.description}\n`);
     if (!madeChanges) {
       logger.info(`No changes were made\n`);
-      return { changes, nextSteps, promptContext, logs };
+      return { changes, nextSteps, agentContext, logs };
     }
 
     logger.info('Changes:');
@@ -2831,7 +2831,7 @@ export async function runNxOrAngularMigration(
     await installDepsIfChanged();
   }
 
-  return { changes, nextSteps, promptContext, logs };
+  return { changes, nextSteps, agentContext, logs };
 }
 
 async function runMigrations(
@@ -2985,29 +2985,29 @@ async function runNxMigration(
   } else {
     result = await fn(host, {});
   }
-  const { nextSteps, promptContext } = parseMigrationReturn(result);
+  const { nextSteps, agentContext } = parseMigrationReturn(result);
   host.lock();
   const changes = host.listChanges();
   flushChanges(root, changes);
-  return { changes, nextSteps, promptContext, logs };
+  return { changes, nextSteps, agentContext, logs };
 }
 
 export function parseMigrationReturn(value: unknown): {
   nextSteps: string[];
-  promptContext: string[];
+  agentContext: string[];
 } {
   if (isStringArray(value)) {
-    return { nextSteps: value, promptContext: [] };
+    return { nextSteps: value, agentContext: [] };
   }
   if (value && typeof value === 'object') {
     const obj = value as Record<string, unknown>;
     return {
       nextSteps: isStringArray(obj.nextSteps) ? obj.nextSteps : [],
-      promptContext: isStringArray(obj.promptContext) ? obj.promptContext : [],
+      agentContext: isStringArray(obj.agentContext) ? obj.agentContext : [],
     };
   }
   // Catches `void`, mistakenly-returned generator callbacks, malformed values.
-  return { nextSteps: [], promptContext: [] };
+  return { nextSteps: [], agentContext: [] };
 }
 
 export async function migrate(

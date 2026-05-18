@@ -82,7 +82,7 @@ export type PackageJsonUpdates = {
  *
  * - `nextSteps`: workspace-wide notes surfaced to the human in the `nx migrate`
  *   post-run summary. Same audience as the legacy `string[]` return.
- * - `promptContext`: for hybrid migrations (`implementation` + `prompt`). When the
+ * - `agentContext`: for hybrid migrations (`implementation` + `prompt`). When the
  *   paired prompt runs under `--agentic`, these strings are delivered to the
  *   agent as part of its outer prompt. When no agent runs, this bucket is
  *   silently dropped — it is agent-only by contract. Content meant for the
@@ -90,7 +90,7 @@ export type PackageJsonUpdates = {
  */
 export interface MigrationReturnObject {
   nextSteps?: string[];
-  promptContext?: string[];
+  agentContext?: string[];
 }
 
 export type Migration = (

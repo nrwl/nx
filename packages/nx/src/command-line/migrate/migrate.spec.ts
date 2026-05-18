@@ -4198,14 +4198,14 @@ describe('Migration', () => {
       it('treats a string array as legacy workspace-wide nextSteps', () => {
         expect(parseMigrationReturn(['a', 'b'])).toEqual({
           nextSteps: ['a', 'b'],
-          promptContext: [],
+          agentContext: [],
         });
       });
 
       it('treats undefined/void as empty buckets', () => {
         expect(parseMigrationReturn(undefined)).toEqual({
           nextSteps: [],
-          promptContext: [],
+          agentContext: [],
         });
       });
 
@@ -4213,19 +4213,19 @@ describe('Migration', () => {
         expect(
           parseMigrationReturn({
             nextSteps: ['a'],
-            promptContext: ['b', 'c'],
+            agentContext: ['b', 'c'],
           })
-        ).toEqual({ nextSteps: ['a'], promptContext: ['b', 'c'] });
+        ).toEqual({ nextSteps: ['a'], agentContext: ['b', 'c'] });
       });
 
       it('tolerates partial object shape', () => {
-        expect(parseMigrationReturn({ promptContext: ['x'] })).toEqual({
+        expect(parseMigrationReturn({ agentContext: ['x'] })).toEqual({
           nextSteps: [],
-          promptContext: ['x'],
+          agentContext: ['x'],
         });
         expect(parseMigrationReturn({ nextSteps: ['y'] })).toEqual({
           nextSteps: ['y'],
-          promptContext: [],
+          agentContext: [],
         });
       });
 
@@ -4233,30 +4233,30 @@ describe('Migration', () => {
         expect(
           parseMigrationReturn({
             nextSteps: ['ok', 1, null] as any,
-            promptContext: [true, 'ok'] as any,
+            agentContext: [true, 'ok'] as any,
           })
-        ).toEqual({ nextSteps: [], promptContext: [] });
+        ).toEqual({ nextSteps: [], agentContext: [] });
       });
 
       it('rejects arrays with non-string entries when treated as legacy', () => {
         expect(parseMigrationReturn(['ok', 42] as any)).toEqual({
           nextSteps: [],
-          promptContext: [],
+          agentContext: [],
         });
       });
 
       it('returns empty buckets for unsupported return values', () => {
         expect(parseMigrationReturn(() => undefined)).toEqual({
           nextSteps: [],
-          promptContext: [],
+          agentContext: [],
         });
         expect(parseMigrationReturn('a string')).toEqual({
           nextSteps: [],
-          promptContext: [],
+          agentContext: [],
         });
         expect(parseMigrationReturn(42)).toEqual({
           nextSteps: [],
-          promptContext: [],
+          agentContext: [],
         });
       });
     });
