@@ -31,13 +31,13 @@
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/react": "workspace:*",
     "tslib": "catalog:typescript",
     "@phenomnomnominal/tsquery": "catalog:typescript"
   },
   "devDependencies": {
+    "@nx/eslint": "workspace:*",
     "nx": "workspace:*",
     "@nx/vitest": "workspace:*"
   },
