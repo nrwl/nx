@@ -6,6 +6,7 @@ import {
   isRequireInEsmScopeError,
   isTsEsmNamedExportLinkageError,
   isTsEsmSyntaxError,
+  registerTsExtensionsForResolution,
 } from './register';
 
 describe('getTsNodeCompilerOptions', () => {
@@ -204,5 +205,97 @@ describe('isTsEsmNamedExportLinkageError', () => {
       false
     );
     expect(isTsEsmNamedExportLinkageError(null, '/x.ts')).toBe(false);
+  });
+});
+
+describe('registerTsExtensionsForResolution', () => {
+  const TS_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts'];
+
+  /**
+   * These tests pass a fake `extensionsRegistry` object so they are
+   * decoupled from Jest's cross-module `require.extensions` isolation (each
+   * Jest module gets its own `require` and therefore its own
+   * `require.extensions` proxy, making it impossible to observe changes made
+   * inside an imported function from the test's own `require.extensions`).
+   */
+
+  it('registers TypeScript extensions in the provided registry', () => {
+    const registry: NodeJS.RequireExtensions = {} as any;
+    const cleanup = registerTsExtensionsForResolution(registry);
+
+    for (const ext of TS_EXTENSIONS) {
+      expect(registry[ext]).toBeDefined();
+    }
+
+    cleanup();
+  });
+
+  it('cleanup removes the registered extensions from the registry', () => {
+    const registry: NodeJS.RequireExtensions = {} as any;
+    const cleanup = registerTsExtensionsForResolution(registry);
+    cleanup();
+
+    for (const ext of TS_EXTENSIONS) {
+      expect(registry[ext]).toBeUndefined();
+    }
+  });
+
+  it('is idempotent: does not override an already-registered extension', () => {
+    const sentinel = jest.fn() as unknown as NodeJS.RequireExtensions[string];
+    const registry: NodeJS.RequireExtensions = { '.ts': sentinel } as any;
+
+    const cleanup = registerTsExtensionsForResolution(registry);
+
+    // The pre-existing handler must not be overwritten
+    expect(registry['.ts']).toBe(sentinel);
+
+    cleanup();
+
+    // The sentinel stays — it was not added by this call, so cleanup must not remove it
+    expect(registry['.ts']).toBe(sentinel);
+  });
+
+  it('delegates to the registry .js handler when available (passthrough, not a new transpiler)', () => {
+    const jsHandler = jest.fn() as unknown as NodeJS.RequireExtensions[string];
+    const registry: NodeJS.RequireExtensions = { '.js': jsHandler } as any;
+
+    const cleanup = registerTsExtensionsForResolution(registry);
+
+    // Every TS extension should reuse the .js handler — no custom transpiler
+    for (const ext of TS_EXTENSIONS) {
+      expect(registry[ext]).toBe(jsHandler);
+    }
+
+    cleanup();
+  });
+
+  it('uses a no-op fallback handler when the .js handler is not registered', () => {
+    // Simulate a Jest-like environment where require.extensions['.js'] is absent
+    const registry: NodeJS.RequireExtensions = {} as any;
+
+    const cleanup = registerTsExtensionsForResolution(registry);
+
+    // All TS extensions must be a function so require.resolve can find them
+    for (const ext of TS_EXTENSIONS) {
+      expect(typeof registry[ext]).toBe('function');
+    }
+
+    cleanup();
+  });
+
+  it('all registered handlers are the same function (all extensions share one stub)', () => {
+    const registry: NodeJS.RequireExtensions = {} as any;
+
+    const cleanup = registerTsExtensionsForResolution(registry);
+
+    // All four TS extensions must share the same handler reference (either
+    // the .js passthrough or the fallback stub).
+    const handler = registry['.ts'];
+    expect(handler).toBeDefined();
+    for (const ext of TS_EXTENSIONS) {
+      expect(registry[ext]).toBe(handler);
+    }
+
+    cleanup();
   });
 });

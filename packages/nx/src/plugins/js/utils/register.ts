@@ -236,8 +236,21 @@ export function registerTsProject(
   // unsupported syntax (enum, runtime namespace, legacy decorators, etc.)
   // should use `loadTsFile` instead, which registers swc/ts-node +
   // tsconfig-paths on demand.
+  //
+  // We also register TypeScript extensions as passthrough stubs in
+  // `require.extensions` so that `require.resolve('./rule')` can find
+  // `./rule/index.ts` (directory resolution) and `./rule.ts` (explicit
+  // extension). Without this, Node's CJS loader doesn't know `.ts` is a
+  // valid extension and `require.resolve` throws MODULE_NOT_FOUND even
+  // though Node can execute the file via native type-stripping.
+  // The stubs do NOT transpile - Node's native strip handles execution.
   if (preferNodeStripTypes) {
-    return registerTsConfigPaths(tsConfigPath);
+    const cleanupExtensions = registerTsExtensionsForResolution();
+    const cleanupPaths = registerTsConfigPaths(tsConfigPath);
+    return () => {
+      cleanupPaths();
+      cleanupExtensions();
+    };
   }
 
   // Legacy path: prior to v23, Nx always registered swc-node/ts-node and
@@ -839,6 +852,56 @@ export function registerTranspiler(
   }
 
   return transpiler();
+}
+
+/**
+ * TypeScript file extensions that must be registered so Node's CJS loader
+ * includes them in directory/extensionless `require.resolve` searches.
+ * Node's native type-stripping handles actual execution; these stubs only
+ * make the extensions visible to the resolver.
+ */
+const TS_RESOLUTION_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts'] as const;
+
+/**
+ * Register TypeScript file extensions as passthrough stubs in
+ * `require.extensions`. This is the minimal action needed so that CJS
+ * `require.resolve` can find `.ts` files (e.g. `./rule/index.ts` via
+ * directory resolution) without registering a full transpiler.
+ *
+ * Idempotent: already-registered extensions are left untouched.
+ *
+ * @param extensionsRegistry The `require.extensions` map to register into.
+ *   Defaults to the module-local `require.extensions`. Overridable for tests.
+ * @returns cleanup function that removes the stubs added by this call
+ */
+export function registerTsExtensionsForResolution(
+  extensionsRegistry: NodeJS.RequireExtensions = require.extensions
+): () => void {
+  const addedExtensions: string[] = [];
+
+  // Prefer the default `.js` handler as a passthrough. Node's native
+  // type-stripping runs before the CJS hook chain on Node 22.6+, so by
+  // the time this handler is called the TypeScript syntax is already
+  // stripped and the `.js` handler compiles the result as CommonJS.
+  // Fall back to a no-op handler when running in environments (e.g. Jest)
+  // where `require.extensions['.js']` is not exposed — the stub's mere
+  // presence in `require.extensions` is what makes the extension resolvable.
+  const jsHandler: NodeJS.RequireExtensions[string] =
+    extensionsRegistry['.js'] ??
+    ((mod: NodeModule, filename: string) => mod.load(filename));
+
+  for (const ext of TS_RESOLUTION_EXTENSIONS) {
+    if (!extensionsRegistry[ext]) {
+      extensionsRegistry[ext] = jsHandler;
+      addedExtensions.push(ext);
+    }
+  }
+
+  return () => {
+    for (const ext of addedExtensions) {
+      delete extensionsRegistry[ext];
+    }
+  };
 }
 
 /**
