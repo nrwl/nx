@@ -13,6 +13,7 @@ import {
   lt,
   lte,
   major,
+  rsort,
   satisfies,
   valid,
 } from 'semver';
@@ -2371,14 +2372,7 @@ export function isHybridMigration(m: ExecutableMigration): boolean {
 }
 
 export function resolveAgenticRunId(migrations: ExecutableMigration[]): string {
-  const versions = migrations.map((m) => normalizeVersion(m.version));
-  let max = versions[0]!;
-  for (const v of versions.slice(1)) {
-    if (gt(v, max)) {
-      max = v;
-    }
-  }
-  return max;
+  return rsort(migrations.map((m) => normalizeVersion(m.version)))[0]!;
 }
 
 export function formatSkippedPromptsNextStep(
@@ -2504,7 +2498,9 @@ export async function executeMigrations(
             isVerbose,
             /* shouldCreateCommits: */ false,
             commitPrefix,
-            () => changedDepInstaller.installDepsIfChanged()
+            () => changedDepInstaller.installDepsIfChanged(),
+            /* handleInstallDeps: */ false,
+            /* captureGeneratorOutput: */ !!agenticRun
           );
         allNextSteps.push(...nextSteps);
         const generatorMadeChanges = changes.length > 0;
@@ -2757,7 +2753,8 @@ export async function runNxOrAngularMigration(
   shouldCreateCommits: boolean,
   commitPrefix: string,
   installDepsIfChanged?: () => Promise<void>,
-  handleInstallDeps = false
+  handleInstallDeps = false,
+  captureGeneratorOutput = false
 ): Promise<{
   changes: FileChange[];
   nextSteps: string[];
@@ -2782,7 +2779,8 @@ export async function runNxOrAngularMigration(
       collectionPath,
       collection,
       migration.name,
-      migration.version
+      migration.version,
+      captureGeneratorOutput
     ));
 
     logger.info(`Ran ${migration.name} from ${migration.package}`);
@@ -2963,7 +2961,8 @@ async function runNxMigration(
   collectionPath: string,
   collection: MigrationsJson,
   name: string,
-  migrationVersion?: string
+  migrationVersion: string | undefined,
+  captureGeneratorOutput: boolean
 ) {
   const { path: implPath, fnSymbol } = getImplementationPath(
     collection,
@@ -2977,9 +2976,15 @@ async function runNxMigration(
     process.env.NX_VERBOSE_LOGGING === 'true',
     `migration ${collection.name}:${name}`
   );
-  const { withGeneratorOutputCapture } =
-    require('./agentic/capture-generator-output') as typeof import('./agentic/capture-generator-output');
-  const { result, logs } = await withGeneratorOutputCapture(() => fn(host, {}));
+  let result: unknown;
+  let logs = '';
+  if (captureGeneratorOutput) {
+    const { withGeneratorOutputCapture } =
+      require('./agentic/capture-generator-output') as typeof import('./agentic/capture-generator-output');
+    ({ result, logs } = await withGeneratorOutputCapture(() => fn(host, {})));
+  } else {
+    result = await fn(host, {});
+  }
   const { nextSteps, promptContext } = parseMigrationReturn(result);
   host.lock();
   const changes = host.listChanges();

@@ -92,13 +92,11 @@ function shouldPromptForAgentic(
 async function firePromptForAgentic(
   migrations: ReadonlyArray<{ prompt?: string }>
 ): Promise<boolean> {
+  // Caller (`resolveFlag`) guarantees at least one prompt-bearing migration.
   const promptCount = migrations.filter((m) => !!m.prompt).length;
-  const message =
-    promptCount > 0
-      ? `Some migrations are prompt-based and need an AI agent to apply (${promptCount} ${
-          promptCount === 1 ? 'migration' : 'migrations'
-        }). nx can also use the agent to review generator output. Enable the agentic flow?`
-      : 'nx can use an AI agent to review generator output. Enable the agentic flow?';
+  const message = `Some migrations are prompt-based and need an AI agent to apply (${promptCount} ${
+    promptCount === 1 ? 'migration' : 'migrations'
+  }). nx can also use the agent to review generator output. Enable the agentic flow?`;
 
   const response = await prompt<{ enable: boolean }>({
     name: 'enable',

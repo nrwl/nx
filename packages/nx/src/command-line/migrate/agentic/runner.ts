@@ -126,20 +126,19 @@ export function adaptSpawnForWindowsShim(
 
 const CMD_META_CHARS = /([()\][%!^"`<>&|;, ])/g;
 
+// Backslash-escape embedded quotes per MS C runtime convention, wrap in
+// quotes, then caret-escape cmd.exe metacharacters.
 function escapeCmdArg(arg: string): string {
-  // Backslash-escape embedded quotes per MS C runtime convention.
-  let escaped = arg.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\*)$/, '$1$1');
-  escaped = `"${escaped}"`;
-  return escaped.replace(CMD_META_CHARS, '^$1');
+  const quoted = `"${arg
+    .replace(/(\\*)"/g, '$1$1\\"')
+    .replace(/(\\*)$/, '$1$1')}"`;
+  return quoted.replace(CMD_META_CHARS, '^$1');
 }
 
 function escapeCmdCommand(arg: string): string {
   // cmd.exe interprets the command portion through an extra parsing pass;
-  // double-escape metacharacters there so the .cmd shim sees the original.
-  let escaped = arg.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\*)$/, '$1$1');
-  escaped = `"${escaped}"`;
-  escaped = escaped.replace(CMD_META_CHARS, '^$1');
-  return escaped.replace(CMD_META_CHARS, '^$1');
+  // apply the caret-escape twice so the .cmd shim sees the original.
+  return escapeCmdArg(arg).replace(CMD_META_CHARS, '^$1');
 }
 
 async function promptAmbiguous(): Promise<HandoffOutcome> {
