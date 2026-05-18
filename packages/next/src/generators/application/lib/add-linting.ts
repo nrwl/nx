@@ -14,6 +14,7 @@ import {
   addPluginsToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
+  isTypedLintingEnabled,
   updateOverrideInLintConfig,
   useFlatConfig,
   addImportToFlatConfig,
@@ -41,8 +42,7 @@ export async function addLinting(
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
       rootProject: options.rootProject,
-      enableTypedLinting: options.enableTypedLinting,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting: isTypedLintingEnabled(options),
       addPlugin: options.addPlugin,
     })
   );

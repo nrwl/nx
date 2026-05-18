@@ -409,9 +409,12 @@ export async function addLint(
     unitTestRunner: options.unitTestRunner,
     // Cross-plugin via `ensurePackage`: the installed @nx/eslint may not have
     // `enableTypedLinting` in its types yet. Map to `setParserOptionsProject` so
-    // both releases honor the new flag.
-    setParserOptionsProject:
-      options.enableTypedLinting || options.setParserOptionsProject,
+    // both releases honor the new flag. Inlined because `@nx/js` cannot import
+    // from `@nx/eslint` (the deep import would resolve to the installed
+    // published version, which lacks the helper).
+    setParserOptionsProject: !!(
+      options.enableTypedLinting || options.setParserOptionsProject
+    ),
     rootProject: options.rootProject,
     addPlugin: options.addPlugin,
     // Since the build target is inferred now, we need to let the generator know to add @nx/dependency-checks regardless.

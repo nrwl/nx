@@ -12,6 +12,7 @@ import {
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
+  isTypedLintingEnabled,
   updateOverrideInLintConfig,
   useFlatConfig,
 } from '@nx/eslint/internal';
@@ -44,8 +45,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     tsConfigPaths: options.tsConfigPaths,
     skipFormat: true,
     skipPackageJson: options.skipPackageJson,
-    enableTypedLinting: options.enableTypedLinting,
-    setParserOptionsProject: options.setParserOptionsProject,
+    enableTypedLinting: isTypedLintingEnabled(options),
     addPlugin: options.addPlugin,
     addPackageJsonDependencyChecks: options.buildable,
   });

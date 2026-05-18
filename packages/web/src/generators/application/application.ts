@@ -5,6 +5,7 @@ import {
   logShowProjectCommand,
   E2EWebServerDetails,
 } from '@nx/devkit/internal';
+import { isTypedLintingEnabled } from '@nx/eslint/src/generators/utils/eslint-file';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
@@ -339,8 +340,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       // Cross-plugin: map new flag to `setParserOptionsProject` so the published
       // @nx/eslint (which lacks `enableTypedLinting` in its types yet) receives
       // the signal.
-      setParserOptionsProject:
-        options.enableTypedLinting || options.setParserOptionsProject,
+      setParserOptionsProject: isTypedLintingEnabled(options),
       addPlugin: options.addPlugin,
     });
     tasks.push(lintTask);
@@ -536,8 +536,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       skipFormat: true,
       // Cross-plugin: map new flag to `setParserOptionsProject` for the
       // published @nx/cypress.
-      setParserOptionsProject:
-        options.enableTypedLinting || options.setParserOptionsProject,
+      setParserOptionsProject: isTypedLintingEnabled(options),
       enableTypedLinting: undefined,
       webServerCommands: {
         default: e2eWebServerInfo.e2eWebServerCommand,
@@ -591,8 +590,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       linter: options.linter,
       // Cross-plugin: map new flag to `setParserOptionsProject` for the
       // published @nx/playwright.
-      setParserOptionsProject:
-        options.enableTypedLinting || options.setParserOptionsProject,
+      setParserOptionsProject: isTypedLintingEnabled(options),
       webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
       webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
       addPlugin: options.addPlugin,

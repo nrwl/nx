@@ -1,4 +1,5 @@
 import { logShowProjectCommand } from '@nx/devkit/internal';
+import { isTypedLintingEnabled } from '@nx/eslint/src/generators/utils/eslint-file';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
@@ -194,8 +195,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       linter: options.linter ?? 'eslint',
       unitTestRunner: options.unitTestRunner,
       rootProject: options.rootProject,
-      enableTypedLinting: options.enableTypedLinting,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting: isTypedLintingEnabled(options),
     })
   );
 

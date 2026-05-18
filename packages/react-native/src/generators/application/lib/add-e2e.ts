@@ -1,5 +1,6 @@
 import { addE2e as addE2eReact } from '@nx/react/internal';
 import { GeneratorCallback, Tree, ensurePackage, names } from '@nx/devkit';
+import { isTypedLintingEnabled } from '@nx/eslint/src/generators/utils/eslint-file';
 
 import { nxVersion } from '../../../utils/versions';
 
@@ -42,8 +43,7 @@ export async function addE2e(
         framework: 'react-native',
         // Cross-plugin: map new flag to `setParserOptionsProject` for the
         // published @nx/detox.
-        setParserOptionsProject:
-          options.enableTypedLinting || options.setParserOptionsProject,
+        setParserOptionsProject: isTypedLintingEnabled(options),
         enableTypedLinting: undefined,
         skipFormat: true,
       });

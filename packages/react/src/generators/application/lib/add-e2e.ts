@@ -1,4 +1,5 @@
 import { E2EWebServerDetails } from '@nx/devkit/internal';
+import { isTypedLintingEnabled } from '@nx/eslint/src/generators/utils/eslint-file';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -176,8 +177,7 @@ export async function addE2e(
         // Cross-plugin: map the new flag to `setParserOptionsProject` so the
         // published @nx/cypress (which doesn't have `enableTypedLinting` in its
         // types yet) still receives the signal.
-        setParserOptionsProject:
-          options.enableTypedLinting || options.setParserOptionsProject,
+        setParserOptionsProject: isTypedLintingEnabled(options),
         enableTypedLinting: undefined,
         webServerCommands: {
           default: e2eWebServerInfo.e2eWebServerCommand,
@@ -233,8 +233,7 @@ export async function addE2e(
         // Cross-plugin: forward as `setParserOptionsProject` so the published
         // @nx/playwright accepts the signal (`enableTypedLinting` is not in its
         // types yet).
-        setParserOptionsProject:
-          options.enableTypedLinting || options.setParserOptionsProject,
+        setParserOptionsProject: isTypedLintingEnabled(options),
         webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
         webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
         rootProject: options.rootProject,
