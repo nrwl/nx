@@ -1700,6 +1700,193 @@ describe('NPM lock file utility', () => {
       expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-b');
     });
   });
+
+  describe('shadowing and over-elevation regressions', () => {
+    function buildGraphFromLockfile(rootLockFile: any): ProjectGraph {
+      const hash = uniq('mock-hash');
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
+        JSON.stringify(rootLockFile),
+        hash
+      );
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: { nonProjectFiles: [], projectFileMap: {} },
+        filesToProcess: { nonProjectFiles: [], projectFileMap: {} },
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getNpmLockfileDependencies(
+        JSON.stringify(rootLockFile),
+        hash,
+        ctx,
+        keyMap
+      );
+      const builder = new ProjectGraphBuilder({
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      });
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
+        );
+      }
+      return builder.getUpdatedProjectGraph();
+    }
+
+    it('should not over-elevate a nested package into a slot root does not occupy', () => {
+      const rootLockFile = {
+        name: 'workspace',
+        version: '0.0.0',
+        lockfileVersion: 3,
+        requires: true,
+        packages: {
+          '': {
+            name: 'workspace',
+            version: '0.0.0',
+            dependencies: { app: '1.0.0', pkg: '1.0.0' },
+          },
+          'node_modules/app': {
+            version: '1.0.0',
+            resolved: 'https://example.com/app/-/app-1.0.0.tgz',
+            integrity: 'sha512-app==',
+            dependencies: { parent: '1.0.0' },
+          },
+          'node_modules/parent': {
+            version: '1.0.0',
+            resolved: 'https://example.com/parent/-/parent-1.0.0.tgz',
+            integrity: 'sha512-parent==',
+            dependencies: { wrapper: '1.0.0', child: '1.0.0' },
+          },
+          'node_modules/parent/node_modules/wrapper': {
+            version: '1.0.0',
+            resolved: 'https://example.com/wrapper/-/wrapper-1.0.0.tgz',
+            integrity: 'sha512-wrapper==',
+            dependencies: { pkg: '^2.0.0' },
+          },
+          'node_modules/parent/node_modules/wrapper/node_modules/pkg': {
+            version: '2.0.0',
+            resolved: 'https://example.com/pkg/-/pkg-2.0.0.tgz',
+            integrity: 'sha512-pkg-v2==',
+          },
+          'node_modules/parent/node_modules/child': {
+            version: '1.0.0',
+            resolved: 'https://example.com/child/-/child-1.0.0.tgz',
+            integrity: 'sha512-child==',
+            dependencies: { pkg: '1.0.0' },
+          },
+          'node_modules/pkg': {
+            version: '1.0.0',
+            resolved: 'https://example.com/pkg/-/pkg-1.0.0.tgz',
+            integrity: 'sha512-pkg-v1==',
+          },
+        },
+      };
+
+      const graph = buildGraphFromLockfile(rootLockFile);
+      const appPackageJson = {
+        name: 'dist-app',
+        version: '0.0.0',
+        dependencies: { app: '1.0.0', pkg: '1.0.0' },
+      };
+      const prunedGraph = pruneProjectGraph(graph, appPackageJson);
+      const result = JSON.parse(
+        stringifyNpmLockfile(
+          prunedGraph,
+          JSON.stringify(rootLockFile),
+          appPackageJson
+        )
+      );
+
+      expect(
+        result.packages[
+          'node_modules/parent/node_modules/wrapper/node_modules/pkg'
+        ]?.version
+      ).toBe('2.0.0');
+      expect(
+        result.packages['node_modules/parent/node_modules/pkg']
+      ).toBeUndefined();
+      expect(result.packages['node_modules/pkg']?.version).toBe('1.0.0');
+    });
+
+    it('should re-emit deeply-nested same-version copies that the graph collapses', () => {
+      const rootLockFile = {
+        name: 'workspace',
+        version: '0.0.0',
+        lockfileVersion: 3,
+        requires: true,
+        packages: {
+          '': {
+            name: 'workspace',
+            version: '0.0.0',
+            dependencies: { app: '1.0.0', pkg: '1.0.0' },
+          },
+          'node_modules/app': {
+            version: '1.0.0',
+            resolved: 'https://example.com/app/-/app-1.0.0.tgz',
+            integrity: 'sha512-app==',
+            dependencies: { wrapper: '1.0.0' },
+          },
+          'node_modules/wrapper': {
+            version: '1.0.0',
+            resolved: 'https://example.com/wrapper/-/wrapper-1.0.0.tgz',
+            integrity: 'sha512-wrapper==',
+            dependencies: { pkg: '2.0.0', consumer: '1.0.0' },
+          },
+          'node_modules/wrapper/node_modules/pkg': {
+            version: '2.0.0',
+            resolved: 'https://example.com/pkg/-/pkg-2.0.0.tgz',
+            integrity: 'sha512-pkg-v2==',
+          },
+          'node_modules/wrapper/node_modules/consumer': {
+            version: '1.0.0',
+            resolved: 'https://example.com/consumer/-/consumer-1.0.0.tgz',
+            integrity: 'sha512-consumer==',
+            dependencies: { pkg: '1.0.0' },
+          },
+          'node_modules/wrapper/node_modules/consumer/node_modules/pkg': {
+            version: '1.0.0',
+            resolved: 'https://example.com/pkg/-/pkg-1.0.0.tgz',
+            integrity: 'sha512-pkg-v1==',
+          },
+          'node_modules/pkg': {
+            version: '1.0.0',
+            resolved: 'https://example.com/pkg/-/pkg-1.0.0.tgz',
+            integrity: 'sha512-pkg-v1==',
+          },
+        },
+      };
+
+      const graph = buildGraphFromLockfile(rootLockFile);
+      const appPackageJson = {
+        name: 'dist-app',
+        version: '0.0.0',
+        dependencies: { app: '1.0.0', pkg: '1.0.0' },
+      };
+      const prunedGraph = pruneProjectGraph(graph, appPackageJson);
+      const result = JSON.parse(
+        stringifyNpmLockfile(
+          prunedGraph,
+          JSON.stringify(rootLockFile),
+          appPackageJson
+        )
+      );
+
+      expect(
+        result.packages[
+          'node_modules/wrapper/node_modules/consumer/node_modules/pkg'
+        ]?.version
+      ).toBe('1.0.0');
+      expect(
+        result.packages['node_modules/wrapper/node_modules/pkg']?.version
+      ).toBe('2.0.0');
+      expect(result.packages['node_modules/pkg']?.version).toBe('1.0.0');
+    });
+  });
 });
 
 function uniq(str: string) {
