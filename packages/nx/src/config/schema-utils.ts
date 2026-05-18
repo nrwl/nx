@@ -3,6 +3,7 @@ import { extname, join } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
 import { getWorkspacePackagesMetadata } from '../plugins/js/utils/packages';
 import { registerPluginTSTranspiler } from '../project-graph/plugins';
+import { getRootTsConfigResolveExportsConditions } from '../plugins/js/utils/typescript';
 import { normalizePath } from '../utils/path';
 import type { ProjectConfiguration } from './workspace-json-project-json';
 
@@ -141,7 +142,7 @@ function tryResolveFromSource(
         exports: localProject.metadata!.js!.packageExports,
       },
       path,
-      { conditions: ['development'] }
+      { conditions: getRootTsConfigResolveExportsConditions() }
     );
     if (fromExports && fromExports.length) {
       for (const exportPath of fromExports) {
