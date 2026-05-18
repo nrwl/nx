@@ -15,6 +15,7 @@ export {
   lintConfigHasOverride,
   replaceOverridesInLintConfig,
   updateOverrideInLintConfig,
+  updateRelativePathsInConfig,
 } from './src/generators/utils/eslint-file';
 
 export { addImportToFlatConfig } from './src/generators/utils/flat-config/ast-utils';
