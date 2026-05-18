@@ -410,7 +410,7 @@ export default defineConfig({
   });
 
   describe('no-op when nothing matches', () => {
-    it('leaves files untouched and returns no promptContext', async () => {
+    it('leaves files untouched and returns only the CI-dashboard nextSteps', async () => {
       const tree = createTreeWithEmptyWorkspace();
       tree.write(
         'vitest.config.ts',
@@ -425,7 +425,206 @@ export default defineConfig({
       const result = await migrateToVitest4(tree);
 
       expect(tree.read('vitest.config.ts', 'utf-8')).toBe(before);
-      expect(result).toBeUndefined();
+      // nextSteps is always emitted — the CI-provider-dashboard reminder.
+      expect(result?.nextSteps?.[0]).toMatch(/CI provider/);
+      expect(result?.promptContext).toBeUndefined();
+    });
+  });
+
+  describe('.env file rewrites (V4-8 — extended)', () => {
+    it('renames the legacy vars when exactly one of THREADS/FORKS is present', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        '.env',
+        `# vitest workers\nVITEST_MAX_THREADS=4\nexport VITE_NODE_DEPS_MODULE_DIRECTORIES=/custom\n`
+      );
+
+      await migrateToVitest4(tree);
+
+      const updated = tree.read('.env', 'utf-8');
+      expect(updated).toContain('VITEST_MAX_WORKERS=4');
+      expect(updated).not.toContain('VITEST_MAX_THREADS');
+      expect(updated).toContain('export VITEST_MODULE_DIRECTORIES=/custom');
+      // Comment preserved.
+      expect(updated).toContain('# vitest workers');
+    });
+
+    it('renames in `.env.local` and `.env.production` too', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write('.env.local', `VITEST_MAX_FORKS=2\n`);
+      tree.write('.env.production', `VITEST_MAX_FORKS=8\n`);
+
+      await migrateToVitest4(tree);
+
+      expect(tree.read('.env.local', 'utf-8')).toBe('VITEST_MAX_WORKERS=2\n');
+      expect(tree.read('.env.production', 'utf-8')).toBe(
+        'VITEST_MAX_WORKERS=8\n'
+      );
+    });
+
+    it('skips rename when both VITEST_MAX_{THREADS,FORKS} are present and logs the conflict', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      const original = `VITEST_MAX_THREADS=4\nVITEST_MAX_FORKS=2\n`;
+      tree.write('.env', original);
+
+      const result = await migrateToVitest4(tree);
+
+      expect(tree.read('.env', 'utf-8')).toBe(original);
+      expect(
+        result?.promptContext?.some(
+          (s) =>
+            s.includes('.env') &&
+            s.includes('VITEST_MAX_THREADS') &&
+            s.includes('VITEST_MAX_FORKS')
+        )
+      ).toBe(true);
+    });
+
+    it('does not touch `.envrc` (direnv has different syntax)', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      const original = `export VITEST_MAX_THREADS=4\n`;
+      tree.write('.envrc', original);
+
+      await migrateToVitest4(tree);
+
+      expect(tree.read('.envrc', 'utf-8')).toBe(original);
+    });
+  });
+
+  describe('project.json rewrites (V4-8 — extended)', () => {
+    it('renames `options.env` keys with conflict guard', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'apps/app/project.json',
+        JSON.stringify(
+          {
+            name: 'app',
+            targets: {
+              test: {
+                executor: 'nx:run-commands',
+                options: {
+                  env: {
+                    VITEST_MAX_THREADS: '4',
+                    VITE_NODE_DEPS_MODULE_DIRECTORIES: '/x',
+                  },
+                  command: 'vitest run',
+                },
+              },
+              testBoth: {
+                executor: 'nx:run-commands',
+                options: {
+                  env: {
+                    VITEST_MAX_THREADS: '4',
+                    VITEST_MAX_FORKS: '2',
+                  },
+                  command: 'vitest run',
+                },
+              },
+            },
+          },
+          null,
+          2
+        )
+      );
+
+      const result = await migrateToVitest4(tree);
+
+      const updated = JSON.parse(tree.read('apps/app/project.json', 'utf-8'));
+      // First target: single rename happens.
+      expect(updated.targets.test.options.env).toEqual({
+        VITEST_MAX_WORKERS: '4',
+        VITEST_MODULE_DIRECTORIES: '/x',
+      });
+      // Second target: conflict → no rename, log emitted.
+      expect(updated.targets.testBoth.options.env).toEqual({
+        VITEST_MAX_THREADS: '4',
+        VITEST_MAX_FORKS: '2',
+      });
+      expect(
+        result?.promptContext?.some((s) => s.includes('target `testBoth`'))
+      ).toBe(true);
+    });
+
+    it('rewrites inline VAR= prefixes inside options.command / options.commands / options.args', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'apps/app/project.json',
+        JSON.stringify(
+          {
+            name: 'app',
+            targets: {
+              t1: {
+                options: { command: 'VITEST_MAX_THREADS=4 vitest run' },
+              },
+              t2: {
+                options: {
+                  commands: [
+                    'VITEST_MAX_FORKS=2 vitest run --shard=1/2',
+                    'VITE_NODE_DEPS_MODULE_DIRECTORIES=/x vitest run',
+                  ],
+                },
+              },
+              t3: {
+                options: { args: 'VITEST_MAX_THREADS=4' },
+              },
+            },
+          },
+          null,
+          2
+        )
+      );
+
+      await migrateToVitest4(tree);
+
+      const updated = JSON.parse(tree.read('apps/app/project.json', 'utf-8'));
+      expect(updated.targets.t1.options.command).toBe(
+        'VITEST_MAX_WORKERS=4 vitest run'
+      );
+      expect(updated.targets.t2.options.commands).toEqual([
+        'VITEST_MAX_WORKERS=2 vitest run --shard=1/2',
+        'VITEST_MODULE_DIRECTORIES=/x vitest run',
+      ]);
+      expect(updated.targets.t3.options.args).toBe('VITEST_MAX_WORKERS=4');
+    });
+  });
+
+  describe('CI YAML scan (V4-8 — extended)', () => {
+    it('logs the file path + tokens found in .github/workflows files', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        '.github/workflows/test.yml',
+        `jobs:\n  test:\n    runs-on: ubuntu-latest\n    env:\n      VITEST_MAX_THREADS: 4\n    steps:\n      - run: pnpm test\n`
+      );
+
+      const result = await migrateToVitest4(tree);
+
+      const ciEntry = result?.promptContext?.find((s) =>
+        s.startsWith('.github/workflows/test.yml')
+      );
+      expect(ciEntry).toBeDefined();
+      expect(ciEntry).toContain('VITEST_MAX_THREADS');
+      // The file is not mechanically edited (YAML structure risk).
+      expect(tree.read('.github/workflows/test.yml', 'utf-8')).toContain(
+        'VITEST_MAX_THREADS'
+      );
+    });
+  });
+
+  describe('CI provider nextSteps (always emitted)', () => {
+    it('appears even when no in-repo env vars were found', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'vitest.config.ts',
+        `import { defineConfig } from 'vitest/config';\nexport default defineConfig({ test: { globals: true } });\n`
+      );
+
+      const result = await migrateToVitest4(tree);
+
+      expect(
+        result?.nextSteps?.some((s) =>
+          s.includes('CI provider stores Vitest env vars')
+        )
+      ).toBe(true);
     });
   });
 });

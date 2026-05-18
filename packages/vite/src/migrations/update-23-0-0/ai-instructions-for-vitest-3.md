@@ -11,12 +11,14 @@ Work systematically through each breaking change category.
 
 > **Pre-pass already ran**: a deterministic generator ran before these instructions. It only handles a narrow set of purely-mechanical changes:
 >
-> - `--segfault-retry` removal from `package.json` scripts
+> - `--segfault-retry` removal from `package.json` scripts AND `project.json` `options.{args,command,commands}`
 > - `@vitest/coverage-c8` → `@vitest/coverage-v8` package rename (preserving the user's pin)
-> - `vitest typecheck` → `vitest --typecheck` in scripts
+> - `vitest typecheck` → `vitest --typecheck` in `package.json` scripts AND `project.json` `options.{args,command,commands}`
 > - `SnapshotEnvironment` import path `'vitest'` → `'vitest/snapshot'` (only when it is the sole named binding)
-> - `browser.provider: 'none'` → `'preview'`
-> - `browser.indexScripts` → `orchestratorScripts`
+> - `browser.provider: 'none'` → `'preview'` (only when the value is a direct string literal under `test.browser.provider`)
+> - `browser.indexScripts` → `orchestratorScripts` (only as a direct property name)
+>
+> The pre-pass **does not** edit CI provider configs (`.github/workflows/*.yml`, `.gitlab-ci.yml`, `azure-pipelines.yml`, `.circleci/config.yml`, `bitbucket-pipelines.yml`) — YAML structure varies too much. Any matches it finds there are forwarded to you to handle.
 >
 > **The vast majority of action items below are NOT covered by the pre-pass** and still require your attention — every section other than the six items above.
 >

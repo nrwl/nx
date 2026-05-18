@@ -12,11 +12,13 @@ These instructions guide you through migrating an Nx workspace containing multip
 > - `deps.optimizer.web` → `deps.optimizer.client` rename
 > - `poolOptions.threads.useAtomics` and top-level `test.minWorkers` removal
 > - `'verbose'` → `'tree'` and `'basic'` → `['default', { summary: false }]` inside `test.reporters`
-> - `VITEST_MAX_{THREADS,FORKS}` → `VITEST_MAX_WORKERS` and `VITE_NODE_DEPS_MODULE_DIRECTORIES` → `VITEST_MODULE_DIRECTORIES` env-var renames in `package.json` scripts
+> - `VITEST_MAX_{THREADS,FORKS}` → `VITEST_MAX_WORKERS` and `VITE_NODE_DEPS_MODULE_DIRECTORIES` → `VITEST_MODULE_DIRECTORIES` renames in: `package.json` scripts, `.env` / `.env.*` files, `project.json` `options.env` keys, and inline `VAR=value` prefixes inside `project.json` `options.{args,command,commands}`
+>
+> The pre-pass **skips the rename when both `VITEST_MAX_THREADS` and `VITEST_MAX_FORKS` appear in the same file/scope** (they collapse to a single `VITEST_MAX_WORKERS` whose value depends on which pool the project uses — a decision the pre-pass can't make safely). It also **does not** edit CI provider configs (`.github/workflows/*.yml`, `.gitlab-ci.yml`, `azure-pipelines.yml`, `.circleci/config.yml`, `bitbucket-pipelines.yml`) — YAML structure varies too much. Any conflicts and any CI matches are forwarded to you.
 >
 > **The cross-cutting changes below still require your attention** — pool option flattening (`singleThread`/`singleFork`, `maxThreads`/`maxForks`, `poolOptions.<pool>.{execArgv,isolate}`, `poolOptions.vmThreads.memoryLimit`), `test.deps.{external,inline,fallbackCJS}` → `test.server.deps.*` move, `test.{poolMatchGlobs,environmentMatchGlobs}` projects rewrite, browser provider function-form rewrite, `browser.testerScripts` → `testerHtmlPath`, `vitest.workspace.*` file inlining + `defineWorkspace` removal, custom reporter callback API updates, and `@vitest/browser` package replacement with per-provider packages.
 >
-> If a "Files modified by the generator phase" section appears in the prompt above, those files received the items the pre-pass handled — verify the new shape is in place before re-applying. If a "Context from the generator phase" section appears, **every entry there is pending work** the pre-pass detected but could not safely complete: address each one in addition to the relevant section below.
+> If a "Files modified by the generator phase" section appears in the prompt above, those files received the items the pre-pass handled — verify the new shape is in place before re-applying. If a "Context from the generator phase" section appears, **every entry there is pending work** the pre-pass detected but could not safely complete: address each one in addition to the relevant section below. A workspace-wide reminder is also emitted as a post-run "next step" about env vars set in CI provider dashboards — those can't be detected from the workspace tree.
 
 ## Prerequisites
 

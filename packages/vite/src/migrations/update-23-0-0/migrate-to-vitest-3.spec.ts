@@ -303,6 +303,155 @@ export default defineConfig({
     });
   });
 
+  describe('project.json rewrites (V3-1 / V3-3 — extended)', () => {
+    it('strips --segfault-retry from options.args/command/commands', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'apps/app/project.json',
+        JSON.stringify(
+          {
+            name: 'app',
+            targets: {
+              tArgsString: {
+                options: { args: '--segfault-retry=3 --reporter=verbose' },
+              },
+              tArgsArray: {
+                options: {
+                  args: ['--segfault-retry=3', '--reporter=verbose'],
+                },
+              },
+              tCommand: {
+                options: { command: 'vitest run --segfault-retry 5' },
+              },
+              tCommands: {
+                options: { commands: ['vitest run --segfault-retry'] },
+              },
+            },
+          },
+          null,
+          2
+        )
+      );
+
+      await migrateToVitest3(tree);
+
+      const updated = JSON.parse(tree.read('apps/app/project.json', 'utf-8'));
+      expect(updated.targets.tArgsString.options.args).toBe(
+        '--reporter=verbose'
+      );
+      expect(updated.targets.tArgsArray.options.args).toEqual([
+        '--reporter=verbose',
+      ]);
+      expect(updated.targets.tCommand.options.command).toBe('vitest run');
+      expect(updated.targets.tCommands.options.commands).toEqual([
+        'vitest run',
+      ]);
+    });
+
+    it('rewrites `vitest typecheck` to `vitest --typecheck` inside command/commands/args', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'apps/app/project.json',
+        JSON.stringify(
+          {
+            name: 'app',
+            targets: {
+              typecheck: { options: { command: 'vitest typecheck --run' } },
+              typecheckAll: {
+                options: {
+                  commands: ['pnpm exec vitest typecheck'],
+                },
+              },
+            },
+          },
+          null,
+          2
+        )
+      );
+
+      await migrateToVitest3(tree);
+
+      const updated = JSON.parse(tree.read('apps/app/project.json', 'utf-8'));
+      expect(updated.targets.typecheck.options.command).toBe(
+        'vitest --typecheck --run'
+      );
+      expect(updated.targets.typecheckAll.options.commands).toEqual([
+        'pnpm exec vitest --typecheck',
+      ]);
+    });
+  });
+
+  describe('CI YAML scan (V3-1 / V3-3 — extended)', () => {
+    it('logs the file path + tokens found in .github/workflows files', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        '.github/workflows/test.yml',
+        `jobs:\n  test:\n    steps:\n      - run: pnpm vitest typecheck\n      - run: pnpm vitest run --segfault-retry=3\n`
+      );
+
+      const result = await migrateToVitest3(tree);
+
+      const ciEntry = result?.promptContext?.find((s) =>
+        s.startsWith('.github/workflows/test.yml')
+      );
+      expect(ciEntry).toBeDefined();
+      expect(ciEntry).toContain('--segfault-retry');
+      expect(ciEntry).toContain('vitest typecheck');
+      // CI file is not mechanically rewritten.
+      expect(tree.read('.github/workflows/test.yml', 'utf-8')).toContain(
+        '--segfault-retry'
+      );
+    });
+  });
+
+  describe('substring fallback for indirected shapes', () => {
+    it("logs when 'c8' substring appears but no direct coverage.provider AST assignment", async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'vitest.config.ts',
+        `import { defineConfig } from 'vitest/config';
+const PROVIDER = 'c8';
+export default defineConfig({
+  test: { coverage: { provider: PROVIDER } },
+});
+`
+      );
+      const before = tree.read('vitest.config.ts', 'utf-8');
+
+      const result = await migrateToVitest3(tree);
+
+      expect(tree.read('vitest.config.ts', 'utf-8')).toBe(before);
+      expect(
+        result?.promptContext?.some((s) =>
+          /vitest\.config\.ts.*'c8'.*resolves to c8/.test(s)
+        )
+      ).toBe(true);
+    });
+
+    it("logs when 'indexScripts' substring appears but no direct browser.indexScripts AST assignment", async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'vitest.config.ts',
+        `import { defineConfig } from 'vitest/config';
+const SCRIPTS_KEY = 'indexScripts';
+export default defineConfig({
+  test: { browser: { [SCRIPTS_KEY]: ['./s.js'] } },
+});
+`
+      );
+      const before = tree.read('vitest.config.ts', 'utf-8');
+
+      const result = await migrateToVitest3(tree);
+
+      expect(tree.read('vitest.config.ts', 'utf-8')).toBe(before);
+      expect(
+        result?.promptContext?.some((s) =>
+          /vitest\.config\.ts.*indexScripts.*orchestratorScripts/.test(s)
+        )
+      ).toBe(true);
+    });
+  });
+
   describe('no-op when nothing matches', () => {
     it('leaves files untouched and returns no promptContext', async () => {
       const tree = createTreeWithEmptyWorkspace();

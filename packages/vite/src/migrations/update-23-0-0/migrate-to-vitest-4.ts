@@ -1,6 +1,7 @@
 import { formatFiles, type Tree, visitNotIgnoredFiles } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
 import { ast, query } from '@phenomnomnominal/tsquery';
+import picomatch = require('picomatch');
 import type {
   ArrayLiteralExpression,
   Identifier,
@@ -17,6 +18,7 @@ import {
   replaceStringLiteralValueEdit,
   type TextEdit,
 } from './lib/ast-edits';
+import { visitCiFiles } from './lib/ci-files';
 import {
   isJsOrTsFile,
   isVitestWorkspaceFile,
@@ -62,14 +64,37 @@ export default async function migrateToVitest4(tree: Tree) {
   });
 
   visitNotIgnoredFiles(tree, '', (filePath) => {
-    if (!filePath.endsWith('package.json')) return;
-    processPackageJson(tree, filePath, unhandled);
+    if (filePath.endsWith('package.json')) {
+      processPackageJson(tree, filePath, unhandled);
+    } else if (filePath.endsWith('project.json')) {
+      processProjectJson(tree, filePath, unhandled);
+    } else if (isEnvFile(filePath)) {
+      processEnvFile(tree, filePath, unhandled);
+    }
   });
+
+  scanCiFiles(tree, unhandled);
 
   await formatFiles(tree);
 
-  if (unhandled.length > 0) return { promptContext: unhandled };
-  return;
+  // Always-shown reminder for state we cannot reach from the workspace tree.
+  const nextSteps = [
+    `If your CI provider stores Vitest env vars in its dashboard (GitHub Actions repo/org secrets, GitLab CI/CD variables, Vercel/Netlify env vars, etc.), rename \`VITEST_MAX_THREADS\` and \`VITEST_MAX_FORKS\` to \`VITEST_MAX_WORKERS\`, and \`VITE_NODE_DEPS_MODULE_DIRECTORIES\` to \`VITEST_MODULE_DIRECTORIES\`. The pre-pass only handles in-repo files.`,
+  ];
+
+  const result: { nextSteps?: string[]; promptContext?: string[] } = {
+    nextSteps,
+  };
+  if (unhandled.length > 0) result.promptContext = unhandled;
+  return result;
+}
+
+const ENV_FILE_MATCHERS = [picomatch('**/.env'), picomatch('**/.env.*')];
+function isEnvFile(filePath: string): boolean {
+  const base = filePath.split('/').pop() ?? '';
+  // Skip `.envrc` (direnv) — different syntax surface.
+  if (base === '.envrc') return false;
+  return ENV_FILE_MATCHERS.some((m) => m(filePath));
 }
 
 const COVERAGE_DEAD_OPTIONS = new Set([
@@ -646,6 +671,256 @@ function processPackageJson(
     const trailingNewline = contents.endsWith('\n') ? '\n' : '';
     tree.write(filePath, JSON.stringify(parsed, null, 2) + trailingNewline);
   }
+}
+
+/**
+ * Rewrite `.env` / `.env.*` files: rename the legacy Vitest env vars to the
+ * v4-aware names. `VITEST_MAX_THREADS`/`VITEST_MAX_FORKS` only get renamed
+ * when exactly one of them is present in the file — both map to the same
+ * pool-agnostic `VITEST_MAX_WORKERS`, so a blind rename would produce two
+ * conflicting assignments (the latter would silently win per dotenv
+ * semantics). When both are present the rename is skipped and the conflict
+ * is forwarded to the agent.
+ */
+function processEnvFile(
+  tree: Tree,
+  filePath: string,
+  unhandled: string[]
+): void {
+  const contents = tree.read(filePath, 'utf-8');
+  if (
+    !/(?:VITEST_MAX_THREADS|VITEST_MAX_FORKS|VITE_NODE_DEPS_MODULE_DIRECTORIES)\b/.test(
+      contents
+    )
+  ) {
+    return;
+  }
+
+  const hasThreads = /^(?:\s*(?:export\s+)?)VITEST_MAX_THREADS\b/m.test(
+    contents
+  );
+  const hasForks = /^(?:\s*(?:export\s+)?)VITEST_MAX_FORKS\b/m.test(contents);
+
+  let updated = contents;
+  if (hasThreads && hasForks) {
+    unhandled.push(
+      `${filePath}: both \`VITEST_MAX_THREADS\` and \`VITEST_MAX_FORKS\` are set — both collapse to the single pool-agnostic \`VITEST_MAX_WORKERS\` in Vitest 4. ` +
+        `Decide which value should win based on the pool the project uses (\`test.pool\` in the vitest config) and rename only that line.`
+    );
+  } else if (hasThreads) {
+    updated = updated.replace(
+      /^((?:\s*(?:export\s+)?))VITEST_MAX_THREADS\b/gm,
+      '$1VITEST_MAX_WORKERS'
+    );
+  } else if (hasForks) {
+    updated = updated.replace(
+      /^((?:\s*(?:export\s+)?))VITEST_MAX_FORKS\b/gm,
+      '$1VITEST_MAX_WORKERS'
+    );
+  }
+
+  updated = updated.replace(
+    /^((?:\s*(?:export\s+)?))VITE_NODE_DEPS_MODULE_DIRECTORIES\b/gm,
+    '$1VITEST_MODULE_DIRECTORIES'
+  );
+
+  if (updated !== contents) {
+    tree.write(filePath, updated);
+  }
+}
+
+/**
+ * Walk all targets in `project.json` and apply v4 env-var renames inline:
+ *   - `options.env` keys
+ *   - `options.{args,command,commands}` string content (VAR=value prefixes)
+ * Same conflict guard as `.env` files.
+ */
+function processProjectJson(
+  tree: Tree,
+  filePath: string,
+  unhandled: string[]
+): void {
+  const contents = tree.read(filePath, 'utf-8');
+  let parsed: any;
+  try {
+    parsed = JSON.parse(contents);
+  } catch {
+    return;
+  }
+
+  const targets = parsed?.targets;
+  if (!targets || typeof targets !== 'object') return;
+
+  let changed = false;
+
+  for (const [targetName, target] of Object.entries(targets) as Array<
+    [string, any]
+  >) {
+    const options = target?.options;
+    if (!options || typeof options !== 'object') continue;
+
+    // `options.env`: rename keys, with the same threads/forks conflict guard.
+    if (options.env && typeof options.env === 'object') {
+      const hasThreads = 'VITEST_MAX_THREADS' in options.env;
+      const hasForks = 'VITEST_MAX_FORKS' in options.env;
+      if (hasThreads && hasForks) {
+        unhandled.push(
+          `${filePath} (target \`${targetName}\`): both \`VITEST_MAX_THREADS\` and \`VITEST_MAX_FORKS\` are set in \`options.env\` — both collapse to \`VITEST_MAX_WORKERS\` in Vitest 4. ` +
+            `Decide which value should win and rename only that key.`
+        );
+      } else if (hasThreads) {
+        options.env = renameObjectKey(
+          options.env,
+          'VITEST_MAX_THREADS',
+          'VITEST_MAX_WORKERS'
+        );
+        changed = true;
+      } else if (hasForks) {
+        options.env = renameObjectKey(
+          options.env,
+          'VITEST_MAX_FORKS',
+          'VITEST_MAX_WORKERS'
+        );
+        changed = true;
+      }
+      if ('VITE_NODE_DEPS_MODULE_DIRECTORIES' in options.env) {
+        options.env = renameObjectKey(
+          options.env,
+          'VITE_NODE_DEPS_MODULE_DIRECTORIES',
+          'VITEST_MODULE_DIRECTORIES'
+        );
+        changed = true;
+      }
+    }
+
+    // `options.args` / `options.command` / `options.commands`: in-string renames.
+    if (typeof options.args === 'string') {
+      const rewritten = rewriteInlineEnvVars(
+        options.args,
+        filePath,
+        targetName,
+        unhandled
+      );
+      if (rewritten !== options.args) {
+        options.args = rewritten;
+        changed = true;
+      }
+    } else if (Array.isArray(options.args)) {
+      for (let i = 0; i < options.args.length; i++) {
+        const entry = options.args[i];
+        if (typeof entry !== 'string') continue;
+        const rewritten = rewriteInlineEnvVars(
+          entry,
+          filePath,
+          targetName,
+          unhandled
+        );
+        if (rewritten !== entry) {
+          options.args[i] = rewritten;
+          changed = true;
+        }
+      }
+    }
+
+    if (typeof options.command === 'string') {
+      const rewritten = rewriteInlineEnvVars(
+        options.command,
+        filePath,
+        targetName,
+        unhandled
+      );
+      if (rewritten !== options.command) {
+        options.command = rewritten;
+        changed = true;
+      }
+    }
+
+    if (Array.isArray(options.commands)) {
+      for (let i = 0; i < options.commands.length; i++) {
+        const entry = options.commands[i];
+        if (typeof entry !== 'string') continue;
+        const rewritten = rewriteInlineEnvVars(
+          entry,
+          filePath,
+          targetName,
+          unhandled
+        );
+        if (rewritten !== entry) {
+          options.commands[i] = rewritten;
+          changed = true;
+        }
+      }
+    }
+  }
+
+  if (changed) {
+    const trailingNewline = contents.endsWith('\n') ? '\n' : '';
+    tree.write(filePath, JSON.stringify(parsed, null, 2) + trailingNewline);
+  }
+}
+
+function renameObjectKey(
+  obj: Record<string, unknown>,
+  oldKey: string,
+  newKey: string
+): Record<string, unknown> {
+  const rebuilt: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    rebuilt[k === oldKey ? newKey : k] = v;
+  }
+  return rebuilt;
+}
+
+const VITEST_MAX_THREADS_INLINE = /\bVITEST_MAX_THREADS\b/g;
+const VITEST_MAX_FORKS_INLINE = /\bVITEST_MAX_FORKS\b/g;
+const VITE_NODE_DEPS_INLINE = /\bVITE_NODE_DEPS_MODULE_DIRECTORIES\b/g;
+
+function rewriteInlineEnvVars(
+  value: string,
+  filePath: string,
+  targetName: string,
+  unhandled: string[]
+): string {
+  const hasThreads = /\bVITEST_MAX_THREADS\b/.test(value);
+  const hasForks = /\bVITEST_MAX_FORKS\b/.test(value);
+  let updated = value;
+  if (hasThreads && hasForks) {
+    unhandled.push(
+      `${filePath} (target \`${targetName}\`): \`VITEST_MAX_THREADS\` and \`VITEST_MAX_FORKS\` both appear in the same command — both collapse to \`VITEST_MAX_WORKERS\` in Vitest 4. ` +
+        `Decide which value should win and rename only that occurrence.`
+    );
+  } else if (hasThreads) {
+    updated = updated.replace(VITEST_MAX_THREADS_INLINE, 'VITEST_MAX_WORKERS');
+  } else if (hasForks) {
+    updated = updated.replace(VITEST_MAX_FORKS_INLINE, 'VITEST_MAX_WORKERS');
+  }
+  updated = updated.replace(VITE_NODE_DEPS_INLINE, 'VITEST_MODULE_DIRECTORIES');
+  return updated;
+}
+
+/**
+ * Scan CI provider configs for v4 legacy env-var tokens and forward the file
+ * paths to the agent. YAML structure varies by provider; mechanical edits
+ * risk breaking comments, anchors, and multi-line strings.
+ */
+function scanCiFiles(tree: Tree, unhandled: string[]): void {
+  visitCiFiles(tree, (filePath, contents) => {
+    const tokens: string[] = [];
+    if (/\bVITEST_MAX_THREADS\b/.test(contents)) {
+      tokens.push('`VITEST_MAX_THREADS`');
+    }
+    if (/\bVITEST_MAX_FORKS\b/.test(contents)) {
+      tokens.push('`VITEST_MAX_FORKS`');
+    }
+    if (/\bVITE_NODE_DEPS_MODULE_DIRECTORIES\b/.test(contents)) {
+      tokens.push('`VITE_NODE_DEPS_MODULE_DIRECTORIES`');
+    }
+    if (tokens.length === 0) return;
+    unhandled.push(
+      `${filePath}: found legacy Vitest env-var token(s) in this CI config: ${tokens.join(', ')}. ` +
+        `Rename \`VITEST_MAX_THREADS\` / \`VITEST_MAX_FORKS\` → \`VITEST_MAX_WORKERS\` (pick a single value when both are set), and \`VITE_NODE_DEPS_MODULE_DIRECTORIES\` → \`VITEST_MODULE_DIRECTORIES\`.`
+    );
+  });
 }
 
 /**
