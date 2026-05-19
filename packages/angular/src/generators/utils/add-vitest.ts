@@ -19,7 +19,7 @@ import {
 } from '@nx/devkit/internal';
 import { readModulePackageJson } from 'nx/src/devkit-internals';
 import { intersects, satisfies, valid, validRange } from 'semver';
-import { nxVersion, oxcProjectRuntimeVersion } from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
 import {
   getInstalledAngularDevkitVersion,
   getInstalledAngularVersionInfo,
@@ -91,9 +91,6 @@ export async function addVitestAngular(
       {},
       {
         '@angular/build': angularDevkitVersion,
-        // @angular/build uses rolldown which injects @oxc-project/runtime
-        // helpers at transform time but doesn't declare it as a dependency
-        '@oxc-project/runtime': oxcProjectRuntimeVersion,
         jsdom: pkgVersions.jsdomVersion,
         vitest: pkgVersions.vitestVersion,
       },
@@ -115,9 +112,6 @@ export async function addVitestAnalog(
       versions(tree).angularDevkitVersion;
     const devDependencies: Record<string, string> = {
       '@angular/build': angularDevkitVersion,
-      // @angular/build uses rolldown which injects @oxc-project/runtime
-      // helpers at transform time but doesn't declare it as a dependency
-      '@oxc-project/runtime': oxcProjectRuntimeVersion,
     };
 
     // Add compatible vitest/jsdom versions BEFORE calling configurationGenerator

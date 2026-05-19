@@ -88,24 +88,7 @@ export default defineConfig({
 - [ ] If you cannot drop your Babel plugin, stay on Vite 7 + plugin-react v4 for now (see "Project-Level Vite 7 Pinning")
 - [ ] Run `pnpm install` (or your package manager equivalent) so the new plugin-react version resolves
 
-### 3. Angular + Vitest: Add `@oxc-project/runtime`
-
-`@angular/build` depends on `rolldown`, which injects `@oxc-project/runtime` helpers at transform time but does not declare it as a dependency. Angular projects using Vitest will fail at runtime unless `@oxc-project/runtime` is installed explicitly.
-
-**Search Pattern**: Projects using both `@angular/build` and Vitest
-
-```bash
-rg "@angular/build" package.json
-rg "@nx/vitest:test|@nx/vite:test" --type json
-```
-
-**Action Items**:
-
-- [ ] For each Angular project with Vitest, add `@oxc-project/runtime` to root `devDependencies`
-- [ ] Run `pnpm install` (or equivalent)
-- [ ] Run the project's tests to confirm the helper resolves at runtime
-
-### 4. Type Resolution Under `moduleResolution: "node"`
+### 3. Type Resolution Under `moduleResolution: "node"`
 
 Vite 8 ships its types only via conditional `exports` (it dropped the top-level `types` field that Vite 7 carried), which TypeScript cannot resolve under `moduleResolution: "node"`. Symptoms include type errors on `defineConfig`, `UserConfig`, or plugin return types.
 
@@ -115,7 +98,7 @@ Vite 8 ships its types only via conditional `exports` (it dropped the top-level 
 - [ ] If you cannot change `moduleResolution`, narrow the impact with explicit `as any` casts at vite imports. The Nx-generated configs already do this in a handful of places.
 - [ ] Run `tsc --noEmit` after the change to confirm types resolve cleanly
 
-### 5. Bundle Validation Scripts
+### 4. Bundle Validation Scripts
 
 Rolldown produces different chunk and module counts than Rollup for the same input. Custom build validation (e.g., "bundle has exactly N chunks") will need to be re-baselined.
 
@@ -125,7 +108,7 @@ Rolldown produces different chunk and module counts than Rollup for the same inp
 - [ ] Re-run the build and update expected values
 - [ ] Prefer asserting on size budgets over exact counts going forward
 
-### 6. Project-Level Vite 7 Pinning (Custom Babel Plugins)
+### 5. Project-Level Vite 7 Pinning (Custom Babel Plugins)
 
 If a project depends on a Babel plugin that has no Oxc equivalent, pin that project to Vite 7.
 
@@ -182,7 +165,6 @@ nx prepush
 - [ ] All `rollupOptions` references renamed to `rolldownOptions`
 - [ ] `@vitejs/plugin-react` upgraded to v6 (or pinned to v4 with a documented reason)
 - [ ] No `babel: { ... }` options remain in `react()` calls (or those projects are pinned to Vite 7)
-- [ ] Angular + Vitest projects have `@oxc-project/runtime` installed
 - [ ] Cypress upgraded by `nx migrate` (>= 15.14.0 for Vite 8 support)
 - [ ] `tsc --noEmit` passes on all affected projects
 - [ ] Build, test, and dev-server commands all succeed
@@ -196,10 +178,6 @@ nx prepush
 ### Issue: Babel plugin no longer applied (e.g., styled-components classNames missing)
 
 **Solution**: `@vitejs/plugin-react@6` removed Babel. Find an Oxc-compatible alternative, switch to `@vitejs/plugin-react-swc`, or pin to Vite 7 + plugin-react v4.
-
-### Issue: Angular + Vitest fails with `Cannot find module '@oxc-project/runtime/...'`
-
-**Solution**: Add `@oxc-project/runtime` to root `devDependencies` and reinstall.
 
 ### Issue: Type errors on `defineConfig`, `UserConfig`, or `Plugin` imports from vite
 
