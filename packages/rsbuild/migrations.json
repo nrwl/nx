@@ -8,7 +8,7 @@
     },
     "update-23-0-0-migrate-rsbuild-config-to-v2": {
       "cli": "nx",
-      "version": "23.0.0-beta.14",
+      "version": "23.0.0-beta.18",
       "description": "Rewrites rsbuild.config.{js,ts,mjs,cjs} files for @rsbuild/core@2: renames preview.setupMiddlewares to server.setupMiddlewares, drops the removed performance.removeMomentLocale option, moves source.alias/source.aliasStrategy to the resolve block, and updates server.proxy entries for http-proxy-middleware v4 (context to pathFilter, on* handlers to a unified on object).",
       "factory": "./dist/src/migrations/update-23-0-0/migrate-rsbuild-config-to-v2",
       "requires": {
@@ -17,7 +17,7 @@
     },
     "update-23-0-0-migrate-node-output-to-esm": {
       "cli": "nx",
-      "version": "23.0.0-beta.14",
+      "version": "23.0.0-beta.18",
       "description": "AI-assisted migration: make Node-target rsbuild builds runnable under @rsbuild/core@2, which emits ESM output by default.",
       "prompt": "./dist/src/migrations/update-23-0-0/migrate-node-output-to-esm.md",
       "requires": {
@@ -26,7 +26,7 @@
     },
     "update-23-0-0-migrate-performance-options": {
       "cli": "nx",
-      "version": "23.0.0-beta.14",
+      "version": "23.0.0-beta.18",
       "description": "AI-assisted migration: adopt replacements for the performance.bundleAnalyze and performance.profile options removed in @rsbuild/core@2, and migrate the deprecated performance.chunkSplit option to splitChunks.",
       "prompt": "./dist/src/migrations/update-23-0-0/migrate-performance-options.md",
       "requires": {
@@ -36,7 +36,7 @@
   },
   "packageJsonUpdates": {
     "23.0.0-rsbuild-v2": {
-      "version": "23.0.0-beta.14",
+      "version": "23.0.0-beta.18",
       "requires": {
         "@rsbuild/core": ">=1.0.0 <2.0.0"
       },
