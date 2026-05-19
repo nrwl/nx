@@ -47,17 +47,10 @@ A typical workspace will have many plugins inferring tasks. Nx processes all the
 
 Plugins are processed in the order that they appear in the `plugins` array in `nx.json`. So, if multiple plugins create a task with the same name, the plugin listed last will win. If, for some reason, you have a project with both a `vite.config.js` file and a `webpack.config.js` file, both the `@nx/vite` plugin and the `@nx/webpack` plugin will try to create a `build` task. The `build` task that is executed will be the task that belongs to the plugin listed lower in the `plugins` array.
 
-#### Plugin output must be deterministic
+Nx hashes the project graph node produced by each plugin to determine whether cached task results can be reused. If your plugin's `createNodes`/`createNodesV2` function returns different output on different runs or machines, Nx will compute a different hash and treat unchanged code as a cache miss. Keep output stable by following two rules:
 
-Nx hashes the project graph node produced by each plugin to determine whether cached task results can be reused. If your plugin's `createNodes`/`createNodesV2` function returns different output on different runs or machines, Nx will compute a different hash and treat unchanged code as a cache miss.
-
-To keep output stable:
-
-- **Sort arrays deterministically.** The order of `inputs`, `outputs`, `dependsOn`, and `metadata.targetGroups` entries must be the same every time. Arrays built by iterating over object keys or `Set` values are not guaranteed to be stable—sort them explicitly before returning.
-- **Avoid run-specific or machine-specific values.** Do not leak `process.env` variables, absolute paths, timestamps, or random IDs into target `options`, `env`, or `inputs`. Prefer workspace-relative tokens (e.g. `{workspaceRoot}`) over absolute paths.
-- **`Set` does not deduplicate by structure.** Two distinct object literals with identical contents are different `Set` members, so spreading a `Set<object>` into an array can produce duplicate entries whose order varies. Use value-based deduplication and sort the result instead.
-
-Following these rules ensures that every invocation of your plugin produces byte-for-byte identical configuration for the same source files, keeping the cache effective.
+- **Sort arrays deterministically.** The order of `targets`, `inputs`, `outputs`, `dependsOn`, and `metadata.targetGroups` entries must be the same every time—sort them explicitly before returning.
+- **Avoid machine-specific or run-specific values.** Do not leak `process.env` variables, absolute paths, timestamps, or random IDs into target configuration. Prefer workspace-relative tokens (e.g. `{workspaceRoot}`) over absolute paths.
 
 ### Scope plugins to specific projects
 
