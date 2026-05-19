@@ -16,6 +16,7 @@ import {
   normalizeViteConfigFilePath,
 } from '../../utils/options-utils';
 import { ViteBuildExecutorOptions } from './schema';
+import schema from './schema.json';
 import {
   copyAssets,
   createLockFile,
@@ -257,7 +258,6 @@ export async function getBuildExtraArgs(
   otherOptions: Record<string, any>;
 }> {
   // support passing extra args to vite cli
-  const schema = await import('./schema.json');
   const extraArgs = {};
   for (const key of Object.keys(options)) {
     if (!schema.properties[key]) {
