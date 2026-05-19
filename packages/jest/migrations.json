@@ -79,6 +79,9 @@
       "incompatibleWith": {
         "@angular-devkit/build-angular": "< 21.0.0"
       },
+      "requires": {
+        "jest": ">=29.0.0 <30.0.0"
+      },
       "packages": {
         "jest": {
           "version": "~30.0.0",

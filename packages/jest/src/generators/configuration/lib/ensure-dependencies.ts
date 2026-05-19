@@ -53,6 +53,6 @@ export function ensureDependencies(
     dependencies,
     devDeps,
     undefined,
-    options.keepExistingVersions
+    options.keepExistingVersions ?? true
   );
 }

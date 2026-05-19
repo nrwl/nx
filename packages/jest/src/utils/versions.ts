@@ -1,8 +1,12 @@
 import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
+import { getInstalledPackageVersion } from '@nx/devkit/internal';
 import { join } from 'path';
 import { clean, coerce, major } from 'semver';
 
 const nxVersion = require(join('@nx/jest', 'package.json')).version;
+
+export const minSupportedJestVersion = '29.0.0';
+export const minSupportedTsJestVersion = '29.0.0';
 
 // Jest is pinned to 30.3.x because jest-runtime@30.4.0 added a call to
 // `_moduleMocker.clearMocksOnScope()`, which doesn't exist on the
@@ -14,7 +18,7 @@ export const latestVersions = {
   jestVersion: '~30.3.0',
   babelJestVersion: '~30.3.0',
   jestTypesVersion: '~30.0.0',
-  tsJestVersion: '^29.4.0',
+  tsJestVersion: '^30.0.0',
   tslibVersion: '^2.3.0',
   swcJestVersion: '~0.2.38',
   typesNodeVersion: '^22.0.0',
@@ -22,9 +26,6 @@ export const latestVersions = {
 };
 
 const supportedMajorVersions = [29, 30] as const;
-const minSupportedMajorVersion = Math.min(...supportedMajorVersions);
-const currentMajorVersion = Math.max(...supportedMajorVersions);
-
 type SupportedVersions = (typeof supportedMajorVersions)[number];
 type PackageVersionNames = keyof typeof latestVersions;
 export type VersionMap = {
@@ -53,32 +54,26 @@ export function versions(tree: Tree) {
   }
 
   const jestMajorVersion = major(installedJestVersion);
-  if (versionMap[jestMajorVersion]) {
-    return versionMap[jestMajorVersion];
-  }
-
-  const backwardCompatibleVersions = supportedMajorVersions.slice(0, -1);
-  throw new Error(
-    `You're currently using an unsupported Jest version: ${installedJestVersion}. Supported major versions are ${backwardCompatibleVersions.join(
-      ', '
-    )} and ${currentMajorVersion}.`
-  );
+  return versionMap[jestMajorVersion as SupportedVersions] ?? latestVersions;
 }
 
 export function getInstalledJestVersion(tree?: Tree): string | null {
-  try {
-    let version: string | null;
+  if (!tree) {
+    return getInstalledPackageVersion('jest');
+  }
 
-    if (tree) {
-      version = getJestVersionFromTree(tree);
-    } else {
-      version = getJestVersionFromFileSystem();
-    }
-
-    return version;
-  } catch {
+  const installedVersion = getDependencyVersionFromPackageJson(tree, 'jest');
+  if (!installedVersion) {
     return null;
   }
+  if (installedVersion === 'latest' || installedVersion === 'next') {
+    return (
+      clean(latestVersions.jestVersion) ??
+      coerce(latestVersions.jestVersion)?.version ??
+      null
+    );
+  }
+  return clean(installedVersion) ?? coerce(installedVersion)?.version ?? null;
 }
 
 export function getInstalledJestVersionInfo(tree?: Tree): {
@@ -96,47 +91,4 @@ export function getInstalledJestMajorVersion(tree?: Tree): number | null {
   const installedJestVersion = getInstalledJestVersion(tree);
 
   return installedJestVersion ? major(installedJestVersion) : null;
-}
-
-export function validateInstalledJestVersion(tree?: Tree): void {
-  const { version, major } = getInstalledJestVersionInfo(tree);
-  if (!version) {
-    return;
-  }
-
-  if (major < minSupportedMajorVersion || major > currentMajorVersion) {
-    const backwardCompatibleVersions = supportedMajorVersions.slice(0, -1);
-    throw new Error(
-      `You're currently using an unsupported Jest version: ${version}. Supported major versions are ${backwardCompatibleVersions.join(
-        ', '
-      )} and ${currentMajorVersion}.`
-    );
-  }
-}
-
-function getJestVersionFromTree(tree: Tree): string | null {
-  const installedVersion = getDependencyVersionFromPackageJson(tree, 'jest');
-
-  if (!installedVersion) {
-    return null;
-  }
-
-  if (installedVersion === 'latest' || installedVersion === 'next') {
-    return (
-      clean(latestVersions.jestVersion) ??
-      coerce(latestVersions.jestVersion)?.version
-    );
-  }
-
-  return clean(installedVersion) ?? coerce(installedVersion)?.version;
-}
-
-function getJestVersionFromFileSystem(): string | null {
-  try {
-    const { getVersion } = <typeof import('jest')>require('jest');
-
-    return getVersion();
-  } catch {}
-
-  return null;
 }
