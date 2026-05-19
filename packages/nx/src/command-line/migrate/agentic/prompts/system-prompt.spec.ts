@@ -38,6 +38,12 @@ describe('buildSystemPrompt', () => {
     expect(buildSystemPrompt(ctx)).toMatch(/extra fields .*ignored/i);
   });
 
+  it('locks the handoff path and shape against instructions-file overrides', () => {
+    const prompt = buildSystemPrompt(ctx);
+    expect(prompt).toMatch(/cannot be overridden/i);
+    expect(prompt).toMatch(/follow this contract/i);
+  });
+
   it('wraps the scope rules in a scope_rules tag', () => {
     const prompt = buildSystemPrompt(ctx);
     expect(prompt).toContain('<scope_rules>');
