@@ -1,12 +1,14 @@
 import {
   addDependenciesToPackageJson,
   ensurePackage,
+  type GeneratorCallback,
   getDependencyVersionFromPackageJson,
   joinPathFragments,
   logger,
   offsetFromRoot,
   readNxJson,
   readProjectConfiguration,
+  runTasksInSerial,
   type Tree,
   updateJson,
   updateNxJson,
@@ -46,7 +48,7 @@ export type AddVitestAnalogOptions = {
 export async function addVitestAngular(
   tree: Tree,
   options: AddVitestAngularOptions
-): Promise<void> {
+): Promise<GeneratorCallback> {
   validateVitestVersion(tree);
 
   const executor = options.useNxUnitTestRunnerExecutor
@@ -80,34 +82,34 @@ export async function addVitestAngular(
   configureTypeScriptForVitest(tree, options.projectRoot);
   addVitestScreenshotsToGitIgnore(tree);
 
-  if (!options.skipPackageJson) {
-    const pkgVersions = versions(tree, { minAngularMajorVersion: 21 });
-    const angularDevkitVersion =
-      getInstalledAngularDevkitVersion(tree) ??
-      pkgVersions.angularDevkitVersion;
-
-    addDependenciesToPackageJson(
-      tree,
-      {},
-      {
-        '@angular/build': angularDevkitVersion,
-        // @angular/build uses rolldown which injects @oxc-project/runtime
-        // helpers at transform time but doesn't declare it as a dependency
-        '@oxc-project/runtime': oxcProjectRuntimeVersion,
-        jsdom: pkgVersions.jsdomVersion,
-        vitest: pkgVersions.vitestVersion,
-      },
-      undefined,
-      true
-    );
+  if (options.skipPackageJson) {
+    return () => {};
   }
+
+  const pkgVersions = versions(tree, { minAngularMajorVersion: 21 });
+  const angularDevkitVersion =
+    getInstalledAngularDevkitVersion(tree) ?? pkgVersions.angularDevkitVersion;
+
+  return addDependenciesToPackageJson(
+    tree,
+    {},
+    {
+      '@angular/build': angularDevkitVersion,
+      jsdom: pkgVersions.jsdomVersion,
+      vitest: pkgVersions.vitestVersion,
+    },
+    undefined,
+    true
+  );
 }
 
 export async function addVitestAnalog(
   tree: Tree,
   options: AddVitestAnalogOptions
-): Promise<void> {
+): Promise<GeneratorCallback> {
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+
+  const tasks: GeneratorCallback[] = [];
 
   if (!options.skipPackageJson) {
     const angularDevkitVersion =
@@ -115,8 +117,17 @@ export async function addVitestAnalog(
       versions(tree).angularDevkitVersion;
     const devDependencies: Record<string, string> = {
       '@angular/build': angularDevkitVersion,
-      // @angular/build uses rolldown which injects @oxc-project/runtime
-      // helpers at transform time but doesn't declare it as a dependency
+      // `@analogjs/vite-plugin-angular` (wired in by `@nx/vitest`'s
+      // configurationGenerator for `uiFramework: 'angular'`) registers
+      // an `angularVitestPlugin` whose `transform` hook downlevels
+      // `@angular/*` fesm2022 modules via
+      // `vite.transformWithOxc({ target: 'es2016', … })` so Zone.js
+      // `fakeAsync` can intercept async/await. The lowered code emits
+      // external `@oxc-project/runtime/helpers/*` imports (oxc default
+      // `HelperMode = 'Runtime'`). Nothing in the upstream chain
+      // (analogjs, @angular/core, vite, rolldown) declares the runtime
+      // in a way that's resolvable from the consumer's workspace, so
+      // it must be added here.
       '@oxc-project/runtime': oxcProjectRuntimeVersion,
     };
 
@@ -128,22 +139,28 @@ export async function addVitestAnalog(
       devDependencies['jsdom'] = pkgVersions.jsdomVersion;
     }
 
-    addDependenciesToPackageJson(tree, {}, devDependencies, undefined, true);
+    tasks.push(
+      addDependenciesToPackageJson(tree, {}, devDependencies, undefined, true)
+    );
   }
 
   ensurePackage('@nx/vitest', nxVersion);
   const { configurationGenerator } = await import('@nx/vitest/generators');
 
-  await configurationGenerator(tree, {
-    project: options.name,
-    uiFramework: 'angular',
-    testEnvironment: 'jsdom',
-    coverageProvider: 'v8',
-    addPlugin: options.addPlugin ?? false,
-    skipFormat: options.skipFormat,
-    skipPackageJson: options.skipPackageJson,
-    zoneless: options.zoneless,
-  });
+  tasks.push(
+    await configurationGenerator(tree, {
+      project: options.name,
+      uiFramework: 'angular',
+      testEnvironment: 'jsdom',
+      coverageProvider: 'v8',
+      addPlugin: options.addPlugin ?? false,
+      skipFormat: options.skipFormat,
+      skipPackageJson: options.skipPackageJson,
+      zoneless: options.zoneless,
+    })
+  );
+
+  return runTasksInSerial(...tasks);
 }
 
 function validateVitestVersion(tree: Tree): void {

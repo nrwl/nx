@@ -88,22 +88,26 @@ export default defineConfig({
 - [ ] If you cannot drop your Babel plugin, stay on Vite 7 + plugin-react v4 for now (see "Project-Level Vite 7 Pinning")
 - [ ] Run `pnpm install` (or your package manager equivalent) so the new plugin-react version resolves
 
-### 3. Angular + Vitest: Add `@oxc-project/runtime`
+### 3. Angular + Vitest (vitest-analog path): Add `@oxc-project/runtime`
 
-`@angular/build` depends on `rolldown`, which injects `@oxc-project/runtime` helpers at transform time but does not declare it as a dependency. Angular projects using Vitest will fail at runtime unless `@oxc-project/runtime` is installed explicitly.
+Angular projects whose `test` target uses `@nx/vitest:test` (the vitest-analog setup wired by `@analogjs/vite-plugin-angular`) need `@oxc-project/runtime` declared in the workspace `devDependencies`.
 
-**Search Pattern**: Projects using both `@angular/build` and Vitest
+`@analogjs/vite-plugin-angular` registers an `angularVitestPlugin` (active in test mode) whose `transform` hook matches `@angular/*` `fesm2022` modules that contain `async ` (plus any `@angular/cdk` file) and calls `vite.transformWithOxc(code, id, { target: 'es2016', … })`. The downlevel is deliberate: Zone.js relies on monkey-patching promise scheduling for `fakeAsync` and friends, which it cannot do on native `async`/`await`, so the plugin lowers them to a form Zone.js can intercept. With `target: 'es2016'`, oxc emits the helpers as external `@oxc-project/runtime/helpers/*` imports (oxc's default `HelperMode = 'Runtime'`). Nothing in the upstream chain (`analogjs`, `@angular/core`, `vite`, `rolldown`) declares `@oxc-project/runtime` in a way that's resolvable from the consumer's workspace, so `vite:import-analysis` fails to resolve those imports unless the dep is added explicitly.
+
+Angular projects whose `test` target uses `@angular/build:unit-test` or `@nx/angular:unit-test` (the vitest-angular path) do **not** need this dependency — that path doesn't load `@analogjs/vite-plugin-angular`, sets `optimizeDeps.noDiscovery: true`, and uses an in-memory test provider, so the downlevel transform that emits the helper imports never runs.
+
+**Search Pattern**: Projects with `test.executor` set to `@nx/vitest:test` that also have `@analogjs/vite-plugin-angular` in their `vite.config.*`.
 
 ```bash
-rg "@angular/build" package.json
-rg "@nx/vitest:test|@nx/vite:test" --type json
+rg '"@nx/vitest:test"' --type json
+rg '@analogjs/vite-plugin-angular' --type ts --type js
 ```
 
 **Action Items**:
 
-- [ ] For each Angular project with Vitest, add `@oxc-project/runtime` to root `devDependencies`
+- [ ] For each affected workspace, add `@oxc-project/runtime` to root `devDependencies` (the Nx Angular generators do this automatically on the vitest-analog path; check legacy workspaces that pre-date that)
 - [ ] Run `pnpm install` (or equivalent)
-- [ ] Run the project's tests to confirm the helper resolves at runtime
+- [ ] Run the project's tests to confirm the helper resolves
 
 ### 4. Type Resolution Under `moduleResolution: "node"`
 
@@ -182,7 +186,7 @@ nx prepush
 - [ ] All `rollupOptions` references renamed to `rolldownOptions`
 - [ ] `@vitejs/plugin-react` upgraded to v6 (or pinned to v4 with a documented reason)
 - [ ] No `babel: { ... }` options remain in `react()` calls (or those projects are pinned to Vite 7)
-- [ ] Angular + Vitest projects have `@oxc-project/runtime` installed
+- [ ] Angular + vitest-analog projects have `@oxc-project/runtime` in root `devDependencies`
 - [ ] Cypress upgraded by `nx migrate` (>= 15.14.0 for Vite 8 support)
 - [ ] `tsc --noEmit` passes on all affected projects
 - [ ] Build, test, and dev-server commands all succeed
@@ -197,9 +201,9 @@ nx prepush
 
 **Solution**: `@vitejs/plugin-react@6` removed Babel. Find an Oxc-compatible alternative, switch to `@vitejs/plugin-react-swc`, or pin to Vite 7 + plugin-react v4.
 
-### Issue: Angular + Vitest fails with `Cannot find module '@oxc-project/runtime/...'`
+### Issue: Angular + Vitest fails with `Failed to resolve import "@oxc-project/runtime/helpers/..."`
 
-**Solution**: Add `@oxc-project/runtime` to root `devDependencies` and reinstall.
+**Solution**: Add `@oxc-project/runtime` to root `devDependencies` and reinstall. This only affects projects whose `test` target uses `@nx/vitest:test` (the vitest-analog setup); projects using `@angular/build:unit-test` / `@nx/angular:unit-test` are not affected.
 
 ### Issue: Type errors on `defineConfig`, `UserConfig`, or `Plugin` imports from vite
 
