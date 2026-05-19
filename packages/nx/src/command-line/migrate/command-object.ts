@@ -113,7 +113,7 @@ function withMigrationOptions(yargs: Argv) {
         agentic,
       }) => {
         const agenticMayEnableCommits =
-          agentic !== undefined && agentic !== false;
+          agentic !== undefined && agentic !== false && createCommits !== false;
         if (
           createCommits !== true &&
           !agenticMayEnableCommits &&
