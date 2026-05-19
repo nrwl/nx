@@ -277,11 +277,13 @@ export function parseFiles(options: NxArgs): { files: string[] } {
 }
 
 function getUncommittedFiles(): string[] {
-  return parseGitOutput(`git diff --name-only --no-renames --relative HEAD .`);
+  return parseGitOutput(
+    `git diff -z --name-only --no-renames --relative HEAD .`
+  );
 }
 
 function getUntrackedFiles(): string[] {
-  return parseGitOutput(`git ls-files --others --exclude-standard`);
+  return parseGitOutput(`git ls-files -z --others --exclude-standard`);
 }
 
 function getMergeBase(base: string, head: string = 'HEAD') {
@@ -312,7 +314,7 @@ function getMergeBase(base: string, head: string = 'HEAD') {
 
 function getFilesUsingBaseAndHead(base: string, head: string): string[] {
   return parseGitOutput(
-    `git diff --name-only --no-renames --relative "${base}" "${head}"`
+    `git diff -z --name-only --no-renames --relative "${base}" "${head}"`
   );
 }
 
@@ -324,8 +326,7 @@ function parseGitOutput(command: string): string[] {
     windowsHide: true,
   })
     .toString('utf-8')
-    .split('\n')
-    .map((a) => a.trim())
+    .split('\0')
     .filter((a) => a.length > 0);
 }
 

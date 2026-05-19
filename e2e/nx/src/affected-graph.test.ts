@@ -296,6 +296,19 @@ describe('Nx Affected and Graph Tests', () => {
       expect(affectedProjects).toContain(myapp);
       expect(affectedProjects).toContain(myapp2);
     });
+
+    it('should detect changes to files inside directories with unicode names', () => {
+      generateAll();
+      // Explicitly set core.quotepath=true (the default) to reproduce the
+      // original bug where git-quoted octal-encoded paths were not decoded.
+      runCommand(`git config core.quotepath true`);
+
+      // Add a file whose parent directory contains a non-ASCII character (ä).
+      updateFile(`apps/${myapp}/src/app/Einkäufe/test.ts`, `export const x = 1;`);
+
+      const affectedProjects = runCLI('show projects --affected --uncommitted');
+      expect(affectedProjects).toContain(myapp);
+    });
   });
 
   describe('graph', () => {
