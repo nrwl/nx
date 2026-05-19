@@ -14,6 +14,12 @@ jest.mock('../../adapter/angular-json', () => ({
 jest.mock('./in-process-loader', () => ({
   loadNxPlugin: jest.fn(),
 }));
+// Resolution of local plugins relies on a cached workspace snapshot;
+// loadSpecifiedNxPlugins must drop it on every reload. Mocked so the test can
+// assert that wiring without touching the real filesystem-backed resolver.
+jest.mock('./resolve-plugin', () => ({
+  resetResolvePluginCache: jest.fn(),
+}));
 
 describe('reasonToError', () => {
   it('should return the same Error instance when given a real Error', () => {
@@ -122,5 +128,20 @@ describe('getPluginsSeparated', () => {
       ([plugin]) => plugin === 'test-a'
     );
     expect(testALoads).toHaveLength(1);
+  });
+
+  it('drops the cached local-plugin resolution snapshot when loading the specified plugins', async () => {
+    const { resetResolvePluginCache } = require('./resolve-plugin');
+    expect(resetResolvePluginCache).not.toHaveBeenCalled();
+
+    const load = getPluginsSeparated({ plugins: ['test-a'] });
+    finishLoading('test-a');
+    await load;
+
+    // Loading the specified plugins must reset the resolver's workspace
+    // snapshot. Without this a plugin added to nx.json after an earlier
+    // resolution would be resolved against a stale project layout — missing
+    // its own project — and collapse to the workspace root.
+    expect(resetResolvePluginCache).toHaveBeenCalled();
   });
 });

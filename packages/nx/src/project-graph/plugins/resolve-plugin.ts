@@ -15,7 +15,10 @@ import {
   findProjectForPath,
   ProjectRootMappings,
 } from '../utils/find-project-for-path';
-import { retrieveProjectConfigurationsWithoutPluginInference } from '../utils/retrieve-workspace-files';
+import {
+  clearProjectsWithoutPluginInferenceCache,
+  retrieveProjectConfigurationsWithoutPluginInference,
+} from '../utils/retrieve-workspace-files';
 
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
@@ -380,4 +383,26 @@ function readTsConfigPaths(root: string = workspaceRoot) {
     tsconfigPaths = compilerOptions?.paths;
   }
   return tsconfigPaths ?? {};
+}
+
+/**
+ * Drops the cached snapshot of the workspace's project layout that local Nx
+ * plugin resolution relies on — project configs, tsconfig path mappings, and
+ * package entry points.
+ *
+ * These snapshots are taken lazily the first time a plugin must be resolved
+ * and then kept for the life of the process. In a long-lived daemon that is
+ * stale once a *new* local plugin is added: the snapshot has no entry for the
+ * plugin's own project, so `findProjectForPath` falls back to the catch-all
+ * root project and the plugin resolves to the workspace root — a directory,
+ * which then fails to import. Reloading the specified plugins calls this so
+ * resolution runs against the current state of disk.
+ */
+export function resetResolvePluginCache(): void {
+  projectsWithoutInference = undefined;
+  projectsWithoutInferencePromise = null;
+  packageEntryPointsToProjectMap = undefined;
+  wildcardEntryPointsToProjectMap = undefined;
+  tsconfigPaths = undefined;
+  clearProjectsWithoutPluginInferenceCache();
 }

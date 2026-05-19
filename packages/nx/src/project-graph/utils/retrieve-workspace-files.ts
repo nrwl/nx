@@ -179,6 +179,17 @@ export async function retrieveProjectConfigurationsWithoutPluginInference(
   return projects;
 }
 
+/**
+ * Clears the cache backing `retrieveProjectConfigurationsWithoutPluginInference`.
+ *
+ * The daemon reuses one process across many recomputes. Without this, the very
+ * first snapshot of the workspace's projects would be served forever — even
+ * after new projects (e.g. a freshly generated local plugin) appear on disk.
+ */
+export function clearProjectsWithoutPluginInferenceCache(): void {
+  projectsWithoutPluginCache.clear();
+}
+
 export function getGlobPatternsOfPlugins(
   plugins: Array<LoadedNxPlugin>
 ): string[] {

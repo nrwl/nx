@@ -10,6 +10,7 @@ import { hashObject } from '../../hasher/file-hasher';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { loadNxPlugin } from './in-process-loader';
 import { loadIsolatedNxPlugin } from './isolation';
+import { resetResolvePluginCache } from './resolve-plugin';
 
 import { isIsolationEnabled } from './isolation/enabled';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
@@ -318,6 +319,15 @@ async function loadSpecifiedNxPlugins(
   performance.mark('loadSpecifiedNxPlugins:start');
 
   pluginsConfigurations ??= [];
+
+  // Local plugin paths are resolved against a snapshot of the workspace's
+  // project layout that is cached for the life of the process. In a
+  // long-lived daemon that snapshot can predate a newly added local plugin,
+  // resolving it to the workspace root instead of its source. Drop the
+  // snapshot here — this runs only when the plugin set changed, which is
+  // exactly when a new local plugin may have appeared — so resolution below
+  // sees the current state of disk.
+  resetResolvePluginCache();
 
   const cleanupFunctions: Array<() => void> = [];
   const results = await Promise.allSettled(
