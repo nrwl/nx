@@ -3726,12 +3726,18 @@ importers:
 
   packages/remix:
     dependencies:
+      '@nx/cypress':
+        specifier: workspace:*
+        version: link:../cypress
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
       '@nx/js':
         specifier: workspace:*
         version: link:../js
+      '@nx/playwright':
+        specifier: workspace:*
+        version: link:../playwright
       '@nx/react':
         specifier: workspace:*
         version: link:../react
