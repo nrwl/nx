@@ -358,7 +358,7 @@ export class TasksSchedule {
       return false;
     } else {
       // if all running tasks support parallelism, can only schedule task with parallelism
-      return this.taskGraph.tasks[taskId].parallelism === true;
+      return this.taskGraph.tasks[taskId].parallelism !== false;
     }
   }
 
