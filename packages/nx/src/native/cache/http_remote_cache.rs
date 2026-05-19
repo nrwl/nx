@@ -41,7 +41,8 @@ impl HttpRemoteCache {
 
         let mut client_builder = ClientBuilder::new().default_headers(headers);
 
-        let env_connection_pool_disabled = env::var("NX_SELF_HOSTED_REMOTE_CACHE_CONNECTION_POOLING");
+        let env_connection_pool_disabled =
+            env::var("NX_SELF_HOSTED_REMOTE_CACHE_CONNECTION_POOLING");
         if let Ok(env_connection_pool_disabled) = env_connection_pool_disabled {
             if env_connection_pool_disabled == "0" {
                 client_builder = client_builder.pool_max_idle_per_host(0);
