@@ -1,8 +1,17 @@
-import { dump, load } from '@zkochan/js-yaml';
+import { load } from '@zkochan/js-yaml';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { output, type Tree } from 'nx/src/devkit-exports';
 import { readYamlFile } from 'nx/src/devkit-internals';
+import {
+  Document,
+  isAlias,
+  isMap,
+  isScalar,
+  parseDocument,
+  YAMLMap,
+  type Node,
+} from 'yaml';
 import { formatCatalogError, type CatalogManager } from './manager';
 import type {
   CatalogDefinitions,
@@ -243,8 +252,9 @@ export class YarnCatalogManager implements CatalogManager {
     }
 
     try {
-      const configContent = readYaml();
-      const configData = load(configContent) || {};
+      // parseDocument keeps comments and anchors so a catalog bump doesn't
+      // rewrite the user's .yarnrc.yml.
+      const doc = parseDocument(readYaml());
 
       let hasChanges = false;
       for (const update of updates) {
@@ -252,39 +262,30 @@ export class YarnCatalogManager implements CatalogManager {
         const normalizedCatalogName =
           catalogName === 'default' ? undefined : catalogName;
 
-        let targetCatalog: CatalogEntry;
+        let targetPath: string[];
         if (!normalizedCatalogName) {
-          // Default catalog - update whichever exists, prefer catalog over catalogs.default
-          if (configData.catalog) {
-            targetCatalog = configData.catalog;
-          } else if (configData.catalogs?.default) {
-            targetCatalog = configData.catalogs.default;
+          // An empty `catalog:` placeholder must not claim the default route
+          // when `catalogs.default` is populated — that would create a
+          // duplicate-default config.
+          if (isMapAt(doc, ['catalog'])) {
+            targetPath = ['catalog', packageName];
+          } else if (existsAt(doc, ['catalogs', 'default'])) {
+            targetPath = ['catalogs', 'default', packageName];
           } else {
-            // Neither exists, create catalog (shorthand syntax)
-            configData.catalog ??= {};
-            targetCatalog = configData.catalog;
+            targetPath = ['catalog', packageName];
           }
         } else {
-          // Named catalog
-          configData.catalogs ??= {};
-          configData.catalogs[normalizedCatalogName] ??= {};
-          targetCatalog = configData.catalogs[normalizedCatalogName];
+          targetPath = ['catalogs', normalizedCatalogName, packageName];
         }
 
-        if (targetCatalog[packageName] !== version) {
-          targetCatalog[packageName] = version;
+        if (getValueAt(doc, targetPath) !== version) {
+          setThroughAliases(doc, targetPath, version);
           hasChanges = true;
         }
       }
 
       if (hasChanges) {
-        writeYaml(
-          dump(configData, {
-            indent: 2,
-            quotingType: '"',
-            forceQuotes: true,
-          })
-        );
+        writeYaml(String(doc));
       }
     } catch (error) {
       output.error({
@@ -294,6 +295,83 @@ export class YarnCatalogManager implements CatalogManager {
       throw error;
     }
   }
+}
+
+// Walks `path` resolving aliases at every step so structural checks can
+// see through `key: *anchor` references — neither `doc.getIn` nor
+// `doc.hasIn` traverse aliases on their own. Returns the resolved node, or
+// `undefined` if any ancestor isn't a map.
+function resolveAt(doc: Document, path: string[]): Node | null | undefined {
+  let node: Node | null | undefined = doc.contents;
+  for (let i = 0; i < path.length; i++) {
+    if (isAlias(node)) node = node.resolve(doc);
+    if (!isMap(node)) return undefined;
+    node = node.get(path[i], true) as Node | null | undefined;
+  }
+  if (isAlias(node)) node = node.resolve(doc);
+  return node;
+}
+
+function isMapAt(doc: Document, path: string[]): boolean {
+  return isMap(resolveAt(doc, path));
+}
+
+function existsAt(doc: Document, path: string[]): boolean {
+  return resolveAt(doc, path) !== undefined;
+}
+
+// `doc.getIn` does not traverse aliases — for aliased paths it returns
+// undefined even when the resolved node has a value. Use the alias-aware
+// walk and unwrap scalar nodes to their JS value.
+function getValueAt(doc: Document, path: string[]): unknown {
+  const node = resolveAt(doc, path);
+  return isScalar(node) ? node.value : node;
+}
+
+// Walks `targetPath` resolving aliases at every step and mutates the
+// resolved map directly so anchors are preserved. When a step is missing
+// or holds a null placeholder (`key:` with no value), creates a fresh map
+// inside the current parent and transfers any attached comments from the
+// placeholder so they aren't dropped. Falls back to `doc.setIn` only when
+// the root isn't a map (e.g. an empty document), letting it bootstrap.
+function setThroughAliases(
+  doc: Document,
+  targetPath: string[],
+  value: unknown
+): void {
+  let parent: Node | null | undefined = doc.contents;
+  if (isAlias(parent)) parent = parent.resolve(doc);
+  for (let i = 0; i < targetPath.length - 1; i++) {
+    if (!isMap(parent)) {
+      doc.setIn(targetPath, value);
+      return;
+    }
+    let next = parent.get(targetPath[i], true) as Node | null | undefined;
+    if (isAlias(next)) next = next.resolve(doc);
+    const placeholder =
+      isScalar(next) && next.value === null ? next : undefined;
+    if (next === undefined || placeholder) {
+      let cur = parent;
+      for (let j = i; j < targetPath.length - 1; j++) {
+        const fresh = new YAMLMap();
+        if (j === i && placeholder) {
+          if (placeholder.comment) fresh.comment = placeholder.comment;
+          if (placeholder.commentBefore)
+            fresh.commentBefore = placeholder.commentBefore;
+        }
+        cur.set(targetPath[j], fresh);
+        cur = fresh;
+      }
+      cur.set(targetPath[targetPath.length - 1], value);
+      return;
+    }
+    parent = next;
+  }
+  if (!isMap(parent)) {
+    doc.setIn(targetPath, value);
+    return;
+  }
+  parent.set(targetPath[targetPath.length - 1], value);
 }
 
 function readConfigFromFs(path: string): CatalogDefinitions | null {

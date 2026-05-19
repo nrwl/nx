@@ -2693,6 +2693,9 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+      yaml:
+        specifier: ^2.6.0
+        version: 2.8.2
       yargs-parser:
         specifier: 'catalog:'
         version: 21.1.1
