@@ -39,6 +39,10 @@ jobs:
           fetch-depth: 0
           filter: tree:0
 
+      - name: Set verbose logging from debug mode
+        if: runner.debug == '1'
+        run: echo "NX_VERBOSE_LOGGING=true" >> "$GITHUB_ENV"
+
       - name: Fetch Master
         run: git fetch origin master:master
         if: ${{ github.event_name == 'pull_request' }}
@@ -71,15 +75,45 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@48b5f213c81028ace310571dc5ec0fbbca0b2947 # v4.4.3
+
       - name: Install project dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Restore .NET analyzer projects
         run: dotnet restore nx.sln
 
-      - name: Run MsbuildAnalyzer.Tests:build:dotnet
-        run: pnpm nx run MsbuildAnalyzer.Tests:build
-        timeout-minutes: 20
+      - name: Nx Report
+        run:
+          pnpm nx report
+
+      - name: Run Checks/Lint/Test/Build
+        run: |
+          pids=()
+
+          pnpm nx record -- nx format:check &
+          pids+=($!)
+
+          pnpm nx record -- nx sync:check
+          pids+=($!)
+
+          pnpm nx build workspace-plugin && pnpm nx record -- pnpm nx-cloud conformance:check
+          pids+=($!)
+
+          pnpm nx run-many -t check-imports check-lock-files check-codeowners --parallel=1 --no-dte &
+          pids+=($!)
+
+          pnpm nx affected --targets=lint,test,build,e2e,e2e-ci,format-native,lint-native,gradle:build-ci,vale,run &
+          pids+=($!)
+
+          for pid in "${pids[@]}"; do
+            wait "$pid"
+          done
+        timeout-minutes: 100
+      - name: Fix CI
+        run: pnpm nx fix-ci
+        if: failure()
 
   main-macos:
     runs-on: macos-latest
