@@ -234,4 +234,62 @@ describe('@nx/rsbuild', () => {
       nodes[0][1].projects['my-app'].targets.typecheck.syncGenerators
     ).toEqual(['@nx/js:typescript-sync']);
   });
+
+  describe('build outputs', () => {
+    let projectCounter = 0;
+
+    // Each call uses a fresh project so the plugin's config-file-hash cache
+    // does not return a previous test's inferred targets.
+    const inferBuildOutputs = async (
+      distPathRoot: string | undefined
+    ): Promise<string[]> => {
+      const project = `apps/app-${projectCounter++}`;
+      const configPath = `${project}/rsbuild.config.ts`;
+      tempFs.createFileSync(
+        `${project}/project.json`,
+        JSON.stringify({ name: project })
+      );
+      // Unique content per case so the plugin's file-hash targets cache
+      // does not serve another case's (or an earlier run's) inferred result.
+      tempFs.createFileSync(
+        configPath,
+        `export default {}; // distPath.root=${distPathRoot ?? '(unset)'}`
+      );
+      // `@rsbuild/core` is `require`d lazily inside the plugin, so grab the
+      // same (mocked) module instance from the current registry.
+      const { loadConfig } = require('@rsbuild/core');
+      (loadConfig as jest.Mock).mockResolvedValueOnce({
+        filePath: configPath,
+        content: distPathRoot
+          ? { output: { distPath: { root: distPathRoot } } }
+          : {},
+      });
+
+      const nodes = await createNodesFunction(
+        [configPath],
+        { buildTargetName: 'build' },
+        context
+      );
+
+      return nodes[0][1].projects[project].targets.build.outputs;
+    };
+
+    it('should default to {workspaceRoot}/dist/{projectRoot} when distPath.root is not set', async () => {
+      expect(await inferBuildOutputs(undefined)).toEqual([
+        '{workspaceRoot}/dist/{projectRoot}',
+      ]);
+    });
+
+    it('should use distPath.root as-is for a project-relative path', async () => {
+      expect(await inferBuildOutputs('build')).toEqual(['{projectRoot}/build']);
+    });
+
+    it('should resolve a workspace-relative distPath.root without dropping the leaf directory', async () => {
+      // Regression: the leaf directory must be kept - inferring
+      // `{workspaceRoot}/dist` would capture sibling projects' outputs.
+      expect(await inferBuildOutputs('../../dist/my-app')).toEqual([
+        '{workspaceRoot}/dist/my-app',
+      ]);
+    });
+  });
 });

@@ -277,10 +277,11 @@ function getOutputs(
   projectRoot: string,
   workspaceRoot: string
 ): { buildOutputs: string[] } {
+  // `output.distPath.root` is the directory Rsbuild emits the build into, so
+  // it is the build output as-is. (Don't take its `dirname` - that points at
+  // the parent directory, which can capture sibling projects' outputs.)
   const buildOutputPath = normalizeOutputPath(
-    rsbuildConfig?.output?.distPath?.root
-      ? dirname(rsbuildConfig?.output.distPath.root)
-      : undefined,
+    rsbuildConfig?.output?.distPath?.root,
     projectRoot,
     workspaceRoot,
     'dist'
