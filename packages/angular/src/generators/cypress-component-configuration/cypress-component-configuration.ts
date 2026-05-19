@@ -1,5 +1,5 @@
 import type { NxComponentTestingOptions } from '@nx/cypress/plugins/cypress-preset';
-import type { FoundTarget } from '@nx/cypress/src/utils/find-target-options';
+import type { FoundTarget } from '@nx/cypress/internal';
 import {
   ensurePackage,
   formatFiles,
@@ -66,7 +66,7 @@ export async function cypressComponentConfiguration(
 
   if (isZoneless) {
     const { getInstalledCypressVersion } = await import(
-      '@nx/cypress/src/utils/versions'
+      '@nx/cypress/internal'
     );
     const installedCypressVersion = getInstalledCypressVersion(tree);
     // Zoneless support was introduced in Cypress 15.8.0
@@ -118,8 +118,8 @@ async function addFiles(
     'component.ts'
   );
   const { addMountDefinition } = <
-    typeof import('@nx/cypress/src/utils/config')
-  >require('@nx/cypress/src/utils/config');
+    typeof import('@nx/cypress/internal')
+  >require('@nx/cypress/internal');
   const updatedCmpContents = await addMountDefinition(
     tree.read(componentFile, 'utf-8')
   );
@@ -181,8 +181,8 @@ async function configureCypressCT(
 
   if (!options.buildTarget) {
     const { findBuildConfig } = <
-      typeof import('@nx/cypress/src/utils/find-target-options')
-    >require('@nx/cypress/src/utils/find-target-options');
+      typeof import('@nx/cypress/internal')
+    >require('@nx/cypress/internal');
     found = await findBuildConfig(tree, {
       project: options.project,
       buildTarget: options.buildTarget,
@@ -235,8 +235,8 @@ async function configureCypressCT(
   }
 
   const { addDefaultCTConfig, getProjectCypressConfigPath } = <
-    typeof import('@nx/cypress/src/utils/config')
-  >require('@nx/cypress/src/utils/config');
+    typeof import('@nx/cypress/internal')
+  >require('@nx/cypress/internal');
   const cypressConfigPath = getProjectCypressConfigPath(
     tree,
     projectConfig.root

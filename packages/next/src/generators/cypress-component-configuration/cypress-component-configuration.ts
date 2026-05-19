@@ -90,10 +90,10 @@ async function addFiles(
   opts: CypressComponentConfigurationGeneratorSchema
 ) {
   const { addMountDefinition, addDefaultCTConfig } = await import(
-    '@nx/cypress/src/utils/config'
+    '@nx/cypress/internal'
   );
   const { getInstalledCypressMajorVersion } = await import(
-    '@nx/cypress/src/utils/versions'
+    '@nx/cypress/internal'
   );
   const installedCypressMajorVersion = getInstalledCypressMajorVersion(tree);
 

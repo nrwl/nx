@@ -3,9 +3,10 @@ import {
   getDeclaredPackageVersion,
   getInstalledPackageVersion,
 } from '@nx/devkit/internal';
+import { join } from 'path';
 import { major } from 'semver';
 
-export const nxVersion = require('../../package.json').version;
+export const nxVersion = require(join('@nx/cypress', 'package.json')).version;
 export const minSupportedCypressVersion = '13.0.0';
 export const eslintPluginCypressVersion = '^3.5.0';
 export const typesNodeVersion = '^22.0.0';
