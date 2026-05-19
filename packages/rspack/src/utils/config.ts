@@ -59,6 +59,14 @@ export function composePlugins(
       // Build up Nx context from environment variables.
       // This is to enable `@nx/rspack/plugin` to work with existing projects.
       if (ctx['env']) {
+        // @rspack/dev-server v2 no longer sets process.env.WEBPACK_SERVE —
+        // v1 inherited it from the webpack-dev-server it wrapped. The rspack
+        // 2 CLI signals serve mode via `RSPACK_SERVE` on the config-function
+        // env arg instead. Bridge it so the WEBPACK_SERVE checks across the
+        // rspack/module-federation plugins keep working on rspack 2.
+        if (ctx['env']['RSPACK_SERVE'] && !process.env['WEBPACK_SERVE']) {
+          process.env['WEBPACK_SERVE'] = 'true';
+        }
         ensureNxRspackExecutionContext(ctx);
         // Build this from scratch since what rspack passes us is the env, not config,
         // and `withNX()` creates a new config object anyway.
