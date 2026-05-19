@@ -716,7 +716,7 @@ console.log('Build complete');
         env: {
           NX_SELF_HOSTED_REMOTE_CACHE_SERVER: `http://localhost:${cachePort}`,
           NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN: 'test-token',
-          NX_SELF_HOSTED_REMOTE_CACHE_CONNECTION_POOLING: 'false',
+          NX_SELF_HOSTED_REMOTE_CACHE_CONNECTION_POOLING: '0',
         },
       });
 
