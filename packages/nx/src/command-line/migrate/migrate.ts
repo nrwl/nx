@@ -2489,6 +2489,10 @@ export async function executeMigrations(
   logger.info(`---------------------------------------------------------\n`);
   const allNextSteps: string[] = [];
   const skippedPrompts: ExecutableMigration[] = [];
+  // Prompt-only migrations whose agent never ran — i.e., the migration didn't
+  // execute at all. Hybrid migrations with a skipped prompt are NOT counted
+  // here because their deterministic half still ran.
+  let notRunMigrationsCount = 0;
 
   for (const m of sortedMigrations) {
     logger.info(`Running migration ${m.package}: ${m.name}`);
@@ -2514,7 +2518,7 @@ export async function executeMigrations(
             `Skipping prompt migration (agentic flow disabled). Listed in next steps.`
           );
           skippedPrompts.push(m);
-          migrationsWithNoChanges.push(m);
+          notRunMigrationsCount++;
         }
       } else if (isHybridMigration(m)) {
         const { changes, nextSteps, agentContext, logs } =
@@ -2607,7 +2611,12 @@ export async function executeMigrations(
     allNextSteps.push(formatSkippedPromptsNextStep(skippedPrompts));
   }
 
-  return { migrationsWithNoChanges, nextSteps: allNextSteps };
+  return {
+    migrationsWithNoChanges,
+    skippedPromptsCount: skippedPrompts.length,
+    notRunMigrationsCount,
+    nextSteps: allNextSteps,
+  };
 }
 
 interface AgenticPromptImplContext {
@@ -2945,7 +2954,12 @@ async function runMigrations(
         : ''),
   });
 
-  const { migrationsWithNoChanges, nextSteps } = await executeMigrations(
+  const {
+    migrationsWithNoChanges,
+    skippedPromptsCount,
+    notRunMigrationsCount,
+    nextSteps,
+  } = await executeMigrations(
     root,
     migrations,
     isVerbose,
@@ -2956,13 +2970,28 @@ async function runMigrations(
     agenticHasDiffContext
   );
 
-  if (migrationsWithNoChanges.length < migrations.length) {
+  const ranCount = migrations.length - notRunMigrationsCount;
+  const ranWithChangesCount = ranCount - migrationsWithNoChanges.length;
+  // Only claim the workspace is up to date when no prompt halves were
+  // deferred — otherwise there's pending work the user still needs to apply.
+  const upToDateSuffix =
+    skippedPromptsCount > 0 ? '' : ' This workspace is up to date!';
+
+  if (notRunMigrationsCount === migrations.length && migrations.length > 0) {
+    const remediation =
+      agentic.kind === 'inside-agent'
+        ? 'The surrounding AI agent should apply each prompt — see next steps below.'
+        : 'Re-run with --agentic to apply them. See next steps below.';
+    output.warn({
+      title: `No migrations from '${opts.runMigrations}' were applied — every entry is a prompt-only migration. ${remediation}`,
+    });
+  } else if (ranWithChangesCount > 0) {
     output.success({
-      title: `Successfully finished running migrations from '${opts.runMigrations}'. This workspace is up to date!`,
+      title: `Successfully finished running migrations from '${opts.runMigrations}'.${upToDateSuffix}`,
     });
   } else {
     output.success({
-      title: `No changes were made from running '${opts.runMigrations}'. This workspace is up to date!`,
+      title: `No changes were made from running '${opts.runMigrations}'.${upToDateSuffix}`,
     });
   }
   if (nextSteps.length > 0) {
