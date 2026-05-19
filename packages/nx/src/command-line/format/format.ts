@@ -277,10 +277,12 @@ function getPrettierPath() {
 
   const { packageJson, path: packageJsonPath } =
     readModulePackageJson('prettier');
-  prettierPath = path.resolve(
-    path.dirname(packageJsonPath),
-    packageJson.bin as string
-  );
+  const bin = packageJson.bin;
+  const binPath = typeof bin === 'string' ? bin : bin?.['prettier'];
+  if (!binPath) {
+    throw new Error(`Could not find prettier binary in ${packageJsonPath}`);
+  }
+  prettierPath = path.resolve(path.dirname(packageJsonPath), binPath);
 
   return prettierPath;
 }
