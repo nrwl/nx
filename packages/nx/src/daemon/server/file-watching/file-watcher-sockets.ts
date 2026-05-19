@@ -13,7 +13,7 @@ export let registeredFileWatcherSockets: {
   config: {
     watchProjects: string[] | 'all';
     includeGlobalWorkspaceFiles: boolean;
-    includeDependentProjects: boolean;
+    includeDependencies: boolean;
   };
 }[] = [];
 
@@ -62,7 +62,7 @@ export function notifyFileWatcherSockets(
             )
           );
 
-          if (config.includeDependentProjects) {
+          if (config.includeDependencies) {
             for (const project of watchedProjects) {
               for (const dep of findAllProjectNodeDependencies(
                 project,

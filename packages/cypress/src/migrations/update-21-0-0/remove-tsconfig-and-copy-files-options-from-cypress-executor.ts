@@ -1,10 +1,14 @@
-import { forEachExecutorOptions } from '@nx/devkit/internal';
+import {
+  downgradeTargetDefaults,
+  forEachExecutorOptions,
+  normalizeTargetDefaults,
+} from '@nx/devkit/internal';
 import {
   formatFiles,
-  type ProjectConfiguration,
   readNxJson,
   readProjectConfiguration,
   type TargetConfiguration,
+  type TargetDefaultEntry,
   type Tree,
   updateNxJson,
   updateProjectConfiguration,
@@ -40,35 +44,40 @@ export default async function (tree: Tree) {
   // update options from nx.json target defaults
   const nxJson = readNxJson(tree);
   if (nxJson.targetDefaults) {
-    for (const [targetOrExecutor, targetConfig] of Object.entries(
-      nxJson.targetDefaults
-    )) {
-      if (
-        targetOrExecutor !== EXECUTOR_TO_MIGRATE &&
-        targetConfig.executor !== EXECUTOR_TO_MIGRATE
-      ) {
+    const originalShape = nxJson.targetDefaults;
+    const entries = normalizeTargetDefaults(originalShape);
+    const remaining: TargetDefaultEntry[] = [];
+    for (const entry of entries) {
+      const matches =
+        entry.executor === EXECUTOR_TO_MIGRATE ||
+        entry.target === EXECUTOR_TO_MIGRATE;
+      if (!matches) {
+        remaining.push(entry);
         continue;
       }
-
-      if (targetConfig.options) {
-        updateOptions(targetConfig);
+      if (entry.options) {
+        updateOptions(entry as TargetConfiguration);
       }
-
-      Object.keys(targetConfig.configurations ?? {}).forEach((config) => {
-        updateConfiguration(targetConfig, config);
+      Object.keys(entry.configurations ?? {}).forEach((config) => {
+        updateConfiguration(entry as TargetConfiguration, config);
       });
 
-      if (
-        !Object.keys(targetConfig).length ||
-        (Object.keys(targetConfig).length === 1 &&
-          Object.keys(targetConfig)[0] === 'executor')
-      ) {
-        delete nxJson.targetDefaults[targetOrExecutor];
-      }
-
-      if (!Object.keys(nxJson.targetDefaults).length) {
-        delete nxJson.targetDefaults;
-      }
+      const meaningfulKeys = Object.keys(entry).filter(
+        (k) =>
+          k !== 'target' &&
+          k !== 'executor' &&
+          k !== 'projects' &&
+          k !== 'plugin'
+      );
+      if (meaningfulKeys.length === 0) continue;
+      remaining.push(entry);
+    }
+    if (remaining.length === 0) {
+      delete nxJson.targetDefaults;
+    } else {
+      nxJson.targetDefaults = Array.isArray(originalShape)
+        ? remaining
+        : downgradeTargetDefaults(remaining);
     }
 
     updateNxJson(tree, nxJson);

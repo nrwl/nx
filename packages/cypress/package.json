@@ -24,6 +24,45 @@
   "main": "./index.js",
   "type": "commonjs",
   "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json",
+    "./package": "./package.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./migrations.json": "./migrations.json",
+    "./generators": "./generators.json",
+    "./executors": "./executors.json",
+    "./migrations": "./migrations.json",
+    "./plugin": {
+      "types": "./plugin.d.ts",
+      "default": "./plugin.js"
+    },
+    "./plugin.js": {
+      "types": "./plugin.d.ts",
+      "default": "./plugin.js"
+    },
+    "./plugins/*": {
+      "types": "./plugins/*.d.ts",
+      "default": "./plugins/*.js"
+    },
+    "./plugins/*.js": {
+      "types": "./plugins/*.d.ts",
+      "default": "./plugins/*.js"
+    },
+    "./src/*/schema.json": "./src/*/schema.json",
+    "./src/*": {
+      "types": "./src/*.d.ts",
+      "default": "./src/*.js"
+    },
+    "./src/*.js": {
+      "types": "./src/*.d.ts",
+      "default": "./src/*.js"
+    }
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -43,7 +82,7 @@
     "@phenomnomnominal/tsquery": "catalog:typescript",
     "detect-port": "^2.1.0",
     "semver": "catalog:",
-    "tree-kill": "1.2.2",
+    "tree-kill": "catalog:",
     "tslib": "catalog:typescript"
   },
   "devDependencies": {

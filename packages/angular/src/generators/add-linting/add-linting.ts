@@ -11,18 +11,16 @@ import { assertSupportedAngularVersion } from '../../utils/assert-supported-angu
 import {
   javaScriptOverride,
   typeScriptOverride,
-} from '@nx/eslint/src/generators/init/global-eslint-config';
-import {
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   findEslintFile,
   isEslintConfigSupported,
   replaceOverridesInLintConfig,
-} from '@nx/eslint/src/generators/utils/eslint-file';
+  useFlatConfig,
+} from '@nx/eslint/internal';
 import { addAngularEsLintDependencies } from './lib/add-angular-eslint-dependencies';
 import { isBuildableLibraryProject } from './lib/buildable-project';
 import type { AddLintingGeneratorSchema } from './schema';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 export async function addLintingGenerator(
   tree: Tree,

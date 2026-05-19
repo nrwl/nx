@@ -106,7 +106,7 @@ export class RepoGitTags {
   ): Promise<boolean> {
     let alwaysCheckAllBranches = false;
     /**
-     * By default, we will try and resolve the latest match for the releaseTagPattern from the current branch,
+     * By default, we will try and resolve the latest match for the releaseTag.pattern from the current branch,
      * falling back to all branches if no match is found on the current branch.
      *
      * - If checkAllBranchesWhen is true it will cause us to ALWAYS check all branches for the latest match.

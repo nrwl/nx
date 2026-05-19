@@ -1,10 +1,11 @@
 import { workspaceRoot } from '@nx/devkit';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { execSync, spawn } from 'child_process';
 import { lstatSync } from 'fs';
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
 import { dirname, join, relative } from 'path';
+import { fileURLToPath } from 'url';
 // TODO(jack): Remove this when @nx/cypress switches to moduleResolution:
 // "nodenext". Vite 8 ships ESM-only type declarations (.d.mts) which are not
 // resolvable under moduleResolution: "node".
@@ -50,11 +51,20 @@ export function nxBaseCypressPreset(
   // used to set babel settings for react CT.
   process.env.NX_CYPRESS_COMPONENT_TEST =
     options?.testingType === 'component' ? 'true' : 'false';
+  // ESM-shape configs pass `import.meta.url` (a `file://...` URL string) so
+  // the same expression works under both Node's native TS strip (ESM,
+  // import.meta.url defined) and Cypress's bundled tsx CJS loader, which
+  // exposes `import.meta.url` but not `import.meta.dirname`. CJS-shape
+  // configs still pass `__filename` directly. Normalize either form to a
+  // filesystem path before stat-checking.
+  const resolvedPath = pathToConfig?.startsWith('file://')
+    ? fileURLToPath(pathToConfig)
+    : pathToConfig;
   // prevent from placing path outside the root of the workspace
   // if they pass in a file or directory
-  const normalizedPath = lstatSync(pathToConfig).isDirectory()
-    ? pathToConfig
-    : dirname(pathToConfig);
+  const normalizedPath = lstatSync(resolvedPath).isDirectory()
+    ? resolvedPath
+    : dirname(resolvedPath);
   const projectPath = relative(workspaceRoot, normalizedPath);
   const offset = relative(normalizedPath, workspaceRoot);
   const isTsSolutionSetup = isUsingTsSolutionSetup();

@@ -7,7 +7,7 @@
   "types": "./src/index.ts",
   "dependencies": {
     "@nx/graph-ui-common": "workspace:",
-    "tailwind-merge": "^2.4.0"
+    "tailwind-merge": "catalog:tailwind"
   },
   "devDependencies": {
     "jest": "catalog:jest"

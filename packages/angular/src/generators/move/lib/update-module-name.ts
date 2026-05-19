@@ -8,7 +8,7 @@ import {
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import type { MoveImplOptions } from './types';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 
 /**
  * Updates the Angular module name (including the spec file and index.ts)

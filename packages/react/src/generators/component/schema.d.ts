@@ -14,14 +14,9 @@ export interface Schema {
   skipFormat?: boolean;
   // Used by Next.js to determine how React should generate the page
   isNextPage?: boolean;
-
-  /**
-   * @deprecated Provide the full file path including the file extension in the `path` option. This option will be removed in Nx v21.
-   */
-  js?: boolean;
 }
 
-export interface NormalizedSchema extends Omit<Schema, 'js'> {
+export interface NormalizedSchema extends Schema {
   directory: string;
   projectRoot: string;
   projectSourceRoot: string;

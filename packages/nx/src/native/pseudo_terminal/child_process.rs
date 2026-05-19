@@ -1,7 +1,8 @@
-use super::process_killer::ProcessKiller;
+use super::process_killer::{ProcessKiller, normalize_signal};
 use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
 use crossbeam_channel::Sender;
 use crossbeam_channel::{Receiver, bounded, select};
+use napi::Either;
 use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode::NonBlocking};
 use napi::{Status, bindgen_prelude::Unknown};
@@ -56,10 +57,11 @@ impl ChildProcess {
         self.pid
     }
 
-    #[napi(ts_args_type = "signal?: NodeJS.Signals")]
-    pub fn kill(&mut self, signal: Option<String>) -> anyhow::Result<()> {
-        let signal = signal.as_deref();
-        self.process_killer.kill(signal)
+    #[napi(ts_args_type = "signal?: NodeJS.Signals | number")]
+    pub fn kill(&mut self, signal: Option<Either<String, i32>>) -> anyhow::Result<()> {
+        let signal_str = normalize_signal(signal.as_ref());
+        self.process_killer.kill(signal_str);
+        Ok(())
     }
 
     #[napi]

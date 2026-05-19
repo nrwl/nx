@@ -38,11 +38,22 @@ export { promptWhenInteractive } from './src/generators/prompt';
 export {
   addBuildTargetDefaults,
   addE2eCiTargetDefaults,
+  findTargetDefault,
+  readTargetDefaultsForTarget,
+  upsertTargetDefault,
 } from './src/generators/target-defaults-utils';
+export {
+  downgradeTargetDefaults,
+  normalizeTargetDefaults,
+} from './src/utils/normalize-target-defaults';
 
 // Utils
 export { addPlugin } from './src/utils/add-plugin';
-export { throwForUnsupportedVersion } from './src/utils/version-floor';
+export {
+  getDeclaredPackageVersion,
+  getInstalledPackageVersion,
+} from './src/utils/installed-version';
+export { assertSupportedPackageVersion } from './src/utils/version-floor';
 export {
   createAsyncIterable,
   combineAsyncIterables,

@@ -9,8 +9,8 @@ import { workspaceRoot } from '@nx/devkit';
 import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
-} from '@nx/js/src/utils/buildable-libs-utils';
-import { resolvePathsBaseUrl } from '@nx/js/src/utils/typescript/ts-config';
+} from '@nx/js/internal';
+import { resolvePathsBaseUrl } from '@nx/js';
 import { NormalizedNxAppWebpackPluginOptions } from '../nx-webpack-plugin/nx-app-webpack-plugin-options';
 import { WebpackNxBuildCoordinationPlugin } from '../webpack-nx-build-coordination-plugin';
 

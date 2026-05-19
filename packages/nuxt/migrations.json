@@ -3,7 +3,7 @@
     "update-22-2-0-create-ai-instructions-for-nuxt-4": {
       "version": "22.2.0-beta.0",
       "description": "Create AI Instructions to help migrate workspaces to Nuxt 4.",
-      "implementation": "./src/migrations/update-22-2-0/create-ai-instructions-for-nuxt-4"
+      "prompt": "./src/migrations/update-22-2-0/ai-instructions-for-nuxt-4.md"
     }
   },
   "packageJsonUpdates": {

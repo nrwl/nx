@@ -15,8 +15,10 @@ import {
   TargetConfiguration,
 } from '@nx/devkit';
 import { getLockFileName } from '@nx/js';
-import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  addBuildAndWatchDepsTargets,
+  isUsingTsSolutionSetup,
+} from '@nx/js/internal';
 import { readdirSync } from 'fs';
 import { hashObject } from 'nx/src/devkit-internals';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';

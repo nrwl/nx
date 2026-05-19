@@ -6,6 +6,7 @@ import dev.nx.gradle.data.DependsOnEntry
 import dev.nx.gradle.data.ExternalDepData
 import dev.nx.gradle.data.ExternalNode
 import java.io.File
+import kotlin.io.path.Path
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -157,7 +158,7 @@ private val GRADLE_INPUT_FILES =
  */
 fun getGradleFilesInputs(workspaceRoot: String): List<String> {
   return GRADLE_INPUT_FILES.filter { relativePath -> File("$workspaceRoot/$relativePath").exists() }
-      .map { relativePath -> "{workspaceRoot}/$relativePath" }
+      .map { relativePath -> Path("{workspaceRoot}", relativePath).toString() }
 }
 
 /**
@@ -286,7 +287,7 @@ private fun getInputsForTaskImpl(
 
     // Add consolidated dependentTasksOutputFiles entries using glob patterns by extension
     dependentTaskOutputExtensions.forEach { extension ->
-      inputs.add(mapOf("dependentTasksOutputFiles" to "**/*.$extension"))
+      inputs.add(mapOf("dependentTasksOutputFiles" to "**/*.$extension", "transitive" to true))
     }
 
     if (externalDependencies.isNotEmpty()) {
@@ -517,7 +518,7 @@ fun getExternalDepFromInputFile(
     logger: org.gradle.api.logging.Logger
 ): String? {
   try {
-    val segments = inputFile.split("/")
+    val segments = inputFile.split("/", "\\")
 
     if (segments.size < 5) {
       logger.warn("Invalid input path: '$inputFile'. Expected at least 5 segments.")

@@ -14,7 +14,7 @@ import {
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
-import { angularCliVersion } from '@nx/workspace/src/utils/versions';
+import { angularDevkitVersion } from '@nx/angular/src/utils';
 import { ensureDirSync } from 'fs-extra';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
@@ -144,7 +144,7 @@ function runNgNew(projectName: string, cwd: string): void {
   const packageManager = getSelectedPackageManager();
   const pmc = getPackageManagerCommand({ packageManager });
 
-  const command = `${pmc.runUninstalledPackage} @angular/cli@${angularCliVersion} new ${projectName} --package-manager=${packageManager}`;
+  const command = `${pmc.runUninstalledPackage} @angular/cli@${angularDevkitVersion} new ${projectName} --package-manager=${packageManager}`;
   const fullCwd = join(tmpProjPath(), cwd);
   ensureDirSync(fullCwd);
   execSync(command, {

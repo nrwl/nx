@@ -4,6 +4,9 @@ import * as jsoncEslintParser from 'jsonc-eslint-parser';
 export default [
   ...baseConfig,
   {
+    ignores: ['dist'],
+  },
+  {
     rules: {
       'no-restricted-imports': [
         'error',

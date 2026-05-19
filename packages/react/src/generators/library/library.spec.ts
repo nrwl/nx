@@ -695,6 +695,8 @@ module.exports = withNx(
       });
 
       expect(tree.exists('/my-lib/src/index.js')).toBe(true);
+      expect(tree.exists('/my-lib/src/lib/my-lib.js')).toBe(true);
+      expect(tree.exists('/my-lib/src/lib/my-lib.tsx')).toBe(false);
     });
   });
 

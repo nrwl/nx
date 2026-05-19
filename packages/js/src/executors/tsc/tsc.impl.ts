@@ -8,7 +8,7 @@ import {
 } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import type { TypeScriptCompilationOptions } from '@nx/workspace/src/utilities/typescript/compilation';
+import type { TypeScriptCompilationOptions } from '../../utils/typescript/compilation';
 import { CopyAssetsHandler } from '../../utils/assets/copy-assets-handler';
 import { checkDependencies } from '../../utils/check-dependencies';
 import {

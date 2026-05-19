@@ -135,6 +135,11 @@ packages/dotnet/README.md
 packages/maven/README.md
 packages/nx/README.md
 packages/devkit/README.md
+packages/workspace/README.md
+packages/js/README.md
+packages/jest/README.md
+packages/eslint/README.md
+packages/eslint-plugin/README.md
 
 test-output
 test-results
@@ -152,11 +157,5 @@ test-results
 .claude/worktrees
 
 .nx/self-healing
-# Nx Typings Output
-packages/nx/**/*.d.ts
-!packages/nx/src/utils/perf-hooks.d.ts
-!packages/nx/src/ai/set-up-ai-agents/schema.d.ts
-!packages/nx/src/native/index.d.ts
-!packages/nx/src/native/dts-header.d.ts
 e2e/**/*.d.ts
 e2e/**/*.d.ts.map

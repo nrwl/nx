@@ -2,7 +2,11 @@ import type {
   BrowserBuilderOptions,
   ServerBuilderOptions,
 } from '@angular-devkit/build-angular';
-import type { Tree } from '@nx/devkit';
+import type {
+  NxJsonConfiguration,
+  TargetConfiguration,
+  Tree,
+} from '@nx/devkit';
 import {
   joinPathFragments,
   logger,
@@ -11,7 +15,8 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { upsertTargetDefault } from '@nx/devkit/internal';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import type { NormalizedGeneratorOptions } from '../schema';
 import {
   DEFAULT_BROWSER_DIR,
@@ -145,7 +150,7 @@ export function updateProjectConfigForBrowserBuilder(
 
   updateProjectConfiguration(tree, options.project, projectConfig);
 
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
   if (
     nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations &&
     !nxJson.tasksRunnerOptions.default.options.cacheableOperations.includes(
@@ -156,10 +161,26 @@ export function updateProjectConfigForBrowserBuilder(
       'server'
     );
   }
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults.server ??= {};
-  nxJson.targetDefaults.server.cache ??= true;
+  const existing = findServerDefault(nxJson.targetDefaults);
+  if (!existing || existing.cache === undefined) {
+    upsertTargetDefault(tree, nxJson, { target: 'server', cache: true });
+  }
   updateNxJson(tree, nxJson);
+}
+
+function findServerDefault(
+  td: NxJsonConfiguration['targetDefaults']
+): Partial<TargetConfiguration> | undefined {
+  if (!td) return undefined;
+  if (Array.isArray(td)) {
+    return td.find(
+      (e) =>
+        e.target === 'server' &&
+        e.projects === undefined &&
+        e.plugin === undefined
+    );
+  }
+  return td['server'];
 }
 
 function getServerOptions(

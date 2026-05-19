@@ -3,11 +3,24 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/eslint-plugin",
   "projectType": "library",
+  "release": {
+    "version": {
+      "generator": "@nx/js:release-version",
+      "preserveLocalDependencyProtocols": true,
+      "manifestRootsToUpdate": ["packages/{projectName}"]
+    }
+  },
   "targets": {
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "packages/{projectName}"
+      }
+    },
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/eslint-plugin/README.md"],
-      "command": "node ./scripts/copy-readme.js eslint-plugin",
-      "inputs": ["copyReadme"]
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js eslint-plugin packages/eslint-plugin/readme-template.md packages/eslint-plugin/README.md",
+      "inputs": ["copyReadme"],
+      "dependsOn": ["^build", "build-base"]
     }
   }
 }

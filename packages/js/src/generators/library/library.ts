@@ -416,7 +416,7 @@ export async function addLint(
     updateOverrideInLintConfig,
     addIgnoresToLintConfig,
     // nx-ignore-next-line
-  } = require('@nx/eslint/src/generators/utils/eslint-file');
+  } = require('@nx/eslint/internal');
 
   // if config is not supported, we don't need to do anything
   if (!isEslintConfigSupported(tree)) {

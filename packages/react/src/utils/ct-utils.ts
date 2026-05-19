@@ -5,7 +5,7 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 import { getComponentNode } from './ast-utils';
 import { type FoundTarget } from '@nx/cypress/src/utils/find-target-options';
 import type { NxComponentTestingOptions } from '@nx/cypress/plugins/cypress-preset';
@@ -84,12 +84,10 @@ export async function configureCypressCT(
   );
   const updatedCyConfig = await addDefaultCTConfig(
     tree.read(cypressConfigFilePath, 'utf-8'),
-    ctConfigOptions
+    ctConfigOptions,
+    '@nx/react/plugins/component-testing'
   );
-  tree.write(
-    cypressConfigFilePath,
-    `import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';\n${updatedCyConfig}`
-  );
+  tree.write(cypressConfigFilePath, updatedCyConfig);
 
   return found;
 }

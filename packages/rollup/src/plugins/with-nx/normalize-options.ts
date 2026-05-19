@@ -7,7 +7,7 @@ import type {
   RollupWithNxPluginOptions,
 } from './with-nx-options';
 import { createEntryPoints } from '@nx/js';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export function normalizeOptions(
   projectRoot: string,

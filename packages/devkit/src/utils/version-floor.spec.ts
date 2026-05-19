@@ -1,4 +1,9 @@
-import { throwForUnsupportedVersion } from './version-floor';
+import { updateJson } from 'nx/src/devkit-exports';
+import { createTreeWithEmptyWorkspace } from '../../testing';
+import {
+  assertSupportedPackageVersion,
+  throwForUnsupportedVersion,
+} from './version-floor';
 
 describe('throwForUnsupportedVersion', () => {
   it('throws an error naming the package, installed version, and floor', () => {
@@ -13,16 +18,73 @@ describe('throwForUnsupportedVersion', () => {
       Update \`@angular/core\` to 19.0.0 or higher."
     `);
   });
+});
 
-  it('formats messages for unscoped packages too', () => {
-    expect(() => throwForUnsupportedVersion('vite', '5.4.0', '6.0.0'))
-      .toThrowErrorMatchingInlineSnapshot(`
-      "Unsupported version of \`vite\` detected.
+describe('assertSupportedPackageVersion', () => {
+  it('throws when the declared range is below the supported floor', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '~1.5.0' },
+    }));
 
-        Installed: 5.4.0
-        Supported: >= 6.0.0
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).toThrow(/Unsupported version of `some-pkg` detected/);
+  });
 
-      Update \`vite\` to 6.0.0 or higher."
-    `);
+  it('preserves the declared range in the thrown message (not the cleaned form)', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '~1.5.0' },
+    }));
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).toThrow(/Installed: ~1\.5\.0/);
+  });
+
+  it('does not throw when the package is not declared (fresh-install path)', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).not.toThrow();
+  });
+
+  it('does not throw when declared as `latest`', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': 'latest' },
+    }));
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).not.toThrow();
+  });
+
+  it('does not throw when declared as `next`', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': 'next' },
+    }));
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).not.toThrow();
+  });
+
+  it('does not throw when declared at or above the supported floor', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '^2.5.0' },
+    }));
+
+    expect(() =>
+      assertSupportedPackageVersion(tree, 'some-pkg', '2.0.0')
+    ).not.toThrow();
   });
 });

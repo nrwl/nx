@@ -7,8 +7,8 @@ jest.mock('@nx/devkit', () => ({
 }));
 
 // Needed so the current environment is not used
-jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
-  ...jest.requireActual('@nx/js/src/utils/typescript/ts-solution-setup'),
+jest.mock('@nx/js/internal', () => ({
+  ...jest.requireActual('@nx/js/internal'),
   isUsingTsSolutionSetup: jest.fn(() => false),
 }));
 
@@ -206,7 +206,7 @@ describe('@nx/webpack/plugin', () => {
                     },
                   },
                   "watch-deps": {
-                    "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+                    "command": "npx nx watch --projects my-app --includeDependencies -- npx nx build-deps my-app",
                     "continuous": true,
                     "dependsOn": [
                       "build-deps",

@@ -150,7 +150,7 @@ describe('Nx Watch', () => {
     });
 
     const getOutput = await runWatch(
-      `--projects=${proj3} --includeDependentProjects -- echo \\$NX_PROJECT_NAME`
+      `--projects=${proj3} --includeDependencies -- echo \\$NX_PROJECT_NAME`
     );
     await writeFileForWatcher(`libs/${proj1}/newfile.txt`, 'content');
     await writeFileForWatcher(`libs/${proj2}/newfile.txt`, 'content');

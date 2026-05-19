@@ -1,4 +1,6 @@
-export const nxVersion = require('../../package.json').version;
+import { join } from 'path';
+
+export const nxVersion = require(join('@nx/eslint', 'package.json')).version;
 
 export const eslintVersion = '~8.57.0';
 export const eslintrcVersion = '^2.1.1';

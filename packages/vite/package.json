@@ -40,9 +40,10 @@
     "tsconfig-paths": "catalog:typescript",
     "semver": "catalog:",
     "tslib": "catalog:typescript",
-    "ajv": "^8.0.0"
+    "ajv": "catalog:"
   },
   "devDependencies": {
+    "@nx/eslint": "workspace:*",
     "nx": "workspace:*"
   },
   "peerDependencies": {

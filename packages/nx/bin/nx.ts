@@ -79,6 +79,7 @@ async function main() {
     process.argv[2] === '_migrate' ||
     process.argv[2] === 'init' ||
     process.argv[2] === 'configure-ai-agents' ||
+    process.argv[2] === 'mcp' ||
     (process.argv[2] === 'graph' && !workspace)
   ) {
     process.env.NX_DAEMON = 'false';

@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { logger, readProjectConfiguration, stripIndents } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 import type { StringLiteral } from 'typescript';
 import { locateLibraryEntryPointFromDirectory } from '../../utils/entry-point';
 import { getRelativeImportToFile } from '../../utils/path';

@@ -31,7 +31,7 @@
         "vitest": ">=4.0.0"
       },
       "description": "Create AI Instructions to help migrate users workspaces past breaking changes for Vitest 4.",
-      "implementation": "./src/migrations/update-22-2-0/create-ai-instructions-for-vitest-4"
+      "prompt": "./src/migrations/update-22-2-0/ai-instructions-for-vitest-4.md"
     },
     "migrate-vitest-to-vitest-package": {
       "version": "22.2.0-beta.2",
@@ -57,7 +57,7 @@
         "vite": ">=8.0.0"
       },
       "description": "Create AI Instructions to help migrate users workspaces past breaking changes for Vite 8.",
-      "implementation": "./src/migrations/update-23-0-0/create-ai-instructions-for-vite-8"
+      "prompt": "./src/migrations/update-23-0-0/ai-instructions-for-vite-8.md"
     }
   },
   "packageJsonUpdates": {

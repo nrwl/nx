@@ -52,7 +52,7 @@ export declare class AppLifeCycle {
 export declare class ChildProcess {
   getParserAndWriter(): ExternalObject<[ParserArc, WriterArc]>
   getPid(): number
-  kill(signal?: NodeJS.Signals): void
+  kill(signal?: NodeJS.Signals | number): void
   onExit(callback: (message: string) => void): void
   onOutput(callback: (message: string) => void): void
   cleanup(): void
@@ -488,6 +488,23 @@ export interface JsonInput {
   fields?: Array<string>
   excludeFields?: Array<string>
 }
+
+/**
+ * Kill a process and all its descendants (fire-and-forget).
+ *
+ * Sends the requested signal but does NOT wait for processes to exit.
+ * Use `killProcessTreeGraceful` when cleanup handlers must run.
+ */
+export declare function killProcessTree(rootPid: number, signal?: string | number | undefined | null): void
+
+/**
+ * Kill a process tree gracefully: signal → wait → SIGKILL.
+ *
+ * Signals leaf processes first, waits for them to exit, then signals
+ * their parents (now leaves). Repeats until the tree is empty or the
+ * grace period expires, then force-kills survivors.
+ */
+export declare function killProcessTreeGraceful(rootPid: number, signal?: string | number | undefined | null, gracePeriodMs?: number | undefined | null): Promise<void>
 
 export declare function logDebug(message: string): void
 
