@@ -25,11 +25,7 @@ describe('createConfig', () => {
         import { createConfig }from '@nx/angular-rspack';
         
         
-        export default (env) => {
-              if (env?.['RSPACK_SERVE']) {
-                process.env['WEBPACK_SERVE'] ??= 'true';
-              }
-              return createConfig({
+        export default createConfig({
           options: {
             root: __dirname,
             
@@ -53,8 +49,7 @@ describe('createConfig', () => {
         "skipTypeChecking": false
 
           }
-        });
-            };"
+        });"
     `);
   });
 
@@ -77,11 +72,7 @@ describe('createConfig', () => {
         import { createConfig }from '@nx/angular-rspack';
         
         
-        export default (env) => {
-              if (env?.['RSPACK_SERVE']) {
-                process.env['WEBPACK_SERVE'] ??= 'true';
-              }
-              return createConfig({
+        export default createConfig({
           options: {
             root: __dirname,
             
@@ -97,8 +88,7 @@ describe('createConfig', () => {
         "browser": "src/main.prod.ts"
 
               }
-            }});
-            };"
+            }});"
     `);
   });
 });

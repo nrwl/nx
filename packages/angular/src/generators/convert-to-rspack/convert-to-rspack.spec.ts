@@ -64,43 +64,32 @@ describe('convert-to-rspack', () => {
     const nxJson = readNxJson(tree);
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "
-        import { createConfig }from '@nx/angular-rspack';
-        
-        
-        export default (env) => {
-              if (env?.['RSPACK_SERVE']) {
-                process.env['WEBPACK_SERVE'] ??= 'true';
-              }
-              return createConfig({
-          options: {
-            root: __dirname,
-            
-        "outputPath": {
-          "base": "../../dist/apps/app"
-        },
-        "index": "./src/index.html",
-        "browser": "./src/main.ts",
-        "polyfills": [
-          "tslib"
-        ],
-        "tsConfig": "./tsconfig.app.json",
-        "assets": [
-          "./src/favicon.ico",
-          "./src/assets",
-          {
-            "input": "./public",
-            "glob": "**/*"
-          }
-        ],
-        "styles": [
-          "./src/styles.scss"
-        ],
-        "scripts": []
+      "import { createConfig } from '@nx/angular-rspack';
 
-          }
-        });
-            };"
+      export default createConfig({
+        options: {
+          root: __dirname,
+
+          outputPath: {
+            base: '../../dist/apps/app',
+          },
+          index: './src/index.html',
+          browser: './src/main.ts',
+          polyfills: ['tslib'],
+          tsConfig: './tsconfig.app.json',
+          assets: [
+            './src/favicon.ico',
+            './src/assets',
+            {
+              input: './public',
+              glob: '**/*',
+            },
+          ],
+          styles: ['./src/styles.scss'],
+          scripts: [],
+        },
+      });
+      "
     `);
     expect(pkgJson.devDependencies['@nx/angular-rspack']).toBeDefined();
     expect(
@@ -164,47 +153,36 @@ describe('convert-to-rspack', () => {
     const nxJson = readNxJson(tree);
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "
-        import { createConfig }from '@nx/angular-rspack';
-        
-        
-        export default (env) => {
-              if (env?.['RSPACK_SERVE']) {
-                process.env['WEBPACK_SERVE'] ??= 'true';
-              }
-              return createConfig({
-          options: {
-            root: __dirname,
-            
-        "outputPath": {
-          "base": "../../dist/apps/app"
-        },
-        "index": "./src/index.html",
-        "browser": "./src/main.ts",
-        "polyfills": [
-          "tslib"
-        ],
-        "tsConfig": "./tsconfig.app.json",
-        "assets": [
-          "./src/favicon.ico",
-          "./src/assets",
-          {
-            "input": "./public",
-            "glob": "**/*"
-          }
-        ],
-        "styles": [
-          "./src/styles.scss"
-        ],
-        "scripts": [],
-        "ssr": {
-          "entry": "./src/server.ts"
-        },
-        "server": "./src/main.server.ts"
+      "import { createConfig } from '@nx/angular-rspack';
 
-          }
-        });
-            };"
+      export default createConfig({
+        options: {
+          root: __dirname,
+
+          outputPath: {
+            base: '../../dist/apps/app',
+          },
+          index: './src/index.html',
+          browser: './src/main.ts',
+          polyfills: ['tslib'],
+          tsConfig: './tsconfig.app.json',
+          assets: [
+            './src/favicon.ico',
+            './src/assets',
+            {
+              input: './public',
+              glob: '**/*',
+            },
+          ],
+          styles: ['./src/styles.scss'],
+          scripts: [],
+          ssr: {
+            entry: './src/server.ts',
+          },
+          server: './src/main.server.ts',
+        },
+      });
+      "
     `);
     expect(pkgJson.devDependencies['@nx/angular-rspack']).toBeDefined();
     expect(
@@ -258,39 +236,25 @@ describe('convert-to-rspack', () => {
     const nxJson = readNxJson(tree);
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "
-        import { createConfig }from '@nx/angular-rspack';
-        
-        
-        export default (env) => {
-              if (env?.['RSPACK_SERVE']) {
-                process.env['WEBPACK_SERVE'] ??= 'true';
-              }
-              return createConfig({
-          options: {
-            root: __dirname,
-            
-        "outputPath": {
-          "base": "../../dist/apps/app"
-        },
-        "index": "./src/index.html",
-        "browser": "./src/main.ts",
-        "polyfills": [
-          "tslib",
-          "./src/polyfills.ts"
-        ],
-        "tsConfig": "./tsconfig.app.json",
-        "assets": [
-          "../../libs/mylib/src/favicon.ico"
-        ],
-        "styles": [
-          "./src/styles.scss"
-        ],
-        "scripts": []
+      "import { createConfig } from '@nx/angular-rspack';
 
-          }
-        });
-            };"
+      export default createConfig({
+        options: {
+          root: __dirname,
+
+          outputPath: {
+            base: '../../dist/apps/app',
+          },
+          index: './src/index.html',
+          browser: './src/main.ts',
+          polyfills: ['tslib', './src/polyfills.ts'],
+          tsConfig: './tsconfig.app.json',
+          assets: ['../../libs/mylib/src/favicon.ico'],
+          styles: ['./src/styles.scss'],
+          scripts: [],
+        },
+      });
+      "
     `);
     expect(pkgJson.devDependencies['@nx/angular-rspack']).toBeDefined();
     expect(
@@ -350,55 +314,46 @@ describe('convert-to-rspack', () => {
     const nxJson = readNxJson(tree);
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "
-        import { createConfig }from '@nx/angular-rspack';
-        
-        
-        export default (env) => {
-              if (env?.['RSPACK_SERVE']) {
-                process.env['WEBPACK_SERVE'] ??= 'true';
-              }
-              return createConfig({
+      "import { createConfig } from '@nx/angular-rspack';
+
+      export default createConfig(
+        {
           options: {
             root: __dirname,
-            
-        "outputPath": {
-          "base": "../../dist/apps/app"
-        },
-        "index": "./src/index.html",
-        "browser": "./src/main.ts",
-        "polyfills": [
-          "tslib"
-        ],
-        "tsConfig": "./tsconfig.app.json",
-        "assets": [
-          "./src/favicon.ico",
-          "./src/assets",
-          {
-            "input": "./public",
-            "glob": "**/*"
-          }
-        ],
-        "styles": [
-          "./src/styles.scss"
-        ],
-        "scripts": []
 
-          }
-        }, {
-            "production": {
-              options: {
-                
-        "outputPath": {
-          "base": "../../dist/apps/app-prod"
+            outputPath: {
+              base: '../../dist/apps/app',
+            },
+            index: './src/index.html',
+            browser: './src/main.ts',
+            polyfills: ['tslib'],
+            tsConfig: './tsconfig.app.json',
+            assets: [
+              './src/favicon.ico',
+              './src/assets',
+              {
+                input: './public',
+                glob: '**/*',
+              },
+            ],
+            styles: ['./src/styles.scss'],
+            scripts: [],
+          },
         },
-        "index": "./src/index.prod.html",
-        "browser": "./src/main.prod.ts",
-        "tsConfig": "./tsconfig.prod.json"
-
-              }
-            }});
-            };"
+        {
+          production: {
+            options: {
+              outputPath: {
+                base: '../../dist/apps/app-prod',
+              },
+              index: './src/index.prod.html',
+              browser: './src/main.prod.ts',
+              tsConfig: './tsconfig.prod.json',
+            },
+          },
+        },
+      );
+      "
     `);
     expect(pkgJson.devDependencies['@nx/angular-rspack']).toBeDefined();
     expect(
@@ -470,61 +425,58 @@ describe('convert-to-rspack', () => {
     const updatedProject = readProjectConfiguration(tree, 'app');
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "
-        import { createConfig }from '@nx/angular-rspack';
-        import baseWebpackConfig from './webpack.config';
-            import webpackMerge from 'webpack-merge';
-        
-        export default async (env) => {
-              if (env?.['RSPACK_SERVE']) {
-                process.env['WEBPACK_SERVE'] ??= 'true';
-              }
-              const baseConfig = await createConfig({
+      "import { createConfig } from '@nx/angular-rspack';
+      import baseWebpackConfig from './webpack.config';
+      import webpackMerge from 'webpack-merge';
+
+      export default async () => {
+        const baseConfig = await createConfig({
           options: {
             root: __dirname,
-            
-        "outputPath": {
-          "base": "../../dist/apps/app"
-        },
-        "index": "./src/index.html",
-        "browser": "./src/main.ts",
-        "polyfills": [
-          "tslib"
-        ],
-        "tsConfig": "./tsconfig.app.json",
-        "assets": [
-          "./src/favicon.ico",
-          "./src/assets",
-          {
-            "input": "./public",
-            "glob": "**/*"
-          }
-        ],
-        "styles": [
-          "./src/styles.scss"
-        ],
-        "scripts": []
 
-          }
+            outputPath: {
+              base: '../../dist/apps/app',
+            },
+            index: './src/index.html',
+            browser: './src/main.ts',
+            polyfills: ['tslib'],
+            tsConfig: './tsconfig.app.json',
+            assets: [
+              './src/favicon.ico',
+              './src/assets',
+              {
+                input: './public',
+                glob: '**/*',
+              },
+            ],
+            styles: ['./src/styles.scss'],
+            scripts: [],
+          },
         });
-              return webpackMerge(baseConfig[0], baseWebpackConfig);};"
+        return webpackMerge(baseConfig[0], baseWebpackConfig);
+      };
+      "
     `);
     expect(tree.read('apps/app/webpack.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
+      "const {
+        NxModuleFederationPlugin,
+        NxModuleFederationDevServerPlugin,
+      } = require('@nx/module-federation/rspack');
+      const config = require('./module-federation.config');
+
+      module.exports = {
+        plugins: [
+          new NxModuleFederationPlugin(
+            { config },
+            {
+              dts: false,
+            },
+          ),
+          new NxModuleFederationDevServerPlugin({ config }),
+        ],
+      };
       "
-          const { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } = require('@nx/module-federation/rspack');
-          const config = require('./module-federation.config');
-          
-          
-          module.exports = {
-            plugins: [
-              new NxModuleFederationPlugin({ config }, {
-                dts: false,
-              }),
-              new NxModuleFederationDevServerPlugin({ config }),
-            ]
-          }
-          "
     `);
   });
 
@@ -598,44 +550,37 @@ describe('convert-to-rspack', () => {
     const updatedProject = readProjectConfiguration(tree, 'app');
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "
-        import { createConfig }from '@nx/angular-rspack';
-        import baseWebpackConfig from './webpack.config';
-            import webpackMerge from 'webpack-merge';
-        
-        export default async (env) => {
-              if (env?.['RSPACK_SERVE']) {
-                process.env['WEBPACK_SERVE'] ??= 'true';
-              }
-              const baseConfig = await createConfig({
+      "import { createConfig } from '@nx/angular-rspack';
+      import baseWebpackConfig from './webpack.config';
+      import webpackMerge from 'webpack-merge';
+
+      export default async () => {
+        const baseConfig = await createConfig({
           options: {
             root: __dirname,
-            
-        "outputPath": {
-          "base": "../../dist/apps/app"
-        },
-        "index": "./src/index.html",
-        "browser": "./src/main.ts",
-        "polyfills": [
-          "tslib"
-        ],
-        "tsConfig": "./tsconfig.app.json",
-        "assets": [
-          "./src/favicon.ico",
-          "./src/assets",
-          {
-            "input": "./public",
-            "glob": "**/*"
-          }
-        ],
-        "styles": [
-          "./src/styles.scss"
-        ],
-        "scripts": []
 
-          }
+            outputPath: {
+              base: '../../dist/apps/app',
+            },
+            index: './src/index.html',
+            browser: './src/main.ts',
+            polyfills: ['tslib'],
+            tsConfig: './tsconfig.app.json',
+            assets: [
+              './src/favicon.ico',
+              './src/assets',
+              {
+                input: './public',
+                glob: '**/*',
+              },
+            ],
+            styles: ['./src/styles.scss'],
+            scripts: [],
+          },
         });
-              return webpackMerge(baseConfig[0], baseWebpackConfig);};"
+        return webpackMerge(baseConfig[0], baseWebpackConfig);
+      };
+      "
     `);
   });
 
