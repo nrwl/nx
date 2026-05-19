@@ -34,7 +34,8 @@ public class TargetBuilderOutputPathsTests
         string projectDirectory,
         string projectName = "MyProj",
         bool isExe = false,
-        bool isTest = false) =>
+        bool isTest = false,
+        List<string>? directoryBuildInputs = null) =>
         TargetBuilder.BuildTargets(
             projectName: projectName,
             fileName: $"{projectName}.csproj",
@@ -45,7 +46,8 @@ public class TargetBuilderOutputPathsTests
             projectDirectory: projectDirectory,
             workspaceRoot: WorkspaceRoot,
             options: new PluginOptions(),
-            nxJson: null);
+            nxJson: null,
+            directoryBuildInputs: directoryBuildInputs ?? new List<string>());
 
     // --- Original #33971: Microsoft.NET.Sdk.Web ---------------------------
 

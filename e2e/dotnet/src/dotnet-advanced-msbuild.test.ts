@@ -374,6 +374,79 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
     });
   });
 
+  describe('Directory.Build.* Inputs', () => {
+    beforeAll(() => {
+      createDotNetProject({
+        name: 'DirBuildInputsApp',
+        type: 'console',
+      });
+
+      // Workspace-root Directory.Build.props — exists.
+      updateFile(
+        'Directory.Build.props',
+        `<Project>
+  <PropertyGroup>
+  </PropertyGroup>
+</Project>`
+      );
+
+      // Project-level Directory.Build.targets — also exists, at a different ancestor.
+      updateFile(
+        'DirBuildInputsApp/Directory.Build.targets',
+        `<Project>
+</Project>`
+      );
+
+      // Workspace-root Directory.Packages.props — Central Package Management.
+      updateFile(
+        'Directory.Packages.props',
+        `<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>`
+      );
+    });
+
+    it('should declare only existing Directory.* files as inputs', () => {
+      const projectDetails = runCLI(`show project DirBuildInputsApp --json`);
+      const details = JSON.parse(projectDetails);
+
+      const buildInputs = details.targets.build.inputs as unknown[];
+
+      // The closest ancestor that defines each filename is declared as an input.
+      expect(buildInputs).toContain('{workspaceRoot}/Directory.Build.props');
+      expect(buildInputs).toContain(
+        '{workspaceRoot}/DirBuildInputsApp/Directory.Build.targets'
+      );
+      expect(buildInputs).toContain('{workspaceRoot}/Directory.Packages.props');
+
+      // Files that do NOT exist anywhere must not be declared — that was the point
+      // of moving from the always-declare design to exists-only inputs.
+      expect(buildInputs).not.toContain('{workspaceRoot}/Directory.Build.rsp');
+      expect(buildInputs).not.toContain(
+        '{workspaceRoot}/Directory.Solution.props'
+      );
+      expect(buildInputs).not.toContain(
+        '{workspaceRoot}/Directory.Solution.targets'
+      );
+
+      // Cacheable targets other than build (publish here) get the same inputs.
+      const publishInputs = details.targets.publish.inputs as unknown[];
+      expect(publishInputs).toContain('{workspaceRoot}/Directory.Build.props');
+      expect(publishInputs).toContain(
+        '{workspaceRoot}/DirBuildInputsApp/Directory.Build.targets'
+      );
+      expect(publishInputs).toContain(
+        '{workspaceRoot}/Directory.Packages.props'
+      );
+
+      // Targets without a declared inputs array (e.g. restore) are left untouched
+      // so we don't accidentally narrow Nx's default-input fallback.
+      expect(details.targets.restore.inputs).toBeUndefined();
+    });
+  });
+
   describe('Publish with Artifacts', () => {
     beforeAll(() => {
       createDotNetProject({
