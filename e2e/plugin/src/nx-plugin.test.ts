@@ -11,6 +11,7 @@ import {
   runCLIAsync,
   runCommand,
   tmpProjPath,
+  trimDaemonLog,
   uniq,
   updateFile,
   updateJson,
@@ -45,10 +46,11 @@ describe('Nx Plugin', () => {
         'daemon.log'
       );
       if (existsSync(daemonLog)) {
+        // Trimmed to the diagnostic lines — see trimDaemonLog. The raw log
+        // is thousands of watcher/message lines that bury a plugin crash.
         console.log(
-          `\n========== daemon.log ==========\n${readFileSync(
-            daemonLog,
-            'utf-8'
+          `\n========== daemon.log (trimmed) ==========\n${trimDaemonLog(
+            readFileSync(daemonLog, 'utf-8')
           )}\n========== end daemon.log ==========\n`
         );
       } else {

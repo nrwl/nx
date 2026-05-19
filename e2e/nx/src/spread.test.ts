@@ -4,6 +4,7 @@ import {
   readJson,
   runCLI,
   tmpProjPath,
+  trimDaemonLog,
   uniq,
   updateFile,
   updateJson,
@@ -38,9 +39,11 @@ describe('Spread Token Merging', () => {
         'daemon.log'
       );
       if (existsSync(daemonLog)) {
-        const contents = readFileSync(daemonLog, 'utf-8');
+        // Trimmed to the diagnostic lines — see trimDaemonLog. The raw log
+        // is thousands of watcher/message lines per test.
+        const contents = trimDaemonLog(readFileSync(daemonLog, 'utf-8'));
         console.log(
-          `\n========== daemon.log for "${
+          `\n========== daemon.log (trimmed) for "${
             expect.getState().currentTestName ?? 'unknown'
           }" ==========\n${contents}\n========== end daemon.log ==========\n`
         );

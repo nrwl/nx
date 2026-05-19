@@ -39,3 +39,37 @@ export function logSuccess(title: string, body?: string) {
   )} ${styleText(['bold', 'green'], title)}`;
   return e2eConsoleLogger(message, body);
 }
+
+/**
+ * The Nx daemon log is mostly per-file watcher events and per-message
+ * bookkeeping — thousands of lines that bury the handful that explain a
+ * failure. Keep only the lines useful for diagnosing daemon/plugin issues
+ * (daemon restarts, plugin loads, stale-graph discards, errors) plus the
+ * tail, and mark where runs of noise were removed so the gaps are visible.
+ *
+ * Use when dumping `daemon.log` from an e2e test so CI output stays small
+ * while a failing run is still debuggable.
+ */
+export function trimDaemonLog(contents: string, tailLines = 30): string {
+  const signal =
+    /New daemon|Server stopped|Restarting daemon|Started new daemon|Daemon outdated|lock file hash|loadSpecifiedNxPlugins|loadDefaultNxPlugins|Load Nx Plugin:|Failed to load|AggregateError|Unable to find local plugin|Discarding stale|No in-memory cached project graph|Graph recompute necessary|recomputing project graph|Cannot find module|with an error|Error:/;
+  const lines = contents.split('\n');
+  const tailStart = Math.max(0, lines.length - tailLines);
+  const out: string[] = [];
+  let dropped = 0;
+  lines.forEach((line, i) => {
+    if (signal.test(line) || i >= tailStart) {
+      if (dropped > 0) {
+        out.push(`  … ${dropped} line(s) trimmed …`);
+        dropped = 0;
+      }
+      out.push(line);
+    } else {
+      dropped++;
+    }
+  });
+  if (dropped > 0) {
+    out.push(`  … ${dropped} line(s) trimmed …`);
+  }
+  return out.join('\n');
+}
