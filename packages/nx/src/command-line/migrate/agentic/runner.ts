@@ -1,7 +1,7 @@
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
 import { prompt } from 'enquirer';
 import { extname } from 'path';
-import { readHandoff } from './handoff';
+import { readHandoff, waitForValidHandoff } from './handoff';
 import {
   AgentDefinition,
   DetectedInstalledAgent,
@@ -9,11 +9,19 @@ import {
   InvocationContext,
 } from './types';
 
+// How long to wait for the agent to exit gracefully after sending SIGINT once
+// a valid handoff has been written. Long enough for an interactive agent to
+// finish its current render and clean up; short enough that a frozen child
+// still gets escalated to SIGTERM in a sensible time.
+const AGENT_GRACEFUL_EXIT_MS = 5_000;
+
 export interface RunAgenticArgs {
   detected: DetectedInstalledAgent;
   definition: AgentDefinition;
   invocationContext: InvocationContext;
   handoffFilePath: string;
+  /** Override the handoff-file poll interval (test seam). */
+  handoffPollIntervalMs?: number;
 }
 
 /**
@@ -24,7 +32,13 @@ export interface RunAgenticArgs {
 export async function runAgentic(
   args: RunAgenticArgs
 ): Promise<HandoffOutcome> {
-  const { detected, definition, invocationContext, handoffFilePath } = args;
+  const {
+    detected,
+    definition,
+    invocationContext,
+    handoffFilePath,
+    handoffPollIntervalMs,
+  } = args;
   const spec = definition.buildInteractive(invocationContext);
 
   const adapted = adaptSpawnForWindowsShim(detected.binary, spec.args, {
@@ -52,13 +66,77 @@ export async function runAgentic(
   };
   process.on('SIGINT', swallowSigint);
 
+  const handoffWatchAbort = new AbortController();
+  const exitPromise = waitForExit(child);
+  // Polls for a valid handoff file. When the agent's instructions tell it to
+  // write the handoff JSON as its last step, this races ahead of the agent's
+  // own exit (interactive REPL agents may stay open at a prompt) so the
+  // orchestrator can close the session itself.
+  const handoffPromise = waitForValidHandoff(handoffFilePath, {
+    signal: handoffWatchAbort.signal,
+    intervalMs: handoffPollIntervalMs,
+  });
+
   try {
-    await waitForExit(child);
+    const winner = await Promise.race([
+      exitPromise.then(() => 'exit' as const),
+      // The rejection handler swallows the abort-triggered rejection that
+      // fires from the `finally` block below after the race has already
+      // settled — without it node would log it as an unhandled rejection.
+      handoffPromise.then(
+        () => 'handoff' as const,
+        () => 'exit' as const
+      ),
+    ]);
+    if (winner === 'handoff') {
+      await closeAgentSession(child, exitPromise);
+    }
   } finally {
+    handoffWatchAbort.abort();
     process.removeListener('SIGINT', swallowSigint);
   }
 
   return resolveFromHandoffOrPrompt(handoffFilePath);
+}
+
+/**
+ * Sends SIGINT (graceful, equivalent to the user typing Ctrl+C in the REPL),
+ * waits up to `AGENT_GRACEFUL_EXIT_MS` for the child to exit, and escalates to
+ * SIGTERM as a fallback. Always resolves once the child has exited.
+ */
+async function closeAgentSession(
+  child: ChildProcess,
+  exitPromise: Promise<void>
+): Promise<void> {
+  if (child.exitCode !== null || child.signalCode !== null) return;
+  try {
+    child.kill('SIGINT');
+  } catch {
+    // child already gone between the check above and here
+    return;
+  }
+  let escalation: NodeJS.Timeout | undefined;
+  try {
+    await Promise.race([
+      exitPromise,
+      new Promise<void>((resolve) => {
+        escalation = setTimeout(() => {
+          if (child.exitCode === null && child.signalCode === null) {
+            try {
+              child.kill('SIGTERM');
+            } catch {
+              /* child already gone */
+            }
+          }
+          resolve();
+        }, AGENT_GRACEFUL_EXIT_MS);
+      }),
+    ]);
+  } finally {
+    if (escalation) clearTimeout(escalation);
+  }
+  // If we escalated via SIGTERM, wait for the actual exit.
+  await exitPromise;
 }
 
 function waitForExit(child: ChildProcess): Promise<void> {

@@ -74,3 +74,45 @@ export function readHandoff(filePath: string): HandoffFile | null {
   }
   return result;
 }
+
+/**
+ * Polls for a valid handoff file. Resolves once `readHandoff` accepts the
+ * file's contents. Used to detect when the agent has finished its work so the
+ * orchestrator can close the agent's session without depending on the agent
+ * exiting on its own.
+ *
+ * Rejects with the abort reason when `options.signal` is aborted.
+ */
+export function waitForValidHandoff(
+  handoffFilePath: string,
+  options: { intervalMs?: number; signal?: AbortSignal } = {}
+): Promise<void> {
+  const intervalMs = options.intervalMs ?? 500;
+  const { signal } = options;
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(signal.reason ?? new Error('aborted'));
+      return;
+    }
+    let timer: NodeJS.Timeout | undefined;
+    const onAbort = () => {
+      if (timer) clearTimeout(timer);
+      signal?.removeEventListener('abort', onAbort);
+      reject(signal!.reason ?? new Error('aborted'));
+    };
+    const tick = () => {
+      if (signal?.aborted) {
+        onAbort();
+        return;
+      }
+      if (readHandoff(handoffFilePath) !== null) {
+        signal?.removeEventListener('abort', onAbort);
+        resolve();
+        return;
+      }
+      timer = setTimeout(tick, intervalMs);
+    };
+    signal?.addEventListener('abort', onAbort);
+    timer = setTimeout(tick, intervalMs);
+  });
+}

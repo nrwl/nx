@@ -40,8 +40,31 @@ function makeDefinition(): AgentDefinition {
   };
 }
 
-function fakeChild(): EventEmitter {
-  const ee = new EventEmitter();
+type FakeChild = EventEmitter & {
+  exitCode: number | null;
+  signalCode: NodeJS.Signals | null;
+  killed: boolean;
+  kill: jest.Mock<boolean, [NodeJS.Signals?]>;
+};
+
+function fakeChild(
+  opts: { exitOnKill?: boolean } = { exitOnKill: true }
+): FakeChild {
+  const ee = new EventEmitter() as FakeChild;
+  ee.exitCode = null;
+  ee.signalCode = null;
+  ee.killed = false;
+  ee.kill = jest.fn((signal?: NodeJS.Signals) => {
+    if (ee.killed) return false;
+    ee.killed = true;
+    if (opts.exitOnKill) {
+      setImmediate(() => {
+        ee.signalCode = signal ?? 'SIGTERM';
+        ee.emit('exit', null, signal);
+      });
+    }
+    return true;
+  });
   return ee;
 }
 
@@ -276,6 +299,68 @@ describe('runAgentic', () => {
     });
 
     expect(outcome.kind).toBe('ambiguous-abort');
+  });
+
+  it('closes the agent session with SIGINT when a valid handoff appears before the child exits', async () => {
+    const child = fakeChild();
+    mockSpawn.mockImplementation(() => {
+      // Agent writes the handoff but does NOT exit on its own — only the
+      // orchestrator-triggered SIGINT lets the run progress.
+      setImmediate(() => {
+        writeFileSync(
+          handoffFilePath,
+          JSON.stringify({ status: 'success', summary: 'done' })
+        );
+      });
+      return child;
+    });
+
+    const outcome = await runAgentic({
+      detected: makeDetected(),
+      definition: makeDefinition(),
+      invocationContext: {
+        systemContext: 'sys',
+        userPrompt: 'user',
+        workspaceRoot: workspace,
+      },
+      handoffFilePath,
+      handoffPollIntervalMs: 5,
+    });
+
+    expect(child.kill).toHaveBeenCalledWith('SIGINT');
+    expect(outcome).toEqual({ kind: 'success', summary: 'done' });
+  });
+
+  it('does NOT close the session when the handoff file is written in the wrong shape', async () => {
+    const child = fakeChild();
+    mockSpawn.mockImplementation(() => {
+      setImmediate(() => {
+        // Wrong-shape: missing `summary`. waitForValidHandoff must stay
+        // pending so the user can see the agent continue or correct itself.
+        writeFileSync(handoffFilePath, JSON.stringify({ status: 'success' }));
+        // Eventually the agent exits on its own (or, in real life, the user
+        // ends the session).
+        setTimeout(() => child.emit('exit', 0), 50);
+      });
+      return child;
+    });
+
+    mockPrompt.mockResolvedValue({ choice: 'continue' });
+
+    const outcome = await runAgentic({
+      detected: makeDetected(),
+      definition: makeDefinition(),
+      invocationContext: {
+        systemContext: 'sys',
+        userPrompt: 'user',
+        workspaceRoot: workspace,
+      },
+      handoffFilePath,
+      handoffPollIntervalMs: 5,
+    });
+
+    expect(child.kill).not.toHaveBeenCalled();
+    expect(outcome).toEqual({ kind: 'ambiguous-continue' });
   });
 
   it('installs and removes a SIGINT handler around the child run', async () => {

@@ -13,6 +13,7 @@ import {
   runDirPath,
   stepHandoffPath,
   stepIdFor,
+  waitForValidHandoff,
 } from './handoff';
 
 describe('handoff', () => {
@@ -140,6 +141,54 @@ describe('handoff', () => {
         summary: 'done',
         extras: { changedFiles: ['a.ts'], notes: 'fyi' },
       });
+    });
+  });
+
+  describe('waitForValidHandoff', () => {
+    it('resolves once the file becomes a valid handoff', async () => {
+      const file = join(workspace, 'h.json');
+      const promise = waitForValidHandoff(file, { intervalMs: 10 });
+      // Simulate the agent writing the handoff a moment later.
+      setTimeout(() => {
+        writeFileSync(
+          file,
+          JSON.stringify({ status: 'success', summary: 'done' })
+        );
+      }, 30);
+      await expect(promise).resolves.toBeUndefined();
+    });
+
+    it('keeps polling past invalid contents and resolves on valid ones', async () => {
+      const file = join(workspace, 'h.json');
+      writeFileSync(file, '{ partial');
+      const promise = waitForValidHandoff(file, { intervalMs: 10 });
+      setTimeout(() => {
+        writeFileSync(
+          file,
+          JSON.stringify({ status: 'success', summary: 'ok' })
+        );
+      }, 30);
+      await expect(promise).resolves.toBeUndefined();
+    });
+
+    it('rejects with the abort reason when the signal is aborted', async () => {
+      const file = join(workspace, 'h.json');
+      const ac = new AbortController();
+      const promise = waitForValidHandoff(file, {
+        intervalMs: 10,
+        signal: ac.signal,
+      });
+      setTimeout(() => ac.abort(new Error('cancel')), 20);
+      await expect(promise).rejects.toThrow('cancel');
+    });
+
+    it('rejects immediately when the signal is already aborted', async () => {
+      const file = join(workspace, 'h.json');
+      const ac = new AbortController();
+      ac.abort(new Error('already-cancelled'));
+      await expect(
+        waitForValidHandoff(file, { intervalMs: 10, signal: ac.signal })
+      ).rejects.toThrow('already-cancelled');
     });
   });
 
