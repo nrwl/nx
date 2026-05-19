@@ -447,17 +447,14 @@ describe('@nx/gradle/plugin-v1/nodes', () => {
                       "dependsOn": [
                         {
                           "params": "forward",
-                          "projects": "self",
                           "target": "test-ci--aTest",
                         },
                         {
                           "params": "forward",
-                          "projects": "self",
                           "target": "test-ci--bTest",
                         },
                         {
                           "params": "forward",
-                          "projects": "self",
                           "target": "test-ci--cTests",
                         },
                       ],

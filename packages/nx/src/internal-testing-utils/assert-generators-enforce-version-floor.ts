@@ -12,12 +12,22 @@ export function assertGeneratorsEnforceVersionFloor(options: {
   packageRoot: string;
   packageName: string;
   subFloorVersion: string;
+  /**
+   * Generator names to skip from the floor-enforcement assertion. Use for
+   * generators whose purpose is to migrate sub-floor workspaces onto a
+   * supported version (these must run *below* the floor by design).
+   */
+  excludeGenerators?: string[];
 }): void {
-  const { packageRoot, packageName, subFloorVersion } = options;
+  const { packageRoot, packageName, subFloorVersion, excludeGenerators } =
+    options;
   const generatorsJson: GeneratorsJson = JSON.parse(
     readFileSync(join(packageRoot, 'generators.json'), 'utf-8')
   );
-  const entries = Object.entries(generatorsJson.generators ?? {});
+  const excludedSet = new Set(excludeGenerators ?? []);
+  const entries = Object.entries(generatorsJson.generators ?? {}).filter(
+    ([name]) => !excludedSet.has(name)
+  );
 
   it('has generators registered in generators.json', () => {
     expect(entries.length).toBeGreaterThan(0);

@@ -10,7 +10,7 @@ import {
 } from './lib/normalize';
 import { withNx } from '../../plugins/with-nx/with-nx';
 import { pluginName as generatePackageJsonPluginName } from '../../plugins/package-json/generate-package-json';
-import { calculateProjectBuildableDependencies } from '@nx/js/src/utils/buildable-libs-utils';
+import { calculateProjectBuildableDependencies } from '@nx/js/internal';
 import { warnRollupExecutorDeprecation } from '../../utils/deprecation';
 
 export async function* rollupExecutor(

@@ -31,14 +31,16 @@ import {
   isEslintConfigSupported,
   replaceOverridesInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
-import { findRootJestPreset } from '@nx/jest/src/utils/config/config-file';
-import { getInstalledJestMajorVersion } from '@nx/jest/src/utils/versions';
+import {
+  findRootJestPreset,
+  getInstalledJestMajorVersion,
+} from '@nx/jest/internal';
 import {
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+  addSwcTestConfig,
+} from '@nx/js/internal';
 import { relative } from 'node:path/posix';
-import { addSwcTestConfig } from '@nx/js/src/utils/swc/add-swc-config';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function e2eProjectGenerator(host: Tree, options: Schema) {

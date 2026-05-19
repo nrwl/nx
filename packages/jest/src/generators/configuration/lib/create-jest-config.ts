@@ -13,7 +13,7 @@ import {
   type JestPresetExtension,
 } from '../../../utils/config/config-file';
 import type { NormalizedJestProjectSchema } from '../schema';
-import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectType } from '@nx/js/internal';
 
 export async function createJestConfig(
   tree: Tree,

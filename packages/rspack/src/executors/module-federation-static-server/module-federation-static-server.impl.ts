@@ -9,7 +9,7 @@ import {
   Target,
   workspaceRoot,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { buildStaticRemotes } from '@nx/module-federation/src/executors/utils';
 import {
   getModuleFederationConfig,

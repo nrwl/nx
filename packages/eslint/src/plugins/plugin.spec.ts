@@ -572,6 +572,40 @@ describe('@nx/eslint/plugin', () => {
   });
 
   describe('root eslint config and nested eslint configs', () => {
+    it('should insert projects in input order when one root config governs multiple nested projects', async () => {
+      // Regression coverage for the `Promise.all`-with-shared-mutation race
+      // in `internalCreateNodesV2`: pre-fix, `projects[projectRoot] = project`
+      // was assigned from inside `Promise.all`, so key insertion order
+      // tracked which async branch (`eslint.isPathIgnored`,
+      // `getProjectUsingESLintConfig`) finished first. The fix collects
+      // contributions and assembles `projects` in
+      // `projectRootsByEslintRoots.get(configDir)` order — i.e. input order.
+      //
+      // Inputs are presented in non-alphabetic order so the assertion
+      // proves the plugin preserves input order rather than coincidentally
+      // alphabetizing.
+      createFiles({
+        '.eslintrc.json': `{}`,
+        'libs/c-lib/project.json': `{}`,
+        'libs/c-lib/index.ts': `console.log('c')`,
+        'libs/a-lib/project.json': `{}`,
+        'libs/a-lib/index.ts': `console.log('a')`,
+        'libs/b-lib/project.json': `{}`,
+        'libs/b-lib/index.ts': `console.log('b')`,
+      });
+      const result = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+      });
+      // configFiles is built from Object.keys(fileSys) in this test harness,
+      // so the input order seen by the plugin is c-lib, a-lib, b-lib. With
+      // the fix, that is the exact order the plugin emits.
+      expect(Object.keys(result.projects)).toEqual([
+        'libs/c-lib',
+        'libs/a-lib',
+        'libs/b-lib',
+      ]);
+    });
+
     it('should create appropriate nodes for just a package.json and root level eslint config combined with nested eslint configs', async () => {
       createFiles({
         '.eslintrc.json': `{}`,

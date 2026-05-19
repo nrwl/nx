@@ -2,7 +2,7 @@
   "generators": {
     "23-0-0-move-typescript-compilation-import": {
       "version": "23.0.0-beta.10",
-      "description": "Rewrites imports of `@nx/workspace/src/utilities/typescript/compilation` to `@nx/js/src/utils/typescript/compilation`, where the module now lives.",
+      "description": "Rewrites imports of `@nx/workspace/src/utilities/typescript/compilation` to `@nx/js/internal`, where the module now lives.",
       "implementation": "./dist/src/migrations/update-23-0-0/move-typescript-compilation-import"
     }
   },

@@ -1,5 +1,5 @@
 import { glob, joinPathFragments, type Tree } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 import type {
   BinaryExpression,
   ExportAssignment,
@@ -45,7 +45,17 @@ export async function addDefaultE2EConfig(
   let updatedConfigContents = cyConfigContents;
 
   if (testingTypeConfig.length === 0) {
-    const configValue = `nxE2EPreset(__filename, ${JSON.stringify(
+    // ESM-shape configs use `import.meta.url` (a `file://...` URL string)
+    // because it's the most universally available `import.meta` field:
+    // Node's native TS strip exposes it in ESM scope, and Cypress's bundled
+    // tsx CJS loader provides it too (unlike `import.meta.dirname`, which
+    // older tsx versions don't shim). CJS-shape configs use `__filename`
+    // since `import.meta` isn't defined in plain CJS scope. The base
+    // template is selected to match the workspace's `type` field, so the
+    // shape detected here is consistent with how the file will actually be
+    // evaluated at runtime. `nxBaseCypressPreset` normalizes either form.
+    const pathToConfig = isCommonJS ? '__filename' : 'import.meta.url';
+    const configValue = `nxE2EPreset(${pathToConfig}, ${JSON.stringify(
       options,
       null,
       2
@@ -63,7 +73,7 @@ export async function addDefaultE2EConfig(
   ${node.properties.map((p) => p.getText()).join(',\n')},
   e2e: {
     ...${configValue}${baseUrlContents}
-  } 
+  }
 }`;
         }
         return `{
@@ -74,6 +84,9 @@ export async function addDefaultE2EConfig(
       }
     );
 
+    // @nx/cypress's package exports cover both bare and `.js`-suffixed
+    // subpath forms, so emit the bare path - matches addDefaultCTConfig and
+    // keeps generated configs free of incidental `.js` noise.
     return isCommonJS
       ? `const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
 ${updatedConfigContents}`
@@ -84,19 +97,29 @@ ${updatedConfigContents}`;
 }
 
 /**
- * Adds the nxComponentTestingPreset to the cypress config file
- * Make sure after calling this the correct import statement is addeda
- * to bring in the nxComponentTestingPreset function
+ * Adds the nxComponentTestingPreset to the cypress config file.
+ *
+ * Pass `presetImportPath` (e.g. `@nx/angular/plugins/component-testing`) to
+ * have the matching `import` (ESM) or `const { ... } = require(...)` (CJS)
+ * statement prepended automatically based on the detected module shape.
+ * Without it, the caller is responsible for prepending the import - but
+ * doing so unconditionally produces mixed-syntax files in CJS workspaces
+ * (an ESM `import` followed by a CJS `module.exports`), so prefer passing
+ * `presetImportPath`.
  **/
 export async function addDefaultCTConfig(
   cyConfigContents: string,
-  options: NxComponentTestingOptions = {}
+  options: NxComponentTestingOptions = {},
+  presetImportPath?: string
 ) {
   if (!cyConfigContents) {
     throw new Error('The passed in cypress config file is empty!');
   }
   const { tsquery } = await import('@phenomnomnominal/tsquery');
 
+  const isCommonJS =
+    tsquery.query(cyConfigContents, TS_QUERY_COMMON_JS_EXPORT_SELECTOR).length >
+    0;
   const testingTypeConfig = tsquery.query<PropertyAssignment>(
     cyConfigContents,
     `${TS_QUERY_EXPORT_CONFIG_PREFIX} PropertyAssignment:has(Identifier[name="component"])`
@@ -105,7 +128,10 @@ export async function addDefaultCTConfig(
   let updatedConfigContents = cyConfigContents;
 
   if (testingTypeConfig.length === 0) {
-    let configValue = 'nxComponentTestingPreset(__filename)';
+    // See addDefaultE2EConfig for the rationale on __filename vs
+    // import.meta.url.
+    const pathToConfig = isCommonJS ? '__filename' : 'import.meta.url';
+    let configValue = `nxComponentTestingPreset(${pathToConfig})`;
     if (options) {
       if (options.bundler !== 'vite') {
         // vite is the default bundler, so we don't need to set it
@@ -113,7 +139,7 @@ export async function addDefaultCTConfig(
       }
 
       if (Object.keys(options).length) {
-        configValue = `nxComponentTestingPreset(__filename, ${JSON.stringify(
+        configValue = `nxComponentTestingPreset(${pathToConfig}, ${JSON.stringify(
           options
         )})`;
       }
@@ -126,7 +152,7 @@ export async function addDefaultCTConfig(
         if (node.properties.length > 0) {
           return `{
   ${node.properties.map((p) => p.getText()).join(',\n')},
-  component: ${configValue} 
+  component: ${configValue}
 }`;
         }
         return `{
@@ -135,6 +161,21 @@ export async function addDefaultCTConfig(
       }
     );
   }
+
+  if (presetImportPath) {
+    // Use the path verbatim - callers pass the public exported subpath. Don't
+    // append `.js`: @nx/react and @nx/angular's package exports only declare
+    // the bare `./plugins/component-testing` subpath, so a `.js` suffix
+    // breaks strict ESM resolution with ERR_PACKAGE_PATH_NOT_EXPORTED.
+    // (addDefaultE2EConfig hard-codes `.js` because @nx/cypress has no
+    // exports map - it can get away with the suffix; subpath-exporting
+    // packages cannot.)
+    const prefix = isCommonJS
+      ? `const { nxComponentTestingPreset } = require('${presetImportPath}');\n`
+      : `import { nxComponentTestingPreset } from '${presetImportPath}';\n`;
+    return `${prefix}${updatedConfigContents}`;
+  }
+
   return updatedConfigContents;
 }
 

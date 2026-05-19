@@ -24,7 +24,9 @@
       "inputs": [
         "{projectRoot}/analyzer/**",
         "{workspaceRoot}/scripts/run-native-target.js",
-        { "env": "SKIP_ANALYZER_BUILD" }
+        {
+          "env": "SKIP_ANALYZER_BUILD"
+        }
       ]
     },
     "_build-analyzer": {

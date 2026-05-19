@@ -1,4 +1,7 @@
-import { addBuildTargetDefaults } from '@nx/devkit/internal';
+import {
+  addBuildTargetDefaults,
+  readTargetDefaultsForTarget,
+} from '@nx/devkit/internal';
 import {
   formatFiles,
   joinPathFragments,
@@ -10,13 +13,13 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { getOutputDir, getUpdatedPackageJsonContent } from '@nx/js';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import {
+  getImportPath,
   getDefinedCustomConditionName,
   getProjectSourceRoot,
   isUsingTsSolutionSetup,
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+} from '@nx/js/internal';
 import { basename, dirname, join } from 'node:path/posix';
 import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
 import { PackageJson } from 'nx/src/utils/package-json';
@@ -152,9 +155,11 @@ function updatePackageJson(
     const projectTarget = project.targets[options.buildTarget];
     const mergedTarget = mergeTargetConfigurations(
       projectTarget,
-      (projectTarget.executor
-        ? nxJson.targetDefaults?.[projectTarget.executor]
-        : undefined) ?? nxJson.targetDefaults?.[options.buildTarget]
+      readTargetDefaultsForTarget(
+        options.buildTarget,
+        nxJson.targetDefaults,
+        projectTarget.executor
+      )
     );
 
     const {

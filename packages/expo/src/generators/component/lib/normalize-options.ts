@@ -4,7 +4,7 @@ import {
   type FileExtensionType,
 } from '@nx/devkit/internal';
 import { Schema } from '../schema';
-import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectType } from '@nx/js/internal';
 
 export interface NormalizedSchema extends Schema {
   directory: string;

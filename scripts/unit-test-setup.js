@@ -294,7 +294,7 @@ module.exports = () => {
       };
     });
   };
-  mockIsUsingTsSolutionSetup('@nx/js/src/utils/typescript/ts-solution-setup');
+  mockIsUsingTsSolutionSetup('@nx/js/internal');
   mockIsUsingTsSolutionSetup(
     '@nx/workspace/src/utilities/typescript/ts-solution-setup'
   );

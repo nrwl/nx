@@ -11,16 +11,19 @@ import {
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
+  type TargetConfiguration,
+  type TargetDefaults,
   Tree,
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
+import { upsertTargetDefault } from '@nx/devkit/internal';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   getProjectType,
   isUsingTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { typesNodeVersion } from '@nx/js/src/utils/versions';
+  typesNodeVersion,
+} from '@nx/js/internal';
 import { join } from 'path';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import {
@@ -243,14 +246,13 @@ getTestBed().initTestEnvironment(
   if (isTsSolutionSetup) {
     // in the TS solution setup, the test target depends on the build outputs
     // so we need to setup the task pipeline accordingly
-    const nxJson = readNxJson(tree);
+    const nxJson = readNxJson(tree) ?? {};
     const testTarget = schema.testTarget ?? 'test';
-    nxJson.targetDefaults ??= {};
-    nxJson.targetDefaults[testTarget] ??= {};
-    nxJson.targetDefaults[testTarget].dependsOn ??= [];
-    nxJson.targetDefaults[testTarget].dependsOn = Array.from(
-      new Set([...nxJson.targetDefaults[testTarget].dependsOn, '^build'])
+    const existing = findTestDefault(nxJson.targetDefaults, testTarget);
+    const dependsOn = Array.from(
+      new Set([...(existing?.dependsOn ?? []), '^build'])
     );
+    upsertTargetDefault(tree, nxJson, { target: testTarget, dependsOn });
     updateNxJson(tree, nxJson);
   }
 
@@ -521,6 +523,22 @@ function findBuildTarget(project: {
   }
 
   return project.targets?.build ?? null;
+}
+
+function findTestDefault(
+  td: TargetDefaults | undefined,
+  target: string
+): Partial<TargetConfiguration> | undefined {
+  if (!td) return undefined;
+  if (Array.isArray(td)) {
+    return td.find(
+      (e) =>
+        e.target === target &&
+        e.projects === undefined &&
+        e.plugin === undefined
+    );
+  }
+  return td[target];
 }
 
 export default configurationGenerator;

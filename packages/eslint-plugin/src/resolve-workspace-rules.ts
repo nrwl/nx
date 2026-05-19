@@ -1,10 +1,18 @@
 import { workspaceRoot } from '@nx/devkit';
 import { loadConfigFile } from '@nx/devkit/internal';
-import { registerTsProject } from '@nx/js/src/internal';
+import {
+  forceRegisterEsmLoader,
+  loadTsFile,
+  registerTsConfigPaths,
+} from '@nx/js/internal';
 import type { TSESLint } from '@typescript-eslint/utils';
 import { existsSync } from 'fs';
+import { pathToFileURL } from 'node:url';
 import { dirname, isAbsolute, join, normalize, resolve, sep } from 'path';
 import { WORKSPACE_PLUGIN_DIR, WORKSPACE_RULE_PREFIX } from './constants';
+
+// `new Function` keeps TS from down-leveling `import()` to `require()`.
+const dynamicImport = new Function('p', 'return import(p);');
 
 type ESLintRules = Record<string, TSESLint.RuleModule<string, unknown[]>>;
 
@@ -142,29 +150,77 @@ export async function loadWorkspaceRules(
     return {};
   }
 
-  let registrationCleanup: (() => void) | null = null;
-
   try {
+    const entryFile = resolveDirectoryEntryFile(resolvedDirectory);
     const effectiveTsConfigPath = findTsConfig(resolvedDirectory, tsConfigPath);
 
-    if (effectiveTsConfigPath) {
-      registrationCleanup = registerTsProject(effectiveTsConfigPath);
+    // For TS entry files, use loadTsFile directly so the explicitly-provided
+    // tsConfigPath threads into any swc/ts-node fallback. For other extensions
+    // (or when no tsconfig was found), defer to loadConfigFile's auto-discovery.
+    const isTs = !!effectiveTsConfigPath && /\.(c|m)?ts$/.test(entryFile);
+    let module: { rules?: ESLintRules } | ESLintRules;
+    if (isTs) {
+      try {
+        module = loadTsFile<{ rules?: ESLintRules }>(
+          entryFile,
+          effectiveTsConfigPath
+        );
+      } catch (err: any) {
+        // Top-level await (`ERR_REQUIRE_ASYNC_MODULE`) and ESM-only modules
+        // (`ERR_REQUIRE_ESM`) must be loaded via dynamic import(). Mirror
+        // devkit's loadTypeScriptModule: register tsconfig-paths first so
+        // workspace alias imports resolve, then try native dynamic import.
+        // Only escalate to forceRegisterEsmLoader on unsupported TS syntax
+        // (enum, runtime namespace, etc.) - surface the original ESM error
+        // if no loader can be installed. Without this the outer catch
+        // swallows the error and the lint run silently has no rules.
+        if (
+          err?.code !== 'ERR_REQUIRE_ESM' &&
+          err?.code !== 'ERR_REQUIRE_ASYNC_MODULE'
+        ) {
+          throw err;
+        }
+        const cleanupPaths = registerTsConfigPaths(effectiveTsConfigPath);
+        try {
+          const entryUrl = pathToFileURL(entryFile).href;
+          try {
+            module = await dynamicImport(entryUrl);
+          } catch (esmErr: any) {
+            if (esmErr?.code !== 'ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX') {
+              throw esmErr;
+            }
+            try {
+              forceRegisterEsmLoader();
+            } catch {
+              throw esmErr;
+            }
+            module = await dynamicImport(entryUrl);
+          }
+        } finally {
+          cleanupPaths();
+        }
+      }
+    } else {
+      // Pre-register tsconfig-paths so a `.js`/`.mjs`/`.cjs` workspace
+      // eslint plugin can still import workspace libs via TS path aliases
+      // (pre-PR behavior: loadConfigFile was always preceded by
+      // registerTsProject).
+      let cleanupPaths: (() => void) | undefined;
+      if (effectiveTsConfigPath) {
+        cleanupPaths = registerTsConfigPaths(effectiveTsConfigPath);
+      }
+      try {
+        module = await loadConfigFile<{ rules?: ESLintRules }>(entryFile);
+      } finally {
+        cleanupPaths?.();
+      }
     }
-
-    const entryFile = resolveDirectoryEntryFile(resolvedDirectory);
-
-    // Only rules are supported (not configs, processors, etc.)
-    const module = await loadConfigFile(entryFile);
-    const rules = module.rules || module;
+    const rules = (module as { rules?: ESLintRules }).rules || module;
 
     return rules as ESLintRules;
   } catch (err) {
     console.error(err);
     return {};
-  } finally {
-    if (registrationCleanup) {
-      registrationCleanup();
-    }
   }
 }
 
@@ -173,16 +229,15 @@ export const workspaceRules = ((): ESLintRules => {
   if (!existsSync(WORKSPACE_PLUGIN_DIR)) {
     return {};
   }
-  // Register `tools/eslint-rules` for TS transpilation
-  const registrationCleanup = registerTsProject(
-    join(WORKSPACE_PLUGIN_DIR, 'tsconfig.json')
-  );
   try {
     /**
      * Currently we only support applying the rules from the user's workspace plugin object
      * (i.e. not other things that plugings can expose like configs, processors etc)
      */
-    const { rules } = require(WORKSPACE_PLUGIN_DIR);
+    const { rules } = loadTsFile(
+      WORKSPACE_PLUGIN_DIR,
+      join(WORKSPACE_PLUGIN_DIR, 'tsconfig.json')
+    );
 
     // Apply the namespace to the resolved rules
     const namespacedRules: ESLintRules = {};
@@ -195,9 +250,5 @@ export const workspaceRules = ((): ESLintRules => {
   } catch (err) {
     console.error(err);
     return {};
-  } finally {
-    if (registrationCleanup) {
-      registrationCleanup();
-    }
   }
 })();
