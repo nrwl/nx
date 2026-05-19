@@ -182,68 +182,20 @@ export function isNativeStripPreferred(): boolean {
 }
 
 /**
- * Optionally, if swc-node and tsconfig-paths are available in the current workspace, apply the require
- * register hooks so that .ts files can be used for writing custom workspace projects.
+ * This function registers either ts-node or swc-node to transpile TypeScript files on the fly.
+ * It also registers tsconfig-paths to handle path mapping based on the provided tsconfig.
  *
- * If ts-node and tsconfig-paths are not available, the user can still provide an index.js file in
- * the root of their project and the fundamentals will still work (but
- * workspace path mapping will not, for example).
- *
- * Behavior change in v23: when the runtime exposes native TypeScript type
- * stripping (`process.features.typescript`), this function skips the
- * transpiler (Node handles `.ts` directly) but still registers
- * `tsconfig-paths`. Path mapping is orthogonal to transpilation - callers
- * relying on tsconfig `paths` for workspace alias resolution still get them.
- * For loading a `.ts` file whose syntax native strip can't handle (`enum`,
- * runtime `namespace`, legacy decorators, etc.), use `loadTsFile`, which
- * registers swc/ts-node + tsconfig-paths on demand. To restore the legacy
- * behavior (always register swc/ts-node + tsconfig-paths up front), set
- * `NX_PREFER_NODE_STRIP_TYPES=false`.
+ * The TypeScript transpiler registration is done regardless of NX_PREFER_NODE_STRIP_TYPES.
+ * If you want to skip transpiler registration, it is recommended that you check `process.features.typescript`.
  *
  * @returns cleanup function
  */
-export function registerTsProject(tsConfigPath: string): () => void;
-/**
- * Optionally, if swc-node and tsconfig-paths are available in the current workspace, apply the require
- * register hooks so that .ts files can be used for writing custom workspace projects.
- *
- * If ts-node and tsconfig-paths are not available, the user can still provide an index.js file in
- * the root of their project and the fundamentals will still work (but
- * workspace path mapping will not, for example).
- *
- * @returns cleanup function
- * @deprecated This signature will be removed in Nx v19. You should pass the full path to the tsconfig in the first argument.
- */
-export function registerTsProject(path: string, configFilename: string);
-export function registerTsProject(
-  path: string,
-  configFilename?: string
-): () => void {
+export function registerTsProject(tsConfigPath: string): () => void {
   // See explanation alongside isInvokedByTsx declaration
   if (isInvokedByTsx) {
     return () => {};
   }
 
-  const tsConfigPath = configFilename ? join(path, configFilename) : path;
-
-  // Under native strip we skip the transpiler (Node handles `.ts` directly)
-  // but still register tsconfig-paths. Path mapping is orthogonal to
-  // transpilation: code calling `registerTsProject` for path aliases
-  // (e.g. test setup files requiring `@my-org/lib`) gets nothing back if
-  // both are skipped. Package-manager-workspace symlinks aren't a
-  // universal substitute - explicit tsconfig `paths` configs still need
-  // runtime alias resolution. Callers needing the transpiler for
-  // unsupported syntax (enum, runtime namespace, legacy decorators, etc.)
-  // should use `loadTsFile` instead, which registers swc/ts-node +
-  // tsconfig-paths on demand.
-  if (preferNodeStripTypes) {
-    return registerTsConfigPaths(tsConfigPath);
-  }
-
-  // Legacy path: prior to v23, Nx always registered swc-node/ts-node and
-  // tsconfig-paths to load .ts config files. v23+ prefers Node's built-in
-  // type stripping; this branch only runs when the user opted out via
-  // NX_PREFER_NODE_STRIP_TYPES=false or when strip is unavailable.
   const { compilerOptions, tsConfigRaw } = readCompilerOptions(tsConfigPath);
 
   const cleanupFunctions: ((...args: unknown[]) => unknown)[] = [
