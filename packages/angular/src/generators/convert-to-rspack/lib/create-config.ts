@@ -22,6 +22,14 @@ export function createConfig(
         .join(',\n')
     : '';
 
+  // @rspack/dev-server v2 dropped its webpack-dev-server dependency, which
+  // set process.env.WEBPACK_SERVE on load. The rspack 2 CLI signals serve
+  // mode via `RSPACK_SERVE` on the config-function env arg instead; bridge
+  // it so `createConfig`'s serve detection keeps working on rspack 2.
+  const serveEnvBridge = `if (env?.['RSPACK_SERVE']) {
+          process.env['WEBPACK_SERVE'] ??= 'true';
+        }`;
+
   const createConfigContents = `createConfig({
     options: {
       root: __dirname,
@@ -44,7 +52,8 @@ export function createConfig(
   
   ${
     existingWebpackConfigPath
-      ? `export default async () => {
+      ? `export default async (env) => {
+        ${serveEnvBridge}
         const baseConfig = await ${createConfigContents}
         ${
           isExistingWebpackConfigFunction
@@ -53,7 +62,10 @@ export function createConfig(
         return oldConfig(browserConfig);`
             : 'return webpackMerge(baseConfig[0], baseWebpackConfig);'
         }};`
-      : `export default ${createConfigContents}`
+      : `export default (env) => {
+        ${serveEnvBridge}
+        return ${createConfigContents}
+      };`
   }`;
   tree.write(joinPathFragments(root, 'rspack.config.ts'), configContents);
 }
