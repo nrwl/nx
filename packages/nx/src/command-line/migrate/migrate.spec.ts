@@ -4138,6 +4138,7 @@ describe('Migration', () => {
           resolveCreateCommits({
             createCommits: true,
             agenticKind: 'disabled',
+            isGitRepo: true,
           })
         ).toEqual({ effective: true, agenticHasDiffContext: false });
 
@@ -4145,6 +4146,7 @@ describe('Migration', () => {
           resolveCreateCommits({
             createCommits: false,
             agenticKind: 'disabled',
+            isGitRepo: true,
           })
         ).toEqual({ effective: false, agenticHasDiffContext: false });
       });
@@ -4154,6 +4156,7 @@ describe('Migration', () => {
           resolveCreateCommits({
             createCommits: undefined,
             agenticKind: 'disabled',
+            isGitRepo: true,
           })
         ).toEqual({ effective: false, agenticHasDiffContext: false });
 
@@ -4161,6 +4164,7 @@ describe('Migration', () => {
           resolveCreateCommits({
             createCommits: undefined,
             agenticKind: 'inside-agent',
+            isGitRepo: true,
           })
         ).toEqual({ effective: false, agenticHasDiffContext: false });
       });
@@ -4170,6 +4174,7 @@ describe('Migration', () => {
           resolveCreateCommits({
             createCommits: undefined,
             agenticKind: 'enabled',
+            isGitRepo: true,
           })
         ).toEqual({ effective: true, agenticHasDiffContext: true });
       });
@@ -4179,6 +4184,7 @@ describe('Migration', () => {
           resolveCreateCommits({
             createCommits: true,
             agenticKind: 'enabled',
+            isGitRepo: true,
           })
         ).toEqual({ effective: true, agenticHasDiffContext: true });
       });
@@ -4187,10 +4193,59 @@ describe('Migration', () => {
         const result = resolveCreateCommits({
           createCommits: false,
           agenticKind: 'enabled',
+          isGitRepo: true,
         });
         expect(result.effective).toBe(false);
         expect(result.agenticHasDiffContext).toBe(false);
         expect(result.warning).toMatch(/--no-create-commits/);
+      });
+
+      it('returns an error when --create-commits is explicit and the workspace is not a git repo', () => {
+        const result = resolveCreateCommits({
+          createCommits: true,
+          agenticKind: 'disabled',
+          isGitRepo: false,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.error).toMatch(
+          /`--create-commits` requires a git repository/
+        );
+      });
+
+      it('returns the same error when --create-commits is explicit alongside --agentic without git', () => {
+        const result = resolveCreateCommits({
+          createCommits: true,
+          agenticKind: 'enabled',
+          isGitRepo: false,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.error).toMatch(
+          /`--create-commits` requires a git repository/
+        );
+      });
+
+      it('degrades agentic without git (createCommits unset): warns, no error, no diff context', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'enabled',
+          isGitRepo: false,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.agenticHasDiffContext).toBe(false);
+        expect(result.error).toBeUndefined();
+        expect(result.warning).toMatch(/not a git repository/);
+      });
+
+      it('does not error for non-agentic, no-explicit-createCommits without git', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'disabled',
+          isGitRepo: false,
+        });
+        expect(result).toEqual({
+          effective: false,
+          agenticHasDiffContext: false,
+        });
       });
     });
 

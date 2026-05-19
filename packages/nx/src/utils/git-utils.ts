@@ -342,6 +342,19 @@ export function getVcsRemoteInfo(directory?: string): VcsRemoteInfo | null {
   }
 }
 
+export function isGitRepository(directory?: string): boolean {
+  try {
+    execSync('git rev-parse --is-inside-work-tree', {
+      stdio: 'ignore',
+      cwd: directory,
+      windowsHide: true,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function commitChanges(
   commitMessage: string,
   directory?: string

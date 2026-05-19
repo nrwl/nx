@@ -42,7 +42,7 @@ import {
 import { extractFileFromTarball } from '../../utils/tar';
 import { writeFormattedJsonFile } from '../../utils/write-formatted-json-file';
 import { logger } from '../../utils/logger';
-import { commitChanges } from '../../utils/git-utils';
+import { commitChanges, isGitRepository } from '../../utils/git-utils';
 import {
   ArrayPackageGroup,
   getDependencyVersionFromPackageJson,
@@ -2394,12 +2394,26 @@ export function formatSkippedPromptsNextStep(
 export function resolveCreateCommits(args: {
   createCommits: boolean | undefined;
   agenticKind: ResolvedAgentic['kind'];
+  isGitRepo: boolean;
 }): {
   effective: boolean;
   agenticHasDiffContext: boolean;
   warning?: string;
+  error?: string;
 } {
-  const { createCommits, agenticKind } = args;
+  const { createCommits, agenticKind, isGitRepo } = args;
+
+  // Explicit `--create-commits` without git is a hard error — the user asked
+  // for something we cannot deliver.
+  if (createCommits === true && !isGitRepo) {
+    return {
+      effective: false,
+      agenticHasDiffContext: false,
+      error:
+        '`--create-commits` requires a git repository. Run `git init` first, or omit the flag.',
+    };
+  }
+
   if (agenticKind === 'enabled') {
     if (createCommits === false) {
       return {
@@ -2409,8 +2423,20 @@ export function resolveCreateCommits(args: {
           "--no-create-commits was passed alongside --agentic. The agent will not receive the file-list context from the deterministic phase — per-migration commits are required to isolate each migration's diff.",
       };
     }
+    // Without git we cannot soft-force commits the user didn't explicitly
+    // opt into. Degrade rather than error: continue the agentic run, but
+    // without per-file diff context (which depends on per-migration commits).
+    if (!isGitRepo) {
+      return {
+        effective: false,
+        agenticHasDiffContext: false,
+        warning:
+          '`--agentic` enables per-migration commits by default, but the workspace is not a git repository. Continuing without commits — the agent will not receive per-file diff context. Run `git init` to enable.',
+      };
+    }
     return { effective: true, agenticHasDiffContext: true };
   }
+
   return {
     effective: createCommits === true,
     agenticHasDiffContext: false,
@@ -2898,10 +2924,15 @@ async function runMigrations(
     effective: effectiveCreateCommits,
     agenticHasDiffContext,
     warning: createCommitsWarning,
+    error: createCommitsError,
   } = resolveCreateCommits({
     createCommits: shouldCreateCommits,
     agenticKind: agentic.kind,
+    isGitRepo: isGitRepository(root),
   });
+  if (createCommitsError) {
+    throw new Error(createCommitsError);
+  }
   if (createCommitsWarning) {
     output.warn({ title: createCommitsWarning });
   }
