@@ -128,6 +128,9 @@ describe('@nx/eslint:workspace-rules-project', () => {
         json.workspaces = ['packages/*'];
         return json;
       });
+      // pnpm ignores package.json `workspaces`; without this the test
+      // workspace isn't detected as a TS solution setup when run under pnpm.
+      tree.write('pnpm-workspace.yaml', `packages:\n  - 'packages/*'\n`);
       writeJson(tree, 'tsconfig.base.json', {
         compilerOptions: { composite: true },
       });
