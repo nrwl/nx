@@ -51,11 +51,15 @@ export async function format(
   );
   const patterns = (
     await getPatterns(prettier, { ...args, ...nxArgs } as any)
-  ).map(
-    // prettier removes one of the \
+  ).map((p) => {
+    // On non-Windows, escape $ to prevent shell variable interpolation
+    // (the shell consumes one \, so \\$ becomes \$ which the shell treats as literal $)
+    // On Windows (cmd.exe), $ is not a special character, so escaping it would
+    // cause prettier to look for a file with a literal \$ in the name
     // prettier-ignore
-    (p) => `"${p.replace(/\$/g, '\\\$')}"`
-  );
+    const escaped = process.platform !== 'win32' ? p.replace(/\$/g, '\\\$') : p;
+    return `"${escaped}"`;
+  });
 
   // Chunkify the patterns array to prevent crashing the windows terminal
   const chunkList: string[][] = chunkify(patterns);
