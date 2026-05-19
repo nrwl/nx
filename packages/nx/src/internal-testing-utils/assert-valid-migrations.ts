@@ -23,7 +23,12 @@ export function assertValidMigrationPaths(json: MigrationsJson, root: string) {
     const migrations = Object.values(json.generators);
     for (const m of migrations) {
       const impl = m.factory ?? m.implementation;
-      knownDirs.add(path.basename(path.dirname(impl)));
+      if (impl) {
+        knownDirs.add(path.basename(path.dirname(impl)));
+      }
+      if (m.prompt) {
+        knownDirs.add(path.basename(path.dirname(m.prompt)));
+      }
     }
     for (const dir of dirs) {
       expect(knownDirs).toContain(dir);
@@ -33,15 +38,20 @@ export function assertValidMigrationPaths(json: MigrationsJson, root: string) {
 
 function validateMigration(m: MigrationsJsonEntry, root: string) {
   const impl = m.factory ?? m.implementation;
-  let [implPath, implMember] = impl.includes('#')
-    ? impl.split('#')
-    : [impl, null];
-  implPath = implPath.replace(/dist\//, '');
-  let implModule;
-  expect(() => {
-    implModule = require(path.join(root, `${implPath}.ts`));
-  }).not.toThrow();
-  if (implMember) {
-    expect(implModule).toHaveProperty(implMember);
+  if (impl) {
+    let [implPath, implMember] = impl.includes('#')
+      ? impl.split('#')
+      : [impl, null];
+    implPath = implPath.replace(/dist\//, '');
+    let implModule;
+    expect(() => {
+      implModule = require(path.join(root, `${implPath}.ts`));
+    }).not.toThrow();
+    if (implMember) {
+      expect(implModule).toHaveProperty(implMember);
+    }
+  }
+  if (m.prompt) {
+    expect(fs.existsSync(path.join(root, m.prompt))).toBe(true);
   }
 }

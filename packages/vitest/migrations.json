@@ -8,7 +8,7 @@
     "update-22-1-0": {
       "version": "22.1.0-beta.8",
       "description": "Create AI Instructions to help migrate users workspaces past breaking changes for Vitest 4.",
-      "implementation": "./src/migrations/update-22-1-0/create-ai-instructions-for-vitest-4"
+      "prompt": "./src/migrations/update-22-1-0/ai-instructions-for-vitest-4.md"
     },
     "update-22-3-2": {
       "version": "22.3.2-beta.0",
@@ -16,7 +16,7 @@
         "@angular/build": ">=21.0.0"
       },
       "description": "Create AI Instructions to help migrate users workspaces past breaking changes for Vitest 4.",
-      "implementation": "./src/migrations/update-22-1-0/create-ai-instructions-for-vitest-4"
+      "prompt": "./src/migrations/update-22-1-0/ai-instructions-for-vitest-4.md"
     },
     "update-22-6-0-prefix-reports-directory": {
       "version": "22.6.0-beta.11",
