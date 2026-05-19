@@ -1,9 +1,8 @@
 {
-  "outDir": "dist/packages/eslint",
+  "outDir": "packages/eslint/dist",
   "assets": [
     { "glob": "**/files/**" },
     { "glob": "**/files/**/.gitkeep" },
-    { "glob": "@(package|executors|generators|migrations).json" },
     { "glob": "src/**/schema.json" },
     { "glob": "src/**/schema.d.ts" },
     "LICENSE"

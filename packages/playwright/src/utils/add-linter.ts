@@ -7,17 +7,17 @@ import {
   Tree,
 } from '@nx/devkit';
 import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
-import { javaScriptOverride } from '@nx/eslint/src/generators/init/global-eslint-config';
-import { eslintPluginPlaywrightVersion } from './versions';
 import {
+  javaScriptOverride,
   addExtendsToLintConfig,
   addOverrideToLintConfig,
   addPluginsToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   findEslintFile,
   isEslintConfigSupported,
-} from '@nx/eslint/src/generators/utils/eslint-file';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+  useFlatConfig,
+} from '@nx/eslint/internal';
+import { eslintPluginPlaywrightVersion } from './versions';
 
 export interface PlaywrightLinterOptions {
   project: string;

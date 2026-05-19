@@ -10,7 +10,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { lintInitGenerator } from '@nx/eslint';
-import { setupRootEsLint } from '@nx/eslint/src/generators/lint-project/setup-root-eslint';
+import { setupRootEsLint } from '@nx/eslint/internal';
 import {
   getRootTsConfigPathInTree,
   initGenerator as jsInitGenerator,

@@ -11,8 +11,8 @@ import {
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
-} from '@nx/eslint/src/generators/utils/eslint-file';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+  useFlatConfig,
+} from '@nx/eslint/internal';
 import { addDependenciesToPackageJson, runTasksInSerial } from '@nx/devkit';
 import { addSwcDependencies } from '@nx/js/internal';
 import { extraEslintDependencies } from '../../../utils/lint';
@@ -85,13 +85,13 @@ async function ignoreReactRouterFilesInEslintConfig(
 
   ensurePackage('@nx/eslint', nxVersion);
   const { addIgnoresToLintConfig, isEslintConfigSupported } = await import(
-    '@nx/eslint/src/generators/utils/eslint-file'
+    '@nx/eslint/internal'
   );
   if (!isEslintConfigSupported(tree)) {
     return;
   }
 
-  const { useFlatConfig } = await import('@nx/eslint/src/utils/flat-config');
+  const { useFlatConfig } = await import('@nx/eslint/internal');
   const isUsingFlatConfig = useFlatConfig(tree);
   if (!projectRoot && !isUsingFlatConfig) {
     // root eslintrc files ignore all files and the root eslintrc files add

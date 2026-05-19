@@ -46,7 +46,7 @@ import type {
   ConfigurationGeneratorSchema,
   NormalizedGeneratorOptions,
 } from './schema';
-import { addIgnoresToLintConfig } from '@nx/eslint/src/generators/utils/eslint-file';
+import { addIgnoresToLintConfig } from '@nx/eslint/internal';
 
 export function configurationGenerator(
   tree: Tree,

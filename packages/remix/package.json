@@ -37,6 +37,7 @@
     "@phenomnomnominal/tsquery": "catalog:typescript"
   },
   "devDependencies": {
+    "@nx/eslint": "workspace:*",
     "nx": "workspace:*",
     "@nx/vitest": "workspace:*"
   },
