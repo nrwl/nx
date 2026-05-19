@@ -169,7 +169,8 @@
     },
     {
       "target": "lint",
-      "dependsOn": ["build-native", "^build-native"],
+      "dependsOn": ["build-native", "^build-native", "build"],
+      "inputs": ["...", { "dependentTasksOutputFiles": "**/*.{js,json,md}" }],
       "options": {
         "max-warnings": 5
       }
