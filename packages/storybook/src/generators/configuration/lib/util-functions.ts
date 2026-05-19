@@ -30,10 +30,14 @@ import { nxVersion } from '../../../utils/versions';
 import { findEslintFile } from '@nx/eslint/src/generators/utils/eslint-file';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 import {
+  normalizeTargetDefaults,
+  upsertTargetDefault,
+} from '@nx/devkit/internal';
+import {
   findRuntimeTsConfigName,
   getProjectType,
   isUsingTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+} from '@nx/js/internal';
 
 const DEFAULT_PORT = 4400;
 
@@ -519,50 +523,42 @@ export function addStorybookToNamedInputs(tree: Tree) {
 }
 
 export function addStorybookToTargetDefaults(tree: Tree, setCache = true) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
 
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults['build-storybook'] ??= {};
-  if (setCache) {
-    nxJson.targetDefaults['build-storybook'].cache ??= true;
-  }
-  nxJson.targetDefaults['build-storybook'].inputs ??= [
-    'default',
-    nxJson.namedInputs && 'production' in nxJson.namedInputs
-      ? '^production'
-      : '^default',
-  ];
-
-  if (
-    !nxJson.targetDefaults['build-storybook'].inputs.includes(
-      '{projectRoot}/.storybook/**/*'
-    )
-  ) {
-    nxJson.targetDefaults['build-storybook'].inputs.push(
-      '{projectRoot}/.storybook/**/*'
-    );
-  }
-
-  // Delete the !{projectRoot}/.storybook/**/* glob from build-storybook
-  // because we want to rebuild Storybook if the .storybook folder changes
-  const index = nxJson.targetDefaults['build-storybook'].inputs.indexOf(
-    '!{projectRoot}/.storybook/**/*'
+  const existing = normalizeTargetDefaults(nxJson.targetDefaults).find(
+    (e) =>
+      e.target === 'build-storybook' &&
+      e.executor === undefined &&
+      e.projects === undefined &&
+      e.plugin === undefined
   );
 
-  if (index !== -1) {
-    nxJson.targetDefaults['build-storybook'].inputs.splice(index, 1);
+  const inputs = existing?.inputs
+    ? [...existing.inputs]
+    : [
+        'default',
+        nxJson.namedInputs && 'production' in nxJson.namedInputs
+          ? '^production'
+          : '^default',
+      ];
+
+  if (!inputs.includes('{projectRoot}/.storybook/**/*')) {
+    inputs.push('{projectRoot}/.storybook/**/*');
   }
 
-  if (
-    !nxJson.targetDefaults['build-storybook'].inputs.includes(
-      '{projectRoot}/tsconfig.storybook.json'
-    )
-  ) {
-    nxJson.targetDefaults['build-storybook'].inputs.push(
-      '{projectRoot}/tsconfig.storybook.json'
-    );
+  // Drop the negation glob so Storybook rebuilds when .storybook changes.
+  const negatedIndex = inputs.indexOf('!{projectRoot}/.storybook/**/*');
+  if (negatedIndex !== -1) inputs.splice(negatedIndex, 1);
+
+  if (!inputs.includes('{projectRoot}/tsconfig.storybook.json')) {
+    inputs.push('{projectRoot}/tsconfig.storybook.json');
   }
 
+  upsertTargetDefault(tree, nxJson, {
+    target: 'build-storybook',
+    ...(setCache && existing?.cache === undefined ? { cache: true } : {}),
+    inputs,
+  });
   updateNxJson(tree, nxJson);
 }
 

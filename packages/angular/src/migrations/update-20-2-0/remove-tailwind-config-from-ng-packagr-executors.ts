@@ -56,16 +56,9 @@ export default async function (tree: Tree) {
     return;
   }
 
-  for (const [targetOrExecutor, targetConfig] of Object.entries(
-    nxJson.targetDefaults
-  )) {
-    if (
-      !executors.includes(targetOrExecutor) &&
-      !executors.includes(targetConfig.executor)
-    ) {
-      continue;
-    }
-
+  const cleanEntry = (
+    targetConfig: Record<string, any>
+  ): { empty: boolean } => {
     if (targetConfig.options) {
       delete targetConfig.options.tailwindConfig;
       if (!Object.keys(targetConfig.options).length) {
@@ -74,7 +67,7 @@ export default async function (tree: Tree) {
     }
 
     Object.entries(targetConfig.configurations ?? {}).forEach(
-      ([name, config]) => {
+      ([name, config]: [string, any]) => {
         delete config.tailwindConfig;
         if (!Object.keys(config).length) {
           delete targetConfig.configurations[name];
@@ -86,16 +79,59 @@ export default async function (tree: Tree) {
       delete targetConfig.configurations;
     }
 
-    if (
-      !Object.keys(targetConfig).length ||
-      (Object.keys(targetConfig).length === 1 &&
-        Object.keys(targetConfig)[0] === 'executor')
-    ) {
-      delete nxJson.targetDefaults[targetOrExecutor];
-    }
+    return {
+      empty:
+        !Object.keys(targetConfig).length ||
+        (Object.keys(targetConfig).length === 1 &&
+          Object.keys(targetConfig)[0] === 'executor'),
+    };
+  };
 
-    if (!Object.keys(nxJson.targetDefaults).length) {
+  if (Array.isArray(nxJson.targetDefaults)) {
+    const remaining = [];
+    for (const entry of nxJson.targetDefaults) {
+      const matches =
+        executors.includes(entry.executor) || executors.includes(entry.target);
+      if (!matches) {
+        remaining.push(entry);
+        continue;
+      }
+      const { empty } = cleanEntry(entry as any);
+      // Empty entries that only described executor/target wrappers are dropped.
+      const onlyKeys = Object.keys(entry).filter(
+        (k) =>
+          k !== 'target' &&
+          k !== 'executor' &&
+          k !== 'projects' &&
+          k !== 'plugin'
+      );
+      if (empty && onlyKeys.length === 0) continue;
+      remaining.push(entry);
+    }
+    if (remaining.length === 0) {
       delete nxJson.targetDefaults;
+    } else {
+      nxJson.targetDefaults = remaining;
+    }
+  } else {
+    for (const [targetOrExecutor, targetConfig] of Object.entries(
+      nxJson.targetDefaults
+    )) {
+      if (
+        !executors.includes(targetOrExecutor) &&
+        !executors.includes(targetConfig.executor)
+      ) {
+        continue;
+      }
+
+      const { empty } = cleanEntry(targetConfig as any);
+      if (empty) {
+        delete nxJson.targetDefaults[targetOrExecutor];
+      }
+
+      if (!Object.keys(nxJson.targetDefaults).length) {
+        delete nxJson.targetDefaults;
+      }
     }
   }
 

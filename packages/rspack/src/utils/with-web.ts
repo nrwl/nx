@@ -1,4 +1,4 @@
-import { Configuration } from '@rspack/core';
+import type { Configuration } from '@rspack/core';
 import { ExtraEntryPointClass } from './model';
 import { applyWebConfig } from '../plugins/utils/apply-web-config';
 import { NxRspackExecutionContext } from './config';

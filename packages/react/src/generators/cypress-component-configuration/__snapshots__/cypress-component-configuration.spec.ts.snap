@@ -1,36 +1,44 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`React:CypressComponentTestConfiguration should generate cypress component test config with --build-target 1`] = `
-"import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
-import { defineConfig } from 'cypress';
-export default defineConfig({
+"const {
+  nxComponentTestingPreset,
+} = require('@nx/react/plugins/component-testing');
+const { defineConfig } = require('cypress');
+module.exports = defineConfig({
   component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
 });
 "
 `;
 
 exports[`React:CypressComponentTestConfiguration should generate cypress component test config with project graph 1`] = `
-"import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
-import { defineConfig } from 'cypress';
-export default defineConfig({
+"const {
+  nxComponentTestingPreset,
+} = require('@nx/react/plugins/component-testing');
+const { defineConfig } = require('cypress');
+module.exports = defineConfig({
   component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
 });
 "
 `;
 
 exports[`React:CypressComponentTestConfiguration should generate cypress component test config with webpack 1`] = `
-"import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
-import { defineConfig } from 'cypress';
-export default defineConfig({
+"const {
+  nxComponentTestingPreset,
+} = require('@nx/react/plugins/component-testing');
+const { defineConfig } = require('cypress');
+module.exports = defineConfig({
   component: nxComponentTestingPreset(__filename),
 });
 "
 `;
 
 exports[`React:CypressComponentTestConfiguration should generate cypress config with vite 1`] = `
-"import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
-import { defineConfig } from 'cypress';
-export default defineConfig({
+"const {
+  nxComponentTestingPreset,
+} = require('@nx/react/plugins/component-testing');
+const { defineConfig } = require('cypress');
+module.exports = defineConfig({
   component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
 });
 "

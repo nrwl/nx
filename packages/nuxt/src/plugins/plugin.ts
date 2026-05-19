@@ -21,7 +21,7 @@ import { getLockFileName } from '@nx/js';
 import { dirname, isAbsolute, join, relative } from 'path';
 import { readdirSync } from 'fs';
 import { loadNuxtKitDynamicImport } from '../utils/executor-utils';
-import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
+import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
 
 type NuxtTargets = Record<string, TargetConfiguration>;
 

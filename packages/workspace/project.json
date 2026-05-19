@@ -18,7 +18,10 @@
     },
     "build-base": {
       "dependsOn": [
-        { "projects": ["nx", "devkit"], "target": "build-base" },
+        {
+          "projects": ["nx", "devkit"],
+          "target": "build-base"
+        },
         "build-native",
         "copy-assets"
       ]

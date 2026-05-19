@@ -1,30 +1,40 @@
 import { extname } from 'path';
 import { pathToFileURL } from 'node:url';
+import { loadTsFile, requireWithTsconfigFallback } from '@nx/js/internal';
 
-export async function loadModule<T = any>(path: string): Promise<T> {
-  switch (extname(path)) {
-    case '.mjs': {
+export async function loadModule<T = any>(
+  path: string,
+  tsConfig?: string
+): Promise<T> {
+  const ext = extname(path);
+
+  if (ext === '.mjs') {
+    const result = await loadEsmModule(pathToFileURL(path));
+    return (result as { default: T }).default ?? (result as T);
+  }
+
+  if (ext === '.cjs') {
+    const result = requireWithTsconfigFallback<T>(path, tsConfig);
+    return (result as { default?: T }).default ?? result;
+  }
+
+  const isTs = ext === '.ts' || ext === '.cts' || ext === '.mts';
+
+  try {
+    const result =
+      isTs && tsConfig
+        ? loadTsFile<any>(path, tsConfig)
+        : requireWithTsconfigFallback<any>(path, tsConfig);
+    return result.default ?? result;
+  } catch (e: any) {
+    // ERR_REQUIRE_ESM (legacy) and ERR_REQUIRE_ASYNC_MODULE (Node 22.12+,
+    // ESM with top-level await) both indicate the module must be loaded via
+    // dynamic import.
+    if (e.code === 'ERR_REQUIRE_ESM' || e.code === 'ERR_REQUIRE_ASYNC_MODULE') {
       const result = await loadEsmModule(pathToFileURL(path));
       return (result as { default: T }).default ?? (result as T);
     }
-    case '.cjs': {
-      const result = require(path);
-      return result.default ?? result;
-    }
-
-    default:
-      // it can be CommonJS or ESM, try both
-      try {
-        const result = require(path);
-        return result.default ?? result;
-      } catch (e: any) {
-        if (e.code === 'ERR_REQUIRE_ESM') {
-          const result = await loadEsmModule(pathToFileURL(path));
-          return (result as { default: T }).default ?? (result as T);
-        }
-
-        throw e;
-      }
+    throw e;
   }
 }
 

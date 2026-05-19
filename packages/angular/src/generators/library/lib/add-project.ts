@@ -5,7 +5,7 @@ import {
   joinPathFragments,
   readJson,
 } from '@nx/devkit';
-import { addReleaseConfigForNonTsSolution } from '@nx/js/src/generators/library/utils/add-release-config';
+import { addReleaseConfigForNonTsSolution } from '@nx/js/internal';
 import type { AngularProjectConfiguration } from '../../../utils/types';
 import type { NormalizedSchema } from './normalized-schema';
 

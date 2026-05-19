@@ -16,7 +16,7 @@ import {
   type TargetDependencyConfig,
 } from '@nx/devkit';
 import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
-import { walkTsconfigExtendsChain } from '@nx/js/src/internal';
+import { walkTsconfigExtendsChain } from '@nx/js/internal';
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { minimatch } from 'minimatch';
 import { existsSync, readdirSync } from 'node:fs';

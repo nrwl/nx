@@ -10,6 +10,7 @@
     "composite": true,
     "module": "nodenext",
     "moduleResolution": "nodenext",
+    "customConditions": ["@nx/nx-source"],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },

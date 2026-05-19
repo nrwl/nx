@@ -31,8 +31,8 @@ import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+  sortPackageJsonFields,
+} from '@nx/js/internal';
 import { configureForSwc } from '../../utils/add-swc-to-custom-server';
 import { updateJestConfig } from '../../utils/jest-config-util';
 import { isNext14, isNext15 } from '../../utils/version-utils';

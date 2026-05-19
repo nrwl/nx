@@ -15,7 +15,8 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/internal';
 import { assertSupportedCypressVersion } from '../../utils/assert-supported-cypress-version';
 import { warnCypressExecutorGenerating } from '../../utils/deprecation';
 import {
@@ -186,15 +187,24 @@ function updateNxJsonConfiguration(tree: Tree, hasPlugin: boolean) {
     ) {
       cacheableOperations.push('component-test');
     }
-    nxJson.targetDefaults ??= {};
-    nxJson.targetDefaults['component-test'] ??= {};
-    nxJson.targetDefaults['component-test'].cache ??= true;
-
-    nxJson.targetDefaults['component-test'] ??= {};
-    nxJson.targetDefaults['component-test'].inputs ??= [
-      'default',
-      productionFileSet ? '^production' : '^default',
-    ];
+    // Either a `target: 'component-test'` default or a default keyed on
+    // the executor we're scaffolding will apply to the new target — pick
+    // the more specific (target-keyed) when both are present.
+    const existingForTarget = findTargetDefault(nxJson.targetDefaults, {
+      target: 'component-test',
+    });
+    const existingForExecutor = findTargetDefault(nxJson.targetDefaults, {
+      executor: '@nx/cypress:cypress',
+    });
+    const existing = existingForTarget ?? existingForExecutor;
+    upsertTargetDefault(tree, nxJson, {
+      target: 'component-test',
+      cache: existing?.cache ?? true,
+      inputs: existing?.inputs ?? [
+        'default',
+        productionFileSet ? '^production' : '^default',
+      ],
+    });
   }
   updateNxJson(tree, nxJson);
 }

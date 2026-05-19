@@ -6,7 +6,7 @@ import {
   offsetFromRoot,
 } from '@nx/devkit';
 import { getRootTsConfigFileName } from '@nx/js';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { parse } from 'semver';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import type { AngularProjectConfiguration } from '../../../utils/types';

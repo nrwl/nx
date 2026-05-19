@@ -586,7 +586,7 @@ describe('app', () => {
           "include": [
             "**/*.ts",
             "**/*.js",
-            "playwright.config.ts",
+            "playwright.config.mts",
             "src/**/*.spec.ts",
             "src/**/*.spec.js",
             "src/**/*.test.ts",

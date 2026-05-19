@@ -159,7 +159,7 @@ See merge request nx-release-test/nx-release-test!2`,
       jest.clearAllMocks();
     });
 
-    describe('when releaseTagPatternStrictPreid is false', () => {
+    describe('when releaseTag.strictPreid is false', () => {
       const releaseTagPatternTestCases = [
         {
           pattern: 'v{version}',
@@ -369,7 +369,7 @@ See merge request nx-release-test/nx-release-test!2`,
       );
     });
 
-    describe('when releaseTagPatternStrictPreid is true', () => {
+    describe('when releaseTag.strictPreid is true', () => {
       const releaseTagPatternTestCases = [
         {
           pattern: '{projectName}@{version}',

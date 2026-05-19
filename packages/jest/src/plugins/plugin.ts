@@ -38,7 +38,7 @@ import { getLockFileName } from '@nx/js';
 import {
   walkTsconfigExtendsChain,
   type RawTsconfigJsonCache,
-} from '@nx/js/src/internal';
+} from '@nx/js/internal';
 import { getInstalledJestMajorVersion } from '../utils/versions';
 
 const REPORTER_BUILTINS = new Set(['default', 'github-actions', 'summary']);
@@ -520,7 +520,10 @@ async function buildJestTargets(
           : // @ts-expect-error Jest v29 doesn't have the projectConfig parameter
             await source.getTestPaths(config.globalConfig);
 
-      const testPaths = new Set(specs.tests.map(({ path }) => path));
+      // Sort to keep atomized target name insertion order stable.
+      // jest.SearchSource.getTestPaths walks via jest-haste-map's
+      // parallel workers, so its output order isn't guaranteed.
+      const testPaths = new Set(specs.tests.map(({ path }) => path).sort());
 
       if (testPaths.size > 0) {
         const targetGroup = [];
