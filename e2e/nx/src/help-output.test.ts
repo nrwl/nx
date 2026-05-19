@@ -247,7 +247,7 @@ xdescribe('--help output', () => {
       expect(output).toContain('nx watch');
       expect(output).toMatch(/watch.*changes|file.*changes/i);
       expect(output).toContain('Options:');
-      expect(output).toMatch(/--projects|--includeDependentProjects/);
+      expect(output).toMatch(/--projects|--includeDependencies/);
 
       // Should NOT be a file watcher tool
       expect(output).not.toContain('inotify');

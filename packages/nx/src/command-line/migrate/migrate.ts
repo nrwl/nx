@@ -91,11 +91,24 @@ import {
   getNxPackageGroup,
 } from '../../utils/provenance';
 import { type CatalogManager, getCatalogManager } from '../../utils/catalog';
-import { maybePromptOrWarnMultiMajorMigration } from './multi-major';
+import {
+  maybePromptOrWarnMultiMajorMigration,
+  MULTI_MAJOR_MODE_FLAG,
+  type MultiMajorMode,
+} from './multi-major';
+import {
+  AI_MIGRATIONS_DIR,
+  extractPromptFilesFromTarball,
+  promptContentKey,
+  readPromptFilesFromInstall,
+  validateMigrationEntries,
+  writePromptMigrationFiles,
+} from './prompt-files';
 import { filterDowngradedUpdates } from './update-filters';
 import {
   DIST_TAGS,
   type DistTag,
+  isLegacyEra,
   isNxEquivalentTarget,
   normalizeVersion,
   normalizeVersionWithTagCheck,
@@ -105,6 +118,8 @@ export { normalizeVersion };
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
+  /** Prompt file contents keyed by the `prompt` value as it appears on the migration entry. */
+  resolvedPromptFiles?: Record<string, string>;
 }
 
 const execAsync = promisify(exec);
@@ -168,6 +183,8 @@ function normalizeSlashes(packageName: string): string {
   return packageName.replace(/\\/g, '/');
 }
 
+export type MigrateMode = 'first-party' | 'third-party' | 'all';
+
 export interface MigratorOptions {
   packageJson?: PackageJson;
   nxInstallation?: NxJsonConfiguration['installation'];
@@ -189,7 +206,7 @@ export interface MigratorOptions {
    * - 'third-party' keeps only packages NOT in `firstPartyPackages`
    * - 'all' / undefined keeps all packages (no filtering)
    */
-  mode?: 'first-party' | 'third-party' | 'all';
+  mode?: MigrateMode;
   /** First-party package names used by `mode` for filtering. */
   firstPartyPackages?: ReadonlySet<string>;
 }
@@ -251,15 +268,17 @@ export class Migrator {
     });
     this.applyModeFilter();
 
-    const migrations = await this.createMigrateJson();
+    const { migrations, promptContents } = await this.createMigrateJson();
     return {
       packageUpdates: this.packageUpdates,
       migrations,
+      ...(Object.keys(promptContents).length > 0 ? { promptContents } : {}),
       minVersionWithSkippedUpdates: this.minVersionWithSkippedUpdates,
     };
   }
 
   private async createMigrateJson() {
+    const promptContents: Record<string, string> = {};
     const migrations = await Promise.all(
       Object.keys(this.packageUpdates).map(async (packageName) => {
         if (this.packageUpdates[packageName].ignoreMigrations) {
@@ -270,14 +289,20 @@ export class Migrator {
         if (currentVersion === null) return [];
 
         const { version } = this.packageUpdates[packageName];
-        const { generators } = await this.fetchMigrationConfig(
-          packageName,
-          version
-        );
+        const { generators: migrationEntries, resolvedPromptFiles } =
+          await this.fetchMigrationConfig(packageName, version);
 
-        if (!generators) return [];
+        if (!migrationEntries) return [];
 
-        return Object.entries(generators)
+        if (resolvedPromptFiles) {
+          for (const [promptPath, content] of Object.entries(
+            resolvedPromptFiles
+          )) {
+            promptContents[promptContentKey(packageName, promptPath)] = content;
+          }
+        }
+
+        return Object.entries(migrationEntries)
           .filter(
             ([, migration]) =>
               migration.version &&
@@ -293,7 +318,7 @@ export class Migrator {
       })
     );
 
-    return migrations.flat();
+    return { migrations: migrations.flat(), promptContents };
   }
 
   private async buildPackageJsonUpdates(
@@ -501,7 +526,7 @@ export class Migrator {
     }
 
     const packageGroup: ArrayPackageGroup =
-      packageName === '@nrwl/workspace' && lt(targetVersion, '14.0.0-beta.0')
+      packageName === '@nrwl/workspace' && isLegacyEra(targetVersion)
         ? LEGACY_NRWL_PACKAGE_GROUP
         : (migrationConfig.packageGroup ?? []);
 
@@ -884,20 +909,18 @@ function resolveFirstPartyPackages(
 export function resolveCanonicalNxPackage(
   targetVersion: string
 ): 'nx' | '@nrwl/workspace' {
-  return valid(targetVersion) && lt(targetVersion, '14.0.0-beta.0')
-    ? '@nrwl/workspace'
-    : 'nx';
+  return isLegacyEra(targetVersion) ? '@nrwl/workspace' : 'nx';
 }
 
 export async function resolveMode(
-  mode: 'first-party' | 'third-party' | 'all' | undefined,
+  mode: MigrateMode | undefined,
   targetPackage: string,
   targetVersion: string,
   context: { hasFrom: boolean; hasExcludeAppliedMigrations: boolean } = {
     hasFrom: false,
     hasExcludeAppliedMigrations: false,
   }
-): Promise<'first-party' | 'third-party' | 'all'> {
+): Promise<MigrateMode> {
   if (mode) {
     return mode;
   }
@@ -924,7 +947,7 @@ export async function resolveMode(
     message: 'All (first-party and third-party)',
   });
   const { mode: selected } = await prompt<{
-    mode: 'first-party' | 'third-party' | 'all';
+    mode: MigrateMode;
   }>({
     type: 'select',
     name: 'mode',
@@ -999,10 +1022,9 @@ async function parseTargetPackageAndVersion(args: string): Promise<{
     // on the registry
     const targetVersion = await normalizeVersionWithTagCheck('nx', args);
     const isDistTag = DIST_TAGS.includes(args as DistTag);
-    const targetPackage =
-      !isDistTag && lt(targetVersion, '14.0.0-beta.0')
-        ? '@nrwl/workspace'
-        : 'nx';
+    const targetPackage = isDistTag
+      ? 'nx'
+      : resolveCanonicalNxPackage(targetVersion);
     return { targetPackage, targetVersion };
   }
 
@@ -1017,7 +1039,19 @@ type GenerateMigrations = {
   to: { [k: string]: string };
   interactive?: boolean;
   excludeAppliedMigrations?: boolean;
-  mode: 'first-party' | 'third-party' | 'all';
+  mode: MigrateMode;
+  /**
+   * Set when multi-major redirected `targetVersion` to an incremental step
+   * (gradual mode or the interactive prompt picking a smaller jump). Holds
+   * the concrete resolved target so Next Steps can suggest re-running toward
+   * it.
+   */
+  originalTargetVersion?: string;
+  /**
+   * The `--multi-major-mode` value to propagate to a continuation command,
+   * or undefined to omit it. See `MultiMajorResult.gradual` for when it's set.
+   */
+  multiMajorMode?: MultiMajorMode;
 };
 
 type RunMigrations = {
@@ -1036,6 +1070,11 @@ export async function parseMigrationsOptions(options: {
   if (options.mode && options.runMigrations) {
     throw new Error(
       `Error: '--mode' cannot be combined with '--run-migrations'.`
+    );
+  }
+  if (options.multiMajorMode && options.runMigrations) {
+    throw new Error(
+      `Error: '--multi-major-mode' cannot be combined with '--run-migrations'.`
     );
   }
 
@@ -1066,12 +1105,13 @@ export async function parseMigrationsOptions(options: {
   // Spec §10: prompt or warn when crossing more than one major boundary.
   // Each major's metadata may have pruned migrations from much-older versions,
   // so jumping multiple majors at once can silently skip migrations.
-  targetVersion = await maybePromptOrWarnMultiMajorMigration({
+  const multiMajorResult = await maybePromptOrWarnMultiMajorMigration({
     mode,
     options,
     targetPackage,
     targetVersion,
   });
+  targetVersion = multiMajorResult.chosen;
 
   if (mode === 'third-party') {
     assertThirdPartyTargetBounds({
@@ -1091,6 +1131,8 @@ export async function parseMigrationsOptions(options: {
     interactive: options.interactive,
     excludeAppliedMigrations: options.excludeAppliedMigrations,
     mode,
+    originalTargetVersion: multiMajorResult.originalTarget,
+    multiMajorMode: multiMajorResult.gradual ? 'gradual' : undefined,
   };
 }
 
@@ -1120,13 +1162,13 @@ async function resolveTargetAndMode(args: {
   positional: string | undefined;
   from: Record<string, string>;
   options: {
-    mode?: 'first-party' | 'third-party' | 'all';
+    mode?: MigrateMode;
     excludeAppliedMigrations?: boolean;
   };
 }): Promise<{
   targetPackage: string;
   targetVersion: string;
-  mode: 'first-party' | 'third-party' | 'all';
+  mode: MigrateMode;
   installedNxVersion: string | null | undefined;
 }> {
   const { positional, from, options } = args;
@@ -1181,8 +1223,7 @@ async function resolveTargetAndMode(args: {
   }
 
   if (options.mode && !isNxEquivalentTarget(targetPackage!, targetVersion!)) {
-    const isLegacy =
-      valid(targetVersion!) && lt(targetVersion!, '14.0.0-beta.0');
+    const isLegacy = isLegacyEra(targetVersion!);
     const validTargets = isLegacy
       ? `'@nrwl/workspace'`
       : `'nx' or '@nx/workspace'`;
@@ -1261,10 +1302,10 @@ function resolveInstalledCanonical(): {
 } | null {
   const installedNx = getInstalledNxVersion();
   if (installedNx) {
-    if (lt(installedNx, '14.0.0-beta.0')) {
-      return { canonical: '@nrwl/workspace', version: installedNx };
-    }
-    return { canonical: 'nx', version: installedNx };
+    return {
+      canonical: resolveCanonicalNxPackage(installedNx),
+      version: installedNx,
+    };
   }
   const installedLegacy = getInstalledLegacyNrwlWorkspaceVersion();
   if (installedLegacy) {
@@ -1515,17 +1556,38 @@ async function downloadPackageMigrationsFromRegistry(
       packageVersion
     );
 
-    const migrations = await extractFileFromTarball(
-      join(dir, tarballPath),
-      joinPathFragments('package', migrationsFilePath),
-      join(dir, migrationsFilePath)
-    ).then((path) => readJsonFile<MigrationsJson>(path));
+    const fullTarballPath = join(dir, tarballPath);
 
-    result = { ...migrations, packageGroup, version: packageVersion };
-  } catch {
-    throw new Error(
-      `Failed to find migrations file "${migrationsFilePath}" in package "${packageName}@${packageVersion}".`
+    let migrations: MigrationsJson;
+    try {
+      migrations = await extractFileFromTarball(
+        fullTarballPath,
+        joinPathFragments('package', migrationsFilePath),
+        join(dir, migrationsFilePath)
+      ).then((path) => readJsonFile<MigrationsJson>(path));
+    } catch {
+      throw new Error(
+        `Failed to find migrations file "${migrationsFilePath}" in package "${packageName}@${packageVersion}".`
+      );
+    }
+
+    validateMigrationEntries(packageName, packageVersion, migrations);
+
+    const resolvedPromptFiles = await extractPromptFilesFromTarball(
+      packageName,
+      packageVersion,
+      migrations,
+      migrationsFilePath,
+      fullTarballPath,
+      dir
     );
+
+    result = {
+      ...migrations,
+      packageGroup,
+      version: packageVersion,
+      ...(resolvedPromptFiles ? { resolvedPromptFiles } : {}),
+    };
   } finally {
     await cleanup();
   }
@@ -1607,11 +1669,24 @@ async function getPackageMigrationsUsingInstallImpl(
     } = readPackageMigrationConfig(packageName, dir);
 
     let migrations: MigrationsJson = undefined;
+    let resolvedPromptFiles: Record<string, string> | undefined;
     if (migrationsFilePath) {
       migrations = readJsonFile<MigrationsJson>(migrationsFilePath);
+      validateMigrationEntries(packageName, packageVersion, migrations);
+      resolvedPromptFiles = await readPromptFilesFromInstall(
+        packageName,
+        packageVersion,
+        migrations,
+        migrationsFilePath
+      );
     }
 
-    result = { ...migrations, packageGroup, version: packageJson.version };
+    result = {
+      ...migrations,
+      packageGroup,
+      version: packageJson.version,
+      ...(resolvedPromptFiles ? { resolvedPromptFiles } : {}),
+    };
   } catch (e) {
     const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
 
@@ -1901,8 +1976,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       // third-party filter must mirror that set or first-party `@nrwl/*`
       // plugins slip past it.
       const packageGroup =
-        sourcePackage === '@nrwl/workspace' &&
-        lt(opts.targetVersion, '14.0.0-beta.0')
+        sourcePackage === '@nrwl/workspace' && isLegacyEra(opts.targetVersion)
           ? LEGACY_NRWL_PACKAGE_GROUP
           : rootMetadata.packageGroup;
       firstPartyPackages = resolveFirstPartyPackages(
@@ -1927,8 +2001,12 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       firstPartyPackages,
     });
 
-    const { migrations, packageUpdates, minVersionWithSkippedUpdates } =
-      await migrator.migrate(walkedTargetPackage, opts.targetVersion);
+    const {
+      migrations,
+      packageUpdates,
+      promptContents,
+      minVersionWithSkippedUpdates,
+    } = await migrator.migrate(walkedTargetPackage, opts.targetVersion);
 
     // The cascade collects packageJsonUpdates entries against the cascade
     // root's installed version, but inner per-package pins are only gated
@@ -1947,6 +2025,13 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     const wroteNxJsonInstallation = await updateInstallationDetails(
       root,
       writableUpdates
+    );
+
+    const promptMigrationFiles = writePromptMigrationFiles(
+      root,
+      migrations,
+      promptContents ?? {},
+      packageUpdates[walkedTargetPackage].version
     );
 
     if (migrations.length > 0) {
@@ -1992,6 +2077,11 @@ async function generateMigrationsJsonAndUpdatePackageJson(
         migrations.length > 0
           ? `- migrations.json has been generated.`
           : `- There are no migrations to run, so migrations.json has not been created.`,
+        ...(promptMigrationFiles.length > 0
+          ? [
+              `- ${promptMigrationFiles.length} AI migration prompt(s) have been written to ${AI_MIGRATIONS_DIR}/.`,
+            ]
+          : []),
       ],
     });
 
@@ -2030,8 +2120,22 @@ async function generateMigrationsJsonAndUpdatePackageJson(
         ]
       : [
           `- Make sure package.json changes make sense and then run '${pmc.install}',`,
+          ...(promptMigrationFiles.length > 0
+            ? [
+                `- Review and tweak the AI migration prompts in ${AI_MIGRATIONS_DIR}/ as needed.`,
+              ]
+            : []),
           ...(migrations.length > 0
             ? [`- Run '${pmc.exec} nx migrate --run-migrations'`]
+            : []),
+          ...(opts.originalTargetVersion
+            ? [
+                `- After applying these migrations, run '${pmc.exec} nx migrate ${opts.targetPackage}@${opts.originalTargetVersion} --mode=${opts.mode}${
+                  opts.multiMajorMode === 'gradual'
+                    ? ` ${MULTI_MAJOR_MODE_FLAG}=gradual`
+                    : ''
+                }' to continue toward your original target.`,
+              ]
             : []),
           ...(opts.interactive && minVersionWithSkippedUpdates
             ? [

@@ -16,7 +16,7 @@ import {
   getProjectSourceRoot,
   getProjectType,
   isUsingTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+} from '@nx/js/internal';
 
 export async function normalizeOptions(
   host: Tree,

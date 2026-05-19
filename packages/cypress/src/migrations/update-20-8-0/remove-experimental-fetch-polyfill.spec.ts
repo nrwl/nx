@@ -83,19 +83,19 @@ export default defineConfig({
 
     expect(tree.read('apps/app1-e2e/cypress.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-        "import { defineConfig } from 'cypress';
+      "import { defineConfig } from 'cypress';
 
-        export default defineConfig({
-          component: {
-            devServer: {
-              framework: 'vue',
-              bundler: 'vite',
-            },
+      export default defineConfig({
+        component: {
+          devServer: {
+            framework: 'vue',
+            bundler: 'vite',
           },
-          e2e: {},
-        });
-        "
-      `);
+        },
+        e2e: {},
+      });
+      "
+    `);
   });
 
   it('should handle cypress config files in projects using the "@nx/cypress:cypress" executor', async () => {

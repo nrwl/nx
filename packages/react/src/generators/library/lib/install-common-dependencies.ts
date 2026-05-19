@@ -4,7 +4,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
+import { addSwcDependencies } from '@nx/js/internal';
 import { getReactDependenciesVersionsToInstall } from '../../../utils/version-utils';
 import {
   babelCoreVersion,

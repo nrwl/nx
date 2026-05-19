@@ -13,7 +13,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 
-import type { Schema as EsLintExecutorOptions } from '@nx/eslint/src/executors/lint/schema';
+import type { Schema as EsLintExecutorOptions } from '@nx/eslint/internal';
 
 import { PluginLintChecksGeneratorSchema } from './schema';
 import { NX_PREFIX } from 'nx/src/utils/logger';
@@ -24,8 +24,8 @@ import {
   isEslintConfigSupported,
   lintConfigHasOverride,
   updateOverrideInLintConfig,
-} from '@nx/eslint/src/generators/utils/eslint-file';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+  useFlatConfig,
+} from '@nx/eslint/internal';
 
 export default async function pluginLintCheckGenerator(
   host: Tree,

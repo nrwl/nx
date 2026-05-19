@@ -196,7 +196,7 @@ describe('Remix Application', () => {
       // ASSERT
       expectTargetsToBeCorrect(tree, '.');
 
-      expect(tree.read('e2e/playwright.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('e2e/playwright.config.mts', 'utf-8')).toMatchSnapshot();
     });
   });
 
@@ -409,7 +409,7 @@ describe('Remix Application', () => {
         expectTargetsToBeCorrect(tree, appDir);
 
         expect(
-          tree.read(`${appDir}-e2e/playwright.config.ts`, 'utf-8')
+          tree.read(`${appDir}-e2e/playwright.config.mts`, 'utf-8')
         ).toMatchSnapshot();
       });
     });
@@ -628,7 +628,7 @@ describe('Remix Application', () => {
           "include": [
             "**/*.ts",
             "**/*.js",
-            "playwright.config.ts",
+            "playwright.config.mts",
             "src/**/*.spec.ts",
             "src/**/*.spec.js",
             "src/**/*.test.ts",

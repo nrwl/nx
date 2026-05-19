@@ -1,6 +1,6 @@
 import type { MatchPath } from 'tsconfig-paths';
 import { createMatchPath, loadConfig } from 'tsconfig-paths';
-import { resolvePathsBaseUrl } from '@nx/js/src/utils/typescript/ts-config';
+import { resolvePathsBaseUrl } from '@nx/js';
 import * as pc from 'picocolors';
 import { CachedInputFileSystem, ResolverFactory } from 'enhanced-resolve';
 import { dirname, join } from 'path';

@@ -3,7 +3,7 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { swcCoreVersion, swcHelpersVersion } from '@nx/js/src/utils/versions';
+import { swcCoreVersion, swcHelpersVersion } from '@nx/js/internal';
 import { coreJsVersion, swcLoaderVersion, tsLibVersion } from './versions';
 
 export type EnsureDependenciesOptions = {

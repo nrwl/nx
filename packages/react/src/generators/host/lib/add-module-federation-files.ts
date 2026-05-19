@@ -6,10 +6,7 @@ import {
   offsetFromRoot,
   readProjectConfiguration,
 } from '@nx/devkit';
-import {
-  getProjectSourceRoot,
-  isUsingTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot, isUsingTsSolutionSetup } from '@nx/js/internal';
 import { maybeJs } from '../../../utils/maybe-js';
 import {
   createNxRspackPluginOptions,

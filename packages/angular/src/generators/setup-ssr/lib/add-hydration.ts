@@ -4,8 +4,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { insertImport } from '@nx/js';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { ensureTypescript, getProjectSourceRoot } from '@nx/js/internal';
 import type { CallExpression, SourceFile } from 'typescript';
 import {
   addProviderToAppConfig,

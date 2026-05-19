@@ -20,15 +20,14 @@ import { getLockFileName, getRootTsConfigPath } from '@nx/js';
 import {
   isUsingTsSolutionSetup,
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+  addBuildAndWatchDepsTargets,
+} from '@nx/js/internal';
 import { readdirSync } from 'fs';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { readWebpackOptions } from '../utils/webpack/read-webpack-options';
 import { resolveUserDefinedWebpackConfig } from '../utils/webpack/resolve-user-defined-webpack-config';
-import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
-
 export interface WebpackPluginOptions {
   buildTargetName?: string;
   serveTargetName?: string;

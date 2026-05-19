@@ -31,7 +31,7 @@ import {
 } from '../../utils/executor-utils';
 import { warnViteBuildExecutorDeprecation } from '../../utils/deprecation';
 import { type Plugin } from 'vite';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export async function* viteBuildExecutor(
   options: Record<string, any> & ViteBuildExecutorOptions,

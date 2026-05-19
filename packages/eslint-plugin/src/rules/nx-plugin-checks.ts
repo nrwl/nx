@@ -1,7 +1,7 @@
 import type { TSESLint } from '@typescript-eslint/utils';
 import { ESLintUtils } from '@typescript-eslint/utils';
 import type { AST } from 'jsonc-eslint-parser';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { query } from '@phenomnomnominal/tsquery';
 
 import {
@@ -9,8 +9,7 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
-import { getRootTsConfigPath } from '@nx/js';
-import { registerTsProject } from '@nx/js/src/internal';
+import { loadTsFile, requireWithTsconfigFallback } from '@nx/js/internal';
 import * as path from 'path';
 import { valid } from 'semver';
 import { readProjectGraph } from '../utils/project-graph-utils';
@@ -52,6 +51,7 @@ export type MessageIds =
   | 'invalidImplementationPath'
   | 'invalidImplementationModule'
   | 'unableToReadImplementationExports'
+  | 'invalidPromptPath'
   | 'invalidVersion'
   | 'missingVersion'
   | 'noGeneratorsOrSchematicsFound'
@@ -123,6 +123,7 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
       missingRequiredSchema: '{{ key }}: Missing required property - `schema`',
       missingImplementation:
         '{{ key }}: Missing required property - `implementation`',
+      invalidPromptPath: '{{ key }}: Prompt path should point to a valid file',
       missingVersion: '{{ key }}: Missing required property - `version`',
     },
   },
@@ -160,11 +161,6 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
       )
     ) {
       return {};
-    }
-
-    if (!(global as any).tsProjectRegistered) {
-      registerTsProject(getRootTsConfigPath());
-      (global as any).tsProjectRegistered = true;
     }
 
     return {
@@ -379,7 +375,10 @@ export function validateEntry(
       x.key.type === 'JSONLiteral' &&
       (x.key.value === 'implementation' || x.key.value === 'factory')
   );
-  if (!implementationNode) {
+  const promptNode = baseNode.properties.find(
+    (x) => x.key.type === 'JSONLiteral' && x.key.value === 'prompt'
+  );
+  if (!implementationNode && !(mode === 'migration' && promptNode)) {
     context.report({
       messageId: 'missingImplementation',
       data: {
@@ -387,8 +386,11 @@ export function validateEntry(
       },
       node: baseNode as any,
     });
-  } else {
+  } else if (implementationNode) {
     validateImplementationNode(implementationNode, key, context, options);
+  }
+  if (mode === 'migration' && promptNode) {
+    validatePromptNode(promptNode, key, context, options);
   }
 
   if (mode === 'migration') {
@@ -429,6 +431,26 @@ export function validateEntry(
   }
 }
 
+// Under Node's native TS strip, swc-node isn't registered, so `require.resolve`
+// no longer auto-tries `.ts` extensions. Try them explicitly before giving up.
+const TS_EXTENSIONS = ['.ts', '.tsx', '.cts', '.mts'];
+
+function tryResolveImplementation(modulePath: string): string | undefined {
+  try {
+    return require.resolve(modulePath);
+  } catch {
+    // fall through
+  }
+  for (const ext of TS_EXTENSIONS) {
+    try {
+      return require.resolve(`${modulePath}${ext}`);
+    } catch {
+      // try next
+    }
+  }
+  return undefined;
+}
+
 export function validateImplementationNode(
   implementationNode: AST.JSONProperty,
   key: string,
@@ -456,16 +478,11 @@ export function validateImplementationNode(
       implementationPath
     );
 
-    try {
-      resolvedPath = require.resolve(modulePath);
-    } catch {
-      try {
-        resolvedPath = require.resolve(
-          modulePath.replace(options.outDir, options.rootDir)
-        );
-      } catch {
-        // nothing, will be reported below
-      }
+    resolvedPath = tryResolveImplementation(modulePath);
+    if (!resolvedPath && options.outDir && options.rootDir) {
+      resolvedPath = tryResolveImplementation(
+        modulePath.replace(options.outDir, options.rootDir)
+      );
     }
 
     if (!resolvedPath) {
@@ -500,6 +517,51 @@ export function validateImplementationNode(
           },
         });
       }
+    }
+  }
+}
+
+export function validatePromptNode(
+  promptNode: AST.JSONProperty,
+  key: string,
+  context: TSESLint.RuleContext<MessageIds, Options>,
+  options: NormalizedOptions
+) {
+  if (
+    promptNode.value.type !== 'JSONLiteral' ||
+    typeof promptNode.value.value !== 'string'
+  ) {
+    context.report({
+      messageId: 'invalidPromptPath',
+      data: {
+        key,
+      },
+      node: promptNode.value as any,
+    });
+  } else {
+    const promptPath = path.join(
+      path.dirname(context.filename ?? context.getFilename()),
+      promptNode.value.value
+    );
+    let resolvedPath: string;
+
+    if (existsSync(promptPath)) {
+      resolvedPath = promptPath;
+    } else if (options.outDir && options.rootDir) {
+      const mapped = promptPath.replace(options.outDir, options.rootDir);
+      if (existsSync(mapped)) {
+        resolvedPath = mapped;
+      }
+    }
+
+    if (!resolvedPath) {
+      context.report({
+        messageId: 'invalidPromptPath',
+        data: {
+          key,
+        },
+        node: promptNode.value as any,
+      });
     }
   }
 }
@@ -624,6 +686,8 @@ export function checkIfIdentifierIsFunction(
   }
 
   // Fallback to require()
-  const m = require(filePath);
+  const m = /\.[cm]?ts$/.test(filePath)
+    ? loadTsFile(filePath)
+    : requireWithTsconfigFallback(filePath);
   return identifier in m && typeof m[identifier] === 'function';
 }

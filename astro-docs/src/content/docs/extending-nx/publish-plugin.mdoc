@@ -21,7 +21,8 @@ nx add nx-cfonts
 Nx provides a utility (`nx list`) that lists both core and community plugins. You can submit your plugin to be added to this list, but it needs to meet a few criteria first:
 
 - Run some kind of automated e2e tests in your repository
-- Include `@nx/devkit` as a `dependency` in the plugin's `package.json`
+- Include `@nx/devkit` as a `dependency` (not a `peerDependency`), so your plugin pins the version it was tested against. `@nx/devkit` itself declares a peer dependency on `nx` spanning its own major plus one before and one after — for example, depending on `@nx/devkit@23` means your plugin works on `nx@22`, `nx@23`, and the upcoming `nx@24`.
+- Do **not** list `nx` itself as a direct `dependency` or `peerDependency` — the user's workspace already provides it, and `@nx/devkit` handles the version range for you.
 - List a `repository.url` in the plugin's `package.json`
 
 ```jsonc

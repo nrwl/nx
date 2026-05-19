@@ -5,7 +5,7 @@ import {
   parseTargetString,
   readTargetOptions,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { Configuration } from '@rspack/core';
 import { RspackDevServer } from '@rspack/dev-server';
 import { createCompiler, isMultiCompiler } from '../../utils/create-compiler';

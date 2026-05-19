@@ -43,6 +43,7 @@
     "ajv": "catalog:"
   },
   "devDependencies": {
+    "@nx/eslint": "workspace:*",
     "nx": "workspace:*"
   },
   "peerDependencies": {

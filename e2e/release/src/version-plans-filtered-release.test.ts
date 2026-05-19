@@ -45,6 +45,9 @@ describe('nx release with version plans and project filter', () => {
       nxJson.release = {
         projectsRelationship: 'independent',
         versionPlans: true,
+        version: {
+          adjustSemverBumpsForZeroMajorVersion: false,
+        },
         changelog: {
           workspaceChangelog: false,
         },

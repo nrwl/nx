@@ -22,9 +22,8 @@ import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
   isUsingTsSolutionSetup,
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
-
+  addBuildAndWatchDepsTargets,
+} from '@nx/js/internal';
 /**
  * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
  */

@@ -12,12 +12,16 @@ import { Schema } from './schema';
 import {
   rspackCoreVersion,
   rspackDevServerVersion,
+  rspackPluginReactRefreshVersion,
 } from '../../utils/versions';
 import { transformEsmConfigFile } from './lib/transform-esm';
 import { transformCjsConfigFile } from './lib/transform-cjs';
 import { transformPluginConfig } from './lib/transform-plugin-config';
+import { assertSupportedRspackVersion } from '../../utils/assert-supported-rspack-version';
 
 export default async function (tree: Tree, options: Schema) {
+  assertSupportedRspackVersion(tree);
+
   const projects = getProjects(tree);
   if (!projects.has(options.project)) {
     throw new Error(
@@ -161,7 +165,14 @@ export default async function (tree: Tree, options: Schema) {
     {
       '@rspack/core': rspackCoreVersion,
       '@rspack/dev-server': rspackDevServerVersion,
-    }
+      // @rspack/plugin-react-refresh is required at runtime by
+      // apply-react-config when building a React project. Since it is an
+      // optional peer dependency of @nx/rspack, the convert generator must
+      // install it explicitly.
+      '@rspack/plugin-react-refresh': rspackPluginReactRefreshVersion,
+    },
+    undefined,
+    true
   );
 
   if (!options.skipFormat) {

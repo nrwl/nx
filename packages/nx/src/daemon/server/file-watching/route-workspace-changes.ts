@@ -27,15 +27,18 @@ function summarize(files: string[]): string {
  * updated paths are stat'd to skip directories (the project graph only
  * cares about files). A stat error means the file was unlinked between
  * the watcher firing and us looking — drop the event.
- *
- * Extracted from `handleWorkspaceChanges` so tests can exercise the
- * same routing logic without standing up the daemon's inactivity timer
- * and error-tracking state.
  */
 export function routeWorkspaceChanges(events: WatchEvent[]): void {
+  serverLogger.watcherLog(
+    `[watcher] routeWorkspaceChanges batch: ${events.length} events: ` +
+      events.map((e) => `${e.type}:${e.path}`).join(', ')
+  );
+
   const updatedFilesToHash: string[] = [];
   const createdFilesToHash: string[] = [];
   const deletedFiles: string[] = [];
+  const droppedDirs: string[] = [];
+  const droppedStatErrors: string[] = [];
 
   for (const event of events) {
     if (event.type === 'delete') {
@@ -44,13 +47,19 @@ export function routeWorkspaceChanges(events: WatchEvent[]): void {
     }
     try {
       const s = statSync(join(workspaceRoot, event.path));
-      if (!s.isFile()) continue;
+      if (!s.isFile()) {
+        droppedDirs.push(event.path);
+        continue;
+      }
       if (event.type === 'update') {
         updatedFilesToHash.push(event.path);
       } else {
         createdFilesToHash.push(event.path);
       }
-    } catch {
+    } catch (e) {
+      droppedStatErrors.push(
+        `${event.path} (${e instanceof Error ? e.message : String(e)})`
+      );
       // File deleted between watcher emit and stat — drop it.
     }
   }
@@ -58,13 +67,21 @@ export function routeWorkspaceChanges(events: WatchEvent[]): void {
   if (
     createdFilesToHash.length ||
     updatedFilesToHash.length ||
-    deletedFiles.length
+    deletedFiles.length ||
+    droppedDirs.length ||
+    droppedStatErrors.length
   ) {
     serverLogger.watcherLog(
       `File changes detected:\n` +
         `Created:\n${summarize(createdFilesToHash)}\n` +
         `Updated:\n${summarize(updatedFilesToHash)}\n` +
-        `Deleted:\n${summarize(deletedFiles)}`
+        `Deleted:\n${summarize(deletedFiles)}` +
+        (droppedDirs.length
+          ? `\nDropped (dirs):\n${summarize(droppedDirs)}`
+          : '') +
+        (droppedStatErrors.length
+          ? `\nDropped (stat errors):\n${summarize(droppedStatErrors)}`
+          : '')
     );
   }
 

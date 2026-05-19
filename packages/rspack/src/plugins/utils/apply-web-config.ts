@@ -1,4 +1,4 @@
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import {
   type Configuration,
   type RspackPluginInstance,

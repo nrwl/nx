@@ -2,7 +2,7 @@ import { CreateNodesContextV2 } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { loadViteDynamicImport } from '../utils/executor-utils';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 jest.mock('../utils/executor-utils', () => ({
   loadViteDynamicImport: jest.fn().mockResolvedValue({
@@ -10,8 +10,8 @@ jest.mock('../utils/executor-utils', () => ({
   }),
 }));
 
-jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
-  ...jest.requireActual('@nx/js/src/utils/typescript/ts-solution-setup'),
+jest.mock('@nx/js/internal', () => ({
+  ...jest.requireActual('@nx/js/internal'),
   isUsingTsSolutionSetup: jest.fn(),
 }));
 
@@ -602,7 +602,7 @@ describe('@nx/vite/plugin', () => {
                       },
                     },
                     "watch-deps": {
-                      "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
+                      "command": "npx nx watch --projects my-lib --includeDependencies -- npx nx build-deps my-lib",
                       "continuous": true,
                       "dependsOn": [
                         "build-deps",

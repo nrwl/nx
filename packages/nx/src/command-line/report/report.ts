@@ -586,7 +586,6 @@ export function findRegisteredPluginsBeingUsed(nxJson: NxJsonConfiguration) {
 
 export function findInstalledPackagesWeCareAbout() {
   const packagesWeMayCareAbout: Record<string, string> = {};
-  // TODO (v20): Remove workaround for hiding @nrwl packages when matching @nx package is found.
 
   for (const pkg of packagesWeCareAbout) {
     const v = readPackageVersion(pkg);

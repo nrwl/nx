@@ -69,10 +69,27 @@ export default async function migrate(tree: Tree) {
       delete options.cacheDirectory;
     }
     if (Array.isArray(options.cacheableOperations)) {
-      nxJson.targetDefaults ??= {};
-      for (const target of options.cacheableOperations) {
-        nxJson.targetDefaults[target] ??= {};
-        nxJson.targetDefaults[target].cache ??= true;
+      if (Array.isArray(nxJson.targetDefaults)) {
+        for (const target of options.cacheableOperations) {
+          const idx = nxJson.targetDefaults.findIndex(
+            (e) =>
+              e.target === target &&
+              e.executor === undefined &&
+              e.projects === undefined &&
+              e.plugin === undefined
+          );
+          if (idx >= 0) {
+            nxJson.targetDefaults[idx].cache ??= true;
+          } else {
+            nxJson.targetDefaults.push({ target, cache: true });
+          }
+        }
+      } else {
+        nxJson.targetDefaults ??= {};
+        for (const target of options.cacheableOperations) {
+          nxJson.targetDefaults[target] ??= {};
+          nxJson.targetDefaults[target].cache ??= true;
+        }
       }
       delete options.cacheableOperations;
     }

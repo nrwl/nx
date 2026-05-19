@@ -20,7 +20,7 @@ const packagesToVerify = [
   {
     name: 'js',
     sourceFile: 'src/index.ts',
-    outputFile: 'dist/packages/js/src/index.js',
+    outputFile: 'packages/js/dist/src/index.js',
   },
   {
     name: 'react',
