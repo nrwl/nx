@@ -520,7 +520,7 @@ catalog:
       expect(result.dependencies).toEqual({ react: 'catalog:' });
 
       const workspace = tree.read('pnpm-workspace.yaml', 'utf-8');
-      expect(workspace).toContain('react: "^18.2.0"');
+      expect(workspace).toContain('react: ^18.2.0');
     });
 
     it('should add new dependencies as regular dependencies when no existing catalog reference', () => {
@@ -567,7 +567,7 @@ catalog:
       });
 
       const workspace = tree.read('pnpm-workspace.yaml', 'utf-8');
-      expect(workspace).toContain('react: "^18.2.0"');
+      expect(workspace).toContain('react: ^18.2.0');
     });
 
     it('should preserve existing catalog references when updating with direct versions', () => {
@@ -586,7 +586,7 @@ catalog:
       expect(result.dependencies).toEqual({ react: 'catalog:' });
 
       const workspace = tree.read('pnpm-workspace.yaml', 'utf-8');
-      expect(workspace).toContain('react: "^18.2.0"');
+      expect(workspace).toContain('react: ^18.2.0');
     });
 
     it('should update only the specific catalog when package exists in multiple catalogs', () => {
@@ -643,7 +643,7 @@ catalog:
       expect(result.devDependencies).toEqual({ jest: 'catalog:dev' });
 
       const workspace = tree.read('pnpm-workspace.yaml', 'utf-8');
-      expect(workspace).toContain('jest: "^29.0.0"');
+      expect(workspace).toContain('jest: ^29.0.0');
     });
 
     it('should resolve catalog references for version comparison', () => {
