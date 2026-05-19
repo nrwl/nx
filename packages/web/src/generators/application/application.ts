@@ -5,7 +5,6 @@ import {
   logShowProjectCommand,
   E2EWebServerDetails,
 } from '@nx/devkit/internal';
-import { isTypedLintingEnabled } from '@nx/eslint/src/generators/utils/eslint-file';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
@@ -337,7 +336,12 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       ],
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
-      enableTypedLinting: isTypedLintingEnabled(options),
+      // `@nx/web` cannot import `isTypedLintingEnabled` from `@nx/eslint` (the
+      // deep import would resolve to the installed published version, which
+      // lacks the helper), so the merge is inlined here.
+      enableTypedLinting: !!(
+        options.enableTypedLinting || options.setParserOptionsProject
+      ),
       addPlugin: options.addPlugin,
     });
     tasks.push(lintTask);
@@ -531,7 +535,9 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       baseUrl: e2eWebServerInfo.e2eWebServerAddress,
       directory: 'src',
       skipFormat: true,
-      enableTypedLinting: isTypedLintingEnabled(options),
+      enableTypedLinting: !!(
+        options.enableTypedLinting || options.setParserOptionsProject
+      ),
       webServerCommands: {
         default: e2eWebServerInfo.e2eWebServerCommand,
         production: e2eWebServerInfo.e2eCiWebServerCommand,
@@ -582,7 +588,9 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       directory: 'src',
       js: false,
       linter: options.linter,
-      enableTypedLinting: isTypedLintingEnabled(options),
+      enableTypedLinting: !!(
+        options.enableTypedLinting || options.setParserOptionsProject
+      ),
       webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
       webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
       addPlugin: options.addPlugin,
