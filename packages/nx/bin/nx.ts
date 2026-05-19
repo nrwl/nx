@@ -67,9 +67,15 @@ async function main() {
         'nx/src/command-line/completion/command-completions'
       );
       tryCommandSurfaceCompletion();
-    } catch {
-      // A broken completion must produce NO suggestions — never a partial
-      // list or a stack trace in the user's command line. Swallow, exit 0.
+    } catch (e) {
+      // A broken completion must produce NO suggestions on stdout — never a
+      // partial list or a stack trace in the user's command line. Swallow,
+      // exit 0. Under NX_COMPLETE_DEBUG the wrapper stops discarding stderr,
+      // so surface the cause there (stderr only) to make "no suggestions"
+      // debuggable.
+      if (process.env.NX_COMPLETE_DEBUG) {
+        console.error(e);
+      }
     }
     return;
   }
