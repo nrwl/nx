@@ -41,6 +41,13 @@ impl HttpRemoteCache {
 
         let mut client_builder = ClientBuilder::new().default_headers(headers);
 
+        let env_connection_pool_disabled = env::var("NX_SELF_HOSTED_REMOTE_CACHE_CONNECTION_POOLING");
+        if let Ok(env_connection_pool_disabled) = env_connection_pool_disabled {
+            if env_connection_pool_disabled == "0" {
+                client_builder = client_builder.pool_max_idle_per_host(0);
+            }
+        }
+
         let env_accept_unauthorized = env::var("NODE_TLS_REJECT_UNAUTHORIZED");
         if let Ok(env_accept_unauthorized) = env_accept_unauthorized {
             if env_accept_unauthorized == "0" {
@@ -247,5 +254,33 @@ impl HttpRemoteCache {
             outputs_path: output_dir.to_string_lossy().into_owned(),
             size: Some(size),
         })
+    }
+}
+
+fn is_connection_pooling_disabled(connection_pooling: Option<&str>) -> bool {
+    matches!(connection_pooling, Some("false") | Some("0") | Some("no"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn should_disable_connection_pooling_for_false_values() {
+        for value in ["false", "0", "no"] {
+            assert!(is_connection_pooling_disabled(Some(value)));
+        }
+    }
+
+    #[test]
+    fn should_keep_connection_pooling_enabled_by_default() {
+        assert!(!is_connection_pooling_disabled(None));
+    }
+
+    #[test]
+    fn should_keep_connection_pooling_enabled_for_other_values() {
+        for value in ["true", "1", "yes", ""] {
+            assert!(!is_connection_pooling_disabled(Some(value)));
+        }
     }
 }
