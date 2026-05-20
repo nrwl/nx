@@ -182,8 +182,11 @@ export async function viteConfigurationGeneratorInternal(
 
   if (schema.includeVitest) {
     ensurePackage('@nx/vitest', nxVersion);
-    const { configurationGenerator: vitestConfigurationGenerator } =
-      await import('@nx/vitest/generators');
+    // CommonJS `require` instead of dynamic ESM `import` — `ensurePackage`
+    // exposes the temp install via `Module._initPaths`, which ESM ignores.
+    const {
+      configurationGenerator: vitestConfigurationGenerator,
+    }: typeof import('@nx/vitest/generators') = require('@nx/vitest/generators');
     const vitestTask = await vitestConfigurationGenerator(tree, {
       project: schema.project,
       uiFramework: schema.uiFramework,

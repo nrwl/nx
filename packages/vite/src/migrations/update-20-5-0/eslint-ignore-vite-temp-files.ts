@@ -14,14 +14,17 @@ export default async function (tree: Tree) {
   }
 
   ensurePackage('@nx/eslint', nxVersion);
-  const { addIgnoresToLintConfig, isEslintConfigSupported } = await import(
-    '@nx/eslint/internal'
-  );
+  // CommonJS `require` instead of dynamic ESM `import` — `ensurePackage`
+  // exposes the temp install via `Module._initPaths`, which ESM ignores.
+  const {
+    addIgnoresToLintConfig,
+    isEslintConfigSupported,
+    useFlatConfig,
+  }: typeof import('@nx/eslint/internal') = require('@nx/eslint/internal');
   if (!isEslintConfigSupported(tree)) {
     return;
   }
 
-  const { useFlatConfig } = await import('@nx/eslint/internal');
   const isUsingFlatConfig = useFlatConfig(tree);
 
   if (isUsingFlatConfig) {

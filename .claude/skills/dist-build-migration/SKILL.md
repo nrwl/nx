@@ -528,6 +528,31 @@ Reference implementations:
 
 This was the source of the workspace-migration e2e regressions (PR #35643) and is one of the most-failure-prone steps to forget. Audit aggressively.
 
+### 15b. Audit `ensurePackage` + `await import(...)` pairs
+
+Search for `ensurePackage\(['"]@nx/` inside `packages/<name>/src/`. For every match, look at the next 5–20 lines for a `await import('@nx/<other>/...')` pulling from the same package. This pattern is **broken** under `nodenext`:
+
+- Before migration: `module: commonjs` made TypeScript downlevel `await import('@nx/<other>')` to `Promise.resolve(require('@nx/<other>'))`. The synchronous `require()` honors `Module._initPaths`, which is exactly where `ensurePackage` registers the on-demand temp install. Resolution succeeds.
+- After migration: `module: nodenext` preserves `import()` as a true ESM dynamic import. ESM resolution **ignores** `Module._initPaths` — it walks up `node_modules` from the importing file's location only. The temp install lives in a different temp dir, so the import fails with `Cannot find package '@nx/<other>'`.
+
+**Fix**: replace the dynamic import with a synchronous `require()`. The `ensurePackage` side effect makes it findable via `_initPaths`, and `require()` honors that:
+
+```ts
+// Before
+ensurePackage('@nx/eslint', nxVersion);
+const { foo, bar } = await import('@nx/eslint/internal');
+
+// After
+ensurePackage('@nx/eslint', nxVersion);
+// `require()` honors Module._initPaths (which ensurePackage updates); ESM
+// dynamic `import()` doesn't, so it can't see the temp install.
+const { foo, bar }: typeof import('@nx/eslint/internal') = require('@nx/eslint/internal');
+```
+
+Collapse multiple successive `await import()`s of the same module into one `require()` destructuring while you're at it.
+
+This was the source of the M2 e2e regressions (Playwright/Web/React generators crashed at `Cannot find package '@nx/eslint'` from `ignore-vite-temp-files.js` and `ignore-vitest-temp-files.js`). One-line failure mode, but it can sit hidden in any code path that the unit-test suite doesn't exercise — only the published-then-installed flow exposes it. Audit every `ensurePackage` callsite.
+
 ### 16. Preserve `add-extra-dependencies` if the package has one
 
 `scripts/add-dependency-to-build.js` is a release-time hack that injects an extra dep into the **published** `package.json` (e.g., it adds `nx` to `@nx/workspace`'s `dependencies`). It is **not dead code** — without it the transitive resolution chain breaks for downstream consumers.
