@@ -32,13 +32,13 @@ import {
   printChanges,
 } from '../../generators/tree';
 import {
-  extractFileFromTarball,
   fileExists,
   JsonReadOptions,
   JsonWriteOptions,
   readJsonFile,
   writeJsonFile,
 } from '../../utils/fileutils';
+import { extractFileFromTarball } from '../../utils/tar';
 import { writeFormattedJsonFile } from '../../utils/write-formatted-json-file';
 import { logger } from '../../utils/logger';
 import { commitChanges } from '../../utils/git-utils';
