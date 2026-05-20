@@ -1,12 +1,10 @@
-import {
-  mkdirSync,
-  mkdtempSync,
-  realpathSync,
-  rmSync,
-  writeFileSync,
-} from 'fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import {
+  setWorkspaceRoot,
+  workspaceRoot as currentWorkspaceRoot,
+} from '../../utils/workspace-root';
 
 import {
   completeGenerator,
@@ -17,22 +15,21 @@ import {
   getProjectNamesWithTarget,
   getTargetNameCompletions,
   getTargetNamesForProject,
-  resolveWorkspaceRoot,
 } from './completion-providers';
 
 describe('completion/completion-providers', () => {
   let workspaceRoot: string;
-  let originalRoot: string | undefined;
+  let originalRoot: string;
   let originalDataDir: string | undefined;
   let originalGraphCacheDir: string | undefined;
 
   beforeEach(() => {
     workspaceRoot = mkdtempSync(join(tmpdir(), 'nx-completion-spec-'));
-    originalRoot = process.env.NX_WORKSPACE_ROOT_PATH;
+    originalRoot = currentWorkspaceRoot;
     originalDataDir = process.env.NX_WORKSPACE_DATA_DIRECTORY;
     originalGraphCacheDir = process.env.NX_PROJECT_GRAPH_CACHE_DIRECTORY;
-    process.env.NX_WORKSPACE_ROOT_PATH = workspaceRoot;
-    // Force providers to read the in-fixture cache directory.
+    setWorkspaceRoot(workspaceRoot);
+    // Point the cache-directory util at the in-fixture data dir.
     process.env.NX_WORKSPACE_DATA_DIRECTORY = join(
       workspaceRoot,
       '.nx',
@@ -43,7 +40,7 @@ describe('completion/completion-providers', () => {
 
   afterEach(() => {
     rmSync(workspaceRoot, { recursive: true, force: true });
-    restoreEnv('NX_WORKSPACE_ROOT_PATH', originalRoot);
+    setWorkspaceRoot(originalRoot);
     restoreEnv('NX_WORKSPACE_DATA_DIRECTORY', originalDataDir);
     restoreEnv('NX_PROJECT_GRAPH_CACHE_DIRECTORY', originalGraphCacheDir);
   });
@@ -74,65 +71,8 @@ describe('completion/completion-providers', () => {
     writeFileSync(join(workspaceRoot, 'package.json'), JSON.stringify(pkg));
   }
 
-  describe('resolveWorkspaceRoot', () => {
-    let originalCwd: string;
-
-    beforeEach(() => {
-      originalCwd = process.cwd();
-    });
-
-    afterEach(() => {
-      process.chdir(originalCwd);
-    });
-
-    it('returns NX_WORKSPACE_ROOT_PATH verbatim when set', () => {
-      process.env.NX_WORKSPACE_ROOT_PATH = '/explicit/workspace/root';
-      expect(resolveWorkspaceRoot()).toBe('/explicit/workspace/root');
-    });
-
-    it('walks up from a nested cwd to the nearest nx.json', () => {
-      // This is the Critical-fix regression guard: completion runs without
-      // NX_WORKSPACE_ROOT_PATH set, from whatever subdirectory the user is
-      // in. Without the walk-up, project/target/generator completion only
-      // worked at the workspace root.
-      delete process.env.NX_WORKSPACE_ROOT_PATH;
-      writeFileSync(join(workspaceRoot, 'nx.json'), '{}');
-      const nested = join(workspaceRoot, 'apps', 'my-app', 'src');
-      mkdirSync(nested, { recursive: true });
-      process.chdir(nested);
-      expect(resolveWorkspaceRoot()).toBe(realpathSync(workspaceRoot));
-    });
-
-    it('falls back to cwd when no nx.json is found while walking up', () => {
-      delete process.env.NX_WORKSPACE_ROOT_PATH;
-      // The fixture root has no nx.json.
-      process.chdir(workspaceRoot);
-      expect(resolveWorkspaceRoot()).toBe(realpathSync(workspaceRoot));
-    });
-
-    it('drives project completion from a nested cwd, end-to-end', () => {
-      // End-to-end guard for Critical #1: prove the walk-up actually feeds
-      // the completion entry point, not just `resolveWorkspaceRoot` in
-      // isolation. Both env vars are unset so `getCachedProjectGraph` must
-      // derive the data directory from the resolved workspace root.
-      delete process.env.NX_WORKSPACE_ROOT_PATH;
-      delete process.env.NX_WORKSPACE_DATA_DIRECTORY;
-      writeFileSync(join(workspaceRoot, 'nx.json'), '{}');
-      writeProjectGraph({
-        nodes: {
-          'app-one': { data: { targets: {} } },
-          'lib-one': { data: { targets: {} } },
-        },
-      });
-      const nested = join(workspaceRoot, 'apps', 'app-one', 'src');
-      mkdirSync(nested, { recursive: true });
-      process.chdir(nested);
-      expect(getProjectNameCompletions('').sort()).toEqual([
-        'app-one',
-        'lib-one',
-      ]);
-    });
-  });
+  // (walk-up workspace-root lookup is owned by utils/workspace-root.ts and
+  // tested there; completion-providers just consumes the resolved value.)
 
   describe('project completions', () => {
     beforeEach(() => {

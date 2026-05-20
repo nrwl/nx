@@ -1,37 +1,17 @@
 import { existsSync, readFileSync } from 'fs';
-import { dirname, join } from 'path';
-
-/** Walk-up workspace-root lookup. Completion skips the bootstrap that sets
- *  NX_WORKSPACE_ROOT_PATH, so we re-derive it from cwd here. */
-export function resolveWorkspaceRoot(): string {
-  const fromEnv = process.env.NX_WORKSPACE_ROOT_PATH;
-  if (fromEnv) {
-    return fromEnv;
-  }
-  let dir = process.cwd();
-  while (true) {
-    if (existsSync(join(dir, 'nx.json'))) {
-      return dir;
-    }
-    const parent = dirname(dir);
-    if (parent === dir) return process.cwd(); // fs root reached
-    dir = parent;
-  }
-}
+import { join } from 'path';
+import { workspaceRoot } from '../../utils/workspace-root';
+import { workspaceDataDirectoryForWorkspace } from '../../utils/cache-directory';
 
 /** Direct project-graph.json read. Stale graphs are intentionally tolerated
  *  — do not "fix" by triggering a recompute. */
 function getCachedProjectGraph(): any | null {
   try {
-    const workspaceRoot = resolveWorkspaceRoot();
-    const dataDir =
-      process.env.NX_WORKSPACE_DATA_DIRECTORY ??
-      process.env.NX_PROJECT_GRAPH_CACHE_DIRECTORY ??
-      join(workspaceRoot, '.nx', 'workspace-data');
-    const graphPath = join(dataDir, 'project-graph.json');
-    if (!existsSync(graphPath)) {
-      return null;
-    }
+    const graphPath = join(
+      workspaceDataDirectoryForWorkspace(workspaceRoot),
+      'project-graph.json'
+    );
+    if (!existsSync(graphPath)) return null;
     return JSON.parse(readFileSync(graphPath, 'utf-8'));
   } catch {
     return null;
@@ -149,7 +129,6 @@ interface PluginDir {
  *  plugins win over same-named installed ones. `prefix` skips non-matching
  *  installed deps before reading their package.json. */
 function collectPluginDirs(prefix = ''): Map<string, PluginDir> {
-  const workspaceRoot = resolveWorkspaceRoot();
   const dirs = new Map<string, PluginDir>();
 
   const addIfPlugin = (name: string, dir: string): void => {
