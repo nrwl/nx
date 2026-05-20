@@ -11,25 +11,14 @@ export async function printCompletionScript(
   shell: Shell,
   args: PrintCompletionScriptArgs
 ): Promise<void> {
-  // The generated POSIX scripts resolve a workspace-local nx at TAB time
-  // (walk-up) and only fall back to a bare `nx` from PATH outside a
-  // workspace. So the script always works inside a workspace; the bare-PATH
-  // fallback is the only part that needs `nx` reachable by name. Warn (to
-  // stderr, non-fatal) when it isn't, but still emit the script — `--force`
-  // suppresses the warning entirely.
+  // PATH check is for the outside-workspace fallback only; inside a
+  // workspace the wrapper walks up to the local nx. Advisory.
   if (!args.force && !isNxOnPath()) {
     warnNxNotOnPath(shell);
   }
   process.stdout.write(generateScript(shell));
 }
 
-/**
- * True if a bare `nx` executable resolves on the current PATH. Correctly
- * covers a global install and an `npx nx ...` invocation (npx prepends the
- * package's `.bin` to PATH). A raw `./node_modules/.bin/nx` invocation does
- * not put `.bin` on PATH and will report false — that's fine, the warning
- * is advisory and the script still works inside a workspace via walk-up.
- */
 function isNxOnPath(): boolean {
   const pathEnv = process.env.PATH;
   if (!pathEnv) return false;
@@ -65,10 +54,8 @@ function warnNxNotOnPath(shell: Shell): void {
   );
 }
 
-// The four shell wrappers live as plain files in ./scripts/ so they get
-// real syntax highlighting and can be linted by shellcheck / fish_indent /
-// etc. They're read once at module load (tiny files, no per-invocation
-// cost) and emitted verbatim — nothing is templated.
+// Wrappers live as plain files in ./scripts/ for syntax highlighting and
+// shellcheck. Read once at module load, emitted verbatim.
 const WRAPPER_FILES: Record<Shell, string> = {
   bash: 'bash.sh',
   zsh: 'zsh.zsh',

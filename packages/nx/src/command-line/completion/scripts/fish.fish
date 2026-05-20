@@ -11,11 +11,7 @@ complete -e -c nx
 function __nx_completions
   set -l tokens (commandline -cop)
   set -l current (commandline -ct)
-  # Prefer the workspace's local nx over PATH; falls back to PATH outside a workspace.
-  # Checks both standard (node_modules/.bin/nx) and .nx-style (.nx/installation/...) layouts.
-  # Bare `nx` rather than an absolute path: that would tie completion to whatever
-  # install was active when `nx completion fish` ran, breaking across worktrees or
-  # after a move.
+  # Walk up for a workspace-local nx; fall back to PATH outside a workspace.
   set -l nx_cmd nx
   set -l dir $PWD
   while test "$dir" != "/"
@@ -29,8 +25,7 @@ function __nx_completions
     end
     set dir (dirname "$dir")
   end
-  # Stderr is hidden so a stray warning never lands in the completion buffer.
-  # Honors NX_VERBOSE_LOGGING (Nx's standard debug switch) to surface it.
+  # Hide stderr so stray warnings don't land in the buffer; NX_VERBOSE_LOGGING surfaces it.
   if test -n "$NX_VERBOSE_LOGGING"
     NX_COMPLETE=fish $nx_cmd $tokens "$current"
   else

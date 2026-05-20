@@ -34,11 +34,7 @@ export async function initLocal(workspace: WorkspaceTypeAndRoot) {
       return;
     }
 
-    // Ensure NxConsole is installed if the user has it configured.
     // Skip per-TAB shell completion calls — those must not spawn the daemon.
-    // `nx completion <shell>` (the install command) is fine: the prompt
-    // inside ensureNxConsoleInstalledViaDaemon is already isTTY-gated, so
-    // it stays silent when stdout is redirected to a shell rc file.
     if (!process.env.NX_COMPLETE) {
       try {
         await ensureNxConsoleInstalledViaDaemon();

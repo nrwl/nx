@@ -37,42 +37,23 @@ const isTsExt = extname(__filename).endsWith('.ts');
 const pathToPkgJson = isTsExt ? '../package.json' : '../../package.json';
 
 async function main() {
-  // Shell tab-completion: triggered by the `NX_COMPLETE=<shell>` env var that
-  // the bash/zsh/fish/powershell wrappers set before invoking nx. Skips the
-  // full workspace bootstrap (analytics, native module, dotenv, initLocal,
-  // daemon client) — completion reads the cached project graph directly.
-  //
-  // The trigger is checked inline as a bare env-var read (not via the
-  // `isCompletionRequest` helper) so NOTHING — not even a dynamic import —
-  // runs before the try/catch below. A throw out here would reach
-  // `main().catch`, which prints the error and exits 1; the shell would
-  // splice that stack trace into its completion buffer.
+  // Tab-completion fast path. Bare env-var read so nothing runs before
+  // the try/catch — a throw here would splice a stack trace into the
+  // user's command line.
   if (process.env.NX_COMPLETE) {
     try {
-      // Defensive: some nx modules pair an `init-local` mark with a later
-      // `performance.measure`. Setting the mark keeps any such measure
-      // well-formed if completion ever loads a module that emits one.
       performance.mark('init-local');
-      // Fast path: value completions (project/target/generator names, flag
-      // values) served from registered metadata without loading the full
-      // yargs command surface.
       const { tryValueCompletion } = await import(
         'nx/src/command-line/completion/value-completions'
       );
       if (tryValueCompletion()) return;
-      // Slow path: command-surface completion (top-level commands,
-      // subcommands of a matched command, flag names). Loads `nx-commands`
-      // to walk the yargs command tree.
       const { tryCommandSurfaceCompletion } = await import(
         'nx/src/command-line/completion/command-completions'
       );
       tryCommandSurfaceCompletion();
     } catch (e) {
-      // A broken completion must produce NO suggestions on stdout — never a
-      // partial list or a stack trace in the user's command line. Swallow,
-      // exit 0. Under NX_VERBOSE_LOGGING the wrapper stops discarding stderr,
-      // so surface the cause there (stderr only) to make "no suggestions"
-      // debuggable.
+      // Swallow: a broken completion must produce no suggestions, not a
+      // stack trace. NX_VERBOSE_LOGGING surfaces the cause to stderr.
       if (process.env.NX_VERBOSE_LOGGING) {
         console.error(e);
       }
@@ -80,10 +61,8 @@ async function main() {
     return;
   }
 
-  // `nx completion <shell>` (the install command): generates the wrapper
-  // script. Pure JS, no workspace detection, no native deps — print and
-  // exit before any heavier bootstrap runs. Unknown / missing shell falls
-  // through so yargs' demandCommand and --help still print their guidance.
+  // `nx completion <shell>` install path — print the wrapper, skip the
+  // rest of the bootstrap. Unknown shell falls through to yargs.
   if (process.argv[2] === 'completion') {
     const shell = process.argv[3];
     if (
@@ -338,9 +317,7 @@ function warnIfUsingOutdatedGlobalInstall(
   globalNxVersion: string,
   localNxVersion?: string
 ) {
-  // Never display this warning if Nx is already running via Nx.
-  // (The NX_COMPLETE per-TAB path returns from main() before this function
-  // is ever called, so no separate guard is needed for completion here.)
+  // Skip when Nx is recursively invoking itself.
   if (process.env.NX_CLI_SET) {
     return;
   }

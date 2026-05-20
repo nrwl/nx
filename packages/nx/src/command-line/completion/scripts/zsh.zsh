@@ -10,11 +10,7 @@ if type compdef &>/dev/null; then
     local reply nx_cmd dir
     local si=$IFS
 
-    # Prefer the workspace's local nx over PATH; falls back to PATH outside a workspace.
-    # Checks both standard (node_modules/.bin/nx) and .nx-style (.nx/installation/...) layouts.
-    # Bare `nx` rather than an absolute path: that would tie completion to whatever
-    # install was active when `nx completion zsh` ran, breaking across worktrees or
-    # after a move.
+    # Walk up for a workspace-local nx; fall back to PATH outside a workspace.
     nx_cmd="nx"
     dir="$PWD"
     while [[ "$dir" != "/" ]]; do
@@ -29,8 +25,7 @@ if type compdef &>/dev/null; then
       dir="${dir:h}"
     done
 
-    # Stderr is hidden so a stray warning never lands in the completion
-    # buffer. Honors NX_VERBOSE_LOGGING (Nx's standard debug switch) to surface it.
+    # Hide stderr so stray warnings don't land in the buffer; NX_VERBOSE_LOGGING surfaces it.
     if [[ -n "$NX_VERBOSE_LOGGING" ]]; then
       IFS=$'\n' reply=($(NX_COMPLETE=zsh "$nx_cmd" "${words[@]}"))
     else
@@ -38,10 +33,8 @@ if type compdef &>/dev/null; then
     fi
     IFS=$si
 
-    # Each line is either a bare value or `value<TAB>description`. Split into
-    # parallel arrays and feed `compadd -d`: the value is inserted literally
-    # (values like `my-app:build` contain colons, so `_describe` — which
-    # splits on ':' — must not be used), the description is shown in the menu.
+    # Split `value\tdescription` into parallel arrays for compadd -d. Don't
+    # use _describe: it splits on ':', mangling values like `my-app:build`.
     local -a values displays
     local r value nospace=0
     for r in $reply; do
@@ -52,9 +45,7 @@ if type compdef &>/dev/null; then
       else
         displays+=("$value")
       fi
-      # A trailing ':' (project name before a target) means TAB-again;
-      # suppress the inserted space so the user can keep typing.
-      [[ "$value" == *: ]] && nospace=1
+      [[ "$value" == *: ]] && nospace=1  # trailing ':' → nospace
     done
 
     if (( nospace )); then

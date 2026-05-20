@@ -4,16 +4,12 @@ import {
   getProjectNameCompletions,
 } from '../completion/completion-providers';
 
-// `nx show project <project>` — single project positional.
 registerCompletion('show project', {
   positionals: [{ complete: getProjectNameCompletions }],
 });
 
-// `nx show target` accepts two equivalent forms:
-//   nx show target <project>:<target> [inputs|outputs]
-//   nx show target [inputs|outputs] <project>:<target>
-// so the first positional can be either a project:target or the
-// `inputs`/`outputs` keyword.
+// `nx show target` accepts the keyword on either side of the target —
+// `nx show target my-app:build inputs` or `nx show target inputs my-app:build`.
 const TARGET_SUBCOMMANDS = ['inputs', 'outputs'];
 registerCompletion('show target', {
   positionals: [
@@ -27,8 +23,6 @@ registerCompletion('show target', {
   ],
 });
 
-// `nx show target inputs|outputs <project>:<target>` — once the keyword
-// has been typed, the next positional is just the project:target.
 registerCompletion('show target inputs', {
   positionals: [{ complete: completeProjectTarget }],
 });

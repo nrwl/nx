@@ -1,16 +1,8 @@
 import { existsSync, readFileSync } from 'fs';
 import { dirname, join } from 'path';
 
-/**
- * Resolve the workspace root for completion. Completion runs without the
- * normal workspace bootstrap (`bin/nx.ts` returns before `initLocal`), so
- * `NX_WORKSPACE_ROOT_PATH` is usually unset and `process.cwd()` is whatever
- * subdirectory the user pressed TAB in. Walk up from cwd to the nearest
- * `nx.json` so project/target/generator completion works everywhere in the
- * workspace, not only at the root.
- *
- * Exported only so it can be unit-tested.
- */
+/** Walk-up workspace-root lookup. Completion skips the bootstrap that sets
+ *  NX_WORKSPACE_ROOT_PATH, so we re-derive it from cwd here. */
 export function resolveWorkspaceRoot(): string {
   const fromEnv = process.env.NX_WORKSPACE_ROOT_PATH;
   if (fromEnv) {
@@ -22,23 +14,13 @@ export function resolveWorkspaceRoot(): string {
       return dir;
     }
     const parent = dirname(dir);
-    if (parent === dir) {
-      // Reached the filesystem root without finding nx.json.
-      return process.cwd();
-    }
+    if (parent === dir) return process.cwd(); // fs root reached
     dir = parent;
   }
 }
 
-/**
- * Lightweight cache reader that avoids importing heavy nx modules.
- * Reads project-graph.json directly from the workspace data directory.
- *
- * Intentionally tolerates a stale graph: completion runs on every TAB press
- * and must stay fast, so we never refresh the graph here. A just-added
- * project missing for one keystroke is an acceptable trade — do not "fix"
- * this by triggering a graph recompute.
- */
+/** Direct project-graph.json read. Stale graphs are intentionally tolerated
+ *  — do not "fix" by triggering a recompute. */
 function getCachedProjectGraph(): any | null {
   try {
     const workspaceRoot = resolveWorkspaceRoot();
@@ -56,9 +38,7 @@ function getCachedProjectGraph(): any | null {
   }
 }
 
-/**
- * Returns project names matching the given prefix.
- */
+/** Project names matching `current`. */
 export function getProjectNameCompletions(current: string): string[] {
   const graph = getCachedProjectGraph();
   if (!graph?.nodes) {
@@ -71,11 +51,7 @@ export function getProjectNameCompletions(current: string): string[] {
   return names.filter((name) => name.startsWith(current));
 }
 
-/**
- * Returns names of projects that have the given target, matching the prefix.
- * Used for infix completions like `nx build <TAB>` — we only want projects
- * that actually have a `build` target, not every project in the workspace.
- */
+/** Projects that declare `targetName`, matching `current`. */
 export function getProjectNamesWithTarget(
   current: string,
   targetName: string
@@ -95,11 +71,7 @@ export function getProjectNamesWithTarget(
   return matches;
 }
 
-/**
- * Two-stage completion of a `project[:target]` token. First stage returns
- * project names with a trailing `:` so the shell suppresses the space and
- * the user can TAB again for targets within the chosen project.
- */
+/** Two-stage `project[:target]` — stage 1 emits `project:` (nospace), stage 2 emits `project:target`. */
 export function completeProjectTarget(current: string): string[] {
   const colonIdx = current.indexOf(':');
   if (colonIdx === -1) {
@@ -112,20 +84,9 @@ export function completeProjectTarget(current: string): string[] {
   );
 }
 
-/**
- * Two-stage completion of a `<plugin>:<generator>` token, mirroring
- * project:target above — plus an unqualified-generator path so `nx g
- * application<TAB>` (which Nx resolves to the first matching generator
- * across all plugins) is also completable.
- *
- * Stage 1 (`nx g <TAB>` / `nx g app<TAB>`) returns BOTH the plugin names
- * (with a trailing `:` so the second TAB lists that plugin's generators)
- * AND the bare generator names across all plugins, deduped. The user can
- * either drill into a plugin or pick an unqualified generator.
- *
- * Stage 2 (`nx g @nx/react:<TAB>`) returns that single plugin's
- * generators, qualified.
- */
+/** Generator completion. Stage 1 (`nx g <TAB>`) emits plugin names (with `:`)
+ *  and bare generator names (for `nx g application`); stage 2 emits
+ *  `plugin:generator`. */
 export function completeGenerator(current: string): string[] {
   const colonIdx = current.indexOf(':');
   if (colonIdx !== -1) {
@@ -136,10 +97,8 @@ export function completeGenerator(current: string): string[] {
     );
   }
 
-  // Single collectPluginDirs() call (no prefix — we need every plugin to
-  // enumerate bare generator names). Plugin names get the trailing `:`;
-  // bare names go through a Set to dedup `application` declared in multiple
-  // plugins.
+  // No prefix on the plugin map — we need every plugin to enumerate bare
+  // generator names; dedup bare names across plugins.
   const all = collectPluginDirs();
   const result: string[] = [];
   const bare = new Set<string>();
@@ -159,25 +118,13 @@ export function completeGenerator(current: string): string[] {
   return result;
 }
 
-/**
- * Returns names of plugins that declare a generator collection, matching the
- * prefix. Covers both installed npm plugins and workspace-local plugin
- * projects (e.g. a `libs/my-plugin` with its own `generators.json`).
- *
- * First stage of `<plugin>:<generator>` completion — the generator names
- * inside each collection are not needed yet, so `generators.json` is not
- * read here.
- */
+/** Plugin names matching `current` — installed npm plugins + workspace-local
+ *  plugin projects, only those declaring a generator collection. */
 export function getGeneratorPluginCompletions(current: string): string[] {
-  // Every entry collectPluginDirs returns is already a confirmed plugin
-  // (declares a `generators`/`schematics` collection), so listing the keys
-  // needs no further file reads.
   return [...collectPluginDirs(current).keys()];
 }
 
-/**
- * Returns generator names within a single plugin matching the prefix.
- */
+/** Generator names in a single plugin, matching `current`. */
 export function getGeneratorsForPlugin(
   pluginName: string,
   current: string
@@ -193,28 +140,14 @@ export function getGeneratorsForPlugin(
   return generators.filter((g) => g.startsWith(current));
 }
 
-/** A plugin's directory and the relative path to its generator collection. */
 interface PluginDir {
   dir: string;
   field: string;
 }
 
-/**
- * Builds a map of collection name → plugin location. Only packages that
- * actually declare a `generators`/`schematics` collection are included.
- * Two sources:
- *   - installed npm plugins — root `package.json` deps, resolved under
- *     `node_modules/<name>`
- *   - workspace-local plugin projects — any project in the cached graph
- *     whose `package.json` declares a `generators`/`schematics` collection
- *
- * A local definition wins over a same-named installed package (the local
- * one is what the user is developing).
- *
- * `prefix` skips installed deps whose name cannot match before their
- * `package.json` is read — the dominant per-keystroke cost once the user
- * has typed part of a plugin name.
- */
+/** plugin name → { dir, generators-collection path }. Workspace-local
+ *  plugins win over same-named installed ones. `prefix` skips non-matching
+ *  installed deps before reading their package.json. */
 function collectPluginDirs(prefix = ''): Map<string, PluginDir> {
   const workspaceRoot = resolveWorkspaceRoot();
   const dirs = new Map<string, PluginDir>();
@@ -283,11 +216,7 @@ function readJsonSafe(path: string): any | null {
   }
 }
 
-/**
- * Returns target names matching the given prefix.
- * If projectName is provided, only returns targets for that project.
- * Otherwise returns all unique target names across the workspace.
- */
+/** Target names matching `current`. Scoped to `projectName` if given. */
 export function getTargetNameCompletions(
   current: string,
   projectName?: string

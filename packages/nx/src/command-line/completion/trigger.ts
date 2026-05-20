@@ -1,10 +1,4 @@
-/**
- * Shell-completion trigger detection. The shell-script wrappers set the
- * `NX_COMPLETE` env var to the shell type they run under (bash / zsh /
- * fish / powershell) before invoking nx. We detect that here rather than
- * scanning argv — keeps argv pristine and aligns with the clap convention
- * (`_<BIN>_COMPLETE=<shell>`).
- */
+// Shell detection via NX_COMPLETE env var (set by the wrappers).
 
 export type CompletionShell = 'bash' | 'zsh' | 'fish' | 'powershell';
 

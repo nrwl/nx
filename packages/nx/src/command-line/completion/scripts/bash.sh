@@ -12,11 +12,7 @@ _nx_completions()
     cur_word="${COMP_WORDS[COMP_CWORD]}"
     args=("${COMP_WORDS[@]}")
 
-    # Prefer the workspace's local nx over PATH; falls back to PATH outside a workspace.
-    # Checks both standard (node_modules/.bin/nx) and .nx-style (.nx/installation/...) layouts.
-    # Bare `nx` rather than an absolute path: that would tie completion to whatever
-    # install was active when `nx completion bash` ran, breaking across worktrees or
-    # after a move.
+    # Walk up for a workspace-local nx; fall back to PATH outside a workspace.
     nx_cmd="nx"
     dir="$PWD"
     while [ "$dir" != "/" ]; do
@@ -31,8 +27,7 @@ _nx_completions()
       dir="$(dirname "$dir")"
     done
 
-    # Stderr is hidden so a stray warning never lands in the completion
-    # buffer. Honors NX_VERBOSE_LOGGING (Nx's standard debug switch) to surface it.
+    # Hide stderr so stray warnings don't land in the buffer; NX_VERBOSE_LOGGING surfaces it.
     if [ -n "$NX_VERBOSE_LOGGING" ]; then
       type_list=$(NX_COMPLETE=bash "$nx_cmd" "${args[@]}")
     else
@@ -41,9 +36,7 @@ _nx_completions()
 
     COMPREPLY=( $(compgen -W "${type_list}" -- ${cur_word}) )
 
-    # If the (only) completion ends with ':' (e.g. "devkit:" for show target /
-    # run), suppress the trailing space so the user can TAB again to pick a
-    # target instead of having to backspace and type ':' manually.
+    # Trailing ':' (project:target stage 1) — nospace so the user can TAB again.
     if [ ${#COMPREPLY[@]} -eq 1 ] && [[ "${COMPREPLY[0]}" == *: ]]; then
       compopt -o nospace 2>/dev/null
     fi
