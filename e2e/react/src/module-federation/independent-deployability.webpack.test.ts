@@ -12,7 +12,10 @@ import {
 import { stripIndents } from 'nx/src/utils/strip-indents';
 import { readPort, runCLI } from './utils';
 
-describe('Independent Deployability', () => {
+// TODO: re-enable once webpack 5.107.0 / @module-federation/enhanced compatibility is resolved upstream.
+// See https://github.com/webpack/webpack/issues/20985 and https://github.com/module-federation/core/issues/4747.
+// eslint-disable-next-line jest/no-disabled-tests
+describe.skip('Independent Deployability', () => {
   let proj: string;
   beforeAll(() => {
     process.env.NX_ADD_PLUGINS = 'false';
