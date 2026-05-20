@@ -127,22 +127,18 @@ function isNxOnPath(): boolean {
 }
 
 // Wrappers live as plain files in ./scripts/ for syntax highlighting and
-// shellcheck. Lazy-read + cached per shell — a typical invocation only
-// touches one of the four.
+// shellcheck. Read at call time — each invocation needs each shell's
+// wrapper at most once.
 const WRAPPER_FILES: Record<Shell, string> = {
   bash: 'bash.sh',
   zsh: 'zsh.zsh',
   fish: 'fish.fish',
   powershell: 'powershell.ps1',
 };
-const wrapperCache: Partial<Record<Shell, string>> = {};
 
 export function generateScript(shell: Shell): string {
-  if (wrapperCache[shell] === undefined) {
-    wrapperCache[shell] = readFileSync(
-      join(__dirname, 'scripts', WRAPPER_FILES[shell]),
-      'utf-8'
-    );
-  }
-  return wrapperCache[shell]!;
+  return readFileSync(
+    join(__dirname, 'scripts', WRAPPER_FILES[shell]),
+    'utf-8'
+  );
 }

@@ -1,3 +1,4 @@
+import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 import {
   DESC_SEPARATOR,
   formatDescription,
@@ -48,53 +49,23 @@ describe('completion/command-completions', () => {
   });
 
   describe('shellRendersDescriptions', () => {
-    let originalNxComplete: string | undefined;
-
-    beforeEach(() => {
-      originalNxComplete = process.env.NX_COMPLETE;
-    });
-
-    afterEach(() => {
-      restoreEnv('NX_COMPLETE', originalNxComplete);
-    });
-
-    it('returns true when NX_COMPLETE is zsh', () => {
-      process.env.NX_COMPLETE = 'zsh';
-      expect(shellRendersDescriptions()).toBe(true);
-    });
-
-    it('returns true when NX_COMPLETE is fish', () => {
-      // fish parses `value\tdescription` candidates natively via `complete -a`.
-      process.env.NX_COMPLETE = 'fish';
-      expect(shellRendersDescriptions()).toBe(true);
-    });
-
-    it('returns false for bash (no description protocol in compgen)', () => {
-      process.env.NX_COMPLETE = 'bash';
-      expect(shellRendersDescriptions()).toBe(false);
-    });
-
-    it('returns false for powershell (single-arg CompletionResult ctor)', () => {
-      process.env.NX_COMPLETE = 'powershell';
-      expect(shellRendersDescriptions()).toBe(false);
+    it.each([
+      // NX_COMPLETE value, expected result, reason
+      ['zsh', true],
+      ['fish', true], // fish parses `value\tdescription` via `complete -a`
+      ['bash', false], // no description protocol in compgen
+      ['powershell', false], // single-arg CompletionResult ctor
+      ['nushell', false], // unknown shell
+    ])('NX_COMPLETE=%s -> %s', (nxComplete, expected) => {
+      withEnvironmentVariables({ NX_COMPLETE: nxComplete }, () => {
+        expect(shellRendersDescriptions()).toBe(expected);
+      });
     });
 
     it('returns false when NX_COMPLETE is unset', () => {
-      delete process.env.NX_COMPLETE;
-      expect(shellRendersDescriptions()).toBe(false);
-    });
-
-    it('returns false when NX_COMPLETE is an unknown shell', () => {
-      process.env.NX_COMPLETE = 'nushell';
-      expect(shellRendersDescriptions()).toBe(false);
+      withEnvironmentVariables({ NX_COMPLETE: undefined }, () => {
+        expect(shellRendersDescriptions()).toBe(false);
+      });
     });
   });
 });
-
-function restoreEnv(key: string, value: string | undefined): void {
-  if (value === undefined) {
-    delete process.env[key];
-  } else {
-    process.env[key] = value;
-  }
-}
