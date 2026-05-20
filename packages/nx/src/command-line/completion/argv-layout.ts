@@ -10,9 +10,12 @@ export function parseCompletionArgs(
   argv: readonly string[] = process.argv
 ): ParsedCompletionArgs | null {
   const tail = argv.slice(2);
-  // Wrappers prepend the literal 'nx' (from COMP_WORDS / commandline -cop /
-  // etc.); strip it when present so manual invocations like
-  // `NX_COMPLETE=fish nx show target in` still work for dev testing.
+  // Wrappers usually prepend the literal 'nx' (from COMP_WORDS /
+  // commandline -cop / etc.). They sometimes don't — most notably the
+  // `.nx/installation` wrapper invokes the real bin directly without the
+  // 'nx' token, and manual invocations like `NX_COMPLETE=fish nx show
+  // target in` for dev testing skip it too. Strip when present, otherwise
+  // take the args as-is.
   const tokens = tail[0] === 'nx' ? tail.slice(1) : tail;
   if (tokens.length === 0) return null;
 
