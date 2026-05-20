@@ -1,13 +1,8 @@
 import { registerCompletion } from '../completion/metadata';
+import { readNxPackageGroup } from '../../utils/nx-package-group';
 
-// Derived from nx's own packageGroup — same list `nx report` uses.
-// Auto-updates as new first-party plugins land in nx-migrations.
-const FIRST_PARTY_PLUGINS: string[] = (
-  require('nx/package.json')['nx-migrations'].packageGroup as Array<
-    string | { package: string }
-  >
-)
-  .map((e) => (typeof e === 'string' ? e : e.package))
+// Same list `nx report` uses. Filter to first-party plugins and sort.
+const FIRST_PARTY_PLUGINS: string[] = readNxPackageGroup()
   .filter((p) => p.startsWith('@nx/'))
   .sort();
 

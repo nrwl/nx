@@ -113,8 +113,9 @@ export function getCommandCompletions(
  *  colons (`my-app:build`); descriptions get TABs collapsed. */
 export const DESC_SEPARATOR = '\t';
 
-/** Strip yargs' i18n marker and collapse stray TABs so they can't forge
- *  the value/description separator. */
+/** Strip the y18n marker yargs prepends to its built-in --help / --version
+ *  descriptions, and collapse stray TABs so they can't forge the
+ *  value/description separator. */
 export function formatDescription(raw: string | undefined): string {
   if (!raw) return '';
   return raw.replace(/^__yargsString__:/, '').replace(/\t/g, ' ');

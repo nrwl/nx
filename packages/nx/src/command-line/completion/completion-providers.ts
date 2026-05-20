@@ -39,7 +39,7 @@ export function getProjectNamesWithTarget(
   }
   const matches: string[] = [];
   for (const [name, node] of Object.entries(graph.nodes)) {
-    if (node?.data?.targets && targetName in node.data.targets) {
+    if (node?.data?.targets?.[targetName]) {
       if (!current || name.startsWith(current)) {
         matches.push(name);
       }
