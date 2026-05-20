@@ -7,8 +7,10 @@ import { getRegisteredTopLevelPaths } from './metadata';
 import { getNxCommandHandlers, introspectBuilder } from './command-handlers';
 
 /** Slow-path entry point. Returns true if anything was emitted. */
-export function tryCommandSurfaceCompletion(): boolean {
-  const parsed = parseCompletionArgs();
+export function tryCommandSurfaceCompletion(
+  argv: readonly string[] = process.argv
+): boolean {
+  const parsed = parseCompletionArgs(argv);
   if (parsed === null) return false;
 
   const matched = getCommandCompletions(parsed.current, parsed.tokens);

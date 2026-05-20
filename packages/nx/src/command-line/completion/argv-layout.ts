@@ -6,8 +6,10 @@ export interface ParsedCompletionArgs {
   previousToken: string;
 }
 
-export function parseCompletionArgs(): ParsedCompletionArgs | null {
-  const tail = process.argv.slice(2);
+export function parseCompletionArgs(
+  argv: readonly string[] = process.argv
+): ParsedCompletionArgs | null {
+  const tail = argv.slice(2);
   // Wrappers prepend the literal 'nx' (from COMP_WORDS / commandline -cop /
   // etc.); strip it when present so manual invocations like
   // `NX_COMPLETE=fish nx show target in` still work for dev testing.

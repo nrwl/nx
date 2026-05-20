@@ -6,8 +6,10 @@ import { resolveCompletion } from './metadata';
 import { parseCompletionArgs } from './argv-layout';
 
 /** Returns true if handled — caller should not fall through. */
-export function tryValueCompletion(): boolean {
-  const parsed = parseCompletionArgs();
+export function tryValueCompletion(
+  argv: readonly string[] = process.argv
+): boolean {
+  const parsed = parseCompletionArgs(argv);
   if (parsed === null) return false;
 
   const completions = resolveCompletion(
