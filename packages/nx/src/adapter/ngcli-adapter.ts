@@ -35,7 +35,7 @@ import {
 import type { GenerateOptions } from '../command-line/generate/generate';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { FsTree, Tree } from '../generators/tree';
+import { FileChange, FsTree, Tree } from '../generators/tree';
 import { readJson } from '../generators/utils/json';
 import {
   addProjectConfiguration,
@@ -393,6 +393,7 @@ async function createRecorder(
   host: NxScopedHost,
   record: {
     loggingQueue: string[];
+    changes: FileChange[];
     error: boolean;
   },
   logger: logging.Logger
@@ -415,18 +416,41 @@ async function createRecorder(
       record.loggingQueue.push(
         tags.oneLine`${pc.white('UPDATE')} ${eventPath}`
       );
+      record.changes.push(emptyFileChange('UPDATE', eventPath));
     } else if (event.kind === 'create') {
       record.loggingQueue.push(
         tags.oneLine`${pc.green('CREATE')} ${eventPath}`
       );
+      record.changes.push(emptyFileChange('CREATE', eventPath));
     } else if (event.kind === 'delete') {
       record.loggingQueue.push(`${pc.yellow('DELETE')} ${eventPath}`);
+      record.changes.push({ type: 'DELETE', path: eventPath, content: null });
     } else if (event.kind === 'rename') {
       record.loggingQueue.push(
         `${pc.blue('RENAME')} ${eventPath} => ${event.to}`
       );
+      // Surface as DELETE source + CREATE destination so downstream consumers
+      // (e.g. the agentic validation prompt's `<files_changed>` block) see
+      // both endpoints.
+      const toPath = event.to.startsWith('/') ? event.to.slice(1) : event.to;
+      record.changes.push({ type: 'DELETE', path: eventPath, content: null });
+      record.changes.push(emptyFileChange('CREATE', toPath));
     }
   };
+}
+
+// The Angular workflow has already flushed file content to disk by the time
+// our recorder runs, and our only downstream consumer (the agentic prompt
+// builders) reads `path` + `type` and nothing else. So we synthesize
+// FileChange entries with `content: Buffer.alloc(0)` rather than copying the
+// real bytes — avoids per-event allocation and retention of the entire
+// migration's write set in memory. `null` is reserved for DELETE per the
+// FileChange contract.
+function emptyFileChange(
+  type: Extract<FileChange['type'], 'CREATE' | 'UPDATE'>,
+  path: string
+): FileChange {
+  return { type, path, content: Buffer.alloc(0) };
 }
 
 async function runSchematic(
@@ -442,7 +466,11 @@ async function runSchematic(
   printDryRunMessage = true,
   recorder: any = null
 ): Promise<{ status: number; loggingQueue: string[] }> {
-  const record = { loggingQueue: [] as string[], error: false };
+  const record = {
+    loggingQueue: [] as string[],
+    changes: [] as FileChange[],
+    error: false,
+  };
   workflow.reporter.subscribe(
     recorder || (await createRecorder(host, record, logger))
   );
@@ -1007,7 +1035,11 @@ export async function runMigration(
   const workflow = createWorkflow(fsHost, root, {}, projects);
   const collection = resolveMigrationsCollection(packageName);
 
-  const record = { loggingQueue: [] as string[], error: false };
+  const record = {
+    loggingQueue: [] as string[],
+    changes: [] as FileChange[],
+    error: false,
+  };
   workflow.reporter.subscribe(await createRecorder(fsHost, record, logger));
 
   await workflow
@@ -1022,6 +1054,7 @@ export async function runMigration(
 
   return {
     loggingQueue: record.loggingQueue,
+    changes: record.changes,
     madeChanges: record.loggingQueue.length > 0,
   };
 }

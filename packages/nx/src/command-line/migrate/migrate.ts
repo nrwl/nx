@@ -2631,10 +2631,6 @@ export async function executeMigrations(
             /* captureGeneratorOutput: */ !!validationRun
           );
         allNextSteps.push(...nextSteps);
-        // Validation needs the Nx-side `FileChange[]` for the prompt's
-        // `<files_changed>` block; Angular schematic migrations report
-        // `madeChanges` without populating `changes`, so they're skipped
-        // here even when `validationRun` is set.
         const canRunValidation = !!validationRun && changes.length > 0;
 
         if (canRunValidation) {
@@ -2667,26 +2663,14 @@ export async function executeMigrations(
         } else {
           // No inner validation step ran. Under `inside-agent`, surface the
           // generator-emitted `agentContext` to stdout so the outer driving
-          // agent can ingest it. Covers both the "had changes but validation
-          // skipped under inside-agent" and the "no changes but non-empty
-          // agentContext" paths.
+          // agent can ingest it. Reaches this branch when there were no
+          // changes (regardless of agentContext) or when agentic is disabled
+          // / inside-agent.
           if (printDroppedAgentContext && agentContext.length > 0) {
             printDroppedAgentContext({ migration: m, agentContext });
           }
           if (!madeChanges) {
             migrationsWithNoChanges.push(m);
-          } else if (validationRun) {
-            // Made changes but validation couldn't run (e.g. Angular
-            // schematic). We deferred the in-function commit by passing
-            // `shouldCreateCommits: false`; commit explicitly so per-migration
-            // commits aren't lost when --create-commits is in effect.
-            await commitMigrationIfRequested(
-              root,
-              m,
-              shouldCreateCommits,
-              commitPrefix,
-              () => changedDepInstaller.installDepsIfChanged()
-            );
           }
         }
       }
@@ -2936,11 +2920,10 @@ export async function runNxOrAngularMigration(
   let nextSteps: string[] = [];
   let agentContext: string[] = [];
   let logs = '';
-  // `changes` is the Nx-side FileChange[] which Angular schematic migrations
-  // do NOT populate — Angular reports its "did anything happen" signal via the
-  // ngCliAdapter's `madeChanges` boolean. Tracking a unified `madeChanges`
-  // here is what lets callers commit Angular-driven changes correctly when
-  // they've deferred the in-function commit.
+  // `madeChanges` is populated from `changes.length > 0` for both Nx and
+  // Angular migrations — Angular's `ngResult.changes` is synthesized from the
+  // schematic's DryRunEvent stream so callers can treat the two paths
+  // uniformly for commit/validation gating.
   let madeChanges = false;
   if (!isAngularMigration(collection, migration.name)) {
     ({ nextSteps, changes, agentContext, logs } = await runNxMigration(
@@ -2974,6 +2957,7 @@ export async function runNxOrAngularMigration(
       isVerbose,
       migrationProjectGraph
     );
+    changes = ngResult.changes;
     madeChanges = ngResult.madeChanges;
     logs = ngResult.loggingQueue.join('\n');
 
