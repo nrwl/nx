@@ -20,6 +20,23 @@ describe('completion/registrations', () => {
     expect(findCompletionMetadata(['show', 'project'])).not.toBeNull();
     const target = findCompletionMetadata(['show', 'target']);
     expect(target?.metadata.positionals).toHaveLength(2);
+    // First positional must complete BOTH project:target tokens AND the
+    // inputs/outputs keywords — `nx show target i<TAB>` should land on
+    // `inputs`/`outputs` even though no project starts with `i`.
+    const firstCompleter = target?.metadata.positionals?.[0]?.complete;
+    expect(firstCompleter).toBeInstanceOf(Function);
+    expect(firstCompleter?.('i', ['show', 'target', 'i'])).toEqual(
+      expect.arrayContaining(['inputs'])
+    );
+  });
+
+  it('registers `show target inputs` and `show target outputs`', () => {
+    // After the keyword is typed, the next positional completes
+    // project:target — `nx show target inputs <TAB>` lists projects.
+    expect(findCompletionMetadata(['show', 'target', 'inputs'])).not.toBeNull();
+    expect(
+      findCompletionMetadata(['show', 'target', 'outputs'])
+    ).not.toBeNull();
   });
 
   it.each([
