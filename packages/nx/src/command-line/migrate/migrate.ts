@@ -42,7 +42,12 @@ import {
 import { extractFileFromTarball } from '../../utils/tar';
 import { writeFormattedJsonFile } from '../../utils/write-formatted-json-file';
 import { logger } from '../../utils/logger';
-import { commitChanges, isGitRepository } from '../../utils/git-utils';
+import {
+  commitChanges,
+  getLatestCommitSha,
+  hasUncommittedChanges,
+  isGitRepository,
+} from '../../utils/git-utils';
 import {
   ArrayPackageGroup,
   getDependencyVersionFromPackageJson,
@@ -2854,6 +2859,52 @@ async function commitMigrationIfRequested(
   }
 }
 
+// Commits any pre-existing working-tree state into a dedicated "checkpoint"
+// commit before the first migration runs. Without this, the first migration's
+// commit would absorb whatever was already pending — most commonly the
+// package.json edit `nx migrate latest` produces and the lockfile churn from
+// the orchestrator's `npm install --ignore-scripts` step — and migration 1's
+// validation would see that mixed in with the generator output. No-op when
+// the working tree is already clean.
+function commitCheckpointBeforeMigrations(
+  root: string,
+  commitPrefix: string
+): void {
+  if (!hasUncommittedChanges(root)) return;
+  // `commitChanges` swallows `git commit` failures when `directory` is passed
+  // (e.g. missing `user.email`, hook rejection) and returns the existing HEAD
+  // unchanged. Compare HEAD before vs after to detect whether the commit
+  // actually happened — otherwise we'd falsely log a checkpoint and
+  // migration 1 would absorb the pre-existing state, defeating the point.
+  const before = getLatestCommitSha(root);
+  let after: string | null = null;
+  let thrown: unknown;
+  try {
+    after = commitChanges(
+      `${commitPrefix}checkpoint before running migrations`,
+      root
+    );
+  } catch (e) {
+    thrown = e;
+  }
+  if (after && after !== before) {
+    logger.info(pc.dim(`- Checkpoint commit created: ${after}`));
+    return;
+  }
+  const reason = thrown instanceof Error ? thrown.message : undefined;
+  output.warn({
+    title: 'Could not create checkpoint commit before migrations',
+    bodyLines: [
+      ...(reason
+        ? [reason]
+        : [
+            'The commit produced no new HEAD. Check that `user.email` / `user.name` are configured and that commit hooks are not rejecting the commit.',
+          ]),
+      `Migration 1's commit will absorb any pre-existing working-tree state.`,
+    ],
+  });
+}
+
 class ChangedDepInstaller {
   private initialDeps: string;
   private _skippedInstall = false;
@@ -3083,6 +3134,10 @@ async function runMigrations(
         ? ', with each applied in a dedicated commit'
         : ''),
   });
+
+  if (effectiveCreateCommits) {
+    commitCheckpointBeforeMigrations(root, commitPrefix);
+  }
 
   const {
     migrationsWithNoChanges,

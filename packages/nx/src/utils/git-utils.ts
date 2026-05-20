@@ -355,6 +355,23 @@ export function isGitRepository(directory?: string): boolean {
   }
 }
 
+// Sync companion to `GitRepository.hasUncommittedChanges` for callers that
+// can't drop into the async class (e.g. the migrate orchestrator, which
+// branches on this before spawning subprocesses synchronously).
+export function hasUncommittedChanges(directory?: string): boolean {
+  try {
+    const out = execSync('git status --porcelain', {
+      encoding: 'utf8',
+      cwd: directory,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+    });
+    return out.trim() !== '';
+  } catch {
+    return false;
+  }
+}
+
 export function commitChanges(
   commitMessage: string,
   directory?: string
