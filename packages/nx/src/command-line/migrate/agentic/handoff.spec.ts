@@ -28,9 +28,9 @@ describe('handoff', () => {
   });
 
   describe('runDirPath', () => {
-    it('joins workspace + .nx/agentic + run id', () => {
+    it('joins workspace + .nx/migrate-runs + run id', () => {
       expect(runDirPath('/abs/ws', '23.0.0')).toBe(
-        join('/abs/ws', '.nx', 'agentic', '23.0.0')
+        join('/abs/ws', '.nx', 'migrate-runs', '23.0.0')
       );
     });
   });
@@ -39,7 +39,7 @@ describe('handoff', () => {
     it('creates the directory when it does not exist', () => {
       const dir = initRunDir(workspace, '23.0.0');
       expect(existsSync(dir)).toBe(true);
-      expect(dir).toBe(join(workspace, '.nx', 'agentic', '23.0.0'));
+      expect(dir).toBe(join(workspace, '.nx', 'migrate-runs', '23.0.0'));
     });
 
     it('wipes only the target run-id directory, leaving other runs untouched', () => {
@@ -69,9 +69,9 @@ describe('handoff', () => {
 
   describe('stepHandoffPath', () => {
     it('appends `<stepId>.json` to the run dir', () => {
-      expect(stepHandoffPath('/abs/ws/.nx/agentic/23.0.0', 'pkg__name')).toBe(
-        join('/abs/ws/.nx/agentic/23.0.0', 'pkg__name.json')
-      );
+      expect(
+        stepHandoffPath('/abs/ws/.nx/migrate-runs/23.0.0', 'pkg__name')
+      ).toBe(join('/abs/ws/.nx/migrate-runs/23.0.0', 'pkg__name.json'));
     });
   });
 

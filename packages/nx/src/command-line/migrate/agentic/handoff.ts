@@ -4,7 +4,7 @@ import { HandoffFile } from './types';
 
 /** Returns the run directory for a given workspace + run id (target version). */
 export function runDirPath(workspaceRoot: string, runId: string): string {
-  return join(workspaceRoot, '.nx', 'agentic', runId);
+  return join(workspaceRoot, '.nx', 'migrate-runs', runId);
 }
 
 /**

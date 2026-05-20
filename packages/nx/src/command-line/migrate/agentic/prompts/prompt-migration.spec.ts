@@ -8,7 +8,7 @@ describe('buildPromptMigrationUserPrompt', () => {
     promptPath:
       'tools/ai-migrations/@nx/storybook/9.2.0/migrate-css-imports.md',
     handoffFileAbsolutePath:
-      '/abs/workspace/.nx/agentic/23.0.0/migrate-css-imports.json',
+      '/abs/workspace/.nx/migrate-runs/23.0.0/migrate-css-imports.json',
   };
 
   it('includes the migration identifier and version inside the migration tag', () => {
@@ -54,7 +54,7 @@ describe('buildPromptMigrationUserPrompt', () => {
 
   it('embeds the absolute handoff file path inside a handoff_path tag', () => {
     expect(buildPromptMigrationUserPrompt(base)).toContain(
-      '<handoff_path>/abs/workspace/.nx/agentic/23.0.0/migrate-css-imports.json</handoff_path>'
+      '<handoff_path>/abs/workspace/.nx/migrate-runs/23.0.0/migrate-css-imports.json</handoff_path>'
     );
   });
 });

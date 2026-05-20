@@ -7,7 +7,8 @@ const baseCtx = {
   version: '21.1.0',
   description: 'Rewrite the react config file format',
   promptPath: 'tools/ai-migrations/@nx/react/21.1.0/rewrite-config.md',
-  handoffFileAbsolutePath: '/abs/workspace/.nx/agentic/21.1.0/step-id.json',
+  handoffFileAbsolutePath:
+    '/abs/workspace/.nx/migrate-runs/21.1.0/step-id.json',
 };
 
 function change(type: FileChange['type'], path: string): FileChange {

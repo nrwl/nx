@@ -10,7 +10,8 @@ const baseCtx: GenericValidationPromptContext = {
   name: '21-1-0-rewrite-config',
   version: '21.1.0',
   description: 'Rewrite the react config file format',
-  handoffFileAbsolutePath: '/abs/workspace/.nx/agentic/21.1.0/step-id.json',
+  handoffFileAbsolutePath:
+    '/abs/workspace/.nx/migrate-runs/21.1.0/step-id.json',
   impl: {
     changes: [
       change('UPDATE', 'apps/foo/project.json'),

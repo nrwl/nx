@@ -3,7 +3,8 @@ import { buildSystemPrompt } from './system-prompt';
 describe('buildSystemPrompt', () => {
   const ctx = {
     workspaceRoot: '/abs/workspace',
-    handoffFileAbsolutePath: '/abs/workspace/.nx/agentic/23.0.0/step-1.json',
+    handoffFileAbsolutePath:
+      '/abs/workspace/.nx/migrate-runs/23.0.0/step-1.json',
   };
 
   it('embeds the workspace root inside a workspace_root tag', () => {
@@ -14,7 +15,7 @@ describe('buildSystemPrompt', () => {
 
   it('embeds the absolute handoff file path inside a handoff_path tag', () => {
     expect(buildSystemPrompt(ctx)).toContain(
-      '<handoff_path>/abs/workspace/.nx/agentic/23.0.0/step-1.json</handoff_path>'
+      '<handoff_path>/abs/workspace/.nx/migrate-runs/23.0.0/step-1.json</handoff_path>'
     );
   });
 
