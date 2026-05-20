@@ -3,7 +3,7 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
-import { isTypedLintingEnabled } from '@nx/eslint/src/generators/utils/eslint-file';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import type { Schema as NodeApplicationGeneratorOptions } from '@nx/node/internal';
 import type { ApplicationGeneratorOptions, NormalizedOptions } from '../schema';

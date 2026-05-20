@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { isTypedLintingEnabled } from '@nx/eslint/src/generators/utils/eslint-file';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import type { NormalizedSchema } from './normalized-schema';
 import addLintingGenerator from '../../add-linting/add-linting';
 

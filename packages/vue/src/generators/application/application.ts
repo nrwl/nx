@@ -10,7 +10,7 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { isTypedLintingEnabled } from '@nx/eslint/src/generators/utils/eslint-file';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';

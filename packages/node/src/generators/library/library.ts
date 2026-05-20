@@ -22,7 +22,7 @@ import {
   updateTsConfigsToJs,
   writeJson,
 } from '@nx/devkit';
-import { isTypedLintingEnabled } from '@nx/eslint/src/generators/utils/eslint-file';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import {
   addSwcConfig,
