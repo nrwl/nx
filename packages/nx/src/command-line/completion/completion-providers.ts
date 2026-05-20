@@ -2,6 +2,7 @@ import { join } from 'path';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { readCachedProjectGraph } from '../../project-graph/project-graph';
 import { readJsonFile } from '../../utils/fileutils';
+import { findLocalPluginsWithGenerators } from '../../utils/plugins/local-plugins';
 import type { ProjectGraph } from '../../config/project-graph';
 
 /** Stale graphs are intentionally tolerated — do not "fix" by triggering
@@ -117,10 +118,7 @@ export function getGeneratorsForPlugin(
   return generators.filter((g) => g.startsWith(current));
 }
 
-interface PluginDir {
-  dir: string;
-  field: string;
-}
+type PluginDir = { dir: string; field: string };
 
 /** plugin name → { dir, generators-collection path }. Workspace-local
  *  plugins win over same-named installed ones. `prefix` skips non-matching
@@ -128,14 +126,7 @@ interface PluginDir {
 function collectPluginDirs(prefix = ''): Map<string, PluginDir> {
   const dirs = new Map<string, PluginDir>();
 
-  const addIfPlugin = (name: string, dir: string): void => {
-    const pkg = readJsonSafe(join(dir, 'package.json'));
-    const field = pkg?.generators ?? pkg?.schematics;
-    if (typeof field === 'string') {
-      dirs.set(name, { dir, field });
-    }
-  };
-
+  // Installed plugins: root package.json deps, resolved under node_modules.
   const rootPkg = readJsonSafe(join(workspaceRoot, 'package.json'));
   if (rootPkg) {
     const deps = {
@@ -144,24 +135,23 @@ function collectPluginDirs(prefix = ''): Map<string, PluginDir> {
     };
     for (const dep of Object.keys(deps)) {
       if (prefix && !dep.startsWith(prefix)) continue;
-      addIfPlugin(dep, join(workspaceRoot, 'node_modules', dep));
+      const dir = join(workspaceRoot, 'node_modules', dep);
+      const pkg = readJsonSafe(join(dir, 'package.json'));
+      const field = pkg?.generators ?? pkg?.schematics;
+      if (typeof field === 'string') dirs.set(dep, { dir, field });
     }
   }
 
+  // Workspace-local plugin projects — shared helper with utils/plugins.
+  // Local entries overwrite same-named installed ones (the local one is what
+  // the user is developing).
   const graph = getCachedProjectGraph();
-  for (const node of Object.values(graph?.nodes ?? {})) {
-    const root = node?.data?.root;
-    if (typeof root !== 'string' || !root) continue;
-    const projectDir = join(workspaceRoot, root);
-    const pkg = readJsonSafe(join(projectDir, 'package.json'));
-    const field = pkg?.generators ?? pkg?.schematics;
-    if (
-      pkg?.name &&
-      typeof field === 'string' &&
-      (!prefix || pkg.name.startsWith(prefix))
-    ) {
-      dirs.set(pkg.name, { dir: projectDir, field });
-    }
+  const projectRoots = Object.values(graph?.nodes ?? {})
+    .map((n) => n?.data?.root)
+    .filter((r): r is string => typeof r === 'string' && r.length > 0);
+  for (const [name, entry] of findLocalPluginsWithGenerators(projectRoots)) {
+    if (prefix && !name.startsWith(prefix)) continue;
+    dirs.set(name, entry);
   }
 
   return dirs;
