@@ -187,7 +187,7 @@ describe('completion/registrations', () => {
   });
 
   describe('aliases', () => {
-    // Aliases that should share metadata (by reference) with their
+    // Command aliases should share metadata (by reference) with the
     // canonical command. Catches drift if someone adds a new alias and
     // forgets to point it at the same object.
     it.each([['g', 'generate']])(
@@ -198,6 +198,27 @@ describe('completion/registrations', () => {
         );
       }
     );
+
+    // Option-alias groups: every member must resolve to the same handler
+    // function reference. Guards against someone changing one alias's
+    // handler without updating its siblings (the hand-maintained list
+    // drifts from yargs' alias declarations otherwise).
+    it.each([
+      ['run-many', ['projects', 'p']],
+      ['run-many', ['targets', 'target', 't']],
+      ['affected', ['projects', 'p']],
+      ['affected', ['targets', 'target', 't']],
+      ['graph', ['targets', 'target', 't']],
+      ['watch', ['projects', 'p']],
+    ])('%s: option-alias group %p shares a handler', (cmd, aliases) => {
+      const meta = findCompletionMetadata([cmd])?.metadata;
+      expect(meta).toBeDefined();
+      const first = meta?.flags?.[aliases[0]];
+      expect(first).toBeInstanceOf(Function);
+      for (const alias of aliases.slice(1)) {
+        expect(meta?.flags?.[alias]).toBe(first);
+      }
+    });
   });
 
   describe('infix target completion', () => {
