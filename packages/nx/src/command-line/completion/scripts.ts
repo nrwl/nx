@@ -1,22 +1,79 @@
-import { existsSync, readFileSync } from 'fs';
-import { delimiter, join } from 'path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { homedir } from 'os';
+import { delimiter, dirname, join } from 'path';
 
-type Shell = 'bash' | 'zsh' | 'fish' | 'powershell';
+export type Shell = 'bash' | 'zsh' | 'fish' | 'powershell';
+export const SHELLS: readonly Shell[] = ['bash', 'zsh', 'fish', 'powershell'];
 
-interface PrintCompletionScriptArgs {
+interface CompletionScriptArgs {
   force?: boolean;
+  stdout?: boolean;
 }
 
 export async function printCompletionScript(
   shell: Shell,
-  args: PrintCompletionScriptArgs
+  args: CompletionScriptArgs
 ): Promise<void> {
   // PATH check is for the outside-workspace fallback only; inside a
   // workspace the wrapper walks up to the local nx. Advisory.
   if (!args.force && !isNxOnPath()) {
     warnNxNotOnPath(shell);
   }
-  process.stdout.write(generateScript(shell));
+  if (args.stdout) {
+    process.stdout.write(generateScript(shell));
+    return;
+  }
+  installScript(shell);
+}
+
+/**
+ * Write the wrapper to the shell's default rc location, replacing any prior
+ * nx-completion block (idempotent via the begin/end markers). Logs the
+ * resolved path and a one-line "open a new shell" hint.
+ */
+function installScript(shell: Shell): void {
+  const script = generateScript(shell);
+  const path = installPathFor(shell);
+  if (!path) {
+    process.stderr.write(
+      `nx: automatic install isn't supported for ${shell} yet — run with --stdout and redirect manually.\n`
+    );
+    return;
+  }
+  mkdirSync(dirname(path), { recursive: true });
+
+  // Fish keeps each completion in its own file; bash/zsh/powershell append
+  // to a shared rc file so we strip any existing nx block first.
+  if (shell === 'fish') {
+    writeFileSync(path, script);
+  } else {
+    const existing = existsSync(path) ? readFileSync(path, 'utf8') : '';
+    const stripped = existing.replace(
+      /###-begin-nx-completions-###[\s\S]*?###-end-nx-completions-###\n?/g,
+      ''
+    );
+    const sep = stripped && !stripped.endsWith('\n') ? '\n' : '';
+    writeFileSync(path, stripped + sep + script);
+  }
+  process.stderr.write(
+    `nx: ${shell} completion installed at ${path}.\n` +
+      `    Open a new shell (or re-source the rc file) to activate.\n`
+  );
+}
+
+function installPathFor(shell: Shell): string | null {
+  const home = homedir();
+  switch (shell) {
+    case 'bash':
+      return join(home, '.bashrc');
+    case 'zsh':
+      return join(home, '.zshrc');
+    case 'fish':
+      return join(home, '.config', 'fish', 'completions', 'nx.fish');
+    case 'powershell':
+      // $PROFILE resolution needs pwsh; punt for now and tell the user.
+      return null;
+  }
 }
 
 function isNxOnPath(): boolean {
@@ -34,21 +91,14 @@ function isNxOnPath(): boolean {
 }
 
 function warnNxNotOnPath(shell: Shell): void {
-  const installCommand = {
-    bash: 'nx completion bash >> ~/.bashrc',
-    zsh: 'nx completion zsh >> ~/.zshrc',
-    fish: 'mkdir -p ~/.config/fish/completions && nx completion fish > ~/.config/fish/completions/nx.fish',
-    powershell: 'nx completion powershell | Out-File -Append $PROFILE',
-  }[shell];
   process.stderr.write(
     [
       `nx: \`nx\` is not on your PATH.`,
       `    The generated ${shell} script resolves a workspace-local nx when`,
       `    you tab-complete inside a project, but outside any workspace it`,
-      `    falls back to a bare \`nx\`. Install nx globally for completion to`,
-      `    work everywhere (e.g. \`pnpm add -g nx\` or \`npm i -g nx\`):`,
-      `        ${installCommand}`,
-      `    The script has still been emitted. Pass --force to skip this notice.`,
+      `    falls back to a bare \`nx\`. Install nx globally so completion`,
+      `    works everywhere (e.g. \`pnpm add -g nx\` or \`npm i -g nx\`).`,
+      `    Continuing — pass --force to skip this notice.`,
       ``,
     ].join('\n')
   );
@@ -72,6 +122,6 @@ const wrappers: Record<Shell, string> = {
   ),
 };
 
-function generateScript(shell: Shell): string {
+export function generateScript(shell: Shell): string {
   return wrappers[shell];
 }

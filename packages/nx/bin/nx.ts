@@ -76,6 +76,7 @@ async function main() {
       );
       await printCompletionScript(shell, {
         force: process.argv.includes('--force'),
+        stdout: process.argv.includes('--stdout'),
       });
       return;
     }

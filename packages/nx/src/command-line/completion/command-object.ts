@@ -1,79 +1,78 @@
 import { CommandModule } from 'yargs';
 import { handleImport } from '../../utils/handle-import';
 
-export const yargsCompletionCommand: CommandModule = {
-  command: 'completion',
+const SHELL_CHOICES = ['bash', 'zsh', 'fish', 'powershell'] as const;
+type Shell = (typeof SHELL_CHOICES)[number];
+
+interface CompletionArgs {
+  shell?: Shell;
+  force?: boolean;
+  stdout?: boolean;
+}
+
+export const yargsCompletionCommand: CommandModule<{}, CompletionArgs> = {
+  command: 'completion [shell]',
   describe:
-    'Output shell completion script for bash, zsh, fish, or powershell. Run `nx completion --help` for installation instructions.',
+    'Install shell completion for bash, zsh, fish, or powershell. Omit the shell to pick interactively.',
   builder: (yargs) =>
     yargs
-      .command(bashCompletionCommand)
-      .command(zshCompletionCommand)
-      .command(fishCompletionCommand)
-      .command(powershellCompletionCommand)
-      .demandCommand(
-        1,
-        'Please specify a shell: bash, zsh, fish, or powershell.'
-      )
+      .positional('shell', {
+        type: 'string',
+        choices: SHELL_CHOICES,
+        describe: 'Shell to install completion for.',
+      })
       .option('force', {
         type: 'boolean',
         default: false,
         describe:
-          'Generate the completion script even if `nx` is not found on PATH.',
+          'Install the completion script even if `nx` is not found on PATH.',
       })
-      .example('$0 completion bash >> ~/.bashrc', 'Enable bash completion')
-      .example('$0 completion zsh >> ~/.zshrc', 'Enable zsh completion')
+      .option('stdout', {
+        type: 'boolean',
+        default: false,
+        describe:
+          'Print the completion script to stdout instead of writing to the shell rc file.',
+      })
+      .example('$0 completion bash', 'Install bash completion to ~/.bashrc')
       .example(
-        'mkdir -p ~/.config/fish/completions && $0 completion fish > ~/.config/fish/completions/nx.fish',
-        'Enable fish completion (mkdir is needed because fish does not auto-create the parent directory on redirect)'
+        '$0 completion',
+        'Pick shells interactively and install completion for each'
       )
       .example(
-        '$0 completion powershell | Out-File -Append $PROFILE',
-        'Enable PowerShell completion'
-      ),
-  handler: async () => {},
-};
-
-const bashCompletionCommand: CommandModule = {
-  command: 'bash',
-  describe: 'Output bash completion script.',
+        '$0 completion bash --stdout >> ~/.bash_profile',
+        'Print to stdout for a custom rc location'
+      ) as any,
   handler: async (args) => {
-    await (
-      await handleImport('./scripts.js', __dirname)
-    ).printCompletionScript('bash', args);
+    const scripts = await handleImport('./scripts.js', __dirname);
+    if (args.shell) {
+      await scripts.printCompletionScript(args.shell, args);
+      process.exit(0);
+    }
+    const chosen = await pickShellsInteractively();
+    if (chosen.length === 0) {
+      process.stderr.write('nx: no shells selected — nothing installed.\n');
+      process.exit(0);
+    }
+    for (const shell of chosen) {
+      await scripts.printCompletionScript(shell, args);
+    }
     process.exit(0);
   },
 };
 
-const zshCompletionCommand: CommandModule = {
-  command: 'zsh',
-  describe: 'Output zsh completion script.',
-  handler: async (args) => {
-    await (
-      await handleImport('./scripts.js', __dirname)
-    ).printCompletionScript('zsh', args);
-    process.exit(0);
-  },
-};
-
-const fishCompletionCommand: CommandModule = {
-  command: 'fish',
-  describe: 'Output fish completion script.',
-  handler: async (args) => {
-    await (
-      await handleImport('./scripts.js', __dirname)
-    ).printCompletionScript('fish', args);
-    process.exit(0);
-  },
-};
-
-const powershellCompletionCommand: CommandModule = {
-  command: 'powershell',
-  describe: 'Output PowerShell completion script.',
-  handler: async (args) => {
-    await (
-      await handleImport('./scripts.js', __dirname)
-    ).printCompletionScript('powershell', args);
-    process.exit(0);
-  },
-};
+async function pickShellsInteractively(): Promise<Shell[]> {
+  if (!process.stdin.isTTY || !process.stderr.isTTY) {
+    process.stderr.write(
+      'nx: please specify a shell — `nx completion <bash|zsh|fish|powershell>`.\n'
+    );
+    process.exit(1);
+  }
+  const { prompt } = (await import('enquirer')) as any;
+  const answer = (await prompt({
+    type: 'multiselect',
+    name: 'shells',
+    message: 'Install nx completion for which shell(s)?',
+    choices: SHELL_CHOICES.map((name) => ({ name, value: name })),
+  })) as { shells?: Shell[] };
+  return answer.shells ?? [];
+}

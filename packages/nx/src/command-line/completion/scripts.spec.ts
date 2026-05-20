@@ -1,30 +1,11 @@
-import { printCompletionScript } from './scripts';
+import { generateScript } from './scripts';
 
 const SHELLS = ['bash', 'zsh', 'fish', 'powershell'] as const;
 type Shell = (typeof SHELLS)[number];
 
 describe('completion/scripts', () => {
-  let originalWrite: typeof process.stdout.write;
-  let captured: string;
-
-  beforeEach(() => {
-    captured = '';
-    originalWrite = process.stdout.write.bind(process.stdout);
-    (process.stdout as any).write = (chunk: any) => {
-      captured += String(chunk);
-      return true;
-    };
-  });
-
-  afterEach(() => {
-    process.stdout.write = originalWrite;
-  });
-
   async function generate(shell: Shell): Promise<string> {
-    captured = '';
-    // force: true skips the PATH-probe advisory so the test is hermetic.
-    await printCompletionScript(shell, { force: true });
-    return captured;
+    return generateScript(shell);
   }
 
   // The shell wrappers are templated strings — a copy-paste slip (e.g. the
