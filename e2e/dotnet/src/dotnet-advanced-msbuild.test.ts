@@ -3,6 +3,7 @@ import {
   checkFilesMatchingPatternExist,
   cleanupProject,
   newProject,
+  removeFile,
   runCLI,
   tmpProjPath,
   uniq,
@@ -408,6 +409,16 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
       );
     });
 
+    afterAll(() => {
+      // The mere presence of a workspace-root Directory.Packages.props enables
+      // Central Package Management workspace-wide, which makes `dotnet restore`
+      // fail (NU1008) for every other project that pins versions inline. Remove
+      // the files this block wrote so later blocks (which restore/build other
+      // projects) aren't poisoned by leaked state.
+      removeFile('Directory.Packages.props');
+      removeFile('DirBuildInputsApp/Directory.Build.targets');
+    });
+
     it('should declare only existing Directory.* files as inputs', () => {
       const projectDetails = runCLI(`show project DirBuildInputsApp --json`);
       const details = JSON.parse(projectDetails);
@@ -463,6 +474,12 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
   </PropertyGroup>
 </Project>`
       );
+
+      // Restore after switching to the artifacts layout so the artifacts/obj
+      // assets file exists for the `--no-restore` build below. The other
+      // artifacts blocks in this file do the same; relying on a prior block to
+      // have left UseArtifactsOutput enabled is brittle (test ordering).
+      runCLI('run-many -t restore');
     });
 
     it('should use artifacts path for publish output', () => {
