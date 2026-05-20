@@ -49,7 +49,7 @@ export const yargsCompletionCommand: CommandModule<{}, CompletionArgs> = {
       : scripts.installCompletionScript;
     const shells = args.shell ? [args.shell] : await pickShellsInteractively();
     if (shells.length === 0) {
-      process.stderr.write('nx: no shells selected — nothing installed.\n');
+      console.warn('nx: no shells selected — nothing installed.');
       process.exit(0);
     }
     // Fire the PATH-advisory once, before any per-shell emit.
@@ -61,8 +61,8 @@ export const yargsCompletionCommand: CommandModule<{}, CompletionArgs> = {
 
 async function pickShellsInteractively(): Promise<Shell[]> {
   if (!process.stdin.isTTY || !process.stderr.isTTY) {
-    process.stderr.write(
-      'nx: please specify a shell — `nx completion <bash|zsh|fish|powershell>`.\n'
+    console.warn(
+      'nx: please specify a shell — `nx completion <bash|zsh|fish|powershell>`.'
     );
     process.exit(1);
   }

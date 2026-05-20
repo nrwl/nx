@@ -28,7 +28,7 @@ export function installCompletionScript(shell: Shell): void {
  */
 export function maybeWarnNxNotOnPath(): void {
   if (isNxOnPath()) return;
-  process.stderr.write(
+  console.warn(
     [
       `nx: \`nx\` is not on your PATH.`,
       `    The generated wrappers resolve a workspace-local nx when you`,
@@ -36,7 +36,6 @@ export function maybeWarnNxNotOnPath(): void {
       `    fall back to a bare \`nx\`. Install nx globally so completion`,
       `    works everywhere (e.g. \`pnpm add -g nx\` or \`npm i -g nx\`).`,
       `    Continuing — pass --force to skip this notice.`,
-      ``,
     ].join('\n')
   );
 }
@@ -45,8 +44,8 @@ function writeScriptToRcFile(shell: Shell): void {
   const script = generateScript(shell);
   const path = installPathFor(shell);
   if (!path) {
-    process.stderr.write(
-      `nx: automatic install isn't supported for ${shell} yet — run with --stdout and redirect manually.\n`
+    console.warn(
+      `nx: automatic install isn't supported for ${shell} yet — run with --stdout and redirect manually.`
     );
     return;
   }
@@ -61,18 +60,18 @@ function writeScriptToRcFile(shell: Shell): void {
   } else {
     const existing = existsSync(path) ? readFileSync(path, 'utf8') : '';
     if (existing.includes('###-begin-nx-completions-###')) {
-      process.stderr.write(
+      console.warn(
         `nx: ${shell} completion already present in ${path} — skipping.\n` +
-          `    Remove the existing block manually if you need to reinstall.\n`
+          `    Remove the existing block manually if you need to reinstall.`
       );
       return;
     }
     const sep = existing && !existing.endsWith('\n') ? '\n' : '';
     writeFileSync(path, existing + sep + script);
   }
-  process.stderr.write(
+  console.warn(
     `nx: ${shell} completion installed at ${path}.\n` +
-      `    Open a new shell (or re-source the rc file) to activate.\n`
+      `    Open a new shell (or re-source the rc file) to activate.`
   );
 }
 
@@ -128,23 +127,22 @@ function isNxOnPath(): boolean {
 }
 
 // Wrappers live as plain files in ./scripts/ for syntax highlighting and
-// shellcheck. Read once at module load, emitted verbatim.
+// shellcheck. Lazy-read + cached per shell — a typical invocation only
+// touches one of the four.
 const WRAPPER_FILES: Record<Shell, string> = {
   bash: 'bash.sh',
   zsh: 'zsh.zsh',
   fish: 'fish.fish',
   powershell: 'powershell.ps1',
 };
-const wrappers: Record<Shell, string> = {
-  bash: readFileSync(join(__dirname, 'scripts', WRAPPER_FILES.bash), 'utf-8'),
-  zsh: readFileSync(join(__dirname, 'scripts', WRAPPER_FILES.zsh), 'utf-8'),
-  fish: readFileSync(join(__dirname, 'scripts', WRAPPER_FILES.fish), 'utf-8'),
-  powershell: readFileSync(
-    join(__dirname, 'scripts', WRAPPER_FILES.powershell),
-    'utf-8'
-  ),
-};
+const wrapperCache: Partial<Record<Shell, string>> = {};
 
 export function generateScript(shell: Shell): string {
-  return wrappers[shell];
+  if (wrapperCache[shell] === undefined) {
+    wrapperCache[shell] = readFileSync(
+      join(__dirname, 'scripts', WRAPPER_FILES[shell]),
+      'utf-8'
+    );
+  }
+  return wrapperCache[shell]!;
 }
