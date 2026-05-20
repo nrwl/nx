@@ -39,6 +39,18 @@ describe('completion/registrations', () => {
     ).not.toBeNull();
   });
 
+  it('registers `add` with first-party plugin suggestions', () => {
+    const match = findCompletionMetadata(['add']);
+    const complete = match?.metadata.positionals?.[0]?.complete;
+    expect(complete).toBeInstanceOf(Function);
+    // Prefix-filtered: typing `@nx/r` lands on the rspack/react/etc. set.
+    const results = complete?.('@nx/r', ['add', '@nx/r']) ?? [];
+    expect(results).toEqual(
+      expect.arrayContaining(['@nx/react', '@nx/rspack'])
+    );
+    expect(results.every((r) => r.startsWith('@nx/r'))).toBe(true);
+  });
+
   it.each([
     'build',
     'serve',

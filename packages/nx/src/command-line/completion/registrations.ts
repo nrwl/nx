@@ -16,3 +16,4 @@ import '../show/completion';
 import '../generate/completion';
 import '../graph/completion';
 import '../watch/completion';
+import '../add/completion';
