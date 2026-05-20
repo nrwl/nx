@@ -2548,7 +2548,7 @@ export async function executeMigrations(
           notRunMigrationsCount++;
         }
       } else if (isHybridMigration(m)) {
-        const { changes, nextSteps, agentContext, logs } =
+        const { changes, nextSteps, agentContext, logs, madeChanges } =
           await runNxOrAngularMigration(
             root,
             m,
@@ -2560,7 +2560,7 @@ export async function executeMigrations(
             /* captureGeneratorOutput: */ !!agenticRun
           );
         allNextSteps.push(...nextSteps);
-        const generatorMadeChanges = changes.length > 0;
+        const generatorMadeChanges = madeChanges;
 
         if (agenticRun) {
           // Install any deps the deterministic phase added/bumped before the
@@ -2617,7 +2617,7 @@ export async function executeMigrations(
         // uncommitted in the working tree for the user to review.
         const validationRun =
           agenticRun && shouldRunValidation ? agenticRun : undefined;
-        const { changes, nextSteps, agentContext, logs } =
+        const { changes, nextSteps, agentContext, logs, madeChanges } =
           await runNxOrAngularMigration(
             root,
             m,
@@ -2631,9 +2631,13 @@ export async function executeMigrations(
             /* captureGeneratorOutput: */ !!validationRun
           );
         allNextSteps.push(...nextSteps);
-        const generatorMadeChanges = changes.length > 0;
+        // Validation needs the Nx-side `FileChange[]` for the prompt's
+        // `<files_changed>` block; Angular schematic migrations report
+        // `madeChanges` without populating `changes`, so they're skipped
+        // here even when `validationRun` is set.
+        const canRunValidation = !!validationRun && changes.length > 0;
 
-        if (validationRun && generatorMadeChanges) {
+        if (canRunValidation) {
           // Install any deps the deterministic phase added/bumped before the
           // validation agent runs — the agent may run tasks that need them.
           await changedDepInstaller.installDepsIfChanged();
@@ -2669,8 +2673,20 @@ export async function executeMigrations(
           if (printDroppedAgentContext && agentContext.length > 0) {
             printDroppedAgentContext({ migration: m, agentContext });
           }
-          if (!generatorMadeChanges) {
+          if (!madeChanges) {
             migrationsWithNoChanges.push(m);
+          } else if (validationRun) {
+            // Made changes but validation couldn't run (e.g. Angular
+            // schematic). We deferred the in-function commit by passing
+            // `shouldCreateCommits: false`; commit explicitly so per-migration
+            // commits aren't lost when --create-commits is in effect.
+            await commitMigrationIfRequested(
+              root,
+              m,
+              shouldCreateCommits,
+              commitPrefix,
+              () => changedDepInstaller.installDepsIfChanged()
+            );
           }
         }
       }
@@ -2906,6 +2922,7 @@ export async function runNxOrAngularMigration(
   nextSteps: string[];
   agentContext: string[];
   logs: string;
+  madeChanges: boolean;
 }> {
   if (!installDepsIfChanged) {
     const changedDepInstaller = new ChangedDepInstaller(root);
@@ -2919,6 +2936,12 @@ export async function runNxOrAngularMigration(
   let nextSteps: string[] = [];
   let agentContext: string[] = [];
   let logs = '';
+  // `changes` is the Nx-side FileChange[] which Angular schematic migrations
+  // do NOT populate — Angular reports its "did anything happen" signal via the
+  // ngCliAdapter's `madeChanges` boolean. Tracking a unified `madeChanges`
+  // here is what lets callers commit Angular-driven changes correctly when
+  // they've deferred the in-function commit.
+  let madeChanges = false;
   if (!isAngularMigration(collection, migration.name)) {
     ({ nextSteps, changes, agentContext, logs } = await runNxMigration(
       root,
@@ -2928,12 +2951,13 @@ export async function runNxOrAngularMigration(
       migration.version,
       captureGeneratorOutput
     ));
+    madeChanges = changes.length > 0;
 
     logger.info(`Ran ${migration.name} from ${migration.package}`);
     logger.info(`  ${migration.description}\n`);
-    if (changes.length < 1) {
+    if (!madeChanges) {
       logger.info(`No changes were made\n`);
-      return { changes, nextSteps, agentContext, logs };
+      return { changes, nextSteps, agentContext, logs, madeChanges };
     }
 
     logger.info('Changes:');
@@ -2942,7 +2966,7 @@ export async function runNxOrAngularMigration(
   } else {
     const ngCliAdapter = await getNgCompatLayer();
     const migrationProjectGraph = await createProjectGraphAsync();
-    const { madeChanges, loggingQueue } = await ngCliAdapter.runMigration(
+    const ngResult = await ngCliAdapter.runMigration(
       root,
       migration.package,
       migration.name,
@@ -2950,17 +2974,18 @@ export async function runNxOrAngularMigration(
       isVerbose,
       migrationProjectGraph
     );
-    logs = loggingQueue.join('\n');
+    madeChanges = ngResult.madeChanges;
+    logs = ngResult.loggingQueue.join('\n');
 
     logger.info(`Ran ${migration.name} from ${migration.package}`);
     logger.info(`  ${migration.description}\n`);
     if (!madeChanges) {
       logger.info(`No changes were made\n`);
-      return { changes, nextSteps, agentContext, logs };
+      return { changes, nextSteps, agentContext, logs, madeChanges };
     }
 
     logger.info('Changes:');
-    loggingQueue.forEach((log) => logger.info('  ' + log));
+    ngResult.loggingQueue.forEach((log) => logger.info('  ' + log));
     logger.info('');
   }
 
@@ -2977,7 +3002,7 @@ export async function runNxOrAngularMigration(
     await installDepsIfChanged();
   }
 
-  return { changes, nextSteps, agentContext, logs };
+  return { changes, nextSteps, agentContext, logs, madeChanges };
 }
 
 async function runMigrations(
