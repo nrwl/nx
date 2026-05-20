@@ -1,4 +1,7 @@
-import { renderListItem } from './prompts/shared-rendering';
+import {
+  filterNonEmptyStrings,
+  renderListItem,
+} from './prompts/shared-rendering';
 
 /**
  * Surfaces a migration's `agentContext` to stdout in an XML-tagged block so an
@@ -20,9 +23,7 @@ export interface DroppedAgentContextInput {
 export function formatDroppedAgentContextForOuterAgent(
   input: DroppedAgentContextInput
 ): string {
-  const entries = input.agentContext.filter(
-    (s): s is string => typeof s === 'string' && s.trim().length > 0
-  );
+  const entries = filterNonEmptyStrings(input.agentContext);
   if (entries.length === 0) {
     return '';
   }

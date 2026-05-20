@@ -27,3 +27,11 @@ const ANSI_RE = /\x1b\[[0-9;]*[a-zA-Z]/g;
 export function stripAnsi(text: string): string {
   return text.replace(ANSI_RE, '');
 }
+
+// `agentContext` arrives from user-authored migration code; defend against
+// non-string and whitespace-only entries before rendering.
+export function filterNonEmptyStrings(entries: unknown[]): string[] {
+  return entries.filter(
+    (s): s is string => typeof s === 'string' && s.trim().length > 0
+  );
+}

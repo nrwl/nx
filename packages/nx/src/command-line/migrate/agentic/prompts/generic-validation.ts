@@ -1,5 +1,6 @@
 import type { FileChange } from '../../../../generators/tree';
 import {
+  filterNonEmptyStrings,
   renderFileEntry,
   renderKeyMultilineValue,
   renderListItem,
@@ -100,9 +101,7 @@ export function buildGenericValidationUserPrompt(
     lines.push(``, ...fileListBlock);
   }
 
-  const agentContext = (ctx.impl.agentContext ?? []).filter(
-    (s) => typeof s === 'string' && s.trim().length > 0
-  );
+  const agentContext = filterNonEmptyStrings(ctx.impl.agentContext ?? []);
   if (agentContext.length > 0) {
     lines.push(
       ``,

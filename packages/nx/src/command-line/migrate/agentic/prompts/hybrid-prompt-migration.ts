@@ -1,5 +1,6 @@
 import type { FileChange } from '../../../../generators/tree';
 import {
+  filterNonEmptyStrings,
   renderFileEntry,
   renderKeyMultilineValue,
   renderListItem,
@@ -65,9 +66,7 @@ export function buildHybridPromptUserPrompt(
   const fileList = renderFileList(ctx.impl?.changes);
   const showFileList = !!ctx.impl?.hasDiffContext && !!fileList;
   const logs = stripAnsi(ctx.impl?.logs ?? '').trim();
-  const agentContext = (ctx.impl?.agentContext ?? []).filter(
-    (s) => typeof s === 'string' && s.trim().length > 0
-  );
+  const agentContext = filterNonEmptyStrings(ctx.impl?.agentContext ?? []);
 
   if (logs) {
     lines.push(

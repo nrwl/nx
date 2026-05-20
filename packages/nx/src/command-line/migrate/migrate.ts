@@ -2611,41 +2611,37 @@ export async function executeMigrations(
           );
         }
       } else {
-        // generator-only (no prompt). When the agentic flow is enabled and
-        // `--validate` is on, run the framework-owned generic-validation
-        // agent step after the generator produces changes. The commit is
-        // deferred until validation succeeds — consistent with the hybrid
-        // path's failure handling (no commit on a thrown handoff).
-        const wantsGenericValidation = !!agenticRun && shouldRunValidation;
+        // Defer the commit until validation succeeds when the new generic-
+        // validation step runs — failed validation throws before the explicit
+        // commit, leaving the generator's changes + the agent's partial fixes
+        // uncommitted in the working tree for the user to review.
+        const validationRun =
+          agenticRun && shouldRunValidation ? agenticRun : undefined;
         const { changes, nextSteps, agentContext, logs } =
           await runNxOrAngularMigration(
             root,
             m,
             isVerbose,
-            /* shouldCreateCommits: */ wantsGenericValidation
+            /* shouldCreateCommits: */ validationRun
               ? false
               : shouldCreateCommits,
             commitPrefix,
             () => changedDepInstaller.installDepsIfChanged(),
             /* handleInstallDeps: */ false,
-            /* captureGeneratorOutput: */ wantsGenericValidation
+            /* captureGeneratorOutput: */ !!validationRun
           );
         allNextSteps.push(...nextSteps);
         const generatorMadeChanges = changes.length > 0;
 
-        if (wantsGenericValidation && generatorMadeChanges) {
+        if (validationRun && generatorMadeChanges) {
           // Install any deps the deterministic phase added/bumped before the
           // validation agent runs — the agent may run tasks that need them.
           await changedDepInstaller.installDepsIfChanged();
-          // Throws on `status: "failed"`. `commitMigrationIfRequested` below
-          // is intentionally only reached on the success path — failed
-          // validation leaves the generator's changes + the agent's partial
-          // fixes uncommitted in the working tree for the user to review.
           await runAgenticPromptStep(
             root,
             m,
-            agenticRun!.agentic,
-            agenticRun!.runDir,
+            validationRun.agentic,
+            validationRun.runDir,
             changedDepInstaller,
             {
               implContext: {
