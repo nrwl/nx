@@ -4,6 +4,7 @@
 import { getCompletionShell } from './trigger';
 import { parseCompletionArgs } from './argv-layout';
 import { getRegisteredTopLevelPaths } from './metadata';
+import { getNxCommandHandlers } from './command-handlers';
 
 /** Slow-path entry point. Returns true if anything was emitted. */
 export function tryCommandSurfaceCompletion(): boolean {
@@ -30,13 +31,7 @@ export function getTopLevelCommands(
   current: string,
   withDesc: boolean
 ): string[] | null {
-  const { commandsObject } = require('../nx-commands') as {
-    commandsObject: any;
-  };
-  const handlers = commandsObject
-    .getInternalMethods()
-    .getCommandInstance()
-    .getCommandHandlers();
+  const handlers = getNxCommandHandlers();
 
   const seen = new Set<string>();
   const completions: string[] = [];
@@ -67,15 +62,7 @@ export function getCommandCompletions(
   current: string,
   args: string[]
 ): string[] | null {
-  // Lazy require to avoid circular dependency with nx-commands.
-  const { commandsObject } = require('../nx-commands') as {
-    commandsObject: any;
-  };
-  const handlers = commandsObject
-    .getInternalMethods()
-    .getCommandInstance()
-    .getCommandHandlers();
-
+  const handlers = getNxCommandHandlers();
   const cmdName = args.find((a) => handlers[a]);
   if (!cmdName) {
     return null;
