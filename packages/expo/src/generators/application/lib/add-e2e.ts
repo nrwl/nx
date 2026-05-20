@@ -11,7 +11,7 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { isTypedLintingEnabled } from '@nx/eslint/src/generators/utils/eslint-file';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
 import { nxVersion } from '../../../utils/versions';
