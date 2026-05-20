@@ -1,4 +1,5 @@
 import type { Compilation, Compiler, RspackPluginInstance } from '@rspack/core';
+import { bridgeRspackServeEnv } from '../../../utils/bridge-rspack-serve-env';
 import * as pc from 'picocolors';
 import {
   logger,
@@ -41,6 +42,7 @@ export class NxModuleFederationSSRDevServerPlugin
   }
 
   apply(compiler: Compiler) {
+    bridgeRspackServeEnv();
     const isDevServer = process.env['WEBPACK_SERVE'];
     if (!isDevServer) {
       return;
