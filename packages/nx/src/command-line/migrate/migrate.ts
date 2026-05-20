@@ -2580,7 +2580,19 @@ export async function executeMigrations(
             () => changedDepInstaller.installDepsIfChanged()
           );
         } else {
-          // `agentContext` is agent-only by contract; dropped here.
+          // The inner prompt step doesn't run here (agentic disabled, or
+          // running inside an outer agent). Under `inside-agent`, surface the
+          // generator-emitted `agentContext` to stdout so the outer driving
+          // agent can ingest it (§3.1 / §10.11). Under `disabled` the run is
+          // human-driven; agent-targeted context would only add noise — drop.
+          if (agentic?.kind === 'inside-agent' && agentContext.length > 0) {
+            const { printDroppedAgentContextForOuterAgent } =
+              require('./agentic/print-dropped-agent-context') as typeof import('./agentic/print-dropped-agent-context');
+            printDroppedAgentContextForOuterAgent({
+              migration: m,
+              agentContext,
+            });
+          }
           skippedPrompts.push(m);
           if (!generatorMadeChanges) {
             migrationsWithNoChanges.push(m);
@@ -2645,8 +2657,23 @@ export async function executeMigrations(
             commitPrefix,
             () => changedDepInstaller.installDepsIfChanged()
           );
-        } else if (!generatorMadeChanges) {
-          migrationsWithNoChanges.push(m);
+        } else {
+          // No inner validation step ran. Under `inside-agent`, surface the
+          // generator-emitted `agentContext` to stdout so the outer driving
+          // agent can ingest it (§3.1 / §10.11). Covers both the "had changes
+          // but validation skipped under inside-agent" and the "no changes but
+          // non-empty agentContext" paths.
+          if (agentic?.kind === 'inside-agent' && agentContext.length > 0) {
+            const { printDroppedAgentContextForOuterAgent } =
+              require('./agentic/print-dropped-agent-context') as typeof import('./agentic/print-dropped-agent-context');
+            printDroppedAgentContextForOuterAgent({
+              migration: m,
+              agentContext,
+            });
+          }
+          if (!generatorMadeChanges) {
+            migrationsWithNoChanges.push(m);
+          }
         }
       }
       logger.info(`---------------------------------------------------------`);
