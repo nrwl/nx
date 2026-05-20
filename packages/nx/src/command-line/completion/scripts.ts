@@ -118,8 +118,8 @@ _nx_completions()
     done
 
     # Stderr is hidden so a stray warning never lands in the completion
-    # buffer. Set NX_COMPLETE_DEBUG to surface it when completion misbehaves.
-    if [ -n "\$NX_COMPLETE_DEBUG" ]; then
+    # buffer. Honors NX_VERBOSE_LOGGING (Nx's standard debug switch) to surface it.
+    if [ -n "\$NX_VERBOSE_LOGGING" ]; then
       type_list=$(NX_COMPLETE=bash "\$nx_cmd" "\${args[@]}")
     else
       type_list=$(NX_COMPLETE=bash "\$nx_cmd" "\${args[@]}" 2>/dev/null)
@@ -175,8 +175,8 @@ if type compdef &>/dev/null; then
     done
 
     # Stderr is hidden so a stray warning never lands in the completion
-    # buffer. Set NX_COMPLETE_DEBUG to surface it when completion misbehaves.
-    if [[ -n "\$NX_COMPLETE_DEBUG" ]]; then
+    # buffer. Honors NX_VERBOSE_LOGGING (Nx's standard debug switch) to surface it.
+    if [[ -n "\$NX_VERBOSE_LOGGING" ]]; then
       IFS=$'\\n' reply=($(NX_COMPLETE=zsh "\$nx_cmd" "\${words[@]}"))
     else
       IFS=$'\\n' reply=($(NX_COMPLETE=zsh "\$nx_cmd" "\${words[@]}" 2>/dev/null))
@@ -246,8 +246,8 @@ function __nx_completions
     set dir (dirname "\$dir")
   end
   # Stderr is hidden so a stray warning never lands in the completion buffer.
-  # Set NX_COMPLETE_DEBUG to surface it when completion misbehaves.
-  if test -n "\$NX_COMPLETE_DEBUG"
+  # Honors NX_VERBOSE_LOGGING (Nx's standard debug switch) to surface it.
+  if test -n "\$NX_VERBOSE_LOGGING"
     NX_COMPLETE=fish \$nx_cmd \$tokens "\$current"
   else
     NX_COMPLETE=fish \$nx_cmd \$tokens "\$current" 2>/dev/null
@@ -299,9 +299,9 @@ Register-ArgumentCompleter -Native -CommandName nx -ScriptBlock {
     $env:NX_COMPLETE = 'powershell'
     try {
         # Stderr is hidden so a stray warning never lands in the completion
-        # buffer. Set NX_COMPLETE_DEBUG to surface it when completion
-        # misbehaves.
-        if ($env:NX_COMPLETE_DEBUG) {
+        # buffer. Honors NX_VERBOSE_LOGGING (Nx's standard debug switch) to
+        # surface it.
+        if ($env:NX_VERBOSE_LOGGING) {
             $lines = & $nxCmd @tokens
         } else {
             $lines = & $nxCmd @tokens 2>$null

@@ -70,10 +70,10 @@ async function main() {
     } catch (e) {
       // A broken completion must produce NO suggestions on stdout — never a
       // partial list or a stack trace in the user's command line. Swallow,
-      // exit 0. Under NX_COMPLETE_DEBUG the wrapper stops discarding stderr,
+      // exit 0. Under NX_VERBOSE_LOGGING the wrapper stops discarding stderr,
       // so surface the cause there (stderr only) to make "no suggestions"
       // debuggable.
-      if (process.env.NX_COMPLETE_DEBUG) {
+      if (process.env.NX_VERBOSE_LOGGING) {
         console.error(e);
       }
     }

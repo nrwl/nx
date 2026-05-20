@@ -54,11 +54,11 @@ describe('completion/scripts', () => {
         }
       });
 
-      it('gates the stderr discard on NX_COMPLETE_DEBUG', async () => {
+      it('gates the stderr discard on NX_VERBOSE_LOGGING', async () => {
         const script = await generate(shell);
         // Both must be present: the debug var AND the default discard.
         // Together they prove the discard is conditional, not hardcoded.
-        expect(script).toContain('NX_COMPLETE_DEBUG');
+        expect(script).toContain('NX_VERBOSE_LOGGING');
         expect(script).toContain(
           shell === 'powershell' ? '2>$null' : '2>/dev/null'
         );
