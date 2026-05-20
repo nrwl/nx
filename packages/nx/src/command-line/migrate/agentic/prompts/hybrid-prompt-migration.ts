@@ -42,7 +42,7 @@ export function buildHybridPromptUserPrompt(
   ctx: HybridPromptMigrationContext
 ): string {
   const lines: string[] = [
-    `Apply the AI-driven half of a two-phase Nx migration. The deterministic generator phase has already run; the sections below summarize what it did so you can complete the paired prompt step in context.`,
+    `Complete the AI-driven step that follows the generator phase of a two-phase Nx migration. The deterministic generator phase has already run; the sections below summarize what it did. The step may apply additional changes, verify the generator's output, or both — follow the instructions file.`,
     ``,
     `<migration>`,
     `package: ${ctx.package}`,
@@ -86,7 +86,7 @@ export function buildHybridPromptUserPrompt(
   if (agentContext.length > 0) {
     lines.push(
       ``,
-      `<advisory_context note="hints from the generator phase; consult while applying the instructions, not as separate tasks">`,
+      `<advisory_context note="hints from the generator phase; consult while following the instructions, not as separate tasks">`,
       ...agentContext.map(renderListItem),
       `</advisory_context>`
     );

@@ -36,6 +36,18 @@ describe('buildHybridPromptUserPrompt', () => {
     expect(out).toMatch(/<precedence>[\s\S]*instructions file wins/);
   });
 
+  it('uses a neutral lead framing that does not presuppose apply-only behavior', () => {
+    const out = buildHybridPromptUserPrompt(baseCtx);
+    expect(out).toMatch(
+      /Complete the AI-driven step that follows the generator phase/
+    );
+    expect(out).toMatch(
+      /may apply additional changes, verify the generator's output, or both/
+    );
+    // The old apply-only framing should be gone.
+    expect(out).not.toContain('Apply the AI-driven half of a two-phase');
+  });
+
   it('omits the description line when none is provided', () => {
     const out = buildHybridPromptUserPrompt({
       ...baseCtx,
@@ -136,6 +148,10 @@ describe('buildHybridPromptUserPrompt', () => {
     expect(out).toContain('- Consumer X may need manual update');
     expect(out).toContain('- Adapter Y left untouched');
     expect(out).toContain('</advisory_context>');
+    // Note header uses "following" not "applying" so the advisory remains
+    // accurate for validation-only hybrid prompts.
+    expect(out).toContain('consult while following the instructions');
+    expect(out).not.toContain('consult while applying the instructions');
   });
 
   it('renders multi-line agentContext entries with continuation indent so each entry stays a single list item', () => {

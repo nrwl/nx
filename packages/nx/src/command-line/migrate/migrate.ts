@@ -2656,24 +2656,43 @@ async function runAgenticPromptStep(
     mode,
   });
 
-  const promptCtx = {
-    package: migration.package,
-    name: migration.name,
-    version: migration.version,
-    description: migration.description,
-    promptPath: migration.prompt!,
-    handoffFileAbsolutePath: handoffFilePath,
-  };
-  const userPrompt = implContext
-    ? (
-        require('./agentic/prompts/hybrid-prompt-migration') as typeof import('./agentic/prompts/hybrid-prompt-migration')
-      ).buildHybridPromptUserPrompt({
-        ...promptCtx,
-        impl: implContext,
-      })
-    : (
-        require('./agentic/prompts/prompt-migration') as typeof import('./agentic/prompts/prompt-migration')
-      ).buildPromptMigrationUserPrompt(promptCtx);
+  let userPrompt: string;
+  if (mode === 'generic-validation') {
+    if (!implContext) {
+      throw new Error(
+        `Internal error: generic-validation mode requires impl context (logs, changes, agentContext, hasDiffContext) but none was provided.`
+      );
+    }
+    const { buildGenericValidationUserPrompt } =
+      require('./agentic/prompts/generic-validation') as typeof import('./agentic/prompts/generic-validation');
+    userPrompt = buildGenericValidationUserPrompt({
+      package: migration.package,
+      name: migration.name,
+      version: migration.version,
+      description: migration.description,
+      handoffFileAbsolutePath: handoffFilePath,
+      impl: implContext,
+    });
+  } else {
+    const promptCtx = {
+      package: migration.package,
+      name: migration.name,
+      version: migration.version,
+      description: migration.description,
+      promptPath: migration.prompt!,
+      handoffFileAbsolutePath: handoffFilePath,
+    };
+    userPrompt = implContext
+      ? (
+          require('./agentic/prompts/hybrid-prompt-migration') as typeof import('./agentic/prompts/hybrid-prompt-migration')
+        ).buildHybridPromptUserPrompt({
+          ...promptCtx,
+          impl: implContext,
+        })
+      : (
+          require('./agentic/prompts/prompt-migration') as typeof import('./agentic/prompts/prompt-migration')
+        ).buildPromptMigrationUserPrompt(promptCtx);
+  }
 
   const definition = getAgentDefinition(agentic.selectedAgent.id);
   if (!definition) {
