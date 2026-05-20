@@ -50,16 +50,101 @@ describe('buildSystemPrompt', () => {
     expect(prompt).toContain('</scope_rules>');
   });
 
-  it('warns against changes outside the migration scope', () => {
-    expect(buildSystemPrompt(ctx)).toMatch(/refactor|reformat|dependencies/i);
+  describe('author mode (default)', () => {
+    it('warns against changes outside the migration scope', () => {
+      expect(buildSystemPrompt(ctx)).toMatch(/refactor|reformat|dependencies/i);
+    });
+
+    it('forbids running other mutating nx commands', () => {
+      expect(buildSystemPrompt(ctx)).toMatch(/nx (migrate|reset|run-many)/);
+    });
+
+    it('tells the agent to fail rather than guess on unclear instructions', () => {
+      expect(buildSystemPrompt(ctx)).toMatch(/unclear/i);
+      expect(buildSystemPrompt(ctx)).toMatch(/do not guess/i);
+    });
+
+    it('emits the author scope rules when mode is omitted', () => {
+      expect(buildSystemPrompt(ctx)).toContain(
+        'Apply only the changes the migration prompt asks for.'
+      );
+    });
+
+    it('emits the author scope rules when mode is set to "author" explicitly', () => {
+      expect(buildSystemPrompt({ ...ctx, mode: 'author' })).toContain(
+        'Apply only the changes the migration prompt asks for.'
+      );
+    });
   });
 
-  it('forbids running other mutating nx commands', () => {
-    expect(buildSystemPrompt(ctx)).toMatch(/nx (migrate|reset|run-many)/);
-  });
+  describe('generic-validation mode', () => {
+    const validationCtx = { ...ctx, mode: 'generic-validation' as const };
 
-  it('tells the agent to fail rather than guess on unclear instructions', () => {
-    expect(buildSystemPrompt(ctx)).toMatch(/unclear/i);
-    expect(buildSystemPrompt(ctx)).toMatch(/do not guess/i);
+    it('frames the agent as a validator of generator output', () => {
+      expect(buildSystemPrompt(validationCtx)).toMatch(
+        /validate the generator's changes/i
+      );
+    });
+
+    it('instructs target discovery via nx show project rather than hardcoded names', () => {
+      const prompt = buildSystemPrompt(validationCtx);
+      expect(prompt).toMatch(/nx show project/);
+      expect(prompt).toMatch(/Do not assume specific target names/);
+    });
+
+    it('permits nx affected and per-project nx run', () => {
+      const prompt = buildSystemPrompt(validationCtx);
+      expect(prompt).toMatch(/nx affected -t/);
+      expect(prompt).toMatch(/nx run <project>:<target>/);
+    });
+
+    it('permits scoped nx run-many with -p but forbids unscoped run-many', () => {
+      const prompt = buildSystemPrompt(validationCtx);
+      expect(prompt).toMatch(
+        /nx run-many -t <target> -p <project1>,<project2>/
+      );
+      expect(prompt).toMatch(/Unscoped `nx run-many` \(no `-p`\) is forbidden/);
+    });
+
+    it('permits artifact-writing inspection commands', () => {
+      const prompt = buildSystemPrompt(validationCtx);
+      expect(prompt).toMatch(/nx graph --file/);
+      expect(prompt).toMatch(/do not mutate workspace source/i);
+    });
+
+    it('binds fixes to the migration intention, not the generator footprint', () => {
+      const prompt = buildSystemPrompt(validationCtx);
+      expect(prompt).toMatch(/this migration intended to accomplish/i);
+      expect(prompt).toMatch(
+        /Do not refactor, do not modify unrelated functionality/
+      );
+    });
+
+    it('forbids other mutating nx commands', () => {
+      const prompt = buildSystemPrompt(validationCtx);
+      expect(prompt).toMatch(/Do not run other `nx` commands that mutate/);
+      expect(prompt).toMatch(/nx migrate.*nx reset.*generators/s);
+    });
+
+    it('forbids modifying files outside the workspace root', () => {
+      expect(buildSystemPrompt(validationCtx)).toMatch(
+        /Do not modify files outside the workspace root/
+      );
+    });
+
+    it('directs fix-what-you-can-then-fail on unresolved findings', () => {
+      const prompt = buildSystemPrompt(validationCtx);
+      expect(prompt).toMatch(
+        /apply every fix you can within scope.*then exit with `status: "failed"`/s
+      );
+      expect(prompt).toMatch(/Do not guess/);
+    });
+
+    it('does not emit the author-mode scope rules', () => {
+      const prompt = buildSystemPrompt(validationCtx);
+      expect(prompt).not.toContain(
+        'Apply only the changes the migration prompt asks for.'
+      );
+    });
   });
 });

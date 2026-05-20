@@ -1066,6 +1066,7 @@ type RunMigrations = {
   runMigrations: string;
   ifExists: boolean;
   agentic: AgenticArg;
+  validate?: boolean;
 };
 
 export async function parseMigrationsOptions(options: {
@@ -1092,6 +1093,7 @@ export async function parseMigrationsOptions(options: {
       runMigrations: options.runMigrations as string,
       ifExists: options.ifExists as boolean,
       agentic: options.agentic as AgenticArg,
+      validate: options.validate as boolean | undefined,
     };
   }
 
@@ -2626,13 +2628,16 @@ interface AgenticPromptImplContext {
   hasDiffContext: boolean;
 }
 
+type AgenticPromptMode = 'author' | 'generic-validation';
+
 async function runAgenticPromptStep(
   root: string,
   migration: ExecutableMigration,
   agentic: EnabledResolvedAgentic,
   runDir: string,
   changedDepInstaller: ChangedDepInstaller,
-  implContext?: AgenticPromptImplContext
+  implContext?: AgenticPromptImplContext,
+  mode: AgenticPromptMode = 'author'
 ): Promise<void> {
   const { stepHandoffPath, stepIdFor } =
     require('./agentic/handoff') as typeof import('./agentic/handoff');
@@ -2648,6 +2653,7 @@ async function runAgenticPromptStep(
   const systemContext = buildSystemPrompt({
     workspaceRoot: root,
     handoffFileAbsolutePath: handoffFilePath,
+    mode,
   });
 
   const promptCtx = {
@@ -2875,6 +2881,7 @@ async function runMigrations(
     runMigrations: string;
     ifExists: boolean;
     agentic: AgenticArg;
+    validate?: boolean;
   },
   args: string[],
   isVerbose: boolean,

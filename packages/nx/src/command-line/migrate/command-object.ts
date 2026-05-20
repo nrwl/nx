@@ -103,6 +103,11 @@ function withMigrationOptions(yargs: Argv) {
         'Enable the agentic flow for prompt-based migrations and AI-driven review. Pass `--agentic=<agent>` to pin a specific agent (claude-code, codex, or opencode). Pass `--agentic=false` or `--no-agentic` to disable.',
       coerce: coerceAgenticArg,
     })
+    .option('validate', {
+      describe:
+        'When `--agentic` resolves to an enabled agent, run agent-driven validation after generator-only migrations that have no `prompt:` field. Defaults to on; pass `--no-validate` to opt out. Has no effect when `--agentic` is disabled, when running inside an outer agent, or when running non-interactively without an explicit agent.',
+      type: 'boolean',
+    })
     .check(
       ({
         createCommits,
