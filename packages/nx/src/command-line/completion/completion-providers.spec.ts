@@ -16,6 +16,7 @@ import {
   getProjectNameCompletions,
   getProjectNamesWithTarget,
   getTargetNameCompletions,
+  getTargetNamesForProject,
   resolveWorkspaceRoot,
 } from './completion-providers';
 
@@ -201,11 +202,11 @@ describe('completion/completion-providers', () => {
     });
 
     it('restricts to one project when provided', () => {
-      expect(getTargetNameCompletions('', 'app-one').sort()).toEqual([
+      expect(getTargetNamesForProject('', 'app-one').sort()).toEqual([
         'build',
         'test',
       ]);
-      expect(getTargetNameCompletions('', 'lib-one')).toEqual(['lint']);
+      expect(getTargetNamesForProject('', 'lib-one')).toEqual(['lint']);
     });
 
     it('filters by prefix', () => {
@@ -213,11 +214,9 @@ describe('completion/completion-providers', () => {
     });
 
     it('falls back to all workspace targets when the project does not exist', () => {
-      // Documented quirk: the project-name branch only triggers when the node
-      // exists in the graph; otherwise we fall through to the "all targets"
-      // branch. Locked in here so any future change to that contract is
-      // intentional.
-      expect(getTargetNameCompletions('', 'missing').sort()).toEqual([
+      // Locked-in quirk: unknown project → all-workspace targets. Covers
+      // `project:t<TAB>` where the user is still typing the project name.
+      expect(getTargetNamesForProject('', 'missing').sort()).toEqual([
         'build',
         'lint',
         'test',

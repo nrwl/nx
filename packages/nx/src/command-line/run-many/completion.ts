@@ -8,8 +8,8 @@ registerCompletion('run-many', {
   flags: {
     projects: getProjectNameCompletions,
     p: getProjectNameCompletions,
-    targets: (current) => getTargetNameCompletions(current),
-    target: (current) => getTargetNameCompletions(current),
-    t: (current) => getTargetNameCompletions(current),
+    targets: getTargetNameCompletions,
+    target: getTargetNameCompletions,
+    t: getTargetNameCompletions,
   },
 });

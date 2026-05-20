@@ -8,8 +8,8 @@ registerCompletion('graph', {
   flags: {
     focus: getProjectNameCompletions,
     exclude: getProjectNameCompletions,
-    targets: (current) => getTargetNameCompletions(current),
-    target: (current) => getTargetNameCompletions(current),
-    t: (current) => getTargetNameCompletions(current),
+    targets: getTargetNameCompletions,
+    target: getTargetNameCompletions,
+    t: getTargetNameCompletions,
   },
 });

@@ -79,7 +79,7 @@ export function completeProjectTarget(current: string): string[] {
   }
   const projectName = current.slice(0, colonIdx);
   const targetPrefix = current.slice(colonIdx + 1);
-  return getTargetNameCompletions(targetPrefix, projectName).map(
+  return getTargetNamesForProject(targetPrefix, projectName).map(
     (t) => `${projectName}:${t}`
   );
 }
@@ -216,31 +216,31 @@ function readJsonSafe(path: string): any | null {
   }
 }
 
-/** Target names matching `current`. Scoped to `projectName` if given. */
-export function getTargetNameCompletions(
+/** Unique target names across the workspace, matching `current`. */
+export function getTargetNameCompletions(current: string): string[] {
+  const graph = getCachedProjectGraph();
+  if (!graph?.nodes) return [];
+  const targetSet = new Set<string>();
+  for (const node of Object.values(graph.nodes)) {
+    for (const target of Object.keys((node as any)?.data?.targets ?? {})) {
+      targetSet.add(target);
+    }
+  }
+  const targets = [...targetSet];
+  return current ? targets.filter((t) => t.startsWith(current)) : targets;
+}
+
+/** Target names for a single project, matching `current`. Falls back to
+ *  workspace-wide if the project isn't in the graph — covers the
+ *  `project:t<TAB>` case where the user is still typing the project name. */
+export function getTargetNamesForProject(
   current: string,
-  projectName?: string
+  projectName: string
 ): string[] {
   const graph = getCachedProjectGraph();
-  if (!graph?.nodes) {
-    return [];
-  }
-
-  let targets: string[];
-  if (projectName && graph.nodes[projectName]) {
-    targets = Object.keys(graph.nodes[projectName]?.data?.targets ?? {});
-  } else {
-    const targetSet = new Set<string>();
-    for (const node of Object.values(graph.nodes)) {
-      for (const target of Object.keys((node as any)?.data?.targets ?? {})) {
-        targetSet.add(target);
-      }
-    }
-    targets = Array.from(targetSet);
-  }
-
-  if (!current) {
-    return targets;
-  }
-  return targets.filter((t) => t.startsWith(current));
+  if (!graph?.nodes) return [];
+  const node = graph.nodes[projectName];
+  if (!node) return getTargetNameCompletions(current);
+  const targets = Object.keys(node?.data?.targets ?? {});
+  return current ? targets.filter((t) => t.startsWith(current)) : targets;
 }
