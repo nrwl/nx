@@ -105,6 +105,7 @@ import {
   validateMigrationEntries,
   writePromptMigrationFiles,
 } from './prompt-files';
+import type { AgenticPromptMode } from './agentic/prompts/system-prompt';
 import type { AgenticArg } from './agentic/select';
 import type {
   EnabledResolvedAgentic,
@@ -2450,8 +2451,8 @@ export function resolveCreateCommits(args: {
  * after generator-only migrations.
  *
  * Default-on when the agentic flow resolved to `enabled`; silently ignored
- * otherwise (no warning per design §10.1) — `--validate` requires an active
- * agent session by definition. An explicit `--no-validate` (`validate === false`)
+ * otherwise (no warning emitted) — `--validate` requires an active agent
+ * session by definition. An explicit `--no-validate` (`validate === false`)
  * opts out even when agentic is enabled.
  */
 export function resolveShouldRunValidation(args: {
@@ -2500,6 +2501,13 @@ export async function executeMigrations(
       runDir: initRunDir(root, resolveAgenticRunId(sortedMigrations)),
     };
   }
+
+  const printDroppedAgentContext =
+    agentic?.kind === 'inside-agent'
+      ? (
+          require('./agentic/print-dropped-agent-context') as typeof import('./agentic/print-dropped-agent-context')
+        ).printDroppedAgentContextForOuterAgent
+      : undefined;
 
   logger.info(`Running the following migrations:`);
   sortedMigrations.forEach((m) =>
@@ -2566,10 +2574,12 @@ export async function executeMigrations(
             agenticRun.runDir,
             changedDepInstaller,
             {
-              logs,
-              changes,
-              agentContext,
-              hasDiffContext: agenticHasDiffContext,
+              implContext: {
+                logs,
+                changes,
+                agentContext,
+                hasDiffContext: agenticHasDiffContext,
+              },
             }
           );
           await commitMigrationIfRequested(
@@ -2583,15 +2593,10 @@ export async function executeMigrations(
           // The inner prompt step doesn't run here (agentic disabled, or
           // running inside an outer agent). Under `inside-agent`, surface the
           // generator-emitted `agentContext` to stdout so the outer driving
-          // agent can ingest it (§3.1 / §10.11). Under `disabled` the run is
-          // human-driven; agent-targeted context would only add noise — drop.
-          if (agentic?.kind === 'inside-agent' && agentContext.length > 0) {
-            const { printDroppedAgentContextForOuterAgent } =
-              require('./agentic/print-dropped-agent-context') as typeof import('./agentic/print-dropped-agent-context');
-            printDroppedAgentContextForOuterAgent({
-              migration: m,
-              agentContext,
-            });
+          // agent can ingest it. Under `disabled` the run is human-driven;
+          // agent-targeted context would only add noise — drop.
+          if (printDroppedAgentContext && agentContext.length > 0) {
+            printDroppedAgentContext({ migration: m, agentContext });
           }
           skippedPrompts.push(m);
           if (!generatorMadeChanges) {
@@ -2643,12 +2648,14 @@ export async function executeMigrations(
             agenticRun!.runDir,
             changedDepInstaller,
             {
-              logs,
-              changes,
-              agentContext,
-              hasDiffContext: agenticHasDiffContext,
-            },
-            'generic-validation'
+              implContext: {
+                logs,
+                changes,
+                agentContext,
+                hasDiffContext: agenticHasDiffContext,
+              },
+              mode: 'generic-validation',
+            }
           );
           await commitMigrationIfRequested(
             root,
@@ -2660,16 +2667,11 @@ export async function executeMigrations(
         } else {
           // No inner validation step ran. Under `inside-agent`, surface the
           // generator-emitted `agentContext` to stdout so the outer driving
-          // agent can ingest it (§3.1 / §10.11). Covers both the "had changes
-          // but validation skipped under inside-agent" and the "no changes but
-          // non-empty agentContext" paths.
-          if (agentic?.kind === 'inside-agent' && agentContext.length > 0) {
-            const { printDroppedAgentContextForOuterAgent } =
-              require('./agentic/print-dropped-agent-context') as typeof import('./agentic/print-dropped-agent-context');
-            printDroppedAgentContextForOuterAgent({
-              migration: m,
-              agentContext,
-            });
+          // agent can ingest it. Covers both the "had changes but validation
+          // skipped under inside-agent" and the "no changes but non-empty
+          // agentContext" paths.
+          if (printDroppedAgentContext && agentContext.length > 0) {
+            printDroppedAgentContext({ migration: m, agentContext });
           }
           if (!generatorMadeChanges) {
             migrationsWithNoChanges.push(m);
@@ -2714,17 +2716,19 @@ interface AgenticPromptImplContext {
   hasDiffContext: boolean;
 }
 
-type AgenticPromptMode = 'author' | 'generic-validation';
-
 async function runAgenticPromptStep(
   root: string,
   migration: ExecutableMigration,
   agentic: EnabledResolvedAgentic,
   runDir: string,
   changedDepInstaller: ChangedDepInstaller,
-  implContext?: AgenticPromptImplContext,
-  mode: AgenticPromptMode = 'author'
+  opts: {
+    implContext?: AgenticPromptImplContext;
+    mode?: AgenticPromptMode;
+  } = {}
 ): Promise<void> {
+  const { implContext, mode = 'author' } = opts;
+
   const { stepHandoffPath, stepIdFor } =
     require('./agentic/handoff') as typeof import('./agentic/handoff');
   const { runAgentic } =

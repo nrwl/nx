@@ -1,4 +1,4 @@
-export type SystemPromptMode = 'author' | 'generic-validation';
+export type AgenticPromptMode = 'author' | 'generic-validation';
 
 export interface SystemPromptContext {
   workspaceRoot: string;
@@ -14,7 +14,7 @@ export interface SystemPromptContext {
    *
    * Defaults to `author` so existing call sites remain unchanged.
    */
-  mode?: SystemPromptMode;
+  mode?: AgenticPromptMode;
 }
 
 /**
@@ -32,7 +32,7 @@ export interface SystemPromptContext {
  * with markdown allowed for inline content.
  */
 export function buildSystemPrompt(ctx: SystemPromptContext): string {
-  const mode: SystemPromptMode = ctx.mode ?? 'author';
+  const mode: AgenticPromptMode = ctx.mode ?? 'author';
   return [
     `You are an AI assistant invoked by \`nx migrate\` to apply one migration step from an Nx workspace upgrade. Each step has its own instructions; nx runs you once per step and reads your handoff file to decide whether to continue.`,
     ``,
@@ -59,7 +59,7 @@ export function buildSystemPrompt(ctx: SystemPromptContext): string {
   ].join('\n');
 }
 
-function buildScopeRules(mode: SystemPromptMode): string {
+function buildScopeRules(mode: AgenticPromptMode): string {
   if (mode === 'generic-validation') {
     return [
       `<scope_rules>`,

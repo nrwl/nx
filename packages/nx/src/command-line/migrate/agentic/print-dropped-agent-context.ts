@@ -1,3 +1,5 @@
+import { renderListItem } from './prompts/shared-rendering';
+
 /**
  * Surfaces a migration's `agentContext` to stdout in an XML-tagged block so an
  * outer AI agent driving `nx migrate` can ingest the hints when no inner agent
@@ -41,11 +43,4 @@ export function printDroppedAgentContextForOuterAgent(
     // migration progress) doesn't run into the opening or closing tag.
     process.stdout.write(`\n${block}\n\n`);
   }
-}
-
-// 2-space continuation indent on lines 2+ so multi-line entries parse as a
-// single markdown list item rather than introducing a new prose paragraph.
-function renderListItem(entry: string): string {
-  const [first, ...rest] = entry.split('\n');
-  return [`- ${first}`, ...rest.map((line) => `  ${line}`)].join('\n');
 }
