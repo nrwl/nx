@@ -44,8 +44,11 @@ export const yargsCompletionCommand: CommandModule<{}, CompletionArgs> = {
       ) as any,
   handler: async (args) => {
     const scripts = await handleImport('./scripts.js', __dirname);
+    const emit = args.stdout
+      ? scripts.printCompletionScript
+      : scripts.installCompletionScript;
     if (args.shell) {
-      await scripts.printCompletionScript(args.shell, args);
+      emit(args.shell, args);
       process.exit(0);
     }
     const chosen = await pickShellsInteractively();
@@ -54,7 +57,7 @@ export const yargsCompletionCommand: CommandModule<{}, CompletionArgs> = {
       process.exit(0);
     }
     for (const shell of chosen) {
-      await scripts.printCompletionScript(shell, args);
+      emit(shell, args);
     }
     process.exit(0);
   },

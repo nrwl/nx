@@ -7,23 +7,15 @@ export const SHELLS: readonly Shell[] = ['bash', 'zsh', 'fish', 'powershell'];
 
 interface CompletionScriptArgs {
   force?: boolean;
-  stdout?: boolean;
 }
 
-export async function printCompletionScript(
+/** Print the raw wrapper script to stdout — for scripting / custom rc paths. */
+export function printCompletionScript(
   shell: Shell,
-  args: CompletionScriptArgs
-): Promise<void> {
-  // PATH check is for the outside-workspace fallback only; inside a
-  // workspace the wrapper walks up to the local nx. Advisory.
-  if (!args.force && !isNxOnPath()) {
-    warnNxNotOnPath(shell);
-  }
-  if (args.stdout) {
-    process.stdout.write(generateScript(shell));
-    return;
-  }
-  installScript(shell);
+  args: CompletionScriptArgs = {}
+): void {
+  if (!args.force && !isNxOnPath()) warnNxNotOnPath(shell);
+  process.stdout.write(generateScript(shell));
 }
 
 /**
@@ -31,7 +23,15 @@ export async function printCompletionScript(
  * nx-completion block (idempotent via the begin/end markers). Logs the
  * resolved path and a one-line "open a new shell" hint.
  */
-function installScript(shell: Shell): void {
+export function installCompletionScript(
+  shell: Shell,
+  args: CompletionScriptArgs = {}
+): void {
+  if (!args.force && !isNxOnPath()) warnNxNotOnPath(shell);
+  writeScriptToRcFile(shell);
+}
+
+function writeScriptToRcFile(shell: Shell): void {
   const script = generateScript(shell);
   const path = installPathFor(shell);
   if (!path) {
