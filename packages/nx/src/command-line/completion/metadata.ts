@@ -43,6 +43,20 @@ export function registerCompletion(
 }
 
 /**
+ * Returns every registered top-level path (single-token, no spaces).
+ * Used by the top-level menu so infix targets (`build`, `serve`, ...) and
+ * any other singly-registered command appear in `nx <TAB>` alongside the
+ * yargs-known commands.
+ */
+export function getRegisteredTopLevelPaths(): string[] {
+  const paths: string[] = [];
+  for (const path of REGISTRY.keys()) {
+    if (!path.includes(' ')) paths.push(path);
+  }
+  return paths;
+}
+
+/**
  * Resolves the matching command-path metadata for the given args. Picks
  * the longest registered prefix that consists entirely of leading non-flag
  * args. Returns the metadata together with the user's positional index

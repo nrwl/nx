@@ -36,9 +36,12 @@ export function tryCommandSurfaceCompletion(): boolean {
 }
 
 /**
- * Top-level command enumeration. Walks the registered top-level command
- * handlers and emits the matching names (with descriptions in zsh).
- * Replaces what yargs's `defaultCompletions` used to do for `nx <TAB>`.
+ * Top-level command enumeration. Emits matching names from two sources:
+ *   - yargs' registered command handlers (run, generate, add, ...)
+ *   - the completion registry's top-level paths (build, serve, test, ...
+ *     i.e. the infix-target names registered in run/completion.ts)
+ * Descriptions are included for shells that render them; infix targets
+ * have no description.
  */
 export function getTopLevelCommands(
   current: string,
@@ -52,14 +55,27 @@ export function getTopLevelCommands(
     .getCommandInstance()
     .getCommandHandlers();
 
+  const seen = new Set<string>();
   const completions: string[] = [];
   for (const name of Object.keys(handlers)) {
     if (name === '$0' || name.startsWith('_')) continue;
     if (current && !name.startsWith(current)) continue;
     const handler = handlers[name];
     if (handler?.description === false) continue; // hidden
+    seen.add(name);
     const desc = withDesc ? formatDescription(handler?.description) : '';
     completions.push(desc ? `${name}${DESC_SEPARATOR}${desc}` : name);
+  }
+
+  // Add infix-target names (and any other top-level completion-only paths)
+  // that aren't already yargs commands.
+  const { getRegisteredTopLevelPaths } = require('./metadata') as {
+    getRegisteredTopLevelPaths: () => string[];
+  };
+  for (const name of getRegisteredTopLevelPaths()) {
+    if (seen.has(name)) continue;
+    if (current && !name.startsWith(current)) continue;
+    completions.push(name);
   }
   return completions;
 }
