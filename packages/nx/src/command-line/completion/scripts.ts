@@ -1,3 +1,4 @@
+import { spawnSync } from 'child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { homedir } from 'os';
 import { delimiter, dirname, join } from 'path';
@@ -80,9 +81,31 @@ function installPathFor(shell: Shell): string | null {
     case 'fish':
       return join(home, '.config', 'fish', 'completions', 'nx.fish');
     case 'powershell':
-      // $PROFILE resolution needs pwsh; punt for now and tell the user.
-      return null;
+      return resolvePowerShellProfile();
   }
+}
+
+/**
+ * Shell out to PowerShell to expand $PROFILE. The variable's resolution
+ * depends on the PS version, $PSVersionTable, and Windows Documents-folder
+ * redirection (OneDrive etc.), so asking PS itself is the only reliable
+ * way. Returns null if no PowerShell executable is found — caller falls
+ * back to a manual-install hint.
+ */
+function resolvePowerShellProfile(): string | null {
+  const candidates =
+    process.platform === 'win32' ? ['pwsh.exe', 'powershell.exe'] : ['pwsh'];
+  for (const exe of candidates) {
+    const result = spawnSync(exe, ['-NoProfile', '-Command', '$PROFILE'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    if (result.status === 0 && result.stdout) {
+      const path = result.stdout.trim();
+      if (path) return path;
+    }
+  }
+  return null;
 }
 
 function isNxOnPath(): boolean {
