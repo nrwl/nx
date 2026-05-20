@@ -1,7 +1,7 @@
 import {
   DESC_SEPARATOR,
   formatDescription,
-  isZshShell,
+  shellRendersDescriptions,
 } from './command-completions';
 
 // `getCommandCompletions` and `getTopLevelCommands` aren't unit-tested:
@@ -47,7 +47,7 @@ describe('completion/command-completions', () => {
     });
   });
 
-  describe('isZshShell', () => {
+  describe('shellRendersDescriptions', () => {
     let originalNxComplete: string | undefined;
 
     beforeEach(() => {
@@ -60,22 +60,33 @@ describe('completion/command-completions', () => {
 
     it('returns true when NX_COMPLETE is zsh', () => {
       process.env.NX_COMPLETE = 'zsh';
-      expect(isZshShell()).toBe(true);
+      expect(shellRendersDescriptions()).toBe(true);
     });
 
-    it('returns false when NX_COMPLETE is a different shell', () => {
+    it('returns true when NX_COMPLETE is fish', () => {
+      // fish parses `value\tdescription` candidates natively via `complete -a`.
+      process.env.NX_COMPLETE = 'fish';
+      expect(shellRendersDescriptions()).toBe(true);
+    });
+
+    it('returns false for bash (no description protocol in compgen)', () => {
       process.env.NX_COMPLETE = 'bash';
-      expect(isZshShell()).toBe(false);
+      expect(shellRendersDescriptions()).toBe(false);
+    });
+
+    it('returns false for powershell (single-arg CompletionResult ctor)', () => {
+      process.env.NX_COMPLETE = 'powershell';
+      expect(shellRendersDescriptions()).toBe(false);
     });
 
     it('returns false when NX_COMPLETE is unset', () => {
       delete process.env.NX_COMPLETE;
-      expect(isZshShell()).toBe(false);
+      expect(shellRendersDescriptions()).toBe(false);
     });
 
     it('returns false when NX_COMPLETE is an unknown shell', () => {
       process.env.NX_COMPLETE = 'nushell';
-      expect(isZshShell()).toBe(false);
+      expect(shellRendersDescriptions()).toBe(false);
     });
   });
 });

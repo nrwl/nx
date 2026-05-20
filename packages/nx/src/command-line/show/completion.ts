@@ -18,8 +18,8 @@ const TARGET_SUBCOMMANDS = ['inputs', 'outputs'];
 registerCompletion('show target', {
   positionals: [
     {
-      complete: (current, args) => [
-        ...completeProjectTarget(current, args),
+      complete: (current) => [
+        ...completeProjectTarget(current),
         ...TARGET_SUBCOMMANDS.filter((k) => k.startsWith(current)),
       ],
     },

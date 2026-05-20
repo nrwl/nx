@@ -25,7 +25,7 @@ export function tryCommandSurfaceCompletion(): boolean {
   const completions =
     matched !== null
       ? matched
-      : getTopLevelCommands(parsed.current, isZshShell());
+      : getTopLevelCommands(parsed.current, shellRendersDescriptions());
 
   if (completions === null || completions.length === 0) return false;
 
@@ -42,7 +42,7 @@ export function tryCommandSurfaceCompletion(): boolean {
  */
 export function getTopLevelCommands(
   current: string,
-  isZsh: boolean
+  withDesc: boolean
 ): string[] | null {
   const { commandsObject } = require('../nx-commands') as {
     commandsObject: any;
@@ -58,7 +58,7 @@ export function getTopLevelCommands(
     if (current && !name.startsWith(current)) continue;
     const handler = handlers[name];
     if (handler?.description === false) continue; // hidden
-    const desc = isZsh ? formatDescription(handler?.description) : '';
+    const desc = withDesc ? formatDescription(handler?.description) : '';
     completions.push(desc ? `${name}${DESC_SEPARATOR}${desc}` : name);
   }
   return completions;
@@ -104,9 +104,10 @@ export function getCommandCompletions(
 
   const completions: string[] = [];
   const isFlagPrefix = current.startsWith('-');
-  // Descriptions are emitted only for zsh (its wrapper renders them via
-  // `compadd -d`). bash/fish/powershell get bare names. See DESC_SEPARATOR.
-  const isZsh = isZshShell();
+  // Descriptions are emitted for shells that render them (zsh's compadd -d
+  // and fish's native value\tdescription parsing). bash and powershell get
+  // bare names. See DESC_SEPARATOR.
+  const withDesc = shellRendersDescriptions();
 
   // Subcommands: only relevant when user isn't typing a flag.
   if (!isFlagPrefix) {
@@ -115,7 +116,7 @@ export function getCommandCompletions(
       // usagePattern is like "project [projectName]" — first token is the name.
       const subName = String(usagePattern).split(/\s+/)[0];
       if (subName === '$0') continue;
-      const formatted = isZsh ? formatDescription(desc as string) : '';
+      const formatted = withDesc ? formatDescription(desc as string) : '';
       completions.push(
         formatted ? `${subName}${DESC_SEPARATOR}${formatted}` : subName
       );
@@ -130,7 +131,7 @@ export function getCommandCompletions(
     .getDescriptions();
   for (const k of Object.keys(opts.key ?? {})) {
     if ((opts.hiddenOptions ?? []).includes(k)) continue;
-    const desc = isZsh ? formatDescription(descriptions[k]) : '';
+    const desc = withDesc ? formatDescription(descriptions[k]) : '';
     completions.push(desc ? `--${k}${DESC_SEPARATOR}${desc}` : `--${k}`);
   }
 
@@ -167,6 +168,14 @@ export function formatDescription(raw: string | undefined): string {
   return raw.replace(/^__yargsString__:/, '').replace(/\t/g, ' ');
 }
 
-export function isZshShell(): boolean {
-  return getCompletionShell() === 'zsh';
+/**
+ * True when the active shell renders per-completion descriptions. zsh
+ * parses `value\tdescription` via the wrapper's `compadd -d`; fish does
+ * the same natively via `complete -a`. bash has no description protocol
+ * for `compgen -W`, and the PowerShell wrapper uses the single-arg
+ * `CompletionResult` constructor.
+ */
+export function shellRendersDescriptions(): boolean {
+  const shell = getCompletionShell();
+  return shell === 'zsh' || shell === 'fish';
 }
