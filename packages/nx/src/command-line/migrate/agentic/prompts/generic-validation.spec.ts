@@ -98,8 +98,8 @@ describe('buildGenericValidationUserPrompt', () => {
     expect(out).toMatch(/no commit will be created from a failed run/);
   });
 
-  describe('<files_changed> rendering', () => {
-    it('renders entries verbatim and includes the git diff hint when hasDiffContext is true', () => {
+  describe('files_changed / git-inspect rendering', () => {
+    it('omits the <files_changed> block and instructs the agent to inspect via git when hasDiffContext is true', () => {
       const out = buildGenericValidationUserPrompt({
         ...baseCtx,
         impl: {
@@ -112,15 +112,19 @@ describe('buildGenericValidationUserPrompt', () => {
           hasDiffContext: true,
         },
       });
-      expect(out).toContain('<files_changed');
-      expect(out).toContain('[UPDATE] apps/foo/project.json');
-      expect(out).toContain('[CREATE] apps/foo/src/new.ts');
-      expect(out).toContain('[DELETE] apps/foo/src/old.ts');
-      expect(out).toContain('git diff');
-      expect(out).toContain('</files_changed>');
+      // No embedded file-list block under hasDiffContext.
+      expect(out).not.toMatch(/<files_changed[^>]*>[\s\S]*<\/files_changed>/);
+      // The first validation step points at git and explains the boundary.
+      expect(out).toMatch(/git status --porcelain=v1 -uall/);
+      expect(out).toMatch(/git diff -- <path>/);
+      expect(out).toMatch(/cat <path>/);
+      expect(out).toMatch(
+        /working tree contains only this migration's contribution/i
+      );
+      expect(out).toMatch(/checkpointed/i);
     });
 
-    it('still renders the file list when hasDiffContext is false (without the git diff hint)', () => {
+    it('embeds the file list with no git hint when hasDiffContext is false', () => {
       const out = buildGenericValidationUserPrompt({
         ...baseCtx,
         impl: {
@@ -129,34 +133,32 @@ describe('buildGenericValidationUserPrompt', () => {
           hasDiffContext: false,
         },
       });
-      expect(out).toContain('<files_changed');
+      expect(out).toMatch(/<files_changed>[\s\S]*<\/files_changed>/);
       expect(out).toContain('[UPDATE] apps/foo/project.json');
-      // Diff hint omitted.
-      expect(out).not.toContain('git diff');
+      // Git-inspect instruction is reserved for the hasDiffContext path.
+      expect(out).not.toMatch(/git status --porcelain/);
     });
 
-    it('omits the files_changed block entirely when changes are empty', () => {
+    it('omits the files_changed block entirely when changes are empty and hasDiffContext is false', () => {
       const out = buildGenericValidationUserPrompt({
         ...baseCtx,
         impl: {
           ...baseCtx.impl,
           changes: [],
+          hasDiffContext: false,
         },
       });
-      // Tag-form match — the substring `<files_changed` appears inside
-      // <validation_instructions> prose ("Resolve each path in <files_changed>
-      // to its owning Nx project") even when no block is rendered.
       expect(out).not.toMatch(/<files_changed[^>]*>[\s\S]*<\/files_changed>/);
     });
 
-    it('renders all entries verbatim when count is at or below the cap', () => {
+    it('renders all entries verbatim when count is at or below the cap (hasDiffContext false)', () => {
       const exactlyCap = Array.from(
         { length: GENERIC_VALIDATION_FILE_LIST_CAP },
         (_, i) => change('UPDATE', `apps/p${i}/file.ts`)
       );
       const out = buildGenericValidationUserPrompt({
         ...baseCtx,
-        impl: { ...baseCtx.impl, changes: exactlyCap },
+        impl: { ...baseCtx.impl, changes: exactlyCap, hasDiffContext: false },
       });
       for (const entry of exactlyCap) {
         expect(out).toContain(`[UPDATE] ${entry.path}`);
@@ -164,7 +166,7 @@ describe('buildGenericValidationUserPrompt', () => {
       expect(out).not.toMatch(/and \d+ more file/);
     });
 
-    it('caps the file list and renders a project-keyed summary footer when count exceeds the cap', () => {
+    it('caps the file list and appends a simple remaining-count line when count exceeds the cap', () => {
       const overCap: FileChange[] = [];
       for (let i = 0; i < 200; i++) {
         overCap.push(change('UPDATE', `packages/foo/src/f${i}.ts`));
@@ -172,58 +174,29 @@ describe('buildGenericValidationUserPrompt', () => {
       for (let i = 0; i < 180; i++) {
         overCap.push(change('UPDATE', `packages/bar/src/f${i}.ts`));
       }
-      for (let i = 0; i < 43; i++) {
-        overCap.push(change('UPDATE', `packages/baz/src/f${i}.ts`));
-      }
       const out = buildGenericValidationUserPrompt({
         ...baseCtx,
-        impl: { ...baseCtx.impl, changes: overCap },
+        impl: { ...baseCtx.impl, changes: overCap, hasDiffContext: false },
       });
 
       // First N entries verbatim
       expect(out).toContain('[UPDATE] packages/foo/src/f0.ts');
-      // Past the cap, project summary kicks in
+      // Trailing summary is now just a count, no per-project breakdown
       const remainder = overCap.length - GENERIC_VALIDATION_FILE_LIST_CAP;
-      expect(out).toContain(`… and ${remainder} more files across 3 projects:`);
-      // Summary lists projects with counts. The first-N range eats some
-      // entries from packages/foo, leaving the remainder roughly:
-      //   packages/foo: 200 - 50 = 150
-      //   packages/bar: 180
-      //   packages/baz: 43
-      // Sorted by count desc: bar, foo, baz.
-      expect(out).toMatch(/packages\/bar \(180\)/);
-      expect(out).toMatch(/packages\/foo \(150\)/);
-      expect(out).toMatch(/packages\/baz \(43\)/);
+      expect(out).toContain(`… and ${remainder} more files.`);
+      expect(out).not.toMatch(/across \d+ projects/);
     });
 
-    it('uses singular forms in the footer when only one extra file or one extra project remains', () => {
+    it('uses singular "file" in the trailing count when only one extra file remains', () => {
       const overCap: FileChange[] = Array.from(
         { length: GENERIC_VALIDATION_FILE_LIST_CAP + 1 },
         (_, i) => change('UPDATE', `apps/only/f${i}.ts`)
       );
       const out = buildGenericValidationUserPrompt({
         ...baseCtx,
-        impl: { ...baseCtx.impl, changes: overCap },
+        impl: { ...baseCtx.impl, changes: overCap, hasDiffContext: false },
       });
-      expect(out).toMatch(/… and 1 more file across 1 project:/);
-    });
-
-    it('falls back to the top-level segment when a path does not start with a conventional Nx prefix', () => {
-      const overCap: FileChange[] = [];
-      // First fill the cap so the summary appears.
-      for (let i = 0; i < GENERIC_VALIDATION_FILE_LIST_CAP; i++) {
-        overCap.push(change('UPDATE', `apps/foo/src/f${i}.ts`));
-      }
-      // Then add 5 files under a non-Nx-conventional directory so they land
-      // in the summary.
-      for (let i = 0; i < 5; i++) {
-        overCap.push(change('UPDATE', `custom-dir/sub/f${i}.ts`));
-      }
-      const out = buildGenericValidationUserPrompt({
-        ...baseCtx,
-        impl: { ...baseCtx.impl, changes: overCap },
-      });
-      expect(out).toMatch(/custom-dir \(5\)/);
+      expect(out).toMatch(/… and 1 more file\./);
     });
   });
 

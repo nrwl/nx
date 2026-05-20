@@ -2,6 +2,7 @@ import type { FileChange } from '../../../../generators/tree';
 import {
   filterNonEmptyStrings,
   renderFileEntry,
+  renderGitInspectInstruction,
   renderKeyMultilineValue,
   renderListItem,
   stripAnsi,
@@ -20,13 +21,18 @@ export interface HybridPromptMigrationContext {
   impl?: {
     /** Raw output from the generator (devkit logger + console). */
     logs?: string;
-    /** Files the generator changed. Rendered as a `[TYPE] path` list. */
+    /**
+     * Files the generator changed. Rendered inside `<files_changed>` as a
+     * `[TYPE] path` list — only when `hasDiffContext` is false; when true the
+     * agent is instead pointed at `git status` / `git diff`.
+     */
     changes?: FileChange[];
     /** Strings the generator author put in `agentContext`. */
     agentContext?: string[];
     /**
-     * False when per-migration commits are disabled; the file-list section
-     * is omitted because the diff boundary is meaningless without them.
+     * True when per-migration commits are in effect (git repo + commits
+     * enabled). The prompt then points the agent at git for the file list;
+     * when false (no git or commits disabled), `changes` is embedded.
      */
     hasDiffContext?: boolean;
   };
@@ -63,10 +69,14 @@ export function buildHybridPromptUserPrompt(
 
   lines.push(`</migration>`);
 
-  const fileList = renderFileList(ctx.impl?.changes);
-  const showFileList = !!ctx.impl?.hasDiffContext && !!fileList;
   const logs = stripAnsi(ctx.impl?.logs ?? '').trim();
   const agentContext = filterNonEmptyStrings(ctx.impl?.agentContext ?? []);
+  const hasDiffContext = !!ctx.impl?.hasDiffContext;
+  const hasGeneratorOutput =
+    !!ctx.impl?.changes && ctx.impl.changes.length > 0;
+  const embeddedFileList = !hasDiffContext
+    ? renderFileList(ctx.impl?.changes)
+    : '';
 
   if (logs) {
     lines.push(
@@ -79,13 +89,17 @@ export function buildHybridPromptUserPrompt(
     );
   }
 
-  if (showFileList) {
+  if (hasDiffContext && hasGeneratorOutput) {
+    // Live view via git. Suppressed when the generator made no changes —
+    // pointing the agent at `git status` for an empty diff is noise.
     lines.push(
       ``,
-      `<files_changed note="for full per-file diffs, run \`git diff\` against the listed paths from the workspace root">`,
-      fileList,
-      `</files_changed>`
+      `<inspect_changes>`,
+      renderGitInspectInstruction(),
+      `</inspect_changes>`
     );
+  } else if (embeddedFileList) {
+    lines.push(``, `<files_changed>`, embeddedFileList, `</files_changed>`);
   }
 
   if (agentContext.length > 0) {

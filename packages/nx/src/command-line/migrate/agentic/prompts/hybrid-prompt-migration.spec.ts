@@ -70,7 +70,8 @@ describe('buildHybridPromptUserPrompt', () => {
   it('omits every impl section when impl is absent', () => {
     const out = buildHybridPromptUserPrompt(baseCtx);
     expect(out).not.toContain('<generator_output');
-    expect(out).not.toContain('<files_changed');
+    expect(out).not.toMatch(/<files_changed[^>]*>[\s\S]*<\/files_changed>/);
+    expect(out).not.toContain('<inspect_changes');
     expect(out).not.toContain('<advisory_context');
   });
 
@@ -94,7 +95,7 @@ describe('buildHybridPromptUserPrompt', () => {
     ).not.toContain('<generator_output');
   });
 
-  it('renders the file list when hasDiffContext is true and changes exist', () => {
+  it('omits <files_changed> and emits an <inspect_changes> git pointer when hasDiffContext is true', () => {
     const out = buildHybridPromptUserPrompt({
       ...baseCtx,
       impl: {
@@ -106,32 +107,60 @@ describe('buildHybridPromptUserPrompt', () => {
         ],
       },
     });
-    expect(out).toContain('<files_changed');
-    expect(out).toContain('[UPDATE] apps/foo/project.json');
-    expect(out).toContain('[CREATE] apps/foo/src/new.ts');
-    expect(out).toContain('[DELETE] apps/foo/src/old.ts');
-    expect(out).toContain('git diff');
-    expect(out).toContain('against the listed paths');
-    expect(out).toContain('</files_changed>');
+    // No embedded list under hasDiffContext.
+    expect(out).not.toMatch(/<files_changed[^>]*>[\s\S]*<\/files_changed>/);
+    // Git-inspect pointer is present, with the explicit commands.
+    expect(out).toContain('<inspect_changes');
+    expect(out).toMatch(/git status --porcelain=v1 -uall/);
+    expect(out).toMatch(/git diff -- <path>/);
+    expect(out).toMatch(/cat <path>/);
+    expect(out).toMatch(
+      /working tree contains only this migration's contribution/i
+    );
+    expect(out).toContain('</inspect_changes>');
   });
 
-  it('omits the file list when hasDiffContext is false even if changes exist', () => {
+  it('embeds <files_changed> with the change list when hasDiffContext is false', () => {
     const out = buildHybridPromptUserPrompt({
       ...baseCtx,
       impl: {
         hasDiffContext: false,
-        changes: [change('UPDATE', 'apps/foo/project.json')],
+        changes: [
+          change('UPDATE', 'apps/foo/project.json'),
+          change('CREATE', 'apps/foo/src/new.ts'),
+        ],
       },
     });
-    expect(out).not.toContain('<files_changed');
+    expect(out).toMatch(/<files_changed>[\s\S]*<\/files_changed>/);
+    expect(out).toContain('[UPDATE] apps/foo/project.json');
+    expect(out).toContain('[CREATE] apps/foo/src/new.ts');
+    // No git-inspect pointer under !hasDiffContext.
+    expect(out).not.toContain('<inspect_changes');
+    expect(out).not.toMatch(/git status --porcelain/);
   });
 
-  it('omits the file list when changes are empty', () => {
+  it('omits both <files_changed> and <inspect_changes> when impl is absent', () => {
+    const out = buildHybridPromptUserPrompt({ ...baseCtx, impl: undefined });
+    expect(out).not.toMatch(/<files_changed[^>]*>[\s\S]*<\/files_changed>/);
+    expect(out).not.toContain('<inspect_changes');
+  });
+
+  it('suppresses both <files_changed> and <inspect_changes> when the generator made no changes (avoids pointing the agent at an empty diff)', () => {
     const out = buildHybridPromptUserPrompt({
       ...baseCtx,
       impl: { hasDiffContext: true, changes: [] },
     });
-    expect(out).not.toContain('<files_changed');
+    expect(out).not.toContain('<inspect_changes');
+    expect(out).not.toMatch(/<files_changed[^>]*>[\s\S]*<\/files_changed>/);
+  });
+
+  it('omits <files_changed> when hasDiffContext is false and changes is empty', () => {
+    const out = buildHybridPromptUserPrompt({
+      ...baseCtx,
+      impl: { hasDiffContext: false, changes: [] },
+    });
+    expect(out).not.toMatch(/<files_changed[^>]*>[\s\S]*<\/files_changed>/);
+    expect(out).not.toContain('<inspect_changes');
   });
 
   it('renders agentContext as advisory bullets inside the advisory_context tag', () => {
@@ -186,7 +215,8 @@ describe('buildHybridPromptUserPrompt', () => {
       impl: { hasDiffContext: true, changes: [], logs: '', agentContext: [] },
     });
     expect(out).not.toContain('<generator_output');
-    expect(out).not.toContain('<files_changed');
+    expect(out).not.toMatch(/<files_changed[^>]*>[\s\S]*<\/files_changed>/);
+    expect(out).not.toContain('<inspect_changes');
     expect(out).not.toContain('<advisory_context');
     expect(out).toContain(baseCtx.promptPath);
     expect(out).toContain(baseCtx.handoffFileAbsolutePath);

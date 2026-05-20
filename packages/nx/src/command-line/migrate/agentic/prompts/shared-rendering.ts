@@ -35,3 +35,20 @@ export function filterNonEmptyStrings(entries: unknown[]): string[] {
     (s): s is string => typeof s === 'string' && s.trim().length > 0
   );
 }
+
+// Shared phrasing used by both prompt builders to point the agent at the
+// working tree and the git commands that scope to this migration's
+// contribution. Centralized so the command set and the "working tree is
+// scoped" guarantee stay in lock-step across builders — the guarantee is
+// the orchestrator's responsibility (per-migration commits + a checkpoint
+// commit before the run) so the prompt's claim and the runtime invariant
+// can't drift independently.
+export function renderGitInspectInstruction(): string {
+  return (
+    `The working tree contains only this migration's contribution; previous ` +
+    `migrations were committed and any pre-existing state was checkpointed ` +
+    `before the run. Run \`git status --porcelain=v1 -uall\` from the ` +
+    `workspace root for the list of affected paths, then \`git diff -- <path>\` ` +
+    `(tracked) or \`cat <path>\` (new files) for content.`
+  );
+}
