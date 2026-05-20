@@ -3,6 +3,7 @@ import {
   completeProjectTarget,
   getProjectNamesWithTarget,
 } from '../completion/completion-providers';
+import { readCachedProjectGraph } from '../../project-graph/project-graph';
 
 // `nx run <project>:<target>` — single positional.
 registerCompletion('run', {
@@ -14,10 +15,11 @@ registerCompletion('run', {
 // that actually have the target so e.g. `nx build <TAB>` skips projects
 // without a build target.
 //
-// Best-effort list of the conventional target names. Custom target names
-// (`compile`, `deploy`, `storybook`, ...) won't get infix completion — a
-// future improvement could derive this from the project graph.
-const INFIX_TARGETS = [
+// We enumerate every target name in the cached project graph so custom
+// targets (`compile`, `deploy`, `storybook`, ...) get infix completion
+// too, then union with a conventional set so cold workspaces (no graph
+// yet) still get the everyday names.
+const CONVENTIONAL_TARGETS = [
   'build',
   'serve',
   'test',
@@ -27,9 +29,21 @@ const INFIX_TARGETS = [
   'start',
   'preview',
   'typecheck',
-] as const;
+];
 
-for (const targetName of INFIX_TARGETS) {
+const targetNames = new Set<string>(CONVENTIONAL_TARGETS);
+try {
+  const graph = readCachedProjectGraph();
+  for (const node of Object.values(graph?.nodes ?? {})) {
+    for (const t of Object.keys(node?.data?.targets ?? {})) {
+      targetNames.add(t);
+    }
+  }
+} catch {
+  // No cached graph (cold workspace) — fall back to the conventional set.
+}
+
+for (const targetName of targetNames) {
   registerCompletion(targetName, {
     positionals: [
       {
