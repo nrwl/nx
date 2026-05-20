@@ -18,16 +18,12 @@ jest.mock('../../../utils/output', () => ({
 import { isAiAgent } from '../../../native';
 import { prompt } from 'enquirer';
 import { detectInstalledAgents } from './detect-installed';
-import { output } from '../../../utils/output';
 import { resolveAgentic } from './select';
 import { DetectedInstalledAgent } from './types';
 
 const mockIsAiAgent = isAiAgent as unknown as jest.Mock;
 const mockPrompt = prompt as unknown as jest.Mock;
 const mockDetect = detectInstalledAgents as unknown as jest.Mock;
-const mockOutputLog = output.log as unknown as jest.Mock;
-const mockOutputWarn = output.warn as unknown as jest.Mock;
-const mockOutputError = output.error as unknown as jest.Mock;
 
 function detected(
   id: 'claude-code' | 'codex' | 'opencode'
@@ -62,9 +58,6 @@ describe('resolveAgentic', () => {
     mockIsAiAgent.mockReturnValue(false);
     mockPrompt.mockReset();
     mockDetect.mockReset();
-    mockOutputLog.mockReset();
-    mockOutputWarn.mockReset();
-    mockOutputError.mockReset();
     setTty(true);
   });
 
@@ -207,15 +200,18 @@ describe('resolveAgentic', () => {
   it.each([
     ['--agentic=true', true],
     ['--agentic=<id>', 'claude-code'],
-  ])('aborts when %s is passed in a non-TTY environment', async (_label, agentic) => {
-    setTty(false);
-    await expect(
-      resolveAgentic({
-        agentic,
-        migrations: [{ prompt: 'x.md' }],
-      })
-    ).rejects.toThrow(/interactive terminal/);
-  });
+  ])(
+    'aborts when %s is passed in a non-TTY environment',
+    async (_label, agentic) => {
+      setTty(false);
+      await expect(
+        resolveAgentic({
+          agentic,
+          migrations: [{ prompt: 'x.md' }],
+        })
+      ).rejects.toThrow(/interactive terminal/);
+    }
+  );
 
   it('resolves silently to disabled when --agentic is undefined in a non-TTY environment', async () => {
     setTty(false);

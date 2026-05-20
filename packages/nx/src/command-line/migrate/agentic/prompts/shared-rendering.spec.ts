@@ -11,7 +11,11 @@ describe('shared-rendering', () => {
   describe('renderFileEntry', () => {
     it('formats as [TYPE] path', () => {
       expect(
-        renderFileEntry({ type: 'UPDATE', path: 'apps/foo/file.ts', content: null })
+        renderFileEntry({
+          type: 'UPDATE',
+          path: 'apps/foo/file.ts',
+          content: null,
+        })
       ).toBe('[UPDATE] apps/foo/file.ts');
     });
   });
@@ -36,18 +40,17 @@ describe('shared-rendering', () => {
     });
 
     it('renders multi-line values as a YAML-style block scalar (`key: |`)', () => {
-      expect(renderKeyMultilineValue('description', 'one\ntwo\nthree')).toEqual([
-        'description: |',
-        '  one',
-        '  two',
-        '  three',
-      ]);
+      expect(renderKeyMultilineValue('description', 'one\ntwo\nthree')).toEqual(
+        ['description: |', '  one', '  two', '  three']
+      );
     });
   });
 
   describe('stripAnsi', () => {
     it('removes SGR color codes and reset sequences', () => {
-      expect(stripAnsi('\x1b[1m\x1b[33mbold-yellow\x1b[0m')).toBe('bold-yellow');
+      expect(stripAnsi('\x1b[1m\x1b[33mbold-yellow\x1b[0m')).toBe(
+        'bold-yellow'
+      );
     });
 
     it('removes extended CSI sequences terminating in a letter', () => {

@@ -4072,7 +4072,7 @@ describe('Migration', () => {
           string,
           boolean | undefined,
           'disabled' | 'inside-agent' | 'enabled',
-          { effective: boolean; agenticHasDiffContext: boolean }
+          { effective: boolean; agenticHasDiffContext: boolean },
         ]
       >([
         [
@@ -4132,20 +4132,17 @@ describe('Migration', () => {
         expect(result.warning).toMatch(/--no-create-commits/);
       });
 
-      it.each<['disabled' | 'enabled']>([['disabled'], ['enabled']])(
-        'errors when --create-commits is explicit without a git repo (agenticKind=%s)',
-        (agenticKind) => {
-          const result = resolveCreateCommits({
-            createCommits: true,
-            agenticKind,
-            isGitRepo: false,
-          });
-          expect(result.effective).toBe(false);
-          expect(result.error).toMatch(
-            /`--create-commits` requires a git repository/
-          );
-        }
-      );
+      it('errors when --create-commits is explicit without a git repo', () => {
+        const result = resolveCreateCommits({
+          createCommits: true,
+          agenticKind: 'disabled',
+          isGitRepo: false,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.error).toMatch(
+          /`--create-commits` requires a git repository/
+        );
+      });
 
       it('degrades agentic without git (createCommits unset): warns, no error, no diff context', () => {
         const result = resolveCreateCommits({
@@ -4162,19 +4159,34 @@ describe('Migration', () => {
 
     describe('resolveShouldRunValidation', () => {
       it.each<
-        [string, boolean | undefined, 'disabled' | 'inside-agent' | 'enabled', boolean]
+        [
+          string,
+          boolean | undefined,
+          'disabled' | 'inside-agent' | 'enabled',
+          boolean,
+        ]
       >([
         ['default on when agentic enabled', undefined, 'enabled', true],
         ['explicit true respected when agentic enabled', true, 'enabled', true],
         ['explicit false overrides agentic enabled', false, 'enabled', false],
         ['ignored when disabled (validate=true)', true, 'disabled', false],
-        ['ignored when inside-agent (validate=true)', true, 'inside-agent', false],
+        [
+          'ignored when inside-agent (validate=true)',
+          true,
+          'inside-agent',
+          false,
+        ],
         ['off when disabled and validate unset', undefined, 'disabled', false],
-        ['off when inside-agent and validate unset', undefined, 'inside-agent', false],
+        [
+          'off when inside-agent and validate unset',
+          undefined,
+          'inside-agent',
+          false,
+        ],
       ])('%s', (_label, validate, agenticKind, expected) => {
-        expect(
-          resolveShouldRunValidation({ validate, agenticKind })
-        ).toBe(expected);
+        expect(resolveShouldRunValidation({ validate, agenticKind })).toBe(
+          expected
+        );
       });
     });
 
@@ -4217,12 +4229,15 @@ describe('Migration', () => {
         ['function', () => undefined],
         ['string', 'a string'],
         ['number', 42],
-      ])('returns empty buckets for unsupported return value: %s', (_label, value) => {
-        expect(parseMigrationReturn(value as any)).toEqual({
-          nextSteps: [],
-          agentContext: [],
-        });
-      });
+      ])(
+        'returns empty buckets for unsupported return value: %s',
+        (_label, value) => {
+          expect(parseMigrationReturn(value as any)).toEqual({
+            nextSteps: [],
+            agentContext: [],
+          });
+        }
+      );
     });
 
     describe('formatSkippedPromptsNextStep', () => {

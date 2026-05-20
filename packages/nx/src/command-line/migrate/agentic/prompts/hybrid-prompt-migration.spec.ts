@@ -91,7 +91,9 @@ describe('buildHybridPromptUserPrompt', () => {
       impl: { hasDiffContext: true, changes: [] },
     });
     expect(withDiff).not.toContain('<inspect_changes');
-    expect(withDiff).not.toMatch(/<files_changed[^>]*>[\s\S]*<\/files_changed>/);
+    expect(withDiff).not.toMatch(
+      /<files_changed[^>]*>[\s\S]*<\/files_changed>/
+    );
 
     const withoutDiff = buildHybridPromptUserPrompt({
       ...baseCtx,

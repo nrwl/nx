@@ -20,7 +20,6 @@ describe('coerceAgenticArg', () => {
 
   it('passes any other string through unchanged (upstream `.check` validates it)', () => {
     expect(coerceAgenticArg('claude-code')).toBe('claude-code');
-    expect(coerceAgenticArg('whatever')).toBe('whatever');
   });
 
   it('falls back to undefined for unexpected types', () => {

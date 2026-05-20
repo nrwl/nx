@@ -32,7 +32,9 @@ describe('add-migrate-runs-to-git-ignore migration', () => {
 
     await addMigrateRunsToGitIgnore(tree);
 
-    expect(tree.read('.gitignore')?.toString()).not.toContain('.nx/migrate-runs');
+    expect(tree.read('.gitignore')?.toString()).not.toContain(
+      '.nx/migrate-runs'
+    );
   });
 
   it('should not skip for lerna workspaces that also have nx.json', async () => {

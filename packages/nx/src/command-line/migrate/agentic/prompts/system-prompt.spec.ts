@@ -24,7 +24,8 @@ describe('buildSystemPrompt', () => {
   });
 
   describe('scope rules selection', () => {
-    const AUTHOR_MARKER = 'Apply only the changes the migration prompt asks for.';
+    const AUTHOR_MARKER =
+      'Apply only the changes the migration prompt asks for.';
     const VALIDATION_MARKER = /validate the generator's changes/i;
 
     it('emits the author scope rules by default', () => {
