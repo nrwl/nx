@@ -80,12 +80,33 @@ async function main() {
     return;
   }
 
+  // `nx completion <shell>` (the install command): generates the wrapper
+  // script. Pure JS, no workspace detection, no native deps — print and
+  // exit before any heavier bootstrap runs. Unknown / missing shell falls
+  // through so yargs' demandCommand and --help still print their guidance.
+  if (process.argv[2] === 'completion') {
+    const shell = process.argv[3];
+    if (
+      shell === 'bash' ||
+      shell === 'zsh' ||
+      shell === 'fish' ||
+      shell === 'powershell'
+    ) {
+      const { printCompletionScript } = await import(
+        'nx/src/command-line/completion/scripts'
+      );
+      await printCompletionScript(shell, {
+        force: process.argv.includes('--force'),
+      });
+      return;
+    }
+  }
+
   if (
     process.argv[2] !== 'report' &&
     process.argv[2] !== '--version' &&
     process.argv[2] !== '--help' &&
-    process.argv[2] !== 'reset' &&
-    process.argv[2] !== 'completion'
+    process.argv[2] !== 'reset'
   ) {
     const { assertSupportedPlatform } = await import(
       '../src/native/assert-supported-platform.js'
@@ -317,11 +338,9 @@ function warnIfUsingOutdatedGlobalInstall(
   globalNxVersion: string,
   localNxVersion?: string
 ) {
-  // Never display during shell completion — stdout is captured as suggestions.
-  if (process.env.NX_COMPLETE) {
-    return;
-  }
-  // Never display this warning if Nx is already running via Nx
+  // Never display this warning if Nx is already running via Nx.
+  // (The NX_COMPLETE per-TAB path returns from main() before this function
+  // is ever called, so no separate guard is needed for completion here.)
   if (process.env.NX_CLI_SET) {
     return;
   }
