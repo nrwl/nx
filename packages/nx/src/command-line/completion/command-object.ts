@@ -24,8 +24,8 @@ export const yargsCompletionCommand: CommandModule = {
       .example('$0 completion bash >> ~/.bashrc', 'Enable bash completion')
       .example('$0 completion zsh >> ~/.zshrc', 'Enable zsh completion')
       .example(
-        '$0 completion fish > ~/.config/fish/completions/nx.fish',
-        'Enable fish completion'
+        'mkdir -p ~/.config/fish/completions && $0 completion fish > ~/.config/fish/completions/nx.fish',
+        'Enable fish completion (mkdir is needed because fish does not auto-create the parent directory on redirect)'
       )
       .example(
         '$0 completion powershell | Out-File -Append $PROFILE',

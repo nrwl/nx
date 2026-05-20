@@ -48,7 +48,7 @@ function warnNxNotOnPath(shell: Shell): void {
   const installCommand = {
     bash: 'nx completion bash >> ~/.bashrc',
     zsh: 'nx completion zsh >> ~/.zshrc',
-    fish: 'nx completion fish > ~/.config/fish/completions/nx.fish',
+    fish: 'mkdir -p ~/.config/fish/completions && nx completion fish > ~/.config/fish/completions/nx.fish',
     powershell: 'nx completion powershell | Out-File -Append $PROFILE',
   }[shell];
   process.stderr.write(
@@ -223,7 +223,9 @@ function generateFishScript(): string {
 #
 # nx command completion script for fish
 #
-# Installation: nx completion fish > ~/.config/fish/completions/nx.fish
+# Installation:
+#   mkdir -p ~/.config/fish/completions
+#   nx completion fish > ~/.config/fish/completions/nx.fish
 #
 complete -e -c nx
 
