@@ -4,7 +4,7 @@
 import { getCompletionShell } from './trigger';
 import { parseCompletionArgs } from './argv-layout';
 import { getRegisteredTopLevelPaths } from './metadata';
-import { getNxCommandHandlers } from './command-handlers';
+import { getNxCommandHandlers, introspectBuilder } from './command-handlers';
 
 /** Slow-path entry point. Returns true if anything was emitted. */
 export function tryCommandSurfaceCompletion(): boolean {
@@ -72,41 +72,27 @@ export function getCommandCompletions(
     return null;
   }
 
-  // Run the builder on a throwaway yargs instance to read its
-  // subcommands/options without triggering parse.
-  const yargs = require('yargs') as typeof import('yargs');
-  const temp: any = (yargs as any)();
-  try {
-    handler.builder(temp);
-  } catch {
-    return null;
-  }
+  const intro = introspectBuilder(handler.builder);
+  if (!intro) return null;
 
   const completions: string[] = [];
   const isFlagPrefix = current.startsWith('-');
   const withDesc = shellRendersDescriptions();
 
   if (!isFlagPrefix) {
-    const subUsage = temp.getInternalMethods().getUsageInstance();
-    for (const [usagePattern, desc] of subUsage.getCommands()) {
-      const subName = String(usagePattern).split(/\s+/)[0];
-      if (subName === '$0') continue;
-      const formatted = withDesc ? formatDescription(desc as string) : '';
+    for (const [name, desc] of intro.subcommands) {
+      const formatted = withDesc ? formatDescription(desc) : '';
       completions.push(
-        formatted ? `${subName}${DESC_SEPARATOR}${formatted}` : subName
+        formatted ? `${name}${DESC_SEPARATOR}${formatted}` : name
       );
     }
   }
 
-  const opts = temp.getOptions();
-  const descriptions = temp
-    .getInternalMethods()
-    .getUsageInstance()
-    .getDescriptions();
-  for (const k of Object.keys(opts.key ?? {})) {
-    if ((opts.hiddenOptions ?? []).includes(k)) continue;
-    const desc = withDesc ? formatDescription(descriptions[k]) : '';
-    completions.push(desc ? `--${k}${DESC_SEPARATOR}${desc}` : `--${k}`);
+  for (const [name, desc] of intro.options) {
+    const formatted = withDesc ? formatDescription(desc) : '';
+    completions.push(
+      formatted ? `--${name}${DESC_SEPARATOR}${formatted}` : `--${name}`
+    );
   }
 
   if (!current) {

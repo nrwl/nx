@@ -24,3 +24,46 @@ export function getNxCommandHandlers(): CommandHandlers {
     .getCommandInstance()
     .getCommandHandlers();
 }
+
+/** Subcommand name → description, and visible-option name → description. */
+export interface BuilderIntrospection {
+  subcommands: Map<string, string | undefined>;
+  options: Map<string, string | undefined>;
+}
+
+/**
+ * Run a yargs builder against a throwaway instance and return its declared
+ * subcommands and visible options with their descriptions. Returns null if
+ * the builder throws. Does NOT call `.argv` — would trigger parse and the
+ * help-printing path we're avoiding.
+ */
+export function introspectBuilder(
+  builder: (yargs: any) => any
+): BuilderIntrospection | null {
+  const yargs = require('yargs') as typeof import('yargs');
+  const temp: any = (yargs as any)();
+  try {
+    builder(temp);
+  } catch {
+    return null;
+  }
+
+  const usage = temp.getInternalMethods().getUsageInstance();
+
+  const subcommands = new Map<string, string | undefined>();
+  for (const [usagePattern, desc] of usage.getCommands()) {
+    const name = String(usagePattern).split(/\s+/)[0];
+    if (name === '$0') continue;
+    subcommands.set(name, desc as string | undefined);
+  }
+
+  const opts = temp.getOptions();
+  const descriptions = usage.getDescriptions();
+  const options = new Map<string, string | undefined>();
+  for (const k of Object.keys(opts.key ?? {})) {
+    if ((opts.hiddenOptions ?? []).includes(k)) continue;
+    options.set(k, descriptions[k]);
+  }
+
+  return { subcommands, options };
+}
