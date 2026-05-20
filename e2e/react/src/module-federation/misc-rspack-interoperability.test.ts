@@ -15,6 +15,7 @@ import { stripIndents } from 'nx/src/utils/strip-indents';
 // TODO: re-enable once webpack 5.107.0 / @module-federation/enhanced compatibility is resolved upstream.
 // Both interop scenarios involve a webpack-built host or remote, so they hit the same module-resolution failure.
 // See https://github.com/webpack/webpack/issues/20985 and https://github.com/module-federation/core/issues/4747.
+// eslint-disable-next-line jest/no-disabled-tests
 describe.skip('React Rspack Module Federation Misc - Interoperability', () => {
   beforeEach(() => {
     process.env.NX_ADD_PLUGINS = 'false';
