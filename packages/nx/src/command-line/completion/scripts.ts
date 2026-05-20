@@ -52,18 +52,23 @@ function writeScriptToRcFile(shell: Shell): void {
   }
   mkdirSync(dirname(path), { recursive: true });
 
-  // Fish keeps each completion in its own file; bash/zsh/powershell append
-  // to a shared rc file so we strip any existing nx block first.
+  // Fish keeps each completion in its own file (a full overwrite is correct).
+  // bash/zsh/powershell append to a shared rc file: skip if an nx-completion
+  // block is already present so re-runs are no-ops, and never modify
+  // existing content — the user may have customized around the block.
   if (shell === 'fish') {
     writeFileSync(path, script);
   } else {
     const existing = existsSync(path) ? readFileSync(path, 'utf8') : '';
-    const stripped = existing.replace(
-      /###-begin-nx-completions-###[\s\S]*?###-end-nx-completions-###\n?/g,
-      ''
-    );
-    const sep = stripped && !stripped.endsWith('\n') ? '\n' : '';
-    writeFileSync(path, stripped + sep + script);
+    if (existing.includes('###-begin-nx-completions-###')) {
+      process.stderr.write(
+        `nx: ${shell} completion already present in ${path} — skipping.\n` +
+          `    Remove the existing block manually if you need to reinstall.\n`
+      );
+      return;
+    }
+    const sep = existing && !existing.endsWith('\n') ? '\n' : '';
+    writeFileSync(path, existing + sep + script);
   }
   process.stderr.write(
     `nx: ${shell} completion installed at ${path}.\n` +
