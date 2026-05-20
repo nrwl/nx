@@ -26,10 +26,22 @@ function __nx_completions
     set dir (dirname "$dir")
   end
   # Hide stderr so stray warnings don't land in the buffer; NX_VERBOSE_LOGGING surfaces it.
+  set -l output
   if test -n "$NX_VERBOSE_LOGGING"
-    NX_COMPLETE=fish $nx_cmd $tokens "$current"
+    set output (NX_COMPLETE=fish $nx_cmd $tokens "$current")
   else
-    NX_COMPLETE=fish $nx_cmd $tokens "$current" 2>/dev/null
+    set output (NX_COMPLETE=fish $nx_cmd $tokens "$current" 2>/dev/null)
+  end
+  if test (count $output) -gt 0
+    printf '%s\n' $output
+    return
+  end
+  # No nx completion — fall back to filename completion. `-f` on the
+  # `complete` declaration blocks fish's BUILT-IN file offering, but we
+  # can still emit path candidates from inside the function.
+  set -l matches $current*
+  if test (count $matches) -gt 0
+    printf '%s\n' $matches
   end
 end
 complete -c nx -f -a '(__nx_completions)'
