@@ -62,7 +62,7 @@ function getAnalyzerPath(): string {
   }
 
   throw new Error(
-    `msbuild-analyzer not found at any expected location. Please build it first with: nx run dotnet:build-analyzer`
+    `msbuild-analyzer not found at any expected location. Please build it first with: nx run dotnet:copy-assets`
   );
 }
 
