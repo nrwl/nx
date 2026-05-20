@@ -27,9 +27,7 @@ function readPort(appName: string): number {
   return config.targets.serve.options.port;
 }
 
-// TODO: re-enable once webpack 5.107.0 / @module-federation/enhanced compatibility is resolved upstream.
-// See https://github.com/webpack/webpack/issues/20985 and https://github.com/module-federation/core/issues/4747.
-describe.skip('Angular Module Federation - SSR', () => {
+describe('Angular Module Federation - SSR', () => {
   let setup: ModuleFederationTestSetup;
 
   beforeAll(() => {
