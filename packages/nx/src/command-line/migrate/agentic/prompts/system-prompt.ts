@@ -41,6 +41,7 @@ export function buildSystemPrompt(ctx: SystemPromptContext): string {
     `<handoff_contract>`,
     `Before you exit (whether you succeed, fail, or hit an unrecoverable error), write a JSON file at:`,
     `<handoff_path>${ctx.handoffFileAbsolutePath}</handoff_path>`,
+    `The parent directory already exists — write the file directly. Do not run \`mkdir\`, do not check whether the directory exists, do not list its contents.`,
     ``,
     `Shape:`,
     `{`,

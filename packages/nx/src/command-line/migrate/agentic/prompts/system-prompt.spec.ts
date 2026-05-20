@@ -44,6 +44,12 @@ describe('buildSystemPrompt', () => {
     expect(prompt).toMatch(/follow this contract/i);
   });
 
+  it('declares the handoff parent directory already exists', () => {
+    const prompt = buildSystemPrompt(ctx);
+    expect(prompt).toMatch(/parent directory already exists/i);
+    expect(prompt).toMatch(/do not run `mkdir`/i);
+  });
+
   it('wraps the scope rules in a scope_rules tag', () => {
     const prompt = buildSystemPrompt(ctx);
     expect(prompt).toContain('<scope_rules>');

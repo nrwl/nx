@@ -66,7 +66,7 @@ import {
   onlyDefaultRunnerIsUsed,
 } from '../nx-cloud/connect/connect-to-nx-cloud';
 import { output } from '../../utils/output';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { isCI } from '../../utils/is-ci';
 import {
@@ -2736,6 +2736,10 @@ async function runAgenticPromptStep(
 
   const stepId = stepIdFor(migration);
   const handoffFilePath = stepHandoffPath(runDir, stepId);
+  // The system prompt tells the agent the parent dir exists, so the agent
+  // doesn't defensively `mkdir -p` (which triggers a workspace-permission
+  // prompt in agents like Claude Code every run).
+  mkdirSync(dirname(handoffFilePath), { recursive: true });
   const systemContext = buildSystemPrompt({
     workspaceRoot: root,
     handoffFileAbsolutePath: handoffFilePath,
