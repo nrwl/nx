@@ -1,10 +1,18 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import {
   setWorkspaceRoot,
   workspaceRoot as currentWorkspaceRoot,
 } from '../../utils/workspace-root';
+import * as projectGraphModule from '../../project-graph/project-graph';
 
 import {
   completeGenerator,
@@ -20,29 +28,35 @@ import {
 describe('completion/completion-providers', () => {
   let workspaceRoot: string;
   let originalRoot: string;
-  let originalDataDir: string | undefined;
-  let originalGraphCacheDir: string | undefined;
+  let readGraphSpy: jest.SpyInstance;
 
   beforeEach(() => {
     workspaceRoot = mkdtempSync(join(tmpdir(), 'nx-completion-spec-'));
     originalRoot = currentWorkspaceRoot;
-    originalDataDir = process.env.NX_WORKSPACE_DATA_DIRECTORY;
-    originalGraphCacheDir = process.env.NX_PROJECT_GRAPH_CACHE_DIRECTORY;
     setWorkspaceRoot(workspaceRoot);
-    // Point the cache-directory util at the in-fixture data dir.
-    process.env.NX_WORKSPACE_DATA_DIRECTORY = join(
-      workspaceRoot,
-      '.nx',
-      'workspace-data'
-    );
-    delete process.env.NX_PROJECT_GRAPH_CACHE_DIRECTORY;
+
+    // The real readCachedProjectGraph reads from a module-load-frozen
+    // path, so we redirect it to the per-test workspace fixture.
+    readGraphSpy = jest
+      .spyOn(projectGraphModule, 'readCachedProjectGraph')
+      .mockImplementation(() => {
+        const path = join(
+          workspaceRoot,
+          '.nx',
+          'workspace-data',
+          'project-graph.json'
+        );
+        if (!existsSync(path)) {
+          throw new Error('No cached ProjectGraph (test fixture).');
+        }
+        return JSON.parse(readFileSync(path, 'utf-8'));
+      });
   });
 
   afterEach(() => {
+    readGraphSpy.mockRestore();
     rmSync(workspaceRoot, { recursive: true, force: true });
     setWorkspaceRoot(originalRoot);
-    restoreEnv('NX_WORKSPACE_DATA_DIRECTORY', originalDataDir);
-    restoreEnv('NX_PROJECT_GRAPH_CACHE_DIRECTORY', originalGraphCacheDir);
   });
 
   function writeProjectGraph(graph: object): void {
@@ -331,11 +345,3 @@ describe('completion/completion-providers', () => {
     });
   });
 });
-
-function restoreEnv(key: string, value: string | undefined): void {
-  if (value === undefined) {
-    delete process.env[key];
-  } else {
-    process.env[key] = value;
-  }
-}

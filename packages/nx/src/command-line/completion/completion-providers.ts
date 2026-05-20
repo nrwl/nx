@@ -1,18 +1,15 @@
-import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { workspaceDataDirectoryForWorkspace } from '../../utils/cache-directory';
+import { readCachedProjectGraph } from '../../project-graph/project-graph';
+import { readJsonFile } from '../../utils/fileutils';
+import type { ProjectGraph } from '../../config/project-graph';
 
-/** Direct project-graph.json read. Stale graphs are intentionally tolerated
- *  — do not "fix" by triggering a recompute. */
-function getCachedProjectGraph(): any | null {
+/** Stale graphs are intentionally tolerated — do not "fix" by triggering
+ *  a recompute. readCachedProjectGraph throws if no cache exists; we
+ *  swallow because completion must always degrade silently. */
+function getCachedProjectGraph(): ProjectGraph | null {
   try {
-    const graphPath = join(
-      workspaceDataDirectoryForWorkspace(workspaceRoot),
-      'project-graph.json'
-    );
-    if (!existsSync(graphPath)) return null;
-    return JSON.parse(readFileSync(graphPath, 'utf-8'));
+    return readCachedProjectGraph();
   } catch {
     return null;
   }
@@ -41,7 +38,7 @@ export function getProjectNamesWithTarget(
     return [];
   }
   const matches: string[] = [];
-  for (const [name, node] of Object.entries<any>(graph.nodes)) {
+  for (const [name, node] of Object.entries(graph.nodes)) {
     if (node?.data?.targets && targetName in node.data.targets) {
       if (!current || name.startsWith(current)) {
         matches.push(name);
@@ -153,7 +150,7 @@ function collectPluginDirs(prefix = ''): Map<string, PluginDir> {
 
   const graph = getCachedProjectGraph();
   for (const node of Object.values(graph?.nodes ?? {})) {
-    const root = (node as any)?.data?.root;
+    const root = node?.data?.root;
     if (typeof root !== 'string' || !root) continue;
     const projectDir = join(workspaceRoot, root);
     const pkg = readJsonSafe(join(projectDir, 'package.json'));
@@ -186,10 +183,7 @@ function readGeneratorNames(pluginDir: string, field: string): string[] {
 
 function readJsonSafe(path: string): any | null {
   try {
-    if (!existsSync(path)) {
-      return null;
-    }
-    return JSON.parse(readFileSync(path, 'utf-8'));
+    return readJsonFile(path);
   } catch {
     return null;
   }
@@ -201,7 +195,7 @@ export function getTargetNameCompletions(current: string): string[] {
   if (!graph?.nodes) return [];
   const targetSet = new Set<string>();
   for (const node of Object.values(graph.nodes)) {
-    for (const target of Object.keys((node as any)?.data?.targets ?? {})) {
+    for (const target of Object.keys(node?.data?.targets ?? {})) {
       targetSet.add(target);
     }
   }
