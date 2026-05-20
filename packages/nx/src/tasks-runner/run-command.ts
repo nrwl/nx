@@ -80,6 +80,28 @@ const originalStderrWrite = process.stderr.write.bind(process.stderr);
 const originalConsoleLog = console.log.bind(console);
 const originalConsoleError = console.error.bind(console);
 
+// Only used in the non-TTY error path. In non-TTY the function `process.exit(1)`s
+// before the `applyChanges` branch can auto-sync, so the auto-sync bullet keeps
+// the "interactive environments" qualifier to avoid suggesting a config change
+// that won't help in CI/agent contexts.
+const SYNC_FIX_MESSAGE_LINES = [
+  'To sync the workspace:',
+  '- Run `nx sync` (no flags) to sync now.',
+  '- Run `nx sync:check` to preview the changes without modifying any files.',
+  '- Set `sync.applyChanges` to `true` in your `nx.json` to sync automatically when running tasks in interactive environments.',
+  '',
+  'For more information, refer to the docs: https://nx.dev/concepts/sync-generators',
+];
+const APPLY_CHANGES_FALSE_FIX_MESSAGE_LINES = [
+  'Your workspace is set to not sync automatically (`sync.applyChanges` is `false` in your `nx.json`).',
+  'Run `nx sync` (no flags) to sync now, or set `sync.applyChanges` to `true` to sync automatically before each task run.',
+];
+const SYNC_SKIPPED_FIX_MESSAGE_LINES = [
+  'This could lead to unexpected results or errors when running tasks.',
+  '',
+  'Run `nx sync` (no flags) later to sync the workspace.',
+];
+
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
   initiatingTasks: Task[],
@@ -666,8 +688,6 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     getFailedSyncGeneratorsFixMessageLines(results, nxArgs.verbose);
   const outOfSyncTitle = 'The workspace is out of sync';
   const resultBodyLines = getSyncGeneratorSuccessResultsMessageLines(results);
-  const fixMessage =
-    'Make sure to run `nx sync` to apply the identified changes or set `sync.applyChanges` to `true` in your `nx.json` to apply them automatically when running tasks in interactive environments.';
 
   if (!process.stdout.isTTY) {
     // If the user is running a non-TTY environment we
@@ -684,7 +704,7 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     } else {
       output.error({
         title: outOfSyncTitle,
-        bodyLines: [...resultBodyLines, '', fixMessage],
+        bodyLines: [...resultBodyLines, '', ...SYNC_FIX_MESSAGE_LINES],
       });
 
       if (anySyncGeneratorsFailed) {
@@ -727,8 +747,7 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
       bodyLines: [
         ...resultBodyLines,
         '',
-        'Your workspace is set to not apply the identified changes automatically (`sync.applyChanges` is set to `false` in your `nx.json`).',
-        fixMessage,
+        ...APPLY_CHANGES_FALSE_FIX_MESSAGE_LINES,
       ],
     });
 
@@ -838,10 +857,7 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     } else {
       output.warn({
         title: 'Syncing the workspace was skipped',
-        bodyLines: [
-          'This could lead to unexpected results or errors when running tasks.',
-          fixMessage,
-        ],
+        bodyLines: SYNC_SKIPPED_FIX_MESSAGE_LINES,
       });
     }
   }
