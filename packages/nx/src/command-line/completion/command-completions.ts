@@ -3,6 +3,7 @@
 
 import { getCompletionShell } from './trigger';
 import { parseCompletionArgs } from './argv-layout';
+import { getRegisteredTopLevelPaths } from './metadata';
 
 /** Slow-path entry point. Returns true if anything was emitted. */
 export function tryCommandSurfaceCompletion(): boolean {
@@ -50,9 +51,6 @@ export function getTopLevelCommands(
   }
 
   // Infix targets + any other top-level completion-only paths.
-  const { getRegisteredTopLevelPaths } = require('./metadata') as {
-    getRegisteredTopLevelPaths: () => string[];
-  };
   for (const name of getRegisteredTopLevelPaths()) {
     if (seen.has(name)) continue;
     if (current && !name.startsWith(current)) continue;
