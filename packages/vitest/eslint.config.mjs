@@ -29,6 +29,9 @@ export default [
           buildTargets: ['build-base'],
           ignoredDependencies: [
             'nx',
+            // Self-reference: resolves the package's own package.json at
+            // runtime (see src/utils/versions.ts).
+            '@nx/vitest',
             'eslint',
             'typescript',
             '@nx/eslint',
