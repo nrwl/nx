@@ -554,6 +554,14 @@ The agent configuration and the `--parallel` flag both parallelize tasks, but in
 In the examples above, there will be 3 agents running tasks and each agent will try to run 2 tasks at once. If a particular CI run only has 2 tasks, only one agent will be used.
 {% /aside %}
 
+## Upload agent metrics
+
+{% aside type="note" title="Requirements" %}
+Requires Nx 22.1 or higher.
+{% /aside %}
+
+The examples above include an `npx nx-cloud upload-agent-metrics` step in each agent job. See [Track CI Resource Usage](/docs/guides/nx-cloud/ci-resource-usage) to learn how to view the collected data in Nx Cloud.
+
 ## Rerunning jobs with DTE
 
 Rerunning only failed jobs results in agent jobs not running, which causes the CI pipeline to hang and eventually timeout. This is a common pitfall when using a CI providers "rerun failed jobs", or equivalent, feature since agent jobs will always complete successfully.
