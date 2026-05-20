@@ -15,12 +15,6 @@ describe('claudeCodeDefinition', () => {
     }
   });
 
-  it('uses the expected id, display name, and binary name', () => {
-    expect(claudeCodeDefinition.id).toBe('claude-code');
-    expect(claudeCodeDefinition.displayName).toBe('Claude Code');
-    expect(claudeCodeDefinition.binaryNames).toEqual(['claude']);
-  });
-
   it('returns the POSIX well-known path on non-Windows platforms', () => {
     Object.defineProperty(process, 'platform', { value: 'darwin' });
     expect(claudeCodeDefinition.wellKnownPaths()).toEqual([

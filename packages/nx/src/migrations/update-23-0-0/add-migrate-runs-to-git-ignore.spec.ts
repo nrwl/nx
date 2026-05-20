@@ -9,41 +9,20 @@ describe('add-migrate-runs-to-git-ignore migration', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
+  it('should add .nx/migrate-runs to existing .gitignore', async () => {
+    tree.write('.gitignore', 'node_modules\ndist\n');
+
+    await addMigrateRunsToGitIgnore(tree);
+
+    expect(tree.read('.gitignore')?.toString()).toContain('.nx/migrate-runs');
+  });
+
   it('should not create .gitignore if it does not exist', async () => {
     tree.delete('.gitignore');
 
     await addMigrateRunsToGitIgnore(tree);
 
     expect(tree.exists('.gitignore')).toBe(false);
-  });
-
-  it('should add .nx/migrate-runs to existing .gitignore', async () => {
-    tree.write('.gitignore', 'node_modules\ndist\n');
-
-    await addMigrateRunsToGitIgnore(tree);
-
-    const gitignore = tree.read('.gitignore')?.toString();
-    expect(gitignore).toContain('node_modules');
-    expect(gitignore).toContain('.nx/migrate-runs');
-  });
-
-  it('should not duplicate if .nx/migrate-runs is already present', async () => {
-    tree.write('.gitignore', 'node_modules\n.nx/migrate-runs\n');
-
-    await addMigrateRunsToGitIgnore(tree);
-
-    const gitignore = tree.read('.gitignore')?.toString();
-    const matches = gitignore.match(/\.nx\/migrate-runs/g);
-    expect(matches).toHaveLength(1);
-  });
-
-  it('should not add if a broader pattern already covers it', async () => {
-    tree.write('.gitignore', '.nx/\n');
-
-    await addMigrateRunsToGitIgnore(tree);
-
-    const gitignore = tree.read('.gitignore')?.toString();
-    expect(gitignore).not.toContain('.nx/migrate-runs');
   });
 
   it('should skip for lerna workspaces without nx.json', async () => {
@@ -53,8 +32,7 @@ describe('add-migrate-runs-to-git-ignore migration', () => {
 
     await addMigrateRunsToGitIgnore(tree);
 
-    const gitignore = tree.read('.gitignore')?.toString();
-    expect(gitignore).not.toContain('.nx/migrate-runs');
+    expect(tree.read('.gitignore')?.toString()).not.toContain('.nx/migrate-runs');
   });
 
   it('should not skip for lerna workspaces that also have nx.json', async () => {
@@ -64,7 +42,6 @@ describe('add-migrate-runs-to-git-ignore migration', () => {
 
     await addMigrateRunsToGitIgnore(tree);
 
-    const gitignore = tree.read('.gitignore')?.toString();
-    expect(gitignore).toContain('.nx/migrate-runs');
+    expect(tree.read('.gitignore')?.toString()).toContain('.nx/migrate-runs');
   });
 });

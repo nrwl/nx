@@ -18,13 +18,8 @@ describe('coerceAgenticArg', () => {
     expect(coerceAgenticArg('no')).toBe(false);
   });
 
-  it('passes recognized agent ids through unchanged', () => {
+  it('passes any other string through unchanged (upstream `.check` validates it)', () => {
     expect(coerceAgenticArg('claude-code')).toBe('claude-code');
-    expect(coerceAgenticArg('codex')).toBe('codex');
-    expect(coerceAgenticArg('opencode')).toBe('opencode');
-  });
-
-  it('passes unknown strings through (upstream `.check` validates them)', () => {
     expect(coerceAgenticArg('whatever')).toBe('whatever');
   });
 

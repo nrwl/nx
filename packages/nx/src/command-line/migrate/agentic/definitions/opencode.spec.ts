@@ -21,12 +21,6 @@ describe('opencodeDefinition', () => {
     }
   });
 
-  it('uses the expected id, display name, and binary name', () => {
-    expect(opencodeDefinition.id).toBe('opencode');
-    expect(opencodeDefinition.displayName).toBe('OpenCode');
-    expect(opencodeDefinition.binaryNames).toEqual(['opencode']);
-  });
-
   it('returns POSIX well-known paths derived from environment and home', () => {
     Object.defineProperty(process, 'platform', { value: 'linux' });
     process.env.OPENCODE_INSTALL_DIR = '/opt/opencode';

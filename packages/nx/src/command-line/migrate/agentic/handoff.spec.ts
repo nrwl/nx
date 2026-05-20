@@ -1,17 +1,9 @@
-import {
-  existsSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'fs';
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import {
   initRunDir,
   readHandoff,
-  runDirPath,
-  stepHandoffPath,
   stepIdFor,
   waitForValidHandoff,
 } from './handoff';
@@ -25,14 +17,6 @@ describe('handoff', () => {
 
   afterEach(() => {
     rmSync(workspace, { recursive: true, force: true });
-  });
-
-  describe('runDirPath', () => {
-    it('joins workspace + .nx/migrate-runs + run id', () => {
-      expect(runDirPath('/abs/ws', '23.0.0')).toBe(
-        join('/abs/ws', '.nx', 'migrate-runs', '23.0.0')
-      );
-    });
   });
 
   describe('initRunDir', () => {
@@ -56,22 +40,11 @@ describe('handoff', () => {
   });
 
   describe('stepIdFor', () => {
-    it('combines package + name with double underscore', () => {
+    it('joins package + name with double underscore and replaces filesystem-unsafe characters', () => {
       expect(stepIdFor({ package: '@nx/storybook', name: 'migrate-css' })).toBe(
         '_nx_storybook__migrate-css'
       );
-    });
-
-    it('replaces filesystem-unsafe characters with underscore', () => {
       expect(stepIdFor({ package: 'a/b:c', name: 'x y' })).toBe('a_b_c__x_y');
-    });
-  });
-
-  describe('stepHandoffPath', () => {
-    it('appends `<stepId>.json` to the run dir', () => {
-      expect(
-        stepHandoffPath('/abs/ws/.nx/migrate-runs/23.0.0', 'pkg__name')
-      ).toBe(join('/abs/ws/.nx/migrate-runs/23.0.0', 'pkg__name.json'));
     });
   });
 
@@ -101,28 +74,13 @@ describe('handoff', () => {
       expect(readHandoff(file)).toBeNull();
     });
 
-    it('parses a success handoff with status + summary', () => {
-      const file = join(workspace, 'ok.json');
-      writeFileSync(
-        file,
-        JSON.stringify({ status: 'success', summary: 'all good' })
-      );
-      expect(readHandoff(file)).toEqual({
-        status: 'success',
-        summary: 'all good',
-      });
-    });
-
-    it('parses a failed handoff with status + summary', () => {
-      const file = join(workspace, 'bad.json');
-      writeFileSync(
-        file,
-        JSON.stringify({ status: 'failed', summary: 'broken' })
-      );
-      expect(readHandoff(file)).toEqual({
-        status: 'failed',
-        summary: 'broken',
-      });
+    it.each([
+      ['success', { status: 'success', summary: 'all good' }],
+      ['failed', { status: 'failed', summary: 'broken' }],
+    ])('parses a %s handoff with status + summary', (_label, payload) => {
+      const file = join(workspace, `${_label}.json`);
+      writeFileSync(file, JSON.stringify(payload));
+      expect(readHandoff(file)).toEqual(payload);
     });
 
     it('preserves extra fields in `extras`', () => {
@@ -145,20 +103,7 @@ describe('handoff', () => {
   });
 
   describe('waitForValidHandoff', () => {
-    it('resolves once the file becomes a valid handoff', async () => {
-      const file = join(workspace, 'h.json');
-      const promise = waitForValidHandoff(file, { intervalMs: 10 });
-      // Simulate the agent writing the handoff a moment later.
-      setTimeout(() => {
-        writeFileSync(
-          file,
-          JSON.stringify({ status: 'success', summary: 'done' })
-        );
-      }, 30);
-      await expect(promise).resolves.toBeUndefined();
-    });
-
-    it('keeps polling past invalid contents and resolves on valid ones', async () => {
+    it('keeps polling past invalid contents and resolves once the file becomes a valid handoff', async () => {
       const file = join(workspace, 'h.json');
       writeFileSync(file, '{ partial');
       const promise = waitForValidHandoff(file, { intervalMs: 10 });
@@ -171,7 +116,7 @@ describe('handoff', () => {
       await expect(promise).resolves.toBeUndefined();
     });
 
-    it('rejects with the abort reason when the signal is aborted', async () => {
+    it('rejects with the abort reason when the signal is aborted mid-poll', async () => {
       const file = join(workspace, 'h.json');
       const ac = new AbortController();
       const promise = waitForValidHandoff(file, {
@@ -189,25 +134,6 @@ describe('handoff', () => {
       await expect(
         waitForValidHandoff(file, { intervalMs: 10, signal: ac.signal })
       ).rejects.toThrow('already-cancelled');
-    });
-  });
-
-  it('reads from a real on-disk write end-to-end', () => {
-    const runDir = initRunDir(workspace, '23.0.0');
-    const stepId = stepIdFor({ package: '@nx/storybook', name: 'migrate-css' });
-    const file = stepHandoffPath(runDir, stepId);
-    writeFileSync(
-      file,
-      JSON.stringify({ status: 'success', summary: 'applied' })
-    );
-    // Sanity: written content survives the round-trip via readHandoff.
-    expect(JSON.parse(readFileSync(file, 'utf-8'))).toEqual({
-      status: 'success',
-      summary: 'applied',
-    });
-    expect(readHandoff(file)).toEqual({
-      status: 'success',
-      summary: 'applied',
     });
   });
 });

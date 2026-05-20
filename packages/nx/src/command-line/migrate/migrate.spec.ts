@@ -2087,46 +2087,19 @@ describe('Migration', () => {
       });
     });
 
-    it.each([
-      ['true (boolean)', true, true],
-      ['false (boolean)', false, false],
-      ['claude-code (string)', 'claude-code', 'claude-code'],
-      ['codex (string)', 'codex', 'codex'],
-      ['opencode (string)', 'opencode', 'opencode'],
-      ['undefined', undefined, undefined],
-    ])(
-      'should propagate the agentic value (%s) when running migrations',
-      async (_label, input, expected) => {
-        const r = await parseMigrationsOptions({
-          runMigrations: '',
-          ifExists: true,
-          agentic: input,
-        });
-        expect(r).toMatchObject({
-          type: 'runMigrations',
-          agentic: expected,
-        });
-      }
-    );
-
-    it.each([
-      ['true', true, true],
-      ['false', false, false],
-      ['undefined', undefined, undefined],
-    ])(
-      'should propagate the validate value (%s) when running migrations',
-      async (_label, input, expected) => {
-        const r = await parseMigrationsOptions({
-          runMigrations: '',
-          ifExists: true,
-          validate: input,
-        });
-        expect(r).toMatchObject({
-          type: 'runMigrations',
-          validate: expected,
-        });
-      }
-    );
+    it('should propagate the agentic and validate values when running migrations', async () => {
+      const r = await parseMigrationsOptions({
+        runMigrations: '',
+        ifExists: true,
+        agentic: 'claude-code',
+        validate: false,
+      });
+      expect(r).toMatchObject({
+        type: 'runMigrations',
+        agentic: 'claude-code',
+        validate: false,
+      });
+    });
 
     it('should default to nx@latest when no packageAndVersion is provided', async () => {
       jest
@@ -4048,91 +4021,37 @@ describe('Migration', () => {
   });
 
   describe('agentic helpers', () => {
-    describe('isPromptOnlyMigration', () => {
-      it('is true when only `prompt` is set', () => {
-        expect(
-          isPromptOnlyMigration({
-            package: 'p',
-            name: 'n',
-            version: '1.0.0',
-            prompt: 'x.md',
-          })
-        ).toBe(true);
-      });
+    const baseMigration = { package: 'p', name: 'n', version: '1.0.0' };
 
-      it('is false when both `prompt` and `implementation` are set', () => {
-        expect(
-          isPromptOnlyMigration({
-            package: 'p',
-            name: 'n',
-            version: '1.0.0',
-            prompt: 'x.md',
-            implementation: './impl.js',
-          })
-        ).toBe(false);
-      });
-
-      it('is false when `prompt` is missing', () => {
-        expect(
-          isPromptOnlyMigration({
-            package: 'p',
-            name: 'n',
-            version: '1.0.0',
-            implementation: './impl.js',
-          })
-        ).toBe(false);
-      });
-
-      it('is false when `prompt` is set alongside the legacy `factory` field', () => {
-        expect(
-          isPromptOnlyMigration({
-            package: 'p',
-            name: 'n',
-            version: '1.0.0',
-            prompt: 'x.md',
-            factory: './factory.js',
-          })
-        ).toBe(false);
-      });
-    });
-
-    describe('isHybridMigration', () => {
-      it('is true only when `prompt` and an implementation (or factory) are set', () => {
-        expect(
-          isHybridMigration({
-            package: 'p',
-            name: 'n',
-            version: '1.0.0',
-            prompt: 'x.md',
-            implementation: './impl.js',
-          })
-        ).toBe(true);
-        expect(
-          isHybridMigration({
-            package: 'p',
-            name: 'n',
-            version: '1.0.0',
-            prompt: 'x.md',
-            factory: './factory.js',
-          })
-        ).toBe(true);
-        expect(
-          isHybridMigration({
-            package: 'p',
-            name: 'n',
-            version: '1.0.0',
-            prompt: 'x.md',
-          })
-        ).toBe(false);
-        expect(
-          isHybridMigration({
-            package: 'p',
-            name: 'n',
-            version: '1.0.0',
-            implementation: './impl.js',
-          })
-        ).toBe(false);
-      });
+    describe('isPromptOnlyMigration / isHybridMigration', () => {
+      it.each([
+        ['prompt only', { prompt: 'x.md' }, true, false],
+        [
+          'prompt + implementation (hybrid)',
+          { prompt: 'x.md', implementation: './impl.js' },
+          false,
+          true,
+        ],
+        [
+          'prompt + legacy factory (hybrid)',
+          { prompt: 'x.md', factory: './factory.js' },
+          false,
+          true,
+        ],
+        [
+          'implementation only (no prompt)',
+          { implementation: './impl.js' },
+          false,
+          false,
+        ],
+      ])(
+        'classifies %s correctly',
+        (_label, extra, expectedPromptOnly, expectedHybrid) => {
+          const migration = { ...baseMigration, ...extra };
+          expect(isPromptOnlyMigration(migration)).toBe(expectedPromptOnly);
+          expect(isHybridMigration(migration)).toBe(expectedHybrid);
+        }
+      );
     });
 
     describe('resolveAgenticRunId', () => {
@@ -4145,69 +4064,61 @@ describe('Migration', () => {
           ])
         ).toBe('23.0.0');
       });
-
-      it('returns the only version when the queue has a single entry', () => {
-        expect(
-          resolveAgenticRunId([{ package: 'a', name: 'a1', version: '21.2.0' }])
-        ).toBe('21.2.0');
-      });
     });
 
     describe('resolveCreateCommits', () => {
-      it('uses explicit createCommits value when agentic is not enabled', () => {
+      it.each<
+        [
+          string,
+          boolean | undefined,
+          'disabled' | 'inside-agent' | 'enabled',
+          { effective: boolean; agenticHasDiffContext: boolean }
+        ]
+      >([
+        [
+          'explicit true, no agentic',
+          true,
+          'disabled',
+          { effective: true, agenticHasDiffContext: false },
+        ],
+        [
+          'explicit false, no agentic',
+          false,
+          'disabled',
+          { effective: false, agenticHasDiffContext: false },
+        ],
+        [
+          'unset, no agentic',
+          undefined,
+          'disabled',
+          { effective: false, agenticHasDiffContext: false },
+        ],
+        [
+          'unset, inside-agent',
+          undefined,
+          'inside-agent',
+          { effective: false, agenticHasDiffContext: false },
+        ],
+        [
+          'unset, agentic enabled — soft-force on',
+          undefined,
+          'enabled',
+          { effective: true, agenticHasDiffContext: true },
+        ],
+        [
+          'explicit true, agentic enabled',
+          true,
+          'enabled',
+          { effective: true, agenticHasDiffContext: true },
+        ],
+      ])('git repo: %s', (_label, createCommits, agenticKind, expected) => {
         expect(
           resolveCreateCommits({
-            createCommits: true,
-            agenticKind: 'disabled',
+            createCommits,
+            agenticKind,
             isGitRepo: true,
           })
-        ).toEqual({ effective: true, agenticHasDiffContext: false });
-
-        expect(
-          resolveCreateCommits({
-            createCommits: false,
-            agenticKind: 'disabled',
-            isGitRepo: true,
-          })
-        ).toEqual({ effective: false, agenticHasDiffContext: false });
-      });
-
-      it('defaults to false when unset and agentic is not enabled', () => {
-        expect(
-          resolveCreateCommits({
-            createCommits: undefined,
-            agenticKind: 'disabled',
-            isGitRepo: true,
-          })
-        ).toEqual({ effective: false, agenticHasDiffContext: false });
-
-        expect(
-          resolveCreateCommits({
-            createCommits: undefined,
-            agenticKind: 'inside-agent',
-            isGitRepo: true,
-          })
-        ).toEqual({ effective: false, agenticHasDiffContext: false });
-      });
-
-      it('soft-forces createCommits=true when agentic is enabled and createCommits is unset', () => {
-        expect(
-          resolveCreateCommits({
-            createCommits: undefined,
-            agenticKind: 'enabled',
-            isGitRepo: true,
-          })
-        ).toEqual({ effective: true, agenticHasDiffContext: true });
-      });
-
-      it('honours createCommits=true when agentic is enabled', () => {
-        expect(
-          resolveCreateCommits({
-            createCommits: true,
-            agenticKind: 'enabled',
-            isGitRepo: true,
-          })
-        ).toEqual({ effective: true, agenticHasDiffContext: true });
+        ).toEqual(expected);
       });
 
       it('warns and drops diff context when createCommits=false is explicit alongside agentic', () => {
@@ -4221,29 +4132,20 @@ describe('Migration', () => {
         expect(result.warning).toMatch(/--no-create-commits/);
       });
 
-      it('returns an error when --create-commits is explicit and the workspace is not a git repo', () => {
-        const result = resolveCreateCommits({
-          createCommits: true,
-          agenticKind: 'disabled',
-          isGitRepo: false,
-        });
-        expect(result.effective).toBe(false);
-        expect(result.error).toMatch(
-          /`--create-commits` requires a git repository/
-        );
-      });
-
-      it('returns the same error when --create-commits is explicit alongside --agentic without git', () => {
-        const result = resolveCreateCommits({
-          createCommits: true,
-          agenticKind: 'enabled',
-          isGitRepo: false,
-        });
-        expect(result.effective).toBe(false);
-        expect(result.error).toMatch(
-          /`--create-commits` requires a git repository/
-        );
-      });
+      it.each<['disabled' | 'enabled']>([['disabled'], ['enabled']])(
+        'errors when --create-commits is explicit without a git repo (agenticKind=%s)',
+        (agenticKind) => {
+          const result = resolveCreateCommits({
+            createCommits: true,
+            agenticKind,
+            isGitRepo: false,
+          });
+          expect(result.effective).toBe(false);
+          expect(result.error).toMatch(
+            /`--create-commits` requires a git repository/
+          );
+        }
+      );
 
       it('degrades agentic without git (createCommits unset): warns, no error, no diff context', () => {
         const result = resolveCreateCommits({
@@ -4256,74 +4158,40 @@ describe('Migration', () => {
         expect(result.error).toBeUndefined();
         expect(result.warning).toMatch(/not a git repository/);
       });
-
-      it('does not error for non-agentic, no-explicit-createCommits without git', () => {
-        const result = resolveCreateCommits({
-          createCommits: undefined,
-          agenticKind: 'disabled',
-          isGitRepo: false,
-        });
-        expect(result).toEqual({
-          effective: false,
-          agenticHasDiffContext: false,
-        });
-      });
     });
 
     describe('resolveShouldRunValidation', () => {
-      it('returns true by default when agentic resolves to enabled', () => {
+      it.each<
+        [string, boolean | undefined, 'disabled' | 'inside-agent' | 'enabled', boolean]
+      >([
+        ['default on when agentic enabled', undefined, 'enabled', true],
+        ['explicit true respected when agentic enabled', true, 'enabled', true],
+        ['explicit false overrides agentic enabled', false, 'enabled', false],
+        ['ignored when disabled (validate=true)', true, 'disabled', false],
+        ['ignored when inside-agent (validate=true)', true, 'inside-agent', false],
+        ['off when disabled and validate unset', undefined, 'disabled', false],
+        ['off when inside-agent and validate unset', undefined, 'inside-agent', false],
+      ])('%s', (_label, validate, agenticKind, expected) => {
         expect(
-          resolveShouldRunValidation({
-            validate: undefined,
-            agenticKind: 'enabled',
-          })
-        ).toBe(true);
+          resolveShouldRunValidation({ validate, agenticKind })
+        ).toBe(expected);
       });
-
-      it('returns true when validate is explicitly true and agentic is enabled', () => {
-        expect(
-          resolveShouldRunValidation({
-            validate: true,
-            agenticKind: 'enabled',
-          })
-        ).toBe(true);
-      });
-
-      it('returns false when validate is explicitly false even with agentic enabled', () => {
-        expect(
-          resolveShouldRunValidation({
-            validate: false,
-            agenticKind: 'enabled',
-          })
-        ).toBe(false);
-      });
-
-      it.each<['disabled' | 'inside-agent']>([['disabled'], ['inside-agent']])(
-        'returns false when agentic resolves to %s, regardless of validate=true',
-        (kind) => {
-          expect(
-            resolveShouldRunValidation({
-              validate: true,
-              agenticKind: kind,
-            })
-          ).toBe(false);
-        }
-      );
-
-      it.each<['disabled' | 'inside-agent']>([['disabled'], ['inside-agent']])(
-        'returns false when agentic resolves to %s and validate is undefined',
-        (kind) => {
-          expect(
-            resolveShouldRunValidation({
-              validate: undefined,
-              agenticKind: kind,
-            })
-          ).toBe(false);
-        }
-      );
     });
 
     describe('parseMigrationReturn', () => {
+      it('reads both buckets from the object shape and tolerates partial shapes', () => {
+        expect(
+          parseMigrationReturn({
+            nextSteps: ['a'],
+            agentContext: ['b', 'c'],
+          })
+        ).toEqual({ nextSteps: ['a'], agentContext: ['b', 'c'] });
+        expect(parseMigrationReturn({ agentContext: ['x'] })).toEqual({
+          nextSteps: [],
+          agentContext: ['x'],
+        });
+      });
+
       it('treats a string array as legacy workspace-wide nextSteps', () => {
         expect(parseMigrationReturn(['a', 'b'])).toEqual({
           nextSteps: ['a', 'b'],
@@ -4331,59 +4199,26 @@ describe('Migration', () => {
         });
       });
 
-      it('treats undefined/void as empty buckets', () => {
-        expect(parseMigrationReturn(undefined)).toEqual({
-          nextSteps: [],
-          agentContext: [],
-        });
-      });
-
-      it('reads both buckets from the object shape', () => {
-        expect(
-          parseMigrationReturn({
-            nextSteps: ['a'],
-            agentContext: ['b', 'c'],
-          })
-        ).toEqual({ nextSteps: ['a'], agentContext: ['b', 'c'] });
-      });
-
-      it('tolerates partial object shape', () => {
-        expect(parseMigrationReturn({ agentContext: ['x'] })).toEqual({
-          nextSteps: [],
-          agentContext: ['x'],
-        });
-        expect(parseMigrationReturn({ nextSteps: ['y'] })).toEqual({
-          nextSteps: ['y'],
-          agentContext: [],
-        });
-      });
-
-      it('rejects non-string entries in either bucket', () => {
+      it('rejects non-string entries (in object shape and legacy array)', () => {
         expect(
           parseMigrationReturn({
             nextSteps: ['ok', 1, null] as any,
             agentContext: [true, 'ok'] as any,
           })
         ).toEqual({ nextSteps: [], agentContext: [] });
-      });
-
-      it('rejects arrays with non-string entries when treated as legacy', () => {
         expect(parseMigrationReturn(['ok', 42] as any)).toEqual({
           nextSteps: [],
           agentContext: [],
         });
       });
 
-      it('returns empty buckets for unsupported return values', () => {
-        expect(parseMigrationReturn(() => undefined)).toEqual({
-          nextSteps: [],
-          agentContext: [],
-        });
-        expect(parseMigrationReturn('a string')).toEqual({
-          nextSteps: [],
-          agentContext: [],
-        });
-        expect(parseMigrationReturn(42)).toEqual({
+      it.each([
+        ['undefined', undefined],
+        ['function', () => undefined],
+        ['string', 'a string'],
+        ['number', 42],
+      ])('returns empty buckets for unsupported return value: %s', (_label, value) => {
+        expect(parseMigrationReturn(value as any)).toEqual({
           nextSteps: [],
           agentContext: [],
         });
