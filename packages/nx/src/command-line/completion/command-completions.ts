@@ -18,7 +18,7 @@ export function tryCommandSurfaceCompletion(): boolean {
   if (completions === null || completions.length === 0) return false;
 
   for (const line of completions) {
-    process.stdout.write(line + '\n');
+    console.log(line);
   }
   return true;
 }

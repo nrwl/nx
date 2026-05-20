@@ -13,20 +13,18 @@ describe('completion/value-completions', () => {
   });
 
   describe('tryValueCompletion', () => {
-    let originalWrite: typeof process.stdout.write;
+    let logSpy: jest.SpyInstance;
     let captured: string[];
 
     beforeEach(() => {
-      originalWrite = process.stdout.write.bind(process.stdout);
       captured = [];
-      (process.stdout as any).write = (chunk: any) => {
-        captured.push(String(chunk));
-        return true;
-      };
+      logSpy = jest.spyOn(console, 'log').mockImplementation((line: any) => {
+        captured.push(String(line) + '\n');
+      });
     });
 
     afterEach(() => {
-      process.stdout.write = originalWrite;
+      logSpy.mockRestore();
     });
 
     // argv layout at TAB time: [node, nx-bin, ...shellTokens, currentPartial]

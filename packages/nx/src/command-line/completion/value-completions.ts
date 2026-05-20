@@ -18,7 +18,7 @@ export function tryValueCompletion(): boolean {
   if (completions === null) return false;
 
   for (const line of completions) {
-    process.stdout.write(line + '\n');
+    console.log(line);
   }
   return true;
 }
