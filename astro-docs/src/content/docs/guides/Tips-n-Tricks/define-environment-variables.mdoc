@@ -77,9 +77,7 @@ for workspace-specific settings (like the [Nx Cloud token](/docs/guides/nx-cloud
 {% /aside %}
 
 {% aside type="caution" title="Env files are not loaded in batch mode" %}
-The task-specific `.env` files described above are **not** loaded for tasks run with [batch mode](/docs/reference/glossary#batch-mode) (for example `tsc` or Gradle tasks run with `--batch` or `NX_BATCH_MODE=true`). Batch processes only receive the variables present in the current `process.env`, so variables defined in files like `.env.[target-name]` won't be available.
-
-If a batched task depends on these variables, set them in the shell before invoking Nx (or load them with a tool like [`dotenvx`](https://github.com/dotenvx/dotenvx)) so they are present in `process.env`.
+The task-specific `.env` files described above are **not** loaded for tasks run with [batch mode](/docs/reference/glossary#batch-mode) (for example `tsc` or Gradle tasks run with `--batch` or `NX_BATCH_MODE=true`). Batch processes only receive the variables present in the current environment and root .env files, like `.env` and `.env.local`, so variables defined in files like `.env.[target-name]` won't be available.
 {% /aside %}
 
 ### Environment variables for atomized targets
