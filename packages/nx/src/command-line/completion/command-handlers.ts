@@ -25,15 +25,17 @@ export function getNxCommandHandlers(): CommandHandlers {
     .getCommandHandlers();
 }
 
-/** Subcommand name → description, and visible-option name → description. */
+/** Subcommand name → description, visible-option name → description, and
+ *  canonical option name → its yargs-declared aliases (e.g. projects → [p]). */
 export interface BuilderIntrospection {
   subcommands: Map<string, string | undefined>;
   options: Map<string, string | undefined>;
+  aliases: Map<string, string[]>;
 }
 
 /**
  * Run a yargs builder against a throwaway instance and return its declared
- * subcommands and visible options with their descriptions. Returns null if
+ * subcommands, visible options, and option-alias groups. Returns null if
  * the builder throws. Does NOT call `.argv` — would trigger parse and the
  * help-printing path we're avoiding.
  */
@@ -65,5 +67,10 @@ export function introspectBuilder(
     options.set(k, descriptions[k]);
   }
 
-  return { subcommands, options };
+  const aliases = new Map<string, string[]>();
+  for (const [canonical, list] of Object.entries(opts.alias ?? {})) {
+    aliases.set(canonical, list as string[]);
+  }
+
+  return { subcommands, options, aliases };
 }

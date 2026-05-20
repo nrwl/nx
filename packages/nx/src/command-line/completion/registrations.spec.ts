@@ -16,6 +16,7 @@ import * as projectGraphModule from '../../project-graph/project-graph';
 
 import './registrations';
 import { findCompletionMetadata, resolveCompletion } from './metadata';
+import { getNxCommandHandlers, introspectBuilder } from './command-handlers';
 
 // End-to-end completion tests. For each registered command we drive a
 // realistic argv layout through resolveCompletion and assert the emitted
@@ -199,26 +200,27 @@ describe('completion/registrations', () => {
       }
     );
 
-    // Option-alias groups: every member must resolve to the same handler
-    // function reference. Guards against someone changing one alias's
-    // handler without updating its siblings (the hand-maintained list
-    // drifts from yargs' alias declarations otherwise).
-    it.each([
-      ['run-many', ['projects', 'p']],
-      ['run-many', ['targets', 'target', 't']],
-      ['affected', ['projects', 'p']],
-      ['affected', ['targets', 'target', 't']],
-      ['graph', ['targets', 'target', 't']],
-      ['watch', ['projects', 'p']],
-    ])('%s: option-alias group %p shares a handler', (cmd, aliases) => {
-      const meta = findCompletionMetadata([cmd])?.metadata;
-      expect(meta).toBeDefined();
-      const first = meta?.flags?.[aliases[0]];
-      expect(first).toBeInstanceOf(Function);
-      for (const alias of aliases.slice(1)) {
-        expect(meta?.flags?.[alias]).toBe(first);
+    // Option-alias groups derived from yargs' own builder. For each
+    // canonical option that we register a completion handler for, every
+    // yargs-declared alias must also be registered with the same handler
+    // reference. Auto-discovers groups so a new alias can't drift silently.
+    it.each(['run-many', 'affected', 'graph', 'watch'])(
+      '%s: every registered option-alias group shares a handler',
+      (cmd) => {
+        const handler = getNxCommandHandlers()[cmd];
+        const intro = introspectBuilder(handler.builder!);
+        const meta = findCompletionMetadata([cmd])?.metadata;
+        expect(intro).not.toBeNull();
+        expect(meta).toBeDefined();
+        for (const [canonical, aliases] of intro!.aliases) {
+          const fn = meta?.flags?.[canonical];
+          if (!fn) continue; // we don't complete this option — OK
+          for (const alias of aliases) {
+            expect(meta?.flags?.[alias]).toBe(fn);
+          }
+        }
       }
-    });
+    );
   });
 
   describe('infix target completion', () => {
