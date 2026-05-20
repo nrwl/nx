@@ -81,15 +81,15 @@ describe('completion/value-completions', () => {
       expect(captured).toEqual([]);
     });
 
-    it('treats argv without leading `nx` script-name the same as with it', () => {
+    it('returns false when argv is missing the leading `nx` script-name', () => {
+      // Wrappers always include `nx`; anything else is a malformed call.
       registerCompletion('value-no-nx', {
         positionals: [{ complete: () => ['a'] }],
       });
-      // No 'nx' between nx-bin and the command name.
       process.argv = ['node', 'nx-bin', 'value-no-nx', ''];
 
-      expect(tryValueCompletion()).toBe(true);
-      expect(captured.join('')).toBe('a\n');
+      expect(tryValueCompletion()).toBe(false);
+      expect(captured.join('')).toBe('');
     });
 
     it('passes the full tokens array (including the partial) to the completion fn', () => {

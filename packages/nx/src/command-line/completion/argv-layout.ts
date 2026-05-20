@@ -8,7 +8,8 @@ export interface ParsedCompletionArgs {
 
 export function parseCompletionArgs(): ParsedCompletionArgs | null {
   const tail = process.argv.slice(2);
-  const tokens = tail[0] === 'nx' ? tail.slice(1) : tail;
+  if (tail[0] !== 'nx') return null;
+  const tokens = tail.slice(1);
   if (tokens.length === 0) return null;
 
   const current = tokens[tokens.length - 1] ?? '';
