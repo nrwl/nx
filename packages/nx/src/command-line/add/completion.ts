@@ -1,41 +1,15 @@
 import { registerCompletion } from '../completion/metadata';
 
-// `nx add <plugin>` accepts any npm package; suggest the first-party set.
-// Keep alphabetical.
-const FIRST_PARTY_PLUGINS = [
-  '@nx/angular',
-  '@nx/angular-rspack',
-  '@nx/cypress',
-  '@nx/detox',
-  '@nx/docker',
-  '@nx/dotnet',
-  '@nx/esbuild',
-  '@nx/eslint',
-  '@nx/expo',
-  '@nx/express',
-  '@nx/gradle',
-  '@nx/jest',
-  '@nx/js',
-  '@nx/maven',
-  '@nx/module-federation',
-  '@nx/nest',
-  '@nx/next',
-  '@nx/node',
-  '@nx/nuxt',
-  '@nx/playwright',
-  '@nx/react',
-  '@nx/react-native',
-  '@nx/remix',
-  '@nx/rollup',
-  '@nx/rsbuild',
-  '@nx/rspack',
-  '@nx/storybook',
-  '@nx/vite',
-  '@nx/vitest',
-  '@nx/vue',
-  '@nx/web',
-  '@nx/webpack',
-];
+// Derived from nx's own packageGroup — same list `nx report` uses.
+// Auto-updates as new first-party plugins land in nx-migrations.
+const FIRST_PARTY_PLUGINS: string[] = (
+  require('nx/package.json')['nx-migrations'].packageGroup as Array<
+    string | { package: string }
+  >
+)
+  .map((e) => (typeof e === 'string' ? e : e.package))
+  .filter((p) => p.startsWith('@nx/'))
+  .sort();
 
 registerCompletion('add', {
   positionals: [
