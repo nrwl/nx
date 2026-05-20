@@ -72,8 +72,7 @@ export function buildHybridPromptUserPrompt(
   const logs = stripAnsi(ctx.impl?.logs ?? '').trim();
   const agentContext = filterNonEmptyStrings(ctx.impl?.agentContext ?? []);
   const hasDiffContext = !!ctx.impl?.hasDiffContext;
-  const hasGeneratorOutput =
-    !!ctx.impl?.changes && ctx.impl.changes.length > 0;
+  const hasGeneratorOutput = !!ctx.impl?.changes && ctx.impl.changes.length > 0;
   const embeddedFileList = !hasDiffContext
     ? renderFileList(ctx.impl?.changes)
     : '';
