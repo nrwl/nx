@@ -21,10 +21,15 @@ describe('completion/argv-layout', () => {
       });
     });
 
-    it('returns null when the script-name token is missing', () => {
-      // Wrappers always include `nx`; anything else is a malformed call.
+    it('handles a layout without the leading `nx` script-name', () => {
+      // The wrappers always include `nx`, but manual invocations like
+      // `NX_COMPLETE=fish nx run-many` don't — keep dev iteration usable.
       process.argv = ['node', 'nx-bin', 'run-many', ''];
-      expect(parseCompletionArgs()).toBeNull();
+      expect(parseCompletionArgs()).toEqual({
+        tokens: ['run-many', ''],
+        current: '',
+        previousToken: 'run-many',
+      });
     });
 
     it('exposes the partial being typed as `current`', () => {

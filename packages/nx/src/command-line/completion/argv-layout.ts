@@ -8,8 +8,10 @@ export interface ParsedCompletionArgs {
 
 export function parseCompletionArgs(): ParsedCompletionArgs | null {
   const tail = process.argv.slice(2);
-  if (tail[0] !== 'nx') return null;
-  const tokens = tail.slice(1);
+  // Wrappers prepend the literal 'nx' (from COMP_WORDS / commandline -cop /
+  // etc.); strip it when present so manual invocations like
+  // `NX_COMPLETE=fish nx show target in` still work for dev testing.
+  const tokens = tail[0] === 'nx' ? tail.slice(1) : tail;
   if (tokens.length === 0) return null;
 
   const current = tokens[tokens.length - 1] ?? '';
