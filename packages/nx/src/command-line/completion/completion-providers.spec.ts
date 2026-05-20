@@ -317,6 +317,21 @@ describe('completion/completion-providers', () => {
       ]);
     });
 
+    it('completeGenerator also completes bare generator names (nx g <gen>)', () => {
+      // empty prefix: every plugin (with `:`) plus every non-hidden bare
+      // generator name across all plugins.
+      expect(completeGenerator('').sort()).toEqual([
+        '@scoped/plugin:',
+        'app',
+        'component',
+        'lib',
+        'plain-plugin:',
+      ]);
+      // typed prefix narrows both lanes — no plugin starts with `app`, but
+      // `@scoped/plugin` declares an `app` generator, so the bare name lands.
+      expect(completeGenerator('app').sort()).toEqual(['app']);
+    });
+
     it('returns [] when the root package.json is missing', () => {
       rmSync(join(workspaceRoot, 'package.json'));
       expect(getGeneratorPluginCompletions('')).toEqual([]);

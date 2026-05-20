@@ -114,18 +114,49 @@ export function completeProjectTarget(current: string): string[] {
 
 /**
  * Two-stage completion of a `<plugin>:<generator>` token, mirroring
- * project:target above.
+ * project:target above — plus an unqualified-generator path so `nx g
+ * application<TAB>` (which Nx resolves to the first matching generator
+ * across all plugins) is also completable.
+ *
+ * Stage 1 (`nx g <TAB>` / `nx g app<TAB>`) returns BOTH the plugin names
+ * (with a trailing `:` so the second TAB lists that plugin's generators)
+ * AND the bare generator names across all plugins, deduped. The user can
+ * either drill into a plugin or pick an unqualified generator.
+ *
+ * Stage 2 (`nx g @nx/react:<TAB>`) returns that single plugin's
+ * generators, qualified.
  */
 export function completeGenerator(current: string): string[] {
   const colonIdx = current.indexOf(':');
-  if (colonIdx === -1) {
-    return getGeneratorPluginCompletions(current).map((p) => `${p}:`);
+  if (colonIdx !== -1) {
+    const pluginName = current.slice(0, colonIdx);
+    const generatorPrefix = current.slice(colonIdx + 1);
+    return getGeneratorsForPlugin(pluginName, generatorPrefix).map(
+      (g) => `${pluginName}:${g}`
+    );
   }
-  const pluginName = current.slice(0, colonIdx);
-  const generatorPrefix = current.slice(colonIdx + 1);
-  return getGeneratorsForPlugin(pluginName, generatorPrefix).map(
-    (g) => `${pluginName}:${g}`
-  );
+
+  // Single collectPluginDirs() call (no prefix — we need every plugin to
+  // enumerate bare generator names). Plugin names get the trailing `:`;
+  // bare names go through a Set to dedup `application` declared in multiple
+  // plugins.
+  const all = collectPluginDirs();
+  const result: string[] = [];
+  const bare = new Set<string>();
+  for (const [name, entry] of all) {
+    if (!current || name.startsWith(current)) {
+      result.push(`${name}:`);
+    }
+    for (const gen of readGeneratorNames(entry.dir, entry.field)) {
+      if (!current || gen.startsWith(current)) {
+        bare.add(gen);
+      }
+    }
+  }
+  for (const gen of bare) {
+    result.push(gen);
+  }
+  return result;
 }
 
 /**
