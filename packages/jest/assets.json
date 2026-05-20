@@ -1,6 +1,7 @@
 {
   "outDir": "packages/jest/dist",
   "assets": [
+    { "glob": "src/migrations/**/*.md" },
     { "glob": "**/@(files|files-angular)/**" },
     { "glob": "src/**/schema.json" },
     { "glob": "src/**/schema.d.ts" },
