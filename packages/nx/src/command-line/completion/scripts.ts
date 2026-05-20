@@ -5,16 +5,8 @@ import { delimiter, dirname, join } from 'path';
 export type Shell = 'bash' | 'zsh' | 'fish' | 'powershell';
 export const SHELLS: readonly Shell[] = ['bash', 'zsh', 'fish', 'powershell'];
 
-interface CompletionScriptArgs {
-  force?: boolean;
-}
-
 /** Print the raw wrapper script to stdout — for scripting / custom rc paths. */
-export function printCompletionScript(
-  shell: Shell,
-  args: CompletionScriptArgs = {}
-): void {
-  if (!args.force && !isNxOnPath()) warnNxNotOnPath(shell);
+export function printCompletionScript(shell: Shell): void {
   process.stdout.write(generateScript(shell));
 }
 
@@ -23,12 +15,29 @@ export function printCompletionScript(
  * nx-completion block (idempotent via the begin/end markers). Logs the
  * resolved path and a one-line "open a new shell" hint.
  */
-export function installCompletionScript(
-  shell: Shell,
-  args: CompletionScriptArgs = {}
-): void {
-  if (!args.force && !isNxOnPath()) warnNxNotOnPath(shell);
+export function installCompletionScript(shell: Shell): void {
   writeScriptToRcFile(shell);
+}
+
+/**
+ * Stderr advisory when `nx` is not on PATH — the wrappers walk up for a
+ * workspace-local nx, but the outside-workspace fallback needs `nx`
+ * reachable by name. Callers fire this ONCE per invocation even when
+ * installing for multiple shells.
+ */
+export function maybeWarnNxNotOnPath(): void {
+  if (isNxOnPath()) return;
+  process.stderr.write(
+    [
+      `nx: \`nx\` is not on your PATH.`,
+      `    The generated wrappers resolve a workspace-local nx when you`,
+      `    tab-complete inside a project, but outside any workspace they`,
+      `    fall back to a bare \`nx\`. Install nx globally so completion`,
+      `    works everywhere (e.g. \`pnpm add -g nx\` or \`npm i -g nx\`).`,
+      `    Continuing — pass --force to skip this notice.`,
+      ``,
+    ].join('\n')
+  );
 }
 
 function writeScriptToRcFile(shell: Shell): void {
@@ -88,20 +97,6 @@ function isNxOnPath(): boolean {
     }
   }
   return false;
-}
-
-function warnNxNotOnPath(shell: Shell): void {
-  process.stderr.write(
-    [
-      `nx: \`nx\` is not on your PATH.`,
-      `    The generated ${shell} script resolves a workspace-local nx when`,
-      `    you tab-complete inside a project, but outside any workspace it`,
-      `    falls back to a bare \`nx\`. Install nx globally so completion`,
-      `    works everywhere (e.g. \`pnpm add -g nx\` or \`npm i -g nx\`).`,
-      `    Continuing — pass --force to skip this notice.`,
-      ``,
-    ].join('\n')
-  );
 }
 
 // Wrappers live as plain files in ./scripts/ for syntax highlighting and

@@ -47,18 +47,14 @@ export const yargsCompletionCommand: CommandModule<{}, CompletionArgs> = {
     const emit = args.stdout
       ? scripts.printCompletionScript
       : scripts.installCompletionScript;
-    if (args.shell) {
-      emit(args.shell, args);
-      process.exit(0);
-    }
-    const chosen = await pickShellsInteractively();
-    if (chosen.length === 0) {
+    const shells = args.shell ? [args.shell] : await pickShellsInteractively();
+    if (shells.length === 0) {
       process.stderr.write('nx: no shells selected — nothing installed.\n');
       process.exit(0);
     }
-    for (const shell of chosen) {
-      emit(shell, args);
-    }
+    // Fire the PATH-advisory once, before any per-shell emit.
+    if (!args.force) scripts.maybeWarnNxNotOnPath();
+    for (const shell of shells) emit(shell);
     process.exit(0);
   },
 };
