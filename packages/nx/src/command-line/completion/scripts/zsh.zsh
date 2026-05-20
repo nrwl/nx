@@ -48,6 +48,12 @@ if type compdef &>/dev/null; then
       [[ "$value" == *: ]] && nospace=1  # trailing ':' → nospace
     done
 
+    if (( ${#values} == 0 )); then
+      # Nothing to suggest — fall back to filename completion (covers
+      # `nx g app --directory <TAB>` and similar unknown-flag values).
+      _files
+      return
+    fi
     if (( nospace )); then
       compadd -S '' -d displays -a values
     else

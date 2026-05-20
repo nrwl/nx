@@ -147,7 +147,12 @@ describe('completion/metadata', () => {
       expect(positional).not.toHaveBeenCalled();
     });
 
-    it('falls through to positional when previousToken is a flag with no handler', () => {
+    it('emits no candidates when previousToken is a flag with no handler', () => {
+      // The user is typing a flag's value; we don't know what it expects.
+      // Emitting nothing lets the shell wrapper fall back to its native
+      // default (filename completion). Falling through to positional
+      // dispatch would offer wrong candidates (e.g. project names for
+      // `nx g app --directory <TAB>`).
       const positional = jest.fn(() => ['x']);
       registerCompletion('meta-test-resolve-flag-fallthrough', {
         positionals: [{ complete: positional }],
@@ -160,8 +165,8 @@ describe('completion/metadata', () => {
         '--unknown'
       );
 
-      // Empty `nonFlag` chain past the path means positional 0 still matches.
-      expect(result).toEqual(['x']);
+      expect(result).toEqual([]);
+      expect(positional).not.toHaveBeenCalled();
     });
 
     it('returns null for empty args', () => {

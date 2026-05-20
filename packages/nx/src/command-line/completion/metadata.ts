@@ -75,6 +75,12 @@ export function resolveCompletion(
   if (previousToken && previousToken.startsWith('-')) {
     const handler = findFlagCompletion(meta, previousToken.replace(/^-+/, ''));
     if (handler) return handler(current, args);
+    // The user is typing a flag's value but we don't have a handler for
+    // this flag. Emit no candidates so the shell wrapper falls back to its
+    // native default (filename/dirname completion in bash via `-o default`).
+    // Crucially, do NOT fall through to positional dispatch — that would
+    // offer wrong candidates (e.g. project names for `nx g app --directory <TAB>`).
+    return [];
   }
 
   if (match) {
