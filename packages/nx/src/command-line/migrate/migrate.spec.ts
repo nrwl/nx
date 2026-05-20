@@ -37,6 +37,7 @@ import {
   resolveCanonicalNxPackage,
   resolveCreateCommits,
   resolveMode,
+  resolveShouldRunValidation,
 } from './migrate';
 import {
   readPromptFilesFromInstall,
@@ -2082,6 +2083,7 @@ describe('Migration', () => {
         runMigrations: 'migrations.json',
         ifExists: true,
         agentic: undefined,
+        validate: undefined,
       });
     });
 
@@ -2103,6 +2105,25 @@ describe('Migration', () => {
         expect(r).toMatchObject({
           type: 'runMigrations',
           agentic: expected,
+        });
+      }
+    );
+
+    it.each([
+      ['true', true, true],
+      ['false', false, false],
+      ['undefined', undefined, undefined],
+    ])(
+      'should propagate the validate value (%s) when running migrations',
+      async (_label, input, expected) => {
+        const r = await parseMigrationsOptions({
+          runMigrations: '',
+          ifExists: true,
+          validate: input,
+        });
+        expect(r).toMatchObject({
+          type: 'runMigrations',
+          validate: expected,
         });
       }
     );
@@ -4247,6 +4268,59 @@ describe('Migration', () => {
           agenticHasDiffContext: false,
         });
       });
+    });
+
+    describe('resolveShouldRunValidation', () => {
+      it('returns true by default when agentic resolves to enabled', () => {
+        expect(
+          resolveShouldRunValidation({
+            validate: undefined,
+            agenticKind: 'enabled',
+          })
+        ).toBe(true);
+      });
+
+      it('returns true when validate is explicitly true and agentic is enabled', () => {
+        expect(
+          resolveShouldRunValidation({
+            validate: true,
+            agenticKind: 'enabled',
+          })
+        ).toBe(true);
+      });
+
+      it('returns false when validate is explicitly false even with agentic enabled', () => {
+        expect(
+          resolveShouldRunValidation({
+            validate: false,
+            agenticKind: 'enabled',
+          })
+        ).toBe(false);
+      });
+
+      it.each<['disabled' | 'inside-agent']>([['disabled'], ['inside-agent']])(
+        'returns false when agentic resolves to %s, regardless of validate=true',
+        (kind) => {
+          expect(
+            resolveShouldRunValidation({
+              validate: true,
+              agenticKind: kind,
+            })
+          ).toBe(false);
+        }
+      );
+
+      it.each<['disabled' | 'inside-agent']>([['disabled'], ['inside-agent']])(
+        'returns false when agentic resolves to %s and validate is undefined',
+        (kind) => {
+          expect(
+            resolveShouldRunValidation({
+              validate: undefined,
+              agenticKind: kind,
+            })
+          ).toBe(false);
+        }
+      );
     });
 
     describe('parseMigrationReturn', () => {

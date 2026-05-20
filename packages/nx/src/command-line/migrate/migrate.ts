@@ -2445,6 +2445,22 @@ export function resolveCreateCommits(args: {
   };
 }
 
+/**
+ * Resolves whether the framework-owned generic-validation agent step should run
+ * after generator-only migrations.
+ *
+ * Default-on when the agentic flow resolved to `enabled`; silently ignored
+ * otherwise (no warning per design §10.1) — `--validate` requires an active
+ * agent session by definition. An explicit `--no-validate` (`validate === false`)
+ * opts out even when agentic is enabled.
+ */
+export function resolveShouldRunValidation(args: {
+  validate: boolean | undefined;
+  agenticKind: ResolvedAgentic['kind'];
+}): boolean {
+  return args.validate !== false && args.agenticKind === 'enabled';
+}
+
 export async function executeMigrations(
   root: string,
   migrations: ExecutableMigration[],
@@ -2453,7 +2469,8 @@ export async function executeMigrations(
   commitPrefix: string,
   shouldSkipInstall = false,
   agentic?: ResolvedAgentic,
-  agenticHasDiffContext = false
+  agenticHasDiffContext = false,
+  shouldRunValidation = false
 ) {
   const changedDepInstaller = new ChangedDepInstaller(root, shouldSkipInstall);
 
@@ -2577,16 +2594,58 @@ export async function executeMigrations(
           );
         }
       } else {
-        const { changes, nextSteps } = await runNxOrAngularMigration(
-          root,
-          m,
-          isVerbose,
-          shouldCreateCommits,
-          commitPrefix,
-          () => changedDepInstaller.installDepsIfChanged()
-        );
+        // generator-only (no prompt). When the agentic flow is enabled and
+        // `--validate` is on, run the framework-owned generic-validation
+        // agent step after the generator produces changes. The commit is
+        // deferred until validation succeeds — consistent with the hybrid
+        // path's failure handling (no commit on a thrown handoff).
+        const wantsGenericValidation = !!agenticRun && shouldRunValidation;
+        const { changes, nextSteps, agentContext, logs } =
+          await runNxOrAngularMigration(
+            root,
+            m,
+            isVerbose,
+            /* shouldCreateCommits: */ wantsGenericValidation
+              ? false
+              : shouldCreateCommits,
+            commitPrefix,
+            () => changedDepInstaller.installDepsIfChanged(),
+            /* handleInstallDeps: */ false,
+            /* captureGeneratorOutput: */ wantsGenericValidation
+          );
         allNextSteps.push(...nextSteps);
-        if (changes.length === 0) {
+        const generatorMadeChanges = changes.length > 0;
+
+        if (wantsGenericValidation && generatorMadeChanges) {
+          // Install any deps the deterministic phase added/bumped before the
+          // validation agent runs — the agent may run tasks that need them.
+          await changedDepInstaller.installDepsIfChanged();
+          // Throws on `status: "failed"`. `commitMigrationIfRequested` below
+          // is intentionally only reached on the success path — failed
+          // validation leaves the generator's changes + the agent's partial
+          // fixes uncommitted in the working tree for the user to review.
+          await runAgenticPromptStep(
+            root,
+            m,
+            agenticRun!.agentic,
+            agenticRun!.runDir,
+            changedDepInstaller,
+            {
+              logs,
+              changes,
+              agentContext,
+              hasDiffContext: agenticHasDiffContext,
+            },
+            'generic-validation'
+          );
+          await commitMigrationIfRequested(
+            root,
+            m,
+            shouldCreateCommits,
+            commitPrefix,
+            () => changedDepInstaller.installDepsIfChanged()
+          );
+        } else if (!generatorMadeChanges) {
           migrationsWithNoChanges.push(m);
         }
       }
@@ -2972,6 +3031,11 @@ async function runMigrations(
     output.warn({ title: createCommitsWarning });
   }
 
+  const shouldRunValidation = resolveShouldRunValidation({
+    validate: opts.validate,
+    agenticKind: agentic.kind,
+  });
+
   output.log({
     title:
       `Running migrations from '${opts.runMigrations}'` +
@@ -2993,7 +3057,8 @@ async function runMigrations(
     commitPrefix,
     shouldSkipInstall,
     agentic,
-    agenticHasDiffContext
+    agenticHasDiffContext,
+    shouldRunValidation
   );
 
   const ranCount = migrations.length - notRunMigrationsCount;
