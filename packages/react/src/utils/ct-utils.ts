@@ -29,9 +29,7 @@ export async function configureCypressCT(
   const projectConfig = readProjectConfiguration(tree, options.project);
   // Specifically undefined as a workaround for Remix to pass an empty string as the buildTarget
   if (options.buildTarget === undefined) {
-    const { findBuildConfig } = await import(
-      '@nx/cypress/internal'
-    );
+    const { findBuildConfig } = await import('@nx/cypress/internal');
 
     found = await findBuildConfig(tree, {
       project: options.project,
