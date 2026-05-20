@@ -13,7 +13,9 @@ import {
   ModuleFederationTestSetup,
 } from './module-federation-setup';
 
-describe('Angular Module Federation - Federated Libraries', () => {
+// TODO: re-enable once webpack 5.107.0 / @module-federation/enhanced compatibility is resolved upstream.
+// See https://github.com/webpack/webpack/issues/20985 and https://github.com/module-federation/core/issues/4747.
+describe.skip('Angular Module Federation - Federated Libraries', () => {
   let setup: ModuleFederationTestSetup;
 
   beforeAll(() => {
