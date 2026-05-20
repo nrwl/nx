@@ -61,32 +61,12 @@ async function main() {
     return;
   }
 
-  // `nx completion <shell>` install path — print the wrapper, skip the
-  // rest of the bootstrap. Unknown shell falls through to yargs.
-  if (process.argv[2] === 'completion') {
-    const shell = process.argv[3];
-    if (
-      shell === 'bash' ||
-      shell === 'zsh' ||
-      shell === 'fish' ||
-      shell === 'powershell'
-    ) {
-      const { printCompletionScript } = await import(
-        'nx/src/command-line/completion/scripts'
-      );
-      await printCompletionScript(shell, {
-        force: process.argv.includes('--force'),
-        stdout: process.argv.includes('--stdout'),
-      });
-      return;
-    }
-  }
-
   if (
     process.argv[2] !== 'report' &&
     process.argv[2] !== '--version' &&
     process.argv[2] !== '--help' &&
-    process.argv[2] !== 'reset'
+    process.argv[2] !== 'reset' &&
+    process.argv[2] !== 'completion'
   ) {
     const { assertSupportedPlatform } = await import(
       '../src/native/assert-supported-platform.js'
@@ -125,6 +105,7 @@ async function main() {
     process.argv[2] === 'init' ||
     process.argv[2] === 'configure-ai-agents' ||
     process.argv[2] === 'mcp' ||
+    process.argv[2] === 'completion' ||
     (process.argv[2] === 'graph' && !workspace)
   ) {
     process.env.NX_DAEMON = 'false';
