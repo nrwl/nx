@@ -1331,27 +1331,86 @@ describe('shared', () => {
         createMockCommit(
           'ghi789',
           ['libs/lib-a/src/index.ts'],
-          'feat(graph): ambiguous scope'
+          'feat(graph): ambiguous scope',
+          'graph'
         ),
       ];
 
-      try {
-        await getCommitsRelevantToProjects(
+      await expect(
+        getCommitsRelevantToProjects(
           mockProjectGraph,
           commits,
           ['@foo/graph', '@bar/graph'],
           mockReleaseConfig!,
           mockReleaseGraph
-        );
-      } catch (err: any) {
-        expect(err.message).toContain('Ambiguous scope "graph"');
-      }
+        )
+      ).rejects.toThrow(/Ambiguous scope "graph"/);
+    });
+
+    it('should NOT throw when ambiguous scope only collides with projects outside the active release group', async () => {
+      // The commit's `graph` scope matches @foo/graph + @bar/graph
+      // (both outside the active release group). The active group is
+      // ['lib-a'] and the commit touches libs/lib-a. The cross-group
+      // ambiguity is irrelevant to lib-a's release and should not
+      // block it. See https://github.com/nrwl/nx/issues/35744.
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'cross1',
+          ['libs/lib-a/src/index.ts'],
+          'feat(graph): cross-group ambiguous scope',
+          'graph'
+        ),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['lib-a'],
+        mockReleaseConfig!,
+        mockReleaseGraph
+      );
+
+      // lib-a is included via file-affectedness path, treated as
+      // non-scoped for this group (mirrors the empty-scope behavior).
+      expect(result.size).toBe(1);
+      expect(result.get('lib-a')).toHaveLength(1);
+      expect(result.get('lib-a')?.[0].commit.shortHash).toBe('cross1');
+      expect(result.get('lib-a')?.[0].isProjectScopedCommit).toBe(false);
+    });
+
+    it('should treat partially-ambiguous scope as scoped when filtered to a single in-group match', async () => {
+      // Scope `graph` matches @foo/graph + @bar/graph globally, but
+      // only @foo/graph is in the active release group. The filtered
+      // match set has one element, so no throw, and the commit is
+      // treated as scoped to @foo/graph.
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'partial1',
+          ['foo/graph/src/index.ts'],
+          'feat(graph): partial cross-group match',
+          'graph'
+        ),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['@foo/graph'],
+        mockReleaseConfig!,
+        mockReleaseGraph
+      );
+
+      expect(result.size).toBe(1);
+      expect(result.get('@foo/graph')).toHaveLength(1);
+      expect(result.get('@foo/graph')?.[0].commit.shortHash).toBe('partial1');
+      expect(result.get('@foo/graph')?.[0].isProjectScopedCommit).toBe(true);
     });
 
     function createMockCommit(
       shortHash: string,
       affectedFiles: string[],
-      message?: string
+      message?: string,
+      scope: string = ''
     ): GitCommit {
       return {
         message: message || `feat: commit ${shortHash}`,
@@ -1360,7 +1419,7 @@ describe('shared', () => {
         author: { name: 'Test Author', email: 'test@example.com' },
         description: `commit ${shortHash}`,
         type: 'feat',
-        scope: '',
+        scope,
         references: [],
         authors: [{ name: 'Test Author', email: 'test@example.com' }],
         isBreaking: false,
