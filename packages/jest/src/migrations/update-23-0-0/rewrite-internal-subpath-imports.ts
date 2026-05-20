@@ -14,6 +14,7 @@ import type {
   ExportSpecifier,
   ImportDeclaration,
   ImportSpecifier,
+  ImportTypeNode,
   Node,
   SourceFile,
   StringLiteral,
@@ -243,10 +244,28 @@ function collectCallExpressionRewrites(
         TO_INTERNAL,
         changes
       );
+    } else if (ts!.isImportTypeNode(node)) {
+      // `typeof import('...')` parses as an `ImportTypeNode`, not a
+      // CallExpression — its argument is `LiteralTypeNode<StringLiteral>`.
+      // The whole module is referenced, so it can't be symbol-split.
+      const literal = getImportTypeStringLiteral(node);
+      if (literal && literal.text.startsWith(FROM_PREFIX)) {
+        replaceSpecifier(sourceFile, literal, TO_INTERNAL, changes);
+      }
     }
     ts!.forEachChild(node, visit);
   };
   visit(sourceFile);
+}
+
+function getImportTypeStringLiteral(
+  node: ImportTypeNode
+): StringLiteral | undefined {
+  const arg = node.argument;
+  if (arg && ts!.isLiteralTypeNode(arg) && ts!.isStringLiteral(arg.literal)) {
+    return arg.literal;
+  }
+  return undefined;
 }
 
 function shouldRewriteCallExpression(call: CallExpression): boolean {
@@ -254,9 +273,8 @@ function shouldRewriteCallExpression(call: CallExpression): boolean {
   // `require('...')`
   if (ts!.isIdentifier(callee) && callee.text === 'require') return true;
   // dynamic `import('...')` (runtime form parses as a CallExpression whose
-  // callee is the `import` keyword). The type-position form
-  // (`typeof import('...')`) is an `ImportTypeNode`, not a CallExpression, so
-  // we don't touch it.
+  // callee is the `import` keyword). The `typeof import('...')` type-position
+  // form is an `ImportTypeNode` (handled in `collectCallExpressionRewrites`).
   if (callee.kind === ts!.SyntaxKind.ImportKeyword) return true;
   // `jest.mock(...)` / `vi.mock(...)` and friends.
   if (ts!.isPropertyAccessExpression(callee)) {

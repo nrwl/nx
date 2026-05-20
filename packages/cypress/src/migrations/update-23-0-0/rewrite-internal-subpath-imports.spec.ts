@@ -138,9 +138,68 @@ describe('rewrite-internal-subpath-imports migration', () => {
       expect(rewriteSubpathImports(source)).toBe(source);
     });
 
-    it('leaves typeof import() type queries alone', () => {
+    it('rewrites typeof import() type queries to the internal entry', () => {
       const source = `type X = typeof import('@nx/cypress/src/utils/ct-helpers');\n`;
-      expect(rewriteSubpathImports(source)).toBe(source);
+      expect(rewriteSubpathImports(source)).toBe(
+        `type X = typeof import('@nx/cypress/internal');\n`
+      );
+    });
+
+    it('rewrites a <typeof import()>require() cast in tandem', () => {
+      const source = `const m = (require('@nx/cypress/src/utils/ct-helpers') as typeof import('@nx/cypress/src/utils/ct-helpers'));\n`;
+      expect(rewriteSubpathImports(source)).toBe(
+        `const m = (require('@nx/cypress/internal') as typeof import('@nx/cypress/internal'));\n`
+      );
+    });
+
+    it('routes componentConfigurationGenerator to the public entry', () => {
+      const source = `import { componentConfigurationGenerator } from '@nx/cypress/src/generators/component-configuration/component-configuration';\n`;
+      expect(rewriteSubpathImports(source)).toBe(
+        `import { componentConfigurationGenerator } from '@nx/cypress';\n`
+      );
+    });
+
+    it('routes a default import to the internal entry', () => {
+      const source = `import ctHelpers from '@nx/cypress/src/utils/ct-helpers';\n`;
+      expect(rewriteSubpathImports(source)).toBe(
+        `import ctHelpers from '@nx/cypress/internal';\n`
+      );
+    });
+
+    it('routes a default-plus-named import to the internal entry', () => {
+      const source = `import ctHelpers, { createExecutorContext } from '@nx/cypress/src/utils/ct-helpers';\n`;
+      // A default + named clause can't be symbol-split (default binds to the
+      // whole module), so the whole import goes to /internal.
+      expect(rewriteSubpathImports(source)).toBe(
+        `import ctHelpers, { createExecutorContext } from '@nx/cypress/internal';\n`
+      );
+    });
+
+    it.each(['mock', 'unmock', 'doMock', 'dontMock'])(
+      'rewrites jest.%s(...) to the internal entry',
+      (method) => {
+        const source = `jest.${method}('@nx/cypress/src/utils/ct-helpers');\n`;
+        expect(rewriteSubpathImports(source)).toBe(
+          `jest.${method}('@nx/cypress/internal');\n`
+        );
+      }
+    );
+
+    it.each(['mock', 'unmock', 'importActual', 'importMock'])(
+      'rewrites vi.%s(...) to the internal entry',
+      (method) => {
+        const source = `vi.${method}('@nx/cypress/src/utils/ct-helpers');\n`;
+        expect(rewriteSubpathImports(source)).toBe(
+          `vi.${method}('@nx/cypress/internal');\n`
+        );
+      }
+    );
+
+    it('rewrites jest.mock with a factory argument', () => {
+      const source = `jest.mock('@nx/cypress/src/utils/ct-helpers', () => ({ x: 1 }));\n`;
+      expect(rewriteSubpathImports(source)).toBe(
+        `jest.mock('@nx/cypress/internal', () => ({ x: 1 }));\n`
+      );
     });
 
     it('returns the source unchanged when there are no matches', () => {

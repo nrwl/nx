@@ -14,6 +14,8 @@ import type {
   ExportSpecifier,
   ImportDeclaration,
   ImportSpecifier,
+  ImportTypeNode,
+  LiteralTypeNode,
   Node,
   SourceFile,
   StringLiteral,
@@ -240,10 +242,28 @@ function collectCallExpressionRewrites(
         TO_INTERNAL,
         changes
       );
+    } else if (ts!.isImportTypeNode(node)) {
+      // `typeof import('...')` parses as an `ImportTypeNode`, not a
+      // CallExpression — its argument is `LiteralTypeNode<StringLiteral>`.
+      // The whole module is referenced, so it can't be symbol-split.
+      const literal = getImportTypeStringLiteral(node);
+      if (literal && literal.text.startsWith(FROM_PREFIX)) {
+        replaceSpecifier(sourceFile, literal, TO_INTERNAL, changes);
+      }
     }
     ts!.forEachChild(node, visit);
   };
   visit(sourceFile);
+}
+
+function getImportTypeStringLiteral(
+  node: ImportTypeNode
+): StringLiteral | undefined {
+  const arg = node.argument;
+  if (arg && ts!.isLiteralTypeNode(arg) && ts!.isStringLiteral(arg.literal)) {
+    return arg.literal;
+  }
+  return undefined;
 }
 
 function shouldRewriteCallExpression(call: CallExpression): boolean {
