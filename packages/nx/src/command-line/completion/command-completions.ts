@@ -51,6 +51,7 @@ export function getTopLevelCommands(
   for (const name of getRegisteredTopLevelPaths()) {
     if (seen.has(name)) continue;
     if (current && !name.startsWith(current)) continue;
+    seen.add(name);
     completions.push(name);
   }
   return completions;
