@@ -4,7 +4,7 @@ import {
   MigrationsJson,
   MigrationsJsonEntry,
 } from '../../config/misc-interfaces';
-import { extractFileFromTarball } from '../../utils/fileutils';
+import { extractFileFromTarball } from '../../utils/tar';
 import { joinPathFragments } from '../../utils/path';
 
 export const AI_MIGRATIONS_DIR = joinPathFragments('tools', 'ai-migrations');
