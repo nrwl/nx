@@ -105,6 +105,7 @@ async function firePromptForAgentic(
     name: 'enable',
     type: 'confirm',
     message: 'Enable the agentic flow?',
+    // @ts-expect-error -- enquirer types are incomplete; `hint` is supported at runtime by the base Prompt class
     hint,
     initial: true,
   });
