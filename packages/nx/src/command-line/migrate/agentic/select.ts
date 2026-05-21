@@ -92,24 +92,31 @@ function shouldPromptForAgentic(
 async function firePromptForAgentic(
   migrations: ReadonlyArray<{ prompt?: string }>
 ): Promise<boolean> {
-  // Caller (`resolveFlag`) guarantees at least one prompt-bearing migration.
+  // Caller (`resolveFlag`) guarantees at least one prompt-bearing migration —
+  // the "Yes"/"No" hints below assume that. If we later extend the prompt to
+  // fire for generator-only runs (validation-only), the hints need to branch.
   const promptCount = migrations.filter((m) => !!m.prompt).length;
-  const hint = `AI agent will apply ${promptCount} prompt-based migration${
+  const yesHint = `Apply ${promptCount} prompt migration${
     promptCount === 1 ? '' : 's'
-  } and review generator output.`;
+  } and validate generator output with an AI agent`;
+  const noHint = `Skip prompts (listed for review) and run generators without AI validation`;
 
   // Blank line keeps the prompt from gluing to the previous `npm install`
   // output or any earlier orchestrator line.
   console.log();
-  const response = await prompt<{ enable: boolean }>({
+  // `as any` because enquirer's TS types lag the runtime (per-choice `hint`
+  // and `value` are supported but not in the .d.ts).
+  const response = await prompt<{ enable: 'yes' | 'no' }>({
     name: 'enable',
-    type: 'confirm',
+    type: 'autocomplete',
     message: 'Enable the agentic flow?',
-    // @ts-expect-error -- enquirer types are incomplete; `hint` is supported at runtime by the base Prompt class
-    hint,
-    initial: true,
-  });
-  return response.enable;
+    choices: [
+      { name: 'yes', message: 'Yes', hint: yesHint },
+      { name: 'no', message: 'No', hint: noHint },
+    ],
+    initial: 0,
+  } as any);
+  return response.enable === 'yes';
 }
 
 async function selectAgent(

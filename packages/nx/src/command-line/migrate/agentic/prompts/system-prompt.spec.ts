@@ -54,13 +54,23 @@ describe('buildSystemPrompt', () => {
 
   it('instructs the agent to summarize for the user, write the handoff, and tells it nx closes the session', () => {
     const prompt = buildSystemPrompt(ctx);
-    expect(prompt).toMatch(/1\. Tell the user briefly what you did/);
     expect(prompt).toMatch(
-      /Mention that writing the handoff file will close this session/
+      /1\. Summarize what you did or why you couldn't in one or two sentences/
+    );
+    expect(prompt).toMatch(
+      /writing the handoff file next will close this session/
     );
     expect(prompt).toMatch(/2\. Write a JSON file at:/);
     expect(prompt).toMatch(/3\. You're done\./);
     expect(prompt).toMatch(/nx closes this session automatically/);
+  });
+
+  it('offers a pause for follow-ups with a silence bailout so the agent does not deadlock', () => {
+    const prompt = buildSystemPrompt(ctx);
+    expect(prompt).toMatch(
+      /Offer the user a chance to ask follow-up questions or redirect before you write/
+    );
+    expect(prompt).toMatch(/if they have none, proceed with the write/);
   });
 
   describe('scope rules selection', () => {

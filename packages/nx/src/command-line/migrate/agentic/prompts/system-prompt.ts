@@ -59,7 +59,7 @@ export function buildSystemPrompt(ctx: SystemPromptContext): string {
     `<handoff_contract>`,
     `At the end of every step (success, failure, or unrecoverable error):`,
     ``,
-    `1. Tell the user briefly what you did or why you couldn't — one or two sentences. This is the last output they'll see before \`nx migrate\` resumes with the next step. Mention that writing the handoff file will close this session.`,
+    `1. Summarize what you did or why you couldn't in one or two sentences. Then note that writing the handoff file next will close this session and \`nx migrate\` will continue with the next step. Offer the user a chance to ask follow-up questions or redirect before you write — if they have none, proceed with the write.`,
     `2. Write a JSON file at:`,
     `   <handoff_path>`,
     `   ${ctx.handoffFileAbsolutePath}`,

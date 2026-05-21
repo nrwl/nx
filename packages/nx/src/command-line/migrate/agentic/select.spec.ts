@@ -105,7 +105,7 @@ describe('resolveAgentic', () => {
   });
 
   it('fires the up-front prompt when --agentic is undefined and prompt migrations are queued', async () => {
-    mockPrompt.mockResolvedValueOnce({ enable: false });
+    mockPrompt.mockResolvedValueOnce({ enable: 'no' });
     const result = await resolveAgentic({
       agentic: undefined,
       migrations: [{ prompt: 'x.md' }],
@@ -115,7 +115,7 @@ describe('resolveAgentic', () => {
   });
 
   it('enables the agentic flow when the up-front prompt is accepted', async () => {
-    mockPrompt.mockResolvedValueOnce({ enable: true });
+    mockPrompt.mockResolvedValueOnce({ enable: 'yes' });
     mockDetect.mockResolvedValue([detected('claude-code')]);
     const result = await resolveAgentic({
       agentic: undefined,
@@ -125,6 +125,44 @@ describe('resolveAgentic', () => {
       kind: 'enabled',
       selectedAgent: { id: 'claude-code' },
     });
+  });
+
+  it('renders the up-front prompt as an autocomplete with Yes/No choices and per-choice hints', async () => {
+    mockPrompt.mockResolvedValueOnce({ enable: 'no' });
+    await resolveAgentic({
+      agentic: undefined,
+      migrations: [{ prompt: 'a.md' }, { prompt: 'b.md' }, {}],
+    });
+    expect(mockPrompt).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'autocomplete',
+        message: 'Enable the agentic flow?',
+        choices: [
+          {
+            name: 'yes',
+            message: 'Yes',
+            hint: 'Apply 2 prompt migrations and validate generator output with an AI agent',
+          },
+          {
+            name: 'no',
+            message: 'No',
+            hint: 'Skip prompts (listed for review) and run generators without AI validation',
+          },
+        ],
+      })
+    );
+  });
+
+  it('singularizes the "Yes" hint when only one prompt migration is queued', async () => {
+    mockPrompt.mockResolvedValueOnce({ enable: 'no' });
+    await resolveAgentic({
+      agentic: undefined,
+      migrations: [{ prompt: 'only.md' }],
+    });
+    const call = mockPrompt.mock.calls[0][0];
+    expect(call.choices[0].hint).toBe(
+      'Apply 1 prompt migration and validate generator output with an AI agent'
+    );
   });
 
   it('uses the single detected agent without firing a picker', async () => {

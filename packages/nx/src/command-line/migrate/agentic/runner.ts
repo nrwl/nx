@@ -220,6 +220,10 @@ function escapeCmdCommand(arg: string): string {
 }
 
 async function promptAmbiguous(): Promise<HandoffOutcome> {
+  // Blank line keeps the prompt from gluing to the agent's exit message
+  // (e.g. Claude Code's "Resume this session with: claude --resume <id>"),
+  // which would otherwise sit immediately above this question.
+  console.log();
   const response = await prompt<{ choice: 'abort' | 'continue' }>({
     name: 'choice',
     type: 'select',
