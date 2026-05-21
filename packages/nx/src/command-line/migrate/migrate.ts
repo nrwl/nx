@@ -2523,8 +2523,17 @@ export async function executeMigrations(
     )
   );
   logger.info('');
-  const allNextSteps: string[] = [];
+  // Migration-emitted next-steps strings (from MigrationReturnObject.nextSteps).
+  // Tracked separately from the skipped-prompts list so the end-of-run logic
+  // can render them distinctly: inside-agent gets a directive block that
+  // subsumes both; other modes get the legacy "additional information" block.
+  const migrationEmittedNextSteps: string[] = [];
   const skippedPrompts: ExecutableMigration[] = [];
+  // Migrations that finished without throwing. Used to populate the failure
+  // recap when a later migration in the run throws.
+  const completedSuccessfully: ExecutableMigration[] = [];
+  let lastCommittedSha: string | null = null;
+  let committedShasCount = 0;
   // Prompt-only migrations whose agent never ran — i.e., the migration didn't
   // execute at all. Hybrid migrations with a skipped prompt are NOT counted
   // here because their deterministic half still ran.
@@ -2560,6 +2569,10 @@ export async function executeMigrations(
             commitPrefix,
             () => changedDepInstaller.installDepsIfChanged()
           );
+          if (sha) {
+            lastCommittedSha = sha;
+            committedShasCount++;
+          }
           logAgenticSuccessOutcome(
             stepResult.ambiguous ? 'Marked complete by user' : 'Applied',
             sha,
@@ -2584,7 +2597,7 @@ export async function executeMigrations(
             /* handleInstallDeps: */ false,
             /* captureGeneratorOutput: */ !!agenticRun
           );
-        allNextSteps.push(...nextSteps);
+        migrationEmittedNextSteps.push(...nextSteps);
         const generatorMadeChanges = madeChanges;
 
         if (agenticRun) {
@@ -2614,6 +2627,10 @@ export async function executeMigrations(
             commitPrefix,
             () => changedDepInstaller.installDepsIfChanged()
           );
+          if (sha) {
+            lastCommittedSha = sha;
+            committedShasCount++;
+          }
           logAgenticSuccessOutcome(
             stepResult.ambiguous ? 'Marked complete by user' : 'Applied',
             sha,
@@ -2645,6 +2662,8 @@ export async function executeMigrations(
             () => changedDepInstaller.installDepsIfChanged()
           );
           if (sha) {
+            lastCommittedSha = sha;
+            committedShasCount++;
             logger.info(pc.dim(`Committed as ${sha}`));
           }
         }
@@ -2655,20 +2674,30 @@ export async function executeMigrations(
         // uncommitted in the working tree for the user to review.
         const validationRun =
           agenticRun && shouldRunValidation ? agenticRun : undefined;
-        const { changes, nextSteps, agentContext, logs, madeChanges } =
-          await runNxOrAngularMigration(
-            root,
-            m,
-            isVerbose,
-            /* shouldCreateCommits: */ validationRun
-              ? false
-              : shouldCreateCommits,
-            commitPrefix,
-            () => changedDepInstaller.installDepsIfChanged(),
-            /* handleInstallDeps: */ false,
-            /* captureGeneratorOutput: */ !!validationRun
-          );
-        allNextSteps.push(...nextSteps);
+        const {
+          changes,
+          nextSteps,
+          agentContext,
+          logs,
+          madeChanges,
+          committedSha,
+        } = await runNxOrAngularMigration(
+          root,
+          m,
+          isVerbose,
+          /* shouldCreateCommits: */ validationRun
+            ? false
+            : shouldCreateCommits,
+          commitPrefix,
+          () => changedDepInstaller.installDepsIfChanged(),
+          /* handleInstallDeps: */ false,
+          /* captureGeneratorOutput: */ !!validationRun
+        );
+        migrationEmittedNextSteps.push(...nextSteps);
+        if (committedSha) {
+          lastCommittedSha = committedSha;
+          committedShasCount++;
+        }
         const canRunValidation = !!validationRun && changes.length > 0;
 
         if (canRunValidation) {
@@ -2698,6 +2727,10 @@ export async function executeMigrations(
             commitPrefix,
             () => changedDepInstaller.installDepsIfChanged()
           );
+          if (sha) {
+            lastCommittedSha = sha;
+            committedShasCount++;
+          }
           logAgenticSuccessOutcome(
             stepResult.ambiguous
               ? 'Marked complete by user'
@@ -2719,11 +2752,20 @@ export async function executeMigrations(
           }
         }
       }
+      completedSuccessfully.push(m);
       logger.info('');
     } catch (e) {
       if (!(e instanceof NpmPeerDepsInstallError)) {
         output.error({
           title: `Failed to run ${m.name} from ${m.package}. This workspace is NOT up to date!`,
+        });
+        logFailureRecap({
+          migrationIndex,
+          totalMigrations,
+          completedSuccessfully,
+          lastCommittedSha,
+          migrationEmittedNextSteps,
+          insideAgent: agentic?.kind === 'inside-agent',
         });
       }
       throw e;
@@ -2738,15 +2780,26 @@ export async function executeMigrations(
     logSkippedPostMigrationInstall(root);
   }
 
+  // Combined-view next-steps array for back-compat with repair.ts (which
+  // consumes a single `nextSteps` field). Internally, runMigrations uses the
+  // split fields (skippedPrompts, migrationEmittedNextSteps) directly.
+  const combinedNextSteps = [...migrationEmittedNextSteps];
   if (skippedPrompts.length > 0) {
-    allNextSteps.push(formatSkippedPromptsNextStep(skippedPrompts));
+    combinedNextSteps.push(formatSkippedPromptsNextStep(skippedPrompts));
   }
 
   return {
     migrationsWithNoChanges,
     skippedPromptsCount: skippedPrompts.length,
     notRunMigrationsCount,
-    nextSteps: allNextSteps,
+    nextSteps: combinedNextSteps,
+    skippedPrompts,
+    migrationEmittedNextSteps,
+    completedSuccessfullyCount: completedSuccessfully.length,
+    committedShasCount,
+    lastCompletedMigration:
+      completedSuccessfully[completedSuccessfully.length - 1] ?? null,
+    lastCommittedSha,
   };
 }
 
@@ -2960,6 +3013,159 @@ function logAgenticSuccessOutcome(
   logger.info(`${pc.green('✓')} ${label}${shaPart}: ${summary}`);
 }
 
+/**
+ * Logs a structured recap when a migration throws mid-loop. Inserted between
+ * the "Failed to run X" error block and the re-throw so the user (or AI agent
+ * driving the run) can see what completed before the failure without scrolling
+ * back through the per-migration log to count shas.
+ *
+ * Counts-based rather than full migration lists so a 24-migration run that
+ * fails at #12 doesn't dump 24 names into the recap — readers scroll up to
+ * see specifics in the per-migration log.
+ */
+function logFailureRecap(opts: {
+  migrationIndex: number;
+  totalMigrations: number;
+  completedSuccessfully: ExecutableMigration[];
+  lastCommittedSha: string | null;
+  migrationEmittedNextSteps: string[];
+  insideAgent: boolean;
+}): void {
+  const {
+    migrationIndex,
+    totalMigrations,
+    completedSuccessfully,
+    lastCommittedSha,
+    migrationEmittedNextSteps,
+    insideAgent,
+  } = opts;
+  const completed = completedSuccessfully.length;
+  const notAttempted = totalMigrations - migrationIndex;
+  const last = completedSuccessfully[completedSuccessfully.length - 1];
+
+  logger.info('');
+  logger.info(
+    `Run halted at migration ${migrationIndex} of ${totalMigrations}.`
+  );
+  if (completed === 0) {
+    logger.info(`0 migrations completed. ${notAttempted} not attempted.`);
+  } else {
+    const anchor =
+      last && lastCommittedSha
+        ? ` (last: ${last.name} → ${lastCommittedSha})`
+        : last
+          ? ` (last: ${last.name})`
+          : '';
+    logger.info(
+      `${completed} migration${completed === 1 ? '' : 's'} completed${anchor}. ${notAttempted} not attempted.`
+    );
+    logger.info(`See the per-migration log above for full details.`);
+  }
+  if (migrationEmittedNextSteps.length > 0) {
+    logger.info('');
+    logger.info(`Notes from migrations that completed before the failure:`);
+    for (const step of migrationEmittedNextSteps) {
+      logger.info(`  - ${step}`);
+    }
+  }
+  logger.info('');
+  if (insideAgent) {
+    logger.info(
+      `Report the failure and the recap above to the user. They'll need to fix the failing migration and re-run \`nx migrate --run-migrations\` themselves.`
+    );
+  } else {
+    logger.info(
+      `Fix the failing migration and re-run \`nx migrate --run-migrations\` to resume.`
+    );
+  }
+  logger.info('');
+}
+
+/**
+ * Builds the tally body line shown under the top end-of-run NX block.
+ *
+ * Rule (kept coherent across every scenario):
+ * - When at least one migration was applied: `<N> migrations applied, <K> commits created[, <D> prompt migrations <skipped|deferred>]`.
+ *   The `<K> commits created` part stays even at 0 — it tells the reader work
+ *   was applied but not committed (the J4/J8 information made explicit).
+ * - When zero migrations were applied (all-skipped): `<D> prompt migrations <skipped|deferred>` only.
+ */
+function buildTallyBodyLine(opts: {
+  appliedCount: number;
+  committedShasCount: number;
+  skippedPromptsCount: number;
+  insideAgent: boolean;
+}): string {
+  const { appliedCount, committedShasCount, skippedPromptsCount, insideAgent } =
+    opts;
+  const skipVerb = insideAgent ? 'deferred' : 'skipped';
+  if (appliedCount === 0) {
+    return `${skippedPromptsCount} prompt migration${
+      skippedPromptsCount === 1 ? '' : 's'
+    } ${skipVerb}.`;
+  }
+  const parts = [
+    `${appliedCount} migration${appliedCount === 1 ? '' : 's'} applied`,
+    `${committedShasCount} commit${committedShasCount === 1 ? '' : 's'} created`,
+  ];
+  if (skippedPromptsCount > 0) {
+    parts.push(
+      `${skippedPromptsCount} prompt migration${
+        skippedPromptsCount === 1 ? '' : 's'
+      } ${skipVerb}`
+    );
+  }
+  return `${parts.join(', ')}.`;
+}
+
+/**
+ * Builds the body lines for the inside-agent directive block. Sub-sections
+ * drop independently when empty. Returns an empty array when the block has
+ * nothing actionable (no deferred prompts AND no migration-emitted notes) —
+ * the caller skips emitting the block entirely in that case.
+ */
+function buildDirectiveBlockBodyLines(opts: {
+  skippedPrompts: ExecutableMigration[];
+  migrationEmittedNextSteps: string[];
+}): string[] {
+  const { skippedPrompts, migrationEmittedNextSteps } = opts;
+  const hasDeferred = skippedPrompts.length > 0;
+  const hasNotes = migrationEmittedNextSteps.length > 0;
+  if (!hasDeferred && !hasNotes) return [];
+
+  const lines: string[] = [];
+  if (hasDeferred) {
+    lines.push('Apply the deferred prompts below, in order:');
+    skippedPrompts.forEach((m, i) => {
+      const kindHint = isHybridMigration(m)
+        ? ' — hybrid prompt phase'
+        : ' — prompt-only migration';
+      lines.push(`  ${i + 1}. ${m.prompt}`);
+      lines.push(`       (${m.name}${kindHint})`);
+    });
+  }
+  if (hasNotes) {
+    if (hasDeferred) lines.push('');
+    lines.push(
+      hasDeferred
+        ? 'Then relay these migration-emitted notes to the user:'
+        : 'Relay these migration-emitted notes to the user:'
+    );
+    for (const step of migrationEmittedNextSteps) {
+      lines.push(`  - ${step}`);
+    }
+  }
+  lines.push('');
+  lines.push(
+    hasDeferred || hasNotes
+      ? hasDeferred && hasNotes
+        ? 'Finally, summarize what was done across the run and commit the changes per workspace conventions.'
+        : 'Then summarize what was done across the run and commit the changes per workspace conventions.'
+      : 'Summarize what was done across the run and commit the changes per workspace conventions.'
+  );
+  return lines;
+}
+
 // Commits any pre-existing working-tree state into a dedicated "checkpoint"
 // commit before the first migration runs. Without this, the first migration's
 // commit would absorb whatever was already pending — most commonly the
@@ -3063,6 +3269,13 @@ export async function runNxOrAngularMigration(
   agentContext: string[];
   logs: string;
   madeChanges: boolean;
+  /**
+   * Sha of the commit created by this function when `shouldCreateCommits` is
+   * true. Null when commits weren't requested, when the migration made no
+   * changes, or when the commit failed. Used by the executor loop to track
+   * the last successful commit for the failure-recap "last completed" anchor.
+   */
+  committedSha: string | null;
 }> {
   if (!installDepsIfChanged) {
     const changedDepInstaller = new ChangedDepInstaller(root);
@@ -3100,7 +3313,14 @@ export async function runNxOrAngularMigration(
     logger.info('');
     if (!madeChanges) {
       logger.info(`No changes were made\n`);
-      return { changes, nextSteps, agentContext, logs, madeChanges };
+      return {
+        changes,
+        nextSteps,
+        agentContext,
+        logs,
+        madeChanges,
+        committedSha: null,
+      };
     }
 
     logger.info('Changes:');
@@ -3128,7 +3348,14 @@ export async function runNxOrAngularMigration(
     logger.info('');
     if (!madeChanges) {
       logger.info(`No changes were made\n`);
-      return { changes, nextSteps, agentContext, logs, madeChanges };
+      return {
+        changes,
+        nextSteps,
+        agentContext,
+        logs,
+        madeChanges,
+        committedSha: null,
+      };
     }
 
     logger.info('Changes:');
@@ -3136,23 +3363,24 @@ export async function runNxOrAngularMigration(
     logger.info('');
   }
 
+  let committedSha: string | null = null;
   if (shouldCreateCommits) {
-    const sha = await commitMigrationIfRequested(
+    committedSha = await commitMigrationIfRequested(
       root,
       migration,
       shouldCreateCommits,
       commitPrefix,
       installDepsIfChanged
     );
-    if (sha) {
-      logger.info(pc.dim(`Committed as ${sha}`));
+    if (committedSha) {
+      logger.info(pc.dim(`Committed as ${committedSha}`));
     }
     // if we are running this function alone, we need to install deps internally
   } else if (handleInstallDeps) {
     await installDepsIfChanged();
   }
 
-  return { changes, nextSteps, agentContext, logs, madeChanges };
+  return { changes, nextSteps, agentContext, logs, madeChanges, committedSha };
 }
 
 async function runMigrations(
@@ -3254,7 +3482,9 @@ async function runMigrations(
     migrationsWithNoChanges,
     skippedPromptsCount,
     notRunMigrationsCount,
-    nextSteps,
+    skippedPrompts,
+    migrationEmittedNextSteps,
+    committedShasCount,
   } = await executeMigrations(
     root,
     migrations,
@@ -3269,32 +3499,69 @@ async function runMigrations(
 
   const ranCount = migrations.length - notRunMigrationsCount;
   const ranWithChangesCount = ranCount - migrationsWithNoChanges.length;
+  // The "applied" tally counts fully-completed migrations — those that left no
+  // deferred work behind. Hybrid migrations whose prompt half was deferred
+  // count as "deferred", not "applied", so the two tally components add up to
+  // the migration total without double-counting.
+  const appliedCount = migrations.length - skippedPrompts.length;
+  const insideAgent = agentic.kind === 'inside-agent';
+  const tallyLine = buildTallyBodyLine({
+    appliedCount,
+    committedShasCount,
+    skippedPromptsCount,
+    insideAgent,
+  });
   // Only claim the workspace is up to date when no prompt halves were
   // deferred — otherwise there's pending work the user still needs to apply.
   const upToDateSuffix =
     skippedPromptsCount > 0 ? '' : ' This workspace is up to date!';
 
   if (notRunMigrationsCount === migrations.length && migrations.length > 0) {
-    const remediation =
-      agentic.kind === 'inside-agent'
-        ? 'The surrounding AI agent should apply each prompt — see next steps below.'
-        : 'Re-run with --agentic to apply them. See next steps below.';
+    const remediation = insideAgent
+      ? 'The AI agent driving this run should apply each prompt — see next steps below.'
+      : 'Re-run with --agentic to apply them. See next steps below.';
     output.warn({
       title: `No migrations from '${opts.runMigrations}' were applied — every entry is a prompt-only migration. ${remediation}`,
+      bodyLines: [tallyLine],
     });
   } else if (ranWithChangesCount > 0) {
     output.success({
       title: `Successfully finished running migrations from '${opts.runMigrations}'.${upToDateSuffix}`,
+      bodyLines: [tallyLine],
     });
   } else {
     output.success({
       title: `No changes were made from running '${opts.runMigrations}'.${upToDateSuffix}`,
+      bodyLines: [tallyLine],
     });
   }
-  if (nextSteps.length > 0) {
+
+  if (insideAgent) {
+    // Under inside-agent the consumer of the next-steps section is another AI
+    // agent, not a human. Emit a directive block that subsumes deferred
+    // prompts + migration-emitted notes + commit guidance, so the outer agent
+    // has explicit instructions to act on (not just relay).
+    const directiveLines = buildDirectiveBlockBodyLines({
+      skippedPrompts,
+      migrationEmittedNextSteps,
+    });
+    if (directiveLines.length > 0) {
+      output.log({
+        title: 'Next steps for the AI agent driving this run',
+        bodyLines: directiveLines,
+      });
+    }
+  } else if (skippedPromptsCount > 0 || migrationEmittedNextSteps.length > 0) {
+    // Non-inside-agent path keeps the legacy "additional information" shape —
+    // the consumer is the human user.
+    const bodyLines: string[] = [];
+    if (skippedPromptsCount > 0) {
+      bodyLines.push(formatSkippedPromptsNextStep(skippedPrompts));
+    }
+    bodyLines.push(...migrationEmittedNextSteps);
     output.log({
       title: `Some migrations have additional information, see below.`,
-      bodyLines: nextSteps.map((line) => `- ${line}`),
+      bodyLines: bodyLines.map((line) => `- ${line}`),
     });
   }
 }
