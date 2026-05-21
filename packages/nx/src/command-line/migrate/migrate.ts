@@ -2428,7 +2428,7 @@ export function resolveCreateCommits(args: {
         effective: false,
         agenticHasDiffContext: false,
         warning:
-          "--no-create-commits was passed alongside --agentic. The agent will not receive the file-list context from the deterministic phase — per-migration commits are required to isolate each migration's diff.",
+          "--no-create-commits was passed alongside --agentic. Without per-migration commits, the agent can't isolate the current migration's changes from earlier migrations in this run. Drop --no-create-commits for accurate per-migration review.",
       };
     }
     // Without git we cannot soft-force commits the user didn't explicitly

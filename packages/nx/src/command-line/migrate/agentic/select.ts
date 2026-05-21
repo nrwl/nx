@@ -94,14 +94,18 @@ async function firePromptForAgentic(
 ): Promise<boolean> {
   // Caller (`resolveFlag`) guarantees at least one prompt-bearing migration.
   const promptCount = migrations.filter((m) => !!m.prompt).length;
-  const message = `Some migrations are prompt-based and need an AI agent to apply (${promptCount} ${
-    promptCount === 1 ? 'migration' : 'migrations'
-  }). nx can also use the agent to review generator output. Enable the agentic flow?`;
+  const hint = `AI agent will apply ${promptCount} prompt-based migration${
+    promptCount === 1 ? '' : 's'
+  } and review generator output.`;
 
+  // Blank line keeps the prompt from gluing to the previous `npm install`
+  // output or any earlier orchestrator line.
+  console.log();
   const response = await prompt<{ enable: boolean }>({
     name: 'enable',
     type: 'confirm',
-    message,
+    message: 'Enable the agentic flow?',
+    hint,
     initial: true,
   });
   return response.enable;
@@ -158,11 +162,12 @@ async function selectAgent(
   // a TTY before resolving an enabled state, so this is defense-in-depth.
   requireInteractiveOrAbort(isInteractive);
 
+  // Blank line for the same reason as `firePromptForAgentic`.
+  console.log();
   const response = await prompt<{ id: AgentId }>({
     name: 'id',
     type: 'select',
-    message:
-      'Multiple AI agents detected. Which one should drive the agentic flow?',
+    message: 'Multiple AI agents detected. Which one should Nx use?',
     choices: detected.map((d) => ({ name: d.id, message: d.displayName })),
   });
   return detected.find((d) => d.id === response.id)!;
