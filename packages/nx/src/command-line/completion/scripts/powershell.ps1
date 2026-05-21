@@ -27,6 +27,11 @@ Register-ArgumentCompleter -Native -CommandName nx -ScriptBlock {
     }
 
     $env:NX_COMPLETE = 'powershell'
+    # Windows PowerShell 5.1 turns native-command stderr into terminating
+    # ErrorRecords when the caller's $ErrorActionPreference is 'Stop', so
+    # `2>$null` raises before it can suppress. Force 'Continue' locally —
+    # the param has function scope and resets on return.
+    $ErrorActionPreference = 'Continue'
     try {
         # Hide stderr so stray warnings don't land in the buffer; NX_VERBOSE_LOGGING surfaces it.
         if ($env:NX_VERBOSE_LOGGING) {
@@ -35,8 +40,10 @@ Register-ArgumentCompleter -Native -CommandName nx -ScriptBlock {
             $lines = & $nxCmd @tokens 2>$null
         }
         # PowerShell appends a space after each completion — no per-result nospace API.
-        $lines | ForEach-Object {
-            [System.Management.Automation.CompletionResult]::new($_)
+        # Skip blank lines: PS 5.1's CompletionResult ctor throws on empty completionText.
+        foreach ($line in $lines) {
+            if ([string]::IsNullOrEmpty($line)) { continue }
+            [System.Management.Automation.CompletionResult]::new($line)
         }
     } finally {
         Remove-Item Env:NX_COMPLETE -ErrorAction SilentlyContinue
