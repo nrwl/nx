@@ -50,8 +50,8 @@ const SHUTDOWN_CHECK_INTERVAL_MS: u64 = 50;
 /// - host CPU count
 /// - `ceil(host_cpu_count × CpuRate / 10000)` from a `HARD_CAP` Job Object
 ///   rate (Docker `--cpus N` and equivalent — see `job_object` module)
-/// - popcount of the Job Object affinity mask (when `LIMIT_AFFINITY` is set)
-/// - popcount of `GetProcessAffinityMask` (Job + manual + system intersection)
+/// - popcount of `GetProcessAffinityMask`, which the kernel intersects from
+///   Job-imposed, manual `SetProcessAffinityMask`, and system affinity
 ///
 /// On macOS, returns the host CPU count unchanged. macOS has no
 /// container-style CPU enforcement primitives for native processes; container
@@ -93,6 +93,9 @@ fn detect_effective_cpu_count(host_cpu_count: u32) -> u32 {
     let mut effective = host_cpu_count;
     if let Some(job_cpus) = super::job_object::read_job_cpu_quota_cores(host_cpu_count) {
         effective = effective.min(job_cpus);
+    }
+    if let Some(affinity) = super::job_object::read_process_affinity_cores(host_cpu_count) {
+        effective = effective.min(affinity);
     }
     effective.max(1)
 }

@@ -7,15 +7,24 @@
 //! workloads.
 //!
 //! ## CPU
-//! - `JOBOBJECT_CPU_RATE_CONTROL_INFORMATION` with `HARD_CAP` set:
-//!   `ceil(host_cpu_count × CpuRate / 10000)`. Docker's `--cpus N` translates
-//!   to HARD_CAP rate control on Windows.
-//! - `JOBOBJECT_BASIC_LIMIT_INFORMATION.Affinity` (when `LIMIT_AFFINITY` set):
-//!   the popcount of the Job-imposed CPU mask.
-//! - `GetProcessAffinityMask`: the kernel's effective process mask, which
-//!   reflects Job-imposed limits AND any manual `SetProcessAffinityMask` AND
-//!   the system mask intersection.
-//! - The function returns the minimum of those that are set.
+//! Exposed as two `pub(super)` readers, mirroring the Linux arm's split
+//! between cgroup-derived limits and `sched_getaffinity`:
+//!
+//! - [`read_job_cpu_quota_cores`] — Job-derived limits only. Returns `None`
+//!   when the process is not in a Job. Inside a Job, reads
+//!   `JOBOBJECT_CPU_RATE_CONTROL_INFORMATION` with `HARD_CAP` set
+//!   (`ceil(host_cpu_count × CpuRate / 10000)` — Docker's `--cpus N`
+//!   translates to HARD_CAP rate control). Job-imposed affinity is not read
+//!   here because the kernel intersects it into the process mask, so
+//!   `read_process_affinity_cores` already covers it.
+//!
+//! - [`read_process_affinity_cores`] — `GetProcessAffinityMask` unconditionally,
+//!   honors manual `SetProcessAffinityMask` whether or not the process is in a
+//!   Job. Inside a Job, the kernel intersects Job-imposed limits with manual
+//!   affinity and the system mask. Matches Go's `runtime/os_windows.go`,
+//!   .NET CoreCLR's `Environment.ProcessorCount`, libuv's
+//!   `uv_available_parallelism`, and the no-Job branch of OpenJDK HotSpot's
+//!   `active_processor_count`.
 //!
 //! `WEIGHT_BASED` rate control (Docker `--cpu-shares`) is intentionally
 //! ignored — it's a relative priority (1–9), not a hard ceiling. Mirrors how
@@ -68,6 +77,7 @@
 
 use std::mem;
 
+use tracing::debug;
 use winapi::shared::minwindef::{BOOL, DWORD, FALSE};
 use winapi::um::jobapi::IsProcessInJob;
 use winapi::um::jobapi2::QueryInformationJobObject;
@@ -75,42 +85,34 @@ use winapi::um::processthreadsapi::GetCurrentProcess;
 use winapi::um::winbase::GetProcessAffinityMask;
 use winapi::um::winnt::{
     JOB_OBJECT_CPU_RATE_CONTROL_ENABLE, JOB_OBJECT_CPU_RATE_CONTROL_HARD_CAP,
-    JOB_OBJECT_CPU_RATE_CONTROL_WEIGHT_BASED, JOB_OBJECT_LIMIT_AFFINITY,
-    JOB_OBJECT_LIMIT_JOB_MEMORY, JOB_OBJECT_LIMIT_PROCESS_MEMORY, JOB_OBJECT_LIMIT_WORKINGSET,
+    JOB_OBJECT_CPU_RATE_CONTROL_WEIGHT_BASED, JOB_OBJECT_LIMIT_JOB_MEMORY,
+    JOB_OBJECT_LIMIT_PROCESS_MEMORY, JOB_OBJECT_LIMIT_WORKINGSET,
     JOBOBJECT_CPU_RATE_CONTROL_INFORMATION, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
     JobObjectCpuRateControlInformation, JobObjectExtendedLimitInformation,
 };
 
+use super::metrics_math::{
+    cores_from_affinity_mask, cores_from_cpu_rate, is_finite_memory_limit, take_min,
+};
+
 /// Read the effective CPU core count derived from the Job Object the calling
-/// process belongs to. Returns `None` when the process is not in a Job, when
-/// no Job-derived limits are set, or when the queries fail.
+/// process belongs to. Returns `None` when the process is not in a Job or no
+/// Job-derived limits apply.
 pub(super) fn read_job_cpu_quota_cores(host_cpu_count: u32) -> Option<u32> {
     if !is_in_job_object()? {
         return None;
     }
+    read_cpu_hard_cap_rate().map(|rate| cores_from_cpu_rate(host_cpu_count, rate))
+}
 
-    let mut tightest: Option<u32> = None;
-
-    if let Some(rate) = read_cpu_hard_cap_rate() {
-        let cap = ((host_cpu_count as u64 * rate as u64).div_ceil(10000) as u32).max(1);
-        tightest = take_min(tightest, cap.min(host_cpu_count));
-    }
-
-    if let Some(ext) = read_extended_limit_info() {
-        let basic = &ext.BasicLimitInformation;
-        if basic.LimitFlags & JOB_OBJECT_LIMIT_AFFINITY != 0 && basic.Affinity != 0 {
-            // Affinity is `ULONG_PTR` (usize on x64). Bit count == # of CPUs the
-            // job is allowed to schedule on.
-            let count = basic.Affinity.count_ones();
-            tightest = take_min(tightest, count.min(host_cpu_count));
-        }
-    }
-
-    if let Some(count) = read_process_affinity_count() {
-        tightest = take_min(tightest, count.min(host_cpu_count));
-    }
-
-    tightest
+/// Read the effective CPU core count derived from the calling process's
+/// affinity mask. Honors manual `SetProcessAffinityMask` whether or not the
+/// process is in a Job Object. Returns `None` when the query fails or the
+/// mask is empty (Win32 reports zero when the process spans multiple
+/// processor groups on > 64-CPU hosts).
+pub(super) fn read_process_affinity_cores(host_cpu_count: u32) -> Option<u32> {
+    let mask = read_process_affinity_mask()?;
+    cores_from_affinity_mask(mask, host_cpu_count)
 }
 
 /// Read the effective memory limit in bytes derived from the Job Object the
@@ -126,7 +128,7 @@ pub(super) fn read_job_memory_limit_bytes(host_total: u64) -> Option<u64> {
     let flags = ext.BasicLimitInformation.LimitFlags;
     let mut tightest: Option<u64> = None;
     let mut update = |value: u64| {
-        if value > 0 && (host_total == 0 || value < host_total) {
+        if is_finite_memory_limit(value, host_total) {
             tightest = take_min(tightest, value);
         }
     };
@@ -146,19 +148,17 @@ pub(super) fn read_job_memory_limit_bytes(host_total: u64) -> Option<u64> {
     tightest
 }
 
-fn take_min<T: Ord>(current: Option<T>, value: T) -> Option<T> {
-    Some(match current {
-        Some(prev) => prev.min(value),
-        None => value,
-    })
-}
-
 fn is_in_job_object() -> Option<bool> {
     let mut in_job: BOOL = FALSE;
     // SAFETY: `GetCurrentProcess` returns a pseudo-handle (no resource); a
     // NULL `JobHandle` means "any job", per MSDN.
     let ok = unsafe { IsProcessInJob(GetCurrentProcess(), std::ptr::null_mut(), &mut in_job) };
-    if ok == 0 { None } else { Some(in_job != 0) }
+    if ok == 0 {
+        debug!("IsProcessInJob failed; assuming process is not in a Job Object");
+        None
+    } else {
+        Some(in_job != 0)
+    }
 }
 
 fn read_cpu_hard_cap_rate() -> Option<u32> {
@@ -176,6 +176,7 @@ fn read_cpu_hard_cap_rate() -> Option<u32> {
         )
     };
     if ok == 0 {
+        debug!("QueryInformationJobObject(JobObjectCpuRateControlInformation) failed");
         return None;
     }
 
@@ -212,10 +213,15 @@ fn read_extended_limit_info() -> Option<JOBOBJECT_EXTENDED_LIMIT_INFORMATION> {
             &mut return_length,
         )
     };
-    if ok == 0 { None } else { Some(info) }
+    if ok == 0 {
+        debug!("QueryInformationJobObject(JobObjectExtendedLimitInformation) failed");
+        None
+    } else {
+        Some(info)
+    }
 }
 
-fn read_process_affinity_count() -> Option<u32> {
+fn read_process_affinity_mask() -> Option<u64> {
     let mut process_mask: usize = 0;
     let mut system_mask: usize = 0;
     // SAFETY: GetProcessAffinityMask writes two ULONG_PTR (usize) out values.
@@ -226,11 +232,16 @@ fn read_process_affinity_count() -> Option<u32> {
             &mut system_mask as *mut _ as *mut _,
         )
     };
+    if ok == 0 {
+        debug!("GetProcessAffinityMask failed");
+        return None;
+    }
     // On systems with > 64 CPUs across multiple processor groups,
     // `GetProcessAffinityMask` may legitimately return 0 in `process_mask`.
     // Treat that as "unknown" rather than 0 cores.
-    if ok == 0 || process_mask == 0 {
+    if process_mask == 0 {
+        debug!("GetProcessAffinityMask returned empty mask (likely > 64 CPUs across groups)");
         return None;
     }
-    Some(process_mask.count_ones())
+    Some(process_mask as u64)
 }

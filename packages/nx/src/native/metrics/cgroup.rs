@@ -37,6 +37,10 @@
 use std::borrow::Cow;
 use std::path::{Path, PathBuf};
 
+use tracing::debug;
+
+use super::metrics_math::{is_finite_memory_limit, take_min};
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Version {
     V1,
@@ -57,9 +61,17 @@ pub(super) struct CgroupLocation {
 /// `"memory"`). Returns `None` when not running under cgroups, when /proc
 /// is masked, or when the controller isn't found.
 pub(super) fn discover(controller: &str) -> Option<CgroupLocation> {
-    let cgroup_content = std::fs::read_to_string("/proc/self/cgroup").ok()?;
-    let mountinfo_content = std::fs::read_to_string("/proc/self/mountinfo").ok()?;
-    resolve_cgroup_dir(&cgroup_content, &mountinfo_content, controller)
+    let cgroup_content = std::fs::read_to_string("/proc/self/cgroup")
+        .inspect_err(|e| debug!("failed to read /proc/self/cgroup: {e}"))
+        .ok()?;
+    let mountinfo_content = std::fs::read_to_string("/proc/self/mountinfo")
+        .inspect_err(|e| debug!("failed to read /proc/self/mountinfo: {e}"))
+        .ok()?;
+    let location = resolve_cgroup_dir(&cgroup_content, &mountinfo_content, controller);
+    if location.is_none() {
+        debug!("no cgroup mount matched controller {controller:?}");
+    }
+    location
 }
 
 /// Read the effective CPU quota in whole cores (rounded up) for the calling
@@ -94,10 +106,7 @@ fn walk_for_limit<T: Ord>(cg: &CgroupLocation, read_at: impl Fn(&Path) -> Option
     let mut tightest: Option<T> = None;
     loop {
         if let Some(value) = read_at(&current) {
-            tightest = Some(match tightest {
-                Some(prev) => prev.min(value),
-                None => value,
-            });
+            tightest = take_min(tightest, value);
         }
         if current == cg.mount_point {
             return tightest;
@@ -335,12 +344,9 @@ fn read_v1_memory_limit(dir: &Path, host_total: u64) -> Option<u64> {
     let content = std::fs::read_to_string(dir.join("memory.limit_in_bytes")).ok()?;
     let bytes: u64 = content.trim().parse().ok()?;
     // v1 has no "max" sentinel; the kernel reports something around
-    // `0x7FFFFFFFFFFFF000` (PAGE_COUNTER_MAX) when no limit is set. Anything at
-    // or above host RAM is meaningless as a "container limit", so treat as unset.
-    if host_total > 0 && bytes >= host_total {
-        return None;
-    }
-    Some(bytes)
+    // `0x7FFFFFFFFFFFF000` (PAGE_COUNTER_MAX) when no limit is set, and
+    // anything at or above host RAM is meaningless as a "container limit".
+    is_finite_memory_limit(bytes, host_total).then_some(bytes)
 }
 
 // ---------------------------------------------------------------------------
@@ -672,6 +678,13 @@ mod tests {
         )
         .unwrap();
         assert!(read_v1_memory_limit(tmp.path(), host_total).is_none());
+    }
+
+    #[test]
+    fn read_v1_memory_limit_filters_zero() {
+        let tmp = TempDir::new().unwrap();
+        fs::write(tmp.path().join("memory.limit_in_bytes"), "0\n").unwrap();
+        assert!(read_v1_memory_limit(tmp.path(), 64 * 1024 * 1024 * 1024).is_none());
     }
 
     #[test]
