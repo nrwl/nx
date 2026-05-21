@@ -4,7 +4,7 @@ import { join } from 'path';
 import {
   initRunDir,
   readHandoff,
-  stepIdFor,
+  stepHandoffPath,
   waitForValidHandoff,
 } from './handoff';
 
@@ -39,12 +39,20 @@ describe('handoff', () => {
     });
   });
 
-  describe('stepIdFor', () => {
-    it('joins package + name with double underscore and replaces filesystem-unsafe characters', () => {
-      expect(stepIdFor({ package: '@nx/storybook', name: 'migrate-css' })).toBe(
-        '_nx_storybook__migrate-css'
-      );
-      expect(stepIdFor({ package: 'a/b:c', name: 'x y' })).toBe('a_b_c__x_y');
+  describe('stepHandoffPath', () => {
+    it('treats the package scope as a subdirectory', () => {
+      expect(
+        stepHandoffPath('/run', {
+          package: '@nx/storybook',
+          name: 'migrate-css',
+        })
+      ).toBe(join('/run', '@nx', 'storybook', 'migrate-css.json'));
+    });
+
+    it('uses a single segment for unscoped packages', () => {
+      expect(
+        stepHandoffPath('/run', { package: 'plain-pkg', name: 'm1-gen' })
+      ).toBe(join('/run', 'plain-pkg', 'm1-gen.json'));
     });
   });
 

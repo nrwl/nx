@@ -2516,7 +2516,11 @@ export async function executeMigrations(
 
   logger.info(`Running the following migrations:`);
   sortedMigrations.forEach((m) =>
-    logger.info(`- ${m.package}: ${m.name} (${m.description})`)
+    logger.info(
+      m.description
+        ? `- ${m.package}: ${m.name} — ${m.description}`
+        : `- ${m.package}: ${m.name}`
+    )
   );
   logger.info(`---------------------------------------------------------\n`);
   const allNextSteps: string[] = [];
@@ -2730,7 +2734,7 @@ async function runAgenticPromptStep(
 ): Promise<void> {
   const { implContext, mode = 'author' } = opts;
 
-  const { stepHandoffPath, stepIdFor } =
+  const { stepHandoffPath } =
     require('./agentic/handoff') as typeof import('./agentic/handoff');
   const { runAgentic } =
     require('./agentic/runner') as typeof import('./agentic/runner');
@@ -2739,8 +2743,7 @@ async function runAgenticPromptStep(
   const { buildSystemPrompt } =
     require('./agentic/prompts/system-prompt') as typeof import('./agentic/prompts/system-prompt');
 
-  const stepId = stepIdFor(migration);
-  const handoffFilePath = stepHandoffPath(runDir, stepId);
+  const handoffFilePath = stepHandoffPath(runDir, migration);
   // The system prompt tells the agent the parent dir exists, so the agent
   // doesn't defensively `mkdir -p` (which triggers a workspace-permission
   // prompt in agents like Claude Code every run).
@@ -2992,7 +2995,10 @@ export async function runNxOrAngularMigration(
     madeChanges = changes.length > 0;
 
     logger.info(`Ran ${migration.name} from ${migration.package}`);
-    logger.info(`  ${migration.description}\n`);
+    if (migration.description) {
+      logger.info(`  ${migration.description}`);
+    }
+    logger.info('');
     if (!madeChanges) {
       logger.info(`No changes were made\n`);
       return { changes, nextSteps, agentContext, logs, madeChanges };
@@ -3017,7 +3023,10 @@ export async function runNxOrAngularMigration(
     logs = ngResult.loggingQueue.join('\n');
 
     logger.info(`Ran ${migration.name} from ${migration.package}`);
-    logger.info(`  ${migration.description}\n`);
+    if (migration.description) {
+      logger.info(`  ${migration.description}`);
+    }
+    logger.info('');
     if (!madeChanges) {
       logger.info(`No changes were made\n`);
       return { changes, nextSteps, agentContext, logs, madeChanges };

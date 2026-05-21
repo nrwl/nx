@@ -21,26 +21,22 @@ export function initRunDir(workspaceRoot: string, runId: string): string {
   return dir;
 }
 
-function sanitizeForFilename(value: string): string {
-  return value.replace(/[^a-zA-Z0-9_.-]/g, '_');
-}
-
 /**
- * Stable, filesystem-safe identifier for a migration step within a run.
- * Combines the package name and migration name so two packages can ship a
- * migration with the same name without colliding.
+ * Absolute path of the handoff file for a migration step within a run.
+ * The package's scope (if any) becomes a real subdirectory so the package name
+ * stays readable; two packages can ship a migration with the same name without
+ * colliding because they land in different package subdirectories. Matches the
+ * layout used by `writePromptMigrationFiles` for inlined prompt copies.
  */
-export function stepIdFor(migration: {
-  package: string;
-  name: string;
-}): string {
-  return `${sanitizeForFilename(migration.package)}__${sanitizeForFilename(
-    migration.name
-  )}`;
-}
-
-export function stepHandoffPath(runDir: string, stepId: string): string {
-  return join(runDir, `${stepId}.json`);
+export function stepHandoffPath(
+  runDir: string,
+  migration: { package: string; name: string }
+): string {
+  return join(
+    runDir,
+    ...migration.package.split('/'),
+    `${migration.name}.json`
+  );
 }
 
 /**
