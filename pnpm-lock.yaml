@@ -2978,7 +2978,7 @@ importers:
         specifier: 'catalog:'
         version: 7.7.4
       ts-jest:
-        specifier: ^29.0.0 || ^30.0.0
+        specifier: ^29.0.0
         version: 29.4.0(@babel/core@7.29.0)(@jest/transform@30.3.0)(@jest/types@30.0.1)(babel-jest@30.3.0(@babel/core@7.29.0))(esbuild@0.25.0)(jest-util@30.2.0)(jest@30.3.0(@types/node@24.12.2)(babel-plugin-macros@3.1.0)(esbuild-register@3.6.0(esbuild@0.25.0))(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.12.2)(typescript@5.9.2)))(typescript@5.9.2)
       tslib:
         specifier: catalog:typescript

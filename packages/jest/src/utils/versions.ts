@@ -18,7 +18,10 @@ export const latestVersions = {
   jestVersion: '~30.3.0',
   babelJestVersion: '~30.3.0',
   jestTypesVersion: '~30.0.0',
-  tsJestVersion: '^30.0.0',
+  // ts-jest has not shipped a v30 — 29.x is its latest line and its peers
+  // already span jest 29 and 30 (`jest: '^29.0.0 || ^30.0.0'`), so a jest-30
+  // workspace correctly stays on ts-jest 29.x.
+  tsJestVersion: '^29.4.0',
   tslibVersion: '^2.3.0',
   swcJestVersion: '~0.2.38',
   typesNodeVersion: '^22.0.0',
