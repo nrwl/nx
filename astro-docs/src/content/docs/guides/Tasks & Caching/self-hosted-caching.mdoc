@@ -22,7 +22,7 @@ You'll also get access to advanced CI features:
 - [Detection and re-running of flaky tasks](/docs/features/ci-features/flaky-tasks)
 - [Self-healing CI and other AI features](https://nx.dev/ai)
 
-[Get Started](https://cloud.nx.app)
+[Get Started](https://cloud.nx.app/get-started/)
 {% /aside %}
 
 {% aside type="note" title="Nx Enterprise" %}
@@ -38,14 +38,6 @@ Includes everything from Nx Cloud, plus:
 [Reach out for an Enterprise trial](https://nx.dev/enterprise/trial)
 
 {% /aside %}
-
-## Self-hosted cache
-
-Nx previously offered self-hosted cache plugins.
-These are deprecated due to [CVE-2025-36852](https://www.cve.org/CVERecord?id=CVE-2025-36852) (the CREEP vulnerability).
-See the [deprecation notice](/docs/reference/deprecated/self-hosted-cache-packages) for details and migration paths.
-
-To self-host today, build your own caching server using the OpenAPI specification below.
 
 ## Build your own caching server
 
@@ -209,7 +201,7 @@ To use your custom caching server, set the `NX_SELF_HOSTED_REMOTE_CACHE_SERVER` 
 
 You might have used Nx now-deprecated custom task runners API in these scenarios:
 
-- To implement custom self-hosted caching: use one of the implementations listed above
+- To implement custom self-hosted caching, follow the [OpenAPI spec](#open-api-specification), or switch to Nx Cloud
 - To inject custom behavior before and after running tasks: use our new API with dedicated pre and post hooks
 
 To learn more about migrating from custom task runners, [please refer to this detailed guide](/docs/reference/deprecated/custom-tasks-runner).
