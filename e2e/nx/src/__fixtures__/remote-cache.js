@@ -3,6 +3,9 @@
 const http = require('http');
 
 const inMemoryCache = {};
+const socketIds = new WeakMap();
+const cacheRequestSocketIds = [];
+let nextSocketId = 0;
 
 // IMPORTANT: This implementation serves only as a test fixture
 // and is not intended for production use. It is a simple in-memory cache server.
@@ -14,6 +17,26 @@ const inMemoryCache = {};
 //    - Ensure existing data is not overwritten without checks
 const server = http.createServer((req, res) => {
   const url = req.url;
+
+  if (url === '/__stats') {
+    res.setHeader('Content-Type', 'application/json');
+    res.end(
+      JSON.stringify({
+        cacheRequestSocketIds,
+      })
+    );
+    return;
+  }
+
+  if (url === '/__reset-stats') {
+    cacheRequestSocketIds.length = 0;
+    res.statusCode = 204;
+    res.end();
+    return;
+  }
+
+  cacheRequestSocketIds.push(socketIds.get(req.socket));
+
   const parts = url?.split('/');
   const hash = parts?.[parts.length - 1];
 
@@ -64,6 +87,9 @@ const server = http.createServer((req, res) => {
 });
 
 const PORT = Number(process.env.PORT ?? 3000);
+server.on('connection', (socket) => {
+  socketIds.set(socket, ++nextSocketId);
+});
 server.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}/`);
 });

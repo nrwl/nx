@@ -15,6 +15,7 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 import { fork } from 'child_process';
+import { request } from 'http';
 
 import { readdir, stat } from 'fs/promises';
 
@@ -692,6 +693,41 @@ console.log('Build complete');
       expect(fileExists(tmpProjPath(outputFilePath))).toBe(true);
     });
 
+    it('should use fresh HTTP connections when connection pooling is disabled', async () => {
+      await resetRemoteCacheStats(cachePort);
+
+      const projectName = uniq('myapp');
+      const outputFilePath = `dist/${projectName}/output.txt`;
+      updateFile(
+        `projects/${projectName}/project.json`,
+        JSON.stringify({
+          name: projectName,
+          targets: {
+            build: {
+              command: `node -e 'const {mkdirSync, writeFileSync} = require("fs"); mkdirSync("dist/${projectName}", {recursive: true}); writeFileSync("${outputFilePath}", "Hello World")'`,
+              outputs: ['{workspaceRoot}/dist/{projectName}'],
+              cache: true,
+            },
+          },
+        })
+      );
+
+      runCLI(`build ${projectName}`, {
+        env: {
+          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: `http://localhost:${cachePort}`,
+          NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN: 'test-token',
+          NX_SELF_HOSTED_REMOTE_CACHE_CONNECTION_POOLING: '0',
+        },
+      });
+
+      const { cacheRequestSocketIds } = await readRemoteCacheStats(cachePort);
+
+      expect(cacheRequestSocketIds.length).toBeGreaterThanOrEqual(2);
+      expect(new Set(cacheRequestSocketIds).size).toEqual(
+        cacheRequestSocketIds.length
+      );
+    });
+
     it('should handle 401 without ACCESS_TOKEN appropriately', async () => {
       const projectName = uniq('myapp');
       const outputFilePath = `dist/${projectName}/output.txt`;
@@ -789,6 +825,44 @@ console.log('Build complete');
     matchingProjects.sort((a, b) => a.localeCompare(b));
     expectedProjects.sort((a, b) => a.localeCompare(b));
     expect(matchingProjects).toEqual(expectedProjects);
+  }
+
+  async function resetRemoteCacheStats(port: number): Promise<void> {
+    await remoteCacheRequest(port, '/__reset-stats', 'POST');
+  }
+
+  async function readRemoteCacheStats(
+    port: number
+  ): Promise<{ cacheRequestSocketIds: number[] }> {
+    const response = await remoteCacheRequest(port, '/__stats', 'GET');
+    return JSON.parse(response);
+  }
+
+  function remoteCacheRequest(
+    port: number,
+    path: string,
+    method: 'GET' | 'POST'
+  ): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const req = request(
+        {
+          hostname: 'localhost',
+          method,
+          path,
+          port,
+        },
+        (res) => {
+          let data = '';
+          res.setEncoding('utf8');
+          res.on('data', (chunk) => {
+            data += chunk;
+          });
+          res.on('end', () => resolve(data));
+        }
+      );
+      req.on('error', reject);
+      req.end();
+    });
   }
 });
 

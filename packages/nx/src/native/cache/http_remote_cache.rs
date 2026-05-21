@@ -41,6 +41,14 @@ impl HttpRemoteCache {
 
         let mut client_builder = ClientBuilder::new().default_headers(headers);
 
+        let env_connection_pool_disabled =
+            env::var("NX_SELF_HOSTED_REMOTE_CACHE_CONNECTION_POOLING");
+        if let Ok(env_connection_pool_disabled) = env_connection_pool_disabled {
+            if env_connection_pool_disabled == "0" {
+                client_builder = client_builder.pool_max_idle_per_host(0);
+            }
+        }
+
         let env_accept_unauthorized = env::var("NODE_TLS_REJECT_UNAUTHORIZED");
         if let Ok(env_accept_unauthorized) = env_accept_unauthorized {
             if env_accept_unauthorized == "0" {
