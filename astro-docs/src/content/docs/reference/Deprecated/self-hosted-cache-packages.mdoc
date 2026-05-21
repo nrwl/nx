@@ -36,13 +36,15 @@ For information on the vulnerability, see [The CREEP vulnerability and build cac
 - `@nx/azure-cache`
 - `@nx/shared-fs-cache`
 
-## Recommended: Migrate to Nx Cloud
+## Recommended: Migrate to Nx Cloud OR disable remote cache
 
-[Nx Cloud](https://nx.dev/nx-cloud) is the supported remote cache.
+[Nx Cloud](https://nx.dev/nx-cloud) is the best solution for remote cache.
 It includes a free tier for small teams and requires no infrastructure on your side.
 
 To connect your workspace, see [Connect to Nx Cloud](/docs/getting-started/nx-cloud).
 If you need on-premises storage, see [Self-hosted caching](/docs/guides/tasks--caching/self-hosted-caching).
+
+If you cannot use Nx Cloud at this moment, we recommend that you disable remote cache to avoid exploit by the CREEP vulnerability.
 
 ## Advanced: Build your own
 
