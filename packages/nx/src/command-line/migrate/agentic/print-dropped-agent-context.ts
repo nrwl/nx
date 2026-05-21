@@ -16,7 +16,7 @@ import {
  * within the mixed stdout stream (logger output, migration progress, etc.).
  */
 export interface DroppedAgentContextInput {
-  migration: { package: string; name: string };
+  migration: { package: string; name: string; prompt?: string };
   agentContext: string[];
 }
 
@@ -28,7 +28,12 @@ export function formatDroppedAgentContextForOuterAgent(
     return '';
   }
   const id = `${input.migration.package}:${input.migration.name}`;
+  const preamble = input.migration.prompt
+    ? `ℹ Hints from the ${input.migration.name} generator for the outer AI agent applying ${input.migration.prompt}:`
+    : `ℹ Hints from the ${input.migration.name} generator for the outer AI agent:`;
   return [
+    preamble,
+    ``,
     `<agent_context migration="${id}">`,
     ...entries.map(renderListItem),
     `</agent_context>`,

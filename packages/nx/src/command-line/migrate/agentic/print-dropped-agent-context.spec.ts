@@ -6,16 +6,32 @@ import {
 const baseMigration = { package: '@nx/react', name: '21-1-0-rewrite-config' };
 
 describe('formatDroppedAgentContextForOuterAgent', () => {
-  it('wraps the agentContext in an agent_context tag keyed by package:name', () => {
+  it('wraps the agentContext in an agent_context tag keyed by package:name, with an ℹ preamble', () => {
     const out = formatDroppedAgentContextForOuterAgent({
       migration: baseMigration,
       agentContext: ['Consumer X may need manual update'],
     });
     expect(out).toMatch(
-      /^<agent_context migration="@nx\/react:21-1-0-rewrite-config">/
+      /^ℹ Hints from the 21-1-0-rewrite-config generator for the outer AI agent:/
+    );
+    expect(out).toContain(
+      '<agent_context migration="@nx/react:21-1-0-rewrite-config">'
     );
     expect(out).toContain('- Consumer X may need manual update');
     expect(out).toContain('</agent_context>');
+  });
+
+  it('includes the prompt path in the preamble when present', () => {
+    const out = formatDroppedAgentContextForOuterAgent({
+      migration: {
+        ...baseMigration,
+        prompt: 'tools/ai-migrations/@nx/react/21.1.0/rewrite-config.md',
+      },
+      agentContext: ['hint'],
+    });
+    expect(out).toMatch(
+      /applying tools\/ai-migrations\/@nx\/react\/21\.1\.0\/rewrite-config\.md/
+    );
   });
 
   it('returns an empty string when no usable entries remain after filtering', () => {

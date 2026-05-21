@@ -2522,7 +2522,7 @@ export async function executeMigrations(
         : `- ${m.package}: ${m.name}`
     )
   );
-  logger.info(`---------------------------------------------------------\n`);
+  logger.info('');
   const allNextSteps: string[] = [];
   const skippedPrompts: ExecutableMigration[] = [];
   // Prompt-only migrations whose agent never ran — i.e., the migration didn't
@@ -2530,28 +2530,44 @@ export async function executeMigrations(
   // here because their deterministic half still ran.
   let notRunMigrationsCount = 0;
 
+  // Wording for the skip parenthetical, branched on resolution mode so we
+  // don't say "agentic flow disabled" when the flow was actually deferred to
+  // the outer agent.
+  const skipReason =
+    agentic?.kind === 'inside-agent'
+      ? 'deferred to the outer AI agent'
+      : 'agentic flow disabled';
+
+  const totalMigrations = sortedMigrations.length;
+  let migrationIndex = 0;
   for (const m of sortedMigrations) {
-    logger.info(`Running migration ${m.package}: ${m.name}`);
+    migrationIndex++;
+    logMigrationBoundary(migrationIndex, totalMigrations, m.package, m.name);
     try {
       if (isPromptOnlyMigration(m)) {
         if (agenticRun) {
-          await runAgenticPromptStep(
+          const stepResult = await runAgenticPromptStep(
             root,
             m,
             agenticRun.agentic,
             agenticRun.runDir,
             changedDepInstaller
           );
-          await commitMigrationIfRequested(
+          const sha = await commitMigrationIfRequested(
             root,
             m,
             shouldCreateCommits,
             commitPrefix,
             () => changedDepInstaller.installDepsIfChanged()
           );
+          logAgenticSuccessOutcome(
+            stepResult.ambiguous ? 'Marked complete by user' : 'Applied',
+            sha,
+            stepResult.summary
+          );
         } else {
           logger.info(
-            `Skipping prompt migration (agentic flow disabled). Listed in next steps.`
+            pc.dim(`↷ Skipped — ${skipReason}. Listed in next steps.`)
           );
           skippedPrompts.push(m);
           notRunMigrationsCount++;
@@ -2576,7 +2592,7 @@ export async function executeMigrations(
           // agent runs — the prompt half may depend on them being present in
           // node_modules.
           await changedDepInstaller.installDepsIfChanged();
-          await runAgenticPromptStep(
+          const stepResult = await runAgenticPromptStep(
             root,
             m,
             agenticRun.agentic,
@@ -2591,12 +2607,17 @@ export async function executeMigrations(
               },
             }
           );
-          await commitMigrationIfRequested(
+          const sha = await commitMigrationIfRequested(
             root,
             m,
             shouldCreateCommits,
             commitPrefix,
             () => changedDepInstaller.installDepsIfChanged()
+          );
+          logAgenticSuccessOutcome(
+            stepResult.ambiguous ? 'Marked complete by user' : 'Applied',
+            sha,
+            stepResult.summary
           );
         } else {
           // The inner prompt step doesn't run here (agentic disabled, or
@@ -2604,6 +2625,11 @@ export async function executeMigrations(
           // generator-emitted `agentContext` to stdout so the outer driving
           // agent can ingest it. Under `disabled` the run is human-driven;
           // agent-targeted context would only add noise — drop.
+          logger.info(
+            pc.dim(
+              `↷ Prompt phase skipped — ${skipReason}. Listed in next steps.`
+            )
+          );
           if (printDroppedAgentContext && agentContext.length > 0) {
             printDroppedAgentContext({ migration: m, agentContext });
           }
@@ -2611,13 +2637,16 @@ export async function executeMigrations(
           if (!generatorMadeChanges) {
             migrationsWithNoChanges.push(m);
           }
-          await commitMigrationIfRequested(
+          const sha = await commitMigrationIfRequested(
             root,
             m,
             shouldCreateCommits,
             commitPrefix,
             () => changedDepInstaller.installDepsIfChanged()
           );
+          if (sha) {
+            logger.info(pc.dim(`Committed as ${sha}`));
+          }
         }
       } else {
         // Defer the commit until validation succeeds when the new generic-
@@ -2646,7 +2675,7 @@ export async function executeMigrations(
           // Install any deps the deterministic phase added/bumped before the
           // validation agent runs — the agent may run tasks that need them.
           await changedDepInstaller.installDepsIfChanged();
-          await runAgenticPromptStep(
+          const stepResult = await runAgenticPromptStep(
             root,
             m,
             validationRun.agentic,
@@ -2662,12 +2691,19 @@ export async function executeMigrations(
               mode: 'generic-validation',
             }
           );
-          await commitMigrationIfRequested(
+          const sha = await commitMigrationIfRequested(
             root,
             m,
             shouldCreateCommits,
             commitPrefix,
             () => changedDepInstaller.installDepsIfChanged()
+          );
+          logAgenticSuccessOutcome(
+            stepResult.ambiguous
+              ? 'Marked complete by user'
+              : 'Validation passed',
+            sha,
+            stepResult.summary
           );
         } else {
           // No inner validation step ran. Under `inside-agent`, surface the
@@ -2683,7 +2719,7 @@ export async function executeMigrations(
           }
         }
       }
-      logger.info(`---------------------------------------------------------`);
+      logger.info('');
     } catch (e) {
       if (!(e instanceof NpmPeerDepsInstallError)) {
         output.error({
@@ -2721,6 +2757,17 @@ interface AgenticPromptImplContext {
   hasDiffContext: boolean;
 }
 
+interface AgenticStepResult {
+  /** Agent's handoff summary, or a placeholder when the user marked complete. */
+  summary: string;
+  /**
+   * True when the agent didn't write a valid handoff and the user told nx to
+   * continue anyway. The caller uses this to swap the outcome label
+   * accordingly.
+   */
+  ambiguous: boolean;
+}
+
 async function runAgenticPromptStep(
   root: string,
   migration: ExecutableMigration,
@@ -2731,7 +2778,7 @@ async function runAgenticPromptStep(
     implContext?: AgenticPromptImplContext;
     mode?: AgenticPromptMode;
   } = {}
-): Promise<void> {
+): Promise<AgenticStepResult> {
   const { implContext, mode = 'author' } = opts;
 
   const { stepHandoffPath } =
@@ -2800,6 +2847,13 @@ async function runAgenticPromptStep(
     );
   }
 
+  const agentDisplay = agentic.selectedAgent.displayName;
+  const phasePreMarker =
+    mode === 'generic-validation'
+      ? `→ Validating with ${agentDisplay}…`
+      : `→ Running prompt with ${agentDisplay}…`;
+  logger.info(pc.dim(phasePreMarker));
+
   const outcome: HandoffOutcome = await runAgentic({
     detected: agentic.selectedAgent,
     definition,
@@ -2811,26 +2865,31 @@ async function runAgenticPromptStep(
     handoffFilePath,
   });
 
+  // Some agent TUIs leave cursor/SGR state behind on exit. Reset before our
+  // own log lines so the outcome line lands clean instead of overlaid on the
+  // agent's trailing status bar.
+  resetTerminalAfterAgent();
+
   switch (outcome.kind) {
     case 'success':
       await changedDepInstaller.installDepsIfChanged();
-      logger.info(`Prompt migration applied: ${outcome.summary}`);
-      return;
+      return { summary: outcome.summary, ambiguous: false };
     case 'ambiguous-continue':
       await changedDepInstaller.installDepsIfChanged();
-      logger.info(
-        `Prompt migration marked complete by user (no handoff file was written).`
-      );
-      return;
-    case 'failed':
-      output.error({
-        title: `Prompt migration ${migration.package}: ${migration.name} reported a failure.`,
-        bodyLines: [outcome.summary],
-      });
+      return {
+        summary: 'No handoff file was written; marked complete by user.',
+        ambiguous: true,
+      };
+    case 'failed': {
+      const failLabel =
+        mode === 'generic-validation' ? 'Validation failed' : 'Failed';
+      logger.info(`${pc.red('✗')} ${failLabel}: ${outcome.summary}`);
       throw new Error(
         `Prompt migration ${migration.package}: ${migration.name} failed.`
       );
+    }
     case 'ambiguous-abort':
+      logger.info(`${pc.red('✗')} Aborted by user.`);
       throw new Error(
         `Prompt migration ${migration.package}: ${migration.name} was aborted by user.`
       );
@@ -2843,24 +2902,62 @@ async function commitMigrationIfRequested(
   shouldCreateCommits: boolean,
   commitPrefix: string,
   installDepsIfChanged: () => Promise<void>
-): Promise<void> {
-  if (!shouldCreateCommits) return;
+): Promise<string | null> {
+  if (!shouldCreateCommits) return null;
   await installDepsIfChanged();
   const commitMessage = `${commitPrefix}${migration.name}`;
   try {
     const committedSha = commitChanges(commitMessage, root);
     if (committedSha) {
-      logger.info(pc.dim(`- Commit created for changes: ${committedSha}`));
-    } else {
-      logger.info(
-        pc.red(
-          `- A commit could not be created/retrieved for an unknown reason`
-        )
-      );
+      return committedSha;
     }
+    logger.info(
+      pc.red(`A commit could not be created/retrieved for an unknown reason`)
+    );
+    return null;
   } catch (e: any) {
-    logger.info(pc.red(`- ${e.message}`));
+    logger.info(pc.red(e.message));
+    return null;
   }
+}
+
+/**
+ * Some agent TUIs (codex, opencode) don't fully reset their cursor / SGR state
+ * when they exit, which corrupts subsequent orchestrator output. Emit an SGR
+ * reset + newline so our log lines land on a clean row instead of being
+ * overlaid by leftover status bars.
+ */
+function resetTerminalAfterAgent(): void {
+  process.stdout.write('\x1b[0m\n');
+}
+
+/**
+ * Per-migration boundary header. Anchors the orchestrator log at the start of
+ * each migration with the migration index and identity.
+ */
+function logMigrationBoundary(
+  index: number,
+  total: number,
+  pkg: string,
+  name: string
+): void {
+  const label = `── Migration ${index} of ${total} · ${pkg}:${name} `;
+  const targetWidth = 73;
+  const dashes = Math.max(3, targetWidth - label.length);
+  logger.info(`${label}${'─'.repeat(dashes)}`);
+}
+
+/**
+ * Logs the outcome line that closes an agentic phase. Vocabulary:
+ *   ✓ <label>[ (<sha>)]: <summary>
+ */
+function logAgenticSuccessOutcome(
+  label: string,
+  sha: string | null,
+  summary: string
+): void {
+  const shaPart = sha ? ` (${sha})` : '';
+  logger.info(`${pc.green('✓')} ${label}${shaPart}: ${summary}`);
 }
 
 // Commits any pre-existing working-tree state into a dedicated "checkpoint"
@@ -2984,6 +3081,7 @@ export async function runNxOrAngularMigration(
   // schematic's DryRunEvent stream so callers can treat the two paths
   // uniformly for commit/validation gating.
   let madeChanges = false;
+  logger.info(pc.dim('→ Running generator…'));
   if (!isAngularMigration(collection, migration.name)) {
     ({ nextSteps, changes, agentContext, logs } = await runNxMigration(
       root,
@@ -3039,13 +3137,16 @@ export async function runNxOrAngularMigration(
   }
 
   if (shouldCreateCommits) {
-    await commitMigrationIfRequested(
+    const sha = await commitMigrationIfRequested(
       root,
       migration,
       shouldCreateCommits,
       commitPrefix,
       installDepsIfChanged
     );
+    if (sha) {
+      logger.info(pc.dim(`Committed as ${sha}`));
+    }
     // if we are running this function alone, we need to install deps internally
   } else if (handleInstallDeps) {
     await installDepsIfChanged();
