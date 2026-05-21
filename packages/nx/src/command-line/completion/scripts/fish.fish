@@ -37,11 +37,19 @@ function __nx_completions
     return
   end
   # No nx completion — fall back to filename completion. `-f` on the
-  # `complete` declaration blocks fish's BUILT-IN file offering, but we
-  # can still emit path candidates from inside the function.
-  set -l matches $current*
-  if test (count $matches) -gt 0
-    printf '%s\n' $matches
+  # `complete` declaration blocks fish's BUILT-IN file offering, but
+  # we can still emit path candidates from inside the function. Append
+  # '/' to directories so fish keeps the cursor in them (no trailing
+  # space). Emitting bare paths (no description tab) preserves the
+  # slash through fish's completion machinery — __fish_complete_path's
+  # tab-separated output gets the slash stripped by fish when picking a
+  # unique candidate.
+  for match in $current*
+    if test -d $match
+      echo $match/
+    else
+      echo $match
+    end
   end
 end
 complete -c nx -f -a '(__nx_completions)'

@@ -10,19 +10,34 @@ export type CommandHandlers = Record<string, CommandHandler>;
  * Reach into the yargs commandsObject to enumerate registered command
  * handlers. Lazy-required: nx-commands pulls in the full command tree
  * and is only needed on the slow path.
+ *
+ * Yargs only keys handlers by canonical name. We mirror each alias to its
+ * canonical handler reference so lookups like `handlers['g']` resolve to
+ * the same entry as `handlers['generate']`.
  */
 export function getNxCommandHandlers(): CommandHandlers {
   const { commandsObject } = require('../nx-commands') as {
     commandsObject: {
       getInternalMethods(): {
         getCommandInstance(): { getCommandHandlers(): CommandHandlers };
+        getUsageInstance(): { getCommands(): unknown[][] };
       };
     };
   };
-  return commandsObject
-    .getInternalMethods()
-    .getCommandInstance()
-    .getCommandHandlers();
+  const internal = commandsObject.getInternalMethods();
+  const handlers = { ...internal.getCommandInstance().getCommandHandlers() };
+  for (const row of internal.getUsageInstance().getCommands()) {
+    // usage.getCommands() rows: [usagePattern, description, isDefault, aliases, deprecated]
+    const usagePattern = String(row[0] ?? '');
+    const aliases = Array.isArray(row[3]) ? (row[3] as string[]) : [];
+    const canonical = usagePattern.split(/\s+/)[0];
+    const handler = handlers[canonical];
+    if (!handler) continue;
+    for (const alias of aliases) {
+      if (!handlers[alias]) handlers[alias] = handler;
+    }
+  }
+  return handlers;
 }
 
 /** Subcommand name → description, visible-option name → description, and

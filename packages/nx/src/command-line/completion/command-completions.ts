@@ -70,12 +70,16 @@ export function getCommandCompletions(
     return null;
   }
   const handler = handlers[cmdName];
+  // Once we recognize a top-level command in `args`, we own the slot —
+  // return [] (not null) for the "found a command but can't enumerate its
+  // surface" case so the caller doesn't fall back to top-level commands
+  // (which would mis-offer e.g. `exec` for `nx g c ex`).
   if (typeof handler.builder !== 'function') {
-    return null;
+    return [];
   }
 
   const intro = introspectBuilder(handler.builder);
-  if (!intro) return null;
+  if (!intro) return [];
 
   const completions: string[] = [];
   const isFlagPrefix = current.startsWith('-');
