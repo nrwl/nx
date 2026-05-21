@@ -14,10 +14,7 @@ import {
   cleanupCoreWebpackTest,
 } from './core-webpack-setup';
 
-// TODO: re-enable once webpack 5.107.0 / @module-federation/enhanced compatibility is resolved upstream.
-// See https://github.com/webpack/webpack/issues/20985 and https://github.com/module-federation/core/issues/4747.
-// eslint-disable-next-line jest/no-disabled-tests
-describe.skip('React Module Federation - Webpack Basic - Playwright', () => {
+describe('React Module Federation - Webpack Basic - Playwright', () => {
   beforeAll(() => {
     setupCoreWebpackTest();
   });
