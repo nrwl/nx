@@ -29,8 +29,8 @@ export function formatDroppedAgentContextForOuterAgent(
   }
   const id = `${input.migration.package}:${input.migration.name}`;
   const preamble = input.migration.prompt
-    ? `ℹ Hints from the ${input.migration.name} generator for the outer AI agent applying ${input.migration.prompt}:`
-    : `ℹ Hints from the ${input.migration.name} generator for the outer AI agent:`;
+    ? `ℹ Hints from the ${input.migration.name} generator for the AI agent driving this run, when applying ${input.migration.prompt}:`
+    : `ℹ Hints from the ${input.migration.name} generator for the AI agent driving this run:`;
   return [
     preamble,
     ``,

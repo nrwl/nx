@@ -2532,10 +2532,10 @@ export async function executeMigrations(
 
   // Wording for the skip parenthetical, branched on resolution mode so we
   // don't say "agentic flow disabled" when the flow was actually deferred to
-  // the outer agent.
+  // the AI agent driving the run.
   const skipReason =
     agentic?.kind === 'inside-agent'
-      ? 'deferred to the outer AI agent'
+      ? 'deferred to the AI agent driving this run'
       : 'agentic flow disabled';
 
   const totalMigrations = sortedMigrations.length;

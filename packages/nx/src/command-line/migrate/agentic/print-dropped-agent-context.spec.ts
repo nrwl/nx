@@ -12,7 +12,7 @@ describe('formatDroppedAgentContextForOuterAgent', () => {
       agentContext: ['Consumer X may need manual update'],
     });
     expect(out).toMatch(
-      /^ℹ Hints from the 21-1-0-rewrite-config generator for the outer AI agent:/
+      /^ℹ Hints from the 21-1-0-rewrite-config generator for the AI agent driving this run:/
     );
     expect(out).toContain(
       '<agent_context migration="@nx/react:21-1-0-rewrite-config">'
@@ -30,7 +30,7 @@ describe('formatDroppedAgentContextForOuterAgent', () => {
       agentContext: ['hint'],
     });
     expect(out).toMatch(
-      /applying tools\/ai-migrations\/@nx\/react\/21\.1\.0\/rewrite-config\.md/
+      /when applying tools\/ai-migrations\/@nx\/react\/21\.1\.0\/rewrite-config\.md/
     );
   });
 
