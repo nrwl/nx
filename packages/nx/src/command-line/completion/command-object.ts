@@ -1,3 +1,4 @@
+import { prompt } from 'enquirer';
 import { existsSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
@@ -76,7 +77,6 @@ async function pickShellsInteractively(): Promise<Shell[]> {
     process.exit(1);
   }
   const detected = detectAvailableShells();
-  const { prompt } = (await import('enquirer')) as any;
   const answer = (await prompt({
     type: 'multiselect',
     name: 'shells',
