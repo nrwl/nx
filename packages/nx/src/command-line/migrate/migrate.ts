@@ -84,7 +84,7 @@ import {
   getInstalledNxVersion,
 } from '../../utils/installed-nx-version';
 import { readNxJson } from '../../config/configuration';
-import { runNxSync } from '../../utils/child-process';
+import { getRunNxBaseCommand, runNxSync } from '../../utils/child-process';
 import { daemonClient } from '../../daemon/client/client';
 import { isNxCloudUsed, isNxCloudDisabled } from '../../utils/nx-cloud-utils';
 import {
@@ -2848,10 +2848,12 @@ async function runAgenticPromptStep(
   // doesn't defensively `mkdir -p` (which triggers a workspace-permission
   // prompt in agents like Claude Code every run).
   mkdirSync(dirname(handoffFilePath), { recursive: true });
+  const pm = detectPackageManager(root);
   const systemContext = buildSystemPrompt({
     workspaceRoot: root,
     handoffFileAbsolutePath: handoffFilePath,
-    packageManager: detectPackageManager(root),
+    packageManager: pm,
+    nxInvocation: getRunNxBaseCommand(getPackageManagerCommand(pm, root), root),
     mode,
   });
 
@@ -2959,19 +2961,26 @@ async function commitMigrationIfRequested(
   if (!shouldCreateCommits) return null;
   await installDepsIfChanged();
   const commitMessage = `${commitPrefix}${migration.name}`;
+  // `commitChanges` swallows `git commit` failures when a directory is passed
+  // (e.g. missing `user.email`, "nothing to commit" if the migration only
+  // touched gitignored paths) and returns the existing HEAD unchanged. Compare
+  // HEAD before vs after to detect whether a new commit actually landed —
+  // otherwise we'd report `Committed as <priorSha>` for a no-op step.
+  const before = getLatestCommitSha(root);
+  let after: string | null = null;
   try {
-    const committedSha = commitChanges(commitMessage, root);
-    if (committedSha) {
-      return committedSha;
-    }
-    logger.info(
-      pc.red(`A commit could not be created/retrieved for an unknown reason`)
-    );
-    return null;
+    after = commitChanges(commitMessage, root);
   } catch (e: any) {
     logger.info(pc.red(e.message));
     return null;
   }
+  if (after && after !== before) {
+    return after;
+  }
+  logger.info(
+    pc.red(`A commit could not be created/retrieved for an unknown reason`)
+  );
+  return null;
 }
 
 /**

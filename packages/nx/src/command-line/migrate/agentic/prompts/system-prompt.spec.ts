@@ -6,6 +6,7 @@ describe('buildSystemPrompt', () => {
     handoffFileAbsolutePath:
       '/abs/workspace/.nx/migrate-runs/23.0.0/step-1.json',
     packageManager: 'npm',
+    nxInvocation: 'npx nx',
   };
 
   it('embeds the workspace root inside its tag', () => {
@@ -24,6 +25,21 @@ describe('buildSystemPrompt', () => {
     const prompt = buildSystemPrompt(ctx);
     expect(prompt).toContain('<package_manager>npm</package_manager>');
     expect(prompt).toMatch(/Use `npm` for any package-manager invocation/);
+  });
+
+  it('renders the nx invocation distinct from the package manager so npm gets `npx nx`', () => {
+    const prompt = buildSystemPrompt(ctx);
+    expect(prompt).toMatch(/To invoke nx, use `npx nx …`/);
+  });
+
+  it('honors a package-manager-specific nx invocation (e.g. `pnpm exec nx`)', () => {
+    const prompt = buildSystemPrompt({
+      ...ctx,
+      packageManager: 'pnpm',
+      nxInvocation: 'pnpm exec nx',
+    });
+    expect(prompt).toContain('<package_manager>pnpm</package_manager>');
+    expect(prompt).toMatch(/To invoke nx, use `pnpm exec nx …`/);
   });
 
   it('wraps the handoff contract, environment note, and scope rules in their tags', () => {

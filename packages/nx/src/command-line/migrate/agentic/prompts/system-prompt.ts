@@ -10,6 +10,15 @@ export interface SystemPromptContext {
    */
   packageManager: string;
   /**
+   * Concrete command the agent should use to invoke nx in this workspace —
+   * e.g. `npx nx`, `pnpm exec nx`, `./nx` (encapsulated install). Passed in
+   * explicitly because the right form depends on both the package manager
+   * (`npm nx …` doesn't work) and whether the workspace has a root
+   * `package.json` (encapsulated installs use `./nx` / `.\nx.bat`). Compute
+   * via `getRunNxBaseCommand` and hand the result over.
+   */
+  nxInvocation: string;
+  /**
    * Which scope rules to emit:
    * - `author`: the agent is running an author-provided prompt (prompt-only or
    *   hybrid migration). Constraints favor strict no-mutation outside what the
@@ -45,7 +54,7 @@ export function buildSystemPrompt(ctx: SystemPromptContext): string {
     `<workspace_root>${ctx.workspaceRoot}</workspace_root>`,
     ``,
     `<package_manager>${ctx.packageManager}</package_manager>`,
-    `Use \`${ctx.packageManager}\` for any package-manager invocation in this workspace — including when invoking nx through a package manager (\`${ctx.packageManager} nx …\`). Do not default to a different package manager based on your own preference.`,
+    `Use \`${ctx.packageManager}\` for any package-manager invocation in this workspace. To invoke nx, use \`${ctx.nxInvocation} …\`. Do not default to a different package manager based on your own preference.`,
     ``,
     `<handoff_contract>`,
     `At the end of every step (success, failure, or unrecoverable error):`,

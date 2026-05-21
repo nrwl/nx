@@ -22,11 +22,23 @@ export function initRunDir(workspaceRoot: string, runId: string): string {
 }
 
 /**
+ * The bare `.` / `..` check must come first — otherwise a malformed migration
+ * name of exactly `..` would let the handoff write escape the run directory.
+ */
+function sanitizeSegment(value: string): string {
+  if (value === '.' || value === '..') return '_';
+  let sanitized = value.replace(/[\x00-\x1f<>:"/\\|?*]/g, '_');
+  // Windows forbids trailing dots/spaces on file/directory names.
+  sanitized = sanitized.replace(/[. ]+$/, '');
+  return sanitized || '_';
+}
+
+/**
  * Absolute path of the handoff file for a migration step within a run.
  * The package's scope (if any) becomes a real subdirectory so the package name
  * stays readable; two packages can ship a migration with the same name without
- * colliding because they land in different package subdirectories. Matches the
- * layout used by `writePromptMigrationFiles` for inlined prompt copies.
+ * colliding because they land in different package subdirectories. Each
+ * segment is sanitized so the path is always writable on every platform.
  */
 export function stepHandoffPath(
   runDir: string,
@@ -34,8 +46,8 @@ export function stepHandoffPath(
 ): string {
   return join(
     runDir,
-    ...migration.package.split('/'),
-    `${migration.name}.json`
+    ...migration.package.split('/').map(sanitizeSegment),
+    `${sanitizeSegment(migration.name)}.json`
   );
 }
 
