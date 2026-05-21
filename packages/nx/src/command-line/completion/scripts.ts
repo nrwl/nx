@@ -42,13 +42,19 @@ export function maybeWarnNxNotOnPath(): void {
 
 function writeScriptToRcFile(shell: Shell): void {
   const script = generateScript(shell);
-  const path = installPathFor(shell);
-  if (!path) {
+  const paths = installPathsFor(shell);
+  if (paths.length === 0) {
     console.warn(
       `nx: automatic install isn't supported for ${shell} yet — run with --stdout and redirect manually.`
     );
     return;
   }
+  for (const path of paths) {
+    writeOneRcFile(shell, path, script);
+  }
+}
+
+function writeOneRcFile(shell: Shell, path: string, script: string): void {
   mkdirSync(dirname(path), { recursive: true });
 
   // Fish keeps each completion in its own file (a full overwrite is correct).
@@ -75,42 +81,43 @@ function writeScriptToRcFile(shell: Shell): void {
   );
 }
 
-function installPathFor(shell: Shell): string | null {
+function installPathsFor(shell: Shell): string[] {
   const home = homedir();
   switch (shell) {
     case 'bash':
-      return join(home, '.bashrc');
+      return [join(home, '.bashrc')];
     case 'zsh':
-      return join(home, '.zshrc');
+      return [join(home, '.zshrc')];
     case 'fish':
-      return join(home, '.config', 'fish', 'completions', 'nx.fish');
+      return [join(home, '.config', 'fish', 'completions', 'nx.fish')];
     case 'powershell':
-      return resolvePowerShellProfile();
+      return resolvePowerShellProfiles();
   }
 }
 
 /**
- * Shell out to PowerShell to expand $PROFILE. The variable's resolution
- * depends on the PS version, $PSVersionTable, and Windows Documents-folder
- * redirection (OneDrive etc.), so asking PS itself is the only reliable
- * way. Returns null if no PowerShell executable is found — caller falls
- * back to a manual-install hint.
+ * Shell out to each available PowerShell to expand $PROFILE. The variable's
+ * resolution depends on the PS version (5.1 vs 7), $PSVersionTable, and
+ * Windows Documents-folder redirection (OneDrive etc.), so asking PS itself
+ * is the only reliable way. Returns every distinct profile path we find —
+ * PS 5.1 and PS 7 keep separate profile files, so a user with both
+ * installed needs the wrapper written to both.
  */
-function resolvePowerShellProfile(): string | null {
+function resolvePowerShellProfiles(): string[] {
   const candidates =
     process.platform === 'win32' ? ['pwsh.exe', 'powershell.exe'] : ['pwsh'];
+  const paths: string[] = [];
   for (const exe of candidates) {
     const result = spawnSync(exe, ['-NoProfile', '-Command', '$PROFILE'], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],
       windowsHide: true,
     });
-    if (result.status === 0 && result.stdout) {
-      const path = result.stdout.trim();
-      if (path) return path;
-    }
+    if (result.status !== 0 || !result.stdout) continue;
+    const path = result.stdout.trim();
+    if (path && !paths.includes(path)) paths.push(path);
   }
-  return null;
+  return paths;
 }
 
 function isNxOnPath(): boolean {
