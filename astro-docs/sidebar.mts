@@ -1213,10 +1213,6 @@ const referenceGroups: SidebarItems = [
         link: 'reference/nx-cloud/credits-pricing',
       },
       {
-        label: 'Remote cache plugins',
-        link: 'reference/remote-cache-plugins',
-      },
-      {
         label: 'Changelog',
         link: `${resolveNxDevUrl()}/changelog`,
       },
