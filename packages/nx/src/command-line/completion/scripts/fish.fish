@@ -38,19 +38,10 @@ function __nx_completions
   end
   # No nx completion — fall back to filename completion. `-f` on the
   # `complete` declaration blocks fish's BUILT-IN file offering, but
-  # we can still emit path candidates from inside the function. Append
-  # '/' to directories so fish keeps the cursor in them (no trailing
-  # space). Emitting bare paths (no description tab) preserves the
-  # slash through fish's completion machinery — __fish_complete_path's
-  # tab-separated output gets the slash stripped by fish when picking a
-  # unique candidate.
-  for match in $current*
-    if test -d $match
-      echo $match/
-    else
-      echo $match
-    end
-  end
+  # fish exposes __fish_complete_path for callers that want the same
+  # behaviour (trailing '/' on dirs, ~ expansion, hidden-file handling,
+  # fish_complete_path config) from inside a function.
+  __fish_complete_path $current
 end
 complete -c nx -f -a '(__nx_completions)'
 ###-end-nx-completions-###
