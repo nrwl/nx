@@ -76,6 +76,10 @@ We recommend nesting your **app** specific `env` files in `apps/your-app`, and c
 for workspace-specific settings (like the [Nx Cloud token](/docs/guides/nx-cloud/access-tokens)).
 {% /aside %}
 
+{% aside type="caution" title="Env files are not loaded in batch mode" %}
+The task-specific `.env` files described above are **not** loaded for tasks run with [batch mode](/docs/reference/glossary#batch-mode) (Gradle and Maven tasks run this way be default). Batch processes only receive the variables present in the current environment and root .env files, like `.env` and `.env.local`, so variables defined in files like `.env.[target-name]` won't be available.
+{% /aside %}
+
 ### Environment variables for atomized targets
 
 Atomized targets have their names created dynamically, typically using the file names as a suffix. This makes it difficult to define environment variable files for them.
