@@ -28,7 +28,7 @@ describe('buildPromptMigrationUserPrompt', () => {
       `<instructions_file>${base.promptPath}</instructions_file>`
     );
     expect(result).toContain(
-      `<handoff_path>${base.handoffFileAbsolutePath}</handoff_path>`
+      `<handoff_path>\n${base.handoffFileAbsolutePath}\n</handoff_path>`
     );
   });
 

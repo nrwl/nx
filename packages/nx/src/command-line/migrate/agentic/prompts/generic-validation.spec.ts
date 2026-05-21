@@ -33,7 +33,7 @@ describe('buildGenericValidationUserPrompt', () => {
     );
     expect(out).toContain('name: 21-1-0-rewrite-config');
     expect(out).toContain(
-      `<handoff_path>${baseCtx.handoffFileAbsolutePath}</handoff_path>`
+      `<handoff_path>\n${baseCtx.handoffFileAbsolutePath}\n</handoff_path>`
     );
     expect(out).toContain('<validation_instructions>');
     expect(out).toContain('</validation_instructions>');

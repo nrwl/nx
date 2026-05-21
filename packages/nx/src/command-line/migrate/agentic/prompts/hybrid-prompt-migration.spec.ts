@@ -26,7 +26,7 @@ describe('buildHybridPromptUserPrompt', () => {
       `<instructions_file>${baseCtx.promptPath}</instructions_file>`
     );
     expect(out).toContain(
-      `<handoff_path>${baseCtx.handoffFileAbsolutePath}</handoff_path>`
+      `<handoff_path>\n${baseCtx.handoffFileAbsolutePath}\n</handoff_path>`
     );
     expect(out).toMatch(/<precedence>[\s\S]*instructions file wins/);
   });

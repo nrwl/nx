@@ -2751,6 +2751,7 @@ async function runAgenticPromptStep(
   const systemContext = buildSystemPrompt({
     workspaceRoot: root,
     handoffFileAbsolutePath: handoffFilePath,
+    packageManager: detectPackageManager(root),
     mode,
   });
 

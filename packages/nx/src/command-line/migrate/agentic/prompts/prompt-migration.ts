@@ -42,7 +42,9 @@ export function buildPromptMigrationUserPrompt(
     `<instructions_file>${ctx.promptPath}</instructions_file>`,
     ``,
     `Open the instructions file (path is workspace-relative), follow its instructions step by step, then write your handoff JSON to:`,
-    `<handoff_path>${ctx.handoffFileAbsolutePath}</handoff_path>`
+    `<handoff_path>`,
+    ctx.handoffFileAbsolutePath,
+    `</handoff_path>`
   );
 
   return lines.join('\n');
