@@ -192,6 +192,20 @@ export function buildTargetFromScript(
   };
 }
 
+export type PackageJsonProjectMetadata = {
+  targetGroups: {
+    'NPM Scripts'?: Array<string>;
+  };
+  description: string;
+  js: {
+    packageName: PackageJson['name'];
+    packageVersion: PackageJson['version'];
+    packageExports: PackageJson['exports'];
+    packageMain: PackageJson['main'];
+    isInPackageManagerWorkspaces: boolean;
+  };
+};
+
 export function getMetadataFromPackageJson(
   packageJson: PackageJson,
   isInPackageManagerWorkspaces: boolean
@@ -199,10 +213,12 @@ export function getMetadataFromPackageJson(
   const { scripts, nx, description, name, exports, main, version } =
     packageJson;
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
-  return {
-    targetGroups: {
-      ...(includedScripts.length ? { 'NPM Scripts': includedScripts } : {}),
-    },
+  const metadata: PackageJsonProjectMetadata = {
+    targetGroups: includedScripts.length
+      ? {
+          'NPM Scripts': includedScripts,
+        }
+      : {},
     description,
     js: {
       packageName: name,
@@ -212,6 +228,7 @@ export function getMetadataFromPackageJson(
       isInPackageManagerWorkspaces,
     },
   };
+  return metadata satisfies ProjectMetadata;
 }
 
 export function getTagsFromPackageJson(packageJson: PackageJson): string[] {
