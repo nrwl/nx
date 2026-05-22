@@ -168,6 +168,38 @@ export default defineConfig({
     `);
   });
 
+  it('should rename quoted-key form (single quotes)', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      'vite.config.ts',
+      `import { defineConfig } from 'vite';
+
+export default defineConfig({
+  build: {
+    'rollupOptions': {
+      external: ['react'],
+    },
+  },
+});
+`
+    );
+
+    await renameRollupOptionsToRolldownOptions(tree);
+
+    expect(tree.read('vite.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+      "import { defineConfig } from 'vite';
+
+      export default defineConfig({
+        build: {
+          rolldownOptions: {
+            external: ['react'],
+          },
+        },
+      });
+      "
+    `);
+  });
+
   it('should be idempotent', async () => {
     const tree = createTreeWithEmptyWorkspace();
     tree.write(

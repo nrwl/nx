@@ -1,10 +1,12 @@
 import * as path from 'node:path';
 import { existsSync } from 'node:fs';
+import { resolve as resolveExports } from 'resolve.exports';
 
 import {
   getWorkspacePackagesMetadata,
   matchImportToWildcardEntryPointsToProjectMap,
 } from '../../plugins/js/utils/packages';
+import { getRootTsConfigResolveExportsConditions } from '../../plugins/js/utils/typescript';
 import { readJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
 import { normalizePath } from '../../utils/path';
@@ -17,6 +19,18 @@ import { retrieveProjectConfigurationsWithoutPluginInference } from '../utils/re
 
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
+type LocalPluginMatch = {
+  path: string;
+  projectConfig: ProjectConfiguration;
+  // Set only when a tsconfig `paths` entry maps the import to an existing
+  // file with an extension. Directory and extensionless mappings are left
+  // for the downstream `main`/exports-condition flow to resolve, since they
+  // require full module resolution to load.
+  resolvedFile?: string;
+};
+
+const TS_SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.cts', '.mts']);
+
 let projectsWithoutInference: Record<string, ProjectConfiguration>;
 let projectsWithoutInferencePromise: Promise<
   typeof projectsWithoutInference
@@ -27,14 +41,30 @@ export async function resolveNxPlugin(
   root: string,
   paths: string[]
 ) {
-  try {
-    require.resolve(moduleName, { paths });
-  } catch {
-    // If a plugin cannot be resolved, we will need projects to resolve it
-    projectsWithoutInferencePromise ??=
-      retrieveProjectConfigurationsWithoutPluginInference(root);
-    projectsWithoutInference ??= await projectsWithoutInferencePromise;
+  // Default plugins (see `getDefaultPlugins` in `get-plugins.ts`) are passed
+  // as absolute file paths to compiled bundles inside `nx` itself; they are
+  // never workspace-local. Skip the project load entirely for them to avoid
+  // recursing through `retrieveProjectConfigurationsWithoutPluginInference`,
+  // which itself triggers default-plugin loading.
+  if (!path.isAbsolute(moduleName)) {
+    let resolvedFromNode: string | undefined;
+    try {
+      resolvedFromNode = require.resolve(moduleName, { paths });
+    } catch {}
+
+    // Load projects if Node couldn't resolve (so the local fallback can run)
+    // OR if Node resolved to a workspace-internal path (a symlinked workspace
+    // package whose source-first lookup should win over the symlinked dist).
+    if (
+      !resolvedFromNode ||
+      isWorkspaceLocalResolution(resolvedFromNode, root)
+    ) {
+      projectsWithoutInferencePromise ??=
+        retrieveProjectConfigurationsWithoutPluginInference(root);
+      projectsWithoutInference ??= await projectsWithoutInferencePromise;
+    }
   }
+
   const { pluginPath, name, shouldRegisterTSTranspiler } = getPluginPathAndName(
     moduleName,
     paths,
@@ -42,6 +72,31 @@ export async function resolveNxPlugin(
     root
   );
   return { pluginPath, name, shouldRegisterTSTranspiler };
+}
+
+/**
+ * Distinguishes a symlinked workspace package (where `require.resolve`
+ * follows the package-manager symlink into the workspace source tree) from
+ * a truly-installed dependency under `node_modules/`. The former needs the
+ * source-first lookup to bypass the dist that Node would otherwise return.
+ */
+function isWorkspaceLocalResolution(
+  resolvedPath: string,
+  root: string
+): boolean {
+  const normalizedRoot = path.normalize(root);
+  const normalizedPath = path.normalize(resolvedPath);
+  return (
+    normalizedPath.startsWith(normalizedRoot + path.sep) &&
+    !normalizedPath.includes(path.sep + 'node_modules' + path.sep)
+  );
+}
+
+function isPackageResolutionError(e: unknown): boolean {
+  const code = (e as { code?: string }).code;
+  return (
+    code === 'MODULE_NOT_FOUND' || code === 'ERR_PACKAGE_PATH_NOT_EXPORTED'
+  );
 }
 
 function readPluginMainFromProjectConfiguration(
@@ -67,7 +122,7 @@ export function resolveLocalNxPlugin(
   importPath: string,
   projects: Record<string, ProjectConfiguration>,
   root = workspaceRoot
-): { path: string; projectConfig: ProjectConfiguration } | null {
+): LocalPluginMatch | null {
   return lookupLocalPlugin(importPath, projects, root);
 }
 
@@ -77,33 +132,50 @@ export function getPluginPathAndName(
   projects: Record<string, ProjectConfiguration>,
   root: string
 ) {
-  let pluginPath: string;
-  let shouldRegisterTSTranspiler = false;
-  try {
-    pluginPath = require.resolve(moduleName, {
-      paths,
-    });
-    const extension = path.extname(pluginPath);
-    shouldRegisterTSTranspiler = extension === '.ts';
-  } catch (e) {
-    if (e.code === 'MODULE_NOT_FOUND') {
-      const plugin = resolveLocalNxPlugin(moduleName, projects, root);
-      if (plugin) {
-        shouldRegisterTSTranspiler = true;
-        const main = readPluginMainFromProjectConfiguration(
-          plugin.projectConfig
-        );
-        pluginPath = main ? path.join(root, main) : plugin.path;
-      } else {
-        logger.error(`Plugin listed in \`nx.json\` not found: ${moduleName}`);
+  let pluginPath: string | undefined;
+
+  // Resolve local workspace plugins from source first so the workspace's
+  // `customConditions`/`development` exports condition wins over the built
+  // `dist` artifact that Node's resolver would otherwise pick up via the
+  // `default` condition (Node ignores TypeScript custom conditions). Skipped
+  // when `projects` weren't loaded — the caller already determined that the
+  // import isn't a workspace package.
+  const localPlugin = projects
+    ? resolveLocalNxPlugin(moduleName, projects, root)
+    : null;
+  if (localPlugin) {
+    pluginPath = tryResolveLocalPluginFromSource(moduleName, localPlugin, root);
+    if (!pluginPath && getSubpathOfLocalPackage(moduleName, localPlugin)) {
+      throwUnresolvableLocalPluginError(moduleName, localPlugin, root);
+    }
+  }
+
+  if (!pluginPath) {
+    try {
+      pluginPath = require.resolve(moduleName, { paths });
+    } catch (e) {
+      if (localPlugin && isPackageResolutionError(e)) {
+        throwUnresolvableLocalPluginError(moduleName, localPlugin, root);
+      }
+      if (e.code !== 'MODULE_NOT_FOUND') {
         throw e;
       }
-    } else {
+      if (localPlugin) {
+        throwUnresolvableLocalPluginError(moduleName, localPlugin, root);
+      }
+      logger.error(`Plugin listed in \`nx.json\` not found: ${moduleName}`);
       throw e;
     }
   }
-  const packageJsonPath = path.join(pluginPath, 'package.json');
 
+  const ext = path.extname(pluginPath);
+  // Directory paths fall through to Node's `package.json` `main` resolution
+  // which may land on a TS file; only opt out of TS transpiler registration
+  // when the resolved path is unambiguously JS.
+  const shouldRegisterTSTranspiler =
+    ext === '' || TS_SOURCE_EXTENSIONS.has(ext);
+
+  const packageJsonPath = path.join(pluginPath, 'package.json');
   const { name } =
     !['.ts', '.js'].some((x) => path.extname(moduleName) === x) && // Not trying to point to a ts or js file
     existsSync(packageJsonPath) // plugin has a package.json
@@ -112,17 +184,128 @@ export function getPluginPathAndName(
   return { pluginPath, name, shouldRegisterTSTranspiler };
 }
 
+function getSubpathOfLocalPackage(
+  moduleName: string,
+  plugin: LocalPluginMatch
+): string | null {
+  const packageName = plugin.projectConfig.metadata?.js?.packageName;
+  if (!packageName || !moduleName.startsWith(packageName + '/')) {
+    return null;
+  }
+  return '.' + moduleName.slice(packageName.length);
+}
+
+function tryResolveLocalPluginFromSource(
+  moduleName: string,
+  plugin: LocalPluginMatch,
+  root: string
+): string | null {
+  if (plugin.resolvedFile) {
+    return plugin.resolvedFile;
+  }
+
+  const subpath = getSubpathOfLocalPackage(moduleName, plugin);
+  if (subpath) {
+    return resolveSubpathFromExports(
+      plugin.projectConfig,
+      plugin.path,
+      subpath,
+      root
+    );
+  }
+
+  const main = readPluginMainFromProjectConfiguration(plugin.projectConfig);
+  return main ? path.join(root, main) : null;
+}
+
+function throwUnresolvableLocalPluginError(
+  moduleName: string,
+  plugin: LocalPluginMatch,
+  root: string
+): never {
+  const subpath = getSubpathOfLocalPackage(moduleName, plugin);
+  const packageName = plugin.projectConfig.metadata?.js?.packageName;
+  if (subpath) {
+    throw new Error(
+      `Unable to resolve local plugin "${moduleName}". The import targets ` +
+        `the subpath "${subpath}" of the local package "${packageName}", but ` +
+        `the package's "exports" map has no resolvable entry for "${subpath}", ` +
+        `or none of the matched paths exist on disk. Check the "exports" field ` +
+        `in "${path.relative(root, path.join(plugin.path, 'package.json'))}" ` +
+        `and ensure the source file referenced by "${subpath}" exists.`
+    );
+  }
+
+  throw new Error(
+    `Unable to resolve local plugin "${moduleName}". The local package ` +
+      `"${packageName ?? moduleName}" does not declare a build target with ` +
+      `a "main" source path, and Node could not resolve it either.`
+  );
+}
+
+function resolveSubpathFromExports(
+  projectConfig: ProjectConfiguration,
+  projectPath: string,
+  subpath: string,
+  root: string
+): string | null {
+  const packageExports = projectConfig.metadata?.js?.packageExports;
+  if (!packageExports) {
+    return null;
+  }
+
+  const pkg = {
+    name: projectConfig.metadata!.js!.packageName,
+    exports: packageExports,
+  };
+
+  try {
+    const matches = resolveExports(pkg, subpath, {
+      conditions: getRootTsConfigResolveExportsConditions(root),
+    });
+    if (!matches || !matches.length) {
+      return null;
+    }
+
+    for (const match of matches) {
+      const candidate = path.join(projectPath, match);
+      if (existsSync(candidate)) {
+        return candidate;
+      }
+    }
+  } catch (e) {
+    logger.verbose(
+      `Failed to resolve subpath "${subpath}" of local plugin via package.json exports`,
+      e
+    );
+  }
+
+  return null;
+}
+
 function lookupLocalPlugin(
   importPath: string,
   projects: Record<string, ProjectConfiguration>,
   root = workspaceRoot
-) {
-  const projectConfig = findNxProjectForImportPath(importPath, projects, root);
-  if (!projectConfig) {
+): LocalPluginMatch | null {
+  const match = findNxProjectForImportPath(importPath, projects, root);
+  if (!match) {
     return null;
   }
 
-  return { path: path.join(root, projectConfig.root), projectConfig };
+  let resolvedFile: string | undefined;
+  if (match.tsPathFile) {
+    const candidate = path.join(root, match.tsPathFile);
+    if (path.extname(candidate) && existsSync(candidate)) {
+      resolvedFile = candidate;
+    }
+  }
+
+  return {
+    path: path.join(root, match.projectConfig.root),
+    projectConfig: match.projectConfig,
+    resolvedFile,
+  };
 }
 
 let packageEntryPointsToProjectMap: Record<string, ProjectConfiguration>;
@@ -131,7 +314,7 @@ function findNxProjectForImportPath(
   importPath: string,
   projects: Record<string, ProjectConfiguration>,
   root = workspaceRoot
-): ProjectConfiguration | null {
+): { projectConfig: ProjectConfiguration; tsPathFile?: string } | null {
   const tsConfigPaths: Record<string, string[]> = readTsConfigPaths(root);
   const possibleTsPaths =
     tsConfigPaths[importPath]?.map((p) =>
@@ -149,7 +332,10 @@ function findNxProjectForImportPath(
     for (const tsConfigPath of possibleTsPaths) {
       const nxProject = findProjectForPath(tsConfigPath, projectRootMappings);
       if (nxProject) {
-        return projectNameMap.get(nxProject);
+        return {
+          projectConfig: projectNameMap.get(nxProject)!,
+          tsPathFile: tsConfigPath,
+        };
       }
     }
   }
@@ -161,7 +347,7 @@ function findNxProjectForImportPath(
     } = getWorkspacePackagesMetadata(projects));
   }
   if (packageEntryPointsToProjectMap[importPath]) {
-    return packageEntryPointsToProjectMap[importPath];
+    return { projectConfig: packageEntryPointsToProjectMap[importPath] };
   }
 
   const project = matchImportToWildcardEntryPointsToProjectMap(
@@ -169,7 +355,7 @@ function findNxProjectForImportPath(
     importPath
   );
   if (project) {
-    return project;
+    return { projectConfig: project };
   }
 
   logger.verbose(
@@ -177,9 +363,7 @@ function findNxProjectForImportPath(
     possibleTsPaths,
     projectRootMappings
   );
-  throw new Error(
-    'Unable to resolve local plugin with import path ' + importPath
-  );
+  return null;
 }
 
 let tsconfigPaths: Record<string, string[]>;

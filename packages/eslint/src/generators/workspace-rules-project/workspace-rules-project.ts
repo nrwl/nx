@@ -9,13 +9,17 @@ import {
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
+  type TargetConfiguration,
+  type TargetDefaults,
   Tree,
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
-import { addSwcRegisterDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  addSwcRegisterDependencies,
+  isUsingTsSolutionSetup,
+} from '@nx/js/internal';
 import { join } from 'path';
 import { nxVersion } from '../../utils/versions';
 import { getTypeScriptEslintVersionToInstall } from '../../utils/version-utils';
@@ -66,10 +70,9 @@ export async function lintWorkspaceRulesProjectGenerator(
    */
   const nxJson = readNxJson(tree);
 
-  if (nxJson.targetDefaults?.lint?.inputs) {
-    nxJson.targetDefaults.lint.inputs.push(
-      `{workspaceRoot}/${WORKSPACE_PLUGIN_DIR}/**/*`
-    );
+  const lintEntry = findLintTargetDefault(nxJson.targetDefaults);
+  if (lintEntry?.inputs) {
+    lintEntry.inputs.push(`{workspaceRoot}/${WORKSPACE_PLUGIN_DIR}/**/*`);
 
     updateNxJson(tree, nxJson);
   }
@@ -134,4 +137,19 @@ export async function lintWorkspaceRulesProjectGenerator(
   }
 
   return runTasksInSerial(...tasks);
+}
+
+function findLintTargetDefault(
+  td: TargetDefaults | undefined
+): Partial<TargetConfiguration> | undefined {
+  if (!td) return undefined;
+  if (Array.isArray(td)) {
+    return td.find(
+      (e) =>
+        e.target === 'lint' &&
+        e.projects === undefined &&
+        e.plugin === undefined
+    );
+  }
+  return td['lint'];
 }

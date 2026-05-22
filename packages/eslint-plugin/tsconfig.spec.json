@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/eslint-plugin/spec",
+    "outDir": "dist/spec",
     "module": "commonjs",
     "composite": true,
     "isolatedModules": true,

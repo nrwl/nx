@@ -8,7 +8,7 @@ import {
   ProjectGraphExternalNode,
 } from '../../config/project-graph';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { hashArray } from '../../hasher/file-hasher';
+import { hashArray, hashObject } from '../../hasher/file-hasher';
 import { NxWorkspaceFilesExternals } from '../../native';
 import { buildProjectGraphUsingProjectFileMap as buildProjectGraphUsingFileMap } from '../../project-graph/build-project-graph';
 import {
@@ -97,21 +97,33 @@ let recomputationGeneration = 0;
 let cacheHasBeenPersisted = false;
 
 /**
- * Start a fresh project graph computation, in parallel with any in-flight
- * one. The new promise becomes `cachedSerializedProjectGraphPromise`; any
- * older compute will detect itself as stale at its next `isStale()` check
- * and chain to the cached pointer, so consumers awaiting the cached pointer
- * always end up on the latest compute.
- *
- * Notify + persist fire only when this IIFE is still the latest — older
- * IIFEs that chained their result through us have already had their side
- * effects fired by the IIFE that actually produced the result.
+ * Freshness-gated recompute. Each IIFE snapshots the nx.json `plugins`
+ * hash at kickoff and re-reads at commit; if it changed mid-flight, bail
+ * and kick a successor instead of clobbering the winner. Without this,
+ * `cachedSerializedProjectGraphPromise` is last-kickoff-wins and can
+ * return a graph built against a stale plugin set
+ * (see spread.test.ts "middle plugin" flake).
  */
 function kickOffRecompute() {
   let myPromise: Promise<SerializedProjectGraph>;
   myPromise = (async () => {
-    const plugins = await getPluginsSeparated();
+    // Single read shared with getPluginsSeparated below. This collapses
+    // what would otherwise be two independent nx.json reads (our snap +
+    // the plugin loader's) into one, so the snap hash and the plugin
+    // set the compute uses always reflect the same disk state.
+    const nxJson = readNxJson(workspaceRoot);
+    const myPluginsHash = hashObject(nxJson.plugins ?? []);
+
+    const plugins = await getPluginsSeparated(nxJson, workspaceRoot);
+
+    // Plugin set we just loaded may already be stale vs disk.
+    if (isStale(myPluginsHash)) return chainToSuccessor(myPromise);
+
     const result = await processFilesAndCreateAndSerializeProjectGraph(plugins);
+
+    // Compute may have run against plugins that are now stale.
+    if (isStale(myPluginsHash)) return chainToSuccessor(myPromise);
+
     if (
       cachedSerializedProjectGraphPromise === myPromise &&
       result.projectGraph
@@ -126,6 +138,30 @@ function kickOffRecompute() {
     return result;
   })();
   cachedSerializedProjectGraphPromise = myPromise;
+}
+
+function isStale(expectedHash: string): boolean {
+  return readNxJsonPluginsHash() !== expectedHash;
+}
+
+/**
+ * Starts a successor recompute only when this IIFE is still the cached one.
+ * If a newer recompute already replaced the cached pointer, that newer
+ * recompute will produce the fresh result and we just need to return the
+ * pointer so awaiters chain onto it.
+ */
+function chainToSuccessor(
+  myPromise: Promise<SerializedProjectGraph>
+): Promise<SerializedProjectGraph> {
+  serverLogger.log(
+    'Discarding stale recompute result (nx.json plugins changed mid-compute).'
+  );
+  if (cachedSerializedProjectGraphPromise === myPromise) kickOffRecompute();
+  return cachedSerializedProjectGraphPromise;
+}
+
+function readNxJsonPluginsHash(): string {
+  return hashObject(readNxJson(workspaceRoot).plugins ?? []);
 }
 
 export async function getCachedSerializedProjectGraphPromise(
@@ -556,7 +592,7 @@ async function createAndSerializeProjectGraph({
         fileMap,
         rustReferences,
         currentProjectFileMapCache || readFileMapCache(),
-        await getPlugins(),
+        await getPlugins(readNxJson(workspaceRoot)),
         sourceMaps
       );
 

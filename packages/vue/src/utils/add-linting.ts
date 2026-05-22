@@ -12,12 +12,10 @@ import {
   lintConfigHasOverride,
   replaceOverridesInLintConfig,
   updateOverrideInLintConfig,
-} from '@nx/eslint/src/generators/utils/eslint-file';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
-import {
+  useFlatConfig,
   getInstalledEslintVersion,
   getTypeScriptEslintVersionToInstall,
-} from '@nx/eslint/src/utils/version-utils';
+} from '@nx/eslint/internal';
 import type { Linter as EsLintLinter } from 'eslint';
 import { Tree } from 'nx/src/generators/tree';
 import { joinPathFragments } from 'nx/src/utils/path';

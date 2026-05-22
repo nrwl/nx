@@ -396,7 +396,6 @@ function getTestCiTargets(
     targetGroups[targetGroupName].push(targetName);
     dependsOn.push({
       target: targetName,
-      projects: 'self',
       params: 'forward',
     });
   });

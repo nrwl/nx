@@ -75,7 +75,7 @@ export async function applicationGenerator(
   await createFiles(tree, options, rootOffset);
 
   await addLinting(tree, options);
-  await addUnitTestRunner(tree, options);
+  const unitTestRunnerTask = await addUnitTestRunner(tree, options);
   const e2ePort = await addE2e(tree, options);
   addServeStaticTarget(
     tree,
@@ -164,7 +164,8 @@ export async function applicationGenerator(
     await formatFiles(tree);
   }
 
-  return () => {
+  return async () => {
+    await unitTestRunnerTask();
     installPackagesTask(tree);
     logShowProjectCommand(options.name);
   };

@@ -58,7 +58,11 @@ export async function setupViteConfiguration(
       includeLib: false,
       includeVitest: options.unitTestRunner === 'vitest',
       inSourceTests: options.inSourceTests,
-      rollupOptionsExternal: ["'react'", "'react-dom'", "'react/jsx-runtime'"],
+      rolldownOptionsExternal: [
+        "'react'",
+        "'react-dom'",
+        "'react/jsx-runtime'",
+      ],
       port: options.port,
       previewPort: options.port,
       useEsmExtension: true,
@@ -98,7 +102,11 @@ export async function setupVitestConfiguration(
       includeLib: false,
       includeVitest: true,
       inSourceTests: options.inSourceTests,
-      rollupOptionsExternal: ["'react'", "'react-dom'", "'react/jsx-runtime'"],
+      rolldownOptionsExternal: [
+        "'react'",
+        "'react-dom'",
+        "'react/jsx-runtime'",
+      ],
       imports: [
         options.compiler === 'swc'
           ? `import react from '@vitejs/plugin-react-swc'`

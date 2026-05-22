@@ -32,6 +32,21 @@ import {
   resolveCanonicalNxPackage,
   resolveMode,
 } from './migrate';
+import {
+  readPromptFilesFromInstall,
+  validateMigrationEntries,
+  writePromptMigrationFiles,
+} from './prompt-files';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
+import { tmpdir } from 'os';
+import { dirname, join } from 'path';
 
 const createPackageJson = (
   overrides: Partial<PackageJson> = {}
@@ -2442,6 +2457,19 @@ describe('Migration', () => {
       );
     });
 
+    it('should reject --mode=third-party with --to @nx/workspace higher than installed', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      await expect(() =>
+        parseMigrationsOptions({
+          packageAndVersion: 'nx@22.0.0',
+          mode: 'third-party',
+          to: '@nx/workspace@23.0.0',
+        })
+      ).rejects.toThrow(
+        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to @nx/workspace@23.0.0', installed 'nx@22.0.0').`
+      );
+    });
+
     it('should accept --mode=third-party with --to for non-canonical packages', async () => {
       mockGetInstalledNxVersion.mockReturnValue('22.0.0');
       const r = await parseMigrationsOptions({
@@ -2864,6 +2892,66 @@ describe('Migration', () => {
 
       expect(result).toEqual({ pkg: update });
     });
+
+    it('should keep narrowing rewrites when the specifier is a tilde range covering a lower version', () => {
+      // user has `vite: ~6.2.0`, resolved 6.2.5. Cascade proposes `6.2.5` (exact).
+      // Tilde floor is 6.2.0 < resolved 6.2.5 → narrowing → keep.
+      const update = {
+        version: '6.2.5',
+        addToPackageJson: 'devDependencies' as const,
+      };
+      const result = filterDowngradedUpdates(
+        { vite: update },
+        createPackageJson({ devDependencies: { vite: '~6.2.0' } }),
+        () => '6.2.5'
+      );
+
+      expect(result).toEqual({ vite: update });
+    });
+
+    it('should drop no-op rewrites when a tilde range is already pinned to resolved', () => {
+      // user has `vite: ~6.2.5`, resolved 6.2.5. Cascade proposes `6.2.5`.
+      // Tilde floor 6.2.5 === resolved 6.2.5 → no-op → drop.
+      const result = filterDowngradedUpdates(
+        {
+          vite: { version: '6.2.5', addToPackageJson: 'devDependencies' },
+        },
+        createPackageJson({ devDependencies: { vite: '~6.2.5' } }),
+        () => '6.2.5'
+      );
+
+      expect(result).toEqual({});
+    });
+
+    it('should drop downgrades inside a tilde range', () => {
+      // user has `vite: ~6.2.0`, resolved 6.2.7. Cascade proposes `6.2.3`.
+      // Tilde floor 6.2.0 covers 6.2.3, but resolved 6.2.7 > proposed → drop.
+      const result = filterDowngradedUpdates(
+        {
+          vite: { version: '6.2.3', addToPackageJson: 'devDependencies' },
+        },
+        createPackageJson({ devDependencies: { vite: '~6.2.0' } }),
+        () => '6.2.7'
+      );
+
+      expect(result).toEqual({});
+    });
+
+    it('should drop equal-version rewrites for peer-deps-only packages (no dep/devDep specifier)', () => {
+      // `peerDependencies` is intentionally not considered — only direct
+      // dependencies / devDependencies count as a specifier. A package present
+      // only as a peer dep behaves like an unspecified package: equal-version
+      // rewrites become orphan writes and are dropped.
+      const result = filterDowngradedUpdates(
+        {
+          'peer-only': { version: '5.0.0', addToPackageJson: 'dependencies' },
+        },
+        createPackageJson({ peerDependencies: { 'peer-only': '^5.0.0' } }),
+        () => '5.0.0'
+      );
+
+      expect(result).toEqual({});
+    });
   });
 
   describe('isNpmPeerDepsError', () => {
@@ -3164,16 +3252,13 @@ describe('Migration', () => {
       expect(r).toMatchObject({ targetVersion: '22.5.3' });
     });
 
-    it('should fall back silently to the requested target when --multi-major-mode=gradual has no stepwise option', async () => {
+    it('should warn and fall back to the requested target when --multi-major-mode=gradual has no incremental option', async () => {
       setTty(true);
       // Installed at latest of its major → current-major option dropped.
       // Next-major lookup fails → next-major option dropped. Both unavailable.
       mockGetInstalledNxVersion.mockReturnValue('21.5.3');
       mockRegistry({ latest: '23.1.0', '21': '21.5.3' });
       const warnSpy = spyWarn();
-      const logSpy = jest
-        .spyOn(require('../../utils/output').output, 'log')
-        .mockImplementation(() => {});
 
       const r = await parseMigrationsOptions({
         packageAndVersion: 'latest',
@@ -3182,8 +3267,13 @@ describe('Migration', () => {
       });
 
       expect(mockPrompt).not.toHaveBeenCalled();
-      expect(warnSpy).not.toHaveBeenCalled();
-      expect(logSpy).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining(
+            'Could not look up incremental migration options for --multi-major-mode=gradual'
+          ),
+        })
+      );
       expect(r).toMatchObject({ targetVersion: '23.1.0' });
     });
 
@@ -3223,6 +3313,30 @@ describe('Migration', () => {
       });
 
       expect(r).toMatchObject({ targetVersion: '23.1.0' });
+    });
+
+    it('should bypass --multi-major-mode=gradual when --mode=third-party', async () => {
+      setTty(true);
+      // third-party anchors at the installed canonical (here 21.0.0) and
+      // must not be redirected to an incremental target. `maybePromptOrWarn…`
+      // early-returns on `mode === 'third-party'` before consulting gradual,
+      // so the flag is accepted but is a no-op.
+      mockRegistry({
+        latest: '23.1.0',
+        '21': '21.5.3',
+        '22': '22.5.3',
+      });
+      const warnSpy = spyWarn();
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'nx@21.0.0',
+        mode: 'third-party',
+        multiMajorMode: 'gradual',
+      });
+
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(warnSpy).not.toHaveBeenCalled();
+      expect(r).toMatchObject({ targetVersion: '21.0.0' });
     });
 
     it('should not prompt or warn when delta is exactly 1 major', async () => {
@@ -3312,6 +3426,574 @@ describe('Migration', () => {
       expect(mockPrompt).not.toHaveBeenCalled();
       expect(warnSpy).toHaveBeenCalled();
       expect(r).toMatchObject({ targetVersion: '23.1.0' });
+    });
+
+    it('should set originalTargetVersion when gradual mode redirects to an incremental step', async () => {
+      setTty(true);
+      mockRegistry({
+        latest: '23.1.0',
+        '21': '21.5.3',
+        '22': '22.5.3',
+      });
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+        multiMajorMode: 'gradual',
+      });
+
+      expect(r).toMatchObject({
+        targetVersion: '21.5.3',
+        originalTargetVersion: '23.1.0',
+      });
+    });
+
+    it('should set originalTargetVersion when the interactive prompt picks an incremental step', async () => {
+      setTty(true);
+      mockRegistry({
+        latest: '23.1.0',
+        '21': '21.5.3',
+        '22': '22.5.3',
+      });
+      mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+      });
+
+      expect(r).toMatchObject({
+        targetVersion: '22.5.3',
+        originalTargetVersion: '23.1.0',
+      });
+    });
+
+    it('should leave originalTargetVersion undefined when the interactive prompt picks the requested target', async () => {
+      setTty(true);
+      mockRegistry({
+        latest: '23.1.0',
+        '21': '21.5.3',
+        '22': '22.5.3',
+      });
+      mockPrompt.mockResolvedValue({ chosen: '23.1.0' });
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+      });
+
+      expect(r).toMatchObject({ targetVersion: '23.1.0' });
+      expect(
+        (r as { originalTargetVersion?: string }).originalTargetVersion
+      ).toBeUndefined();
+    });
+
+    it('should leave originalTargetVersion undefined under --multi-major-mode=direct', async () => {
+      setTty(true);
+      mockRegistry({
+        latest: '23.1.0',
+        '21': '21.5.3',
+        '22': '22.5.3',
+      });
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+        multiMajorMode: 'direct',
+      });
+
+      expect(r).toMatchObject({ targetVersion: '23.1.0' });
+      expect(
+        (r as { originalTargetVersion?: string }).originalTargetVersion
+      ).toBeUndefined();
+    });
+
+    it('should leave originalTargetVersion undefined for bare invocations within a single-major delta', async () => {
+      // Regression guard: dist-tag resolution alone (target == installed
+      // after resolving 'latest') must not be treated as a redirect, or
+      // Next Steps would suggest re-running toward the version the user
+      // already landed on.
+      setTty(true);
+      mockGetInstalledNxVersion.mockReturnValue('22.5.3');
+      mockRegistry({ latest: '22.5.3' });
+
+      const bare = await parseMigrationsOptions({ mode: 'all' });
+      expect(bare).toMatchObject({ targetVersion: '22.5.3' });
+      expect(
+        (bare as { originalTargetVersion?: string }).originalTargetVersion
+      ).toBeUndefined();
+
+      const barePkg = await parseMigrationsOptions({
+        packageAndVersion: 'nx',
+        mode: 'all',
+      });
+      expect(barePkg).toMatchObject({ targetVersion: '22.5.3' });
+      expect(
+        (barePkg as { originalTargetVersion?: string }).originalTargetVersion
+      ).toBeUndefined();
+    });
+
+    it('should propagate gradual to multiMajorMode when gradual mode redirects', async () => {
+      setTty(true);
+      mockRegistry({
+        latest: '23.1.0',
+        '21': '21.5.3',
+        '22': '22.5.3',
+      });
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+        multiMajorMode: 'gradual',
+      });
+
+      expect(r).toMatchObject({
+        targetVersion: '21.5.3',
+        originalTargetVersion: '23.1.0',
+        multiMajorMode: 'gradual',
+      });
+    });
+
+    it('should NOT propagate gradual to multiMajorMode when the interactive prompt picks an incremental step', async () => {
+      setTty(true);
+      mockRegistry({
+        latest: '23.1.0',
+        '21': '21.5.3',
+        '22': '22.5.3',
+      });
+      mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+      });
+
+      expect(r).toMatchObject({
+        targetVersion: '22.5.3',
+        originalTargetVersion: '23.1.0',
+      });
+      expect((r as { multiMajorMode?: string }).multiMajorMode).toBeUndefined();
+    });
+  });
+
+  describe('prompt-bearing migrations', () => {
+    it('should expose resolved prompt content via promptContents keyed by package and prompt path', async () => {
+      const migrator = new Migrator({
+        packageJson: createPackageJson({
+          dependencies: { '@nx/expo': '1.0.0' },
+        }),
+        getInstalledPackageVersion: () => '1.0.0',
+        fetch: () =>
+          Promise.resolve({
+            version: '2.0.0',
+            generators: {
+              'ai-instructions': {
+                version: '2.0.0',
+                description: 'AI prompt only',
+                prompt: './files/ai-instructions.md',
+              },
+            },
+            resolvedPromptFiles: {
+              './files/ai-instructions.md': 'PROMPT BODY',
+            },
+          } as ResolvedMigrationConfiguration),
+        from: {},
+        to: {},
+      });
+
+      const result = await migrator.migrate('@nx/expo', '2.0.0');
+      expect(result.migrations).toEqual([
+        {
+          version: '2.0.0',
+          name: 'ai-instructions',
+          package: '@nx/expo',
+          description: 'AI prompt only',
+          prompt: './files/ai-instructions.md',
+        },
+      ]);
+      expect(result.promptContents).toEqual({
+        '@nx/expo::./files/ai-instructions.md': 'PROMPT BODY',
+      });
+    });
+
+    it('should preserve both prompt and implementation on hybrid entries', async () => {
+      const migrator = new Migrator({
+        packageJson: createPackageJson({ dependencies: { pkg: '1.0.0' } }),
+        getInstalledPackageVersion: () => '1.0.0',
+        fetch: () =>
+          Promise.resolve({
+            version: '2.0.0',
+            generators: {
+              hybrid: {
+                version: '2.0.0',
+                description: 'hybrid',
+                implementation: './migrations/hybrid',
+                prompt: './files/hybrid.md',
+              },
+            },
+            resolvedPromptFiles: {
+              './files/hybrid.md': 'HYBRID',
+            },
+          } as ResolvedMigrationConfiguration),
+        from: {},
+        to: {},
+      });
+
+      const result = await migrator.migrate('pkg', '2.0.0');
+      expect(result.migrations[0]).toMatchObject({
+        implementation: './migrations/hybrid',
+        prompt: './files/hybrid.md',
+      });
+      expect(result.promptContents).toEqual({
+        'pkg::./files/hybrid.md': 'HYBRID',
+      });
+    });
+
+    it('should omit promptContents from the result when no prompts were resolved', async () => {
+      const migrator = new Migrator({
+        packageJson: createPackageJson({ dependencies: { pkg: '1.0.0' } }),
+        getInstalledPackageVersion: () => '1.0.0',
+        fetch: () =>
+          Promise.resolve({
+            version: '2.0.0',
+            generators: {
+              one: {
+                version: '2.0.0',
+                description: 'plain',
+                implementation: './migrations/one',
+              },
+            },
+          } as ResolvedMigrationConfiguration),
+        from: {},
+        to: {},
+      });
+
+      const result = await migrator.migrate('pkg', '2.0.0');
+      expect(result).not.toHaveProperty('promptContents');
+    });
+  });
+
+  describe('validateMigrationEntries', () => {
+    it('should not throw when all entries have at least one of implementation/factory/prompt', () => {
+      expect(() =>
+        validateMigrationEntries('@nx/x', '2.0.0', {
+          generators: {
+            a: { version: '2.0.0', implementation: './a' },
+            b: { version: '2.0.0', factory: './b' },
+            c: { version: '2.0.0', prompt: './c.md' },
+          },
+        })
+      ).not.toThrow();
+    });
+
+    it('should throw when an entry has none of implementation/factory/prompt', () => {
+      expect(() =>
+        validateMigrationEntries('@nx/x', '2.0.0', {
+          generators: {
+            broken: { version: '2.0.0', description: 'oops' },
+          },
+        })
+      ).toThrow(
+        /Invalid migration "broken" in package "@nx\/x@2\.0\.0": migration entries must have at least one of "implementation", "factory", or "prompt"\./
+      );
+    });
+
+    it('should validate entries from both generators and schematics', () => {
+      expect(() =>
+        validateMigrationEntries('pkg', '1.0.0', {
+          schematics: {
+            broken: { version: '1.0.0' },
+          },
+        })
+      ).toThrow(/Invalid migration "broken" in package "pkg@1\.0\.0"/);
+    });
+  });
+
+  describe('prompt path traversal', () => {
+    it.each([
+      ['../../etc/passwd'],
+      ['./safe/../../escape.md'],
+      ['/etc/passwd'],
+    ])(
+      'should reject prompt path %p that escapes the migrations directory',
+      async (badPath) => {
+        await expect(
+          readPromptFilesFromInstall(
+            'pkg',
+            '1.0.0',
+            {
+              generators: {
+                m: { version: '1.0.0', prompt: badPath },
+              },
+            },
+            '/tmp/fake-pkg/migrations.json'
+          )
+        ).rejects.toThrow(/Invalid prompt path/);
+      }
+    );
+  });
+
+  describe('writePromptMigrationFiles', () => {
+    let tmpRoot: string;
+
+    beforeEach(() => {
+      tmpRoot = mkdtempSync(join(tmpdir(), 'nx-prompt-migrations-'));
+    });
+
+    afterEach(() => {
+      rmSync(tmpRoot, { recursive: true, force: true });
+    });
+
+    it('should write prompt files under the package and target version directories using the basename', () => {
+      const migrations = [
+        {
+          package: '@nx/expo',
+          name: 'm',
+          version: '22.2.0-beta.3',
+          prompt:
+            './src/migrations/update-22-2-0/files/ai-instructions-for-expo-54.md',
+        },
+      ];
+      const promptContents = {
+        '@nx/expo::./src/migrations/update-22-2-0/files/ai-instructions-for-expo-54.md':
+          'EXPO',
+      };
+
+      const written = writePromptMigrationFiles(
+        tmpRoot,
+        migrations,
+        promptContents,
+        '22.5.0'
+      );
+
+      const expectedPath =
+        'tools/ai-migrations/@nx/expo/22.5.0/ai-instructions-for-expo-54.md';
+      expect(written).toEqual([expectedPath]);
+      expect(migrations[0].prompt).toBe(expectedPath);
+      expect(readFileSync(join(tmpRoot, expectedPath), 'utf-8')).toBe('EXPO');
+    });
+
+    it('should write under the package directory when unscoped', () => {
+      const migrations = [
+        {
+          package: 'mypackage',
+          name: 'm',
+          version: '1.0.0',
+          prompt: './files/foo.md',
+        },
+      ];
+      const promptContents = { 'mypackage::./files/foo.md': 'X' };
+
+      const written = writePromptMigrationFiles(
+        tmpRoot,
+        migrations,
+        promptContents,
+        '1.0.0'
+      );
+
+      expect(written).toEqual(['tools/ai-migrations/mypackage/1.0.0/foo.md']);
+    });
+
+    it('should write a single file when two entries reference the same source .md', () => {
+      const migrations = [
+        {
+          package: '@nx/vitest',
+          name: 'a',
+          version: '22.1.0-beta.8',
+          prompt: './files/ai-instructions-for-vitest-4.md',
+        },
+        {
+          package: '@nx/vitest',
+          name: 'b',
+          version: '22.3.2-beta.0',
+          prompt: './files/ai-instructions-for-vitest-4.md',
+        },
+      ];
+      const promptContents = {
+        '@nx/vitest::./files/ai-instructions-for-vitest-4.md': 'V',
+      };
+
+      const written = writePromptMigrationFiles(
+        tmpRoot,
+        migrations,
+        promptContents,
+        '22.4.0'
+      );
+
+      const expectedPath =
+        'tools/ai-migrations/@nx/vitest/22.4.0/ai-instructions-for-vitest-4.md';
+      expect(written).toEqual([expectedPath]);
+      expect(migrations[0].prompt).toBe(expectedPath);
+      expect(migrations[1].prompt).toBe(expectedPath);
+      expect(readFileSync(join(tmpRoot, expectedPath), 'utf-8')).toBe('V');
+    });
+
+    it('should suffix the basename when two entries have different content but the same basename', () => {
+      const migrations = [
+        {
+          package: 'pkg',
+          name: 'a',
+          version: '1.0.0',
+          prompt: './a/foo.md',
+        },
+        {
+          package: 'pkg',
+          name: 'b',
+          version: '1.0.0',
+          prompt: './b/foo.md',
+        },
+      ];
+      const promptContents = {
+        'pkg::./a/foo.md': 'A',
+        'pkg::./b/foo.md': 'B',
+      };
+
+      const written = writePromptMigrationFiles(
+        tmpRoot,
+        migrations,
+        promptContents,
+        '2.0.0'
+      );
+
+      expect(written).toEqual([
+        'tools/ai-migrations/pkg/2.0.0/foo.md',
+        'tools/ai-migrations/pkg/2.0.0/foo-1.md',
+      ]);
+      expect(migrations[0].prompt).toBe('tools/ai-migrations/pkg/2.0.0/foo.md');
+      expect(migrations[1].prompt).toBe(
+        'tools/ai-migrations/pkg/2.0.0/foo-1.md'
+      );
+      expect(
+        readFileSync(
+          join(tmpRoot, 'tools/ai-migrations/pkg/2.0.0/foo.md'),
+          'utf-8'
+        )
+      ).toBe('A');
+      expect(
+        readFileSync(
+          join(tmpRoot, 'tools/ai-migrations/pkg/2.0.0/foo-1.md'),
+          'utf-8'
+        )
+      ).toBe('B');
+    });
+
+    it('should reuse an existing on-disk file when its content is identical', () => {
+      const existing = join(tmpRoot, 'tools/ai-migrations/pkg/2.0.0/foo.md');
+      mkdirSync(dirname(existing), { recursive: true });
+      writeFileSync(existing, 'SAME');
+
+      const migrations = [
+        {
+          package: 'pkg',
+          name: 'm',
+          version: '1.0.0',
+          prompt: './files/foo.md',
+        },
+      ];
+      const promptContents = { 'pkg::./files/foo.md': 'SAME' };
+
+      const written = writePromptMigrationFiles(
+        tmpRoot,
+        migrations,
+        promptContents,
+        '2.0.0'
+      );
+
+      expect(written).toEqual([]);
+      expect(migrations[0].prompt).toBe('tools/ai-migrations/pkg/2.0.0/foo.md');
+      expect(readFileSync(existing, 'utf-8')).toBe('SAME');
+    });
+
+    it('should suffix when an existing on-disk file has different content', () => {
+      const existing = join(tmpRoot, 'tools/ai-migrations/pkg/2.0.0/foo.md');
+      mkdirSync(dirname(existing), { recursive: true });
+      writeFileSync(existing, 'OLD');
+
+      const migrations = [
+        {
+          package: 'pkg',
+          name: 'm',
+          version: '1.0.0',
+          prompt: './files/foo.md',
+        },
+      ];
+      const promptContents = { 'pkg::./files/foo.md': 'NEW' };
+
+      const written = writePromptMigrationFiles(
+        tmpRoot,
+        migrations,
+        promptContents,
+        '2.0.0'
+      );
+
+      expect(written).toEqual(['tools/ai-migrations/pkg/2.0.0/foo-1.md']);
+      expect(migrations[0].prompt).toBe(
+        'tools/ai-migrations/pkg/2.0.0/foo-1.md'
+      );
+      expect(readFileSync(existing, 'utf-8')).toBe('OLD');
+      expect(
+        readFileSync(
+          join(tmpRoot, 'tools/ai-migrations/pkg/2.0.0/foo-1.md'),
+          'utf-8'
+        )
+      ).toBe('NEW');
+    });
+
+    it('should walk past existing suffixed files until it finds a free or content-matching slot', () => {
+      const dir = join(tmpRoot, 'tools/ai-migrations/pkg/2.0.0');
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(join(dir, 'foo.md'), 'A');
+      writeFileSync(join(dir, 'foo-1.md'), 'B');
+
+      const migrations = [
+        {
+          package: 'pkg',
+          name: 'm',
+          version: '1.0.0',
+          prompt: './files/foo.md',
+        },
+      ];
+      const promptContents = { 'pkg::./files/foo.md': 'C' };
+
+      const written = writePromptMigrationFiles(
+        tmpRoot,
+        migrations,
+        promptContents,
+        '2.0.0'
+      );
+
+      expect(written).toEqual(['tools/ai-migrations/pkg/2.0.0/foo-2.md']);
+      expect(migrations[0].prompt).toBe(
+        'tools/ai-migrations/pkg/2.0.0/foo-2.md'
+      );
+      expect(readFileSync(join(dir, 'foo-2.md'), 'utf-8')).toBe('C');
+    });
+
+    it('should ignore entries whose prompt content is missing from the map', () => {
+      const migrations = [
+        { package: 'pkg', name: 'a', version: '1.0.0' },
+        {
+          package: 'pkg',
+          name: 'b',
+          version: '1.0.0',
+          prompt: './missing.md',
+        },
+        {
+          package: 'pkg',
+          name: 'c',
+          version: '1.0.0',
+          prompt: './x.md',
+        },
+      ];
+      const promptContents = { 'pkg::./x.md': 'X' };
+
+      const written = writePromptMigrationFiles(
+        tmpRoot,
+        migrations,
+        promptContents,
+        '1.0.0'
+      );
+      expect(written).toEqual(['tools/ai-migrations/pkg/1.0.0/x.md']);
     });
   });
 });

@@ -65,13 +65,24 @@
         }
       }
     },
-    "21.3.0": {
+    "21.3.0-module-federation-enhanced": {
       "version": "21.3.0-beta.8",
+      "requires": {
+        "@module-federation/enhanced": ">=0.15.0 <0.17.0"
+      },
       "packages": {
         "@module-federation/enhanced": {
           "version": "^0.17.0",
           "alwaysAddToPackageJson": false
-        },
+        }
+      }
+    },
+    "21.3.0-module-federation-node": {
+      "version": "21.3.0-beta.8",
+      "requires": {
+        "@module-federation/node": "<2.7.9"
+      },
+      "packages": {
         "@module-federation/node": {
           "version": "^2.7.9",
           "alwaysAddToPackageJson": false
@@ -100,21 +111,48 @@
         }
       }
     },
-    "22.2.0": {
+    "22.2.0-module-federation-enhanced": {
       "version": "22.2.0-beta.0",
+      "requires": {
+        "@module-federation/enhanced": ">=0.17.0 <0.21.0"
+      },
       "packages": {
         "@module-federation/enhanced": {
           "version": "^0.21.2",
           "alwaysAddToPackageJson": false
-        },
-        "@module-federation/runtime": {
-          "version": "^0.21.2",
-          "alwaysAddToPackageJson": false
-        },
+        }
+      }
+    },
+    "22.2.0-module-federation-sdk": {
+      "version": "22.2.0-beta.0",
+      "requires": {
+        "@module-federation/sdk": ">=0.17.0 <0.21.0"
+      },
+      "packages": {
         "@module-federation/sdk": {
           "version": "^0.21.2",
           "alwaysAddToPackageJson": false
-        },
+        }
+      }
+    },
+    "22.2.0-module-federation-runtime": {
+      "version": "22.2.0-beta.0",
+      "requires": {
+        "@module-federation/runtime": "<0.21.0"
+      },
+      "packages": {
+        "@module-federation/runtime": {
+          "version": "^0.21.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "22.2.0-module-federation-node": {
+      "version": "22.2.0-beta.0",
+      "requires": {
+        "@module-federation/node": "<2.7.21"
+      },
+      "packages": {
         "@module-federation/node": {
           "version": "^2.7.21",
           "alwaysAddToPackageJson": false

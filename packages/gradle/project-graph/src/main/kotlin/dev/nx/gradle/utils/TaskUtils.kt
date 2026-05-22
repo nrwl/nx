@@ -287,7 +287,7 @@ private fun getInputsForTaskImpl(
 
     // Add consolidated dependentTasksOutputFiles entries using glob patterns by extension
     dependentTaskOutputExtensions.forEach { extension ->
-      inputs.add(mapOf("dependentTasksOutputFiles" to "**/*.$extension"))
+      inputs.add(mapOf("dependentTasksOutputFiles" to "**/*.$extension", "transitive" to true))
     }
 
     if (externalDependencies.isNotEmpty()) {

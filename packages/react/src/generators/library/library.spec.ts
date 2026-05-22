@@ -911,7 +911,7 @@ module.exports = withNx(
               // Don't forget to update your package.json as well.
               formats: ['es' as const]
             },
-            rollupOptions: {
+            rolldownOptions: {
               // External packages that should not be bundled into your library.
               external: ['react','react-dom','react/jsx-runtime']
             },

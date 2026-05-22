@@ -24,7 +24,7 @@
       "type": "boolean",
       "x-priority": "internal",
       "description": "Keep existing dependencies versions",
-      "default": false
+      "default": true
     }
   },
   "required": []

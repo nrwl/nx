@@ -3,7 +3,7 @@ import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
 
 import { assertValidStyle } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
-import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectType } from '@nx/js/internal';
 
 export async function normalizeOptions(
   tree: Tree,

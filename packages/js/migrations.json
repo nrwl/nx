@@ -3,17 +3,22 @@
     "migrate-development-custom-condition": {
       "version": "21.5.0-beta.2",
       "description": "Migrate the legacy 'development' custom condition to a workspace-unique custom condition name.",
-      "factory": "./src/migrations/update-21-5-0/migrate-development-custom-condition"
+      "factory": "./dist/src/migrations/update-21-5-0/migrate-development-custom-condition"
     },
     "remove-external-options-from-js-executors": {
       "version": "22.0.0-beta.0",
       "description": "Remove the deprecated `external` and `externalBuildTargets` options from the `@nx/js:swc` and `@nx/js:tsc` executors.",
-      "factory": "./src/migrations/update-22-0-0/remove-external-options-from-js-executors"
+      "factory": "./dist/src/migrations/update-22-0-0/remove-external-options-from-js-executors"
     },
     "remove-redundant-ts-project-references": {
       "version": "22.1.0-rc.1",
       "description": "Removes redundant TypeScript project references from project's tsconfig.json files when runtime tsconfig files (e.g., tsconfig.lib.json, tsconfig.app.json) exist.",
-      "factory": "./src/migrations/update-22-1-0/remove-redundant-ts-project-references"
+      "factory": "./dist/src/migrations/update-22-1-0/remove-redundant-ts-project-references"
+    },
+    "23-0-0-rewrite-internal-subpath-imports": {
+      "version": "23.0.0-beta.14",
+      "description": "Rewrites `@nx/js/src/*` subpath imports to the new `@nx/js/internal` entry. The `./src/*` wildcard has been removed from `@nx/js`'s exports map; `@nx/js/src/release/version-actions` is preserved as a non-wildcard entry for back-compat with existing nx.json release configs. If a rewritten import resolves to a symbol that lives on the public `@nx/js` entry (e.g. `libraryGenerator`, `extractTsConfigBase`, `resolvePathsBaseUrl`), change the specifier to `@nx/js`.",
+      "factory": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
     }
   },
   "packageJsonUpdates": {
@@ -54,6 +59,9 @@
     },
     "20.7.1-beta.0": {
       "version": "20.7.1-beta.0",
+      "requires": {
+        "@swc/cli": ">=0.3.0 <0.6.0"
+      },
       "packages": {
         "@swc/cli": {
           "version": "~0.6.0",
@@ -94,10 +102,6 @@
           "version": "^1.15.5",
           "alwaysAddToPackageJson": false
         },
-        "@swc/cli": {
-          "version": "^0.7.10",
-          "alwaysAddToPackageJson": false
-        },
         "@swc/helpers": {
           "version": "^0.5.18",
           "alwaysAddToPackageJson": false
@@ -108,11 +112,35 @@
         }
       }
     },
+    "22.5.0-swc-cli": {
+      "version": "22.5.0-beta.1",
+      "requires": {
+        "@swc/cli": ">=0.6.0 <0.7.0"
+      },
+      "packages": {
+        "@swc/cli": {
+          "version": "^0.7.10",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
     "22.6.4": {
       "version": "22.6.4",
       "packages": {
         "verdaccio": {
           "version": "^6.3.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.0.0-swc-cli": {
+      "version": "23.0.0-beta.17",
+      "requires": {
+        "@swc/cli": ">=0.7.0 <0.8.0"
+      },
+      "packages": {
+        "@swc/cli": {
+          "version": "~0.8.0",
           "alwaysAddToPackageJson": false
         }
       }

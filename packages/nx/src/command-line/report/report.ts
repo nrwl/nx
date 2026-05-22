@@ -40,6 +40,7 @@ import {
   resolveMaxCacheSize,
 } from '../../tasks-runner/cache';
 import { daemonClient } from '../../daemon/client/client';
+import { readNxPackageGroup } from '../../utils/nx-package-group';
 
 const nxPackageJson = readJsonFile<NxPackageJson>(
   require.resolve('nx/package.json')
@@ -47,9 +48,7 @@ const nxPackageJson = readJsonFile<NxPackageJson>(
 
 export const packagesWeCareAbout = [
   'lerna',
-  ...nxPackageJson['nx-migrations'].packageGroup.map((x) =>
-    typeof x === 'string' ? x : x.package
-  ),
+  ...readNxPackageGroup(),
   '@nrwl/schematics', // manually added since we don't publish it anymore.
   'typescript',
 ];
@@ -586,7 +585,6 @@ export function findRegisteredPluginsBeingUsed(nxJson: NxJsonConfiguration) {
 
 export function findInstalledPackagesWeCareAbout() {
   const packagesWeMayCareAbout: Record<string, string> = {};
-  // TODO (v20): Remove workaround for hiding @nrwl packages when matching @nx package is found.
 
   for (const pkg of packagesWeCareAbout) {
     const v = readPackageVersion(pkg);

@@ -3,8 +3,10 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
-import { eslint9__typescriptESLintVersion } from '@nx/eslint/src/utils/versions';
+import {
+  useFlatConfig,
+  eslint9__typescriptESLintVersion,
+} from '@nx/eslint/internal';
 import { versions } from '../../utils/version-utils';
 import { isBuildableLibraryProject } from './buildable-project';
 

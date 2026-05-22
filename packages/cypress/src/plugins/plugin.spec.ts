@@ -368,7 +368,6 @@ describe('@nx/cypress/plugin', () => {
                       {
                         "options": "forward",
                         "params": "forward",
-                        "projects": "self",
                         "target": "e2e-ci--src/test.cy.ts",
                       },
                     ],
@@ -573,7 +572,6 @@ describe('@nx/cypress/plugin', () => {
                       {
                         "options": "forward",
                         "params": "forward",
-                        "projects": "self",
                         "target": "e2e-ci--src/test.cy.ts",
                       },
                     ],
@@ -780,7 +778,6 @@ describe('@nx/cypress/plugin', () => {
                       {
                         "options": "forward",
                         "params": "forward",
-                        "projects": "self",
                         "target": "e2e-ci--src/test.cy.ts",
                       },
                     ],
@@ -975,13 +972,11 @@ describe('@nx/cypress/plugin', () => {
                       {
                         "options": "forward",
                         "params": "forward",
-                        "projects": "self",
                         "target": "component-test-ci--src/test-2.cy.ts",
                       },
                       {
                         "options": "forward",
                         "params": "forward",
-                        "projects": "self",
                         "target": "component-test-ci--src/test.cy.ts",
                       },
                     ],
@@ -1207,7 +1202,6 @@ describe('@nx/cypress/plugin', () => {
                       {
                         "options": "forward",
                         "params": "forward",
-                        "projects": "self",
                         "target": "e2e-ci--src/test.cy.ts",
                       },
                     ],
@@ -1401,13 +1395,11 @@ describe('@nx/cypress/plugin', () => {
                       {
                         "options": "forward",
                         "params": "forward",
-                        "projects": "self",
                         "target": "component-test-ci--src/test-2.cy.ts",
                       },
                       {
                         "options": "forward",
                         "params": "forward",
-                        "projects": "self",
                         "target": "component-test-ci--src/test.cy.ts",
                       },
                     ],
@@ -1645,7 +1637,6 @@ describe('@nx/cypress/plugin', () => {
                       {
                         "options": "forward",
                         "params": "forward",
-                        "projects": "self",
                         "target": "e2e-ci--src/test.cy.ts",
                       },
                     ],

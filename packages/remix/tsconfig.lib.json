@@ -22,6 +22,9 @@
       "path": "../js/tsconfig.lib.json"
     },
     {
+      "path": "../eslint/tsconfig.lib.json"
+    },
+    {
       "path": "../devkit/tsconfig.lib.json"
     },
     {

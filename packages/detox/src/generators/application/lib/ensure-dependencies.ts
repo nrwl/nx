@@ -1,5 +1,5 @@
 import { addDependenciesToPackageJson, type Tree } from '@nx/devkit';
-import { versions } from '@nx/jest/src/utils/versions';
+import { versions } from '@nx/jest/internal';
 import {
   configPluginsDetoxVersion,
   testingLibraryJestDom,
