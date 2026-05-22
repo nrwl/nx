@@ -1,5 +1,5 @@
-import { prompt } from 'enquirer';
 import { output } from '../../../utils/output';
+import { migratePrompt } from '../safe-prompt';
 import { detectInstalledAgents } from './detect-installed';
 import { isInsideAgent } from './inception';
 import { AGENT_DEFINITIONS } from './registry';
@@ -125,7 +125,7 @@ async function firePromptForAgentic(
   console.log();
   // `as any` because enquirer's TS types lag the runtime (per-choice `hint`
   // and `value` are supported but not in the .d.ts).
-  const response = await prompt<{ enable: 'yes' | 'no' }>({
+  const response = await migratePrompt<{ enable: 'yes' | 'no' }>({
     name: 'enable',
     type: 'autocomplete',
     message: 'Enable the agentic flow?',
@@ -199,7 +199,7 @@ async function selectAgent(
 
   // Blank line for the same reason as `firePromptForAgentic`.
   console.log();
-  const response = await prompt<{ id: AgentId }>({
+  const response = await migratePrompt<{ id: AgentId }>({
     name: 'id',
     type: 'select',
     message: 'Multiple AI agents detected. Which one should Nx use?',

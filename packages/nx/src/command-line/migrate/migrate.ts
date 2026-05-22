@@ -1,6 +1,6 @@
 import * as pc from 'picocolors';
 import { exec, execSync, spawn, type StdioOptions } from 'child_process';
-import { prompt } from 'enquirer';
+import { migratePrompt } from './safe-prompt';
 import { handleImport } from '../../utils/handle-import';
 import { dirname, join } from 'path';
 import { createRequire } from 'module';
@@ -834,7 +834,7 @@ export class Migrator {
         );
     }
 
-    return await prompt([promptConfig]).then(
+    return await migratePrompt([promptConfig]).then(
       ({ shouldApply }: { shouldApply: boolean }) => {
         this.promptAnswers[promptKey] = shouldApply;
 
@@ -961,7 +961,7 @@ export async function resolveMode(
     name: 'all',
     message: 'All (first-party and third-party)',
   });
-  const { mode: selected } = await prompt<{
+  const { mode: selected } = await migratePrompt<{
     mode: MigrateMode;
   }>({
     type: 'select',

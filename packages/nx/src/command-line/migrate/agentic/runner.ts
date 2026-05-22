@@ -1,6 +1,6 @@
 import { ChildProcess, execSync, spawn, SpawnOptions } from 'child_process';
-import { prompt } from 'enquirer';
 import { extname } from 'path';
+import { migratePrompt } from '../safe-prompt';
 import { readHandoff, waitForValidHandoff } from './handoff';
 import {
   AgentDefinition,
@@ -61,8 +61,19 @@ export async function runAgentic(
     return resolveFromHandoffOrPrompt(handoffFilePath);
   }
 
+  // Counts user-initiated SIGINTs caught while the agent runs. The agent
+  // owns the terminal and handles its own SIGINT semantics, so we swallow
+  // at the process level. A non-zero count after the agent exits tells the
+  // resolver "the user pressed Ctrl+C" → skip the abort/continue prompt
+  // and abort directly. This isn't just UX: enquirer misbehaves in the
+  // wonky TTY state that follows a SIGINT-killed child (Bug A:
+  // ERR_USE_AFTER_CLOSE during cancel cleanup; Bug B: setRawMode EIO
+  // during prompt initialization). Both surface as EventEmitter errors /
+  // unhandled rejections from async chains an `await` try/catch cannot
+  // intercept, so bypassing enquirer entirely is the safe path.
+  let userInterruptCount = 0;
   const swallowSigint = () => {
-    /* swallow — the child controls the terminal and handles its own cleanup */
+    userInterruptCount++;
   };
   process.on('SIGINT', swallowSigint);
 
@@ -105,7 +116,7 @@ export async function runAgentic(
     restoreTerminalAfterAgent();
   }
 
-  return resolveFromHandoffOrPrompt(handoffFilePath);
+  return resolveFromHandoffOrPrompt(handoffFilePath, userInterruptCount > 0);
 }
 
 function restoreTerminalAfterAgent(): void {
@@ -189,17 +200,28 @@ function waitForExit(child: ChildProcess): Promise<void> {
 }
 
 async function resolveFromHandoffOrPrompt(
-  handoffFilePath: string
+  handoffFilePath: string,
+  userInterrupted = false
 ): Promise<HandoffOutcome> {
   const handoff = readHandoff(handoffFilePath);
-  if (handoff === null) {
-    return promptAmbiguous();
+  if (handoff !== null) {
+    return {
+      kind: handoff.status,
+      summary: handoff.summary,
+      extras: handoff.extras,
+    };
   }
-  return {
-    kind: handoff.status,
-    summary: handoff.summary,
-    extras: handoff.extras,
-  };
+  if (userInterrupted) {
+    // The user pressed Ctrl+C during the agent run. Don't show the
+    // abort/continue prompt — they already told us what they want, and
+    // the TTY state after a SIGINT-killed child trips enquirer's
+    // setRawMode-EIO and ERR_USE_AFTER_CLOSE bugs anyway. The orchestrator
+    // surfaces the abort outcome via its standard failure cascade (`✗
+    // Aborted by user.` / `NX Prompt migration … was aborted by user.`)
+    // so no additional message is needed here.
+    return { kind: 'ambiguous-abort' };
+  }
+  return promptAmbiguous();
 }
 
 /**
@@ -257,20 +279,27 @@ async function promptAmbiguous(): Promise<HandoffOutcome> {
   // (e.g. Claude Code's "Resume this session with: claude --resume <id>"),
   // which would otherwise sit immediately above this question.
   console.log();
-  const response = await prompt<{ choice: 'abort' | 'continue' }>({
-    name: 'choice',
-    type: 'select',
-    message:
-      'The agent did not write a handoff file. How should nx migrate proceed?',
-    choices: [
-      { name: 'abort', message: 'Treat as failed — abort the run' },
-      {
-        name: 'continue',
-        message: 'Treat as completed — mark done and continue',
-      },
-    ],
-  });
-  return response.choice === 'continue'
-    ? { kind: 'ambiguous-continue' }
-    : { kind: 'ambiguous-abort' };
+  // `migratePrompt` injects `options.cancel` so Ctrl+C and Esc exit cleanly
+  // via `process.exit(130)` before enquirer's broken cancel cleanup runs.
+  // Any other rejection (programmatic or otherwise) we treat as abort.
+  try {
+    const response = await migratePrompt<{ choice: 'abort' | 'continue' }>({
+      name: 'choice',
+      type: 'select',
+      message:
+        'The agent did not write a handoff file. How should nx migrate proceed?',
+      choices: [
+        { name: 'abort', message: 'Treat as failed — abort the run' },
+        {
+          name: 'continue',
+          message: 'Treat as completed — mark done and continue',
+        },
+      ],
+    });
+    return response.choice === 'continue'
+      ? { kind: 'ambiguous-continue' }
+      : { kind: 'ambiguous-abort' };
+  } catch {
+    return { kind: 'ambiguous-abort' };
+  }
 }
