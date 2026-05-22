@@ -22,7 +22,7 @@ env:
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
   NODE_VERSION: 22.16.0
-  PNPM_VERSION: 10.28.2 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
+  PNPM_VERSION: 11.2.2 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
   NX_GRADLE_PROJECT_GRAPH_TIMEOUT: 600
 
 jobs:
@@ -449,7 +449,7 @@ jobs:
             env
             whoami
             sudo pkg install -y -f node libnghttp2 www/npm git ca_root_nss
-            sudo npm install --location=global --ignore-scripts pnpm@10.28.2
+            sudo npm install --location=global --ignore-scripts pnpm@11.2.2
             curl https://sh.rustup.rs -sSf --output rustup.sh
             sh rustup.sh -y --profile minimal --default-toolchain stable
             source "$HOME/.cargo/env"

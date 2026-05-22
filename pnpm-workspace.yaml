@@ -18,8 +18,9 @@ minimumReleaseAgeExclude:
   - create-nx-workspace
   - create-nx-plugin
 overrides:
+  handlebars: '4.7.9'
   minimist: '^1.2.6'
-  underscore: '^1.12.1'
+  underscore: '^1.13.8'
 onlyBuiltDependencies:
   - '@nestjs/core'
   - 'nx'
@@ -116,3 +117,21 @@ catalogs:
     '@swc/helpers': '0.5.18'
     '@swc/cli': '0.8.0'
     '@swc-node/register': '^1.11.1'
+allowBuilds:
+  '@nestjs/core': true
+  '@parcel/watcher': false
+  '@swc/core': false
+  '@tailwindcss/oxide': false
+  core-js: false
+  core-js-pure: false
+  cypress: false
+  detox: false
+  dtrace-provider: false
+  es5-ext: false
+  esbuild: false
+  less: false
+  lmdb: false
+  msgpackr-extract: false
+  nx: true
+  sharp: false
+  unrs-resolver: false
