@@ -9,6 +9,14 @@
  */
 export function coerceAgenticArg(value: unknown): string | boolean | undefined {
   if (value === undefined) return undefined;
+  // yargs collects repeated occurrences of the same option into an array.
+  // Rather than silently picking last/first, error so the user knows the
+  // flag conflicts. `--agentic` is a single-value option by intent.
+  if (Array.isArray(value)) {
+    throw new Error(
+      'Error: --agentic was passed more than once. Specify --agentic at most one time.'
+    );
+  }
   if (value === true || value === '' || value === 'true' || value === 'yes') {
     return true;
   }

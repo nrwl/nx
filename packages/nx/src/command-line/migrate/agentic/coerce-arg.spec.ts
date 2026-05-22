@@ -26,4 +26,10 @@ describe('coerceAgenticArg', () => {
     expect(coerceAgenticArg(42 as unknown)).toBeUndefined();
     expect(coerceAgenticArg(null as unknown)).toBeUndefined();
   });
+
+  it('throws when --agentic is repeated (yargs delivers an array)', () => {
+    expect(() => coerceAgenticArg(['claude-code', 'codex'])).toThrow(
+      /--agentic was passed more than once/
+    );
+  });
 });
