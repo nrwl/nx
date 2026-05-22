@@ -90,6 +90,32 @@ describe('handoff', () => {
         })
       ).toBe(join('/run', '@scope', 'pkg', 'trailing.json'));
     });
+
+    it.each([
+      ['CON', '_CON'],
+      ['con', '_con'],
+      ['NUL', '_NUL'],
+      ['COM1', '_COM1'],
+      ['LPT9', '_LPT9'],
+      ['aux', '_aux'],
+      ['CON.bak', '_CON.bak'],
+    ])(
+      'prefixes Windows reserved device name "%s" so the resulting filename is writable',
+      (input, expected) => {
+        expect(
+          stepHandoffPath('/run', { package: '@scope/pkg', name: input })
+        ).toBe(join('/run', '@scope', 'pkg', `${expected}.json`));
+      }
+    );
+
+    it.each(['CONsole', 'PRNTASK', 'COM10', 'LPT', 'conform'])(
+      'leaves non-reserved names that merely start with a reserved prefix untouched ("%s")',
+      (input) => {
+        expect(
+          stepHandoffPath('/run', { package: '@scope/pkg', name: input })
+        ).toBe(join('/run', '@scope', 'pkg', `${input}.json`));
+      }
+    );
   });
 
   describe('readHandoff', () => {

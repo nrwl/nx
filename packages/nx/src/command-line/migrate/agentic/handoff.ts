@@ -21,6 +21,12 @@ export function initRunDir(workspaceRoot: string, runId: string): string {
   return dir;
 }
 
+// Windows reserves a fixed set of device names (CON, PRN, AUX, NUL, COM1-9,
+// LPT1-9). Any path segment matching one of these — with or without an
+// extension — refuses to open. A migration named `CON` would otherwise
+// produce `CON.json`, which the agent's handoff write would fail silently.
+const WINDOWS_RESERVED_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i;
+
 /**
  * The bare `.` / `..` check must come first — otherwise a malformed migration
  * name of exactly `..` would let the handoff write escape the run directory.
@@ -30,6 +36,9 @@ function sanitizeSegment(value: string): string {
   let sanitized = value.replace(/[\x00-\x1f<>:"/\\|?*]/g, '_');
   // Windows forbids trailing dots/spaces on file/directory names.
   sanitized = sanitized.replace(/[. ]+$/, '');
+  if (WINDOWS_RESERVED_NAMES.test(sanitized)) {
+    sanitized = `_${sanitized}`;
+  }
   return sanitized || '_';
 }
 
