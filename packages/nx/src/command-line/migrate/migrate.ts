@@ -2580,13 +2580,13 @@ export async function executeMigrations(
     try {
       if (isPromptOnlyMigration(m)) {
         if (agenticRun) {
-          const stepResult = await agenticRun.runStep(
+          const stepResult = await agenticRun.runStep({
             root,
-            m,
-            agenticRun.agentic,
-            agenticRun.runDir,
-            installDepsIfChanged
-          );
+            migration: m,
+            agentic: agenticRun.agentic,
+            runDir: agenticRun.runDir,
+            installDepsIfChanged,
+          });
           const sha = await commitMigrationIfRequested(
             root,
             m,
@@ -2627,21 +2627,19 @@ export async function executeMigrations(
           // agent runs — the prompt half may depend on them being present in
           // node_modules.
           await installDepsIfChanged();
-          const stepResult = await agenticRun.runStep(
+          const stepResult = await agenticRun.runStep({
             root,
-            m,
-            agenticRun.agentic,
-            agenticRun.runDir,
+            migration: m,
+            agentic: agenticRun.agentic,
+            runDir: agenticRun.runDir,
             installDepsIfChanged,
-            {
-              implContext: {
-                logs,
-                changes,
-                agentContext,
-                hasDiffContext: agenticHasDiffContext,
-              },
-            }
-          );
+            implContext: {
+              logs,
+              changes,
+              agentContext,
+              hasDiffContext: agenticHasDiffContext,
+            },
+          });
           const sha = await commitMigrationIfRequested(
             root,
             m,
@@ -2719,22 +2717,20 @@ export async function executeMigrations(
           // Install any deps the deterministic phase added/bumped before the
           // validation agent runs — the agent may run tasks that need them.
           await installDepsIfChanged();
-          const stepResult = await validationRun.runStep(
+          const stepResult = await validationRun.runStep({
             root,
-            m,
-            validationRun.agentic,
-            validationRun.runDir,
+            migration: m,
+            agentic: validationRun.agentic,
+            runDir: validationRun.runDir,
             installDepsIfChanged,
-            {
-              implContext: {
-                logs,
-                changes,
-                agentContext,
-                hasDiffContext: agenticHasDiffContext,
-              },
-              mode: 'generic-validation',
-            }
-          );
+            implContext: {
+              logs,
+              changes,
+              agentContext,
+              hasDiffContext: agenticHasDiffContext,
+            },
+            mode: 'generic-validation',
+          });
           const sha = await commitMigrationIfRequested(
             root,
             m,

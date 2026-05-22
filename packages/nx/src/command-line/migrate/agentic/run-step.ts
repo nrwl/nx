@@ -41,6 +41,22 @@ export interface AgenticStepResult {
   ambiguous: boolean;
 }
 
+export interface RunAgenticPromptStepInput {
+  root: string;
+  migration: {
+    package: string;
+    name: string;
+    version: string;
+    description?: string;
+    prompt?: string;
+  };
+  agentic: EnabledResolvedAgentic;
+  runDir: string;
+  installDepsIfChanged: () => Promise<void>;
+  implContext?: AgenticPromptImplContext;
+  mode?: AgenticPromptMode;
+}
+
 /**
  * Spawns the configured AI agent against a migration step, awaits its handoff,
  * and translates the outcome into a structured result the executor can branch
@@ -53,23 +69,17 @@ export interface AgenticStepResult {
  * the file free of cross-imports with the orchestrator.
  */
 export async function runAgenticPromptStep(
-  root: string,
-  migration: {
-    package: string;
-    name: string;
-    version: string;
-    description?: string;
-    prompt?: string;
-  },
-  agentic: EnabledResolvedAgentic,
-  runDir: string,
-  installDepsIfChanged: () => Promise<void>,
-  opts: {
-    implContext?: AgenticPromptImplContext;
-    mode?: AgenticPromptMode;
-  } = {}
+  input: RunAgenticPromptStepInput
 ): Promise<AgenticStepResult> {
-  const { implContext, mode = 'author' } = opts;
+  const {
+    root,
+    migration,
+    agentic,
+    runDir,
+    installDepsIfChanged,
+    implContext,
+    mode = 'author',
+  } = input;
 
   const handoffFilePath = stepHandoffPath(runDir, migration);
   // The system prompt tells the agent the parent dir exists, so the agent
