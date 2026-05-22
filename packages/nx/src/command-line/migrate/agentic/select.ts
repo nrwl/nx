@@ -115,7 +115,7 @@ async function firePromptForAgentic(
   const yesHint = `Apply ${promptCount} prompt migration${
     promptCount === 1 ? '' : 's'
   } and validate generator output with an AI agent`;
-  const noHint = `Skip prompts (listed for review) and run generators without AI validation`;
+  const noHint = `Skip prompts and run generators without AI validation`;
 
   // Blank line keeps the prompt from gluing to the previous `npm install`
   // output or any earlier orchestrator line.

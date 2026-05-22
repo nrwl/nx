@@ -42,14 +42,26 @@ describe('buildSystemPrompt', () => {
     expect(prompt).toMatch(/To invoke nx, use `pnpm exec nx …`/);
   });
 
-  it('wraps the handoff contract, environment note, and scope rules in their tags', () => {
+  it('wraps the opening brief, handoff contract, environment note, and scope rules in their tags', () => {
     const prompt = buildSystemPrompt(ctx);
+    expect(prompt).toContain('<opening_brief>');
+    expect(prompt).toContain('</opening_brief>');
     expect(prompt).toContain('<handoff_contract>');
     expect(prompt).toContain('</handoff_contract>');
     expect(prompt).toContain('<environment_note>');
     expect(prompt).toContain('</environment_note>');
     expect(prompt).toContain('<scope_rules>');
     expect(prompt).toContain('</scope_rules>');
+  });
+
+  it('asks the agent to state its intent up front so the user has a window to redirect before any change lands', () => {
+    const prompt = buildSystemPrompt(ctx);
+    expect(prompt).toMatch(
+      /Before you take any action, output one or two sentences stating what you intend to do/
+    );
+    expect(prompt).toMatch(
+      /This gives the user a chance to redirect before any change lands/
+    );
   });
 
   it('instructs the agent to summarize for the user, write the handoff, and tells it nx closes the session', () => {

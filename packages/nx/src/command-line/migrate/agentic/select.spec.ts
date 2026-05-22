@@ -161,7 +161,7 @@ describe('resolveAgentic', () => {
           {
             name: 'no',
             message: 'No',
-            hint: 'Skip prompts (listed for review) and run generators without AI validation',
+            hint: 'Skip prompts and run generators without AI validation',
           },
         ],
       })
