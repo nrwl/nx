@@ -7,7 +7,7 @@ import {
   getProjectConfigByPath,
   getTempTailwindPath,
   isCtProjectUsingBuildProject,
-} from '@nx/cypress/src/utils/ct-helpers';
+} from '@nx/cypress/internal';
 import {
   ExecutorContext,
   joinPathFragments,

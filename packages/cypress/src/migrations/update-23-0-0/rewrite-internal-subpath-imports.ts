@@ -15,27 +15,25 @@ import type {
   ImportDeclaration,
   ImportSpecifier,
   ImportTypeNode,
+  LiteralTypeNode,
   Node,
   SourceFile,
   StringLiteral,
 } from 'typescript';
 
 const TS_EXTENSIONS = ['.ts', '.tsx', '.cts', '.mts'] as const;
-const FROM_PREFIX = '@nx/jest/src/';
-const TO_PUBLIC = '@nx/jest';
-const TO_INTERNAL = '@nx/jest/internal';
+const FROM_PREFIX = '@nx/cypress/src/';
+const TO_PUBLIC = '@nx/cypress';
+const TO_INTERNAL = '@nx/cypress/internal';
 
-// Symbols exported from `@nx/jest`'s public entry (packages/jest/index.ts).
-// A named import/export of one of these from `@nx/jest/src/*` is routed to
-// the public `@nx/jest` entry; everything else goes to `@nx/jest/internal`.
+// Symbols exported from `@nx/cypress`'s public entry (packages/cypress/index.ts).
+// A named import/export of one of these from `@nx/cypress/src/*` is routed to
+// the public `@nx/cypress` entry; everything else goes to `@nx/cypress/internal`.
 const PUBLIC_SYMBOLS: ReadonlySet<string> = new Set([
   'configurationGenerator',
-  'jestInitGenerator',
-  'addPropertyToJestConfig',
-  'removePropertyFromJestConfig',
-  'jestConfigObjectAst',
-  'getJestProjectsAsync',
-  'findJestConfig',
+  'componentConfigurationGenerator',
+  'cypressInitGenerator',
+  'migrateCypressProject',
 ]);
 
 // Methods on `jest` and `vi` that take a module specifier as their first arg.
@@ -74,8 +72,8 @@ export default async function rewriteInternalSubpathImports(
 
   if (touchedCount > 0) {
     logger.info(
-      `Rewrote @nx/jest/src/* imports in ${touchedCount} file(s) ` +
-        `(public symbols to @nx/jest, internals to @nx/jest/internal).`
+      `Rewrote @nx/cypress/src/* imports in ${touchedCount} file(s) ` +
+        `(public symbols to @nx/cypress, internals to @nx/cypress/internal).`
     );
   }
 
@@ -167,7 +165,7 @@ function collectExportRewrite(
 
 /**
  * Partition the named bindings of an import/export declaration into the ones
- * that resolve to `@nx/jest`'s public entry and the ones that don't. If both
+ * that resolve to `@nx/cypress`'s public entry and the ones that don't. If both
  * groups are non-empty, the single declaration is split into two.
  */
 function rewriteNamedDeclaration(
@@ -273,8 +271,9 @@ function shouldRewriteCallExpression(call: CallExpression): boolean {
   // `require('...')`
   if (ts!.isIdentifier(callee) && callee.text === 'require') return true;
   // dynamic `import('...')` (runtime form parses as a CallExpression whose
-  // callee is the `import` keyword). The `typeof import('...')` type-position
-  // form is an `ImportTypeNode` (handled in `collectCallExpressionRewrites`).
+  // callee is the `import` keyword). The type-position form
+  // (`typeof import('...')`) is an `ImportTypeNode`, not a CallExpression, so
+  // we don't touch it.
   if (callee.kind === ts!.SyntaxKind.ImportKeyword) return true;
   // `jest.mock(...)` / `vi.mock(...)` and friends.
   if (ts!.isPropertyAccessExpression(callee)) {
