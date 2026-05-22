@@ -26,9 +26,12 @@ export async function resolveAgentic(
   input: ResolveAgenticInput
 ): Promise<ResolvedAgentic> {
   if (isInsideAgent()) {
+    const explicit =
+      input.agentic === true || typeof input.agentic === 'string';
     output.log({
-      title:
-        'Agentic flow skipped: nx detected this run is invoked from inside an AI agent.',
+      title: explicit
+        ? 'Agentic flow skipped: nx detected this run is invoked from inside an AI agent — the outer agent drives the migration. The explicit --agentic flag is ignored in this context.'
+        : 'Agentic flow skipped: nx detected this run is invoked from inside an AI agent.',
     });
     return { kind: 'inside-agent' };
   }
@@ -145,16 +148,24 @@ async function selectAgent(
     if (match) {
       return match;
     }
-    const installedList =
-      detected.length > 0
-        ? detected.map((d) => `  - ${d.displayName} (${d.id})`)
-        : ['  (none detected)'];
+    if (detected.length === 0) {
+      output.error({
+        title: `The agent "${explicitId}" was requested via --agentic but no supported AI agent is installed on this machine.`,
+        bodyLines: [
+          'Install one of the supported agents and re-run the migration:',
+          ...AGENT_DEFINITIONS.map(
+            (def: AgentDefinition) => `  - ${def.displayName}`
+          ),
+        ],
+      });
+      throw new Error(`The requested agent "${explicitId}" is not installed.`);
+    }
     output.error({
       title: `The agent "${explicitId}" was requested via --agentic but is not installed.`,
       bodyLines: [
         'Install the requested agent and re-run, or pass --agentic without an explicit agent to choose from installed ones.',
         'Currently installed agents:',
-        ...installedList,
+        ...detected.map((d) => `  - ${d.displayName} (${d.id})`),
       ],
     });
     throw new Error(`The requested agent "${explicitId}" is not installed.`);

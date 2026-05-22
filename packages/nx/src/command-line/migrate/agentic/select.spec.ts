@@ -17,6 +17,7 @@ jest.mock('../../../utils/output', () => ({
 
 import { isAiAgent } from '../../../native';
 import { prompt } from 'enquirer';
+import { output } from '../../../utils/output';
 import { detectInstalledAgents } from './detect-installed';
 import { resolveAgentic } from './select';
 import { DetectedInstalledAgent } from './types';
@@ -24,6 +25,8 @@ import { DetectedInstalledAgent } from './types';
 const mockIsAiAgent = isAiAgent as unknown as jest.Mock;
 const mockPrompt = prompt as unknown as jest.Mock;
 const mockDetect = detectInstalledAgents as unknown as jest.Mock;
+const mockOutputLog = output.log as unknown as jest.Mock;
+const mockOutputError = output.error as unknown as jest.Mock;
 
 function detected(
   id: 'claude-code' | 'codex' | 'opencode'
@@ -58,6 +61,8 @@ describe('resolveAgentic', () => {
     mockIsAiAgent.mockReturnValue(false);
     mockPrompt.mockReset();
     mockDetect.mockReset();
+    mockOutputLog.mockReset();
+    mockOutputError.mockReset();
     // Default to "no agents detected" — the few tests that exercise an enabled
     // flow override this with their own agent list.
     mockDetect.mockResolvedValue([]);
@@ -80,13 +85,34 @@ describe('resolveAgentic', () => {
   it('skips everything when running inside another AI agent (native detection)', async () => {
     mockIsAiAgent.mockReturnValue(true);
     const result = await resolveAgentic({
-      agentic: true,
+      agentic: undefined,
       migrations: [{ prompt: 'x.md' }],
     });
     expect(result).toEqual({ kind: 'inside-agent' });
     expect(mockDetect).not.toHaveBeenCalled();
     expect(mockPrompt).not.toHaveBeenCalled();
+    expect(mockOutputLog).toHaveBeenCalledTimes(1);
+    expect(mockOutputLog.mock.calls[0][0].title).not.toMatch(/explicit/i);
   });
+
+  it.each([
+    ['--agentic=true', true],
+    ['--agentic=<id>', 'claude-code'],
+  ])(
+    'notes the explicit %s flag is ignored when inside an outer AI agent',
+    async (_label, agentic) => {
+      mockIsAiAgent.mockReturnValue(true);
+      const result = await resolveAgentic({
+        agentic,
+        migrations: [{ prompt: 'x.md' }],
+      });
+      expect(result).toEqual({ kind: 'inside-agent' });
+      expect(mockOutputLog).toHaveBeenCalledTimes(1);
+      expect(mockOutputLog.mock.calls[0][0].title).toMatch(
+        /explicit --agentic flag is ignored/i
+      );
+    }
+  );
 
   it('returns disabled when --agentic=false, without detection or prompts', async () => {
     const result = await resolveAgentic({
@@ -224,22 +250,44 @@ describe('resolveAgentic', () => {
     expect(mockPrompt).not.toHaveBeenCalled();
   });
 
-  it.each([
-    ['other agents available', [detected('claude-code'), detected('codex')]],
-    ['no agents present', []],
-  ])(
-    'aborts when the explicit agent id is not installed (%s)',
-    async (_label, available) => {
-      mockDetect.mockResolvedValue(available);
-      await expect(
-        resolveAgentic({
-          agentic: 'opencode',
-          migrations: [{ prompt: 'x.md' }],
-        })
-      ).rejects.toThrow(/requested agent "opencode" is not installed/i);
-      expect(mockPrompt).not.toHaveBeenCalled();
-    }
-  );
+  it('aborts with an actionable list when --agentic=<id> is set but that agent is not among the other detected agents', async () => {
+    mockDetect.mockResolvedValue([detected('claude-code'), detected('codex')]);
+    await expect(
+      resolveAgentic({
+        agentic: 'opencode',
+        migrations: [{ prompt: 'x.md' }],
+      })
+    ).rejects.toThrow(/requested agent "opencode" is not installed/i);
+    expect(mockPrompt).not.toHaveBeenCalled();
+    const errArg = mockOutputError.mock.calls[0][0];
+    expect(errArg.title).toMatch(/is not installed\./);
+    // The remediation must offer the "drop the explicit flag" path when
+    // there ARE other agents to fall back to.
+    expect(errArg.bodyLines.join('\n')).toMatch(
+      /pass --agentic without an explicit agent/
+    );
+  });
+
+  it('aborts without offering the "drop the explicit flag" remediation when --agentic=<id> is set and NO agents are installed', async () => {
+    mockDetect.mockResolvedValue([]);
+    await expect(
+      resolveAgentic({
+        agentic: 'opencode',
+        migrations: [{ prompt: 'x.md' }],
+      })
+    ).rejects.toThrow(/requested agent "opencode" is not installed/i);
+    expect(mockPrompt).not.toHaveBeenCalled();
+    const errArg = mockOutputError.mock.calls[0][0];
+    expect(errArg.title).toMatch(/no supported AI agent is installed/i);
+    // The circular "pass --agentic without an explicit agent" remediation
+    // must not appear when there's nothing to fall back to.
+    expect(errArg.bodyLines.join('\n')).not.toMatch(
+      /pass --agentic without an explicit agent/
+    );
+    expect(errArg.bodyLines.join('\n')).toMatch(
+      /install one of the supported agents/i
+    );
+  });
 
   it('aborts when agentic is enabled but no agents are installed', async () => {
     mockDetect.mockResolvedValue([]);
