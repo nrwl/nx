@@ -79,7 +79,7 @@ common-init-steps: &common-init-steps
 
   - name: Restore .NET analyzer projects
     script: |
-      dotnet restore packages/dotnet/analyzer.Tests/MsbuildAnalyzer.Tests.csproj
+      dotnet restore nx.sln
 
   - name: Configure git metadata (needed for lerna smoke tests)
     script: |
