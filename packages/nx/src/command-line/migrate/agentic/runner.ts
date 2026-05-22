@@ -1,4 +1,4 @@
-import { ChildProcess, spawn, SpawnOptions } from 'child_process';
+import { ChildProcess, execSync, spawn, SpawnOptions } from 'child_process';
 import { prompt } from 'enquirer';
 import { extname } from 'path';
 import { readHandoff, waitForValidHandoff } from './handoff';
@@ -94,9 +94,41 @@ export async function runAgentic(
   } finally {
     handoffWatchAbort.abort();
     process.removeListener('SIGINT', swallowSigint);
+    // Some agent TUIs (notably Codex) clear ICANON/ECHO/OPOST when they
+    // take over the controlling tty and do not restore them on exit —
+    // particularly when we close them via SIGINT. With OPOST off, every
+    // subsequent `\n` we emit is a bare line-feed (no implicit CR) and the
+    // per-migration output renders as a column-skewed staircase. They also
+    // leave inline TUI cells painted on rows our wrapped log lines partially
+    // overwrite, so cells past the end of our text bleed through as
+    // unrelated fragments.
+    restoreTerminalAfterAgent();
   }
 
   return resolveFromHandoffOrPrompt(handoffFilePath);
+}
+
+function restoreTerminalAfterAgent(): void {
+  // OPOST is a POSIX termios flag; Windows consoles don't use it.
+  if (process.platform === 'win32') return;
+  if (!process.stdin.isTTY) return;
+  try {
+    // `stty sane` resets termios to a known cooked state via the kernel —
+    // independent of Node's libuv mode tracking (Node's setRawMode(false)
+    // short-circuits when libuv's per-handle mode is already NORMAL, even
+    // if the OS-level termios was changed out-of-band by the agent).
+    execSync('stty sane < /dev/tty', {
+      stdio: ['ignore', 'ignore', 'ignore'],
+    });
+    // `\r` → column 0 of the current row.
+    // `\x1B[J` → clear from cursor to end of screen. Wipes any agent TUI
+    //   cells on or below our row that our subsequent log lines won't
+    //   overwrite (e.g., a status footer past where our text wraps).
+    process.stdout.write('\r\x1B[J');
+  } catch {
+    // best-effort — if stty isn't on PATH or /dev/tty isn't accessible,
+    // the worst case is the pre-existing staircase + cell-bleed output.
+  }
 }
 
 /**
