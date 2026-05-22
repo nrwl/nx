@@ -83,10 +83,14 @@ jobs:
         id: brew-install-python-setuptools
         run: brew install python-setuptools
 
-      - name: Install packages
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm playwright install --with-deps
+      - name: Install pnpm packages
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright
+        run: pnpm playwright install --with-deps
+
+      - name: Restore .NET packages
+        run: dotnet restore nx.sln
 
       - name: Homebrew cache directory path
         if: ${{ matrix.os == 'macos-latest' }}
@@ -168,10 +172,14 @@ jobs:
           corepack enable
           corepack prepare --activate
 
-      - name: Install packages
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm playwright install --with-deps
+      - name: Install pnpm packages
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright
+        run: pnpm playwright install --with-deps
+
+      - name: Restore .NET packages
+        run: dotnet restore nx.sln
 
       - name: Cleanup
         if: ${{ matrix.os == 'ubuntu-latest' }}
