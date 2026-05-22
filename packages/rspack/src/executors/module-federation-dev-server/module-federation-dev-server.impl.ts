@@ -12,11 +12,13 @@ import { extname, join } from 'path';
 import devServerExecutor from '../dev-server/dev-server.impl';
 import { normalizeOptions, startRemotes } from './lib';
 import { ModuleFederationDevServerOptions } from './schema';
+import { warnRspackMfDevServerExecutorDeprecation } from '../../utils/module-federation-deprecation';
 
 export default async function* moduleFederationDevServer(
   schema: ModuleFederationDevServerOptions,
   context: ExecutorContext
 ): AsyncIterableIterator<{ success: boolean; baseUrl?: string }> {
+  warnRspackMfDevServerExecutorDeprecation();
   const options = normalizeOptions(schema);
   const currIter = options.static
     ? fileServerExecutor(

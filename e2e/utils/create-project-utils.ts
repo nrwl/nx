@@ -68,6 +68,7 @@ const nxPackages = [
   `@nx/react-native`,
   `@nx/expo`,
   '@nx/dotnet',
+  `@nx/module-federation`,
   `@nx/workspace`,
 ] as const;
 

@@ -1,0 +1,22 @@
+{
+  "name": "<%= projectName %>",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "rsbuild dev --port <%= port %>",
+    "build": "rsbuild build",
+    "preview": "rsbuild preview --port <%= port %>"
+  },
+  "dependencies": {
+    "react": "<%= versions.reactVersion %>",
+    "react-dom": "<%= versions.reactDomVersion %>"
+  },
+  "devDependencies": {
+    "@module-federation/enhanced": "<%= versions.moduleFederationEnhancedVersion %>",
+    "@rsbuild/core": "<%= versions.rsbuildCoreVersion %>",
+    "@rsbuild/plugin-react": "<%= versions.rsbuildPluginReactVersion %>",
+    "@types/react": "<%= versions.typesReactVersion %>",
+    "@types/react-dom": "<%= versions.typesReactDomVersion %>",
+    "typescript": "<%= versions.typescriptVersion %>"
+  }
+}

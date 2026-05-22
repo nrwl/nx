@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NxReactConsumer",
+  "title": "Create a Module Federation consumer",
+  "description": "Scaffold a React Module Federation consumer. The bundler is selected at generation time; remotes are registered dynamically at runtime from public/mf-remotes.json (no build-time remotes list).",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "directory": {
+      "type": "string",
+      "description": "Directory the consumer is generated in, e.g. `apps/my-consumer`. The project name is inferred from the trailing path segment.",
+      "alias": "dir",
+      "$default": { "$source": "argv", "index": 0 },
+      "x-prompt": "Which directory do you want to create the consumer in?"
+    },
+    "bundler": {
+      "type": "string",
+      "description": "Bundler used by the consumer. Final choice; cannot be switched later.",
+      "enum": ["vite", "rsbuild", "rspack"],
+      "default": "vite",
+      "x-prompt": {
+        "message": "Which bundler should the consumer use?",
+        "type": "list",
+        "items": [
+          { "value": "vite", "label": "Vite (default)" },
+          { "value": "rsbuild", "label": "Rsbuild" },
+          { "value": "rspack", "label": "Rspack" }
+        ]
+      }
+    },
+    "port": {
+      "type": "number",
+      "description": "Dev-server port the consumer listens on."
+    },
+    "providerNames": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Comma-separated list of provider project names to generate alongside this consumer. Each becomes an `@nx/react:provider` app sibling to the consumer and an entry in `public/mf-remotes.json`. Defaults to `[my-provider]` as a placeholder (no provider is generated until you pass the flag explicitly).",
+      "alias": "providers"
+    }
+  },
+  "required": ["directory"]
+}

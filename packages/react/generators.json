@@ -64,15 +64,25 @@
       "factory": "./src/generators/host/host",
       "schema": "./src/generators/host/schema.json",
       "x-type": "application",
-      "description": "Generate a host react application",
-      "aliases": ["consumer"]
+      "description": "Generate a host react application"
     },
     "remote": {
       "factory": "./src/generators/remote/remote",
       "schema": "./src/generators/remote/schema.json",
       "x-type": "application",
-      "description": "Generate a remote react application",
-      "aliases": ["producer"]
+      "description": "Generate a remote react application"
+    },
+    "consumer": {
+      "factory": "./src/generators/consumer/consumer",
+      "schema": "./src/generators/consumer/schema.json",
+      "x-type": "application",
+      "description": "Create a React Module Federation consumer that loads federated components dynamically via mf-remotes.json. Supports Vite (default), Rsbuild, and Rspack."
+    },
+    "provider": {
+      "factory": "./src/generators/provider/provider",
+      "schema": "./src/generators/provider/schema.json",
+      "x-type": "application",
+      "description": "Create a React Module Federation provider that exposes a federated component. Supports Vite (default), Rsbuild, and Rspack."
     },
     "cypress-component-configuration": {
       "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigGenerator",

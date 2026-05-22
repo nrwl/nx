@@ -11,11 +11,13 @@ import { existsSync } from 'fs';
 import { extname, join } from 'path';
 import { normalizeOptions, startRemotes } from './lib';
 import { ModuleFederationSsrDevServerOptions } from './schema';
+import { warnReactMfSsrDevServerExecutorDeprecation } from '../../utils/module-federation-deprecation';
 
 export default async function* moduleFederationSsrDevServer(
   ssrDevServerOptions: ModuleFederationSsrDevServerOptions,
   context: ExecutorContext
 ) {
+  warnReactMfSsrDevServerExecutorDeprecation();
   const options = normalizeOptions(ssrDevServerOptions);
   // TODO(JamesHenry): remove type assertion once the nx repo is updated to use https://github.com/nrwl/nx/pull/33095
   let iter: any = ssrDevServerExecutor(options, context as any);

@@ -1525,6 +1525,18 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1(supports-color@8.1.1)
 
+  e2e/module-federation:
+    dependencies:
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../../packages/devkit
+      '@nx/e2e-utils':
+        specifier: workspace:*
+        version: link:../utils
+      nx:
+        specifier: workspace:*
+        version: link:../../packages/nx
+
   e2e/next:
     dependencies:
       '@nx/e2e-utils':

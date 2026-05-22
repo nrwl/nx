@@ -1,0 +1,24 @@
+{
+  "name": "<%= projectName %>",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port <%= port %> --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --port <%= port %> --strictPort"
+  },
+  "dependencies": {
+    "@module-federation/runtime": "<%= versions.moduleFederationRuntimeVersion %>",
+    "react": "<%= versions.reactVersion %>",
+    "react-dom": "<%= versions.reactDomVersion %>"
+  },
+  "devDependencies": {
+    "@module-federation/vite": "<%= versions.moduleFederationVitePluginVersion %>",
+    "@types/react": "<%= versions.typesReactVersion %>",
+    "@types/react-dom": "<%= versions.typesReactDomVersion %>",
+    "@vitejs/plugin-react": "<%= versions.vitejsPluginReactVersion %>",
+    "typescript": "<%= versions.typescriptVersion %>",
+    "vite": "<%= versions.viteVersion %>"
+  }
+}
