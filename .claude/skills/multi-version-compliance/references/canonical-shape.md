@@ -227,22 +227,23 @@ export function versions(tree: Tree): VitestVersions {
 
 ### The `getInstalled<Pkg>Version(tree?)` helper
 
-Optional `tree` parameter — with tree, reads declared from `package.json` (normalizing `latest`/`next` to the fresh-install constant); without tree, routes through the shared `getInstalledPackageVersion` from `@nx/devkit/internal` (FS resolution via `getNxRequirePaths()`).
+Optional `tree` parameter — with tree, reads declared from `package.json` via `getDeclaredPackageVersion` (handles dist-tag normalization, semver cleaning); without tree, routes through `getInstalledPackageVersion` from `@nx/devkit/internal` (FS resolution via `getNxRequirePaths()`).
+
+**Do not open-code the tree-branch.** `getDeclaredPackageVersion` already centralizes the dist-tag list (`isNonSemverDistTag`) and the `clean(v) ?? coerce(v)?.version ?? null` chain (`normalizeSemver`). Local re-implementations drift when devkit's constants change. See `anti-patterns.md` §1.
 
 ```ts
+import { type Tree } from '@nx/devkit';
+import {
+  getDeclaredPackageVersion,
+  getInstalledPackageVersion,
+} from '@nx/devkit/internal';
+import { major } from 'semver';
+
 export function getInstalledVitestVersion(tree?: Tree): string | null {
   if (!tree) {
     return getInstalledPackageVersion('vitest');
   }
-
-  const installedVersion = getDependencyVersionFromPackageJson(tree, 'vitest');
-  if (!installedVersion) {
-    return null;
-  }
-  if (installedVersion === 'latest' || installedVersion === 'next') {
-    return clean(vitestVersion) ?? coerce(vitestVersion)?.version ?? null;
-  }
-  return clean(installedVersion) ?? coerce(installedVersion)?.version ?? null;
+  return getDeclaredPackageVersion(tree, 'vitest');
 }
 
 export function getInstalledVitestMajorVersion(tree?: Tree): number | null {
@@ -251,7 +252,15 @@ export function getInstalledVitestMajorVersion(tree?: Tree): number | null {
 }
 ```
 
-This is the cypress/playwright/vitest pattern. Reference: `packages/cypress/src/utils/versions.ts`.
+Reference: `packages/cypress/src/utils/versions.ts`, `packages/rspack/src/utils/version-utils.ts`, `packages/rsbuild/src/utils/version-utils.ts`.
+
+#### Dist-tag semantics — third arg (`latestKnownVersion`)
+
+`getDeclaredPackageVersion(tree, pkg, latestKnownVersion?)`'s third arg falls back to `normalizeSemver(latestKnownVersion)` whenever the declared range can't be normalized to semver — both "package missing from `package.json`" AND "package declared as a dist tag (`latest` / `next`)". The helper does not distinguish the two cases.
+
+**Default to omitting the third arg.** The wrapper returns `null` for both "missing" and "dist tag"; consumers that want `?? latestVersions` semantics should encode it at the call site (rspack/rsbuild precedent), not globally in the helper. Passing the third arg makes the helper claim the package is "installed at the fresh-install constant" even when nothing is declared — which silently disables init generators' "add the package" branches.
+
+When a consumer specifically needs to distinguish "missing" from "dist tag", use `getDependencyVersionFromPackageJson` from `@nx/devkit` to inspect the raw declared string.
 
 ## Generator entry points
 
