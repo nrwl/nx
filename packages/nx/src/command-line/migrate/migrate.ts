@@ -106,6 +106,7 @@ import {
   writePromptMigrationFiles,
 } from './prompt-files';
 import type { AgenticArg } from './agentic/select';
+import { DEFAULT_MIGRATION_COMMIT_PREFIX } from './command-object';
 import type { EnabledResolvedAgentic, ResolvedAgentic } from './agentic/types';
 import {
   commitCheckpointBeforeMigrations,
@@ -2404,13 +2405,19 @@ export function resolveCreateCommits(args: {
   createCommits: boolean | undefined;
   agenticKind: ResolvedAgentic['kind'];
   isGitRepo: boolean;
+  /**
+   * Whether `--commit-prefix` was given a non-default value. When commits
+   * end up disabled, the prefix has no effect — the warning copy below
+   * surfaces that so the user isn't silently misled.
+   */
+  commitPrefixIsCustom?: boolean;
 }): {
   effective: boolean;
   agenticHasDiffContext: boolean;
   warning?: string;
   error?: string;
 } {
-  const { createCommits, agenticKind, isGitRepo } = args;
+  const { createCommits, agenticKind, isGitRepo, commitPrefixIsCustom } = args;
 
   // Explicit `--create-commits` without git is a hard error — the user asked
   // for something we cannot deliver.
@@ -2429,7 +2436,10 @@ export function resolveCreateCommits(args: {
         effective: false,
         agenticHasDiffContext: false,
         warning:
-          "--no-create-commits was passed alongside --agentic. Without per-migration commits, the agent can't isolate the current migration's changes from earlier migrations in this run. Drop --no-create-commits for accurate per-migration review.",
+          "--no-create-commits was passed alongside --agentic. Without per-migration commits, the agent can't isolate the current migration's changes from earlier migrations in this run. Drop --no-create-commits for accurate per-migration review." +
+          (commitPrefixIsCustom
+            ? ' Note: the custom --commit-prefix value will have no effect because commits are disabled.'
+            : ''),
       };
     }
     // Without git we cannot soft-force commits the user didn't explicitly
@@ -2440,7 +2450,10 @@ export function resolveCreateCommits(args: {
         effective: false,
         agenticHasDiffContext: false,
         warning:
-          '`--agentic` enables per-migration commits by default, but the workspace is not a git repository. Continuing without commits — the agent will not receive per-file diff context. Run `git init` to enable.',
+          '`--agentic` enables per-migration commits by default, but the workspace is not a git repository. Continuing without commits — the agent will not receive per-file diff context. Run `git init` to enable.' +
+          (commitPrefixIsCustom
+            ? ' The custom --commit-prefix value will have no effect.'
+            : ''),
       };
     }
     return { effective: true, agenticHasDiffContext: true };
@@ -3048,6 +3061,7 @@ async function runMigrations(
     createCommits: shouldCreateCommits,
     agenticKind: agentic.kind,
     isGitRepo: isGitRepository(root),
+    commitPrefixIsCustom: commitPrefix !== DEFAULT_MIGRATION_COMMIT_PREFIX,
   });
   if (createCommitsError) {
     throw new Error(createCommitsError);

@@ -30,9 +30,9 @@ export const yargsInternalMigrateCommand: CommandModule = {
     ),
 };
 
-function withMigrationOptions(yargs: Argv) {
-  const defaultCommitPrefix = 'chore: [nx migration] ';
+export const DEFAULT_MIGRATION_COMMIT_PREFIX = 'chore: [nx migration] ';
 
+function withMigrationOptions(yargs: Argv) {
   return withVerbose(yargs)
     .positional('packageAndVersion', {
       describe: `The target package and version (e.g, @nx/workspace@16.0.0).`,
@@ -67,7 +67,7 @@ function withMigrationOptions(yargs: Argv) {
       describe:
         'Commit prefix to apply to the commit for each migration, when --create-commits is enabled.',
       type: 'string',
-      default: defaultCommitPrefix,
+      default: DEFAULT_MIGRATION_COMMIT_PREFIX,
     })
     .option('interactive', {
       describe:
@@ -122,7 +122,7 @@ function withMigrationOptions(yargs: Argv) {
         if (
           createCommits !== true &&
           !agenticMayEnableCommits &&
-          commitPrefix !== defaultCommitPrefix
+          commitPrefix !== DEFAULT_MIGRATION_COMMIT_PREFIX
         ) {
           throw new Error(
             'Error: Providing a custom commit prefix requires --create-commits to be enabled'

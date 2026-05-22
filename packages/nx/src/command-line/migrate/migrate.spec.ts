@@ -4155,6 +4155,39 @@ describe('Migration', () => {
         expect(result.error).toBeUndefined();
         expect(result.warning).toMatch(/not a git repository/);
       });
+
+      it('notes the dropped --commit-prefix in the agentic-without-git warning when the prefix is customized', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'enabled',
+          isGitRepo: false,
+          commitPrefixIsCustom: true,
+        });
+        expect(result.warning).toMatch(/--commit-prefix/);
+        expect(result.warning).toMatch(/no effect/);
+      });
+
+      it('notes the dropped --commit-prefix in the --no-create-commits + agentic warning when the prefix is customized', () => {
+        const result = resolveCreateCommits({
+          createCommits: false,
+          agenticKind: 'enabled',
+          isGitRepo: true,
+          commitPrefixIsCustom: true,
+        });
+        expect(result.warning).toMatch(/--no-create-commits/);
+        expect(result.warning).toMatch(/--commit-prefix/);
+        expect(result.warning).toMatch(/no effect/);
+      });
+
+      it('does not mention --commit-prefix when the prefix is unchanged', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'enabled',
+          isGitRepo: false,
+          commitPrefixIsCustom: false,
+        });
+        expect(result.warning).not.toMatch(/--commit-prefix/);
+      });
     });
 
     describe('resolveShouldRunValidation', () => {
