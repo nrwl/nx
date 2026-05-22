@@ -3,7 +3,7 @@
   "description": "Smart Monorepos · Fast Builds",
   "homepage": "https://nx.dev",
   "private": true,
-  "packageManager": "pnpm@10.28.2",
+  "packageManager": "pnpm@11.2.2",
   "scripts": {
     "build": "nx run-many --target build --parallel 8 --exclude nx-dev,tools-documentation-create-embeddings,nx-dev-util-ai",
     "commit": "czg",
