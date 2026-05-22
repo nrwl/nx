@@ -10,6 +10,13 @@ packages:
   - 'examples/angular-rspack/module-federation/host'
   - 'examples/angular-rspack/module-federation/remote'
   - 'packages/nx/native-packages/*'
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - nx
+  - '@nx/*'
+  - '@nrwl/*'
+  - create-nx-workspace
+  - create-nx-plugin
 overrides:
   minimist: '^1.2.6'
   underscore: '^1.12.1'
