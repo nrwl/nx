@@ -58,6 +58,9 @@ describe('resolveAgentic', () => {
     mockIsAiAgent.mockReturnValue(false);
     mockPrompt.mockReset();
     mockDetect.mockReset();
+    // Default to "no agents detected" — the few tests that exercise an enabled
+    // flow override this with their own agent list.
+    mockDetect.mockResolvedValue([]);
     setTty(true);
   });
 
@@ -105,6 +108,7 @@ describe('resolveAgentic', () => {
   });
 
   it('fires the up-front prompt when --agentic is undefined and prompt migrations are queued', async () => {
+    mockDetect.mockResolvedValue([detected('claude-code')]);
     mockPrompt.mockResolvedValueOnce({ enable: 'no' });
     const result = await resolveAgentic({
       agentic: undefined,
@@ -112,6 +116,16 @@ describe('resolveAgentic', () => {
     });
     expect(mockPrompt).toHaveBeenCalledTimes(1);
     expect(result.kind).toBe('disabled');
+  });
+
+  it('skips the up-front prompt when --agentic is undefined and no agents are installed', async () => {
+    mockDetect.mockResolvedValue([]);
+    const result = await resolveAgentic({
+      agentic: undefined,
+      migrations: [{ prompt: 'x.md' }],
+    });
+    expect(result.kind).toBe('disabled');
+    expect(mockPrompt).not.toHaveBeenCalled();
   });
 
   it('enables the agentic flow when the up-front prompt is accepted', async () => {
@@ -128,6 +142,7 @@ describe('resolveAgentic', () => {
   });
 
   it('renders the up-front prompt as an autocomplete with Yes/No choices and per-choice hints', async () => {
+    mockDetect.mockResolvedValue([detected('claude-code')]);
     mockPrompt.mockResolvedValueOnce({ enable: 'no' });
     await resolveAgentic({
       agentic: undefined,
@@ -154,6 +169,7 @@ describe('resolveAgentic', () => {
   });
 
   it('singularizes the "Yes" hint when only one prompt migration is queued', async () => {
+    mockDetect.mockResolvedValue([detected('claude-code')]);
     mockPrompt.mockResolvedValueOnce({ enable: 'no' });
     await resolveAgentic({
       agentic: undefined,

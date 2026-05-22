@@ -34,13 +34,26 @@ export async function resolveAgentic(
   }
 
   const isInteractive = !!process.stdin.isTTY && !!process.stdout.isTTY;
-  const { enabled, explicitId } = await resolveFlag(input, isInteractive);
+
+  // Skip detection for the one case where the result is unused: explicit
+  // `--agentic=false`. For every other path (explicit enable, explicit id, or
+  // undefined-with-prompt) we either need the detection result to pick/verify
+  // an agent or to decide whether the up-front prompt is even worth asking.
+  if (input.agentic === false) {
+    return { kind: 'disabled' };
+  }
+
+  const detected = await detectInstalledAgents(AGENT_DEFINITIONS);
+  const { enabled, explicitId } = await resolveFlag(
+    input,
+    isInteractive,
+    detected
+  );
 
   if (!enabled) {
     return { kind: 'disabled' };
   }
 
-  const detected = await detectInstalledAgents(AGENT_DEFINITIONS);
   const selected = await selectAgent(detected, explicitId, isInteractive);
 
   return { kind: 'enabled', selectedAgent: selected };
@@ -48,7 +61,8 @@ export async function resolveAgentic(
 
 async function resolveFlag(
   input: ResolveAgenticInput,
-  isInteractive: boolean
+  isInteractive: boolean,
+  detected: DetectedInstalledAgent[]
 ): Promise<{ enabled: boolean; explicitId?: AgentId }> {
   if (input.agentic === true) {
     requireInteractiveOrAbort(isInteractive);
@@ -58,15 +72,17 @@ async function resolveFlag(
     requireInteractiveOrAbort(isInteractive);
     return { enabled: true, explicitId: input.agentic };
   }
-  if (input.agentic === false) {
-    return { enabled: false };
-  }
-  // undefined — fire the up-front prompt only when we have a TTY and there is
-  // something agentic-eligible queued.
+  // undefined — fire the up-front prompt only when we have a TTY, something
+  // agentic-eligible is queued, and at least one agent is installed. Without
+  // an installed agent the user can't say "Yes" meaningfully — asking would
+  // walk them into a dead end.
   if (!isInteractive) {
     return { enabled: false };
   }
   if (!shouldPromptForAgentic(input.migrations)) {
+    return { enabled: false };
+  }
+  if (detected.length === 0) {
     return { enabled: false };
   }
   return { enabled: await firePromptForAgentic(input.migrations) };
