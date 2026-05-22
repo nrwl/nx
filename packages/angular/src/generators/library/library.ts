@@ -60,7 +60,7 @@ export async function libraryGenerator(
   const project = await addProject(tree, libraryOptions);
 
   createFiles(tree, options, project);
-  await addUnitTestRunner(tree, libraryOptions);
+  const unitTestRunnerTask = await addUnitTestRunner(tree, libraryOptions);
   updateTsConfigFiles(tree, libraryOptions);
   updateNpmScopeIfBuildableOrPublishable(tree, libraryOptions);
   setGeneratorDefaults(tree, options);
@@ -101,7 +101,10 @@ export async function libraryGenerator(
     await formatFiles(tree);
   }
 
-  const tasks: GeneratorCallback[] = [() => installPackagesTask(tree)];
+  const tasks: GeneratorCallback[] = [
+    unitTestRunnerTask,
+    () => installPackagesTask(tree),
+  ];
   if (libraryOptions.publishable) {
     tasks.push(await releaseTasks(tree));
   }
@@ -113,7 +116,7 @@ export async function libraryGenerator(
 async function addUnitTestRunner(
   host: Tree,
   options: NormalizedSchema['libraryOptions']
-) {
+): Promise<GeneratorCallback> {
   const zoneless =
     getDependencyVersionFromPackageJson(host, 'zone.js') === null;
 
@@ -127,17 +130,16 @@ async function addUnitTestRunner(
         runtimeTsconfigFileName: 'tsconfig.lib.json',
         zoneless,
       });
-      break;
+      return () => {};
     case UnitTestRunner.VitestAngular:
-      await addVitestAngular(host, {
+      return addVitestAngular(host, {
         name: options.name,
         projectRoot: options.projectRoot,
         skipPackageJson: options.skipPackageJson,
         useNxUnitTestRunnerExecutor: true,
       });
-      break;
     case UnitTestRunner.VitestAnalog:
-      await addVitestAnalog(host, {
+      return addVitestAnalog(host, {
         name: options.name,
         projectRoot: options.projectRoot,
         skipFormat: options.skipFormat,
@@ -145,7 +147,8 @@ async function addUnitTestRunner(
         strict: options.strict,
         zoneless,
       });
-      break;
+    default:
+      return () => {};
   }
 }
 

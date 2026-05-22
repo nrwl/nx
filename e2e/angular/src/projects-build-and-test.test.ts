@@ -130,6 +130,26 @@ describe('Angular Projects - Build and Test', () => {
     }
   }, 1000000);
 
+  it('should successfully generate and run tests for vitest-angular', async () => {
+    // Workspace default unitTestRunner is vitest-analog (set when app1
+    // was generated with --bundler=webpack via setGeneratorDefaults
+    // during projects-setup), so opt into vitest-angular explicitly.
+    // - App: --bundler=esbuild required (uses @angular/build:unit-test).
+    // - Lib: --buildable required (uses @nx/angular:unit-test against
+    //   the built output).
+    const app = uniq('vitest-angular-app');
+    runCLI(
+      `generate @nx/angular:app ${app} --bundler=esbuild --unitTestRunner=vitest-angular --no-interactive`
+    );
+
+    const lib = uniq('vitest-angular-lib');
+    runCLI(
+      `generate @nx/angular:lib ${lib} --buildable --unitTestRunner=vitest-angular --no-interactive`
+    );
+
+    runCLI(`run-many --target test --projects=${app},${lib}`);
+  }, 1000000);
+
   it('should successfully work with playwright for e2e tests', async () => {
     const app = uniq('app');
 
