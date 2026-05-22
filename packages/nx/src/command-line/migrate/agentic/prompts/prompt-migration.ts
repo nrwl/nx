@@ -1,3 +1,5 @@
+import { renderKeyMultilineValue } from './shared-rendering';
+
 export interface PromptMigrationContext {
   package: string;
   name: string;
@@ -48,14 +50,4 @@ export function buildPromptMigrationUserPrompt(
   );
 
   return lines.join('\n');
-}
-
-// YAML block-scalar form (`key: |`) for multi-line values inside `<migration>`,
-// so embedded newlines don't break the inner block's visual grouping.
-function renderKeyMultilineValue(key: string, value: string): string[] {
-  const valueLines = value.split('\n');
-  if (valueLines.length === 1) {
-    return [`${key}: ${value}`];
-  }
-  return [`${key}: |`, ...valueLines.map((line) => `  ${line}`)];
 }
