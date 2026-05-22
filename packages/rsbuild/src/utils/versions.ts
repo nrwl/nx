@@ -17,7 +17,7 @@ type RsbuildVersionMap = {
 };
 
 export const latestRsbuildVersions: RsbuildVersionMap = {
-  rsbuildVersion: '2.0.6',
+  rsbuildVersion: '2.0.7',
   rsbuildPluginReactVersion: '2.0.0',
   // plugin-vue and plugin-sass still publish 1.x but declare compatibility
   // with rsbuild ^1.0.0 || ^2.0.0-0, so the same range works on both
