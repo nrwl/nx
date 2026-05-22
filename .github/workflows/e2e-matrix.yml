@@ -85,6 +85,9 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm playwright install --with-deps
 
+      - name: Restore .NET packages
+        run: dotnet restore nx.sln
+
       - name: Homebrew cache directory path
         if: ${{ matrix.os == 'macos-latest' }}
         id: homebrew-cache-dir-path
@@ -169,6 +172,9 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm playwright install --with-deps
+
+      - name: Restore .NET packages
+        run: dotnet restore nx.sln
 
       - name: Cleanup
         if: ${{ matrix.os == 'ubuntu-latest' }}
