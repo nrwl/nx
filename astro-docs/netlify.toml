@@ -16,6 +16,7 @@
 [build.environment]
 NX_GRADLE_DISABLE = "true"
 NX_MAVEN_DISABLE = "true"
+NX_DOTNET_DISABLE = "true"
 
 # Edge functions are auto-discovered from netlify/edge-functions/
 # Path configuration is in each function's inline `config` export
