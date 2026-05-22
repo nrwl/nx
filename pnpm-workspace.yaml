@@ -11,8 +11,9 @@ packages:
   - 'examples/angular-rspack/module-federation/remote'
   - 'packages/nx/native-packages/*'
 overrides:
+  handlebars: '4.7.9'
   minimist: '^1.2.6'
-  underscore: '^1.12.1'
+  underscore: '^1.13.8'
 onlyBuiltDependencies:
   - '@nestjs/core'
   - 'nx'
@@ -144,3 +145,21 @@ catalogs:
     tailwind-merge: '^2.4.0'
   vite:
     vitest: '^4.0.0'
+allowBuilds:
+  '@nestjs/core': true
+  '@parcel/watcher': false
+  '@swc/core': false
+  '@tailwindcss/oxide': false
+  core-js: false
+  core-js-pure: false
+  cypress: false
+  detox: false
+  dtrace-provider: false
+  es5-ext: false
+  esbuild: false
+  less: false
+  lmdb: false
+  msgpackr-extract: false
+  nx: true
+  sharp: false
+  unrs-resolver: false

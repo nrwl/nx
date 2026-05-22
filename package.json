@@ -374,12 +374,6 @@
     "tslib": "catalog:typescript",
     "webpack-cli": "^5.1.4"
   },
-  "pnpm": {
-    "overrides": {
-      "handlebars": "4.7.9",
-      "underscore": "^1.13.8"
-    }
-  },
   "nx": {
     "includedScripts": [
       "lint-pnpm-lock",
