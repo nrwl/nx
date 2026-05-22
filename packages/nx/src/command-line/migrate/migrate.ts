@@ -2807,11 +2807,7 @@ export async function executeMigrations(
     nextSteps: combinedNextSteps,
     skippedPrompts,
     migrationEmittedNextSteps,
-    completedSuccessfullyCount: completedSuccessfully.length,
     committedShasCount,
-    lastCompletedMigration:
-      completedSuccessfully[completedSuccessfully.length - 1] ?? null,
-    lastCommittedSha,
   };
 }
 
