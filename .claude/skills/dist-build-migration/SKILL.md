@@ -546,7 +546,10 @@ const { foo, bar } = await import('@nx/eslint/internal');
 ensurePackage('@nx/eslint', nxVersion);
 // `require()` honors Module._initPaths (which ensurePackage updates); ESM
 // dynamic `import()` doesn't, so it can't see the temp install.
-const { foo, bar }: typeof import('@nx/eslint/internal') = require('@nx/eslint/internal');
+const {
+  foo,
+  bar,
+}: typeof import('@nx/eslint/internal') = require('@nx/eslint/internal');
 ```
 
 Collapse multiple successive `await import()`s of the same module into one `require()` destructuring while you're at it.
