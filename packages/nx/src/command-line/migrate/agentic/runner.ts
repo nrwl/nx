@@ -119,6 +119,7 @@ function restoreTerminalAfterAgent(): void {
     // if the OS-level termios was changed out-of-band by the agent).
     execSync('stty sane < /dev/tty', {
       stdio: ['ignore', 'ignore', 'ignore'],
+      windowsHide: true,
     });
     // `\r` → column 0 of the current row.
     // `\x1B[J` → clear from cursor to end of screen. Wipes any agent TUI
