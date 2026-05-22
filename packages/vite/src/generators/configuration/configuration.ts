@@ -153,7 +153,7 @@ export async function viteConfigurationGeneratorInternal(
           includeLib: schema.includeLib,
           includeVitest: schema.includeVitest,
           inSourceTests: schema.inSourceTests,
-          rollupOptionsExternal: [
+          rolldownOptionsExternal: [
             "'react'",
             "'react-dom'",
             "'react/jsx-runtime'",
