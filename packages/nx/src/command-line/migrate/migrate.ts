@@ -2559,6 +2559,19 @@ export async function executeMigrations(
       ? 'deferred to the AI agent driving this run'
       : 'agentic flow disabled';
 
+  // Hoisted once so call sites stay tight and the bookkeeping invariants are
+  // enforced in one place: every dep-install boundary goes through the same
+  // installer, and every commit feeds both the tally and the failure-recap
+  // anchor (a new commit site that forgets to track these silently corrupts
+  // both the end-of-run summary and the recap).
+  const installDepsIfChanged = () => changedDepInstaller.installDepsIfChanged();
+  const recordCommit = (sha: string | null): void => {
+    if (sha) {
+      lastCommittedSha = sha;
+      committedShasCount++;
+    }
+  };
+
   const totalMigrations = sortedMigrations.length;
   let migrationIndex = 0;
   for (const m of sortedMigrations) {
@@ -2572,19 +2585,16 @@ export async function executeMigrations(
             m,
             agenticRun.agentic,
             agenticRun.runDir,
-            () => changedDepInstaller.installDepsIfChanged()
+            installDepsIfChanged
           );
           const sha = await commitMigrationIfRequested(
             root,
             m,
             shouldCreateCommits,
             commitPrefix,
-            () => changedDepInstaller.installDepsIfChanged()
+            installDepsIfChanged
           );
-          if (sha) {
-            lastCommittedSha = sha;
-            committedShasCount++;
-          }
+          recordCommit(sha);
           logAgenticSuccessOutcome(
             stepResult.ambiguous ? 'Marked complete by user' : 'Applied',
             sha,
@@ -2605,7 +2615,7 @@ export async function executeMigrations(
             isVerbose,
             /* shouldCreateCommits: */ false,
             commitPrefix,
-            () => changedDepInstaller.installDepsIfChanged(),
+            installDepsIfChanged,
             /* handleInstallDeps: */ false,
             /* captureGeneratorOutput: */ !!agenticRun
           );
@@ -2616,13 +2626,13 @@ export async function executeMigrations(
           // Install any deps the deterministic phase added/bumped before the
           // agent runs — the prompt half may depend on them being present in
           // node_modules.
-          await changedDepInstaller.installDepsIfChanged();
+          await installDepsIfChanged();
           const stepResult = await agenticRun.runStep(
             root,
             m,
             agenticRun.agentic,
             agenticRun.runDir,
-            () => changedDepInstaller.installDepsIfChanged(),
+            installDepsIfChanged,
             {
               implContext: {
                 logs,
@@ -2637,12 +2647,9 @@ export async function executeMigrations(
             m,
             shouldCreateCommits,
             commitPrefix,
-            () => changedDepInstaller.installDepsIfChanged()
+            installDepsIfChanged
           );
-          if (sha) {
-            lastCommittedSha = sha;
-            committedShasCount++;
-          }
+          recordCommit(sha);
           logAgenticSuccessOutcome(
             stepResult.ambiguous ? 'Marked complete by user' : 'Applied',
             sha,
@@ -2671,11 +2678,10 @@ export async function executeMigrations(
             m,
             shouldCreateCommits,
             commitPrefix,
-            () => changedDepInstaller.installDepsIfChanged()
+            installDepsIfChanged
           );
+          recordCommit(sha);
           if (sha) {
-            lastCommittedSha = sha;
-            committedShasCount++;
             logger.info(pc.dim(`Committed as ${sha}`));
           }
         }
@@ -2701,27 +2707,24 @@ export async function executeMigrations(
             ? false
             : shouldCreateCommits,
           commitPrefix,
-          () => changedDepInstaller.installDepsIfChanged(),
+          installDepsIfChanged,
           /* handleInstallDeps: */ false,
           /* captureGeneratorOutput: */ !!validationRun
         );
         migrationEmittedNextSteps.push(...nextSteps);
-        if (committedSha) {
-          lastCommittedSha = committedSha;
-          committedShasCount++;
-        }
+        recordCommit(committedSha);
         const canRunValidation = !!validationRun && changes.length > 0;
 
         if (canRunValidation) {
           // Install any deps the deterministic phase added/bumped before the
           // validation agent runs — the agent may run tasks that need them.
-          await changedDepInstaller.installDepsIfChanged();
+          await installDepsIfChanged();
           const stepResult = await validationRun.runStep(
             root,
             m,
             validationRun.agentic,
             validationRun.runDir,
-            () => changedDepInstaller.installDepsIfChanged(),
+            installDepsIfChanged,
             {
               implContext: {
                 logs,
@@ -2737,12 +2740,9 @@ export async function executeMigrations(
             m,
             shouldCreateCommits,
             commitPrefix,
-            () => changedDepInstaller.installDepsIfChanged()
+            installDepsIfChanged
           );
-          if (sha) {
-            lastCommittedSha = sha;
-            committedShasCount++;
-          }
+          recordCommit(sha);
           logAgenticSuccessOutcome(
             stepResult.ambiguous
               ? 'Marked complete by user'
@@ -2785,7 +2785,7 @@ export async function executeMigrations(
   }
 
   if (!shouldCreateCommits) {
-    await changedDepInstaller.installDepsIfChanged();
+    await installDepsIfChanged();
   }
 
   if (changedDepInstaller.skippedInstall) {
