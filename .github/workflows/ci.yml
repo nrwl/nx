@@ -316,6 +316,10 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm playwright install --with-deps
 
+      - name: Restore .NET packages
+        if: steps.check-changes.outputs.has_changes == 'true'
+        run: dotnet restore nx.sln
+
       - name: Run E2E Tests for macOS
         if: steps.check-changes.outputs.has_changes == 'true'
         run: |
