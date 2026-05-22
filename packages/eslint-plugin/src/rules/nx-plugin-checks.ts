@@ -12,10 +12,12 @@ import {
 import { loadTsFile, requireWithTsconfigFallback } from '@nx/js/internal';
 import {
   ImplementationResolutionError,
+  PromptResolutionError,
   resolveImplementation,
+  resolvePrompt,
   resolveSchema,
   SchemaResolutionError,
-} from 'nx/src/config/schema-utils';
+} from '@nx/devkit/internal';
 import * as path from 'path';
 import { valid } from 'semver';
 import { readProjectGraph } from '../utils/project-graph-utils';
@@ -362,7 +364,7 @@ export function validateEntry(
     validateImplementationNode(implementationNode, key, context, projects);
   }
   if (mode === 'migration' && promptNode) {
-    validatePromptNode(promptNode, key, context, projects);
+    validatePromptNode(promptNode, key, context);
   }
 
   if (mode === 'migration') {
@@ -475,8 +477,7 @@ export function validateImplementationNode(
 export function validatePromptNode(
   promptNode: AST.JSONProperty,
   key: string,
-  context: TSESLint.RuleContext<MessageIds, Options>,
-  projects: Record<string, ProjectConfiguration>
+  context: TSESLint.RuleContext<MessageIds, Options>
 ) {
   if (
     promptNode.value.type !== 'JSONLiteral' ||
@@ -493,14 +494,12 @@ export function validatePromptNode(
   }
 
   try {
-    resolveSchema(
+    resolvePrompt(
       promptNode.value.value,
-      path.dirname(context.filename ?? context.getFilename()),
-      context.filename ?? context.getFilename(),
-      projects
+      path.dirname(context.filename ?? context.getFilename())
     );
   } catch (e) {
-    if (e instanceof SchemaResolutionError) {
+    if (e instanceof PromptResolutionError) {
       context.report({
         messageId: 'invalidPromptPath',
         data: {

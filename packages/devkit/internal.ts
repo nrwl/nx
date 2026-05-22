@@ -4,6 +4,12 @@ export {
   PluginCache,
   safeWriteFileCache,
   emitPluginWorkerLog,
+  resolveImplementation,
+  resolveSchema,
+  ImplementationResolutionError,
+  SchemaResolutionError,
+  resolvePrompt,
+  PromptResolutionError,
 } from 'nx/src/devkit-internals';
 
 // Generators
