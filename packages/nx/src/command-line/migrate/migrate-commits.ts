@@ -32,22 +32,28 @@ export async function commitMigrationIfRequested(
 ): Promise<string | null> {
   if (!shouldCreateCommits) return null;
   await installDepsIfChanged();
-  const commitMessage = `${commitPrefix}${migration.name}`;
-  // See file-level note: compare HEAD before vs after to detect a real commit.
-  // Otherwise we'd report `Committed as <priorSha>` for a no-op step.
-  const before = getLatestCommitSha(root);
-  let after: string | null = null;
-  try {
-    after = commitChanges(commitMessage, root);
-  } catch (e: any) {
-    logger.info(pc.red(e.message));
+  // A migration may legitimately produce no commit-worthy delta — generator
+  // wrote only to gitignored paths, or the prompt half made no change. Detect
+  // that up front so we can log it neutrally instead of as a red error.
+  if (!hasUncommittedChanges(root)) {
+    logger.info(pc.dim(`- No changes to commit for ${migration.name}.`));
     return null;
   }
+  const commitMessage = `${commitPrefix}${migration.name}`;
+  // See file-level note: `commitChanges` swallows errors when given a
+  // directory, so compare HEAD before vs after to detect a real commit.
+  const before = getLatestCommitSha(root);
+  const after = commitChanges(commitMessage, root);
   if (after && after !== before) {
     return after;
   }
+  // There were stageable changes but HEAD didn't advance — `git commit`
+  // failed (e.g. hook rejection, missing user.email/user.name) and the
+  // failure was swallowed by `commitChanges`.
   logger.info(
-    pc.red(`A commit could not be created/retrieved for an unknown reason`)
+    pc.red(
+      `Could not create a commit for ${migration.name}. Check that user.email/user.name are configured and that commit hooks are not rejecting the commit.`
+    )
   );
   return null;
 }
