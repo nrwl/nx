@@ -147,7 +147,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         includeLib: true,
         includeVitest: options.unitTestRunner === 'vitest',
         inSourceTests: options.inSourceTests,
-        rollupOptionsExternal: [
+        rolldownOptionsExternal: [
           "'react'",
           "'react-dom'",
           "'react/jsx-runtime'",
@@ -222,7 +222,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         includeLib: true,
         includeVitest: true,
         inSourceTests: options.inSourceTests,
-        rollupOptionsExternal: [
+        rolldownOptionsExternal: [
           "'react'",
           "'react-dom'",
           "'react/jsx-runtime'",

@@ -169,7 +169,8 @@
     },
     {
       "target": "lint",
-      "dependsOn": ["build-native", "^build-native"],
+      "dependsOn": ["build-native", "^build-native", "build"],
+      "inputs": ["...", { "dependentTasksOutputFiles": "**/*.{js,json,md}" }],
       "options": {
         "max-warnings": 5
       }
@@ -402,7 +403,7 @@
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 3234,
+  "bust": 3235,
   "defaultBase": "master",
   "sync": {
     "applyChanges": true

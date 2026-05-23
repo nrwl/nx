@@ -59,6 +59,9 @@
     },
     "20.7.1-beta.0": {
       "version": "20.7.1-beta.0",
+      "requires": {
+        "@swc/cli": ">=0.3.0 <0.6.0"
+      },
       "packages": {
         "@swc/cli": {
           "version": "~0.6.0",
@@ -99,10 +102,6 @@
           "version": "^1.15.5",
           "alwaysAddToPackageJson": false
         },
-        "@swc/cli": {
-          "version": "^0.7.10",
-          "alwaysAddToPackageJson": false
-        },
         "@swc/helpers": {
           "version": "^0.5.18",
           "alwaysAddToPackageJson": false
@@ -113,11 +112,35 @@
         }
       }
     },
+    "22.5.0-swc-cli": {
+      "version": "22.5.0-beta.1",
+      "requires": {
+        "@swc/cli": ">=0.6.0 <0.7.0"
+      },
+      "packages": {
+        "@swc/cli": {
+          "version": "^0.7.10",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
     "22.6.4": {
       "version": "22.6.4",
       "packages": {
         "verdaccio": {
           "version": "^6.3.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.0.0-swc-cli": {
+      "version": "23.0.0-beta.17",
+      "requires": {
+        "@swc/cli": ">=0.7.0 <0.8.0"
+      },
+      "packages": {
+        "@swc/cli": {
+          "version": "~0.8.0",
           "alwaysAddToPackageJson": false
         }
       }

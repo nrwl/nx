@@ -348,6 +348,46 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
    * to running from the package root directly), then special attention should be paid to the fact that npm/pnpm publish will nest its
    * JSON output under the name of the package in that case (and it would need to be handled below).
    */
+  return runPublish({
+    pm,
+    options,
+    context,
+    packageRoot,
+    packageJson,
+    registry,
+    registryConfigKey,
+    tag,
+    isDryRun,
+    isNpmInstalled,
+  });
+}
+
+interface RunPublishContext {
+  pm: ReturnType<typeof detectPackageManager>;
+  options: PublishExecutorSchema;
+  context: ExecutorContext;
+  packageRoot: string;
+  packageJson: any;
+  registry: string;
+  registryConfigKey: string;
+  tag: string;
+  isDryRun: boolean;
+  isNpmInstalled: boolean;
+}
+
+function runPublish(ctx: RunPublishContext): { success: boolean } {
+  const {
+    pm,
+    options,
+    context,
+    packageRoot,
+    packageJson,
+    registry,
+    registryConfigKey,
+    tag,
+    isDryRun,
+    isNpmInstalled,
+  } = ctx;
   const pmCommand = getPackageManagerCommand(pm);
   const publishCommandSegments = [
     pmCommand.publish(packageRoot, registry, registryConfigKey, tag),
@@ -448,9 +488,25 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
     try {
       // bun publish does not support outputting JSON, so we cannot perform any further processing
       if (pm === 'bun') {
+        const bunStderr = err.stderr?.toString() || '';
+        const bunStdout = err.stdout?.toString() || '';
+        // bun publish does not yet support npm's OIDC trusted publishing flow. If the failure
+        // looks like an authentication error and npm is available, retry via npm to recover.
+        // Other failures (e.g. version conflict, 403) would produce the same error from npm,
+        // so we surface bun's error directly instead.
+        const looksLikeAuthError =
+          /missing authentication|bunx npm login|unauthorized|\b401\b/i.test(
+            bunStderr + bunStdout
+          );
+        if (isNpmInstalled && looksLikeAuthError) {
+          console.warn(
+            `bun publish failed with an authentication error; falling back to npm publish (bun does not support npm OIDC trusted publishing).`
+          );
+          return runPublish({ ...ctx, pm: 'npm' });
+        }
         console.error(`bun publish error:`);
-        console.error(err.stderr?.toString() || '');
-        console.error(err.stdout?.toString() || '');
+        console.error(bunStderr);
+        console.error(bunStdout);
         return {
           success: false,
         };

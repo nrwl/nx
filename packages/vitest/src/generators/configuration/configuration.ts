@@ -202,7 +202,7 @@ getTestBed().initTestEnvironment(
           includeLib: getProjectType(tree, root, projectType) === 'library',
           includeVitest: true,
           inSourceTests: schema.inSourceTests,
-          rollupOptionsExternal: [
+          rolldownOptionsExternal: [
             "'react'",
             "'react-dom'",
             "'react/jsx-runtime'",

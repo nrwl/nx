@@ -1,6 +1,6 @@
 import {
   getNamedInputs,
-  calculateHashForCreateNodes,
+  calculateHashesForCreateNodes,
   PluginCache,
 } from '@nx/devkit/internal';
 import {
@@ -38,17 +38,26 @@ export const createNodes: CreateNodesV2<DetoxPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+    const normalizedOptions = normalizeOptions(options);
 
     try {
+      const projectRoots = configFiles.map((f) => dirname(f));
+      const projectHashes = await calculateHashesForCreateNodes(
+        projectRoots,
+        normalizedOptions,
+        context,
+        projectRoots.map(() => [lockFileName])
+      );
+
       return await createNodesFromFiles(
-        (configFile, options, context) =>
+        (configFile, _, ctx, idx) =>
           createNodesInternal(
             configFile,
-            options,
-            context,
+            normalizedOptions,
+            ctx,
             targetsCache,
             pmc,
-            lockFileName
+            projectHashes[idx]
           ),
         configFiles,
         options,
@@ -68,17 +77,9 @@ async function createNodesInternal(
   context: CreateNodesContextV2,
   targetsCache: PluginCache<DetoxTargets>,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  lockFileName: string
+  hash: string
 ): Promise<CreateNodesResult> {
-  options = normalizeOptions(options);
   const projectRoot = dirname(configFile);
-
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [lockFileName]
-  );
 
   if (!targetsCache.has(hash)) {
     targetsCache.set(

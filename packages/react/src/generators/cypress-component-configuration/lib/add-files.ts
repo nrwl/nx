@@ -1,4 +1,4 @@
-import type { FoundTarget } from '@nx/cypress/src/utils/find-target-options';
+import type { FoundTarget } from '@nx/cypress/internal';
 import {
   addDependenciesToPackageJson,
   joinPathFragments,
@@ -21,9 +21,9 @@ export async function addFiles(
 ) {
   // must dynamicaly import to prevent packages not using cypress from erroring out
   // when importing react
-  const { addMountDefinition } = await import('@nx/cypress/src/utils/config');
+  const { addMountDefinition } = await import('@nx/cypress/internal');
   const { getInstalledCypressMajorVersion } = await import(
-    '@nx/cypress/src/utils/versions'
+    '@nx/cypress/internal'
   );
   const installedCypressMajorVersion = getInstalledCypressMajorVersion(tree);
 

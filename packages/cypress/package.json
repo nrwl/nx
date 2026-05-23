@@ -2,6 +2,15 @@
   "name": "@nx/cypress",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "!dist/spec",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
   "description": "The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.",
   "repository": {
     "type": "git",
@@ -21,46 +30,45 @@
     "Front-end",
     "Testing"
   ],
-  "main": "./index.js",
-  "type": "commonjs",
-  "types": "./index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "plugin": [
+        "dist/plugin.d.ts"
+      ],
+      "plugins/cypress-preset": [
+        "dist/plugins/cypress-preset.d.ts"
+      ],
+      "internal": [
+        "dist/internal.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
-      "types": "./index.d.ts",
-      "default": "./index.js"
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./package.json": "./package.json",
-    "./package": "./package.json",
+    "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
-    "./migrations.json": "./migrations.json",
-    "./generators": "./generators.json",
-    "./executors": "./executors.json",
-    "./migrations": "./migrations.json",
     "./plugin": {
-      "types": "./plugin.d.ts",
-      "default": "./plugin.js"
+      "@nx/nx-source": "./plugin.ts",
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
     },
-    "./plugin.js": {
-      "types": "./plugin.d.ts",
-      "default": "./plugin.js"
+    "./plugins/cypress-preset": {
+      "@nx/nx-source": "./plugins/cypress-preset.ts",
+      "types": "./dist/plugins/cypress-preset.d.ts",
+      "default": "./dist/plugins/cypress-preset.js"
     },
-    "./plugins/*": {
-      "types": "./plugins/*.d.ts",
-      "default": "./plugins/*.js"
-    },
-    "./plugins/*.js": {
-      "types": "./plugins/*.d.ts",
-      "default": "./plugins/*.js"
-    },
-    "./src/*/schema.json": "./src/*/schema.json",
-    "./src/*": {
-      "types": "./src/*.d.ts",
-      "default": "./src/*.js"
-    },
-    "./src/*.js": {
-      "types": "./src/*.d.ts",
-      "default": "./src/*.js"
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
     }
   },
   "author": "Victor Savkin",

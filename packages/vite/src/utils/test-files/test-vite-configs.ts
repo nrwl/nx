@@ -161,7 +161,7 @@ export const hasEverything = `
           // Don't forget to update your package.json as well.
           formats: ['es'],
         },
-        rollupOptions: {
+        rolldownOptions: {
           // External packages that should not be bundled into your library.
           external: ['react', 'react-dom', 'react/jsx-runtime'],
         },
@@ -188,7 +188,7 @@ export const buildOption = `
         // Don't forget to update your package.json as well.
         formats: ['es']
       },
-      rollupOptions: {
+      rolldownOptions: {
         // External packages that should not be bundled into your library.
         external: ['react', 'react-dom', 'react/jsx-runtime']
       }
@@ -200,7 +200,7 @@ export const buildOptionObject = {
     fileName: 'index',
     formats: ['es'],
   },
-  rollupOptions: {
+  rolldownOptions: {
     external: ['react', 'react-dom', 'react/jsx-runtime'],
   },
 };

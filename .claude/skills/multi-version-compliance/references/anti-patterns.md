@@ -10,12 +10,26 @@ Patterns to reject in your own work and flag in reviews. Each entry: what it loo
 - `function cleanVersion(v) { return clean(v) ?? coerce(v)?.version ?? undefined; }` — duplicates `normalizeSemver`.
 - `getInstalledRsbuildVersionRuntime` / `getInstalled<X>FromFs` reading `require('<pkg>/package.json')` directly — duplicates `getInstalledPackageVersion`.
 - Inline `clean(declared) ?? coerce(declared)` chain at a generator entry point — duplicates `getDeclaredPackageVersion`.
+- Open-coded tree-branch in `getInstalled<Pkg>Version(tree?)`: `getDependencyVersionFromPackageJson(tree, pkg)` + an `installedVersion === 'latest' || installedVersion === 'next'` check + a `clean(...) ?? coerce(...)?.version ?? null` chain. The dist-tag list and the normalization chain are both centralized in `getDeclaredPackageVersion` (via `NON_SEMVER_DIST_TAGS` / `normalizeSemver`). A local copy silently misses new entries if `NON_SEMVER_DIST_TAGS` grows.
 
 **Why wrong:** The shared helpers in `@nx/devkit/internal` and `@nx/devkit/internal-testing-utils` already exist. Duplicates create drift — one will get the `latest`/`next` handling, the other won't; one will use `getNxRequirePaths()` for pnpm-strict resolution, the other won't.
 
 **Do instead:** Call `assertSupportedPackageVersion(tree, pkg, floor)` via the per-plugin wrapper (`assertSupportedXVersion`). For executor-side reads: `getInstalledPackageVersion(pkg)`. For tree-side normalization: `getDeclaredPackageVersion(tree, pkg, latestKnown)`. For raw semver cleaning: `normalizeSemver(v)`.
 
-**Reference:** Compliant — `packages/cypress/src/utils/assert-supported-cypress-version.ts` (7 lines). Concrete anti-pattern — PR `#35676` introduces `function cleanVersion` (`packages/rsbuild/src/utils/versions.ts`) and `getInstalledRsbuildVersionRuntime` reading `require('@rsbuild/core/package.json')`. Both should call the shared helpers instead.
+For the `getInstalled<Pkg>Version(tree?)` wrapper specifically:
+
+```ts
+export function getInstalledCypressVersion(tree?: Tree): string | null {
+  if (!tree) {
+    return getInstalledPackageVersion('cypress');
+  }
+  return getDeclaredPackageVersion(tree, 'cypress');
+}
+```
+
+**Omit the third arg by default.** It conflates "missing" with "dist tag" — both fall back to the supplied fresh-install constant. That's almost never what the caller wants; consumers that need a `?? latest` fallback should encode it at the call site, not globally in the helper (rspack/rsbuild precedent). See `canonical-shape.md` §"Dist-tag semantics — third arg".
+
+**Reference:** Compliant — `packages/cypress/src/utils/assert-supported-cypress-version.ts` (7 lines); `packages/cypress/src/utils/versions.ts` `getInstalledCypressVersion` (no third arg); `packages/rspack/src/utils/version-utils.ts` and `packages/rsbuild/src/utils/version-utils.ts` (same shape). Concrete anti-pattern — PR `#35676` introduces `function cleanVersion` (`packages/rsbuild/src/utils/versions.ts`) and `getInstalledRsbuildVersionRuntime` reading `require('@rsbuild/core/package.json')`. Both should call the shared helpers instead.
 
 ## 2. Above-ceiling throw or warn
 

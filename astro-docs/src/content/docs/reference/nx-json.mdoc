@@ -255,7 +255,7 @@ Some common scenarios for this follow.
 Named inputs defined in `nx.json` are merged with the named inputs defined in [project level configuration](/docs/reference/project-configuration). In other words, every project has a set of named inputs, and it's defined as: `{...namedInputsFromNxJson, ...namedInputsFromProjectsProjectJson}`.
 
 Defining `inputs` for a given target would replace the set of inputs for that target name defined in `nx.json`.
-Using pseudocode `inputs = projectJson.targets.build.inputs || nxJsonTargetDefaults.build.inputs`.
+Using pseudocode `inputs = projectJson.targets.build.inputs || nxJsonTargetDefaults.build.inputs`. To merge with the base inputs instead of replacing them, use the [spread token](#spread-token).
 
 You can also define and redefine named inputs. This enables one key use case, where your `nx.json` can define things like this (which applies to every project):
 
@@ -490,6 +490,45 @@ Task Atomizer plugins create several targets with a similar pattern. For example
 {% aside type="note" title="Pattern Matching" %}
 Nx uses glob patterns to match against the target name. This means that the `**/**` pattern above is required because tests can be nested within a directory which would make the target name contain a `/`. If your target name does not contain a `/`, you can use a simpler pattern like `e2e-ci-*`.
 {% /aside %}
+
+### Spread token
+
+By default, a target default replaces the corresponding value from a matching [inferred task](/docs/concepts/inferred-tasks) (and from any lower-priority configuration source) rather than merging with it. The spread token (`"..."`) lets a target default contribute to the base value instead of overwriting it.
+
+**In arrays**, `"..."` is substituted with the items from the base array at that position. For example, to add an input to every `build` target while keeping the inputs its plugin already infers:
+
+```json
+// nx.json
+{
+  "targetDefaults": [
+    {
+      "target": "build",
+      "inputs": ["...", "{workspaceRoot}/babel.config.json"]
+    }
+  ]
+}
+```
+
+If the inferred `build` target has `inputs: ["default", "^production"]`, the result is `["default", "^production", "{workspaceRoot}/babel.config.json"]`.
+
+**In objects**, a key of `"..."` set to `true` spreads base properties at that position, which is useful for adding an option without discarding the ones a plugin already set. Keys defined after `"..."` override base values, and keys defined before `"..."` can be overridden by base values.
+
+```json
+// nx.json
+{
+  "targetDefaults": [
+    {
+      "target": "build",
+      "options": {
+        "...": true,
+        "assetsDir": "static/assets"
+      }
+    }
+  ]
+}
+```
+
+The spread token behaves the same way in `nx.json` target defaults as it does in `project.json`. For the full list of levels where it applies (target root, `options`, `configurations`, and nested values) and important cautions, see the [Spread token reference](/docs/reference/project-configuration#spread-token).
 
 ## Release
 

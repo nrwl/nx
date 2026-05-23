@@ -1,6 +1,6 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
   getProjects,
   readJson,
@@ -17,8 +17,8 @@ import { Schema } from './schema';
 const { load } = require('@zkochan/js-yaml');
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/versions', () => ({
-  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+jest.mock('@nx/cypress/internal', () => ({
+  ...jest.requireActual('@nx/cypress/internal'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
 describe('lib', () => {
@@ -911,7 +911,7 @@ module.exports = withNx(
               // Don't forget to update your package.json as well.
               formats: ['es' as const]
             },
-            rollupOptions: {
+            rolldownOptions: {
               // External packages that should not be bundled into your library.
               external: ['react','react-dom','react/jsx-runtime']
             },
