@@ -9,6 +9,7 @@ import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import {
   createProjectConfigurationsWithPlugins,
   CreateNodesResultEntry,
+  findMatchingConfigFiles,
   MergeError,
   mergeCreateNodesResults,
 } from './project-configuration-utils';
@@ -21,6 +22,47 @@ import type {
   ConfigurationSourceMaps,
   SourceInformation,
 } from './project-configuration/source-maps';
+
+describe('findMatchingConfigFiles', () => {
+  const files = [
+    'libs/a/project.json',
+    'libs/a/extra/project.json',
+    'libs/a/ignored/project.json',
+    'libs/b/project.json',
+    'libs/b/project.spec.json',
+  ];
+
+  it('should apply include and exclude filters after pattern match', () => {
+    const result = findMatchingConfigFiles(
+      files,
+      '**/project.json',
+      ['libs/a/**', 'libs/b/**'],
+      ['**/ignored/**']
+    );
+
+    expect(result).toEqual([
+      'libs/a/project.json',
+      'libs/a/extra/project.json',
+      'libs/b/project.json',
+    ]);
+  });
+
+  it('should honor include negation patterns', () => {
+    const result = findMatchingConfigFiles(
+      files,
+      '**/project*.json',
+      ['libs/**', '!**/*.spec.json'],
+      []
+    );
+
+    expect(result).toEqual([
+      'libs/a/project.json',
+      'libs/a/extra/project.json',
+      'libs/a/ignored/project.json',
+      'libs/b/project.json',
+    ]);
+  });
+});
 
 describe('project-configuration-utils', () => {
   describe('mergeCreateNodesResults', () => {

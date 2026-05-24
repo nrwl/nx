@@ -9,7 +9,7 @@ import {
 } from './project-configuration/project-nodes-manager';
 import { validateAndNormalizeProjectRootMap } from './project-configuration/target-normalization';
 
-import { minimatch } from 'minimatch';
+import { Minimatch, minimatch } from 'minimatch';
 import { performance } from 'perf_hooks';
 
 import { DelayedSpinner } from '../../utils/delayed-spinner';
@@ -553,6 +553,7 @@ export function findMatchingConfigFiles(
   exclude: string[]
 ): string[] {
   const matchingConfigFiles: string[] = [];
+  const patternMatcher = new Minimatch(pattern, { dot: true });
 
   // Create matchers once, outside the loop
   // Empty include means include everything, empty exclude means exclude nothing
@@ -560,7 +561,7 @@ export function findMatchingConfigFiles(
   const excludes = createMatcher(exclude, false);
 
   for (const file of projectFiles) {
-    if (minimatch(file, pattern, { dot: true })) {
+    if (patternMatcher.match(file)) {
       if (!includes(file)) {
         continue;
       }
