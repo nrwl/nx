@@ -1,5 +1,5 @@
 {
-  "outDir": "dist/packages/rspack",
+  "outDir": "packages/rspack/dist",
   "assets": [
     { "glob": "@(package|executors|generators|migrations).json" },
     { "glob": "src/**/schema.json" },
