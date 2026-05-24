@@ -15,9 +15,7 @@
       "hidden": true
     },
     "convert-webpack": {
-      "aliases": [
-        "convert-to-rspack"
-      ],
+      "aliases": ["convert-to-rspack"],
       "factory": "./dist/src/generators/convert-webpack/convert-webpack",
       "schema": "./dist/src/generators/convert-webpack/schema.json",
       "description": "Convert a webpack application to use rspack."

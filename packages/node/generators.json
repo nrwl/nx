@@ -1,34 +1,26 @@
 {
   "name": "nx/node",
   "version": "0.1",
-  "extends": [
-    "@nx/workspace"
-  ],
+  "extends": ["@nx/workspace"],
   "generators": {
     "init": {
       "factory": "./dist/src/generators/init/init",
       "schema": "./dist/src/generators/init/schema.json",
       "description": "Initialize the `@nx/node` plugin.",
-      "aliases": [
-        "ng-add"
-      ],
+      "aliases": ["ng-add"],
       "hidden": true
     },
     "application": {
       "factory": "./dist/src/generators/application/application#applicationGeneratorInternal",
       "schema": "./dist/src/generators/application/schema.json",
-      "aliases": [
-        "app"
-      ],
+      "aliases": ["app"],
       "x-type": "application",
       "description": "Create a node application."
     },
     "library": {
       "factory": "./dist/src/generators/library/library#libraryGeneratorInternal",
       "schema": "./dist/src/generators/library/schema.json",
-      "aliases": [
-        "lib"
-      ],
+      "aliases": ["lib"],
       "x-type": "library",
       "description": "Create a node library."
     },

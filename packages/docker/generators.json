@@ -6,9 +6,7 @@
       "factory": "./dist/src/generators/init/init",
       "schema": "./dist/src/generators/init/schema.json",
       "description": "Initialize the `@nx/docker` plugin. **Experimental**: Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.",
-      "aliases": [
-        "ng-add"
-      ],
+      "aliases": ["ng-add"],
       "hidden": true
     }
   }

@@ -6,9 +6,7 @@
       "factory": "./dist/src/generators/init/init#initGeneratorInternal",
       "schema": "./dist/src/generators/init/schema.json",
       "description": "Initialize the `@nx/rsbuild` plugin.",
-      "aliases": [
-        "ng-add"
-      ],
+      "aliases": ["ng-add"],
       "hidden": true
     },
     "configuration": {
