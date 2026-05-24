@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   readJson,
+  readNxJson,
   Tree,
   updateJson,
 } from '@nx/devkit';
@@ -33,10 +34,25 @@ describe('init', () => {
     await initGenerator(tree, {});
 
     const packageJson = readJson(tree, 'package.json');
+    const nxJson = readNxJson(tree);
+
     expect(packageJson.dependencies['@nx/node']).toBeUndefined();
     expect(packageJson.dependencies[existing]).toBeDefined();
     expect(packageJson.devDependencies['@nx/node']).toBeDefined();
     expect(packageJson.devDependencies[existing]).toBeDefined();
+    expect(nxJson.plugins).toContainEqual({
+      plugin: '@nx/node',
+      options: {
+        respectSideEffects: true,
+        removeTypeOnlyEdges: true,
+        fallbackToStaticGraph: true,
+        affectedNarrowing: true,
+      },
+    });
+    expect(nxJson.pluginsConfig?.['@nx/js']).toMatchObject({
+      analyzeSourceFiles: false,
+      analyzePackageJson: false,
+    });
   });
 
   it('should not fail when dependencies is missing from package.json and no other init generators are invoked', async () => {
@@ -46,5 +62,24 @@ describe('init', () => {
     });
 
     await expect(initGenerator(tree, {})).resolves.toBeTruthy();
+  });
+
+  it('should preserve existing @nx/js plugin config when disabling duplicate analysis', async () => {
+    updateJson(tree, 'nx.json', (json) => {
+      json.pluginsConfig = {
+        '@nx/js': {
+          analyzeLockfile: true,
+        },
+      };
+      return json;
+    });
+
+    await initGenerator(tree, {});
+
+    expect(readNxJson(tree).pluginsConfig?.['@nx/js']).toMatchObject({
+      analyzeLockfile: true,
+      analyzeSourceFiles: false,
+      analyzePackageJson: false,
+    });
   });
 });

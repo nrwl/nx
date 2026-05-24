@@ -59,7 +59,7 @@ export const CORE_PLUGINS: CorePlugin[] = [
   },
   {
     name: '@nx/node',
-    capabilities: 'executors,generators',
+    capabilities: 'graph',
   },
   {
     name: '@nx/nuxt',
