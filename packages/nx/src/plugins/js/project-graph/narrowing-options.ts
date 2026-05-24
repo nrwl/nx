@@ -1,6 +1,9 @@
+import type {
+  NxJsonConfiguration,
+} from '../../../config/nx-json';
 import type { BundlerKind } from './types';
 
-export type NodeTreeShakePluginOptions = {
+export type DependencyNarrowingOptions = {
   mode?: 'semantic' | 'strict' | 'aggressive';
   respectSideEffects?: boolean;
   removeTypeOnlyEdges?: boolean;
@@ -13,7 +16,7 @@ export type NodeTreeShakePluginOptions = {
   debug?: boolean;
 };
 
-export type NormalizedOptions = {
+export type NormalizedDependencyNarrowingOptions = {
   mode: 'semantic' | 'strict' | 'aggressive';
   respectSideEffects: boolean;
   removeTypeOnlyEdges: boolean;
@@ -26,7 +29,7 @@ export type NormalizedOptions = {
   debug: boolean;
 };
 
-const DEFAULT_OPTIONS: NormalizedOptions = {
+const DEFAULT_OPTIONS: NormalizedDependencyNarrowingOptions = {
   mode: 'semantic',
   respectSideEffects: true,
   removeTypeOnlyEdges: true,
@@ -39,9 +42,9 @@ const DEFAULT_OPTIONS: NormalizedOptions = {
   debug: false,
 };
 
-export function normalizeOptions(
-  options?: NodeTreeShakePluginOptions
-): NormalizedOptions {
+export function normalizeDependencyNarrowingOptions(
+  options?: DependencyNarrowingOptions
+): NormalizedDependencyNarrowingOptions {
   return {
     ...DEFAULT_OPTIONS,
     ...options,
@@ -50,4 +53,16 @@ export function normalizeOptions(
         ? options.bundlerAdapters
         : DEFAULT_OPTIONS.bundlerAdapters,
   };
+}
+
+export function getJsPluginDependencyNarrowingOptions(
+  nxJson: NxJsonConfiguration | undefined
+): NormalizedDependencyNarrowingOptions | undefined {
+  const dependencyNarrowing = nxJson?.pluginsConfig?.['@nx/js']?.dependencyNarrowing;
+
+  if (!dependencyNarrowing) {
+    return undefined;
+  }
+
+  return normalizeDependencyNarrowingOptions(dependencyNarrowing);
 }
