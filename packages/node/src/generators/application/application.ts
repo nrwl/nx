@@ -142,9 +142,14 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     });
     tasks.push(webpackInitTask);
     if (!options.skipPackageJson) {
-      const { ensureDependencies } = await import(
-        '@nx/webpack/src/utils/ensure-dependencies'
-      );
+      // Use CommonJS `require` rather than a dynamic ESM `import`:
+      // `ensurePackage` makes the on-demand-installed package available via
+      // `Module._initPaths`, which `require()` honors but ESM resolution does
+      // not. Under nodenext, a dynamic `import()` is preserved as a true ESM
+      // dynamic import, so it can't see the temp install.
+      const {
+        ensureDependencies,
+      }: typeof import('@nx/webpack/src/utils/ensure-dependencies') = require('@nx/webpack/src/utils/ensure-dependencies');
       tasks.push(
         ensureDependencies(tree, {
           uiFramework: options.isNest ? 'none' : 'react',

@@ -4,8 +4,9 @@ import {
   getInstalledPackageVersion,
 } from '@nx/devkit/internal';
 import { major } from 'semver';
+import { join } from 'path';
 
-export const nxVersion = require('../../package.json').version;
+export const nxVersion = require(join('@nx/node', 'package.json')).version;
 
 export const tslibVersion = '^2.3.0';
 
