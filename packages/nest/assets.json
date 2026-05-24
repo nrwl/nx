@@ -1,5 +1,5 @@
 {
-  "outDir": "dist/packages/nest",
+  "outDir": "packages/nest/dist",
   "assets": [
     { "glob": "**/files/**" },
     { "glob": "**/files/**/.gitkeep" },
