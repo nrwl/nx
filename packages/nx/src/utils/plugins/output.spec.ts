@@ -2,6 +2,7 @@ import { PluginCapabilities } from './plugin-capabilities';
 import {
   formatPluginCapabilitiesAsJson,
   formatPluginsAsJson,
+  listAlsoAvailableCorePlugins,
   listPluginCapabilities,
 } from './output';
 
@@ -173,6 +174,36 @@ describe('formatPluginCapabilitiesAsJson', () => {
     expect(result.path).toBeNull();
     expect(result.generators['gen'].path).toBeNull();
     expect(result.generators['gen'].schema).toBeNull();
+  });
+});
+
+describe('listAlsoAvailableCorePlugins', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should advertise graph capability for graph-extending core plugins', () => {
+    listAlsoAvailableCorePlugins(new Map());
+
+    const alsoAvailableCall = output.log.mock.calls.find(
+      ([arg]) => arg.title === 'Also available:'
+    );
+
+    expect(alsoAvailableCall).toBeDefined();
+    expect(
+      alsoAvailableCall[0].bodyLines.some(
+        (line: string) =>
+          line.includes('@nx/js') &&
+          line.includes('(executors,generators,graph-extension)')
+      )
+    ).toBe(true);
+    expect(
+      alsoAvailableCall[0].bodyLines.some(
+        (line: string) =>
+          line.includes('@nx/gradle') &&
+          line.includes('(graph-extension)')
+      )
+    ).toBe(true);
   });
 });
 

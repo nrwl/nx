@@ -1,116 +1,121 @@
+export type CorePluginCapability =
+  | 'executors'
+  | 'generators'
+  | 'graph-extension';
+
 export interface CorePlugin {
   name: string;
-  capabilities: 'executors' | 'generators' | 'executors,generators' | 'graph';
+  capabilities: CorePluginCapability[];
   link?: string;
 }
 
 export const CORE_PLUGINS: CorePlugin[] = [
   {
     name: '@nx/angular',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators'],
   },
   {
     name: '@nx/cypress',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators'],
   },
   {
     name: '@nx/detox',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators'],
   },
   {
     name: '@nx/esbuild',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators'],
   },
   {
     name: '@nx/expo',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators'],
   },
   {
     name: '@nx/express',
-    capabilities: 'generators',
+    capabilities: ['generators'],
   },
   {
     name: '@nx/gradle',
-    capabilities: 'graph',
+    capabilities: ['graph-extension'],
   },
   {
     name: '@nx/jest',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators'],
   },
   {
     name: '@nx/js',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators', 'graph-extension'],
   },
   {
     name: '@nx/eslint',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators'],
   },
   {
     name: '@nx/nest',
-    capabilities: 'generators',
+    capabilities: ['generators'],
   },
   {
     name: '@nx/next',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators'],
   },
   {
     name: '@nx/node',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators'],
   },
   {
     name: '@nx/nuxt',
-    capabilities: 'generators',
+    capabilities: ['generators'],
   },
   {
     name: 'nx',
-    capabilities: 'executors',
+    capabilities: ['executors'],
   },
   {
     name: '@nx/plugin',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators'],
   },
   {
     name: '@nx/react',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators'],
   },
   {
     name: '@nx/react-native',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators'],
   },
   {
     name: '@nx/remix',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators'],
   },
   {
     name: '@nx/rollup',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators'],
   },
   {
     name: '@nx/rspack',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators'],
   },
   {
     name: '@nx/storybook',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators'],
   },
   {
     name: '@nx/vite',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators'],
   },
   {
     name: '@nx/vue',
-    capabilities: 'generators',
+    capabilities: ['generators'],
   },
   {
     name: '@nx/web',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators'],
   },
   {
     name: '@nx/webpack',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators'],
   },
   {
     name: '@nx/workspace',
-    capabilities: 'executors,generators',
+    capabilities: ['executors', 'generators'],
   },
 ];

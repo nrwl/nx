@@ -8,7 +8,7 @@ import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { output } from '../output';
 import { getPackageManagerCommand } from '../package-manager';
 import { workspaceRoot } from '../workspace-root';
-import { CORE_PLUGINS } from './core-plugins';
+import { CORE_PLUGINS, CorePluginCapability } from './core-plugins';
 import {
   PluginCapabilities,
   getPluginCapabilities,
@@ -37,9 +37,7 @@ export function listPlugins(
       capabilities.push('project-inference');
     }
     bodyLines.push(
-      `${pc.bold(p.name)} ${
-        capabilities.length >= 1 ? `(${capabilities.join()})` : ''
-      }`
+      `${pc.bold(p.name)} ${formatCapabilityList(capabilities)}`
     );
   }
 
@@ -60,10 +58,16 @@ export function listAlsoAvailableCorePlugins(
     output.log({
       title: `Also available:`,
       bodyLines: alsoAvailable.map((p) => {
-        return `${pc.bold(p.name)} (${p.capabilities})`;
+        return `${pc.bold(p.name)} ${formatCapabilityList(p.capabilities)}`;
       }),
     });
   }
+}
+
+function formatCapabilityList(
+  capabilities: Array<CorePluginCapability | 'project-inference'>
+): string {
+  return capabilities.length >= 1 ? `(${capabilities.join()})` : '';
 }
 
 export function listPowerpackPlugins(): void {
