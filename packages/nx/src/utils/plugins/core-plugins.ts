@@ -1,6 +1,11 @@
 export interface CorePlugin {
   name: string;
-  capabilities: 'executors' | 'generators' | 'executors,generators' | 'graph';
+  capabilities:
+    | 'executors'
+    | 'generators'
+    | 'graph'
+    | 'executors,generators'
+    | 'executors,generators,graph';
   link?: string;
 }
 
@@ -59,7 +64,7 @@ export const CORE_PLUGINS: CorePlugin[] = [
   },
   {
     name: '@nx/node',
-    capabilities: 'graph',
+    capabilities: 'executors,generators,graph',
   },
   {
     name: '@nx/nuxt',
