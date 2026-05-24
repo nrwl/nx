@@ -44,21 +44,6 @@ describe('getTouchedProjectsFromTsConfig', () => {
           .spyOn(tsUtils, 'getRootTsConfigFileName')
           .mockReturnValue(tsConfig);
         jest.clearAllMocks();
-
-        graph.nodes['proj-cdk'] = {
-          name: 'proj-cdk',
-          type: 'lib',
-          data: {
-            root: 'libs/typescript/cdk',
-          },
-        };
-        graph.nodes['proj-cdk-utils'] = {
-          name: 'proj-cdk-utils',
-          type: 'lib',
-          data: {
-            root: 'libs/typescript/cdk-utils',
-          },
-        };
       });
 
       it(`should not return changes when ${tsConfig} is not touched`, () => {
@@ -318,6 +303,27 @@ describe('getTouchedProjectsFromTsConfig', () => {
         });
 
         it('should not match sibling roots that only share a string prefix', () => {
+          const localGraph: ProjectGraph = {
+            ...graph,
+            nodes: {
+              ...graph.nodes,
+              'proj-cdk': {
+                name: 'proj-cdk',
+                type: 'lib',
+                data: {
+                  root: 'libs/typescript/cdk',
+                },
+              },
+              'proj-cdk-utils': {
+                name: 'proj-cdk-utils',
+                type: 'lib',
+                data: {
+                  root: 'libs/typescript/cdk-utils',
+                },
+              },
+            },
+          };
+
           const result = getTouchedProjectsFromTsConfig(
             [
               {
@@ -344,7 +350,7 @@ describe('getTouchedProjectsFromTsConfig', () => {
             null,
             null,
             null,
-            graph
+            localGraph
           );
 
           expect(result).toContainEqual('proj-cdk');
