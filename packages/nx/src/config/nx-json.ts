@@ -82,6 +82,25 @@ export interface NrwlJsPluginConfig {
   analyzePackageJson?: boolean;
   analyzeLockfile?: boolean;
   projectsAffectedByDependencyUpdates?: 'all' | 'auto' | string[];
+  dependencyNarrowing?: {
+    mode?: 'semantic' | 'strict' | 'aggressive';
+    respectSideEffects?: boolean;
+    removeTypeOnlyEdges?: boolean;
+    treatMissingPackageJsonAsSideEffectFree?: boolean;
+    resolveNamespaceImports?: boolean;
+    bundlerAdapters?: (
+      | 'esbuild'
+      | 'swc'
+      | 'babel'
+      | 'webpack'
+      | 'rollup'
+      | 'vite'
+    )[];
+    fallbackToStaticGraph?: boolean;
+    passthrough?: boolean;
+    affectedNarrowing?: boolean;
+    debug?: boolean;
+  };
 }
 
 interface NxInstallationConfiguration {
