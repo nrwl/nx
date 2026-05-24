@@ -1,5 +1,5 @@
 {
-  "outDir": "dist/packages/gradle",
+  "outDir": "packages/gradle/dist",
   "assets": [
     { "glob": "**/files/**" },
     { "glob": "package.json" },
