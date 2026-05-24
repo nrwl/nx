@@ -1,5 +1,5 @@
 {
-  "outDir": "dist/packages/module-federation",
+  "outDir": "packages/module-federation/dist",
   "assets": [
     { "glob": "**/files/**" },
     { "glob": "**/files/**/.gitkeep" },
