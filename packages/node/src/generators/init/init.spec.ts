@@ -40,18 +40,14 @@ describe('init', () => {
     expect(packageJson.dependencies[existing]).toBeDefined();
     expect(packageJson.devDependencies['@nx/node']).toBeDefined();
     expect(packageJson.devDependencies[existing]).toBeDefined();
-    expect(nxJson.plugins).toContainEqual({
-      plugin: '@nx/node',
-      options: {
+    expect(nxJson.plugins).toBeUndefined();
+    expect(nxJson.pluginsConfig?.['@nx/js']).toMatchObject({
+      dependencyNarrowing: {
         respectSideEffects: true,
         removeTypeOnlyEdges: true,
         fallbackToStaticGraph: true,
         affectedNarrowing: true,
       },
-    });
-    expect(nxJson.pluginsConfig?.['@nx/js']).toMatchObject({
-      analyzeSourceFiles: false,
-      analyzePackageJson: false,
     });
   });
 
@@ -64,11 +60,14 @@ describe('init', () => {
     await expect(initGenerator(tree, {})).resolves.toBeTruthy();
   });
 
-  it('should preserve existing @nx/js plugin config when disabling duplicate analysis', async () => {
+  it('should preserve existing @nx/js plugin config when configuring dependency narrowing', async () => {
     updateJson(tree, 'nx.json', (json) => {
       json.pluginsConfig = {
         '@nx/js': {
           analyzeLockfile: true,
+          dependencyNarrowing: {
+            debug: true,
+          },
         },
       };
       return json;
@@ -78,8 +77,13 @@ describe('init', () => {
 
     expect(readNxJson(tree).pluginsConfig?.['@nx/js']).toMatchObject({
       analyzeLockfile: true,
-      analyzeSourceFiles: false,
-      analyzePackageJson: false,
+      dependencyNarrowing: {
+        debug: true,
+        respectSideEffects: true,
+        removeTypeOnlyEdges: true,
+        fallbackToStaticGraph: true,
+        affectedNarrowing: true,
+      },
     });
   });
 });
