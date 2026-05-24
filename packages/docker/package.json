@@ -3,6 +3,14 @@
   "description": "The Nx Plugin for Docker to aid in containerizing projects.",
   "version": "0.0.1",
   "type": "commonjs",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "!dist/spec",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -22,28 +30,52 @@
   "author": "Victor Savkin",
   "license": "MIT",
   "homepage": "https://nx.dev",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "generators": [
+        "dist/generators.d.ts"
+      ],
+      "release/version-utils": [
+        "dist/src/release/version-utils.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
-      "types": "./index.d.ts",
-      "default": "./index.js"
-    },
-    "./release/version-utils": {
-      "types": "./src/release/version-utils.d.ts",
-      "default": "./src/release/version-utils.js"
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./generators": {
-      "types": "./generators.d.ts",
-      "default": "./generators.js"
+      "@nx/nx-source": "./generators.ts",
+      "types": "./dist/generators.d.ts",
+      "default": "./dist/generators.js"
+    },
+    "./release/version-utils": {
+      "@nx/nx-source": "./src/release/version-utils.ts",
+      "types": "./dist/src/release/version-utils.d.ts",
+      "default": "./dist/src/release/version-utils.js"
     },
     "./executors/*/schema.json": "./src/executors/*/schema.json",
-    "./executors/*/schema": "./src/executors/*/schema.d.ts",
+    "./executors/*/schema": "./dist/src/executors/*/schema.d.ts",
     "./generators/*/schema.json": "./src/generators/*/schema.json",
-    "./generators/*/schema": "./src/generators/*/schema.d.ts",
+    "./generators/*/schema": "./dist/src/generators/*/schema.d.ts",
     "./package.json": "./package.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
-    "./migrations.json": "./migrations.json"
+    "./migrations.json": "./migrations.json",
+    "./src/*": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./dist/src/*.d.ts",
+      "default": "./dist/src/*.js"
+    },
+    "./src/*.js": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./dist/src/*.d.ts",
+      "default": "./dist/src/*.js"
+    }
   },
   "nx-migrations": {
     "migrations": "./migrations.json"

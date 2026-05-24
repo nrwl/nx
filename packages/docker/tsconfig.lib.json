@@ -1,11 +1,27 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/docker",
-    "types": ["node"]
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": "dist",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
+    "types": ["node"],
+    "composite": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
-  "include": ["**/*.ts"],
-  "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
+  "include": ["*.ts", "src/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "jest.config.ts",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "eslint.config.mjs"
+  ],
   "references": [
     {
       "path": "../devkit/tsconfig.lib.json"
