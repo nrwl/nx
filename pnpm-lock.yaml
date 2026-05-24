@@ -3295,6 +3295,9 @@ importers:
         specifier: catalog:typescript
         version: 2.8.1
     devDependencies:
+      '@nx/webpack':
+        specifier: workspace:*
+        version: link:../webpack
       nx:
         specifier: workspace:*
         version: link:../nx
