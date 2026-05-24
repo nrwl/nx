@@ -44,6 +44,21 @@ describe('getTouchedProjectsFromTsConfig', () => {
           .spyOn(tsUtils, 'getRootTsConfigFileName')
           .mockReturnValue(tsConfig);
         jest.clearAllMocks();
+
+        graph.nodes['proj-cdk'] = {
+          name: 'proj-cdk',
+          type: 'lib',
+          data: {
+            root: 'libs/typescript/cdk',
+          },
+        };
+        graph.nodes['proj-cdk-utils'] = {
+          name: 'proj-cdk-utils',
+          type: 'lib',
+          data: {
+            root: 'libs/typescript/cdk-utils',
+          },
+        };
       });
 
       it(`should not return changes when ${tsConfig} is not touched`, () => {
@@ -300,6 +315,42 @@ describe('getTouchedProjectsFromTsConfig', () => {
           );
           expect(result).toContainEqual('proj1');
           expect(result).toContainEqual('proj2');
+        });
+
+        it('should not match sibling roots that only share a string prefix', () => {
+          const result = getTouchedProjectsFromTsConfig(
+            [
+              {
+                file: tsConfig,
+                getChanges: () =>
+                  jsonDiff(
+                    {
+                      compilerOptions: {
+                        paths: {
+                          '@proj/cdk': ['libs/typescript/cdk/index.ts'],
+                        },
+                      },
+                    },
+                    {
+                      compilerOptions: {
+                        paths: {
+                          '@proj/cdk': ['libs/typescript/cdk-utils/index.ts'],
+                        },
+                      },
+                    }
+                  ),
+              },
+            ],
+            null,
+            null,
+            null,
+            graph
+          );
+
+          expect(result).toContainEqual('proj-cdk');
+          expect(result).toContainEqual('proj-cdk-utils');
+          expect(result.filter((x) => x === 'proj-cdk')).toHaveLength(1);
+          expect(result.filter((x) => x === 'proj-cdk-utils')).toHaveLength(1);
         });
       });
     });
