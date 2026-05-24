@@ -3,16 +3,23 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/storybook",
   "projectType": "library",
+  "release": {
+    "version": {
+      "generator": "@nx/js:release-version",
+      "preserveLocalDependencyProtocols": true,
+      "manifestRootsToUpdate": ["packages/{projectName}"]
+    }
+  },
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/storybook/README.md"],
-      "command": "node ./scripts/copy-readme.js storybook",
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js storybook packages/storybook/readme-template.md packages/storybook/README.md",
       "inputs": ["copyReadme"]
     },
     "nx-release-publish": {
       "executor": "@nx/js:release-publish",
       "options": {
-        "packageRoot": "dist/packages/storybook"
+        "packageRoot": "packages/{projectName}"
       },
       "dependsOn": ["^nx-release-publish"]
     }
