@@ -34,7 +34,8 @@ public class TargetBuilderOutputPathsTests
         string projectDirectory,
         string projectName = "MyProj",
         bool isExe = false,
-        bool isTest = false) =>
+        bool isTest = false,
+        List<string>? directoryBuildInputs = null) =>
         TargetBuilder.BuildTargets(
             projectName: projectName,
             fileName: $"{projectName}.csproj",
@@ -45,7 +46,8 @@ public class TargetBuilderOutputPathsTests
             projectDirectory: projectDirectory,
             workspaceRoot: WorkspaceRoot,
             options: new PluginOptions(),
-            nxJson: null);
+            nxJson: null,
+            directoryBuildInputs: directoryBuildInputs ?? new List<string>());
 
     // --- Original #33971: Microsoft.NET.Sdk.Web ---------------------------
 
@@ -201,5 +203,61 @@ public class TargetBuilderOutputPathsTests
                 "{workspaceRoot}/build-output/obj/foo",
             },
             targets["build"].Outputs);
+    }
+
+    // --- Publish output: configuration is rewritten to match the target -----
+
+    [Fact]
+    public void Publish_RewritesEvaluatedDebugPublishDirToRelease()
+    {
+        // MSBuild evaluates PublishDir at the default (Debug) configuration, but
+        // the publish target runs --configuration Release. The declared output
+        // must point at bin/Release/publish (where the publish actually lands),
+        // not the evaluated bin/Debug/publish.
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["PublishDir"] = "bin\\Debug\\publish\\",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo", isExe: true);
+
+        Assert.Equal(
+            new[] { "{projectRoot}/bin/Release/publish" },
+            targets["publish"].Outputs);
+    }
+
+    [Fact]
+    public void Publish_LeavesCustomPublishDirWithoutConfigurationSegmentAlone()
+    {
+        // A custom PublishDir that has no Debug/Release segment is passed through
+        // unchanged (only configuration segments are rewritten).
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["PublishDir"] = "dist-publish",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo", isExe: true);
+
+        Assert.Equal(
+            new[] { "{projectRoot}/dist-publish" },
+            targets["publish"].Outputs);
+    }
+
+    [Fact]
+    public void Publish_ArtifactsLayout_EmitsWorkspaceRootPublishPath()
+    {
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["UseArtifactsOutput"] = "true",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo", isExe: true);
+
+        Assert.Equal(
+            new[] { "{workspaceRoot}/artifacts/publish/foo" },
+            targets["publish"].Outputs);
     }
 }

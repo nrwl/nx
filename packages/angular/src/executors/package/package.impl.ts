@@ -4,7 +4,7 @@ import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
   type DependentBuildableProjectNode,
-} from '@nx/js/src/utils/buildable-libs-utils';
+} from '@nx/js/internal';
 import type { NgPackagr } from 'ng-packagr';
 import { join, resolve } from 'path';
 import { from } from 'rxjs';

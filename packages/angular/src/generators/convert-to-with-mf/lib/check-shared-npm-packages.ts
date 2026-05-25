@@ -1,5 +1,5 @@
 import type { SourceFile, Node } from 'typescript';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 
 export function checkSharedNpmPackagesMatchExpected(sourceFile: SourceFile) {
   ensureTypescript();

@@ -7,7 +7,7 @@ import {
   oxcTransformVersion,
   swcCoreVersion,
   swcHelpersVersion,
-} from '@nx/js/src/utils/versions';
+} from '@nx/js/internal';
 import { coreJsVersion, swcLoaderVersion, tsLibVersion } from './versions';
 
 export type EnsureDependenciesOptions = {

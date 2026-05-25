@@ -24,14 +24,13 @@ import {
   configurationGenerator,
   findJestConfig,
 } from '@nx/jest';
-import { getRelativePathToRootTsConfig } from '@nx/js';
-import { setupVerdaccio } from '@nx/js/src/generators/setup-verdaccio/generator';
-import { addLocalRegistryScripts } from '@nx/js/src/utils/add-local-registry-scripts';
-import { normalizeLinterOption } from '@nx/js/src/utils/generator-prompts';
+import { getRelativePathToRootTsConfig, setupVerdaccio } from '@nx/js';
 import {
+  addLocalRegistryScripts,
+  normalizeLinterOption,
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+} from '@nx/js/internal';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { Schema } from './schema';

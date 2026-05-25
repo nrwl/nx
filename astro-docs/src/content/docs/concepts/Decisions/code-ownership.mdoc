@@ -43,3 +43,7 @@ the `CODEOWNERS` file for that.
 
 If you want to know more about code ownership on GitHub, please
 check [the documentation on the `CODEOWNERS` file](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners).
+
+{% aside type="tip" title="Define ownership by project" %}
+Maintaining a `CODEOWNERS` file by hand means revisiting it every time a project moves or a new project is added. The [`@nx/owners` plugin](/docs/reference/owners/overview) lets you define code ownership based on projects -- using the same project matcher syntax as [`nx run-many`](/docs/reference/nx-commands#nx-run-many) -- and compiles it into a valid `CODEOWNERS` file for GitHub, Bitbucket, or GitLab.
+{% /aside %}

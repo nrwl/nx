@@ -5,11 +5,14 @@ import {
   getDependencyVersionFromPackageJson,
   Tree,
 } from '@nx/devkit';
-import { esbuildVersion } from '@nx/js/src/utils/versions';
+import { esbuildVersion } from '@nx/js/internal';
+import { assertSupportedEsbuildVersion } from '../../utils/assert-supported-esbuild-version';
 import { nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
 export async function esbuildInitGenerator(tree: Tree, schema: Schema) {
+  assertSupportedEsbuildVersion(tree);
+
   let installTask: GeneratorCallback = () => {};
   if (!schema.skipPackageJson) {
     installTask = addDependenciesToPackageJson(
@@ -22,7 +25,7 @@ export async function esbuildInitGenerator(tree: Tree, schema: Schema) {
           esbuildVersion,
       },
       undefined,
-      schema.keepExistingVersions
+      schema.keepExistingVersions ?? true
     );
   }
 

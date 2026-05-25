@@ -635,6 +635,44 @@ Remove temporary marker files created by `start-ci-run` if accidentally run loca
 npx nx-cloud cleanup
 ```
 
+### `nx-cloud get sandbox-reports`
+
+Download sandbox reports for tasks that ran on a branch. Reports capture unexpected file reads and writes detected by the Nx Cloud task sandbox and are written to disk as JSON files for inspection or post-processing.
+
+**Usage:**
+
+```shell
+npx nx-cloud get sandbox-reports [options]
+```
+
+#### Options
+
+| Option              | Type    | Description                                                                            | Default                                          |
+| ------------------- | ------- | -------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `--branch`          | string  | Branch to query                                                                        | current git branch                               |
+| `--fallback-branch` | string  | For each task without a report on `--branch`, fall back to this branch's latest report |                                                  |
+| `--since`           | string  | Time window. Units: `h`, `d`, `w`, `y` (e.g. `1h`, `7d`, `4w`, `1y`)                   | `7d`                                             |
+| `--output`, `-o`    | string  | Output directory                                                                       | `./.nx/workspace-data/sandbox-reports/<branch>/` |
+| `--include-clean`   | boolean | Include reports with zero unexpected reads/writes                                      | `false`                                          |
+| `--concurrency`     | number  | Parallel downloads                                                                     | `20`                                             |
+| `--force`           | boolean | Overwrite existing files instead of skipping them                                      | `false`                                          |
+| `--json`            | boolean | Print a machine-readable summary on stdout                                             | `false`                                          |
+| `--help`, `-h`      | boolean | Show command help and exit                                                             |                                                  |
+
+#### Examples
+
+Download reports for a feature branch over the last hour:
+
+```shell
+npx nx-cloud get sandbox-reports --branch 11249 --since 1h
+```
+
+Fall back to `main` for any task that has no report on the feature branch:
+
+```shell
+npx nx-cloud get sandbox-reports --branch my-feature --fallback-branch main
+```
+
 ## Getting help
 
 You can get help for any command by adding the `--help` flag:

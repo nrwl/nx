@@ -21,6 +21,10 @@ export async function migrate10Generator(tree: Tree, schema: Schema) {
 
   callUpgrade(schema);
 
+  if (schema.skipAiInstructions) {
+    return;
+  }
+
   const pathToAiInstructions = join(
     __dirname,
     'files',

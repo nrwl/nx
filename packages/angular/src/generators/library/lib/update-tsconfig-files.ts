@@ -5,7 +5,7 @@ import {
   getRelativePathToRootTsConfig,
   getRootTsConfigFileName,
 } from '@nx/js';
-import { getNeededCompilerOptionOverrides } from '@nx/js/src/utils/typescript/configuration';
+import { getNeededCompilerOptionOverrides } from '@nx/js/internal';
 import { gte } from 'semver';
 import { getDefinedCompilerOption } from '../../utils/tsconfig-utils';
 import { updateProjectRootTsConfig } from '../../utils/update-project-root-tsconfig';

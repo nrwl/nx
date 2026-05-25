@@ -404,7 +404,7 @@ export class ProcessTasks {
         qualifiedTarget,
         interpolatedOverrides
       ),
-      cache: project.data.targets[target].cache,
+      cache: project.data.targets[target].cache ?? false,
       parallelism: project.data.targets[target].parallelism ?? true,
       continuous: project.data.targets[target].continuous ?? false,
     };

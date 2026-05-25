@@ -20,7 +20,7 @@ export function convertNxExecutor(executor: Executor) {
     const promise = async () => {
       const nxJsonConfiguration = readNxJson(builderContext.workspaceRoot);
 
-      const separatedPlugins = await getPluginsSeparated();
+      const separatedPlugins = await getPluginsSeparated(nxJsonConfiguration);
       const projectsConfigurations: ProjectsConfigurations = {
         version: 2,
         projects: readProjectConfigurationsFromRootMap(

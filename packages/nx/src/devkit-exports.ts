@@ -88,6 +88,8 @@ export type {
   PluginConfiguration,
   ExpandedPluginConfiguration,
   TargetDefaults,
+  TargetDefaultEntry,
+  TargetDefaultsRecord,
   NxAffectedConfig,
 } from './config/nx-json';
 

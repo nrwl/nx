@@ -8,7 +8,9 @@ import {
   addProjectConfiguration,
   logger,
   readJson,
+  readProjectConfiguration,
   updateJson,
+  updateProjectConfiguration,
 } from '@nx/devkit';
 
 import { convertToFlatConfigGenerator } from './generator';
@@ -16,6 +18,15 @@ import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { lintProjectGenerator } from '../lint-project/lint-project';
 import { eslintrcVersion } from '../../utils/versions';
 import { dump } from '@zkochan/js-yaml';
+
+function getLintInputs(nxJson: NxJsonConfiguration): string[] {
+  const td = nxJson.targetDefaults;
+  if (!td) return [];
+  const entry = Array.isArray(td)
+    ? td.find((e) => e.target === 'lint' || e.target === '@nx/eslint:lint')
+    : (td['lint'] ?? td['@nx/eslint:lint']);
+  return (entry?.inputs ?? []) as string[];
+}
 
 describe('convert-to-flat-config generator', () => {
   let tree: Tree;
@@ -96,7 +107,7 @@ describe('convert-to-flat-config generator', () => {
       ).toMatchSnapshot();
       // check nx.json changes
       const nxJson = readJson(tree, 'nx.json');
-      expect(nxJson.targetDefaults.lint.inputs).toContain(
+      expect(getLintInputs(nxJson)).toContain(
         '{workspaceRoot}/eslint.config.cjs'
       );
       expect(nxJson.namedInputs.production).toContain(
@@ -127,7 +138,7 @@ describe('convert-to-flat-config generator', () => {
       ).toMatchSnapshot();
       // check nx.json changes
       const nxJson = readJson(tree, 'nx.json');
-      expect(nxJson.targetDefaults.lint.inputs).toContain(
+      expect(getLintInputs(nxJson)).toContain(
         '{workspaceRoot}/eslint.config.cjs'
       );
       expect(nxJson.namedInputs.production).toContain(
@@ -158,7 +169,7 @@ describe('convert-to-flat-config generator', () => {
       ).toMatchSnapshot();
       // check nx.json changes
       const nxJson = readJson(tree, 'nx.json');
-      expect(nxJson.targetDefaults.lint.inputs).toContain(
+      expect(getLintInputs(nxJson)).toContain(
         '{workspaceRoot}/eslint.config.cjs'
       );
       expect(nxJson.namedInputs.production).toContain(
@@ -191,9 +202,6 @@ describe('convert-to-flat-config generator', () => {
         });
 
         module.exports = [
-          {
-            ignores: ['**/dist', '**/out-tsc'],
-          },
           ...compat.extends('plugin:storybook/recommended'),
           ...nx.configs['flat/base'],
           {
@@ -224,9 +232,6 @@ describe('convert-to-flat-config generator', () => {
         "const baseConfig = require('../../eslint.config.cjs');
 
         module.exports = [
-          {
-            ignores: ['**/dist', '**/out-tsc'],
-          },
           ...baseConfig,
           {
             files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -434,9 +439,6 @@ describe('convert-to-flat-config generator', () => {
         "const nx = require('@nx/eslint-plugin');
 
         module.exports = [
-          {
-            ignores: ['**/dist', '**/out-tsc'],
-          },
           ...nx.configs['flat/base'],
           {
             linterOptions: {
@@ -533,6 +535,42 @@ describe('convert-to-flat-config generator', () => {
       expect(tree.exists('libs/test-lib/eslint.config.cjs')).toBeTruthy();
     });
 
+    it('should convert project if target is defined via array-shaped targetDefaults', async () => {
+      await lintProjectGenerator(tree, {
+        skipFormat: false,
+        linter: 'eslint',
+        project: 'test-lib',
+        setParserOptionsProject: false,
+        eslintConfigFormat: 'cjs',
+      });
+      updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+        json.targetDefaults = [
+          {
+            target: 'lint',
+            executor: '@nx/eslint:lint',
+            inputs: ['default'],
+          },
+        ];
+        return json;
+      });
+      updateJson(
+        tree,
+        'libs/test-lib/project.json',
+        (json: ProjectConfiguration) => {
+          json.targets.lint = {
+            options: json.targets.lint.options,
+          };
+          return json;
+        }
+      );
+
+      expect(tree.exists('eslint.config.cjs')).toBeFalsy();
+      expect(tree.exists('libs/test-lib/eslint.config.cjs')).toBeFalsy();
+      await convertToFlatConfigGenerator(tree, options);
+      expect(tree.exists('eslint.config.cjs')).toBeTruthy();
+      expect(tree.exists('libs/test-lib/eslint.config.cjs')).toBeTruthy();
+    });
+
     it('should warn and skip project with eslint config but no lint target', async () => {
       addProjectConfiguration(tree, 'no-lint-lib', {
         root: 'libs/no-lint-lib',
@@ -611,9 +649,6 @@ describe('convert-to-flat-config generator', () => {
         "const baseConfig = require('../../eslint.config.cjs');
 
         module.exports = [
-          {
-            ignores: ['**/dist', '**/out-tsc'],
-          },
           ...baseConfig,
           {
             files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -696,7 +731,7 @@ describe('convert-to-flat-config generator', () => {
       ).toMatchSnapshot();
       // check nx.json changes
       const nxJson = readJson(tree, 'nx.json');
-      expect(nxJson.targetDefaults.lint.inputs).toContain(
+      expect(getLintInputs(nxJson)).toContain(
         '{workspaceRoot}/eslint.config.mjs'
       );
       expect(nxJson.namedInputs.production).toContain(
@@ -727,7 +762,7 @@ describe('convert-to-flat-config generator', () => {
       ).toMatchSnapshot();
       // check nx.json changes
       const nxJson = readJson(tree, 'nx.json');
-      expect(nxJson.targetDefaults.lint.inputs).toContain(
+      expect(getLintInputs(nxJson)).toContain(
         '{workspaceRoot}/eslint.config.mjs'
       );
       expect(nxJson.namedInputs.production).toContain(
@@ -758,7 +793,7 @@ describe('convert-to-flat-config generator', () => {
       ).toMatchSnapshot();
       // check nx.json changes
       const nxJson = readJson(tree, 'nx.json');
-      expect(nxJson.targetDefaults.lint.inputs).toContain(
+      expect(getLintInputs(nxJson)).toContain(
         '{workspaceRoot}/eslint.config.mjs'
       );
       expect(nxJson.namedInputs.production).toContain(
@@ -793,9 +828,6 @@ describe('convert-to-flat-config generator', () => {
         });
 
         export default [
-          {
-            ignores: ['**/dist', '**/out-tsc'],
-          },
           ...compat.extends('plugin:storybook/recommended'),
           ...nx.configs['flat/base'],
           {
@@ -826,9 +858,6 @@ describe('convert-to-flat-config generator', () => {
         "import baseConfig from '../../eslint.config.mjs';
 
         export default [
-          {
-            ignores: ['**/dist', '**/out-tsc'],
-          },
           ...baseConfig,
           {
             files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -1036,9 +1065,6 @@ describe('convert-to-flat-config generator', () => {
         "import nx from '@nx/eslint-plugin';
 
         export default [
-          {
-            ignores: ['**/dist', '**/out-tsc'],
-          },
           ...nx.configs['flat/base'],
           {
             linterOptions: {
@@ -1180,9 +1206,6 @@ describe('convert-to-flat-config generator', () => {
         "import baseConfig from '../../eslint.config.mjs';
 
         export default [
-          {
-            ignores: ['**/dist', '**/out-tsc'],
-          },
           ...baseConfig,
           {
             files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -1210,6 +1233,107 @@ describe('convert-to-flat-config generator', () => {
         ];
         "
       `);
+    });
+
+    it('should rewrite stale eslintrc/eslintignore references in nx.json and project.json inputs', async () => {
+      await lintProjectGenerator(tree, {
+        skipFormat: false,
+        linter: 'eslint',
+        project: 'test-lib',
+        setParserOptionsProject: false,
+        eslintConfigFormat: 'mjs',
+      });
+      updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+        json.targetDefaults = {
+          ...json.targetDefaults,
+          lint: {
+            inputs: [
+              'default',
+              '{workspaceRoot}/.eslintrc.json',
+              '{workspaceRoot}/.eslintignore',
+            ],
+          },
+          build: {
+            inputs: [
+              'production',
+              '^production',
+              '{projectRoot}/.eslintrc.json',
+              { runtime: 'node --version' },
+            ],
+          },
+        };
+        json.namedInputs = {
+          ...json.namedInputs,
+          production: [
+            'default',
+            '!{projectRoot}/.eslintrc.json',
+            '!{projectRoot}/.eslintignore',
+          ],
+          customNamedInput: [
+            '{projectRoot}/.eslintrc.base.json',
+            '{projectRoot}/src/**/*',
+          ],
+        };
+        return json;
+      });
+      updateProjectConfiguration(tree, 'test-lib', {
+        ...readProjectConfiguration(tree, 'test-lib'),
+        root: 'libs/test-lib',
+        targets: {
+          lint: {
+            executor: '@nx/eslint:lint',
+            inputs: [
+              'default',
+              '{projectRoot}/.eslintrc.json',
+              '{projectRoot}/.eslintignore',
+            ],
+            options: {},
+          },
+        },
+        namedInputs: {
+          projectNamed: [
+            '{projectRoot}/.eslintrc.json',
+            '{projectRoot}/src/**/*',
+          ],
+        },
+      });
+
+      await convertToFlatConfigGenerator(tree, {
+        skipFormat: false,
+        eslintConfigFormat: 'mjs',
+      });
+
+      const nxJson = readJson(tree, 'nx.json');
+      // legacy refs rewritten and dedup'd against the newly ensured entry
+      expect(nxJson.targetDefaults.lint.inputs).toEqual([
+        'default',
+        '{workspaceRoot}/eslint.config.mjs',
+      ]);
+      // non-lint targets: legacy refs still rewritten, non-string inputs preserved
+      expect(nxJson.targetDefaults.build.inputs).toEqual([
+        'production',
+        '^production',
+        '{projectRoot}/eslint.config.mjs',
+        { runtime: 'node --version' },
+      ]);
+      expect(nxJson.namedInputs.production).toEqual([
+        'default',
+        '!{projectRoot}/eslint.config.mjs',
+      ]);
+      expect(nxJson.namedInputs.customNamedInput).toEqual([
+        '{projectRoot}/eslint.base.config.mjs',
+        '{projectRoot}/src/**/*',
+      ]);
+
+      const projectJson = readProjectConfiguration(tree, 'test-lib');
+      expect(projectJson.targets.lint.inputs).toEqual([
+        'default',
+        '{projectRoot}/eslint.config.mjs',
+      ]);
+      expect(projectJson.namedInputs.projectNamed).toEqual([
+        '{projectRoot}/eslint.config.mjs',
+        '{projectRoot}/src/**/*',
+      ]);
     });
   });
 });

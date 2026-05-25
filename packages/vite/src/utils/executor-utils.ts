@@ -2,7 +2,7 @@ import { ExecutorContext, getPackageManagerCommand } from '@nx/devkit';
 import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
-} from '@nx/js/src/utils/buildable-libs-utils';
+} from '@nx/js/internal';
 import { getProjectTsConfigPath } from './options-utils';
 import { execSync } from 'node:child_process';
 import { printDiagnostics, runTypeCheck } from '@nx/js';

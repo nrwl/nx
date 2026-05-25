@@ -145,9 +145,9 @@ describe('Cypress Component Configuration', () => {
     expect(tree.exists('libs/cool-lib/cypress.config.ts')).toEqual(true);
     expect(tree.read('libs/cool-lib/cypress.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { defineConfig } from 'cypress';
+      "const { defineConfig } = require('cypress');
 
-      export default defineConfig({});
+      module.exports = defineConfig({});
       "
     `);
     expect(tree.exists('libs/cool-lib/cypress')).toEqual(true);

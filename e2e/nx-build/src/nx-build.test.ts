@@ -20,7 +20,7 @@ const packagesToVerify = [
   {
     name: 'js',
     sourceFile: 'src/index.ts',
-    outputFile: 'dist/packages/js/src/index.js',
+    outputFile: 'packages/js/dist/src/index.js',
   },
   {
     name: 'react',
@@ -30,7 +30,22 @@ const packagesToVerify = [
   {
     name: 'playwright',
     sourceFile: 'index.ts',
-    outputFile: 'dist/packages/playwright/index.js',
+    outputFile: 'packages/playwright/dist/index.js',
+  },
+  {
+    name: 'cypress',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/cypress/dist/index.js',
+  },
+  {
+    name: 'vite',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/vite/dist/index.js',
+  },
+  {
+    name: 'vitest',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/vitest/dist/index.js',
   },
   {
     name: 'create-nx-workspace',

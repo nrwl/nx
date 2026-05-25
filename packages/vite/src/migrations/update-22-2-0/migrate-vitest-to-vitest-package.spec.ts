@@ -3,12 +3,18 @@ import {
   readJson,
   readNxJson,
   readProjectConfiguration,
+  type TargetDefaultsRecord,
   type Tree,
   updateNxJson,
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migrateVitestToVitestPackage from './migrate-vitest-to-vitest-package';
+
+// This migration ran before targetDefaults supported the array shape, so
+// the test fixtures all use the legacy record shape.
+const td = (n: { targetDefaults?: unknown }) =>
+  n.targetDefaults as TargetDefaultsRecord;
 
 describe('migrate-vitest-to-vitest-package', () => {
   let tree: Tree;
@@ -422,8 +428,8 @@ describe('migrate-vitest-to-vitest-package', () => {
       await migrateVitestToVitestPackage(tree);
 
       const updatedNxJson = readNxJson(tree);
-      expect(updatedNxJson.targetDefaults['@nx/vite:test']).toBeUndefined();
-      expect(updatedNxJson.targetDefaults['@nx/vitest:test']).toEqual({
+      expect(td(updatedNxJson)['@nx/vite:test']).toBeUndefined();
+      expect(td(updatedNxJson)['@nx/vitest:test']).toEqual({
         cache: true,
         inputs: ['default', '^production'],
       });
@@ -444,8 +450,8 @@ describe('migrate-vitest-to-vitest-package', () => {
       await migrateVitestToVitestPackage(tree);
 
       const updatedNxJson = readNxJson(tree);
-      expect(updatedNxJson.targetDefaults['@nx/vite:test']).toBeUndefined();
-      expect(updatedNxJson.targetDefaults['@nx/vitest:test']).toEqual({
+      expect(td(updatedNxJson)['@nx/vite:test']).toBeUndefined();
+      expect(td(updatedNxJson)['@nx/vitest:test']).toEqual({
         cache: true,
         inputs: ['default'],
       });
@@ -463,7 +469,7 @@ describe('migrate-vitest-to-vitest-package', () => {
       await migrateVitestToVitestPackage(tree);
 
       const updatedNxJson = readNxJson(tree);
-      expect(updatedNxJson.targetDefaults).toEqual({
+      expect(td(updatedNxJson)).toEqual({
         build: {
           cache: true,
         },
@@ -484,7 +490,7 @@ describe('migrate-vitest-to-vitest-package', () => {
       await migrateVitestToVitestPackage(tree);
 
       const updatedNxJson = readNxJson(tree);
-      expect(updatedNxJson.targetDefaults.test).toEqual({
+      expect(td(updatedNxJson).test).toEqual({
         executor: '@nx/vitest:test',
         cache: true,
         inputs: ['default', '^production'],
@@ -508,12 +514,12 @@ describe('migrate-vitest-to-vitest-package', () => {
 
       const updatedNxJson = readNxJson(tree);
       // Executor-keyed should be migrated to new key
-      expect(updatedNxJson.targetDefaults['@nx/vite:test']).toBeUndefined();
-      expect(updatedNxJson.targetDefaults['@nx/vitest:test']).toEqual({
+      expect(td(updatedNxJson)['@nx/vite:test']).toBeUndefined();
+      expect(td(updatedNxJson)['@nx/vitest:test']).toEqual({
         cache: true,
       });
       // Target-name-keyed should have executor updated in place
-      expect(updatedNxJson.targetDefaults.test).toEqual({
+      expect(td(updatedNxJson).test).toEqual({
         executor: '@nx/vitest:test',
         inputs: ['default'],
       });
@@ -551,7 +557,7 @@ describe('migrate-vitest-to-vitest-package', () => {
 
       // Should not fail, just skip targetDefaults migration
       const updatedNxJson = readNxJson(tree);
-      expect(updatedNxJson.targetDefaults).toBeUndefined();
+      expect(td(updatedNxJson)).toBeUndefined();
     });
   });
 });

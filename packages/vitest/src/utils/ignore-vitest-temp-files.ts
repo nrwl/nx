@@ -30,14 +30,21 @@ async function ignoreVitestTempFilesInEslintConfig(
   }
 
   ensurePackage('@nx/eslint', nxVersion);
-  const { addIgnoresToLintConfig, isEslintConfigSupported } = await import(
-    '@nx/eslint/src/generators/utils/eslint-file'
-  );
+  // Use CommonJS `require` rather than a dynamic ESM `import`: `ensurePackage`
+  // makes the on-demand-installed package available via `Module._initPaths`,
+  // which `require()` honors but ESM resolution does not. Under nodenext, a
+  // dynamic `import()` is preserved as a true ESM dynamic import, so it can't
+  // see the temp install — generators that go down this path crash with
+  // `Cannot find package '@nx/eslint'`.
+  const {
+    addIgnoresToLintConfig,
+    isEslintConfigSupported,
+    useFlatConfig,
+  }: typeof import('@nx/eslint/internal') = require('@nx/eslint/internal');
   if (!isEslintConfigSupported(tree)) {
     return;
   }
 
-  const { useFlatConfig } = await import('@nx/eslint/src/utils/flat-config');
   const isUsingFlatConfig = useFlatConfig(tree);
   if (!projectRoot && !isUsingFlatConfig) {
     // root eslintrc files ignore all files and the root eslintrc files add

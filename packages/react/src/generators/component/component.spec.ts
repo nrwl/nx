@@ -1,6 +1,6 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
   logger,
   readJson,
@@ -14,8 +14,8 @@ import { componentGenerator } from './component';
 
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/versions', () => ({
-  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+jest.mock('@nx/cypress/internal', () => ({
+  ...jest.requireActual('@nx/cypress/internal'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
 
@@ -78,6 +78,18 @@ describe('component', () => {
     expect(appTree.read('my-lib/src/lib/hello/hello.tsx').toString()).toMatch(
       /<div className={styles\['container']}>/
     );
+  });
+
+  it('should generate jsx when path has .jsx extension', async () => {
+    await componentGenerator(appTree, {
+      name: 'hello',
+      style: 'css',
+      path: `${projectName}/src/lib/hello/hello.jsx`,
+    });
+
+    expect(appTree.exists('my-lib/src/lib/hello/hello.jsx')).toBeTruthy();
+    expect(appTree.exists('my-lib/src/lib/hello/hello.spec.jsx')).toBeTruthy();
+    expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeFalsy();
   });
 
   it('should generate files with global CSS', async () => {

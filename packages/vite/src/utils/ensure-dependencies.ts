@@ -5,8 +5,8 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { oxcTransformVersion } from '@nx/js/internal';
 import { coerce, major } from 'semver';
-import { oxcTransformVersion } from '@nx/js/src/utils/versions';
 import {
   ajvVersion,
   rolldownPluginDtsVersion,

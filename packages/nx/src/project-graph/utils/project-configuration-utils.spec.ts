@@ -716,6 +716,139 @@ describe('project-configuration-utils', () => {
       expect(buildTarget.inputs).toEqual(['explicit', 'inferred']);
     });
 
+    it('should apply projects-filtered defaults to a project that only a default plugin contributed', () => {
+      // ~45% of projects in a typical workspace are default-plugin-only
+      // (project.json / package.json reader output, no specified-plugin
+      // contribution). The merge-twice flow's preview pass must include
+      // these projects in the name view fed to findMatchingProjects so
+      // that `projects:` filters apply correctly.
+      const defaultResults = [
+        [
+          [
+            'nx/core/project-json',
+            'libs/lib-a/project.json',
+            {
+              projects: {
+                'libs/lib-a': {
+                  name: 'lib-a',
+                  root: 'libs/lib-a',
+                  tags: ['scope:web'],
+                  targets: {
+                    build: { executor: 'nx:noop' },
+                  },
+                },
+              },
+            },
+          ],
+          [
+            'nx/core/project-json',
+            'libs/lib-b/project.json',
+            {
+              projects: {
+                'libs/lib-b': {
+                  name: 'lib-b',
+                  root: 'libs/lib-b',
+                  tags: ['scope:api'],
+                  targets: {
+                    build: { executor: 'nx:noop' },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        [],
+        defaultResults as any,
+        {
+          targetDefaults: [
+            {
+              target: 'build',
+              projects: 'tag:scope:web',
+              cache: true,
+              inputs: ['web-only'],
+            },
+          ],
+        },
+        '/tmp/test',
+        errors
+      );
+
+      const libATarget = result.projectRootMap['libs/lib-a'].targets!['build'];
+      const libBTarget = result.projectRootMap['libs/lib-b'].targets!['build'];
+
+      // lib-a matches the tag filter: cache + inputs from the default apply.
+      expect(libATarget.cache).toBe(true);
+      expect(libATarget.inputs).toEqual(['web-only']);
+      // lib-b doesn't match: no cache, default plugin only.
+      expect(libBTarget.cache).toBeUndefined();
+      expect(libBTarget.inputs).toBeUndefined();
+
+      expect(errors).toEqual([]);
+    });
+
+    it('should fall back to a less-specific compatible default when the most-specific match is incompatible', () => {
+      // A workspace has a generic `{ target: 'build', cache: true }`
+      // default and a specific-but-incompatible `{ target: 'build',
+      // executor: 'foreign:build', cache: false }`. The matcher's best
+      // candidate is the specific one (executorOnly outranks
+      // exactTarget), but that entry's executor is incompatible with
+      // the project's actual `nx:run-commands` target. We should fall
+      // back to the generic default rather than dropping all defaults.
+      const specifiedResults = [
+        [
+          [
+            '@nx/dotnet',
+            'libs/dotnet-lib/MyLib.csproj',
+            {
+              projects: {
+                'libs/dotnet-lib': {
+                  name: 'dotnet-lib',
+                  root: 'libs/dotnet-lib',
+                  targets: {
+                    build: {
+                      command: 'dotnet build',
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults as any,
+        [],
+        {
+          targetDefaults: [
+            // Generic — compatible with anything (no executor set).
+            { target: 'build', cache: true, inputs: ['default'] },
+            // Specific — incompatible with the dotnet `command` target.
+            {
+              target: 'build',
+              executor: '@monodon/rust:build',
+              cache: false,
+            },
+          ],
+        },
+        '/tmp/test',
+        errors
+      );
+
+      const buildTarget =
+        result.projectRootMap['libs/dotnet-lib'].targets!['build'];
+      // Inferred command preserved; generic default's cache + inputs apply.
+      expect(buildTarget.executor).toEqual('nx:run-commands');
+      expect(buildTarget.cache).toBe(true);
+      expect(buildTarget.inputs).toEqual(['default']);
+      expect(errors).toEqual([]);
+    });
+
     it('should not let a target-name-keyed default with a foreign executor replace an inferred command target', () => {
       // Repro: a polyglot workspace has a target-name keyed default
       // (`test-native`) configured for the rust plugin's executor, and
@@ -752,13 +885,14 @@ describe('project-configuration-utils', () => {
         specifiedResults as any,
         [],
         {
-          targetDefaults: {
-            'test-native': {
+          targetDefaults: [
+            {
+              target: 'test-native',
               executor: '@monodon/rust:test',
               options: {},
               cache: true,
             },
-          },
+          ],
         },
         '/tmp/test',
         errors
@@ -829,13 +963,14 @@ describe('project-configuration-utils', () => {
         specifiedResults as any,
         defaultResults as any,
         {
-          targetDefaults: {
-            'test-native': {
+          targetDefaults: [
+            {
+              target: 'test-native',
               executor: '@monodon/rust:test',
               options: {},
               cache: true,
             },
-          },
+          ],
         },
         '/tmp/test',
         errors
