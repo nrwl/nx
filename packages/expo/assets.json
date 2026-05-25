@@ -2,11 +2,12 @@
   "outDir": "dist/packages/expo",
   "assets": [
     { "glob": "**/files/**" },
-    {
-      "glob": "**/*.json",
-      "ignore": ["tsconfig*.json", "**/project.json"]
-    },
-    { "glob": "**/*.d.ts" },
+    { "glob": "**/files/**/.gitkeep" },
+    { "glob": "@(package|executors|generators|migrations).json" },
+    { "glob": "src/**/schema.json" },
+    { "glob": "src/**/schema.d.ts" },
+    { "glob": "typings/**/*.d.ts" },
+    { "glob": "src/executors/build-list/build-fragment.d.ts" },
     { "glob": "**/*.md" },
     "LICENSE"
   ]

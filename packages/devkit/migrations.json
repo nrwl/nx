@@ -1,5 +1,11 @@
 {
-  "generators": {},
+  "generators": {
+    "update-devkit-deep-imports": {
+      "version": "23.0.0-beta.6",
+      "description": "Rewrite imports from `@nx/devkit/src/...` to `@nx/devkit` (for public symbols) or `@nx/devkit/internal` (for the rest), since deep imports are no longer reachable through the package's `exports` map.",
+      "implementation": "./dist/src/migrations/update-23-0-0/update-deep-imports"
+    }
+  },
   "packageJsonUpdates": {},
   "version": "0.1"
 }

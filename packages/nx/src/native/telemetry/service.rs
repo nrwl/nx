@@ -128,6 +128,10 @@ impl TelemetryService {
             event_dimension::IS_AI_AGENT.to_string(),
             is_ai_agent.to_string(),
         );
+        user_parameters.insert(
+            event_dimension::WORKSPACE_ID.to_string(),
+            opts.workspace_id.clone(),
+        );
         user_parameters.insert(user_dimension::IS_CI.to_string(), opts.is_ci.to_string());
         user_parameters.insert(
             user_dimension::NX_CLOUD_ENABLED.to_string(),

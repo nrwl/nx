@@ -1,3 +1,4 @@
+import type { JsonInput } from '../native';
 import type { PackageJson } from '../utils/package-json';
 import type {
   NxJsonConfiguration,
@@ -203,6 +204,10 @@ export interface TargetDependencyConfig {
   options?: 'ignore' | 'forward';
 }
 
+// TODO: import the remaining variants from '../native' so the TS types stay
+// in sync with the Rust/napi-generated shapes. Some variants (fileset/input
+// discrimination, workingDirectory literal union) carry richer TS semantics
+// than their native counterparts and will need a layered type to preserve.
 export type InputDefinition =
   | { input: string; projects: string | string[] }
   | { input: string; dependencies: true }
@@ -213,7 +218,8 @@ export type InputDefinition =
   | { externalDependencies: string[] }
   | { dependentTasksOutputFiles: string; transitive?: boolean }
   | { env: string }
-  | { workingDirectory: 'relative' | 'absolute' };
+  | { workingDirectory: 'relative' | 'absolute' }
+  | JsonInput;
 
 /**
  * Target's configuration
@@ -288,4 +294,15 @@ export interface TargetConfiguration<T = any> {
    * is up to date.
    */
   syncGenerators?: string[];
+
+  /**
+   * Spread token used when merging target configurations. When set to `true`,
+   * base (inferred) values take priority over this target's values for any
+   * shared keys — effectively "only add new keys without overwriting inferred
+   * values". Keys that do not exist in the base target are still added.
+   *
+   * The position of `'...'` in the object's key order follows standard
+   * last-write-wins semantics with {@link https://nx.dev/reference/project-configuration#spread-token}.
+   */
+  '...'?: true;
 }

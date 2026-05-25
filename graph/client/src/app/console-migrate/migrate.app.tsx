@@ -1,10 +1,8 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 // nx-ignore-next-line
 import { type FileChange } from 'nx/src/devkit-exports';
 import { MigrateUI } from '@nx/graph-migrate';
-/* eslint-enable @nx/enforce-module-boundaries */
 
 import { getExternalApiService } from '@nx/graph-shared';
 import { useSelector } from '@xstate/react';

@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/devkit/spec",
+    "outDir": "dist/spec",
     "module": "commonjs",
     "types": ["jest", "node"],
     "composite": true

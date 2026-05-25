@@ -25,7 +25,7 @@ export async function viewLogs(): Promise<number> {
     'view-logs',
     'setupViewLogs'
   );
-  if (!setupNxCloud) {
+  if (setupNxCloud !== 'yes') {
     return;
   }
 

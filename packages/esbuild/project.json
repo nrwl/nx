@@ -5,6 +5,7 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "inputs": ["copyReadme"],
       "outputs": ["{workspaceRoot}/dist/packages/esbuild/README.md"],
       "commands": ["node ./scripts/copy-readme.js esbuild"]
     }

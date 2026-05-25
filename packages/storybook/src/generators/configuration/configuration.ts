@@ -12,6 +12,7 @@ import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import { StorybookConfigureSchema } from './schema';
 import { initGenerator } from '../init/init';
+import { warnStorybookExecutorGenerating } from '../../utils/deprecation';
 
 import {
   addAngularStorybookTarget,
@@ -47,7 +48,7 @@ import {
 } from '../../utils/versions';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { editRootTsConfig } from './lib/edit-root-tsconfig';
-import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectType } from '@nx/js/internal';
 
 export function configurationGenerator(
   tree: Tree,
@@ -179,6 +180,7 @@ export async function configurationGeneratorInternal(
   let devDeps = {};
 
   if (!hasPlugin || schema.addExplicitTargets) {
+    warnStorybookExecutorGenerating();
     if (schema.uiFramework === '@storybook/angular') {
       addAngularStorybookTarget(tree, schema.project, schema.interactionTests);
     } else {

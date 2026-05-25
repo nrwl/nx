@@ -5,7 +5,6 @@ export interface NormalizedSchema {
   libraryOptions: {
     directory: string;
     name?: string;
-    addTailwind?: boolean;
     skipFormat?: boolean;
     addModuleSpec?: boolean;
     sourceDir?: string;

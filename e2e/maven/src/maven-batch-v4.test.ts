@@ -11,9 +11,8 @@ import { createMavenProject } from './utils/create-maven-project';
 describe('Maven 4 Batch Mode', () => {
   const projectName = uniq('batch-v4-test');
 
-  const runBatchCLI = (cmd: string, opts: { verbose?: boolean } = {}) => {
+  const runBatchCLI = (cmd: string) => {
     return runCLI(cmd, {
-      ...opts,
       env: { NX_BATCH_MODE: 'true' },
     });
   };
@@ -46,6 +45,21 @@ wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-w
       'lib/target/lib-1.0.0-SNAPSHOT.jar',
       'utils/target/utils-1.0.0-SNAPSHOT.jar'
     );
+  });
+
+  it('should record build state while running Maven 4 resource phases in parallel', () => {
+    const output = runCLI(
+      'run-many -t resources,after:resources --parallel=3 --skip-nx-cache',
+      {
+        env: { NX_BATCH_MODE: 'true', NX_VERBOSE_LOGGING: 'true' },
+      }
+    );
+
+    expect(output).toContain('Successfully ran targets');
+    expect(output).toContain('resources');
+    expect(output).toContain('after:resources');
+    expect(output).not.toContain('context.terminal');
+    expect(output).not.toContain('Terminal.writer()');
   });
 
   it('should install successfully after restoring cached package outputs', () => {
@@ -97,5 +111,13 @@ class AppApplicationTests {
     }
     expect(error).toBeDefined();
     expect(error.stdout || error.stderr).toContain('thisTestShouldFail');
+  });
+
+  it('should clean multiple projects with run-many in batch mode', () => {
+    // Regression test for https://github.com/nrwl/nx/issues/34757
+    // clean targets are fast and run in parallel, which previously caused
+    // workers to exit prematurely when the task queue was momentarily empty.
+    const output = runBatchCLI('run-many -t clean');
+    expect(output).toContain('Successfully ran target clean');
   });
 });

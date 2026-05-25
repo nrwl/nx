@@ -196,7 +196,7 @@ jobs:
 
       - run: npm ci
       - run: npx cypress install
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
@@ -244,7 +244,7 @@ jobs:
 
       - run: npm ci
       - run: npx cypress install
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
@@ -619,7 +619,7 @@ jobs:
       # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: bun nx record -- echo Hello World
@@ -663,7 +663,7 @@ jobs:
       # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: bun nx record -- echo Hello World
@@ -707,7 +707,7 @@ jobs:
       # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: bun nx record -- echo Hello World
@@ -1095,7 +1095,7 @@ jobs:
           cache: 'npm'
 
       - run: npm ci
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
@@ -1141,7 +1141,7 @@ jobs:
           cache: 'npm'
 
       - run: npm ci
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
@@ -1187,7 +1187,7 @@ jobs:
           cache: 'npm'
 
       - run: npm ci
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
@@ -1601,7 +1601,7 @@ jobs:
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx record -- echo Hello World
@@ -1652,7 +1652,7 @@ jobs:
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx record -- echo Hello World
@@ -1704,7 +1704,7 @@ jobs:
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx record -- echo Hello World
@@ -2092,7 +2092,7 @@ jobs:
           cache: 'yarn'
 
       - run: yarn install --frozen-lockfile
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: yarn nx record -- echo Hello World
@@ -2140,7 +2140,7 @@ jobs:
           cache: 'yarn'
 
       - run: yarn install --frozen-lockfile
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: yarn nx record -- echo Hello World
@@ -2186,7 +2186,7 @@ jobs:
           cache: 'yarn'
 
       - run: yarn install --frozen-lockfile
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: yarn nx record -- echo Hello World
@@ -2426,7 +2426,7 @@ jobs:
 
       - run: npm ci
       - run: npx cypress install
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
@@ -2474,7 +2474,7 @@ jobs:
 
       - run: npm ci
       - run: npx cypress install
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
@@ -2851,7 +2851,7 @@ jobs:
       # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: bun nx record -- echo Hello World
@@ -2895,7 +2895,7 @@ jobs:
       # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: bun nx record -- echo Hello World
@@ -2939,7 +2939,7 @@ jobs:
       # - run: bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: bun nx record -- echo Hello World
@@ -3329,7 +3329,7 @@ jobs:
           cache: 'npm'
 
       - run: npm ci
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
@@ -3375,7 +3375,7 @@ jobs:
           cache: 'npm'
 
       - run: npm ci
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
@@ -3421,7 +3421,7 @@ jobs:
           cache: 'npm'
 
       - run: npm ci
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
@@ -3837,7 +3837,7 @@ jobs:
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx record -- echo Hello World
@@ -3888,7 +3888,7 @@ jobs:
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx record -- echo Hello World
@@ -3940,7 +3940,7 @@ jobs:
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx record -- echo Hello World
@@ -4330,7 +4330,7 @@ jobs:
           cache: 'yarn'
 
       - run: yarn install --frozen-lockfile
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: yarn nx record -- echo Hello World
@@ -4378,7 +4378,7 @@ jobs:
           cache: 'yarn'
 
       - run: yarn install --frozen-lockfile
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: yarn nx record -- echo Hello World
@@ -4424,7 +4424,7 @@ jobs:
           cache: 'yarn'
 
       - run: yarn install --frozen-lockfile
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: yarn nx record -- echo Hello World

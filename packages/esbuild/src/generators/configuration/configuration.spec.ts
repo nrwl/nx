@@ -1,6 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import {
   addProjectConfiguration,
+  readJson,
   readProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
@@ -59,6 +60,105 @@ describe('configurationGenerator', () => {
       outputFileName: 'main.js',
       outputPath: 'dist/mypkg',
       tsConfig: `tsconfig.app.json`,
+    });
+  });
+
+  it('should set @nx/esbuild:esbuild target defaults with the tsconfig field-scoped input', async () => {
+    addProjectConfiguration(tree, 'mypkg', {
+      root: 'mypkg',
+    });
+    tree.write('mypkg/src/main.ts', 'console.log("main");');
+    writeJson(tree, 'mypkg/tsconfig.app.json', {});
+
+    await configurationGenerator(tree, {
+      project: 'mypkg',
+    });
+
+    const nxJson = readJson(tree, 'nx.json');
+    const td = nxJson.targetDefaults;
+    const esbuildEntry = Array.isArray(td)
+      ? td.find((e) => e.executor === '@nx/esbuild:esbuild')
+      : td['@nx/esbuild:esbuild'];
+    expect(esbuildEntry).toEqual({
+      cache: true,
+      dependsOn: ['^build'],
+      executor: '@nx/esbuild:esbuild',
+      inputs: [
+        'default',
+        '^default',
+        {
+          json: '{workspaceRoot}/tsconfig.json',
+          fields: ['extends', 'files', 'include'],
+        },
+      ],
+    });
+    expect(
+      readProjectConfiguration(tree, 'mypkg').targets.build.inputs
+    ).toBeUndefined();
+  });
+
+  it('should use production named inputs when defined', async () => {
+    writeJson(tree, 'nx.json', {
+      namedInputs: {
+        default: ['{projectRoot}/**/*'],
+        production: ['default'],
+      },
+    });
+    addProjectConfiguration(tree, 'mypkg', {
+      root: 'mypkg',
+    });
+    tree.write('mypkg/src/main.ts', 'console.log("main");');
+    writeJson(tree, 'mypkg/tsconfig.app.json', {});
+
+    await configurationGenerator(tree, {
+      project: 'mypkg',
+    });
+
+    const nxJson = readJson(tree, 'nx.json');
+    const td = nxJson.targetDefaults;
+    // Generators now write the array shape with executor-keyed defaults
+    // surfaced as `executor`, not `target`. The legacy record-shape lookup
+    // is kept as a fallback for tests running against older fixtures.
+    const esbuildEntry = Array.isArray(td)
+      ? td.find((e) => e.executor === '@nx/esbuild:esbuild')
+      : td['@nx/esbuild:esbuild'];
+    expect(esbuildEntry.inputs).toEqual([
+      'production',
+      '^production',
+      {
+        json: '{workspaceRoot}/tsconfig.json',
+        fields: ['extends', 'files', 'include'],
+      },
+    ]);
+  });
+
+  it('should not override existing @nx/esbuild:esbuild target defaults', async () => {
+    writeJson(tree, 'nx.json', {
+      targetDefaults: {
+        '@nx/esbuild:esbuild': {
+          cache: true,
+          inputs: ['custom-input'],
+        },
+      },
+    });
+    addProjectConfiguration(tree, 'mypkg', {
+      root: 'mypkg',
+    });
+    tree.write('mypkg/src/main.ts', 'console.log("main");');
+    writeJson(tree, 'mypkg/tsconfig.app.json', {});
+
+    await configurationGenerator(tree, {
+      project: 'mypkg',
+    });
+
+    const nxJson = readJson(tree, 'nx.json');
+    const td = nxJson.targetDefaults;
+    const esbuildEntry = Array.isArray(td)
+      ? td.find((e) => e.executor === '@nx/esbuild:esbuild')
+      : td['@nx/esbuild:esbuild'];
+    expect(esbuildEntry).toMatchObject({
+      cache: true,
+      inputs: ['custom-input'],
     });
   });
 });

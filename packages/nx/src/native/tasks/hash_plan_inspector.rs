@@ -1,6 +1,6 @@
 use crate::native::tasks::hashers::{
-    ProjectFileSetCache, hash_project_files_with_inputs_cached, hash_workspace_files_with_inputs,
-    resolve_task_output_files,
+    ProjectFileSetCache, collect_json_input_files, hash_project_files_with_inputs_cached,
+    hash_workspace_files_with_inputs, resolve_task_output_files,
 };
 use crate::native::tasks::task_hasher::{HashInputs, HashInputsBuilder};
 use crate::native::tasks::types::HashInstruction;
@@ -82,7 +82,9 @@ impl HashPlanInspector {
     /// Like `inspect()` but returns structured `HashInputs` objects instead of flat strings.
     /// Each `HashInstruction` is categorized into the appropriate bucket (files, runtime,
     /// environment, depOutputs, external). TsConfiguration is resolved to the root tsconfig
-    /// file path. ProjectConfiguration is skipped for now. Cwd is skipped as it's ambient.
+    /// file path. JsonFileSet is resolved to the matched JSON file paths (field/excludeField
+    /// filters only affect hashing, not which files are reported as inputs).
+    /// ProjectConfiguration is skipped for now. Cwd is skipped as it's ambient.
     #[napi(ts_return_type = "Record<string, HashInputs>")]
     pub fn inspect_inputs(
         &self,
@@ -155,6 +157,26 @@ impl HashPlanInspector {
                         .unwrap_or_else(|_| dep_outputs.iter().cloned().collect());
                 Ok(HashInputsBuilder {
                     dep_outputs: dep_output_files,
+                    ..Default::default()
+                })
+            }
+            HashInstruction::JsonFileSet {
+                project_name,
+                json_path,
+                ..
+            } => {
+                // Resolve the file paths the JsonFileSet would hash, without
+                // reading or parsing any JSON. Field/excludeField filters are
+                // irrelevant here — the reported inputs are still the files.
+                let matched = collect_json_input_files(
+                    json_path,
+                    project_name.as_deref(),
+                    &self.project_file_map,
+                    &self.all_workspace_files,
+                )?;
+                let files: HashSet<String> = matched.into_iter().map(String::from).collect();
+                Ok(HashInputsBuilder {
+                    files,
                     ..Default::default()
                 })
             }

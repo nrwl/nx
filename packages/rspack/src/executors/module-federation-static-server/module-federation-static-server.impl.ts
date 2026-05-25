@@ -1,15 +1,15 @@
 import {
+  combineAsyncIterables,
+  createAsyncIterable,
+} from '@nx/devkit/internal';
+import {
   logger,
   parseTargetString,
   readTargetOptions,
   Target,
   workspaceRoot,
 } from '@nx/devkit';
-import {
-  combineAsyncIterables,
-  createAsyncIterable,
-} from '@nx/devkit/src/utils/async-iterable';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { buildStaticRemotes } from '@nx/module-federation/src/executors/utils';
 import {
   getModuleFederationConfig,
@@ -101,7 +101,6 @@ async function buildHost(
     );
     staticProcess.stdout.on('data', (data) => {
       const ANSII_CODE_REGEX =
-        // eslint-disable-next-line no-control-regex
         /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
       const stdoutString = data.toString().replace(ANSII_CODE_REGEX, '');
 
@@ -178,9 +177,8 @@ export function startProxies(
   mappedLocationsOfRemotes: Record<string, string>,
   sslOptions?: { pathToCert: string; pathToKey: string }
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { createProxyMiddleware } = require('http-proxy-middleware');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+
   const express = require('express');
   let sslCert: Buffer;
   let sslKey: Buffer;
@@ -197,9 +195,9 @@ export function startProxies(
       );
     }
   }
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+
   const http = require('http');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+
   const https = require('https');
 
   logger.info(`NX Starting static remotes proxies...`);

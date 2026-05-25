@@ -8,7 +8,7 @@ import { workspaceRoot } from '@nx/devkit';
 import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
-} from '@nx/js/src/utils/buildable-libs-utils';
+} from '@nx/js/internal';
 import { NormalizedNxAppRspackPluginOptions } from '../models';
 import { RspackNxBuildCoordinationPlugin } from './rspack-nx-build-coordination-plugin';
 import { unlinkSync } from 'fs';
@@ -75,8 +75,7 @@ export class NxTsconfigPathsRspackPlugin {
         options.tsConfig,
         options.root,
         target.data.root,
-        dependencies,
-        true // There is an issue with Rspack that requires the baseUrl to be set in the generated tsconfig
+        dependencies
       );
       this.tmpTsConfigPath = options.tsConfig;
 

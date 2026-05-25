@@ -1,5 +1,5 @@
 import { createProjectGraphAsync, GeneratorCallback, Tree } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import { addPlugin } from '@nx/devkit/internal';
 
 import { createNodesV2 } from '../../plugins/plugin';
 import { InitSchema } from './schema';

@@ -49,6 +49,7 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@xmldom/xmldom": "^0.8.10",
+    "tree-kill": "catalog:",
     "tslib": "catalog:typescript"
   },
   "devDependencies": {

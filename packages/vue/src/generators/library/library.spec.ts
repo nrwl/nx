@@ -76,7 +76,7 @@ describe('library', () => {
     await libraryGenerator(tree, defaultSchema);
     const tsconfigJson = readJson(tree, '/tsconfig.base.json');
     expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-      'my-lib/src/index.ts',
+      './my-lib/src/index.ts',
     ]);
   });
 
@@ -88,7 +88,7 @@ describe('library', () => {
     expect(tree.exists('tsconfig.base.json')).toEqual(true);
     const tsconfigJson = readJson(tree, 'tsconfig.base.json');
     expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-      'my-lib/src/index.ts',
+      './my-lib/src/index.ts',
     ]);
   });
 
@@ -101,7 +101,7 @@ describe('library', () => {
     await libraryGenerator(tree, defaultSchema);
     const tsconfigJson = readJson(tree, '/tsconfig.base.json');
     expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-      'my-lib/src/index.ts',
+      './my-lib/src/index.ts',
     ]);
   });
 
@@ -351,7 +351,7 @@ module.exports = [
       });
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
-        ['my-dir/my-lib/src/index.ts']
+        ['./my-dir/my-lib/src/index.ts']
       );
       expect(
         tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']

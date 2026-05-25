@@ -3,7 +3,6 @@ import {
   checkFilesExist,
   cleanupProject,
   createFile,
-  getPackageManagerCommand,
   killPort,
   newProject,
   readJson,
@@ -13,7 +12,6 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-  updateJson,
 } from '@nx/e2e-utils';
 
 const TEN_MINS_MS = 600_000;
@@ -93,7 +91,10 @@ describe('env vars', () => {
           `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
         );
         expect(run1).toContain('All specs passed!');
-        // tests should not fail because of a config change
+        // tests should not fail because of a config change. The ESM
+        // shape (import / export default) uses `import.meta.url` rather
+        // than `__filename` so it works under both Nx's native TS strip
+        // (ESM) and Cypress's bundled tsx CJS loader.
         updateFile(
           `apps/${myapp}-e2e/cypress.config.ts`,
           `
@@ -102,7 +103,7 @@ import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 export default defineConfig({
   e2e: {
-    ...nxE2EPreset(__filename, {
+    ...nxE2EPreset(import.meta.url, {
       cypressDir: 'src',
       webServerCommands: {
         default: 'nx run ${myapp}:serve',
@@ -169,15 +170,6 @@ export default defineConfig({
       runCLI(
         `generate @nx/next:component apps/${appName}/components/btn --no-interactive`
       );
-      // Cypress CT (@cypress/vite-dev-server) does not support Vite 8 yet.
-      // Downgrade the workspace to Vite 7 before configuring Cypress CT.
-      updateJson('package.json', (json) => {
-        json.devDependencies ??= {};
-        json.devDependencies['vite'] = '^7.0.0';
-        json.devDependencies['@vitejs/plugin-react'] = '^4.2.0';
-        return json;
-      });
-      runCommand(getPackageManagerCommand().install);
 
       runCLI(
         `generate @nx/next:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
@@ -208,15 +200,6 @@ export default defineConfig({
       runCLI(
         `generate @nx/angular:component apps/${appName}/src/app/btn/btn --no-interactive`
       );
-      // Cypress CT (@cypress/vite-dev-server) does not support Vite 8 yet.
-      // Downgrade the workspace to Vite 7 before configuring Cypress CT.
-      updateJson('package.json', (json) => {
-        json.devDependencies ??= {};
-        json.devDependencies['vite'] = '^7.0.0';
-        json.devDependencies['@vitejs/plugin-react'] = '^4.2.0';
-        return json;
-      });
-      runCommand(getPackageManagerCommand().install);
 
       runCLI(
         `generate @nx/angular:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`

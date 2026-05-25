@@ -1,5 +1,6 @@
 import {
   expandDependencyConfigSyntaxSugar,
+  expandInitiatingTasksThroughNoop,
   expandWildcardTargetConfiguration,
   getDependencyConfigs,
   getOutputsForTargetAndConfiguration,
@@ -8,6 +9,7 @@ import {
   validateOutputs,
 } from './utils';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
+import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 
 describe('utils', () => {
@@ -830,6 +832,184 @@ describe('utils', () => {
         Run \`nx repair\` to fix this."
       `);
     });
+  });
+});
+
+describe('expandInitiatingTasksThroughNoop', () => {
+  function mkTask(id: string): Task {
+    const [project, target] = id.split(':');
+    return {
+      id,
+      target: { project, target },
+      overrides: {},
+      outputs: [],
+      projectRoot: project,
+      parallelism: true,
+    };
+  }
+
+  function mkProjectGraph(
+    targets: Record<string, Record<string, { executor: string }>>
+  ): ProjectGraph {
+    const nodes: ProjectGraph['nodes'] = {};
+    for (const [project, ts] of Object.entries(targets)) {
+      nodes[project] = {
+        name: project,
+        type: 'lib',
+        data: { root: `libs/${project}`, targets: ts as any },
+      };
+    }
+    return { nodes, dependencies: {}, externalNodes: {} };
+  }
+
+  function mkTaskGraph(
+    tasks: string[],
+    dependencies: Record<string, string[]> = {},
+    continuousDependencies: Record<string, string[]> = {}
+  ): TaskGraph {
+    const taskMap: Record<string, Task> = {};
+    for (const t of tasks) taskMap[t] = mkTask(t);
+    const deps: Record<string, string[]> = {};
+    const cdeps: Record<string, string[]> = {};
+    for (const t of tasks) {
+      deps[t] = dependencies[t] ?? [];
+      cdeps[t] = continuousDependencies[t] ?? [];
+    }
+    return {
+      tasks: taskMap,
+      dependencies: deps,
+      continuousDependencies: cdeps,
+      roots: [],
+    };
+  }
+
+  it('returns initiating ids unchanged when none are noop', () => {
+    const projectGraph = mkProjectGraph({
+      app: { build: { executor: 'nx:run-commands' } },
+    });
+    const taskGraph = mkTaskGraph(['app:build']);
+    const result = expandInitiatingTasksThroughNoop(
+      [taskGraph.tasks['app:build']],
+      taskGraph,
+      projectGraph
+    );
+    expect([...result]).toEqual(['app:build']);
+  });
+
+  it('replaces a noop initiating task with its continuous dependencies', () => {
+    const projectGraph = mkProjectGraph({
+      app: {
+        dev: { executor: 'nx:noop' },
+        serve: { executor: 'nx:run-commands' },
+        watch: { executor: 'nx:run-commands' },
+      },
+    });
+    const taskGraph = mkTaskGraph(
+      ['app:dev', 'app:serve', 'app:watch'],
+      {},
+      { 'app:dev': ['app:serve', 'app:watch'] }
+    );
+    const result = expandInitiatingTasksThroughNoop(
+      [taskGraph.tasks['app:dev']],
+      taskGraph,
+      projectGraph
+    );
+    expect([...result].sort()).toEqual(['app:serve', 'app:watch']);
+  });
+
+  it('replaces a noop initiating task with its non-continuous dependencies', () => {
+    const projectGraph = mkProjectGraph({
+      app: {
+        orchestrate: { executor: 'nx:noop' },
+        build: { executor: 'nx:run-commands' },
+      },
+    });
+    const taskGraph = mkTaskGraph(['app:orchestrate', 'app:build'], {
+      'app:orchestrate': ['app:build'],
+    });
+    const result = expandInitiatingTasksThroughNoop(
+      [taskGraph.tasks['app:orchestrate']],
+      taskGraph,
+      projectGraph
+    );
+    expect([...result]).toEqual(['app:build']);
+  });
+
+  it('recursively collapses nested noop orchestrators', () => {
+    const projectGraph = mkProjectGraph({
+      app: {
+        outer: { executor: 'nx:noop' },
+        inner: { executor: 'nx:noop' },
+        serve: { executor: 'nx:run-commands' },
+      },
+    });
+    const taskGraph = mkTaskGraph(
+      ['app:outer', 'app:inner', 'app:serve'],
+      {},
+      {
+        'app:outer': ['app:inner'],
+        'app:inner': ['app:serve'],
+      }
+    );
+    const result = expandInitiatingTasksThroughNoop(
+      [taskGraph.tasks['app:outer']],
+      taskGraph,
+      projectGraph
+    );
+    expect([...result]).toEqual(['app:serve']);
+  });
+
+  it('returns an empty set for a noop with no dependencies', () => {
+    const projectGraph = mkProjectGraph({
+      app: { nothing: { executor: 'nx:noop' } },
+    });
+    const taskGraph = mkTaskGraph(['app:nothing']);
+    const result = expandInitiatingTasksThroughNoop(
+      [taskGraph.tasks['app:nothing']],
+      taskGraph,
+      projectGraph
+    );
+    expect(result.size).toBe(0);
+  });
+
+  it('terminates on cyclic noop dependencies', () => {
+    const projectGraph = mkProjectGraph({
+      app: {
+        a: { executor: 'nx:noop' },
+        b: { executor: 'nx:noop' },
+      },
+    });
+    const taskGraph = mkTaskGraph(['app:a', 'app:b'], {
+      'app:a': ['app:b'],
+      'app:b': ['app:a'],
+    });
+    const result = expandInitiatingTasksThroughNoop(
+      [taskGraph.tasks['app:a']],
+      taskGraph,
+      projectGraph
+    );
+    expect(result.size).toBe(0);
+  });
+
+  it('preserves non-noop initiating tasks alongside expanded noops', () => {
+    const projectGraph = mkProjectGraph({
+      app: {
+        dev: { executor: 'nx:noop' },
+        serve: { executor: 'nx:run-commands' },
+        test: { executor: 'nx:run-commands' },
+      },
+    });
+    const taskGraph = mkTaskGraph(
+      ['app:dev', 'app:serve', 'app:test'],
+      {},
+      { 'app:dev': ['app:serve'] }
+    );
+    const result = expandInitiatingTasksThroughNoop(
+      [taskGraph.tasks['app:dev'], taskGraph.tasks['app:test']],
+      taskGraph,
+      projectGraph
+    );
+    expect([...result].sort()).toEqual(['app:serve', 'app:test']);
   });
 });
 

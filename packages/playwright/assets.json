@@ -1,23 +1,10 @@
 {
-  "outDir": "dist/packages/playwright",
+  "outDir": "packages/playwright/dist",
   "assets": [
-    {
-      "glob": "**/files/**"
-    },
-    {
-      "glob": "**/*.json",
-      "ignore": ["tsconfig*.json", "project.json", ".eslintrc.json"]
-    },
-    {
-      "glob": "**/*.js",
-      "ignore": ["**/jest.config.js"]
-    },
-    {
-      "glob": "**/*.d.ts"
-    },
-    {
-      "glob": "PLUGIN.md"
-    },
+    { "glob": "**/files/**" },
+    { "glob": "src/**/schema.json" },
+    { "glob": "src/**/schema.d.ts" },
+    { "glob": "PLUGIN.md" },
     "LICENSE"
   ]
 }

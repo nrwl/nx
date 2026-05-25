@@ -11,18 +11,13 @@ const publicOutputDir = path.resolve(__dirname, 'public');
  **/
 module.exports = {
   siteUrl,
-  generateRobotsTxt: true,
-  exclude: [],
+  // robots.txt is served via Next.js rewrite to astro-docs (next.config.js
+  // beforeFiles). Leaving this false avoids clobbering that with a static file.
+  generateRobotsTxt: false,
+  // /ai-chat is the root redirect target and /api/* is not indexable.
+  exclude: noIndex ? ['/*'] : ['/ai-chat', '/api/*'],
   sourceDir: buildOutputDir,
   outDir: publicOutputDir,
-  robotsTxtOptions: noIndex
-    ? {
-        policies: [{ userAgent: '*', disallow: '/' }],
-      }
-    : {
-        additionalSitemaps: [
-          `${siteUrl}/sitemap-1.xml`,
-          `${siteUrl}/docs/sitemap-index.xml`,
-        ],
-      },
+  // Additional sitemaps are added to the sitemap index by
+  // scripts/patch-sitemap-index.mjs to avoid duplicate entries.
 };

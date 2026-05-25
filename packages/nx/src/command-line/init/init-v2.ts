@@ -1,9 +1,10 @@
 import { existsSync } from 'fs';
+import { basename } from 'path';
 
 import { prompt } from 'enquirer';
 import { prerelease } from 'semver';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
-import { readJsonFile } from '../../utils/fileutils';
+import { readJsonFile, writeJsonFile } from '../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
 import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
@@ -22,9 +23,13 @@ import { addNxToAngularCliRepo } from './implementation/angular';
 import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts';
 import {
   createNxJsonFile,
+  extractErrorName,
   initCloud,
   isMonorepo,
   printFinalMessage,
+  readErrorStderr,
+  setNeverConnectToCloud,
+  toErrorString,
   updateGitIgnore,
 } from './implementation/utils';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
@@ -33,7 +38,7 @@ import { handleImport } from '../../utils/handle-import';
 import { isAiAgent } from '../../native';
 import { Agent } from '../../ai/utils';
 import { detectAiAgent } from '../../ai/detect-ai-agent';
-import { recordStat } from '../../utils/ab-testing';
+import { MessageOptionKey, recordStat } from '../../utils/ab-testing';
 import { isCI } from '../../utils/is-ci';
 import { detectPackageManager } from '../../utils/package-manager';
 import {
@@ -90,8 +95,69 @@ export async function initHandler(
   }
 }
 
+async function recordInitError(
+  error: unknown,
+  baseMeta: Record<string, string | boolean>
+): Promise<void> {
+  const errorMessage = toErrorString(error);
+  const errorCode = determineErrorCode(error);
+  const stderr = readErrorStderr(error).trim();
+  const telemetryMessage = (
+    stderr ? `${errorMessage} | stderr: ${stderr.slice(-250)}` : errorMessage
+  ).slice(0, 500);
+  const errorName = extractErrorName(error, stderr);
+
+  await recordStat({
+    command: 'init',
+    nxVersion,
+    useCloud: false,
+    meta: {
+      type: 'error',
+      errorCode,
+      errorName,
+      errorMessage: telemetryMessage,
+      ...baseMeta,
+    },
+  });
+
+  if (baseMeta.aiAgent) {
+    const errorLogPath = writeErrorLog(error);
+    writeAiOutput(buildErrorResult(errorMessage, errorCode, errorLogPath));
+  } else {
+    // Restore the cursor in case the user bailed during an interactive
+    // prompt. Skip for AI agents — it would corrupt NDJSON output.
+    process.stdout.write('\x1b[?25h');
+  }
+  process.exit(1);
+}
+
 async function initHandlerImpl(options: InitArgs): Promise<void> {
   process.env.NX_RUNNING_NX_INIT = 'true';
+  const baseMeta = {
+    nodeVersion: process.versions.node,
+    os: process.platform,
+    packageManager: detectPackageManager(),
+    aiAgent: isAiAgent(),
+    isCI: isCI(),
+  };
+  recordStat({
+    command: 'init',
+    nxVersion,
+    useCloud: false,
+    meta: { type: 'start', ...baseMeta },
+  });
+
+  try {
+    return await runInit(options, baseMeta);
+  } catch (error) {
+    await recordInitError(error, baseMeta);
+  }
+}
+
+async function runInit(
+  options: InitArgs,
+  baseMeta: Record<string, string | boolean>
+): Promise<void> {
   const version =
     process.env.NX_VERSION ?? (prerelease(nxVersion) ? nxVersion : 'latest');
   if (process.env.NX_VERSION) {
@@ -141,6 +207,45 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
       learnMoreLink: 'https://nx.dev/technologies/angular/migration/angular',
     });
     return;
+  }
+
+  // When in an empty directory (no package.json) and the user hasn't explicitly
+  // chosen a setup method, prompt them to pick between .nx and package.json setup.
+  // Skip the prompt when stdin is not a TTY (e.g. CI, e2e tests) to avoid hangs.
+  if (
+    !existsSync('package.json') &&
+    !options.useDotNxInstallation &&
+    options.interactive &&
+    !aiMode &&
+    process.stdin.isTTY
+  ) {
+    const setupMode = await prompt<{ setupMode: string }>([
+      {
+        type: 'select',
+        name: 'setupMode',
+        message: 'How would you like to set up Nx in this directory?',
+        choices: [
+          {
+            name: '.nx installation (recommended for non-JavaScript projects)',
+          },
+          {
+            name: 'package.json installation (recommended for JavaScript/TypeScript projects)',
+          },
+        ],
+      },
+    ]).then((r) => r.setupMode);
+
+    if (setupMode.startsWith('package.json')) {
+      // Create a minimal package.json so the JS/TS workflow takes over
+      const workspaceName = basename(process.cwd());
+      writeJsonFile('package.json', {
+        name: workspaceName,
+        version: '0.0.0',
+        private: true,
+      });
+    } else {
+      options.useDotNxInstallation = true;
+    }
   }
 
   const _isNonJs = !existsSync('package.json') || options.useDotNxInstallation;
@@ -340,23 +445,29 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
     }
   }
 
-  let useNxCloud: any = options.nxCloud;
-  if (useNxCloud === undefined) {
-    output.log({ title: '🛠️ Setting up Self-Healing CI and Remote Caching' });
-    useNxCloud = options.interactive
+  let nxCloudChoice: MessageOptionKey;
+  if (options.nxCloud === true) {
+    nxCloudChoice = 'yes';
+  } else if (options.nxCloud === false) {
+    nxCloudChoice = 'skip';
+  } else {
+    nxCloudChoice = options.interactive
       ? await connectExistingRepoToNxCloudPrompt()
-      : false;
+      : 'skip';
   }
-  if (useNxCloud) {
+  if (nxCloudChoice === 'yes') {
     await initCloud('nx-init');
+  } else if (nxCloudChoice === 'never') {
+    setNeverConnectToCloud(repoRoot);
   }
 
   await recordStat({
     command: 'init',
     nxVersion: version,
-    useCloud: !!useNxCloud,
+    useCloud: nxCloudChoice === 'yes',
     meta: {
       type: 'complete',
+      nxCloudArg: nxCloudChoice,
       nodeVersion: process.versions.node,
       os: process.platform,
       packageManager: detectPackageManager(),

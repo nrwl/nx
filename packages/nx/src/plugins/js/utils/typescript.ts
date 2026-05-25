@@ -112,6 +112,52 @@ export function getRootTsConfigPath(): string | null {
   return tsConfigFileName ? join(workspaceRoot, tsConfigFileName) : null;
 }
 
+const customConditionsCache = new Map<string, string[]>();
+export function getRootTsConfigCustomConditions(
+  root: string = workspaceRoot
+): string[] {
+  if (customConditionsCache.has(root)) {
+    return customConditionsCache.get(root)!;
+  }
+
+  // Resolve via the TypeScript API rather than a raw JSON read so that
+  // `customConditions` inherited through `extends` chains are honored —
+  // matches what TypeScript itself sees when resolving package exports.
+  let conditions: string[] = [];
+  for (const name of ['tsconfig.base.json', 'tsconfig.json']) {
+    const tsConfigPath = join(root, name);
+    if (!existsSync(tsConfigPath)) {
+      continue;
+    }
+    try {
+      const options = readTsConfigOptions(tsConfigPath);
+      if (Array.isArray(options.customConditions)) {
+        conditions = options.customConditions.filter(
+          (c): c is string => typeof c === 'string'
+        );
+      }
+    } catch {}
+    break;
+  }
+
+  customConditionsCache.set(root, conditions);
+  return conditions;
+}
+
+/**
+ * Conditions list for `resolve.exports`: workspace `customConditions` plus
+ * `development` as backward-compat for workspaces not yet migrated by
+ * `migrate-development-custom-condition` (21.5).
+ */
+export function getRootTsConfigResolveExportsConditions(
+  root: string = workspaceRoot
+): string[] {
+  const conditions = getRootTsConfigCustomConditions(root);
+  return conditions.includes('development')
+    ? conditions
+    : [...conditions, 'development'];
+}
+
 export function findNodes(
   node: Node,
   kind: SyntaxKind | SyntaxKind[],

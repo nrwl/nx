@@ -1,7 +1,14 @@
 import {
+  calculateHashesForCreateNodes,
+  getNamedInputs,
+  PluginCache,
+} from '@nx/devkit/internal';
+import {
+  AggregateCreateNodesError,
   type CreateNodesContextV2,
   createNodesFromFiles,
   type CreateNodesResult,
+  CreateNodesResultV2,
   type CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
@@ -9,10 +16,7 @@ import {
   readJsonFile,
   type Target,
   type TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName } from '@nx/js';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative } from 'node:path';
@@ -80,19 +84,6 @@ const knownExecutors = {
   ]),
 };
 
-const pmc = getPackageManagerCommand();
-
-function readProjectsCache(cachePath: string): Record<string, AngularProjects> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
-
-function writeProjectsToCache(
-  cachePath: string,
-  results: Record<string, AngularProjects>
-) {
-  writeJsonFile(cachePath, results);
-}
-
 export const createNodesV2: CreateNodesV2<AngularPluginOptions> = [
   '**/angular.json',
   async (configFiles, options, context) => {
@@ -101,17 +92,57 @@ export const createNodesV2: CreateNodesV2<AngularPluginOptions> = [
       workspaceDataDirectory,
       `angular-${optionsHash}.hash`
     );
-    const projectsCache = readProjectsCache(cachePath);
+    const projectsCache = new PluginCache<AngularProjects>(cachePath);
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
+
     try {
-      return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, projectsCache),
+      const { entries, preErrors } = await filterAngularConfigs(
         configFiles,
-        options,
         context
       );
+
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.angularWorkspaceRoot),
+        options ?? {},
+        context,
+        entries.map(() => [lockFileName])
+      );
+
+      let results: CreateNodesResultV2 = [];
+      let nodeErrors: Array<[string | null, Error]> = [];
+      try {
+        results = await createNodesFromFiles(
+          (configFile, opts, ctx, idx) =>
+            createNodesInternal(
+              configFile,
+              opts,
+              ctx,
+              projectsCache,
+              pmc,
+              projectHashes[idx]
+            ),
+          entries.map((e) => e.configFile),
+          options,
+          context
+        );
+      } catch (e) {
+        if (e instanceof AggregateCreateNodesError) {
+          results = e.partialResults ?? [];
+          nodeErrors = e.errors;
+        } else {
+          throw e;
+        }
+      }
+
+      const allErrors = [...preErrors, ...nodeErrors];
+      if (allErrors.length > 0) {
+        throw new AggregateCreateNodesError(allErrors, results);
+      }
+      return results;
     } finally {
-      writeProjectsToCache(cachePath, projectsCache);
+      projectsCache.writeToDisk();
     }
   },
 ];
@@ -120,40 +151,34 @@ async function createNodesInternal(
   configFilePath: string,
   options: {} | undefined,
   context: CreateNodesContextV2,
-  projectsCache: Record<string, AngularProjects>
+  projectsCache: PluginCache<AngularProjects>,
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  hash: string
 ): Promise<CreateNodesResult> {
   const angularWorkspaceRoot = dirname(configFilePath);
 
-  // Do not create a project if package.json isn't there
-  const siblingFiles = readdirSync(
-    join(context.workspaceRoot, angularWorkspaceRoot)
-  );
-  if (!siblingFiles.includes('package.json')) {
-    return {};
+  if (!projectsCache.has(hash)) {
+    projectsCache.set(
+      hash,
+      await buildAngularProjects(
+        configFilePath,
+        options,
+        angularWorkspaceRoot,
+        context,
+        pmc
+      )
+    );
   }
 
-  const hash = await calculateHashForCreateNodes(
-    angularWorkspaceRoot,
-    options,
-    context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
-  );
-
-  projectsCache[hash] ??= await buildAngularProjects(
-    configFilePath,
-    options,
-    angularWorkspaceRoot,
-    context
-  );
-
-  return { projects: projectsCache[hash] };
+  return { projects: projectsCache.get(hash) };
 }
 
 async function buildAngularProjects(
   configFilePath: string,
   options: AngularPluginOptions,
   angularWorkspaceRoot: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<AngularProjects> {
   const projects: Record<string, AngularProjects[string] & { root: string }> =
     {};
@@ -950,4 +975,40 @@ function getAngularJsonProjectTargets(
   project: AngularProjectConfiguration
 ): Record<string, AngularTargetConfiguration> {
   return project.architect ?? project.targets;
+}
+
+interface AngularEntry {
+  configFile: string;
+  angularWorkspaceRoot: string;
+}
+
+async function filterAngularConfigs(
+  configFiles: readonly string[],
+  context: CreateNodesContextV2
+): Promise<{
+  entries: AngularEntry[];
+  preErrors: Array<[string, Error]>;
+}> {
+  const preErrors: Array<[string, Error]> = [];
+  const candidates = await Promise.all(
+    configFiles.map(async (configFile): Promise<AngularEntry | null> => {
+      try {
+        const angularWorkspaceRoot = dirname(configFile);
+        const siblingFiles = readdirSync(
+          join(context.workspaceRoot, angularWorkspaceRoot)
+        );
+        if (!siblingFiles.includes('package.json')) {
+          return null;
+        }
+        return { configFile, angularWorkspaceRoot };
+      } catch (e) {
+        preErrors.push([configFile, e as Error]);
+        return null;
+      }
+    })
+  );
+  return {
+    entries: candidates.filter((c): c is AngularEntry => c !== null),
+    preErrors,
+  };
 }

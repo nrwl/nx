@@ -657,7 +657,7 @@ impl TuiApp for InlineApp {
         })
     }
 
-    fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
+    fn update_task_status(&mut self, task_id: &str, status: TaskStatus) {
         debug!("Updating task '{}' status to {:?}", task_id, status);
         self.core.update_task_status(task_id, status);
         let can_be_interactive = self.can_be_interactive();
@@ -670,11 +670,7 @@ impl TuiApp for InlineApp {
     fn end_tasks(&mut self, task_results: Vec<crate::native::tasks::types::TaskResult>) {
         debug!(
             "Ending tasks in InlineApp - {:?}. Selected task: {:?}",
-            task_results
-                .clone()
-                .iter()
-                .map(|t| &t.task.id)
-                .collect::<Vec<_>>(),
+            task_results.iter().map(|t| &t.task.id).collect::<Vec<_>>(),
             self.selected_item
         );
         self.core.end_tasks(&task_results);
@@ -1065,6 +1061,7 @@ impl InlineApp {
         pty: &Arc<PtyInstance>,
     ) {
         use crate::native::tui::theme::THEME;
+        use crate::native::tui::vt100_adapter::Vt100CttScreen;
         use ratatui::style::Style;
         use ratatui::widgets::Block;
         use tui_term::widget::PseudoTerminal;
@@ -1077,7 +1074,7 @@ impl InlineApp {
                 .border_style(Style::default().fg(THEME.primary_fg));
 
             // Use PseudoTerminal with block
-            let pseudo_term = PseudoTerminal::new(&*screen).block(block);
+            let pseudo_term = PseudoTerminal::new(Vt100CttScreen::wrap(&screen)).block(block);
             f.render_widget(pseudo_term, area);
         }
     }
@@ -1086,30 +1083,18 @@ impl InlineApp {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::native::tasks::types::{TaskResult, TaskTarget};
+    use crate::native::tasks::types::TaskResult;
     use crate::native::tui::config;
     use crossterm::event::KeyEvent;
     use tokio::sync::mpsc;
 
     fn create_test_task(id: &str) -> Task {
-        Task {
-            id: id.to_string(),
-            target: TaskTarget {
-                project: id.to_string(),
-                target: "build".to_string(),
-                configuration: None,
-            },
-            outputs: vec![],
-            project_root: Some(format!("/tmp/{}", id)),
-            start_time: None,
-            end_time: None,
-            continuous: None,
-        }
+        Task::new(id, "build").with_project_root(format!("/tmp/{}", id))
     }
 
     fn create_test_inline_app() -> InlineApp {
         let tasks = vec![create_test_task("app1"), create_test_task("app2")];
-        let initiating_tasks = HashSet::from([String::from("app1")]);
+        let initiating_tasks = HashSet::from([String::from("app1:build")]);
         let task_graph = TaskGraph {
             tasks: HashMap::new(),
             dependencies: HashMap::new(),
@@ -1216,8 +1201,8 @@ mod tests {
         let (tx, _rx) = mpsc::unbounded_channel();
 
         // Mark all tasks as completed
-        app.update_task_status(String::from("app1"), TaskStatus::Success);
-        app.update_task_status(String::from("app2"), TaskStatus::Success);
+        app.update_task_status("app1:build", TaskStatus::Success);
+        app.update_task_status("app2:build", TaskStatus::Success);
 
         let event = tui::Event::Key(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE));
         let result = app.handle_event(event, &tx).unwrap();
@@ -1349,15 +1334,15 @@ mod tests {
         let mut app = create_test_inline_app();
 
         // Register non-interactive PTY (simpler test)
-        app.register_running_non_interactive_task(String::from("app1"));
+        app.register_running_non_interactive_task(String::from("app1:build"));
 
         // Verify scrollback tracking initialized
-        assert_eq!(app.task_scrollback_lines.get("app1"), Some(&0));
+        assert_eq!(app.task_scrollback_lines.get("app1:build"), Some(&0));
 
         // Verify PTY registered in state
         let state_ref = app.get_state();
         let state = state_ref.lock();
-        assert!(state.get_pty_instance("app1").is_some());
+        assert!(state.get_pty_instance("app1:build").is_some());
     }
 
     #[test]
@@ -1382,18 +1367,24 @@ mod tests {
         // Verify status updated in state
         let state_ref = app.get_state();
         let state = state_ref.lock();
-        assert_eq!(state.get_task_status("app1"), Some(TaskStatus::InProgress));
+        assert_eq!(
+            state.get_task_status("app1:build"),
+            Some(TaskStatus::InProgress)
+        );
     }
 
     #[test]
     fn test_update_task_status() {
         let mut app = create_test_inline_app();
 
-        app.update_task_status(String::from("app1"), TaskStatus::Success);
+        app.update_task_status("app1:build", TaskStatus::Success);
 
         let state_ref = app.get_state();
         let state = state_ref.lock();
-        assert_eq!(state.get_task_status("app1"), Some(TaskStatus::Success));
+        assert_eq!(
+            state.get_task_status("app1:build"),
+            Some(TaskStatus::Success)
+        );
     }
 
     #[test]
@@ -1415,7 +1406,7 @@ mod tests {
         // Verify timing recorded
         let state_ref = app.get_state();
         let state = state_ref.lock();
-        let (start, end) = state.get_task_timing("app1");
+        let (start, end) = state.get_task_timing("app1:build");
         assert!(start.is_some());
         assert!(end.is_some());
     }
@@ -1430,10 +1421,13 @@ mod tests {
         assert!(app.get_current_running_item().is_none());
 
         // Start a task
-        app.update_task_status(String::from("app1"), TaskStatus::InProgress);
+        app.update_task_status("app1:build", TaskStatus::InProgress);
 
         // Should find running task
-        assert_eq!(app.get_current_running_item(), Some(String::from("app1")));
+        assert_eq!(
+            app.get_current_running_item(),
+            Some(String::from("app1:build"))
+        );
     }
 
     #[test]
@@ -1621,13 +1615,13 @@ mod tests {
         let mut app = create_test_inline_app();
 
         // Register same task twice
-        app.register_running_non_interactive_task(String::from("app1"));
-        app.register_running_non_interactive_task(String::from("app1"));
+        app.register_running_non_interactive_task(String::from("app1:build"));
+        app.register_running_non_interactive_task(String::from("app1:build"));
 
         // Should overwrite, not panic
         let state_ref = app.get_state();
         let state = state_ref.lock();
-        assert!(state.get_pty_instance("app1").is_some());
+        assert!(state.get_pty_instance("app1:build").is_some());
     }
 
     #[test]
@@ -1635,7 +1629,7 @@ mod tests {
         let mut app = create_test_inline_app();
 
         // Should not panic
-        app.update_task_status(String::from("nonexistent"), TaskStatus::Success);
+        app.update_task_status("nonexistent", TaskStatus::Success);
 
         // Status should be recorded anyway
         let state_ref = app.get_state();
@@ -1650,28 +1644,16 @@ mod tests {
 #[cfg(test)]
 mod integration_tests {
     use super::*;
-    use crate::native::tasks::types::{TaskResult, TaskTarget};
+    use crate::native::tasks::types::TaskResult;
     use crate::native::tui::config;
 
     fn create_test_task(id: &str) -> Task {
-        Task {
-            id: id.to_string(),
-            target: TaskTarget {
-                project: id.to_string(),
-                target: "build".to_string(),
-                configuration: None,
-            },
-            outputs: vec![],
-            project_root: Some(format!("/tmp/{}", id)),
-            start_time: None,
-            end_time: None,
-            continuous: None,
-        }
+        Task::new(id, "build").with_project_root(format!("/tmp/{}", id))
     }
 
     fn create_test_inline_app() -> InlineApp {
         let tasks = vec![create_test_task("app1"), create_test_task("app2")];
-        let initiating_tasks = HashSet::from([String::from("app1")]);
+        let initiating_tasks = HashSet::from([String::from("app1:build")]);
         let task_graph = TaskGraph {
             tasks: HashMap::new(),
             dependencies: HashMap::new(),
@@ -1708,10 +1690,10 @@ mod integration_tests {
         app.start_tasks(tasks);
 
         // Register PTY
-        app.register_running_non_interactive_task(String::from("app1"));
+        app.register_running_non_interactive_task(String::from("app1:build"));
 
         // Update to success
-        app.update_task_status(String::from("app1"), TaskStatus::Success);
+        app.update_task_status("app1:build", TaskStatus::Success);
 
         // End tasks
         app.end_tasks(vec![TaskResult {
@@ -1727,8 +1709,11 @@ mod integration_tests {
         // Verify final state
         let state_ref = app.get_state();
         let state = state_ref.lock();
-        assert_eq!(state.get_task_status("app1"), Some(TaskStatus::Success));
-        assert!(state.get_pty_instance("app1").is_some());
+        assert_eq!(
+            state.get_task_status("app1:build"),
+            Some(TaskStatus::Success)
+        );
+        assert!(state.get_pty_instance("app1:build").is_some());
     }
 
     #[test]
@@ -1763,12 +1748,15 @@ mod integration_tests {
         let app2 = InlineApp::with_state(state.clone(), None).unwrap();
 
         // Modify through app1
-        app1.update_task_status(String::from("shared"), TaskStatus::Success);
+        app1.update_task_status("shared:build", TaskStatus::Success);
 
         // Verify visible through app2
         assert!(!app2.should_quit()); // Can access state without issues
         let state2_ref = app2.get_state();
         let state2 = state2_ref.lock();
-        assert_eq!(state2.get_task_status("shared"), Some(TaskStatus::Success));
+        assert_eq!(
+            state2.get_task_status("shared:build"),
+            Some(TaskStatus::Success)
+        );
     }
 }

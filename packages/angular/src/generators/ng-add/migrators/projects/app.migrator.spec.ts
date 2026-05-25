@@ -11,6 +11,7 @@ import {
   readProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
+import { normalizeTargetDefaults } from '@nx/devkit/internal';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import type { MigrationProjectConfiguration } from '../../utilities/types';
 import { AppMigrator } from './app.migrator';
@@ -1043,46 +1044,6 @@ describe('app migrator', () => {
       });
     });
 
-    it('should set hasTypeAwareRules when there are rules requiring type checking', async () => {
-      writeJson(tree, '.eslintrc.json', {
-        root: true,
-        ignorePatterns: ['projects/**/*'],
-        overrides: [
-          {
-            files: ['*.ts', '*.tsx'],
-            extends: ['plugin:@nx/typescript'],
-            rules: { '@typescript-eslint/await-thenable': 'error' },
-          },
-        ],
-      });
-      const project = addProject('app1', {
-        root: '',
-        sourceRoot: 'src',
-        architect: {
-          lint: {
-            builder: '@angular-eslint/builder:lint',
-            options: {
-              eslintConfig: '.eslintrc.json',
-              lintFilePatterns: ['src/**/*.ts', 'src/**/*.html'],
-            },
-          },
-        },
-      });
-      const migrator = new AppMigrator(tree, {}, project);
-
-      await migrator.migrate();
-
-      const { targets } = readProjectConfiguration(tree, 'app1');
-      expect(targets.lint).toStrictEqual({
-        executor: '@nx/eslint:lint',
-        options: {
-          eslintConfig: 'apps/app1/.eslintrc.json',
-          hasTypeAwareRules: true,
-          lintFilePatterns: ['apps/app1/**/*.ts', 'apps/app1/**/*.html'],
-        },
-      });
-    });
-
     it('should update server target', async () => {
       const project = addProject('app1', {
         root: '',
@@ -1838,7 +1799,9 @@ describe('app migrator', () => {
 
       const { targetDefaults } = readNxJson(tree);
       expect(
-        Object.keys(targetDefaults).filter((f) => targetDefaults[f].cache)
+        normalizeTargetDefaults(targetDefaults)
+          .filter((entry) => entry.cache && entry.target)
+          .map((entry) => entry.target)
       ).toStrictEqual([
         'build',
         'lint',
@@ -1872,7 +1835,9 @@ describe('app migrator', () => {
 
       const { targetDefaults } = readNxJson(tree);
       expect(
-        Object.keys(targetDefaults).filter((f) => targetDefaults[f].cache)
+        normalizeTargetDefaults(targetDefaults)
+          .filter((entry) => entry.cache && entry.target)
+          .map((entry) => entry.target)
       ).toStrictEqual(['build', 'lint', 'myCustomTest', 'e2e']);
     });
   });

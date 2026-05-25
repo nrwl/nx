@@ -1,7 +1,7 @@
 import { Tree } from 'nx/src/generators/tree';
-import * as shared from '@nx/js/src/utils/typescript/create-ts-config';
+import * as shared from '@nx/js';
 import { updateJson, writeJson } from 'nx/src/generators/utils/json';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export function createTsConfig(
   host: Tree,
@@ -97,11 +97,6 @@ function createTsConfigForTsSolution(
         json.compilerOptions.types = Array.from(types);
       }
 
-      if (options.style === '@emotion/styled') {
-        json.compilerOptions ??= {};
-        json.compilerOptions.jsxImportSource = '@emotion/react';
-      }
-
       return json;
     });
   }
@@ -136,10 +131,6 @@ function createTsConfigForNonTsSolution(
       },
     ],
   } as any;
-
-  if (options.style === '@emotion/styled') {
-    json.compilerOptions.jsxImportSource = '@emotion/react';
-  }
 
   if (options.bundler === 'vite') {
     json.compilerOptions.types =

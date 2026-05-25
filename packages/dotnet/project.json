@@ -17,25 +17,6 @@
       "inputs": ["copyReadme"],
       "cache": true
     },
-    "build-analyzer": {
-      "command": "node ./scripts/run-native-target.js _build-analyzer dotnet",
-      "cache": true,
-      "outputs": ["{workspaceRoot}/dist/msbuild-analyzer"],
-      "inputs": ["{projectRoot}/analyzer/**", { "env": "SKIP_ANALYZER_BUILD" }]
-    },
-    "_build-analyzer": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/dist/msbuild-analyzer"],
-      "inputs": ["{projectRoot}/analyzer/**"],
-      "cache": true,
-      "options": {
-        "commands": [
-          "dotnet publish {projectRoot}/analyzer/MsbuildAnalyzer.csproj -c Release -o dist/msbuild-analyzer --self-contained false",
-          "node scripts/chmod.js dist/msbuild-analyzer/MsbuildAnalyzer"
-        ],
-        "parallel": false
-      }
-    },
     "format-native": {
       "command": "node ./scripts/run-native-target.js _format-native dotnet"
     },
@@ -51,7 +32,7 @@
       }
     },
     "copy-assets": {
-      "dependsOn": ["build-analyzer"]
+      "dependsOn": [{ "projects": ["MsbuildAnalyzer"], "target": "publish" }]
     },
     "nx-release-publish": {
       "executor": "@nx/js:release-publish",

@@ -1,3 +1,4 @@
+import { determineProjectNameAndRootOptions } from '@nx/devkit/internal';
 import {
   GeneratorCallback,
   Tree,
@@ -13,7 +14,6 @@ import { Schema } from './schema';
 
 import { remoteGenerator } from '../remote/remote';
 import { addPathToExposes, checkRemoteExists } from './lib/utils';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { addTsConfigPath, getRootTsConfigPathInTree } from '@nx/js';
 
 export async function federateModuleGenerator(tree: Tree, schema: Schema) {

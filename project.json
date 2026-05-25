@@ -60,8 +60,7 @@
       "cache": true,
       "inputs": [
         "{projectRoot}/pnpm-lock.yaml",
-        "{workspaceRoot}/.eslintrc.json",
-        "{workspaceRoot}/.eslintignore",
+        "{workspaceRoot}/eslint.config.mjs",
         "{workspaceRoot}/tsconfig.json",
         "{workspaceRoot}/tools/eslint-rules/**/*"
       ]

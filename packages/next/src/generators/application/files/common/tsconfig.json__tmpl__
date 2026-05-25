@@ -2,7 +2,6 @@
   "extends": "<%= rootTsConfigPath %>",
   "compilerOptions": {
     "jsx": "preserve",
-    <% if (style === '@emotion/styled') { %>"jsxImportSource": "@emotion/react",<% } %>
     "strict": true,
     "noEmit": true,
     "emitDeclarationOnly": false,

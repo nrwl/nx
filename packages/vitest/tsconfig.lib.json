@@ -1,11 +1,27 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/vitest",
-    "types": ["node"]
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": "dist",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
+    "types": ["node"],
+    "composite": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
-  "include": ["**/*.ts", "**/*.json"],
-  "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "jest.config.ts",
+    ".eslintrc.json"
+  ],
+  "include": ["*.ts", "src/**/*.ts"],
   "references": [
     {
       "path": "../js/tsconfig.lib.json"
@@ -15,6 +31,9 @@
     },
     {
       "path": "../nx/tsconfig.lib.json"
+    },
+    {
+      "path": "../eslint/tsconfig.lib.json"
     }
   ]
 }

@@ -1,4 +1,4 @@
-import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import * as devkit from '@nx/devkit';
 import {
   NxJsonConfiguration,
@@ -10,23 +10,18 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
+import { normalizeTargetDefaults } from '@nx/devkit/internal';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as enquirer from 'enquirer';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
-import {
-  angularDevkitVersion,
-  angularVersion,
-  autoprefixerVersion,
-  postcssVersion,
-  tailwindVersion,
-} from '../../utils/versions';
+import { angularDevkitVersion, angularVersion } from '../../utils/versions';
 import { generateTestApplication } from '../utils/testing';
 import type { Schema } from './schema';
 
 // need to mock cypress otherwise it'll use installed version in this repo's package.json
-jest.mock('@nx/cypress/src/utils/versions', () => ({
-  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+jest.mock('@nx/cypress/internal', () => ({
+  ...jest.requireActual('@nx/cypress/internal'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
 jest.mock('enquirer');
@@ -235,7 +230,7 @@ describe('app', () => {
       });
 
       expect(
-        appTree.exists('playwright-app-e2e/playwright.config.ts')
+        appTree.exists('playwright-app-e2e/playwright.config.mts')
       ).toBeTruthy();
       expect(
         appTree.exists('playwright-app-e2e/src/example.spec.ts')
@@ -869,15 +864,18 @@ describe('app', () => {
         const project = readProjectConfiguration(appTree, 'my-app');
         expect(project.targets.test).toStrictEqual({
           executor: '@angular/build:unit-test',
-          options: {},
+          options: {
+            watch: false,
+          },
         });
         const nxJson = readNxJson(appTree);
-        expect(nxJson.targetDefaults['@angular/build:unit-test']).toStrictEqual(
-          {
-            cache: true,
-            inputs: ['default', '^default'],
-          }
-        );
+        const unitTestDefault = normalizeTargetDefaults(
+          nxJson.targetDefaults
+        ).find((entry) => entry.executor === '@angular/build:unit-test');
+        expect(unitTestDefault).toMatchObject({
+          cache: true,
+          inputs: ['default', '^default'],
+        });
       });
 
       it('should install vitest, jsdom and @angular/build packages', async () => {
@@ -1019,61 +1017,6 @@ describe('app', () => {
     });
   });
 
-  describe('--add-tailwind', () => {
-    it('should not add a tailwind.config.js and relevant packages when "--add-tailwind" is not specified', async () => {
-      // ACT
-      await generateApp(appTree, 'app1');
-
-      // ASSERT
-      expect(appTree.exists('app1/tailwind.config.js')).toBeFalsy();
-      const { devDependencies } = readJson(appTree, 'package.json');
-      expect(devDependencies['tailwindcss']).toBeUndefined();
-      expect(devDependencies['postcss']).toBeUndefined();
-      expect(devDependencies['autoprefixer']).toBeUndefined();
-    });
-
-    it('should not add a tailwind.config.js and relevant packages when "--add-tailwind=false"', async () => {
-      // ACT
-      await generateApp(appTree, 'app1', { addTailwind: false });
-
-      // ASSERT
-      expect(appTree.exists('app1/tailwind.config.js')).toBeFalsy();
-      const { devDependencies } = readJson(appTree, 'package.json');
-      expect(devDependencies['tailwindcss']).toBeUndefined();
-      expect(devDependencies['postcss']).toBeUndefined();
-      expect(devDependencies['autoprefixer']).toBeUndefined();
-    });
-
-    it('should add a tailwind.config.js and relevant packages when "--add-tailwind=true"', async () => {
-      // ACT
-      await generateApp(appTree, 'app1', { addTailwind: true });
-
-      // ASSERT
-      expect(appTree.read('app1/tailwind.config.js', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
-        const { join } = require('path');
-
-        /** @type {import('tailwindcss').Config} */
-        module.exports = {
-          content: [
-            join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
-            ...createGlobPatternsForDependencies(__dirname),
-          ],
-          theme: {
-            extend: {},
-          },
-          plugins: [],
-        };
-        "
-      `);
-      const { devDependencies } = readJson(appTree, 'package.json');
-      expect(devDependencies['tailwindcss']).toBe(tailwindVersion);
-      expect(devDependencies['postcss']).toBe(postcssVersion);
-      expect(devDependencies['autoprefixer']).toBe(autoprefixerVersion);
-    });
-  });
-
   describe('--standalone', () => {
     it('should generate a standalone app correctly with routing', async () => {
       // ACT
@@ -1168,7 +1111,7 @@ describe('app', () => {
         e2eTestRunner: E2eTestRunner.Playwright,
         name: 'root-app',
       });
-      expect(appTree.exists('e2e/playwright.config.ts')).toBeTruthy();
+      expect(appTree.exists('e2e/playwright.config.mts')).toBeTruthy();
       expect(appTree.exists('e2e/src/example.spec.ts')).toBeTruthy();
     });
 

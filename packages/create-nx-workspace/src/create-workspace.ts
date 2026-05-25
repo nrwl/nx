@@ -35,6 +35,8 @@ import {
   getPackageManagerCommand,
 } from './utils/package-manager';
 import { isAiAgent, logProgress } from './utils/ai/ai-output';
+import { confirmThirdPartyPreset } from './internal-utils/prompts';
+import { CnwError } from './utils/error-utils';
 
 // State for SIGINT handler - only set after workspace is fully installed
 let workspaceDirectory: string | undefined;
@@ -162,6 +164,24 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
         'Preset is required when not using a template. Please provide --preset or --template.'
       );
     }
+
+    // If the preset is a third-party preset, warn the user before installing
+    // the npm package. A preset name like "core" silently installs an
+    // unrelated npm package; this confirmation makes that explicit.
+    const thirdPartyPackageName = getPackageNameFromThirdPartyPreset(preset);
+    if (thirdPartyPackageName) {
+      const confirmed = await confirmThirdPartyPreset(
+        thirdPartyPackageName,
+        options.interactive
+      );
+      if (!confirmed) {
+        throw new CnwError(
+          'INVALID_PRESET',
+          `Aborted: not installing third-party preset '${thirdPartyPackageName}'.`
+        );
+      }
+    }
+
     const tmpDir = await createSandbox(packageManager);
     const workspaceGlobs = getWorkspaceGlobsFromPreset(preset);
 
@@ -181,7 +201,6 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     // If the preset is a third-party preset, we need to call createPreset to install it
     // For first-party presets, it will be created by createEmptyWorkspace instead.
     // In createEmptyWorkspace, it will call `nx new` -> `@nx/workspace newGenerator` -> `@nx/workspace generatePreset`.
-    const thirdPartyPackageName = getPackageNameFromThirdPartyPreset(preset);
     if (thirdPartyPackageName) {
       await createPreset(
         thirdPartyPackageName,

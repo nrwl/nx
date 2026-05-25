@@ -1,3 +1,4 @@
+import { resolveImportPath, promptWhenInteractive } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -19,23 +20,23 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { resolveImportPath } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { Linter, LinterType } from '@nx/eslint';
 import {
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
-import { normalizeLinterOption } from '@nx/js/src/utils/generator-prompts';
 import {
+  normalizeLinterOption,
   getProjectPackageManagerWorkspaceState,
   getProjectPackageManagerWorkspaceStateWarningTask,
-} from '@nx/js/src/utils/package-manager-workspaces';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+  isUsingTsSolutionSetup,
+} from '@nx/js/internal';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { addLinterToCyProject } from '../../utils/add-linter';
+import { assertSupportedCypressVersion } from '../../utils/assert-supported-cypress-version';
 import { addDefaultE2EConfig } from '../../utils/config';
+import { warnCypressExecutorGenerating } from '../../utils/deprecation';
 import {
   getInstalledCypressMajorVersion,
   versions,
@@ -80,6 +81,8 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   options: CypressE2EConfigSchema
 ) {
+  assertSupportedCypressVersion(tree);
+
   const opts = await normalizeOptions(tree, options);
   const tasks: GeneratorCallback[] = [];
 
@@ -105,6 +108,7 @@ export async function configurationGeneratorInternal(
 
   await addFiles(tree, opts, projectGraph, hasPlugin);
   if (!hasPlugin) {
+    warnCypressExecutorGenerating();
     addTarget(tree, opts, projectGraph);
   }
 

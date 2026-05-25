@@ -2,6 +2,7 @@ import { TasksSchedule } from './tasks-schedule';
 import { removeTasksFromTaskGraph } from './utils';
 import { Task, TaskGraph } from '../config/task-graph';
 import { DependencyType, ProjectGraph } from '../config/project-graph';
+import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import * as nxJsonUtils from '../config/nx-json';
 import * as executorUtils from '../command-line/run/executor-utils';
 import * as taskHistoryUtils from '../utils/task-history';
@@ -148,9 +149,14 @@ describe('TasksSchedule', () => {
         version: '5',
       };
       taskHistory.getEstimatedTaskTimings.mockReturnValue({});
-      taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
-        lifeCycle,
-      });
+      taskSchedule = new TasksSchedule(
+        projectGraph,
+        readProjectsConfigurationFromProjectGraph(projectGraph).projects,
+        taskGraph,
+        {
+          lifeCycle,
+        }
+      );
       await taskSchedule.init();
     });
 
@@ -395,9 +401,14 @@ describe('TasksSchedule', () => {
         externalNodes: {},
         version: '5',
       };
-      taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
-        lifeCycle,
-      });
+      taskSchedule = new TasksSchedule(
+        projectGraph,
+        readProjectsConfigurationFromProjectGraph(projectGraph).projects,
+        taskGraph,
+        {
+          lifeCycle,
+        }
+      );
     });
 
     describe('Without Batch Mode', () => {
@@ -651,9 +662,14 @@ describe('TasksSchedule', () => {
           version: '5',
         };
         taskHistory.getEstimatedTaskTimings.mockReturnValue({});
-        taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
-          lifeCycle,
-        });
+        taskSchedule = new TasksSchedule(
+          projectGraph,
+          readProjectsConfigurationFromProjectGraph(projectGraph).projects,
+          taskGraph,
+          {
+            lifeCycle,
+          }
+        );
         await taskSchedule.init();
       });
 
@@ -825,9 +841,14 @@ describe('TasksSchedule', () => {
           version: '5',
         };
         taskHistory.getEstimatedTaskTimings.mockReturnValue({});
-        taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
-          lifeCycle,
-        });
+        taskSchedule = new TasksSchedule(
+          projectGraph,
+          readProjectsConfigurationFromProjectGraph(projectGraph).projects,
+          taskGraph,
+          {
+            lifeCycle,
+          }
+        );
         await taskSchedule.init();
       });
 
@@ -1001,10 +1022,15 @@ describe('TasksSchedule', () => {
       });
 
       // Create schedule with batch: undefined (not specified)
-      taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
-        batch: undefined,
-        lifeCycle,
-      });
+      taskSchedule = new TasksSchedule(
+        projectGraph,
+        readProjectsConfigurationFromProjectGraph(projectGraph).projects,
+        taskGraph,
+        {
+          batch: undefined,
+          lifeCycle,
+        }
+      );
       await taskSchedule.init();
       await taskSchedule.scheduleNextTasks();
 
@@ -1027,10 +1053,15 @@ describe('TasksSchedule', () => {
       });
 
       // Create schedule with batch: false (explicit opt-out)
-      taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
-        batch: false,
-        lifeCycle,
-      });
+      taskSchedule = new TasksSchedule(
+        projectGraph,
+        readProjectsConfigurationFromProjectGraph(projectGraph).projects,
+        taskGraph,
+        {
+          batch: false,
+          lifeCycle,
+        }
+      );
       await taskSchedule.init();
       await taskSchedule.scheduleNextTasks();
 
@@ -1052,10 +1083,15 @@ describe('TasksSchedule', () => {
       });
 
       // Create schedule with batch: true (explicit opt-in)
-      taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
-        batch: true,
-        lifeCycle,
-      });
+      taskSchedule = new TasksSchedule(
+        projectGraph,
+        readProjectsConfigurationFromProjectGraph(projectGraph).projects,
+        taskGraph,
+        {
+          batch: true,
+          lifeCycle,
+        }
+      );
       await taskSchedule.init();
       await taskSchedule.scheduleNextTasks();
 
@@ -1078,10 +1114,15 @@ describe('TasksSchedule', () => {
       });
 
       // Create schedule with batch: undefined (not specified)
-      taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
-        batch: undefined,
-        lifeCycle,
-      });
+      taskSchedule = new TasksSchedule(
+        projectGraph,
+        readProjectsConfigurationFromProjectGraph(projectGraph).projects,
+        taskGraph,
+        {
+          batch: undefined,
+          lifeCycle,
+        }
+      );
       await taskSchedule.init();
       await taskSchedule.scheduleNextTasks();
 
@@ -1103,10 +1144,15 @@ describe('TasksSchedule', () => {
       });
 
       // Create schedule with batch: undefined (not specified)
-      taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
-        batch: undefined,
-        lifeCycle,
-      });
+      taskSchedule = new TasksSchedule(
+        projectGraph,
+        readProjectsConfigurationFromProjectGraph(projectGraph).projects,
+        taskGraph,
+        {
+          batch: undefined,
+          lifeCycle,
+        }
+      );
       await taskSchedule.init();
       await taskSchedule.scheduleNextTasks();
 
@@ -1222,9 +1268,14 @@ describe('TasksSchedule', () => {
       };
 
       taskHistory.getEstimatedTaskTimings.mockReturnValue({});
-      taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
-        lifeCycle,
-      });
+      taskSchedule = new TasksSchedule(
+        projectGraph,
+        readProjectsConfigurationFromProjectGraph(projectGraph).projects,
+        taskGraph,
+        {
+          lifeCycle,
+        }
+      );
       await taskSchedule.init();
     });
 
@@ -1326,9 +1377,14 @@ describe('TasksSchedule', () => {
       };
 
       taskHistory.getEstimatedTaskTimings.mockReturnValue({});
-      taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
-        lifeCycle,
-      });
+      taskSchedule = new TasksSchedule(
+        projectGraph,
+        readProjectsConfigurationFromProjectGraph(projectGraph).projects,
+        taskGraph,
+        {
+          lifeCycle,
+        }
+      );
       await taskSchedule.init();
 
       process.env['NX_BATCH_MODE'] = 'false';

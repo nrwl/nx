@@ -1,6 +1,13 @@
 import {
+  calculateHashesForCreateNodes,
+  loadConfigFile,
+  getNamedInputs,
+} from '@nx/devkit/internal';
+import {
+  AggregateCreateNodesError,
   type CreateNodesContextV2,
   createNodesFromFiles,
+  CreateNodesResultV2,
   type CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
@@ -10,16 +17,13 @@ import {
   type ProjectConfiguration,
   type TargetConfiguration,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
 import { hashObject } from 'nx/src/devkit-internals';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
-import { dirname, join, relative } from 'path';
+import { dirname, join, relative, resolve } from 'path';
 import { NX_PLUGIN_OPTIONS } from '../utils/constants';
 
 export interface CypressPluginOptions {
@@ -42,8 +46,6 @@ const defaultPatterns = {
   },
 };
 
-const pmc = getPackageManagerCommand();
-
 export const createNodes: CreateNodesV2<CypressPluginOptions> = [
   cypressConfigGlob,
   async (configFiles, options, context) => {
@@ -53,16 +55,57 @@ export const createNodes: CreateNodesV2<CypressPluginOptions> = [
       `cypress-${optionsHash}.hash`
     );
     const pluginCache = new PluginCache<CypressTargets>(cachePath);
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
+    const normalizedOptions = normalizeOptions(options);
+
     try {
-      return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, pluginCache),
+      const { entries, preErrors } = await filterCypressConfigs(
         configFiles,
-        options,
         context
       );
+
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.projectRoot),
+        normalizedOptions,
+        context,
+        entries.map(() => [lockFileName])
+      );
+
+      let results: CreateNodesResultV2 = [];
+      let nodeErrors: Array<[string | null, Error]> = [];
+      try {
+        results = await createNodesFromFiles(
+          (configFile, _, ctx, idx) =>
+            createNodesInternal(
+              configFile,
+              normalizedOptions,
+              ctx,
+              pluginCache,
+              pmc,
+              projectHashes[idx]
+            ),
+          entries.map((e) => e.configFile),
+          options,
+          context
+        );
+      } catch (e) {
+        if (e instanceof AggregateCreateNodesError) {
+          results = e.partialResults ?? [];
+          nodeErrors = e.errors;
+        } else {
+          throw e;
+        }
+      }
+
+      const allErrors = [...preErrors, ...nodeErrors];
+      if (allErrors.length > 0) {
+        throw new AggregateCreateNodesError(allErrors, results);
+      }
+      return results;
     } finally {
-      pluginCache.writeToDisk(cachePath);
+      pluginCache.writeToDisk();
     }
   },
 ];
@@ -73,31 +116,23 @@ async function createNodesInternal(
   configFilePath: string,
   options: CypressPluginOptions,
   context: CreateNodesContextV2,
-  pluginCache: PluginCache<CypressTargets>
+  pluginCache: PluginCache<CypressTargets>,
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  projectHash: string
 ) {
-  options = normalizeOptions(options);
   const projectRoot = dirname(configFilePath);
-
-  // Do not create a project if package.json and project.json isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
-    return {};
-  }
-
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
-  );
+  const hash = projectHash + configFilePath;
 
   if (!pluginCache.has(hash)) {
     pluginCache.set(
       hash,
-      await buildCypressTargets(configFilePath, projectRoot, options, context)
+      await buildCypressTargets(
+        configFilePath,
+        projectRoot,
+        options,
+        context,
+        pmc
+      )
     );
   }
   const { targets, metadata } = pluginCache.get(hash);
@@ -121,8 +156,35 @@ function getTargetOutputs(outputs: string[], subfolder?: string): string[] {
   );
 }
 
+// Normalize a Cypress config folder (e.g. videosFolder, screenshotsFolder) to a
+// project-root-relative path, then append the per-spec subfolder. Cypress
+// resolves relative folders against the project root (cwd), so this keeps the
+// path Cypress writes to in lockstep with what Nx declares as the target's
+// outputs — regardless of whether the user wrote a relative path or computed
+// an absolute one (e.g. via `path.resolve` / `__dirname`).
+function serializeConfigPath(
+  configPath: string,
+  projectRoot: string,
+  workspaceRoot: string,
+  outputSubfolder: string
+): string {
+  if (!configPath) {
+    return configPath;
+  }
+
+  const fullProjectRoot = resolve(workspaceRoot, projectRoot);
+  const fullConfigPath = resolve(fullProjectRoot, configPath);
+  const relativeConfigPath = normalizePath(
+    relative(fullProjectRoot, fullConfigPath)
+  );
+
+  return normalizePath(join(relativeConfigPath, outputSubfolder));
+}
+
 function getTargetConfig(
   cypressConfig: any,
+  projectRoot: string,
+  workspaceRoot: string,
   outputSubfolder: string,
   ciBaseUrl?: string
 ): string {
@@ -134,21 +196,38 @@ function getTargetConfig(
   const { screenshotsFolder, videosFolder, e2e, component } = cypressConfig;
 
   if (videosFolder) {
-    config['videosFolder'] = join(videosFolder, outputSubfolder);
+    config['videosFolder'] = serializeConfigPath(
+      videosFolder,
+      projectRoot,
+      workspaceRoot,
+      outputSubfolder
+    );
   }
 
   if (screenshotsFolder) {
-    config['screenshotsFolder'] = join(screenshotsFolder, outputSubfolder);
+    config['screenshotsFolder'] = serializeConfigPath(
+      screenshotsFolder,
+      projectRoot,
+      workspaceRoot,
+      outputSubfolder
+    );
   }
 
   if (e2e) {
     config['e2e'] = {};
     if (e2e.videosFolder) {
-      config['e2e']['videosFolder'] = join(e2e.videosFolder, outputSubfolder);
+      config['e2e']['videosFolder'] = serializeConfigPath(
+        e2e.videosFolder,
+        projectRoot,
+        workspaceRoot,
+        outputSubfolder
+      );
     }
     if (e2e.screenshotsFolder) {
-      config['e2e']['screenshotsFolder'] = join(
+      config['e2e']['screenshotsFolder'] = serializeConfigPath(
         e2e.screenshotsFolder,
+        projectRoot,
+        workspaceRoot,
         outputSubfolder
       );
     }
@@ -157,14 +236,18 @@ function getTargetConfig(
   if (component) {
     config['component'] = {};
     if (component.videosFolder) {
-      config['component']['videosFolder'] = join(
+      config['component']['videosFolder'] = serializeConfigPath(
         component.videosFolder,
+        projectRoot,
+        workspaceRoot,
         outputSubfolder
       );
     }
     if (component.screenshotsFolder) {
-      config['component']['screenshotsFolder'] = join(
+      config['component']['screenshotsFolder'] = serializeConfigPath(
         component.screenshotsFolder,
+        projectRoot,
+        workspaceRoot,
         outputSubfolder
       );
     }
@@ -177,14 +260,22 @@ function getTargetConfig(
 function getOutputs(
   projectRoot: string,
   cypressConfig: any,
-  testingType: 'e2e' | 'component'
+  testingType: 'e2e' | 'component',
+  workspaceRoot: string
 ): string[] {
-  function getOutput(path: string): string {
-    if (path.startsWith('..')) {
-      return joinPathFragments('{workspaceRoot}', projectRoot, path);
-    } else {
-      return joinPathFragments('{projectRoot}', path);
+  const fullProjectRoot = resolve(workspaceRoot, projectRoot);
+  function getOutput(outputPath: string): string {
+    const fullPath = resolve(fullProjectRoot, outputPath);
+    const relativeToProjectRoot = normalizePath(
+      relative(fullProjectRoot, fullPath)
+    );
+    if (relativeToProjectRoot.startsWith('..')) {
+      return joinPathFragments(
+        '{workspaceRoot}',
+        relative(workspaceRoot, fullPath)
+      );
     }
+    return joinPathFragments('{projectRoot}', relativeToProjectRoot);
   }
 
   const { screenshotsFolder, videosFolder, e2e, component } = cypressConfig;
@@ -228,7 +319,8 @@ async function buildCypressTargets(
   configFilePath: string,
   projectRoot: string,
   options: CypressPluginOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContextV2,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<CypressTargets> {
   const cypressConfig = await loadConfigFile(
     join(context.workspaceRoot, configFilePath)
@@ -260,7 +352,12 @@ async function buildCypressTargets(
       },
       cache: true,
       inputs: getInputs(namedInputs),
-      outputs: getOutputs(projectRoot, cypressConfig, 'e2e'),
+      outputs: getOutputs(
+        projectRoot,
+        cypressConfig,
+        'e2e',
+        context.workspaceRoot
+      ),
       metadata: {
         technologies: ['cypress'],
         description: 'Runs Cypress Tests',
@@ -317,7 +414,12 @@ async function buildCypressTargets(
       const ciBaseUrl = pluginPresetOptions?.ciBaseUrl;
 
       const dependsOn: TargetConfiguration['dependsOn'] = [];
-      const outputs = getOutputs(projectRoot, cypressConfig, 'e2e');
+      const outputs = getOutputs(
+        projectRoot,
+        cypressConfig,
+        'e2e',
+        context.workspaceRoot
+      );
       const inputs = getInputs(namedInputs);
 
       const groupName = 'E2E (CI)';
@@ -360,6 +462,8 @@ async function buildCypressTargets(
           cache: true,
           command: `cypress run --env webServerCommand="${ciWebServerCommand}" --spec ${relativeSpecFilePath} --config=${getTargetConfig(
             cypressConfig,
+            projectRoot,
+            context.workspaceRoot,
             outputSubfolder,
             ciBaseUrl
           )}`,
@@ -380,7 +484,6 @@ async function buildCypressTargets(
         };
         dependsOn.push({
           target: targetName,
-          projects: 'self',
           params: 'forward',
           options: 'forward',
         });
@@ -426,7 +529,12 @@ async function buildCypressTargets(
 
   if ('component' in cypressConfig) {
     const inputs = getInputs(namedInputs);
-    const outputs = getOutputs(projectRoot, cypressConfig, 'component');
+    const outputs = getOutputs(
+      projectRoot,
+      cypressConfig,
+      'component',
+      context.workspaceRoot
+    );
 
     // This will not override the e2e target if it is the same
     targets[options.componentTestingTargetName] ??= {
@@ -500,6 +608,8 @@ async function buildCypressTargets(
           cache: true,
           command: `cypress run --component --spec ${relativeSpecFilePath} --config=${getTargetConfig(
             cypressConfig,
+            projectRoot,
+            context.workspaceRoot,
             outputSubfolder
           )}`,
           options: {
@@ -523,7 +633,6 @@ async function buildCypressTargets(
         };
         dependsOn.push({
           target: targetName,
-          projects: 'self',
           params: 'forward',
           options: 'forward',
         });
@@ -651,4 +760,43 @@ async function getSpecFilesAndPatternsForTestType(
   );
 
   return { specFiles, specPatterns, excludeSpecPatterns };
+}
+
+interface CypressEntry {
+  configFile: string;
+  projectRoot: string;
+}
+
+async function filterCypressConfigs(
+  configFiles: readonly string[],
+  context: CreateNodesContextV2
+): Promise<{
+  entries: CypressEntry[];
+  preErrors: Array<[string, Error]>;
+}> {
+  const preErrors: Array<[string, Error]> = [];
+  const candidates = await Promise.all(
+    configFiles.map(async (configFile): Promise<CypressEntry | null> => {
+      try {
+        const projectRoot = dirname(configFile);
+        const siblingFiles = readdirSync(
+          join(context.workspaceRoot, projectRoot)
+        );
+        if (
+          !siblingFiles.includes('package.json') &&
+          !siblingFiles.includes('project.json')
+        ) {
+          return null;
+        }
+        return { configFile, projectRoot };
+      } catch (e) {
+        preErrors.push([configFile, e as Error]);
+        return null;
+      }
+    })
+  );
+  return {
+    entries: candidates.filter((c): c is CypressEntry => c !== null),
+    preErrors,
+  };
 }

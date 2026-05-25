@@ -1,4 +1,4 @@
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import {
   type Configuration,
   type RspackPluginInstance,
@@ -181,7 +181,7 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForCssModules(options, includePaths),
         {
-          loader: require.resolve('less-loader'),
+          loader: join(__dirname, 'loaders/deprecated-less-loader.js'),
           options: {
             lessOptions: {
               paths: includePaths,
@@ -227,7 +227,7 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForGlobalCss(options, includePaths),
         {
-          loader: require.resolve('less-loader'),
+          loader: join(__dirname, 'loaders/deprecated-less-loader.js'),
           options: {
             sourceMap: !!options.sourceMap,
             lessOptions: {
@@ -275,7 +275,7 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForGlobalStyle(options, includePaths),
         {
-          loader: require.resolve('less-loader'),
+          loader: join(__dirname, 'loaders/deprecated-less-loader.js'),
           options: {
             sourceMap: !!options.sourceMap,
             lessOptions: {
@@ -375,19 +375,9 @@ export function applyWebConfig(
     ...(config.module ?? {}),
     rules: [
       ...(config.module.rules ?? []),
-      // Images: Inline small images, and emit a separate file otherwise.
+      // Images: Inline small images, and emit a separate file otherwise (including SVGs).
       {
-        test: /\.(avif|bmp|gif|ico|jpe?g|png|webp)$/,
-        type: 'asset',
-        parser: {
-          dataUrlCondition: {
-            maxSize: 10_000, // 10 kB
-          },
-        },
-      },
-      // SVG: same as image but we need to separate it so it can be swapped for SVGR in the React plugin.
-      {
-        test: /\.svg$/,
+        test: /\.(avif|bmp|gif|ico|jpe?g|png|svg|webp)$/,
         type: 'asset',
         parser: {
           dataUrlCondition: {

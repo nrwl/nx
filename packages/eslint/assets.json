@@ -1,23 +1,11 @@
 {
-  "outDir": "dist/packages/eslint",
+  "outDir": "packages/eslint/dist",
   "assets": [
-    {
-      "glob": "**/files/**"
-    },
-    {
-      "glob": "**/files/**/.gitkeep"
-    },
-    {
-      "glob": "**/*.json",
-      "ignore": ["tsconfig*.json", "project.json", ".eslintrc.json"]
-    },
-    {
-      "glob": "**/*.js",
-      "ignore": ["**/jest.config.js"]
-    },
-    {
-      "glob": "**/*.d.ts"
-    },
+    { "glob": "src/migrations/**/*.md" },
+    { "glob": "**/files/**" },
+    { "glob": "**/files/**/.gitkeep" },
+    { "glob": "src/**/schema.json" },
+    { "glob": "src/**/schema.d.ts" },
     "LICENSE"
   ]
 }

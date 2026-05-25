@@ -5,7 +5,7 @@
     "types": ["node"],
     "tsBuildInfoFile": "../../dist/packages/module-federation/tsconfig.tsbuildinfo"
   },
-  "include": ["**/*.ts", "**/*.json"],
+  "include": ["**/*.ts"],
   "references": [
     {
       "path": "../web/tsconfig.lib.json"

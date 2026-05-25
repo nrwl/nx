@@ -45,6 +45,7 @@ export interface FinalConfigForProject {
   preserveLocalDependencyProtocols: NxReleaseVersionConfiguration['preserveLocalDependencyProtocols'];
   preserveMatchingDependencyRanges: NxReleaseVersionConfiguration['preserveMatchingDependencyRanges'];
   adjustSemverBumpsForZeroMajorVersion: NxReleaseVersionConfiguration['adjustSemverBumpsForZeroMajorVersion'];
+  applyPreidToDependents: NxReleaseVersionConfiguration['applyPreidToDependents'];
   versionActionsOptions: NxReleaseVersionConfiguration['versionActionsOptions'];
   manifestRootsToUpdate: Array<
     Exclude<
@@ -910,12 +911,22 @@ Valid values are: ${validReleaseVersionPrefixes
     /**
      * adjustSemverBumpsForZeroMajorVersion
      *
-     * TODO(v23): change the default value of this to true
-     * This is false by default for backward compatibility.
+     * This is true by default. Set to false to treat all bumps the same regardless of major version.
      */
     const adjustSemverBumpsForZeroMajorVersion =
       projectVersionConfig?.adjustSemverBumpsForZeroMajorVersion ??
       releaseGroupVersionConfig?.adjustSemverBumpsForZeroMajorVersion ??
+      true;
+
+    /**
+     * applyPreidToDependents
+     *
+     * Defaults to false to preserve the long-standing behavior where dependents
+     * of a prerelease-bumped project get a stable patch bump unless opted in.
+     */
+    const applyPreidToDependents =
+      projectVersionConfig?.applyPreidToDependents ??
+      releaseGroupVersionConfig?.applyPreidToDependents ??
       false;
 
     /**
@@ -963,6 +974,7 @@ Valid values are: ${validReleaseVersionPrefixes
       preserveLocalDependencyProtocols,
       preserveMatchingDependencyRanges,
       adjustSemverBumpsForZeroMajorVersion,
+      applyPreidToDependents,
       versionActionsOptions,
       manifestRootsToUpdate,
       dockerOptions,

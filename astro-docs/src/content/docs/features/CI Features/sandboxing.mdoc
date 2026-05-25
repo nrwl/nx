@@ -18,12 +18,11 @@ implications on [caching](/docs/features/cache-task-results) correctness, from f
 serving stale results to missing output files after a cache restore.
 
 {% aside type="note" title="Enterprise Feature" %}
-Sandboxing is available on the [Nx Enterprise plan](https://nx.dev/enterprise).
-[Reach out to learn more](https://nx.dev/enterprise).
+Sandboxing is currently available on the [Nx Enterprise plan](https://nx.dev/enterprise). We're working on rolling it out to other Nx Cloud plans starting June 1st. If you'd like to use it sooner, [reach out to learn more](https://nx.dev/enterprise).
 {% /aside %}
 
-{% aside type="caution" title="Nx 22.5+ Required" %}
-Task sandboxing requires Nx 22.5 or later.
+{% aside type="caution" title="Nx 22.6+ Required" %}
+Task sandboxing requires Nx 22.6 or later.
 {% /aside %}
 
 ## Why hermeticity matters
@@ -143,6 +142,10 @@ To export the raw trace data for further analysis, click **View raw sandbox repo
 the JSON report.
 
 ![View raw sandbox report button](../../../../assets/features/sandboxing-raw-report.png)
+
+Once you have identified the violating tasks, follow
+[Fix sandbox violations](/docs/guides/nx-cloud/fix-sandbox-violations)
+to download every report on a branch, classify each violation, and update your project configuration in a structured loop.
 
 ## Inspecting inputs and outputs
 

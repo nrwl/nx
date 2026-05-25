@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@angular/build": "catalog:angular-supported-versions",
-    "sass-embedded": "^1.79.3",
+    "sass-embedded": "catalog:css",
     "semver": "catalog:",
     "ts-morph": "catalog:typescript",
     "tslib": "catalog:typescript",
@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "jsonc-eslint-parser": "^2.4.0",
-    "vitest": "^4.0.8",
+    "vitest": "catalog:vite",
     "memfs": "^4.17.0"
   },
   "peerDependencies": {
@@ -69,9 +69,7 @@
       "build": {
         "command": "node ./scripts/copy-readme.js angular-rspack-compiler packages/angular-rspack-compiler/readme-template.md packages/angular-rspack-compiler/README.md",
         "inputs": [
-          "{projectRoot}/readme-template.md",
-          "{workspaceRoot}/scripts/copy-readme.js",
-          "{workspaceRoot}/scripts/readme-fragments"
+          "copyReadme"
         ],
         "outputs": [
           "{projectRoot}/README.md"
@@ -80,11 +78,6 @@
       "test": {
         "dependsOn": [
           "^build-native"
-        ],
-        "inputs": [
-          "default",
-          "^production",
-          "{projectRoot}/vitest.config.mts"
         ],
         "options": {
           "args": [

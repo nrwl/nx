@@ -312,7 +312,7 @@ export function updateOverrideInLintConfig(
     if (!existingJson.overrides || !existingJson.overrides.some(lookup)) {
       return;
     }
-    updateJson(tree, fileName, (json: Linter.Config) => {
+    updateJson(tree, fileName, (json: Linter.LegacyConfig) => {
       const index = json.overrides.findIndex(lookup);
       if (index !== -1) {
         const newOverride = update(json.overrides[index]);

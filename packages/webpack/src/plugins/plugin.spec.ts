@@ -7,7 +7,8 @@ jest.mock('@nx/devkit', () => ({
 }));
 
 // Needed so the current environment is not used
-jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
+jest.mock('@nx/js/internal', () => ({
+  ...jest.requireActual('@nx/js/internal'),
   isUsingTsSolutionSetup: jest.fn(() => false),
 }));
 
@@ -20,8 +21,10 @@ describe('@nx/webpack/plugin', () => {
   let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContextV2;
   let tempFs: TempFs;
+  let originalCacheProjectGraph = process.env.NX_CACHE_PROJECT_GRAPH;
 
   beforeEach(() => {
+    process.env.NX_CACHE_PROJECT_GRAPH = 'false';
     tempFs = new TempFs('webpack-plugin');
 
     context = {
@@ -39,10 +42,16 @@ describe('@nx/webpack/plugin', () => {
       JSON.stringify({ name: 'my-app' })
     );
     tempFs.createFileSync('my-app/webpack.config.js', '');
+    tempFs.createFileSync('package-lock.json', '{}');
   });
 
   afterEach(() => {
     jest.resetModules();
+    if (originalCacheProjectGraph !== undefined) {
+      process.env.NX_CACHE_PROJECT_GRAPH = originalCacheProjectGraph;
+    } else {
+      delete process.env.NX_CACHE_PROJECT_GRAPH;
+    }
   });
 
   it('should create nodes', async () => {
@@ -93,6 +102,14 @@ describe('@nx/webpack/plugin', () => {
                         "externalDependencies": [
                           "webpack-cli",
                         ],
+                      },
+                      {
+                        "fields": [
+                          "extends",
+                          "files",
+                          "include",
+                        ],
+                        "json": "{workspaceRoot}/tsconfig.json",
                       },
                     ],
                     "metadata": {
@@ -189,7 +206,7 @@ describe('@nx/webpack/plugin', () => {
                     },
                   },
                   "watch-deps": {
-                    "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+                    "command": "npx nx watch --projects my-app --includeDependencies -- npx nx build-deps my-app",
                     "continuous": true,
                     "dependsOn": [
                       "build-deps",

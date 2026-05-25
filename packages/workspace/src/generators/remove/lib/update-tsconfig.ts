@@ -44,10 +44,8 @@ export async function updateTsconfig(tree: Tree, schema: Schema) {
       } else {
         for (const importPath in json.compilerOptions.paths) {
           for (const path of json.compilerOptions.paths[importPath]) {
-            const project = findProjectForPath(
-              normalizePath(path),
-              projectMapping
-            );
+            const normalized = normalizePath(path).replace(/^\.\//, '');
+            const project = findProjectForPath(normalized, projectMapping);
             if (project === schema.projectName) {
               delete json.compilerOptions.paths[importPath];
               break;

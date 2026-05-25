@@ -1,4 +1,5 @@
 packages:
+  - 'benchmarks'
   - 'packages/*'
   - 'e2e/*'
   - 'graph/*'
@@ -9,23 +10,52 @@ packages:
   - 'examples/angular-rspack/module-federation/host'
   - 'examples/angular-rspack/module-federation/remote'
   - 'packages/nx/native-packages/*'
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - nx
+  - '@nx/*'
+  - '@nrwl/*'
+  - create-nx-workspace
+  - create-nx-plugin
 overrides:
+  handlebars: '4.7.9'
   minimist: '^1.2.6'
-  underscore: '^1.12.1'
+  underscore: '^1.13.8'
+  brace-expansion: '5.0.6'
+  minimatch: '^10.2.5'
 onlyBuiltDependencies:
   - '@nestjs/core'
   - 'nx'
 patchedDependencies:
   '@astrojs/starlight': 'patches/@astrojs__starlight.patch'
 catalog:
+  '@babel/core': '^7.23.2'
+  '@heroicons/react': '^2.1.4'
+  '@module-federation/enhanced': '^2.3.3'
+  '@playwright/test': '^1.36.0'
+  '@svgr/webpack': '^8.0.1'
   '@zkochan/js-yaml': '0.0.7'
+  ajv: '^8.0.0'
   chalk: '^4.1.0'
   enquirer: '~2.3.6'
-  minimatch: '10.2.4'
+  gpt3-tokenizer: '^1.1.5'
+  http-proxy-middleware: '^3.0.5'
+  http-server: '^14.1.0'
+  jsonc-parser: '^3.2.0'
+  minimatch: '10.2.5'
+  next-seo: '^5.13.0'
+  ora: '^5.3.0'
   picomatch: '4.0.4'
   picocolors: '^1.1.0'
+  react-textarea-autosize: '^8.5.3'
+  rxjs: '^7.8.0'
   semver: '^7.6.3'
   tinyglobby: '^0.2.12'
+  tmp: '~0.2.1'
+  tree-kill: '^1.2.2'
+  verdaccio: '^6.3.2'
+  webpack: '^5.101.3'
+  webpack-dev-server: '^5.2.1'
   yargs: '^17.6.2'
   yargs-parser: '21.1.1'
 catalogs:
@@ -61,19 +91,30 @@ catalogs:
     ng-packagr: '>= 19.0.0 < 22.0.0'
     rxjs: '^6.5.3 || ^7.5.0'
     zone.js: '~0.15.0 || ~0.16.0'
+  css:
+    autoprefixer: '^10.4.9'
+    less-loader: '^12.2.0'
+    postcss: '^8.4.38'
+    postcss-loader: '^8.1.1'
+    sass: '^1.97.2'
+    sass-embedded: '^1.97.2'
+    sass-loader: '^16.0.7'
   eslint:
-    '@angular-eslint/eslint-plugin': '21.2.0'
-    '@angular-eslint/eslint-plugin-template': '21.2.0'
-    '@angular-eslint/template-parser': '21.2.0'
-    angular-eslint: '21.2.0'
+    '@angular-eslint/eslint-plugin': '^21.3.1'
+    '@angular-eslint/eslint-plugin-template': '^21.3.1'
+    '@angular-eslint/template-parser': '^21.3.1'
+    '@typescript-eslint/type-utils': '^8.0.0'
+    '@typescript-eslint/utils': '^8.0.0'
+    angular-eslint: '^21.3.1'
+    eslint-config-prettier: '^10.0.0'
   jest:
     '@jest/reporters': '^30.0.2'
     '@jest/test-result': '^30.0.2'
     '@jest/types': '30.0.1'
     '@types/jest': '30.0.0'
-    babel-jest: '^30.0.2'
+    babel-jest: '30.3.0'
     identity-obj-proxy: '3.0.0'
-    jest: '^30.0.2'
+    jest: '30.3.0'
     jest-config: '^30.0.2'
     jest-diff: '^30.0.2'
     jest-environment-jsdom: '^30.0.2'
@@ -96,8 +137,8 @@ catalogs:
     '@rspack/plugin-react-refresh': '^1.0.0'
     ts-checker-rspack-plugin: '^1.1.1'
   typescript:
-    '@phenomnomnominal/tsquery': '~6.1.4'
-    '@types/node': '^20.19.10'
+    '@phenomnomnominal/tsquery': '~6.2.0'
+    '@types/node': '^24.11.0'
     ts-morph: '^27.0.2'
     ts-node: '10.9.1'
     tsconfig-paths: '^4.1.2'
@@ -108,3 +149,26 @@ catalogs:
     '@swc/helpers': '0.5.18'
     '@swc/cli': '0.8.0'
     '@swc-node/register': '^1.11.1'
+  tailwind:
+    '@tailwindcss/postcss': '^4.1.5'
+    tailwind-merge: '^2.4.0'
+  vite:
+    vitest: '^4.0.0'
+allowBuilds:
+  '@nestjs/core': true
+  '@parcel/watcher': false
+  '@swc/core': false
+  '@tailwindcss/oxide': false
+  core-js: false
+  core-js-pure: false
+  cypress: false
+  detox: false
+  dtrace-provider: false
+  es5-ext: false
+  esbuild: false
+  less: false
+  lmdb: false
+  msgpackr-extract: false
+  nx: true
+  sharp: false
+  unrs-resolver: false

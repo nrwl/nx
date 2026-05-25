@@ -1,4 +1,3 @@
-/* eslint-disable */
 module.exports = {
   displayName: 'graph-ui-project-details',
   preset: '../../jest.preset.js',

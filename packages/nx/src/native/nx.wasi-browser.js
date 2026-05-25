@@ -117,7 +117,6 @@ export const copy = __napiModule.exports.copy
 export const expandOutputs = __napiModule.exports.expandOutputs
 export const findImports = __napiModule.exports.findImports
 export const getBinaryTarget = __napiModule.exports.getBinaryTarget
-export const getFilesForOutputs = __napiModule.exports.getFilesForOutputs
 export const getTransformableOutputs = __napiModule.exports.getTransformableOutputs
 export const hashArray = __napiModule.exports.hashArray
 export const hashFile = __napiModule.exports.hashFile

@@ -211,11 +211,38 @@
     });
   }
 
+  function deriveCodeId(text) {
+    return (text || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '')
+      .slice(0, 60);
+  }
+
+  function setupCodeBlockCopyTracking() {
+    document.addEventListener('click', (e) => {
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+      const button = target.closest('figure.frame .copy button[data-code]');
+      if (!button) return;
+      // Expressive Code encodes newlines as DEL (0x7F) in the data-code attribute.
+      const code = (button.getAttribute('data-code') || '').replace(
+        /\x7F/g,
+        '\n'
+      );
+      pushGtmEvent('code_block_copy', {
+        event_category: 'docs_interaction',
+        event_label: window.location.pathname,
+        code_id: deriveCodeId(code),
+      });
+    });
+  }
+
   const initializeAnalytics = () => {
     if (!gtmMeasurementId) return;
     loadGTM();
     setupSearchTracking();
     setupScrollTracking();
+    setupCodeBlockCopyTracking();
   };
 
   // Add GTM noscript iframe to body

@@ -1,4 +1,8 @@
 import {
+  combineAsyncIterables,
+  createAsyncIterable,
+} from '@nx/devkit/internal';
+import {
   detectPackageManager,
   ExecutorContext,
   joinPathFragments,
@@ -12,6 +16,7 @@ import {
   normalizeViteConfigFilePath,
 } from '../../utils/options-utils';
 import { ViteBuildExecutorOptions } from './schema';
+import schema from './schema.json';
 import {
   copyAssets,
   createLockFile,
@@ -21,21 +26,20 @@ import {
 import { existsSync, writeFileSync } from 'fs';
 import { relative, resolve } from 'path';
 import {
-  combineAsyncIterables,
-  createAsyncIterable,
-} from '@nx/devkit/src/utils/async-iterable';
-import {
   createBuildableTsConfig,
   loadViteDynamicImport,
   validateTypes,
 } from '../../utils/executor-utils';
+import { warnViteBuildExecutorDeprecation } from '../../utils/deprecation';
 import { type Plugin } from 'vite';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export async function* viteBuildExecutor(
   options: Record<string, any> & ViteBuildExecutorOptions,
   context: ExecutorContext
 ) {
+  warnViteBuildExecutorDeprecation();
+
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
   const { mergeConfig, build, resolveConfig, createBuilder } =
@@ -254,7 +258,6 @@ export async function getBuildExtraArgs(
   otherOptions: Record<string, any>;
 }> {
   // support passing extra args to vite cli
-  const schema = await import('./schema.json');
   const extraArgs = {};
   for (const key of Object.keys(options)) {
     if (!schema.properties[key]) {

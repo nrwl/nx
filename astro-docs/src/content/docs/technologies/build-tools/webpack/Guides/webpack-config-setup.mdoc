@@ -206,8 +206,8 @@ you can customize your Webpack configuration as follows.
 // apps/my-app/webpack.config.js
 const { composePlugins, withNx } = require('@nx/webpack');
 const { merge } = require('webpack-merge');
-const withModuleFederation = require('@nx/react/module-federation');
-// or `const withModuleFederation = require('@nx/angular/module-federation');`
+const { withModuleFederation } = require('@nx/module-federation/webpack');
+// or `const { withModuleFederation } = require('@nx/module-federation/angular');`
 
 module.exports = composePlugins(
   withNx(),
@@ -222,6 +222,10 @@ module.exports = composePlugins(
   }
 );
 ```
+
+{% aside type="note" title="Install @nx/module-federation" %}
+The `withModuleFederation` plugins live in the `@nx/module-federation` package. Install it with your package manager, or use the Nx Module Federation generators (such as `@nx/angular:host`, `@nx/angular:remote`, `@nx/react:host`, or `@nx/react:remote`), which add the dependency for you.
+{% /aside %}
 
 Reference the [Webpack documentation](https://webpack.js.org/configuration/) for details on the structure of the Webpack
 configuration object.

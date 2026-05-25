@@ -4,6 +4,7 @@ import {
   type NxModuleFederationConfigOverride,
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
+import { workspaceRoot } from '@nx/devkit';
 
 export async function withModuleFederationForSSR(
   options: ModuleFederationConfig,
@@ -39,6 +40,10 @@ export async function withModuleFederationForSSR(
       },
       resolve: {
         ...(config.resolve ?? {}),
+        modules: [
+          ...(config.resolve?.modules ?? ['node_modules']),
+          workspaceRoot,
+        ],
         alias: {
           ...(config.resolve?.alias ?? {}),
           ...sharedLibraries.getAliases(),

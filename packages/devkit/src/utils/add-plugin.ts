@@ -124,7 +124,10 @@ async function _addPluginInternal<PluginOptions>(
       global.NX_GRAPH_CREATION = true;
       try {
         projConfigs = await retrieveProjectConfigurations(
-          [pluginFactory(pluginOptions)],
+          {
+            specifiedPlugins: [pluginFactory(pluginOptions)],
+            defaultPlugins: [],
+          },
           tree.root,
           nxJson
         );
@@ -169,7 +172,10 @@ async function _addPluginInternal<PluginOptions>(
     global.NX_GRAPH_CREATION = true;
     try {
       projConfigs = await retrieveProjectConfigurations(
-        [pluginFactory(pluginOptions)],
+        {
+          specifiedPlugins: [pluginFactory(pluginOptions)],
+          defaultPlugins: [],
+        },
         tree.root,
         nxJson
       );

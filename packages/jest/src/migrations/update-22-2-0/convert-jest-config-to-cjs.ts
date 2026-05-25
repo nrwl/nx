@@ -3,11 +3,9 @@ import {
   globAsync,
   joinPathFragments,
   logger,
-  NxJsonConfiguration,
   readJson,
   Tree,
 } from '@nx/devkit';
-import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
 import { dirname } from 'path';
 
 /**
@@ -15,8 +13,6 @@ import { dirname } from 'path';
  * using CommonJS resolution. This is needed because Node.js type-stripping
  * in newer versions (22+, 24+) can cause issues with ESM syntax in .ts files
  * when the project is configured for CommonJS.
- *
- * This migration only runs if @nx/jest/plugin is registered in nx.json.
  *
  * Conversions:
  * - `export default { ... }` -> `module.exports = { ... }`
@@ -27,14 +23,10 @@ import { dirname } from 'path';
  * - `import.meta`
  * - top-level `await`
  *
- * Projects with `type: module` in package.json will be warned as they are
- * incompatible with @nx/jest/plugin which forces CommonJS resolution.
+ * Projects with `type: module` in package.json are skipped and warned about,
+ * as they use ESM semantics and don't need the CJS conversion.
  */
 export default async function convertJestConfigToCjs(tree: Tree) {
-  // If @nx/jest/plugin not used, then there will not be any problems with graph construction, which
-  // is what we're trying to address.
-  if (!isJestPluginRegistered(tree)) return;
-
   const { ast: parseAst, query } = require('@phenomnomnominal/tsquery');
 
   const jestConfigPaths = await globAsync(tree, ['**/jest.config.ts']);
@@ -43,14 +35,6 @@ export default async function convertJestConfigToCjs(tree: Tree) {
   const modifiedFiles: string[] = [];
 
   for (const configPath of jestConfigPaths) {
-    // Skip config files that are excluded from the plugin via include/exclude patterns
-    const pluginRegistration = await findPluginForConfigFile(
-      tree,
-      '@nx/jest/plugin',
-      configPath
-    );
-    if (!pluginRegistration) continue;
-
     const projectRoot = dirname(configPath);
     const packageJsonPath = joinPathFragments(projectRoot, 'package.json');
     const rootPackageJsonPath = 'package.json';
@@ -70,8 +54,8 @@ export default async function convertJestConfigToCjs(tree: Tree) {
     const effectiveType =
       projectPackageJson?.type ?? rootPackageJson?.type ?? 'commonjs'; // CJS is default if missing
 
-    // If type is "module", warn user - this is incompatible with @nx/jest/plugin
-    // Should not be possible, but it's possible that there's a way to get this working that we're unaware of
+    // If type is "module", skip conversion: the file already runs under ESM
+    // semantics and does not need the CJS rewrite.
     if (effectiveType === 'module') {
       projectsWithTypeModule.push(configPath);
       continue;
@@ -109,9 +93,9 @@ export default async function convertJestConfigToCjs(tree: Tree) {
     return () => {
       if (projectsWithTypeModule.length > 0) {
         logger.warn(
-          `The following projects have "type": "module" in their package.json which is incompatible ` +
-            `with @nx/jest/plugin. Consider removing "type": "module" ` +
-            `or using a different Jest configuration approach:\n` +
+          `The following jest.config.ts files belong to projects with "type": "module" in their package.json ` +
+            `and were left as-is. If you use @nx/jest/plugin, it forces CommonJS resolution, so consider ` +
+            `removing "type": "module" or using a different Jest configuration approach:\n` +
             projectsWithTypeModule.map((p) => `  - ${p}`).join('\n')
         );
       }
@@ -189,7 +173,14 @@ function convertImportsToRequire(
       continue;
     }
 
+    // `import type ...` is erased by Node's type-stripping at runtime, so it
+    // can remain in the file untouched — this preserves editor/tsc type safety.
+    if (importClause.isTypeOnly) {
+      continue;
+    }
+
     const parts: string[] = [];
+    const typeOnlySpecifiers: string[] = [];
 
     // Default import: import x from 'module'
     if (importClause.name) {
@@ -199,20 +190,29 @@ function convertImportsToRequire(
       );
     }
 
-    // Named imports: import { a, b } from 'module'
     if (importClause.namedBindings) {
       if (ts.isNamedImports(importClause.namedBindings)) {
-        const namedImports = importClause.namedBindings.elements
-          .map((element) => {
-            const name = element.name.getText();
-            const propertyName = element.propertyName?.getText();
-            if (propertyName) {
-              return `${propertyName}: ${name}`;
-            }
-            return name;
-          })
-          .join(', ');
-        parts.push(`const { ${namedImports} } = require('${moduleSpecifier}')`);
+        const valueSpecifiers: string[] = [];
+        for (const element of importClause.namedBindings.elements) {
+          const name = element.name.getText();
+          const propertyName = element.propertyName?.getText();
+          if (element.isTypeOnly) {
+            // Inline `type` modifier: `import { type Foo, bar } from 'x'`.
+            // Preserve the type-only portion so type references still resolve.
+            typeOnlySpecifiers.push(
+              propertyName ? `${propertyName} as ${name}` : name
+            );
+          } else {
+            valueSpecifiers.push(
+              propertyName ? `${propertyName}: ${name}` : name
+            );
+          }
+        }
+        if (valueSpecifiers.length) {
+          parts.push(
+            `const { ${valueSpecifiers.join(', ')} } = require('${moduleSpecifier}')`
+          );
+        }
       } else if (ts.isNamespaceImport(importClause.namedBindings)) {
         // Namespace import: import * as x from 'module'
         const namespaceName = importClause.namedBindings.name.getText();
@@ -220,8 +220,20 @@ function convertImportsToRequire(
       }
     }
 
-    const requireStatement = parts.join(';\n');
-    content = replaceNode(content, importDecl, requireStatement);
+    const replacementParts: string[] = [];
+    if (typeOnlySpecifiers.length) {
+      replacementParts.push(
+        `import type { ${typeOnlySpecifiers.join(', ')} } from '${moduleSpecifier}'`
+      );
+    }
+    replacementParts.push(...parts);
+
+    if (replacementParts.length === 0) {
+      continue;
+    }
+
+    const replacement = replacementParts.join(';\n');
+    content = replaceNode(content, importDecl, replacement);
   }
 
   return content;
@@ -257,18 +269,4 @@ function replaceNode(content: string, node: any, replacement: string): string {
     endPos = end + 1;
   }
   return content.slice(0, start) + replacement + ';' + content.slice(endPos);
-}
-
-function isJestPluginRegistered(tree: Tree): boolean {
-  if (!tree.exists('nx.json')) {
-    return false;
-  }
-
-  const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-  const plugins = nxJson.plugins ?? [];
-
-  return plugins.some((plugin) => {
-    const pluginName = typeof plugin === 'string' ? plugin : plugin.plugin;
-    return pluginName === '@nx/jest/plugin' || pluginName === '@nx/jest';
-  });
 }

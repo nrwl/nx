@@ -6,6 +6,7 @@ import {
   newProject,
   readFile,
   removeFile,
+  reservePort,
   rmDist,
   runCLI,
   tmpProjPath,
@@ -190,7 +191,9 @@ describe('cache', () => {
 
     // Rerun without touching anything
     const rerunWithUntouchedOutputs = runCLI(`build ${mylib}`);
-    expect(rerunWithUntouchedOutputs).toContain('local cache');
+    expect(rerunWithUntouchedOutputs).toContain(
+      'existing outputs match the cache'
+    );
     const outputsWithUntouchedOutputs = [
       ...listFiles('dist/apps'),
       ...listFiles('dist/.next').map((f) => `.next/${f}`),
@@ -209,7 +212,9 @@ describe('cache', () => {
     // Create a file in the dist that does not match output glob
     updateFile('dist/apps/c.ts', '');
 
-    // Rerun
+    // Rerun. Outputs were modified (extra file in dist), so the daemon's
+    // outputs-hash check fails and nx restores from cache → "[local cache]"
+    // rather than the "existing outputs match" no-op path.
     const rerunWithNewUnrelatedFile = runCLI(`build ${mylib}`);
     expect(rerunWithNewUnrelatedFile).toContain('local cache');
     const outputsAfterAddingUntouchedFileAndRerunning = [
@@ -334,7 +339,7 @@ console.log('Build complete');
 
     // Second run - should hit cache and restore without EEXIST error
     const secondRun = runCLI(`build ${projectName}`);
-    expect(secondRun).toContain('local cache');
+    expect(secondRun).toContain('existing outputs match the cache');
   });
 
   it('should use consider filesets when hashing', async () => {
@@ -634,9 +639,15 @@ console.log('Build complete');
 
   describe('http remote cache', () => {
     let cacheServer: any;
-    beforeAll(() => {
+    let cachePort: number;
+    let unusedPort: number;
+    beforeAll(async () => {
+      cachePort = await reservePort();
+      // Reserved but never bound — used to simulate a server-not-running error.
+      unusedPort = await reservePort();
       cacheServer = fork(join(__dirname, '__fixtures__', 'remote-cache.js'), {
         stdio: 'inherit',
+        env: { ...process.env, PORT: String(cachePort) },
       });
     });
 
@@ -662,7 +673,7 @@ console.log('Build complete');
       );
       runCLI(`build ${projectName}`, {
         env: {
-          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3000',
+          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: `http://localhost:${cachePort}`,
           NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN: 'test-token',
         },
       });
@@ -673,7 +684,7 @@ console.log('Build complete');
       runCLI(`reset`);
       const output = runCLI(`build ${projectName}`, {
         env: {
-          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3000',
+          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: `http://localhost:${cachePort}`,
           NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN: 'test-token',
         },
       });
@@ -699,7 +710,7 @@ console.log('Build complete');
       );
       const output = runCLI(`build ${projectName}`, {
         env: {
-          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3000',
+          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: `http://localhost:${cachePort}`,
         },
         silenceError: true,
       });
@@ -727,13 +738,13 @@ console.log('Build complete');
       );
       const output = runCLI(`build ${projectName}`, {
         env: {
-          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3001',
+          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: `http://localhost:${unusedPort}`,
           NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN: 'test-token',
         },
         silenceError: true,
       });
 
-      expect(output).toContain('http://localhost:3001');
+      expect(output).toContain(`http://localhost:${unusedPort}`);
     });
   });
 

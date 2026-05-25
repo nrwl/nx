@@ -1,4 +1,3 @@
-import { sendCustomEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import {
   type FormEvent,
   type JSX,
@@ -11,7 +10,7 @@ import { ErrorMessage } from './error-message';
 import { Feed } from './feed/feed';
 import { LoadingState } from './loading-state';
 import { Prompt } from './prompt';
-import { getQueryFromUid, storeQueryForUid } from '@nx/nx-dev-util-ai';
+import { storeQueryForUid } from '@nx/nx-dev-util-ai';
 import { Message, useChat } from 'ai/react';
 import { cx } from '@nx/nx-dev-ui-primitives';
 
@@ -41,11 +40,8 @@ export function FeedContainer(): JSX.Element {
     onError: (error) => {
       setError(error);
     },
-    onResponse: (_response) => {
+    onResponse: () => {
       setStartedReply(true);
-      sendCustomEventViaGtm('ai_query', 'ai', 'query', undefined, {
-        query: input,
-      });
       setError(null);
     },
     onFinish: (response: Message) => {
@@ -90,11 +86,8 @@ export function FeedContainer(): JSX.Element {
     setStopped(false);
   };
 
-  const handleFeedback = (statement: 'good' | 'bad', chatItemUid: string) => {
-    const query = getQueryFromUid(chatItemUid);
-    sendCustomEventViaGtm('ai_feedback', 'ai', statement, undefined, {
-      query: query ?? 'Could not retrieve the question',
-    });
+  const handleFeedback = () => {
+    // no-op: analytics removed
   };
 
   const handleStopGenerating = () => {

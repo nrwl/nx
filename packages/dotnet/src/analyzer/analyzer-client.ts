@@ -22,31 +22,6 @@ export interface AnalysisErrorResult {
 }
 export type AnalysisResult = AnalysisSuccessResult | AnalysisErrorResult;
 
-const analyzerCaches = new Map<string, PluginCache<AnalysisSuccessResult>>();
-
-function getCachePathForOptionsHash(optionsHash: string): string {
-  return join(workspaceDataDirectory, `dotnet-${optionsHash}.hash`);
-}
-
-function readAnalyzerCache(
-  optionsHash: string
-): PluginCache<AnalysisSuccessResult> {
-  if (analyzerCaches.has(optionsHash)) {
-    return analyzerCaches.get(optionsHash)!;
-  }
-  const cacheFilePath = getCachePathForOptionsHash(optionsHash);
-  return new PluginCache<AnalysisSuccessResult>(cacheFilePath);
-}
-
-function writeAnalyzerCache(
-  optionsHash: string,
-  cache: PluginCache<AnalysisSuccessResult>
-): void {
-  analyzerCaches.set(optionsHash, cache);
-  const cacheFilePath = getCachePathForOptionsHash(optionsHash);
-  cache.writeToDisk(cacheFilePath);
-}
-
 /**
  * Options passed to the MSBuild analyzer.
  * These are the target names that the analyzer will use to generate targets.
@@ -87,22 +62,17 @@ function getAnalyzerPath(): string {
   }
 
   throw new Error(
-    `msbuild-analyzer not found at any expected location. Please build it first with: nx run dotnet:build-analyzer`
+    `msbuild-analyzer not found at any expected location. Please build it first with: nx run dotnet:copy-assets`
   );
 }
 
 /**
- * Calculate a hash of all project files and Directory.Build.* files to determine if we need to re-analyze
+ * Hash every file that affects MSBuild evaluation — project files plus the Directory.*
+ * matches surfaced by the createNodesV2 glob. The analyzer partitions the same list on
+ * its side, so we don't classify it here.
  */
-async function calculateProjectFilesHash(
-  projectFiles: string[]
-): Promise<string> {
-  const hash = await hashWithWorkspaceContext(
-    workspaceRoot,
-    projectFiles.concat('Directory.Build.*', '**/Directory.Build.*')
-  );
-
-  return hash;
+async function calculateProjectFilesHash(files: string[]): Promise<string> {
+  return await hashWithWorkspaceContext(workspaceRoot, files);
 }
 
 /**
@@ -110,10 +80,10 @@ async function calculateProjectFilesHash(
  * Uses stdin for large file lists to avoid ARG_MAX issues.
  */
 function runAnalyzer(
-  projectFiles: string[],
+  files: string[],
   options?: DotNetAnalyzerOptions
 ): AnalysisSuccessResult {
-  if (projectFiles.length === 0) {
+  if (files.length === 0) {
     return { nodesByFile: {}, referencesByRoot: {} };
   }
 
@@ -160,8 +130,9 @@ function runAnalyzer(
       args.push(JSON.stringify(options));
     }
 
-    // Use stdin mode for large file lists to avoid ARG_MAX issues
-    const input = projectFiles.join('\n');
+    // Use stdin mode for large file lists to avoid ARG_MAX issues. The analyzer
+    // partitions paths by filename, so we just stream everything in one block.
+    const input = files.join('\n');
     const result = spawnSync('dotnet', args, {
       input,
       encoding: 'utf-8',
@@ -208,10 +179,10 @@ function runAnalyzer(
  * This should be called by createNodes to populate the cache.
  */
 export async function analyzeProjects(
-  projectFiles: string[],
+  files: string[],
   options?: DotNetAnalyzerOptions
 ): Promise<AnalysisResult> {
-  const filesHash = await calculateProjectFilesHash(projectFiles);
+  const filesHash = await calculateProjectFilesHash(files);
 
   // Return cached results if the hash matches
   if (
@@ -226,7 +197,9 @@ export async function analyzeProjects(
   }
 
   const optionsHash = hashObject(options);
-  const analyzerCache = readAnalyzerCache(optionsHash);
+  const analyzerCache = new PluginCache<AnalysisSuccessResult>(
+    join(workspaceDataDirectory, `dotnet-${optionsHash}.hash`)
+  );
   const cachedResult = analyzerCache.get(filesHash);
   if (cachedResult) {
     // Update cache
@@ -239,7 +212,7 @@ export async function analyzeProjects(
 
   // Run the analyzer
   try {
-    const result = runAnalyzer(projectFiles, options);
+    const result = runAnalyzer(files, options);
 
     // Update local cache
     cache = {
@@ -248,7 +221,7 @@ export async function analyzeProjects(
     };
     // Update persistent cache
     analyzerCache.set(filesHash, result);
-    writeAnalyzerCache(optionsHash, analyzerCache);
+    analyzerCache.writeToDisk();
 
     return result;
   } catch (error) {

@@ -68,95 +68,30 @@ The detail view has a few features to help you dig into resource usage:
 - **Detecting memory leaks**: Look for tasks where memory keeps climbing over time.
 - **Picking the right resource class**: Figure out the right agent size when moving to Nx Agents from GitHub Actions or other CI providers.
 
-## Manual metrics upload
+## Resource metrics with manual DTE
 
-If you're running your own CI runners instead of Nx Agents, you can still collect resource metrics and upload them to Nx Cloud.
+If you're running your own CI agents instead of Nx Agents, Nx Cloud can still collect per-agent CPU and memory metrics so you can debug slow tasks and OOM kills in the run timeline. Opt in by adding a single CLI step to each agent job.
 
-### How it works
+{% aside type="note" title="Nx Enterprise Required" %}
+This feature is available on Nx Cloud Enterprise plans only. [Reach out to learn more about Nx Enterprise](https://nx.dev/enterprise).
+{% /aside %}
 
-Nx writes resource metrics to a local directory during task execution. To view this data in Nx Cloud:
+### What to add
 
-1. Save the metrics directory as a CI artifact
-2. Download the artifact after the run finishes
-3. Upload the metrics file in the Nx Cloud analysis screen
+At the end of each agent job, run `npx nx-cloud upload-agent-metrics`. Use your provider's always-run mechanism so the step runs even when the agent is killed mid-task — that's precisely the scenario where metrics are most useful.
 
-### Configuration
-
-Metrics collection is currently on by default for enterprise users with Nx version 22.1 or higher. To disable it, set the `NX_CLOUD_DISABLE_METRICS_COLLECTION` environment variable:
-
-```shell
-export NX_CLOUD_DISABLE_METRICS_COLLECTION=true
-```
-
-Metrics are written to the local Nx cache directory by default (`.nx/cache/metrics` unless manually overridden). You can change this directory by setting the `NX_CLOUD_METRICS_DIRECTORY` environment variable.
-
-```shell
-export NX_CLOUD_METRICS_DIRECTORY=/path/to/metrics
-```
-
-### Saving metrics as CI artifacts
-
-Set up your CI to save the metrics directory as an artifact so you can download it later. The following examples assume that the default cache directory (`.nx/cache/metrics`) is used. If you overwrite the metrics directory, adjust the paths in the artifact upload step accordingly.
-
-{% tabs syncKey="ci-provider" %}
-{% tabitem label="GitHub Actions" %}
+Here's the GitHub Actions step:
 
 ```yaml
-# .github/workflows/ci.yml
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-      - run: npm ci
-      - run: npx nx affected -t build test lint
-      - name: Upload metrics artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: nx-metrics
-          path: ${{ github.workspace }}/.nx/cache/metrics
+- name: Upload agent metrics
+  if: always()
+  run: npx nx-cloud upload-agent-metrics
+  env:
+    NX_AGENT_NAME: ${{ matrix.agent }}
 ```
 
-{% /tabitem %}
-{% tabitem label="GitLab CI" %}
+The `if: always()` condition is important: if an agent is OOM-killed mid-run, the normal step sequence stops — but the upload still needs to happen so you can see which task caused the kill.
 
-```yaml
-# .gitlab-ci.yml
-build:
-  script:
-    - npm ci
-    - npx nx affected -t build test lint
-  artifacts:
-    paths:
-      - .nx/cache/metrics
-    when: always
-```
+### Other CI providers
 
-{% /tabitem %}
-{% tabitem label="CircleCI" %}
-
-```yaml
-# .circleci/config.yml
-jobs:
-  build:
-    docker:
-      - image: cimg/node:lts
-    steps:
-      - checkout
-      - run: npm ci
-      - run: npx nx affected -t build test lint
-      - store_artifacts:
-          path: .nx/cache/metrics
-          destination: nx-metrics
-```
-
-{% /tabitem %}
-{% /tabs %}
-
-### Uploading metrics to Nx Cloud
-
-Once your CI run finishes, download the metrics artifact from your CI provider. Then go to the CI pipeline execution in Nx Cloud, open the analysis screen, and upload the metrics file.
-
-![Manual upload interface in the Nx Cloud analysis screen](../../../../assets/guides/nx-cloud/resource-usage-manual-upload.png)
+The [Manual DTE guide](/docs/guides/nx-cloud/manual-dte) shows the equivalent step for Circle CI, Azure Pipelines, Bitbucket Pipelines, GitLab CI, and Jenkins.

@@ -15,9 +15,6 @@
       "path": "../packages/nx/tsconfig.lib.json"
     },
     {
-      "path": "../nx-dev/data-access-packages/tsconfig.lib.json"
-    },
-    {
       "path": "../nx-dev/models-package/tsconfig.lib.json"
     },
     {

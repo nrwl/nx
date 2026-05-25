@@ -8,6 +8,7 @@ import {
   readProjectConfiguration,
   updateProjectConfiguration,
 } from '@nx/devkit';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { addSnippet, normalizeOptions } from './lib';
 import type { WebWorkerGeneratorOptions } from './schema';
 import { getRelativePathToRootTsConfig } from '@nx/js';
@@ -16,6 +17,7 @@ export async function webWorkerGenerator(
   tree: Tree,
   rawOptions: WebWorkerGeneratorOptions
 ): Promise<void> {
+  assertSupportedAngularVersion(tree);
   const options = normalizeOptions(tree, rawOptions);
   const workerNames = names(options.name);
   const projectConfig = readProjectConfiguration(tree, options.project);

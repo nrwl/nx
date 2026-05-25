@@ -1,4 +1,11 @@
 {
-  "generators": {},
+  "generators": {
+    "update-23-0-0-remove-use-legacy-typescript-plugin": {
+      "cli": "nx",
+      "version": "23.0.0-beta.4",
+      "description": "Remove deprecated useLegacyTypescriptPlugin option from @nx/rollup:rollup",
+      "implementation": "./src/migrations/update-23-0-0/remove-use-legacy-typescript-plugin"
+    }
+  },
   "packageJsonUpdates": {}
 }

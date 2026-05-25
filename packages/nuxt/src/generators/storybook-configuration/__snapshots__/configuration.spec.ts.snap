@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`nuxt:storybook-configuration should configure with vue3 framework and styles import 1`] = `
 "import type { StorybookConfig } from '@storybook/vue3-vite';

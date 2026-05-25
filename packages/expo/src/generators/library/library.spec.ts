@@ -58,7 +58,7 @@ describe('lib', () => {
       await expoLibraryGenerator(appTree, defaultSchema);
       const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-lib/src/index.ts',
+        './my-lib/src/index.ts',
       ]);
     });
 
@@ -71,7 +71,7 @@ describe('lib', () => {
       await expoLibraryGenerator(appTree, defaultSchema);
       const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-lib/src/index.ts',
+        './my-lib/src/index.ts',
       ]);
     });
 
@@ -224,7 +224,7 @@ describe('lib', () => {
       });
       const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-dir/src/index.ts',
+        './my-dir/src/index.ts',
       ]);
       expect(tsconfigJson.compilerOptions.paths['my-dir/*']).toBeUndefined();
     });
@@ -447,6 +447,8 @@ describe('lib', () => {
       });
 
       expect(appTree.exists('my-lib/src/index.js')).toBe(true);
+      expect(appTree.exists('my-lib/src/lib/my-lib.js')).toBe(true);
+      expect(appTree.exists('my-lib/src/lib/my-lib.tsx')).toBe(false);
     });
   });
 

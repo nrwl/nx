@@ -4,5 +4,11 @@
   "sourceRoot": "nx-dev/ui-markdoc/src",
   "projectType": "library",
   "tags": [],
-  "targets": {}
+  "targets": {
+    "lint": {
+      "options": {
+        "max-warnings": 7
+      }
+    }
+  }
 }

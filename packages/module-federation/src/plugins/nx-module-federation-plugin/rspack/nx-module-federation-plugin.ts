@@ -5,6 +5,7 @@ import {
 } from '../../../utils/models';
 import { getModuleFederationConfig } from '../../../with-module-federation/rspack/utils';
 import { normalizeProjectName } from '../../../utils';
+import { workspaceRoot } from '@nx/devkit';
 
 export class NxModuleFederationPlugin implements RspackPluginInstance {
   constructor(
@@ -29,6 +30,13 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
       compiler.options.optimization.splitChunks.cacheGroups.common = false;
     }
     compiler.options.output.uniqueName = this._options.config.name;
+    // Ensure workspace root is in resolve.modules so that expose paths
+    // like "apps/remote/src/..." resolve correctly without baseUrl.
+    compiler.options.resolve ??= {};
+    compiler.options.resolve.modules = [
+      ...(compiler.options.resolve.modules ?? ['node_modules']),
+      workspaceRoot,
+    ];
     if (compiler.options.output.scriptType === 'module') {
       compiler.options.output.scriptType = undefined;
       compiler.options.output.module = undefined;

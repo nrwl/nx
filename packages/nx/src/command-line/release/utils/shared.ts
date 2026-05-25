@@ -14,6 +14,7 @@ import {
   gitCommit,
   sanitizeProjectNameForGitTag,
 } from './git';
+import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { ReleaseGraph } from './release-graph';
 
 export const noDiffInChangelogMessage = pc.yellow(
@@ -478,24 +479,46 @@ Promise<Map<string, { commit: GitCommit; isProjectScopedCommit: boolean }[]>> {
         projectGraph
       );
 
+    // Resolve commit scopes using Nx matcher
+    const scopePatterns = commit.scope
+      ? commit.scope.split(',').map((s) => s.trim())
+      : [];
+
+    let scopedProjects: Set<string> | null = null;
+
+    if (scopePatterns.length > 0) {
+      const matches = findMatchingProjects(scopePatterns, projectGraph.nodes);
+
+      // detect ambiguity
+      for (const pattern of scopePatterns) {
+        const perPatternMatches = findMatchingProjects(
+          [pattern],
+          projectGraph.nodes
+        );
+
+        if (perPatternMatches.length > 1) {
+          throw new Error(
+            `Ambiguous scope "${pattern}" in commit "${commit.message}". ` +
+              `Matches: ${perPatternMatches.join(', ')}`
+          );
+        }
+      }
+
+      scopedProjects = new Set(matches);
+    }
+
     for (const projectName of Object.keys(affectedGraph.nodes)) {
       if (projectSet.has(projectName)) {
         if (!relevantCommits.has(projectName)) {
           relevantCommits.set(projectName, []);
         }
-        if (
-          commit.scope === projectName ||
-          commit.scope.split(',').includes(projectName) ||
-          !commit.scope
-        ) {
-          relevantCommits
-            .get(projectName)
-            ?.push({ commit, isProjectScopedCommit: true });
-        } else {
-          relevantCommits
-            .get(projectName)
-            ?.push({ commit, isProjectScopedCommit: false });
-        }
+
+        const isProjectScopedCommit =
+          scopedProjects === null || scopedProjects.has(projectName);
+
+        relevantCommits
+          .get(projectName)
+          ?.push({ commit, isProjectScopedCommit });
       }
     }
   }

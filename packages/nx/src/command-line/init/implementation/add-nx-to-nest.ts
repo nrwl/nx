@@ -18,10 +18,12 @@ import {
   initCloud,
   markRootPackageJsonAsNxProjectLegacy,
   runInstall,
+  setNeverConnectToCloud,
   updateGitIgnore,
 } from './utils';
 import { nxVersion } from '../../../utils/versions';
 import { connectExistingRepoToNxCloudPrompt } from '../../nx-cloud/connect/connect-to-nx-cloud';
+import { MessageOptionKey } from '../../../utils/ab-testing';
 
 type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'>;
 type NestCLIConfiguration = any;
@@ -66,7 +68,7 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
 
   let cacheableOperations: string[];
   let scriptOutputs = {};
-  let useNxCloud: boolean;
+  let nxCloudChoice: MessageOptionKey;
 
   if (options.interactive && scripts.length > 0) {
     output.log({
@@ -101,15 +103,22 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
       )[scriptName];
     }
 
-    useNxCloud =
-      options.nxCloud ?? (await connectExistingRepoToNxCloudPrompt());
+    nxCloudChoice =
+      options.nxCloud === true
+        ? 'yes'
+        : options.nxCloud === false
+          ? 'skip'
+          : await connectExistingRepoToNxCloudPrompt();
   } else {
     cacheableOperations = options.cacheable ?? [];
-    useNxCloud =
-      options.nxCloud ??
-      (options.interactive
-        ? await connectExistingRepoToNxCloudPrompt()
-        : false);
+    nxCloudChoice =
+      options.nxCloud === true
+        ? 'yes'
+        : options.nxCloud === false
+          ? 'skip'
+          : options.interactive
+            ? await connectExistingRepoToNxCloudPrompt()
+            : 'skip';
   }
 
   createNxJsonFile(
@@ -138,9 +147,11 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
 
   runInstall(repoRoot);
 
-  if (useNxCloud) {
+  if (nxCloudChoice === 'yes') {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
     await initCloud('nx-init-nest');
+  } else if (nxCloudChoice === 'never') {
+    setNeverConnectToCloud(repoRoot);
   }
 }
 

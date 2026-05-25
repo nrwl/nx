@@ -83,6 +83,7 @@ storybook-static
 .kotlin
 
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
 CLAUDE.local.md
 
 .cursor/mcp.json
@@ -106,6 +107,7 @@ node_modules/
 *.ntvs*
 *.njsproj
 *.sln
+!/nx.sln
 *.sw?
 .specstory/**
 .cursorindexingignore
@@ -132,6 +134,16 @@ packages/angular-rspack-compiler/README.md
 packages/dotnet/README.md
 packages/maven/README.md
 packages/nx/README.md
+packages/devkit/README.md
+packages/workspace/README.md
+packages/js/README.md
+packages/jest/README.md
+packages/eslint/README.md
+packages/eslint-plugin/README.md
+packages/vitest/README.md
+packages/cypress/README.md
+packages/playwright/README.md
+packages/vite/README.md
 
 test-output
 test-results
@@ -142,15 +154,12 @@ test-results
 # .NET build output
 /packages/dotnet/analyzer/bin
 /packages/dotnet/analyzer/obj
+/packages/dotnet/analyzer.Tests/bin
+/packages/dotnet/analyzer.Tests/obj
 /*.deb
 .nx/polygraph
 .claude/worktrees
 
 .nx/self-healing
-# Nx Typings Output
-packages/nx/**/*.d.ts
-!packages/nx/src/utils/perf-hooks.d.ts
-!packages/nx/src/ai/set-up-ai-agents/schema.d.ts
-!packages/nx/src/native/index.d.ts
 e2e/**/*.d.ts
 e2e/**/*.d.ts.map

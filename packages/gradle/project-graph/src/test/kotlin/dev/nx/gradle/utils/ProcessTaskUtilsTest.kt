@@ -3,6 +3,7 @@ package dev.nx.gradle.utils
 import dev.nx.gradle.data.Dependency
 import dev.nx.gradle.data.DependsOnEntry
 import dev.nx.gradle.data.ExternalNode
+import kotlin.io.path.Path
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.*
@@ -23,15 +24,17 @@ class ProcessTaskUtilsTest {
 
   @Test
   fun `test replaceRootInPath`() {
-    val path = "/home/user/workspace/project/src/main/java"
-    val projectRoot = "/home/user/workspace/project"
-    val workspaceRoot = "/home/user/workspace"
+    val path = Path("home", "user", "workspace", "project", "src", "main", "java").toString()
+    val projectRoot = Path("home", "user", "workspace", "project").toString()
+    val workspaceRoot = Path("home", "user", "workspace").toString()
 
-    assertEquals("{projectRoot}/src/main/java", replaceRootInPath(path, projectRoot, workspaceRoot))
     assertEquals(
-        "{workspaceRoot}/project/src/main/java",
-        replaceRootInPath(path, "/other/path", workspaceRoot))
-    assertNull(replaceRootInPath("/external/other", projectRoot, workspaceRoot))
+        Path("{projectRoot}", "src", "main", "java").toString(),
+        replaceRootInPath(path, projectRoot, workspaceRoot))
+    assertEquals(
+        Path("{workspaceRoot}", "project", "src", "main", "java").toString(),
+        replaceRootInPath(path, Path("other", "path").toString(), workspaceRoot))
+    assertNull(replaceRootInPath(Path("external", "other").toString(), projectRoot, workspaceRoot))
   }
 
   @Test
@@ -157,10 +160,15 @@ class ProcessTaskUtilsTest {
       assertNotNull(result)
 
       // Should contain consolidated dependentTasksOutputFiles glob pattern for jar extension
-      assertTrue(result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" })
+      assertTrue(
+          result!!.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.jar" &&
+                it["transitive"] == true
+          })
 
       // Should contain the non-conflicting input file
-      assertTrue(result.any { it == "{projectRoot}/src/main.kt" })
+      assertTrue(result.any { it == Path("{projectRoot}", "src", "main.kt").toString() })
     }
 
     @Test
@@ -184,8 +192,18 @@ class ProcessTaskUtilsTest {
       assertNotNull(result)
 
       // Should have consolidated glob patterns by extension
-      assertTrue(result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" })
-      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" })
+      assertTrue(
+          result!!.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.jar" &&
+                it["transitive"] == true
+          })
+      assertTrue(
+          result.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.class" &&
+                it["transitive"] == true
+          })
 
       // Should only have 2 dependentTasksOutputFiles entries (one per extension)
       val dependentTasksOutputFilesCount =
@@ -235,16 +253,22 @@ class ProcessTaskUtilsTest {
       // Should contain consolidated dependentTasksOutputFiles glob pattern
       assertTrue(
           resultWithPreComputed.any {
-            it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar"
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.jar" &&
+                it["transitive"] == true
           })
       assertTrue(
           resultWithoutPreComputed.any {
-            it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar"
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.jar" &&
+                it["transitive"] == true
           })
 
       // Should contain the input file
-      assertTrue(resultWithPreComputed.any { it == "{projectRoot}/src/main.kt" })
-      assertTrue(resultWithoutPreComputed.any { it == "{projectRoot}/src/main.kt" })
+      assertTrue(
+          resultWithPreComputed.any { it == Path("{projectRoot}", "src", "main.kt").toString() })
+      assertTrue(
+          resultWithoutPreComputed.any { it == Path("{projectRoot}", "src", "main.kt").toString() })
     }
 
     @Test
@@ -330,13 +354,28 @@ class ProcessTaskUtilsTest {
       assertNotNull(result)
 
       // Should have consolidated glob patterns by extension
-      assertTrue(result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" })
-      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" })
-      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.xml" })
+      assertTrue(
+          result!!.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.jar" &&
+                it["transitive"] == true
+          })
+      assertTrue(
+          result.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.class" &&
+                it["transitive"] == true
+          })
+      assertTrue(
+          result.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.xml" &&
+                it["transitive"] == true
+          })
 
       // Should contain regular input files
-      assertTrue(result.any { it == "{projectRoot}/src/main.kt" })
-      assertTrue(result.any { it == "{projectRoot}/config/app.properties" })
+      assertTrue(result.any { it == Path("{projectRoot}", "src", "main.kt").toString() })
+      assertTrue(result.any { it == Path("{projectRoot}", "config", "app.properties").toString() })
 
       // Verify we have exactly 3 dependentTasksOutputFiles entries (one per unique extension: jar,
       // class, xml)
@@ -387,16 +426,26 @@ class ProcessTaskUtilsTest {
       assertNotNull(result)
 
       // Source file should be regular input
-      assertTrue(result!!.any { it == "{projectRoot}/src/main.kt" })
+      assertTrue(result!!.any { it == Path("{projectRoot}", "src", "main.kt").toString() })
 
       // Config file should be regular input
-      assertTrue(result.any { it == "{projectRoot}/config/app.properties" })
+      assertTrue(result.any { it == Path("{projectRoot}", "config", "app.properties").toString() })
 
       // Build file (class extension) should be consolidated into dependentTasksOutputFiles glob
-      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" })
+      assertTrue(
+          result.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.class" &&
+                it["transitive"] == true
+          })
 
       // Log file should be consolidated into dependentTasksOutputFiles glob
-      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.log" })
+      assertTrue(
+          result.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.log" &&
+                it["transitive"] == true
+          })
     }
 
     @Test
@@ -431,12 +480,22 @@ class ProcessTaskUtilsTest {
 
       assertNotNull(result)
 
-      assertTrue(result!!.any { it == "{projectRoot}/src/Main.java" })
+      assertTrue(result!!.any { it == Path("{projectRoot}", "src", "Main.java").toString() })
 
       // Both ignored files should be consolidated into glob patterns by extension
-      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" })
+      assertTrue(
+          result.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.class" &&
+                it["transitive"] == true
+          })
 
-      assertTrue(result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" })
+      assertTrue(
+          result.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.jar" &&
+                it["transitive"] == true
+          })
     }
   }
 
@@ -490,8 +549,119 @@ class ProcessTaskUtilsTest {
     // Verify inputs contain both regular inputs and consolidated dependentTasksOutputFiles
     val inputs = result["inputs"] as? List<*>
     assertNotNull(inputs)
-    assertTrue(inputs!!.any { it == "{projectRoot}/src/test.kt" })
-    assertTrue(inputs.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" })
+    assertTrue(inputs!!.any { it == Path("{projectRoot}", "src", "test.kt").toString() })
+    assertTrue(
+        inputs.any {
+          it is Map<*, *> &&
+              it["dependentTasksOutputFiles"] == "**/*.class" &&
+              it["transitive"] == true
+        })
+  }
+
+  @Nested
+  inner class InferExtensionsFromInputPropertiesTests {
+
+    @Test
+    fun `compile task infers class and jar with archive dependents`() {
+      val kotlinProject = ProjectBuilder.builder().withName("kotlinInferTest").build()
+      kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
+
+      val compileTestKotlin = kotlinProject.tasks.getByName("compileTestKotlin")
+      val dependsOnTasks = getDependsOnTask(compileTestKotlin)
+
+      val extensions = inferExtensionsFromInputProperties(compileTestKotlin, dependsOnTasks)
+
+      assertTrue(extensions.contains("class"), "Expected 'class' extension, got $extensions")
+      assertTrue(
+          extensions.contains("jar"),
+          "Expected 'jar' extension from archive dependents, got $extensions")
+    }
+
+    @Test
+    fun `kotlin compile task alone infers class via primary branch`() {
+      val kotlinProject = ProjectBuilder.builder().withName("kotlinPrimaryBranch").build()
+      kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
+
+      val compileKotlin = kotlinProject.tasks.getByName("compileKotlin")
+
+      val extensions = inferExtensionsFromInputProperties(compileKotlin, emptySet())
+
+      assertTrue(
+          extensions.contains("class"),
+          "Expected 'class' extension from primary branch for KotlinCompile task, got $extensions")
+      assertFalse(
+          extensions.contains("jar"),
+          "Expected no 'jar' extension with empty dependents, got $extensions")
+    }
+
+    @Test
+    fun `kotlin compile dependent contributes class extension`() {
+      val kotlinProject = ProjectBuilder.builder().withName("kotlinDepBranch").build()
+      kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
+
+      val compileKotlin = kotlinProject.tasks.getByName("compileKotlin")
+      val plain = kotlinProject.tasks.register("plain").get()
+
+      val extensions = inferExtensionsFromInputProperties(plain, setOf(compileKotlin))
+
+      assertTrue(
+          extensions.contains("class"),
+          "Expected 'class' from KotlinCompile dependent, got $extensions")
+    }
+
+    @Test
+    fun `compile task without archive dependents does not infer jar`() {
+      val project = ProjectBuilder.builder().withName("compileOnly").build()
+      project.plugins.apply("java")
+
+      val compileJava = project.tasks.getByName("compileJava")
+
+      val extensions = inferExtensionsFromInputProperties(compileJava, emptySet())
+
+      assertTrue(extensions.contains("class"), "Expected 'class' extension, got $extensions")
+      assertFalse(
+          extensions.contains("jar"), "Compile task alone should not infer 'jar', got $extensions")
+    }
+
+    @Test
+    fun `archive dependent tasks infer their archive extension`() {
+      val kotlinProject = ProjectBuilder.builder().withName("kotlinJarTest").build()
+      kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
+
+      val jarTask = kotlinProject.tasks.getByName("jar")
+      val dependentTasks = setOf(jarTask)
+
+      val extensions =
+          inferExtensionsFromInputProperties(kotlinProject.tasks.getByName("build"), dependentTasks)
+
+      assertTrue(
+          extensions.contains("jar"),
+          "Expected 'jar' extension from archive task dependency, got $extensions")
+    }
+
+    @Test
+    fun `test task infers class and jar regardless of dependents`() {
+      val kotlinProject = ProjectBuilder.builder().withName("kotlinTestTask").build()
+      kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
+
+      val testTask = kotlinProject.tasks.getByName("test")
+      val extensions = inferExtensionsFromInputProperties(testTask, emptySet())
+
+      assertTrue(
+          extensions.contains("class"), "Expected 'class' extension for Test task, got $extensions")
+      assertTrue(
+          extensions.contains("jar"), "Expected 'jar' extension for Test task, got $extensions")
+    }
+
+    @Test
+    fun `plain tasks infer no extensions`() {
+      val project = ProjectBuilder.builder().build()
+      val task = project.tasks.register("plainTask").get()
+
+      val extensions = inferExtensionsFromInputProperties(task, emptySet())
+
+      assertTrue(extensions.isEmpty(), "Expected empty extensions for plain task, got $extensions")
+    }
   }
 
   @Nested
@@ -549,10 +719,13 @@ class ProcessTaskUtilsTest {
 
         assertEquals(2, result.size, "Expected 2 gradle wrapper files")
         assertTrue(
-            result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.jar"),
+            result.contains(
+                Path("{workspaceRoot}", "gradle", "wrapper", "gradle-wrapper.jar").toString()),
             "Expected gradle-wrapper.jar in $result")
         assertTrue(
-            result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.properties"),
+            result.contains(
+                Path("{workspaceRoot}", "gradle", "wrapper", "gradle-wrapper.properties")
+                    .toString()),
             "Expected gradle-wrapper.properties in $result")
       } finally {
         tempDir.deleteRecursively()
@@ -575,7 +748,7 @@ class ProcessTaskUtilsTest {
 
         assertEquals(1, result.size, "Expected 1 gradle file")
         assertTrue(
-            result.contains("{workspaceRoot}/gradle.properties"),
+            result.contains(Path("{workspaceRoot}", "gradle.properties").toString()),
             "Expected gradle.properties in $result")
       } finally {
         tempDir.deleteRecursively()
@@ -602,13 +775,17 @@ class ProcessTaskUtilsTest {
 
         assertEquals(3, result.size, "Expected 3 gradle files")
         assertTrue(
-            result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.jar"),
+            result.contains(
+                Path("{workspaceRoot}", "gradle", "wrapper", "gradle-wrapper.jar").toString()),
             "Expected gradle-wrapper.jar")
         assertTrue(
-            result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.properties"),
+            result.contains(
+                Path("{workspaceRoot}", "gradle", "wrapper", "gradle-wrapper.properties")
+                    .toString()),
             "Expected gradle-wrapper.properties")
         assertTrue(
-            result.contains("{workspaceRoot}/gradle.properties"), "Expected gradle.properties")
+            result.contains(Path("{workspaceRoot}", "gradle.properties").toString()),
+            "Expected gradle.properties")
       } finally {
         tempDir.deleteRecursively()
       }
@@ -643,10 +820,10 @@ class ProcessTaskUtilsTest {
 
         assertNotNull(result)
         assertTrue(
-            result!!.any { it == "{workspaceRoot}/gradle.properties" },
+            result!!.any { it == Path("{workspaceRoot}", "gradle.properties").toString() },
             "Expected gradle.properties in inputs: $result")
         assertTrue(
-            result.any { it == "{projectRoot}/src/main.kt" },
+            result.any { it == Path("{projectRoot}", "src", "main.kt").toString() },
             "Expected src/main.kt in inputs: $result")
       } finally {
         tempDir.deleteRecursively()
@@ -681,7 +858,7 @@ class ProcessTaskUtilsTest {
         assertNotNull(result)
         // Should have src/main.kt but no gradle files
         assertTrue(
-            result!!.any { it == "{projectRoot}/src/main.kt" },
+            result!!.any { it == Path("{projectRoot}", "src", "main.kt").toString() },
             "Expected src/main.kt in inputs: $result")
         assertFalse(
             result.any { it.toString().contains("gradle") },

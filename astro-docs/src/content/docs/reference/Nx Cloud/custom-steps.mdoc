@@ -87,7 +87,7 @@ When specifying the location for the custom step, you must include a branch or t
 launch-templates:
   custom-template:
     resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.11-v7'
+    image: 'ubuntu22.04-node24.14-v1'
     init-steps:
       - name: Custom Step
         uses: 'your-org/your-repo/main/.nx/workflows/custom-steps.yaml'

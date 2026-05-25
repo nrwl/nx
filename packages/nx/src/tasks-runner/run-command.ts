@@ -2,7 +2,6 @@ import { prompt } from 'enquirer';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
-const ora = require('ora');
 import type { Observable } from 'rxjs';
 import {
   NxJsonConfiguration,
@@ -13,6 +12,7 @@ import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
+import { globalSpinner } from '../utils/spinner';
 import { createTaskHasher } from '../hasher/create-task-hasher';
 import {
   getTaskDetails,
@@ -27,8 +27,12 @@ import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { NxArgs } from '../utils/command-line-utils';
 import { handleErrors } from '../utils/handle-errors';
 import { isCI } from '../utils/is-ci';
-import { isNxCloudUsed } from '../utils/nx-cloud-utils';
-import { printNxKey } from '../utils/nx-key';
+import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
+import { logger } from '../utils/logger';
+import {
+  createNxKeyLicenseeInformation,
+  getNxKeyInformation,
+} from '../utils/nx-key';
 import { output } from '../utils/output';
 import {
   collectEnabledTaskSyncGeneratorsFromTaskGraph,
@@ -505,6 +509,11 @@ export async function runCommandForTasks(
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
   extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
 ): Promise<{ taskResults: TaskResults; completed: boolean }> {
+  // Kick off the license lookup in the background so it overlaps with task
+  // execution. The log itself is deferred to the print site below so it
+  // never lands in the middle of task output.
+  const nxKeyPromise = getNxKeyInformation().catch(() => null);
+
   const projectNames = projectsToRun.map((t) => t.name);
   const projectNameSet = new Set(projectNames);
 
@@ -559,7 +568,8 @@ export async function runCommandForTasks(
 
     await printConfigureAiAgentsDisclaimer();
 
-    await printNxKey();
+    const nxKey = await nxKeyPromise;
+    if (nxKey) logger.log(createNxKeyLicenseeInformation(nxKey));
 
     return {
       taskResults,
@@ -755,8 +765,7 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     (await promptForApplyingSyncGeneratorChanges());
 
   if (applyChanges) {
-    const spinner = ora('Syncing the workspace...');
-    spinner.start();
+    const spinner = globalSpinner.start('Syncing the workspace...');
 
     // Flush sync generator changes to disk
     const flushResult = await flushSyncGeneratorChanges(results);
@@ -1019,9 +1028,11 @@ export async function invokeTasksRunner({
           return hasher.hashTask(task, taskGraph_, env);
         },
         hashTasks(
-          task: Task[],
+          tasks: Task[],
           taskGraph_?: TaskGraph,
-          env?: NodeJS.ProcessEnv
+          envOrPerTaskEnvs?:
+            | NodeJS.ProcessEnv
+            | Record<string, NodeJS.ProcessEnv>
         ) {
           if (!taskGraph_) {
             output.warn({
@@ -1033,7 +1044,7 @@ export async function invokeTasksRunner({
             });
             taskGraph_ = taskGraph;
           }
-          if (!env) {
+          if (!envOrPerTaskEnvs) {
             output.warn({
               title: `The environment variables are now required as an argument to hashTasks`,
               bodyLines: [
@@ -1041,10 +1052,15 @@ export async function invokeTasksRunner({
                 'This will result in an error in Nx 20',
               ],
             });
-            env = process.env;
+            envOrPerTaskEnvs = process.env;
           }
-
-          return hasher.hashTasks(task, taskGraph_, env);
+          // hasher.hashTasks accepts either legacy single-env or the new
+          // per-task-env shape and normalizes internally.
+          return hasher.hashTasks(
+            tasks,
+            taskGraph_,
+            envOrPerTaskEnvs as NodeJS.ProcessEnv
+          );
         },
       },
       daemon: daemonClient,
@@ -1211,7 +1227,13 @@ function getTasksRunnerPath(
     // Nx Cloud ID specified in nxJson
     nxJson.nxCloudId;
 
-  return isCloudRunner ? 'nx-cloud' : defaultTasksRunnerPath;
+  // NX_NO_CLOUD / neverConnectToCloud wins over any ambient token — otherwise
+  // a surrounding CI env variable would still route through the cloud shell,
+  // which resolves the default tasks runner via its own require bridge and
+  // can pull in a different Nx version than the workspace's own.
+  return isCloudRunner && !isNxCloudDisabled(nxJson)
+    ? 'nx-cloud'
+    : defaultTasksRunnerPath;
 }
 
 export function getRunnerOptions(
@@ -1220,14 +1242,6 @@ export function getRunnerOptions(
   nxArgs: NxArgs,
   isCloudDefault: boolean
 ): any {
-  const defaultCacheableOperations = [];
-
-  for (const key in nxJson.targetDefaults) {
-    if (nxJson.targetDefaults[key].cache) {
-      defaultCacheableOperations.push(key);
-    }
-  }
-
   const result = {
     ...nxJson.tasksRunnerOptions?.[runner]?.options,
     ...nxArgs,
@@ -1259,13 +1273,6 @@ export function getRunnerOptions(
 
   if (nxJson.cacheDirectory) {
     result.cacheDirectory ??= nxJson.cacheDirectory;
-  }
-
-  if (defaultCacheableOperations.length) {
-    result.cacheableOperations ??= [];
-    result.cacheableOperations = result.cacheableOperations.concat(
-      defaultCacheableOperations
-    );
   }
 
   if (nxJson.useDaemonProcess !== undefined) {

@@ -1,23 +1,28 @@
 import {
+  logShowProjectCommand,
+  promptWhenInteractive,
+} from '@nx/devkit/internal';
+import {
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
   readNxJson,
   runTasksInSerial,
+  type TargetConfiguration,
+  type TargetDefaults,
   Tree,
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
+import { upsertTargetDefault } from '@nx/devkit/internal';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+  sortPackageJsonFields,
+} from '@nx/js/internal';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
-import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
-import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import reactInitGenerator from '../init/init';
 import { createApplicationFiles } from './lib/create-application-files';
 import { updateSpecConfig } from './lib/update-jest-config';
@@ -28,13 +33,9 @@ import { addRouting } from './lib/add-routing';
 import { setDefaults } from './lib/set-defaults';
 import { addLinting } from './lib/add-linting';
 import { addE2e } from './lib/add-e2e';
-import { showPossibleWarnings } from './lib/show-possible-warnings';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { initWebpack } from './lib/bundlers/add-webpack';
-import {
-  handleStyledJsxForRspack,
-  initRspack,
-} from './lib/bundlers/add-rspack';
+import { initRspack } from './lib/bundlers/add-rspack';
 import {
   initRsbuild,
   setupRsbuildConfiguration,
@@ -44,9 +45,6 @@ import {
   setupVitestConfiguration,
 } from './lib/bundlers/add-vite';
 import { Schema } from './schema';
-import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
-
 export async function applicationGenerator(
   tree: Tree,
   schema: Schema
@@ -110,8 +108,6 @@ export async function applicationGeneratorInternal(
         ).then((r) => r.response === 'Yes')))
       : false;
 
-  showPossibleWarnings(tree, options);
-
   const initTask = await reactInitGenerator(tree, {
     ...options,
     skipFormat: true,
@@ -120,17 +116,22 @@ export async function applicationGeneratorInternal(
   tasks.push(initTask);
 
   if (!options.addPlugin) {
-    const nxJson = readNxJson(tree);
-    nxJson.targetDefaults ??= {};
-    if (!Object.keys(nxJson.targetDefaults).includes('build')) {
-      nxJson.targetDefaults.build = {
+    const nxJson = readNxJson(tree) ?? {};
+    const existing = findBuildDefault(nxJson.targetDefaults);
+    if (!existing) {
+      upsertTargetDefault(tree, nxJson, {
+        target: 'build',
         cache: true,
         dependsOn: ['^build'],
-      };
-    } else if (!nxJson.targetDefaults.build.dependsOn) {
-      nxJson.targetDefaults.build.dependsOn = ['^build'];
+      });
+      updateNxJson(tree, nxJson);
+    } else if (!existing.dependsOn) {
+      upsertTargetDefault(tree, nxJson, {
+        target: 'build',
+        dependsOn: ['^build'],
+      });
+      updateNxJson(tree, nxJson);
     }
-    updateNxJson(tree, nxJson);
   }
 
   if (options.bundler === 'webpack') {
@@ -152,13 +153,6 @@ export async function applicationGeneratorInternal(
   // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
   if (options.isUsingTsSolutionConfig) {
     await addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
-  }
-
-  if (options.style === 'tailwind') {
-    const twTask = await setupTailwindGenerator(tree, {
-      project: options.projectName,
-    });
-    tasks.push(twTask);
   }
 
   const lintTask = await addLinting(tree, options);
@@ -198,17 +192,11 @@ export async function applicationGeneratorInternal(
   updateSpecConfig(tree, options);
   const commonDependencyTask = await installCommonDependencies(tree, options);
   tasks.push(commonDependencyTask);
-  const styledTask = addStyledModuleDependencies(tree, options);
-  tasks.push(styledTask);
   if (!options.useReactRouter) {
     const routingTask = addRouting(tree, options);
     tasks.push(routingTask);
   }
   setDefaults(tree, options);
-
-  if (options.bundler === 'rspack' && options.style === 'styled-jsx') {
-    handleStyledJsxForRspack(tasks, tree, options);
-  }
 
   if (options.useReactRouter) {
     updateJson(
@@ -258,6 +246,21 @@ export async function applicationGeneratorInternal(
   });
 
   return runTasksInSerial(...tasks);
+}
+
+function findBuildDefault(
+  td: TargetDefaults | undefined
+): Partial<TargetConfiguration> | undefined {
+  if (!td) return undefined;
+  if (Array.isArray(td)) {
+    return td.find(
+      (e) =>
+        e.target === 'build' &&
+        e.projects === undefined &&
+        e.plugin === undefined
+    );
+  }
+  return td['build'];
 }
 
 export default applicationGenerator;

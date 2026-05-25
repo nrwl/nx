@@ -46,5 +46,24 @@
   "publishConfig": {
     "access": "public"
   },
-  "peerDependencies": {}
+  "peerDependencies": {
+    "@nx/cypress": "workspace:*",
+    "@nx/playwright": "workspace:*",
+    "@nx/rsbuild": "workspace:*",
+    "@nx/storybook": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@nx/cypress": {
+      "optional": true
+    },
+    "@nx/playwright": {
+      "optional": true
+    },
+    "@nx/rsbuild": {
+      "optional": true
+    },
+    "@nx/storybook": {
+      "optional": true
+    }
+  }
 }

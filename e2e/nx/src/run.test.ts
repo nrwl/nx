@@ -2,6 +2,7 @@ import {
   checkFilesExist,
   cleanupProject,
   fileExists,
+  getStrippedEnvironmentVariables,
   isWindows,
   newProject,
   readJson,
@@ -14,6 +15,7 @@ import {
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
+import { execSync } from 'child_process';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
 
@@ -193,9 +195,11 @@ describe('Nx Running Tests', () => {
         expect(stdout).toMatch(/ECHOED positional --a=123 --no-b/);
       }
 
-      expect(runCLI(`echo:fail ${mylib}`, { silenceError: true })).toContain(
-        `Cannot find configuration for task ${mylib}:echo:fail`
-      );
+      expect(
+        runCLI(`echo:fail ${mylib}`, {
+          silenceError: true,
+        })
+      ).toContain(`Cannot find configuration for task ${mylib}:echo:fail`);
 
       updateJson(`libs/${mylib}/project.json`, (c) => original);
     }, 1000000);
@@ -476,7 +480,9 @@ describe('Nx Running Tests', () => {
       runCLI(`generate @nx/web:app apps/${myapp}`);
 
       // Project has no "run" target, so it should fail
-      const result = runCLI(`run ${myapp}`, { silenceError: true });
+      const result = runCLI(`run ${myapp}`, {
+        silenceError: true,
+      });
       expect(result).toContain('Both project and target have to be specified');
     });
 
@@ -486,13 +492,15 @@ describe('Nx Running Tests', () => {
         const lib = uniq('lib');
 
         updateJson('nx.json', (nxJson) => {
-          nxJson.targetDefaults ??= {};
-          nxJson.targetDefaults[target] = {
+          const entries = nxJson.targetDefaults ?? [];
+          entries.push({
+            target,
             executor: 'nx:run-commands',
             options: {
               command: `echo Hello from ${target}`,
             },
-          };
+          });
+          nxJson.targetDefaults = entries;
           return nxJson;
         });
 
@@ -516,12 +524,14 @@ describe('Nx Running Tests', () => {
         const lib = uniq('lib');
 
         updateJson('nx.json', (nxJson) => {
-          nxJson.targetDefaults ??= {};
-          nxJson.targetDefaults[`nx:run-commands`] = {
+          const entries = nxJson.targetDefaults ?? [];
+          entries.push({
+            executor: 'nx:run-commands',
             options: {
               command: `echo Hello from ${target}`,
             },
-          };
+          });
+          nxJson.targetDefaults = entries;
           return nxJson;
         });
 
@@ -540,6 +550,208 @@ describe('Nx Running Tests', () => {
         expect(runCLI(`${target} ${lib} --verbose`)).toContain(
           `Hello from ${target}`
         );
+      });
+    });
+
+    describe('target defaults filtering by projects and plugin', () => {
+      it('scopes a target-default to a single project name via the `projects` filter', () => {
+        const target = uniq('target');
+        const libA = uniq('liba');
+        const libB = uniq('libb');
+
+        updateJson('nx.json', (nxJson) => {
+          const entries = nxJson.targetDefaults ?? [];
+          entries.push({
+            target,
+            projects: libA,
+            executor: 'nx:run-commands',
+            options: { command: `echo SCOPED-TO-${libA}` },
+          });
+          nxJson.targetDefaults = entries;
+          return nxJson;
+        });
+
+        updateFile(
+          `libs/${libA}/project.json`,
+          JSON.stringify({ name: libA, targets: { [target]: {} } })
+        );
+        updateFile(
+          `libs/${libB}/project.json`,
+          JSON.stringify({ name: libB, targets: { [target]: {} } })
+        );
+
+        // libA matches the `projects` filter — the executor and options inject.
+        expect(runCLI(`${target} ${libA} --verbose`)).toContain(
+          `SCOPED-TO-${libA}`
+        );
+
+        // libB doesn't match — no other default applies, so the bare target has
+        // no executor and the run fails. We only assert the SCOPED text isn't
+        // there; the exact "no executor" wording is engine-version-sensitive.
+        const result = runCLI(`${target} ${libB} --verbose`, {
+          silenceError: true,
+        });
+        expect(result).not.toContain(`SCOPED-TO-${libA}`);
+      });
+
+      it('scopes a target-default by tag via the `projects` filter', () => {
+        const target = uniq('target');
+        const tag = uniq('tag').toLowerCase();
+        const libTagged = uniq('libtagged');
+        const libUntagged = uniq('libuntagged');
+
+        updateJson('nx.json', (nxJson) => {
+          const entries = nxJson.targetDefaults ?? [];
+          entries.push({
+            target,
+            projects: `tag:${tag}`,
+            executor: 'nx:run-commands',
+            options: { command: `echo TAGGED-${tag}` },
+          });
+          nxJson.targetDefaults = entries;
+          return nxJson;
+        });
+
+        updateFile(
+          `libs/${libTagged}/project.json`,
+          JSON.stringify({
+            name: libTagged,
+            tags: [tag],
+            targets: { [target]: {} },
+          })
+        );
+        updateFile(
+          `libs/${libUntagged}/project.json`,
+          JSON.stringify({ name: libUntagged, targets: { [target]: {} } })
+        );
+
+        expect(runCLI(`${target} ${libTagged} --verbose`)).toContain(
+          `TAGGED-${tag}`
+        );
+
+        const result = runCLI(`${target} ${libUntagged} --verbose`, {
+          silenceError: true,
+        });
+        expect(result).not.toContain(`TAGGED-${tag}`);
+      });
+
+      it('falls back to a less-specific target-default when the more-specific `projects` filter does not match', () => {
+        const target = uniq('target');
+        const libA = uniq('liba');
+        const libB = uniq('libb');
+
+        updateJson('nx.json', (nxJson) => {
+          const entries = nxJson.targetDefaults ?? [];
+          // More-specific (filtered) entry — preferred for libA.
+          entries.push({
+            target,
+            projects: libA,
+            executor: 'nx:run-commands',
+            options: { command: `echo SPECIFIC-${libA}` },
+          });
+          // Less-specific (no filter) entry — covers everyone else.
+          entries.push({
+            target,
+            executor: 'nx:run-commands',
+            options: { command: `echo GENERIC-${target}` },
+          });
+          nxJson.targetDefaults = entries;
+          return nxJson;
+        });
+
+        updateFile(
+          `libs/${libA}/project.json`,
+          JSON.stringify({ name: libA, targets: { [target]: {} } })
+        );
+        updateFile(
+          `libs/${libB}/project.json`,
+          JSON.stringify({ name: libB, targets: { [target]: {} } })
+        );
+
+        // libA matches the specific entry — higher tier wins.
+        const aOut = runCLI(`${target} ${libA} --verbose`);
+        expect(aOut).toContain(`SPECIFIC-${libA}`);
+        expect(aOut).not.toContain(`GENERIC-${target}`);
+
+        // libB doesn't match the specific filter, falls back to the generic default.
+        const bOut = runCLI(`${target} ${libB} --verbose`);
+        expect(bOut).toContain(`GENERIC-${target}`);
+        expect(bOut).not.toContain(`SPECIFIC-${libA}`);
+      });
+
+      it('scopes a target-default by `source` to plugin-inferred targets only', () => {
+        const target = uniq('target');
+        const inferredLib = uniq('inferred');
+        const manualLib = uniq('manual');
+        const pluginPath = './tools/echo-source-plugin.cjs';
+
+        // Inline plugin: infers `<target>` for any project containing
+        // `marker.json`. Targets it creates carry source attribution
+        // pointing at this plugin's path.
+        updateFile(
+          'tools/echo-source-plugin.cjs',
+          `
+            const { dirname, basename } = require('path');
+            module.exports = {
+              createNodes: ['**/marker.json', (files) => {
+                return files.map((file) => {
+                  const root = dirname(file);
+                  return [file, {
+                    projects: {
+                      [root]: {
+                        name: basename(root),
+                        targets: {
+                          '${target}': { command: 'echo INFERRED-COMMAND' },
+                        },
+                      },
+                    },
+                  }];
+                });
+              }],
+            };
+          `
+        );
+
+        updateJson('nx.json', (nxJson) => {
+          nxJson.plugins = [...(nxJson.plugins ?? []), pluginPath];
+          const entries = nxJson.targetDefaults ?? [];
+          entries.push({
+            target,
+            plugin: pluginPath,
+            outputs: ['{workspaceRoot}/source-filter-marker'],
+          });
+          nxJson.targetDefaults = entries;
+          return nxJson;
+        });
+
+        // Inferred via the plugin (has marker.json).
+        updateFile(`libs/${inferredLib}/marker.json`, '{}');
+
+        // Manually defined — same target name, but its source attribution is
+        // project.json (not the plugin path).
+        updateFile(
+          `libs/${manualLib}/project.json`,
+          JSON.stringify({
+            name: manualLib,
+            targets: {
+              [target]: { command: 'echo MANUAL-COMMAND' },
+            },
+          })
+        );
+
+        const inferredCfg = JSON.parse(
+          runCLI(`show project ${inferredLib} --json`)
+        );
+        const manualCfg = JSON.parse(
+          runCLI(`show project ${manualLib} --json`)
+        );
+
+        // The default's `outputs` only attaches to the inferred target —
+        // its source matches the plugin path the filter names.
+        expect(inferredCfg.targets[target]?.outputs).toEqual([
+          '{workspaceRoot}/source-filter-marker',
+        ]);
+        expect(manualCfg.targets[target]?.outputs).toBeUndefined();
       });
     });
 
@@ -773,6 +985,301 @@ describe('Nx Running Tests', () => {
     });
   });
 
+  describe('SIGINT process cleanup', () => {
+    if (isWindows()) {
+      it('skipped on windows', () => {});
+    } else {
+      it('should kill executor-based (discrete) task processes on SIGINT', async () => {
+        const lib = uniq('sigint-lib');
+        runCLI(`generate @nx/js:lib libs/${lib}`);
+
+        const pidFile = path.join(tmpProjPath(), `libs/${lib}/build.pid`);
+        const scriptBody = writePidScript('build.pid');
+
+        updateFile(`libs/${lib}/slow-build.js`, scriptBody);
+
+        // nx:run-script executor goes through the discrete/forked process path
+        updateJson(`libs/${lib}/project.json`, (config) => {
+          config.targets = {
+            build: {
+              executor: 'nx:run-script',
+              options: { script: 'build' },
+            },
+          };
+          return config;
+        });
+
+        updateJson(`libs/${lib}/package.json`, (pkg) => {
+          pkg.scripts = { build: 'node slow-build.js' };
+          return pkg;
+        });
+
+        const pids = await runNxAndSigint(
+          ['build', lib, '--skip-nx-cache'],
+          pidFile
+        );
+
+        for (const pid of pids) {
+          expect(isProcessAlive(pid)).toBe(false);
+        }
+      }, 60_000);
+
+      it('should kill run-commands task processes on SIGINT', async () => {
+        const lib = uniq('sigint-rc');
+        runCLI(`generate @nx/js:lib libs/${lib}`);
+
+        const pidFile = path.join(tmpProjPath(), `libs/${lib}/build.pid`);
+
+        updateFile(`libs/${lib}/slow-build.js`, writePidScript('build.pid'));
+
+        updateJson(`libs/${lib}/project.json`, (config) => {
+          config.targets = {
+            build: {
+              command: 'node slow-build.js',
+              options: { cwd: `libs/${lib}` },
+            },
+          };
+          return config;
+        });
+
+        const pids = await runNxAndSigint(
+          ['build', lib, '--skip-nx-cache'],
+          pidFile
+        );
+
+        for (const pid of pids) {
+          expect(isProcessAlive(pid)).toBe(false);
+        }
+      }, 60_000);
+
+      it('should kill continuous task processes on SIGINT', async () => {
+        const lib = uniq('sigint-cont');
+        runCLI(`generate @nx/js:lib libs/${lib}`);
+
+        const pidFile = path.join(tmpProjPath(), `libs/${lib}/serve.pid`);
+
+        updateFile(`libs/${lib}/serve.js`, writePidScript('serve.pid'));
+
+        updateJson(`libs/${lib}/project.json`, (config) => {
+          config.targets = {
+            serve: {
+              command: 'node serve.js',
+              options: { cwd: `libs/${lib}` },
+              continuous: true,
+            },
+          };
+          return config;
+        });
+
+        const pids = await runNxAndSigint(
+          ['serve', lib, '--skip-nx-cache'],
+          pidFile
+        );
+
+        for (const pid of pids) {
+          expect(isProcessAlive(pid)).toBe(false);
+        }
+      }, 60_000);
+
+      it('should kill executor-based (discrete) task processes on SIGINT (TUI mode)', async () => {
+        const lib = uniq('sigint-tui');
+        runCLI(`generate @nx/js:lib libs/${lib}`);
+
+        const pidFile = path.join(tmpProjPath(), `libs/${lib}/build.pid`);
+
+        updateFile(`libs/${lib}/slow-build.js`, writePidScript('build.pid'));
+
+        updateJson(`libs/${lib}/project.json`, (config) => {
+          config.targets = {
+            build: {
+              executor: 'nx:run-script',
+              options: { script: 'build' },
+            },
+          };
+          return config;
+        });
+
+        updateJson(`libs/${lib}/package.json`, (pkg) => {
+          pkg.scripts = { build: 'node slow-build.js' };
+          return pkg;
+        });
+
+        const pids = await runNxAndSigint(
+          ['build', lib, '--skip-nx-cache'],
+          pidFile,
+          { useTui: true }
+        );
+
+        for (const pid of pids) {
+          expect(isProcessAlive(pid)).toBe(false);
+        }
+      }, 60_000);
+
+      it('should kill run-commands task processes on SIGINT (TUI mode)', async () => {
+        const lib = uniq('sigint-tui-rc');
+        runCLI(`generate @nx/js:lib libs/${lib}`);
+
+        const pidFile = path.join(tmpProjPath(), `libs/${lib}/build.pid`);
+
+        updateFile(`libs/${lib}/slow-build.js`, writePidScript('build.pid'));
+
+        updateJson(`libs/${lib}/project.json`, (config) => {
+          config.targets = {
+            build: {
+              command: 'node slow-build.js',
+              options: { cwd: `libs/${lib}` },
+            },
+          };
+          return config;
+        });
+
+        const pids = await runNxAndSigint(
+          ['build', lib, '--skip-nx-cache'],
+          pidFile,
+          { useTui: true }
+        );
+
+        for (const pid of pids) {
+          expect(isProcessAlive(pid)).toBe(false);
+        }
+      }, 60_000);
+
+      it('should kill continuous task processes on SIGINT (TUI mode)', async () => {
+        const lib = uniq('sigint-tui-cont');
+        runCLI(`generate @nx/js:lib libs/${lib}`);
+
+        const pidFile = path.join(tmpProjPath(), `libs/${lib}/serve.pid`);
+
+        updateFile(`libs/${lib}/serve.js`, writePidScript('serve.pid'));
+
+        updateJson(`libs/${lib}/project.json`, (config) => {
+          config.targets = {
+            serve: {
+              command: 'node serve.js',
+              options: { cwd: `libs/${lib}` },
+              continuous: true,
+            },
+          };
+          return config;
+        });
+
+        const pids = await runNxAndSigint(
+          ['serve', lib, '--skip-nx-cache'],
+          pidFile,
+          { useTui: true }
+        );
+
+        for (const pid of pids) {
+          expect(isProcessAlive(pid)).toBe(false);
+        }
+      }, 60_000);
+    }
+
+    /** Script that writes its PID to a file and keeps running. */
+    function writePidScript(filename: string): string {
+      return `
+        const fs = require('fs');
+        const path = require('path');
+        fs.writeFileSync(path.join(__dirname, '${filename}'), String(process.pid));
+        setInterval(() => {}, 1000);
+      `;
+    }
+
+    /**
+     * Runs nx inside a real pseudo-terminal, polls for a PID file,
+     * sends SIGINT (identical to Ctrl+C), and asserts nx exits
+     * promptly with all processes in the tree dead.
+     */
+    async function runNxAndSigint(
+      args: string[],
+      pidFile: string,
+      { useTui }: { useTui?: boolean } = {}
+    ): Promise<number[]> {
+      const { existsSync, readFileSync, unlinkSync } = require('fs');
+      const { RustPseudoTerminal } = require('nx/src/native');
+
+      try {
+        unlinkSync(pidFile);
+      } catch {}
+
+      const nxBin = path.join(tmpProjPath(), 'node_modules', '.bin', 'nx');
+      const command = `${nxBin} ${args.join(' ')}`;
+
+      const pty = new RustPseudoTerminal();
+      const childProcess = pty.runCommand(command, tmpProjPath(), {
+        ...getStrippedEnvironmentVariables(),
+        CI: 'true',
+        FORCE_COLOR: 'false',
+        NX_DAEMON: 'false',
+        NX_TUI: useTui ? 'true' : 'false',
+        ...(useTui ? { NX_TUI_SKIP_CAPABILITY_CHECK: 'true' } : {}),
+      });
+
+      const nxPid = childProcess.getPid();
+      console.log(`[sigint-test] started PID=${nxPid}, useTui=${!!useTui}`);
+
+      // Track exit immediately so we don't miss it
+      let exited = false;
+      let exitResolve: (clean: boolean) => void;
+      const exitPromise = new Promise<boolean>((r) => (exitResolve = r));
+      childProcess.onExit((msg) => {
+        console.log(`[sigint-test] onExit: ${msg}`);
+        exited = true;
+        exitResolve(true);
+      });
+
+      // Poll for PID file written by the task script
+      let taskPid: number | undefined;
+      const startTime = Date.now();
+      while (Date.now() - startTime < 30_000 && !exited) {
+        if (existsSync(pidFile)) {
+          taskPid = parseInt(readFileSync(pidFile, 'utf-8').trim(), 10);
+          if (taskPid && !isNaN(taskPid)) break;
+        }
+        await new Promise((r) => setTimeout(r, 200));
+      }
+
+      if (!taskPid) {
+        childProcess.kill('SIGKILL');
+        throw new Error(
+          exited
+            ? 'nx exited before task script wrote PID file'
+            : 'Timed out waiting for PID file from task'
+        );
+      }
+
+      expect(isProcessAlive(taskPid)).toBe(true);
+
+      // Capture entire process tree before sending SIGINT
+      const processTree = getProcessTree(nxPid);
+
+      console.log(
+        `[sigint-test] taskPid=${taskPid} alive=${isProcessAlive(taskPid)}, tree=${JSON.stringify(processTree)}`
+      );
+
+      // Send SIGINT — identical to Ctrl+C in a real terminal
+      console.log(`[sigint-test] sending SIGINT`);
+      childProcess.kill('SIGINT');
+
+      // Nx should exit promptly. Without the fix, cleanup hangs
+      // waiting for unkilled discrete tasks.
+      const exitTimeout = setTimeout(() => {
+        console.log(`[sigint-test] TIMEOUT — sending SIGKILL`);
+        childProcess.kill('SIGKILL');
+        exitResolve(false);
+      }, 10_000);
+      const exitedCleanly = await exitPromise;
+      clearTimeout(exitTimeout);
+
+      console.log(`[sigint-test] exitedCleanly=${exitedCleanly}`);
+      expect(exitedCleanly).toBe(true);
+
+      await new Promise((r) => setTimeout(r, 2000));
+
+      return processTree;
+    }
+  });
+
   describe('exec', () => {
     let pkg: string;
     let pkg2: string;
@@ -945,3 +1452,46 @@ describe('Nx Running Tests', () => {
     });
   });
 });
+
+function isProcessAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Get all descendant PIDs of a process (recursive).
+ * Uses `pgrep -P` on macOS/Linux.
+ */
+function getProcessTree(rootPid: number): number[] {
+  const pids: number[] = [rootPid];
+  try {
+    const children = execSync(`pgrep -P ${rootPid}`, { encoding: 'utf-8' })
+      .trim()
+      .split('\n')
+      .filter(Boolean)
+      .map(Number);
+    for (const child of children) {
+      pids.push(...getProcessTree(child));
+    }
+  } catch {
+    // No children or process already exited
+  }
+  return pids;
+}
+
+/**
+ * Kill an entire process tree by walking descendants.
+ * Used as a fallback when cleanup times out.
+ */
+function killProcessTree(pid: number) {
+  const pids = getProcessTree(pid);
+  for (const p of pids) {
+    try {
+      process.kill(p, 'SIGKILL');
+    } catch {}
+  }
+}

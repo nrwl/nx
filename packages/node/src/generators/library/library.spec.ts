@@ -70,7 +70,7 @@ describe('lib', () => {
       await libraryGenerator(tree, baseLibraryConfig);
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-lib/src/index.ts',
+        './my-lib/src/index.ts',
       ]);
     });
 
@@ -232,7 +232,7 @@ describe('lib', () => {
       });
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-dir/my-lib/src/index.ts',
+        './my-dir/my-lib/src/index.ts',
       ]);
       expect(tsconfigJson.compilerOptions.paths['my-lib/*']).toBeUndefined();
     });
@@ -489,7 +489,7 @@ describe('lib', () => {
       await libraryGenerator(tree, { directory: 'my-lib', js: true } as Schema);
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-lib/src/index.js',
+        './my-lib/src/index.js',
       ]);
     });
 
@@ -606,7 +606,6 @@ describe('lib', () => {
       expect(readJson(tree, 'mylib/tsconfig.lib.json')).toMatchInlineSnapshot(`
         {
           "compilerOptions": {
-            "baseUrl": ".",
             "emitDeclarationOnly": true,
             "module": "nodenext",
             "moduleResolution": "nodenext",

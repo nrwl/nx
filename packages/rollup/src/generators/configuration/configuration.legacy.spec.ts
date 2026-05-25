@@ -46,6 +46,25 @@ describe('configurationGenerator', () => {
       name: '@proj/mypkg',
       version: '0.0.1',
     });
+
+    const td = readJson(tree, 'nx.json').targetDefaults;
+    const rollupEntry = Array.isArray(td)
+      ? td.find((e) => e.executor === '@nx/rollup:rollup')
+      : td['@nx/rollup:rollup'];
+    expect(rollupEntry).toEqual({
+      cache: true,
+      dependsOn: ['^build'],
+      executor: '@nx/rollup:rollup',
+      inputs: [
+        'default',
+        '^default',
+        {
+          json: '{workspaceRoot}/tsconfig.json',
+          fields: ['extends', 'files', 'include'],
+        },
+      ],
+    });
+    expect(project.targets.build.inputs).toBeUndefined();
   });
 
   it('should respect existing package.json file', async () => {

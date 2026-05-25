@@ -1,11 +1,11 @@
+import { createAsyncIterable } from '@nx/devkit/internal';
 import {
   ExecutorContext,
   logger,
   parseTargetString,
   readTargetOptions,
 } from '@nx/devkit';
-import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { Configuration } from '@rspack/core';
 import { RspackDevServer } from '@rspack/dev-server';
 import { createCompiler, isMultiCompiler } from '../../utils/create-compiler';
@@ -13,12 +13,15 @@ import { isMode } from '../../utils/mode-utils';
 import { normalizeOptions } from '../rspack/lib/normalize-options';
 import { getDevServerOptions } from './lib/get-dev-server-config';
 import { DevServerExecutorSchema } from './schema';
+import { warnRspackDevServerExecutorDeprecation } from '../../utils/deprecation';
 
 type DevServer = Configuration['devServer'];
 export default async function* runExecutor(
   options: DevServerExecutorSchema,
   context: ExecutorContext
 ): AsyncIterableIterator<{ success: boolean; baseUrl?: string }> {
+  warnRspackDevServerExecutorDeprecation();
+
   process.env.NODE_ENV ??= options.mode ?? 'development';
 
   if (isMode(process.env.NODE_ENV)) {

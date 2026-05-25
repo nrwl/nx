@@ -1,5 +1,5 @@
 {
-  "outDir": "dist/packages/workspace",
+  "outDir": "packages/workspace/dist",
   "assets": [
     {
       "glob": "**/files/**"
@@ -22,16 +22,10 @@
     {
       "glob": "**/files-root-app/**"
     },
+    { "glob": "presets/*.json" },
+    { "glob": "src/**/schema.json" },
     {
-      "glob": "**/*.json",
-      "ignore": ["tsconfig*.json", "project.json", ".eslintrc.json"]
-    },
-    {
-      "glob": "**/*.{js,css,html,svg}",
-      "ignore": ["**/jest.config.js"]
-    },
-    {
-      "glob": "**/*.d.ts"
+      "glob": "src/**/schema.d.ts"
     },
     "LICENSE"
   ]

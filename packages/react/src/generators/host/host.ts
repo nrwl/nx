@@ -1,3 +1,4 @@
+import { ensureRootProjectName } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   detectPackageManager,
@@ -26,12 +27,11 @@ import { updateModuleFederationE2eProject } from './lib/update-module-federation
 import { NormalizedSchema, Schema } from './schema';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { isValidVariable } from '@nx/js';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import {
   moduleFederationEnhancedVersion,
   nxVersion,
 } from '../../utils/versions';
-import { ensureRootProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { updateModuleFederationTsconfig } from './lib/update-module-federation-tsconfig';
 import { normalizeHostName } from './lib/normalize-host-name';
 

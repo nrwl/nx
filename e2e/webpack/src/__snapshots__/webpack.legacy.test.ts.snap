@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Webpack Plugin (legacy) ConvertConfigToWebpackPlugin, should convert withNx webpack config to a standard config using NxWebpackPlugin 1`] = `
 "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
@@ -25,7 +25,7 @@ module.exports = async () => ({
     // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \\\`apply\\\` method.
     // e.g. \\\`{ apply: (compiler) => { /* modify compiler.options */ }\\\`
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    await useLegacyNxPlugin(require('./webpack.config.old'), options),
+    await useLegacyNxPlugin(require('./webpack.config.old.js'), options),
   ],
 });
 "

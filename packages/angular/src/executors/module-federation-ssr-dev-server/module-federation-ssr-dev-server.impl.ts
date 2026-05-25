@@ -3,8 +3,8 @@ import {
   combineAsyncIterables,
   createAsyncIterable,
   mapAsyncIterable,
-} from '@nx/devkit/src/utils/async-iterable';
-import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
+  eachValueFrom,
+} from '@nx/devkit/internal';
 import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { existsSync } from 'fs';

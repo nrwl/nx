@@ -4,12 +4,11 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
+import { addSwcDependencies } from '@nx/js/internal';
 import { getReactDependenciesVersionsToInstall } from '../../../utils/version-utils';
 import {
   babelCoreVersion,
   babelPresetReactVersion,
-  lessVersion,
   sassVersion,
   testingLibraryDomVersion,
   testingLibraryReactVersion,
@@ -41,13 +40,8 @@ export async function installCommonDependencies(
   // `@nx/webpack` installs them automatically for now.
   // TODO(jack): Once we clean up webpack we can remove this check
   if (options.bundler === 'vite' || options.unitTestRunner === 'vitest') {
-    switch (options.style) {
-      case 'scss':
-        devDependencies['sass'] = sassVersion;
-        break;
-      case 'less':
-        devDependencies['less'] = lessVersion;
-        break;
+    if (options.style === 'scss') {
+      devDependencies['sass'] = sassVersion;
     }
   }
 

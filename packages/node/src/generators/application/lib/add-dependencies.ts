@@ -1,11 +1,12 @@
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
+  getDependencyVersionFromPackageJson,
   joinPathFragments,
   Tree,
   updateJson,
 } from '@nx/devkit';
-import { esbuildVersion } from '@nx/js/src/utils/versions';
+import { esbuildVersion } from '@nx/js/internal';
 import {
   expressTypingsVersion,
   expressVersion,
@@ -34,7 +35,8 @@ export function addProjectDependencies(
     },
     esbuild: {
       '@nx/esbuild': nxVersion,
-      esbuild: esbuildVersion,
+      esbuild:
+        getDependencyVersionFromPackageJson(tree, 'esbuild') ?? esbuildVersion,
     },
   };
 

@@ -9,5 +9,6 @@
       "inputs": ["copyReadme"],
       "outputs": ["{workspaceRoot}/dist/packages/plugin/README.md"]
     }
-  }
+  },
+  "implicitDependencies": ["vitest"]
 }

@@ -1,18 +1,37 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/vite",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": "dist",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/vite/tsconfig.tsbuildinfo"
+    "composite": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
-  "include": ["**/*.ts", "**/*.json"],
-  "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
+  "include": ["*.ts", "src/**/*.ts", "plugins/**/*.ts", "src/**/schema.json"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "jest.config.cts",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "src/utils/test-utils.ts",
+    ".eslintrc.json"
+  ],
   "references": [
     {
       "path": "../vitest/tsconfig.lib.json"
     },
     {
       "path": "../js/tsconfig.lib.json"
+    },
+    {
+      "path": "../eslint/tsconfig.lib.json"
     },
     {
       "path": "../devkit/tsconfig.lib.json"

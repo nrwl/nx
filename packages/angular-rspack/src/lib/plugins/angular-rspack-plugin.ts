@@ -149,9 +149,9 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     );
 
     compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation) => {
-      // Handle errors thrown by loaders that prevent sealing
+      // Handle errors thrown by loaders that prevent sealing (but ignore for watch mode)
       compilation.hooks.afterSeal.tapAsync(PLUGIN_NAME, (callback) => {
-        if (compilation.errors.length > 0) {
+        if (!watchRunInitialized && compilation.errors.length > 0) {
           const stats = compilation.getStats();
           const compilationError = statsErrorsToString(
             stats.toJson(),
@@ -334,7 +334,8 @@ export class AngularRspackPlugin implements RspackPluginInstance {
           : defaultStatsOptions;
 
       rspackStatsLogger(stats, statsOptions);
-      if (stats.hasErrors()) {
+      // Don't forcibly exit the process with errors when in watch mode
+      if (!watchRunInitialized && stats.hasErrors()) {
         process.exit(1);
       }
     });

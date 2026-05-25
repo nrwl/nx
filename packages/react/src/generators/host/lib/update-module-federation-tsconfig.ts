@@ -1,6 +1,6 @@
 import { joinPathFragments, type Tree, updateJson } from '@nx/devkit';
 import { NormalizedSchema } from '../schema';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export function updateModuleFederationTsconfig(
   host: Tree,
@@ -16,13 +16,7 @@ export function updateModuleFederationTsconfig(
   );
   if (!host.exists(tsconfigPath) || !host.exists(tsconfigRuntimePath)) return;
 
-  // Not setting `baseUrl` does not work with MF.
   if (isUsingTsSolutionSetup(host)) {
-    updateJson(host, 'tsconfig.base.json', (json) => {
-      json.compilerOptions.baseUrl = '.';
-      return json;
-    });
-
     // Update references to match what `nx sync` does.
     if (options.remotes?.length) {
       updateJson(host, tsconfigPath, (json) => {

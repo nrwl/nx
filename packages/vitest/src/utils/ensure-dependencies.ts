@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   detectPackageManager,
+  getDependencyVersionFromPackageJson,
   logger,
   type GeneratorCallback,
   type Tree,
@@ -57,10 +58,11 @@ export async function ensureDependencies(
     if (schema.compiler === 'swc') {
       devDependencies['@vitejs/plugin-react-swc'] = vitePluginReactSwcVersion;
     } else {
-      // @vitejs/plugin-react v6 requires Vite 8+, use v4 for older versions
-      const pkgJson = JSON.parse(tree.read('package.json', 'utf-8'));
-      const viteRange = pkgJson?.devDependencies?.['vite'];
-      const viteMajor = viteRange ? major(coerce(viteRange)) : null;
+      // @vitejs/plugin-react v6 requires Vite 8+, use v4 for older versions.
+      // getDependencyVersionFromPackageJson resolves pnpm catalog: refs.
+      const viteRange = getDependencyVersionFromPackageJson(tree, 'vite');
+      const coerced = viteRange ? coerce(viteRange) : null;
+      const viteMajor = coerced ? major(coerced) : null;
       devDependencies['@vitejs/plugin-react'] =
         viteMajor !== null && viteMajor < 8
           ? vitePluginReactV4Version

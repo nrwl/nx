@@ -1,14 +1,14 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/versions', () => ({
-  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+jest.mock('@nx/cypress/internal', () => ({
+  ...jest.requireActual('@nx/cypress/internal'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
 describe('react app generator (legacy)', () => {
@@ -142,39 +142,5 @@ describe('react app generator (legacy)', () => {
     expect(
       appTree.read('my-vite-app/vite.config.mts', 'utf-8')
     ).toMatchSnapshot();
-  });
-
-  describe('--style tailwind', () => {
-    it('should not generate any styles files', async () => {
-      await applicationGenerator(appTree, { ...schema, style: 'tailwind' });
-
-      expect(appTree.exists('my-app/src/app/app.tsx')).toBeTruthy();
-      expect(appTree.exists('my-app/src/app/app.spec.tsx')).toBeTruthy();
-      expect(appTree.exists('my-app/src/app/app.css')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.scss')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.module.css')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.module.scss')).toBeFalsy();
-
-      const content = appTree.read('my-app/src/app/app.tsx').toString();
-      expect(content).toMatchSnapshot();
-    });
-
-    it.each`
-      bundler
-      ${'webpack'}
-      ${'rspack'}
-    `('should generate styles.css not styles.tailwind', async ({ bundler }) => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: 'tailwind',
-        bundler,
-      });
-
-      // Should not have `styles.tailwind` in build options since it's not valid -- it needs to be styles.css.
-      const projectConfig = readProjectConfiguration(appTree, 'my-app');
-      expect(projectConfig.targets.build.options.styles).toEqual([
-        'my-app/src/styles.css',
-      ]);
-    });
   });
 });

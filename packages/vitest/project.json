@@ -3,11 +3,24 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/vitest",
   "projectType": "library",
+  "release": {
+    "version": {
+      "generator": "@nx/js:release-version",
+      "preserveLocalDependencyProtocols": true,
+      "manifestRootsToUpdate": ["packages/{projectName}"]
+    }
+  },
   "targets": {
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "packages/{projectName}"
+      }
+    },
     "build": {
-      "command": "node ./scripts/copy-readme.js vitest",
+      "command": "node ./scripts/copy-readme.js vitest packages/vitest/readme-template.md packages/vitest/README.md",
       "inputs": ["copyReadme"],
-      "outputs": ["{workspaceRoot}/dist/packages/vitest/README.md"]
+      "outputs": ["{projectRoot}/README.md"],
+      "dependsOn": ["^build", "build-base"]
     }
   }
 }

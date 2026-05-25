@@ -2,6 +2,13 @@
   "name": "@nx/eslint-plugin",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "!dist/spec",
+    "migrations.json"
+  ],
   "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
   "repository": {
     "type": "git",
@@ -16,18 +23,65 @@
     "CLI",
     "Testing"
   ],
-  "main": "./src/index.js",
-  "type": "commonjs",
-  "types": "./src/index.d.ts",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "angular": [
+        "dist/angular.d.ts"
+      ],
+      "nx": [
+        "dist/nx.d.ts"
+      ],
+      "react": [
+        "dist/react.d.ts"
+      ],
+      "typescript": [
+        "dist/typescript.d.ts"
+      ]
+    }
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
+  "nx-migrations": {
+    "migrations": "./migrations.json"
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./src/index.ts",
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./angular": {
+      "@nx/nx-source": "./angular.ts",
+      "types": "./dist/angular.d.ts",
+      "default": "./dist/angular.js"
+    },
+    "./nx": {
+      "@nx/nx-source": "./nx.ts",
+      "types": "./dist/nx.d.ts",
+      "default": "./dist/nx.js"
+    },
+    "./react": {
+      "@nx/nx-source": "./react.ts",
+      "types": "./dist/react.d.ts",
+      "default": "./dist/react.js"
+    },
+    "./typescript": {
+      "@nx/nx-source": "./typescript.ts",
+      "types": "./dist/typescript.d.ts",
+      "default": "./dist/typescript.js"
+    }
+  },
   "peerDependencies": {
     "@typescript-eslint/parser": "^6.13.2 || ^7.0.0 || ^8.0.0",
-    "eslint-config-prettier": "^10.0.0"
+    "eslint-config-prettier": "catalog:eslint"
   },
   "peerDependenciesMeta": {
     "eslint-config-prettier": {
@@ -38,11 +92,11 @@
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@phenomnomnominal/tsquery": "catalog:typescript",
-    "@typescript-eslint/type-utils": "^8.0.0",
-    "@typescript-eslint/utils": "^8.0.0",
+    "@typescript-eslint/type-utils": "catalog:eslint",
+    "@typescript-eslint/utils": "catalog:eslint",
     "chalk": "catalog:",
     "confusing-browser-globals": "^1.0.9",
-    "globals": "^15.9.0",
+    "globals": "^17.0.0",
     "jsonc-eslint-parser": "^2.1.0",
     "semver": "catalog:",
     "tslib": "catalog:typescript"
@@ -52,8 +106,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "nx-migrations": {
-    "migrations": "./migrations.json"
   }
 }

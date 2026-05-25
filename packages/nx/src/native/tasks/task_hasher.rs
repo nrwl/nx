@@ -16,9 +16,9 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        CachedTaskOutput, ProjectFileSetCache, hash_all_externals, hash_external,
-        hash_project_config, hash_project_files_with_inputs_cached, hash_task_output,
-        hash_tsconfig_selectively, hash_workspace_files_with_inputs,
+        CachedTaskOutput, JsonHashResult, ProjectFileSetCache, hash_all_externals, hash_external,
+        hash_json_files, hash_project_config, hash_project_files_with_inputs_cached,
+        hash_task_output, hash_tsconfig_selectively, hash_workspace_files_with_inputs,
     },
     types::FileData,
     workspace::types::ProjectFiles,
@@ -166,9 +166,8 @@ impl TaskHasher {
         #[napi(ts_arg_type = "ExternalObject<ProjectGraph>")] project_graph: &External<
             Arc<ProjectGraph>,
         >,
-        #[napi(ts_arg_type = "ExternalObject<ProjectFiles>")] project_file_map: &External<
-            Arc<ProjectFiles>,
-        >,
+        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<FileData>>>")]
+        project_file_map: &External<Arc<ProjectFiles>>,
         #[napi(ts_arg_type = "ExternalObject<Array<FileData>>")] all_workspace_files: &External<
             Arc<Vec<FileData>>,
         >,
@@ -190,14 +189,42 @@ impl TaskHasher {
         }
     }
 
-    #[napi]
+    /// Hash each task's instructions using the env map keyed by `task.id`.
+    /// Every task in `hash_plans` must have an entry in `per_task_envs` —
+    /// a missing id surfaces as an error rather than silently hashing
+    /// against an empty env. Callers that want to hash all tasks against
+    /// the same env should build `per_task_envs` by keying that env under
+    /// every task id.
+    #[napi(ts_return_type = "Record<string, HashDetails>")]
     pub fn hash_plans(
         &self,
         hash_plans: &External<HashMap<String, Vec<HashInstruction>>>,
-        js_env: HashMap<String, String>,
+        per_task_envs: HashMap<String, HashMap<String, String>>,
         cwd: String,
         collect_task_inputs: Option<bool>,
     ) -> anyhow::Result<NapiDashMap<String, HashDetails>> {
+        for task_id in hash_plans.keys() {
+            if !per_task_envs.contains_key(task_id) {
+                anyhow::bail!("hash_plans: missing env entry for task {}", task_id);
+            }
+        }
+        self.hash_plans_impl(hash_plans, cwd, collect_task_inputs, |task_id| {
+            per_task_envs
+                .get(task_id)
+                .expect("per-task env presence verified above")
+        })
+    }
+
+    fn hash_plans_impl<'a, F>(
+        &self,
+        hash_plans: &External<HashMap<String, Vec<HashInstruction>>>,
+        cwd: String,
+        collect_task_inputs: Option<bool>,
+        resolve_env: F,
+    ) -> anyhow::Result<NapiDashMap<String, HashDetails>>
+    where
+        F: Fn(&str) -> &'a HashMap<String, String> + Sync,
+    {
         // Create fresh caches for this invocation.
         // This ensures no stale caches across multiple CLI commands when the daemon holds
         // the TaskHasher instance.
@@ -205,6 +232,7 @@ impl TaskHasher {
         let runtime_cache: DashMap<String, String> = DashMap::new();
         let project_file_set_cache = ProjectFileSetCache::new();
         let workspace_file_set_cache: DashMap<String, CachedFileSetHash> = DashMap::new();
+        let json_file_set_cache: DashMap<String, JsonHashResult> = DashMap::new();
         let should_collect_inputs = collect_task_inputs.unwrap_or(false);
 
         let function_start = std::time::Instant::now();
@@ -254,7 +282,7 @@ impl TaskHasher {
                     task_id,
                     instruction,
                     HashInstructionArgs {
-                        js_env: &js_env,
+                        js_env: resolve_env(task_id),
                         ts_config_hash: &ts_config_hash,
                         project_root_mappings: &project_root_mappings,
                         sorted_externals: &sorted_externals,
@@ -263,6 +291,7 @@ impl TaskHasher {
                         runtime_cache: &runtime_cache,
                         project_file_set_cache: &project_file_set_cache,
                         workspace_file_set_cache: &workspace_file_set_cache,
+                        json_file_set_cache: &json_file_set_cache,
                         cwd: cwd_path,
                         collect_inputs: should_collect_inputs,
                     },
@@ -340,6 +369,7 @@ impl TaskHasher {
             runtime_cache,
             project_file_set_cache,
             workspace_file_set_cache,
+            json_file_set_cache,
             cwd,
             collect_inputs,
         }: HashInstructionArgs,
@@ -523,6 +553,46 @@ impl TaskHasher {
                 };
                 (hashed_all_externals, inputs)
             }
+            HashInstruction::JsonFileSet {
+                project_name,
+                json_path,
+                fields,
+                exclude_fields,
+            } => {
+                // Cache is keyed on the full instruction string so
+                // different fields/excludeFields against the same file
+                // remain distinct. `instruction.to_string()` already
+                // encodes (project_name, json_path, fields, exclude_fields)
+                // via the Display impl — see types.rs.
+                let cache_key = instruction.to_string();
+                // Clone the cached entry and drop the Ref before any
+                // subsequent insert to avoid deadlocking DashMap.
+                let cached_entry = if let Some(entry) = json_file_set_cache.get(&cache_key) {
+                    entry.clone()
+                } else {
+                    let result = hash_json_files(
+                        &self.workspace_root,
+                        json_path,
+                        project_name.as_deref(),
+                        fields.as_deref(),
+                        exclude_fields.as_deref(),
+                        &self.project_file_map,
+                        &self.all_workspace_files,
+                    )?;
+                    json_file_set_cache.insert(cache_key, result.clone());
+                    result
+                };
+                trace!(parent: &span, "hash_json: {:?}", now.elapsed());
+                let inputs = if collect_inputs {
+                    HashInputsBuilder {
+                        files: cached_entry.files.into_iter().collect(),
+                        ..Default::default()
+                    }
+                } else {
+                    empty
+                };
+                (cached_entry.hash, inputs)
+            }
         };
         Ok((instruction.to_string(), hash, inputs))
     }
@@ -538,6 +608,7 @@ struct HashInstructionArgs<'a> {
     runtime_cache: &'a DashMap<String, String>,
     project_file_set_cache: &'a ProjectFileSetCache,
     workspace_file_set_cache: &'a DashMap<String, CachedFileSetHash>,
+    json_file_set_cache: &'a DashMap<String, JsonHashResult>,
     cwd: &'a std::path::Path,
     collect_inputs: bool,
 }

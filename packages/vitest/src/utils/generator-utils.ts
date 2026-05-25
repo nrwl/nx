@@ -11,9 +11,10 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { VitestExecutorOptions } from '../executors/test/schema';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
+import { warnVitestExecutorGenerating } from './deprecation';
 import { nxVersion } from './versions';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
@@ -67,6 +68,7 @@ export function addOrChangeTestTarget(
   if (project.targets[target]) {
     throw new Error(`Target "${target}" already exists in the project.`);
   } else {
+    warnVitestExecutorGenerating();
     project.targets[target] = {
       executor: '@nx/vitest:test',
       outputs: ['{options.reportsDirectory}'],
@@ -83,7 +85,7 @@ export interface ViteConfigFileOptions {
   includeVitest?: boolean;
   inSourceTests?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
-  rollupOptionsExternal?: string[];
+  rolldownOptionsExternal?: string[];
   imports?: string[];
   plugins?: string[];
   coverageProvider?: 'v8' | 'istanbul' | 'custom';
@@ -138,9 +140,9 @@ export function createOrEditViteConfig(
       // Don't forget to update your package.json as well.
       formats: ['es' as const]
     },
-    rollupOptions: {
+    rolldownOptions: {
       // External packages that should not be bundled into your library.
-      external: [${options.rollupOptionsExternal ?? ''}]
+      external: [${options.rolldownOptionsExternal ?? ''}]
     },
   },`
       : `  build: {
@@ -349,8 +351,8 @@ function handleViteConfigFileExists(
           fileName: 'index',
           formats: ['es'],
         },
-        rollupOptions: {
-          external: options.rollupOptionsExternal ?? [],
+        rolldownOptions: {
+          external: options.rolldownOptionsExternal ?? [],
         },
         outDir: buildOutDir,
         reportCompressedSize: true,

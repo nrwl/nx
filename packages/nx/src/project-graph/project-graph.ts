@@ -37,7 +37,7 @@ import {
   readSourceMapsCache,
   writeCache,
 } from './nx-deps-cache';
-import { getPlugins } from './plugins/get-plugins';
+import { getPlugins, getPluginsSeparated } from './plugins/get-plugins';
 import { ConfigurationResult } from './utils/project-configuration-utils';
 import {
   retrieveProjectConfigurations,
@@ -116,10 +116,13 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   performance.mark('retrieve-project-configurations:start');
   let configurationResult: ConfigurationResult;
   let projectConfigurationsError: ProjectConfigurationsError;
-  const plugins = await getPlugins();
+  const separatedPlugins = await getPluginsSeparated(nxJson);
+  const plugins = separatedPlugins.specifiedPlugins.concat(
+    separatedPlugins.defaultPlugins
+  );
   try {
     configurationResult = await retrieveProjectConfigurations(
-      plugins,
+      separatedPlugins,
       workspaceRoot,
       nxJson
     );
@@ -136,8 +139,10 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   performance.mark('retrieve-project-configurations:end');
 
   performance.mark('retrieve-workspace-files:start');
-  const { allWorkspaceFiles, fileMap, rustReferences } =
-    await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
+  const { fileMap, rustReferences } = await retrieveWorkspaceFiles(
+    workspaceRoot,
+    projectRootMap
+  );
   performance.mark('retrieve-workspace-files:end');
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
@@ -151,7 +156,6 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
       projects,
       externalNodes,
       fileMap,
-      allWorkspaceFiles,
       rustReferences,
       cacheEnabled ? readFileMapCache() : null,
       plugins,
@@ -230,9 +234,11 @@ async function readCachedGraphAndHydrateFileMap(minimumComputedAt?: number) {
       project,
     ])
   );
-  const { allWorkspaceFiles, fileMap, rustReferences } =
-    await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
-  hydrateFileMap(fileMap, allWorkspaceFiles, rustReferences);
+  const { fileMap, rustReferences } = await retrieveWorkspaceFiles(
+    workspaceRoot,
+    projectRootMap
+  );
+  hydrateFileMap(fileMap, rustReferences);
   return graph;
 }
 

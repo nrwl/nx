@@ -3,12 +3,20 @@
   [headers.values]
     X-Frame-Options = "DENY"
     Content-Security-Policy = "frame-ancestors 'none'"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    # Agent discovery via RFC 8288 Link headers (see https://isitagentready.com/.well-known/agent-skills/link-headers/SKILL.md)
+    # Points AI agents/crawlers at machine-readable entry points hosted on nx.dev.
+
+    Link = '''</llms.txt>; rel="describedby"; type="text/plain", </llms-full.txt>; rel="service-doc"; type="text/plain", </sitemap.xml>; rel="sitemap"; type="application/xml"'''
+
 
 # Disable gradle and maven plugins on Netlify
 # (Netlify only supports Java 8 but these plugins require Java 17)
 [build.environment]
 NX_GRADLE_DISABLE = "true"
 NX_MAVEN_DISABLE = "true"
+NX_DOTNET_DISABLE = "true"
 
 # Edge functions are auto-discovered from netlify/edge-functions/
 # Path configuration is in each function's inline `config` export
@@ -75,6 +83,47 @@ to = "/docs/technologies/angular/migration/angular"
 [[redirects]]
 from = "/docs/getting-started/nx-cloud"
 to = "/docs/features/ci-features"
+
+# NX-4480: Self-hosted remote cache packages deprecated (CVE-2025-36852)
+[[redirects]]
+from = "/docs/reference/remote-cache-plugins"
+to = "/docs/reference/deprecated/self-hosted-cache-packages"
+
+[[redirects]]
+from = "/docs/reference/remote-cache-plugins/s3-cache"
+to = "/docs/reference/deprecated/self-hosted-cache-packages"
+
+[[redirects]]
+from = "/docs/reference/remote-cache-plugins/s3-cache/overview"
+to = "/docs/reference/deprecated/self-hosted-cache-packages"
+
+[[redirects]]
+from = "/docs/reference/remote-cache-plugins/gcs-cache"
+to = "/docs/reference/deprecated/self-hosted-cache-packages"
+
+[[redirects]]
+from = "/docs/reference/remote-cache-plugins/gcs-cache/overview"
+to = "/docs/reference/deprecated/self-hosted-cache-packages"
+
+[[redirects]]
+from = "/docs/reference/remote-cache-plugins/azure-cache"
+to = "/docs/reference/deprecated/self-hosted-cache-packages"
+
+[[redirects]]
+from = "/docs/reference/remote-cache-plugins/azure-cache/overview"
+to = "/docs/reference/deprecated/self-hosted-cache-packages"
+
+[[redirects]]
+from = "/docs/reference/remote-cache-plugins/shared-fs-cache"
+to = "/docs/reference/deprecated/self-hosted-cache-packages"
+
+[[redirects]]
+from = "/docs/reference/remote-cache-plugins/shared-fs-cache/overview"
+to = "/docs/reference/deprecated/self-hosted-cache-packages"
+
+[[redirects]]
+from = "/docs/reference/remote-cache-plugins/shared-fs-cache/generators"
+to = "/docs/reference/deprecated/self-hosted-cache-packages"
 
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]

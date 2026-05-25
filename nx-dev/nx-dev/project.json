@@ -5,27 +5,25 @@
   "projectType": "application",
   "targets": {
     "next:build": {
-      "dependsOn": ["copy-docs", "prebuild-banner"],
+      "dependsOn": ["^build", "^typecheck", "typecheck"],
       "inputs": [
-        "production",
-        "^production",
-        "{projectRoot}/lib/banner.json",
+        "...",
+        { "dependentTasksOutputFiles": "**/*", "transitive": true },
         { "env": "NEXT_PUBLIC_ASTRO_URL" },
         { "env": "NX_DEV_URL" },
         { "env": "NEXT_PUBLIC_NO_INDEX" }
       ],
-      "outputs": [
-        "{workspaceRoot}/nx-dev/nx-dev/.next",
-        "{workspaceRoot}/nx-dev/nx-dev/public/sitemap*.xml",
-        "{workspaceRoot}/nx-dev/nx-dev/public/robots.txt"
-      ]
+      "outputs": ["{workspaceRoot}/nx-dev/nx-dev/.next"]
     },
     "sitemap": {
       "dependsOn": ["nx-dev:next:build"],
       "inputs": [
-        "{workspaceRoot}/docs/**/*",
         "production",
         "{projectRoot}/next-sitemap.config.js",
+        "{projectRoot}/scripts/patch-sitemap-index.mjs",
+        {
+          "dependentTasksOutputFiles": "**/.next/{build-manifest,export-marker,prerender-manifest,routes-manifest}.json"
+        },
         { "env": "NX_DEV_URL" },
         { "env": "NEXT_PUBLIC_NO_INDEX" }
       ],
@@ -35,68 +33,26 @@
         "cwd": "nx-dev/nx-dev"
       }
     },
-    "prebuild-banner": {
-      "cache": false,
-      "outputs": ["{projectRoot}/lib/banner.json"],
-      "command": "node ../../scripts/documentation/prebuild-banner.mjs",
-      "options": {
-        "cwd": "nx-dev/nx-dev",
-        "env": {
-          "BANNER_OUTPUT_PATH": "lib/banner.json"
-        }
-      }
-    },
-    "copy-docs": {
-      "inputs": ["{workspaceRoot}/docs/**/*"],
-      "outputs": ["{projectRoot}/public/documentation"],
-      "command": "node ./copy-docs.js",
-      "options": {
-        "cwd": "nx-dev/nx-dev"
-      }
-    },
     "copy-redirects": {
-      "dependsOn": ["nx-dev:next:build"],
+      "dependsOn": ["next:build"],
       "inputs": ["{projectRoot}/_redirects"],
       "outputs": ["{projectRoot}/.next/_redirects"],
       "command": "cp nx-dev/nx-dev/_redirects nx-dev/nx-dev/.next/_redirects"
     },
     "build": {
       "dependsOn": ["sitemap", "copy-redirects"],
-      "outputs": ["{projectRoot}/.next"]
+      "outputs": ["{projectRoot}/.next", "{projectRoot}/public/sitemap*.xml"]
     },
     "deploy-build": {
       "dependsOn": ["build"],
-      "outputs": ["{projectRoot}/.next"]
+      "outputs": ["{projectRoot}/.next", "{projectRoot}/public/sitemap*.xml"]
     },
     "serve": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["copy-docs", "prebuild-banner"],
-      "options": {
-        "commands": [
-          "nx watch --projects=docs -- nx run-many -t=copy-docs -p nx-dev",
-          "nx dev nx-dev"
-        ],
-        "parallel": true
-      }
+      "command": "nx dev nx-dev"
     },
     "start": {
       "command": "nx next:start nx-dev"
-    },
-    "check-links": {
-      "cache": true,
-      "dependsOn": ["nx-dev:sitemap", "astro-docs:build"],
-      "command": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts",
-      "inputs": [
-        "{workspaceRoot}/docs/**/*",
-        { "dependentTasksOutputFiles": "**/sitemap*.xml" },
-        "{workspaceRoot}/scripts/tsconfig.scripts.json",
-        "{workspaceRoot}/scripts/documentation/internal-link-checker.ts"
-      ]
-    },
-    "test": {
-      "dependsOn": ["check-links"]
     }
   },
-  "tags": ["scope:nx-dev", "type:app"],
-  "implicitDependencies": ["docs"]
+  "tags": ["scope:nx-dev", "type:app"]
 }

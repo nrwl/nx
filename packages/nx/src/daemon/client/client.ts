@@ -8,7 +8,6 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs';
-import { deserialize } from 'node:v8';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { readNxJson } from '../../config/configuration';
@@ -27,8 +26,9 @@ import {
 } from '../../project-graph/plugins/public-api';
 import { preventRecursionInGraphConstruction } from '../../project-graph/project-graph';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
-import { isJsonMessage } from '../../utils/consume-messages-from-socket';
+import { parseMessage } from '../../utils/consume-messages-from-socket';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
+import { handleImport } from '../../utils/handle-import';
 import { isCI } from '../../utils/is-ci';
 import { isSandbox } from '../../utils/is-sandbox';
 import { output } from '../../utils/output';
@@ -37,10 +37,19 @@ import type {
   FlushSyncGeneratorChangesResult,
   SyncGeneratorRunResult,
 } from '../../utils/sync-generators';
+import { waitForSocketConnection } from '../../utils/wait-for-socket-connection';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getDaemonProcessIdSync, readDaemonProcessJsonCache } from '../cache';
 import { isNxVersionMismatch } from '../is-nx-version-mismatch';
 import { clientLogger } from '../logger';
+import {
+  type ConfigureAiAgentsStatusResponse,
+  GET_CONFIGURE_AI_AGENTS_STATUS,
+  type HandleGetConfigureAiAgentsStatusMessage,
+  type HandleResetConfigureAiAgentsStatusMessage,
+  RESET_CONFIGURE_AI_AGENTS_STATUS,
+} from '../message-types/configure-ai-agents';
+import { DaemonMessage } from '../message-types/daemon-message';
 import {
   FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
   type HandleFlushSyncGeneratorChangesToDiskMessage,
@@ -83,13 +92,6 @@ import {
   SET_NX_CONSOLE_PREFERENCE_AND_INSTALL,
   type SetNxConsolePreferenceAndInstallResponse,
 } from '../message-types/nx-console';
-import {
-  GET_CONFIGURE_AI_AGENTS_STATUS,
-  RESET_CONFIGURE_AI_AGENTS_STATUS,
-  type ConfigureAiAgentsStatusResponse,
-  type HandleGetConfigureAiAgentsStatusMessage,
-  type HandleResetConfigureAiAgentsStatusMessage,
-} from '../message-types/configure-ai-agents';
 import { REGISTER_PROJECT_GRAPH_LISTENER } from '../message-types/register-project-graph-listener';
 import {
   HandlePostTasksExecutionMessage,
@@ -97,6 +99,10 @@ import {
   POST_TASKS_EXECUTION,
   PRE_TASKS_EXECUTION,
 } from '../message-types/run-tasks-execution-hooks';
+import {
+  isEmitLogMessage,
+  isUpdateProgressMessage,
+} from '../message-types/streaming-messages';
 import {
   GET_ESTIMATED_TASK_TIMINGS,
   GET_FLAKY_TASKS,
@@ -117,21 +123,10 @@ import {
 } from '../tmp-dir';
 import {
   DaemonSocketMessenger,
-  Message,
   VersionMismatchError,
 } from './daemon-socket-messenger';
-import { handleImport } from '../../utils/handle-import';
 
-const DAEMON_ENV_REQUIRED_SETTINGS = {
-  NX_PROJECT_GLOB_CACHE: 'false',
-  NX_CACHE_PROJECTS_CONFIG: 'false',
-};
-
-const DAEMON_ENV_OVERRIDABLE_SETTINGS = {
-  NX_VERBOSE_LOGGING: 'true',
-  NX_PERF_LOGGING: 'true',
-  NX_NATIVE_LOGGING: 'nx=debug',
-};
+import { getDaemonEnv } from './daemon-environment';
 
 export type UnregisterCallback = () => void;
 export type ChangedFile = {
@@ -168,6 +163,11 @@ export class DaemonClient {
   private currentMessage;
   private currentResolve;
   private currentReject;
+  // Tracks the spinner owned by the in-flight request so streamed
+  // progress updates are routed to the caller's spinner instead of
+  // mutating the process-wide globalSpinner (which may belong to an
+  // unrelated command).
+  private currentSpinner: DelayedSpinner | null = null;
 
   private _enabled: boolean | undefined;
   private _daemonStatus: DaemonStatus = DaemonStatus.DISCONNECTED;
@@ -194,7 +194,7 @@ export class DaemonClient {
     {
       watchProjects: string[] | 'all';
       includeGlobalWorkspaceFiles?: boolean;
-      includeDependentProjects?: boolean;
+      includeDependencies?: boolean;
       allowPartialGraph?: boolean;
     }
   > = new Map();
@@ -299,12 +299,6 @@ export class DaemonClient {
     }
   }
 
-  private parseMessage(message: string): any {
-    return isJsonMessage(message)
-      ? JSON.parse(message)
-      : deserialize(Buffer.from(message, 'binary'));
-  }
-
   async requestShutdown(): Promise<void> {
     return this.sendToDaemonViaQueue({ type: 'REQUEST_SHUTDOWN' });
   }
@@ -318,10 +312,8 @@ export class DaemonClient {
     // If the graph takes a while to load, we want to show a spinner.
     spinner = new DelayedSpinner(
       'Calculating the project graph on the Nx Daemon'
-    ).scheduleMessageUpdate(
-      'Calculating the project graph on the Nx Daemon is taking longer than expected. Re-run with NX_DAEMON=false to see more details.',
-      { ciDelay: 60_000, delay: 30_000 }
     );
+    this.currentSpinner = spinner;
     try {
       const response = await this.sendToDaemonViaQueue({
         type: 'REQUEST_PROJECT_GRAPH',
@@ -338,6 +330,7 @@ export class DaemonClient {
       }
     } finally {
       spinner?.cleanup();
+      this.currentSpinner = null;
     }
   }
 
@@ -349,17 +342,14 @@ export class DaemonClient {
     runnerOptions: any,
     tasks: Task[],
     taskGraph: TaskGraph,
-    env: NodeJS.ProcessEnv,
+    perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
     collectInputs?: boolean
   ): Promise<Hash[]> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
       runnerOptions,
-      env:
-        process.env.NX_USE_V8_SERIALIZER !== 'false'
-          ? structuredClone(process.env)
-          : env,
+      perTaskEnvs,
       tasks,
       taskGraph,
       cwd,
@@ -371,7 +361,7 @@ export class DaemonClient {
     config: {
       watchProjects: string[] | 'all';
       includeGlobalWorkspaceFiles?: boolean;
-      includeDependentProjects?: boolean;
+      includeDependencies?: boolean;
       allowPartialGraph?: boolean;
     },
     callback: (
@@ -418,7 +408,7 @@ export class DaemonClient {
       ).listen(
         (message) => {
           try {
-            const parsedMessage = this.parseMessage(message);
+            const parsedMessage = parseMessage<any>(message);
             // Notify all callbacks
             for (const cb of this.fileWatcherCallbacks.values()) {
               cb(null, parsedMessage);
@@ -524,7 +514,7 @@ export class DaemonClient {
       ).listen(
         (message) => {
           try {
-            const parsedMessage = this.parseMessage(message);
+            const parsedMessage = parseMessage<any>(message);
             for (const cb of this.fileWatcherCallbacks.values()) {
               cb(null, parsedMessage);
             }
@@ -613,7 +603,7 @@ export class DaemonClient {
       ).listen(
         (message) => {
           try {
-            const parsedMessage = this.parseMessage(message);
+            const parsedMessage = parseMessage<any>(message);
             // Notify all callbacks
             for (const cb of this.projectGraphListenerCallbacks.values()) {
               cb(null, parsedMessage);
@@ -718,7 +708,7 @@ export class DaemonClient {
       ).listen(
         (message) => {
           try {
-            const parsedMessage = this.parseMessage(message);
+            const parsedMessage = parseMessage<any>(message);
             for (const cb of this.projectGraphListenerCallbacks.values()) {
               cb(null, parsedMessage);
             }
@@ -778,30 +768,28 @@ export class DaemonClient {
         type: 'PROCESS_IN_BACKGROUND',
         requirePath,
         data,
-        // This method is sometimes passed data that cannot be serialized with v8
-        // so we force JSON serialization here
       },
+      // This method is sometimes passed data that cannot be serialized with v8
+      // so we force JSON serialization here
       'json'
     );
   }
 
-  recordOutputsHash(outputs: string[], hash: string): Promise<any> {
+  recordOutputsHashBatch(
+    entries: { outputs: string[]; hash: string }[]
+  ): Promise<any> {
     return this.sendToDaemonViaQueue({
-      type: 'RECORD_OUTPUTS_HASH',
-      data: {
-        outputs,
-        hash,
-      },
+      type: 'RECORD_OUTPUTS_HASH_BATCH',
+      data: entries,
     });
   }
 
-  outputsHashesMatch(outputs: string[], hash: string): Promise<any> {
+  outputsHashesMatchBatch(
+    entries: { outputs: string[]; hash: string }[]
+  ): Promise<boolean[]> {
     return this.sendToDaemonViaQueue({
-      type: 'OUTPUTS_HASHES_MATCH',
-      data: {
-        outputs,
-        hash,
-      },
+      type: 'OUTPUTS_HASHES_MATCH_BATCH',
+      data: entries,
     });
   }
 
@@ -1050,13 +1038,17 @@ export class DaemonClient {
     }
   }
 
-  private async sendToDaemonViaQueue(
-    messageToDaemon: Message,
-    force?: 'v8' | 'json'
+  private async sendToDaemonViaQueue<T extends DaemonMessage>(
+    messageToDaemon: T,
+    parser?: 'v8' | 'json'
   ): Promise<any> {
-    return this.queue.sendToQueue(() =>
-      this.sendMessageToDaemon(messageToDaemon, force)
-    );
+    return this.queue.sendToQueue(async () => {
+      // Set currentSpinner inside the queued function so it's only
+      // active while this specific message is in flight — preventing
+      // concurrent callers from overwriting each other's spinner
+      // reference before their turn arrives.
+      return await this.sendMessageToDaemon(messageToDaemon, parser);
+    });
   }
 
   private setUpConnection() {
@@ -1174,35 +1166,34 @@ export class DaemonClient {
   private async waitForServerToBeAvailable(options: {
     ignoreVersionMismatch: boolean;
   }): Promise<boolean> {
-    let attempts = 0;
-
     clientLogger.log(
       `[Client] Waiting for server (max: ${WAIT_FOR_SERVER_CONFIG.maxAttempts} attempts, ${WAIT_FOR_SERVER_CONFIG.delayMs}ms interval)`
     );
 
-    while (attempts < WAIT_FOR_SERVER_CONFIG.maxAttempts) {
-      await new Promise((resolve) =>
-        setTimeout(resolve, WAIT_FOR_SERVER_CONFIG.delayMs)
-      );
-      attempts++;
-
-      try {
-        if (await this.isServerAvailable()) {
-          clientLogger.log(
-            `[Client] Server available after ${attempts} attempts`
-          );
-          return true;
-        }
-      } catch (err) {
-        if (err instanceof VersionMismatchError) {
-          if (!options.ignoreVersionMismatch) {
-            throw err;
+    const socket = await waitForSocketConnection(
+      () => {
+        try {
+          return this.getSocketPath();
+        } catch (err) {
+          if (err instanceof VersionMismatchError) {
+            if (!options.ignoreVersionMismatch) {
+              throw err;
+            }
           }
-          // Keep waiting - old cache file may exist
-        } else {
-          throw err;
+          // Socket path not available yet — keep polling
+          return null;
         }
+      },
+      {
+        maxAttempts: WAIT_FOR_SERVER_CONFIG.maxAttempts,
+        delayMs: WAIT_FOR_SERVER_CONFIG.delayMs,
       }
+    );
+
+    if (socket) {
+      socket.destroy();
+      clientLogger.log(`[Client] Server available`);
+      return true;
     }
 
     clientLogger.log(
@@ -1211,17 +1202,36 @@ export class DaemonClient {
     return false;
   }
 
+  private envReflectionSent = false;
   private async sendMessageToDaemon(
-    message: Message,
+    message: DaemonMessage,
     force?: 'v8' | 'json'
   ): Promise<any> {
+    // the first message sent to the daemon includes an env prop
+    // that updates the process.env values on the daemon.
+    if (!this.envReflectionSent && !global.NX_PLUGIN_WORKER) {
+      message.env = getDaemonEnv();
+      this.envReflectionSent = true;
+    }
     await this.startDaemonIfNecessary();
-    // An open promise isn't enough to keep the event loop
-    // alive, so we set a timeout here and clear it when we hear
-    // back
-    const keepAlive = setTimeout(() => {}, 10 * 60 * 1000);
+
+    let keepAlive: NodeJS.Timeout;
     return new Promise((resolve, reject) => {
       performance.mark('sendMessageToDaemon-start');
+
+      // An open promise isn't enough to keep the event loop
+      // alive, so we set a timeout here and clear it when we hear
+      // back. This **must** be longer than the message timeout used
+      // in the plugin isolation messages, or the daemon will timeout before
+      // a plugin worker would, and that can result in odd exit behavior.
+      keepAlive = setTimeout(
+        () => {
+          reject(
+            new Error('The daemon timed out while processing ' + message.type)
+          );
+        },
+        20 * 60 * 1000
+      );
 
       this.currentMessage = message;
       this.currentResolve = resolve;
@@ -1254,15 +1264,26 @@ export class DaemonClient {
   private handleMessage(serializedResult: string) {
     try {
       performance.mark('result-parse-start-' + this.currentMessage.type);
-      const parsedResult = isJsonMessage(serializedResult)
-        ? JSON.parse(serializedResult)
-        : deserialize(Buffer.from(serializedResult, 'binary'));
+      const parsedResult = parseMessage<any>(serializedResult);
       performance.mark('result-parse-end-' + this.currentMessage.type);
       performance.measure(
         'deserialize daemon response - ' + this.currentMessage.type,
         'result-parse-start-' + this.currentMessage.type,
         'result-parse-end-' + this.currentMessage.type
       );
+      // Streaming messages fire side-effects on the client but do not
+      // resolve the pending request promise — the daemon can push several
+      // of these before finally sending the real response. Progress
+      // updates route through the in-flight request's own spinner so
+      // we don't stomp on unrelated commands' spinner text.
+      if (isUpdateProgressMessage(parsedResult)) {
+        this.currentSpinner?.setMessage(parsedResult.message);
+        return;
+      }
+      if (isEmitLogMessage(parsedResult)) {
+        console[parsedResult.level](parsedResult.message);
+        return;
+      }
       if (parsedResult.error) {
         this.currentReject(parsedResult.error);
       } else {
@@ -1306,8 +1327,16 @@ export class DaemonClient {
       writeFileSync(DAEMON_OUTPUT_LOG_FILE, '');
     }
 
-    this._out = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
-    this._err = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
+    // Open the log handles into locals first. If the previous daemon's
+    // socket close handler fires reset() while we're awaiting these opens,
+    // it would null out this._out/this._err and the spawn below would hit
+    // `Cannot read properties of null (reading 'fd')`.
+    const [out, err] = await Promise.all([
+      open(DAEMON_OUTPUT_LOG_FILE, 'a'),
+      open(DAEMON_OUTPUT_LOG_FILE, 'a'),
+    ]);
+    this._out = out;
+    this._err = err;
 
     clientLogger.log(`[Client] Starting new daemon server in background`);
 
@@ -1316,17 +1345,16 @@ export class DaemonClient {
       [join(__dirname, `../server/start.js`)],
       {
         cwd: workspaceRoot,
-        stdio: ['ignore', this._out.fd, this._err.fd],
+        stdio: ['ignore', out.fd, err.fd],
         detached: true,
         windowsHide: true,
         shell: false,
-        env: {
-          ...DAEMON_ENV_OVERRIDABLE_SETTINGS,
-          ...process.env,
-          ...DAEMON_ENV_REQUIRED_SETTINGS,
-        },
+        env: getDaemonEnv(),
       }
     );
+    // if this process is the process that spawned the daemon,
+    // the daemon env is already up to date
+    this.envReflectionSent = true;
     backgroundProcess.unref();
 
     /**

@@ -1,3 +1,4 @@
+import { eachValueFrom } from '@nx/devkit/internal';
 import webpack from 'webpack';
 import {
   ExecutorContext,
@@ -5,7 +6,6 @@ import {
   readTargetOptions,
 } from '@nx/devkit';
 
-import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import { map, tap } from 'rxjs/operators';
 import WebpackDevServer from 'webpack-dev-server';
 
@@ -13,9 +13,10 @@ import { getDevServerOptions } from './lib/get-dev-server-config';
 import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
-} from '@nx/js/src/utils/buildable-libs-utils';
+} from '@nx/js/internal';
 import { runWebpackDevServer } from '../../utils/run-webpack';
 import { resolveUserDefinedWebpackConfig } from '../../utils/webpack/resolve-user-defined-webpack-config';
+import { warnWebpackDevServerExecutorDeprecation } from '../../utils/deprecation';
 import { normalizeOptions } from '../webpack/lib/normalize-options';
 import { WebpackExecutorOptions } from '../webpack/schema';
 import { WebDevServerOptions } from './schema';
@@ -26,6 +27,8 @@ export async function* devServerExecutor(
   serveOptions: WebDevServerOptions,
   context: ExecutorContext
 ) {
+  warnWebpackDevServerExecutorDeprecation();
+
   // Default to dev mode so builds are faster and HMR mode works better.
   (process.env as any).NODE_ENV ??= 'development';
 

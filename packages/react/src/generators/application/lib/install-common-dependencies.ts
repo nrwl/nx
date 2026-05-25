@@ -2,7 +2,6 @@ import { addDependenciesToPackageJson, Tree } from '@nx/devkit';
 import {
   babelCoreVersion,
   babelPresetReactVersion,
-  lessVersion,
   sassVersion,
   swcLoaderVersion,
   testingLibraryReactVersion,
@@ -51,13 +50,8 @@ export async function installCommonDependencies(
   // Vite requires style preprocessors to be installed manually.
   // `@nx/webpack` installs them automatically for now.
   if (options.bundler === 'vite' || options.unitTestRunner === 'vitest') {
-    switch (options.style) {
-      case 'scss':
-        devDependencies['sass'] = sassVersion;
-        break;
-      case 'less':
-        devDependencies['less'] = lessVersion;
-        break;
+    if (options.style === 'scss') {
+      devDependencies['sass'] = sassVersion;
     }
   }
 

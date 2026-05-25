@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import { SourceInfo } from '../source-info/source-info';
 import { selectSourceInfo } from './select-source-info';

@@ -46,7 +46,7 @@ export function SvgAnimation({
         ref={objectRef}
         type="image/svg+xml"
         title={title}
-        className="rounded-sm bg-white p-2 ring-1 ring-zinc-50 dark:bg-zinc-800/80 dark:ring-zinc-800"
+        className="rounded-xs bg-white p-2 ring-1 ring-zinc-50 dark:bg-zinc-800/80 dark:ring-zinc-800"
       >
         {title}
       </object>

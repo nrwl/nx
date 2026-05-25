@@ -1,10 +1,10 @@
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import {
   formatFiles,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { WebpackExecutorOptions } from '../../executors/webpack/schema';
 
 export default async function (tree: Tree) {

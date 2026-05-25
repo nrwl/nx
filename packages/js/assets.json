@@ -1,22 +1,18 @@
 {
-  "outDir": "dist/packages/js",
+  "outDir": "packages/js/dist",
   "assets": [
+    {
+      "glob": "src/migrations/**/*.md"
+    },
     {
       "glob": "**/files/**"
     },
     {
       "glob": "**/files/**/.gitkeep"
     },
+    { "glob": "src/**/schema.json" },
     {
-      "glob": "**/*.json",
-      "ignore": ["tsconfig*.json", "project.json", ".eslintrc.json"]
-    },
-    {
-      "glob": "**/*.js",
-      "ignore": ["**/jest.config.js", "src/index.js"]
-    },
-    {
-      "glob": "**/*.d.ts"
+      "glob": "src/**/schema.d.ts"
     },
     "LICENSE"
   ]

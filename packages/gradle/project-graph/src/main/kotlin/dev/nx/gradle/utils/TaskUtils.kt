@@ -6,6 +6,7 @@ import dev.nx.gradle.data.DependsOnEntry
 import dev.nx.gradle.data.ExternalDepData
 import dev.nx.gradle.data.ExternalNode
 import java.io.File
+import kotlin.io.path.Path
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -14,6 +15,20 @@ import org.gradle.api.internal.provider.ProviderInternal
 import org.gradle.api.internal.provider.TransformBackedProvider
 import org.gradle.api.internal.tasks.DefaultTaskDependency
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.bundling.AbstractArchiveTask
+import org.gradle.api.tasks.compile.AbstractCompile
+import org.gradle.api.tasks.testing.Test as GradleTest
+
+private val kotlinCompileToolClass: Class<*>? by lazy {
+  try {
+    Class.forName("org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool")
+  } catch (e: Throwable) {
+    null
+  }
+}
+
+private fun isKotlinCompileTask(task: Task): Boolean =
+    kotlinCompileToolClass?.isInstance(task) == true
 
 /**
  * Process a task and convert it into target Going to populate:
@@ -24,6 +39,32 @@ import org.gradle.api.tasks.TaskProvider
  * - metadata
  */
 fun processTask(
+    task: Task,
+    projectBuildPath: String,
+    projectRoot: String,
+    workspaceRoot: String,
+    externalNodes: MutableMap<String, ExternalNode>,
+    dependencies: MutableSet<Dependency>,
+    targetNameOverrides: Map<String, String>,
+    gitIgnoreClassifier: GitIgnoreClassifier,
+    targetNamePrefix: String = "",
+    project: Project,
+): MutableMap<String, Any?> =
+    NxTracing.withSpan("processTask", mapOf("task" to task.path)) {
+      processTaskImpl(
+          task,
+          projectBuildPath,
+          projectRoot,
+          workspaceRoot,
+          externalNodes,
+          dependencies,
+          targetNameOverrides,
+          gitIgnoreClassifier,
+          targetNamePrefix,
+          project)
+    }
+
+private fun processTaskImpl(
     task: Task,
     projectBuildPath: String,
     projectRoot: String,
@@ -117,7 +158,43 @@ private val GRADLE_INPUT_FILES =
  */
 fun getGradleFilesInputs(workspaceRoot: String): List<String> {
   return GRADLE_INPUT_FILES.filter { relativePath -> File("$workspaceRoot/$relativePath").exists() }
-      .map { relativePath -> "{workspaceRoot}/$relativePath" }
+      .map { relativePath -> Path("{workspaceRoot}", relativePath).toString() }
+}
+
+/**
+ * Infer file extensions consumed by a task from its dependents' outputs using task type checks.
+ *
+ * Test tasks consume .class + .jar (compiled code and library jars on the test classpath). Compile
+ * tasks consume .class from upstream compile tasks (e.g. compileTestKotlin → compileKotlin).
+ * Archive dependents declare their own extension (jar, war, etc).
+ *
+ * Works at configuration time without requiring files to exist on disk.
+ */
+fun inferExtensionsFromInputProperties(task: Task, dependentTasks: Set<Task>): Set<String> {
+  val extensions = mutableSetOf<String>()
+
+  when {
+    task is GradleTest -> {
+      extensions.add("class")
+      extensions.add("jar")
+    }
+    task is AbstractCompile || isKotlinCompileTask(task) -> extensions.add("class")
+  }
+
+  dependentTasks.forEach { depTask ->
+    if (depTask is AbstractArchiveTask) {
+      try {
+        depTask.archiveExtension.get().takeIf { it.isNotEmpty() }?.let { extensions.add(it) }
+      } catch (e: Exception) {
+        task.logger.debug("Could not read archiveExtension for ${depTask.path}: ${e.message}")
+      }
+    }
+    if (depTask is AbstractCompile || isKotlinCompileTask(depTask)) {
+      extensions.add("class")
+    }
+  }
+
+  return extensions.toSet()
 }
 
 /**
@@ -132,6 +209,19 @@ fun getGradleFilesInputs(workspaceRoot: String): List<String> {
  * @return a list of inputs including external dependencies, null if empty or an error occurred
  */
 fun getInputsForTask(
+    dependsOnTasks: Set<Task>?,
+    task: Task,
+    projectRoot: String,
+    workspaceRoot: String,
+    externalNodes: MutableMap<String, ExternalNode>? = null,
+    gitIgnoreClassifier: GitIgnoreClassifier
+): List<Any>? =
+    NxTracing.withSpan("getInputsForTask", mapOf("task" to task.path)) {
+      getInputsForTaskImpl(
+          dependsOnTasks, task, projectRoot, workspaceRoot, externalNodes, gitIgnoreClassifier)
+    }
+
+private fun getInputsForTaskImpl(
     dependsOnTasks: Set<Task>?,
     task: Task,
     projectRoot: String,
@@ -191,9 +281,13 @@ fun getInputsForTask(
       }
     }
 
+    // Supplement with extensions inferred from Gradle metadata (handles clean builds where
+    // output directories exist but are empty, so file-based extension discovery misses them)
+    dependentTaskOutputExtensions.addAll(inferExtensionsFromInputProperties(task, tasksToProcess))
+
     // Add consolidated dependentTasksOutputFiles entries using glob patterns by extension
     dependentTaskOutputExtensions.forEach { extension ->
-      inputs.add(mapOf("dependentTasksOutputFiles" to "**/*.$extension"))
+      inputs.add(mapOf("dependentTasksOutputFiles" to "**/*.$extension", "transitive" to true))
     }
 
     if (externalDependencies.isNotEmpty()) {
@@ -424,7 +518,7 @@ fun getExternalDepFromInputFile(
     logger: org.gradle.api.logging.Logger
 ): String? {
   try {
-    val segments = inputFile.split("/")
+    val segments = inputFile.split("/", "\\")
 
     if (segments.size < 5) {
       logger.warn("Invalid input path: '$inputFile'. Expected at least 5 segments.")

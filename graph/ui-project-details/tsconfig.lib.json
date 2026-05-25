@@ -21,8 +21,7 @@
     "**/*.stories.js",
     "**/*.stories.jsx",
     "**/*.stories.tsx",
-    "node_modules",
-    "../../packages/nx/**/*"
+    "node_modules"
   ],
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "files": [
@@ -44,6 +43,14 @@
     },
     {
       "path": "../ui-code-block/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/devkit/tsconfig.lib.json"
     }
-  ]
+  ],
+  "nx": {
+    "sync": {
+      "ignoredReferences": ["../../packages/devkit/tsconfig.lib.json"]
+    }
+  }
 }

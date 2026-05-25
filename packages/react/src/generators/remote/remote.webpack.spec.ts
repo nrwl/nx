@@ -9,10 +9,10 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import remote from './remote';
 import { getRootTsConfigPathInTree } from '@nx/js';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
-jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
-  ...jest.requireActual('@nx/js/src/utils/typescript/ts-solution-setup'),
+jest.mock('@nx/js/internal', () => ({
+  ...jest.requireActual('@nx/js/internal'),
   isUsingTsSolutionSetup: jest.fn(),
 }));
 
@@ -142,7 +142,7 @@ describe('remote generator', () => {
 
       const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
       expect(tsconfigJson.compilerOptions.paths['test/Module']).toEqual([
-        'test/src/remote-entry.ts',
+        './test/src/remote-entry.ts',
       ]);
     });
 
@@ -175,7 +175,7 @@ describe('remote generator', () => {
 
       const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
       expect(tsconfigJson.compilerOptions.paths['test/Module']).toEqual([
-        'test/src/remote-entry.js',
+        './test/src/remote-entry.js',
       ]);
     });
 

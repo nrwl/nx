@@ -174,7 +174,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
 
     checkFilesExist(
       `apps/${reactApp}/src/main.tsx`,
-      `apps/e2e/playwright.config.ts`
+      `apps/e2e/playwright.config.mts`
     );
 
     expect(() => runCLI(`build ${reactApp}`)).not.toThrow();
@@ -339,7 +339,7 @@ describe('Workspace Tests', () => {
         rootTsConfig.compilerOptions.paths[
           `@${proj}/shared-${lib1}-data-access`
         ]
-      ).toEqual([`shared/${lib1}/data-access/src/index.ts`]);
+      ).toEqual([`./shared/${lib1}/data-access/src/index.ts`]);
 
       projects = runCLI('show projects').split('\n');
       expect(projects).not.toContain(`${lib1}-data-access`);
@@ -465,7 +465,7 @@ describe('Workspace Tests', () => {
         rootTsConfig.compilerOptions.paths[
           `@${proj}/shared-${lib1}-data-access`
         ]
-      ).toEqual([`shared/${lib1}/data-access/src/index.ts`]);
+      ).toEqual([`./shared/${lib1}/data-access/src/index.ts`]);
 
       const projects = runCLI('show projects').split('\n');
       expect(projects).not.toContain(`${lib1}-data-access`);
@@ -591,7 +591,7 @@ describe('Workspace Tests', () => {
       ).toBeUndefined();
       expect(
         rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}-data-access`]
-      ).toEqual([`${lib1}/data-access/src/index.ts`]);
+      ).toEqual([`./${lib1}/data-access/src/index.ts`]);
 
       projects = runCLI('show projects').split('\n');
       expect(projects).not.toContain(lib1);
@@ -706,7 +706,7 @@ describe('Workspace Tests', () => {
       ).toBeUndefined();
       expect(
         rootTsConfig.compilerOptions.paths[`shared-${lib1}-data-access`]
-      ).toEqual([`shared/${lib1}/data-access/src/index.ts`]);
+      ).toEqual([`./shared/${lib1}/data-access/src/index.ts`]);
 
       const projects = runCLI('show projects').split('\n');
       expect(projects).not.toContain(`${lib1}-data-access`);
@@ -753,18 +753,14 @@ describe('Workspace Tests', () => {
        * Try removing the project (should fail)
        */
 
-      let error;
-      try {
-        console.log(runCLI(`generate @nx/workspace:remove --project ${lib1}`));
-      } catch (e) {
-        error = e;
-      }
+      const output = runCLI(`generate @nx/workspace:remove --project ${lib1}`, {
+        silenceError: true,
+      });
 
-      expect(error).toBeDefined();
-      expect(error.stdout.toString()).toContain(
+      expect(output).toContain(
         `${lib1} is still a dependency of the following projects`
       );
-      expect(error.stdout.toString()).toContain(lib2);
+      expect(output).toContain(lib2);
 
       /**
        * Try force removing the project

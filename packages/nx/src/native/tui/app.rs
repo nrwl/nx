@@ -165,11 +165,11 @@ impl App {
         ) = {
             let state_lock = state.lock();
             (
-                state_lock.tasks().clone(),
+                state_lock.tasks().to_vec(),
                 state_lock.initiating_tasks().clone(),
                 state_lock.run_mode(),
-                state_lock.pinned_tasks().clone(),
-                state_lock.title_text().to_string(),
+                state_lock.pinned_tasks().to_vec(),
+                state_lock.title_text().to_owned(),
                 get_task_count(state_lock.task_graph()),
                 state_lock.get_task_status_map().clone(),
                 state_lock.get_task_start_times().clone(),
@@ -186,7 +186,7 @@ impl App {
                 // Get max_parallel for restoration
                 state_lock.get_max_parallel(),
                 // Get filter text for restoration
-                state_lock.get_filter_text().to_string(),
+                state_lock.get_filter_text().to_owned(),
             )
         };
 
@@ -200,7 +200,7 @@ impl App {
         };
 
         let mut tasks_list = TasksList::new(
-            tasks.clone(),
+            tasks.to_vec(),
             initiating_tasks,
             run_mode,
             initial_focus,
@@ -217,7 +217,7 @@ impl App {
         // TasksList::new creates TaskItems with NotStarted status, but we need
         // to restore the actual status from TuiState
         for (task_id, status) in task_status_map {
-            tasks_list.update_task_status(task_id.clone(), status);
+            tasks_list.update_task_status(&task_id, status);
 
             // Also sync timing data for this task
             let start_time = task_start_times.get(&task_id).copied();
@@ -365,7 +365,7 @@ impl App {
         let (pinned_tasks, run_mode, task_count, initiating_tasks) = {
             let state = self.core.state().lock();
             (
-                state.pinned_tasks().clone(),
+                state.pinned_tasks().to_vec(),
                 state.run_mode(),
                 get_task_count(state.task_graph()),
                 state.initiating_tasks().clone(),
@@ -374,7 +374,7 @@ impl App {
 
         for (idx, task) in pinned_tasks.iter().enumerate() {
             if idx < 2 {
-                self.selection_manager.lock().select_task(task.clone());
+                self.selection_manager.lock().select_task(task);
 
                 if pinned_tasks.len() == 1 && idx == 0 {
                     self.display_and_focus_current_task_in_terminal_pane(match run_mode {
@@ -392,9 +392,7 @@ impl App {
         // Only in RunOne mode - in RunMany there's no single initiating task to prioritize
         if matches!(run_mode, RunMode::RunOne) {
             if let Some(first_initiating) = initiating_tasks.iter().next() {
-                self.selection_manager
-                    .lock()
-                    .select_task(first_initiating.clone());
+                self.selection_manager.lock().select_task(first_initiating);
             }
         }
 
@@ -414,18 +412,18 @@ impl App {
         self.dispatch_action(Action::StartTasks(tasks));
     }
 
-    pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
+    pub fn update_task_status(&mut self, task_id: &str, status: TaskStatus) {
         // Get old status before updating to check for state transition
-        let old_status = self.core.state().lock().get_task_status(&task_id);
+        let old_status = self.core.state().lock().get_task_status(task_id);
         // Update the task status map in shared state first
-        self.core.update_task_status(task_id.clone(), status);
+        self.core.update_task_status(task_id, status);
 
         // Auto-switch pane to failed dependency when a task becomes skipped
         if status == TaskStatus::Skipped {
-            self.handle_automatic_pane_switching(&task_id);
+            self.handle_automatic_pane_switching(task_id);
         }
 
-        self.dispatch_action(Action::UpdateTaskStatus(task_id.clone(), status));
+        self.dispatch_action(Action::UpdateTaskStatus(task_id.to_owned(), status));
 
         // Update terminal progress indicator only when transitioning TO complete
         // FROM non-complete to prevent needless updates
@@ -459,45 +457,38 @@ impl App {
     }
 
     pub fn print_task_terminal_output(&mut self, task_id: String, output: String) {
-        // Check if a PTY instance already exists for this task
-        // If so, it already has all the output from the task execution
-        if self
-            .core
-            .state()
-            .lock()
-            .get_pty_instance(&task_id)
-            .is_some()
+        // If a PTY already exists, the task's output was streamed via
+        // append_task_output and we don't write it again. We still emit the
+        // cursor-hide escape — append_task_output doesn't, and a finished
+        // pane shouldn't show a blinking virtual cursor.
         {
-            // If the task is continuous, ensure the pty instances get resized appropriately
-            if self.is_task_continuous(&task_id) {
-                let _ = self.debounce_pty_resize();
+            let state = self.core.state().lock();
+            if let Some(pty) = state.get_pty_instance(&task_id) {
+                pty.process_output(b"\x1b[?25l");
+                drop(state);
+                if self.is_task_continuous(&task_id) {
+                    let _ = self.throttle_pty_resize();
+                }
+                return;
             }
-            return;
         }
 
-        // Tasks run within a pseudo-terminal always have a pty instance and do not need a new one
-        // Tasks not run within a pseudo-terminal need a new pty instance to print output
+        // Tasks not run within a pseudo-terminal need a new pty instance to print output.
         let (rows, cols) = self.calculate_pty_dimensions_for_mode();
         let pty = PtyInstance::non_interactive_with_dimensions(rows, cols);
 
-        // Add ANSI escape sequence to hide cursor at the end of output,
-        // it would be confusing to have it visible when a task is a cache hit
+        // Hide the cursor at the end of static output so it doesn't blink in
+        // a finished pane (most visible on cache hits).
         let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
         write_output_to_pty(&pty, &output_with_hidden_cursor);
 
         self.register_pty_instance(&task_id, pty);
-        // Ensure the pty instances get resized appropriately
-        let _ = self.debounce_pty_resize();
-
-        // If the task is continuous, ensure the pty instances get resized appropriately
-        if self.is_task_continuous(&task_id) {
-            let _ = self.debounce_pty_resize();
-        }
+        let _ = self.throttle_pty_resize();
     }
 
     pub fn end_tasks(&mut self, task_results: Vec<TaskResult>) {
         // When tasks finish ensure that pty instances are resized appropriately as they may be actively displaying output when they finish
-        let _ = self.debounce_pty_resize();
+        let _ = self.throttle_pty_resize();
 
         // Use TuiCore to record end timing and update status
         // This ensures task_end_times are recorded properly
@@ -531,7 +522,7 @@ impl App {
                 if !self.has_visible_panes() {
                     self.selection_manager
                         .lock()
-                        .select_task(failed_task_names.first().unwrap().clone());
+                        .select_task(failed_task_names.first().unwrap());
 
                     // Display the task logs but keep focus on the task list
                     self.toggle_output_visibility();
@@ -587,14 +578,14 @@ impl App {
         let (rows, cols) = self.calculate_pty_dimensions_for_mode();
         let pty = PtyInstance::non_interactive_with_dimensions(rows, cols);
         self.register_pty_instance(&task_id, pty);
-        self.update_task_status(task_id.clone(), TaskStatus::InProgress);
+        self.update_task_status(&task_id, TaskStatus::InProgress);
         // Ensure the pty instances get resized appropriately
-        let _ = self.debounce_pty_resize();
+        let _ = self.throttle_pty_resize();
     }
 
     fn register_running_task(&mut self, task_id: String, pty: PtyInstance) {
         self.register_pty_instance(&task_id, pty);
-        self.update_task_status(task_id.clone(), TaskStatus::InProgress);
+        self.update_task_status(&task_id, TaskStatus::InProgress);
     }
 
     pub fn append_task_output(&mut self, task_id: String, output: String) {
@@ -612,7 +603,7 @@ impl App {
         let pty = PtyInstance::non_interactive_with_dimensions(rows, cols);
         pty.process_output(output.as_bytes());
         self.register_pty_instance(&task_id, pty);
-        let _ = self.debounce_pty_resize();
+        let _ = self.throttle_pty_resize();
     }
 
     pub fn append_batch_output(&mut self, batch_id: String, output: String) {
@@ -842,15 +833,35 @@ impl App {
                             }
                             return Ok(false);
                         }
+                        KeyCode::PageUp => {
+                            if let Some(help_popup) = self
+                                .components
+                                .iter_mut()
+                                .find_map(|c| c.as_any_mut().downcast_mut::<HelpPopup>())
+                            {
+                                help_popup.page_up();
+                            }
+                            return Ok(false);
+                        }
+                        KeyCode::PageDown => {
+                            if let Some(help_popup) = self
+                                .components
+                                .iter_mut()
+                                .find_map(|c| c.as_any_mut().downcast_mut::<HelpPopup>())
+                            {
+                                help_popup.page_down();
+                            }
+                            return Ok(false);
+                        }
                         _ => {}
                     }
                     return Ok(false);
                 }
 
-                // Handle Up/Down keys for scrolling first
+                // Handle Up/Down/PageUp/PageDown keys for scrolling first
                 if matches!(self.focus, Focus::MultipleOutput(_)) {
                     match key.code {
-                        KeyCode::Up | KeyCode::Down => {
+                        KeyCode::Up | KeyCode::Down | KeyCode::PageUp | KeyCode::PageDown => {
                             self.handle_key_event(key).ok();
                             return Ok(false);
                         }
@@ -969,47 +980,36 @@ impl App {
                                         } else {
                                             match c {
                                                 '/' => {
-                                                    if tasks_list.filter_mode {
-                                                        tasks_list.persist_filter();
-                                                    } else {
-                                                        tasks_list.enter_filter_mode();
-                                                    }
+                                                    tasks_list.enter_filter_mode();
                                                 }
                                                 c => {
-                                                    if tasks_list.filter_mode {
-                                                        tasks_list.add_filter_char(c);
-                                                    } else {
-                                                        match c {
-                                                            'j' => {
-                                                                self.dispatch_action(
-                                                                    Action::NextTask,
-                                                                );
-                                                            }
-                                                            'k' => {
-                                                                self.dispatch_action(
-                                                                    Action::PreviousTask,
-                                                                );
-                                                            }
-                                                            '1' => {
-                                                                self.toggle_current_task_in_pane(0);
-                                                                let _ = self.handle_pty_resize();
-                                                                // No need to debounce
-                                                            }
-                                                            '2' => {
-                                                                self.toggle_current_task_in_pane(1);
-                                                                let _ = self.handle_pty_resize();
-                                                                // No need to debounce
-                                                            }
-                                                            '0' => self.clear_all_panes(),
-                                                            'b' => self.toggle_task_list(),
-                                                            'm' => {
-                                                                if let Some(area) = self.frame_area
-                                                                {
-                                                                    self.toggle_layout_mode(area);
-                                                                }
-                                                            }
-                                                            _ => {}
+                                                    match c {
+                                                        'j' => {
+                                                            self.dispatch_action(Action::NextTask);
                                                         }
+                                                        'k' => {
+                                                            self.dispatch_action(
+                                                                Action::PreviousTask,
+                                                            );
+                                                        }
+                                                        '1' => {
+                                                            self.toggle_current_task_in_pane(0);
+                                                            let _ = self.handle_pty_resize();
+                                                            // No need to debounce
+                                                        }
+                                                        '2' => {
+                                                            self.toggle_current_task_in_pane(1);
+                                                            let _ = self.handle_pty_resize();
+                                                            // No need to debounce
+                                                        }
+                                                        '0' => self.clear_all_panes(),
+                                                        'b' => self.toggle_task_list(),
+                                                        'm' => {
+                                                            if let Some(area) = self.frame_area {
+                                                                self.toggle_layout_mode(area);
+                                                            }
+                                                        }
+                                                        _ => {}
                                                     }
                                                 }
                                             }
@@ -1146,7 +1146,7 @@ impl App {
                 // Recalculate the layout areas
                 self.recalculate_layout_areas();
                 // Ensure the pty instances get resized appropriately (debounced)
-                let _ = self.debounce_pty_resize();
+                let _ = self.throttle_pty_resize();
             }
             Action::ToggleDebugMode => {
                 self.debug_mode = !self.debug_mode;
@@ -1540,7 +1540,7 @@ impl App {
         self.recalculate_layout_areas();
 
         // Ensure the pty instances get resized appropriately
-        let _ = self.debounce_pty_resize();
+        let _ = self.throttle_pty_resize();
 
         self.dispatch_action(Action::SetSpacebarMode(spacebar_mode));
     }
@@ -1849,17 +1849,19 @@ impl App {
         }
     }
 
-    /// Ensures that the PTY instances get resized appropriately based on the latest layout areas.
-    fn debounce_pty_resize(&mut self) -> io::Result<()> {
-        // Get current time in milliseconds
+    /// Throttles PTY resize calls to at most one per 200 ms.
+    ///
+    /// This is a throttle (fire-then-block), not a debounce (delay-until-quiet):
+    /// the first call in a window executes immediately; subsequent calls within
+    /// 200 ms are dropped. During a resize drag this prevents excessive reparse
+    /// work while still updating dimensions on the first event of each burst.
+    fn throttle_pty_resize(&mut self) -> io::Result<()> {
         let now = current_timestamp_millis() as u128;
 
-        // If we have a timer and it's not expired yet, just return
         if self.resize_debounce_timer.is_some_and(|timer| now < timer) {
             return Ok(());
         }
 
-        // Set a new timer for 200ms from now
         self.resize_debounce_timer = Some(now + 200);
 
         // Process the resize
@@ -2547,14 +2549,14 @@ impl TuiApp for App {
 
     fn on_tasks_ended(&mut self, task_results: &[TaskResult]) {
         // Resize PTYs when tasks finish (they may still be displaying output)
-        let _ = self.debounce_pty_resize();
+        let _ = self.throttle_pty_resize();
         self.dispatch_action(Action::EndTasks(task_results.to_vec()));
         self.update_terminal_progress();
     }
 
     // start_tasks and end_tasks use trait defaults which call hooks above
 
-    fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
+    fn update_task_status(&mut self, task_id: &str, status: TaskStatus) {
         App::update_task_status(self, task_id, status);
     }
 
@@ -2570,8 +2572,8 @@ impl TuiApp for App {
 
     fn on_pty_registered(&mut self, task_id: &str) {
         // Update task status and trigger resize debounce
-        self.update_task_status(task_id.to_string(), TaskStatus::InProgress);
-        let _ = self.debounce_pty_resize();
+        self.update_task_status(task_id, TaskStatus::InProgress);
+        let _ = self.throttle_pty_resize();
     }
 
     // Override print_task_terminal_output for App-specific continuous task handling
@@ -2627,7 +2629,7 @@ impl TuiApp for App {
             .map(|tasks_list| {
                 (
                     tasks_list.get_batch_expansion_states(),
-                    tasks_list.get_filter_text().to_string(),
+                    tasks_list.get_filter_text().to_owned(),
                 )
             })
             .unwrap_or_default();
@@ -2656,7 +2658,7 @@ impl TuiApp for App {
         );
 
         // Trigger resize for new PTY instance
-        let _ = self.debounce_pty_resize();
+        let _ = self.throttle_pty_resize();
 
         // Dispatch UI action
         self.dispatch_action(Action::StartBatch(batch_id.to_string(), batch_info.clone()));
@@ -2664,5 +2666,118 @@ impl TuiApp for App {
 
     fn set_batch_status(&mut self, batch_id: String, status: BatchStatus) {
         App::set_batch_status(self, batch_id, status);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::native::tasks::types::TaskGraph;
+    use crate::native::tui::config;
+    use crate::native::tui::lifecycle::TuiMode;
+    use crate::native::tui::tui_state::TuiState;
+    use hashbrown::HashSet;
+    use std::collections::HashMap;
+
+    fn create_test_app() -> App {
+        let tasks = vec![Task::new("app1:build", "build").with_project_root("/tmp/app1")];
+        let task_graph = TaskGraph {
+            tasks: HashMap::new(),
+            dependencies: HashMap::new(),
+            continuous_dependencies: HashMap::new(),
+            roots: vec![],
+        };
+        let cli_args = config::TuiCliArgs {
+            targets: vec![],
+            tui_auto_exit: None,
+        };
+
+        let state = Arc::new(Mutex::new(TuiState::new(
+            tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            vec![],
+            config::TuiConfig::new(None, None, &cli_args),
+            String::from("Test"),
+            task_graph,
+            HashMap::new(),
+            None,
+        )));
+
+        App::with_state(state, TuiMode::FullScreen).unwrap()
+    }
+
+    /// `print_task_terminal_output` must hide the cursor whether or not the
+    /// PTY pre-existed. The PTY-exists branch (e.g. a batch task whose
+    /// terminal output was streamed via `append_task_output` first) used to
+    /// return early and lose the cursor-hide; that left a blinking virtual
+    /// cursor at the end of finished panes.
+    #[test]
+    fn test_print_task_terminal_output_hides_cursor_when_pty_already_exists() {
+        let mut app = create_test_app();
+        let task_id = String::from("app1:build");
+
+        // Simulate a batch task: streamed terminal output creates the PTY,
+        // then the orchestrator calls `print_task_terminal_output` to mark
+        // the task as finished.
+        app.append_task_output(
+            task_id.clone(),
+            String::from("> Task :app1:build UP-TO-DATE\n"),
+        );
+        app.print_task_terminal_output(
+            task_id.clone(),
+            String::from("> Task :app1:build UP-TO-DATE\n"),
+        );
+
+        let state = app.core.state().lock();
+        let pty = state.get_pty_instance(&task_id).expect("PTY should exist");
+        assert!(
+            pty.get_screen()
+                .expect("PTY parser should be readable")
+                .hide_cursor(),
+            "cursor must be hidden after print_task_terminal_output finalizes the pane"
+        );
+    }
+
+    /// `append_task_output` is the streaming path — it must NOT hide the
+    /// cursor, otherwise a still-running task's pane would freeze its cursor
+    /// mid-stream.
+    #[test]
+    fn test_append_task_output_does_not_hide_cursor() {
+        let mut app = create_test_app();
+        let task_id = String::from("app1:build");
+
+        app.append_task_output(task_id.clone(), String::from("first chunk\n"));
+        app.append_task_output(task_id.clone(), String::from("second chunk\n"));
+
+        let state = app.core.state().lock();
+        let pty = state.get_pty_instance(&task_id).expect("PTY should exist");
+        assert!(
+            !pty.get_screen()
+                .expect("PTY parser should be readable")
+                .hide_cursor(),
+            "append_task_output is for streaming; the cursor must remain visible"
+        );
+    }
+
+    /// Same finalization for the path where no PTY exists yet (cache hits,
+    /// non-streaming results).
+    #[test]
+    fn test_print_task_terminal_output_hides_cursor_when_no_pty_exists() {
+        let mut app = create_test_app();
+        let task_id = String::from("app1:build");
+
+        app.print_task_terminal_output(task_id.clone(), String::from("cached output\n"));
+
+        let state = app.core.state().lock();
+        let pty = state
+            .get_pty_instance(&task_id)
+            .expect("PTY should be created");
+        assert!(
+            pty.get_screen()
+                .expect("PTY parser should be readable")
+                .hide_cursor(),
+            "cursor must be hidden when print creates a fresh PTY"
+        );
     }
 }

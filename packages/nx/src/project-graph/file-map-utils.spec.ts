@@ -47,12 +47,6 @@ describe('fileMapUtils', () => {
           },
           nonProjectFiles: [{ file: 'tools/myfile.txt', hash: 'some-hash' }],
         },
-        allWorkspaceFiles: [
-          { file: 'apps/demo/src/main.ts', hash: 'some-hash' },
-          { file: 'apps/demo-e2e/src/main.ts', hash: 'some-hash' },
-          { file: 'libs/ui/src/index.ts', hash: 'some-hash' },
-          { file: 'tools/myfile.txt', hash: 'some-hash' },
-        ],
       });
     });
   });

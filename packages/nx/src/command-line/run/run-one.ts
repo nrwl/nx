@@ -175,7 +175,10 @@ export function parseRunOneOptions(
   let target;
   let configuration;
 
-  if (parsedArgs[PROJECT_TARGET_CONFIG]?.lastIndexOf(':') > 0) {
+  if (
+    typeof parsedArgs[PROJECT_TARGET_CONFIG] === 'string' &&
+    parsedArgs[PROJECT_TARGET_CONFIG].lastIndexOf(':') > 0
+  ) {
     // run case
     [project, target, configuration] = splitTarget(
       parsedArgs[PROJECT_TARGET_CONFIG],
@@ -189,7 +192,7 @@ export function parseRunOneOptions(
     }
   } else if (parsedArgs.target) {
     target = parsedArgs.target;
-  } else if (parsedArgs[PROJECT_TARGET_CONFIG]) {
+  } else if (typeof parsedArgs[PROJECT_TARGET_CONFIG] === 'string') {
     // If project:target:configuration exists but has no colon, check if it's a project with run target
     if (
       projectGraph.nodes[parsedArgs[PROJECT_TARGET_CONFIG]]?.data?.targets?.run

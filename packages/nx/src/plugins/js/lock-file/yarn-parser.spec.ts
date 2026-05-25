@@ -25,11 +25,6 @@ function loadJsonFixture(path: string) {
   return JSON.parse(realReadFileSync(path, 'utf-8'));
 }
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  workspaceRoot: '/root',
-}));
-
 jest.mock('../../../utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));

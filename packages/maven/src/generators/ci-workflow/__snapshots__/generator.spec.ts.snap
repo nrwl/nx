@@ -84,7 +84,7 @@ jobs:
           distribution: 'temurin'
           architecture: x64
 
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.
       - run: ./nx affected -t verify-ci
@@ -178,7 +178,7 @@ jobs:
           distribution: 'temurin'
           architecture: x64
 
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.
       - run: ./nx affected -t verify-ci

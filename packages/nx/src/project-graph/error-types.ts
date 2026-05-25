@@ -327,18 +327,45 @@ export function formatAggregateCreateNodesError(
   ];
   const errorStackLines = [];
 
-  const innerErrors = error.errors;
-  for (const [file, e] of innerErrors) {
-    if (file) {
-      errorBodyLines.push(`  - ${file}: ${e.message}`);
-      errorStackLines.push(` - ${file}: ${e.stack}`);
-    } else {
-      errorBodyLines.push(`  - ${e.message}`);
-      errorStackLines.push(` - ${e.stack}`);
+  // Group errors by file so repeated file paths aren't printed multiple times
+  const groupedErrors = new Map<string | null, Error[]>();
+  for (const [file, e] of error.errors) {
+    const key = file ?? null;
+    if (!groupedErrors.has(key)) {
+      groupedErrors.set(key, []);
     }
-    if (e.stack && process.env.NX_VERBOSE_LOGGING === 'true') {
-      const innerStackTrace = '    ' + e.stack.split('\n')?.join('\n    ');
-      errorStackLines.push(innerStackTrace);
+    groupedErrors.get(key).push(e);
+  }
+
+  for (const [file, errors] of groupedErrors) {
+    if (file) {
+      errorBodyLines.push(`  - ${file}:`);
+      errorStackLines.push(` - ${file}:`);
+    }
+    for (const e of errors) {
+      const messageLines = e.message.split('\n');
+      const stackLines = e.stack.split('\n');
+      if (file) {
+        errorBodyLines.push(...messageLines.map((line) => `      ${line}`));
+        errorStackLines.push(...stackLines.map((line) => `     ${line}`));
+      } else {
+        errorBodyLines.push(
+          `  - ${messageLines[0]}`,
+          ...messageLines.slice(1).map((line) => `    ${line}`)
+        );
+        errorStackLines.push(
+          ` - ${stackLines[0]}`,
+          ...stackLines.slice(1).map((line) => `   ${line}`)
+        );
+      }
+      if (e.stack && process.env.NX_VERBOSE_LOGGING === 'true') {
+        const verboseIndent = file ? '       ' : '     ';
+        const innerStackTrace = e.stack
+          .split('\n')
+          .map((line) => `${verboseIndent}${line}`)
+          .join('\n');
+        errorStackLines.push(innerStackTrace);
+      }
     }
   }
 

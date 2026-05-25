@@ -25,6 +25,7 @@
       "type": "string",
       "alias": "s",
       "default": "css",
+      "enum": ["css", "scss", "none"],
       "x-prompt": {
         "message": "Which stylesheet format would you like to use?",
         "type": "list",
@@ -35,27 +36,7 @@
           },
           {
             "value": "scss",
-            "label": "SASS(.scss)       [ https://sass-lang.com          ]"
-          },
-          {
-            "value": "less",
-            "label": "LESS              [ https://lesscss.org            ]"
-          },
-          {
-            "value": "tailwind",
-            "label": "tailwind          [ https://tailwindcss.com/       ]"
-          },
-          {
-            "value": "styled-components",
-            "label": "styled-components [ https://styled-components.com ]"
-          },
-          {
-            "value": "@emotion/styled",
-            "label": "emotion           [ https://emotion.sh            ]"
-          },
-          {
-            "value": "styled-jsx",
-            "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
+            "label": "SASS(.scss)       [ https://sass-lang.com   ]"
           },
           {
             "value": "none",
@@ -63,11 +44,6 @@
           }
         ]
       }
-    },
-    "js": {
-      "type": "boolean",
-      "description": "Generate JavaScript files rather than TypeScript files.",
-      "x-deprecated": "Provide the full file path including the file extension in the `path` option. This option will be removed in Nx v21."
     },
     "skipTests": {
       "type": "boolean",

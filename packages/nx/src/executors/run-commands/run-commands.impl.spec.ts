@@ -2,10 +2,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { env } from 'npm-run-path';
 import { relative } from 'path';
 import { dirSync, fileSync } from 'tmp';
-import runCommands, {
-  interpolateArgsIntoCommand,
-  LARGE_BUFFER,
-} from './run-commands.impl';
+import runCommands, { interpolateArgsIntoCommand } from './run-commands.impl';
 
 function normalize(p: string) {
   return p.startsWith('/private') ? p.substring(8) : p;
@@ -685,7 +682,7 @@ describe('Run Commands', () => {
 
   describe('--color', () => {
     it('should not set FORCE_COLOR=true', async () => {
-      const exec = jest.spyOn(require('child_process'), 'exec');
+      const spawnSpy = jest.spyOn(require('child_process'), 'spawn');
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
@@ -695,27 +692,31 @@ describe('Run Commands', () => {
         context
       );
 
-      expect(exec).toHaveBeenCalledTimes(2);
-      expect(exec).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, {
-        maxBuffer: LARGE_BUFFER,
+      expect(spawnSpy).toHaveBeenCalledTimes(2);
+      expect(spawnSpy).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, [], {
+        shell: true,
+        detached: process.platform !== 'win32',
         env: {
           ...process.env,
           ...env(),
         },
         windowsHide: true,
+        stdio: ['inherit', 'pipe', 'pipe'],
       });
-      expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
-        maxBuffer: LARGE_BUFFER,
+      expect(spawnSpy).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, [], {
+        shell: true,
+        detached: process.platform !== 'win32',
         env: {
           ...process.env,
           ...env(),
         },
         windowsHide: true,
+        stdio: ['inherit', 'pipe', 'pipe'],
       });
     });
 
     it('should not set FORCE_COLOR=true when --no-color is passed', async () => {
-      const exec = jest.spyOn(require('child_process'), 'exec');
+      const spawnSpy = jest.spyOn(require('child_process'), 'spawn');
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
@@ -726,27 +727,31 @@ describe('Run Commands', () => {
         context
       );
 
-      expect(exec).toHaveBeenCalledTimes(2);
-      expect(exec).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, {
-        maxBuffer: LARGE_BUFFER,
+      expect(spawnSpy).toHaveBeenCalledTimes(2);
+      expect(spawnSpy).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, [], {
+        shell: true,
+        detached: process.platform !== 'win32',
         env: {
           ...process.env,
           ...env(),
         },
         windowsHide: true,
+        stdio: ['inherit', 'pipe', 'pipe'],
       });
-      expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
-        maxBuffer: LARGE_BUFFER,
+      expect(spawnSpy).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, [], {
+        shell: true,
+        detached: process.platform !== 'win32',
         env: {
           ...process.env,
           ...env(),
         },
         windowsHide: true,
+        stdio: ['inherit', 'pipe', 'pipe'],
       });
     });
 
     it('should set FORCE_COLOR=true when running with --color', async () => {
-      const exec = jest.spyOn(require('child_process'), 'exec');
+      const spawnSpy = jest.spyOn(require('child_process'), 'spawn');
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
@@ -757,16 +762,20 @@ describe('Run Commands', () => {
         context
       );
 
-      expect(exec).toHaveBeenCalledTimes(2);
-      expect(exec).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, {
-        maxBuffer: LARGE_BUFFER,
+      expect(spawnSpy).toHaveBeenCalledTimes(2);
+      expect(spawnSpy).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, [], {
+        shell: true,
+        detached: process.platform !== 'win32',
         env: { ...process.env, FORCE_COLOR: `true`, ...env() },
         windowsHide: true,
+        stdio: ['inherit', 'pipe', 'pipe'],
       });
-      expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
-        maxBuffer: LARGE_BUFFER,
+      expect(spawnSpy).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, [], {
+        shell: true,
+        detached: process.platform !== 'win32',
         env: { ...process.env, FORCE_COLOR: `true`, ...env() },
         windowsHide: true,
+        stdio: ['inherit', 'pipe', 'pipe'],
       });
     });
   });

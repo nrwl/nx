@@ -7,6 +7,7 @@ import { ReactNativeRunAndroidOptions } from './schema';
 import { runCliStart } from '../start/start.impl';
 import { chmodAndroidGradlewFiles } from '../../utils/chmod-android-gradle-files';
 import { getCliOptions } from '../../utils/get-cli-options';
+import { warnReactNativeExecutorDeprecation } from '../../utils/deprecation';
 
 export interface ReactNativeRunAndroidOutput {
   success: boolean;
@@ -18,6 +19,8 @@ export default async function* runAndroidExecutor(
   options: ReactNativeRunAndroidOptions,
   context: ExecutorContext
 ): AsyncGenerator<ReactNativeRunAndroidOutput> {
+  warnReactNativeExecutorDeprecation('run-android');
+
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   chmodAndroidGradlewFiles(join(context.root, projectRoot, 'android'));

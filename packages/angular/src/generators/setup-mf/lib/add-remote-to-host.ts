@@ -7,8 +7,7 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { insertImport } from '@nx/js';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { ensureTypescript, getProjectSourceRoot } from '@nx/js/internal';
 import { ArrayLiteralExpression } from 'typescript';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
 

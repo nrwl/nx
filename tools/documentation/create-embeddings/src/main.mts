@@ -196,7 +196,7 @@ async function generateEmbeddings() {
       description: 'Source mode: astro or legacy',
       type: 'string',
       choices: ['astro', 'legacy'],
-      default: 'legacy'
+      default: 'astro'
     })
     .argv;
 

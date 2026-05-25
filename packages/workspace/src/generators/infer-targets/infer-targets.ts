@@ -1,3 +1,4 @@
+import { NoTargetsToMigrateError } from '@nx/devkit/internal';
 import {
   createProjectGraphAsync,
   formatFiles,
@@ -8,7 +9,6 @@ import {
   Tree,
   workspaceRoot,
 } from '@nx/devkit';
-import { NoTargetsToMigrateError } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import { prompt } from 'enquirer';
 import {
   GeneratorInformation,

@@ -1,4 +1,3 @@
-/* eslint-disable */
 module.exports = {
   displayName: 'nx-dev-ui-theme',
   preset: '../../jest.preset.js',

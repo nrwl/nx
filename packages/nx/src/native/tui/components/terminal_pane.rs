@@ -20,6 +20,7 @@ use crate::native::tui::theme::THEME;
 use crate::native::tui::utils::{
     format_duration_with_estimate, get_task_status_icon, get_task_status_style,
 };
+use crate::native::tui::vt100_adapter::Vt100CttScreen;
 use crate::native::tui::{action::Action, pty::PtyInstance};
 
 /// Configuration for terminal pane layout and display constants
@@ -89,6 +90,19 @@ impl TerminalPaneData {
                     pty_mut.scroll_to_bottom();
                     return Ok(None);
                 }
+                // Handle PageUp/PageDown for full-page scrolling when not in interactive mode
+                KeyCode::PageUp if !self.is_interactive => {
+                    let (rows, _) = pty_mut.get_dimensions();
+                    let page = (rows.min(255) as u8).saturating_sub(2).max(1);
+                    pty_mut.scroll_up(page);
+                    return Ok(None);
+                }
+                KeyCode::PageDown if !self.is_interactive => {
+                    let (rows, _) = pty_mut.get_dimensions();
+                    let page = (rows.min(255) as u8).saturating_sub(2).max(1);
+                    pty_mut.scroll_down(page);
+                    return Ok(None);
+                }
                 // Handle ctrl+u and ctrl+d for scrolling when not in interactive mode
                 KeyCode::Char('u')
                     if key.modifiers.contains(KeyModifiers::CONTROL) && !self.is_interactive =>
@@ -122,7 +136,7 @@ impl TerminalPaneData {
                     };
                     // Set status message outside the pty borrow
                     if let Some(msg) = status_message {
-                        self.status_message = Some((msg.to_string(), Instant::now()));
+                        self.status_message = Some((msg.to_owned(), Instant::now()));
                     }
                     return Ok(None);
                 }
@@ -672,7 +686,8 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                         ScrollbarState::default()
                     };
 
-                    let pseudo_term = PseudoTerminal::new(&*screen).block(block);
+                    let pseudo_term =
+                        PseudoTerminal::new(Vt100CttScreen::wrap(&screen)).block(block);
                     Widget::render(pseudo_term, safe_area, buf);
 
                     // Only render scrollbar if needed

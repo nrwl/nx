@@ -1,3 +1,4 @@
+import { addBuildTargetDefaults } from '@nx/devkit/internal';
 import {
   formatFiles,
   GeneratorCallback,
@@ -15,7 +16,8 @@ import { webpackInitGenerator } from '../init/init';
 import { ConfigurationGeneratorSchema } from './schema';
 import { WebpackExecutorOptions } from '../../executors/webpack/schema';
 import { hasPlugin } from '../../utils/has-plugin';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { warnWebpackExecutorGenerating } from '../../utils/deprecation';
+import { TS_SOLUTION_SETUP_TSCONFIG_INPUT } from '@nx/js/internal';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 
 export function configurationGenerator(
@@ -50,6 +52,7 @@ export async function configurationGeneratorInternal(
   checkForTargetConflicts(tree, options);
 
   if (!hasPlugin(tree)) {
+    warnWebpackExecutorGenerating();
     addBuildTarget(tree, options);
     if (options.devServer) {
       addServeTarget(tree, options);
@@ -179,7 +182,9 @@ module.exports = composePlugins(withNx(), (config) => {
 }
 
 function addBuildTarget(tree: Tree, options: ConfigurationGeneratorSchema) {
-  addBuildTargetDefaults(tree, '@nx/webpack:webpack');
+  addBuildTargetDefaults(tree, '@nx/webpack:webpack', 'build', [
+    TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+  ]);
 
   const project = readProjectConfiguration(tree, options.project);
   const buildOptions: WebpackExecutorOptions = {

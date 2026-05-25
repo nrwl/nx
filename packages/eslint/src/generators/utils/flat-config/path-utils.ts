@@ -3,7 +3,7 @@ import type { Linter } from 'eslint';
 
 export function updateFiles(
   override: Linter.ConfigOverride<Linter.RulesRecord>
-) {
+): Linter.ConfigOverride<Linter.RulesRecord> {
   if (override.files) {
     override.files = Array.isArray(override.files)
       ? override.files

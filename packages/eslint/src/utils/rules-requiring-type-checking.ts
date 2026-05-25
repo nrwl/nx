@@ -25,7 +25,7 @@ function resolveKnownRulesRequiringTypeChecking(): string[] | null {
 }
 
 export function hasRulesRequiringTypeChecking(
-  eslintConfig: Linter.Config
+  eslintConfig: Linter.LegacyConfig
 ): boolean {
   knownRulesRequiringTypeChecking = resolveKnownRulesRequiringTypeChecking();
   if (!knownRulesRequiringTypeChecking) {
@@ -43,8 +43,8 @@ export function hasRulesRequiringTypeChecking(
 }
 
 export function removeParserOptionsProjectIfNotRequired(
-  json: Linter.Config
-): Linter.Config {
+  json: Linter.LegacyConfig
+): Linter.LegacyConfig {
   // At least one rule requiring type-checking is in use, do not migrate the config
   if (hasRulesRequiringTypeChecking(json)) {
     return json;
@@ -61,7 +61,7 @@ function determineEnabledRules(rules: Linter.RulesRecord): string[] {
     .map(([ruleName]) => ruleName);
 }
 
-function getAllRulesInConfig(json: Linter.Config): string[] {
+function getAllRulesInConfig(json: Linter.LegacyConfig): string[] {
   let allRules = json.rules ? determineEnabledRules(json.rules) : [];
   if (json.overrides?.length > 0) {
     for (const o of json.overrides) {
@@ -73,7 +73,7 @@ function getAllRulesInConfig(json: Linter.Config): string[] {
   return allRules;
 }
 
-function removeProjectParserOptionFromConfig(json: Linter.Config): void {
+function removeProjectParserOptionFromConfig(json: Linter.LegacyConfig): void {
   delete json.parserOptions?.project;
   // If parserOptions is left empty by this removal, also clean up the whole object
   if (json.parserOptions && Object.keys(json.parserOptions).length === 0) {

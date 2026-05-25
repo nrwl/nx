@@ -8,17 +8,6 @@ const workspaceRoot = process.cwd();
 // Set environment variable for documentation generation
 process.env.NX_GENERATE_DOCS_PROCESS = 'true';
 
-// Register ts-node to handle TypeScript files
-require('ts-node').register({
-  project: join(workspaceRoot, 'tsconfig.base.json'),
-  transpileOnly: true,
-  compilerOptions: {
-    module: 'commonjs',
-  },
-});
-
-// TypeScript paths are now handled by pnpm workspaces, no need for tsconfig-paths
-
 // Inline command parser functions
 const YargsTypes = ['array', 'count', 'string', 'boolean', 'number'];
 
@@ -88,11 +77,11 @@ async function parseCommand(name, command) {
 
 async function runCnwParser() {
   try {
-    // Import create-nx-workspace command
+    // Import create-nx-workspace command from compiled dist
     const { commandsObject } = importFresh(
       join(
         workspaceRoot,
-        'packages/create-nx-workspace/bin/create-nx-workspace'
+        'dist/packages/create-nx-workspace/bin/create-nx-workspace.js'
       )
     );
 
@@ -103,11 +92,11 @@ async function runCnwParser() {
       commands['$0']
     );
 
-    // Import Preset enum to get all preset values
+    // Import Preset enum to get all preset values from compiled dist
     const { Preset } = importFresh(
       join(
         workspaceRoot,
-        'packages/create-nx-workspace/src/utils/preset/preset'
+        'dist/packages/create-nx-workspace/src/utils/preset/preset.js'
       )
     );
 

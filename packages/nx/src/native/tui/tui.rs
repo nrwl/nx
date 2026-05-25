@@ -207,7 +207,13 @@ impl Tui {
         let _cancellation_token = self.cancellation_token.clone();
         let _event_tx = self.event_tx.clone();
         debug!("start(): spawning new event task");
-        self.task = Some(tokio::spawn(async move {
+        // Use napi's bindgen_prelude::spawn so this works from any thread
+        // (e.g. the JS main thread that calls __init), not only from inside a
+        // Tokio runtime context. This lets enter() couple raw-mode entry with
+        // EventStream creation synchronously, closing a race where bytes
+        // queued in stdin (OSC color-query replies, leftover prompt input)
+        // get parsed as keypresses.
+        self.task = Some(napi::bindgen_prelude::spawn(async move {
             debug!("Event task spawned - inside async block");
             debug!("Event task: creating EventStream");
             let mut reader = crossterm::event::EventStream::new();
@@ -372,10 +378,15 @@ impl Tui {
             }
         }
 
-        // NOTE: start() is NOT called here. It must be called from within a
-        // Tokio runtime context (e.g., inside napi's spawn() block) because it
-        // uses tokio::spawn() internally. The caller is responsible for calling
-        // start() after entering the runtime.
+        // Start the event reader synchronously so the EventStream exists
+        // before we return to the caller. Otherwise any bytes that arrive on
+        // stdin between enable_raw_mode() and EventStream::new() (e.g. tail
+        // bytes of an OSC 11 color-scheme reply, or leftover input from an
+        // interactive prompt that ran just before the TUI) get read as
+        // keypresses once the reader finally starts — which manifested as a
+        // bogus filter being pre-applied on TUI boot.
+        self.start();
+
         Ok(())
     }
 

@@ -12,6 +12,7 @@ const sitemapPath = resolve(outDir, 'sitemap.xml');
 
 const additionalSitemaps = [
   `${siteUrl}/sitemap-1.xml`,
+  `${siteUrl}/sitemap-2.xml`,
   `${siteUrl}/docs/sitemap-index.xml`,
 ];
 

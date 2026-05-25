@@ -44,13 +44,12 @@ export async function buildStaticRemotes(
     // File to debug build failures e.g. 2024-01-01T00_00_0_0Z-build.log'
     const remoteBuildLogFile = join(
       workspaceDataDirectory,
-      // eslint-disable-next-line
+
       `${new Date().toISOString().replace(/[:\.]/g, '_')}-build.log`
     );
     const stdoutStream = createWriteStream(remoteBuildLogFile);
     staticProcess.stdout?.on('data', (data) => {
       const ANSII_CODE_REGEX =
-        // eslint-disable-next-line no-control-regex
         /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
       const stdoutString = data.toString().replace(ANSII_CODE_REGEX, '');
       stdoutStream.write(stdoutString);

@@ -22,8 +22,12 @@ export default async function removeRunCommandsOutputPath(tree: Tree) {
   }
   if (tree.exists('nx.json')) {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      for (const [, target] of Object.entries(json.targetDefaults ?? {})) {
-        updateTargetBlock(target);
+      const td = json.targetDefaults;
+      if (td) {
+        const entries = Array.isArray(td) ? td : Object.values(td);
+        for (const entry of entries) {
+          updateTargetBlock(entry as TargetConfiguration);
+        }
       }
       return json;
     });

@@ -133,24 +133,14 @@ function withNx(
       };
     } else {
       const {
-        createProjectGraphAsync,
+        readCachedProjectGraph,
         joinPathFragments,
         offsetFromRoot,
         workspaceRoot,
       } = require('@nx/devkit');
 
-      let graph: ProjectGraph;
-      try {
-        graph = await createProjectGraphAsync({
-          exitOnError: false,
-          resetDaemonClient: true,
-        });
-      } catch (e) {
-        throw new Error(
-          'Could not create project graph. Please ensure that your workspace is valid.',
-          { cause: e }
-        );
-      }
+      // Since this is invoked by an Nx task, the graph is already cached.
+      const graph: ProjectGraph = readCachedProjectGraph();
 
       const originalTarget = {
         project: process.env.NX_TASK_TARGET_PROJECT,

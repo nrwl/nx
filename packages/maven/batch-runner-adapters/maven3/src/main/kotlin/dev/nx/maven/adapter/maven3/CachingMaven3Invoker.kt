@@ -3,7 +3,11 @@ package dev.nx.maven.adapter.maven3
 import dev.nx.maven.adapter.AdapterInvoker
 import org.apache.maven.execution.DefaultMavenExecutionRequest
 import org.apache.maven.execution.MavenExecutionRequest
+import org.apache.maven.execution.MavenExecutionRequestPopulationException
 import org.apache.maven.execution.MavenExecutionRequestPopulator
+import org.apache.maven.settings.building.DefaultSettingsBuildingRequest
+import org.apache.maven.settings.building.SettingsBuilder
+import org.apache.maven.settings.building.SettingsBuildingException
 import org.apache.maven.graph.GraphBuilder
 import org.apache.maven.lifecycle.internal.ExecutionEventCatapult
 import org.apache.maven.lifecycle.internal.LifecycleStarter
@@ -16,6 +20,7 @@ import org.codehaus.plexus.classworlds.ClassWorld
 import org.codehaus.plexus.classworlds.realm.ClassRealm
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.OutputStream
 import java.io.PrintStream
 
@@ -33,6 +38,7 @@ class CachingMaven3Invoker(
     private var container: DefaultPlexusContainer? = null
     private var nxMaven: NxMaven3? = null
     private var requestPopulator: MavenExecutionRequestPopulator? = null
+    private var settingsBuilder: SettingsBuilder? = null
     private var graphSetup = false
 
     init {
@@ -58,6 +64,12 @@ class CachingMaven3Invoker(
 
         val c = container!!
         requestPopulator = c.lookup(MavenExecutionRequestPopulator::class.java)
+        settingsBuilder = try {
+            c.lookup(SettingsBuilder::class.java)
+        } catch (e: Exception) {
+            log.warn("SettingsBuilder lookup failed; settings.xml merge will be skipped: ${e.message}")
+            null
+        }
 
         nxMaven = NxMaven3(
             c,
@@ -127,14 +139,29 @@ class CachingMaven3Invoker(
         System.getProperties().forEach { key, value ->
             request.systemProperties.setProperty(key.toString(), value.toString())
         }
+        if (request.userProperties == null) {
+            request.userProperties = java.util.Properties()
+        }
 
         val goals = mutableListOf<String>()
         val selectedProjects = mutableListOf<String>()
+        var userSettingsOverride: File? = null
+        var globalSettingsOverride: File? = null
         var i = 0
         while (i < args.size) {
             when (val arg = args[i]) {
                 "-pl", "--projects" -> {
                     if (i + 1 < args.size) selectedProjects.addAll(args[++i].split(","))
+                }
+                "-s", "--settings" -> {
+                    if (i + 1 < args.size) {
+                        userSettingsOverride = resolveSettingsFile(args[++i], workingDir)
+                    }
+                }
+                "-gs", "--global-settings" -> {
+                    if (i + 1 < args.size) {
+                        globalSettingsOverride = resolveSettingsFile(args[++i], workingDir)
+                    }
                 }
                 "-N", "--non-recursive" -> request.isRecursive = false
                 "-B", "--batch-mode" -> request.isInteractiveMode = false
@@ -162,9 +189,11 @@ class CachingMaven3Invoker(
             request.selectedProjects = selectedProjects
         }
 
-        val localRepoPath = System.getProperty("maven.repo.local")
-            ?: "${System.getProperty("user.home")}/.m2/repository"
-        request.localRepositoryPath = File(localRepoPath)
+        mergeEffectiveSettings(request, userSettingsOverride, globalSettingsOverride)
+
+        System.getProperty("maven.repo.local")?.let { path ->
+            request.localRepositoryPath = File(path)
+        }
 
         try {
             requestPopulator?.populateDefaults(request)
@@ -173,6 +202,80 @@ class CachingMaven3Invoker(
         }
 
         return request
+    }
+
+    /**
+     * Loads global + user settings.xml (mirrors, proxies, servers, profiles, etc.) the same way
+     * [org.apache.maven.cli.configuration.SettingsXmlConfigurationProcessor] does for the `mvn` CLI,
+     * then merges them into the execution request via [MavenExecutionRequestPopulator.populateFromSettings].
+     */
+    private fun mergeEffectiveSettings(
+        request: MavenExecutionRequest,
+        userSettingsOverride: File?,
+        globalSettingsOverride: File?
+    ) {
+        val builder = settingsBuilder
+        if (builder == null) {
+            log.warn("Skipping settings.xml merge (SettingsBuilder unavailable)")
+            return
+        }
+
+        userSettingsOverride?.let {
+            if (!it.isFile) {
+                throw FileNotFoundException(
+                    "The specified user settings file does not exist: ${it.absolutePath}"
+                )
+            }
+        }
+        globalSettingsOverride?.let {
+            if (!it.isFile) {
+                throw FileNotFoundException(
+                    "The specified global settings file does not exist: ${it.absolutePath}"
+                )
+            }
+        }
+
+        val userHome = System.getProperty("user.home")
+        val userSettingsFile = userSettingsOverride
+            ?: File(userHome, ".m2/settings.xml")
+        val globalSettingsFile = globalSettingsOverride
+            ?: System.getProperty("maven.conf")?.let { File(it, "settings.xml") }
+
+        request.setUserSettingsFile(userSettingsFile)
+        if (globalSettingsFile != null) {
+            request.setGlobalSettingsFile(globalSettingsFile)
+        }
+
+        val settingsRequest = DefaultSettingsBuildingRequest()
+        settingsRequest.globalSettingsFile = globalSettingsFile
+        settingsRequest.userSettingsFile = userSettingsFile
+        settingsRequest.systemProperties = request.systemProperties
+        settingsRequest.userProperties = request.userProperties
+
+        val populator = requestPopulator
+        if (populator == null) {
+            log.warn("MavenExecutionRequestPopulator unavailable; skipping settings application")
+            return
+        }
+
+        try {
+            val result = builder.build(settingsRequest)
+            for (problem in result.problems) {
+                log.warn("Settings problem: {} @ {}", problem.message, problem.location)
+            }
+            populator.populateFromSettings(request, result.effectiveSettings)
+        } catch (e: SettingsBuildingException) {
+            log.error("Failed to build effective Maven settings: ${e.message}", e)
+            throw e
+        } catch (e: MavenExecutionRequestPopulationException) {
+            log.error("Failed to apply Maven settings to execution request: ${e.message}", e)
+            throw e
+        }
+    }
+
+    private fun resolveSettingsFile(path: String, workingDir: File): File {
+        val f = File(path)
+        return if (f.isAbsolute) f else File(workingDir, path).absoluteFile
     }
 
     override fun recordBuildStates(projectSelectors: Set<String>) {

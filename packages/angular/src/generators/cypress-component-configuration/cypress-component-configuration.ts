@@ -1,5 +1,5 @@
 import type { NxComponentTestingOptions } from '@nx/cypress/plugins/cypress-preset';
-import type { FoundTarget } from '@nx/cypress/src/utils/find-target-options';
+import type { FoundTarget } from '@nx/cypress/internal';
 import {
   ensurePackage,
   formatFiles,
@@ -13,6 +13,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { relative } from 'path';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { isZonelessApp } from '../../utils/zoneless';
 import { nxVersion } from '../../utils/versions';
 import { componentTestGenerator } from '../component-test/component-test';
@@ -48,6 +49,7 @@ export async function cypressComponentConfiguration(
   tree: Tree,
   options: CypressComponentConfigSchema
 ): Promise<GeneratorCallback> {
+  assertSupportedAngularVersion(tree);
   const { componentConfigurationGenerator: baseCyCTConfig } = ensurePackage<
     typeof import('@nx/cypress')
   >('@nx/cypress', nxVersion);
@@ -63,9 +65,7 @@ export async function cypressComponentConfiguration(
   }
 
   if (isZoneless) {
-    const { getInstalledCypressVersion } = await import(
-      '@nx/cypress/src/utils/versions'
-    );
+    const { getInstalledCypressVersion } = await import('@nx/cypress/internal');
     const installedCypressVersion = getInstalledCypressVersion(tree);
     // Zoneless support was introduced in Cypress 15.8.0
     // If Cypress is not yet installed, we'll install the latest version, which will have zoneless support
@@ -115,9 +115,9 @@ async function addFiles(
     'support',
     'component.ts'
   );
-  const { addMountDefinition } = <
-    typeof import('@nx/cypress/src/utils/config')
-  >require('@nx/cypress/src/utils/config');
+  const { addMountDefinition } = <typeof import('@nx/cypress/internal')>(
+    require('@nx/cypress/internal')
+  );
   const updatedCmpContents = await addMountDefinition(
     tree.read(componentFile, 'utf-8')
   );
@@ -178,9 +178,9 @@ async function configureCypressCT(
   let found: FoundTarget = { target: options.buildTarget, config: undefined };
 
   if (!options.buildTarget) {
-    const { findBuildConfig } = <
-      typeof import('@nx/cypress/src/utils/find-target-options')
-    >require('@nx/cypress/src/utils/find-target-options');
+    const { findBuildConfig } = <typeof import('@nx/cypress/internal')>(
+      require('@nx/cypress/internal')
+    );
     found = await findBuildConfig(tree, {
       project: options.project,
       buildTarget: options.buildTarget,
@@ -233,20 +233,18 @@ async function configureCypressCT(
   }
 
   const { addDefaultCTConfig, getProjectCypressConfigPath } = <
-    typeof import('@nx/cypress/src/utils/config')
-  >require('@nx/cypress/src/utils/config');
+    typeof import('@nx/cypress/internal')
+  >require('@nx/cypress/internal');
   const cypressConfigPath = getProjectCypressConfigPath(
     tree,
     projectConfig.root
   );
   const updatedCyConfig = await addDefaultCTConfig(
     tree.read(cypressConfigPath, 'utf-8'),
-    ctConfigOptions
+    ctConfigOptions,
+    '@nx/angular/plugins/component-testing'
   );
-  tree.write(
-    cypressConfigPath,
-    `import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';\n${updatedCyConfig}`
-  );
+  tree.write(cypressConfigPath, updatedCyConfig);
 }
 
 export default cypressComponentConfiguration;

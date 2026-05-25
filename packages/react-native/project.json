@@ -9,5 +9,6 @@
       "command": "node ./scripts/copy-readme.js react-native",
       "inputs": ["copyReadme"]
     }
-  }
+  },
+  "implicitDependencies": ["jest", "vite", "webpack"]
 }

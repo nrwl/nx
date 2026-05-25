@@ -1,0 +1,7 @@
+.nx
+node_modules
+results-*.json
+output.json
+**/dist
+**/copy-out
+baseline.json

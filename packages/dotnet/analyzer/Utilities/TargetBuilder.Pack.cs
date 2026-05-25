@@ -12,9 +12,11 @@ public static partial class TargetBuilder
         string projectName,
         string fileName,
         Dictionary<string, string> properties,
+        string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
-        string productionInput)
+        string productionInput,
+        List<string> directoryBuildInputs)
     {
         // Create a copy of properties with Configuration=Release
         var releaseProperties = new Dictionary<string, string>(properties)
@@ -22,10 +24,7 @@ public static partial class TargetBuilder
             ["Configuration"] = "Release"
         };
 
-        var packageOutputPath = GetPackageOutputPath(releaseProperties, projectName, workspaceRoot);
-
-        var useWorkspaceRoot = UsesArtifactsOutput(properties);
-        var outputPrefix = useWorkspaceRoot ? "{workspaceRoot}" : "{projectRoot}";
+        var packageOutputPath = GetPackageOutputPath(releaseProperties, projectName, projectDirectory, workspaceRoot);
 
         var buildReleaseTarget = $"{options.BuildTargetName}:release";
         targets[options.PackTargetName] = new Target
@@ -49,8 +48,18 @@ public static partial class TargetBuilder
             },
             DependsOn = [buildReleaseTarget],
             Cache = true,
-            Inputs = ["default", $"^{productionInput}", new { workingDirectory = "absolute" }],
-            Outputs = [$"{outputPrefix}/{packageOutputPath}/*.nupkg"],
+            Inputs =
+            [
+                "default",
+                $"^{productionInput}",
+                "{workspaceRoot}/.editorconfig",
+                new { workingDirectory = "absolute" },
+                new { dependentTasksOutputFiles = "**/*" },
+                .. directoryBuildInputs
+            ],
+            Outputs = packageOutputPath is null
+                ? []
+                : [$"{packageOutputPath.TrimEnd('/')}/*.nupkg"],
             Metadata = new TargetMetadata
             {
                 Description = "Create NuGet package",

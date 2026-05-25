@@ -1,14 +1,13 @@
+import { logShowProjectCommand } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
-  logger,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import {
   testingLibraryDomVersion,
   testingLibraryReactVersion,
@@ -27,18 +26,16 @@ import { addStyleDependencies } from '../../utils/styles';
 import { addLinting } from './lib/add-linting';
 import { customServerGenerator } from '../custom-server/custom-server';
 import { updateCypressTsConfig } from './lib/update-cypress-tsconfig';
-import { showPossibleWarnings } from './lib/show-possible-warnings';
 import { tsLibVersion } from '../../utils/versions';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+  sortPackageJsonFields,
+} from '@nx/js/internal';
 import { configureForSwc } from '../../utils/add-swc-to-custom-server';
 import { updateJestConfig } from '../../utils/jest-config-util';
-import { isNext14, isNext15, isNext16 } from '../../utils/version-utils';
+import { isNext14, isNext15 } from '../../utils/version-utils';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
@@ -67,7 +64,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   tasks.push(jsInitTask);
 
   const options = await normalizeOptions(host, schema);
-  showPossibleWarnings(host, options);
 
   const nextTask = await nextInitGenerator(host, {
     ...options,
@@ -93,22 +89,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   const jestTask = await addJest(host, options);
   tasks.push(jestTask);
-
-  if (options.style === 'tailwind') {
-    const tailwindTask = await setupTailwindGenerator(host, {
-      project: options.projectName,
-    });
-
-    tasks.push(tailwindTask);
-  }
-
-  // LESS is not currrently supported with Turbopack
-  // Turbopack is default in Next 16, set to webpack
-  if (options.style === 'less' && (await isNext16(host))) {
-    logger.warn(
-      "NX LESS is only supported with Webpack bundler. Please ensure you run your application with '--webpack'."
-    );
-  }
 
   const styledTask = addStyleDependencies(host, {
     style: options.style,

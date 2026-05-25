@@ -2,6 +2,9 @@
   "name": ":gradle-project-graph",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "gradle:publishToMavenLocal": {
+      "cache": false
+    },
     "publish-staging": {
       "command": "./gradlew :gradle-project-graph:publish",
       "cache": true,

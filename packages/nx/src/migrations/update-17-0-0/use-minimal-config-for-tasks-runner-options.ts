@@ -25,7 +25,19 @@ export default async function migrate(tree: Tree) {
 
   const nxCloudClientSupported = await isNxCloudClientSupported(nxJson);
   updateJson<NxJsonConfiguration>(tree, 'nx.json', (nxJson) => {
-    const { runner, options } = nxJson.tasksRunnerOptions.default;
+    const { runner, options } = nxJson.tasksRunnerOptions.default as {
+      runner: string;
+      options: {
+        useDaemonProcess?: boolean;
+        accessToken?: string;
+        url?: string;
+        useLightClient?: boolean;
+        encryptionKey?: string;
+        parallel?: number;
+        cacheDirectory?: string;
+        cacheableOperations?: string[];
+      };
+    };
 
     // This property shouldn't ever be part of tasks runner options.
     if (options.useDaemonProcess !== undefined) {
@@ -69,10 +81,27 @@ export default async function migrate(tree: Tree) {
       delete options.cacheDirectory;
     }
     if (Array.isArray(options.cacheableOperations)) {
-      nxJson.targetDefaults ??= {};
-      for (const target of options.cacheableOperations) {
-        nxJson.targetDefaults[target] ??= {};
-        nxJson.targetDefaults[target].cache ??= true;
+      if (Array.isArray(nxJson.targetDefaults)) {
+        for (const target of options.cacheableOperations) {
+          const idx = nxJson.targetDefaults.findIndex(
+            (e) =>
+              e.target === target &&
+              e.executor === undefined &&
+              e.projects === undefined &&
+              e.plugin === undefined
+          );
+          if (idx >= 0) {
+            nxJson.targetDefaults[idx].cache ??= true;
+          } else {
+            nxJson.targetDefaults.push({ target, cache: true });
+          }
+        }
+      } else {
+        nxJson.targetDefaults ??= {};
+        for (const target of options.cacheableOperations) {
+          nxJson.targetDefaults[target] ??= {};
+          nxJson.targetDefaults[target].cache ??= true;
+        }
       }
       delete options.cacheableOperations;
     }

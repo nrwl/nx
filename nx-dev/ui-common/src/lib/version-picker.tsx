@@ -36,7 +36,7 @@ export function VersionPicker(): JSX.Element {
               <div className="relative">
                 <ListboxButton
                   className={
-                    'relative w-full cursor-pointer rounded-lg border-zinc-200 py-2 pr-6 text-left font-medium focus:outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-300 sm:text-sm dark:border-zinc-700'
+                    'focus-visible:ring-opacity-75 relative w-full cursor-pointer rounded-lg border-zinc-200 py-2 pr-6 text-left font-medium focus:outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-blue-300 sm:text-sm dark:border-zinc-700'
                   }
                 >
                   <span className="block">{selected.label}</span>
@@ -59,13 +59,13 @@ export function VersionPicker(): JSX.Element {
                 >
                   <ListboxOptions
                     static
-                    className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-sm bg-white py-1 pl-0 text-base shadow-md focus:outline-none sm:text-sm dark:bg-zinc-800/90 dark:focus-within:ring-blue-500"
+                    className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-xs bg-white py-1 pl-0 text-base shadow-md focus:outline-none sm:text-sm dark:bg-zinc-800/90 dark:focus-within:ring-blue-500"
                   >
                     {versionOptions.map((item, idx) => (
                       <ListboxOption
                         key={idx}
                         className={() =>
-                          `relative cursor-pointer select-none list-none hover:bg-zinc-50 dark:hover:bg-zinc-800`
+                          `relative cursor-pointer list-none select-none hover:bg-zinc-50 dark:hover:bg-zinc-800`
                         }
                         value={item}
                       >

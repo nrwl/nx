@@ -1,3 +1,4 @@
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import {
   formatFiles,
   readNxJson,
@@ -6,7 +7,6 @@ import {
   updateProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import type { JestExecutorOptions } from '../../executors/jest/schema';
 
 // migration for https://github.com/jestjs/jest/commit/41133b526d2c17bc9758f90d6026b25301cf0552
@@ -33,23 +33,42 @@ export default async function (tree: Tree) {
     return;
   }
 
-  for (const [targetOrExecutor, targetConfig] of Object.entries(
-    nxJson.targetDefaults
-  )) {
-    if (
-      targetOrExecutor !== '@nx/jest:jest' &&
-      targetConfig.executor !== '@nx/jest:jest'
-    ) {
-      continue;
-    }
+  if (Array.isArray(nxJson.targetDefaults)) {
+    for (const entry of nxJson.targetDefaults) {
+      if (
+        entry.target !== '@nx/jest:jest' &&
+        entry.executor !== '@nx/jest:jest'
+      ) {
+        continue;
+      }
 
-    if (targetConfig.options) {
-      renameTestPathPattern(targetConfig.options);
-    }
+      if (entry.options) {
+        renameTestPathPattern(entry.options);
+      }
 
-    Object.values(targetConfig.configurations ?? {}).forEach((config) => {
-      renameTestPathPattern(config);
-    });
+      Object.values(entry.configurations ?? {}).forEach((config) => {
+        renameTestPathPattern(config);
+      });
+    }
+  } else {
+    for (const [targetOrExecutor, targetConfig] of Object.entries(
+      nxJson.targetDefaults
+    )) {
+      if (
+        targetOrExecutor !== '@nx/jest:jest' &&
+        targetConfig.executor !== '@nx/jest:jest'
+      ) {
+        continue;
+      }
+
+      if (targetConfig.options) {
+        renameTestPathPattern(targetConfig.options);
+      }
+
+      Object.values(targetConfig.configurations ?? {}).forEach((config) => {
+        renameTestPathPattern(config);
+      });
+    }
   }
 
   updateNxJson(tree, nxJson);

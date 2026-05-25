@@ -132,6 +132,7 @@ describe('nx release preserve local dependency protocols', () => {
       nxJson.release = {
         version: {
           preserveLocalDependencyProtocols: false,
+          adjustSemverBumpsForZeroMajorVersion: false,
         },
       };
       return nxJson;
@@ -178,7 +179,9 @@ describe('nx release preserve local dependency protocols', () => {
 
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       nxJson.release = {
-        version: {},
+        version: {
+          adjustSemverBumpsForZeroMajorVersion: false,
+        },
       };
       return nxJson;
     });

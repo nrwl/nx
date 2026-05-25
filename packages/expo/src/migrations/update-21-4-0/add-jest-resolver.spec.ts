@@ -1,7 +1,7 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Tree, addProjectConfiguration } from '@nx/devkit';
 import addJestResolver from './add-jest-resolver';
-import * as nxDevkitConfigUtils from '@nx/devkit/src/utils/config-utils';
+import * as nxDevkitConfigUtils from '@nx/devkit/internal';
 import * as path from 'path';
 
 describe('add-jest-resolver migration', () => {

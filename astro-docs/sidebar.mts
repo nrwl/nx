@@ -37,8 +37,7 @@ const learnGroups: SidebarItems = [
       { label: 'Editor setup', link: 'getting-started/editor-setup' },
       {
         label: 'Tutorials',
-        badge: 'New',
-        collapsed: true,
+        collapsed: false,
         items: [
           {
             label: 'Crafting your workspace',
@@ -83,7 +82,7 @@ const learnGroups: SidebarItems = [
 
   {
     label: 'How Nx works',
-    collapsed: false,
+    collapsed: true,
     items: [
       { label: 'Mental model', link: 'concepts/mental-model' },
       { label: 'How caching works', link: 'concepts/how-caching-works' },
@@ -118,7 +117,7 @@ const learnGroups: SidebarItems = [
   },
   {
     label: 'Platform features',
-    collapsed: false,
+    collapsed: true,
     items: [
       { label: 'Run tasks', link: 'features/run-tasks' },
       {
@@ -579,6 +578,10 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'troubleshooting/troubleshoot-nx-install-issues',
           },
           {
+            label: 'Fix Nx in Claude Code sandbox',
+            link: 'troubleshooting/nx-sandbox-unix-sockets',
+          },
+          {
             label: 'Resolve circular dependencies',
             link: 'troubleshooting/resolve-circular-dependencies',
           },
@@ -627,6 +630,10 @@ const knowledgeBaseGroups: SidebarItems = [
           {
             label: 'Standalone to monorepo',
             link: 'guides/tips-n-tricks/standalone-to-monorepo',
+          },
+          {
+            label: 'Migrate `nx` imports to `@nx/devkit`',
+            link: 'guides/tips-n-tricks/migrate-nx-imports-to-devkit',
           },
         ],
       },
@@ -857,6 +864,10 @@ const knowledgeBaseGroups: SidebarItems = [
           {
             label: 'Heartbeat and manual shutdown handling',
             link: 'concepts/ci-concepts/heartbeat-and-manual-shutdown-handling',
+          },
+          {
+            label: 'Fix sandbox violations',
+            link: 'guides/nx-cloud/fix-sandbox-violations',
           },
         ],
       },
@@ -1200,10 +1211,6 @@ const referenceGroups: SidebarItems = [
       {
         label: 'Nx Cloud credit pricing',
         link: 'reference/nx-cloud/credits-pricing',
-      },
-      {
-        label: 'Remote cache plugins',
-        link: 'reference/remote-cache-plugins',
       },
       {
         label: 'Changelog',

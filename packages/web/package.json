@@ -32,8 +32,8 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "detect-port": "^1.5.1",
-    "http-server": "^14.1.0",
+    "detect-port": "^2.1.0",
+    "http-server": "catalog:",
     "picocolors": "catalog:",
     "tslib": "catalog:typescript",
     "@nx/devkit": "workspace:*",
@@ -42,6 +42,34 @@
   "devDependencies": {
     "nx": "workspace:*",
     "@nx/vitest": "workspace:*"
+  },
+  "peerDependencies": {
+    "@nx/cypress": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@nx/jest": "workspace:*",
+    "@nx/playwright": "workspace:*",
+    "@nx/vite": "workspace:*",
+    "@nx/webpack": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@nx/cypress": {
+      "optional": true
+    },
+    "@nx/eslint": {
+      "optional": true
+    },
+    "@nx/jest": {
+      "optional": true
+    },
+    "@nx/playwright": {
+      "optional": true
+    },
+    "@nx/vite": {
+      "optional": true
+    },
+    "@nx/webpack": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"

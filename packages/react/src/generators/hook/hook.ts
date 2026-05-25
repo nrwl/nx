@@ -1,3 +1,7 @@
+import {
+  determineArtifactNameAndDirectoryOptions,
+  type FileExtensionType,
+} from '@nx/devkit/internal';
 // TODO(jack): Remove inline renderHook function when RTL releases with its own version
 import {
   applyChangesToString,
@@ -9,16 +13,10 @@ import {
   names,
   Tree,
 } from '@nx/devkit';
-import {
-  determineArtifactNameAndDirectoryOptions,
-  type FileExtensionType,
-} from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript, getProjectType } from '@nx/js/internal';
 import { join } from 'path';
 import { addImport } from '../../utils/ast-utils';
 import { Schema } from './schema';
-import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
-
 interface NormalizedSchema extends Omit<Schema, 'js'> {
   projectSourceRoot: string;
   hookName: string;

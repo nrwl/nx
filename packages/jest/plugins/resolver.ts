@@ -28,6 +28,10 @@ function getCompilerSetup(rootDir: string) {
     dirname(tsConfigPath)
   );
   const compilerOptions = config.options;
+  if (!compilerOptions.baseUrl) {
+    const { resolvePathsBaseUrl } = require('@nx/js');
+    compilerOptions.baseUrl = resolvePathsBaseUrl(tsConfigPath);
+  }
   const host = ts.createCompilerHost(compilerOptions, true);
   return { compilerOptions, host };
 }

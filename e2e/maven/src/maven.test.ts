@@ -47,8 +47,15 @@ describe('Maven', () => {
   });
 
   it('should build Maven project with dependencies without batch mode', () => {
-    // Build app which depends on lib, which depends on utils
-    let buildOutput = runCLI('run app:install --no-batch', { verbose: true });
+    // Build app which depends on lib, which depends on utils.
+    // Without --batch, Nx fans `app:install` out into one task per Maven
+    // lifecycle phase per project (~87 tasks total), each spawning its own
+    // mvn JVM. On loaded CI hosts this routinely runs 220-290s, so the
+    // default 5-minute runCLI timeout is too tight; bump it to 10 minutes.
+    let buildOutput = runCLI('run app:install --no-batch', {
+      verbose: true,
+      timeout: 10 * 60 * 1000,
+    });
 
     // Should build dependencies first
     expect(buildOutput).toContain('BUILD SUCCESS');
@@ -117,8 +124,12 @@ describe('Maven', () => {
     expect(output).toContain('- mvn-package:');
     expect(output).toContain('- mvn-install-ci:');
 
-    // Verify prefixed target works
-    const buildOutput = runCLI('run app:mvn-compile --no-batch');
+    // Verify prefixed target works. Same lifecycle-fan-out concern as the
+    // app:install case above — give it a 10-minute timeout so CI load
+    // doesn't push us past the default 5 minutes.
+    const buildOutput = runCLI('run app:mvn-compile --no-batch', {
+      timeout: 10 * 60 * 1000,
+    });
     expect(buildOutput).toContain('BUILD SUCCESS');
   });
 });

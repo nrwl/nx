@@ -7,6 +7,7 @@ import {
   newProject,
   promisifiedTreeKill,
   readFile,
+  reservePort,
   runCLI,
   runCommandUntil,
   uniq,
@@ -56,7 +57,7 @@ describe('Node Applications + webpack', () => {
     }
   }
 
-  async function runE2eTests(appName: string, port: number = 5000) {
+  async function runE2eTests(appName: string, port: number) {
     process.env.PORT = `${port}`;
     const result = runCLI(`e2e ${appName}-e2e --verbose`);
     expect(result).toContain('Setting up...');
@@ -74,8 +75,16 @@ describe('Node Applications + webpack', () => {
     const fastifyApp = uniq('fastifyapp');
     const koaApp = uniq('koaapp');
     const nestApp = uniq('nest');
+    let expressPort: number;
+    let fastifyPort: number;
+    let koaPort: number;
+    let nestPort: number;
 
-    beforeAll(() => {
+    beforeAll(async () => {
+      expressPort = await reservePort();
+      fastifyPort = await reservePort();
+      koaPort = await reservePort();
+      nestPort = await reservePort();
       runCLI(
         `generate @nx/node:lib libs/${testLib1} --linter=eslint --unitTestRunner=jest --buildable=false`
       );
@@ -83,16 +92,16 @@ describe('Node Applications + webpack', () => {
         `generate @nx/node:lib libs/${testLib2} --importPath=@acme/test2 --linter=eslint --unitTestRunner=jest --buildable=false`
       );
       runCLI(
-        `generate @nx/node:app apps/${expressApp} --framework=express --port=7000 --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
+        `generate @nx/node:app apps/${expressApp} --framework=express --port=${expressPort} --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
       );
       runCLI(
-        `generate @nx/node:app apps/${fastifyApp} --framework=fastify --port=7001 --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
+        `generate @nx/node:app apps/${fastifyApp} --framework=fastify --port=${fastifyPort} --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
       );
       runCLI(
-        `generate @nx/node:app apps/${koaApp} --framework=koa --port=7002 --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
+        `generate @nx/node:app apps/${koaApp} --framework=koa --port=${koaPort} --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
       );
       runCLI(
-        `generate @nx/node:app apps/${nestApp} --framework=nest --port=7003 --bundler=webpack --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest --verbose`
+        `generate @nx/node:app apps/${nestApp} --framework=nest --port=${nestPort} --bundler=webpack --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest --verbose`
       );
 
       addLibImport(expressApp, testLib1);
@@ -145,19 +154,19 @@ describe('Node Applications + webpack', () => {
     }, 300_000);
 
     it('should e2e test express app', async () => {
-      await runE2eTests(expressApp, 7000);
+      await runE2eTests(expressApp, expressPort);
     });
 
     it('should e2e test fastify app', async () => {
-      await runE2eTests(fastifyApp, 7001);
+      await runE2eTests(fastifyApp, fastifyPort);
     });
 
     it('should e2e test koa app', async () => {
-      await runE2eTests(koaApp, 7002);
+      await runE2eTests(koaApp, koaPort);
     });
 
     it('should e2e test nest app', async () => {
-      await runE2eTests(nestApp, 7003);
+      await runE2eTests(nestApp, nestPort);
     });
   });
 
@@ -174,13 +183,15 @@ describe('Node Applications + webpack', () => {
   it('should support waitUntilTargets for serve target', async () => {
     const nodeApp1 = uniq('nodeapp1');
     const nodeApp2 = uniq('nodeapp2');
+    const nodeApp1Port = await reservePort();
+    const nodeApp2Port = await reservePort();
 
     // Set ports to avoid conflicts with other tests that might run in parallel
     runCLI(
-      `generate @nx/node:app apps/${nodeApp1} --framework=none --no-interactive --port=4444 --linter=eslint --unitTestRunner=jest`
+      `generate @nx/node:app apps/${nodeApp1} --framework=none --no-interactive --port=${nodeApp1Port} --linter=eslint --unitTestRunner=jest`
     );
     runCLI(
-      `generate @nx/node:app apps/${nodeApp2} --framework=none --no-interactive --port=4445 --linter=eslint --unitTestRunner=jest`
+      `generate @nx/node:app apps/${nodeApp2} --framework=none --no-interactive --port=${nodeApp2Port} --linter=eslint --unitTestRunner=jest`
     );
     updateJson(join('apps', nodeApp1, 'project.json'), (config) => {
       config.targets.serve.options.waitUntilTargets = [`${nodeApp2}:build`];

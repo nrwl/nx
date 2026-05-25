@@ -5,7 +5,7 @@
     "types": ["node"],
     "tsBuildInfoFile": "../../dist/packages/nuxt/tsconfig.tsbuildinfo"
   },
-  "include": ["**/*.ts", "**/*.json"],
+  "include": ["**/*.ts"],
   "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
   "references": [
     {

@@ -139,7 +139,8 @@ fn split_inputs_into_self_and_deps<'a>(
                 | Input::Environment(_)
                 | Input::DepsOutputs { .. }
                 | Input::ExternalDependency(_)
-                | Input::WorkingDirectory(_) => {
+                | Input::WorkingDirectory(_)
+                | Input::Json { .. } => {
                     acc.1.push(input);
                 }
                 Input::Projects { .. } => {
@@ -215,6 +216,18 @@ pub(super) fn expand_single_project_inputs<'a>(
                 dependent_tasks_output_files,
             }),
             Input::WorkingDirectory(mode) => expanded.push(Input::WorkingDirectory(mode)),
+            Input::Json {
+                json,
+                fields,
+                exclude_fields,
+            } => {
+                validate_file_set(json)?;
+                expanded.push(Input::Json {
+                    json,
+                    fields: *fields,
+                    exclude_fields: *exclude_fields,
+                });
+            }
             Input::Projects { .. }
             | Input::Inputs {
                 dependencies: true, ..

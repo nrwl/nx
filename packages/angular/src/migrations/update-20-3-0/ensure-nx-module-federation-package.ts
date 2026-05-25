@@ -1,9 +1,9 @@
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import {
   type Tree,
   readProjectConfiguration,
   addDependenciesToPackageJson,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { nxVersion } from '../../utils/versions';
 
 export default async function ensureMfPackage(tree: Tree) {

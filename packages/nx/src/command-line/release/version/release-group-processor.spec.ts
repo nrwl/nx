@@ -716,23 +716,21 @@ describe('ReleaseGroupProcessor', () => {
         // Initial state of rustLibA
         expect(tree.read('rustLibA/Cargo.toml', 'utf-8'))
           .toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'rustLibA'
-          version = '1.0.0'
+          "[package]
+          name = "rustLibA"
+          version = "1.0.0"
           "
         `);
 
         // Initial state of rustLibB
         expect(tree.read('rustLibB/Cargo.toml', 'utf-8'))
           .toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'rustLibB'
-          version = '1.0.0'
+          "[package]
+          name = "rustLibB"
+          version = "1.0.0"
 
-          [dependencies]
-          rustLibA = { version = '1.0.0' }
+          [dependencies.rustLibA]
+          version = "1.0.0"
           "
         `);
 
@@ -757,23 +755,21 @@ describe('ReleaseGroupProcessor', () => {
         // rustLibA is bumped by minor
         expect(tree.read('rustLibA/Cargo.toml', 'utf-8'))
           .toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'rustLibA'
-          version = '1.1.0'
+          "[package]
+          name = "rustLibA"
+          version = "1.1.0"
           "
         `);
 
         // rustLibB is bumped by minor, and its dependency on rustLibA is updated
         expect(tree.read('rustLibB/Cargo.toml', 'utf-8'))
           .toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'rustLibB'
-          version = '1.1.0'
+          "[package]
+          name = "rustLibB"
+          version = "1.1.0"
 
           [dependencies]
-          rustLibA = '1.1.0'
+          rustLibA = "1.1.0"
           "
         `);
 
@@ -823,23 +819,21 @@ describe('ReleaseGroupProcessor', () => {
         // Initial state of rustLibA
         expect(tree.read('rustLibA/Cargo.toml', 'utf-8'))
           .toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'rustLibA'
-          version = '1.0.0'
+          "[package]
+          name = "rustLibA"
+          version = "1.0.0"
           "
         `);
 
         // Initial state of rustLibB
         expect(tree.read('rustLibB/Cargo.toml', 'utf-8'))
           .toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'rustLibB'
-          version = '2.0.0'
+          "[package]
+          name = "rustLibB"
+          version = "2.0.0"
 
-          [dependencies]
-          rustLibA = { version = '1.0.0' }
+          [dependencies.rustLibA]
+          version = "1.0.0"
           "
         `);
 
@@ -869,23 +863,21 @@ describe('ReleaseGroupProcessor', () => {
         // rustLibA is bumped by minor
         expect(tree.read('rustLibA/Cargo.toml', 'utf-8'))
           .toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'rustLibA'
-          version = '1.1.0'
+          "[package]
+          name = "rustLibA"
+          version = "1.1.0"
           "
         `);
 
         // rustLibB is bumped by updateDependents default of "patch", and its dependency on rustLibA is updated
         expect(tree.read('rustLibB/Cargo.toml', 'utf-8'))
           .toMatchInlineSnapshot(`
-          "
-          [package]
-          name = 'rustLibB'
-          version = '2.0.1'
+          "[package]
+          name = "rustLibB"
+          version = "2.0.1"
 
           [dependencies]
-          rustLibA = '1.1.0'
+          rustLibA = "1.1.0"
           "
         `);
 

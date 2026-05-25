@@ -53,10 +53,13 @@ async function execWithOutput(
   if (description) {
     log(`🔄 ${description}`);
   }
-  log(`📝 Running: ${command}`);
+  const finalCommand = command.startsWith('mise ')
+    ? command
+    : `mise exec -- ${command}`;
+  log(`📝 Running: ${finalCommand}`);
 
   return new Promise((resolve, reject) => {
-    const child = spawn('bash', ['-c', command], {
+    const child = spawn('bash', ['-c', finalCommand], {
       cwd,
       stdio: ['inherit', 'pipe', 'pipe'],
     });

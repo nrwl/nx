@@ -5,16 +5,21 @@ common-env-vars: &common-env-vars
   GIT_COMMITTER_NAME: Test
   SELECTED_PM: 'pnpm'
   NX_NATIVE_LOGGING: 'nx::native::db'
+  # Pin corepack to the pnpm version from packageManager. Without this, corepack
+  # falls back to "latest" in directories that have no packageManager field
+  # (e.g. e2e temp dirs created by create-nx-workspace), pulling pnpm 11 and
+  # breaking install. Same treatment as .github/workflows/{ci,e2e-matrix}.yml.
+  COREPACK_DEFAULT_TO_LATEST: '0'
   # These are need for build and link validation for next.js and astro apps
   NEXT_PUBLIC_ASTRO_URL: 'https://master--nx-docs.netlify.app'
   NX_DEV_URL: 'https://canary.nx.dev'
 
 common-init-steps: &common-init-steps
   - name: Checkout
-    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml'
 
   - name: Cache restore
-    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
     inputs:
       key: 'pnpm-lock.yaml'
       paths: ~/.local/share/pnpm/store
@@ -22,7 +27,7 @@ common-init-steps: &common-init-steps
 
   # reads mise.toml and installs toolchains needed for repo
   - name: Setup toolchains
-    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-mise/main.yaml'
+    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-mise/main.yaml'
 
   - name: Verify toolchain versions
     script: |
@@ -36,6 +41,17 @@ common-init-steps: &common-init-steps
 
   - name: Install system deps
     script: |
+      # apt mirror+file failover: tab-separated; printf preserves \t (YAML heredocs don't).
+      printf 'https://archive.ubuntu.com/ubuntu/\tpriority:1\n'       | sudo tee /etc/apt/apt-mirrors.txt > /dev/null
+      printf 'https://security.ubuntu.com/ubuntu/\tpriority:2\n'      | sudo tee -a /etc/apt/apt-mirrors.txt > /dev/null
+      printf 'http://azure.archive.ubuntu.com/ubuntu/\tpriority:3\n'  | sudo tee -a /etc/apt/apt-mirrors.txt > /dev/null
+      # Retries=0: mirror+file already retries via failover; apt-level retries multiply stall on a dead mirror.
+      sudo tee /etc/apt/apt.conf.d/80-nx-mirror-failover > /dev/null <<'EOF'
+      Acquire::http::Timeout "5";
+      Acquire::https::Timeout "5";
+      Acquire::Retries "0";
+      EOF
+      sudo sed -i 's|http://archive.ubuntu.com/ubuntu|mirror+file:/etc/apt/apt-mirrors.txt|g; s|http://security.ubuntu.com/ubuntu|mirror+file:/etc/apt/apt-mirrors.txt|g' /etc/apt/sources.list
       sudo apt-get update
       sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev zip unzip
 
@@ -52,10 +68,18 @@ common-init-steps: &common-init-steps
     script: |
       cargo fetch
 
+  - name: Install hyperfine
+    script: |
+      cargo install hyperfine
+
   - name: Setup gradle
     script: |
       ./gradlew wrapper
       ./gradlew --version
+
+  - name: Restore .NET analyzer projects
+    script: |
+      dotnet restore nx.sln
 
   - name: Configure git metadata (needed for lerna smoke tests)
     script: |

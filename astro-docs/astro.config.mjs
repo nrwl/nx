@@ -5,6 +5,7 @@ import netlify from '@astrojs/netlify';
 import react from '@astrojs/react';
 import markdoc from '@astrojs/markdoc';
 import tailwindcss from '@tailwindcss/vite';
+import sitemap from '@astrojs/sitemap';
 import { sidebar } from './sidebar.mts';
 import rehypeTableOptionLinks from './src/plugins/utils/rehype-table-option-links.ts';
 import { resolveNxDevUrl } from './src/utils/resolve-nx-dev-url.ts';
@@ -40,6 +41,28 @@ export default defineConfig({
     rehypePlugins: [rehypeTableOptionLinks],
   },
   trailingSlash: 'never',
+  redirects: {
+    '/reference/remote-cache-plugins':
+      '/docs/reference/deprecated/self-hosted-cache-packages',
+    '/reference/remote-cache-plugins/s3-cache':
+      '/docs/reference/deprecated/self-hosted-cache-packages',
+    '/reference/remote-cache-plugins/s3-cache/overview':
+      '/docs/reference/deprecated/self-hosted-cache-packages',
+    '/reference/remote-cache-plugins/gcs-cache':
+      '/docs/reference/deprecated/self-hosted-cache-packages',
+    '/reference/remote-cache-plugins/gcs-cache/overview':
+      '/docs/reference/deprecated/self-hosted-cache-packages',
+    '/reference/remote-cache-plugins/azure-cache':
+      '/docs/reference/deprecated/self-hosted-cache-packages',
+    '/reference/remote-cache-plugins/azure-cache/overview':
+      '/docs/reference/deprecated/self-hosted-cache-packages',
+    '/reference/remote-cache-plugins/shared-fs-cache':
+      '/docs/reference/deprecated/self-hosted-cache-packages',
+    '/reference/remote-cache-plugins/shared-fs-cache/overview':
+      '/docs/reference/deprecated/self-hosted-cache-packages',
+    '/reference/remote-cache-plugins/shared-fs-cache/generators':
+      '/docs/reference/deprecated/self-hosted-cache-packages',
+  },
   // This adapter doesn't support local previews, so only load it on Netlify.
   adapter: process.env['NETLIFY'] ? netlify() : undefined,
   integrations: [
@@ -57,6 +80,7 @@ export default defineConfig({
         replacesTitle: true,
       },
       disable404Route: true,
+      lastUpdated: true,
       head: [
         {
           tag: 'script',
@@ -81,6 +105,7 @@ export default defineConfig({
         './src/plugins/github-stars.middleware.ts',
         './src/plugins/raw-content.middleware.ts',
         './src/plugins/canonical.middleware.ts',
+        './src/plugins/schema.middleware.ts',
       ],
       markdown: {
         headingLinks: true,
@@ -122,10 +147,10 @@ export default defineConfig({
           // frequency of the term relative to document length
           // versus weighted term count.
           // default is 1.0
-          termFrequency: 0.75,
+          termFrequency: 0.65,
           // pageLength changes the way ranking compares page lengths with the average page lengths on your site.
           // default 0.75
-          pageLength: 0.5,
+          pageLength: 0.3,
           // termSaturation controls how quickly a term “saturates” on a page.
           // Once a term has appeared on a page many times,
           // further appearances have a reduced impact on the page rank.
@@ -140,5 +165,8 @@ export default defineConfig({
       },
     }),
     react(),
+    sitemap({
+      lastmod: new Date(),
+    }),
   ],
 });

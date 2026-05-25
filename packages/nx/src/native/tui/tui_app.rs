@@ -181,7 +181,7 @@ pub trait TuiApp: Send {
     ///
     /// * `task_id` - The task identifier
     /// * `status` - The new status for the task
-    fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
+    fn update_task_status(&mut self, task_id: &str, status: TaskStatus) {
         self.core().update_task_status(task_id, status);
     }
 

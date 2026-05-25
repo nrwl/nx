@@ -1,7 +1,11 @@
 import { join } from 'node:path';
 
 import { shouldMergeAngularProjects } from '../../adapter/angular-json';
-import { PluginConfiguration, readNxJson } from '../../config/nx-json';
+import {
+  NxJsonConfiguration,
+  PluginConfiguration,
+  readNxJson,
+} from '../../config/nx-json';
 import { hashObject } from '../../hasher/file-hasher';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { loadNxPlugin } from './in-process-loader';
@@ -19,8 +23,14 @@ import {
  */
 let currentPluginsConfigurationHash: string;
 let loadedPlugins: LoadedNxPlugin[];
+let cachedSeparatedPlugins: SeparatedPlugins;
 let pendingPluginsPromise: Promise<LoadedNxPlugin[]> | undefined;
 let cleanupSpecifiedPlugins: () => void | undefined;
+
+export interface SeparatedPlugins {
+  specifiedPlugins: LoadedNxPlugin[];
+  defaultPlugins: LoadedNxPlugin[];
+}
 
 const loadingMethod = (
   plugin: PluginConfiguration,
@@ -31,20 +41,53 @@ const loadingMethod = (
     ? loadIsolatedNxPlugin(plugin, root, index)
     : loadNxPlugin(plugin, root, index);
 
+/**
+ * Returns all plugins (specified + default) as a flat list.
+ * Specified plugins come first, followed by default plugins.
+ */
 export async function getPlugins(
+  nxJson: NxJsonConfiguration,
   root = workspaceRoot
 ): Promise<LoadedNxPlugin[]> {
-  const pluginsConfiguration = readNxJson(root).plugins ?? [];
+  const { specifiedPlugins, defaultPlugins } = await getPluginsSeparated(
+    nxJson,
+    root
+  );
+  return specifiedPlugins.concat(defaultPlugins);
+}
+
+/**
+ * Returns specified plugins (from nx.json) and default plugins (project.json,
+ * package.json, etc.) as separate arrays. This separation is needed for
+ * two-phase project configuration processing where target defaults are
+ * applied between specified and default plugin results.
+ *
+ * `nxJson` is required so callers control the snapshot of nx.json the plugin
+ * loader uses. This matters for the daemon's freshness-gated recompute, where
+ * the snap hash and the plugin set must reflect the same disk state.
+ */
+export async function getPluginsSeparated(
+  nxJson: NxJsonConfiguration,
+  root = workspaceRoot
+): Promise<SeparatedPlugins> {
+  const pluginsConfiguration = nxJson.plugins ?? [];
   const pluginsConfigurationHash = hashObject(pluginsConfiguration);
 
   // If the plugins configuration has not changed, reuse the current plugins
   if (
-    loadedPlugins &&
+    cachedSeparatedPlugins &&
     pluginsConfigurationHash === currentPluginsConfigurationHash
   ) {
-    return loadedPlugins;
+    return cachedSeparatedPlugins;
   }
 
+  // Plugins config changed (e.g. `nx add @nx/maven` updated nx.json). The
+  // cached SeparatedPlugins is invalidated by the early-return above, but
+  // pendingPluginsPromise — the in-flight load — would otherwise be reused
+  // by the `??=` below and serve the previous plugin set forever. Tear
+  // down the old workers and force a fresh load.
+  cleanupSpecifiedPlugins?.();
+  pendingPluginsPromise = undefined;
   currentPluginsConfigurationHash = pluginsConfigurationHash;
   const results = await Promise.allSettled([
     getOnlyDefaultPlugins(root),
@@ -63,11 +106,7 @@ export async function getPlugins(
     if (result.status === 'fulfilled') {
       (i === 0 ? defaultPlugins : specifiedPlugins).push(...result.value);
     } else {
-      errors.push(
-        result.reason instanceof Error
-          ? result.reason
-          : new Error(String(result.reason))
-      );
+      errors.push(reasonToError(result.reason));
     }
   }
 
@@ -75,9 +114,10 @@ export async function getPlugins(
     throw new AggregateError(errors, errors.map((e) => e.message).join('\n'));
   }
 
+  cachedSeparatedPlugins = { specifiedPlugins, defaultPlugins };
   loadedPlugins = specifiedPlugins.concat(defaultPlugins);
 
-  return loadedPlugins;
+  return cachedSeparatedPlugins;
 }
 
 /**
@@ -123,6 +163,7 @@ export function cleanupPlugins() {
   cleanupDefaultPlugins?.();
   pendingPluginsPromise = undefined;
   pendingDefaultPluginPromise = undefined;
+  cachedSeparatedPlugins = undefined;
 }
 
 /**
@@ -164,10 +205,7 @@ async function loadDefaultNxPlugins(root = workspaceRoot) {
     } else {
       errors.push({
         pluginName: plugins[i],
-        error:
-          result.reason instanceof Error
-            ? result.reason
-            : new Error(String(result.reason)),
+        error: reasonToError(result.reason),
       });
     }
   }
@@ -263,10 +301,7 @@ async function loadSpecifiedNxPlugins(
         typeof pluginConfig === 'string' ? pluginConfig : pluginConfig.plugin;
       errors.push({
         pluginName,
-        error:
-          result.reason instanceof Error
-            ? result.reason
-            : new Error(String(result.reason)),
+        error: reasonToError(result.reason),
       });
     }
   }
@@ -295,6 +330,20 @@ async function loadSpecifiedNxPlugins(
   };
 
   return plugins;
+}
+
+export function reasonToError(reason: unknown): Error {
+  if (reason instanceof Error) {
+    return reason;
+  }
+  if (typeof reason === 'object' && reason !== null && 'message' in reason) {
+    const error = new Error(String(reason.message));
+    if ('stack' in reason) {
+      error.stack = String(reason.stack);
+    }
+    return error;
+  }
+  return new Error(String(reason));
 }
 
 function getDefaultPlugins(root: string) {

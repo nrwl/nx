@@ -1,3 +1,4 @@
+import { addPlugin } from '@nx/devkit/internal';
 import {
   type Tree,
   type GeneratorCallback,
@@ -9,7 +10,6 @@ import {
   logger,
   updateNxJson,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { InitGeneratorSchema } from './schema';
 import { createNodesV2 } from '../../plugins/plugin';
 import { nxVersion } from '../../utils/versions';

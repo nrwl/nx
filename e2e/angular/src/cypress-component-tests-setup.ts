@@ -1,5 +1,4 @@
 import {
-  checkFilesExist,
   cleanupProject,
   createFile,
   newProject,
@@ -317,25 +316,7 @@ export function updateBuilableLibTestsToAssertAppStyles(
     `${buildableLibName}/src/lib/input-standalone/input-standalone.cy.ts`,
     (content) => {
       // app styles should now apply
-      return content.replace('rgb(34, 197, 94)', 'rgb(255, 192, 203)');
+      return content.replace('rgb(0, 0, 0)', 'rgb(255, 192, 203)');
     }
   );
-}
-
-export function useRootLevelTailwindConfig(existingConfigPath: string) {
-  createFile(
-    'tailwind.config.js',
-    `const { join } = require('path');
-
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: [join(__dirname, '**/*.{html,js,ts}')],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
-};
-`
-  );
-  removeFile(existingConfigPath);
 }

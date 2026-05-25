@@ -5,7 +5,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { findNodes } from '@nx/js';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { getModifiers } from '@typescript-eslint/type-utils';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'fs';
 import { dirname, join } from 'path';
@@ -71,10 +71,11 @@ export function getBarrelEntryPointProjectNode(
       .filter((entry) => {
         const sourceFolderPaths = tsConfigBase.compilerOptions.paths[entry];
         return sourceFolderPaths.some((sourceFolderPath) => {
+          const normalizedPath = sourceFolderPath.replace(/^\.\//, '');
           const sourceRoot = getProjectSourceRoot(projectNode.data);
           return (
-            sourceFolderPath === sourceRoot ||
-            sourceFolderPath.indexOf(`${sourceRoot}/`) === 0
+            normalizedPath === sourceRoot ||
+            normalizedPath.indexOf(`${sourceRoot}/`) === 0
           );
         });
       })
@@ -121,6 +122,8 @@ export function getRelativeImportPath(exportedMember, filePath) {
     );
     if (ext) {
       filePath += ext;
+    } else {
+      return;
     }
   } else if (status.isDirectory()) {
     const file = readdirSync(filePath).find((file) =>

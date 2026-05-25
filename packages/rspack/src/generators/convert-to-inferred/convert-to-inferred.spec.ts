@@ -144,11 +144,7 @@ const options = {};
 module.exports = async () => ({
   plugins: [
     new NxAppRspackPlugin(options),
-    new NxReactRspackPlugin({
-      // Uncomment this line if you don't want to use SVGR
-      // See: https://react-svgr.com/
-      // svgr: false
-    }),
+    new NxReactRspackPlugin(),
     // eslint-disable-next-line react-hooks/rules-of-hooks
     await useLegacyNxPlugin(require('./rspack.config.old'), options),
   ],
@@ -315,11 +311,7 @@ describe('convert-to-inferred', () => {
         // Nx plugins for rspack.
         module.exports = composePlugins(
           withNx(),
-          withReact({
-            // Uncomment this line if you don't want to use SVGR
-            // See: https://react-svgr.com/
-            // svgr: false
-          }),
+          withReact(),
           (config) => {
             return config;
           }
@@ -562,11 +554,7 @@ describe('convert-to-inferred', () => {
           devServer: devServerOptions,
           plugins: [
             new NxAppRspackPlugin(buildOptions),
-            new NxReactRspackPlugin({
-              // Uncomment this line if you don't want to use SVGR
-              // See: https://react-svgr.com/
-              // svgr: false
-            }),
+            new NxReactRspackPlugin(),
             // eslint-disable-next-line react-hooks/rules-of-hooks
             await useLegacyNxPlugin(require('./rspack.config.old'), buildOptions),
           ],
@@ -617,11 +605,7 @@ describe('convert-to-inferred', () => {
         module.exports = async () => ({
           plugins: [
             new NxAppRspackPlugin(options),
-            new NxReactRspackPlugin({
-              // Uncomment this line if you don't want to use SVGR
-              // See: https://react-svgr.com/
-              // svgr: false
-            }),
+            new NxReactRspackPlugin(),
             // eslint-disable-next-line react-hooks/rules-of-hooks
             await useLegacyNxPlugin(require('./rspack.config.old'), options),
           ],
@@ -716,11 +700,7 @@ describe('convert-to-inferred', () => {
           devServer: devServerOptions,
           plugins: [
             new NxAppRspackPlugin(buildOptions),
-            new NxReactRspackPlugin({
-              // Uncomment this line if you don't want to use SVGR
-              // See: https://react-svgr.com/
-              // svgr: false
-            }),
+            new NxReactRspackPlugin(),
             // eslint-disable-next-line react-hooks/rules-of-hooks
             await useLegacyNxPlugin(require('./rspack.config.old'), buildOptions),
           ],
@@ -758,11 +738,7 @@ describe('convert-to-inferred', () => {
           devServer: { hot: true },
           plugins: [
             new NxAppRspackPlugin(options),
-            new NxReactRspackPlugin({
-              // Uncomment this line if you don't want to use SVGR
-              // See: https://react-svgr.com/
-              // svgr: false
-            }),
+            new NxReactRspackPlugin(),
             // eslint-disable-next-line react-hooks/rules-of-hooks
             await useLegacyNxPlugin(require('./rspack.config.old'), options),
           ],
@@ -867,17 +843,9 @@ describe('convert-to-inferred', () => {
 const { withReact } = require('@nx/react');
 
 // Nx plugins for rspack.
-module.exports = composePlugins(
-  withNx(),
-  withReact({
-    // Uncomment this line if you don't want to use SVGR
-    // See: https://react-svgr.com/
-    // svgr: false
-  }),
-  (config) => {
-    return config;
-  },
-);
+module.exports = composePlugins(withNx(), withReact(), (config) => {
+  return config;
+});
 `;
       writeRspackConfig(
         tree,
@@ -1174,11 +1142,7 @@ module.exports = composePlugins(
           devServer: devServerOptions,
           plugins: [
             new NxAppRspackPlugin(buildOptions),
-            new NxReactRspackPlugin({
-              // Uncomment this line if you don't want to use SVGR
-              // See: https://react-svgr.com/
-              // svgr: false
-            }),
+            new NxReactRspackPlugin(),
             // eslint-disable-next-line react-hooks/rules-of-hooks
             await useLegacyNxPlugin(require('./rspack.config.old'), buildOptions),
           ],
@@ -1265,11 +1229,7 @@ module.exports = composePlugins(
           devServer: devServerOptions,
           plugins: [
             new NxAppRspackPlugin(buildOptions),
-            new NxReactRspackPlugin({
-              // Uncomment this line if you don't want to use SVGR
-              // See: https://react-svgr.com/
-              // svgr: false
-            }),
+            new NxReactRspackPlugin(),
             // eslint-disable-next-line react-hooks/rules-of-hooks
             await useLegacyNxPlugin(require('./rspack.config.old'), buildOptions),
           ],

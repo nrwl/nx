@@ -465,7 +465,7 @@ jobs:
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       - run: pnpm exec nx affected -t lint test build e2e-ci
 ```

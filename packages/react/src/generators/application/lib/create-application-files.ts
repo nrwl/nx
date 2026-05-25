@@ -22,7 +22,7 @@ import {
   getNxCloudAppOnBoardingUrl,
 } from 'nx/src/nx-cloud/utilities/onboarding';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import {
   reactDomVersion,
   reactRouterIsBotVersion,
@@ -37,7 +37,7 @@ export function getDefaultTemplateVariables(
   host: Tree,
   options: NormalizedSchema
 ) {
-  const hasStyleFile = ['scss', 'css', 'less'].includes(options.style);
+  const hasStyleFile = ['scss', 'css'].includes(options.style);
   const appTests = getAppTests(options);
   return {
     ...options.names,
@@ -54,7 +54,7 @@ export function getDefaultTemplateVariables(
     offsetFromRoot: offsetFromRoot(options.appProjectRoot),
     appTests,
     inSourceVitestTests: getInSourceVitestTestsTemplate(appTests),
-    style: options.style === 'tailwind' ? 'css' : options.style,
+    style: options.style,
     hasStyleFile,
     isUsingTsSolutionSetup: isUsingTsSolutionSetup(host),
     port: options.port ?? 4200,
@@ -88,14 +88,7 @@ export function createNxRspackPluginOptions(
     ),
     tsConfig: './tsconfig.app.json',
     assets: ['./src/favicon.ico', './src/assets'],
-    styles:
-      options.styledModule || !options.hasStyles
-        ? []
-        : [
-            `./src/styles.${
-              options.style !== 'tailwind' ? options.style : 'css'
-            }`,
-          ],
+    styles: !options.hasStyles ? [] : [`./src/styles.${options.style}`],
   };
 }
 
@@ -104,13 +97,7 @@ export async function createApplicationFiles(
   options: NormalizedSchema
 ) {
   let styleSolutionSpecificAppFiles: string;
-  if (options.styledModule && options.style !== 'styled-jsx') {
-    styleSolutionSpecificAppFiles = '../files/style-styled-module';
-  } else if (options.style === 'styled-jsx') {
-    styleSolutionSpecificAppFiles = '../files/style-styled-jsx';
-  } else if (options.style === 'tailwind') {
-    styleSolutionSpecificAppFiles = '../files/style-tailwind';
-  } else if (options.style === 'none') {
+  if (options.style === 'none') {
     styleSolutionSpecificAppFiles = '../files/style-none';
   } else if (options.globalCss) {
     styleSolutionSpecificAppFiles = '../files/style-global-css';
@@ -164,51 +151,17 @@ export async function createApplicationFiles(
             '@nx/react/babel',
             {
               runtime: 'automatic',
-              importSource:
-                options.style === '@emotion/styled'
-                  ? '@emotion/react'
-                  : undefined,
             },
           ],
         ],
-        plugins: [
-          options.style === 'styled-components'
-            ? ['styled-components', { pure: true, ssr: true }]
-            : undefined,
-          options.style === 'styled-jsx' ? 'styled-jsx/babel' : undefined,
-          options.style === '@emotion/styled'
-            ? '@emotion/babel-plugin'
-            : undefined,
-        ].filter(Boolean),
+        plugins: [],
       });
     } else if (options.compiler === 'swc') {
-      const swcrc: any = {
+      writeJson(host, `${options.appProjectRoot}/.swcrc`, {
         jsc: {
           target: 'es2016',
         },
-      };
-      if (options.style === 'styled-components') {
-        swcrc.jsc.experimental = {
-          plugins: [
-            [
-              '@swc/plugin-styled-components',
-              {
-                displayName: true,
-                ssr: true,
-              },
-            ],
-          ],
-        };
-      } else if (options.style === '@emotion/styled') {
-        swcrc.jsc.experimental = {
-          plugins: [['@swc/plugin-emotion', {}]],
-        };
-      } else if (options.style === 'styled-jsx') {
-        swcrc.jsc.experimental = {
-          plugins: [['@swc/plugin-styled-jsx', {}]],
-        };
-      }
-      writeJson(host, `${options.appProjectRoot}/.swcrc`, swcrc);
+      });
     }
   } else if (options.bundler === 'rspack') {
     generateFiles(
@@ -314,14 +267,7 @@ function createNxWebpackPluginOptions(
     ),
     tsConfig: './tsconfig.app.json',
     assets: ['./src/favicon.ico', './src/assets'],
-    styles:
-      options.styledModule || !options.hasStyles
-        ? []
-        : [
-            `./src/styles.${
-              options.style !== 'tailwind' ? options.style : 'css'
-            }`,
-          ],
+    styles: !options.hasStyles ? [] : [`./src/styles.${options.style}`],
   };
 }
 

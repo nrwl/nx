@@ -2,7 +2,7 @@ import { CreateNodesContextV2 } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { loadViteDynamicImport } from '../utils/executor-utils';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 jest.mock('../utils/executor-utils', () => ({
   loadViteDynamicImport: jest.fn().mockResolvedValue({
@@ -10,8 +10,8 @@ jest.mock('../utils/executor-utils', () => ({
   }),
 }));
 
-jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
-  ...jest.requireActual('@nx/js/src/utils/typescript/ts-solution-setup'),
+jest.mock('@nx/js/internal', () => ({
+  ...jest.requireActual('@nx/js/internal'),
   isUsingTsSolutionSetup: jest.fn(),
 }));
 
@@ -46,6 +46,7 @@ describe('@nx/vite/plugin', () => {
       tempFs.createFileSync('vite.config.ts', '');
       tempFs.createFileSync('index.html', '');
       tempFs.createFileSync('package.json', '{}');
+      tempFs.createFileSync('package-lock.json', '{}');
     });
 
     afterEach(() => {
@@ -216,6 +217,76 @@ describe('@nx/vite/plugin', () => {
       ).toEqual(['@nx/js:typescript-sync']);
     });
 
+    it('should use tsgo for typecheck when compiler option is tsgo', async () => {
+      tempFs.createFileSync('tsconfig.json', '');
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
+          serveStaticTargetName: 'serve-static',
+          compiler: 'tsgo',
+        },
+        context
+      );
+
+      const typecheck = nodes[0][1].projects['.'].targets.typecheck;
+      expect(typecheck.command).toEqual(`tsgo --noEmit -p tsconfig.json`);
+      expect(typecheck.inputs).toContainEqual({
+        externalDependencies: ['@typescript/native-preview'],
+      });
+    });
+
+    it('should use tsgo with --build flag when compiler is tsgo and using TS solution setup', async () => {
+      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
+      tempFs.createFileSync('tsconfig.json', '');
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
+          serveStaticTargetName: 'serve-static',
+          compiler: 'tsgo',
+        },
+        context
+      );
+
+      const typecheck = nodes[0][1].projects['.'].targets.typecheck;
+      expect(typecheck.command).toEqual(`tsgo --build --emitDeclarationOnly`);
+      expect(typecheck.inputs).toContainEqual({
+        externalDependencies: ['@typescript/native-preview'],
+      });
+    });
+
+    it('should use vue-tsc when compiler option is vue-tsc (for non-detected Vue setups)', async () => {
+      tempFs.createFileSync('tsconfig.json', '');
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
+          serveStaticTargetName: 'serve-static',
+          compiler: 'vue-tsc',
+        },
+        context
+      );
+
+      const typecheck = nodes[0][1].projects['.'].targets.typecheck;
+      expect(typecheck.command).toEqual(`vue-tsc --noEmit -p tsconfig.json`);
+      expect(typecheck.inputs).toContainEqual({
+        externalDependencies: ['vue-tsc', 'typescript'],
+      });
+    });
+
     it('should infer the sync generator when using TS solution setup', async () => {
       (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
       tempFs.createFileSync('tsconfig.json', '');
@@ -261,6 +332,7 @@ describe('@nx/vite/plugin', () => {
       );
       tempFs.createFileSync('my-app/vite.config.ts', '');
       tempFs.createFileSync('my-app/index.html', '');
+      tempFs.createFileSync('package-lock.json', '{}');
     });
 
     afterEach(() => {
@@ -345,6 +417,7 @@ describe('@nx/vite/plugin', () => {
         JSON.stringify({ name: 'my-lib' })
       );
       tempFs.createFileSync('my-lib/vite.config.ts', '');
+      tempFs.createFileSync('package-lock.json', '{}');
 
       const nodes = await createNodesFunction(
         ['my-lib/vite.config.ts'],
@@ -388,6 +461,7 @@ describe('@nx/vite/plugin', () => {
         JSON.stringify({ name: 'my-lib' })
       );
       tempFs.createFileSync('my-lib/vite.config.ts', '');
+      tempFs.createFileSync('package-lock.json', '{}');
 
       const nodes = await createNodesFunction(
         ['my-lib/vite.config.ts'],
@@ -528,7 +602,7 @@ describe('@nx/vite/plugin', () => {
                       },
                     },
                     "watch-deps": {
-                      "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
+                      "command": "npx nx watch --projects my-lib --includeDependencies -- npx nx build-deps my-lib",
                       "continuous": true,
                       "dependsOn": [
                         "build-deps",

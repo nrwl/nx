@@ -1,3 +1,4 @@
+import { getRelativeCwd, logShowProjectCommand } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -13,8 +14,6 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
 import { relative } from 'path';
 
@@ -22,13 +21,11 @@ import {
   addReleaseConfigForNonTsSolution,
   addReleaseConfigForTsSolution,
   releaseTasks,
-} from '@nx/js/src/generators/library/utils/add-release-config';
-import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
-import {
+  sortPackageJsonFields,
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+} from '@nx/js/internal';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { updateJestConfigContent } from '../../utils/jest-utils';
@@ -150,7 +147,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         includeLib: true,
         includeVitest: options.unitTestRunner === 'vitest',
         inSourceTests: options.inSourceTests,
-        rollupOptionsExternal: [
+        rolldownOptionsExternal: [
           "'react'",
           "'react-dom'",
           "'react/jsx-runtime'",
@@ -225,7 +222,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         includeLib: true,
         includeVitest: true,
         inSourceTests: options.inSourceTests,
-        rollupOptionsExternal: [
+        rolldownOptionsExternal: [
           "'react'",
           "'react-dom'",
           "'react/jsx-runtime'",
@@ -247,7 +244,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     const path = joinPathFragments(
       options.projectRoot,
       'src/lib',
-      options.fileName
+      options.js ? `${options.fileName}.js` : options.fileName
     );
     const componentTask = await componentGenerator(host, {
       path: relativeCwd ? relative(relativeCwd, path) : path,
@@ -257,7 +254,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         (options.unitTestRunner === 'vitest' && options.inSourceTests == true),
       export: true,
       routing: options.routing,
-      js: options.js,
       name: options.name,
       inSourceTests: options.inSourceTests,
       skipFormat: true,

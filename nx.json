@@ -7,7 +7,7 @@
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json",
       "!{projectRoot}/jest.config.[jt]s",
-      "!{projectRoot}/.eslintrc.json",
+      "!{projectRoot}/eslint.config.@(js|cjs|mjs|ts|cts|mts)",
       "!{projectRoot}/.storybook/**/*",
       "!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
       "!{projectRoot}/tsconfig.storybook.json",
@@ -28,9 +28,20 @@
     "native": [
       "{projectRoot}/**/*.rs",
       "{projectRoot}/**/Cargo.*",
-      { "runtime": "node -p '`${process.platform}_${process.arch}`'" },
-      { "runtime": "rustc --version" },
-      { "externalDependencies": ["npm:@monodon/rust", "npm:@napi-rs/cli"] }
+      "{projectRoot}/src/native/dts-header.d.ts",
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/clippy.toml",
+      "{workspaceRoot}/.cargo/config.toml",
+      {
+        "runtime": "node -p '`${process.platform}_${process.arch}`'"
+      },
+      {
+        "runtime": "rustc --version"
+      },
+      {
+        "externalDependencies": ["npm:@monodon/rust", "npm:@napi-rs/cli"]
+      }
     ],
     "e2eInputs": [
       "default",
@@ -40,65 +51,137 @@
       "{workspaceRoot}/.verdaccio/config.yml",
       "{workspaceRoot}/scripts/local-registry/**/*",
       "{workspaceRoot}/scripts/nx-release.ts",
-      { "env": "SELECTED_CLI" },
-      { "env": "SELECTED_PM" },
-      { "env": "NX_E2E_CI_CACHE_KEY" },
-      { "env": "CI" },
-      { "env": "NX_E2E_RUN_E2E" }
+      {
+        "env": "SELECTED_CLI"
+      },
+      {
+        "env": "SELECTED_PM"
+      },
+      {
+        "env": "NX_E2E_CI_CACHE_KEY"
+      },
+      {
+        "env": "CI"
+      },
+      {
+        "env": "NX_E2E_RUN_E2E"
+      },
+      {
+        "dependentTasksOutputFiles": "**/*.d.ts",
+        "transitive": true
+      },
+      {
+        "json": "{workspaceRoot}/tsconfig.json",
+        "fields": ["compilerOptions", "extends", "files", "include"]
+      }
     ]
   },
   "release": {
     "projects": ["packages/*", "packages/nx/native-packages/*"],
-    "releaseTagPattern": "{version}",
+    "releaseTag": {
+      "pattern": "{version}"
+    },
     "changelog": {
-      "workspaceChangelog": { "createRelease": "github", "file": false },
-      "git": { "commit": false, "stageChanges": false, "tag": false }
+      "workspaceChangelog": {
+        "createRelease": "github",
+        "file": false
+      },
+      "git": {
+        "commit": false,
+        "stageChanges": false,
+        "tag": false
+      }
     },
     "version": {
-      "git": { "commit": false, "stageChanges": false, "tag": false },
+      "git": {
+        "commit": false,
+        "stageChanges": false,
+        "tag": false
+      },
       "currentVersionResolver": "registry",
       "preserveLocalDependencyProtocols": false,
       "preserveMatchingDependencyRanges": false,
       "manifestRootsToUpdate": ["dist/packages/{projectName}"],
-      "versionActionsOptions": { "skipLockFileUpdate": true }
+      "versionActionsOptions": {
+        "skipLockFileUpdate": true
+      }
     }
   },
-  "targetDefaults": {
-    "cleanup-tsconfig": {
+  "targetDefaults": [
+    {
+      "target": "cleanup-tsconfig",
       "executor": "nx:run-commands",
       "options": {
         "command": "node ./scripts/cleanup-tsconfig-files.js dist/packages/{projectName}"
       }
     },
-    "nx-release-publish": {
-      "options": { "packageRoot": "dist/packages/{projectName}" }
+    {
+      "target": "nx-release-publish",
+      "options": {
+        "packageRoot": "dist/packages/{projectName}"
+      }
     },
-    "build": {
+    {
+      "target": "build",
       "dependsOn": ["^build", "typecheck", "build-base"],
       "inputs": ["production", "^production"],
       "cache": true
     },
-    "build-native": { "inputs": ["native"], "cache": true },
-    "build-base": {
+    {
+      "executor": "@nx/esbuild:esbuild",
+      "cache": true,
+      "dependsOn": ["^build", "typecheck", "build-base"],
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "json": "{workspaceRoot}/tsconfig.json",
+          "fields": ["extends", "files", "include"]
+        }
+      ]
+    },
+    {
+      "target": "build-native",
+      "inputs": ["native"],
+      "cache": true
+    },
+    {
+      "target": "build-base",
       "dependsOn": ["^build-base", "build-native", "copy-assets"],
       "cache": true
     },
-    "test-native": {
-      "inputs": ["native"],
+    {
+      "target": "test-native",
+      "inputs": ["native", "{projectRoot}/**/*.snap"],
       "executor": "@monodon/rust:test",
       "options": {},
       "cache": true
     },
-    "test": {
+    {
+      "target": "test",
       "dependsOn": ["test-native", "build-native", "^build-native"],
       "options": {
         "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
-        "env": { "NODE_OPTIONS": "--experimental-vm-modules" }
+        "env": {
+          "NODE_OPTIONS": "--experimental-vm-modules"
+        }
       }
     },
-    "lint": { "dependsOn": ["build-native", "^build-native"] },
-    "e2e": { "cache": true, "inputs": ["e2eInputs", "^production"] },
-    "e2e-local": {
+    {
+      "target": "lint",
+      "dependsOn": ["build-native", "^build-native", "build"],
+      "inputs": ["...", { "dependentTasksOutputFiles": "**/*.{js,json,md}" }],
+      "options": {
+        "max-warnings": 5
+      }
+    },
+    {
+      "target": "e2e",
+      "cache": true,
+      "inputs": ["e2eInputs", "^production"]
+    },
+    {
+      "target": "e2e-local",
       "cache": true,
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
@@ -106,8 +189,12 @@
         "@nx/nx-source:local-registry"
       ]
     },
-    "e2e-ci": { "inputs": ["e2eInputs", "^production"] },
-    "e2e-macos-local": {
+    {
+      "target": "e2e-ci",
+      "inputs": ["e2eInputs", "^production"]
+    },
+    {
+      "target": "e2e-macos-local",
       "cache": true,
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
@@ -115,24 +202,35 @@
         "@nx/nx-source:local-registry"
       ]
     },
-    "e2e-macos-ci": { "inputs": ["e2eInputs", "^production"] },
-    "e2e-ci--**/**": {
+    {
+      "target": "e2e-macos-ci",
+      "inputs": ["e2eInputs", "^production"]
+    },
+    {
+      "target": "e2e-ci--**/**",
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:local-registry"
       ],
-      "options": { "args": ["--forceExit"] }
+      "options": {
+        "args": ["--forceExit"]
+      }
     },
-    "e2e-macos-ci--**/*": {
+    {
+      "target": "e2e-macos-ci--**/*",
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:local-registry"
       ]
     },
-    "e2e-base": { "inputs": ["default", "^production"] },
-    "build-storybook": {
+    {
+      "target": "e2e-base",
+      "inputs": ["default", "^production"]
+    },
+    {
+      "target": "build-storybook",
       "inputs": [
         "default",
         "^production",
@@ -142,10 +240,19 @@
       ],
       "cache": true
     },
-    "build-ng": { "cache": true },
-    "sitemap": { "cache": true },
-    "copy-docs": { "cache": true }
-  },
+    {
+      "target": "build-ng",
+      "cache": true
+    },
+    {
+      "target": "sitemap",
+      "cache": true
+    },
+    {
+      "target": "copy-docs",
+      "cache": true
+    }
+  ],
   "plugins": [
     "./tools/workspace-plugin/src/plugins/copy-assets-plugin.ts",
     "@monodon/rust",
@@ -156,39 +263,41 @@
         "packages/angular-rspack/**"
       ]
     },
-    { "plugin": "@nx/vite/plugin", "include": ["astro-docs/**"] },
+    {
+      "plugin": "@nx/vite/plugin",
+      "include": ["astro-docs/**"]
+    },
     {
       "plugin": "@nx/js/typescript",
-      "include": ["packages/nx/**"],
+      "exclude": ["examples/angular-rspack/**/*", "nx-dev/**/*", "e2e/**/*"],
       "options": {
         "typecheck": true,
-        "build": { "targetName": "build-base" },
-        "compiler": "tsgo"
+        "build": {
+          "targetName": "build-base"
+        }
       }
     },
     {
       "plugin": "@nx/js/typescript",
-      "exclude": [
-        "examples/angular-rspack/**/*",
-        "nx-dev/**/*",
-        "e2e/**/*",
-        "packages/nx/**"
-      ],
-      "options": { "typecheck": true, "build": { "targetName": "build-base" } }
-    },
-    {
-      "plugin": "@nx/js/typescript",
-      "include": ["e2e/**/*"],
-      "options": { "typecheck": true, "build": false }
+      "include": ["e2e/**/*", "nx-dev/ui-fence/**/*"],
+      "options": {
+        "typecheck": true,
+        "build": false
+      }
     },
     {
       "plugin": "@nx/playwright/plugin",
-      "options": { "targetName": "pw-e2e", "ciTargetName": "e2e-ci" }
+      "options": {
+        "targetName": "pw-e2e",
+        "ciTargetName": "e2e-ci"
+      }
     },
     {
       "plugin": "@nx/eslint/plugin",
       "exclude": ["packages/**/__fixtures__/**/*"],
-      "options": { "targetName": "lint" }
+      "options": {
+        "targetName": "lint"
+      }
     },
     {
       "plugin": "@nx/jest/plugin",
@@ -197,7 +306,9 @@
         "packages/**/__fixtures__/**/*",
         "jest.config.ts"
       ],
-      "options": { "targetName": "test" }
+      "options": {
+        "targetName": "test"
+      }
     },
     {
       "plugin": "@nx/webpack/plugin",
@@ -210,7 +321,10 @@
       "plugin": "@nx/jest/plugin",
       "include": ["e2e/**/*"],
       "exclude": ["e2e/detox/**/*", "e2e/react-native/**/*", "e2e/expo/**/*"],
-      "options": { "targetName": "e2e-local", "ciTargetName": "e2e-ci" }
+      "options": {
+        "targetName": "e2e-local",
+        "ciTargetName": "e2e-ci"
+      }
     },
     {
       "plugin": "@nx/jest/plugin",
@@ -238,6 +352,17 @@
       "exclude": ["packages/react-native/src/generators/application/files/**/*"]
     },
     {
+      "plugin": "@nx/dotnet",
+      "options": {
+        "build": {
+          "targetName": "build:dotnet"
+        },
+        "test": {
+          "targetName": "test-native"
+        }
+      }
+    },
+    {
       "plugin": "@nx/storybook/plugin",
       "options": {
         "serveStorybookTargetName": "serve:storybook",
@@ -259,7 +384,9 @@
     },
     {
       "plugin": "@nx/vitest",
-      "options": { "testTargetName": "test" },
+      "options": {
+        "testTargetName": "test"
+      },
       "include": [
         "packages/angular-rspack-compiler/**",
         "packages/angular-rspack/**"
@@ -267,28 +394,22 @@
     },
     {
       "plugin": "@nx/vitest",
-      "options": { "testTargetName": "vite:test" },
+      "options": {
+        "testTargetName": "vite:test"
+      },
       "include": ["astro-docs/**"]
     }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 3,
+  "bust": 3235,
   "defaultBase": "master",
-  "sync": { "applyChanges": true },
+  "sync": {
+    "applyChanges": true
+  },
   "conformance": {
     "rules": [
-      {
-        "rule": "./dist/workspace-plugin/src/conformance-rules/blog-description",
-        "projects": ["docs"],
-        "options": { "mdGlobPattern": "{blog,shared}/**/!(sitemap).md" }
-      },
-      {
-        "rule": "./dist/workspace-plugin/src/conformance-rules/blog-cover-image",
-        "projects": ["docs"],
-        "options": { "mdGlobPattern": "blog/**/!(sitemap).md" }
-      },
       {
         "rule": "./dist/workspace-plugin/src/conformance-rules/project-package-json",
         "projects": [
@@ -386,6 +507,40 @@
       },
       {
         "rule": "./dist/workspace-plugin/src/conformance-rules/types-versions-exports-sync"
+      },
+      {
+        "rule": "./dist/workspace-plugin/src/conformance-rules/env-vars-documented",
+        "options": {
+          "ignore": [
+            "NX_ANALYTICS_SESSION_ID",
+            "NX_FORKED_TASK_EXECUTOR",
+            "NX_RUN_COMMANDS_DIRECTLY",
+            "NX_DAEMON_PROCESS",
+            "NX_IPC_CHANNEL_ID",
+            "NX_PSEUDO_TERMINAL_EXEC_ARGV",
+            "NX_GENERATE_DOCS_PROCESS",
+            "NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG",
+            "NX_WORKSPACE_ROOT_PATH",
+            "NX_IMPORT_SOURCE",
+            "NX_IMPORT_DESTINATION",
+            "NX_PROJECT_GRAPH_CACHE_DIRECTORY",
+            "NX_CONSOLE",
+            "NX_DEBUG_TELEMETRY",
+            "NX_TUI_INLINE_MODE",
+            "NX_TUI_SKIP_CAPABILITY_CHECK",
+            "NX_SKIP_CHECK_REMOTE",
+            "NX_CLI_SET",
+            "NX_WORKSPACE_ROOT",
+            "NX_TERMINAL_OUTPUT_PATH",
+            "NX_TERMINAL_CAPTURE_STDERR",
+            "NX_VERSION",
+            "NX_STREAM_OUTPUT",
+            "NX_PREFIX_OUTPUT",
+            "NX_INFER_ALL_PACKAGE_JSONS",
+            "NX_AI_FILES_USE_LOCAL",
+            "NX_WINDOWS_PTY_SUPPORT"
+          ]
+        }
       }
     ]
   },

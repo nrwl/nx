@@ -49,7 +49,7 @@ function parseLockFile(lockFileContent: string, lockFileHash: string) {
   }
 
   const { parseSyml } =
-    require('@yarnpkg/parsers') as typeof import('@yarnpkg/parsers');
+    require('../../../utils/yarn-syml') as typeof import('../../../utils/yarn-syml');
 
   const result = parseSyml(lockFileContent);
   cachedParsedLockFile = result;
@@ -369,7 +369,7 @@ export function stringifyYarnLockfile(
   rootLockFileContent: string,
   packageJson: NormalizedPackageJson
 ): string {
-  const { parseSyml, stringifySyml } = require('@yarnpkg/parsers');
+  const { parseSyml, stringifySyml } = require('../../../utils/yarn-syml');
   const { __metadata, ...dependencies } = parseSyml(rootLockFileContent);
   const isBerry = !!__metadata;
   const workspaceModules = getWorkspacePackagesFromGraph(graph);

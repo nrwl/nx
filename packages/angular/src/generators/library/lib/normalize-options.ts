@@ -2,7 +2,7 @@ import { names, type Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
+} from '@nx/devkit/internal';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import {
   getComponentType,

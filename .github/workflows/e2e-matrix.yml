@@ -13,6 +13,10 @@ on:
 
 env:
   CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cypress
+  # Pin corepack to the pnpm version from packageManager. Without this, corepack
+  # falls back to "latest" in directories that have no packageManager field
+  # (e.g. e2e temp dirs), pulling pnpm 11 and breaking install.
+  COREPACK_DEFAULT_TO_LATEST: '0'
 
 permissions: {}
 jobs:
@@ -30,19 +34,16 @@ jobs:
           # - windows-latest Windows fails to build gradle wrapper which always runs when we build nx.
           ## https://staging.nx.app/runs/LgD4vxGn8w?utm_source=pull-request&utm_medium=comment
         node_version:
-          # TODO(v23): remove node 20 - EOL April 2026
-          - 20
           - 22
           - 24
+          # TODO: re-enable once playwright ships the yauzl fix for node 26 extract hang.
+          # See https://github.com/microsoft/playwright/issues/40724
+          # - 26
         exclude:
-          # run just node v24 on macos and windows
-          - os: macos-latest
-            node_version: 20
+          # macos skips the oldest node to keep the macos matrix slim
           - os: macos-latest
             node_version: 22
           # - os: windows-latest TODO(Jack): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
-          #   node_version: 20
-          # - os: windows-latest TODO (Jack): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
           #   node_version: 22
 
     name: Cache install (${{ matrix.os }}, node v${{ matrix.node_version }})
@@ -79,10 +80,14 @@ jobs:
         id: brew-install-python-setuptools
         run: brew install python-setuptools
 
-      - name: Install packages
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm playwright install --with-deps
+      - name: Install pnpm packages
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright
+        run: pnpm playwright install --with-deps
+
+      - name: Restore .NET packages
+        run: dotnet restore nx.sln
 
       - name: Homebrew cache directory path
         if: ${{ matrix.os == 'macos-latest' }}
@@ -164,10 +169,14 @@ jobs:
           corepack enable
           corepack prepare --activate
 
-      - name: Install packages
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm playwright install --with-deps
+      - name: Install pnpm packages
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright
+        run: pnpm playwright install --with-deps
+
+      - name: Restore .NET packages
+        run: dotnet restore nx.sln
 
       - name: Cleanup
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -327,7 +336,7 @@ jobs:
           NX_NATIVE_LOGGING: 'false'
           NX_E2E_RUN_E2E: 'true'
           NX_CLOUD_NO_TIMEOUTS: 'true'
-          NX_E2E_SKIP_CLEANUP: 'true'
+          NX_E2E_SKIP_GLOBAL_CLEANUP: 'true'
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: ${{ matrix.package_manager }}
           npm_config_registry: http://localhost:4872
@@ -352,7 +361,7 @@ jobs:
           NX_E2E_VERBOSE_LOGGING: 'true'
           NX_NATIVE_LOGGING: 'false'
           NX_E2E_RUN_E2E: 'true'
-          NX_E2E_SKIP_CLEANUP: 'true'
+          NX_E2E_SKIP_GLOBAL_CLEANUP: 'true'
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: 'npm'
           npm_config_registry: http://localhost:4872

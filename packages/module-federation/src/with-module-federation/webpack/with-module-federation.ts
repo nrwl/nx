@@ -6,6 +6,7 @@ import {
 import { getModuleFederationConfig } from './utils';
 import { ModuleFederationPlugin } from '@module-federation/enhanced/webpack';
 import type { NormalModuleReplacementPlugin } from 'webpack';
+import { workspaceRoot } from '@nx/devkit';
 
 /**
  * @param {ModuleFederationConfig} options
@@ -27,6 +28,11 @@ export async function withModuleFederation(
     config.output.publicPath = 'auto';
 
     config.output.scriptType = 'text/javascript';
+    config.resolve ??= {};
+    config.resolve.modules = [
+      ...(config.resolve.modules ?? ['node_modules']),
+      workspaceRoot,
+    ];
     config.optimization = {
       ...(config.optimization ?? {}),
       runtimeChunk:
