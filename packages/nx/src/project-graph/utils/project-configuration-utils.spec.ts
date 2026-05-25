@@ -29,13 +29,11 @@ describe('findMatchingConfigFiles', () => {
     'libs/a/extra/project.json',
     'libs/a/ignored/project.json',
     'libs/b/project.json',
-    'libs/b/project.spec.json',
   ];
 
-  it('should apply include and exclude filters after pattern match', () => {
+  it('should apply include and exclude filters to the pre-matched project file list', () => {
     const result = findMatchingConfigFiles(
       files,
-      '**/project.json',
       ['libs/a/**', 'libs/b/**'],
       ['**/ignored/**']
     );
@@ -50,15 +48,13 @@ describe('findMatchingConfigFiles', () => {
   it('should honor include negation patterns', () => {
     const result = findMatchingConfigFiles(
       files,
-      '**/project*.json',
-      ['libs/**', '!**/*.spec.json'],
+      ['libs/**', '!libs/a/ignored/**'],
       []
     );
 
     expect(result).toEqual([
       'libs/a/project.json',
       'libs/a/extra/project.json',
-      'libs/a/ignored/project.json',
       'libs/b/project.json',
     ]);
   });

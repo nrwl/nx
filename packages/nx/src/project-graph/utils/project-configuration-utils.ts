@@ -157,7 +157,6 @@ export async function createProjectConfigurationsWithPlugins(
 
     const matchingConfigFiles: string[] = findMatchingConfigFiles(
       allProjectFiles[index],
-      pattern,
       include,
       exclude
     );
@@ -548,30 +547,28 @@ function createMatcher(
 
 export function findMatchingConfigFiles(
   projectFiles: string[],
-  pattern: string,
   include: string[],
   exclude: string[]
 ): string[] {
   const matchingConfigFiles: string[] = [];
-  const patternMatcher = new Minimatch(pattern, { dot: true });
 
+  // projectFiles already comes from multiGlobWithWorkspaceContext for the
+  // plugin's createNodes pattern, so only include/exclude filters remain here.
   // Create matchers once, outside the loop
   // Empty include means include everything, empty exclude means exclude nothing
   const includes = createMatcher(include, true);
   const excludes = createMatcher(exclude, false);
 
   for (const file of projectFiles) {
-    if (patternMatcher.match(file)) {
-      if (!includes(file)) {
-        continue;
-      }
-
-      if (excludes(file)) {
-        continue;
-      }
-
-      matchingConfigFiles.push(file);
+    if (!includes(file)) {
+      continue;
     }
+
+    if (excludes(file)) {
+      continue;
+    }
+
+    matchingConfigFiles.push(file);
   }
 
   return matchingConfigFiles;
