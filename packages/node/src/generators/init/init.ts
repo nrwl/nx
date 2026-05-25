@@ -41,7 +41,9 @@ function addProjectGraphPlugin(tree: Tree) {
       removeTypeOnlyEdges: true,
       fallbackToStaticGraph: true,
       affectedNarrowing: true,
-      ...(jsPluginConfig.dependencyNarrowing as Record<string, unknown> | undefined),
+      ...(jsPluginConfig.dependencyNarrowing as
+        | Record<string, unknown>
+        | undefined),
     },
   };
 

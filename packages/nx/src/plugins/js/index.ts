@@ -31,9 +31,7 @@ import {
 } from './lock-file/lock-file';
 import { narrowDependencies } from './project-graph/narrow-dependencies';
 import { buildExplicitDependencies } from './project-graph/build-dependencies/build-dependencies';
-import {
-  getJsPluginDependencyNarrowingOptions,
-} from './project-graph/narrowing-options';
+import { getJsPluginDependencyNarrowingOptions } from './project-graph/narrowing-options';
 import type { RawDependency } from './project-graph/types';
 import { jsPluginConfig } from './utils/config';
 

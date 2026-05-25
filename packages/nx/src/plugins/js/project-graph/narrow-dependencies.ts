@@ -511,7 +511,9 @@ async function resolveRelativeImport(
     candidates.map((candidate) => cache.exists(candidate))
   );
   const index = results.findIndex(Boolean);
-  return index >= 0 ? toWorkspacePath(candidates[index], workspaceRoot) : undefined;
+  return index >= 0
+    ? toWorkspacePath(candidates[index], workspaceRoot)
+    : undefined;
 }
 
 function toWorkspacePath(absolutePath: string, workspaceRoot: string): string {
@@ -654,6 +656,14 @@ type ReexportEdge = {
   targetMatch: TargetMatchData;
 };
 
+function makeImportedNamesCacheKey(
+  sourceFilePath: string,
+  target: string,
+  resolveNamespaceImports: boolean
+): string {
+  return `${sourceFilePath}::${target}::${resolveNamespaceImports ? '1' : '0'}`;
+}
+
 function collectImportedNamesForTarget(
   sourceAst: ts.SourceFile,
   targetMatch: TargetMatchData,
@@ -774,7 +784,10 @@ function collectNamespacePropertyAccesses(
   return unsafeUsage ? undefined : props;
 }
 
-function matchesAlias(specifier: string, targetMatch: TargetMatchData): boolean {
+function matchesAlias(
+  specifier: string,
+  targetMatch: TargetMatchData
+): boolean {
   return (
     (!!targetMatch.packageName && specifier === targetMatch.packageName) ||
     targetMatch.aliases.some(
@@ -798,7 +811,11 @@ async function resolveTargetExportedSymbols(
   if (tracked.has(targetMatch.target)) return new Set();
   tracked.add(targetMatch.target);
 
-  const entryPath = await findEntryPoint(workspaceRoot, targetMatch.root, cache);
+  const entryPath = await findEntryPoint(
+    workspaceRoot,
+    targetMatch.root,
+    cache
+  );
   if (!entryPath) return undefined;
 
   return resolveExportsFromFile(
@@ -945,7 +962,10 @@ async function resolveStarReexportSymbols(
   return undefined;
 }
 
-function collectDeclaredNames(statement: ts.Statement, into: Set<string>): void {
+function collectDeclaredNames(
+  statement: ts.Statement,
+  into: Set<string>
+): void {
   if (ts.isFunctionDeclaration(statement) && statement.name) {
     into.add(statement.name.text);
   } else if (ts.isClassDeclaration(statement) && statement.name) {
@@ -969,7 +989,11 @@ function hasExportModifier(node: ts.Statement): boolean {
   const modifiers: readonly ts.Modifier[] | undefined =
     (node as { modifiers?: readonly ts.Modifier[] }).modifiers ??
     (ts.canHaveModifiers?.(node) ? ts.getModifiers?.(node) : undefined);
-  return modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) ?? false;
+  return (
+    modifiers?.some(
+      (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword
+    ) ?? false
+  );
 }
 
 async function resolveReexportEdges(
@@ -1102,7 +1126,13 @@ async function getGitDiffFiles(
     const resolvedBase = head
       ? await resolveMergeBase(workspaceRoot, base, head)
       : base;
-    const args = ['diff', '--name-only', '--no-renames', '--relative', resolvedBase];
+    const args = [
+      'diff',
+      '--name-only',
+      '--no-renames',
+      '--relative',
+      resolvedBase,
+    ];
     if (head) {
       args.push(head);
     }
@@ -1161,7 +1191,9 @@ async function resolveExportOriginsFromFile(
   visited.add(filePath);
 
   const { ast: sourceAst } = await cache.getOrParse(filePath);
-  const workspaceRelative = relative(workspaceRoot, filePath).split('\\').join('/');
+  const workspaceRelative = relative(workspaceRoot, filePath)
+    .split('\\')
+    .join('/');
 
   type NamedReexport = {
     spec: string;
@@ -1174,9 +1206,7 @@ async function resolveExportOriginsFromFile(
   for (const statement of sourceAst.statements) {
     if (ts.isExportDeclaration(statement)) {
       if (!statement.exportClause && statement.moduleSpecifier) {
-        const spec = statement.moduleSpecifier
-          .getText(sourceAst)
-          .slice(1, -1);
+        const spec = statement.moduleSpecifier.getText(sourceAst).slice(1, -1);
         if (spec.startsWith('.')) {
           starReexportSpecs.push(spec);
         }
@@ -1345,7 +1375,10 @@ async function collectImportedNamesViaRelativePaths(
 
   for (let index = 0; index < relativeSpecs.length; index += 1) {
     const workspaceRelative = resolved[index];
-    if (!workspaceRelative || !workspaceRelative.startsWith(normalizedRoot + '/')) {
+    if (
+      !workspaceRelative ||
+      !workspaceRelative.startsWith(normalizedRoot + '/')
+    ) {
       continue;
     }
 
@@ -1405,6 +1438,50 @@ async function collectImportedNamesViaRelativePaths(
   return names;
 }
 
+async function getImportedNamesForEdgeSourceTarget(
+  sourceFilePath: string,
+  targetMatch: TargetMatchData,
+  workspaceRoot: string,
+  cache: FileCache,
+  resolveNamespaceImports: boolean,
+  importedNamesCache: Map<string, Promise<Set<string>>>
+): Promise<Set<string>> {
+  const cacheKey = makeImportedNamesCacheKey(
+    sourceFilePath,
+    targetMatch.target,
+    resolveNamespaceImports
+  );
+  const existing = importedNamesCache.get(cacheKey);
+  if (existing) {
+    return existing;
+  }
+
+  const pending = (async () => {
+    const { ast: sourceAst } = await cache.getOrParse(sourceFilePath);
+    let importedNames = collectImportedNamesForTarget(
+      sourceAst,
+      targetMatch,
+      resolveNamespaceImports
+    );
+
+    if (importedNames.size === 0) {
+      importedNames = await collectImportedNamesViaRelativePaths(
+        sourceAst,
+        sourceFilePath,
+        targetMatch,
+        workspaceRoot,
+        cache,
+        resolveNamespaceImports
+      );
+    }
+
+    return importedNames;
+  })();
+
+  importedNamesCache.set(cacheKey, pending);
+  return pending;
+}
+
 async function applyAffectedNarrowing(
   keptEdges: RawDependency[],
   context: CreateDependenciesContext,
@@ -1427,6 +1504,13 @@ async function applyAffectedNarrowing(
   if (touchedProjects.size === 0) {
     return keptEdges;
   }
+
+  const changedFilesByProject = new Map<string, Set<string>>();
+  for (const [projectName, projectFiles] of touchedProjects) {
+    changedFilesByProject.set(projectName, new Set(projectFiles));
+  }
+
+  const importedNamesCache = new Map<string, Promise<Set<string>>>();
 
   const originMapEntries = await Promise.all(
     [...touchedProjects.keys()].map(async (projectName) => {
@@ -1478,8 +1562,8 @@ async function applyAffectedNarrowing(
 
   const decisions = await Promise.all(
     edgesToCheck.map(async (edge) => {
-      const changedFilesInTarget = touchedProjects.get(edge.target);
-      if (!changedFilesInTarget || changedFilesInTarget.length === 0) {
+      const changedFilesInTarget = changedFilesByProject.get(edge.target);
+      if (!changedFilesInTarget || changedFilesInTarget.size === 0) {
         return { edge, keep: true };
       }
 
@@ -1493,23 +1577,14 @@ async function applyAffectedNarrowing(
         return { edge, keep: true };
       }
 
-      const { ast: sourceAst } = await cache.getOrParse(sourceFilePath);
-      let importedNames = collectImportedNamesForTarget(
-        sourceAst,
+      const importedNames = await getImportedNamesForEdgeSourceTarget(
+        sourceFilePath,
         targetMatch,
-        options.resolveNamespaceImports
+        context.workspaceRoot,
+        cache,
+        options.resolveNamespaceImports,
+        importedNamesCache
       );
-
-      if (importedNames.size === 0) {
-        importedNames = await collectImportedNamesViaRelativePaths(
-          sourceAst,
-          sourceFilePath,
-          targetMatch,
-          context.workspaceRoot,
-          cache,
-          options.resolveNamespaceImports
-        );
-      }
 
       if (importedNames.has('*') || importedNames.size === 0) {
         return { edge, keep: true };
@@ -1520,14 +1595,13 @@ async function applyAffectedNarrowing(
         return { edge, keep: true };
       }
 
-      const changedFilesSet = new Set(changedFilesInTarget);
       for (const symbolName of importedNames) {
         const originFiles = exportOriginMap.get(symbolName);
         if (!originFiles) {
           return { edge, keep: true };
         }
         for (const originFile of originFiles) {
-          if (changedFilesSet.has(originFile)) {
+          if (changedFilesInTarget.has(originFile)) {
             return { edge, keep: true };
           }
         }
