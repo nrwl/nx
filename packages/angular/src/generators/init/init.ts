@@ -11,6 +11,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { createNodesV2 } from '../../plugins/plugin';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { assertNotUsingTsSolutionSetup } from '../utils/validations';
 import {
   getInstalledAngularDevkitVersion,
@@ -22,6 +23,7 @@ export async function angularInitGenerator(
   tree: Tree,
   options: Schema
 ): Promise<GeneratorCallback> {
+  assertSupportedAngularVersion(tree);
   assertNotUsingTsSolutionSetup(tree, 'init');
 
   ignoreAngularCacheDirectory(tree);

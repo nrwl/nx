@@ -1,11 +1,13 @@
 import type { Tree } from '@nx/devkit';
 import { formatFiles } from '@nx/devkit';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { directiveGenerator } from '../directive/directive';
 import { exportScam } from '../utils/export-scam';
 import { convertDirectiveToScam, normalizeOptions } from './lib';
 import type { Schema } from './schema';
 
 export async function scamDirectiveGenerator(tree: Tree, rawOptions: Schema) {
+  assertSupportedAngularVersion(tree);
   const options = await normalizeOptions(tree, rawOptions);
   await directiveGenerator(tree, {
     ...options,

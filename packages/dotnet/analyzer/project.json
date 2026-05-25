@@ -8,6 +8,9 @@
     },
     "run": {
       "executor": "nx:noop"
+    },
+    "publish": {
+      "outputs": ["{projectRoot}/bin/Release/publish"]
     }
   }
 }

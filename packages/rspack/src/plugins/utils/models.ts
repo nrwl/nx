@@ -1,6 +1,6 @@
 import type { DevTool, Mode } from '@rspack/core';
 import type { ProjectGraph } from '@nx/devkit';
-import type { AssetGlob } from '@nx/js/src/utils/assets/assets';
+import type { AssetGlob } from '@nx/js/internal';
 
 export interface AssetGlobPattern {
   glob: string;

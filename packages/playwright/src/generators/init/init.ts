@@ -9,6 +9,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { createNodesV2 } from '../../plugins/plugin';
+import { assertSupportedPlaywrightVersion } from '../../utils/assert-supported-playwright-version';
 import { nxVersion, playwrightVersion } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
 
@@ -20,6 +21,8 @@ export async function initGeneratorInternal(
   tree: Tree,
   options: InitGeneratorSchema
 ) {
+  assertSupportedPlaywrightVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
 
   const nxJson = readNxJson(tree);
@@ -39,7 +42,7 @@ export async function initGeneratorInternal(
           '@playwright/test': playwrightVersion,
         },
         undefined,
-        options.keepExistingVersions
+        options.keepExistingVersions ?? true
       )
     );
   }

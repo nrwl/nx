@@ -8,10 +8,10 @@
   "dependencies": {
     "@nx/nx-dev-util-ai": "workspace:*",
     "@nx/nx-dev-ui-primitives": "workspace:*",
-    "@heroicons/react": "2.2.0",
+    "@heroicons/react": "catalog:",
     "@markdoc/markdoc": "0.2.2",
     "ai": "3.0.19",
     "react": "catalog:react",
-    "react-textarea-autosize": "8.5.3"
+    "react-textarea-autosize": "catalog:"
   }
 }

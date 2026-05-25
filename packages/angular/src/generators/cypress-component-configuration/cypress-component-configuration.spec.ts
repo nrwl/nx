@@ -1,4 +1,4 @@
-import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
   DependencyType,
   joinPathFragments,
@@ -24,8 +24,8 @@ import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-
 import { generateTestApplication, generateTestLibrary } from '../utils/testing';
 import { cypressComponentConfiguration } from './cypress-component-configuration';
 
-jest.mock('@nx/cypress/src/utils/versions', () => ({
-  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+jest.mock('@nx/cypress/internal', () => ({
+  ...jest.requireActual('@nx/cypress/internal'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
 // nested code imports graph from the repo, which might have innacurate graph version
@@ -442,9 +442,9 @@ describe('Cypress Component Testing Configuration', () => {
 
     expect(tree.read('my-lib/cypress.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
-      import { defineConfig } from 'cypress';
-      export default defineConfig({
+      "const { nxComponentTestingPreset } = require('@nx/angular/plugins/component-testing');
+      const { defineConfig } = require('cypress');
+      module.exports = defineConfig({
           component: nxComponentTestingPreset(__filename)
       });"
     `);

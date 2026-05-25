@@ -3,6 +3,7 @@ import {
   getProjects,
   readNxJson,
   readProjectConfiguration,
+  removeDependenciesFromPackageJson,
   Tree,
   updateNxJson,
   updateProjectConfiguration,
@@ -25,6 +26,11 @@ const PROPERTY_NAME = 'useLegacyTypescriptPlugin';
 
 export default async function (tree: Tree) {
   const projects = getProjects(tree);
+
+  // Track whether the migration actually stripped any legacy config so we
+  // only strip the orphan devDep when it was needed (a user could have
+  // installed `rollup-plugin-typescript2` for their own custom rollup setup).
+  let anyChange = false;
 
   for (const [projectName] of projects) {
     const projectConfig = readProjectConfiguration(tree, projectName);
@@ -63,12 +69,15 @@ export default async function (tree: Tree) {
 
     if (projectJsonChanged) {
       updateProjectConfiguration(tree, projectName, projectConfig);
+      anyChange = true;
     }
 
     visitNotIgnoredFiles(tree, projectConfig.root, (filePath) => {
       const basename = filePath.split('/').pop();
       if (!ROLLUP_CONFIG_NAMES.includes(basename)) return;
-      stripFromRollupConfig(tree, filePath);
+      if (stripFromRollupConfig(tree, filePath)) {
+        anyChange = true;
+      }
     });
   }
 
@@ -108,15 +117,22 @@ export default async function (tree: Tree) {
 
     if (nxJsonChanged) {
       updateNxJson(tree, nxJson);
+      anyChange = true;
     }
+  }
+
+  // Only strip the orphan devDep when we actually stripped a legacy config.
+  // Skipping otherwise preserves a user's own dep on rollup-plugin-typescript2.
+  if (anyChange) {
+    removeDependenciesFromPackageJson(tree, [], ['rollup-plugin-typescript2']);
   }
 
   await formatFiles(tree);
 }
 
-function stripFromRollupConfig(tree: Tree, filePath: string) {
+function stripFromRollupConfig(tree: Tree, filePath: string): boolean {
   const original = tree.read(filePath, 'utf-8');
-  if (!original?.includes(PROPERTY_NAME)) return;
+  if (!original?.includes(PROPERTY_NAME)) return false;
 
   // Filter by the property NAME (not any descendant Identifier) so we don't
   // strip `{ alias: useLegacyTypescriptPlugin }` where the identifier appears as a value.
@@ -128,7 +144,7 @@ function stripFromRollupConfig(tree: Tree, filePath: string) {
       | ShorthandPropertyAssignment
     )[]
   ).filter((p) => p.name && (p.name as any).text === PROPERTY_NAME);
-  if (matches.length === 0) return;
+  if (matches.length === 0) return false;
 
   // Walk in reverse so each splice doesn't shift the offsets of remaining matches
   // (a file may legitimately contain multiple withNx({...}) calls, e.g. multi-format
@@ -155,4 +171,5 @@ function stripFromRollupConfig(tree: Tree, filePath: string) {
   }
 
   tree.write(filePath, updated);
+  return true;
 }

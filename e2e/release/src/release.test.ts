@@ -769,7 +769,7 @@ describe('nx release', () => {
           default: {
             // @proj/source will be added as a project by the verdaccio setup, but we aren't versioning or publishing it, so we exclude it here
             projects: ['*', '!@proj/source'],
-            releaseTagPattern: 'xx{version}',
+            releaseTag: { pattern: 'xx{version}' },
             version: {
               // Resolve the latest version from the git tag
               currentVersionResolver: 'git-tag',
@@ -839,7 +839,7 @@ describe('nx release', () => {
           default: {
             // @proj/source will be added as a project by the verdaccio setup, but we aren't versioning or publishing it, so we exclude it here
             projects: ['*', '!@proj/source'],
-            releaseTagPattern: 'xx{version}',
+            releaseTag: { pattern: 'xx{version}' },
             version: {
               specifierSource: 'conventional-commits',
               currentVersionResolver: 'git-tag',
@@ -908,7 +908,7 @@ describe('nx release', () => {
           default: {
             // @proj/source will be added as a project by the verdaccio setup, but we aren't versioning or publishing it, so we exclude it here
             projects: ['*', '!@proj/source'],
-            releaseTagPattern: 'xx{version}',
+            releaseTag: { pattern: 'xx{version}' },
           },
         },
       };
@@ -944,11 +944,11 @@ describe('nx release', () => {
         groups: {
           group1: {
             projects: [pkg1],
-            releaseTagPattern: 'xx-{version}',
+            releaseTag: { pattern: 'xx-{version}' },
           },
           group2: {
             projects: [pkg2, pkg3],
-            releaseTagPattern: 'zz-{version}',
+            releaseTag: { pattern: 'zz-{version}' },
           },
         },
         git: {
@@ -1063,13 +1063,13 @@ describe('nx release', () => {
       ).length
     ).toEqual(2);
 
-    // change the releaseTagPattern to something that doesn't exist in order to test fallbackCurrentVersionResolver
+    // change the releaseTag.pattern to something that doesn't exist in order to test fallbackCurrentVersionResolver
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       nxJson.release = {
         groups: {
           group1: {
             projects: [pkg1, pkg2, pkg3],
-            releaseTagPattern: '>{version}',
+            releaseTag: { pattern: '>{version}' },
           },
         },
         git: {

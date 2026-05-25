@@ -15,8 +15,8 @@ import {
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
-} from '@nx/eslint/src/generators/utils/eslint-file';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+  useFlatConfig,
+} from '@nx/eslint/internal';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
   if (options.linter === 'eslint') {

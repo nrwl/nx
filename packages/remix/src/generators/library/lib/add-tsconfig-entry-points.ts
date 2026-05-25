@@ -5,7 +5,7 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { getRootTsConfigPathInTree } from '@nx/js';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import type { RemixLibraryOptions } from './normalize-options';
 
 export function addTsconfigEntryPoints(

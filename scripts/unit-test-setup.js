@@ -273,6 +273,16 @@ module.exports = () => {
    * `@nx/workspace` — both need to be mocked.
    */
   const mockIsUsingTsSolutionSetup = (specifier) => {
+    // Some test configs (e.g. tools/workspace-plugin) use the default jest
+    // resolver, which does not read package `exports` maps. If a workspace
+    // package locks down its `exports` map, `@nx/<pkg>/src/...` subpath
+    // imports become unresolvable in those contexts. Skip the mock there —
+    // those tests don't import the function anyway.
+    try {
+      require.resolve(specifier);
+    } catch {
+      return;
+    }
     jest.doMock(specifier, () => {
       const actual = jest.requireActual(specifier);
       return {
@@ -284,7 +294,7 @@ module.exports = () => {
       };
     });
   };
-  mockIsUsingTsSolutionSetup('@nx/js/src/utils/typescript/ts-solution-setup');
+  mockIsUsingTsSolutionSetup('@nx/js/internal');
   mockIsUsingTsSolutionSetup(
     '@nx/workspace/src/utilities/typescript/ts-solution-setup'
   );

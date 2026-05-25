@@ -18,8 +18,9 @@ import {
   agentDisplayMap,
   supportedAgents,
 } from '../create-workspace-options';
-import { detectAiAgentName } from '../utils/ai/ai-output';
+import { detectAiAgentName, isAiAgent } from '../utils/ai/ai-output';
 import { CnwError } from '../utils/error-utils';
+import { output } from '../utils/output';
 
 export async function determineNxCloud(
   parsedArgs: yargs.Arguments<{ nxCloud: NxCloud }>
@@ -235,6 +236,48 @@ export async function determineDefaultBase(
       });
   }
   return deduceDefaultBase();
+}
+
+/**
+ * Confirm with the user before installing a third-party preset npm package.
+ *
+ * `--preset=<name>` will install any npm package whose name matches when the
+ * preset is not a known Nx preset. A typo (e.g. `--preset=core`) can silently
+ * install an unrelated package from the registry, which is a supply-chain
+ * risk. This prompt makes that step explicit.
+ *
+ * In non-interactive / CI / AI-agent contexts we cannot prompt, so we emit a
+ * warning and proceed — automated workflows like
+ * `--preset=@my-org/nx-plugin --no-interactive` keep working, but the warning
+ * still appears in the logs.
+ */
+export async function confirmThirdPartyPreset(
+  packageName: string,
+  interactive: boolean | undefined
+): Promise<boolean> {
+  output.warn({
+    title: `About to install '${packageName}' from the npm registry as a preset.`,
+    bodyLines: [
+      `'${packageName}' is not a built-in Nx preset.`,
+      `Nx will download this npm package and run its preset generator.`,
+      `Only proceed if you trust the publisher of '${packageName}'.`,
+    ],
+  });
+
+  if (interactive === false || isCI() || isAiAgent()) {
+    return true;
+  }
+
+  const { confirm } = await enquirer.prompt<{ confirm: 'Yes' | 'No' }>([
+    {
+      name: 'confirm',
+      message: `Install third-party preset '${packageName}'?`,
+      type: 'autocomplete',
+      choices: [{ name: 'No' }, { name: 'Yes' }],
+      initial: 0,
+    },
+  ]);
+  return confirm === 'Yes';
 }
 
 export async function determinePackageManager(

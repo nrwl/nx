@@ -19,7 +19,7 @@ import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
 import {
   walkTsconfigExtendsChain,
   type RawTsconfigJsonCache,
-} from '@nx/js/src/internal';
+} from '@nx/js/internal';
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { hashObject } from 'nx/src/hasher/file-hasher';
@@ -584,9 +584,13 @@ async function getTestPathsRelativeToProjectRoot(
   });
   const relevantTestSpecifications =
     await vitest.getRelevantTestSpecifications();
+  // Sort to keep atomized target name insertion order stable.
+  // vitest.getRelevantTestSpecifications uses tinyglobby internally,
+  // which does not sort its filesystem traversal output.
   return relevantTestSpecifications
     .filter((ts) =>
       fullProjectRoot === '.' ? true : ts.moduleId.startsWith(fullProjectRoot)
     )
-    .map((ts) => normalizePath(relative(projectRoot, ts.moduleId)));
+    .map((ts) => normalizePath(relative(projectRoot, ts.moduleId)))
+    .sort();
 }

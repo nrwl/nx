@@ -1,4 +1,4 @@
-import { Configuration } from '@rspack/core';
+import type { Configuration } from '@rspack/core';
 import { NxRspackExecutionContext } from './config';
 import { withWeb, WithWebOptions } from './with-web';
 import { applyReactConfig } from '../plugins/utils/apply-react-config';

@@ -1,13 +1,15 @@
 import {
-  calculateHashForCreateNodes,
+  calculateHashesForCreateNodes,
   loadConfigFile,
   getNamedInputs,
   PluginCache,
 } from '@nx/devkit/internal';
 import {
+  AggregateCreateNodesError,
   CreateDependencies,
   CreateNodesContextV2,
   createNodesFromFiles,
+  CreateNodesResultV2,
   CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
@@ -15,8 +17,10 @@ import {
   TargetConfiguration,
 } from '@nx/devkit';
 import { getLockFileName } from '@nx/js';
-import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  addBuildAndWatchDepsTargets,
+  isUsingTsSolutionSetup,
+} from '@nx/js/internal';
 import { readdirSync } from 'fs';
 import { hashObject } from 'nx/src/devkit-internals';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
@@ -55,23 +59,53 @@ export const createNodes: CreateNodesV2<NextPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+    const normalizedOptions = normalizeOptions(options);
 
     try {
-      return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(
-            configFile,
-            options,
-            context,
-            targetsCache,
-            isTsSolutionSetup,
-            pmc,
-            lockFileName
-          ),
+      const { entries, preErrors } = await filterNextConfigs(
         configFiles,
-        options,
         context
       );
+
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.projectRoot),
+        normalizedOptions,
+        context,
+        entries.map(() => [lockFileName])
+      );
+
+      let results: CreateNodesResultV2 = [];
+      let nodeErrors: Array<[string | null, Error]> = [];
+      try {
+        results = await createNodesFromFiles(
+          (configFile, _, ctx, idx) =>
+            createNodesInternal(
+              configFile,
+              normalizedOptions,
+              ctx,
+              targetsCache,
+              isTsSolutionSetup,
+              pmc,
+              projectHashes[idx]
+            ),
+          entries.map((e) => e.configFile),
+          options,
+          context
+        );
+      } catch (e) {
+        if (e instanceof AggregateCreateNodesError) {
+          results = e.partialResults ?? [];
+          nodeErrors = e.errors;
+        } else {
+          throw e;
+        }
+      }
+
+      const allErrors = [...preErrors, ...nodeErrors];
+      if (allErrors.length > 0) {
+        throw new AggregateCreateNodesError(allErrors, results);
+      }
+      return results;
     } finally {
       targetsCache.writeToDisk();
     }
@@ -87,26 +121,9 @@ async function createNodesInternal(
   targetsCache: PluginCache<NextTargets>,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  lockFileName: string
+  hash: string
 ) {
   const projectRoot = dirname(configFilePath);
-
-  // Do not create a project if package.json and project.json isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
-    return {};
-  }
-  options = normalizeOptions(options);
-
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [lockFileName]
-  );
 
   if (!targetsCache.has(hash)) {
     targetsCache.set(
@@ -264,6 +281,45 @@ function getNextConfig(
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
   return loadConfigFile(resolvedPath);
+}
+
+interface NextEntry {
+  configFile: string;
+  projectRoot: string;
+}
+
+async function filterNextConfigs(
+  configFiles: readonly string[],
+  context: CreateNodesContextV2
+): Promise<{
+  entries: NextEntry[];
+  preErrors: Array<[string, Error]>;
+}> {
+  const preErrors: Array<[string, Error]> = [];
+  const candidates = await Promise.all(
+    configFiles.map(async (configFile): Promise<NextEntry | null> => {
+      try {
+        const projectRoot = dirname(configFile);
+        const siblingFiles = readdirSync(
+          join(context.workspaceRoot, projectRoot)
+        );
+        if (
+          !siblingFiles.includes('package.json') &&
+          !siblingFiles.includes('project.json')
+        ) {
+          return null;
+        }
+        return { configFile, projectRoot };
+      } catch (e) {
+        preErrors.push([configFile, e as Error]);
+        return null;
+      }
+    })
+  );
+  return {
+    entries: candidates.filter((c): c is NextEntry => c !== null),
+    preErrors,
+  };
 }
 
 function normalizeOptions(options: NextPluginOptions): NextPluginOptions {

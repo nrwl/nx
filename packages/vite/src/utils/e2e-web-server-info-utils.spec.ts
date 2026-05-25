@@ -47,6 +47,40 @@ describe('getViteE2EWebServerInfo', () => {
     `);
   });
 
+  it('should use array-shaped serve targetDefaults when no plugin is registered and plugins are not being used', async () => {
+    // ARRANGE
+    const nxJson = readNxJson(tree);
+    nxJson.plugins ??= [];
+    nxJson.targetDefaults = [
+      {
+        target: 'serve',
+        options: {
+          port: 4400,
+        },
+      },
+    ];
+    updateNxJson(tree, nxJson);
+
+    // ACT
+    const e2eWebServerInfo = await getViteE2EWebServerInfo(
+      tree,
+      'app',
+      'app/vite.config.ts',
+      false
+    );
+
+    // ASSERT
+    expect(e2eWebServerInfo).toMatchInlineSnapshot(`
+      {
+        "e2eCiBaseUrl": "http://localhost:4300",
+        "e2eCiWebServerCommand": "npx nx run app:preview",
+        "e2eDevServerTarget": "app:dev",
+        "e2eWebServerAddress": "http://localhost:4400",
+        "e2eWebServerCommand": "npx nx run app:dev",
+      }
+    `);
+  });
+
   it('should use the default values of the plugin when the plugin is just a string', async () => {
     // ARRANGE
     const nxJson = readNxJson(tree);
@@ -68,6 +102,40 @@ describe('getViteE2EWebServerInfo', () => {
         "e2eCiWebServerCommand": "npx nx run app:preview",
         "e2eDevServerTarget": "app:dev",
         "e2eWebServerAddress": "http://localhost:4200",
+        "e2eWebServerCommand": "npx nx run app:dev",
+      }
+    `);
+  });
+
+  it('should use array-shaped dev targetDefaults when the plugin is just a string', async () => {
+    // ARRANGE
+    const nxJson = readNxJson(tree);
+    nxJson.plugins = ['@nx/vite/plugin'];
+    nxJson.targetDefaults = [
+      {
+        target: 'dev',
+        options: {
+          port: 4500,
+        },
+      },
+    ];
+    updateNxJson(tree, nxJson);
+
+    // ACT
+    const e2eWebServerInfo = await getViteE2EWebServerInfo(
+      tree,
+      'app',
+      'app/vite.config.ts',
+      true
+    );
+
+    // ASSERT
+    expect(e2eWebServerInfo).toMatchInlineSnapshot(`
+      {
+        "e2eCiBaseUrl": "http://localhost:4300",
+        "e2eCiWebServerCommand": "npx nx run app:preview",
+        "e2eDevServerTarget": "app:dev",
+        "e2eWebServerAddress": "http://localhost:4500",
         "e2eWebServerCommand": "npx nx run app:dev",
       }
     `);

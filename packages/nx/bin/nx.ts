@@ -37,11 +37,36 @@ const isTsExt = extname(__filename).endsWith('.ts');
 const pathToPkgJson = isTsExt ? '../package.json' : '../../package.json';
 
 async function main() {
+  // Tab-completion fast path. Bare env-var read so nothing runs before
+  // the try/catch — a throw here would splice a stack trace into the
+  // user's command line.
+  if (process.env.NX_COMPLETE) {
+    try {
+      performance.mark('init-local');
+      const { tryValueCompletion } = await import(
+        'nx/src/command-line/completion/value-completions'
+      );
+      if (tryValueCompletion()) return;
+      const { tryCommandSurfaceCompletion } = await import(
+        'nx/src/command-line/completion/command-completions'
+      );
+      tryCommandSurfaceCompletion();
+    } catch (e) {
+      // Swallow: a broken completion must produce no suggestions, not a
+      // stack trace. NX_VERBOSE_LOGGING surfaces the cause to stderr.
+      if (process.env.NX_VERBOSE_LOGGING) {
+        console.error(e);
+      }
+    }
+    return;
+  }
+
   if (
     process.argv[2] !== 'report' &&
     process.argv[2] !== '--version' &&
     process.argv[2] !== '--help' &&
-    process.argv[2] !== 'reset'
+    process.argv[2] !== 'reset' &&
+    process.argv[2] !== 'completion'
   ) {
     const { assertSupportedPlatform } = await import(
       '../src/native/assert-supported-platform.js'
@@ -79,6 +104,8 @@ async function main() {
     process.argv[2] === '_migrate' ||
     process.argv[2] === 'init' ||
     process.argv[2] === 'configure-ai-agents' ||
+    process.argv[2] === 'mcp' ||
+    process.argv[2] === 'completion' ||
     (process.argv[2] === 'graph' && !workspace)
   ) {
     process.env.NX_DAEMON = 'false';
@@ -272,7 +299,7 @@ function warnIfUsingOutdatedGlobalInstall(
   globalNxVersion: string,
   localNxVersion?: string
 ) {
-  // Never display this warning if Nx is already running via Nx
+  // Skip when Nx is recursively invoking itself.
   if (process.env.NX_CLI_SET) {
     return;
   }

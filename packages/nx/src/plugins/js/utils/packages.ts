@@ -1,6 +1,7 @@
 import { join } from 'node:path/posix';
 import type { ProjectGraphProjectNode } from '../../../config/project-graph';
 import type { ProjectConfiguration } from '../../../config/workspace-json-project-json';
+import type { PackageJsonProjectMetadata } from '../../../utils/package-json';
 
 export function getWorkspacePackagesMetadata<
   T extends ProjectGraphProjectNode | ProjectConfiguration,
@@ -15,8 +16,9 @@ export function getWorkspacePackagesMetadata<
   const wildcardEntryPointsToProjectMap: Record<string, T> = {};
   const packageToProjectMap: Record<string, T> = {};
   for (const project of Object.values(projects)) {
-    const metadata =
-      'data' in project ? project.data.metadata : project.metadata;
+    const metadata = (
+      'data' in project ? project.data.metadata : project.metadata
+    ) as PackageJsonProjectMetadata;
 
     if (!metadata?.js) {
       continue;

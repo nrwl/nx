@@ -5,7 +5,7 @@ import {
   type FileData,
   type Tree,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 import { fileDataDepTarget } from 'nx/src/config/project-graph';
 import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 import type { ImportDeclaration, ImportSpecifier, Node } from 'typescript';

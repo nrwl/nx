@@ -13,11 +13,15 @@ The Nx Plugin for Rspack contains executors, generators, and utilities for manag
 
 The `@nx/rspack` plugin supports the following package versions.
 
-| Package        | Supported Versions |
-| -------------- | ------------------ |
-| `@rspack/core` | ^1.6.0             |
+| Package        | Supported Versions | Default Installed |
+| -------------- | ------------------ | ----------------- |
+| `@rspack/core` | `^1.0.0`           | `1.6.8`           |
 
-[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+[Nx generators](/docs/features/generate-code) install the latest supported version automatically when scaffolding new projects. When `@rspack/core` is already installed in your workspace, generators detect the installed version and keep it in place rather than overwriting it.
+
+{% aside type="caution" title="@rspack/core v2 not yet supported" %}
+`@rspack/core@2` ships as a pure-ESM package, which `@nx/rspack` (CommonJS) cannot currently load synchronously. Support is tracked separately; until then, pin `@rspack/core` to `^1`.
+{% /aside %}
 
 ## Setting up @nx/rspack
 

@@ -377,7 +377,7 @@ describe('shared', () => {
       expect(tags).toEqual([]);
     });
 
-    it('should use docker version when releaseTagPatternPreferDockerVersion is true', () => {
+    it('should use docker version when releaseTag.preferDockerVersion is true', () => {
       const { releaseGroup, releaseGroupToFilteredProjects } =
         setUpReleaseGroup();
       releaseGroup.releaseTag.preferDockerVersion = true;
@@ -404,7 +404,7 @@ describe('shared', () => {
       expect(tags).toEqual(['my-group-2024.01.abc123']);
     });
 
-    it('should use semver version when releaseTagPatternPreferDockerVersion is false', () => {
+    it('should use semver version when releaseTag.preferDockerVersion is false', () => {
       const { releaseGroup, releaseGroupToFilteredProjects } =
         setUpReleaseGroup();
       releaseGroup.releaseTag.preferDockerVersion = false;
@@ -431,7 +431,7 @@ describe('shared', () => {
       expect(tags).toEqual(['my-group-1.1.0']);
     });
 
-    it('should create tags for both versions when releaseTagPatternPreferDockerVersion is "both"', () => {
+    it('should create tags for both versions when releaseTag.preferDockerVersion is "both"', () => {
       const { releaseGroup, releaseGroupToFilteredProjects } =
         setUpReleaseGroup();
       releaseGroup.releaseTag.preferDockerVersion = 'both';

@@ -51,6 +51,11 @@ const FULL_HELP_WIDTH: u16 = 86; // Full help text width
 const MIN_CLOUD_URL_WIDTH: u16 = 15; // Minimum space to show at least part of the URL
 const MIN_BOTTOM_SPACING: u16 = 4; // Minimum space between Cloud and Help
 const SCROLLBAR_WIDTH: u16 = 3; // Width for scrollbar area (1 scrollbar + 2 padding)
+// Rows consumed by the table header area: top_margin(1) + header content(1) + spacing row(1)
+const TABLE_HEADER_OVERHEAD_ROWS: u16 = 3;
+// Rows before the scrollbar track starts: top_margin(1) + header content(1)
+// The scrollbar spans from the spacing row (which is part of the visual table area) downward
+const SCROLLBAR_Y_OFFSET: u16 = 2;
 
 // Constants for column layout calculation
 const STATUS_ICON_WIDTH: u16 = 6; // Width for status icon with NX logo
@@ -1374,68 +1379,20 @@ impl TasksList {
         }
     }
 
-    /// Performs initial in-progress task selection if not yet done.
-    ///
-    /// This is called from render() after tasks have been sorted and entries created.
-    /// It ensures that when tasks first start running, we select the first in-progress task
-    /// (unless the terminal is showing the currently selected task).
-    ///
-    /// Selection behavior:
-    /// - If terminal is showing the currently selected task → keep it selected
-    /// - Otherwise → select the first task in the in-progress section (after sorting)
-    ///
-    /// This implements the selection.md rule for initial startup in run-many mode.
+    /// Drives the selection state machine from `draw()` after sort/entry
+    /// creation. `Explicit` selections are never overridden;
+    /// `AwaitingNextAllocation` never falls back to first-available.
     fn perform_initial_in_progress_selection_if_needed(&mut self) {
-        // Get current state and check if we need to make a selection
-        let (needs_selection, has_in_progress, selected_task) = {
-            let selection_manager = self.selection_manager.lock();
-            let selection = selection_manager.get_selection();
-            let needs_selection = selection.is_none();
-            let in_progress_items = selection_manager.get_in_progress_items();
-            let has_in_progress = !in_progress_items.is_empty();
-            let selected_task = match selection {
-                Some(SelectionEntry::Task(name)) => Some(name.clone()),
-                _ => None,
-            };
-            (needs_selection, has_in_progress, selected_task)
-        };
-
-        // If already selected, nothing to do
-        if !needs_selection {
+        let mut manager = self.selection_manager.lock();
+        if manager.is_explicit() {
             return;
         }
-
-        // Check if terminal is showing a task (even though nothing is selected in state)
-        let terminal_showing_task = if let Some(ref task) = selected_task {
-            self.is_terminal_showing_task(task)
-        } else {
-            false
-        };
-
-        // Only select if terminal isn't showing a specific task
-        if !terminal_showing_task {
-            if has_in_progress {
-                // Select the first in-progress task (from the already-sorted entries)
-                self.select_first_in_progress_entry();
-            } else {
-                // No in-progress tasks yet, select first available entry
-                self.selection_manager.lock().select_first_available();
+        if manager.has_in_progress() {
+            if let Some(entry) = manager.first_in_progress_entry() {
+                manager.select(Some(entry));
             }
-        }
-    }
-
-    /// Selects the first entry in the in-progress section.
-    ///
-    /// This is used during initial allocation to prioritize showing in-progress tasks.
-    fn select_first_in_progress_entry(&mut self) {
-        let mut selection_manager = self.selection_manager.lock();
-
-        // Get in-progress items from selection manager
-        let in_progress_items = selection_manager.get_in_progress_items();
-
-        // Select the first item if available
-        if let Some(first_item) = in_progress_items.first() {
-            selection_manager.select(Some(first_item.clone()));
+        } else if manager.is_empty() {
+            manager.select_first_available_as_initial_placeholder();
         }
     }
 
@@ -1464,8 +1421,7 @@ impl TasksList {
         // No more in-progress tasks?
         if self.in_progress_tasks.is_empty() {
             if has_pending {
-                // Wait for next allocation
-                self.selection_manager.lock().select(None);
+                self.selection_manager.lock().await_next_allocation();
             }
             // else: last task, keep selection (already on finished task)
             return;
@@ -1844,8 +1800,8 @@ impl TasksList {
 
     /// Checks if the scrollbar will be needed for the given table height
     fn will_need_scrollbar(&self, table_height: u16) -> bool {
-        let header_and_spacing_rows = 4;
-        let dynamic_viewport_height = table_height.saturating_sub(header_and_spacing_rows) as usize;
+        let dynamic_viewport_height =
+            table_height.saturating_sub(TABLE_HEADER_OVERHEAD_ROWS) as usize;
         let total_entries = self.selection_manager.lock().get_total_entries();
         total_entries > dynamic_viewport_height
     }
@@ -2193,15 +2149,12 @@ impl TasksList {
 
         // Render scrollbar if needed
         if let Some(scrollbar_area) = scrollbar_area {
-            // Position scrollbar to align with actual table content (below header and empty rows)
-            let header_and_spacing_rows = 2; // Header + 1 empty spacing row
+            // Position scrollbar below top_margin + header, spanning the spacing row and content
             let content_scrollbar_area = Rect {
                 x: scrollbar_area.x,
-                y: scrollbar_area.y + header_and_spacing_rows, // Start at actual content
+                y: scrollbar_area.y + SCROLLBAR_Y_OFFSET,
                 width: scrollbar_area.width,
-                height: scrollbar_area
-                    .height
-                    .saturating_sub(header_and_spacing_rows), // Adjust height accordingly
+                height: scrollbar_area.height.saturating_sub(SCROLLBAR_Y_OFFSET),
             };
 
             // Ensure the scrollbar area is within frame bounds
@@ -2749,7 +2702,9 @@ impl Component for TasksList {
         // Compute scroll metrics once here to reduce lock contention in render_task_table
         let scroll_metrics = {
             let mut manager = self.selection_manager.lock();
-            manager.update_viewport_and_get_metrics(table_area.height.saturating_sub(4) as usize)
+            manager.update_viewport_and_get_metrics(
+                table_area.height.saturating_sub(TABLE_HEADER_OVERHEAD_ROWS) as usize,
+            )
         };
         self.render_task_table(
             f,
@@ -3097,6 +3052,281 @@ mod tests {
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_selection_holds_in_waiting_state_until_next_in_progress() {
+        // Regression: when the selected in-progress task finishes while
+        // pending tasks remain, the selection enters AwaitingNextAllocation
+        // and must STAY there across renders. The previous behaviour bounced
+        // the highlight onto the first pending task and then carried that
+        // pending task forward via TrackByName instead of latching onto the
+        // next task that actually started running.
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        tasks_list.update(Action::StartCommand(Some(1))).unwrap();
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .ok();
+
+        // First render: in-progress exists -> selection latches onto it.
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        assert!(matches!(
+            tasks_list.selection_manager.lock().get_selection(),
+            Some(SelectionEntry::Task(name)) if *name == test_tasks[0].id
+        ));
+
+        // The selected in-progress task finishes while pending tasks remain.
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[0].id.clone(),
+                TaskStatus::Success,
+            ))
+            .ok();
+
+        // Selection enters AwaitingNextAllocation and stays there across
+        // renders (no fallback to first pending).
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        {
+            let manager = tasks_list.selection_manager.lock();
+            assert!(manager.is_awaiting_next_allocation());
+            assert!(manager.get_selection().is_none());
+        }
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        {
+            let manager = tasks_list.selection_manager.lock();
+            assert!(manager.is_awaiting_next_allocation());
+            assert!(manager.get_selection().is_none());
+        }
+
+        // The next allocation should pull selection out of the waiting state.
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[1].clone()]))
+            .ok();
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        assert!(matches!(
+            tasks_list.selection_manager.lock().get_selection(),
+            Some(SelectionEntry::Task(name)) if *name == test_tasks[1].id
+        ));
+    }
+
+    #[test]
+    fn test_initial_render_sets_placeholder_then_promotes_on_in_progress() {
+        // The first render before any task starts auto-picks the first
+        // selectable entry as an InitialPlaceholder so the user has a
+        // visual anchor. Once start_tasks fires for a different task, the
+        // placeholder is replaced by the new in-progress entry. A user
+        // who navigates between the two renders keeps their explicit choice.
+
+        // Case 1: no user navigation - placeholder is replaced.
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        {
+            let manager = tasks_list.selection_manager.lock();
+            assert!(manager.is_initial_placeholder());
+            assert!(manager.get_selection().is_some());
+        }
+
+        // start_tasks for the second task — placeholder should be replaced
+        // by the first in-progress entry on the next render.
+        tasks_list.update(Action::StartCommand(Some(1))).unwrap();
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[1].clone()]))
+            .ok();
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        assert!(matches!(
+            tasks_list.selection_manager.lock().get_selection(),
+            Some(SelectionEntry::Task(name)) if *name == test_tasks[1].id
+        ));
+
+        // Case 2: user navigation between renders - the explicit choice
+        // survives the in-progress arrival.
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        // Simulate user pressing Down.
+        tasks_list.update(Action::NextTask).ok();
+        {
+            let manager = tasks_list.selection_manager.lock();
+            assert!(!manager.is_initial_placeholder());
+        }
+
+        let post_nav_selection = tasks_list.selection_manager.lock().get_selection().cloned();
+        tasks_list.update(Action::StartCommand(Some(1))).unwrap();
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[1].clone()]))
+            .ok();
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        assert_eq!(
+            tasks_list.selection_manager.lock().get_selection().cloned(),
+            post_nav_selection,
+            "explicit user selection should survive in-progress arrival"
+        );
+    }
+
+    #[test]
+    fn test_initial_placeholder_overridden_when_in_progress_arrives() {
+        // Visual snapshot of the multi-render override path: first render
+        // anchors on the first pending entry (app1:build alphabetically),
+        // then start_tasks for a different task replaces the placeholder
+        // with the new in-progress entry.
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        // Frame 1: placeholder anchors on the first pending entry.
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(
+            "initial_placeholder_anchors_on_first_pending",
+            terminal.backend()
+        );
+
+        // Now start a task that is NOT the placeholder target.
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .ok();
+
+        // Frame 2: placeholder gets replaced by the first in-progress entry.
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(
+            "initial_placeholder_promoted_to_first_in_progress",
+            terminal.backend()
+        );
+    }
+
+    #[test]
+    fn test_auto_select_prefers_standalone_in_progress_over_batch() {
+        // When the override fires, the first selectable entry in the
+        // in-progress section is preferred. Standalone tasks come before
+        // batch groups in the sorted entries, so a standalone in-progress
+        // task wins over a concurrently-running batch.
+        let (mut tasks_list, test_tasks) = create_test_tasks_list_with_batches();
+
+        tasks_list.update(Action::StartCommand(Some(3))).unwrap();
+        tasks_list
+            .update(Action::StartTasks(test_tasks.clone()))
+            .ok();
+        for task in &test_tasks {
+            tasks_list
+                .update(Action::UpdateTaskStatus(
+                    task.id.clone(),
+                    TaskStatus::InProgress,
+                ))
+                .ok();
+        }
+        // Group the first two tasks into a batch; the third (standalone:test)
+        // stays as a standalone in-progress task.
+        tasks_list.start_batch(
+            "build-batch".to_string(),
+            "test-executor".to_string(),
+            vec![test_tasks[0].id.clone(), test_tasks[1].id.clone()],
+            current_timestamp_millis(),
+            false,
+        );
+
+        let mut terminal = create_test_terminal(120, 15);
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+
+        // standalone:test is the only standalone in-progress task — it should
+        // win the auto-select over the batch group.
+        assert!(matches!(
+            tasks_list.selection_manager.lock().get_selection(),
+            Some(SelectionEntry::Task(name)) if *name == test_tasks[2].id
+        ));
+    }
+
+    #[test]
+    fn test_auto_select_lands_on_batch_when_only_batches_running() {
+        // If no standalone in-progress tasks exist, the override falls onto
+        // the first batch group. Verified for both expanded and collapsed
+        // batches since the in-progress section size accounts for nested
+        // task expansion.
+        for is_expanded in [false, true] {
+            let (mut tasks_list, test_tasks) = create_test_tasks_list_with_batches();
+
+            tasks_list.update(Action::StartCommand(Some(3))).unwrap();
+            tasks_list
+                .update(Action::StartTasks(vec![
+                    test_tasks[0].clone(),
+                    test_tasks[1].clone(),
+                ]))
+                .ok();
+            for task in &test_tasks[..2] {
+                tasks_list
+                    .update(Action::UpdateTaskStatus(
+                        task.id.clone(),
+                        TaskStatus::InProgress,
+                    ))
+                    .ok();
+            }
+            tasks_list.start_batch(
+                "build-batch".to_string(),
+                "test-executor".to_string(),
+                vec![test_tasks[0].id.clone(), test_tasks[1].id.clone()],
+                current_timestamp_millis(),
+                is_expanded,
+            );
+
+            let mut terminal = create_test_terminal(120, 15);
+            render_to_test_backend(&mut terminal, &mut tasks_list);
+
+            assert!(
+                matches!(
+                    tasks_list.selection_manager.lock().get_selection(),
+                    Some(SelectionEntry::BatchGroup(id)) if id == "build-batch"
+                ),
+                "expected the batch group to be auto-selected (is_expanded={})",
+                is_expanded
+            );
+        }
+    }
+
+    #[test]
+    fn test_initial_placeholder_overridden_by_first_in_progress_batch() {
+        // Initial render anchors a placeholder on the first selectable
+        // entry. Once a batch becomes the only in-progress entry, the
+        // override replaces the placeholder with the batch group.
+        let (mut tasks_list, test_tasks) = create_test_tasks_list_with_batches();
+        let mut terminal = create_test_terminal(120, 15);
+
+        // Frame 1: placeholder anchors on the first pending standalone task.
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        {
+            let manager = tasks_list.selection_manager.lock();
+            assert!(manager.is_initial_placeholder());
+            assert!(matches!(
+                manager.get_selection(),
+                Some(SelectionEntry::Task(_))
+            ));
+        }
+
+        // A batch starts up — none of the placeholder's siblings are
+        // standalone in-progress yet.
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+        tasks_list
+            .update(Action::StartTasks(vec![
+                test_tasks[0].clone(),
+                test_tasks[1].clone(),
+            ]))
+            .ok();
+        tasks_list.start_batch(
+            "build-batch".to_string(),
+            "test-executor".to_string(),
+            vec![test_tasks[0].id.clone(), test_tasks[1].id.clone()],
+            current_timestamp_millis(),
+            false,
+        );
+
+        // Frame 2: override → batch group is now selected.
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        assert!(matches!(
+            tasks_list.selection_manager.lock().get_selection(),
+            Some(SelectionEntry::BatchGroup(id)) if id == "build-batch"
+        ));
     }
 
     #[test]

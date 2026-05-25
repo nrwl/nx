@@ -16,7 +16,7 @@ import {
   handleUnknownConfiguration,
   moveAndEditIndexHtml,
 } from '../../../utils/generator-utils';
-import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectType } from '@nx/js/internal';
 
 export async function convertNonVite(
   tree: Tree,

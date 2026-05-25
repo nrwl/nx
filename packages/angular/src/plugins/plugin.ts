@@ -1,12 +1,14 @@
 import {
-  calculateHashForCreateNodes,
+  calculateHashesForCreateNodes,
   getNamedInputs,
   PluginCache,
 } from '@nx/devkit/internal';
 import {
+  AggregateCreateNodesError,
   type CreateNodesContextV2,
   createNodesFromFiles,
   type CreateNodesResult,
+  CreateNodesResultV2,
   type CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
@@ -94,21 +96,51 @@ export const createNodesV2: CreateNodesV2<AngularPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+
     try {
-      return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(
-            configFile,
-            options,
-            context,
-            projectsCache,
-            pmc,
-            lockFileName
-          ),
+      const { entries, preErrors } = await filterAngularConfigs(
         configFiles,
-        options,
         context
       );
+
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.angularWorkspaceRoot),
+        options ?? {},
+        context,
+        entries.map(() => [lockFileName])
+      );
+
+      let results: CreateNodesResultV2 = [];
+      let nodeErrors: Array<[string | null, Error]> = [];
+      try {
+        results = await createNodesFromFiles(
+          (configFile, opts, ctx, idx) =>
+            createNodesInternal(
+              configFile,
+              opts,
+              ctx,
+              projectsCache,
+              pmc,
+              projectHashes[idx]
+            ),
+          entries.map((e) => e.configFile),
+          options,
+          context
+        );
+      } catch (e) {
+        if (e instanceof AggregateCreateNodesError) {
+          results = e.partialResults ?? [];
+          nodeErrors = e.errors;
+        } else {
+          throw e;
+        }
+      }
+
+      const allErrors = [...preErrors, ...nodeErrors];
+      if (allErrors.length > 0) {
+        throw new AggregateCreateNodesError(allErrors, results);
+      }
+      return results;
     } finally {
       projectsCache.writeToDisk();
     }
@@ -121,24 +153,9 @@ async function createNodesInternal(
   context: CreateNodesContextV2,
   projectsCache: PluginCache<AngularProjects>,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  lockFileName: string
+  hash: string
 ): Promise<CreateNodesResult> {
   const angularWorkspaceRoot = dirname(configFilePath);
-
-  // Do not create a project if package.json isn't there
-  const siblingFiles = readdirSync(
-    join(context.workspaceRoot, angularWorkspaceRoot)
-  );
-  if (!siblingFiles.includes('package.json')) {
-    return {};
-  }
-
-  const hash = await calculateHashForCreateNodes(
-    angularWorkspaceRoot,
-    options,
-    context,
-    [lockFileName]
-  );
 
   if (!projectsCache.has(hash)) {
     projectsCache.set(
@@ -958,4 +975,40 @@ function getAngularJsonProjectTargets(
   project: AngularProjectConfiguration
 ): Record<string, AngularTargetConfiguration> {
   return project.architect ?? project.targets;
+}
+
+interface AngularEntry {
+  configFile: string;
+  angularWorkspaceRoot: string;
+}
+
+async function filterAngularConfigs(
+  configFiles: readonly string[],
+  context: CreateNodesContextV2
+): Promise<{
+  entries: AngularEntry[];
+  preErrors: Array<[string, Error]>;
+}> {
+  const preErrors: Array<[string, Error]> = [];
+  const candidates = await Promise.all(
+    configFiles.map(async (configFile): Promise<AngularEntry | null> => {
+      try {
+        const angularWorkspaceRoot = dirname(configFile);
+        const siblingFiles = readdirSync(
+          join(context.workspaceRoot, angularWorkspaceRoot)
+        );
+        if (!siblingFiles.includes('package.json')) {
+          return null;
+        }
+        return { configFile, angularWorkspaceRoot };
+      } catch (e) {
+        preErrors.push([configFile, e as Error]);
+        return null;
+      }
+    })
+  );
+  return {
+    entries: candidates.filter((c): c is AngularEntry => c !== null),
+    preErrors,
+  };
 }

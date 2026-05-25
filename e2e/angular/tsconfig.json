@@ -7,7 +7,7 @@
   "files": [],
   "references": [
     {
-      "path": "../../packages/workspace"
+      "path": "../../packages/angular"
     },
     {
       "path": "../utils"

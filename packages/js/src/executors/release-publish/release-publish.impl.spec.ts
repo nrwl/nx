@@ -273,6 +273,151 @@ describe('release-publish executor', () => {
       );
     });
 
+    it('should fall back to npm publish when bun publish fails with an authentication error and npm is installed', async () => {
+      mockDetectPackageManager.mockReturnValue('bun');
+      mockExecSync.mockReset();
+
+      mockExecSync
+        // npm --version succeeds (npm is installed)
+        .mockReturnValueOnce('11.5.1' as any)
+        // bun info (view) call
+        .mockReturnValueOnce(
+          Buffer.from(
+            JSON.stringify({
+              versions: ['0.9.0'],
+              'dist-tags': { latest: '0.9.0' },
+            })
+          )
+        )
+        // bun publish fails with missing authentication
+        .mockImplementationOnce(() => {
+          const error: any = new Error('bun publish failed');
+          error.stdout = Buffer.from('');
+          error.stderr = Buffer.from(
+            'error: missing authentication (run `bunx npm login`)'
+          );
+          throw error;
+        })
+        // npm publish (fallback) succeeds
+        .mockReturnValueOnce(Buffer.from('{}') as any);
+
+      jest.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
+        beforeJsonData: '',
+        jsonData: {
+          id: '@scope/test-package@1.0.0',
+          name: '@scope/test-package',
+          version: '1.0.0',
+          size: 100,
+          unpackedSize: 200,
+          shasum: 'abc123',
+          integrity: 'sha512-abc',
+          filename: 'test-package-1.0.0.tgz',
+          files: [],
+          entryCount: 1,
+          bundled: [],
+        },
+        afterJsonData: '',
+      } as any);
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      // bun publish was tried first
+      expect(mockExecSync).toHaveBeenCalledWith(
+        expect.stringContaining('bun publish'),
+        expect.anything()
+      );
+      // npm publish was tried after bun failed
+      expect(mockExecSync).toHaveBeenCalledWith(
+        expect.stringContaining('npm publish'),
+        expect.anything()
+      );
+      // the user-facing fallback warning was logged
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('falling back to npm publish')
+      );
+    });
+
+    it('should not fall back to npm publish when bun publish fails with a non-auth error', async () => {
+      mockDetectPackageManager.mockReturnValue('bun');
+      mockExecSync.mockReset();
+
+      mockExecSync
+        // npm --version succeeds (npm is installed)
+        .mockReturnValueOnce('11.5.1' as any)
+        // bun info (view) call
+        .mockReturnValueOnce(
+          Buffer.from(
+            JSON.stringify({
+              versions: ['0.9.0'],
+              'dist-tags': { latest: '0.9.0' },
+            })
+          )
+        )
+        // bun publish fails with a non-auth error (e.g., version conflict)
+        .mockImplementationOnce(() => {
+          const error: any = new Error('bun publish failed');
+          error.stdout = Buffer.from('');
+          error.stderr = Buffer.from(
+            'error: version 1.0.0 already exists in the registry'
+          );
+          throw error;
+        });
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(false);
+      expect(console.error).toHaveBeenCalledWith('bun publish error:');
+      // npm publish must NOT be attempted for non-auth bun errors
+      expect(mockExecSync).not.toHaveBeenCalledWith(
+        expect.stringContaining('npm publish'),
+        expect.anything()
+      );
+      // the fallback warning must NOT have been logged
+      expect(console.warn).not.toHaveBeenCalledWith(
+        expect.stringContaining('falling back to npm publish')
+      );
+    });
+
+    it('should not fall back to npm publish when bun publish fails with an authentication error but npm is not installed', async () => {
+      mockDetectPackageManager.mockReturnValue('bun');
+      mockExecSync.mockReset();
+
+      mockExecSync
+        // npm --version throws (npm not installed)
+        .mockImplementationOnce(() => {
+          throw new Error('Command not found: npm');
+        })
+        // bun info (view) call
+        .mockReturnValueOnce(
+          Buffer.from(
+            JSON.stringify({
+              versions: ['0.9.0'],
+              'dist-tags': { latest: '0.9.0' },
+            })
+          )
+        )
+        // bun publish fails with an auth error — but npm is unavailable, so no fallback
+        .mockImplementationOnce(() => {
+          const error: any = new Error('bun publish failed');
+          error.stdout = Buffer.from('');
+          error.stderr = Buffer.from(
+            'error: missing authentication (run `bunx npm login`)'
+          );
+          throw error;
+        });
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(false);
+      expect(console.error).toHaveBeenCalledWith('bun publish error:');
+      // npm publish must NOT be attempted when npm is unavailable
+      expect(mockExecSync).not.toHaveBeenCalledWith(
+        expect.stringContaining('npm publish'),
+        expect.anything()
+      );
+    });
+
     it('should return failure when pm is not bun and npm is not installed', async () => {
       mockDetectPackageManager.mockReturnValue('pnpm');
       mockExecSync.mockReset();

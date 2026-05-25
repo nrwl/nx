@@ -1,6 +1,5 @@
 import { configurationGenerator } from './src/generators/configuration/configuration';
 import { NxAppWebpackPlugin } from './src/plugins/nx-webpack-plugin/nx-app-webpack-plugin';
-import { NxTsconfigPathsWebpackPlugin as _NxTsconfigPathsWebpackPlugin } from './src/plugins/nx-typescript-webpack-plugin/nx-tsconfig-paths-webpack-plugin';
 import { useLegacyNxPlugin } from './src/plugins/use-legacy-nx-plugin/use-legacy-nx-plugin';
 
 // Lazy-loaded to avoid requiring typescript before it's installed.
@@ -25,8 +24,6 @@ export const webpackProjectGenerator = configurationGenerator;
 
 /** @deprecated Use NxAppWebpackPlugin from `@nx/webpack/app-plugin` instead, which can improve graph creation by 150-200ms per file. */
 export const NxWebpackPlugin = NxAppWebpackPlugin;
-/** @deprecated Use NxTsconfigPathsWebpackPlugin from `@nx/webpack/tsconfig-paths-plugin` instead. */
-export const NxTsconfigPathsWebpackPlugin = _NxTsconfigPathsWebpackPlugin;
 
 export * from './src/utils/create-copy-plugin';
 export * from './src/utils/config';
