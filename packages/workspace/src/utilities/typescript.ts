@@ -2,8 +2,6 @@ import { ensurePackage, workspaceRoot } from '@nx/devkit';
 import { dirname } from 'path';
 import type * as ts from 'typescript';
 import { typescriptVersion } from '../utils/versions';
-export { compileTypeScript } from './typescript/compilation';
-export type { TypeScriptCompilationOptions } from './typescript/compilation';
 export { getSourceNodes } from './typescript/get-source-nodes';
 
 const normalizedAppRoot = workspaceRoot.replace(/\\/g, '/');

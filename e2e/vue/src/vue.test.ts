@@ -37,7 +37,7 @@ describe('Vue Plugin', () => {
     if (runE2ETests('playwright')) {
       const availablePort = await reservePort();
 
-      updateFile(`${app}-e2e/playwright.config.ts`, (content) => {
+      updateFile(`${app}-e2e/playwright.config.mts`, (content) => {
         return content
           .replace(
             /const baseURL = process\.env\['BASE_URL'\] \|\| '[^']*';/,
@@ -79,7 +79,7 @@ describe('Vue Plugin', () => {
     if (runE2ETests('playwright')) {
       const availablePort = await reservePort();
 
-      updateFile(`${app}-e2e/playwright.config.ts`, (content) => {
+      updateFile(`${app}-e2e/playwright.config.mts`, (content) => {
         return content
           .replace(
             /const baseURL = process\.env\['BASE_URL'\] \|\| '[^']*';/,

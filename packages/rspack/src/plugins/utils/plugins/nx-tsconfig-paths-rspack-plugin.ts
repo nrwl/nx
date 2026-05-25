@@ -8,7 +8,7 @@ import { workspaceRoot } from '@nx/devkit';
 import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
-} from '@nx/js/src/utils/buildable-libs-utils';
+} from '@nx/js/internal';
 import { NormalizedNxAppRspackPluginOptions } from '../models';
 import { RspackNxBuildCoordinationPlugin } from './rspack-nx-build-coordination-plugin';
 import { unlinkSync } from 'fs';

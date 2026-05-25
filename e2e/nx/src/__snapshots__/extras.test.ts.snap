@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Extra Nx Misc Tests task graph inputs should correctly expand default task inputs 1`] = `
 {

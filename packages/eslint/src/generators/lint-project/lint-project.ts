@@ -41,7 +41,7 @@ import {
 import { hasEslintPlugin } from '../utils/plugin';
 import { jsoncEslintParserVersion } from '../../utils/versions';
 import { setupRootEsLint } from './setup-root-eslint';
-import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectType } from '@nx/js/internal';
 
 interface LintProjectOptions {
   project: string;

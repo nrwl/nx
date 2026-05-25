@@ -78,8 +78,17 @@ const VALID_AUTHORS_FOR_LATEST = [
     'packages/angular-rspack-compiler',
     'packages/devkit',
     'packages/dotnet',
+    'packages/cypress',
+    'packages/eslint',
+    'packages/eslint-plugin',
+    'packages/jest',
+    'packages/js',
     'packages/maven',
     'packages/nx',
+    'packages/playwright',
+    'packages/vite',
+    'packages/vitest',
+    'packages/workspace',
   ];
 
   const packageSnapshots: { [key: string]: string } = {};

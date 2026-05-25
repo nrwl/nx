@@ -35,6 +35,12 @@
       "version": "22.0.0-beta.0",
       "description": "Updates webpack configs using React to use the new withSvgr composable function instead of the svgr option in withReact or NxReactWebpackPlugin.",
       "factory": "./src/migrations/update-22-0-0/add-svgr-to-webpack-config"
+    },
+    "update-23-0-0-remove-nx-react-webpack-plugin-import": {
+      "cli": "nx",
+      "version": "23.0.0-beta.10",
+      "description": "Rewrites imports of NxReactWebpackPlugin from '@nx/react' to the sub-path '@nx/react/webpack-plugin'.",
+      "factory": "./src/migrations/update-23-0-0/remove-nx-react-webpack-plugin-import"
     }
   },
   "packageJsonUpdates": {

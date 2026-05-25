@@ -1,5 +1,5 @@
 {
-  "outDir": "dist/packages/workspace",
+  "outDir": "packages/workspace/dist",
   "assets": [
     {
       "glob": "**/files/**"
@@ -23,10 +23,6 @@
       "glob": "**/files-root-app/**"
     },
     { "glob": "presets/*.json" },
-    { "glob": "package.json" },
-    { "glob": "executors.json" },
-    { "glob": "generators.json" },
-    { "glob": "migrations.json" },
     { "glob": "src/**/schema.json" },
     {
       "glob": "src/**/schema.d.ts"

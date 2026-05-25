@@ -1,5 +1,5 @@
 import { getProjects, output, type Tree } from '@nx/devkit';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export function validateProject(tree: Tree, projectName: string): void {
   const projects = getProjects(tree);

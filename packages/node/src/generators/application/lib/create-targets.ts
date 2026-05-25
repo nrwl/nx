@@ -5,7 +5,7 @@ import {
   TargetConfiguration,
   detectPackageManager,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { NormalizedSchema } from './normalized-schema';
 import { getLockFileName } from '@nx/js';
 

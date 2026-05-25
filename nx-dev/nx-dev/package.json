@@ -14,18 +14,18 @@
     "@nx/nx-dev-ui-video-courses": "workspace:*",
     "@nx/nx-dev-util-ai": "workspace:*",
     "@supabase/supabase-js": "^2.26.0",
-    "@tailwindcss/postcss": "4.1.11",
+    "@tailwindcss/postcss": "catalog:tailwind",
     "@tailwindcss/typography": "0.5.16",
     "ai": "3.0.19",
-    "gpt3-tokenizer": "1.1.5",
+    "gpt3-tokenizer": "catalog:",
     "next": "14.2.35",
-    "next-seo": "5.15.0",
+    "next-seo": "catalog:",
     "openai": "~4.3.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "tailwind-merge": "2.6.0",
+    "tailwind-merge": "catalog:tailwind",
     "tailwindcss": "4.1.11",
-    "tslib": "2.8.1",
-    "typescript": "5.9.2"
+    "tslib": "catalog:typescript",
+    "typescript": "catalog:typescript"
   }
 }

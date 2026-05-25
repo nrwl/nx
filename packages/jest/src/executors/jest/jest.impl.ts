@@ -5,6 +5,7 @@ import { addResult, makeEmptyAggregatedTestResult } from '@jest/test-result';
 import * as path from 'path';
 import { join } from 'path';
 import { JestExecutorOptions } from './schema';
+import schema from './schema.json';
 import { Config } from '@jest/types';
 import {
   ExecutorContext,
@@ -70,7 +71,6 @@ export async function parseJestConfig(
 
   // support passing extra args to jest cli supporting 3rd party plugins
   // like 'jest-runner-groups' --group arg
-  const schema = await import('./schema.json');
   const extraArgs = getExtraArgs(options, schema);
 
   const config: Config.Argv = {

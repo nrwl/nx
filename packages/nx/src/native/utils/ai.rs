@@ -70,6 +70,17 @@ fn is_gemini_ai() -> bool {
     }
 }
 
+/// Detects if the current process is being run by a VS Code AI agent
+fn is_vscode_ai() -> bool {
+    match env::var("VSCODE_AGENT") {
+        Ok(_) => {
+            debug!("VS Code AI detected via VSCODE_AGENT environment variable");
+            true
+        }
+        Err(_) => false,
+    }
+}
+
 /// Detects which AI agent is running and returns its name.
 /// Returns None if no agent is detected or when running inside the Nx daemon.
 /// Filtering against supported agents should be done on the TypeScript side.
@@ -87,6 +98,8 @@ pub fn detect_ai_agent() -> Option<String> {
         Some("opencode".to_string())
     } else if is_gemini_ai() {
         Some("gemini".to_string())
+    } else if is_vscode_ai() {
+        Some("copilot".to_string())
     } else if is_replit_ai() {
         Some("replit".to_string())
     } else {
@@ -104,8 +117,12 @@ pub fn is_ai_agent() -> bool {
         return false;
     }
 
-    let is_ai =
-        is_claude_ai() || is_replit_ai() || is_cursor_ai() || is_opencode_ai() || is_gemini_ai();
+    let is_ai = is_claude_ai()
+        || is_replit_ai()
+        || is_cursor_ai()
+        || is_opencode_ai()
+        || is_gemini_ai()
+        || is_vscode_ai();
 
     if is_ai {
         debug!("AI agent detected");
@@ -128,6 +145,7 @@ mod tests {
             "COMPOSER_NO_INTERACTION",
             "OPENCODE",
             "GEMINI_CLI",
+            "VSCODE_AGENT",
         ];
         for var in &ai_vars {
             unsafe {
@@ -147,6 +165,7 @@ mod tests {
         let original_composer_no_interaction = env::var("COMPOSER_NO_INTERACTION").ok();
         let original_opencode = env::var("OPENCODE").ok();
         let original_gemini_cli = env::var("GEMINI_CLI").ok();
+        let original_vscode_agent = env::var("VSCODE_AGENT").ok();
 
         // Start with clean environment
         clear_ai_env_vars();
@@ -171,6 +190,10 @@ mod tests {
         assert!(
             !is_gemini_ai(),
             "Should not detect Gemini CLI without GEMINI_CLI"
+        );
+        assert!(
+            !is_vscode_ai(),
+            "Should not detect VS Code AI without VSCODE_AGENT"
         );
         assert!(!is_ai_agent(), "Should not detect any AI agent");
 
@@ -279,6 +302,21 @@ mod tests {
             env::remove_var("GEMINI_CLI");
         }
 
+        // Test VS Code AI detection
+        unsafe {
+            env::set_var("VSCODE_AGENT", "1");
+        }
+        assert!(is_vscode_ai(), "Should detect VS Code AI with VSCODE_AGENT");
+        assert!(is_ai_agent(), "Main function should detect VS Code AI");
+        assert_eq!(
+            detect_ai_agent(),
+            Some("copilot".to_string()),
+            "detect_ai_agent should return copilot for VS Code AI"
+        );
+        unsafe {
+            env::remove_var("VSCODE_AGENT");
+        }
+
         // Test multiple AI agents
         unsafe {
             env::set_var("CLAUDECODE", "1");
@@ -337,6 +375,11 @@ mod tests {
         if let Some(val) = original_gemini_cli {
             unsafe {
                 env::set_var("GEMINI_CLI", val);
+            }
+        }
+        if let Some(val) = original_vscode_agent {
+            unsafe {
+                env::set_var("VSCODE_AGENT", val);
             }
         }
     }

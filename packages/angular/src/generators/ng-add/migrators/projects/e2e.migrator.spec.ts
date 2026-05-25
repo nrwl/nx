@@ -1,8 +1,8 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 // mock so we can test multiple versions
-jest.mock('@nx/cypress/src/utils/versions', () => ({
-  ...jest.requireActual<any>('@nx/cypress/src/utils/versions'),
+jest.mock('@nx/cypress/internal', () => ({
+  ...jest.requireActual<any>('@nx/cypress/internal'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
 // mock bc the nxE2EPreset uses fs for path normalization
@@ -15,7 +15,7 @@ jest.mock('fs', () => {
   };
 });
 
-import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import { formatFiles, ProjectConfiguration, Tree } from '@nx/devkit';
 import {
   joinPathFragments,

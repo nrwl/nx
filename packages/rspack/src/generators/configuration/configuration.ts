@@ -22,9 +22,10 @@ import {
 } from '../../utils/generator-utils';
 import rspackInitGenerator from '../init/init';
 import { ConfigurationSchema } from './schema';
-import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectType } from '@nx/js/internal';
 import { Framework } from '../init/schema';
 import { warnRspackExecutorGenerating } from '../../utils/deprecation';
+import { assertSupportedRspackVersion } from '../../utils/assert-supported-rspack-version';
 
 function projectIsRootProjectInStandaloneWorkspace(projectRoot: string) {
   return relative(workspaceRoot, projectRoot).length === 0;
@@ -36,13 +37,7 @@ function editTsConfig(
   framework: Framework,
   relativePathToRootTsConfig: string
 ) {
-  // Nx 15.8 moved util to @nx/js, but it is in @nx/workspace in 15.7
-  let shared: any;
-  try {
-    shared = require('@nx/js/src/utils/typescript/create-ts-config');
-  } catch {
-    shared = require('@nx/workspace/src/utils/create-ts-config');
-  }
+  const shared = require('@nx/js');
 
   if (framework === 'react') {
     const json = {
@@ -82,6 +77,8 @@ export async function configurationGenerator(
   tree: Tree,
   options: ConfigurationSchema
 ) {
+  assertSupportedRspackVersion(tree);
+
   const task = await rspackInitGenerator(tree, {
     ...options,
   });

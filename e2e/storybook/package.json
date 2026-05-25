@@ -10,7 +10,6 @@
     "@nx/angular": "workspace:*",
     "@nx/react": "workspace:*",
     "@nx/jest": "workspace:*",
-    "@nx/js": "workspace:*",
-    "@nx/workspace": "workspace:*"
+    "@nx/js": "workspace:*"
   }
 }

@@ -1,7 +1,8 @@
 import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
+import { join } from 'path';
 import { clean, coerce, major } from 'semver';
 
-const nxVersion = require('../../package.json').version;
+const nxVersion = require(join('@nx/jest', 'package.json')).version;
 
 // Jest is pinned to 30.3.x because jest-runtime@30.4.0 added a call to
 // `_moduleMocker.clearMocksOnScope()`, which doesn't exist on the

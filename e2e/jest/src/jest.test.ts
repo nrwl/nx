@@ -70,7 +70,7 @@ describe('Jest', () => {
     updateFile(
       `libs/${mylib}/setup.ts`,
       stripIndents`
-      const { registerTsProject } = require('@nx/js/src/internal');
+      const { registerTsProject } = require('@nx/js/internal');
       const { join } = require('path');
       const cleanup = registerTsProject(join(__dirname, '../../tsconfig.base.json'));
 
@@ -84,7 +84,7 @@ describe('Jest', () => {
     updateFile(
       `libs/${mylib}/teardown.ts`,
       stripIndents`
-      const { registerTsProject } = require('@nx/js/src/internal');
+      const { registerTsProject } = require('@nx/js/internal');
       const { join } = require('path');
       const cleanup = registerTsProject(join(__dirname, '../../tsconfig.base.json'));
 
@@ -97,7 +97,7 @@ describe('Jest', () => {
     updateFile(
       `libs/${mylib}/jest.config.cts`,
       stripIndents`
-        export default {
+        module.exports = {
           testEnvironment: 'node',
           displayName: "${mylib}",
           preset: "../../jest.preset.js",

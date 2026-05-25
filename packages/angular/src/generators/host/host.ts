@@ -12,6 +12,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { isValidVariable } from '@nx/js';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { E2eTestRunner } from '../../utils/test-runners';
 import applicationGenerator from '../application/application';
 import convertToRspack from '../convert-to-rspack/convert-to-rspack';
@@ -25,6 +26,7 @@ import { updateSsrSetup, validateOptions } from './lib';
 import type { Schema } from './schema';
 
 export async function host(tree: Tree, schema: Schema) {
+  assertSupportedAngularVersion(tree);
   assertNotUsingTsSolutionSetup(tree, 'host');
   validateOptions(tree, schema);
   // TODO: Replace with Rspack when confidence is high enough

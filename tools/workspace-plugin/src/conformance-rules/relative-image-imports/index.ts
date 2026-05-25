@@ -1,8 +1,8 @@
 import { ConformanceViolation, createConformanceRule } from '@nx/conformance';
 import { workspaceRoot } from '@nx/devkit';
-import { sync as globSync } from 'glob';
 import { readFileSync, existsSync } from 'node:fs';
-import { join, dirname, resolve, relative, isAbsolute } from 'node:path';
+import { dirname, join, resolve, relative, isAbsolute } from 'node:path';
+import { globSync } from 'tinyglobby';
 
 const ignorePatterns = ['**/node_modules/**', '**/dist/**', '**/.astro/**'];
 
@@ -17,8 +17,10 @@ export default createConformanceRule({
     const violations: ConformanceViolation[] = [];
 
     // Find all .mdoc files in astro-docs
-    const mdocFiles = globSync(join(workspaceRoot, 'astro-docs/**/*.mdoc'), {
+    const mdocFiles = globSync('astro-docs/**/*.mdoc', {
+      cwd: workspaceRoot,
       ignore: ignorePatterns,
+      absolute: true,
     });
 
     for (const file of mdocFiles) {

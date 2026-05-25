@@ -37,11 +37,6 @@
       "type": "string",
       "description": "The component symbol name. Defaults to the last segment of the file path."
     },
-    "js": {
-      "type": "boolean",
-      "description": "Generate JavaScript files rather than TypeScript files.",
-      "x-deprecated": "Provide the full file path including the file extension in the `path` option. This option will be removed in Nx v21."
-    },
     "skipTests": {
       "type": "boolean",
       "description": "When true, does not create `spec.ts` test files for the new component.",

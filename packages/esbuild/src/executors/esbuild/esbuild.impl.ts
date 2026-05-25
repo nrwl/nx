@@ -29,7 +29,7 @@ import {
   getOutfile,
 } from './lib/build-esbuild-options';
 import { getExtraDependencies } from './lib/get-extra-dependencies';
-import { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
+import { DependentBuildableProjectNode } from '@nx/js/internal';
 import { rmSync } from 'node:fs';
 import { join, relative } from 'path';
 

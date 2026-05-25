@@ -4,7 +4,7 @@ import {
   applyChangesToString,
   addDependenciesToPackageJson,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 import { addInitialRoutes } from '../../../utils/ast-utils';
 import { reactRouterDomVersion } from '../../../utils/versions';
 import { maybeJs } from '../../../utils/maybe-js';
