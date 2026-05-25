@@ -73,3 +73,5 @@ help you get started.
 | -------------------------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | ![Craigory Coppola](https://avatars.githubusercontent.com/u/6933928?s=160) | ![Chau Tran](https://avatars.githubusercontent.com/u/25516557?s=160) | ![Nicholas Cunningham](https://avatars.githubusercontent.com/u/338948?s=160) |
 | [AgentEnder](https://github.com/AgentEnder)                                | [nartc](https://github.com/nartc)                                    | [ndcunningham](https://github.com/ndcunningham)                              |
+
+Made in Toronto.
