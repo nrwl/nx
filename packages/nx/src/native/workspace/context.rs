@@ -427,3 +427,56 @@ impl Drop for WorkspaceContext {
         drop(fw);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use assert_fs::TempDir;
+    use assert_fs::prelude::*;
+
+    /// Plugin createNodes pipelines (and therefore atomized target name
+    /// insertion order) depend on the JS-visible `WorkspaceContext.glob`
+    /// returning paths in sorted order. Internally that's `par_sort` after
+    /// hashing + a Rayon `par_iter().filter()` (order-preserving) — but the
+    /// guarantee is a public contract, so it's worth a smoke test that
+    /// exercises the full path through `WorkspaceContext::new`.
+    ///
+    /// Files are written in non-alphabetic order so the test cannot pass
+    /// just because file walking happens to be alphabetic on this OS.
+    #[test]
+    fn glob_should_return_sorted_results_regardless_of_creation_order() {
+        let temp = TempDir::new().unwrap();
+        // Deliberately non-alphabetic creation order across both depths so
+        // any creation-time-vs-name ordering quirks would surface.
+        for name in ["z.ts", "src/m.ts", "a.ts", "src/a.ts", "m.ts", "src/z.ts"] {
+            temp.child(name).write_str("x").unwrap();
+        }
+
+        let cache = TempDir::new().unwrap();
+        let ctx = WorkspaceContext::new(
+            temp.path().to_string_lossy().to_string(),
+            cache.path().to_string_lossy().to_string(),
+        );
+
+        let matched = ctx.glob(vec!["**/*.ts".into()], None).unwrap();
+        let mut expected = matched.clone();
+        expected.sort();
+        assert_eq!(
+            matched, expected,
+            "glob results must be sorted regardless of file creation order"
+        );
+
+        // multi_glob applies the same guarantee per-pattern.
+        let multi = ctx
+            .multi_glob(vec!["**/*.ts".into(), "src/**/*.ts".into()], None)
+            .unwrap();
+        for (i, group) in multi.iter().enumerate() {
+            let mut sorted = group.clone();
+            sorted.sort();
+            assert_eq!(
+                group, &sorted,
+                "multi_glob group {i} must be sorted regardless of file creation order"
+            );
+        }
+    }
+}

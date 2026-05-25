@@ -31,8 +31,8 @@ import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+  sortPackageJsonFields,
+} from '@nx/js/internal';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { addRollupBuildTarget } from '@nx/react/src/generators/library/lib/add-rollup-build-target';
 import { expoComponentGenerator } from '../component/component';
@@ -102,14 +102,13 @@ export async function expoLibraryGeneratorInternal(
   const path = joinPathFragments(
     options.projectRoot,
     'src/lib',
-    options.fileName
+    options.js ? `${options.fileName}.js` : options.fileName
   );
   const componentTask = await expoComponentGenerator(host, {
     path: relativeCwd ? relative(relativeCwd, path) : path,
     skipTests: options.unitTestRunner === 'none',
     export: true,
     skipFormat: true,
-    js: options.js,
   });
   tasks.push(() => componentTask);
 

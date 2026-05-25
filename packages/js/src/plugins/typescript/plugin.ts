@@ -34,6 +34,7 @@ import picomatch = require('picomatch');
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
 import type { Extension, ParsedCommandLine, System } from 'typescript';
 import {
   addBuildAndWatchDepsTargets,
@@ -111,6 +112,21 @@ interface ConfigContext {
 }
 
 let ts: typeof import('typescript');
+const resolvedTypescriptPaths: Record<string, string> = {};
+
+function resolveTypescriptPath(
+  projectRoot: string,
+  workspaceRoot: string
+): string {
+  // Resolve from projectRoot first, then workspace paths, with __dirname as a
+  // last resort. Required so the lookup works under layouts where @nx/js's real
+  // path is outside the workspace tree (e.g. pnpm's enableGlobalVirtualStore),
+  // since typescript is not a declared dep.
+  resolvedTypescriptPaths[projectRoot] ??= require.resolve('typescript', {
+    paths: [projectRoot, ...getNxRequirePaths(workspaceRoot), __dirname],
+  });
+  return resolvedTypescriptPaths[projectRoot];
+}
 
 const TSCONFIG_CACHE_VERSION = 2;
 const TS_CONFIG_CACHE_PATH = join(
@@ -725,7 +741,7 @@ function getInputs(
   const absoluteProjectRoot = config.project.absolute;
 
   if (!ts) {
-    ts = require('typescript');
+    ts = require(resolveTypescriptPath(absoluteProjectRoot, workspaceRoot));
   }
   // https://github.com/microsoft/TypeScript/blob/19b777260b26aac5707b1efd34202054164d4a9d/src/compiler/utilities.ts#L9869
   const supportedTSExtensions: readonly Extension[] = [
@@ -1542,7 +1558,7 @@ function readTsConfig(
   cache: InvocationCache
 ): ParsedCommandLine {
   if (!ts) {
-    ts = require('typescript');
+    ts = require(resolveTypescriptPath(workspaceRoot, workspaceRoot));
   }
 
   // Normalize to forward slashes for TypeScript compatibility on Windows.

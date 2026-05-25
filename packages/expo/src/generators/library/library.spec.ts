@@ -447,6 +447,8 @@ describe('lib', () => {
       });
 
       expect(appTree.exists('my-lib/src/index.js')).toBe(true);
+      expect(appTree.exists('my-lib/src/lib/my-lib.js')).toBe(true);
+      expect(appTree.exists('my-lib/src/lib/my-lib.tsx')).toBe(false);
     });
   });
 

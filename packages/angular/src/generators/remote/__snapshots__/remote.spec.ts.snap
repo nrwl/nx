@@ -348,7 +348,7 @@ export default AppServerModule;
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 5`] = `"import('./main.server');"`;
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 6`] = `
-"import { ModuleFederationConfig } from '@nx/module-federation';
+"import type { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'test',
@@ -599,7 +599,7 @@ bootstrapApplication(RemoteEntry, appConfig).catch((err) =>
 `;
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components when --typescriptConfiguration=true 2`] = `
-"import { ModuleFederationConfig } from '@nx/module-federation';
+"import type { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'test',

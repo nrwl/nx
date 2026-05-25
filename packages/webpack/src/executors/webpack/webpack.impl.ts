@@ -6,7 +6,7 @@ import {
   targetToTargetString,
 } from '@nx/devkit';
 import { getRootTsConfigPath } from '@nx/js';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { resolve } from 'path';
 import { from, of } from 'rxjs';
 import {

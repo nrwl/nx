@@ -15,12 +15,12 @@ import {
   getUpdatedPackageJsonContent,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import {
+  getImportPath,
   getDefinedCustomConditionName,
   getProjectType,
   isUsingTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+} from '@nx/js/internal';
 import { join } from 'node:path/posix';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
@@ -153,7 +153,7 @@ export async function viteConfigurationGeneratorInternal(
           includeLib: schema.includeLib,
           includeVitest: schema.includeVitest,
           inSourceTests: schema.inSourceTests,
-          rollupOptionsExternal: [
+          rolldownOptionsExternal: [
             "'react'",
             "'react-dom'",
             "'react/jsx-runtime'",
@@ -182,8 +182,11 @@ export async function viteConfigurationGeneratorInternal(
 
   if (schema.includeVitest) {
     ensurePackage('@nx/vitest', nxVersion);
-    const { configurationGenerator: vitestConfigurationGenerator } =
-      await import('@nx/vitest/generators');
+    // CommonJS `require` instead of dynamic ESM `import` — `ensurePackage`
+    // exposes the temp install via `Module._initPaths`, which ESM ignores.
+    const {
+      configurationGenerator: vitestConfigurationGenerator,
+    }: typeof import('@nx/vitest/generators') = require('@nx/vitest/generators');
     const vitestTask = await vitestConfigurationGenerator(tree, {
       project: schema.project,
       uiFramework: schema.uiFramework,

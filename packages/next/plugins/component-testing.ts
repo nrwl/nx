@@ -2,11 +2,11 @@ import {
   nxBaseCypressPreset,
   NxComponentTestingOptions,
 } from '@nx/cypress/plugins/cypress-preset';
-import { CypressExecutorOptions } from '@nx/cypress/src/executors/cypress/cypress.impl';
 import {
   createExecutorContext,
+  type CypressExecutorOptions,
   getProjectConfigByPath,
-} from '@nx/cypress/src/utils/ct-helpers';
+} from '@nx/cypress/internal';
 import {
   ExecutorContext,
   parseTargetString,
@@ -16,7 +16,7 @@ import {
   stripIndents,
   workspaceRoot,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { withReact } from '@nx/react';
 import {
   AssetGlobPattern,

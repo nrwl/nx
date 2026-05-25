@@ -6,7 +6,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import type { NormalizedJestProjectSchema } from '../schema';
-import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectType } from '@nx/js/internal';
 
 export function updateTsConfig(
   host: Tree,

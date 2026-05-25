@@ -4,6 +4,9 @@ import * as jsoncEslintParser from 'jsonc-eslint-parser';
 export default [
   ...baseConfig,
   {
+    ignores: ['dist'],
+  },
+  {
     files: ['**/*.ts'],
     rules: {
       'no-restricted-imports': ['error', '@nx/workspace'],
@@ -31,7 +34,16 @@ export default [
         'error',
         {
           buildTargets: ['build-base'],
-          ignoredDependencies: ['nx', 'typescript', 'eslint', 'rollup', 'vite'],
+          ignoredDependencies: [
+            'nx',
+            // Self-reference: resolves the package's own package.json at
+            // runtime (see src/utils/versions.ts).
+            '@nx/cypress',
+            'typescript',
+            'eslint',
+            'rollup',
+            'vite',
+          ],
         },
       ],
     },

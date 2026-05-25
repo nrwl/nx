@@ -6,12 +6,21 @@ using MsbuildAnalyzer.Models;
 using MsbuildAnalyzer.Utilities;
 
 // Parse input - either from stdin or command line arguments
-// Format (stdin): Read newline-separated list of project files from stdin
+// Format (stdin): newline-separated file paths. Files are partitioned here by name:
+//   .csproj/.fsproj/.vbproj go to projectFiles, the canonical Directory.* files go to
+//   directoryFiles. MSBuild evaluation finds those directory files on its own; we need
+//   them in this process to declare the right per-project inputs back to Nx.
 // Args: MsbuildAnalyzer <workspace-root> [plugin-options-json]
 
 string workspaceRoot;
 List<string> projectFiles;
+List<string> directoryFiles = new();
 PluginOptions? pluginOptions = null;
+
+var directoryFileNameSet = new HashSet<string>(
+    ProjectUtilities.DirectoryBuildFileNames,
+    StringComparer.OrdinalIgnoreCase
+);
 
 // Check if stdin has data for project files
 if (Console.IsInputRedirected)
@@ -51,10 +60,22 @@ if (Console.IsInputRedirected)
     while ((line = Console.ReadLine()) != null)
     {
         line = line.Trim();
-        if (!string.IsNullOrEmpty(line))
+        if (string.IsNullOrEmpty(line))
+        {
+            continue;
+        }
+
+        var fileName = Path.GetFileName(line);
+        if (ProjectUtilities.IsProjectFile(line))
         {
             projectFiles.Add(line);
         }
+        else if (directoryFileNameSet.Contains(fileName))
+        {
+            directoryFiles.Add(line);
+        }
+        // Anything else is silently dropped; the glob shouldn't surface unrelated files,
+        // but we don't want a stray path to abort the run.
     }
 }
 else
@@ -152,7 +173,7 @@ var jsonOptions = new JsonSerializerOptions
 AnalysisResult result;
 using (var analyzePerf = PerfLogger.Start("analyze workspace"))
 {
-    result = Analyzer.AnalyzeWorkspace(projectFiles, workspaceRoot, pluginOptions);
+    result = Analyzer.AnalyzeWorkspace(projectFiles, directoryFiles, workspaceRoot, pluginOptions);
 }
 
 // Serialize and output results

@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`componentStory generator should generate the right props 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';

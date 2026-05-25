@@ -2,10 +2,12 @@
   "outDir": "packages/nx/dist",
   "assets": [
     { "glob": "presets/*.json" },
+    { "glob": "src/migrations/**/*.md" },
     { "glob": "src/command-line/migrate/run-migration-process.js" },
     { "glob": "src/ai/set-up-ai-agents/schema.d.ts" },
     { "glob": "src/utils/perf-hooks.d.ts" },
     { "glob": "src/utils/yarn-syml/syml-grammar.js" },
+    { "glob": "src/command-line/completion/scripts/*" },
     { "glob": "src/native/browser.js" },
     { "glob": "src/native/index.js" },
     { "glob": "src/native/index.d.ts" },

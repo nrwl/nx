@@ -25,9 +25,8 @@ import {
   updateTsconfigFiles,
   shouldConfigureTsSolutionSetup,
   getDefinedCustomConditionName,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
-
+  sortPackageJsonFields,
+} from '@nx/js/internal';
 export async function libraryGenerator(host: Tree, rawOptions: Schema) {
   return await libraryGeneratorInternal(host, {
     addPlugin: false,

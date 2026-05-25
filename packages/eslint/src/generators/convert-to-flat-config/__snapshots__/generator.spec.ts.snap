@@ -5,9 +5,6 @@ exports[`convert-to-flat-config generator CJS should add env configuration 1`] =
 const globals = require('globals');
 
 module.exports = [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...nx.configs['flat/base'],
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
   {
@@ -39,9 +36,6 @@ exports[`convert-to-flat-config generator CJS should add global and env configur
 const globals = require('globals');
 
 module.exports = [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...nx.configs['flat/base'],
   {
     languageOptions: {
@@ -76,9 +70,6 @@ exports[`convert-to-flat-config generator CJS should add global configuration 1`
 "const nx = require('@nx/eslint-plugin');
 
 module.exports = [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...nx.configs['flat/base'],
   { languageOptions: { globals: { myCustomGlobal: 'readonly' } } },
   {
@@ -109,9 +100,6 @@ exports[`convert-to-flat-config generator CJS should add global eslintignores 1`
 "const nx = require('@nx/eslint-plugin');
 
 module.exports = [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...nx.configs['flat/base'],
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -145,9 +133,6 @@ exports[`convert-to-flat-config generator CJS should add parser 1`] = `
 const typescriptEslintParser = require('@typescript-eslint/parser');
 
 module.exports = [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...nx.configs['flat/base'],
   { languageOptions: { parser: typescriptEslintParser } },
   {
@@ -182,9 +167,6 @@ const justScopeEslintPlugin = require('@just-scope/eslint-plugin');
 const nx = require('@nx/eslint-plugin');
 
 module.exports = [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   {
     plugins: {
       'eslint-plugin-import': eslintPluginImport,
@@ -221,9 +203,6 @@ exports[`convert-to-flat-config generator CJS should add settings 1`] = `
 "const nx = require('@nx/eslint-plugin');
 
 module.exports = [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...nx.configs['flat/base'],
   {
     settings: {
@@ -258,9 +237,6 @@ exports[`convert-to-flat-config generator CJS should convert json successfully 1
 "const nx = require('@nx/eslint-plugin');
 
 module.exports = [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...nx.configs['flat/base'],
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -290,9 +266,6 @@ exports[`convert-to-flat-config generator CJS should convert json successfully 2
 "const baseConfig = require('../../eslint.config.cjs');
 
 module.exports = [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -317,9 +290,6 @@ exports[`convert-to-flat-config generator CJS should convert yaml successfully 1
 "const nx = require('@nx/eslint-plugin');
 
 module.exports = [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...nx.configs['flat/base'],
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -349,9 +319,6 @@ exports[`convert-to-flat-config generator CJS should convert yaml successfully 2
 "const baseConfig = require('../../eslint.config.cjs');
 
 module.exports = [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -376,9 +343,6 @@ exports[`convert-to-flat-config generator CJS should convert yml successfully 1`
 "const nx = require('@nx/eslint-plugin');
 
 module.exports = [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...nx.configs['flat/base'],
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -408,9 +372,6 @@ exports[`convert-to-flat-config generator CJS should convert yml successfully 2`
 "const baseConfig = require('../../eslint.config.cjs');
 
 module.exports = [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -435,9 +396,6 @@ exports[`convert-to-flat-config generator CJS should handle custom eslintignores
 "const baseConfig = require('../../eslint.config.cjs');
 
 module.exports = [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -469,9 +427,6 @@ exports[`convert-to-flat-config generator MJS should add env configuration 1`] =
 import globals from 'globals';
 
 export default [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...nx.configs['flat/base'],
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
   {
@@ -503,9 +458,6 @@ exports[`convert-to-flat-config generator MJS should add global and env configur
 import globals from 'globals';
 
 export default [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...nx.configs['flat/base'],
   {
     languageOptions: {
@@ -540,9 +492,6 @@ exports[`convert-to-flat-config generator MJS should add global configuration 1`
 "import nx from '@nx/eslint-plugin';
 
 export default [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...nx.configs['flat/base'],
   { languageOptions: { globals: { myCustomGlobal: 'readonly' } } },
   {
@@ -573,9 +522,6 @@ exports[`convert-to-flat-config generator MJS should add global eslintignores 1`
 "import nx from '@nx/eslint-plugin';
 
 export default [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...nx.configs['flat/base'],
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -609,9 +555,6 @@ exports[`convert-to-flat-config generator MJS should add parser 1`] = `
 import typescriptEslintParser from '@typescript-eslint/parser';
 
 export default [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...nx.configs['flat/base'],
   { languageOptions: { parser: typescriptEslintParser } },
   {
@@ -646,9 +589,6 @@ import justScopeEslintPlugin from '@just-scope/eslint-plugin';
 import nx from '@nx/eslint-plugin';
 
 export default [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   {
     plugins: {
       'eslint-plugin-import': eslintPluginImport,
@@ -685,9 +625,6 @@ exports[`convert-to-flat-config generator MJS should add settings 1`] = `
 "import nx from '@nx/eslint-plugin';
 
 export default [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...nx.configs['flat/base'],
   {
     settings: {
@@ -722,9 +659,6 @@ exports[`convert-to-flat-config generator MJS should convert json successfully 1
 "import nx from '@nx/eslint-plugin';
 
 export default [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...nx.configs['flat/base'],
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -754,9 +688,6 @@ exports[`convert-to-flat-config generator MJS should convert json successfully 2
 "import baseConfig from '../../eslint.config.mjs';
 
 export default [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -781,9 +712,6 @@ exports[`convert-to-flat-config generator MJS should convert yaml successfully 1
 "import nx from '@nx/eslint-plugin';
 
 export default [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...nx.configs['flat/base'],
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -813,9 +741,6 @@ exports[`convert-to-flat-config generator MJS should convert yaml successfully 2
 "import baseConfig from '../../eslint.config.mjs';
 
 export default [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -840,9 +765,6 @@ exports[`convert-to-flat-config generator MJS should convert yml successfully 1`
 "import nx from '@nx/eslint-plugin';
 
 export default [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...nx.configs['flat/base'],
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -872,9 +794,6 @@ exports[`convert-to-flat-config generator MJS should convert yml successfully 2`
 "import baseConfig from '../../eslint.config.mjs';
 
 export default [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -899,9 +818,6 @@ exports[`convert-to-flat-config generator MJS should handle custom eslintignores
 "import baseConfig from '../../eslint.config.mjs';
 
 export default [
-  {
-    ignores: ['**/dist', '**/out-tsc'],
-  },
   ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],

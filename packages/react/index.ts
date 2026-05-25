@@ -1,8 +1,3 @@
-import { NxReactWebpackPlugin as _NxReactWebpackPlugin } from './plugins/nx-react-webpack-plugin/nx-react-webpack-plugin';
-
-/** @deprecated Use '@nx/react/webpack-plugin' instead, which can improve graph creation by 150-200ms per file. */
-export const NxReactWebpackPlugin = _NxReactWebpackPlugin;
-
 export {
   extraEslintDependencies,
   extendReactEslintJson,

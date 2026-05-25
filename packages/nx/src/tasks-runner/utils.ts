@@ -19,6 +19,12 @@ import {
 } from '../native';
 import { isRelativePath } from '../utils/fileutils';
 import { findMatchingProjects } from '../utils/find-matching-projects';
+import {
+  LegacyDependsOnLocation,
+  LegacyDependsOnViolation,
+  flushLegacyDependsOnViolations,
+  warnLegacyDependsOnMagicString,
+} from './legacy-depends-on-warning';
 import { isGlobPattern } from '../utils/globs';
 import { joinPathFragments } from '../utils/path';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
@@ -36,33 +42,47 @@ export function getDependencyConfigs(
   projectGraph: ProjectGraph,
   allTargetNames: string[]
 ): NormalizedTargetDependencyConfig[] | undefined {
+  const legacyViolations: LegacyDependsOnViolation[] = [];
   const dependencyConfigs = (
     projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
     // This is passed into `run-command` from programmatic invocations
     extraTargetDependencies[target] ??
     []
-  ).flatMap((config) =>
+  ).flatMap((config, index) =>
     normalizeDependencyConfigDefinition(
       config,
       project,
       projectGraph,
-      allTargetNames
+      allTargetNames,
+      { ownerTarget: target, index, legacyViolations }
     )
   );
+  if (legacyViolations.length) {
+    flushLegacyDependsOnViolations(
+      project,
+      target,
+      legacyViolations,
+      projectGraph.nodes[project]?.data?.root
+    );
+  }
   return dependencyConfigs;
 }
+
+export type DependsOnEntryLocation = LegacyDependsOnLocation;
 
 export function normalizeDependencyConfigDefinition(
   definition: string | TargetDependencyConfig,
   currentProject: string,
   graph: ProjectGraph,
-  allTargetNames: string[]
+  allTargetNames: string[],
+  location?: DependsOnEntryLocation
 ): NormalizedTargetDependencyConfig[] {
   return expandWildcardTargetConfiguration(
     normalizeDependencyConfigProjects(
       expandDependencyConfigSyntaxSugar(definition, graph, currentProject),
       currentProject,
-      graph
+      graph,
+      location
     ),
     allTargetNames
   );
@@ -71,10 +91,14 @@ export function normalizeDependencyConfigDefinition(
 export function normalizeDependencyConfigProjects(
   dependencyConfig: TargetDependencyConfig,
   currentProject: string,
-  graph: ProjectGraph
+  graph: ProjectGraph,
+  location?: DependsOnEntryLocation
 ): NormalizedTargetDependencyConfig {
-  const noStringConfig =
-    normalizeTargetDependencyWithStringProjects(dependencyConfig);
+  const noStringConfig = normalizeTargetDependencyWithStringProjects(
+    dependencyConfig,
+    currentProject,
+    location
+  );
 
   if (noStringConfig.projects) {
     dependencyConfig.projects = findMatchingProjects(
@@ -202,29 +226,35 @@ export function getOutputs(
 }
 
 export function normalizeTargetDependencyWithStringProjects(
-  dependencyConfig: TargetDependencyConfig
-): Omit<TargetDependencyConfig, 'projects'> & { projects: string[] } {
+  dependencyConfig: TargetDependencyConfig,
+  currentProject?: string,
+  location?: DependsOnEntryLocation
+): Omit<TargetDependencyConfig, 'projects'> & { projects?: string[] } {
   if (typeof dependencyConfig.projects === 'string') {
-    /** LERNA SUPPORT START - Remove in v20 */
-    // Lerna uses `dependencies` in `prepNxOptions`, so we need to maintain
-    // support for it until lerna can be updated to use the syntax.
-    //
-    // This should have been removed in v17, but the updates to lerna had not
-    // been made yet.
-    //
-    // TODO(@agentender): Remove this part in v20
+    // TODO(v24): Remove the `self` / `dependencies` magic-string shim.
+    // The v16 `update-depends-on-to-tokens` migration already rewrites
+    // these to the modern shape, and `nx repair` will re-run it on demand.
     if (dependencyConfig.projects === 'self') {
+      warnLegacyDependsOnMagicString(
+        currentProject,
+        dependencyConfig,
+        location
+      );
       delete dependencyConfig.projects;
     } else if (dependencyConfig.projects === 'dependencies') {
+      warnLegacyDependsOnMagicString(
+        currentProject,
+        dependencyConfig,
+        location
+      );
       dependencyConfig.dependencies = true;
       delete dependencyConfig.projects;
-      /** LERNA SUPPORT END - Remove in v20 */
     } else {
       dependencyConfig.projects = [dependencyConfig.projects];
     }
   }
   return dependencyConfig as Omit<TargetDependencyConfig, 'projects'> & {
-    projects: string[];
+    projects?: string[];
   };
 }
 
@@ -624,25 +654,6 @@ export function shouldStreamOutput(
   if (longRunningTask(task)) return true;
   if (task.target.project === initiatingProject) return true;
   return false;
-}
-
-export function isCacheableTask(
-  task: Task,
-  options: {
-    cacheableOperations?: string[] | null;
-    cacheableTargets?: string[] | null;
-  }
-): boolean {
-  if (task.cache !== undefined) {
-    return task.cache;
-  }
-
-  const cacheable = options.cacheableOperations || options.cacheableTargets;
-  return (
-    cacheable &&
-    cacheable.indexOf(task.target.target) > -1 &&
-    !longRunningTask(task)
-  );
 }
 
 function longRunningTask(task: Task) {

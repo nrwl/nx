@@ -8,11 +8,11 @@ filter: 'type:Guides'
 
 Nx is a general-purpose monorepo platform and CLI. It works with JavaScript, TypeScript, Java, C#, Go, etc.. The core plugins Nx comes with do work best with JavaScript or TypeScript.
 
-TypeScript is a great choice for many teams, but not for everyone. If you want to use Nx with JavaScript, simply pass `--js` to all generate commands, as follows:
+TypeScript is a great choice for many teams, but not for everyone. If you want to use Nx with JavaScript, application and library generators support a `--js` flag. For component generators, include the file extension directly in the `path` argument:
 
 ```shell
 nx g @nx/react:app apps/myapp --js
-nx g @nx/react:component apps/myapp/src/lib/mycmp --js
+nx g @nx/react:component apps/myapp/src/lib/mycmp.jsx
 ```
 
 You can build/test/lint/serve your applications and libraries the same way whether you use JavaScript and TypeScript. You can also mix and match them.

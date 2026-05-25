@@ -41,6 +41,28 @@ export default defineConfig({
     rehypePlugins: [rehypeTableOptionLinks],
   },
   trailingSlash: 'never',
+  redirects: {
+    '/reference/remote-cache-plugins':
+      '/docs/reference/deprecated/self-hosted-cache-packages',
+    '/reference/remote-cache-plugins/s3-cache':
+      '/docs/reference/deprecated/self-hosted-cache-packages',
+    '/reference/remote-cache-plugins/s3-cache/overview':
+      '/docs/reference/deprecated/self-hosted-cache-packages',
+    '/reference/remote-cache-plugins/gcs-cache':
+      '/docs/reference/deprecated/self-hosted-cache-packages',
+    '/reference/remote-cache-plugins/gcs-cache/overview':
+      '/docs/reference/deprecated/self-hosted-cache-packages',
+    '/reference/remote-cache-plugins/azure-cache':
+      '/docs/reference/deprecated/self-hosted-cache-packages',
+    '/reference/remote-cache-plugins/azure-cache/overview':
+      '/docs/reference/deprecated/self-hosted-cache-packages',
+    '/reference/remote-cache-plugins/shared-fs-cache':
+      '/docs/reference/deprecated/self-hosted-cache-packages',
+    '/reference/remote-cache-plugins/shared-fs-cache/overview':
+      '/docs/reference/deprecated/self-hosted-cache-packages',
+    '/reference/remote-cache-plugins/shared-fs-cache/generators':
+      '/docs/reference/deprecated/self-hosted-cache-packages',
+  },
   // This adapter doesn't support local previews, so only load it on Netlify.
   adapter: process.env['NETLIFY'] ? netlify() : undefined,
   integrations: [

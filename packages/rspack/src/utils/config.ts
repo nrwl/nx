@@ -4,7 +4,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
   workspaceRoot,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import type { Configuration } from '@rspack/core';
 import { readNxJson } from 'nx/src/config/configuration';
 import { NormalizedRspackExecutorSchema } from '../executors/rspack/schema';
