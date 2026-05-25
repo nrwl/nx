@@ -1,6 +1,4 @@
-import type {
-  NxJsonConfiguration,
-} from '../../../config/nx-json';
+import type { NxJsonConfiguration } from '../../../config/nx-json';
 import type { BundlerKind } from './types';
 
 export type DependencyNarrowingOptions = {
@@ -58,7 +56,8 @@ export function normalizeDependencyNarrowingOptions(
 export function getJsPluginDependencyNarrowingOptions(
   nxJson: NxJsonConfiguration | undefined
 ): NormalizedDependencyNarrowingOptions | undefined {
-  const dependencyNarrowing = nxJson?.pluginsConfig?.['@nx/js']?.dependencyNarrowing;
+  const dependencyNarrowing =
+    nxJson?.pluginsConfig?.['@nx/js']?.dependencyNarrowing;
 
   if (!dependencyNarrowing) {
     return undefined;
