@@ -21,6 +21,8 @@ overrides:
   handlebars: '4.7.9'
   minimist: '^1.2.6'
   underscore: '^1.13.8'
+  brace-expansion: '5.0.6'
+  minimatch: '^10.2.5'
 onlyBuiltDependencies:
   - '@nestjs/core'
   - 'nx'
